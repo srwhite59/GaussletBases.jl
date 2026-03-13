@@ -1,0 +1,6 @@
+name = "Gausslets"
+uuid = "5d4de616-c9ab-4678-9ab9-e835b9559837"
+version = "0.1.0"
+
+[compat]
+julia = "1.10"
