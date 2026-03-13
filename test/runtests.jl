@@ -163,6 +163,50 @@ end
     @test length(rb) >= 3
 end
 
+@testset "Construction grid controls" begin
+    rspec = RadialBasisSpec(:G10;
+        count = 4,
+        mapping = AsinhMapping(c = 0.15, s = 0.15),
+        reference_spacing = 1.0,
+        tails = 2,
+        odd_even_kmax = 1,
+        xgaussians = XGaussian[],
+    )
+    rb_fixed = build_basis(rspec; grid_h = 0.04, refine_grid_h = false)
+    rb_refined = build_basis(rspec; grid_h = 0.04, refine_grid_h = true)
+    rdata_fixed = Gausslets._build_radial_coefficients(rspec; grid_h = 0.04)
+    rdata_refined = Gausslets._select_construction_data(
+        h -> Gausslets._build_radial_coefficients(rspec; grid_h = h),
+        Gausslets._radial_overlap_deviation,
+        0.04;
+        refine_grid_h = true,
+    )
+
+    @test rb_fixed isa RadialBasis
+    @test rb_refined isa RadialBasis
+    @test Gausslets._radial_overlap_deviation(rdata_refined) <= Gausslets._radial_overlap_deviation(rdata_fixed) + 1.0e-12
+
+    hspec = HalfLineBasisSpec(:G10;
+        xmax = 2.0,
+        reference_spacing = 1.0,
+        tails = 2,
+        mapping = AsinhMapping(a = 1.0, s = 0.2),
+    )
+    hb_fixed = build_basis(hspec; grid_h = 0.04, refine_grid_h = false)
+    hb_refined = build_basis(hspec; grid_h = 0.04, refine_grid_h = true)
+    hdata_fixed = Gausslets._build_halfline_coefficients(hspec; grid_h = 0.04)
+    hdata_refined = Gausslets._select_construction_data(
+        h -> Gausslets._build_halfline_coefficients(hspec; grid_h = h),
+        Gausslets._halfline_overlap_deviation,
+        0.04;
+        refine_grid_h = true,
+    )
+
+    @test hb_fixed isa HalfLineBasis
+    @test hb_refined isa HalfLineBasis
+    @test Gausslets._halfline_overlap_deviation(hdata_refined) <= Gausslets._halfline_overlap_deviation(hdata_fixed) + 1.0e-12
+end
+
 @testset "Primitive contractions" begin
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
@@ -192,7 +236,9 @@ end
         odd_even_kmax = 2,
         xgaussians = [XGaussian(alpha = 0.2)],
     ))
-    grid = radial_quadrature(rb; refine = 8)
+    @test_throws ArgumentError radial_quadrature(rb; refine = 8)
+
+    grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
     diag_rb = basis_diagnostics(rb, grid)
@@ -238,7 +284,7 @@ end
     coefficient_matrix = stencil_matrix(rb)
     Amunu = Matrix{Float64}(I, length(primitive_data), length(primitive_data))
     A = contract_primitive_matrix(rb, Amunu)
-    grid = radial_quadrature(rb; refine = 8)
+    grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
     diag = basis_diagnostics(rb, grid)
 
     @test sum(coefficient_matrix[mu, 2] * primitive_data[mu](0.2) for mu in eachindex(primitive_data)) ≈

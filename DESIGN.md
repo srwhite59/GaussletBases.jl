@@ -199,6 +199,8 @@ Construction entry point:
 
 ```julia
 build_basis(spec::AbstractBasisSpec)
+build_basis(spec::HalfLineBasisSpec; grid_h=nothing, refine_grid_h=true)
+build_basis(spec::RadialBasisSpec; grid_h=nothing, refine_grid_h=true)
 ```
 
 ### Notes
@@ -206,6 +208,7 @@ build_basis(spec::AbstractBasisSpec)
 - `BasisSpec` stays explicit; do not shorten it to bare `Spec` in user-facing docs.
 - Most users should prefer `rmax`; `count` is mainly for reproducibility, testing, and benchmarking.
 - `tails`, `odd_even_kmax`, and `xgaussians` are public because they are method-level choices, not tiny implementation details.
+- `grid_h` is a build-time control keyword on `build_basis`, not part of the mathematical `BasisSpec`.
 
 ---
 
@@ -350,7 +353,7 @@ RadialQuadratureGrid(points, weights; mapping = nothing)
 
 radial_quadrature(basis::RadialBasis;
                   refine::Int = 8,
-                  rmax = nothing)
+                  rmax)
 
 quadrature_points(grid)
 quadrature_weights(grid)
@@ -362,6 +365,7 @@ quadrature_weights(grid)
 - The quadrature grid follows the same mapping as the basis but is usually finer.
 - This is not a DVR basis.
 - `refine` is the quadrature refinement relative to the reference-coordinate basis spacing.
+- `rmax` is an explicit physical-space cutoff chosen for the system/problem.
 
 ---
 
@@ -804,7 +808,7 @@ Base.getindex(basis, i::Integer)
 
 ```julia
 """
-    radial_quadrature(basis::RadialBasis; refine=8, rmax=nothing)
+    radial_quadrature(basis::RadialBasis; refine=8, rmax)
 
 Build a fine quadrature grid matched to a radial basis.
 
@@ -818,8 +822,7 @@ Keyword arguments
   relative refinement factor on the uniform reference coordinate.
   `refine = 8` means roughly eight quadrature subintervals per basis spacing.
 - `rmax`:
-  optional physical-space cutoff for the quadrature grid. By default, the grid
-  is chosen to cover the represented support of the basis.
+  required physical-space cutoff for the quadrature grid.
 
 Use this grid for:
 - one-body radial integrals (`overlap`, `kinetic`, `nuclear`, `centrifugal`)
@@ -940,7 +943,7 @@ f(0.3)
 center(f)
 reference_center(f)
 
-grid = radial_quadrature(rb; refine = 8)
+grid = radial_quadrature(rb; refine = 8, rmax = 20.0)
 
 moment_center(f, grid)
 basis_diagnostics(rb, grid)
@@ -1004,7 +1007,7 @@ For radial work, basis and quadrature are separate objects:
 
 ```julia
 rb   = build_basis(spec)
-grid = radial_quadrature(rb)
+grid = radial_quadrature(rb; rmax = 20.0)
 ```
 
 ## Scope of v0

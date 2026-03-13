@@ -2,7 +2,8 @@
 
 Gausslets.jl is a small library for localized gausslet function objects.
 
-This repository currently implements only the first narrow slice of the design:
+This repository currently implements a narrow callable/basis/quadrature slice of
+the design:
 
 - callable primitive function objects
 - callable `Gausslet` objects built from exact Gaussian stencils
@@ -90,6 +91,20 @@ The `count` constructor builds an exact number of radial basis functions. The
 `rmax` constructor chooses enough functions to cover approximately up to the
 requested range after mapping.
 
+The internal construction-grid spacing is a build-time control on
+`build_basis`, not part of `RadialBasisSpec`. For example:
+
+```julia
+rb_fixed = build_basis(RadialBasisSpec(:G10;
+    count = 6,
+    mapping = map,
+    reference_spacing = 1.0,
+    tails = 3,
+    odd_even_kmax = 2,
+    xgaussians = [XGaussian(alpha = 0.2)],
+); grid_h = 0.01, refine_grid_h = false)
+```
+
 ## Inspect The Shared Primitive Layer
 
 ```julia
@@ -119,7 +134,7 @@ The contraction helpers use the exact ordering returned by `primitives(basis)`.
 ## Radial Quadrature And Diagnostics
 
 ```julia
-grid = radial_quadrature(rb; refine = 8)
+grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
 
 quadrature_points(grid)
 quadrature_weights(grid)

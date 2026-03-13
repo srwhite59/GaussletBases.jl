@@ -2,6 +2,8 @@ const _BASIS_GRID_SIGMA = 3.0
 const _BASIS_GRID_S0 = 6.5
 const _BASIS_GRID_MARGIN = 20.0
 const _BASIS_EIG_TOL = 1.0e-10
+const _CONSTRUCTION_GRID_TOL = 1.0e-6
+const _CONSTRUCTION_GRID_MAXITER = 4
 
 _as_family(family_value::GaussletFamily) = family_value
 _as_family(family_value::Symbol) = GaussletFamily(family_value)
@@ -10,8 +12,39 @@ function _identity_mapping(mapping_value::AbstractCoordinateMapping)
     return mapping_value isa IdentityMapping
 end
 
-function _basis_grid_h(reference_spacing::Float64)
-    return min(0.02, reference_spacing / 25.0)
+function _basis_grid_h(reference_spacing::Float64, grid_h_value::Union{Nothing, Real} = nothing)
+    if grid_h_value === nothing
+        return min(0.02, reference_spacing / 25.0)
+    end
+    h = Float64(grid_h_value)
+    h > 0.0 || throw(ArgumentError("grid_h must be positive"))
+    return h
+end
+
+function _select_construction_data(
+    build_once::Function,
+    quality_measure::Function,
+    start_h::Float64;
+    refine_grid_h::Bool,
+)
+    if !refine_grid_h
+        return build_once(start_h)
+    end
+
+    h_try = start_h
+    best_data = nothing
+    best_deviation = Inf
+    for _ in 1:_CONSTRUCTION_GRID_MAXITER
+        data = build_once(h_try)
+        deviation = quality_measure(data)
+        if deviation < best_deviation
+            best_data = data
+            best_deviation = deviation
+        end
+        deviation <= _CONSTRUCTION_GRID_TOL && return data
+        h_try /= 2.0
+    end
+    return best_data
 end
 
 function _make_erf_grid(; h::Real, rmax::Real, sigma::Real = _BASIS_GRID_SIGMA, s0::Real = _BASIS_GRID_S0)
@@ -235,7 +268,7 @@ function _integral_weights_from_representation(
     return vec(transpose(coefficient_matrix) * primitive_weights)
 end
 
-function _build_halfline_coefficients(spec)
+function _build_halfline_coefficients(spec; grid_h::Float64)
     spacing = spec.reference_spacing
     reference_max = uofx(spec.mapping_value, spec.xmax)
     reference_max > 0.0 || throw(ArgumentError("HalfLineBasisSpec requires xmax to map to a positive reference range"))
@@ -246,7 +279,6 @@ function _build_halfline_coefficients(spec)
 
     seed = Gausslet(spec.family_value; center = 0.0, spacing = spacing)
     phi = (j::Int, x::Float64) -> seed(x - j * spacing)
-    grid_h = _basis_grid_h(spacing)
     grid_max = max(reference_max + _BASIS_GRID_MARGIN * spacing, (jpos_build + _BASIS_GRID_MARGIN) * spacing)
     xgrid, weights = _make_erf_grid(; h = grid_h, rmax = grid_max)
     js = collect(-jneg:jpos_build)
@@ -264,7 +296,24 @@ function _build_halfline_coefficients(spec)
     _sign_fix_columns!(coefficients_full, sampled_values, weights)
 
     nkeep = jneg + jpos_save
-    return js, coefficients_full[:, 1:nkeep], reference_centers_full[1:nkeep]
+    return (
+        grid_h = grid_h,
+        grid_max = grid_max,
+        spacing = spacing,
+        seed = seed,
+        js = js,
+        coefficient_seed = coefficients_full[:, 1:nkeep],
+        reference_center_data = collect(reference_centers_full[1:nkeep]),
+    )
+end
+
+function _halfline_overlap_deviation(data)
+    phi = (j::Int, x::Float64) -> data.seed(x - j * data.spacing)
+    xcheck, weights_check = _make_erf_grid(; h = data.grid_h / 2.0, rmax = data.grid_max)
+    _, _, sampled_seed = _seed_scalar_integrals(phi, data.js, xcheck, weights_check)
+    basis_values = sampled_seed * data.coefficient_seed
+    overlap = basis_values' * (weights_check .* basis_values)
+    return norm(overlap - I, Inf)
 end
 
 function _xgaussian_sample_matrix(xgaussians::Vector{XGaussian}, xgrid::Vector{Float64})
@@ -275,7 +324,7 @@ function _xgaussian_sample_matrix(xgaussians::Vector{XGaussian}, xgrid::Vector{F
     return matrix
 end
 
-function _build_radial_coefficients(spec)
+function _build_radial_coefficients(spec; grid_h::Float64)
     spacing = spec.reference_spacing
     ninj = length(spec.xgaussians)
     target_odd_count =
@@ -296,7 +345,6 @@ function _build_radial_coefficients(spec)
 
     seed = Gausslet(spec.family_value; center = 0.0, spacing = spacing)
     phi = (j::Int, x::Float64) -> seed(x - j * spacing)
-    grid_h = _basis_grid_h(spacing)
     reference_target =
         spec.count === nothing ? uofx(spec.mapping_value, spec.rmax) : target_odd_count * spacing
     grid_max = max(reference_target + _BASIS_GRID_MARGIN * spacing, (lseed + _BASIS_GRID_MARGIN) * spacing)
@@ -364,7 +412,6 @@ function _build_radial_coefficients(spec)
     combined_base = hcat(odd_coefficients, even_clean)
     sampled_combined = sampled_seed
     position_combined = position_seed
-    integral_combined = seed_integrals
 
     if ninj > 0
         sampled_x = _xgaussian_sample_matrix(spec.xgaussians, xgrid)
@@ -372,7 +419,6 @@ function _build_radial_coefficients(spec)
         position_xx = sampled_x' * ((xgrid .* weights) .* sampled_x)
         position_combined = [position_seed position_sx; position_sx' position_xx]
         sampled_combined = hcat(sampled_seed, sampled_x)
-        integral_combined = vcat(seed_integrals, vec(sampled_x' * weights))
         combined_base = hcat(
             vcat(combined_base, zeros(Float64, ninj, size(combined_base, 2))),
             vcat(zeros(Float64, nseed, ninj), Matrix{Float64}(I, ninj, ninj)),
@@ -390,7 +436,29 @@ function _build_radial_coefficients(spec)
         spec.count === nothing ?
         target_odd_count + spec.odd_even_kmax + ninj :
         spec.count
-    return js, final_coefficients[:, 1:target_count], reference_centers_full[1:target_count]
+    return (
+        grid_h = grid_h,
+        grid_max = grid_max,
+        spacing = spacing,
+        seed = seed,
+        js = js,
+        xgaussians = copy(spec.xgaussians),
+        coefficient_full = final_coefficients[:, 1:target_count],
+        reference_center_data = collect(reference_centers_full[1:target_count]),
+    )
+end
+
+function _radial_overlap_deviation(data)
+    phi = (j::Int, x::Float64) -> data.seed(x - j * data.spacing)
+    xcheck, weights_check = _make_erf_grid(; h = data.grid_h / 2.0, rmax = data.grid_max)
+    _, _, sampled_seed = _seed_scalar_integrals(phi, data.js, xcheck, weights_check)
+    sampled_combined =
+        isempty(data.xgaussians) ?
+        sampled_seed :
+        hcat(sampled_seed, _xgaussian_sample_matrix(data.xgaussians, xcheck))
+    basis_values = sampled_combined * data.coefficient_full
+    overlap = basis_values' * (weights_check .* basis_values)
+    return norm(overlap - I, Inf)
 end
 
 function _boundary_primitive_layer(
@@ -729,8 +797,8 @@ end
 
 """
     build_basis(spec::UniformBasisSpec)
-    build_basis(spec::HalfLineBasisSpec)
-    build_basis(spec::RadialBasisSpec)
+    build_basis(spec::HalfLineBasisSpec; grid_h=nothing, refine_grid_h=true)
+    build_basis(spec::RadialBasisSpec; grid_h=nothing, refine_grid_h=true)
 
 Build the concrete basis described by `spec`.
 """
@@ -741,44 +809,78 @@ function build_basis(spec::UniformBasisSpec)
     return UniformBasis(spec, primitive_data, coefficient_matrix, center_data, integral_weight_data)
 end
 
-function build_basis(spec::HalfLineBasisSpec)
-    js, coefficients_seed, reference_center_data = _build_halfline_coefficients(spec)
+"""
+    build_basis(spec::HalfLineBasisSpec; grid_h=nothing, refine_grid_h=true)
+
+Build the concrete half-line basis described by `spec`.
+
+`grid_h` controls the internal construction-grid spacing used while
+orthonormalizing and localizing the basis. It is a build-time control, not part
+of `HalfLineBasisSpec`. When `refine_grid_h=true`, construction starts from the
+supplied or default `grid_h` and internally halves it until an overlap check on
+a finer reference grid is acceptable.
+"""
+function build_basis(spec::HalfLineBasisSpec; grid_h = nothing, refine_grid_h::Bool = true)
+    start_h = _basis_grid_h(spec.reference_spacing, grid_h)
+    data = _select_construction_data(
+        h -> _build_halfline_coefficients(spec; grid_h = h),
+        _halfline_overlap_deviation,
+        start_h;
+        refine_grid_h = refine_grid_h,
+    )
     primitive_data, coefficient_matrix = _boundary_primitive_layer(
-        js,
-        coefficients_seed,
+        data.js,
+        data.coefficient_seed,
         spec.family_value,
         spec.reference_spacing,
         spec.mapping_value,
     )
-    center_data = _physical_centers(reference_center_data, spec.mapping_value)
+    center_data = _physical_centers(data.reference_center_data, spec.mapping_value)
     integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
     return HalfLineBasis(
         spec,
         primitive_data,
         coefficient_matrix,
-        collect(reference_center_data),
+        data.reference_center_data,
         center_data,
         integral_weight_data,
     )
 end
 
-function build_basis(spec::RadialBasisSpec)
-    js, coefficients_full, reference_center_data = _build_radial_coefficients(spec)
+"""
+    build_basis(spec::RadialBasisSpec; grid_h=nothing, refine_grid_h=true)
+
+Build the concrete radial basis described by `spec`.
+
+`grid_h` controls the internal construction-grid spacing used while building
+and localizing the reference-coordinate basis. It is a build-time control, not
+part of `RadialBasisSpec`. When `refine_grid_h=true`, construction starts from
+the supplied or default `grid_h` and internally halves it until an overlap
+check on a finer reference grid is acceptable.
+"""
+function build_basis(spec::RadialBasisSpec; grid_h = nothing, refine_grid_h::Bool = true)
+    start_h = _basis_grid_h(spec.reference_spacing, grid_h)
+    data = _select_construction_data(
+        h -> _build_radial_coefficients(spec; grid_h = h),
+        _radial_overlap_deviation,
+        start_h;
+        refine_grid_h = refine_grid_h,
+    )
     primitive_data, coefficient_matrix = _radial_primitive_layer(
-        js,
-        coefficients_full,
+        data.js,
+        data.coefficient_full,
         spec.family_value,
         spec.reference_spacing,
         spec.xgaussians,
         spec.mapping_value,
     )
-    center_data = _physical_centers(reference_center_data, spec.mapping_value)
+    center_data = _physical_centers(data.reference_center_data, spec.mapping_value)
     integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
     return RadialBasis(
         spec,
         primitive_data,
         coefficient_matrix,
-        collect(reference_center_data),
+        data.reference_center_data,
         center_data,
         integral_weight_data,
     )

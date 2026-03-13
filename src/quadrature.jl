@@ -111,21 +111,18 @@ Return the physical-space quadrature weights of `grid`.
 quadrature_weights(grid::RadialQuadratureGrid) = grid.weight_data
 
 """
-    radial_quadrature(basis::RadialBasis; refine=8, rmax=nothing)
+    radial_quadrature(basis::RadialBasis; refine=8, rmax)
 
 Build a fine physical-space quadrature grid matched to `basis`.
+
+`rmax` is an explicit physical-space cutoff for the quadrature. Construction
+grids used while building the basis are separate internal objects and are not
+set by this API.
 """
 function radial_quadrature(basis::RadialBasis; refine::Int = 8, rmax = nothing)
-    cutoff =
-        if rmax === nothing
-            _, xhi = _basis_support_bounds(basis)
-            xhi
-        else
-            rmax_value = Float64(rmax)
-            rmax_value > 0.0 || throw(ArgumentError("radial_quadrature requires rmax > 0"))
-            rmax_value
-        end
-
+    rmax === nothing && throw(ArgumentError("radial_quadrature requires explicit rmax"))
+    cutoff = Float64(rmax)
+    cutoff > 0.0 || throw(ArgumentError("radial_quadrature requires rmax > 0"))
     points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
     return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
 end
@@ -215,10 +212,22 @@ function _halfline_diagnostics_grid(basis::HalfLineBasis; refine::Int = 8)
     return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
 end
 
+function _radial_diagnostics_grid(basis::RadialBasis; refine::Int = 8)
+    cutoff =
+        if basis.spec.rmax === nothing
+            _, xhi = _basis_support_bounds(basis)
+            xhi
+        else
+            basis.spec.rmax
+        end
+    points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
+    return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
+end
+
 function basis_diagnostics(basis::HalfLineBasis)
     return basis_diagnostics(basis, _halfline_diagnostics_grid(basis))
 end
 
 function basis_diagnostics(basis::RadialBasis)
-    return basis_diagnostics(basis, radial_quadrature(basis))
+    return basis_diagnostics(basis, _radial_diagnostics_grid(basis))
 end
