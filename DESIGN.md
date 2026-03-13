@@ -376,7 +376,6 @@ Approximation choices:
 ```julia
 abstract type AbstractDiagonalApproximation end
 
-NoDiagonalApproximation()
 IntegralDiagonal()
 ```
 
@@ -420,6 +419,10 @@ multipole(ops, L)
 
 ### Notes
 
+- For v0, `multipole_matrix` means the supported two-index IDA-style radial
+  multipole matrix. An exact non-diagonal electron-electron object is a
+  separate future API question and should not be folded into the same function
+  name now.
 - Use fields for the fixed matrices.
 - Use accessor functions for the angular-momentum-indexed pieces.
 - Avoid raw public `ops.Vcentr[ℓ]` / `ops.Veel[L]` style indexing in the high-level API.

@@ -2,8 +2,8 @@
 
 Gausslets.jl is a small library for localized gausslet function objects.
 
-This repository currently implements a narrow callable/basis/quadrature slice of
-the design:
+This repository currently implements a narrow callable/basis/quadrature/operator
+slice of the design:
 
 - callable primitive function objects
 - callable `Gausslet` objects built from exact Gaussian stencils
@@ -11,11 +11,14 @@ the design:
 - a shared basis-wide primitive layer via `primitives(basis)` and `stencil_matrix(basis)`
 - primitive contraction helpers
 - radial quadrature, moment centers, and modest basis diagnostics
+- radial one-body matrix builders
+- a two-index IDA-style radial `multipole_matrix`
+- a high-level `RadialAtomicOperators` bundle
 - one public stencil layer
 - coordinate mappings
 
-One-electron matrices, multipole matrices, and the high-level atomic operator
-bundle are planned but are not implemented in this pass.
+Exact four-index radial electron-electron APIs, PGDG, and downstream HF/DMRG
+layers are not implemented in this pass.
 
 ## Quick Start
 
@@ -134,7 +137,7 @@ The contraction helpers use the exact ordering returned by `primitives(basis)`.
 ## Radial Quadrature And Diagnostics
 
 ```julia
-grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
+grid = radial_quadrature(rb; refine = 24, rmax = 12.0)
 
 quadrature_points(grid)
 quadrature_weights(grid)
@@ -148,6 +151,24 @@ diag.D
 
 `RadialQuadratureGrid` is separate from the basis. It follows the same mapping
 as the radial basis, but is usually finer.
+
+## Radial Operators
+
+```julia
+ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+
+ops.overlap
+ops.kinetic
+ops.nuclear
+
+centrifugal(ops, 2)
+multipole(ops, 1)
+```
+
+The one-body matrices use the supplied quadrature grid directly. In this v0
+slice, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index
+IDA-style radial multipole matrices, not an exact four-index electron-electron
+object.
 
 ## Coordinate Mappings
 

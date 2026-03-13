@@ -3,6 +3,19 @@ using LinearAlgebra
 
 using Gausslets
 
+function _radial_operator_fixture(; refine = 8, rmax = 12.0)
+    rb = build_basis(RadialBasisSpec(:G10;
+        count = 6,
+        mapping = AsinhMapping(c = 0.15, s = 0.15),
+        reference_spacing = 1.0,
+        tails = 3,
+        odd_even_kmax = 2,
+        xgaussians = [XGaussian(alpha = 0.2)],
+    ))
+    grid = radial_quadrature(rb; refine = refine, rmax = rmax)
+    return rb, grid
+end
+
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)
@@ -228,17 +241,9 @@ end
 end
 
 @testset "Radial quadrature and diagnostics" begin
-    rb = build_basis(RadialBasisSpec(:G10;
-        count = 6,
-        mapping = AsinhMapping(c = 0.15, s = 0.15),
-        reference_spacing = 1.0,
-        tails = 3,
-        odd_even_kmax = 2,
-        xgaussians = [XGaussian(alpha = 0.2)],
-    ))
+    rb, grid = _radial_operator_fixture()
     @test_throws ArgumentError radial_quadrature(rb; refine = 8)
 
-    grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
     diag_rb = basis_diagnostics(rb, grid)
@@ -270,22 +275,75 @@ end
     @test isfinite(diag_hb.D)
 end
 
+@testset "Radial operator matrices" begin
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    points = quadrature_points(grid)
+    weights = quadrature_weights(grid)
+
+    overlap = overlap_matrix(rb, grid)
+    kinetic = kinetic_matrix(rb, grid)
+    nuclear = nuclear_matrix(rb, grid; Z = 2.0)
+    centr0 = centrifugal_matrix(rb, grid; l = 0)
+    centr2 = centrifugal_matrix(rb, grid; l = 2)
+    multipole0 = multipole_matrix(rb, grid; L = 0)
+    multipole1 = multipole_matrix(rb, grid; L = 1)
+
+    values = [rb[j](points[i]) for i in eachindex(points), j in 1:length(rb)]
+    wchi = vec(transpose(values) * weights)
+    kernel1 = [
+        weights[i] * weights[j] * min(points[i], points[j]) / max(points[i], points[j])^2
+        for i in eachindex(points), j in eachindex(points)
+    ]
+    multipole1_explicit =
+        Diagonal(1.0 ./ wchi) * transpose(values) * kernel1 * values * Diagonal(1.0 ./ wchi)
+
+    @test all(isfinite, overlap)
+    @test overlap ≈ transpose(overlap) atol = 1.0e-12 rtol = 1.0e-12
+    @test norm(overlap - I, Inf) ≤ 2.0e-3
+
+    @test all(isfinite, kinetic)
+    @test kinetic ≈ transpose(kinetic) atol = 1.0e-12 rtol = 1.0e-12
+
+    @test all(isfinite, nuclear)
+    @test nuclear ≈ transpose(nuclear) atol = 1.0e-12 rtol = 1.0e-12
+
+    @test all(isfinite, centr0)
+    @test centr0 ≈ zeros(Float64, length(rb), length(rb)) atol = 1.0e-12 rtol = 1.0e-12
+    @test all(isfinite, centr2)
+    @test centr2 ≈ transpose(centr2) atol = 1.0e-12 rtol = 1.0e-12
+    @test norm(centr2, Inf) > 1.0e-8
+
+    @test multipole0 isa Matrix{Float64}
+    @test all(isfinite, multipole0)
+    @test multipole0 ≈ transpose(multipole0) atol = 1.0e-12 rtol = 1.0e-12
+    @test all(isfinite, multipole1)
+    @test multipole1 ≈ transpose(multipole1) atol = 1.0e-12 rtol = 1.0e-12
+    @test multipole1 ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
+end
+
+@testset "Radial atomic operators" begin
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+
+    @test ops isa RadialAtomicOperators
+    @test ops.overlap ≈ overlap_matrix(rb, grid) atol = 1.0e-12 rtol = 1.0e-12
+    @test ops.kinetic ≈ kinetic_matrix(rb, grid) atol = 1.0e-12 rtol = 1.0e-12
+    @test ops.nuclear ≈ nuclear_matrix(rb, grid; Z = 2.0) atol = 1.0e-12 rtol = 1.0e-12
+    @test centrifugal(ops, 2) ≈ centrifugal_matrix(rb, grid; l = 2) atol = 1.0e-12 rtol = 1.0e-12
+    @test multipole(ops, 1) ≈ multipole_matrix(rb, grid; L = 1) atol = 1.0e-12 rtol = 1.0e-12
+    @test size(multipole(ops, 4)) == (length(rb), length(rb))
+    @test_throws BoundsError multipole(ops, 5)
+end
+
 @testset "README example slice" begin
-    rb = build_basis(RadialBasisSpec(:G10;
-        count = 6,
-        mapping = AsinhMapping(c = 0.15, s = 0.15),
-        reference_spacing = 1.0,
-        tails = 3,
-        odd_even_kmax = 2,
-        xgaussians = [XGaussian(alpha = 0.2)],
-    ))
+    rb, grid = _radial_operator_fixture(; refine = 24)
     rf = rb[2]
     primitive_data = primitives(rb)
     coefficient_matrix = stencil_matrix(rb)
     Amunu = Matrix{Float64}(I, length(primitive_data), length(primitive_data))
     A = contract_primitive_matrix(rb, Amunu)
-    grid = radial_quadrature(rb; refine = 8, rmax = 12.0)
     diag = basis_diagnostics(rb, grid)
+    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
 
     @test sum(coefficient_matrix[mu, 2] * primitive_data[mu](0.2) for mu in eachindex(primitive_data)) ≈
           rf(0.2) atol = 1.0e-12 rtol = 1.0e-12
@@ -294,4 +352,7 @@ end
     @test isfinite(diag.D)
     @test quadrature_points(grid)[end] >= center(rf)
     @test quadrature_weights(grid)[1] > 0.0
+    @test size(ops.overlap) == (length(rb), length(rb))
+    @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
+    @test size(multipole(ops, 1)) == (length(rb), length(rb))
 end

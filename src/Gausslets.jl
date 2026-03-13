@@ -7,6 +7,7 @@ export AbstractFunction1D,
        AbstractBasisFunction1D,
        AbstractCoordinateMapping,
        AbstractBasisSpec,
+       AbstractDiagonalApproximation,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -47,6 +48,16 @@ export AbstractFunction1D,
        quadrature_points,
        quadrature_weights,
        basis_diagnostics,
+       IntegralDiagonal,
+       overlap_matrix,
+       kinetic_matrix,
+       nuclear_matrix,
+       centrifugal_matrix,
+       multipole_matrix,
+       RadialAtomicOperators,
+       atomic_operators,
+       centrifugal,
+       multipole,
        coefficients,
        primitives,
        terms,
@@ -92,6 +103,14 @@ Placeholder abstract supertype for later basis-construction recipes.
 """
 abstract type AbstractBasisSpec end
 
+"""
+    AbstractDiagonalApproximation
+
+Abstract supertype for supported diagonal-approximation choices in the radial
+electron-electron operator layer.
+"""
+abstract type AbstractDiagonalApproximation end
+
 function value end
 function direct_value end
 function derivative end
@@ -116,6 +135,14 @@ function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
 function basis_diagnostics end
+function overlap_matrix end
+function kinetic_matrix end
+function nuclear_matrix end
+function centrifugal_matrix end
+function multipole_matrix end
+function atomic_operators end
+function centrifugal end
+function multipole end
 
 function coefficients end
 function primitives end
@@ -160,5 +187,6 @@ include("functions.jl")
 include("families.jl")
 include("bases.jl")
 include("quadrature.jl")
+include("operators.jl")
 
 end
