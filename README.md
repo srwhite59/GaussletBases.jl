@@ -7,11 +7,14 @@ This repository currently implements only the first narrow slice of the design:
 - callable primitive function objects
 - callable `Gausslet` objects built from exact Gaussian stencils
 - concrete uniform / half-line / radial basis specs and basis objects
+- a shared basis-wide primitive layer via `primitives(basis)` and `stencil_matrix(basis)`
+- primitive contraction helpers
+- radial quadrature, moment centers, and modest basis diagnostics
 - one public stencil layer
 - coordinate mappings
 
-Quadrature, diagnostics, primitive-space transforms, and operator bundles are
-planned but are not implemented in this pass.
+One-electron matrices, multipole matrices, and the high-level atomic operator
+bundle are planned but are not implemented in this pass.
 
 ## Quick Start
 
@@ -86,6 +89,50 @@ stencil(rf)
 The `count` constructor builds an exact number of radial basis functions. The
 `rmax` constructor chooses enough functions to cover approximately up to the
 requested range after mapping.
+
+## Inspect The Shared Primitive Layer
+
+```julia
+P = primitives(rb)
+C = stencil_matrix(rb)
+
+x = 0.2
+sum(C[mu, 2] * P[mu](x) for mu in eachindex(P))
+rf(x)
+```
+
+Rows of `C` follow `primitives(rb)`. Columns of `C` follow `rb[i]`.
+
+## Contract Primitive-Space Data
+
+```julia
+using LinearAlgebra
+
+Amunu = Matrix{Float64}(I, length(P), length(P))
+A = contract_primitive_matrix(rb, Amunu)
+
+size(A)
+```
+
+The contraction helpers use the exact ordering returned by `primitives(basis)`.
+
+## Radial Quadrature And Diagnostics
+
+```julia
+grid = radial_quadrature(rb; refine = 8)
+
+quadrature_points(grid)
+quadrature_weights(grid)
+
+moment_center(rf, grid)
+
+diag = basis_diagnostics(rb, grid)
+diag.overlap_error
+diag.D
+```
+
+`RadialQuadratureGrid` is separate from the basis. It follows the same mapping
+as the radial basis, but is usually finer.
 
 ## Coordinate Mappings
 

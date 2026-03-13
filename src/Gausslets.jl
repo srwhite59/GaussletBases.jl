@@ -28,8 +28,10 @@ export AbstractFunction1D,
        derivative,
        center,
        reference_center,
+       moment_center,
        integral_weight,
        stencil,
+       stencil_matrix,
        build_basis,
        basis_spec,
        family,
@@ -37,6 +39,14 @@ export AbstractFunction1D,
        centers,
        reference_centers,
        integral_weights,
+       contract_primitive_vector,
+       contract_primitive_diagonal,
+       contract_primitive_matrix,
+       RadialQuadratureGrid,
+       radial_quadrature,
+       quadrature_points,
+       quadrature_weights,
+       basis_diagnostics,
        coefficients,
        primitives,
        terms,
@@ -87,8 +97,10 @@ function direct_value end
 function derivative end
 function center end
 function reference_center end
+function moment_center end
 function integral_weight end
 function stencil end
+function stencil_matrix end
 function build_basis end
 
 function basis_spec end
@@ -97,6 +109,13 @@ function mapping end
 function centers end
 function reference_centers end
 function integral_weights end
+function contract_primitive_vector end
+function contract_primitive_diagonal end
+function contract_primitive_matrix end
+function radial_quadrature end
+function quadrature_points end
+function quadrature_weights end
+function basis_diagnostics end
 
 function coefficients end
 function primitives end
@@ -140,5 +159,6 @@ include("stencils.jl")
 include("functions.jl")
 include("families.jl")
 include("bases.jl")
+include("quadrature.jl")
 
 end

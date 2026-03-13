@@ -194,6 +194,8 @@ function _reference_bounds(f::XGaussian)
     return 0.0, span
 end
 
+_reference_bounds(f::Distorted) = _reference_bounds(f.primitive)
+
 function integral_weight(f::Distorted)
     ulo, uhi = _reference_bounds(f.primitive)
     xlo = xofu(f.mapping, ulo)

@@ -2,7 +2,6 @@ const _BASIS_GRID_SIGMA = 3.0
 const _BASIS_GRID_S0 = 6.5
 const _BASIS_GRID_MARGIN = 20.0
 const _BASIS_EIG_TOL = 1.0e-10
-const _BASIS_STENCIL_TOL = 1.0e-12
 
 _as_family(family_value::GaussletFamily) = family_value
 _as_family(family_value::Symbol) = GaussletFamily(family_value)
@@ -180,6 +179,39 @@ function _halfline_seed_primitive_layer(js::Vector{Int}, family_value::GaussletF
     return matrix, primitive_list
 end
 
+function _fullline_basis_primitive_layer(
+    center_data::Vector{Float64},
+    family_value::GaussletFamily,
+    spacing::Float64,
+)
+    full_coefficients = _full_family_coefficients(family_value.positive_coefficients)
+    radius = length(family_value.positive_coefficients) - 1
+    primitive_indices = collect((-radius):(3 * (length(center_data) - 1) + radius))
+    matrix = zeros(Float64, length(primitive_indices), length(center_data))
+    scale = 1.0 / sqrt(2.0 * pi * spacing)
+    stencil_coefficients = Float64[scale * coefficient for coefficient in full_coefficients]
+
+    for column in eachindex(center_data)
+        j = column - 1
+        row = 1
+        for offset in primitive_indices
+            local_offset = offset - 3 * j
+            if -radius <= local_offset <= radius
+                matrix[row, column] = stencil_coefficients[local_offset + radius + 1]
+            end
+            row += 1
+        end
+    end
+
+    primitive_spacing = spacing / 3.0
+    first_center = first(center_data)
+    primitive_list = AbstractPrimitiveFunction1D[
+        Gaussian(center = first_center + index * primitive_spacing, width = primitive_spacing)
+        for index in primitive_indices
+    ]
+    return primitive_list, matrix
+end
+
 function _with_mapping(primitives_ref::Vector{AbstractPrimitiveFunction1D}, mapping_value::AbstractCoordinateMapping)
     if _identity_mapping(mapping_value)
         return primitives_ref
@@ -187,27 +219,20 @@ function _with_mapping(primitives_ref::Vector{AbstractPrimitiveFunction1D}, mapp
     return AbstractPrimitiveFunction1D[Distorted(primitive, mapping_value) for primitive in primitives_ref]
 end
 
-function _stencil_from_column(
-    coefficients_column::AbstractVector{<:Real},
+function _shared_stencil_from_column(
+    coefficient_matrix::AbstractMatrix{Float64},
+    column::Integer,
     primitive_list::Vector{AbstractPrimitiveFunction1D},
 )
-    keep = findall(coefficient -> abs(coefficient) > _BASIS_STENCIL_TOL, coefficients_column)
-    if isempty(keep)
-        keep = [argmax(abs.(coefficients_column))]
-    end
-    return FunctionStencil(coefficients_column[keep], primitive_list[keep])
+    return FunctionStencil(view(coefficient_matrix, :, column), primitive_list)
 end
 
-function _integral_weights_from_stencils(stencils::Vector{FunctionStencil})
-    weights = Float64[]
-    for stencil_value in stencils
-        total = 0.0
-        for term in terms(stencil_value)
-            total += term.coefficient * integral_weight(term.primitive)
-        end
-        push!(weights, total)
-    end
-    return weights
+function _integral_weights_from_representation(
+    primitive_list::Vector{AbstractPrimitiveFunction1D},
+    coefficient_matrix::AbstractMatrix{Float64},
+)
+    primitive_weights = Float64[integral_weight(primitive) for primitive in primitive_list]
+    return vec(transpose(coefficient_matrix) * primitive_weights)
 end
 
 function _build_halfline_coefficients(spec)
@@ -368,7 +393,7 @@ function _build_radial_coefficients(spec)
     return js, final_coefficients[:, 1:target_count], reference_centers_full[1:target_count]
 end
 
-function _boundary_stencils(
+function _boundary_primitive_layer(
     js::Vector{Int},
     coefficients_seed::Matrix{Float64},
     family_value::GaussletFamily,
@@ -378,11 +403,10 @@ function _boundary_stencils(
     primitive_matrix, primitive_ref = _halfline_seed_primitive_layer(js, family_value, spacing)
     public_primitives = _with_mapping(primitive_ref, mapping_value)
     primitive_coefficients = primitive_matrix * coefficients_seed
-    return [_stencil_from_column(primitive_coefficients[:, column], public_primitives)
-            for column in 1:size(primitive_coefficients, 2)]
+    return public_primitives, primitive_coefficients
 end
 
-function _radial_stencils(
+function _radial_primitive_layer(
     js::Vector{Int},
     coefficients_full::Matrix{Float64},
     family_value::GaussletFamily,
@@ -404,8 +428,7 @@ function _radial_stencils(
     end
 
     public_primitives = _with_mapping(primitive_ref, mapping_value)
-    return [_stencil_from_column(radial_coefficients[:, column], public_primitives)
-            for column in 1:size(radial_coefficients, 2)]
+    return public_primitives, radial_coefficients
 end
 
 function _physical_centers(reference_center_data::Vector{Float64}, mapping_value::AbstractCoordinateMapping)
@@ -537,6 +560,8 @@ Concrete uniform full-line gausslet basis.
 """
 struct UniformBasis
     spec::UniformBasisSpec
+    primitive_data::Vector{AbstractPrimitiveFunction1D}
+    coefficient_matrix::Matrix{Float64}
     center_data::Vector{Float64}
     integral_weight_data::Vector{Float64}
 end
@@ -548,7 +573,8 @@ Concrete boundary-correct half-line gausslet basis.
 """
 struct HalfLineBasis{M <: AbstractCoordinateMapping}
     spec::HalfLineBasisSpec{M}
-    stencil_data::Vector{FunctionStencil}
+    primitive_data::Vector{AbstractPrimitiveFunction1D}
+    coefficient_matrix::Matrix{Float64}
     reference_center_data::Vector{Float64}
     center_data::Vector{Float64}
     integral_weight_data::Vector{Float64}
@@ -561,7 +587,8 @@ Concrete radial gausslet basis for the reduced radial function `u(r) = r R(r)`.
 """
 struct RadialBasis{M <: AbstractCoordinateMapping}
     spec::RadialBasisSpec{M}
-    stencil_data::Vector{FunctionStencil}
+    primitive_data::Vector{AbstractPrimitiveFunction1D}
+    coefficient_matrix::Matrix{Float64}
     reference_center_data::Vector{Float64}
     center_data::Vector{Float64}
     integral_weight_data::Vector{Float64}
@@ -587,9 +614,9 @@ struct RadialGausslet{B <: RadialBasis} <: AbstractBasisFunction1D
     index::Int
 end
 
-Base.length(basis::UniformBasis) = length(basis.center_data)
-Base.length(basis::HalfLineBasis) = length(basis.stencil_data)
-Base.length(basis::RadialBasis) = length(basis.stencil_data)
+Base.length(basis::UniformBasis) = size(basis.coefficient_matrix, 2)
+Base.length(basis::HalfLineBasis) = size(basis.coefficient_matrix, 2)
+Base.length(basis::RadialBasis) = size(basis.coefficient_matrix, 2)
 
 function Base.getindex(basis::UniformBasis, index::Integer)
     return Gausslet(basis.spec.family_value; center = basis.center_data[index], spacing = basis.spec.spacing)
@@ -622,8 +649,26 @@ integral_weights(basis::UniformBasis) = basis.integral_weight_data
 integral_weights(basis::HalfLineBasis) = basis.integral_weight_data
 integral_weights(basis::RadialBasis) = basis.integral_weight_data
 
-stencil(f::BoundaryGausslet) = f.basis.stencil_data[f.index]
-stencil(f::RadialGausslet) = f.basis.stencil_data[f.index]
+"""
+    primitives(basis)
+
+Return the ordered primitive function layer underlying `basis`.
+"""
+primitives(basis::UniformBasis) = basis.primitive_data
+primitives(basis::HalfLineBasis) = basis.primitive_data
+primitives(basis::RadialBasis) = basis.primitive_data
+
+"""
+    stencil_matrix(basis)
+
+Return the exact primitive-to-basis coefficient matrix for `basis`.
+"""
+stencil_matrix(basis::UniformBasis) = basis.coefficient_matrix
+stencil_matrix(basis::HalfLineBasis) = basis.coefficient_matrix
+stencil_matrix(basis::RadialBasis) = basis.coefficient_matrix
+
+stencil(f::BoundaryGausslet) = _shared_stencil_from_column(f.basis.coefficient_matrix, f.index, f.basis.primitive_data)
+stencil(f::RadialGausslet) = _shared_stencil_from_column(f.basis.coefficient_matrix, f.index, f.basis.primitive_data)
 
 center(f::BoundaryGausslet) = f.basis.center_data[f.index]
 center(f::RadialGausslet) = f.basis.center_data[f.index]
@@ -633,6 +678,44 @@ reference_center(f::RadialGausslet) = f.basis.reference_center_data[f.index]
 
 integral_weight(f::BoundaryGausslet) = f.basis.integral_weight_data[f.index]
 integral_weight(f::RadialGausslet) = f.basis.integral_weight_data[f.index]
+
+"""
+    contract_primitive_vector(basis, vmu)
+
+Contract a primitive-space vector into basis space.
+"""
+function contract_primitive_vector(basis, vmu::AbstractVector)
+    coefficient_matrix = stencil_matrix(basis)
+    length(vmu) == size(coefficient_matrix, 1) ||
+        throw(DimensionMismatch("primitive vector length does not match stencil_matrix(basis) rows"))
+    return coefficient_matrix' * vmu
+end
+
+"""
+    contract_primitive_diagonal(basis, dmu)
+
+Contract a primitive-space diagonal operator into basis space.
+"""
+function contract_primitive_diagonal(basis, dmu::AbstractVector)
+    coefficient_matrix = stencil_matrix(basis)
+    length(dmu) == size(coefficient_matrix, 1) ||
+        throw(DimensionMismatch("primitive diagonal length does not match stencil_matrix(basis) rows"))
+    return coefficient_matrix' * Diagonal(dmu) * coefficient_matrix
+end
+
+"""
+    contract_primitive_matrix(basis, Amunu)
+
+Contract a primitive-space operator matrix into basis space.
+"""
+function contract_primitive_matrix(basis, Amunu::AbstractMatrix)
+    coefficient_matrix = stencil_matrix(basis)
+    size(Amunu, 1) == size(coefficient_matrix, 1) ||
+        throw(DimensionMismatch("primitive matrix row count does not match stencil_matrix(basis) rows"))
+    size(Amunu, 2) == size(coefficient_matrix, 1) ||
+        throw(DimensionMismatch("primitive matrix column count does not match stencil_matrix(basis) rows"))
+    return coefficient_matrix' * Amunu * coefficient_matrix
+end
 
 function _uniform_centers(xmin::Float64, xmax::Float64, spacing::Float64)
     centers_out = Float64[]
@@ -653,22 +736,35 @@ Build the concrete basis described by `spec`.
 """
 function build_basis(spec::UniformBasisSpec)
     center_data = _uniform_centers(spec.xmin, spec.xmax, spec.spacing)
-    weight = integral_weight(Gausslet(spec.family_value; center = 0.0, spacing = spec.spacing))
-    integral_weight_data = fill(weight, length(center_data))
-    return UniformBasis(spec, center_data, integral_weight_data)
+    primitive_data, coefficient_matrix = _fullline_basis_primitive_layer(center_data, spec.family_value, spec.spacing)
+    integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
+    return UniformBasis(spec, primitive_data, coefficient_matrix, center_data, integral_weight_data)
 end
 
 function build_basis(spec::HalfLineBasisSpec)
     js, coefficients_seed, reference_center_data = _build_halfline_coefficients(spec)
-    stencil_data = _boundary_stencils(js, coefficients_seed, spec.family_value, spec.reference_spacing, spec.mapping_value)
+    primitive_data, coefficient_matrix = _boundary_primitive_layer(
+        js,
+        coefficients_seed,
+        spec.family_value,
+        spec.reference_spacing,
+        spec.mapping_value,
+    )
     center_data = _physical_centers(reference_center_data, spec.mapping_value)
-    integral_weight_data = _integral_weights_from_stencils(stencil_data)
-    return HalfLineBasis(spec, stencil_data, collect(reference_center_data), center_data, integral_weight_data)
+    integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
+    return HalfLineBasis(
+        spec,
+        primitive_data,
+        coefficient_matrix,
+        collect(reference_center_data),
+        center_data,
+        integral_weight_data,
+    )
 end
 
 function build_basis(spec::RadialBasisSpec)
     js, coefficients_full, reference_center_data = _build_radial_coefficients(spec)
-    stencil_data = _radial_stencils(
+    primitive_data, coefficient_matrix = _radial_primitive_layer(
         js,
         coefficients_full,
         spec.family_value,
@@ -677,6 +773,13 @@ function build_basis(spec::RadialBasisSpec)
         spec.mapping_value,
     )
     center_data = _physical_centers(reference_center_data, spec.mapping_value)
-    integral_weight_data = _integral_weights_from_stencils(stencil_data)
-    return RadialBasis(spec, stencil_data, collect(reference_center_data), center_data, integral_weight_data)
+    integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
+    return RadialBasis(
+        spec,
+        primitive_data,
+        coefficient_matrix,
+        collect(reference_center_data),
+        center_data,
+        integral_weight_data,
+    )
 end
