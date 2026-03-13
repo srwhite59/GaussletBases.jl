@@ -48,6 +48,8 @@ The mapping object is the forward coordinate map:
 
 ```julia
 map = AsinhMapping(c = 0.15, s = 0.15)
+# Equivalent:
+# map = AsinhMapping(a = 1.0, s = 0.15)
 
 u = map(3.0)
 x = xofu(map, u)
@@ -58,4 +60,7 @@ du2dx2(map, 3.0)
 ```
 
 `AsinhMapping` in this implementation includes the constant-density tail term
-controlled by `tail_spacing`.
+controlled by `tail_spacing`. Its public constructor meanings are:
+
+- `a` is the direct parameter in `asinh(x / a) / s`
+- `c` is the derived near-origin control with `c = a * s`

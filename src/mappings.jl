@@ -19,8 +19,14 @@ Forward mapping
 
     u(x) = x / tail_spacing + asinh(x / a) / s
 
-which includes the constant-density tail term controlled by `tail_spacing`.
-The keyword `c` is accepted as an alias for `a`.
+The linear tail term is built in for this mapping. The keyword `a` is the
+direct parameter in the asinh term. The keyword `c` is the derived near-origin
+control with
+
+    c = a * s
+
+so `AsinhMapping(c=c0, s=s0)` is equivalent to
+`AsinhMapping(a=c0 / s0, s=s0)`.
 """
 struct AsinhMapping <: AbstractCoordinateMapping
     a::Float64
@@ -46,7 +52,7 @@ function AsinhMapping(;
 )
     (c === nothing) == (a === nothing) &&
         throw(ArgumentError("provide exactly one of c or a"))
-    return AsinhMapping(c === nothing ? a : c, s, tail_spacing)
+    return AsinhMapping(c === nothing ? a : c / s, s, tail_spacing)
 end
 
 function uofx(mapping::AsinhMapping, x::Real)

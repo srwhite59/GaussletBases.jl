@@ -35,7 +35,41 @@ end
     @test map(x) == uofx(map, x)
     @test xofu(map, uofx(map, x)) ≈ x atol = 1.0e-12 rtol = 1.0e-12
     @test dudx(map, x) > 0.0
-    @test uofx(map, x) > asinh(x / 0.15) / 0.15
+    @test uofx(map, x) > asinh(x / 1.0) / 0.15
+end
+
+@testset "AsinhMapping constructor semantics" begin
+    c0 = 0.15
+    s0 = 0.15
+    t0 = 10.0
+    map_from_c = AsinhMapping(c = c0, s = s0, tail_spacing = t0)
+    map_from_a = AsinhMapping(a = c0 / s0, s = s0, tail_spacing = t0)
+
+    for x in (-2.0, -0.5, 0.0, 0.75, 3.0)
+        @test uofx(map_from_c, x) ≈ uofx(map_from_a, x) atol = 1.0e-12 rtol = 1.0e-12
+        @test dudx(map_from_c, x) ≈ dudx(map_from_a, x) atol = 1.0e-12 rtol = 1.0e-12
+        @test du2dx2(map_from_c, x) ≈ du2dx2(map_from_a, x) atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    @test xofu(map_from_c, 1.25) ≈ xofu(map_from_a, 1.25) atol = 1.0e-12 rtol = 1.0e-12
+    @test_throws ArgumentError AsinhMapping(c = c0, a = c0 / s0, s = s0)
+    @test_throws ArgumentError AsinhMapping(s = s0)
+end
+
+@testset "AsinhMapping keeps the linear tail term" begin
+    a0 = 1.0
+    s0 = 0.15
+    t0 = 10.0
+    x = 3.0
+    map = AsinhMapping(a = a0, s = s0, tail_spacing = t0)
+
+    @test uofx(map, x) ≈ x / t0 + asinh(x / a0) / s0 atol = 1.0e-12 rtol = 1.0e-12
+    @test dudx(map, x) ≈ 1.0 / t0 + 1.0 / (s0 * sqrt(x * x + a0 * a0)) atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "XGaussian center" begin
+    g = XGaussian(alpha = 0.23)
+    @test center(g) == 0.23
 end
 
 @testset "README example slice" begin

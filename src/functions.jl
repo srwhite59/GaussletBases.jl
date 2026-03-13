@@ -108,7 +108,8 @@ Near-origin half-line primitive
 
     x * exp(-0.5 * (x / alpha)^2)
 
-Values are zero for `x < 0`.
+Values are zero for `x < 0`. The public `center` is the peak location, so
+`center(XGaussian(alpha=a)) == a`.
 """
 struct XGaussian <: AbstractPrimitiveFunction1D
     alpha::Float64
@@ -126,7 +127,7 @@ function value(g::XGaussian, x::Real)
     return xval * exp(-0.5 * (xval / g.alpha)^2)
 end
 
-center(::XGaussian) = 0.0
+center(g::XGaussian) = g.alpha
 integral_weight(g::XGaussian) = g.alpha^2
 stencil(g::XGaussian) = FunctionStencil([1.0], AbstractPrimitiveFunction1D[g])
 
