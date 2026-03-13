@@ -1,24 +1,42 @@
 module Gausslets
 
+using LinearAlgebra
+
 export AbstractFunction1D,
        AbstractPrimitiveFunction1D,
        AbstractBasisFunction1D,
        AbstractCoordinateMapping,
        AbstractBasisSpec,
+       UniformBasisSpec,
+       HalfLineBasisSpec,
+       RadialBasisSpec,
        Gaussian,
        HalfLineGaussian,
        XGaussian,
        Distorted,
        GaussletFamily,
        Gausslet,
+       UniformBasis,
+       HalfLineBasis,
+       RadialBasis,
+       BoundaryGausslet,
+       RadialGausslet,
        StencilTerm,
        FunctionStencil,
        value,
        direct_value,
        derivative,
        center,
+       reference_center,
        integral_weight,
        stencil,
+       build_basis,
+       basis_spec,
+       family,
+       mapping,
+       centers,
+       reference_centers,
+       integral_weights,
        coefficients,
        primitives,
        terms,
@@ -68,8 +86,17 @@ function value end
 function direct_value end
 function derivative end
 function center end
+function reference_center end
 function integral_weight end
 function stencil end
+function build_basis end
+
+function basis_spec end
+function family end
+function mapping end
+function centers end
+function reference_centers end
+function integral_weights end
 
 function coefficients end
 function primitives end
@@ -89,8 +116,15 @@ direct_value(f::AbstractFunction1D, x::Real) = stencil(f)(x)
 function derivative(f::AbstractFunction1D, x::Real; order::Int = 1)
     order >= 0 || throw(ArgumentError("derivative order must be nonnegative"))
     order == 0 && return value(f, x)
-    throw(ArgumentError("derivative order $(order) is not implemented for $(typeof(f))"))
+    st = stencil(f)
+    total = 0.0
+    for i in eachindex(coefficients(st))
+        total += coefficients(st)[i] * derivative(primitives(st)[i], x; order = order)
+    end
+    return total
 end
+
+reference_center(f::AbstractFunction1D) = center(f)
 
 function integral_weight(f::AbstractFunction1D)
     st = stencil(f)
@@ -105,5 +139,6 @@ include("mappings.jl")
 include("stencils.jl")
 include("functions.jl")
 include("families.jl")
+include("bases.jl")
 
 end

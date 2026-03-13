@@ -2,6 +2,16 @@ using Test
 
 using Gausslets
 
+@testset "Uniform basis" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+
+    @test ub isa UniformBasis
+    @test length(ub) == 5
+    @test ub[2] isa Gausslet
+    @test centers(ub) == [center(ub[i]) for i in 1:length(ub)]
+    @test reference_centers(ub) == centers(ub)
+end
+
 @testset "Gausslet construction and evaluation" begin
     g = Gausslet(:G10; center = 0.0, spacing = 1.0)
     x = 0.2
@@ -72,7 +82,74 @@ end
     @test center(g) == 0.23
 end
 
+@testset "Half-line basis" begin
+    spec = HalfLineBasisSpec(:G10;
+        xmax = 4.0,
+        reference_spacing = 1.0,
+        tails = 3,
+        mapping = AsinhMapping(a = 1.0, s = 0.2),
+    )
+    hb = build_basis(spec)
+
+    @test hb isa HalfLineBasis
+    @test length(hb) >= 4
+    @test hb[1] isa BoundaryGausslet
+    @test hb[1](0.2) == value(hb[1], 0.2)
+    @test hb[1](-0.5) ≈ 0.0 atol = 1.0e-12
+    @test stencil(hb[2])(0.3) ≈ direct_value(hb[2], 0.3) atol = 1.0e-12 rtol = 1.0e-12
+    @test center(hb[2]) ≈ xofu(mapping(hb), reference_center(hb[2])) atol = 1.0e-12 rtol = 1.0e-12
+    @test issorted(reference_centers(hb))
+    @test issorted(centers(hb))
+end
+
+@testset "Radial basis with count" begin
+    spec = RadialBasisSpec(:G10;
+        count = 6,
+        mapping = AsinhMapping(a = 1.0, s = 0.2),
+        reference_spacing = 1.0,
+        tails = 3,
+        odd_even_kmax = 2,
+        xgaussians = [XGaussian(alpha = 0.2)],
+    )
+    rb = build_basis(spec)
+
+    @test rb isa RadialBasis
+    @test length(rb) == 6
+    @test rb[1] isa RadialGausslet
+    @test abs(rb[1](0.0)) ≤ 1.0e-8
+    @test issorted(reference_centers(rb))
+    @test issorted(centers(rb))
+    @test stencil(rb[2])(0.3) ≈ direct_value(rb[2], 0.3) atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "Radial basis with rmax" begin
+    spec = RadialBasisSpec(:G10;
+        rmax = 5.0,
+        mapping = AsinhMapping(c = 0.15, s = 0.15),
+        reference_spacing = 1.0,
+        tails = 3,
+        odd_even_kmax = 2,
+        xgaussians = XGaussian[],
+    )
+    rb = build_basis(spec)
+
+    @test rb isa RadialBasis
+    @test length(rb) >= 3
+end
+
 @testset "README example slice" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    @test ub[3] isa Gausslet
+
+    rb = build_basis(RadialBasisSpec(:G10;
+        count = 6,
+        mapping = AsinhMapping(c = 0.15, s = 0.15),
+        reference_spacing = 1.0,
+        tails = 3,
+        odd_even_kmax = 2,
+        xgaussians = [XGaussian(alpha = 0.2)],
+    ))
+
     g = Gausslet(:G10; center = 0.0, spacing = 1.0)
     st = stencil(g)
     map = AsinhMapping(c = 0.15, s = 0.15)
@@ -81,4 +158,6 @@ end
     @test g(x) == value(g, x)
     @test direct_value(g, x) == st(x)
     @test xofu(map, map(3.0)) ≈ 3.0 atol = 1.0e-12 rtol = 1.0e-12
+    @test rb[2](0.2) == value(rb[2], 0.2)
+    @test stencil(rb[2])(0.2) ≈ direct_value(rb[2], 0.2) atol = 1.0e-12 rtol = 1.0e-12
 end

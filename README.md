@@ -6,10 +6,11 @@ This repository currently implements only the first narrow slice of the design:
 
 - callable primitive function objects
 - callable `Gausslet` objects built from exact Gaussian stencils
+- concrete uniform / half-line / radial basis specs and basis objects
 - one public stencil layer
 - coordinate mappings
 
-Radial basis construction, quadrature, diagnostics, and operator bundles are
+Quadrature, diagnostics, primitive-space transforms, and operator bundles are
 planned but are not implemented in this pass.
 
 ## Quick Start
@@ -41,6 +42,50 @@ st(x)
 ```
 
 The stencil itself is callable and evaluates the same function as `g`.
+
+## Build A Uniform Basis
+
+```julia
+ub = build_basis(UniformBasisSpec(:G10;
+    xmin = -2.0,
+    xmax = 2.0,
+    spacing = 1.0,
+))
+
+length(ub)
+f = ub[3]
+
+f isa Gausslet
+center(f)
+centers(ub)
+```
+
+## Build A Radial Basis
+
+```julia
+map = AsinhMapping(c = 0.15, s = 0.15)
+
+rb = build_basis(RadialBasisSpec(:G10;
+    count = 6,
+    mapping = map,
+    reference_spacing = 1.0,
+    tails = 3,
+    odd_even_kmax = 2,
+    xgaussians = [XGaussian(alpha = 0.2)],
+))
+
+length(rb)
+rf = rb[2]
+
+rf(0.2)
+reference_center(rf)
+center(rf)
+stencil(rf)
+```
+
+The `count` constructor builds an exact number of radial basis functions. The
+`rmax` constructor chooses enough functions to cover approximately up to the
+requested range after mapping.
 
 ## Coordinate Mappings
 

@@ -1,5 +1,7 @@
 const _SQRT_TWO_PI = sqrt(2.0 * pi)
 
+_erfc(x::Real) = ccall((:erfc, Base.Math.libm), Cdouble, (Cdouble,), Float64(x))
+
 function _check_nonnegative_order(order::Int)
     order >= 0 || throw(ArgumentError("derivative order must be nonnegative"))
     return order
@@ -56,6 +58,7 @@ end
 
 value(g::Gaussian, x::Real) = exp(-0.5 * ((Float64(x) - g.center_value) / g.width)^2)
 center(g::Gaussian) = g.center_value
+reference_center(g::Gaussian) = g.center_value
 integral_weight(g::Gaussian) = g.width * _SQRT_TWO_PI
 stencil(g::Gaussian) = FunctionStencil([1.0], AbstractPrimitiveFunction1D[g])
 
@@ -87,11 +90,12 @@ function value(g::HalfLineGaussian, x::Real)
 end
 
 center(g::HalfLineGaussian) = g.center_value
+reference_center(g::HalfLineGaussian) = g.center_value
 stencil(g::HalfLineGaussian) = FunctionStencil([1.0], AbstractPrimitiveFunction1D[g])
 
 function integral_weight(g::HalfLineGaussian)
     scale = (0.0 - g.center_value) / (sqrt(2.0) * g.width)
-    return g.width * sqrt(pi / 2.0) * erfc(scale)
+    return g.width * sqrt(pi / 2.0) * _erfc(scale)
 end
 
 function derivative(g::HalfLineGaussian, x::Real; order::Int = 1)
@@ -128,6 +132,7 @@ function value(g::XGaussian, x::Real)
 end
 
 center(g::XGaussian) = g.alpha
+reference_center(g::XGaussian) = g.alpha
 integral_weight(g::XGaussian) = g.alpha^2
 stencil(g::XGaussian) = FunctionStencil([1.0], AbstractPrimitiveFunction1D[g])
 
@@ -157,6 +162,7 @@ function value(f::Distorted, x::Real)
 end
 
 center(f::Distorted) = xofu(f.mapping, center(f.primitive))
+reference_center(f::Distorted) = reference_center(f.primitive)
 stencil(f::Distorted) = FunctionStencil([1.0], AbstractPrimitiveFunction1D[f])
 
 function derivative(f::Distorted, x::Real; order::Int = 1)
