@@ -1,31 +1,58 @@
 # GaussletBases.jl
 
-GaussletBases.jl is a Julia package for working with gausslet basis functions.
-Gausslets are smooth, localized functions built from Gaussians. They are meant
-to combine some of the appealing features of localized basis sets and
-grid-like methods: locality, systematic placement, and a direct connection to
-simple underlying building blocks.
+GaussletBases.jl is for numerical electronic-structure work with gausslets:
+smooth, localized functions built from Gaussians. They are designed to live in
+the same scientific conversation as Gaussian bases, grids, and DVR-like ideas,
+while keeping locality and simple underlying building blocks in view.
 
-This package is currently focused on one-dimensional, half-line, and reduced
-radial gausslet bases. In practice, that makes it most useful for atomic and
-related electronic-structure experiments where one wants localized radial bases,
-explicit quadrature, and direct access to operator matrices.
+The current package is especially focused on radial gausslet bases for atomic
+and related problems. It lets you build mapped radial bases, explicit
+quadrature grids, and radial operator matrices, while still making it possible
+to inspect the Gaussian ingredients from which the basis functions are made.
 
-If you know Gaussian basis sets, grids, DVRs, Hartree-Fock, DMRG, PySCF, or
-block2, the rough idea is that gausslets sit in that neighborhood while keeping
-locality front and center.
+One reason gausslets attract interest is that they connect naturally to
+DVR-like thinking and to the possibility of accurate, nearly diagonal
+approximations to Coulomb interactions in many-body calculations. This package
+does not yet provide the full exact four-index electron-electron machinery, but
+it does provide the radial basis, quadrature, and operator tools that support
+that direction of work.
+
+## What Gausslets Are
+
+Gausslets are smooth localized functions assembled from Gaussian pieces. They
+are meant to give you a basis that is local in space, systematic in how it is
+placed, and still closely tied to simple analytic building blocks.
+
+In this package, gausslets appear in three closely related settings:
+
+- individual one-dimensional gausslet functions
+- half-line and radial basis sets built from them
+- radial operator constructions built on top of those bases
+
+## What This Package Is For
+
+Typical uses of GaussletBases.jl are:
+
+- building radial gausslet bases for atomic and related model problems
+- constructing explicit quadrature grids matched to those bases
+- forming radial one-body operator matrices
+- experimenting with localized bases for electronic-structure and many-body
+  workflows
 
 ## Why Gausslets Are Interesting
 
-Gausslets are interesting because they try to give you some of the good parts
-of two different worlds at once.
+Gausslets are interesting because they try to combine some useful features of
+localized basis sets and grid-based methods.
 
 - Like localized basis functions, they are spatially local and can be adapted to
   nonuniform coordinates.
 - Like grid-based approaches, they can be placed in a regular reference
   coordinate and paired naturally with quadrature.
-- Because they are built from Gaussian pieces, there is also a clean analytic
-  layer underneath the basis functions themselves.
+- Because they are built from Gaussian pieces, it is possible to inspect the
+  underlying Gaussian expansion directly when you need it.
+- Their connection to DVR-like ideas is part of why they are attractive for
+  many-body calculations, especially when one wants accurate nearly diagonal
+  approximations to Coulomb interactions.
 
 This is especially appealing in radial electronic-structure work, where one
 often wants basis functions that are local, well behaved near the origin, and
@@ -77,9 +104,9 @@ Runnable versions of this first example live in `examples/01_first_gausslet.jl`.
 
 ## A Small Radial Example
 
-The current package is most useful once you move to radial bases. The example
-below builds a small mapped radial basis for the reduced radial function
-`u(r) = r R(r)`, constructs an explicit quadrature grid, and checks a basic
+For most users, the natural next step is to build a small radial basis. The
+example below constructs a mapped basis for the reduced radial function
+`u(r) = r R(r)`, builds an explicit quadrature grid, and checks a simple
 diagnostic:
 
 ```julia
@@ -170,12 +197,13 @@ sum(C[mu, 2] * P[mu](0.2) for mu in eachindex(P))
 rb[2](0.2)
 ```
 
-This is mainly expert-facing machinery, but it is useful if you want direct
-access to the Gaussian pieces underlying the basis.
+This is useful if you want to work directly with the Gaussian pieces underlying
+the basis, rather than only with the higher-level basis functions.
 
-## Expert-Facing API Pointers
+## If You Want More Direct Control
 
-If you already know what you want to inspect, the main public entry points are:
+If you already know the parts of the package you want to inspect, these are the
+main public entry points:
 
 - individual functions: `Gausslet`, `Gaussian`, `HalfLineGaussian`,
   `XGaussian`, `Distorted`
@@ -194,7 +222,7 @@ If you already know what you want to inspect, the main public entry points are:
 
 ## What Is Deferred From v0
 
-The current release candidate does not yet include:
+The current v0 package does not yet include:
 
 - an exact non-diagonal electron-electron API
 - PGDG
