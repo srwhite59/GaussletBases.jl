@@ -1,0 +1,12 @@
+Manifest.toml
+*.jl.cov
+*.jl.*.cov
+*.ji
+deps/
+docs/build/
+build/
+.DS_Store
+*.swp
+*.swo
+tmp/
+temp/
