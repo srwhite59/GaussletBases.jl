@@ -184,6 +184,7 @@ end
 include("mappings.jl")
 include("stencils.jl")
 include("functions.jl")
+include("internal/wavelet_filters.jl")
 include("families.jl")
 include("bases.jl")
 include("quadrature.jl")

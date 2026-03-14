@@ -1,3 +1,37 @@
+#
+# Built-in gausslet family tables.
+#
+# The underlying ternary wavelet filters c_n_l_m are preserved separately in
+# `src/internal/wavelet_filters.jl`. Those tables are kept as internal reference
+# data and are not currently used by the runtime construction path, which works
+# directly with the pre-folded Gaussian cf-style family coefficients below.
+#
+# These arrays store the Gaussian coefficients for the canonical unit-spacing
+# gausslet families. The entries listed here are only the nonnegative-index
+# coefficients:
+#
+#     c[0], c[1], c[2], ...
+#
+# where index k means the Gaussian centered k primitive steps to the right of
+# the gausslet center on the standard primitive lattice. In this implementation
+# the primitive lattice spacing is one third of the user-facing gausslet
+# spacing, so a physical Gausslet with spacing s uses Gaussian centers at
+# x0 + (s / 3) * k.
+#
+# The canonical family functions are symmetric, so the negative-index
+# coefficients are identical:
+#
+#     c[-k] == c[k]
+#
+# The helper `_full_family_coefficients` reconstructs the full symmetric list
+# in the order
+#
+#     c[-R], ..., c[-1], c[0], c[1], ..., c[R]
+#
+# before the physical normalization factor is applied. The literal tables are
+# kept here in plain array form so the coefficients can be copied into another
+# language if needed.
+#
 const _G4_POSITIVE_COEFFICIENTS = [
     1.52094338883413275109172583,
     1.15198688060176029431495320,
@@ -474,6 +508,7 @@ end
 
 function _full_family_coefficients(positive_coefficients::AbstractVector{<:Real})
     length(positive_coefficients) > 0 || throw(ArgumentError("family coefficient list cannot be empty"))
+    # Recover the full symmetric coefficient list from the stored k >= 0 data.
     tail = reverse(positive_coefficients[2:end])
     return vcat(tail, collect(Float64, positive_coefficients))
 end
