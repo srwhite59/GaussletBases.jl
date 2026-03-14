@@ -1,7 +1,7 @@
 using Test
 using LinearAlgebra
 
-using Gausslets
+using GaussletBases
 
 const _PROJECT_ROOT = dirname(@__DIR__)
 
@@ -195,17 +195,17 @@ end
     )
     rb_fixed = build_basis(rspec; grid_h = 0.04, refine_grid_h = false)
     rb_refined = build_basis(rspec; grid_h = 0.04, refine_grid_h = true)
-    rdata_fixed = Gausslets._build_radial_coefficients(rspec; grid_h = 0.04)
-    rdata_refined = Gausslets._select_construction_data(
-        h -> Gausslets._build_radial_coefficients(rspec; grid_h = h),
-        Gausslets._radial_overlap_deviation,
+    rdata_fixed = GaussletBases._build_radial_coefficients(rspec; grid_h = 0.04)
+    rdata_refined = GaussletBases._select_construction_data(
+        h -> GaussletBases._build_radial_coefficients(rspec; grid_h = h),
+        GaussletBases._radial_overlap_deviation,
         0.04;
         refine_grid_h = true,
     )
 
     @test rb_fixed isa RadialBasis
     @test rb_refined isa RadialBasis
-    @test Gausslets._radial_overlap_deviation(rdata_refined) <= Gausslets._radial_overlap_deviation(rdata_fixed) + 1.0e-12
+    @test GaussletBases._radial_overlap_deviation(rdata_refined) <= GaussletBases._radial_overlap_deviation(rdata_fixed) + 1.0e-12
 
     hspec = HalfLineBasisSpec(:G10;
         xmax = 2.0,
@@ -215,17 +215,17 @@ end
     )
     hb_fixed = build_basis(hspec; grid_h = 0.04, refine_grid_h = false)
     hb_refined = build_basis(hspec; grid_h = 0.04, refine_grid_h = true)
-    hdata_fixed = Gausslets._build_halfline_coefficients(hspec; grid_h = 0.04)
-    hdata_refined = Gausslets._select_construction_data(
-        h -> Gausslets._build_halfline_coefficients(hspec; grid_h = h),
-        Gausslets._halfline_overlap_deviation,
+    hdata_fixed = GaussletBases._build_halfline_coefficients(hspec; grid_h = 0.04)
+    hdata_refined = GaussletBases._select_construction_data(
+        h -> GaussletBases._build_halfline_coefficients(hspec; grid_h = h),
+        GaussletBases._halfline_overlap_deviation,
         0.04;
         refine_grid_h = true,
     )
 
     @test hb_fixed isa HalfLineBasis
     @test hb_refined isa HalfLineBasis
-    @test Gausslets._halfline_overlap_deviation(hdata_refined) <= Gausslets._halfline_overlap_deviation(hdata_fixed) + 1.0e-12
+    @test GaussletBases._halfline_overlap_deviation(hdata_refined) <= GaussletBases._halfline_overlap_deviation(hdata_fixed) + 1.0e-12
 end
 
 @testset "Primitive contractions" begin

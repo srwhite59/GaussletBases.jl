@@ -1,4 +1,4 @@
-using Gausslets
+using GaussletBases
 
 map = AsinhMapping(c = 0.15, s = 0.15)
 spec = RadialBasisSpec(:G10;

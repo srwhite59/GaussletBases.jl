@@ -1,10 +1,10 @@
-# Gausslets.jl — Design Snapshot
+# GaussletBases.jl — Design Snapshot
 
 _Status: working draft based on current interface discussion. This file is meant to be the single evolving design note for the first public version._
 
 ## Goals
 
-Gausslets.jl should be a **small multilevel library** with a clear interface.
+GaussletBases.jl should be a **small multilevel library** with a clear interface.
 
 It should support three levels of use:
 
@@ -878,9 +878,9 @@ See also: `center`, `reference_center`, `basis_diagnostics`
 ## README opening draft
 
 ````markdown
-# Gausslets.jl
+# GaussletBases.jl
 
-Gausslets.jl is a small multilevel library for localized gausslet bases.
+GaussletBases.jl is a small multilevel library for localized gausslet bases.
 
 It supports three levels of use:
 
@@ -904,7 +904,7 @@ without turning the basis itself into a DVR.
 ### Make and inspect a gausslet
 
 ```julia
-using Gausslets
+using GaussletBases
 
 g = Gausslet(:G10; center = 0.0, spacing = 1.0)
 
@@ -978,7 +978,7 @@ workflows.
 
 ## Design
 
-Gausslets.jl uses callable function objects as the main low-level interface:
+GaussletBases.jl uses callable function objects as the main low-level interface:
 
 ```julia
 f(x)

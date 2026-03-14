@@ -1,4 +1,4 @@
-# Gausslets.jl v0 Status
+# GaussletBases.jl v0 Status
 
 ## Included in v0
 

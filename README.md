@@ -1,6 +1,6 @@
-# Gausslets.jl
+# GaussletBases.jl
 
-Gausslets.jl is a small library for localized gausslet function objects.
+GaussletBases.jl is a small library for localized gausslet function objects.
 
 This repository currently implements a narrow callable/basis/quadrature/operator
 slice of the design:
@@ -23,7 +23,7 @@ layers are deferred from v0.
 ## Quick Start
 
 ```julia
-using Gausslets
+using GaussletBases
 
 g = Gausslet(:G10; center = 0.0, spacing = 1.0)
 

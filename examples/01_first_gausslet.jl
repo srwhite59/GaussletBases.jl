@@ -1,4 +1,4 @@
-using Gausslets
+using GaussletBases
 
 g = Gausslet(:G10; center = 0.0, spacing = 1.0)
 x = 0.2
