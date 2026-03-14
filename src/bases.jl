@@ -682,6 +682,110 @@ struct RadialGausslet{B <: RadialBasis} <: AbstractBasisFunction1D
     index::Int
 end
 
+function Base.show(io::IO, spec::UniformBasisSpec)
+    print(
+        io,
+        "UniformBasisSpec(",
+        repr(spec.family_value.name),
+        "; xmin=",
+        spec.xmin,
+        ", xmax=",
+        spec.xmax,
+        ", spacing=",
+        spec.spacing,
+        ")",
+    )
+end
+
+function Base.show(io::IO, spec::HalfLineBasisSpec)
+    print(
+        io,
+        "HalfLineBasisSpec(",
+        repr(spec.family_value.name),
+        "; xmax=",
+        spec.xmax,
+        ", reference_spacing=",
+        spec.reference_spacing,
+        ", tails=",
+        spec.tails,
+        ", mapping=",
+    )
+    show(io, spec.mapping_value)
+    print(io, ")")
+end
+
+function Base.show(io::IO, spec::RadialBasisSpec)
+    print(io, "RadialBasisSpec(", repr(spec.family_value.name), "; ")
+    if spec.count === nothing
+        print(io, "rmax=", spec.rmax)
+    else
+        print(io, "count=", spec.count)
+    end
+    print(
+        io,
+        ", mapping=",
+    )
+    show(io, spec.mapping_value)
+    print(
+        io,
+        ", reference_spacing=",
+        spec.reference_spacing,
+        ", tails=",
+        spec.tails,
+        ", odd_even_kmax=",
+        spec.odd_even_kmax,
+        ", xgaussians=",
+        length(spec.xgaussians),
+        ")",
+    )
+end
+
+function Base.show(io::IO, basis::UniformBasis)
+    print(
+        io,
+        "UniformBasis(length=",
+        length(basis),
+        ", family=",
+        repr(basis.spec.family_value.name),
+        ", xmin=",
+        basis.spec.xmin,
+        ", xmax=",
+        basis.spec.xmax,
+        ", spacing=",
+        basis.spec.spacing,
+        ")",
+    )
+end
+
+function Base.show(io::IO, basis::HalfLineBasis)
+    print(
+        io,
+        "HalfLineBasis(length=",
+        length(basis),
+        ", family=",
+        repr(basis.spec.family_value.name),
+        ", xmax=",
+        basis.spec.xmax,
+        ", reference_spacing=",
+        basis.spec.reference_spacing,
+        ", mapping=",
+    )
+    show(io, basis.spec.mapping_value)
+    print(io, ")")
+end
+
+function Base.show(io::IO, basis::RadialBasis)
+    print(io, "RadialBasis(length=", length(basis), ", family=", repr(basis.spec.family_value.name), ", ")
+    if basis.spec.count === nothing
+        print(io, "rmax=", basis.spec.rmax)
+    else
+        print(io, "count=", basis.spec.count)
+    end
+    print(io, ", reference_spacing=", basis.spec.reference_spacing, ", mapping=")
+    show(io, basis.spec.mapping_value)
+    print(io, ")")
+end
+
 Base.length(basis::UniformBasis) = size(basis.coefficient_matrix, 2)
 Base.length(basis::HalfLineBasis) = size(basis.coefficient_matrix, 2)
 Base.length(basis::RadialBasis) = size(basis.coefficient_matrix, 2)

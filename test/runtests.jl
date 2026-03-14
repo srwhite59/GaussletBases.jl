@@ -3,6 +3,8 @@ using LinearAlgebra
 
 using Gausslets
 
+const _PROJECT_ROOT = dirname(@__DIR__)
+
 function _radial_operator_fixture(; refine = 8, rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
@@ -14,6 +16,12 @@ function _radial_operator_fixture(; refine = 8, rmax = 12.0)
     ))
     grid = radial_quadrature(rb; refine = refine, rmax = rmax)
     return rb, grid
+end
+
+function _run_example_script(name::AbstractString)
+    example_path = joinpath(_PROJECT_ROOT, "examples", name)
+    cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(_PROJECT_ROOT) $example_path`
+    return success(cmd)
 end
 
 @testset "Uniform basis" begin
@@ -333,6 +341,61 @@ end
     @test multipole(ops, 1) ≈ multipole_matrix(rb, grid; L = 1) atol = 1.0e-12 rtol = 1.0e-12
     @test size(multipole(ops, 4)) == (length(rb), length(rb))
     @test_throws BoundsError multipole(ops, 5)
+end
+
+@testset "REPL displays" begin
+    family = GaussletFamily(:G10)
+    map = AsinhMapping(c = 0.15, s = 0.15)
+    ub_spec = UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0)
+    hb_spec = HalfLineBasisSpec(:G10;
+        xmax = 4.0,
+        reference_spacing = 1.0,
+        tails = 3,
+        mapping = map,
+    )
+    rb_spec = RadialBasisSpec(:G10;
+        count = 6,
+        mapping = map,
+        reference_spacing = 1.0,
+        tails = 3,
+        odd_even_kmax = 2,
+        xgaussians = [XGaussian(alpha = 0.2)],
+    )
+    ub = build_basis(ub_spec)
+    hb = build_basis(hb_spec)
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+
+    @test sprint(show, family) == "GaussletFamily(:G10)"
+    @test occursin("AsinhMapping(", sprint(show, map))
+    @test occursin("UniformBasisSpec(", sprint(show, ub_spec))
+    @test occursin("HalfLineBasisSpec(", sprint(show, hb_spec))
+    @test occursin("RadialBasisSpec(", sprint(show, rb_spec))
+    @test occursin("UniformBasis(length=5", sprint(show, ub))
+    @test occursin("HalfLineBasis(length=", sprint(show, hb))
+    @test occursin("RadialBasis(length=6", sprint(show, rb))
+    @test occursin("RadialQuadratureGrid(length=", sprint(show, grid))
+    @test occursin("RadialAtomicOperators(size=(6, 6)", sprint(show, ops))
+end
+
+@testset "Documentation consistency" begin
+    design = read(joinpath(_PROJECT_ROOT, "DESIGN.md"), String)
+    readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
+    status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
+
+    @test !occursin("primitive_kinetic_matrix", design)
+    @test !occursin("CombinedMapping", design)
+    @test !occursin("ScaledMapping", design)
+    @test !occursin("NoDiagonalApproximation", design)
+    @test occursin("atomic_operators", readme)
+    @test occursin("examples/", readme)
+    @test occursin("Exact non-diagonal electron-electron API", status)
+end
+
+@testset "Example scripts" begin
+    @test _run_example_script("01_first_gausslet.jl")
+    @test _run_example_script("02_radial_basis.jl")
+    @test _run_example_script("03_radial_operators.jl")
 end
 
 @testset "README example slice" begin

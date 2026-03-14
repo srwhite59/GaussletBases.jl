@@ -99,7 +99,7 @@ abstract type AbstractCoordinateMapping end
 """
     AbstractBasisSpec
 
-Placeholder abstract supertype for later basis-construction recipes.
+Abstract supertype for public basis-construction recipes.
 """
 abstract type AbstractBasisSpec end
 
@@ -187,6 +187,7 @@ include("functions.jl")
 include("families.jl")
 include("bases.jl")
 include("quadrature.jl")
+include("diagnostics.jl")
 include("operators.jl")
 
 end

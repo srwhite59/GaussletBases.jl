@@ -140,9 +140,6 @@ AsinhMapping(; c::Real,
 AsinhMapping(; a::Real,
              s::Real,
              tail_spacing::Real = 10.0)
-
-CombinedMapping(maps...)
-ScaledMapping(map, scale)
 ```
 
 Mapping interface:
@@ -972,8 +969,8 @@ multipole(ops, 1)
 P = primitives(rb)
 C = stencil_matrix(rb)
 
-Aμν = primitive_kinetic_matrix(P)
-A   = contract_primitive_matrix(rb, Aμν)
+Amunu = Matrix{Float64}(I, length(P), length(P))
+A = contract_primitive_matrix(rb, Amunu)
 ```
 
 This is the expert entry point for analytic or mixed analytic/quadrature

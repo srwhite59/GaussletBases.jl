@@ -44,6 +44,19 @@ struct AsinhMapping <: AbstractCoordinateMapping
     end
 end
 
+function Base.show(io::IO, mapping::AsinhMapping)
+    print(
+        io,
+        "AsinhMapping(a=",
+        mapping.a,
+        ", s=",
+        mapping.s,
+        ", tail_spacing=",
+        mapping.tail_spacing,
+        ")",
+    )
+end
+
 function AsinhMapping(;
     c::Union{Nothing, Real} = nothing,
     a::Union{Nothing, Real} = nothing,

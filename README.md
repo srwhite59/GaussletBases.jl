@@ -18,7 +18,7 @@ slice of the design:
 - coordinate mappings
 
 Exact four-index radial electron-electron APIs, PGDG, and downstream HF/DMRG
-layers are not implemented in this pass.
+layers are deferred from v0.
 
 ## Quick Start
 
@@ -35,6 +35,8 @@ derivative(g, x)
 center(g)
 integral_weight(g)
 ```
+
+Runnable versions of the README flow are in `examples/`.
 
 ## Inspect The Exact Stencil
 
@@ -168,7 +170,8 @@ multipole(ops, 1)
 The one-body matrices use the supplied quadrature grid directly. In this v0
 slice, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index
 IDA-style radial multipole matrices, not an exact four-index electron-electron
-object.
+object. `atomic_operators(...; lmax)` precomputes `centrifugal(ops, l)` for
+`l = 0:lmax` and `multipole(ops, L)` for `L = 0:(2 * lmax)`.
 
 ## Coordinate Mappings
 

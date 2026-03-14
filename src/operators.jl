@@ -231,6 +231,21 @@ struct RadialAtomicOperators{A <: AbstractDiagonalApproximation}
     approximation::A
 end
 
+function Base.show(io::IO, ops::RadialAtomicOperators)
+    print(
+        io,
+        "RadialAtomicOperators(size=",
+        size(ops.overlap),
+        ", lmax=",
+        length(ops.centrifugal_data) - 1,
+        ", Lmax=",
+        length(ops.multipole_data) - 1,
+        ", approximation=",
+    )
+    show(io, ops.approximation)
+    print(io, ")")
+end
+
 """
     atomic_operators(basis::RadialBasis, grid::RadialQuadratureGrid;
                      Z,

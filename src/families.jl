@@ -492,6 +492,10 @@ struct GaussletFamily
     end
 end
 
+function Base.show(io::IO, family::GaussletFamily)
+    print(io, "GaussletFamily(", repr(family.name), ")")
+end
+
 """
     Gausslet(family; center=0.0, spacing=1.0)
 
