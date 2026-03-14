@@ -240,6 +240,16 @@ The repository currently includes these runnable examples:
 
 If you are new to the package, start with them in that order.
 
+## More documentation in this repository
+
+If you want a little more guidance than the README can comfortably hold, these two pages are the best next stops:
+
+* [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md)
+* [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)
+* [`docs/terminology.md`](docs/terminology.md)
+
+The first page is about parameter choices. The second is about the normal workflow of a first radial calculation. The third explains the small amount of package-specific vocabulary used in the code and docs.
+
 ## What is not in v0 yet
 
 The current release intentionally does not yet include:

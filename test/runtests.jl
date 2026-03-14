@@ -382,6 +382,8 @@ end
     design = read(joinpath(_PROJECT_ROOT, "DESIGN.md"), String)
     readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
     atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
+    radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
+    terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
     status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
 
     @test !occursin("primitive_kinetic_matrix", design)
@@ -391,9 +393,13 @@ end
     @test occursin("atomic_operators", readme)
     @test occursin("examples/04_hydrogen_ground_state.jl", readme)
     @test occursin("recommended_atomic_setup.md", readme)
+    @test occursin("first_radial_workflow.md", readme)
+    @test occursin("terminology.md", readme)
     @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
     @test occursin("s = 0.2", atomic_setup)
     @test occursin("odd_even_kmax = 6", atomic_setup)
+    @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
+    @test occursin("the basis is not the quadrature grid", terminology)
     @test !occursin("Gausslets.jl", readme)
     @test occursin("Exact non-diagonal electron-electron API", status)
 end
