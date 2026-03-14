@@ -1,79 +1,131 @@
 # GaussletBases.jl
 
-GaussletBases.jl is a small library for localized gausslet function objects.
+GaussletBases.jl is a Julia package for working with gausslet basis functions.
+Gausslets are smooth, localized functions built from Gaussians. They are meant
+to combine some of the appealing features of localized basis sets and
+grid-like methods: locality, systematic placement, and a direct connection to
+simple underlying building blocks.
 
-This repository currently implements a narrow callable/basis/quadrature/operator
-slice of the design:
+This package is currently focused on one-dimensional, half-line, and reduced
+radial gausslet bases. In practice, that makes it most useful for atomic and
+related electronic-structure experiments where one wants localized radial bases,
+explicit quadrature, and direct access to operator matrices.
 
-- callable primitive function objects
-- callable `Gausslet` objects built from exact Gaussian stencils
-- concrete uniform / half-line / radial basis specs and basis objects
-- a shared basis-wide primitive layer via `primitives(basis)` and `stencil_matrix(basis)`
-- primitive contraction helpers
-- radial quadrature, moment centers, and modest basis diagnostics
-- radial one-body matrix builders
-- a two-index IDA-style radial `multipole_matrix`
-- a high-level `RadialAtomicOperators` bundle
-- one public stencil layer
-- coordinate mappings
+If you know Gaussian basis sets, grids, DVRs, Hartree-Fock, DMRG, PySCF, or
+block2, the rough idea is that gausslets sit in that neighborhood while keeping
+locality front and center.
 
-Exact four-index radial electron-electron APIs, PGDG, and downstream HF/DMRG
-layers are deferred from v0.
+## Why Gausslets Are Interesting
 
-## Quick Start
+Gausslets are interesting because they try to give you some of the good parts
+of two different worlds at once.
+
+- Like localized basis functions, they are spatially local and can be adapted to
+  nonuniform coordinates.
+- Like grid-based approaches, they can be placed in a regular reference
+  coordinate and paired naturally with quadrature.
+- Because they are built from Gaussian pieces, there is also a clean analytic
+  layer underneath the basis functions themselves.
+
+This is especially appealing in radial electronic-structure work, where one
+often wants basis functions that are local, well behaved near the origin, and
+compatible with mapped coordinates and operator construction.
+
+## What v0 Currently Includes
+
+The current package lets you:
+
+- make and evaluate individual gausslets
+- build uniform, half-line, and radial gausslet bases
+- inspect the exact Gaussian expansion used to define a function
+- build explicit radial quadrature grids and basic diagnostics
+- construct radial overlap, kinetic, nuclear, centrifugal, and IDA-style
+  multipole matrices
+- bundle those radial operators into a `RadialAtomicOperators` object
+
+The package does not yet include an exact non-diagonal electron-electron API,
+PGDG, hybrid Gaussian extras, or Python / Fortran interop layers.
+
+## First Thing To Try
+
+If you just want to see what a gausslet looks like in code, start by making one
+gausslet and evaluating it at a point:
 
 ```julia
 using GaussletBases
 
 g = Gausslet(:G10; center = 0.0, spacing = 1.0)
-
 x = 0.2
+
 g(x)
 value(g, x)
-direct_value(g, x)
-derivative(g, x)
 center(g)
 integral_weight(g)
 ```
 
-Runnable versions of the README flow are in `examples/`.
-
-## Inspect The Exact Stencil
-
-`stencil(g)` returns the exact public Gaussian stencil of a gausslet.
+You can also inspect the exact Gaussian expansion used to build that function:
 
 ```julia
 st = stencil(g)
 
+st(x)
 coefficients(st)
 primitives(st)
-st(x)
 ```
 
-The stencil itself is callable and evaluates the same function as `g`.
+Runnable versions of this first example live in `examples/01_first_gausslet.jl`.
 
-## Build A Uniform Basis
+## A Small Radial Example
 
-```julia
-ub = build_basis(UniformBasisSpec(:G10;
-    xmin = -2.0,
-    xmax = 2.0,
-    spacing = 1.0,
-))
-
-length(ub)
-f = ub[3]
-
-f isa Gausslet
-center(f)
-centers(ub)
-```
-
-## Build A Radial Basis
+The current package is most useful once you move to radial bases. The example
+below builds a small mapped radial basis for the reduced radial function
+`u(r) = r R(r)`, constructs an explicit quadrature grid, and checks a basic
+diagnostic:
 
 ```julia
+using GaussletBases
+
 map = AsinhMapping(c = 0.15, s = 0.15)
+spec = RadialBasisSpec(:G10;
+    count = 6,
+    mapping = map,
+    reference_spacing = 1.0,
+    tails = 3,
+    odd_even_kmax = 2,
+    xgaussians = [XGaussian(alpha = 0.2)],
+)
 
+rb = build_basis(spec)
+f = rb[2]
+grid = radial_quadrature(rb; refine = 24, rmax = 12.0)
+diag = basis_diagnostics(rb, grid)
+
+f(0.2)
+reference_center(f)
+center(f)
+moment_center(f, grid)
+diag.overlap_error
+```
+
+Two practical points are worth noting here.
+
+- `radial_quadrature` takes an explicit `rmax`. That outer radius is a physical
+  modeling choice, not something the package guesses for you.
+- `build_basis(spec; grid_h = ..., refine_grid_h = ...)` lets you control the
+  internal construction grid if you need to, but most users can start with the
+  default adaptive behavior.
+
+Runnable version: `examples/02_radial_basis.jl`.
+
+## Construct Radial One-Body Operators
+
+Once you have a radial basis and an explicit quadrature grid, you can build the
+basic radial one-body operators used in atomic-style calculations:
+
+```julia
+using GaussletBases
+
+map = AsinhMapping(c = 0.15, s = 0.15)
 rb = build_basis(RadialBasisSpec(:G10;
     count = 6,
     mapping = map,
@@ -83,80 +135,7 @@ rb = build_basis(RadialBasisSpec(:G10;
     xgaussians = [XGaussian(alpha = 0.2)],
 ))
 
-length(rb)
-rf = rb[2]
-
-rf(0.2)
-reference_center(rf)
-center(rf)
-stencil(rf)
-```
-
-The `count` constructor builds an exact number of radial basis functions. The
-`rmax` constructor chooses enough functions to cover approximately up to the
-requested range after mapping.
-
-The internal construction-grid spacing is a build-time control on
-`build_basis`, not part of `RadialBasisSpec`. For example:
-
-```julia
-rb_fixed = build_basis(RadialBasisSpec(:G10;
-    count = 6,
-    mapping = map,
-    reference_spacing = 1.0,
-    tails = 3,
-    odd_even_kmax = 2,
-    xgaussians = [XGaussian(alpha = 0.2)],
-); grid_h = 0.01, refine_grid_h = false)
-```
-
-## Inspect The Shared Primitive Layer
-
-```julia
-P = primitives(rb)
-C = stencil_matrix(rb)
-
-x = 0.2
-sum(C[mu, 2] * P[mu](x) for mu in eachindex(P))
-rf(x)
-```
-
-Rows of `C` follow `primitives(rb)`. Columns of `C` follow `rb[i]`.
-
-## Contract Primitive-Space Data
-
-```julia
-using LinearAlgebra
-
-Amunu = Matrix{Float64}(I, length(P), length(P))
-A = contract_primitive_matrix(rb, Amunu)
-
-size(A)
-```
-
-The contraction helpers use the exact ordering returned by `primitives(basis)`.
-
-## Radial Quadrature And Diagnostics
-
-```julia
 grid = radial_quadrature(rb; refine = 24, rmax = 12.0)
-
-quadrature_points(grid)
-quadrature_weights(grid)
-
-moment_center(rf, grid)
-
-diag = basis_diagnostics(rb, grid)
-diag.overlap_error
-diag.D
-```
-
-`RadialQuadratureGrid` is separate from the basis. It follows the same mapping
-as the radial basis, but is usually finer.
-
-## Radial Operators
-
-```julia
 ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
 
 ops.overlap
@@ -167,31 +146,65 @@ centrifugal(ops, 2)
 multipole(ops, 1)
 ```
 
-The one-body matrices use the supplied quadrature grid directly. In this v0
-slice, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index
-IDA-style radial multipole matrices, not an exact four-index electron-electron
-object. `atomic_operators(...; lmax)` precomputes `centrifugal(ops, l)` for
-`l = 0:lmax` and `multipole(ops, L)` for `L = 0:(2 * lmax)`.
+In this v0 package, `multipole_matrix` and `multipole(ops, L)` mean the
+two-index radial multipole matrix used in the supported IDA-style workflow.
+They are not an exact four-index electron-electron object.
 
-## Coordinate Mappings
+Runnable version: `examples/03_radial_operators.jl`.
 
-The mapping object is the forward coordinate map:
+## A Note On Terminology
+
+One package-specific word appears often enough to explain once up front:
+
+- `stencil(f)` returns the exact Gaussian expansion used to build the function
+  `f`. In the code this expansion is called the stencil.
+
+For an entire basis, you can also inspect the common set of underlying building
+blocks and the coefficients that combine them into each basis function:
 
 ```julia
-map = AsinhMapping(c = 0.15, s = 0.15)
-# Equivalent:
-# map = AsinhMapping(a = 1.0, s = 0.15)
+P = primitives(rb)
+C = stencil_matrix(rb)
 
-u = map(3.0)
-x = xofu(map, u)
-
-uofx(map, 3.0)
-dudx(map, 3.0)
-du2dx2(map, 3.0)
+sum(C[mu, 2] * P[mu](0.2) for mu in eachindex(P))
+rb[2](0.2)
 ```
 
-`AsinhMapping` in this implementation includes the constant-density tail term
-controlled by `tail_spacing`. Its public constructor meanings are:
+This is mainly expert-facing machinery, but it is useful if you want direct
+access to the Gaussian pieces underlying the basis.
 
-- `a` is the direct parameter in `asinh(x / a) / s`
-- `c` is the derived near-origin control with `c = a * s`
+## Expert-Facing API Pointers
+
+If you already know what you want to inspect, the main public entry points are:
+
+- individual functions: `Gausslet`, `Gaussian`, `HalfLineGaussian`,
+  `XGaussian`, `Distorted`
+- basis recipes and bases: `UniformBasisSpec`, `HalfLineBasisSpec`,
+  `RadialBasisSpec`, `build_basis`, `basis[i]`, `centers`,
+  `reference_centers`, `integral_weights`
+- basis-wide primitive layer: `primitives(basis)`, `stencil_matrix(basis)`,
+  `contract_primitive_vector`, `contract_primitive_diagonal`,
+  `contract_primitive_matrix`
+- mappings: `IdentityMapping`, `AsinhMapping`, `uofx`, `xofu`, `dudx`,
+  `du2dx2`
+- quadrature and diagnostics: `radial_quadrature`, `moment_center`,
+  `basis_diagnostics`
+- radial operators: `overlap_matrix`, `kinetic_matrix`, `nuclear_matrix`,
+  `centrifugal_matrix`, `multipole_matrix`, `atomic_operators`
+
+## What Is Deferred From v0
+
+The current release candidate does not yet include:
+
+- an exact non-diagonal electron-electron API
+- PGDG
+- hybrid Gaussian extras
+- Python / Fortran interop or export layers
+
+## Examples
+
+Short runnable examples are provided in:
+
+- `examples/01_first_gausslet.jl`
+- `examples/02_radial_basis.jl`
+- `examples/03_radial_operators.jl`
