@@ -381,6 +381,7 @@ end
 @testset "Documentation consistency" begin
     design = read(joinpath(_PROJECT_ROOT, "DESIGN.md"), String)
     readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
+    atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
     status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
 
     @test !occursin("primitive_kinetic_matrix", design)
@@ -388,7 +389,12 @@ end
     @test !occursin("ScaledMapping", design)
     @test !occursin("NoDiagonalApproximation", design)
     @test occursin("atomic_operators", readme)
-    @test occursin("examples/", readme)
+    @test occursin("examples/04_hydrogen_ground_state.jl", readme)
+    @test occursin("recommended_atomic_setup.md", readme)
+    @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
+    @test occursin("s = 0.2", atomic_setup)
+    @test occursin("odd_even_kmax = 6", atomic_setup)
+    @test !occursin("Gausslets.jl", readme)
     @test occursin("Exact non-diagonal electron-electron API", status)
 end
 
@@ -396,25 +402,43 @@ end
     @test _run_example_script("01_first_gausslet.jl")
     @test _run_example_script("02_radial_basis.jl")
     @test _run_example_script("03_radial_operators.jl")
+    @test _run_example_script("04_hydrogen_ground_state.jl")
 end
 
 @testset "README example slice" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
-    rf = rb[2]
+    Z = 1.0
+    s = 0.2
+    map = AsinhMapping(c = s / (2Z), s = s)
+    rb = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = map,
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 6,
+        xgaussians = XGaussian[],
+    ))
+    f = rb[4]
+    grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
     primitive_data = primitives(rb)
     coefficient_matrix = stencil_matrix(rb)
-    Amunu = Matrix{Float64}(I, length(primitive_data), length(primitive_data))
-    A = contract_primitive_matrix(rb, Amunu)
     diag = basis_diagnostics(rb, grid)
+    S = overlap_matrix(rb, grid)
+    H = kinetic_matrix(rb, grid) +
+        nuclear_matrix(rb, grid; Z = Z) +
+        centrifugal_matrix(rb, grid; l = 0)
+    eig = eigen(Hermitian(H), Hermitian(S))
+    E0 = minimum(real(eig.values))
     ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
 
-    @test sum(coefficient_matrix[mu, 2] * primitive_data[mu](0.2) for mu in eachindex(primitive_data)) ≈
-          rf(0.2) atol = 1.0e-12 rtol = 1.0e-12
-    @test size(A) == (length(rb), length(rb))
-    @test isfinite(moment_center(rf, grid))
+    @test sum(coefficient_matrix[mu, 4] * primitive_data[mu](0.3) for mu in eachindex(primitive_data)) ≈
+          f(0.3) atol = 1.0e-12 rtol = 1.0e-12
+    @test isfinite(moment_center(f, grid))
+    @test isfinite(diag.overlap_error)
     @test isfinite(diag.D)
-    @test quadrature_points(grid)[end] >= center(rf)
+    @test quadrature_points(grid)[end] >= center(f)
     @test quadrature_weights(grid)[1] > 0.0
+    @test isfinite(E0)
+    @test E0 < 0.0
     @test size(ops.overlap) == (length(rb), length(rb))
     @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
     @test size(multipole(ops, 1)) == (length(rb), length(rb))
