@@ -1,37 +1,50 @@
 # GaussletBases.jl
 
-GaussletBases.jl is for numerical electronic-structure work with gausslets:
-smooth, localized functions built from Gaussians. They are designed to live in
-the same scientific conversation as Gaussian bases, grids, and DVR-like ideas,
-while keeping locality and simple underlying building blocks in view.
+GaussletBases.jl is a Julia package for radial and one-dimensional gausslet
+bases in numerical electronic-structure calculations.
 
-The current package is especially focused on radial gausslet bases for atomic
-and related problems. It lets you build mapped radial bases, explicit
-quadrature grids, and radial operator matrices, while still making it possible
-to inspect the Gaussian ingredients from which the basis functions are made.
+Gausslets are orthonormal, infinitely smooth, highly localized functions built
+as sums of Gaussians. When laid out on a regular reference grid, they also
+satisfy moment conditions that make them integrate low-order polynomials like
+delta functions centered on the grid points. That combination—orthogonality,
+smoothness, locality, quadrature behavior, and an explicit Gaussian
+representation—is what makes gausslets distinct. The key benefit is that they
+allow the use of accurate two-index two-electron interactions, rather than the
+usual expensive four-index form.
 
-The gausslet approach was introduced in 2017 and
-developed further in later work on multisliced, hybrid gausslet/Gaussian, and
-nested gausslet bases.
+For 3D, ordinary gausslets use products of 1D functions along the coordinate axes, f(x) g(y) h(z).
+The most recent development in gausslets is the introduction of radial
+gausslets for atomic and related problems, and this package is built around
+that development.  For ordinary gausslet bases, most integration for Hamiltonian
+terms can be done analytically. For radial gausslets, an explicit quadrature
+grid is currently a better choice, and GaussletBases.jl lets you construct
+coordinate-mapped radial gausslet bases, build explicit radial quadrature
+grids, and form radial operator matrices. It also keeps the exact Gaussian
+expansion of each function accessible, so you can inspect the primitive
+Gaussian layer directly when you need it.  In addition it allows the
+construction and use of ordinary gausslets, but currently without Hamiltonian
+generation.
 
-One reason gausslets attract interest is that they connect naturally to
-DVR-like thinking and to the possibility of accurate, nearly diagonal
-approximations to Coulomb interactions in many-body calculations. This package
-does not yet provide the full exact four-index electron-electron machinery, but
-it does provide the radial basis, quadrature, and operator tools that support
-that direction of work.
+Gausslets were introduced in 2017 and developed further in later work on
+multisliced gausslets, hybrid gausslet/Gaussian bases, and nested gausslet
+bases. A short list of references appears at the end of this README.
 
 ## What Gausslets Are
 
-Gausslets are smooth localized functions assembled from Gaussian pieces. They
-are meant to give you a basis that is local in space, systematic in how it is
-placed, and still closely tied to simple analytic building blocks.
+Gausslets are wavelet-like basis functions represented exactly as linear
+combinations of Gaussians. In practice, that means you get several useful
+things at once:
+
+- an orthonormal basis with strong spatial locality
+- infinite smoothness, rather than piecewise or cusp-like behavior
+- moment properties that support delta-function-like quadrature behavior
+- direct access to the underlying Gaussian expansion
 
 In this package, gausslets appear in three closely related settings:
 
 - individual one-dimensional gausslet functions
 - half-line and radial basis sets built from them
-- radial operator constructions built on top of those bases
+- radial quadrature and operator constructions built on top of those bases
 
 ## What This Package Is For
 
@@ -39,28 +52,27 @@ Typical uses of GaussletBases.jl are:
 
 - building radial gausslet bases for atomic and related model problems
 - constructing explicit quadrature grids matched to those bases
-- forming radial one-body operator matrices
+- forming radial overlap, kinetic, nuclear, centrifugal, and multipole matrices
+- inspecting the Gaussian stencil behind a basis function or an entire basis
 - experimenting with localized bases for electronic-structure and many-body
   workflows
 
 ## Why Gausslets Are Interesting
 
-Gausslets are interesting because they try to combine some useful features of
-localized basis sets and grid-based methods.
+Gausslets are interesting because they combine properties that usually do not
+come together in one basis.
 
-- Like localized basis functions, they are spatially local and can be adapted to
-  nonuniform coordinates.
-- Like grid-based approaches, they can be placed in a regular reference
-  coordinate and paired naturally with quadrature.
-- Because they are built from Gaussian pieces, it is possible to inspect the
-  underlying Gaussian expansion directly when you need it.
-- Their connection to DVR-like ideas is part of why they are attractive for
-  many-body calculations, especially when one wants accurate nearly diagonal
-  approximations to Coulomb interactions.
+- They are orthonormal and highly local at the same time.
+- They are infinitely smooth.
+- Their moment conditions make quadrature and diagonal approximations natural.
+- Because they are built from Gaussian pieces, there is an explicit analytic
+  layer underneath the basis.
+- In many-body settings, these features make accurate diagonal
+  approximations to Coulomb interactions possible.
 
-This is especially appealing in radial electronic-structure work, where one
-often wants basis functions that are local, well behaved near the origin, and
-compatible with mapped coordinates and operator construction.
+This is especially useful in electronic-structure work, where one wants
+localized basis functions, controlled mapped coordinates, explicit quadrature,
+and direct access to operator matrices.
 
 ## What v0 Currently Includes
 
@@ -71,11 +83,11 @@ The current package lets you:
 - inspect the exact Gaussian expansion used to define a function
 - build explicit radial quadrature grids and basic diagnostics
 - construct radial overlap, kinetic, nuclear, centrifugal, and IDA-style
-  multipole matrices
+  two-index multipole matrices
 - bundle those radial operators into a `RadialAtomicOperators` object
 
-The package does not yet include an exact non-diagonal electron-electron API,
-PGDG, hybrid Gaussian extras, or Python / Fortran interop layers.
+The present v0 scope is intentionally centered on the radial basis,
+quadrature, and operator layer.
 
 ## First Thing To Try
 
@@ -177,9 +189,8 @@ centrifugal(ops, 2)
 multipole(ops, 1)
 ```
 
-In this v0 package, `multipole_matrix` and `multipole(ops, L)` mean the
-two-index radial multipole matrix used in the supported IDA-style workflow.
-They are not an exact four-index electron-electron object.
+In this package, `multipole_matrix` and `multipole(ops, L)` refer to the
+supported two-index radial multipole matrices used in the IDA-style workflow.
 
 Runnable version: `examples/03_radial_operators.jl`.
 
@@ -226,11 +237,10 @@ main public entry points:
 
 ## What Is Deferred From v0
 
-The current v0 package does not yet include:
+Features deferred from the current v0 package include:
 
-- an exact non-diagonal electron-electron API
-- PGDG
-- hybrid Gaussian extras
+- pure Gaussian distorted gausslet (PGDG) extensions
+- hybrid gausslet/Gaussian extras beyond the present radial layer
 - Python / Fortran interop or export layers
 
 ## Examples
@@ -246,13 +256,13 @@ Short runnable examples are provided in:
 For the scientific background on gausslets and related basis constructions, see:
 
 - Steven R. White, *Hybrid grid/basis set discretizations of the Schrödinger equation*, J. Chem. Phys. **147**, 244102 (2017). [https://doi.org/10.1063/1.5007066](https://doi.org/10.1063/1.5007066)
-  Original introduction of gausslets, including their construction and the diagonal approximation for two-electron Coulomb terms.
+  Original introduction of gausslets: orthogonal, infinitely smooth, local, polynomially complete functions built from sums of Gaussians, together with diagonal approximations for two-electron Coulomb terms.
 
 - Steven R. White and E. Miles Stoudenmire, *Multisliced gausslet basis sets for electronic structure*, Phys. Rev. B **99**, 081110 (2019). [https://doi.org/10.1103/PhysRevB.99.081110](https://doi.org/10.1103/PhysRevB.99.081110)
   Extends gausslets to efficient three-dimensional electronic-structure calculations using multislicing.
 
 - Yiheng Qiu and Steven R. White, *Hybrid gausslet/Gaussian basis sets*, J. Chem. Phys. **155**, 184107 (2021). [https://doi.org/10.1063/5.0068887](https://doi.org/10.1063/5.0068887)
-  Introduces hybrid bases combining gausslets with standard Gaussian functions to improve near-nuclear accuracy.
+  Introduces hybrid bases combining gausslets with standard Gaussian functions to improve near-nuclear accuracy while preserving orthonormality and the diagonal two-electron structure.
 
 - Steven R. White and Michael J. Lindsey, *Nested gausslet basis sets*, J. Chem. Phys. **159**, 234112 (2023). [https://doi.org/10.1063/5.0180092](https://doi.org/10.1063/5.0180092)
-  Introduces nested gausslet constructions, pure Gaussian distorted gausslet bases, and related extensions for larger-Z atoms and higher accuracy.
+  Introduces nested gausslet constructions and related extensions, and clarifies the relation between completeness, orthogonality, zero-moment conditions, and diagonal structure.
