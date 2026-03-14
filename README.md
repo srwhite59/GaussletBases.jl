@@ -10,6 +10,10 @@ and related problems. It lets you build mapped radial bases, explicit
 quadrature grids, and radial operator matrices, while still making it possible
 to inspect the Gaussian ingredients from which the basis functions are made.
 
+The gausslet approach was introduced in 2017 and
+developed further in later work on multisliced, hybrid gausslet/Gaussian, and
+nested gausslet bases.
+
 One reason gausslets attract interest is that they connect naturally to
 DVR-like thinking and to the possibility of accurate, nearly diagonal
 approximations to Coulomb interactions in many-body calculations. This package
@@ -236,3 +240,19 @@ Short runnable examples are provided in:
 - `examples/01_first_gausslet.jl`
 - `examples/02_radial_basis.jl`
 - `examples/03_radial_operators.jl`
+
+## Background and References
+
+For the scientific background on gausslets and related basis constructions, see:
+
+- Steven R. White, *Hybrid grid/basis set discretizations of the Schrödinger equation*, J. Chem. Phys. **147**, 244102 (2017). [https://doi.org/10.1063/1.5007066](https://doi.org/10.1063/1.5007066)
+  Original introduction of gausslets, including their construction and the diagonal approximation for two-electron Coulomb terms.
+
+- Steven R. White and E. Miles Stoudenmire, *Multisliced gausslet basis sets for electronic structure*, Phys. Rev. B **99**, 081110 (2019). [https://doi.org/10.1103/PhysRevB.99.081110](https://doi.org/10.1103/PhysRevB.99.081110)
+  Extends gausslets to efficient three-dimensional electronic-structure calculations using multislicing.
+
+- Yiheng Qiu and Steven R. White, *Hybrid gausslet/Gaussian basis sets*, J. Chem. Phys. **155**, 184107 (2021). [https://doi.org/10.1063/5.0068887](https://doi.org/10.1063/5.0068887)
+  Introduces hybrid bases combining gausslets with standard Gaussian functions to improve near-nuclear accuracy.
+
+- Steven R. White and Michael J. Lindsey, *Nested gausslet basis sets*, J. Chem. Phys. **159**, 234112 (2023). [https://doi.org/10.1063/5.0180092](https://doi.org/10.1063/5.0180092)
+  Introduces nested gausslet constructions, pure Gaussian distorted gausslet bases, and related extensions for larger-Z atoms and higher accuracy.
