@@ -352,6 +352,30 @@ end
     @test rep.basis_matrices.position ≈ _midpoint_reference_position_matrix(ub) atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Basis partitions" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    rep = basis_representation(ub)
+    partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
+    overlap = rep.basis_matrices.overlap
+    kinetic = rep.basis_matrices.kinetic
+
+    assigned = sort!(vcat([box_indices(partition, i) for i in 1:length(boxes(partition))]...))
+    @test assigned == collect(1:length(ub))
+    @test length(unique(assigned)) == length(ub)
+
+    assembled = zeros(Float64, length(ub), length(ub))
+    for i in 1:length(boxes(partition))
+        for j in 1:length(boxes(partition))
+            assembled[box_indices(partition, i), box_indices(partition, j)] .=
+                box_coupling(overlap, partition, i, j)
+        end
+    end
+
+    @test assembled ≈ overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test box_block(rep, partition, :overlap, 1) ≈ overlap[1:2, 1:2] atol = 1.0e-12 rtol = 1.0e-12
+    @test box_coupling(rep, partition, :kinetic, 1, 2) ≈ kinetic[1:2, 3:3] atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -529,6 +553,7 @@ end
     rb, grid = _radial_operator_fixture(; refine = 24)
     ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
     rep = basis_representation(ub)
+    partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -541,6 +566,8 @@ end
     @test occursin("RadialQuadratureGrid(length=", sprint(show, grid))
     @test occursin("RadialAtomicOperators(size=(6, 6)", sprint(show, ops))
     @test occursin("BasisRepresentation1D(kind=:uniform", sprint(show, rep))
+    @test occursin("BasisPartition1D(nbasis=5, nboxes=3)", sprint(show, partition))
+    @test occursin("BasisBox1D(index=1", sprint(show, boxes(partition)[1]))
 end
 
 @testset "Documentation consistency" begin
@@ -574,9 +601,11 @@ end
     @test occursin("accuracy = :medium", radial_workflow)
     @test occursin("PrimitiveSet1D", primitive_layer_note)
     @test occursin("BasisRepresentation1D", primitive_layer_note)
+    @test occursin("BasisPartition1D", primitive_layer_note)
     @test occursin("primitive_set(basis)", primitive_layer_note)
     @test occursin("position_matrix(set::PrimitiveSet1D)", primitive_layer_note)
     @test occursin("basis_representation(basis; operators = (:overlap, :position, :kinetic))", primitive_layer_note)
+    @test occursin("basis_partition(basis, edges)", primitive_layer_note)
     @test occursin("analytic path", primitive_layer_note)
     @test occursin("numerical path", primitive_layer_note)
     @test occursin("the basis is not the quadrature grid", terminology)
@@ -595,6 +624,7 @@ end
     @test _run_example_script("06_basis_contraction.jl")
     @test _run_example_script("07_position_contraction.jl")
     @test _run_example_script("08_basis_representation.jl")
+    @test _run_example_script("09_basis_partition.jl")
 end
 
 @testset "README example slice" begin

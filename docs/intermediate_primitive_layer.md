@@ -36,6 +36,14 @@ matrix, and a small chosen operator set at both the primitive and basis levels.
 It is meant for downstream Julia consumers, not yet for a permanent file
 format.
 
+The next small grouping layer that can sit above that representation is:
+
+- `BasisPartition1D`
+- `BasisBox1D`
+
+This is only a 1D interval-box partition over existing basis-function centers.
+It is not yet a nested generation algorithm.
+
 ## Minimal public API in this slice
 
 This Stage-2 proof slice adds:
@@ -165,6 +173,36 @@ representation.basis_matrices.kinetic
 This stays deliberately in-memory. It does not define a disk format, and it
 does not commit the package to a broad long-term export schema yet.
 
+## Small 1D grouping layer
+
+The first box abstraction is intentionally simple:
+
+- take an existing basis or `BasisRepresentation1D`
+- partition basis functions by their physical-space centers
+- expose box membership and box-level matrix blocks
+
+The public entry points are:
+
+- `basis_partition(basis, edges)`
+- `basis_partition(representation, edges)`
+- `box_indices(partition, i)`
+- `box_block(matrix, partition, i)`
+- `box_coupling(matrix, partition, i, j)`
+
+and the same block/coupling calls also work directly on a representation plus
+an operator name:
+
+```julia
+partition = basis_partition(representation, [-2.5, -0.5, 0.5, 2.5])
+
+box_indices(partition, 1)
+box_block(representation, partition, :overlap, 1)
+box_coupling(representation, partition, :kinetic, 1, 2)
+```
+
+This is meant as a generic downstream grouping/indexing layer. It does not yet
+encode hierarchical shells, nested refinement, or molecule-specific logic.
+
 ## Metadata versus live computation
 
 `BasisMetadata1D` stores the structural data needed by downstream consumers:
@@ -191,6 +229,6 @@ purpose of this slice is only to prove that:
 - matrix builders can sit above that layer
 - analytic and numerical evaluation can share one public interface
 
-After adding `position_matrix(set)`, this layer now looks strong enough to
-carry one more small export-oriented or ordinary-gausslet-facing consumer
-before any shell or box abstraction is introduced.
+After adding `BasisRepresentation1D` and the first simple `BasisPartition1D`
+layer, this shared structure now looks stable enough for a later hierarchical
+refinement step without yet committing to the historical nested machinery.

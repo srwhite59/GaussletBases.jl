@@ -11,6 +11,8 @@ export AbstractFunction1D,
        PrimitiveSet1D,
        BasisMetadata1D,
        BasisRepresentation1D,
+       BasisBox1D,
+       BasisPartition1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -39,7 +41,12 @@ export AbstractFunction1D,
        build_basis,
        basis_metadata,
        basis_representation,
+       basis_partition,
        primitive_set,
+       boxes,
+       box_indices,
+       box_block,
+       box_coupling,
        basis_spec,
        family,
        mapping,
@@ -130,7 +137,12 @@ function stencil_matrix end
 function build_basis end
 function basis_metadata end
 function basis_representation end
+function basis_partition end
 function primitive_set end
+function boxes end
+function box_indices end
+function box_block end
+function box_coupling end
 
 function basis_spec end
 function family end
@@ -200,6 +212,7 @@ include("families.jl")
 include("bases.jl")
 include("quadrature.jl")
 include("primitive_sets.jl")
+include("partitions.jl")
 include("diagnostics.jl")
 include("operators.jl")
 
