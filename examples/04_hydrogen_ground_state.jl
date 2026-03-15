@@ -15,7 +15,7 @@ rb = build_basis(RadialBasisSpec(:G10;
     xgaussians = XGaussian[],
 ))
 
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 
 S = overlap_matrix(rb, grid)
 H = kinetic_matrix(rb, grid) +

@@ -349,8 +349,8 @@ contract_primitive_matrix(basis, Aμν)  == C' * Aμν * C
 RadialQuadratureGrid(points, weights; mapping = nothing)
 
 radial_quadrature(basis::RadialBasis;
-                  refine::Int = 8,
-                  rmax)
+                  refine = nothing,
+                  quadrature_rmax = nothing)
 
 quadrature_points(grid)
 quadrature_weights(grid)
@@ -361,8 +361,9 @@ quadrature_weights(grid)
 - Radial quadrature is a separate object from the radial basis.
 - The quadrature grid follows the same mapping as the basis but is usually finer.
 - This is not a DVR basis.
-- `refine` is the quadrature refinement relative to the reference-coordinate basis spacing.
-- `rmax` is an explicit physical-space cutoff chosen for the system/problem.
+- The default call should choose a conservative quadrature cutoff and a default starting resolution automatically.
+- `refine` is an optional starting refinement hint relative to the reference-coordinate basis spacing.
+- `quadrature_rmax` is an optional explicit physical-space cutoff override for expert use.
 
 ---
 
@@ -808,7 +809,7 @@ Base.getindex(basis, i::Integer)
 
 ```julia
 """
-    radial_quadrature(basis::RadialBasis; refine=8, rmax)
+    radial_quadrature(basis::RadialBasis; refine=nothing, quadrature_rmax=nothing)
 
 Build a fine quadrature grid matched to a radial basis.
 
@@ -819,10 +820,14 @@ separate control knob from basis size.
 Keyword arguments
 =================
 - `refine`:
-  relative refinement factor on the uniform reference coordinate.
-  `refine = 8` means roughly eight quadrature subintervals per basis spacing.
-- `rmax`:
-  required physical-space cutoff for the quadrature grid.
+  optional starting refinement factor on the uniform reference coordinate.
+  `refine = 8` means roughly eight quadrature subintervals per basis spacing
+  before any internal refinement.
+- `quadrature_rmax`:
+  optional explicit physical-space cutoff override for the quadrature grid.
+
+With no keywords, the routine should choose a conservative cutoff and starting
+resolution from the basis itself.
 
 Use this grid for:
 - one-body radial integrals (`overlap`, `kinetic`, `nuclear`, `centrifugal`)
@@ -943,7 +948,7 @@ f(0.3)
 center(f)
 reference_center(f)
 
-grid = radial_quadrature(rb; refine = 8, rmax = 20.0)
+grid = radial_quadrature(rb)
 
 moment_center(f, grid)
 basis_diagnostics(rb, grid)
@@ -1007,7 +1012,7 @@ For radial work, basis and quadrature are separate objects:
 
 ```julia
 rb   = build_basis(spec)
-grid = radial_quadrature(rb; rmax = 20.0)
+grid = radial_quadrature(rb)
 ```
 
 ## Scope of v0

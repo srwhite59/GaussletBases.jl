@@ -12,8 +12,8 @@ spec = RadialBasisSpec(:G10;
 
 rb = build_basis(spec)
 f = rb[2]
-grid = radial_quadrature(rb; refine = 24, rmax = 12.0)
-diag = basis_diagnostics(rb, grid)
+grid = radial_quadrature(rb)
+diag = basis_diagnostics(rb)
 
 println(rb)
 println("basis length: ", length(rb))

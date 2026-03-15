@@ -121,16 +121,20 @@ f(0.3)
 reference_center(f)
 center(f)
 
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 
 moment_center(f, grid)
 
-diag = basis_diagnostics(rb, grid)
+diag = basis_diagnostics(rb)
 diag.overlap_error
 diag.D
 ```
 
+Here `basis_diagnostics(rb)` chooses its own conservative integration grid internally, so it is a good default check while you are learning the basis.
+
 The basis and the quadrature grid are separate on purpose. The basis is the compact variational object you expand in. The quadrature grid is the finer grid used to evaluate radial integrals accurately.
+
+For most users, `radial_quadrature(rb)` is the right starting point. It chooses a conservative cutoff and starting resolution automatically. The optional `quadrature_rmax` and `refine` keywords are there mainly for manual control and benchmarking.
 
 ## Hydrogen ground-state example
 
@@ -160,7 +164,7 @@ rb = build_basis(RadialBasisSpec(:G10;
     xgaussians = XGaussian[],
 ))
 
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 
 S = overlap_matrix(rb, grid)
 H = kinetic_matrix(rb, grid) +

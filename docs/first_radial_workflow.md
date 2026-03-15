@@ -60,27 +60,31 @@ The basis and the quadrature grid are separate in this package, on purpose.
 The basis is the compact set of functions you expand in. The quadrature grid is the finer grid you use to evaluate radial integrals accurately.
 
 ```julia
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 ```
 
 Here:
 
 * `rb` is the radial basis
-* `refine = 24` asks for a fairly fine quadrature grid
-* `rmax = 30.0` says how far out in physical radius the quadrature should go
+* the package chooses a conservative quadrature cutoff automatically
+* the package also chooses a default starting resolution automatically
 
 In many grid-based methods, the basis and the integration grid are tied together. In GaussletBases they are intentionally separate. That is one of the main ideas behind the package.
+
+If you later want manual control, the advanced keywords are `quadrature_rmax` and `refine`.
 
 ## 3. Check the basis diagnostics
 
 Before doing anything more ambitious, it is a good habit to inspect the diagnostics.
 
 ```julia
-diag = basis_diagnostics(rb, grid)
+diag = basis_diagnostics(rb)
 
 diag.overlap_error
 diag.D
 ```
+
+Here `basis_diagnostics(rb)` chooses its own conservative integration grid internally. That is usually the best first diagnostic path.
 
 Two especially useful quantities are:
 
@@ -146,7 +150,7 @@ rb = build_basis(RadialBasisSpec(:G10;
     xgaussians = XGaussian[],
 ))
 
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 
 S = overlap_matrix(rb, grid)
 H = kinetic_matrix(rb, grid) +
@@ -229,9 +233,9 @@ A very small basis may be fine for testing that code runs, but not for a serious
 
 You do not need `stencil(f)` to start doing calculations. It is there when you want to inspect the exact Gaussian expansion behind a function.
 
-### Choosing `rmax` too small
+### Choosing a cutoff that is too small
 
-If the tail of the state matters and `rmax` is too small, the calculation will look worse for a physical reason, not because the basis idea failed.
+If the tail of the state matters and the basis `rmax` or an explicit `quadrature_rmax` is too small, the calculation will look worse for a physical reason, not because the basis idea failed.
 
 ## 10. Where to go next
 

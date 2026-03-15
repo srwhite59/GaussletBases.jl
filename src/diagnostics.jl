@@ -29,6 +29,10 @@ end
     basis_diagnostics(basis, grid)
 
 Return a small diagnostics summary for `basis`.
+
+The one-argument form chooses its own integration grid. For radial bases, that
+grid is intentionally conservative so the default diagnostics are less likely
+to be dominated by outer-tail truncation.
 """
 function basis_diagnostics(basis, grid)
     return _basis_diagnostics_from_points_weights(basis, quadrature_points(grid), quadrature_weights(grid))
@@ -47,15 +51,8 @@ function _halfline_diagnostics_grid(basis::HalfLineBasis; refine::Int = 8)
 end
 
 function _radial_diagnostics_grid(basis::RadialBasis; refine::Int = 8)
-    cutoff =
-        if basis.spec.rmax === nothing
-            _, xhi = _basis_support_bounds(basis)
-            xhi
-        else
-            basis.spec.rmax
-        end
-    points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
-    return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
+    cutoff = _radial_quadrature_tail_bound(basis)
+    return radial_quadrature(basis; refine = refine, quadrature_rmax = cutoff)
 end
 
 function basis_diagnostics(basis::HalfLineBasis)

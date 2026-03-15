@@ -1,3 +1,9 @@
+const _QUADRATURE_GRID_SIGMA = 3.0
+const _QUADRATURE_GRID_S0 = 6.5
+const _QUADRATURE_DEFAULT_REFINE = 8
+const _QUADRATURE_OVERLAP_TOL = 1.0e-6
+const _QUADRATURE_MAXITER = 5
+
 function _primitive_physical_bounds(primitive::Gaussian)
     return _reference_bounds(primitive)
 end
@@ -26,6 +32,11 @@ function _basis_support_bounds(basis)
     return minimum(lowers), maximum(uppers)
 end
 
+function _radial_quadrature_tail_bound(basis::RadialBasis)
+    _, xhi = _basis_support_bounds(basis)
+    return xhi
+end
+
 function _make_midpoint_grid(xmin::Float64, xmax::Float64, h::Float64)
     xmax > xmin || throw(ArgumentError("grid upper bound must exceed lower bound"))
     h > 0.0 || throw(ArgumentError("grid spacing must be positive"))
@@ -52,13 +63,15 @@ function _make_physical_erf_grid(
     reference_spacing::Float64,
     cutoff::Float64;
     refine::Int,
+    sigma::Real = _QUADRATURE_GRID_SIGMA,
+    s0::Real = _QUADRATURE_GRID_S0,
 )
     refine > 0 || throw(ArgumentError("refine must be positive"))
     cutoff > 0.0 || throw(ArgumentError("quadrature cutoff must be positive"))
 
     h = reference_spacing / refine
     reference_cutoff = _identity_mapping(mapping_value) ? cutoff : uofx(mapping_value, cutoff)
-    reference_points, reference_weights = _make_erf_grid(; h = h, rmax = reference_cutoff)
+    reference_points, reference_weights = _make_erf_grid(; h = h, rmax = reference_cutoff, sigma = sigma, s0 = s0)
 
     physical_points = Float64[]
     physical_weights = Float64[]
@@ -121,20 +134,86 @@ Return the physical-space quadrature weights of `grid`.
 quadrature_weights(grid::RadialQuadratureGrid) = grid.weight_data
 
 """
-    radial_quadrature(basis::RadialBasis; refine=8, rmax)
+    radial_quadrature(basis::RadialBasis; refine=nothing, quadrature_rmax=nothing)
 
 Build a fine physical-space quadrature grid matched to `basis`.
 
-`rmax` is an explicit physical-space cutoff for the quadrature. Construction
-grids used while building the basis are separate internal objects and are not
-set by this API.
+With no keywords, the routine chooses a conservative quadrature cutoff from the
+basis itself and uses a default starting resolution. Construction grids used
+while building the basis are separate internal objects and are not set by this
+API.
+
+`refine` is an optional starting resolution hint. `quadrature_rmax` is an
+optional explicit physical-space cutoff override for expert use. If an explicit
+cutoff is too short to cover the basis tails, the routine warns rather than
+silently reporting good overlap on a truncated grid.
 """
-function radial_quadrature(basis::RadialBasis; refine::Int = 8, rmax = nothing)
-    rmax === nothing && throw(ArgumentError("radial_quadrature requires explicit rmax"))
-    cutoff = Float64(rmax)
-    cutoff > 0.0 || throw(ArgumentError("radial_quadrature requires rmax > 0"))
-    points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
-    return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
+function radial_quadrature(
+    basis::RadialBasis;
+    refine = nothing,
+    quadrature_rmax = nothing,
+    rmax = nothing,
+)
+    quadrature_rmax === nothing || rmax === nothing ||
+        throw(ArgumentError("provide at most one of quadrature_rmax or rmax"))
+
+    refine_value =
+        if refine === nothing
+            _QUADRATURE_DEFAULT_REFINE
+        elseif refine isa Integer
+            Int(refine)
+        else
+            throw(ArgumentError("radial_quadrature requires refine to be an integer or nothing"))
+        end
+    refine_value > 0 || throw(ArgumentError("radial_quadrature requires refine > 0"))
+
+    tail_bound = _radial_quadrature_tail_bound(basis)
+    cutoff_input = quadrature_rmax === nothing ? rmax : quadrature_rmax
+    cutoff = cutoff_input === nothing ? tail_bound : Float64(cutoff_input)
+    cutoff > 0.0 || throw(ArgumentError("radial_quadrature requires quadrature_rmax > 0"))
+    explicit_cutoff = cutoff_input !== nothing
+
+    refine_try = refine_value
+    best_grid = nothing
+    best_error = Inf
+    best_refine = refine_value
+    for _ in 1:_QUADRATURE_MAXITER
+        grid = _radial_quadrature_grid(basis, cutoff; refine = refine_try)
+        error = _basis_overlap_error_from_points_weights(
+            basis,
+            quadrature_points(grid),
+            quadrature_weights(grid),
+        )
+        if error < best_error
+            best_grid = grid
+            best_error = error
+            best_refine = refine_try
+        end
+        error <= _QUADRATURE_OVERLAP_TOL && return grid
+        refine_try *= 2
+    end
+
+    if best_error > _QUADRATURE_OVERLAP_TOL
+        if explicit_cutoff && cutoff < tail_bound
+            @warn(
+                "radial_quadrature did not reach the internal overlap target; the requested quadrature_rmax may be truncating basis tails",
+                refine_start = refine_value,
+                best_refine = best_refine,
+                best_overlap_error = best_error,
+                requested_quadrature_rmax = cutoff,
+                conservative_tail_bound = tail_bound,
+            )
+        else
+            @warn(
+                "radial_quadrature did not reach the internal overlap target",
+                refine_start = refine_value,
+                best_refine = best_refine,
+                best_overlap_error = best_error,
+                used_quadrature_rmax = cutoff,
+            )
+        end
+    end
+    return best_grid
 end
 
 function _moment_center_from_points_weights(
@@ -172,4 +251,23 @@ end
 function _basis_values_matrix(basis, points::AbstractVector{Float64})
     primitive_values = _primitive_sample_matrix(primitives(basis), points)
     return primitive_values * stencil_matrix(basis)
+end
+
+function _basis_overlap_error_from_points_weights(
+    basis,
+    points::AbstractVector{Float64},
+    weights::AbstractVector{Float64},
+)
+    values = _basis_values_matrix(basis, points)
+    overlap = transpose(values) * (weights .* values)
+    return norm(overlap - I, Inf)
+end
+
+function _radial_quadrature_grid(
+    basis::RadialBasis,
+    cutoff::Float64;
+    refine::Int,
+)
+    points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
+    return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
 end

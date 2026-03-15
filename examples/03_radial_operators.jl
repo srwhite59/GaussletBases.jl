@@ -9,7 +9,7 @@ rb = build_basis(RadialBasisSpec(:G10;
     odd_even_kmax = 2,
     xgaussians = [XGaussian(alpha = 0.2)],
 ))
-grid = radial_quadrature(rb; refine = 24, rmax = 12.0)
+grid = radial_quadrature(rb)
 ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
 
 println(ops)

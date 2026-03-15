@@ -5,7 +5,7 @@ using GaussletBases
 
 const _PROJECT_ROOT = dirname(@__DIR__)
 
-function _radial_operator_fixture(; refine = 8, rmax = 12.0)
+function _radial_operator_fixture(; refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
         mapping = AsinhMapping(c = 0.15, s = 0.15),
@@ -14,7 +14,7 @@ function _radial_operator_fixture(; refine = 8, rmax = 12.0)
         odd_even_kmax = 2,
         xgaussians = [XGaussian(alpha = 0.2)],
     ))
-    grid = radial_quadrature(rb; refine = refine, rmax = rmax)
+    grid = radial_quadrature(rb; refine = refine, quadrature_rmax = quadrature_rmax)
     return rb, grid
 end
 
@@ -250,7 +250,7 @@ end
 
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
-    @test_throws ArgumentError radial_quadrature(rb; refine = 8)
+    @test radial_quadrature(rb) isa RadialQuadratureGrid
 
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
@@ -281,6 +281,25 @@ end
     @test isfinite(diag_ub.D)
     @test isfinite(diag_hb.overlap_error)
     @test isfinite(diag_hb.D)
+end
+
+@testset "Recommended radial diagnostics cutoff" begin
+    Z = 2.0
+    s = 0.2
+    rb = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = AsinhMapping(c = s / (2Z), s = s),
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 6,
+        xgaussians = XGaussian[],
+    ))
+
+    @test_logs (:warn, r"truncating basis tails") radial_quadrature(rb; refine = 24, quadrature_rmax = 30.0)
+
+    diag = basis_diagnostics(rb)
+    @test diag.overlap_error < 1.0e-5
+    @test diag.D < 1.0e-3
 end
 
 @testset "Radial operator matrices" begin
@@ -395,6 +414,8 @@ end
     @test occursin("recommended_atomic_setup.md", readme)
     @test occursin("first_radial_workflow.md", readme)
     @test occursin("terminology.md", readme)
+    @test occursin("radial_quadrature(rb)", readme)
+    @test occursin("quadrature_rmax", readme)
     @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
     @test occursin("s = 0.2", atomic_setup)
     @test occursin("odd_even_kmax = 6", atomic_setup)
@@ -424,10 +445,10 @@ end
         xgaussians = XGaussian[],
     ))
     f = rb[4]
-    grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+    grid = radial_quadrature(rb)
     primitive_data = primitives(rb)
     coefficient_matrix = stencil_matrix(rb)
-    diag = basis_diagnostics(rb, grid)
+    diag = basis_diagnostics(rb)
     S = overlap_matrix(rb, grid)
     H = kinetic_matrix(rb, grid) +
         nuclear_matrix(rb, grid; Z = Z) +
@@ -439,12 +460,13 @@ end
     @test sum(coefficient_matrix[mu, 4] * primitive_data[mu](0.3) for mu in eachindex(primitive_data)) ≈
           f(0.3) atol = 1.0e-12 rtol = 1.0e-12
     @test isfinite(moment_center(f, grid))
-    @test isfinite(diag.overlap_error)
-    @test isfinite(diag.D)
+    @test diag.overlap_error < 1.0e-5
+    @test diag.D < 1.0e-3
     @test quadrature_points(grid)[end] >= center(f)
     @test quadrature_weights(grid)[1] > 0.0
     @test isfinite(E0)
     @test E0 < 0.0
+    @test norm(S - I, Inf) < 1.0e-5
     @test size(ops.overlap) == (length(rb), length(rb))
     @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
     @test size(multipole(ops, 1)) == (length(rb), length(rb))

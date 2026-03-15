@@ -36,7 +36,7 @@ spec = RadialBasisSpec(:G10;
 )
 
 rb = build_basis(spec)
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 ```
 
 This is the recommended package starting point, not a hard-wired code default.
@@ -152,11 +152,13 @@ These are starting points, not sacred values. If you are using x-gaussians, chec
 After building a basis and quadrature grid, inspect the diagnostics:
 
 ```julia
-diag = basis_diagnostics(rb, grid)
+diag = basis_diagnostics(rb)
 
 diag.overlap_error
 diag.D
 ```
+
+Here `basis_diagnostics(rb)` chooses its own conservative integration grid internally. That makes it a good first check before you start tuning explicit quadrature settings.
 
 Useful quick checks are:
 
@@ -184,10 +186,12 @@ Most users should leave this alone at first and use the built-in refinement logi
 The public radial quadrature grid is created separately:
 
 ```julia
-grid = radial_quadrature(rb; refine = 24, rmax = 30.0)
+grid = radial_quadrature(rb)
 ```
 
 This grid is the one used for one-body operators, moment centers, diagnostics, and the current radial multipole matrices.
+
+For most users, this no-keyword call is the right place to start. The package chooses a conservative quadrature cutoff and a default starting resolution internally. The keywords `quadrature_rmax` and `refine` are advanced overrides.
 
 The basis and the quadrature grid are intentionally separate. That is one of the main ideas behind the package.
 
@@ -214,8 +218,8 @@ If you are starting a new atom-centered calculation, this is a good checklist:
 4. use `tails = 6`
 5. use `odd_even_kmax = 6`
 6. start with `rmax = 30.0` bohr for a first-row atom
-7. build a reasonably fine quadrature grid, for example `refine = 24`
-8. check `basis_diagnostics(rb, grid)`
-9. if needed, increase `rmax`, refine the quadrature, or try one or two x-gaussians
+7. build the default quadrature grid with `radial_quadrature(rb)`
+8. check `basis_diagnostics(rb)`
+9. if needed, increase the basis `rmax`, override `quadrature_rmax`, refine the quadrature, or try one or two x-gaussians
 
 That is enough to get most first calculations off the ground without immediately disappearing into tuning details.
