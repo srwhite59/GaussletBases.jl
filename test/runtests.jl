@@ -29,6 +29,16 @@ function _run_example_script(name::AbstractString)
     return success(cmd)
 end
 
+function _midpoint_reference_matrices(basis; xmin = -20.0, xmax = 20.0, h = 0.02)
+    points = collect((xmin + 0.5 * h):h:(xmax - 0.5 * h))
+    weights = fill(h, length(points))
+    values = [basis[j](x) for x in points, j in 1:length(basis)]
+    derivatives = [derivative(basis[j], x) for x in points, j in 1:length(basis)]
+    overlap = transpose(values) * (weights .* values)
+    kinetic = 0.5 .* (transpose(derivatives) * (weights .* derivatives))
+    return overlap, kinetic
+end
+
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)
@@ -253,6 +263,55 @@ end
     @test contract_primitive_matrix(rb, Amunu) ≈ coefficient_matrix' * Amunu * coefficient_matrix atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Primitive sets and metadata" begin
+    g = Gausslet(:G10; center = 0.0, spacing = 1.0)
+    plain_set = PrimitiveSet1D(primitives(stencil(g)); name = :plain_gausslet_stencil)
+    overlap_analytic = overlap_matrix(plain_set)
+    overlap_numerical = GaussletBases._primitive_overlap_matrix(
+        plain_set,
+        GaussletBases._NumericalPrimitiveMatrixBackend(),
+    )
+    kinetic_analytic = kinetic_matrix(plain_set)
+    kinetic_numerical = GaussletBases._primitive_kinetic_matrix(
+        plain_set,
+        GaussletBases._NumericalPrimitiveMatrixBackend(),
+    )
+
+    map = AsinhMapping(c = 0.15, s = 0.15)
+    distorted_set = PrimitiveSet1D(
+        [Distorted(primitive, map) for primitive in primitives(plain_set)];
+        name = :distorted_gausslet_stencil,
+    )
+    distorted_overlap = overlap_matrix(distorted_set)
+
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    metadata = basis_metadata(ub)
+
+    @test length(plain_set) == length(primitives(stencil(g)))
+    @test overlap_analytic ≈ overlap_numerical atol = 1.0e-9 rtol = 1.0e-9
+    @test kinetic_analytic ≈ kinetic_numerical atol = 1.0e-9 rtol = 1.0e-9
+    @test all(isfinite, distorted_overlap)
+    @test distorted_overlap ≈ transpose(distorted_overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test metadata.basis_kind == :uniform
+    @test metadata.family_name == :G10
+    @test size(metadata.coefficient_matrix, 1) == length(metadata.primitive_set)
+    @test size(metadata.coefficient_matrix, 2) == length(ub)
+    @test metadata.center_data == centers(ub)
+end
+
+@testset "Basis contraction from primitive layer" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0))
+    P = primitive_set(ub)
+    Smu = overlap_matrix(P)
+    Tmu = kinetic_matrix(P)
+    Sb = contract_primitive_matrix(ub, Smu)
+    Tb = contract_primitive_matrix(ub, Tmu)
+    Sref, Tref = _midpoint_reference_matrices(ub)
+
+    @test Sb ≈ Sref atol = 1.0e-12 rtol = 1.0e-12
+    @test Tb ≈ Tref atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -447,6 +506,7 @@ end
     readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
     atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
     radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
+    primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
     terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
     roadmap = read(joinpath(_PROJECT_ROOT, "ROADMAP.md"), String)
     status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
@@ -470,6 +530,10 @@ end
     @test occursin("accuracy = :veryhigh", atomic_setup)
     @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
     @test occursin("accuracy = :medium", radial_workflow)
+    @test occursin("PrimitiveSet1D", primitive_layer_note)
+    @test occursin("primitive_set(basis)", primitive_layer_note)
+    @test occursin("analytic path", primitive_layer_note)
+    @test occursin("numerical path", primitive_layer_note)
     @test occursin("the basis is not the quadrature grid", terminology)
     @test occursin("more conventional gausslet functionality", roadmap)
     @test occursin("accuracy = :medium", roadmap)
@@ -482,6 +546,8 @@ end
     @test _run_example_script("02_radial_basis.jl")
     @test _run_example_script("03_radial_operators.jl")
     @test _run_example_script("04_hydrogen_ground_state.jl")
+    @test _run_example_script("05_primitive_sets.jl")
+    @test _run_example_script("06_basis_contraction.jl")
 end
 
 @testset "README example slice" begin

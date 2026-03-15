@@ -8,6 +8,8 @@ export AbstractFunction1D,
        AbstractCoordinateMapping,
        AbstractBasisSpec,
        AbstractDiagonalApproximation,
+       PrimitiveSet1D,
+       BasisMetadata1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -34,6 +36,8 @@ export AbstractFunction1D,
        stencil,
        stencil_matrix,
        build_basis,
+       basis_metadata,
+       primitive_set,
        basis_spec,
        family,
        mapping,
@@ -121,6 +125,8 @@ function integral_weight end
 function stencil end
 function stencil_matrix end
 function build_basis end
+function basis_metadata end
+function primitive_set end
 
 function basis_spec end
 function family end
@@ -188,6 +194,7 @@ include("internal/wavelet_filters.jl")
 include("families.jl")
 include("bases.jl")
 include("quadrature.jl")
+include("primitive_sets.jl")
 include("diagnostics.jl")
 include("operators.jl")
 
