@@ -134,7 +134,7 @@ Here `basis_diagnostics(rb)` chooses its own conservative integration grid inter
 
 The basis and the quadrature grid are separate on purpose. The basis is the compact variational object you expand in. The quadrature grid is the finer grid used to evaluate radial integrals accurately.
 
-For most users, `radial_quadrature(rb)` is the right starting point. It chooses a conservative cutoff and starting resolution automatically. The optional `quadrature_rmax` and `refine` keywords are there mainly for manual control and benchmarking.
+For most users, `radial_quadrature(rb)` is the right starting point. It chooses a conservative cutoff automatically and uses the default `accuracy = :high` quadrature profile. The package also supports `accuracy = :medium` for cheaper exploratory work and `accuracy = :veryhigh` when quadrature error needs to be pushed farther down. The optional `quadrature_rmax` and `refine` keywords are there mainly for manual control and benchmarking.
 
 ## Hydrogen ground-state example
 
@@ -253,6 +253,8 @@ If you want a little more guidance than the README can comfortably hold, these t
 * [`docs/terminology.md`](docs/terminology.md)
 
 The first page is about parameter choices. The second is about the normal workflow of a first radial calculation. The third explains the small amount of package-specific vocabulary used in the code and docs.
+
+For a short view of likely next extensions, see [`ROADMAP.md`](ROADMAP.md).
 
 ## What is not in v0 yet
 

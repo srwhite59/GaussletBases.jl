@@ -191,7 +191,7 @@ grid = radial_quadrature(rb)
 
 This grid is the one used for one-body operators, moment centers, diagnostics, and the current radial multipole matrices.
 
-For most users, this no-keyword call is the right place to start. The package chooses a conservative quadrature cutoff and a default starting resolution internally. The keywords `quadrature_rmax` and `refine` are advanced overrides.
+For most users, this no-keyword call is the right place to start. The package chooses a conservative quadrature cutoff and uses the default `accuracy = :high` quadrature profile internally. `accuracy = :medium` is the cheaper exploratory option, and `accuracy = :veryhigh` pushes the quadrature harder when you want additional safety. The keywords `quadrature_rmax` and `refine` are advanced overrides underneath those profiles.
 
 The basis and the quadrature grid are intentionally separate. That is one of the main ideas behind the package.
 
@@ -220,6 +220,6 @@ If you are starting a new atom-centered calculation, this is a good checklist:
 6. start with `rmax = 30.0` bohr for a first-row atom
 7. build the default quadrature grid with `radial_quadrature(rb)`
 8. check `basis_diagnostics(rb)`
-9. if needed, increase the basis `rmax`, override `quadrature_rmax`, refine the quadrature, or try one or two x-gaussians
+9. if needed, raise the quadrature accuracy, increase the basis `rmax`, override `quadrature_rmax`, refine the quadrature manually, or try one or two x-gaussians
 
 That is enough to get most first calculations off the ground without immediately disappearing into tuning details.

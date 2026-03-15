@@ -5,7 +5,7 @@ using GaussletBases
 
 const _PROJECT_ROOT = dirname(@__DIR__)
 
-function _radial_operator_fixture(; refine = nothing, quadrature_rmax = 12.0)
+function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
         mapping = AsinhMapping(c = 0.15, s = 0.15),
@@ -14,7 +14,12 @@ function _radial_operator_fixture(; refine = nothing, quadrature_rmax = 12.0)
         odd_even_kmax = 2,
         xgaussians = [XGaussian(alpha = 0.2)],
     ))
-    grid = radial_quadrature(rb; refine = refine, quadrature_rmax = quadrature_rmax)
+    grid = radial_quadrature(
+        rb;
+        accuracy = accuracy,
+        refine = refine,
+        quadrature_rmax = quadrature_rmax,
+    )
     return rb, grid
 end
 
@@ -251,6 +256,8 @@ end
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
+    @test radial_quadrature(rb; accuracy = :medium) isa RadialQuadratureGrid
+    @test_throws ArgumentError radial_quadrature(rb; accuracy = :low)
 
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
@@ -281,6 +288,43 @@ end
     @test isfinite(diag_ub.D)
     @test isfinite(diag_hb.overlap_error)
     @test isfinite(diag_hb.D)
+end
+
+@testset "Quadrature accuracy profiles" begin
+    Z = 10.0
+    s = 0.2
+    rb = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = AsinhMapping(c = s / (2Z), s = s),
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 6,
+        xgaussians = XGaussian[],
+    ))
+
+    grid_medium = radial_quadrature(rb; accuracy = :medium)
+    grid_high = radial_quadrature(rb; accuracy = :high)
+    grid_veryhigh = radial_quadrature(rb; accuracy = :veryhigh)
+
+    function hydrogenic_error(basis, grid, charge)
+        overlap = overlap_matrix(basis, grid)
+        hamiltonian = kinetic_matrix(basis, grid) +
+                      nuclear_matrix(basis, grid; Z = charge) +
+                      centrifugal_matrix(basis, grid; l = 0)
+        eigenvalues = eigen(Hermitian(hamiltonian), Hermitian(overlap)).values
+        return abs(minimum(real(eigenvalues)) + 0.5 * charge * charge)
+    end
+
+    err_medium = hydrogenic_error(rb, grid_medium, Z)
+    err_high = hydrogenic_error(rb, grid_high, Z)
+    err_veryhigh = hydrogenic_error(rb, grid_veryhigh, Z)
+
+    @test length(quadrature_points(grid_medium)) <= length(quadrature_points(grid_high))
+    @test length(quadrature_points(grid_high)) <= length(quadrature_points(grid_veryhigh))
+    @test err_high <= err_medium + 1.0e-12
+    @test err_veryhigh <= err_high + 1.0e-12
+    @test basis_diagnostics(rb; accuracy = :veryhigh).overlap_error <=
+          basis_diagnostics(rb; accuracy = :medium).overlap_error + 1.0e-9
 end
 
 @testset "Recommended radial diagnostics cutoff" begin
@@ -404,6 +448,7 @@ end
     atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
     radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
     terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
+    roadmap = read(joinpath(_PROJECT_ROOT, "ROADMAP.md"), String)
     status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
 
     @test !occursin("primitive_kinetic_matrix", design)
@@ -415,13 +460,19 @@ end
     @test occursin("recommended_atomic_setup.md", readme)
     @test occursin("first_radial_workflow.md", readme)
     @test occursin("terminology.md", readme)
+    @test occursin("ROADMAP.md", readme)
     @test occursin("radial_quadrature(rb)", readme)
+    @test occursin("accuracy = :high", readme)
     @test occursin("quadrature_rmax", readme)
     @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
     @test occursin("s = 0.2", atomic_setup)
     @test occursin("odd_even_kmax = 6", atomic_setup)
+    @test occursin("accuracy = :veryhigh", atomic_setup)
     @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
+    @test occursin("accuracy = :medium", radial_workflow)
     @test occursin("the basis is not the quadrature grid", terminology)
+    @test occursin("more conventional gausslet functionality", roadmap)
+    @test occursin("accuracy = :medium", roadmap)
     @test !occursin("Gausslets.jl", readme)
     @test occursin("Exact non-diagonal electron-electron API", status)
 end

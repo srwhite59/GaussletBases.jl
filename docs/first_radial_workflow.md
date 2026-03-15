@@ -71,7 +71,7 @@ Here:
 
 In many grid-based methods, the basis and the integration grid are tied together. In GaussletBases they are intentionally separate. That is one of the main ideas behind the package.
 
-If you later want manual control, the advanced keywords are `quadrature_rmax` and `refine`.
+If you later want manual control, the package also offers `accuracy = :medium`, `:high`, and `:veryhigh`, with `:high` as the default. The advanced keywords underneath that are `quadrature_rmax` and `refine`.
 
 ## 3. Check the basis diagnostics
 

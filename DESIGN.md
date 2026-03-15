@@ -349,6 +349,7 @@ contract_primitive_matrix(basis, Aμν)  == C' * Aμν * C
 RadialQuadratureGrid(points, weights; mapping = nothing)
 
 radial_quadrature(basis::RadialBasis;
+                  accuracy = :high,
                   refine = nothing,
                   quadrature_rmax = nothing)
 
@@ -362,6 +363,7 @@ quadrature_weights(grid)
 - The quadrature grid follows the same mapping as the basis but is usually finer.
 - This is not a DVR basis.
 - The default call should choose a conservative quadrature cutoff and a default starting resolution automatically.
+- `accuracy` selects one of the built-in quadrature-accuracy profiles `:medium`, `:high`, or `:veryhigh`, with `:high` as the default.
 - `refine` is an optional starting refinement hint relative to the reference-coordinate basis spacing.
 - `quadrature_rmax` is an optional explicit physical-space cutoff override for expert use.
 
@@ -809,7 +811,7 @@ Base.getindex(basis, i::Integer)
 
 ```julia
 """
-    radial_quadrature(basis::RadialBasis; refine=nothing, quadrature_rmax=nothing)
+    radial_quadrature(basis::RadialBasis; accuracy=:high, refine=nothing, quadrature_rmax=nothing)
 
 Build a fine quadrature grid matched to a radial basis.
 
@@ -819,6 +821,8 @@ separate control knob from basis size.
 
 Keyword arguments
 =================
+- `accuracy`:
+  one of `:medium`, `:high`, or `:veryhigh`. The default is `:high`.
 - `refine`:
   optional starting refinement factor on the uniform reference coordinate.
   `refine = 8` means roughly eight quadrature subintervals per basis spacing

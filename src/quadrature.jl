@@ -1,8 +1,65 @@
 const _QUADRATURE_GRID_SIGMA = 6.5
 const _QUADRATURE_GRID_S0 = 3.0
-const _QUADRATURE_DEFAULT_REFINE = 8
-const _QUADRATURE_OVERLAP_TOL = 1.0e-6
-const _QUADRATURE_MAXITER = 5
+const _QUADRATURE_MEDIUM_REFINES = (8, 16, 24, 32, 48)
+const _QUADRATURE_HIGH_REFINES = (24, 32, 48, 64)
+const _QUADRATURE_VERYHIGH_REFINES = (48, 64, 96, 128)
+
+function _quadrature_accuracy_profile(accuracy)
+    accuracy isa Symbol ||
+        throw(ArgumentError("radial_quadrature requires accuracy to be one of :medium, :high, or :veryhigh"))
+
+    if accuracy == :medium
+        return (
+            name = :medium,
+            refines = _QUADRATURE_MEDIUM_REFINES,
+            overlap_tol = 1.0e-6,
+            use_stability = false,
+            overlap_change_tol = Inf,
+            inverse_radius_change_tol = Inf,
+            moment_center_change_tol = Inf,
+        )
+    elseif accuracy == :high
+        return (
+            name = :high,
+            refines = _QUADRATURE_HIGH_REFINES,
+            overlap_tol = 1.0e-6,
+            use_stability = true,
+            overlap_change_tol = 1.0e-10,
+            inverse_radius_change_tol = 2.0e-10,
+            moment_center_change_tol = 1.0e-12,
+        )
+    elseif accuracy == :veryhigh
+        return (
+            name = :veryhigh,
+            refines = _QUADRATURE_VERYHIGH_REFINES,
+            overlap_tol = 1.0e-6,
+            use_stability = true,
+            overlap_change_tol = 5.0e-11,
+            inverse_radius_change_tol = 5.0e-11,
+            moment_center_change_tol = 5.0e-13,
+        )
+    end
+
+    throw(ArgumentError("radial_quadrature requires accuracy to be one of :medium, :high, or :veryhigh"))
+end
+
+function _quadrature_refine_schedule(profile; refine)
+    if refine === nothing
+        return Int[profile.refines...]
+    end
+
+    refine isa Integer ||
+        throw(ArgumentError("radial_quadrature requires refine to be an integer or nothing"))
+
+    refine_value = Int(refine)
+    refine_value > 0 || throw(ArgumentError("radial_quadrature requires refine > 0"))
+
+    refines = Int[refine_value]
+    while length(refines) < length(profile.refines)
+        push!(refines, 2 * refines[end])
+    end
+    return refines
+end
 
 function _primitive_physical_bounds(primitive::Gaussian)
     return _reference_bounds(primitive)
@@ -134,38 +191,35 @@ Return the physical-space quadrature weights of `grid`.
 quadrature_weights(grid::RadialQuadratureGrid) = grid.weight_data
 
 """
-    radial_quadrature(basis::RadialBasis; refine=nothing, quadrature_rmax=nothing)
+    radial_quadrature(basis::RadialBasis; accuracy=:high, refine=nothing, quadrature_rmax=nothing)
 
 Build a fine physical-space quadrature grid matched to `basis`.
 
 With no keywords, the routine chooses a conservative quadrature cutoff from the
-basis itself and uses a default starting resolution. Construction grids used
+basis itself and uses the `:high` accuracy profile. Construction grids used
 while building the basis are separate internal objects and are not set by this
 API.
 
-`refine` is an optional starting resolution hint. `quadrature_rmax` is an
-optional explicit physical-space cutoff override for expert use. If an explicit
-cutoff is too short to cover the basis tails, the routine warns rather than
-silently reporting good overlap on a truncated grid.
+`accuracy` may be `:medium`, `:high`, or `:veryhigh`. `:medium` reproduces the
+older cheaper overlap-focused behavior. `:high` is the default and also checks
+that simple basis diagnostics have stabilized across refinement. `:veryhigh`
+pushes the same checks farther. `refine` is an optional expert starting
+resolution hint. `quadrature_rmax` is an optional explicit physical-space
+cutoff override for expert use. If an explicit cutoff is too short to cover the
+basis tails, the routine warns rather than silently reporting good overlap on a
+truncated grid.
 """
 function radial_quadrature(
     basis::RadialBasis;
+    accuracy = :high,
     refine = nothing,
     quadrature_rmax = nothing,
     rmax = nothing,
 )
     quadrature_rmax === nothing || rmax === nothing ||
         throw(ArgumentError("provide at most one of quadrature_rmax or rmax"))
-
-    refine_value =
-        if refine === nothing
-            _QUADRATURE_DEFAULT_REFINE
-        elseif refine isa Integer
-            Int(refine)
-        else
-            throw(ArgumentError("radial_quadrature requires refine to be an integer or nothing"))
-        end
-    refine_value > 0 || throw(ArgumentError("radial_quadrature requires refine > 0"))
+    profile = _quadrature_accuracy_profile(accuracy)
+    refines = _quadrature_refine_schedule(profile; refine = refine)
 
     tail_bound = _radial_quadrature_tail_bound(basis)
     cutoff_input = quadrature_rmax === nothing ? rmax : quadrature_rmax
@@ -173,47 +227,48 @@ function radial_quadrature(
     cutoff > 0.0 || throw(ArgumentError("radial_quadrature requires quadrature_rmax > 0"))
     explicit_cutoff = cutoff_input !== nothing
 
-    refine_try = refine_value
-    best_grid = nothing
-    best_error = Inf
-    best_refine = refine_value
-    for _ in 1:_QUADRATURE_MAXITER
+    previous_metrics = nothing
+    latest_grid = nothing
+    latest_metrics = nothing
+    latest_refine = first(refines)
+    for refine_try in refines
         grid = _radial_quadrature_grid(basis, cutoff; refine = refine_try)
-        error = _basis_overlap_error_from_points_weights(
+        metrics = _quadrature_quality_metrics(
             basis,
             quadrature_points(grid),
             quadrature_weights(grid),
         )
-        if error < best_error
-            best_grid = grid
-            best_error = error
-            best_refine = refine_try
+        latest_grid = grid
+        latest_metrics = metrics
+        latest_refine = refine_try
+
+        if _quadrature_profile_satisfied(metrics, previous_metrics, profile)
+            return grid
         end
-        error <= _QUADRATURE_OVERLAP_TOL && return grid
-        refine_try *= 2
+        previous_metrics = metrics
     end
 
-    if best_error > _QUADRATURE_OVERLAP_TOL
-        if explicit_cutoff && cutoff < tail_bound
-            @warn(
-                "radial_quadrature did not reach the internal overlap target; the requested quadrature_rmax may be truncating basis tails",
-                refine_start = refine_value,
-                best_refine = best_refine,
-                best_overlap_error = best_error,
-                requested_quadrature_rmax = cutoff,
-                conservative_tail_bound = tail_bound,
-            )
-        else
-            @warn(
-                "radial_quadrature did not reach the internal overlap target",
-                refine_start = refine_value,
-                best_refine = best_refine,
-                best_overlap_error = best_error,
-                used_quadrature_rmax = cutoff,
-            )
-        end
+    if explicit_cutoff && cutoff < tail_bound
+        @warn(
+            "radial_quadrature did not reach the requested accuracy; the requested quadrature_rmax may be truncating basis tails",
+            accuracy = profile.name,
+            refine_start = first(refines),
+            best_refine = latest_refine,
+            best_overlap_error = latest_metrics.overlap_error,
+            requested_quadrature_rmax = cutoff,
+            conservative_tail_bound = tail_bound,
+        )
+    else
+        @warn(
+            "radial_quadrature did not reach the requested accuracy",
+            accuracy = profile.name,
+            refine_start = first(refines),
+            best_refine = latest_refine,
+            best_overlap_error = latest_metrics.overlap_error,
+            used_quadrature_rmax = cutoff,
+        )
     end
-    return best_grid
+    return latest_grid
 end
 
 function _moment_center_from_points_weights(
@@ -261,6 +316,50 @@ function _basis_overlap_error_from_points_weights(
     values = _basis_values_matrix(basis, points)
     overlap = transpose(values) * (weights .* values)
     return norm(overlap - I, Inf)
+end
+
+function _quadrature_quality_metrics(
+    basis,
+    points::AbstractVector{Float64},
+    weights::AbstractVector{Float64},
+)
+    values = _basis_values_matrix(basis, points)
+    overlap = transpose(values) * (weights .* values)
+    overlap_error = norm(overlap - I, Inf)
+
+    denominators = vec(transpose(values) * weights)
+    numerators = vec(transpose(values) * (points .* weights))
+    moment_centers = similar(numerators)
+    for i in eachindex(moment_centers)
+        moment_centers[i] = denominators[i] == 0.0 ? NaN : numerators[i] / denominators[i]
+    end
+
+    safe_points = max.(points, eps(Float64))
+    inverse_radius_matrix = transpose(values) * ((weights ./ safe_points) .* values)
+
+    return (
+        overlap_error = overlap_error,
+        overlap = overlap,
+        moment_centers = moment_centers,
+        inverse_radius_matrix = inverse_radius_matrix,
+    )
+end
+
+function _quadrature_profile_satisfied(metrics, previous_metrics, profile)
+    metrics.overlap_error <= profile.overlap_tol || return false
+    profile.use_stability || return true
+    previous_metrics === nothing && return false
+
+    overlap_change = norm(metrics.overlap - previous_metrics.overlap, Inf)
+    inverse_radius_change = norm(
+        metrics.inverse_radius_matrix - previous_metrics.inverse_radius_matrix,
+        Inf,
+    )
+    moment_center_change = maximum(abs.(metrics.moment_centers .- previous_metrics.moment_centers))
+
+    return overlap_change <= profile.overlap_change_tol &&
+           inverse_radius_change <= profile.inverse_radius_change_tol &&
+           moment_center_change <= profile.moment_center_change_tol
 end
 
 function _radial_quadrature_grid(

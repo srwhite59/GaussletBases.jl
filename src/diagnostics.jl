@@ -31,8 +31,9 @@ end
 Return a small diagnostics summary for `basis`.
 
 The one-argument form chooses its own integration grid. For radial bases, that
-grid is intentionally conservative so the default diagnostics are less likely
-to be dominated by outer-tail truncation.
+grid is intentionally conservative and uses the same default `accuracy = :high`
+quadrature profile as `radial_quadrature(basis)`, so the default diagnostics
+are less likely to be dominated by outer-tail truncation.
 """
 function basis_diagnostics(basis, grid)
     return _basis_diagnostics_from_points_weights(basis, quadrature_points(grid), quadrature_weights(grid))
@@ -50,15 +51,20 @@ function _halfline_diagnostics_grid(basis::HalfLineBasis; refine::Int = 8)
     return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
 end
 
-function _radial_diagnostics_grid(basis::RadialBasis; refine::Int = 8)
+function _radial_diagnostics_grid(basis::RadialBasis; accuracy = :high, refine = nothing)
     cutoff = _radial_quadrature_tail_bound(basis)
-    return radial_quadrature(basis; refine = refine, quadrature_rmax = cutoff)
+    return radial_quadrature(
+        basis;
+        accuracy = accuracy,
+        refine = refine,
+        quadrature_rmax = cutoff,
+    )
 end
 
 function basis_diagnostics(basis::HalfLineBasis)
     return basis_diagnostics(basis, _halfline_diagnostics_grid(basis))
 end
 
-function basis_diagnostics(basis::RadialBasis)
-    return basis_diagnostics(basis, _radial_diagnostics_grid(basis))
+function basis_diagnostics(basis::RadialBasis; accuracy = :high)
+    return basis_diagnostics(basis, _radial_diagnostics_grid(basis; accuracy = accuracy))
 end
