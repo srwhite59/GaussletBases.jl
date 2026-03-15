@@ -54,6 +54,7 @@ export AbstractFunction1D,
        basis_diagnostics,
        IntegralDiagonal,
        overlap_matrix,
+       position_matrix,
        kinetic_matrix,
        nuclear_matrix,
        centrifugal_matrix,
@@ -142,6 +143,7 @@ function quadrature_points end
 function quadrature_weights end
 function basis_diagnostics end
 function overlap_matrix end
+function position_matrix end
 function kinetic_matrix end
 function nuclear_matrix end
 function centrifugal_matrix end

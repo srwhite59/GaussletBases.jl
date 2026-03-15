@@ -34,6 +34,7 @@ This Stage-2 proof slice adds:
 - `PrimitiveSet1D(primitives; name=nothing, labels=nothing)`
 - `primitive_set(basis)`
 - `overlap_matrix(set::PrimitiveSet1D)`
+- `position_matrix(set::PrimitiveSet1D)`
 - `kinetic_matrix(set::PrimitiveSet1D)`
 - `basis_metadata(basis)`
 
@@ -48,6 +49,7 @@ The public call is simply:
 
 ```julia
 S = overlap_matrix(set)
+X = position_matrix(set)
 T = kinetic_matrix(set)
 ```
 
@@ -66,17 +68,30 @@ For this first slice:
 That keeps the ordinary-gausslet analytic route alive while still supporting
 explicitly distorted primitive sets through the same public calls.
 
+The first additional one-body operator carried by this same interface is the
+position matrix
+
+```julia
+X = position_matrix(set)
+```
+
+For plain Gaussian primitive sets this uses the same analytic
+`<g_a | x | g_b>` route that appears in the legacy ordinary-gausslet and
+pure-Gaussian code. For explicitly distorted primitive sets the public call is
+the same, but the implementation falls back to numerical quadrature.
+
 ## Proof-of-concept example
 
 The first proof target is deliberately small:
 
 1. start from the Gaussian primitive layer of an ordinary gausslet stencil
-2. build its primitive overlap and kinetic matrices through the public API
+2. build its primitive overlap, position, and kinetic matrices through the
+   public API
 3. build a distorted version of that primitive set
 4. show that the same public matrix builders work there too
 
-The comparison test for this slice checks that, for a plain Gaussian primitive
-set, the analytic and numerical overlap builders agree.
+The comparison tests for this slice check that, for a plain Gaussian primitive
+set, the analytic and numerical overlap, position, and kinetic builders agree.
 
 ## Feeding the primitive layer upward into a basis
 
@@ -96,9 +111,11 @@ P = primitive_set(basis)
 C = stencil_matrix(basis)
 
 Smu = overlap_matrix(P)
+Xmu = position_matrix(P)
 Tmu = kinetic_matrix(P)
 
 Sb = contract_primitive_matrix(basis, Smu)
+Xb = contract_primitive_matrix(basis, Xmu)
 Tb = contract_primitive_matrix(basis, Tmu)
 ```
 
@@ -117,8 +134,9 @@ new shell or nested abstractions.
 - the basis coefficient matrix
 
 What it does *not* store are derived operator matrices such as overlap or
-kinetic matrices. Those remain live computations, because they may come from
-either analytic or numerical backends and may evolve as those backends improve.
+position or kinetic matrices. Those remain live computations, because they may
+come from either analytic or numerical backends and may evolve as those
+backends improve.
 
 ## What this does not try to settle
 
@@ -130,3 +148,7 @@ purpose of this slice is only to prove that:
 - the package can represent an explicit primitive layer cleanly
 - matrix builders can sit above that layer
 - analytic and numerical evaluation can share one public interface
+
+After adding `position_matrix(set)`, this layer now looks strong enough to
+carry one more small ordinary-gausslet-facing operator or export-oriented
+consumer before any shell or box abstraction is introduced.

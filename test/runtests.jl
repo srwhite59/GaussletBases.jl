@@ -39,6 +39,13 @@ function _midpoint_reference_matrices(basis; xmin = -20.0, xmax = 20.0, h = 0.02
     return overlap, kinetic
 end
 
+function _midpoint_reference_position_matrix(basis; xmin = -20.0, xmax = 20.0, h = 0.02)
+    points = collect((xmin + 0.5 * h):h:(xmax - 0.5 * h))
+    weights = fill(h, length(points))
+    values = [basis[j](x) for x in points, j in 1:length(basis)]
+    return transpose(values) * (((weights .* points)) .* values)
+end
+
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)
@@ -271,6 +278,11 @@ end
         plain_set,
         GaussletBases._NumericalPrimitiveMatrixBackend(),
     )
+    position_analytic = position_matrix(plain_set)
+    position_numerical = GaussletBases._primitive_position_matrix(
+        plain_set,
+        GaussletBases._NumericalPrimitiveMatrixBackend(),
+    )
     kinetic_analytic = kinetic_matrix(plain_set)
     kinetic_numerical = GaussletBases._primitive_kinetic_matrix(
         plain_set,
@@ -289,6 +301,7 @@ end
 
     @test length(plain_set) == length(primitives(stencil(g)))
     @test overlap_analytic ≈ overlap_numerical atol = 1.0e-9 rtol = 1.0e-9
+    @test position_analytic ≈ position_numerical atol = 1.0e-9 rtol = 1.0e-9
     @test kinetic_analytic ≈ kinetic_numerical atol = 1.0e-9 rtol = 1.0e-9
     @test all(isfinite, distorted_overlap)
     @test distorted_overlap ≈ transpose(distorted_overlap) atol = 1.0e-10 rtol = 1.0e-10
@@ -303,12 +316,16 @@ end
     ub = build_basis(UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0))
     P = primitive_set(ub)
     Smu = overlap_matrix(P)
+    Xmu = position_matrix(P)
     Tmu = kinetic_matrix(P)
     Sb = contract_primitive_matrix(ub, Smu)
+    Xb = contract_primitive_matrix(ub, Xmu)
     Tb = contract_primitive_matrix(ub, Tmu)
     Sref, Tref = _midpoint_reference_matrices(ub)
+    Xref = _midpoint_reference_position_matrix(ub)
 
     @test Sb ≈ Sref atol = 1.0e-12 rtol = 1.0e-12
+    @test Xb ≈ Xref atol = 1.0e-12 rtol = 1.0e-12
     @test Tb ≈ Tref atol = 1.0e-12 rtol = 1.0e-12
 end
 
@@ -532,6 +549,7 @@ end
     @test occursin("accuracy = :medium", radial_workflow)
     @test occursin("PrimitiveSet1D", primitive_layer_note)
     @test occursin("primitive_set(basis)", primitive_layer_note)
+    @test occursin("position_matrix(set::PrimitiveSet1D)", primitive_layer_note)
     @test occursin("analytic path", primitive_layer_note)
     @test occursin("numerical path", primitive_layer_note)
     @test occursin("the basis is not the quadrature grid", terminology)
@@ -548,6 +566,7 @@ end
     @test _run_example_script("04_hydrogen_ground_state.jl")
     @test _run_example_script("05_primitive_sets.jl")
     @test _run_example_script("06_basis_contraction.jl")
+    @test _run_example_script("07_position_contraction.jl")
 end
 
 @testset "README example slice" begin

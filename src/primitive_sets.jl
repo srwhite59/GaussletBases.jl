@@ -260,6 +260,32 @@ function _primitive_kinetic_matrix(
     return current
 end
 
+function _primitive_position_matrix(
+    set::PrimitiveSet1D,
+    ::_NumericalPrimitiveMatrixBackend;
+    h = nothing,
+)
+    xlo, xhi = _primitive_set_bounds(set)
+    h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
+    h_try > 0.0 || throw(ArgumentError("numerical primitive position matrix requires h > 0"))
+
+    previous = nothing
+    current = nothing
+    for _ in 1:_PRIMITIVE_MATRIX_MAXITER
+        points, weights = _make_midpoint_grid(xlo, xhi, h_try)
+        values = _primitive_sample_matrix(set, points)
+        current = _symmetrize_primitive_matrix(
+            transpose(values) * (((weights .* points)) .* values),
+        )
+        if previous !== nothing && norm(current - previous, Inf) <= _PRIMITIVE_MATRIX_TOL
+            return current
+        end
+        previous = current
+        h_try /= 2.0
+    end
+    return current
+end
+
 function _gaussian_overlap(a::Gaussian, b::Gaussian)
     sigma2 = a.width^2 + b.width^2
     prefactor = sqrt(2.0 * pi) * a.width * b.width / sqrt(sigma2)
@@ -273,6 +299,13 @@ function _gaussian_kinetic(a::Gaussian, b::Gaussian)
     return 0.5 * overlap_value * (1.0 / sigma2) * (1.0 - delta^2 / sigma2)
 end
 
+function _gaussian_position(a::Gaussian, b::Gaussian)
+    sigma2 = a.width^2 + b.width^2
+    weighted_center =
+        (a.center_value * b.width^2 + b.center_value * a.width^2) / sigma2
+    return weighted_center * _gaussian_overlap(a, b)
+end
+
 function _primitive_overlap_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatrixBackend)
     matrix = zeros(Float64, length(set), length(set))
     for a in 1:length(set)
@@ -280,6 +313,20 @@ function _primitive_overlap_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatr
         for b in a:length(set)
             pb = primitives(set)[b]
             value_ab = _gaussian_overlap(pa, pb)
+            matrix[a, b] = value_ab
+            matrix[b, a] = value_ab
+        end
+    end
+    return matrix
+end
+
+function _primitive_position_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatrixBackend)
+    matrix = zeros(Float64, length(set), length(set))
+    for a in 1:length(set)
+        pa = primitives(set)[a]
+        for b in a:length(set)
+            pb = primitives(set)[b]
+            value_ab = _gaussian_position(pa, pb)
             matrix[a, b] = value_ab
             matrix[b, a] = value_ab
         end
@@ -323,6 +370,22 @@ primitive support.
 """
 function overlap_matrix(set::PrimitiveSet1D)
     return _primitive_overlap_matrix(set, _select_primitive_matrix_backend(set))
+end
+
+"""
+    position_matrix(set::PrimitiveSet1D)
+
+Build the primitive one-body position matrix
+
+    <phi_mu | x | phi_nu>
+
+for `set`.
+
+As with `overlap_matrix(set)`, the public call chooses the available backend
+automatically.
+"""
+function position_matrix(set::PrimitiveSet1D)
+    return _primitive_position_matrix(set, _select_primitive_matrix_backend(set))
 end
 
 """
