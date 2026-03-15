@@ -44,6 +44,16 @@ The next small grouping layer that can sit above that representation is:
 This is only a 1D interval-box partition over existing basis-function centers.
 It is not yet a nested generation algorithm.
 
+The next small step above that is:
+
+- `HierarchicalBasisPartition1D`
+- `HierarchicalBasisBox1D`
+- `refine_partition(...)`
+
+This is a simple geometric parent-child tree built by refining an existing box
+partition. It still does not encode the historical nested-gausslet generation
+logic.
+
 ## Minimal public API in this slice
 
 This Stage-2 proof slice adds:
@@ -203,6 +213,40 @@ box_coupling(representation, partition, :kinetic, 1, 2)
 This is meant as a generic downstream grouping/indexing layer. It does not yet
 encode hierarchical shells, nested refinement, or molecule-specific logic.
 
+## Small hierarchical refinement layer
+
+The first hierarchical refinement step is deliberately simple:
+
+- start from an existing interval partition
+- refine one leaf box at a time
+- split by midpoint, or by explicitly supplied child edges
+
+The public entry points are:
+
+- `hierarchical_partition(partition)`
+- `hierarchical_partition(basis, edges)`
+- `hierarchical_partition(representation, edges)`
+- `refine_partition(hierarchy, box_index; child_edges=nothing)`
+- `leaf_boxes(hierarchy)`
+- `box_parent(hierarchy, i)`
+- `box_children(hierarchy, i)`
+- `box_level(hierarchy, i)`
+
+The existing block and coupling helpers still apply:
+
+```julia
+hierarchy = hierarchical_partition(representation, [-2.5, -0.5, 0.5, 2.5])
+hierarchy = refine_partition(hierarchy, 1)
+
+leaf_boxes(hierarchy)
+box_block(representation, hierarchy, :overlap, 4)
+box_coupling(representation, hierarchy, :kinetic, 4, 2)
+```
+
+This keeps the hierarchy purely geometric and index-based. It does not yet
+contain adaptive physics criteria, geometry-aware grouping, or nested basis
+generation.
+
 ## Metadata versus live computation
 
 `BasisMetadata1D` stores the structural data needed by downstream consumers:
@@ -229,6 +273,7 @@ purpose of this slice is only to prove that:
 - matrix builders can sit above that layer
 - analytic and numerical evaluation can share one public interface
 
-After adding `BasisRepresentation1D` and the first simple `BasisPartition1D`
-layer, this shared structure now looks stable enough for a later hierarchical
-refinement step without yet committing to the historical nested machinery.
+After adding `BasisRepresentation1D`, the first `BasisPartition1D`, and a small
+hierarchical refinement layer, this shared structure now looks stable enough to
+support a later fork toward either PGDG-oriented basis generation or
+geometry-aware atom and molecule grouping without yet committing to either one.

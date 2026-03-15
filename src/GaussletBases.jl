@@ -13,6 +13,8 @@ export AbstractFunction1D,
        BasisRepresentation1D,
        BasisBox1D,
        BasisPartition1D,
+       HierarchicalBasisBox1D,
+       HierarchicalBasisPartition1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -42,9 +44,15 @@ export AbstractFunction1D,
        basis_metadata,
        basis_representation,
        basis_partition,
+       hierarchical_partition,
+       refine_partition,
        primitive_set,
        boxes,
+       leaf_boxes,
        box_indices,
+       box_level,
+       box_parent,
+       box_children,
        box_block,
        box_coupling,
        basis_spec,
@@ -138,9 +146,15 @@ function build_basis end
 function basis_metadata end
 function basis_representation end
 function basis_partition end
+function hierarchical_partition end
+function refine_partition end
 function primitive_set end
 function boxes end
+function leaf_boxes end
 function box_indices end
+function box_level end
+function box_parent end
+function box_children end
 function box_block end
 function box_coupling end
 
@@ -213,6 +227,7 @@ include("bases.jl")
 include("quadrature.jl")
 include("primitive_sets.jl")
 include("partitions.jl")
+include("hierarchical_partitions.jl")
 include("diagnostics.jl")
 include("operators.jl")
 

@@ -376,6 +376,40 @@ end
     @test box_coupling(rep, partition, :kinetic, 1, 2) ≈ kinetic[1:2, 3:3] atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Hierarchical basis partitions" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    rep = basis_representation(ub)
+    base_partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
+    hierarchy = hierarchical_partition(base_partition)
+    refined = refine_partition(hierarchy, 1)
+    overlap = rep.basis_matrices.overlap
+
+    leaves = leaf_boxes(refined)
+    leaf_indices = sort!(vcat([box.basis_indices for box in leaves]...))
+    @test leaf_indices == collect(1:length(ub))
+    @test length(unique(leaf_indices)) == length(ub)
+
+    assembled = zeros(Float64, length(ub), length(ub))
+    for box_i in leaves
+        for box_j in leaves
+            assembled[box_i.basis_indices, box_j.basis_indices] .=
+                box_coupling(overlap, refined, box_i.index, box_j.index)
+        end
+    end
+
+    @test assembled ≈ overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test box_parent(refined, 4) == 1
+    @test box_parent(refined, 5) == 1
+    @test box_children(refined, 1) == [4, 5]
+    @test box_level(refined, 1) == 0
+    @test box_level(refined, 4) == 1
+    @test isempty(box_children(refined, 2))
+    @test box_indices(refined, 2) == box_indices(base_partition, 2)
+    @test box_indices(refined, 3) == box_indices(base_partition, 3)
+    @test box_block(rep, refined, :overlap, 4) ≈ overlap[1:1, 1:1] atol = 1.0e-12 rtol = 1.0e-12
+    @test box_coupling(rep, refined, :kinetic, 4, 2) ≈ rep.basis_matrices.kinetic[1:1, 3:3] atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -554,6 +588,7 @@ end
     ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
     rep = basis_representation(ub)
     partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
+    hierarchy = refine_partition(hierarchical_partition(partition), 1)
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -568,6 +603,8 @@ end
     @test occursin("BasisRepresentation1D(kind=:uniform", sprint(show, rep))
     @test occursin("BasisPartition1D(nbasis=5, nboxes=3)", sprint(show, partition))
     @test occursin("BasisBox1D(index=1", sprint(show, boxes(partition)[1]))
+    @test occursin("HierarchicalBasisPartition1D(nbasis=5, nboxes=5, nleaves=4)", sprint(show, hierarchy))
+    @test occursin("HierarchicalBasisBox1D(index=4", sprint(show, boxes(hierarchy)[4]))
 end
 
 @testset "Documentation consistency" begin
@@ -602,10 +639,12 @@ end
     @test occursin("PrimitiveSet1D", primitive_layer_note)
     @test occursin("BasisRepresentation1D", primitive_layer_note)
     @test occursin("BasisPartition1D", primitive_layer_note)
+    @test occursin("HierarchicalBasisPartition1D", primitive_layer_note)
     @test occursin("primitive_set(basis)", primitive_layer_note)
     @test occursin("position_matrix(set::PrimitiveSet1D)", primitive_layer_note)
     @test occursin("basis_representation(basis; operators = (:overlap, :position, :kinetic))", primitive_layer_note)
     @test occursin("basis_partition(basis, edges)", primitive_layer_note)
+    @test occursin("refine_partition(hierarchy, box_index; child_edges=nothing)", primitive_layer_note)
     @test occursin("analytic path", primitive_layer_note)
     @test occursin("numerical path", primitive_layer_note)
     @test occursin("the basis is not the quadrature grid", terminology)
@@ -625,6 +664,7 @@ end
     @test _run_example_script("07_position_contraction.jl")
     @test _run_example_script("08_basis_representation.jl")
     @test _run_example_script("09_basis_partition.jl")
+    @test _run_example_script("10_hierarchical_partition.jl")
 end
 
 @testset "README example slice" begin
