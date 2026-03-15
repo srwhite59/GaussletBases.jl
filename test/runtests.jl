@@ -329,6 +329,29 @@ end
     @test Tb ≈ Tref atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Basis representation" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0))
+    rep = basis_representation(ub)
+    primitive_layer = primitive_set(ub)
+    metadata = basis_metadata(ub)
+
+    overlap_public = overlap_matrix(primitive_layer)
+    position_public = position_matrix(primitive_layer)
+    kinetic_public = kinetic_matrix(primitive_layer)
+
+    @test rep.metadata.basis_kind == metadata.basis_kind
+    @test rep.metadata.family_name == metadata.family_name
+    @test rep.coefficient_matrix ≈ stencil_matrix(ub) atol = 1.0e-12 rtol = 1.0e-12
+    @test length(rep.primitive_set) == length(primitive_layer)
+    @test rep.primitive_matrices.overlap ≈ overlap_public atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.primitive_matrices.position ≈ position_public atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.primitive_matrices.kinetic ≈ kinetic_public atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.basis_matrices.overlap ≈ contract_primitive_matrix(ub, overlap_public) atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.basis_matrices.position ≈ contract_primitive_matrix(ub, position_public) atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.basis_matrices.kinetic ≈ contract_primitive_matrix(ub, kinetic_public) atol = 1.0e-12 rtol = 1.0e-12
+    @test rep.basis_matrices.position ≈ _midpoint_reference_position_matrix(ub) atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -505,6 +528,7 @@ end
     hb = build_basis(hb_spec)
     rb, grid = _radial_operator_fixture(; refine = 24)
     ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+    rep = basis_representation(ub)
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -516,6 +540,7 @@ end
     @test occursin("RadialBasis(length=6", sprint(show, rb))
     @test occursin("RadialQuadratureGrid(length=", sprint(show, grid))
     @test occursin("RadialAtomicOperators(size=(6, 6)", sprint(show, ops))
+    @test occursin("BasisRepresentation1D(kind=:uniform", sprint(show, rep))
 end
 
 @testset "Documentation consistency" begin
@@ -548,8 +573,10 @@ end
     @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
     @test occursin("accuracy = :medium", radial_workflow)
     @test occursin("PrimitiveSet1D", primitive_layer_note)
+    @test occursin("BasisRepresentation1D", primitive_layer_note)
     @test occursin("primitive_set(basis)", primitive_layer_note)
     @test occursin("position_matrix(set::PrimitiveSet1D)", primitive_layer_note)
+    @test occursin("basis_representation(basis; operators = (:overlap, :position, :kinetic))", primitive_layer_note)
     @test occursin("analytic path", primitive_layer_note)
     @test occursin("numerical path", primitive_layer_note)
     @test occursin("the basis is not the quadrature grid", terminology)
@@ -567,6 +594,7 @@ end
     @test _run_example_script("05_primitive_sets.jl")
     @test _run_example_script("06_basis_contraction.jl")
     @test _run_example_script("07_position_contraction.jl")
+    @test _run_example_script("08_basis_representation.jl")
 end
 
 @testset "README example slice" begin

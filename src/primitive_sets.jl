@@ -85,6 +85,36 @@ function Base.show(io::IO, metadata::BasisMetadata1D)
     )
 end
 
+"""
+    BasisRepresentation1D
+
+Small in-memory downstream-consumer object bundling basis metadata, the shared
+primitive layer, the contraction matrix, and selected primitive- and
+basis-level matrices built through that layer.
+"""
+struct BasisRepresentation1D{M, PT <: NamedTuple, BT <: NamedTuple}
+    metadata::BasisMetadata1D{M}
+    primitive_set::PrimitiveSet1D
+    coefficient_matrix::Matrix{Float64}
+    primitive_matrices::PT
+    basis_matrices::BT
+end
+
+function Base.show(io::IO, representation::BasisRepresentation1D)
+    print(
+        io,
+        "BasisRepresentation1D(kind=:",
+        representation.metadata.basis_kind,
+        ", nbasis=",
+        size(representation.coefficient_matrix, 2),
+        ", nprimitive=",
+        length(representation.primitive_set),
+        ", operators=",
+        collect(keys(representation.basis_matrices)),
+        ")",
+    )
+end
+
 function _basis_kind(::UniformBasis)
     return :uniform
 end
@@ -133,6 +163,60 @@ function basis_metadata(basis::Union{UniformBasis, HalfLineBasis, RadialBasis})
         _basis_label_vector(length(basis)),
         primitive_layer,
         Matrix{Float64}(stencil_matrix(basis)),
+    )
+end
+
+basis_metadata(representation::BasisRepresentation1D) = representation.metadata
+primitive_set(representation::BasisRepresentation1D) = representation.primitive_set
+stencil_matrix(representation::BasisRepresentation1D) = representation.coefficient_matrix
+
+function _representation_operator_matrix(set::PrimitiveSet1D, operator_name::Symbol)
+    operator_name === :overlap && return overlap_matrix(set)
+    operator_name === :position && return position_matrix(set)
+    operator_name === :kinetic && return kinetic_matrix(set)
+    throw(ArgumentError("unsupported basis representation operator :$operator_name"))
+end
+
+"""
+    basis_representation(basis; operators = (:overlap, :position, :kinetic))
+
+Build a small in-memory representation object for `basis` that a downstream
+consumer can use without depending on GaussletBases internals.
+
+The returned `BasisRepresentation1D` stores:
+
+- `metadata`
+- `primitive_set`
+- `coefficient_matrix`
+- `primitive_matrices`
+- `basis_matrices`
+
+The operator matrices are built through the shared primitive layer and
+contracted upward with the existing basis stencil matrix.
+"""
+function basis_representation(
+    basis::Union{UniformBasis, HalfLineBasis, RadialBasis};
+    operators = (:overlap, :position, :kinetic),
+)
+    operator_names = Tuple(Symbol(operator_name) for operator_name in operators)
+    length(unique(operator_names)) == length(operator_names) ||
+        throw(ArgumentError("basis representation operator names must be unique"))
+
+    metadata = basis_metadata(basis)
+    primitive_layer = metadata.primitive_set
+    coefficient_matrix = metadata.coefficient_matrix
+
+    primitive_matrix_values =
+        Tuple(_representation_operator_matrix(primitive_layer, operator_name) for operator_name in operator_names)
+    basis_matrix_values =
+        Tuple(contract_primitive_matrix(basis, matrix) for matrix in primitive_matrix_values)
+
+    return BasisRepresentation1D(
+        metadata,
+        primitive_layer,
+        coefficient_matrix,
+        NamedTuple{operator_names}(primitive_matrix_values),
+        NamedTuple{operator_names}(basis_matrix_values),
     )
 end
 

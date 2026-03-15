@@ -10,6 +10,7 @@ export AbstractFunction1D,
        AbstractDiagonalApproximation,
        PrimitiveSet1D,
        BasisMetadata1D,
+       BasisRepresentation1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -37,6 +38,7 @@ export AbstractFunction1D,
        stencil_matrix,
        build_basis,
        basis_metadata,
+       basis_representation,
        primitive_set,
        basis_spec,
        family,
@@ -127,6 +129,7 @@ function stencil end
 function stencil_matrix end
 function build_basis end
 function basis_metadata end
+function basis_representation end
 function primitive_set end
 
 function basis_spec end

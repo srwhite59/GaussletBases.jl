@@ -27,6 +27,15 @@ primitive layer into the final basis.
 That is enough to support downstream export or reconstruction of matrix
 workflows without committing to a much larger future schema.
 
+The next small in-memory consumer object is:
+
+- `BasisRepresentation1D`
+
+This bundles the basis metadata, the shared primitive set, the contraction
+matrix, and a small chosen operator set at both the primitive and basis levels.
+It is meant for downstream Julia consumers, not yet for a permanent file
+format.
+
 ## Minimal public API in this slice
 
 This Stage-2 proof slice adds:
@@ -37,6 +46,7 @@ This Stage-2 proof slice adds:
 - `position_matrix(set::PrimitiveSet1D)`
 - `kinetic_matrix(set::PrimitiveSet1D)`
 - `basis_metadata(basis)`
+- `basis_representation(basis; operators = (:overlap, :position, :kinetic))`
 
 The matrix builders return ordinary dense matrices, just like the current radial
 operator builders.
@@ -123,6 +133,38 @@ That is the minimal basis-wide consumer for this layer. It shows that the same
 primitive matrix object can feed an existing basis workflow without introducing
 new shell or nested abstractions.
 
+## Small in-memory downstream representation
+
+The next small consumer on top of this layer is:
+
+- `basis_representation(basis; operators = (:overlap, :position, :kinetic))`
+
+The returned `BasisRepresentation1D` exposes:
+
+- `metadata`
+- `primitive_set`
+- `coefficient_matrix`
+- `primitive_matrices`
+- `basis_matrices`
+
+The intent is that a downstream package can ask for one compact object and then
+work only with those fields, rather than reconstructing GaussletBases internals
+for itself.
+
+The matrices are built through the already-proven path:
+
+```julia
+representation = basis_representation(basis)
+
+representation.primitive_matrices.overlap
+representation.basis_matrices.overlap
+representation.basis_matrices.position
+representation.basis_matrices.kinetic
+```
+
+This stays deliberately in-memory. It does not define a disk format, and it
+does not commit the package to a broad long-term export schema yet.
+
 ## Metadata versus live computation
 
 `BasisMetadata1D` stores the structural data needed by downstream consumers:
@@ -150,5 +192,5 @@ purpose of this slice is only to prove that:
 - analytic and numerical evaluation can share one public interface
 
 After adding `position_matrix(set)`, this layer now looks strong enough to
-carry one more small ordinary-gausslet-facing operator or export-oriented
-consumer before any shell or box abstraction is introduced.
+carry one more small export-oriented or ordinary-gausslet-facing consumer
+before any shell or box abstraction is introduced.
