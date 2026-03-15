@@ -751,6 +751,8 @@ end
     atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
     radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
+    example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
+    global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
     global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
     terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
@@ -761,32 +763,40 @@ end
     @test !occursin("CombinedMapping", design)
     @test !occursin("ScaledMapping", design)
     @test !occursin("NoDiagonalApproximation", design)
-    @test occursin("atomic_operators", readme)
+    @test occursin("atom-centered radial calculations", readme)
+    @test occursin("primitive layers, contraction, partitions, and simple hierarchy", readme)
+    @test occursin("Best first path through the repository", readme)
     @test occursin("examples/04_hydrogen_ground_state.jl", readme)
+    @test occursin("13_global_leaf_contraction.jl", readme)
     @test occursin("recommended_atomic_setup.md", readme)
     @test occursin("first_radial_workflow.md", readme)
+    @test occursin("example_guide.md", readme)
+    @test occursin("intermediate_primitive_layer.md", readme)
     @test occursin("terminology.md", readme)
-    @test occursin("ROADMAP.md", readme)
-    @test occursin("radial_quadrature(rb)", readme)
-    @test occursin("accuracy = :high", readme)
-    @test occursin("quadrature_rmax", readme)
+    @test occursin("diag = basis_diagnostics(rb)", readme)
+    @test occursin("ops = atomic_operators(rb, grid; Z = Z, lmax = 2)", readme)
     @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
     @test occursin("s = 0.2", atomic_setup)
     @test occursin("odd_even_kmax = 6", atomic_setup)
     @test occursin("accuracy = :veryhigh", atomic_setup)
     @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
-    @test occursin("accuracy = :medium", radial_workflow)
+    @test occursin("Quickstart", radial_workflow)
+    @test occursin("quadrature_rmax = 30.0", radial_workflow)
+    @test occursin("example_guide.md", radial_workflow)
     @test occursin("PrimitiveSet1D", primitive_layer_note)
     @test occursin("BasisRepresentation1D", primitive_layer_note)
-    @test occursin("BasisPartition1D", primitive_layer_note)
     @test occursin("HierarchicalBasisPartition1D", primitive_layer_note)
-    @test occursin("primitive_set(basis)", primitive_layer_note)
-    @test occursin("position_matrix(set::PrimitiveSet1D)", primitive_layer_note)
-    @test occursin("basis_representation(basis; operators = (:overlap, :position, :kinetic))", primitive_layer_note)
-    @test occursin("basis_partition(basis, edges)", primitive_layer_note)
-    @test occursin("refine_partition(hierarchy, box_index; child_edges=nothing)", primitive_layer_note)
-    @test occursin("analytic path", primitive_layer_note)
-    @test occursin("numerical path", primitive_layer_note)
+    @test occursin("GlobalMappedPrimitiveLayer1D", primitive_layer_note)
+    @test occursin("LeafBoxContractionLayer1D", primitive_layer_note)
+    @test occursin("LeafLocalPGDG1D", primitive_layer_note)
+    @test occursin("the basis is not a black box", primitive_layer_note)
+    @test occursin("one global mapped primitive layer", primitive_layer_note)
+    @test occursin("13_global_leaf_contraction.jl", example_guide)
+    @test occursin("prototype", example_guide)
+    @test occursin("radial atomic work", lowercase(example_guide))
+    @test startswith(global_map_note, "> **Note for new users:**")
+    @test startswith(global_contraction_note, "> **Note for new users:**")
+    @test startswith(leaf_pgdg_note, "> **Note for new users:**")
     @test occursin("LeafLocalPGDG1D", leaf_pgdg_note)
     @test occursin("1D only", leaf_pgdg_note)
     @test occursin("hierarchy-driven local basis generation", leaf_pgdg_note)
@@ -798,10 +808,14 @@ end
     @test occursin("one common basis over the whole region", global_contraction_note)
     @test occursin("the uncontracted global mapped basis is usable directly", lowercase(global_contraction_note))
     @test occursin("the basis is not the quadrature grid", terminology)
-    @test occursin("more conventional gausslet functionality", roadmap)
-    @test occursin("accuracy = :medium", roadmap)
+    @test occursin("Primitive set", terminology)
+    @test occursin("contract_primitive_matrix", terminology)
+    @test occursin("An exact non-diagonal radial electron-electron layer", roadmap)
+    @test occursin("geometry-aware grouping", roadmap)
     @test !occursin("Gausslets.jl", readme)
-    @test occursin("Exact non-diagonal electron-electron API", status)
+    @test occursin("Established public-facing path: radial calculations", status)
+    @test occursin("Prototype line", status)
+    @test occursin("one global mapped primitive layer", status)
 end
 
 @testset "Example scripts" begin
@@ -821,7 +835,7 @@ end
 end
 
 @testset "README example slice" begin
-    Z = 1.0
+    Z = 2.0
     s = 0.2
     map = AsinhMapping(c = s / (2Z), s = s)
     rb = build_basis(RadialBasisSpec(:G10;
@@ -832,29 +846,14 @@ end
         odd_even_kmax = 6,
         xgaussians = XGaussian[],
     ))
-    f = rb[4]
-    grid = radial_quadrature(rb)
-    primitive_data = primitives(rb)
-    coefficient_matrix = stencil_matrix(rb)
     diag = basis_diagnostics(rb)
-    S = overlap_matrix(rb, grid)
-    H = kinetic_matrix(rb, grid) +
-        nuclear_matrix(rb, grid; Z = Z) +
-        centrifugal_matrix(rb, grid; l = 0)
-    eig = eigen(Hermitian(H), Hermitian(S))
-    E0 = minimum(real(eig.values))
-    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+    grid = radial_quadrature(rb)
+    ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
 
-    @test sum(coefficient_matrix[mu, 4] * primitive_data[mu](0.3) for mu in eachindex(primitive_data)) ≈
-          f(0.3) atol = 1.0e-12 rtol = 1.0e-12
-    @test isfinite(moment_center(f, grid))
     @test diag.overlap_error < 1.0e-5
     @test diag.D < 1.0e-3
-    @test quadrature_points(grid)[end] >= center(f)
+    @test length(quadrature_points(grid)) > 0
     @test quadrature_weights(grid)[1] > 0.0
-    @test isfinite(E0)
-    @test E0 < 0.0
-    @test norm(S - I, Inf) < 1.0e-5
     @test size(ops.overlap) == (length(rb), length(rb))
     @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
     @test size(multipole(ops, 1)) == (length(rb), length(rb))

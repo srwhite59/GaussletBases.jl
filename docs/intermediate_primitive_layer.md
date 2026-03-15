@@ -1,279 +1,179 @@
-# Intermediate primitive layer note
+# The shared primitive layer
 
-This note defines the small Stage-2 slice added after the first radial release.
+This is the first advanced note in the repository.
 
-The goal is not to port nested gausslets yet. The goal is to validate the
-shared intermediate layer that ordinary, radial, and later nested work can all
-use.
+You do **not** need this page in order to run the radial examples or understand the hydrogen example. But if you want to understand how the package is built, or if you are interested in contraction and hierarchy, this is the right next note.
 
-## Minimal new objects
+The basic idea is simple:
 
-The first new public intermediate object is:
+**the final basis is built from a shared Gaussian-type primitive layer, and the package makes that layer visible**
+
+That matters because it turns the basis from a black box into something you can inspect, manipulate, and contract in a controlled way.
+
+## 1. Why this layer exists
+
+A gausslet basis function is not defined out of thin air. It is built from simpler Gaussian-type pieces.
+
+For one function, that exact expansion is available through:
+
+```julia
+stencil(f)
+```
+
+For a whole basis, the package can expose:
+
+- the common primitive layer behind the basis
+- the coefficient matrix that combines those primitives into the final basis functions
+
+That is the key structural idea behind the advanced side of GaussletBases.
+
+## 2. The primitive set
+
+The structured object for the common primitive layer is:
 
 - `PrimitiveSet1D`
 
-This is an explicit ordered set of lowest-level primitives. Those primitives may
-be plain objects such as `Gaussian(...)`, or explicit mapped objects such as
-`Distorted(Gaussian(...), mapping)`.
+For a basis `b`, the preferred high-level call is:
 
-The first small export-oriented basis object is:
+```julia
+P = primitive_set(b)
+```
 
-- `BasisMetadata1D`
+If you want the raw list of primitive function objects, you can also inspect:
 
-This stores the basis kind, family name, mapping, centers, integral weights,
-the shared `PrimitiveSet1D`, and the coefficient matrix that combines the
-primitive layer into the final basis.
+```julia
+primitives(b)
+```
 
-That is enough to support downstream export or reconstruction of matrix
-workflows without committing to a much larger future schema.
+You do not need this for everyday radial work. It becomes useful when you want to understand how matrices are built, or when you want to study contraction and localization directly.
 
-The next small in-memory consumer object is:
+## 3. From primitives to basis functions
+
+For a basis `b`, the coefficient matrix that contracts primitives into basis functions is:
+
+```julia
+C = stencil_matrix(b)
+```
+
+Mathematically, that means:
+
+- each column of `C` gives one basis function in the shared primitive layer
+- the rows follow the primitive ordering
+- the columns follow the basis-function ordering
+
+That is why the package can move cleanly between primitive-level and basis-level matrices.
+
+## 4. Why contraction matters
+
+Suppose you form a matrix at the primitive level, such as an overlap or kinetic matrix. If `C` is the contraction matrix, then the basis-level matrix is just the contracted version of that primitive matrix.
+
+In code:
+
+```julia
+P = primitive_set(b)
+C = stencil_matrix(b)
+
+Smu = overlap_matrix(P)
+Sb = contract_primitive_matrix(b, Smu)
+```
+
+This is one of the most important advanced ideas in the package:
+
+**the basis is not a black box; it is a contraction built on a visible primitive layer**
+
+That makes it easier to reason about representation, locality, and alternative contraction strategies.
+
+## 5. Basis representations
+
+The package also has a compact advanced object for bundling this information:
 
 - `BasisRepresentation1D`
 
-This bundles the basis metadata, the shared primitive set, the contraction
-matrix, and a small chosen operator set at both the primitive and basis levels.
-It is meant for downstream Julia consumers, not yet for a permanent file
-format.
+built by:
 
-The next small grouping layer that can sit above that representation is:
+```julia
+rep = basis_representation(b)
+```
+
+You can think of this as a convenient in-memory bundle containing:
+
+- basis metadata
+- the primitive layer
+- the contraction matrix
+- selected primitive-level matrices
+- the corresponding contracted basis-level matrices
+
+This is mainly for advanced users, method developers, and downstream experiments. It is not the first thing a new user needs.
+
+## 6. Why this matters scientifically
+
+This primitive-layer view is useful for at least three reasons.
+
+### First: it explains where the basis really comes from
+
+A basis function is not magical. It is a structured combination of simpler pieces.
+
+### Second: it makes matrix construction transparent
+
+You can see where a matrix is built and how it is carried upward by contraction.
+
+### Third: it opens the door to local contraction and hierarchy
+
+Once a common primitive layer is explicit, you can ask meaningful questions about:
+
+- partitioning basis functions in space
+- local retained spaces
+- local versus global contraction
+- hierarchy built on a common substrate
+
+That is exactly where the newer 1D research line in the repository begins.
+
+## 7. Partitions and hierarchy
+
+The package includes a small 1D partition and hierarchy layer:
 
 - `BasisPartition1D`
-- `BasisBox1D`
-
-This is only a 1D interval-box partition over existing basis-function centers.
-It is not yet a nested generation algorithm.
-
-The next small step above that is:
-
 - `HierarchicalBasisPartition1D`
-- `HierarchicalBasisBox1D`
-- `refine_partition(...)`
 
-This is a simple geometric parent-child tree built by refining an existing box
-partition. It still does not encode the historical nested-gausslet generation
-logic.
+These objects are there to help study locality and box structure in a way that is explicit and easy to inspect.
 
-## Minimal public API in this slice
+The important point is that these are **advanced** tools, not required for ordinary radial calculations.
 
-This Stage-2 proof slice adds:
+## 8. The current experimental direction
 
-- `PrimitiveSet1D(primitives; name=nothing, labels=nothing)`
-- `primitive_set(basis)`
-- `overlap_matrix(set::PrimitiveSet1D)`
-- `position_matrix(set::PrimitiveSet1D)`
-- `kinetic_matrix(set::PrimitiveSet1D)`
-- `basis_metadata(basis)`
-- `basis_representation(basis; operators = (:overlap, :position, :kinetic))`
+The current research direction in the repository is not “every leaf gets its own completely separate basis world.”
 
-The matrix builders return ordinary dense matrices, just like the current radial
-operator builders.
+The cleaner present direction is:
 
-## Analytic and numerical backends
+1. one global mapped primitive layer
+2. local contraction inside boxes or leaves of that common layer
 
-The public interface is intentionally *not* organized around backend choice.
+That is why the package now includes objects such as:
 
-The public call is simply:
+- `GlobalMappedPrimitiveLayer1D`
+- `LeafBoxContractionLayer1D`
 
-```julia
-S = overlap_matrix(set)
-X = position_matrix(set)
-T = kinetic_matrix(set)
-```
+This is a more faithful and more scientifically useful direction than treating each leaf as an unrelated local basis construction problem.
 
-Under the hood, the implementation chooses between:
+## 9. Where the prototype line fits
 
-- an analytic path, when the primitive content supports it
-- a numerical path, when explicit mapped or otherwise unsupported primitive
-  content is present
+The package also contains a prototype line built around:
 
-For this first slice:
+- `LeafLocalPGDG1D`
 
-- plain full-line `Gaussian` primitive sets use an analytic path
-- distorted sets such as `Distorted(Gaussian(...), mapping)` use numerical
-  quadrature
+This is useful because it shows that hierarchy-driven local generation can work cleanly in code. But it should still be treated as a prototype, not as the main conceptual story of the package.
 
-That keeps the ordinary-gausslet analytic route alive while still supporting
-explicitly distorted primitive sets through the same public calls.
+For most users, the right way to think about the current state is:
 
-The first additional one-body operator carried by this same interface is the
-position matrix
+- radial calculations are the mature public-facing path
+- primitive-layer contraction is the first advanced architectural idea
+- leaf-local generation is a useful prototype line
+- global mapped layer plus local contraction is the more faithful current research direction
 
-```julia
-X = position_matrix(set)
-```
+## 10. What to read next
 
-For plain Gaussian primitive sets this uses the same analytic
-`<g_a | x | g_b>` route that appears in the legacy ordinary-gausslet and
-pure-Gaussian code. For explicitly distorted primitive sets the public call is
-the same, but the implementation falls back to numerical quadrature.
+After this page, the most useful next reads are:
 
-## Proof-of-concept example
-
-The first proof target is deliberately small:
-
-1. start from the Gaussian primitive layer of an ordinary gausslet stencil
-2. build its primitive overlap, position, and kinetic matrices through the
-   public API
-3. build a distorted version of that primitive set
-4. show that the same public matrix builders work there too
-
-The comparison tests for this slice check that, for a plain Gaussian primitive
-set, the analytic and numerical overlap, position, and kinetic builders agree.
-
-## Feeding the primitive layer upward into a basis
-
-For an existing basis, the shared primitive layer is provided by:
-
-- `primitive_set(basis)`
-
-The contraction map from that primitive layer to the final basis functions is
-already the basis stencil matrix:
-
-- `stencil_matrix(basis)`
-
-So the basis-level contraction story is:
-
-```julia
-P = primitive_set(basis)
-C = stencil_matrix(basis)
-
-Smu = overlap_matrix(P)
-Xmu = position_matrix(P)
-Tmu = kinetic_matrix(P)
-
-Sb = contract_primitive_matrix(basis, Smu)
-Xb = contract_primitive_matrix(basis, Xmu)
-Tb = contract_primitive_matrix(basis, Tmu)
-```
-
-That is the minimal basis-wide consumer for this layer. It shows that the same
-primitive matrix object can feed an existing basis workflow without introducing
-new shell or nested abstractions.
-
-## Small in-memory downstream representation
-
-The next small consumer on top of this layer is:
-
-- `basis_representation(basis; operators = (:overlap, :position, :kinetic))`
-
-The returned `BasisRepresentation1D` exposes:
-
-- `metadata`
-- `primitive_set`
-- `coefficient_matrix`
-- `primitive_matrices`
-- `basis_matrices`
-
-The intent is that a downstream package can ask for one compact object and then
-work only with those fields, rather than reconstructing GaussletBases internals
-for itself.
-
-The matrices are built through the already-proven path:
-
-```julia
-representation = basis_representation(basis)
-
-representation.primitive_matrices.overlap
-representation.basis_matrices.overlap
-representation.basis_matrices.position
-representation.basis_matrices.kinetic
-```
-
-This stays deliberately in-memory. It does not define a disk format, and it
-does not commit the package to a broad long-term export schema yet.
-
-## Small 1D grouping layer
-
-The first box abstraction is intentionally simple:
-
-- take an existing basis or `BasisRepresentation1D`
-- partition basis functions by their physical-space centers
-- expose box membership and box-level matrix blocks
-
-The public entry points are:
-
-- `basis_partition(basis, edges)`
-- `basis_partition(representation, edges)`
-- `box_indices(partition, i)`
-- `box_block(matrix, partition, i)`
-- `box_coupling(matrix, partition, i, j)`
-
-and the same block/coupling calls also work directly on a representation plus
-an operator name:
-
-```julia
-partition = basis_partition(representation, [-2.5, -0.5, 0.5, 2.5])
-
-box_indices(partition, 1)
-box_block(representation, partition, :overlap, 1)
-box_coupling(representation, partition, :kinetic, 1, 2)
-```
-
-This is meant as a generic downstream grouping/indexing layer. It does not yet
-encode hierarchical shells, nested refinement, or molecule-specific logic.
-
-## Small hierarchical refinement layer
-
-The first hierarchical refinement step is deliberately simple:
-
-- start from an existing interval partition
-- refine one leaf box at a time
-- split by midpoint, or by explicitly supplied child edges
-
-The public entry points are:
-
-- `hierarchical_partition(partition)`
-- `hierarchical_partition(basis, edges)`
-- `hierarchical_partition(representation, edges)`
-- `refine_partition(hierarchy, box_index; child_edges=nothing)`
-- `leaf_boxes(hierarchy)`
-- `box_parent(hierarchy, i)`
-- `box_children(hierarchy, i)`
-- `box_level(hierarchy, i)`
-
-The existing block and coupling helpers still apply:
-
-```julia
-hierarchy = hierarchical_partition(representation, [-2.5, -0.5, 0.5, 2.5])
-hierarchy = refine_partition(hierarchy, 1)
-
-leaf_boxes(hierarchy)
-box_block(representation, hierarchy, :overlap, 4)
-box_coupling(representation, hierarchy, :kinetic, 4, 2)
-```
-
-This keeps the hierarchy purely geometric and index-based. It does not yet
-contain adaptive physics criteria, geometry-aware grouping, or nested basis
-generation.
-
-## Metadata versus live computation
-
-`BasisMetadata1D` stores the structural data needed by downstream consumers:
-
-- basis kind and family
-- mapping
-- centers and integral weights
-- the shared primitive set
-- the basis coefficient matrix
-
-What it does *not* store are derived operator matrices such as overlap or
-position or kinetic matrices. Those remain live computations, because they may
-come from either analytic or numerical backends and may evolve as those
-backends improve.
-
-## What this does not try to settle
-
-This note does not define the final nested-gausslet API.
-
-It also does not define a final export format for every future workflow. The
-purpose of this slice is only to prove that:
-
-- the package can represent an explicit primitive layer cleanly
-- matrix builders can sit above that layer
-- analytic and numerical evaluation can share one public interface
-
-After adding `BasisRepresentation1D`, the first `BasisPartition1D`, and a small
-hierarchical refinement layer, this shared structure now looks stable enough to
-support a later fork toward either PGDG-oriented basis generation or
-geometry-aware atom and molecule grouping without yet committing to either one.
+- [`example_guide.md`](example_guide.md) for the order of the advanced examples
+- [`global_map_local_contraction.md`](global_map_local_contraction.md) for the correction away from per-leaf maps
+- [`global_mapped_leaf_contraction_1d.md`](global_mapped_leaf_contraction_1d.md) for the current experimental target

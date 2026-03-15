@@ -1,27 +1,54 @@
-# GaussletBases.jl v0 Status
+# Current Status
 
-## Included in v0
+GaussletBases now has one clearly established user-facing path and one newer advanced/research path.
 
-- Callable primitive functions and gausslets
-- Uniform, half-line, and radial basis construction
-- Exact public stencil inspection
-- Shared basis-wide primitive layer and primitive contraction helpers
-- Explicit radial quadrature and basis diagnostics
-- Radial one-body operators
-- Two-index IDA-style radial multipole matrices
+## Established public-facing path: radial calculations
+
+The most mature use of the package today is atom-centered radial work.
+
+This includes:
+
+- ordinary 1D, half-line, and radial gausslet bases
+- explicit radial quadrature, separate from the basis
+- radial diagnostics
+- radial overlap, kinetic, nuclear, and centrifugal matrices
+- the current two-index IDA-style radial multipole matrices
 - `RadialAtomicOperators`
 
-## Explicitly deferred
+For a new user, this is the clearest place to begin.
 
-- Exact non-diagonal electron-electron APIs
-- PGDG
-- Hybrid Gaussian extras
-- HF / DMRG layers
-- Interop / export helpers
+## Advanced but still settling: primitive layers and contraction
 
-## Likely next extension areas
+The package also has a real one-dimensional structure for studying:
 
-- Exact non-diagonal electron-electron API
-- PGDG
-- Hybrid Gaussian extras
-- Language interop / export helpers
+- primitive Gaussian layers
+- contraction from primitives to basis functions
+- basis representations
+- partitions and simple hierarchy
+- a globally mapped common layer plus local contraction
+
+This line is already useful for method development, but it is not yet as settled or beginner-friendly as the radial path.
+
+## Prototype line
+
+`LeafLocalPGDG1D` and its augmentation should still be viewed as useful prototypes.
+
+They are scientifically helpful because they show that hierarchy-driven local generation can work cleanly. But they are not yet the clearest public conceptual path for the package.
+
+The more canonical current research direction is:
+
+- one global mapped primitive layer
+- local contraction inside boxes or shells of that shared layer
+
+## What is not in the package yet
+
+The current repository does not yet provide:
+
+- exact non-diagonal electron-electron operators
+- a full spherical-angular atomic layer
+- full nested 2D or 3D workflows
+- named chemistry basis-set libraries
+- solver layers such as HF, DMRG, or related workflows
+- Python / Fortran interop layers
+
+That is intentional. The package is still clarifying its scientific structure before it grows into those directions.

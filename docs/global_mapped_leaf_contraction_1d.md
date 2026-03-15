@@ -1,3 +1,7 @@
+> **Note for new users:** this is a narrow research note about the current 1D contraction / hierarchy direction.  
+> It is **not** the best place to start if you are new to GaussletBases.  
+> Start instead with `README.md`, `docs/first_radial_workflow.md`, and `docs/recommended_atomic_setup.md`.
+
 # Global mapped layer and leaf contraction note
 
 This note defines a narrow corrected implementation target.

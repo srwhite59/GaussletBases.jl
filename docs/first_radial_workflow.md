@@ -1,33 +1,33 @@
-# A first radial workflow
+# Quickstart: a first radial workflow
 
-This page is meant to answer a simple question:
+This page answers one practical question:
 
 **If I want to do a first atom-centered radial calculation with GaussletBases, what do I actually do?**
 
-The package is built in layers, but you do not need to learn all of them at once. For a first calculation, the usual sequence is:
+The short answer is:
 
-1. choose a radial mapping and basis recipe
-2. build the radial basis
-3. build a matching quadrature grid
-4. check a few diagnostics
-5. build one-body operators
-6. solve a simple test problem such as hydrogen
+1. choose a mapping and a radial basis recipe
+2. build the basis
+3. run a quick diagnostic check
+4. build a quadrature grid
+5. form one-body operators
+6. test the setup on hydrogen
 
-That is the whole basic workflow.
+That is the basic workflow.
 
-## 1. Choose a radial mapping and basis recipe
+If you are new to the package, this is the best page to read after the README.
+
+## 1. Choose a radial recipe
 
 For an atom of nuclear charge `Z`, the package documentation recommends starting with:
 
 - `s = 0.2`
 - `c = s / (2Z)`
-- `tail_spacing = 10.0`
+- `tail_spacing = 10.0` through the default `AsinhMapping`
 - `tails = 6`
 - `odd_even_kmax = 6`
 - `reference_spacing = 1.0`
-- `rmax = 30.0` bohr for a first-row atom
-
-The first two numbers set the coordinate mapping, which controls how resolution is distributed in radius. The next two control the small near-origin and boundary corrections used in the radial basis construction. `rmax` is the physical outer radius you want to represent.
+- `rmax = 30.0` bohr as a good first-row starting point
 
 In code:
 
@@ -47,35 +47,35 @@ spec = RadialBasisSpec(:G10;
     odd_even_kmax = 6,
     xgaussians = XGaussian[],
 )
+```
 
+This is the package’s standard starting recipe. It is not the only workable choice, but it is a good first choice if you want one recommendation rather than a large tuning discussion.
+
+## 2. Build the basis
+
+```julia
 rb = build_basis(spec)
 ```
 
-For a first serious calculation, this is a much better starting point than the tiny toy examples used in quick smoke tests.
+That gives you a compact radial basis for the reduced radial function `u(r) = r R(r)`.
 
-## 2. Build a matching quadrature grid
-
-The basis and the quadrature grid are separate in this package, on purpose.
-
-The basis is the compact set of functions you expand in. The quadrature grid is the finer grid you use to evaluate radial integrals accurately.
+At this point you already have the actual basis functions. For example:
 
 ```julia
-grid = radial_quadrature(rb)
+f = rb[4]
+
+f(0.3)
+reference_center(f)
+center(f)
 ```
 
-Here:
+If you are just learning the package, it is enough to know that:
+- `reference_center(f)` is the center before the coordinate map is applied
+- `center(f)` is the physical-space center after mapping
 
-* `rb` is the radial basis
-* the package chooses a conservative quadrature cutoff automatically
-* the package also chooses a default starting resolution automatically
+## 3. First check: diagnostics
 
-In many grid-based methods, the basis and the integration grid are tied together. In GaussletBases they are intentionally separate. That is one of the main ideas behind the package.
-
-If you later want manual control, the package also offers `accuracy = :medium`, `:high`, and `:veryhigh`, with `:high` as the default. The advanced keywords underneath that are `quadrature_rmax` and `refine`.
-
-## 3. Check the basis diagnostics
-
-Before doing anything more ambitious, it is a good habit to inspect the diagnostics.
+The quickest first sanity check is:
 
 ```julia
 diag = basis_diagnostics(rb)
@@ -84,57 +84,79 @@ diag.overlap_error
 diag.D
 ```
 
-Here `basis_diagnostics(rb)` chooses its own conservative integration grid internally. That is usually the best first diagnostic path.
+This one-argument form is the simplest path for a new user. The package chooses its own conservative quadrature internally for the diagnostic.
 
-Two especially useful quantities are:
+The two most useful quantities at first are:
 
-* `diag.overlap_error`: how far the numerically evaluated overlap matrix is from exact orthonormality
-* `diag.D`: an aggregate measure of how much the nominal basis centers differ from the first-moment centers computed on the quadrature grid
+- `diag.overlap_error`: how close the numerically checked overlap is to exact orthonormality
+- `diag.D`: an aggregate measure of how much the nominal basis centers differ from first-moment centers on the diagnostic grid
 
-You do not need `D` to be “mysteriously small” in some abstract sense. The point is simpler: if `D` looks unexpectedly large or unstable when you change parameters, that is a sign to inspect the setup more carefully.
+You do not need to obsess over `D` on the first day. The point is simply that it helps you notice when the near-origin behavior may need more attention.
 
-## 4. Inspect one basis function if you want to understand the basis
+## 4. Build an explicit quadrature grid
 
-You do not have to do this every time, but it is often helpful while learning.
+When you want to build operators or inspect moment centers directly, make the quadrature grid explicitly:
 
 ```julia
-f = rb[4]
+grid = radial_quadrature(rb)
+```
 
-f(0.3)
+That is the default recommended call for most users.
+
+The package chooses a conservative quadrature profile automatically. If you later want more explicit control, the advanced form is:
+
+```julia
+grid = radial_quadrature(rb; accuracy = :high, quadrature_rmax = 30.0)
+```
+
+You can think of the quadrature grid as the numerical integration partner of the basis. The basis and the quadrature grid are intentionally separate objects.
+
+## 5. Compare different center notions if you want intuition
+
+Near the origin, several “center” notions need not agree exactly. That is normal, and it is part of why the diagnostics exist.
+
+For one basis function:
+
+```julia
 reference_center(f)
 center(f)
 moment_center(f, grid)
 ```
 
-A useful mental picture is:
+The simplest interpretation is:
 
-* `reference_center(f)` is the center before the coordinate mapping is applied
-* `center(f)` is the mapped physical-space center
-* `moment_center(f, grid)` is the first-moment center computed numerically on the quadrature grid
+- `reference_center(f)`: center before mapping
+- `center(f)`: mapped physical-space center
+- `moment_center(f, grid)`: first-moment center computed numerically on the grid
 
-Near the origin, those do not have to agree perfectly, and that is part of why the diagnostics matter.
+If these begin to disagree in a way that looks unstable under reasonable changes of basis or quadrature, that is a sign to look at the setup more carefully.
 
-## 5. Build one-body operators
+## 6. Build one-body operators
 
-For a one-electron radial problem, the Hamiltonian comes from the overlap, kinetic, nuclear, and centrifugal pieces.
+For a radial one-electron problem, the basic matrices are:
 
 ```julia
 S = overlap_matrix(rb, grid)
 T = kinetic_matrix(rb, grid)
 V = nuclear_matrix(rb, grid; Z = Z)
 C0 = centrifugal_matrix(rb, grid; l = 0)
+```
 
+and the one-electron Hamiltonian is then:
+
+```julia
 H = T + V + C0
 ```
 
-At this stage, everything is still one-electron and radial. That makes it a very clean place to learn how the package works.
+At this stage, everything is still one-electron and radial. That makes it the cleanest place to understand what the package is doing.
 
-## 6. Solve hydrogen as a first scientific test
+## 7. Solve hydrogen as the first real test
 
-Hydrogen is the best first test problem because it is simple, physically familiar, and free of electron-electron complications.
+Hydrogen is the best first scientific example because it is simple, familiar, and free of electron-electron complications.
 
 ```julia
 using LinearAlgebra
+using GaussletBases
 
 Z = 1.0
 s = 0.2
@@ -162,23 +184,23 @@ E0 = minimum(real(eig.values))
 E0
 ```
 
-The exact nonrelativistic ground-state energy is `-0.5 Ha`, so this gives you a direct and easy-to-understand accuracy check.
+The exact nonrelativistic ground-state energy is `-0.5 Ha`, so this is a very direct way to check whether the basis and quadrature are working together well.
 
-A runnable version of this calculation is in:
+A runnable version is in:
 
-* `examples/04_hydrogen_ground_state.jl`
+- `examples/04_hydrogen_ground_state.jl`
 
-## 7. What changes for multi-electron atomic work?
+## 8. What changes for multi-electron radial work?
 
-The basic structure stays the same:
+The basic radial structure stays the same:
 
 1. build a radial basis
-2. build a radial quadrature grid
-3. check diagnostics
+2. check diagnostics
+3. build a quadrature grid
 4. build one-body operators
 5. build the current two-index radial multipole operators
 
-For the current v0 package, a convenient higher-level entry point is:
+For that current v0 workflow, the package also provides:
 
 ```julia
 ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
@@ -193,15 +215,15 @@ multipole(ops, 1)
 
 In the current package, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index IDA-style radial multipole matrices. They are not exact four-index electron-electron tensors.
 
-## 8. When should you try x-gaussians?
+## 9. What about x-gaussians?
 
-For a first one-electron calculation such as hydrogen, it is perfectly reasonable to start with:
+For a first one-electron example such as hydrogen, it is perfectly reasonable to start with:
 
 ```julia
 xgaussians = XGaussian[]
 ```
 
-If you are doing more serious radial interaction work and the near-origin diagnostics look unsatisfactory, then trying one or two x-gaussians is reasonable.
+If you later care more about near-origin behavior in the current radial interaction approximation, it can be useful to try one or two x-gaussians.
 
 A simple one-function experiment is:
 
@@ -215,33 +237,36 @@ A more serious two-function starting point is something like:
 xgaussians = [XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]
 ```
 
-These are starting points, not magic numbers. If you are using x-gaussians, check the diagnostics rather than assuming one choice is always best.
+Those are only starting points. If you use x-gaussians, check the diagnostics rather than treating any one choice as sacred.
 
-## 9. Common beginner mistakes
+## 10. Common beginner mistakes
 
-Here are the most common mistakes new users make.
+The most common beginner mistakes are:
 
 ### Confusing the basis with the quadrature grid
 
-They are different objects with different jobs. Build both.
+They are different objects with different jobs.
 
-### Treating a tiny smoke-test basis as a production recommendation
+### Treating a tiny demo basis as a production recommendation
 
-A very small basis may be fine for testing that code runs, but not for a serious atom calculation.
+A tiny basis is useful for smoke tests. It is not automatically a good atom setup.
 
 ### Worrying about `stencil` too early
 
 You do not need `stencil(f)` to start doing calculations. It is there when you want to inspect the exact Gaussian expansion behind a function.
 
-### Choosing a cutoff that is too small
+### Choosing `rmax` too small
 
-If the tail of the state matters and the basis `rmax` or an explicit `quadrature_rmax` is too small, the calculation will look worse for a physical reason, not because the basis idea failed.
+If the state has meaningful tail weight and the represented radius is too short, the result will look worse for a real physical reason.
 
-## 10. Where to go next
+## 11. Where to go next
 
 After this page, the most useful next reads are:
 
-* [`docs/recommended_atomic_setup.md`](recommended_atomic_setup.md)
-* [`docs/terminology.md`](terminology.md)
+- [`recommended_atomic_setup.md`](recommended_atomic_setup.md)
+- [`example_guide.md`](example_guide.md)
+- [`terminology.md`](terminology.md)
 
-And after that, the runnable examples in `examples/` are the best way to get comfortable with the package.
+If you want the advanced contraction/hierarchy side of the repo after that, then read:
+
+- [`intermediate_primitive_layer.md`](intermediate_primitive_layer.md)

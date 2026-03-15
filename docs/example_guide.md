@@ -1,0 +1,140 @@
+# Reading and running the examples
+
+The examples in this repository are meant to be read in sequence.
+
+They do not all serve the same purpose. Some are beginner examples, some are the main radial scientific path, and some belong to the more experimental contraction and hierarchy line.
+
+From the repository root, each example runs as:
+
+```bash
+julia --project=. examples/NAME.jl
+```
+
+## Stage 1: first contact
+
+These are the best starting examples for a new user.
+
+### `01_first_gausslet.jl`
+
+Build one ordinary gausslet, evaluate it, and inspect its exact Gaussian expansion.
+
+This is the smallest possible introduction to the package.
+
+### `02_radial_basis.jl`
+
+Build a **small demo radial basis**, inspect one basis function, and evaluate the basic diagnostics.
+
+This example is deliberately tiny and fast. It is a smoke-test-style introduction, not the package’s recommended atom setup.
+
+### `03_radial_operators.jl`
+
+Build the basic radial one-body operators and the current radial operator bundle on a **small demo basis**.
+
+Again, this is a fast introductory example rather than a production recommendation.
+
+### `04_hydrogen_ground_state.jl`
+
+Solve the hydrogen ground-state problem in the radial basis.
+
+This is the first full scientific check in the repository, and it is the most important example after the first three.
+
+## Stage 2: primitive layers and contraction
+
+These examples explain the common Gaussian primitive layer that lies behind the basis functions.
+
+### `05_primitive_sets.jl`
+
+Build primitive sets directly and form simple matrices on them.
+
+### `06_basis_contraction.jl`
+
+Start from a basis, recover its primitive layer and contraction matrix, and rebuild basis-level matrices by contracting primitive matrices upward.
+
+### `07_position_contraction.jl`
+
+Do the same thing for the position matrix.
+
+### `08_basis_representation.jl`
+
+Build a compact in-memory representation of a basis together with its primitive layer and selected matrices.
+
+These examples are for users who want to understand the package at a deeper level than “build a basis and call operators.”
+
+## Stage 3: partitions and hierarchy
+
+These examples introduce local grouping in physical space.
+
+### `09_basis_partition.jl`
+
+Partition basis functions into interval boxes using their physical-space centers, and inspect local blocks and couplings.
+
+### `10_hierarchical_partition.jl`
+
+Refine one box and inspect the resulting parent-child hierarchy.
+
+These are advanced organizational examples. They do not yet build a new basis.
+
+## Stage 4: research/prototype line
+
+These are the examples to read only after the earlier structure is clear.
+
+### `11_leaf_pgdg.jl`
+
+Generate a simple leaf-local basis on a hierarchy.
+
+This is a useful prototype, but it is not the best conceptual picture of the long-term direction.
+
+### `12_leaf_pgdg_augmentation.jl`
+
+Add extra user-supplied Gaussian primitives in selected leaves.
+
+This is another prototype example showing local enrichment.
+
+### `13_global_leaf_contraction.jl`
+
+Build one globally mapped common basis over a region, then contract locally on the leaf boxes of a hierarchy.
+
+This is the example that best matches the current corrected research direction:
+
+- one global mapped common layer
+- optional local contraction as a refinement
+
+## Recommended reading orders
+
+### If your main interest is radial atomic work
+
+Read:
+
+1. `01_first_gausslet.jl`
+2. `02_radial_basis.jl`
+3. `03_radial_operators.jl`
+4. `04_hydrogen_ground_state.jl`
+
+Then read:
+
+- `docs/first_radial_workflow.md`
+- `docs/recommended_atomic_setup.md`
+
+### If your main interest is primitive layers and contraction
+
+After the radial examples, continue with:
+
+5. `05_primitive_sets.jl`
+6. `06_basis_contraction.jl`
+7. `07_position_contraction.jl`
+8. `08_basis_representation.jl`
+
+### If your main interest is the current nested/hierarchy research direction
+
+Only after the earlier stages, continue with:
+
+9. `09_basis_partition.jl`
+10. `10_hierarchical_partition.jl`
+11. `13_global_leaf_contraction.jl`
+
+Treat:
+
+12. `11_leaf_pgdg.jl`
+13. `12_leaf_pgdg_augmentation.jl`
+
+as prototype studies rather than as the main public story of the package.

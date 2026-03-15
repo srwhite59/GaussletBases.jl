@@ -1,68 +1,106 @@
 # Roadmap
 
-GaussletBases is currently strongest as a radial gausslet package: it builds
-1D, half-line, and radial bases, constructs explicit quadrature grids, and
-forms radial one-body and current two-index IDA-style multipole operators.
+This roadmap is meant as a short scientific guide to the next questions for GaussletBases.
 
-This roadmap is intentionally short. It is a guide to likely next work, not a
-promise that every item will appear on a fixed schedule.
+It is not a schedule. It is a statement of which directions now look most valuable, especially if the package is meant to become useful to a slice of the electronic-structure community rather than only as an internal research notebook.
 
-## Recently completed
+## Where the package now stands
 
-- `implemented`: quadrature accuracy profiles
-  - `radial_quadrature` now supports `accuracy = :medium`, `:high`, and
-    `:veryhigh`
-  - `:high` is the normal default
-  - `refine` and `quadrature_rmax` remain expert overrides
+Two directions are now real in the code:
 
-- `implemented`: broader adaptive quadrature checks
-  - the default quadrature path now uses more than overlap alone
-  - cheap basis-aware stability checks are part of the stopping logic
+1. a mature radial basis / quadrature / operator line
+2. a newer one-dimensional primitive-layer / contraction / hierarchy line
 
-## Near-term work
+Those directions are both scientifically interesting, but they are not equally mature or equally valuable to outside users.
 
-- `planned`: calibrate and tune the new quadrature profiles on representative
-  atomic cases
-  - validate on `Z = 1`, `2`, and `10`
-  - include `0`, `1`, and `2` `XGaussian` cases
-  - keep the README workflows directly tested
+## Highest-value next additions for outside users
 
-- `possible`: refine the quadrature profile thresholds and weightings
-  - keep the default path conservative without making it unnecessarily heavy
-  - improve the balance between overlap checks, center stability, and simple
-    operator-weighted checks
+If the package is meant to become useful to method developers in atomic and related electronic-structure work, the next highest-value additions are likely these.
 
-- `possible`: revisit offline higher-precision radial basis construction
-  - likely as an external or precomputed path
-  - not as a normal runtime requirement
+### 1. An exact non-diagonal radial electron-electron layer
 
-## Likely later extensions
+The current package has the two-index IDA-style radial multipole matrices.
 
-- `possible`: precomputed standard radial tables
-  - especially recommended `1 XGaussian` and `2 XGaussian` cases
-  - keep the general runtime builder as fallback
+A natural next scientific step is the exact non-diagonal radial electron-electron object. That would make it possible to study more carefully where the present radial approximation is strong, where it is weak, and what the true cost/accuracy tradeoffs look like.
 
-- `possible`: exact non-diagonal radial electron-electron API
-  - separate from the current two-index IDA-style `multipole_matrix`
-  - naming and public shape still need design work
+### 2. A spherical-angular atomic layer on top of the radial line
 
-- `possible`: more conventional gausslet functionality
-  - broader gausslet capabilities beyond the current radial-centered slice
-  - the exact scope is intentionally left open for now because this will likely
-    be revisited soon
+The present package is strongest in the radial direction. A natural next outward-facing extension would be the angular layer that turns radial multipole data into more complete atom-centered operator constructions.
 
-## Longer-term possibilities
+This would make the package much more useful to people who think in terms of actual atomic calculations rather than only radial test problems.
 
-- PGDG-related work
-- hybrid Gaussian extensions
-- interop and export helpers
-- downstream workflow integrations
+### 3. Export and interoperability helpers
 
-## Open questions
+Once the radial and atomic pieces are clearer, export helpers become much more valuable.
 
-- what convergence contract the public quadrature API should promise
-- how much offline or precomputed basis data should ship directly in the package
-- which standard `1 XGaussian` and `2 XGaussian` radial tables are stable enough
-  to ship directly in the source
-- how closely future exact electron-electron APIs should resemble the current
-  radial IDA operator surface
+The likely first targets are simple, explicit formats that another code can consume without needing to reimplement the basis construction.
+
+## Important research questions inside the contraction line
+
+The contraction/hierarchy line remains scientifically important, but it is currently more of a research track than a public-facing track.
+
+The main questions there are:
+
+### 1. What should define the first genuinely useful local retained space?
+
+The immediate next question is still:
+
+- what local contraction criterion should be used inside a box or shell?
+
+The present simple retained spaces are good enough to demonstrate the architecture, but not yet enough to settle the scientific choice.
+
+### 2. How should leaf contraction grow into parent-shell contraction?
+
+The present corrected path is leaf-only.
+
+If that line continues, the next structural extension is likely:
+
+- parent-shell contraction on top of the existing leaf structure
+
+### 3. When should geometry-aware grouping enter?
+
+Eventually, one-dimensional interval boxes will no longer be enough.
+
+The question is when it becomes scientifically worthwhile to move from:
+
+- simple 1D locality and hierarchy
+
+to:
+
+- atom- or geometry-aware grouping
+
+## What the roadmap is not promising yet
+
+This roadmap is not a commitment to:
+
+- a complete solver workflow
+- immediate molecule-scale infrastructure
+- a permanent exchange format
+- a fully settled nested or PGDG public surface
+- immediate Python/Fortran bindings
+
+Those are possible later directions, but they are not the present center of gravity.
+
+## Practical interpretation
+
+If the goal is:
+
+### Better public usefulness soon
+
+then the package should prioritize:
+
+1. exact radial electron-electron structure
+2. angular atomic structure
+3. export/interoperability
+
+If the goal is:
+
+### Deeper basis/contraction research first
+
+then the package should prioritize:
+
+1. better local retained spaces
+2. parent-shell contraction
+3. geometry-aware grouping
+
+Right now, the code contains seeds of both futures. The next major choice is which one should lead the public story.
