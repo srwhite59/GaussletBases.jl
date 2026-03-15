@@ -480,6 +480,49 @@ end
     @test augmented_rep.basis_matrices.kinetic ≈ transpose(augmented_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Global mapped layer and leaf contraction" begin
+    mapping = AsinhMapping(c = 0.15, s = 0.15)
+    global_layer = build_global_mapped_primitive_layer(
+        xmin = -2.0,
+        xmax = 2.0,
+        mapping = mapping,
+        reference_spacing = 0.5,
+        width_scale = 1.0,
+    )
+    global_rep = basis_representation(global_layer)
+    coarse_hierarchy = hierarchical_partition(global_layer, [-2.5, -0.5, 0.5, 2.5])
+    refined_hierarchy = refine_partition(coarse_hierarchy, 1)
+    coarse_contracted = contract_leaf_boxes(global_layer, coarse_hierarchy; retained_per_leaf = 1)
+    refined_contracted = contract_leaf_boxes(global_layer, refined_hierarchy; retained_per_leaf = 1)
+    refined_rep = basis_representation(refined_contracted)
+
+    @test global_layer isa GlobalMappedPrimitiveLayer1D
+    @test size(stencil_matrix(global_layer), 1) == length(primitive_set(global_layer))
+    @test size(stencil_matrix(global_layer), 2) == length(primitive_set(global_layer))
+    @test all(isfinite, global_rep.basis_matrices.overlap)
+    @test all(isfinite, global_rep.basis_matrices.kinetic)
+    @test global_rep.basis_matrices.overlap ≈ transpose(global_rep.basis_matrices.overlap) atol = 1.0e-12 rtol = 1.0e-12
+    @test global_rep.basis_matrices.kinetic ≈ transpose(global_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
+
+    @test refined_contracted isa LeafBoxContractionLayer1D
+    @test length(leaf_contractions(refined_contracted)) == length(leaf_boxes(refined_hierarchy))
+    @test size(stencil_matrix(refined_contracted), 1) == length(primitive_set(global_layer))
+    @test size(stencil_matrix(refined_contracted), 2) == length(leaf_boxes(refined_hierarchy))
+    @test size(stencil_matrix(refined_contracted), 2) == size(stencil_matrix(coarse_contracted), 2) + 1
+    @test leaf_contractions(refined_contracted)[1].leaf_box_index == 4
+    @test leaf_contractions(refined_contracted)[1].primitive_indices == box_indices(refined_hierarchy, 4)
+
+    untouched_coarse = Dict(contraction.leaf_box_index => contraction.retained_centers for contraction in leaf_contractions(coarse_contracted))
+    untouched_refined = Dict(contraction.leaf_box_index => contraction.retained_centers for contraction in leaf_contractions(refined_contracted))
+    @test untouched_refined[2] ≈ untouched_coarse[2] atol = 1.0e-12 rtol = 1.0e-12
+    @test untouched_refined[3] ≈ untouched_coarse[3] atol = 1.0e-12 rtol = 1.0e-12
+
+    @test all(isfinite, refined_rep.basis_matrices.overlap)
+    @test all(isfinite, refined_rep.basis_matrices.kinetic)
+    @test refined_rep.basis_matrices.overlap ≈ transpose(refined_rep.basis_matrices.overlap) atol = 1.0e-12 rtol = 1.0e-12
+    @test refined_rep.basis_matrices.kinetic ≈ transpose(refined_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -667,6 +710,18 @@ end
         ),
     )
     spec = LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)
+    global_layer = build_global_mapped_primitive_layer(
+        xmin = -2.0,
+        xmax = 2.0,
+        mapping = map,
+        reference_spacing = 0.5,
+        width_scale = 1.0,
+    )
+    contracted_layer = contract_leaf_boxes(
+        global_layer,
+        refine_partition(hierarchical_partition(global_layer, [-2.5, -0.5, 0.5, 2.5]), 1);
+        retained_per_leaf = 1,
+    )
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -686,6 +741,8 @@ end
     @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=8, primitives_per_leaf=2, naugmented=0)", sprint(show, pgdg))
     @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=9, primitives_per_leaf=2, naugmented=1)", sprint(show, augmented_pgdg))
     @test occursin("LeafGaussianSpec1D(relative_position=0.5, width_scale=0.2)", sprint(show, spec))
+    @test occursin("GlobalMappedPrimitiveLayer1D(nbasis=", sprint(show, global_layer))
+    @test occursin("LeafBoxContractionLayer1D(nleaves=4, nbasis=4, retained_per_leaf=1)", sprint(show, contracted_layer))
 end
 
 @testset "Documentation consistency" begin
@@ -695,6 +752,7 @@ end
     radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
+    global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
     terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
     roadmap = read(joinpath(_PROJECT_ROOT, "ROADMAP.md"), String)
     status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
@@ -735,6 +793,10 @@ end
     @test occursin("no historical nested-driver port", leaf_pgdg_note)
     @test occursin("LeafGaussianSpec1D", leaf_pgdg_note)
     @test occursin("augment_leaf_pgdg", leaf_pgdg_note)
+    @test occursin("GlobalMappedPrimitiveLayer1D", global_contraction_note)
+    @test occursin("LeafBoxContractionLayer1D", global_contraction_note)
+    @test occursin("one common basis over the whole region", global_contraction_note)
+    @test occursin("the uncontracted global mapped basis is usable directly", lowercase(global_contraction_note))
     @test occursin("the basis is not the quadrature grid", terminology)
     @test occursin("more conventional gausslet functionality", roadmap)
     @test occursin("accuracy = :medium", roadmap)
@@ -755,6 +817,7 @@ end
     @test _run_example_script("10_hierarchical_partition.jl")
     @test _run_example_script("11_leaf_pgdg.jl")
     @test _run_example_script("12_leaf_pgdg_augmentation.jl")
+    @test _run_example_script("13_global_leaf_contraction.jl")
 end
 
 @testset "README example slice" begin

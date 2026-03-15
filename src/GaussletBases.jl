@@ -17,6 +17,9 @@ export AbstractFunction1D,
        HierarchicalBasisPartition1D,
        LeafLocalPGDG1D,
        LeafGaussianSpec1D,
+       GlobalMappedPrimitiveLayer1D,
+       LeafBoxContraction1D,
+       LeafBoxContractionLayer1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -49,10 +52,13 @@ export AbstractFunction1D,
        hierarchical_partition,
        build_leaf_pgdg,
        augment_leaf_pgdg,
+       build_global_mapped_primitive_layer,
+       contract_leaf_boxes,
        refine_partition,
         primitive_set,
         boxes,
         leaf_boxes,
+        leaf_contractions,
         leaf_primitive_indices,
         primitive_origins,
         primitive_leaf_boxes,
@@ -156,10 +162,13 @@ function basis_partition end
 function hierarchical_partition end
 function build_leaf_pgdg end
 function augment_leaf_pgdg end
+function build_global_mapped_primitive_layer end
+function contract_leaf_boxes end
 function refine_partition end
 function primitive_set end
 function boxes end
 function leaf_boxes end
+function leaf_contractions end
 function leaf_primitive_indices end
 function primitive_origins end
 function primitive_leaf_boxes end
@@ -241,6 +250,7 @@ include("primitive_sets.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")
+include("global_leaf_contraction.jl")
 include("diagnostics.jl")
 include("operators.jl")
 

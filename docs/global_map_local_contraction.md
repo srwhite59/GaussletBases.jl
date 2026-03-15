@@ -79,7 +79,7 @@ That matters conceptually:
 - the globally mapped uncontracted primitive or product basis is not only
   scaffolding for later contraction
 - it is itself a useful simple object
-- and in some cases it may already be a reasonable basis to use directly
+- and in some cases it may already be a reasonable endpoint to use directly
 
 So local shell or box contraction should be viewed as a refinement layer built
 on top of that global basis, not as the only reason the global layer exists.
@@ -157,6 +157,8 @@ So `LeafLocalPGDG1D` should be viewed as:
 - a good test of provenance, grouping, and representation plumbing
 - but probably not the right conceptual path to the true historical nested
   construction
+- and less faithful to the historical nested idea than a shared global mapped
+  layer plus local box or shell contraction
 
 ## Recommended next implementation target
 
