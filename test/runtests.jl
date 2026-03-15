@@ -444,6 +444,42 @@ end
     @test length(refined_pgdg.leaf_box_ids) == length(leaf_boxes(refined_hierarchy))
 end
 
+@testset "Leaf-local PGDG augmentation" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    rep = basis_representation(ub)
+    hierarchy = refine_partition(hierarchical_partition(rep, [-2.5, -0.5, 0.5, 2.5]), 1)
+    base_pgdg = build_leaf_pgdg(hierarchy; primitives_per_leaf = 2, width_scale = 0.75)
+    augmented_pgdg = augment_leaf_pgdg(
+        base_pgdg;
+        by_leaf = Dict(
+            4 => [LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)],
+        ),
+    )
+    augmented_rep = basis_representation(augmented_pgdg)
+
+    @test length(leaf_primitive_indices(augmented_pgdg, 4)) == length(leaf_primitive_indices(base_pgdg, 4)) + 1
+    @test length(leaf_primitive_indices(augmented_pgdg, 5)) == length(leaf_primitive_indices(base_pgdg, 5))
+    @test length(leaf_primitive_indices(augmented_pgdg, 2)) == length(leaf_primitive_indices(base_pgdg, 2))
+    @test length(primitive_set(augmented_pgdg)) == length(primitive_set(base_pgdg)) + 1
+
+    base_centers = base_pgdg.metadata.center_data
+    augmented_centers = augmented_pgdg.metadata.center_data
+    @test augmented_centers[leaf_primitive_indices(augmented_pgdg, 5)] ≈ base_centers[leaf_primitive_indices(base_pgdg, 5)] atol = 1.0e-12 rtol = 1.0e-12
+    @test augmented_centers[leaf_primitive_indices(augmented_pgdg, 2)] ≈ base_centers[leaf_primitive_indices(base_pgdg, 2)] atol = 1.0e-12 rtol = 1.0e-12
+    @test augmented_centers[leaf_primitive_indices(augmented_pgdg, 3)] ≈ base_centers[leaf_primitive_indices(base_pgdg, 3)] atol = 1.0e-12 rtol = 1.0e-12
+
+    @test count(==(:augmented), primitive_origins(augmented_pgdg)) == 1
+    @test count(==(:generated), primitive_origins(augmented_pgdg)) == length(primitive_set(base_pgdg))
+    @test primitive_leaf_boxes(augmented_pgdg)[last(leaf_primitive_indices(augmented_pgdg, 4))] == 4
+
+    @test all(isfinite, augmented_rep.basis_matrices.overlap)
+    @test all(isfinite, augmented_rep.basis_matrices.position)
+    @test all(isfinite, augmented_rep.basis_matrices.kinetic)
+    @test augmented_rep.basis_matrices.overlap ≈ transpose(augmented_rep.basis_matrices.overlap) atol = 1.0e-12 rtol = 1.0e-12
+    @test augmented_rep.basis_matrices.position ≈ transpose(augmented_rep.basis_matrices.position) atol = 1.0e-12 rtol = 1.0e-12
+    @test augmented_rep.basis_matrices.kinetic ≈ transpose(augmented_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -624,6 +660,13 @@ end
     partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
     hierarchy = refine_partition(hierarchical_partition(partition), 1)
     pgdg = build_leaf_pgdg(hierarchy)
+    augmented_pgdg = augment_leaf_pgdg(
+        pgdg;
+        by_leaf = Dict(
+            4 => [LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)],
+        ),
+    )
+    spec = LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -640,7 +683,9 @@ end
     @test occursin("BasisBox1D(index=1", sprint(show, boxes(partition)[1]))
     @test occursin("HierarchicalBasisPartition1D(nbasis=5, nboxes=5, nleaves=4)", sprint(show, hierarchy))
     @test occursin("HierarchicalBasisBox1D(index=4", sprint(show, boxes(hierarchy)[4]))
-    @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=8, primitives_per_leaf=2)", sprint(show, pgdg))
+    @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=8, primitives_per_leaf=2, naugmented=0)", sprint(show, pgdg))
+    @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=9, primitives_per_leaf=2, naugmented=1)", sprint(show, augmented_pgdg))
+    @test occursin("LeafGaussianSpec1D(relative_position=0.5, width_scale=0.2)", sprint(show, spec))
 end
 
 @testset "Documentation consistency" begin
@@ -688,6 +733,8 @@ end
     @test occursin("1D only", leaf_pgdg_note)
     @test occursin("hierarchy-driven local basis generation", leaf_pgdg_note)
     @test occursin("no historical nested-driver port", leaf_pgdg_note)
+    @test occursin("LeafGaussianSpec1D", leaf_pgdg_note)
+    @test occursin("augment_leaf_pgdg", leaf_pgdg_note)
     @test occursin("the basis is not the quadrature grid", terminology)
     @test occursin("more conventional gausslet functionality", roadmap)
     @test occursin("accuracy = :medium", roadmap)
@@ -707,6 +754,7 @@ end
     @test _run_example_script("09_basis_partition.jl")
     @test _run_example_script("10_hierarchical_partition.jl")
     @test _run_example_script("11_leaf_pgdg.jl")
+    @test _run_example_script("12_leaf_pgdg_augmentation.jl")
 end
 
 @testset "README example slice" begin

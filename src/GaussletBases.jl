@@ -16,6 +16,7 @@ export AbstractFunction1D,
        HierarchicalBasisBox1D,
        HierarchicalBasisPartition1D,
        LeafLocalPGDG1D,
+       LeafGaussianSpec1D,
        UniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
@@ -47,11 +48,14 @@ export AbstractFunction1D,
        basis_partition,
        hierarchical_partition,
        build_leaf_pgdg,
+       augment_leaf_pgdg,
        refine_partition,
         primitive_set,
         boxes,
         leaf_boxes,
         leaf_primitive_indices,
+        primitive_origins,
+        primitive_leaf_boxes,
         box_indices,
         box_level,
         box_parent,
@@ -151,11 +155,14 @@ function basis_representation end
 function basis_partition end
 function hierarchical_partition end
 function build_leaf_pgdg end
+function augment_leaf_pgdg end
 function refine_partition end
 function primitive_set end
 function boxes end
 function leaf_boxes end
 function leaf_primitive_indices end
+function primitive_origins end
+function primitive_leaf_boxes end
 function box_indices end
 function box_level end
 function box_parent end
