@@ -284,22 +284,23 @@ end
 end
 
 @testset "Recommended radial diagnostics cutoff" begin
-    Z = 2.0
-    s = 0.2
-    rb = build_basis(RadialBasisSpec(:G10;
-        rmax = 30.0,
-        mapping = AsinhMapping(c = s / (2Z), s = s),
-        reference_spacing = 1.0,
-        tails = 6,
-        odd_even_kmax = 6,
-        xgaussians = XGaussian[],
-    ))
+    for Z in (2.0, 10.0)
+        s = 0.2
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 30.0,
+            mapping = AsinhMapping(c = s / (2Z), s = s),
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = XGaussian[],
+        ))
 
-    @test_logs (:warn, r"truncating basis tails") radial_quadrature(rb; refine = 24, quadrature_rmax = 30.0)
+        Z == 2.0 && @test_logs (:warn, r"truncating basis tails") radial_quadrature(rb; refine = 24, quadrature_rmax = 30.0)
 
-    diag = basis_diagnostics(rb)
-    @test diag.overlap_error < 1.0e-5
-    @test diag.D < 1.0e-3
+        diag = basis_diagnostics(rb)
+        @test diag.overlap_error < 1.0e-5
+        @test diag.D < 1.0e-3
+    end
 end
 
 @testset "Radial operator matrices" begin
