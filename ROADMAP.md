@@ -7,22 +7,30 @@ forms radial one-body and current two-index IDA-style multipole operators.
 This roadmap is intentionally short. It is a guide to likely next work, not a
 promise that every item will appear on a fixed schedule.
 
+## Recently completed
+
+- `implemented`: quadrature accuracy profiles
+  - `radial_quadrature` now supports `accuracy = :medium`, `:high`, and
+    `:veryhigh`
+  - `:high` is the normal default
+  - `refine` and `quadrature_rmax` remain expert overrides
+
+- `implemented`: broader adaptive quadrature checks
+  - the default quadrature path now uses more than overlap alone
+  - cheap basis-aware stability checks are part of the stopping logic
+
 ## Near-term work
 
-- `under study`: quadrature accuracy profiles
-  - add `accuracy = :medium`, `:high`, and `:veryhigh`
-  - make `:high` the normal default
-  - keep `refine` and `quadrature_rmax` as expert overrides
-
-- `under study`: broader adaptive quadrature checks
-  - use more than overlap alone
-  - include cheap basis-aware stability checks so the default grid is less easy
-    to misuse
-
-- `planned`: calibrate quadrature defaults on representative atomic cases
+- `planned`: calibrate and tune the new quadrature profiles on representative
+  atomic cases
   - validate on `Z = 1`, `2`, and `10`
   - include `0`, `1`, and `2` `XGaussian` cases
   - keep the README workflows directly tested
+
+- `possible`: refine the quadrature profile thresholds and weightings
+  - keep the default path conservative without making it unnecessarily heavy
+  - improve the balance between overlap checks, center stability, and simple
+    operator-weighted checks
 
 - `possible`: revisit offline higher-precision radial basis construction
   - likely as an external or precomputed path
@@ -40,7 +48,8 @@ promise that every item will appear on a fixed schedule.
 
 - `possible`: more conventional gausslet functionality
   - broader gausslet capabilities beyond the current radial-centered slice
-  - the exact scope is intentionally left open for now
+  - the exact scope is intentionally left open for now because this will likely
+    be revisited soon
 
 ## Longer-term possibilities
 
@@ -53,5 +62,7 @@ promise that every item will appear on a fixed schedule.
 
 - what convergence contract the public quadrature API should promise
 - how much offline or precomputed basis data should ship directly in the package
+- which standard `1 XGaussian` and `2 XGaussian` radial tables are stable enough
+  to ship directly in the source
 - how closely future exact electron-electron APIs should resemble the current
   radial IDA operator surface
