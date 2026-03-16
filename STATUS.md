@@ -45,6 +45,28 @@ This layer bundles:
 
 It is an assembly layer only. It does not yet solve the many-electron problem.
 
+## First minimal atomic mean-field line
+
+The repository now also has the first small Hartree/Fock-style layer built on
+top of the current atomic IDA ingredients.
+
+That line now includes:
+
+- the direct/Hartree term
+- the exchange term
+- the algebraic Fock-style combination
+- a minimal UHF fixed-point kernel
+
+This is already enough to run small He-like mean-field tests in the present
+atomic IDA model.
+
+But it should not be overdescribed. This is **not** yet a broad general HF
+workflow. It is a narrow current-model mean-field layer built on:
+
+- the radial basis
+- the `(l,m)` atomic channel layer
+- the current static IDA ingredients
+
 ## Advanced but still settling: primitive layers and contraction
 
 The package also has a real one-dimensional structure for studying:
@@ -73,10 +95,11 @@ The more canonical current research direction is:
 The current repository does not yet provide:
 
 - exact non-diagonal electron-electron operators
-- a solved interacting atomic workflow beyond the present static IDA ingredient layer
+- a broad general HF/RHF/UHF workflow beyond the present minimal atomic IDA kernel
+- a larger interacting atomic workflow beyond the present tiny exact and minimal UHF layers
 - full nested 2D or 3D workflows
 - named chemistry basis-set libraries
-- solver layers such as HF, DMRG, or related workflows
+- larger solver layers such as DMRG or related workflows
 - Python / Fortran interop layers
 
 That is intentional. The package is still clarifying its scientific structure before it grows into those directions.

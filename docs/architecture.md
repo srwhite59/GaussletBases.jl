@@ -60,7 +60,34 @@ That layer makes explicit:
 
 This is still not a solver. It is the explicit interacting data structure that later He-style work should build on.
 
-## 5. Shared primitive layer
+## 5. First minimal atomic mean-field line
+
+On top of that static atomic IDA layer, the repository now also has the first
+small mean-field line for He-like model problems.
+
+That line now consists of:
+
+- the radial basis and radial operator substrate
+- the explicit `(l,m)` channel layer
+- the static atomic IDA ingredient bundle
+- the direct and exchange one-body terms
+- the small Fock-style combination layer
+- the minimal UHF fixed-point kernel
+
+In other words, the atomic story is now coherent through the first
+self-consistent level:
+
+1. radial basis
+2. `(l,m)` channels
+3. static interacting IDA ingredients
+4. direct / exchange / Fock
+5. minimal UHF
+
+That is a real scientific step forward, but it should still be described
+carefully. The present code does **not** provide a broad general HF framework.
+It provides a small UHF kernel for the current atomic IDA approximation.
+
+## 6. Shared primitive layer
 
 The key advanced structural idea is the shared primitive layer.
 
@@ -75,7 +102,7 @@ This is the bridge between “basis functions as final objects” and “basis f
 
 That bridge matters scientifically because it makes matrix construction, locality, and alternative contraction strategies explicit instead of hidden.
 
-## 6. Representation, partitions, and hierarchy
+## 7. Representation, partitions, and hierarchy
 
 On top of the primitive layer, the package now has:
 
@@ -85,7 +112,7 @@ On top of the primitive layer, the package now has:
 
 These layers are not yet full nested-gausslet machinery. They are the organizational scaffolding needed to study locality and local contraction cleanly.
 
-## 7. Prototype line versus corrected direction
+## 8. Prototype line versus corrected direction
 
 There are now two distinct advanced 1D lines in the repository.
 
@@ -116,7 +143,7 @@ This is the line represented most clearly by:
 
 This direction is closer to the historical nested idea because it keeps one shared global primitive basis and performs local contraction inside that common layer.
 
-## 8. Why the global mapped layer matters
+## 9. Why the global mapped layer matters
 
 An important conceptual point is that the globally mapped uncontracted primitive/product basis is not just scaffolding.
 
@@ -127,7 +154,7 @@ It is useful in two ways:
 
 So the package should not be read as “everything is waiting for contraction before it becomes meaningful.” The global mapped layer is already a scientifically meaningful object.
 
-## 9. What is mature, what is advanced, what is still open
+## 10. What is mature, what is advanced, what is still open
 
 ### Mature
 
@@ -137,6 +164,7 @@ So the package should not be read as “everything is waiting for contraction be
 - hydrogen validation example
 - the first explicit one-electron `(l,m)` atomic layer
 - the first static interacting He / IDA-style ingredient layer
+- the first minimal atomic direct / exchange / Fock / UHF line for the current IDA model
 
 ### Advanced but structurally real
 
@@ -151,10 +179,11 @@ So the package should not be read as “everything is waiting for contraction be
 - the best local contraction criterion for a genuinely useful nested step
 - parent-shell contraction beyond leaves
 - geometry-aware grouping for atoms and molecules
+- a broader and more physically general HF layer beyond the present minimal UHF kernel
 - named Gaussian chemistry basis support
 - higher-dimensional nested workflows
 
-## 10. How to read the repository now
+## 11. How to read the repository now
 
 If you are new:
 
@@ -172,12 +201,13 @@ If your interest is specifically the current nested/contraction direction:
 4. run `examples/13_global_leaf_contraction.jl`
 5. treat `11` and `12` as prototype side studies
 
-## 11. Bottom line
+## 12. Bottom line
 
 The package should be understood this way:
 
 - ordinary gausslets are the broad foundation
 - radial gausslets are the current mature public-facing workflow
 - the first `(l,m)` atomic layer now sits directly on top of that radial workflow
+- the first static IDA ingredients and minimal UHF kernel now sit on top of that atomic layer
 - primitive layers, contraction, partitions, and hierarchy are the structural bridge to future nested work
 - the corrected current research direction is global mapped layer plus local contraction, not separate local basis worlds in each leaf

@@ -178,6 +178,8 @@ The main documentation surface is:
   The first explicit angular `(l,m)` layer built on top of the radial substrate.
 - [`docs/atomic_ida_layer.md`](docs/atomic_ida_layer.md)
   The first static interacting He / IDA-style ingredients built on top of the radial-plus-angular layer.
+- [`docs/atomic_ida_uhf.md`](docs/atomic_ida_uhf.md)
+  The current minimal UHF kernel built on top of the present atomic IDA model.
 - [`docs/example_guide.md`](docs/example_guide.md)  
   The best order in which to read and run the examples.
 - [`docs/architecture.md`](docs/architecture.md)  
@@ -226,6 +228,7 @@ What is already useful today:
 - radial gausslet bases and radial one-body operators
 - the first explicit one-electron `(l,m)` atomic layer
 - the first static He / IDA-style interacting atomic ingredients
+- the first direct / exchange / Fock / minimal-UHF atomic line in the current IDA model
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction
 - the first 1D partition/hierarchy/contraction experiments
@@ -234,9 +237,10 @@ What is not yet here:
 
 - exact non-diagonal electron-electron operators
 - the fuller interacting spherical-angular atomic layer beyond the present one-electron `(l,m)` path
+- a broad general HF workflow beyond the present minimal atomic IDA UHF kernel
 - 2D or 3D nested workflows
 - named Gaussian chemistry basis libraries
-- solver layers such as HF, DMRG, or related workflows
+- larger solver layers such as DMRG or related workflows
 - Python and Fortran interoperability layers
 
 That is deliberate. The package is still settling its scientific structure before it grows into those directions.

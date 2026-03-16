@@ -78,6 +78,7 @@ This is still intentionally narrow:
 - simple damping
 - no DIIS
 - no broad workflow layer
+- no claim of a general HF implementation
 
 ### `17_atomic_ida_two_electron.jl`
 
@@ -206,7 +207,7 @@ Then, only if you want the prototype side branch, treat:
 
 as prototype studies rather than as the main public story of the package.
 
-### If your main interest is the first static atomic IDA ingredients
+### If your main interest is the current small atomic IDA / HF line
 
 After `15_atomic_hydrogen_ylm.jl`, continue with:
 
@@ -224,5 +225,16 @@ Then read:
 - `docs/atomic_ida_direct.md`
 - `docs/atomic_ida_exchange.md`
 - `docs/atomic_ida_fock.md`
+- `docs/atomic_ida_spin_fock.md`
 - `docs/atomic_ida_uhf.md`
 - `docs/atomic_ida_two_electron.md`
+
+The important interpretation here is:
+
+- `16` gives the static interacting ingredients
+- `19` and `20` give the direct and exchange pieces
+- `21` gives the algebraic Fock-style combination
+- `22` gives the first minimal UHF fixed-point kernel in the current atomic IDA model
+
+This is already a meaningful atomic mean-field line, but it should still be read
+as a small current-model workflow rather than as a general HF package.
