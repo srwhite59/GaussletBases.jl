@@ -663,6 +663,37 @@ end
     @test multipole1 ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
 end
 
+@testset "Radial primitive operator contraction" begin
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    P = primitive_set(rb)
+
+    overlap_mu = overlap_matrix(P, grid)
+    kinetic_mu = kinetic_matrix(P, grid)
+    nuclear_mu = nuclear_matrix(P, grid; Z = 2.0)
+    centr2_mu = centrifugal_matrix(P, grid; l = 2)
+
+    overlap_b = contract_primitive_matrix(rb, overlap_mu)
+    kinetic_b = contract_primitive_matrix(rb, kinetic_mu)
+    nuclear_b = contract_primitive_matrix(rb, nuclear_mu)
+    centr2_b = contract_primitive_matrix(rb, centr2_mu)
+
+    @test all(isfinite, overlap_mu)
+    @test all(isfinite, kinetic_mu)
+    @test all(isfinite, nuclear_mu)
+    @test all(isfinite, centr2_mu)
+
+    @test overlap_mu ≈ transpose(overlap_mu) atol = 1.0e-12 rtol = 1.0e-12
+    @test kinetic_mu ≈ transpose(kinetic_mu) atol = 1.0e-12 rtol = 1.0e-12
+    @test nuclear_mu ≈ transpose(nuclear_mu) atol = 1.0e-12 rtol = 1.0e-12
+    @test centr2_mu ≈ transpose(centr2_mu) atol = 1.0e-12 rtol = 1.0e-12
+
+    @test norm(overlap_b - overlap_matrix(rb, grid), Inf) ≤ 1.0e-10
+    @test norm(kinetic_b - kinetic_matrix(rb, grid), Inf) ≤ 1.0e-10
+    @test norm(nuclear_b - nuclear_matrix(rb, grid; Z = 2.0), Inf) ≤ 1.0e-10
+    @test norm(centr2_b - centrifugal_matrix(rb, grid; l = 2), Inf) /
+          norm(centrifugal_matrix(rb, grid; l = 2), Inf) ≤ 1.0e-9
+end
+
 @testset "Radial atomic operators" begin
     rb, grid = _radial_operator_fixture(; refine = 24)
     ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
@@ -752,6 +783,7 @@ end
     radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
     architecture = read(joinpath(_PROJECT_ROOT, "docs", "architecture.md"), String)
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
+    radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
@@ -796,6 +828,9 @@ end
     @test occursin("LeafLocalPGDG1D", primitive_layer_note)
     @test occursin("the basis is not a black box", primitive_layer_note)
     @test occursin("one global mapped primitive layer", primitive_layer_note)
+    @test occursin("primitive_set(rb)", radial_primitive_note)
+    @test occursin("not to derive analytic formulas", lowercase(radial_primitive_note))
+    @test occursin("prepares the way for ylm", lowercase(radial_primitive_note))
     @test occursin("13_global_leaf_contraction.jl", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
@@ -837,6 +872,7 @@ end
     @test _run_example_script("11_leaf_pgdg.jl")
     @test _run_example_script("12_leaf_pgdg_augmentation.jl")
     @test _run_example_script("13_global_leaf_contraction.jl")
+    @test _run_example_script("14_radial_primitive_operators.jl")
 end
 
 @testset "README example slice" begin

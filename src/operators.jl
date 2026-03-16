@@ -24,6 +24,16 @@ function _validate_radial_operator_grid(basis::RadialBasis, grid::RadialQuadratu
     return points, weights
 end
 
+function _validate_radial_operator_grid(::PrimitiveSet1D, grid::RadialQuadratureGrid)
+    points = quadrature_points(grid)
+    weights = quadrature_weights(grid)
+    length(points) == length(weights) || throw(ArgumentError("quadrature point and weight counts must match"))
+    isempty(points) && throw(ArgumentError("quadrature grid must not be empty"))
+    issorted(points) || throw(ArgumentError("quadrature points must be sorted in increasing order"))
+    any(weight -> weight <= 0.0, weights) && throw(ArgumentError("quadrature weights must be positive"))
+    return points, weights
+end
+
 function _symmetrize_matrix(matrix::AbstractMatrix{<:Real})
     return 0.5 .* (Matrix{Float64}(matrix) .+ Matrix{Float64}(transpose(matrix)))
 end
@@ -104,6 +114,21 @@ function overlap_matrix(basis::RadialBasis, grid::RadialQuadratureGrid)
 end
 
 """
+    overlap_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid)
+
+Build the primitive-space radial overlap matrix of `set` on the supplied
+quadrature `grid`.
+
+This is intended for the primitive layer behind a `RadialBasis`, for example
+through `primitive_set(rb)`.
+"""
+function overlap_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid)
+    points, weights = _validate_radial_operator_grid(set, grid)
+    values = _primitive_sample_matrix(set, points)
+    return _symmetrize_matrix(_weighted_basis_gram(values, values, weights))
+end
+
+"""
     kinetic_matrix(basis::RadialBasis, grid::RadialQuadratureGrid)
 
 Build the reduced-radial kinetic-energy matrix
@@ -115,6 +140,21 @@ on the supplied quadrature `grid`.
 function kinetic_matrix(basis::RadialBasis, grid::RadialQuadratureGrid)
     points, weights = _validate_radial_operator_grid(basis, grid)
     derivatives = _basis_derivative_matrix(basis, points)
+    return _symmetrize_matrix(0.5 .* _weighted_basis_gram(derivatives, derivatives, weights))
+end
+
+"""
+    kinetic_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid)
+
+Build the primitive-space reduced-radial kinetic-energy matrix
+
+    <phi_mu | -0.5 d^2/dr^2 | phi_nu>
+
+on the supplied quadrature `grid`.
+"""
+function kinetic_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid)
+    points, weights = _validate_radial_operator_grid(set, grid)
+    derivatives = _primitive_sample_matrix(set, points; derivative_order = 1)
     return _symmetrize_matrix(0.5 .* _weighted_basis_gram(derivatives, derivatives, weights))
 end
 
@@ -131,6 +171,23 @@ function nuclear_matrix(basis::RadialBasis, grid::RadialQuadratureGrid; Z::Real)
     points, weights = _validate_radial_operator_grid(basis, grid)
     any(point -> point <= 0.0, points) && throw(ArgumentError("nuclear_matrix requires quadrature points strictly above zero"))
     values = _basis_values_matrix(basis, points)
+    radial_factor = (-Float64(Z)) ./ points
+    return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
+end
+
+"""
+    nuclear_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; Z)
+
+Build the primitive-space reduced-radial nuclear attraction matrix
+
+    <phi_mu | -Z / r | phi_nu>
+
+on the supplied quadrature `grid`.
+"""
+function nuclear_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; Z::Real)
+    points, weights = _validate_radial_operator_grid(set, grid)
+    any(point -> point <= 0.0, points) && throw(ArgumentError("nuclear_matrix requires quadrature points strictly above zero"))
+    values = _primitive_sample_matrix(set, points)
     radial_factor = (-Float64(Z)) ./ points
     return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
 end
@@ -153,6 +210,28 @@ function centrifugal_matrix(basis::RadialBasis, grid::RadialQuadratureGrid; l::I
     l == 0 && return zeros(Float64, nbasis, nbasis)
 
     values = _basis_values_matrix(basis, points)
+    radial_factor = (0.5 * l * (l + 1.0)) ./ (points .^ 2)
+    return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
+end
+
+"""
+    centrifugal_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; l)
+
+Build the primitive-space reduced-radial centrifugal matrix
+
+    <phi_mu | l(l + 1) / (2 r^2) | phi_nu>
+
+on the supplied quadrature `grid`.
+"""
+function centrifugal_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; l::Int)
+    l >= 0 || throw(ArgumentError("centrifugal_matrix requires l >= 0"))
+    points, weights = _validate_radial_operator_grid(set, grid)
+    any(point -> point <= 0.0, points) && throw(ArgumentError("centrifugal_matrix requires quadrature points strictly above zero"))
+
+    nprimitive = length(set)
+    l == 0 && return zeros(Float64, nprimitive, nprimitive)
+
+    values = _primitive_sample_matrix(set, points)
     radial_factor = (0.5 * l * (l + 1.0)) ./ (points .^ 2)
     return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
 end

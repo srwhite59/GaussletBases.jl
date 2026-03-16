@@ -60,6 +60,12 @@ Build a compact in-memory representation of a basis together with its primitive 
 
 These examples are for users who want to understand the package at a deeper level than “build a basis and call operators.”
 
+### `14_radial_primitive_operators.jl`
+
+Build the primitive-space radial one-body operators on an explicit quadrature grid, contract them upward to the radial basis, and compare them with the current direct radial operator path.
+
+This is the clean bridge between the radial workflow and the shared primitive/contraction architecture.
+
 ## Stage 3: partitions and hierarchy
 
 These examples introduce local grouping in physical space.
@@ -128,18 +134,19 @@ After the radial examples, continue with:
 6. `06_basis_contraction.jl`
 7. `07_position_contraction.jl`
 8. `08_basis_representation.jl`
+9. `14_radial_primitive_operators.jl`
 
 ### If your main interest is the current nested/hierarchy research direction
 
 Only after the earlier stages, continue with:
 
-9. `09_basis_partition.jl`
-10. `10_hierarchical_partition.jl`
-11. `13_global_leaf_contraction.jl`
+10. `09_basis_partition.jl`
+11. `10_hierarchical_partition.jl`
+12. `13_global_leaf_contraction.jl`
 
 Then, only if you want the prototype side branch, treat:
 
-12. `11_leaf_pgdg.jl`
-13. `12_leaf_pgdg_augmentation.jl`
+13. `11_leaf_pgdg.jl`
+14. `12_leaf_pgdg_augmentation.jl`
 
 as prototype studies rather than as the main public story of the package.
