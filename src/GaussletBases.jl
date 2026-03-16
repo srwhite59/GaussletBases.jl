@@ -21,6 +21,7 @@ export AbstractFunction1D,
        LeafBoxContraction1D,
        LeafBoxContractionLayer1D,
        UniformBasisSpec,
+       MappedUniformBasisSpec,
        HalfLineBasisSpec,
        RadialBasisSpec,
        Gaussian,
@@ -30,8 +31,10 @@ export AbstractFunction1D,
        GaussletFamily,
        Gausslet,
        UniformBasis,
+       MappedUniformBasis,
        HalfLineBasis,
        RadialBasis,
+       MappedGausslet,
        BoundaryGausslet,
        RadialGausslet,
        StencilTerm,
@@ -80,6 +83,7 @@ export AbstractFunction1D,
        CoulombGaussianExpansion,
        coulomb_gaussian_expansion,
        gaussian_factor_matrix,
+       gaussian_factor_matrices,
        RadialQuadratureGrid,
        radial_quadrature,
        quadrature_points,
@@ -134,6 +138,7 @@ export AbstractFunction1D,
        terms,
        IdentityMapping,
        AsinhMapping,
+       fit_asinh_mapping_for_extent,
        uofx,
        xofu,
        dudx,
@@ -226,6 +231,7 @@ function contract_primitive_diagonal end
 function contract_primitive_matrix end
 function coulomb_gaussian_expansion end
 function gaussian_factor_matrix end
+function gaussian_factor_matrices end
 function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
@@ -274,6 +280,7 @@ function uofx end
 function xofu end
 function dudx end
 function du2dx2 end
+function fit_asinh_mapping_for_extent end
 
 (f::AbstractFunction1D)(x::Real) = value(f, x)
 (mapping::AbstractCoordinateMapping)(x::Real) = uofx(mapping, x)

@@ -11,6 +11,15 @@ _cached_fixture(key::Symbol, builder::Function) = get!(_FIXTURE_CACHE, key) do
     builder()
 end
 
+function _orthonormalize_1d(overlap::AbstractMatrix, operators::AbstractVector{<:AbstractMatrix})
+    decomposition = eigen(Symmetric(Matrix{Float64}(overlap)))
+    invhalf =
+        decomposition.vectors *
+        Diagonal(1.0 ./ sqrt.(decomposition.values)) *
+        transpose(decomposition.vectors)
+    return Tuple(invhalf * operator * invhalf for operator in operators)
+end
+
 function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
@@ -42,11 +51,12 @@ function _quick_cartesian_hydrogen_fixture()
         representation = basis_representation(basis; operators = (:overlap, :kinetic))
         overlap_1d = representation.basis_matrices.overlap
         kinetic_1d = representation.basis_matrices.kinetic
-        expansion = coulomb_gaussian_expansion()
-        gaussian_factors = [
-            gaussian_factor_matrix(basis; exponent = exponent, center = 0.0)
-            for exponent in expansion.exponents
-        ]
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        gaussian_factors = gaussian_factor_matrices(
+            basis;
+            exponents = expansion.exponents,
+            center = 0.0,
+        )
         overlap_3d = kron(overlap_1d, kron(overlap_1d, overlap_1d))
         kinetic_3d =
             kron(kinetic_1d, kron(overlap_1d, overlap_1d)) +
@@ -68,6 +78,50 @@ function _quick_cartesian_hydrogen_fixture()
             gaussian_factors,
             overlap_3d,
             nuclear_3d,
+            hamiltonian,
+            energy,
+        )
+    end)
+end
+
+function _quick_mapped_cartesian_hydrogen_fixture()
+    return _cached_fixture(:quick_mapped_cartesian_hydrogen_fixture, () -> begin
+        Z = 1.0
+        mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = mapping,
+            reference_spacing = 1.0,
+        ))
+        representation = basis_representation(basis; operators = (:overlap, :kinetic))
+        overlap_1d = representation.basis_matrices.overlap
+        kinetic_1d = representation.basis_matrices.kinetic
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        gaussian_factors = gaussian_factor_matrices(
+            basis;
+            exponents = expansion.exponents,
+            center = 0.0,
+        )
+        transformed = _orthonormalize_1d(overlap_1d, [kinetic_1d, gaussian_factors...])
+        kinetic_orth = first(transformed)
+        gaussian_orth = collect(transformed[2:end])
+        identity_1d = Matrix{Float64}(I, length(basis), length(basis))
+        hamiltonian =
+            kron(kinetic_orth, kron(identity_1d, identity_1d)) +
+            kron(identity_1d, kron(kinetic_orth, identity_1d)) +
+            kron(identity_1d, kron(identity_1d, kinetic_orth))
+        for term in eachindex(expansion.coefficients)
+            factor = gaussian_orth[term]
+            hamiltonian .-= Z * expansion.coefficients[term] .* kron(factor, kron(factor, factor))
+        end
+        energy = minimum(eigen(Hermitian(hamiltonian)).values)
+        (
+            basis,
+            mapping,
+            representation,
+            overlap_1d,
+            kinetic_1d,
+            expansion,
             hamiltonian,
             energy,
         )
@@ -707,6 +761,59 @@ end
     distorted_matrix = gaussian_factor_matrix(distorted_set; exponent = 0.7, center = 0.25)
     @test distorted_matrix ≈ transpose(distorted_matrix) atol = 1.0e-10 rtol = 1.0e-10
     @test all(isfinite, distorted_matrix)
+end
+
+@testset "Mapped uniform basis" begin
+    ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    identity_mapped = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = IdentityMapping(),
+        reference_spacing = 1.0,
+    ))
+    fitted_map = fit_asinh_mapping_for_extent(npoints = 9, xmax = 6.0)
+    mapped = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+    mapped_representation = basis_representation(mapped; operators = (:overlap, :kinetic))
+    @test length(identity_mapped) == 5
+    @test reference_centers(identity_mapped) == centers(ub)
+    @test centers(identity_mapped) == centers(ub)
+    @test stencil_matrix(identity_mapped) ≈ stencil_matrix(ub) atol = 1.0e-12 rtol = 1.0e-12
+    @test primitive_set(identity_mapped).primitive_data == primitive_set(ub).primitive_data
+
+    @test fitted_map isa AsinhMapping
+    @test xofu(fitted_map, 4.0) ≈ 6.0 atol = 1.0e-10 rtol = 0.0
+    @test xofu(fitted_map, -4.0) ≈ -6.0 atol = 1.0e-10 rtol = 0.0
+
+    @test mapped isa MappedUniformBasis
+    @test length(mapped) == 5
+    @test length(primitives(mapped)) == size(stencil_matrix(mapped), 1)
+    @test reference_centers(mapped) == [-2.0, -1.0, 0.0, 1.0, 2.0]
+    @test first(centers(mapped)) ≈ -6.0 atol = 1.0e-10 rtol = 0.0
+    @test last(centers(mapped)) ≈ 6.0 atol = 1.0e-10 rtol = 0.0
+    @test mapped_representation.basis_matrices.overlap ≈
+          transpose(mapped_representation.basis_matrices.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test mapped_representation.basis_matrices.kinetic ≈
+          transpose(mapped_representation.basis_matrices.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+end
+
+if _RUN_SLOW_TESTS
+    @testset "Mapped Cartesian hydrogen" begin
+        basis, mapping_value, representation, overlap_1d, kinetic_1d, expansion, hamiltonian, energy =
+            _quick_mapped_cartesian_hydrogen_fixture()
+        (_, _, _, _, _, _, _, _, _, unmapped_energy) = _quick_cartesian_hydrogen_fixture()
+
+        @test mapping_value isa AsinhMapping
+        @test overlap_1d ≈ transpose(overlap_1d) atol = 1.0e-10 rtol = 1.0e-10
+        @test kinetic_1d ≈ transpose(kinetic_1d) atol = 1.0e-10 rtol = 1.0e-10
+        @test length(expansion) == 45
+        @test size(hamiltonian) == (length(basis)^3, length(basis)^3)
+        @test energy < unmapped_energy - 0.02
+        @test energy < -0.46
+        @test energy > -0.5
+    end
 end
 
 @testset "Cartesian hydrogen via Coulomb expansion" begin
@@ -1630,6 +1737,7 @@ end
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
     radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
     ordinary_coulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_coulomb_expansion_path.md"), String)
+    mapped_ordinary_note = read(joinpath(_PROJECT_ROOT, "docs", "mapped_ordinary_basis.md"), String)
     short_gaucoulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "short_gaucoulomb_backend.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
@@ -1661,6 +1769,7 @@ end
     @test occursin("recommended_atomic_setup.md", readme)
     @test occursin("atomic_ylm_layer.md", readme)
     @test occursin("atomic_ida_uhf.md", readme)
+    @test occursin("mapped_ordinary_basis.md", readme)
     @test occursin("first_radial_workflow.md", readme)
     @test occursin("example_guide.md", readme)
     @test occursin("architecture.md", readme)
@@ -1696,6 +1805,9 @@ end
     @test occursin("shortgaucoulomb.jl", lowercase(ordinary_coulomb_note))
     @test occursin("3d grid", lowercase(ordinary_coulomb_note))
     @test occursin("mapped-`u` grid", ordinary_coulomb_note)
+    @test occursin("MappedUniformBasisSpec", mapped_ordinary_note)
+    @test occursin("fit_asinh_mapping_for_extent", mapped_ordinary_note)
+    @test occursin("a general 3d tensor-product basis framework", lowercase(mapped_ordinary_note))
     @test occursin("source-of-truth", lowercase(short_gaucoulomb_note))
     @test occursin("almost verbatim", lowercase(short_gaucoulomb_note))
     @test occursin("coulombgaussianexpansion", lowercase(short_gaucoulomb_note))
@@ -1745,6 +1857,7 @@ end
     @test occursin("13_global_leaf_contraction.jl", example_guide)
     @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
     @test occursin("23_cartesian_hydrogen_coulomb_expansion.jl", example_guide)
+    @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -1758,6 +1871,7 @@ end
     @test occursin("docs/atomic_ida_spin_fock.md", example_guide)
     @test occursin("docs/atomic_ida_uhf.md", example_guide)
     @test occursin("docs/ordinary_coulomb_expansion_path.md", example_guide)
+    @test occursin("docs/mapped_ordinary_basis.md", example_guide)
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
@@ -1784,6 +1898,7 @@ end
     @test occursin("Established public-facing path: radial calculations", status)
     @test occursin("First atomic angular step", status)
     @test occursin("First minimal atomic mean-field line", status)
+    @test occursin("ordinary cartesian hydrogen branch", lowercase(status))
     @test occursin("a broad general hf/rhf/uhf workflow", lowercase(status))
     @test occursin("Prototype line", status)
     @test occursin("one global mapped primitive layer", status)
@@ -1800,6 +1915,7 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("03_radial_operators.jl")
         @test _run_example_script("04_hydrogen_ground_state.jl")
         @test _run_example_script("23_cartesian_hydrogen_coulomb_expansion.jl")
+        @test _run_example_script("24_mapped_cartesian_hydrogen.jl")
         @test _run_example_script("05_primitive_sets.jl")
         @test _run_example_script("06_basis_contraction.jl")
         @test _run_example_script("07_position_contraction.jl")

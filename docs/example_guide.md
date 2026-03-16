@@ -49,6 +49,18 @@ Build the first small ordinary Cartesian hydrogen Hamiltonian by:
 This is the right first ordinary-gausslet hydrogen path. It should be read
 before any future 3D grid-based debug or comparison path.
 
+### `24_mapped_cartesian_hydrogen.jl`
+
+Build the same ordinary Cartesian hydrogen Hamiltonian, but now on the public
+globally mapped full-line basis route.
+
+This is the packaged form of the successful Asinh-mapped hydrogen study:
+
+- one global map on each Cartesian axis
+- one-dimensional mapped ordinary bases
+- Coulomb expansion first
+- no 3D grid-first design
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
@@ -190,6 +202,7 @@ Read:
 Then, if you want the first ordinary Cartesian hydrogen path, read:
 
 6. `23_cartesian_hydrogen_coulomb_expansion.jl`
+7. `24_mapped_cartesian_hydrogen.jl`
 
 Then read:
 
@@ -197,6 +210,7 @@ Then read:
 - `docs/recommended_atomic_setup.md`
 - `docs/atomic_ylm_layer.md`
 - `docs/ordinary_coulomb_expansion_path.md`
+- `docs/mapped_ordinary_basis.md`
 
 ### If your main interest is primitive layers and contraction
 

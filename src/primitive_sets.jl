@@ -119,6 +119,10 @@ function _basis_kind(::UniformBasis)
     return :uniform
 end
 
+function _basis_kind(::MappedUniformBasis)
+    return :mapped_uniform
+end
+
 function _basis_kind(::HalfLineBasis)
     return :halfline
 end
@@ -144,14 +148,14 @@ Return the explicit shared primitive layer underlying `basis` as a
 Use `stencil_matrix(basis)` as the contraction map from this primitive layer to
 the final basis functions.
 """
-function primitive_set(basis::Union{UniformBasis, HalfLineBasis, RadialBasis})
+function primitive_set(basis::Union{UniformBasis, MappedUniformBasis, HalfLineBasis, RadialBasis})
     return PrimitiveSet1D(
         primitives(basis);
         name = Symbol(_basis_kind(basis), "_primitives"),
     )
 end
 
-function basis_metadata(basis::Union{UniformBasis, HalfLineBasis, RadialBasis})
+function basis_metadata(basis::Union{UniformBasis, MappedUniformBasis, HalfLineBasis, RadialBasis})
     primitive_layer = primitive_set(basis)
     return BasisMetadata1D(
         _basis_kind(basis),
@@ -195,7 +199,7 @@ The operator matrices are built through the shared primitive layer and
 contracted upward with the existing basis stencil matrix.
 """
 function basis_representation(
-    basis::Union{UniformBasis, HalfLineBasis, RadialBasis};
+    basis::Union{UniformBasis, MappedUniformBasis, HalfLineBasis, RadialBasis};
     operators = (:overlap, :position, :kinetic),
 )
     operator_names = Tuple(Symbol(operator_name) for operator_name in operators)

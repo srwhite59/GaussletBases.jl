@@ -108,3 +108,54 @@ function xofu(mapping::AsinhMapping, u::Real)
 
     return signu * 0.5 * (lo + hi)
 end
+
+"""
+    fit_asinh_mapping_for_extent(; npoints, xmax, reference_spacing=1.0, tail_spacing=10.0)
+
+Build the symmetric one-parameter `AsinhMapping(c=s, s=s)` used in the first
+mapped ordinary Cartesian hydrogen path, choosing `s` so that the outer basis
+centers of an odd-count full-line basis land at `x = ±xmax`.
+
+This helper is intentionally narrow:
+
+- odd `npoints`
+- full-line basis centered at the origin
+- reference centers spaced by `reference_spacing`
+- the single-parameter family `AsinhMapping(c=s, s=s, tail_spacing=...)`
+
+The endpoint condition is
+
+```text
+u(xmax) = ((npoints - 1) / 2) * reference_spacing
+```
+
+which gives the closed-form choice
+
+```text
+s = asinh(xmax) / ( ((npoints - 1) / 2) * reference_spacing - xmax / tail_spacing ).
+```
+"""
+function fit_asinh_mapping_for_extent(;
+    npoints::Int,
+    xmax::Real,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    isodd(npoints) || throw(ArgumentError("fit_asinh_mapping_for_extent requires an odd npoints"))
+    npoints >= 1 || throw(ArgumentError("fit_asinh_mapping_for_extent requires npoints >= 1"))
+
+    xmax_value = Float64(xmax)
+    spacing_value = Float64(reference_spacing)
+    tail_value = Float64(tail_spacing)
+    xmax_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_extent requires xmax > 0"))
+    spacing_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_extent requires reference_spacing > 0"))
+    tail_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_extent requires tail_spacing > 0"))
+
+    uedge = 0.5 * (npoints - 1) * spacing_value
+    denominator = uedge - xmax_value / tail_value
+    denominator > 0.0 ||
+        throw(ArgumentError("fit_asinh_mapping_for_extent requires the endpoint u-range to exceed xmax / tail_spacing"))
+
+    s_value = asinh(xmax_value) / denominator
+    return AsinhMapping(c = s_value, s = s_value, tail_spacing = tail_value)
+end

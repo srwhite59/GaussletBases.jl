@@ -254,6 +254,132 @@ function _primitive_gaussian_factor_matrix(
     return current
 end
 
+function _primitive_gaussian_factor_matrices(
+    set::PrimitiveSet1D,
+    ::_AnalyticPrimitiveMatrixBackend;
+    exponents::AbstractVector{<:Real},
+    center::Float64,
+)
+    matrices = Matrix{Float64}[]
+    for exponent in exponents
+        push!(
+            matrices,
+            _primitive_gaussian_factor_matrix(
+                set,
+                _AnalyticPrimitiveMatrixBackend();
+                exponent = Float64(exponent),
+                center = center,
+            ),
+        )
+    end
+    return matrices
+end
+
+function _primitive_gaussian_factor_matrices(
+    set::PrimitiveSet1D,
+    ::_NumericalPrimitiveMatrixBackend;
+    exponents::AbstractVector{<:Real},
+    center::Float64,
+    h = nothing,
+)
+    exponent_values = Float64[Float64(exponent) for exponent in exponents]
+    isempty(exponent_values) && return Matrix{Float64}[]
+    all(exponent -> exponent >= 0.0, exponent_values) ||
+        throw(ArgumentError("gaussian factor exponents must be nonnegative"))
+
+    xlo, xhi = _primitive_set_bounds(set)
+    h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
+    h_try > 0.0 || throw(ArgumentError("numerical gaussian factor matrices require h > 0"))
+
+    previous = nothing
+    current = nothing
+    for _ in 1:_PRIMITIVE_MATRIX_MAXITER
+        points, weights = _make_midpoint_grid(xlo, xhi, h_try)
+        values = _primitive_sample_matrix(set, points)
+        current = Matrix{Float64}[]
+        for exponent in exponent_values
+            weighted_factor = weights .* exp.(-exponent .* ((points .- center) .^ 2))
+            matrix = _symmetrize_primitive_matrix(transpose(values) * (weighted_factor .* values))
+            push!(current, matrix)
+        end
+
+        if previous !== nothing
+            maxdiff = maximum(norm(current[i] - previous[i], Inf) for i in eachindex(current))
+            maxdiff <= _PRIMITIVE_MATRIX_TOL && return current
+        end
+
+        previous = current
+        h_try /= 2.0
+    end
+    return current
+end
+
+function _gaussian_factor_matrices(
+    set::PrimitiveSet1D;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    return _primitive_gaussian_factor_matrices(
+        set,
+        _select_primitive_matrix_backend(set);
+        exponents = exponents,
+        center = Float64(center),
+    )
+end
+
+function _gaussian_factor_matrices(
+    basis;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    primitive_matrices = _gaussian_factor_matrices(
+        primitive_set(basis);
+        exponents = exponents,
+        center = center,
+    )
+    return [contract_primitive_matrix(basis, matrix) for matrix in primitive_matrices]
+end
+
+"""
+    gaussian_factor_matrices(layer; exponents, center = 0.0)
+
+Build a batch of one-dimensional Gaussianized one-body matrices
+
+```text
+<phi_mu | exp(-exponents[k] * (x - center)^2) | phi_nu>
+```
+
+for a primitive set or any basis-like layer with a visible primitive set and a
+contraction matrix.
+
+This is the multi-exponent companion to `gaussian_factor_matrix(...)`. It is
+especially useful when the same basis must be evaluated against many Gaussian
+factors, as in the separable Coulomb expansion of `1/r`.
+"""
+function gaussian_factor_matrices(
+    set::PrimitiveSet1D;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    return _gaussian_factor_matrices(
+        set;
+        exponents = exponents,
+        center = center,
+    )
+end
+
+function gaussian_factor_matrices(
+    basis;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    return _gaussian_factor_matrices(
+        basis;
+        exponents = exponents,
+        center = center,
+    )
+end
+
 """
     gaussian_factor_matrix(layer; exponent, center = 0.0)
 

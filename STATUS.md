@@ -79,6 +79,20 @@ The package also has a real one-dimensional structure for studying:
 
 This line is already useful for method development, but it is not yet as settled or beginner-friendly as the radial path.
 
+## Ordinary Cartesian hydrogen branch
+
+The package now also has the first public globally mapped full-line ordinary
+basis route for the Cartesian hydrogen branch.
+
+The important interpretation is:
+
+- one global map on each Cartesian axis
+- the usual ordinary gausslet stencil and primitive layer
+- Coulomb expansion first, not 3D grid first
+
+This is still a narrow hydrogen-focused validation line. It is not yet a broad
+3D Cartesian basis framework or a He workflow.
+
 ## Prototype line
 
 `LeafLocalPGDG1D` and its augmentation should still be viewed as useful prototypes.

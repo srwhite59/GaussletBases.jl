@@ -180,6 +180,8 @@ The main documentation surface is:
   The first static interacting He / IDA-style ingredients built on top of the radial-plus-angular layer.
 - [`docs/atomic_ida_uhf.md`](docs/atomic_ida_uhf.md)
   The current minimal UHF kernel built on top of the present atomic IDA model.
+- [`docs/mapped_ordinary_basis.md`](docs/mapped_ordinary_basis.md)
+  The first public globally mapped full-line basis route for the ordinary Cartesian hydrogen branch.
 - [`docs/example_guide.md`](docs/example_guide.md)  
   The best order in which to read and run the examples.
 - [`docs/architecture.md`](docs/architecture.md)  
@@ -209,6 +211,10 @@ A good reading/running order is:
 - `07_position_contraction.jl`
 - `08_basis_representation.jl`
 
+### Then, if you want the ordinary Cartesian hydrogen branch
+- `23_cartesian_hydrogen_coulomb_expansion.jl`
+- `24_mapped_cartesian_hydrogen.jl`
+
 ### Then, if you want the current corrected nested/contraction direction
 - `09_basis_partition.jl`
 - `10_hierarchical_partition.jl`
@@ -225,6 +231,7 @@ The first four examples are the public-facing heart of the package. The later on
 What is already useful today:
 
 - ordinary 1D gausslet objects and explicit Gaussian constructions
+- the first public globally mapped full-line ordinary basis route
 - radial gausslet bases and radial one-body operators
 - the first explicit one-electron `(l,m)` atomic layer
 - the first static He / IDA-style interacting atomic ingredients

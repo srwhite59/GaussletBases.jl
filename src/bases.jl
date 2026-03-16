@@ -531,6 +531,46 @@ UniformBasisSpec(family_value::Union{GaussletFamily, Symbol}; xmin::Real, xmax::
     UniformBasisSpec(_as_family(family_value), xmin, xmax, spacing)
 
 """
+    MappedUniformBasisSpec(family; count, mapping, reference_spacing=1.0)
+
+Recipe for building a full-line gausslet basis from one global coordinate map
+applied to a uniform reference-coordinate gausslet array.
+
+The basis centers in reference space are
+
+```text
+-(count-1)/2, ..., +(count-1)/2
+```
+
+times `reference_spacing`, then mapped into physical space.
+"""
+struct MappedUniformBasisSpec{M <: AbstractCoordinateMapping} <: AbstractBasisSpec
+    family_value::GaussletFamily
+    count::Int
+    mapping_value::M
+    reference_spacing::Float64
+
+    function MappedUniformBasisSpec(
+        family_value::GaussletFamily,
+        count::Int,
+        mapping_value::M,
+        reference_spacing::Real,
+    ) where {M <: AbstractCoordinateMapping}
+        count > 0 || throw(ArgumentError("MappedUniformBasisSpec requires count > 0"))
+        spacing_value = Float64(reference_spacing)
+        spacing_value > 0.0 || throw(ArgumentError("MappedUniformBasisSpec requires reference_spacing > 0"))
+        new{M}(family_value, count, mapping_value, spacing_value)
+    end
+end
+
+MappedUniformBasisSpec(
+    family_value::Union{GaussletFamily, Symbol};
+    count::Int,
+    mapping::AbstractCoordinateMapping,
+    reference_spacing::Real = 1.0,
+) = MappedUniformBasisSpec(_as_family(family_value), count, mapping, reference_spacing)
+
+"""
     HalfLineBasisSpec(family; xmax, reference_spacing=1.0, tails=6,
                       mapping=IdentityMapping())
 
@@ -635,6 +675,21 @@ struct UniformBasis
 end
 
 """
+    MappedUniformBasis
+
+Concrete full-line gausslet basis built from one global coordinate map applied
+to a uniform reference-coordinate gausslet array.
+"""
+struct MappedUniformBasis{M <: AbstractCoordinateMapping}
+    spec::MappedUniformBasisSpec{M}
+    primitive_data::Vector{AbstractPrimitiveFunction1D}
+    coefficient_matrix::Matrix{Float64}
+    reference_center_data::Vector{Float64}
+    center_data::Vector{Float64}
+    integral_weight_data::Vector{Float64}
+end
+
+"""
     HalfLineBasis
 
 Concrete boundary-correct half-line gausslet basis.
@@ -682,6 +737,16 @@ struct RadialGausslet{B <: RadialBasis} <: AbstractBasisFunction1D
     index::Int
 end
 
+"""
+    MappedGausslet
+
+Lightweight callable basis-function view returned by `MappedUniformBasis[i]`.
+"""
+struct MappedGausslet{B <: MappedUniformBasis} <: AbstractBasisFunction1D
+    basis::B
+    index::Int
+end
+
 function Base.show(io::IO, spec::UniformBasisSpec)
     print(
         io,
@@ -695,6 +760,21 @@ function Base.show(io::IO, spec::UniformBasisSpec)
         spec.spacing,
         ")",
     )
+end
+
+function Base.show(io::IO, spec::MappedUniformBasisSpec)
+    print(
+        io,
+        "MappedUniformBasisSpec(",
+        repr(spec.family_value.name),
+        "; count=",
+        spec.count,
+        ", reference_spacing=",
+        spec.reference_spacing,
+        ", mapping=",
+    )
+    show(io, spec.mapping_value)
+    print(io, ")")
 end
 
 function Base.show(io::IO, spec::HalfLineBasisSpec)
@@ -757,6 +837,21 @@ function Base.show(io::IO, basis::UniformBasis)
     )
 end
 
+function Base.show(io::IO, basis::MappedUniformBasis)
+    print(
+        io,
+        "MappedUniformBasis(length=",
+        length(basis),
+        ", family=",
+        repr(basis.spec.family_value.name),
+        ", reference_spacing=",
+        basis.spec.reference_spacing,
+        ", mapping=",
+    )
+    show(io, basis.spec.mapping_value)
+    print(io, ")")
+end
+
 function Base.show(io::IO, basis::HalfLineBasis)
     print(
         io,
@@ -787,6 +882,7 @@ function Base.show(io::IO, basis::RadialBasis)
 end
 
 Base.length(basis::UniformBasis) = size(basis.coefficient_matrix, 2)
+Base.length(basis::MappedUniformBasis) = size(basis.coefficient_matrix, 2)
 Base.length(basis::HalfLineBasis) = size(basis.coefficient_matrix, 2)
 Base.length(basis::RadialBasis) = size(basis.coefficient_matrix, 2)
 
@@ -794,30 +890,37 @@ function Base.getindex(basis::UniformBasis, index::Integer)
     return Gausslet(basis.spec.family_value; center = basis.center_data[index], spacing = basis.spec.spacing)
 end
 
+Base.getindex(basis::MappedUniformBasis, index::Integer) = MappedGausslet(basis, index)
 Base.getindex(basis::HalfLineBasis, index::Integer) = BoundaryGausslet(basis, index)
 Base.getindex(basis::RadialBasis, index::Integer) = RadialGausslet(basis, index)
 
 basis_spec(basis::UniformBasis) = basis.spec
+basis_spec(basis::MappedUniformBasis) = basis.spec
 basis_spec(basis::HalfLineBasis) = basis.spec
 basis_spec(basis::RadialBasis) = basis.spec
 
 family(basis::UniformBasis) = basis.spec.family_value
+family(basis::MappedUniformBasis) = basis.spec.family_value
 family(basis::HalfLineBasis) = basis.spec.family_value
 family(basis::RadialBasis) = basis.spec.family_value
 
 mapping(::UniformBasis) = IdentityMapping()
+mapping(basis::MappedUniformBasis) = basis.spec.mapping_value
 mapping(basis::HalfLineBasis) = basis.spec.mapping_value
 mapping(basis::RadialBasis) = basis.spec.mapping_value
 
 centers(basis::UniformBasis) = basis.center_data
+centers(basis::MappedUniformBasis) = basis.center_data
 centers(basis::HalfLineBasis) = basis.center_data
 centers(basis::RadialBasis) = basis.center_data
 
 reference_centers(basis::UniformBasis) = basis.center_data
+reference_centers(basis::MappedUniformBasis) = basis.reference_center_data
 reference_centers(basis::HalfLineBasis) = basis.reference_center_data
 reference_centers(basis::RadialBasis) = basis.reference_center_data
 
 integral_weights(basis::UniformBasis) = basis.integral_weight_data
+integral_weights(basis::MappedUniformBasis) = basis.integral_weight_data
 integral_weights(basis::HalfLineBasis) = basis.integral_weight_data
 integral_weights(basis::RadialBasis) = basis.integral_weight_data
 
@@ -827,6 +930,7 @@ integral_weights(basis::RadialBasis) = basis.integral_weight_data
 Return the ordered primitive function layer underlying `basis`.
 """
 primitives(basis::UniformBasis) = basis.primitive_data
+primitives(basis::MappedUniformBasis) = basis.primitive_data
 primitives(basis::HalfLineBasis) = basis.primitive_data
 primitives(basis::RadialBasis) = basis.primitive_data
 
@@ -836,18 +940,23 @@ primitives(basis::RadialBasis) = basis.primitive_data
 Return the exact primitive-to-basis coefficient matrix for `basis`.
 """
 stencil_matrix(basis::UniformBasis) = basis.coefficient_matrix
+stencil_matrix(basis::MappedUniformBasis) = basis.coefficient_matrix
 stencil_matrix(basis::HalfLineBasis) = basis.coefficient_matrix
 stencil_matrix(basis::RadialBasis) = basis.coefficient_matrix
 
+stencil(f::MappedGausslet) = _shared_stencil_from_column(f.basis.coefficient_matrix, f.index, f.basis.primitive_data)
 stencil(f::BoundaryGausslet) = _shared_stencil_from_column(f.basis.coefficient_matrix, f.index, f.basis.primitive_data)
 stencil(f::RadialGausslet) = _shared_stencil_from_column(f.basis.coefficient_matrix, f.index, f.basis.primitive_data)
 
+center(f::MappedGausslet) = f.basis.center_data[f.index]
 center(f::BoundaryGausslet) = f.basis.center_data[f.index]
 center(f::RadialGausslet) = f.basis.center_data[f.index]
 
+reference_center(f::MappedGausslet) = f.basis.reference_center_data[f.index]
 reference_center(f::BoundaryGausslet) = f.basis.reference_center_data[f.index]
 reference_center(f::RadialGausslet) = f.basis.reference_center_data[f.index]
 
+integral_weight(f::MappedGausslet) = f.basis.integral_weight_data[f.index]
 integral_weight(f::BoundaryGausslet) = f.basis.integral_weight_data[f.index]
 integral_weight(f::RadialGausslet) = f.basis.integral_weight_data[f.index]
 
@@ -899,6 +1008,11 @@ function _uniform_centers(xmin::Float64, xmax::Float64, spacing::Float64)
     return centers_out
 end
 
+function _mapped_uniform_reference_centers(count::Int, reference_spacing::Float64)
+    midpoint = 0.5 * (count + 1)
+    return Float64[(index - midpoint) * reference_spacing for index in 1:count]
+end
+
 """
     build_basis(spec::UniformBasisSpec)
     build_basis(spec::HalfLineBasisSpec; grid_h=nothing, refine_grid_h=true)
@@ -911,6 +1025,28 @@ function build_basis(spec::UniformBasisSpec)
     primitive_data, coefficient_matrix = _fullline_basis_primitive_layer(center_data, spec.family_value, spec.spacing)
     integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
     return UniformBasis(spec, primitive_data, coefficient_matrix, center_data, integral_weight_data)
+end
+
+"""
+    build_basis(spec::MappedUniformBasisSpec)
+
+Build the concrete globally mapped full-line basis described by `spec`.
+"""
+function build_basis(spec::MappedUniformBasisSpec)
+    reference_center_data = _mapped_uniform_reference_centers(spec.count, spec.reference_spacing)
+    primitive_ref, coefficient_matrix =
+        _fullline_basis_primitive_layer(reference_center_data, spec.family_value, spec.reference_spacing)
+    primitive_data = _with_mapping(primitive_ref, spec.mapping_value)
+    center_data = _physical_centers(reference_center_data, spec.mapping_value)
+    integral_weight_data = _integral_weights_from_representation(primitive_data, coefficient_matrix)
+    return MappedUniformBasis(
+        spec,
+        primitive_data,
+        coefficient_matrix,
+        reference_center_data,
+        center_data,
+        integral_weight_data,
+    )
 end
 
 """
