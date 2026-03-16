@@ -109,6 +109,7 @@ export AbstractFunction1D,
        radial_multipole,
        direct_matrix,
        exchange_matrix,
+       fock_matrix,
        gaunt_tensor,
        gaunt_coefficient,
        angular_kernel,
@@ -236,6 +237,7 @@ function two_electron_states end
 function radial_multipole end
 function direct_matrix end
 function exchange_matrix end
+function fock_matrix end
 function gaunt_tensor end
 function gaunt_coefficient end
 function angular_kernel end
@@ -304,6 +306,7 @@ include("atomic_angular_sectors.jl")
 include("atomic_ida.jl")
 include("atomic_ida_direct.jl")
 include("atomic_ida_exchange.jl")
+include("atomic_ida_fock.jl")
 include("atomic_ida_two_electron.jl")
 
 end

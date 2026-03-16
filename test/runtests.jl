@@ -1265,6 +1265,35 @@ end
     end
 end
 
+@testset "Atomic IDA Fock matrix" begin
+    rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
+    radial_dim = length(rb)
+    norbitals = length(orbitals(ida))
+    orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
+
+    density = zeros(Float64, norbitals, norbitals)
+    density[orbital_index(1, 1), orbital_index(1, 1)] = 0.9
+    density[orbital_index(3, 1), orbital_index(1, 1)] = 0.25
+    density[orbital_index(1, 1), orbital_index(3, 1)] = 0.25
+    density[orbital_index(1, 1), orbital_index(3, 2)] = -0.2
+    density[orbital_index(3, 2), orbital_index(1, 1)] = -0.2
+    density[orbital_index(4, 2), orbital_index(4, 2)] = 0.4
+
+    direct = direct_matrix(ida, density)
+    exchange = exchange_matrix(ida, density)
+    fock = fock_matrix(ida, density)
+    reference = ida.one_body.hamiltonian + _dense_direct_reference(ida, density) - _dense_exchange_reference(ida, density)
+    reference = 0.5 .* (reference .+ transpose(reference))
+
+    @test size(fock) == size(ida.one_body.hamiltonian)
+    @test fock ≈ ida.one_body.hamiltonian + direct - exchange atol = 1.0e-12 rtol = 1.0e-12
+    @test fock ≈ reference atol = 1.0e-12 rtol = 1.0e-12
+    @test fock ≈ transpose(fock) atol = 1.0e-12 rtol = 1.0e-12
+
+    block = channel_range(ida, YlmChannel(0, 0))
+    @test size(fock[block, block]) == (radial_dim, radial_dim)
+end
+
 @testset "Atomic IDA two-electron problem" begin
     rb, grid, radial_ops, ida, problem = _tiny_atomic_ida_two_electron_fixture()
     norbitals = length(orbitals(problem))
@@ -1405,6 +1434,7 @@ end
     atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
     atomic_direct_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_direct.md"), String)
     atomic_exchange_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_exchange.md"), String)
+    atomic_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_fock.md"), String)
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
@@ -1479,6 +1509,9 @@ end
     @test occursin("radial-pair", lowercase(atomic_exchange_note))
     @test occursin("four-index coulomb contraction", lowercase(atomic_exchange_note))
     @test occursin("f = h + j - k", lowercase(atomic_exchange_note))
+    @test occursin("f = h + j - k", lowercase(atomic_fock_note))
+    @test occursin("not a full scf framework", lowercase(atomic_fock_note))
+    @test occursin("choose occupations", lowercase(atomic_fock_note))
     @test occursin("GauntTables", gaunt_backend_note)
     @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
     @test occursin("src/atomic_ida.jl", gaunt_backend_note)
@@ -1487,10 +1520,12 @@ end
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
+    @test occursin("21_atomic_ida_fock.jl", example_guide)
     @test occursin("17_atomic_ida_two_electron.jl", example_guide)
     @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
     @test occursin("docs/atomic_ida_direct.md", example_guide)
     @test occursin("docs/atomic_ida_exchange.md", example_guide)
+    @test occursin("docs/atomic_ida_fock.md", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -1543,6 +1578,7 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("16_atomic_ida_ingredients.jl")
         @test _run_example_script("19_atomic_ida_direct.jl")
         @test _run_example_script("20_atomic_ida_exchange.jl")
+        @test _run_example_script("21_atomic_ida_fock.jl")
         @test _run_example_script("17_atomic_ida_two_electron.jl")
         @test _run_example_script("18_atomic_ida_two_electron_lanczos.jl")
     end

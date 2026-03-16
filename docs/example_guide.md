@@ -62,6 +62,12 @@ Build the matching exchange/Fock-style one-body term from a trial spatial densit
 
 This completes the first small direct-plus-exchange mean-field-style pair, still without a full SCF workflow.
 
+### `21_atomic_ida_fock.jl`
+
+Combine the one-body atomic term with the direct and exchange pieces into the first tiny Fock-style helper.
+
+This is still not an SCF driver. It is only the effective one-body matrix assembly step.
+
 ### `17_atomic_ida_two_electron.jl`
 
 Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
@@ -196,12 +202,14 @@ After `15_atomic_hydrogen_ylm.jl`, continue with:
 16. `16_atomic_ida_ingredients.jl`
 17. `19_atomic_ida_direct.jl`
 18. `20_atomic_ida_exchange.jl`
-19. `17_atomic_ida_two_electron.jl`
-20. `18_atomic_ida_two_electron_lanczos.jl`
+19. `21_atomic_ida_fock.jl`
+20. `17_atomic_ida_two_electron.jl`
+21. `18_atomic_ida_two_electron_lanczos.jl`
 
 Then read:
 
 - `docs/atomic_ida_layer.md`
 - `docs/atomic_ida_direct.md`
 - `docs/atomic_ida_exchange.md`
+- `docs/atomic_ida_fock.md`
 - `docs/atomic_ida_two_electron.md`
