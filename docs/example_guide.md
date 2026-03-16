@@ -50,6 +50,12 @@ Build the static He-style IDA ingredients on top of the same radial-plus-angular
 
 This example does **not** solve the many-electron problem. It makes the one-body blocks, radial multipoles, angular kernels, and orbital indexing explicit.
 
+### `19_atomic_ida_direct.jl`
+
+Build the first direct/Hartree one-body term from a trial spatial density matrix.
+
+This is the first small physical consumer of the sectorized angular preparation.
+
 ### `17_atomic_ida_two_electron.jl`
 
 Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
@@ -182,10 +188,12 @@ as prototype studies rather than as the main public story of the package.
 After `15_atomic_hydrogen_ylm.jl`, continue with:
 
 16. `16_atomic_ida_ingredients.jl`
-17. `17_atomic_ida_two_electron.jl`
-18. `18_atomic_ida_two_electron_lanczos.jl`
+17. `19_atomic_ida_direct.jl`
+18. `17_atomic_ida_two_electron.jl`
+19. `18_atomic_ida_two_electron_lanczos.jl`
 
 Then read:
 
 - `docs/atomic_ida_layer.md`
+- `docs/atomic_ida_direct.md`
 - `docs/atomic_ida_two_electron.md`

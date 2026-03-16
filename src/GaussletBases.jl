@@ -107,6 +107,7 @@ export AbstractFunction1D,
        orbitals,
        two_electron_states,
        radial_multipole,
+       direct_matrix,
        gaunt_tensor,
        gaunt_coefficient,
        angular_kernel,
@@ -232,6 +233,7 @@ function channel_overlap end
 function orbitals end
 function two_electron_states end
 function radial_multipole end
+function direct_matrix end
 function gaunt_tensor end
 function gaunt_coefficient end
 function angular_kernel end
@@ -298,6 +300,7 @@ include("atomic_ylm.jl")
 include("gaunt_tables.jl")
 include("atomic_angular_sectors.jl")
 include("atomic_ida.jl")
+include("atomic_ida_direct.jl")
 include("atomic_ida_two_electron.jl")
 
 end
