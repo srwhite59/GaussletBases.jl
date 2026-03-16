@@ -68,6 +68,17 @@ Combine the one-body atomic term with the direct and exchange pieces into the fi
 
 This is still not an SCF driver. It is only the effective one-body matrix assembly step.
 
+### `22_atomic_ida_uhf.jl`
+
+Run the smallest self-consistent He-like UHF iteration in the current atomic IDA model.
+
+This is still intentionally narrow:
+
+- fixed occupations
+- simple damping
+- no DIIS
+- no broad workflow layer
+
 ### `17_atomic_ida_two_electron.jl`
 
 Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
@@ -203,8 +214,9 @@ After `15_atomic_hydrogen_ylm.jl`, continue with:
 17. `19_atomic_ida_direct.jl`
 18. `20_atomic_ida_exchange.jl`
 19. `21_atomic_ida_fock.jl`
-20. `17_atomic_ida_two_electron.jl`
-21. `18_atomic_ida_two_electron_lanczos.jl`
+20. `22_atomic_ida_uhf.jl`
+21. `17_atomic_ida_two_electron.jl`
+22. `18_atomic_ida_two_electron_lanczos.jl`
 
 Then read:
 
@@ -212,4 +224,5 @@ Then read:
 - `docs/atomic_ida_direct.md`
 - `docs/atomic_ida_exchange.md`
 - `docs/atomic_ida_fock.md`
+- `docs/atomic_ida_uhf.md`
 - `docs/atomic_ida_two_electron.md`

@@ -108,6 +108,14 @@ function _tiny_atomic_ida_lanczos_fixture()
     end)
 end
 
+function _tiny_atomic_ida_uhf_fixture()
+    return _cached_fixture(:tiny_atomic_ida_uhf_fixture, () -> begin
+        rb, grid, radial_ops, ida, problem = _tiny_atomic_ida_lanczos_fixture()
+        scf = uhf_scf(ida; nalpha = 1, nbeta = 1, maxiter = 80, damping = 0.25, tol = 1.0e-10)
+        (rb, grid, radial_ops, ida, problem, scf)
+    end)
+end
+
 function _direct_dense_angular_kernel(table, channels, L)
     nchannels = length(channels)
     prefactor = 4 * pi / (2 * L + 1)
@@ -1294,6 +1302,100 @@ end
     @test size(fock[block, block]) == (radial_dim, radial_dim)
 end
 
+@testset "Atomic IDA spin-aware Fock matrices" begin
+    rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
+    radial_dim = length(rb)
+    norbitals = length(orbitals(ida))
+    orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
+
+    density_alpha = zeros(Float64, norbitals, norbitals)
+    density_beta = zeros(Float64, norbitals, norbitals)
+
+    density_alpha[orbital_index(1, 1), orbital_index(1, 1)] = 0.8
+    density_alpha[orbital_index(3, 1), orbital_index(1, 1)] = 0.2
+    density_alpha[orbital_index(1, 1), orbital_index(3, 1)] = 0.2
+    density_alpha[orbital_index(1, 1), orbital_index(3, 2)] = -0.15
+    density_alpha[orbital_index(3, 2), orbital_index(1, 1)] = -0.15
+
+    density_beta[orbital_index(4, 2), orbital_index(4, 2)] = 0.5
+    density_beta[orbital_index(2, 1), orbital_index(2, 1)] = 0.3
+    density_beta[orbital_index(2, 1), orbital_index(4, 2)] = 0.1
+    density_beta[orbital_index(4, 2), orbital_index(2, 1)] = 0.1
+
+    total_density = density_alpha + density_beta
+    direct_total = direct_matrix(ida, total_density)
+    exchange_alpha = exchange_matrix(ida, density_alpha)
+    exchange_beta = exchange_matrix(ida, density_beta)
+
+    fock_alpha = fock_matrix_alpha(ida, density_alpha, density_beta)
+    fock_beta = fock_matrix_beta(ida, density_alpha, density_beta)
+
+    @test fock_alpha ≈ ida.one_body.hamiltonian + direct_total - exchange_alpha atol = 1.0e-12 rtol = 1.0e-12
+    @test fock_beta ≈ ida.one_body.hamiltonian + direct_total - exchange_beta atol = 1.0e-12 rtol = 1.0e-12
+    @test fock_alpha ≈ transpose(fock_alpha) atol = 1.0e-12 rtol = 1.0e-12
+    @test fock_beta ≈ transpose(fock_beta) atol = 1.0e-12 rtol = 1.0e-12
+
+    beta_shift = copy(density_beta)
+    beta_shift[orbital_index(1, 2), orbital_index(1, 2)] += 0.4
+    beta_shift[orbital_index(1, 2), orbital_index(3, 2)] -= 0.1
+    beta_shift[orbital_index(3, 2), orbital_index(1, 2)] -= 0.1
+    fock_alpha_shift = fock_matrix_alpha(ida, density_alpha, beta_shift)
+    @test fock_alpha_shift - fock_alpha ≈ direct_matrix(ida, beta_shift - density_beta) atol = 1.0e-12 rtol = 1.0e-12
+
+    alpha_shift = copy(density_alpha)
+    alpha_shift[orbital_index(1, 3), orbital_index(1, 3)] += 0.25
+    alpha_shift[orbital_index(1, 3), orbital_index(3, 3)] += 0.05
+    alpha_shift[orbital_index(3, 3), orbital_index(1, 3)] += 0.05
+    fock_beta_shift = fock_matrix_beta(ida, alpha_shift, density_beta)
+    @test fock_beta_shift - fock_beta ≈ direct_matrix(ida, alpha_shift - density_alpha) atol = 1.0e-12 rtol = 1.0e-12
+
+    closed_shell_density = density_alpha
+    closed_alpha = fock_matrix_alpha(ida, closed_shell_density, closed_shell_density)
+    closed_beta = fock_matrix_beta(ida, closed_shell_density, closed_shell_density)
+    @test closed_alpha ≈ closed_beta atol = 1.0e-12 rtol = 1.0e-12
+    @test closed_alpha ≈ ida.one_body.hamiltonian + direct_matrix(ida, 2.0 .* closed_shell_density) - exchange_matrix(ida, closed_shell_density) atol = 1.0e-12 rtol = 1.0e-12
+
+    spinless_helper = fock_matrix(ida, density_alpha)
+    @test spinless_helper ≈ ida.one_body.hamiltonian + direct_matrix(ida, density_alpha) - exchange_matrix(ida, density_alpha) atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "Atomic IDA UHF" begin
+    _rb, _grid, _radial_ops, ida, exact_problem, scf = _tiny_atomic_ida_uhf_fixture()
+    exact_energy = ground_state_energy(exact_problem)
+    norbitals = length(orbitals(ida))
+
+    coeffs = [1.0 0.0; 0.0 1.0; 0.0 0.0]
+    @test density_matrix(coeffs) ≈ [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 0.0] atol = 1.0e-12 rtol = 1.0e-12
+    @test density_matrix(view(coeffs, :, 1)) ≈ [1.0 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0] atol = 1.0e-12 rtol = 1.0e-12
+
+    initial_alpha = zeros(Float64, norbitals, norbitals)
+    initial_beta = zeros(Float64, norbitals, norbitals)
+    initial_alpha[1, 1] = 1.0
+    initial_beta[1, 1] = 1.0
+    step = uhf_step(ida, initial_alpha, initial_beta; nalpha = 1, nbeta = 1)
+
+    @test step.fock_alpha ≈ fock_matrix_alpha(ida, initial_alpha, initial_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test step.fock_beta ≈ fock_matrix_beta(ida, initial_alpha, initial_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test step.density_alpha ≈ density_matrix(step.occupied_coefficients_alpha) atol = 1.0e-12 rtol = 1.0e-12
+    @test step.density_beta ≈ density_matrix(step.occupied_coefficients_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test step.energy ≈ uhf_energy(ida, step.density_alpha, step.density_beta) atol = 1.0e-12 rtol = 1.0e-12
+
+    @test scf.converged
+    @test 1 <= scf.iterations <= 80
+    @test !isempty(scf.energies)
+    @test length(scf.energies) == scf.iterations
+    @test length(scf.residuals) == scf.iterations
+    @test scf.fock_alpha ≈ transpose(scf.fock_alpha) atol = 1.0e-12 rtol = 1.0e-12
+    @test scf.fock_beta ≈ transpose(scf.fock_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test scf.fock_alpha ≈ fock_matrix_alpha(ida, scf.density_alpha, scf.density_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test scf.fock_beta ≈ fock_matrix_beta(ida, scf.density_alpha, scf.density_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test scf.energy ≈ uhf_energy(ida, scf.density_alpha, scf.density_beta) atol = 1.0e-12 rtol = 1.0e-12
+    @test norm(scf.fock_alpha - scf.fock_beta, Inf) ≤ 1.0e-8
+    @test norm(scf.density_alpha - scf.density_beta, Inf) ≤ 1.0e-8
+    @test scf.energy >= exact_energy - 1.0e-9
+    @test scf.energy < -2.7
+end
+
 @testset "Atomic IDA two-electron problem" begin
     rb, grid, radial_ops, ida, problem = _tiny_atomic_ida_two_electron_fixture()
     norbitals = length(orbitals(problem))
@@ -1435,6 +1537,8 @@ end
     atomic_direct_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_direct.md"), String)
     atomic_exchange_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_exchange.md"), String)
     atomic_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_fock.md"), String)
+    atomic_spin_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_spin_fock.md"), String)
+    atomic_uhf_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_uhf.md"), String)
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
@@ -1512,6 +1616,18 @@ end
     @test occursin("f = h + j - k", lowercase(atomic_fock_note))
     @test occursin("not a full scf framework", lowercase(atomic_fock_note))
     @test occursin("choose occupations", lowercase(atomic_fock_note))
+    @test occursin("uhf-style", lowercase(atomic_spin_fock_note))
+    @test occursin("density_alpha", lowercase(atomic_spin_fock_note))
+    @test occursin("density_beta", lowercase(atomic_spin_fock_note))
+    @test occursin("uses the total density", lowercase(atomic_spin_fock_note))
+    @test occursin("exchange term uses only the same-spin density", lowercase(atomic_spin_fock_note))
+    @test occursin("spinless-model helper", lowercase(atomic_spin_fock_note))
+    @test occursin("minimal uhf layer", lowercase(atomic_uhf_note))
+    @test occursin("density_alpha", lowercase(atomic_uhf_note))
+    @test occursin("density_beta", lowercase(atomic_uhf_note))
+    @test occursin("orbital occupations", lowercase(atomic_uhf_note))
+    @test occursin("uhf total energy", lowercase(atomic_uhf_note))
+    @test occursin("fixed-point iteration", lowercase(atomic_uhf_note))
     @test occursin("GauntTables", gaunt_backend_note)
     @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
     @test occursin("src/atomic_ida.jl", gaunt_backend_note)
@@ -1521,11 +1637,13 @@ end
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
     @test occursin("21_atomic_ida_fock.jl", example_guide)
+    @test occursin("22_atomic_ida_uhf.jl", example_guide)
     @test occursin("17_atomic_ida_two_electron.jl", example_guide)
     @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
     @test occursin("docs/atomic_ida_direct.md", example_guide)
     @test occursin("docs/atomic_ida_exchange.md", example_guide)
     @test occursin("docs/atomic_ida_fock.md", example_guide)
+    @test occursin("docs/atomic_ida_uhf.md", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -1579,6 +1697,7 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("19_atomic_ida_direct.jl")
         @test _run_example_script("20_atomic_ida_exchange.jl")
         @test _run_example_script("21_atomic_ida_fock.jl")
+        @test _run_example_script("22_atomic_ida_uhf.jl")
         @test _run_example_script("17_atomic_ida_two_electron.jl")
         @test _run_example_script("18_atomic_ida_two_electron_lanczos.jl")
     end

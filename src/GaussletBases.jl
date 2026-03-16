@@ -110,6 +110,12 @@ export AbstractFunction1D,
        direct_matrix,
        exchange_matrix,
        fock_matrix,
+       fock_matrix_alpha,
+       fock_matrix_beta,
+       density_matrix,
+       uhf_energy,
+       uhf_step,
+       uhf_scf,
        gaunt_tensor,
        gaunt_coefficient,
        angular_kernel,
@@ -238,6 +244,12 @@ function radial_multipole end
 function direct_matrix end
 function exchange_matrix end
 function fock_matrix end
+function fock_matrix_alpha end
+function fock_matrix_beta end
+function density_matrix end
+function uhf_energy end
+function uhf_step end
+function uhf_scf end
 function gaunt_tensor end
 function gaunt_coefficient end
 function angular_kernel end
@@ -307,6 +319,7 @@ include("atomic_ida.jl")
 include("atomic_ida_direct.jl")
 include("atomic_ida_exchange.jl")
 include("atomic_ida_fock.jl")
+include("atomic_ida_uhf.jl")
 include("atomic_ida_two_electron.jl")
 
 end
