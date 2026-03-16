@@ -33,7 +33,21 @@ That is why the README and quickstart emphasize:
 
 This is not because radial gausslets are the whole point of the package. It is because the radial path is the clearest mature scientific workflow today.
 
-## 3. Shared primitive layer
+## 3. First explicit atomic angular layer
+
+The package now also has a first explicit angular layer for atom-centered one-electron work.
+
+That layer is built from:
+
+- explicit channels labeled by `(l,m)`
+- the radial one-body substrate
+- block-diagonal atomic one-body matrices assembled from the radial blocks
+
+The important point is that this angular layer does not replace the radial line. It sits on top of it.
+
+For hydrogen and other central one-electron problems, this is the natural next step after the radial basis and radial operator workflow.
+
+## 4. Shared primitive layer
 
 The key advanced structural idea is the shared primitive layer.
 
@@ -48,7 +62,7 @@ This is the bridge between “basis functions as final objects” and “basis f
 
 That bridge matters scientifically because it makes matrix construction, locality, and alternative contraction strategies explicit instead of hidden.
 
-## 4. Representation, partitions, and hierarchy
+## 5. Representation, partitions, and hierarchy
 
 On top of the primitive layer, the package now has:
 
@@ -58,7 +72,7 @@ On top of the primitive layer, the package now has:
 
 These layers are not yet full nested-gausslet machinery. They are the organizational scaffolding needed to study locality and local contraction cleanly.
 
-## 5. Prototype line versus corrected direction
+## 6. Prototype line versus corrected direction
 
 There are now two distinct advanced 1D lines in the repository.
 
@@ -89,7 +103,7 @@ This is the line represented most clearly by:
 
 This direction is closer to the historical nested idea because it keeps one shared global primitive basis and performs local contraction inside that common layer.
 
-## 6. Why the global mapped layer matters
+## 7. Why the global mapped layer matters
 
 An important conceptual point is that the globally mapped uncontracted primitive/product basis is not just scaffolding.
 
@@ -100,7 +114,7 @@ It is useful in two ways:
 
 So the package should not be read as “everything is waiting for contraction before it becomes meaningful.” The global mapped layer is already a scientifically meaningful object.
 
-## 7. What is mature, what is advanced, what is still open
+## 8. What is mature, what is advanced, what is still open
 
 ### Mature
 
@@ -108,6 +122,7 @@ So the package should not be read as “everything is waiting for contraction be
 - radial basis construction and diagnostics
 - radial one-body operator workflow
 - hydrogen validation example
+- the first explicit one-electron `(l,m)` atomic layer
 
 ### Advanced but structurally real
 
@@ -125,7 +140,7 @@ So the package should not be read as “everything is waiting for contraction be
 - named Gaussian chemistry basis support
 - higher-dimensional nested workflows
 
-## 8. How to read the repository now
+## 9. How to read the repository now
 
 If you are new:
 
@@ -143,11 +158,12 @@ If your interest is specifically the current nested/contraction direction:
 4. run `examples/13_global_leaf_contraction.jl`
 5. treat `11` and `12` as prototype side studies
 
-## 9. Bottom line
+## 10. Bottom line
 
 The package should be understood this way:
 
 - ordinary gausslets are the broad foundation
 - radial gausslets are the current mature public-facing workflow
+- the first `(l,m)` atomic layer now sits directly on top of that radial workflow
 - primitive layers, contraction, partitions, and hierarchy are the structural bridge to future nested work
 - the corrected current research direction is global mapped layer plus local contraction, not separate local basis worlds in each leaf

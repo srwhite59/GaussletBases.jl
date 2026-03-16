@@ -38,6 +38,12 @@ Solve the hydrogen ground-state problem in the radial basis.
 
 This is the first full scientific check in the repository, and it is the most important example after the first three.
 
+### `15_atomic_hydrogen_ylm.jl`
+
+Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
+
+This is the first atomic example in the repository in the usual radial-plus-angular sense.
+
 ## Stage 2: primitive layers and contraction
 
 These examples explain the common Gaussian primitive layer that lies behind the basis functions.
@@ -120,6 +126,7 @@ Read:
 2. `02_radial_basis.jl`
 3. `03_radial_operators.jl`
 4. `04_hydrogen_ground_state.jl`
+5. `15_atomic_hydrogen_ylm.jl`
 
 Then read:
 
@@ -130,23 +137,23 @@ Then read:
 
 After the radial examples, continue with:
 
-5. `05_primitive_sets.jl`
-6. `06_basis_contraction.jl`
-7. `07_position_contraction.jl`
-8. `08_basis_representation.jl`
-9. `14_radial_primitive_operators.jl`
+6. `05_primitive_sets.jl`
+7. `06_basis_contraction.jl`
+8. `07_position_contraction.jl`
+9. `08_basis_representation.jl`
+10. `14_radial_primitive_operators.jl`
 
 ### If your main interest is the current nested/hierarchy research direction
 
 Only after the earlier stages, continue with:
 
-10. `09_basis_partition.jl`
-11. `10_hierarchical_partition.jl`
-12. `13_global_leaf_contraction.jl`
+11. `09_basis_partition.jl`
+12. `10_hierarchical_partition.jl`
+13. `13_global_leaf_contraction.jl`
 
 Then, only if you want the prototype side branch, treat:
 
-13. `11_leaf_pgdg.jl`
-14. `12_leaf_pgdg_augmentation.jl`
+14. `11_leaf_pgdg.jl`
+15. `12_leaf_pgdg_augmentation.jl`
 
 as prototype studies rather than as the main public story of the package.

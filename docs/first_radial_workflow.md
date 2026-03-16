@@ -215,7 +215,31 @@ multipole(ops, 1)
 
 In the current package, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index IDA-style radial multipole matrices. They are not exact four-index electron-electron tensors.
 
-## 9. What about x-gaussians?
+## 9. First angular step: explicit `(l,m)` channels
+
+Once the radial workflow feels comfortable, the package now has a first explicit atomic angular layer built on top of it.
+
+The pattern is:
+
+```julia
+radial_ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+atom = atomic_one_body_operators(radial_ops; lmax = 2)
+```
+
+Here:
+
+- `radial_ops` contains the radial one-body blocks
+- `atom` adds the explicit angular channels `(l,m)` and assembles the one-electron atomic Hamiltonian
+
+For a central one-electron problem such as hydrogen, the Hamiltonian is diagonal in these angular channels, and the `l` dependence enters through the centrifugal term.
+
+A runnable example is in:
+
+- `examples/15_atomic_hydrogen_ylm.jl`
+
+This is the natural next step before later atomic work involving both radial multipoles and angular coupling factors.
+
+## 10. What about x-gaussians?
 
 For a first one-electron example such as hydrogen, it is perfectly reasonable to start with:
 
@@ -239,7 +263,7 @@ xgaussians = [XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]
 
 Those are only starting points. If you use x-gaussians, check the diagnostics rather than treating any one choice as sacred.
 
-## 10. Common beginner mistakes
+## 11. Common beginner mistakes
 
 The most common beginner mistakes are:
 
@@ -259,11 +283,12 @@ You do not need `stencil(f)` to start doing calculations. It is there when you w
 
 If the state has meaningful tail weight and the represented radius is too short, the result will look worse for a real physical reason.
 
-## 11. Where to go next
+## 12. Where to go next
 
 After this page, the most useful next reads are:
 
 - [`recommended_atomic_setup.md`](recommended_atomic_setup.md)
+- [`atomic_ylm_layer.md`](atomic_ylm_layer.md)
 - [`example_guide.md`](example_guide.md)
 - [`terminology.md`](terminology.md)
 

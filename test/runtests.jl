@@ -708,6 +708,76 @@ end
     @test_throws BoundsError multipole(ops, 5)
 end
 
+@testset "Atomic Ylm one-body layer" begin
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    radial_ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+    channels = ylm_channels(2)
+    atom = atomic_one_body_operators(radial_ops, channels)
+
+    @test length(channels) == 9
+    @test channels[1] == YlmChannel(0, 0)
+    @test channels[2] == YlmChannel(1, -1)
+    @test channels[4] == YlmChannel(1, 1)
+    @test channels[end] == YlmChannel(2, 2)
+    @test size(atom.overlap) == (9 * length(rb), 9 * length(rb))
+    @test size(atom.hamiltonian) == size(atom.overlap)
+
+    for (i, channel) in enumerate(channels)
+        block = channel_range(atom, i)
+        direct_block = radial_ops.kinetic + radial_ops.nuclear + centrifugal(radial_ops, channel.l)
+        @test block == ((i - 1) * length(rb) + 1):(i * length(rb))
+        @test channel_range(atom, channel) == block
+        @test channel_overlap(atom, i) ≈ radial_ops.overlap atol = 1.0e-12 rtol = 1.0e-12
+        @test channel_overlap(atom, channel) ≈ radial_ops.overlap atol = 1.0e-12 rtol = 1.0e-12
+        @test channel_hamiltonian(atom, i) ≈ direct_block atol = 1.0e-12 rtol = 1.0e-12
+        @test channel_hamiltonian(atom, channel) ≈ direct_block atol = 1.0e-12 rtol = 1.0e-12
+
+        for j in 1:length(channels)
+            i == j && continue
+            other = channel_range(atom, j)
+            @test atom.overlap[block, other] == zeros(Float64, length(rb), length(rb))
+            @test atom.hamiltonian[block, other] == zeros(Float64, length(rb), length(rb))
+        end
+    end
+end
+
+@testset "Hydrogen Ylm spectrum" begin
+    Z = 1.0
+    s = 0.2
+    lmax = 2
+    rb = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = AsinhMapping(c = s / (2Z), s = s),
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 6,
+        xgaussians = XGaussian[],
+    ))
+    grid = radial_quadrature(rb)
+    radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
+    atom = atomic_one_body_operators(radial_ops; lmax = lmax)
+
+    spectrum = sort(real(eigen(Hermitian(atom.hamiltonian), Hermitian(atom.overlap)).values))
+    E0 = spectrum[1]
+
+    l1_channels = [YlmChannel(1, m) for m in -1:1]
+    l1_energies = [
+        minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel)), Hermitian(channel_overlap(atom, channel))).values))
+        for channel in l1_channels
+    ]
+    l2_channels = [YlmChannel(2, m) for m in -2:2]
+    l2_energies = [
+        minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel)), Hermitian(channel_overlap(atom, channel))).values))
+        for channel in l2_channels
+    ]
+
+    @test abs(E0 + 0.5) ≤ 1.0e-8
+    @test maximum(abs.(l1_energies .- l1_energies[1])) ≤ 1.0e-10
+    @test maximum(abs.(l2_energies .- l2_energies[1])) ≤ 1.0e-10
+    @test abs(l1_energies[1] + 0.125) ≤ 5.0e-4
+    @test abs(l2_energies[1] + 1.0 / 18.0) ≤ 1.0e-3
+end
+
 @testset "REPL displays" begin
     family = GaussletFamily(:G10)
     map = AsinhMapping(c = 0.15, s = 0.15)
@@ -753,6 +823,8 @@ end
         refine_partition(hierarchical_partition(global_layer, [-2.5, -0.5, 0.5, 2.5]), 1);
         retained_per_leaf = 1,
     )
+    channels = ylm_channels(2)
+    atom = atomic_one_body_operators(ops; lmax = 2)
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -774,6 +846,9 @@ end
     @test occursin("LeafGaussianSpec1D(relative_position=0.5, width_scale=0.2)", sprint(show, spec))
     @test occursin("GlobalMappedPrimitiveLayer1D(nbasis=", sprint(show, global_layer))
     @test occursin("LeafBoxContractionLayer1D(nleaves=4, nbasis=4, retained_per_leaf=1)", sprint(show, contracted_layer))
+    @test occursin("YlmChannel(l=1, m=0)", sprint(show, YlmChannel(1, 0)))
+    @test occursin("YlmChannelSet(lmax=2, nchannels=9)", sprint(show, channels))
+    @test occursin("AtomicOneBodyOperators(nchannels=9, matrix_size=(54, 54))", sprint(show, atom))
 end
 
 @testset "Documentation consistency" begin
@@ -784,6 +859,7 @@ end
     architecture = read(joinpath(_PROJECT_ROOT, "docs", "architecture.md"), String)
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
     radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
+    atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
@@ -800,8 +876,10 @@ end
     @test occursin("primitive layers, contraction, partitions, and hierarchy", readme)
     @test occursin("Best first path through the repository", readme)
     @test occursin("examples/04_hydrogen_ground_state.jl", readme)
+    @test occursin("examples/15_atomic_hydrogen_ylm.jl", readme)
     @test occursin("13_global_leaf_contraction.jl", readme)
     @test occursin("recommended_atomic_setup.md", readme)
+    @test occursin("atomic_ylm_layer.md", readme)
     @test occursin("first_radial_workflow.md", readme)
     @test occursin("example_guide.md", readme)
     @test occursin("architecture.md", readme)
@@ -831,7 +909,12 @@ end
     @test occursin("primitive_set(rb)", radial_primitive_note)
     @test occursin("not to derive analytic formulas", lowercase(radial_primitive_note))
     @test occursin("prepares the way for ylm", lowercase(radial_primitive_note))
+    @test occursin("YlmChannel", atomic_ylm_note)
+    @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
+    @test occursin("hydrogen", lowercase(atomic_ylm_note))
+    @test occursin("He / IDA", atomic_ylm_note)
     @test occursin("13_global_leaf_contraction.jl", example_guide)
+    @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -851,9 +934,11 @@ end
     @test occursin("Primitive set", terminology)
     @test occursin("contract_primitive_matrix", terminology)
     @test occursin("An exact non-diagonal radial electron-electron layer", roadmap)
+    @test occursin("The first interacting He / IDA-style atomic layer", roadmap)
     @test occursin("geometry-aware grouping", roadmap)
     @test !occursin("Gausslets.jl", readme)
     @test occursin("Established public-facing path: radial calculations", status)
+    @test occursin("First atomic angular step", status)
     @test occursin("Prototype line", status)
     @test occursin("one global mapped primitive layer", status)
 end
@@ -873,6 +958,7 @@ end
     @test _run_example_script("12_leaf_pgdg_augmentation.jl")
     @test _run_example_script("13_global_leaf_contraction.jl")
     @test _run_example_script("14_radial_primitive_operators.jl")
+    @test _run_example_script("15_atomic_hydrogen_ylm.jl")
 end
 
 @testset "README example slice" begin

@@ -9,7 +9,8 @@ It is not a schedule. It is a statement of which directions now look most valuab
 Two directions are now real in the code:
 
 1. a mature radial basis / quadrature / operator line
-2. a newer one-dimensional primitive-layer / contraction / hierarchy line
+2. a first explicit one-electron atomic `(l,m)` layer on top of that radial line
+3. a newer one-dimensional primitive-layer / contraction / hierarchy line
 
 Those directions are both scientifically interesting, but they are not equally mature or equally valuable to outside users.
 
@@ -23,11 +24,18 @@ The current package has the two-index IDA-style radial multipole matrices.
 
 A natural next scientific step is the exact non-diagonal radial electron-electron object. That would make it possible to study more carefully where the present radial approximation is strong, where it is weak, and what the true cost/accuracy tradeoffs look like.
 
-### 2. A spherical-angular atomic layer on top of the radial line
+### 2. The first interacting He / IDA-style atomic layer on top of the present `(l,m)` structure
 
-The present package is strongest in the radial direction. A natural next outward-facing extension would be the angular layer that turns radial multipole data into more complete atom-centered operator constructions.
+The package now has the first explicit one-electron angular `(l,m)` layer.
 
-This would make the package much more useful to people who think in terms of actual atomic calculations rather than only radial test problems.
+The next atomic question is how to sit the interacting path on top of that:
+
+- radial one-body operators
+- explicit `(l,m)` channels
+- radial multipole data
+- later Gaunt or related angular-coupling factors
+
+That is the natural path toward helium and related atom-centered work.
 
 ### 3. Export and interoperability helpers
 
@@ -90,7 +98,7 @@ If the goal is:
 then the package should prioritize:
 
 1. exact radial electron-electron structure
-2. angular atomic structure
+2. the first interacting He / IDA-style atomic structure on top of the present `(l,m)` layer
 3. export/interoperability
 
 If the goal is:

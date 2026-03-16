@@ -11,6 +11,8 @@ Its broad foundation is the ordinary one-dimensional gausslet story:
 
 Today its most mature public-facing path is **atom-centered radial calculations**: building radial bases, constructing matching quadrature grids, checking basis diagnostics, and forming the basic radial operator matrices needed for one-electron and mean-field-style work.
 
+The package now also has a first explicit atomic angular layer built from spherical-harmonic channels `(l,m)` on top of that radial substrate. That makes it possible to assemble and diagonalize the one-electron hydrogen Hamiltonian in an explicit radial-plus-angular basis without yet adding the full two-electron atomic story.
+
 The repository also contains a newer one-dimensional line of work on **shared primitive layers, contraction, partitions, and hierarchy**. That line is scientifically important because it is the bridge from ordinary gausslets toward nested constructions, but it is still the more experimental side of the package. If you are new, start with the radial path, while keeping in mind that ordinary gausslets are the broader foundation underneath it.
 
 ## Who this package is for
@@ -55,6 +57,7 @@ The most established public-facing path is the radial line:
 - explicit radial quadrature, separate from the basis
 - basis diagnostics
 - radial one-body matrices
+- a first explicit one-electron atomic `(l,m)` layer built on those radial matrices
 - the current two-index IDA-style radial multipole matrices
 - a high-level `RadialAtomicOperators` bundle
 
@@ -79,6 +82,14 @@ julia --project=. examples/04_hydrogen_ground_state.jl
 ```
 
 Those four examples take you from one gausslet, to a radial basis, to radial operators, to a real hydrogen ground-state calculation.
+
+The next natural step after those four is:
+
+```bash
+julia --project=. examples/15_atomic_hydrogen_ylm.jl
+```
+
+which adds the explicit `(l,m)` angular channels on top of the same radial substrate.
 
 ## A good first atom-centered setup
 
@@ -136,8 +147,11 @@ The most useful first physics example is hydrogen.
 The repository includes:
 
 - `examples/04_hydrogen_ground_state.jl`
+- `examples/15_atomic_hydrogen_ylm.jl`
 
-That example builds a recommended radial basis, forms the one-electron hydrogen Hamiltonian for `l = 0`, and checks the lowest eigenvalue against the exact nonrelativistic ground-state energy `-0.5 Ha`.
+The first of these builds a recommended radial basis, forms the one-electron hydrogen Hamiltonian for `l = 0`, and checks the lowest eigenvalue against the exact nonrelativistic ground-state energy `-0.5 Ha`.
+
+The second adds explicit angular channels `(l,m)` up to a chosen `lmax`, assembles the corresponding block-diagonal one-electron atomic Hamiltonian, and reports the low-lying hydrogen energies.
 
 If you are trying to decide whether the package is working for you, this is the first example that really answers the question.
 
@@ -160,6 +174,8 @@ The main documentation surface is:
   The best first read after this README.
 - [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md)  
   Practical parameter choices for atom-centered radial work.
+- [`docs/atomic_ylm_layer.md`](docs/atomic_ylm_layer.md)
+  The first explicit angular `(l,m)` layer built on top of the radial substrate.
 - [`docs/example_guide.md`](docs/example_guide.md)  
   The best order in which to read and run the examples.
 - [`docs/architecture.md`](docs/architecture.md)  
@@ -180,6 +196,7 @@ A good reading/running order is:
 - `02_radial_basis.jl`
 - `03_radial_operators.jl`
 - `04_hydrogen_ground_state.jl`
+- `15_atomic_hydrogen_ylm.jl`
 
 ### Then move to the advanced primitive-layer line
 - `05_primitive_sets.jl`
@@ -204,6 +221,7 @@ What is already useful today:
 
 - ordinary 1D gausslet objects and explicit Gaussian constructions
 - radial gausslet bases and radial one-body operators
+- the first explicit one-electron `(l,m)` atomic layer
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction
 - the first 1D partition/hierarchy/contraction experiments
@@ -211,7 +229,7 @@ What is already useful today:
 What is not yet here:
 
 - exact non-diagonal electron-electron operators
-- a full spherical-angular atomic layer
+- the fuller interacting spherical-angular atomic layer beyond the present one-electron `(l,m)` path
 - 2D or 3D nested workflows
 - named Gaussian chemistry basis libraries
 - solver layers such as HF, DMRG, or related workflows

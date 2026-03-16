@@ -89,7 +89,15 @@ export AbstractFunction1D,
        nuclear_matrix,
        centrifugal_matrix,
        multipole_matrix,
+       YlmChannel,
+       YlmChannelSet,
        RadialAtomicOperators,
+       AtomicOneBodyOperators,
+       ylm_channels,
+       atomic_one_body_operators,
+       channel_range,
+       channel_hamiltonian,
+       channel_overlap,
        atomic_operators,
        centrifugal,
        multipole,
@@ -198,6 +206,11 @@ function kinetic_matrix end
 function nuclear_matrix end
 function centrifugal_matrix end
 function multipole_matrix end
+function ylm_channels end
+function atomic_one_body_operators end
+function channel_range end
+function channel_hamiltonian end
+function channel_overlap end
 function atomic_operators end
 function centrifugal end
 function multipole end
@@ -253,5 +266,6 @@ include("leaf_pgdg.jl")
 include("global_leaf_contraction.jl")
 include("diagnostics.jl")
 include("operators.jl")
+include("atomic_ylm.jl")
 
 end

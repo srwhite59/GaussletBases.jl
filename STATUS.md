@@ -12,10 +12,25 @@ This includes:
 - explicit radial quadrature, separate from the basis
 - radial diagnostics
 - radial overlap, kinetic, nuclear, and centrifugal matrices
+- a first explicit one-electron `(l,m)` atomic layer built on those radial matrices
 - the current two-index IDA-style radial multipole matrices
 - `RadialAtomicOperators`
 
 For a new user, this is the clearest place to begin.
+
+## First atomic angular step
+
+The package now also has a first explicit atomic angular layer built from channels labeled by `(l,m)`.
+
+This is still a narrow one-electron path, but it is an important step because it makes the hydrogen problem look like an actual radial-plus-angular atomic basis rather than only a radial test problem.
+
+The present objects there are:
+
+- `YlmChannel`
+- `YlmChannelSet`
+- `AtomicOneBodyOperators`
+
+This is the right layer to add before the later interacting atomic path.
 
 ## Advanced but still settling: primitive layers and contraction
 
@@ -45,7 +60,7 @@ The more canonical current research direction is:
 The current repository does not yet provide:
 
 - exact non-diagonal electron-electron operators
-- a full spherical-angular atomic layer
+- the fuller interacting spherical-angular atomic layer beyond the present one-electron `(l,m)` path
 - full nested 2D or 3D workflows
 - named chemistry basis-set libraries
 - solver layers such as HF, DMRG, or related workflows
