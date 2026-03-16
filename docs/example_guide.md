@@ -38,6 +38,17 @@ Solve the hydrogen ground-state problem in the radial basis.
 
 This is the first full scientific check in the repository, and it is the most important example after the first three.
 
+### `23_cartesian_hydrogen_coulomb_expansion.jl`
+
+Build the first small ordinary Cartesian hydrogen Hamiltonian by:
+
+- taking a short Gaussian expansion of `1/r`
+- building one-dimensional Gaussianized operator factors
+- assembling the 3D nuclear-attraction operator from separable pieces
+
+This is the right first ordinary-gausslet hydrogen path. It should be read
+before any future 3D grid-based debug or comparison path.
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
@@ -176,11 +187,16 @@ Read:
 4. `04_hydrogen_ground_state.jl`
 5. `15_atomic_hydrogen_ylm.jl`
 
+Then, if you want the first ordinary Cartesian hydrogen path, read:
+
+6. `23_cartesian_hydrogen_coulomb_expansion.jl`
+
 Then read:
 
 - `docs/first_radial_workflow.md`
 - `docs/recommended_atomic_setup.md`
 - `docs/atomic_ylm_layer.md`
+- `docs/ordinary_coulomb_expansion_path.md`
 
 ### If your main interest is primitive layers and contraction
 

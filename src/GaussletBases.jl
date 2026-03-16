@@ -77,6 +77,9 @@ export AbstractFunction1D,
        contract_primitive_vector,
        contract_primitive_diagonal,
        contract_primitive_matrix,
+       CoulombGaussianExpansion,
+       coulomb_gaussian_expansion,
+       gaussian_factor_matrix,
        RadialQuadratureGrid,
        radial_quadrature,
        quadrature_points,
@@ -221,6 +224,8 @@ function integral_weights end
 function contract_primitive_vector end
 function contract_primitive_diagonal end
 function contract_primitive_matrix end
+function coulomb_gaussian_expansion end
+function gaussian_factor_matrix end
 function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
@@ -306,6 +311,7 @@ include("families.jl")
 include("bases.jl")
 include("quadrature.jl")
 include("primitive_sets.jl")
+include("ordinary_coulomb.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")
