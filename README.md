@@ -2,14 +2,22 @@
 
 GaussletBases.jl is a Julia package for working with gausslet basis functions.
 
-Today its clearest use is **atom-centered radial calculations**: building radial bases, constructing matching quadrature grids, checking basis diagnostics, and forming the basic radial operator matrices needed for one-electron and mean-field-style work.
+Its broad foundation is the ordinary one-dimensional gausslet story:
 
-The repository also contains a newer one-dimensional line of work on **shared primitive layers, contraction, partitions, and simple hierarchy**. That part is scientifically interesting and already useful for method development, but it is still the more experimental side of the package. If you are new, start with the radial path.
+- explicit Gaussian constructions
+- mapped and distorted coordinates
+- basis functions built from a visible primitive layer
+- matrix construction through that shared primitive layer
+
+Today its most mature public-facing path is **atom-centered radial calculations**: building radial bases, constructing matching quadrature grids, checking basis diagnostics, and forming the basic radial operator matrices needed for one-electron and mean-field-style work.
+
+The repository also contains a newer one-dimensional line of work on **shared primitive layers, contraction, partitions, and hierarchy**. That line is scientifically important because it is the bridge from ordinary gausslets toward nested constructions, but it is still the more experimental side of the package. If you are new, start with the radial path, while keeping in mind that ordinary gausslets are the broader foundation underneath it.
 
 ## Who this package is for
 
 GaussletBases is most useful today for people who want to:
 
+- explore ordinary gausslets as localized basis functions built from explicit Gaussian primitive layers
 - explore radial gausslet bases for atoms and related model problems
 - inspect the underlying Gaussian layer behind a basis
 - study how primitive Gaussian layers can be contracted into more useful localized functions
@@ -34,7 +42,13 @@ using GaussletBases
 
 ## What is solid today
 
-For a new user, the most established part of the package is the radial line:
+For a new user, the package currently has three visible layers:
+
+- the broad foundation of ordinary 1D gausslets and explicit primitive-layer constructions
+- the mature radial line
+- the newer experimental contraction and hierarchy line
+
+The most established public-facing path is the radial line:
 
 - ordinary 1D, half-line, and radial gausslet bases
 - explicit coordinate mappings
@@ -148,6 +162,8 @@ The main documentation surface is:
   Practical parameter choices for atom-centered radial work.
 - [`docs/example_guide.md`](docs/example_guide.md)  
   The best order in which to read and run the examples.
+- [`docs/architecture.md`](docs/architecture.md)  
+  A compact map of the package structure: ordinary gausslets, radial work, primitive layers, hierarchy, and the current corrected nested direction.
 - [`docs/terminology.md`](docs/terminology.md)  
   Plain-language explanations of the few package-specific terms.
 - [`docs/intermediate_primitive_layer.md`](docs/intermediate_primitive_layer.md)  
@@ -171,19 +187,22 @@ A good reading/running order is:
 - `07_position_contraction.jl`
 - `08_basis_representation.jl`
 
-### Then, only if you want the research/prototype line
+### Then, if you want the current corrected nested/contraction direction
 - `09_basis_partition.jl`
 - `10_hierarchical_partition.jl`
-- `11_leaf_pgdg.jl`
-- `12_leaf_pgdg_augmentation.jl`
 - `13_global_leaf_contraction.jl`
 
-The first four examples are the public-facing heart of the package. The later ones are there to explain and test the more experimental contraction and hierarchy ideas.
+### Prototype side branch
+- `11_leaf_pgdg.jl`
+- `12_leaf_pgdg_augmentation.jl`
+
+The first four examples are the public-facing heart of the package. The later ones are there to explain and test the more experimental contraction and hierarchy ideas. In particular, `13_global_leaf_contraction.jl` is now the clearest example of the corrected current direction, while `11` and `12` should be read as useful prototypes rather than as the main conceptual path.
 
 ## Current scope and limits
 
 What is already useful today:
 
+- ordinary 1D gausslet objects and explicit Gaussian constructions
 - radial gausslet bases and radial one-body operators
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction

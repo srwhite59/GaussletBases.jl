@@ -74,9 +74,23 @@ Refine one box and inspect the resulting parent-child hierarchy.
 
 These are advanced organizational examples. They do not yet build a new basis.
 
-## Stage 4: research/prototype line
+## Stage 4: corrected current direction
 
 These are the examples to read only after the earlier structure is clear.
+They express the current corrected nested/contraction direction more faithfully than the earlier leaf-local prototype line.
+
+### `13_global_leaf_contraction.jl`
+
+Build one globally mapped common basis over a region, then contract locally on the leaf boxes of a hierarchy.
+
+This is the example that best matches the current corrected research direction:
+
+- one global mapped common layer
+- optional local contraction as a refinement
+
+## Stage 5: prototype side branch
+
+These examples are still useful, but they should be read as prototypes rather than as the main conceptual direction.
 
 ### `11_leaf_pgdg.jl`
 
@@ -89,15 +103,6 @@ This is a useful prototype, but it is not the best conceptual picture of the lon
 Add extra user-supplied Gaussian primitives in selected leaves.
 
 This is another prototype example showing local enrichment.
-
-### `13_global_leaf_contraction.jl`
-
-Build one globally mapped common basis over a region, then contract locally on the leaf boxes of a hierarchy.
-
-This is the example that best matches the current corrected research direction:
-
-- one global mapped common layer
-- optional local contraction as a refinement
 
 ## Recommended reading orders
 
@@ -132,7 +137,7 @@ Only after the earlier stages, continue with:
 10. `10_hierarchical_partition.jl`
 11. `13_global_leaf_contraction.jl`
 
-Treat:
+Then, only if you want the prototype side branch, treat:
 
 12. `11_leaf_pgdg.jl`
 13. `12_leaf_pgdg_augmentation.jl`
