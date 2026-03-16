@@ -296,6 +296,7 @@ include("diagnostics.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
 include("gaunt_tables.jl")
+include("atomic_angular_sectors.jl")
 include("atomic_ida.jl")
 include("atomic_ida_two_electron.jl")
 

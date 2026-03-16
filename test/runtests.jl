@@ -108,6 +108,41 @@ function _tiny_atomic_ida_lanczos_fixture()
     end)
 end
 
+function _direct_dense_angular_kernel(table, channels, L)
+    nchannels = length(channels)
+    prefactor = 4 * pi / (2 * L + 1)
+    kernel = zeros(Float64, nchannels, nchannels, nchannels, nchannels)
+
+    for alpha in 1:nchannels, alphap in 1:nchannels, beta in 1:nchannels, betap in 1:nchannels
+        total = 0.0
+        for M in -L:L
+            total += prefactor *
+                     (isodd(M) ? -1.0 : 1.0) *
+                     GaussletBases.gaunt_value(
+                        table,
+                        L,
+                        channels[alpha].l,
+                        channels[alpha].m,
+                        channels[alphap].l,
+                        channels[alphap].m,
+                        M,
+                    ) *
+                     GaussletBases.gaunt_value(
+                        table,
+                        L,
+                        channels[beta].l,
+                        channels[beta].m,
+                        channels[betap].l,
+                        channels[betap].m,
+                        -M,
+                    )
+        end
+        kernel[alpha, alphap, beta, betap] = total
+    end
+
+    return kernel
+end
+
 function _quick_display_fixture()
     return _cached_fixture(:quick_display_fixture, () -> begin
         family = GaussletFamily(:G10)
@@ -976,6 +1011,50 @@ end
             for alpha in 1:length(channels), alphap in 1:length(channels), M in -L:L
         ]
         @test gaunt_tensor(ida, L) ≈ expected_tensor atol = 1.0e-12 rtol = 1.0e-12
+    end
+end
+
+@testset "Angular kernel sectorization" begin
+    _, _, _, channels, _, ida = _quick_radial_atomic_fixture()
+    sectors = ida.angular_sectors
+    nchannels = length(channels)
+
+    @test sectors.nchannels == nchannels
+    @test length(sectors.pair_to_sector) == nchannels^2
+    @test length(sectors.pair_to_local) == nchannels^2
+    @test sum(length(sector.pair_indices) for sector in sectors.sectors) == nchannels^2
+
+    for (sector_index, sector) in enumerate(sectors.sectors)
+        @test issorted(sector.pair_indices)
+        matrix_by_L = sectors.sector_matrices
+
+        for local_index in eachindex(sector.pair_indices)
+            pair_index = sector.pair_indices[local_index]
+            alpha = sector.left_channel_indices[local_index]
+            beta = sector.right_channel_indices[local_index]
+            @test channels[alpha].m + channels[beta].m == sector.msum
+            @test sectors.pair_to_sector[pair_index] == sector_index
+            @test sectors.pair_to_local[pair_index] == local_index
+        end
+
+        @test length(matrix_by_L) == GaussletBases.gaunt_Lmax(ida.gaunt_table) + 1
+        for level in matrix_by_L
+            @test size(level[sector_index]) == (length(sector.pair_indices), length(sector.pair_indices))
+        end
+    end
+
+    for L in 0:GaussletBases.gaunt_Lmax(ida.gaunt_table)
+        expected_kernel = _direct_dense_angular_kernel(ida.gaunt_table, channels, L)
+        @test angular_kernel(ida, L) ≈ expected_kernel atol = 1.0e-12 rtol = 1.0e-12
+
+        for alpha in 1:nchannels, beta in 1:nchannels, alphap in 1:nchannels, betap in 1:nchannels
+            value = GaussletBases._angular_kernel_sector_value(sectors, L, alpha, beta, alphap, betap)
+            @test value ≈ expected_kernel[alpha, alphap, beta, betap] atol = 1.0e-12 rtol = 1.0e-12
+
+            if channels[alpha].m + channels[beta].m != channels[alphap].m + channels[betap].m
+                @test value == 0.0
+            end
+        end
     end
 end
 

@@ -70,7 +70,7 @@ function Base.show(io::IO, problem::AtomicIDATwoElectronProblem)
         ", nstates=",
         length(problem.state_data),
         ", Lmax=",
-        length(problem.operators.angular_kernel_data) - 1,
+        gaunt_Lmax(problem.operators.gaunt_table),
         ")",
     )
 end
@@ -197,7 +197,7 @@ end
 function _ida_density_interaction_matrix(ops::AtomicIDAOperators, orbital_data::AbstractVector{AtomicOrbital})
     norb = length(orbital_data)
     channel_indices = _orbital_channel_indices(ops, orbital_data)
-    vmax = length(ops.angular_kernel_data) - 1
+    vmax = gaunt_Lmax(ops.gaunt_table)
     matrix = zeros(Float64, norb, norb)
 
     for left in 1:norb
@@ -213,7 +213,7 @@ function _ida_density_interaction_matrix(ops::AtomicIDAOperators, orbital_data::
             total = 0.0
             for L in 0:vmax
                 total += radial_multipole(ops, L)[p, q] *
-                         angular_kernel(ops, L)[alpha, alpha, beta, beta]
+                         _angular_kernel_sector_value(ops.angular_sectors, L, alpha, beta, alpha, beta)
             end
             matrix[left, right] = total
         end

@@ -41,7 +41,8 @@ The object bundles:
 
 - the one-body atomic blocks
 - the underlying radial multipole tables
-- angular Gaunt tensors and M-summed kernels
+- a sparse/block Gaunt table
+- sectorized M-summed angular-kernel preparation
 - orbital indexing metadata
 
 It does **not** solve the many-electron problem. It only assembles the static
@@ -50,8 +51,9 @@ ingredients needed for later He / IDA work.
 struct AtomicIDAOperators{A <: AbstractDiagonalApproximation}
     one_body::AtomicOneBodyOperators
     radial_operators::RadialAtomicOperators{A}
-    gaunt_data::Vector{Array{Float64,3}}
-    angular_kernel_data::Vector{Array{Float64,4}}
+    gaunt_table::GauntTable{Float64}
+    angular_sectors::AngularKernelSectors
+    channel_lookup::Dict{Tuple{Int,Int},Int}
     orbital_data::Vector{AtomicOrbital}
 end
 
@@ -63,7 +65,7 @@ function Base.show(io::IO, ops::AtomicIDAOperators)
         ", norbitals=",
         length(ops.orbital_data),
         ", Lmax=",
-        length(ops.angular_kernel_data) - 1,
+        gaunt_Lmax(ops.gaunt_table),
         ")",
     )
 end
@@ -83,14 +85,14 @@ end
 
 function gaunt_tensor(ops::AtomicIDAOperators, L::Int)
     L >= 0 || throw(ArgumentError("gaunt_tensor requires L >= 0"))
-    L < length(ops.gaunt_data) || throw(BoundsError(ops.gaunt_data, L + 1))
-    return ops.gaunt_data[L + 1]
+    L <= gaunt_Lmax(ops.gaunt_table) || throw(BoundsError(ops.gaunt_table.blocks, L + 1))
+    return _dense_gaunt_tensor(ops.gaunt_table, ops.one_body.channels, ops.channel_lookup, L)
 end
 
 function angular_kernel(ops::AtomicIDAOperators, L::Int)
     L >= 0 || throw(ArgumentError("angular_kernel requires L >= 0"))
-    L < length(ops.angular_kernel_data) || throw(BoundsError(ops.angular_kernel_data, L + 1))
-    return ops.angular_kernel_data[L + 1]
+    L <= gaunt_Lmax(ops.gaunt_table) || throw(BoundsError(ops.gaunt_table.blocks, L + 1))
+    return _dense_angular_kernel_from_sectors(ops.angular_sectors, L)
 end
 
 function gaunt_coefficient(
@@ -102,9 +104,7 @@ function gaunt_coefficient(
 )
     L >= 0 || throw(ArgumentError("gaunt_coefficient requires L >= 0"))
     abs(M) <= L || throw(ArgumentError("gaunt_coefficient requires |M| <= L"))
-    left_index = _channel_index(ops.one_body.channels, left)
-    right_index = _channel_index(ops.one_body.channels, right)
-    return gaunt_tensor(ops, L)[left_index, right_index, M + L + 1]
+    return gaunt_value(ops.gaunt_table, L, left.l, left.m, right.l, right.m, M)
 end
 
 function _channel_lookup(channels::YlmChannelSet)
@@ -136,61 +136,6 @@ function _dense_gaunt_tensor(
     return tensor
 end
 
-function _gaunt_entries_by_M(
-    table::GauntTable{Float64},
-    channels::YlmChannelSet,
-    lookup::Dict{Tuple{Int,Int},Int},
-    L::Int,
-)
-    entries_by_M = [Tuple{Int,Int,Float64}[] for _ in 1:(2 * L + 1)]
-
-    for (l1, l2, entries) in gaunt_each_block(table, L)
-        for entry in entries
-            alpha = lookup[(l1, entry.m1)]
-            alphap = lookup[(l2, entry.m2)]
-            push!(entries_by_M[entry.M + L + 1], (alpha, alphap, entry.val))
-        end
-    end
-
-    return entries_by_M
-end
-
-function _build_gaunt_tensors(table::GauntTable{Float64}, channels::YlmChannelSet)
-    lookup = _channel_lookup(channels)
-    return [
-        _dense_gaunt_tensor(table, channels, lookup, L)
-        for L in 0:gaunt_Lmax(table)
-    ]
-end
-
-function _build_angular_kernels(table::GauntTable{Float64}, channels::YlmChannelSet)
-    nchannels = length(channels)
-    lookup = _channel_lookup(channels)
-    angular_kernel_data = Vector{Array{Float64,4}}(undef, gaunt_Lmax(table) + 1)
-
-    for L in 0:gaunt_Lmax(table)
-        kernel = zeros(Float64, nchannels, nchannels, nchannels, nchannels)
-        prefactor = 4 * pi / (2 * L + 1)
-        entries_by_M = _gaunt_entries_by_M(table, channels, lookup, L)
-
-        for M in -L:L
-            left_entries = entries_by_M[M + L + 1]
-            right_entries = entries_by_M[-M + L + 1]
-            phase = isodd(M) ? -1.0 : 1.0
-            scale = prefactor * phase
-
-            for (alpha, alphap, left_value) in left_entries
-                for (beta, betap, right_value) in right_entries
-                    kernel[alpha, alphap, beta, betap] += scale * left_value * right_value
-                end
-            end
-        end
-        angular_kernel_data[L + 1] = kernel
-    end
-
-    return angular_kernel_data
-end
-
 function _atomic_orbitals(channels::YlmChannelSet, radial_dim::Int)
     orbital_data = AtomicOrbital[]
     index = 1
@@ -214,12 +159,14 @@ The result contains:
 
 - the one-body atomic blocks
 - the radial multipole tables from `radial_ops`
-- Gaunt tensors for the complex `Y_{lm}` channels
-- M-summed angular kernels `Q_L`
+- sparse/block Gaunt data for the complex `Y_{lm}` channels
+- sectorized M-summed angular kernels `Q_L`
 - channel-major orbital indexing metadata
 
 This object assembles the Hamiltonian ingredients but does not solve the
-many-electron problem.
+many-electron problem. The dense `gaunt_tensor` and `angular_kernel` accessors
+remain available and reconstruct those objects on demand from the sparse and
+sectorized internal data.
 """
 function atomic_ida_operators(radial_ops::RadialAtomicOperators, channels::YlmChannelSet)
     maximum_l = _maximum_l(channels)
@@ -234,10 +181,10 @@ function atomic_ida_operators(radial_ops::RadialAtomicOperators, channels::YlmCh
 
     one_body = atomic_one_body_operators(radial_ops, channels)
     gaunt_table = build_gaunt_table(maximum_l; Lmax = 2 * maximum_l, atol = 1.0e-14, basis = :complex)
-    gaunt_data = _build_gaunt_tensors(gaunt_table, channels)
-    angular_kernel_data = _build_angular_kernels(gaunt_table, channels)
+    lookup = _channel_lookup(channels)
+    angular_sectors = _build_angular_kernel_sectors(gaunt_table, channels, lookup)
     orbital_data = _atomic_orbitals(channels, size(radial_ops.overlap, 1))
-    return AtomicIDAOperators(one_body, radial_ops, gaunt_data, angular_kernel_data, orbital_data)
+    return AtomicIDAOperators(one_body, radial_ops, gaunt_table, angular_sectors, lookup, orbital_data)
 end
 
 function atomic_ida_operators(radial_ops::RadialAtomicOperators; lmax::Int)
