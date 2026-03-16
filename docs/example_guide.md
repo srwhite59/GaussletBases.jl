@@ -56,6 +56,12 @@ Build the first direct/Hartree one-body term from a trial spatial density matrix
 
 This is the first small physical consumer of the sectorized angular preparation.
 
+### `20_atomic_ida_exchange.jl`
+
+Build the matching exchange/Fock-style one-body term from a trial spatial density matrix.
+
+This completes the first small direct-plus-exchange mean-field-style pair, still without a full SCF workflow.
+
 ### `17_atomic_ida_two_electron.jl`
 
 Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
@@ -189,11 +195,13 @@ After `15_atomic_hydrogen_ylm.jl`, continue with:
 
 16. `16_atomic_ida_ingredients.jl`
 17. `19_atomic_ida_direct.jl`
-18. `17_atomic_ida_two_electron.jl`
-19. `18_atomic_ida_two_electron_lanczos.jl`
+18. `20_atomic_ida_exchange.jl`
+19. `17_atomic_ida_two_electron.jl`
+20. `18_atomic_ida_two_electron_lanczos.jl`
 
 Then read:
 
 - `docs/atomic_ida_layer.md`
 - `docs/atomic_ida_direct.md`
+- `docs/atomic_ida_exchange.md`
 - `docs/atomic_ida_two_electron.md`

@@ -167,6 +167,30 @@ function _dense_direct_reference(ops::AtomicIDAOperators, density::AbstractMatri
     return 0.5 .* (reference .+ transpose(reference))
 end
 
+function _dense_exchange_reference(ops::AtomicIDAOperators, density::AbstractMatrix{<:Real})
+    radial_dim = size(radial_multipole(ops, 0), 1)
+    nchannels = length(ops.one_body.channels)
+    norbitals = length(orbitals(ops))
+    size(density) == (norbitals, norbitals) || throw(DimensionMismatch("density matrix has the wrong size"))
+
+    orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
+    reference = zeros(Float64, norbitals, norbitals)
+    radial_multipoles = [radial_multipole(ops, L) for L in 0:GaussletBases.gaunt_Lmax(ops.gaunt_table)]
+    angular_kernels = [angular_kernel(ops, L) for L in 0:GaussletBases.gaunt_Lmax(ops.gaunt_table)]
+
+    for left_radial in 1:radial_dim, right_radial in 1:radial_dim, left_channel in 1:nchannels, right_channel in 1:nchannels
+        total = 0.0
+        for (level_index, multipole) in enumerate(radial_multipoles), left_source in 1:nchannels, right_source in 1:nchannels
+            total += multipole[left_radial, right_radial] *
+                     angular_kernels[level_index][left_channel, left_source, right_channel, right_source] *
+                     density[orbital_index(left_source, left_radial), orbital_index(right_source, right_radial)]
+        end
+        reference[orbital_index(left_channel, left_radial), orbital_index(right_channel, right_radial)] = total
+    end
+
+    return 0.5 .* (reference .+ transpose(reference))
+end
+
 function _quick_display_fixture()
     return _cached_fixture(:quick_display_fixture, () -> begin
         family = GaussletFamily(:G10)
@@ -1198,6 +1222,49 @@ end
     end
 end
 
+@testset "Atomic IDA exchange matrix" begin
+    rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
+    radial_dim = length(rb)
+    nchannels = length(channels)
+    norbitals = length(orbitals(ida))
+    orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
+
+    density = zeros(Float64, norbitals, norbitals)
+    density[orbital_index(1, 1), orbital_index(1, 1)] = 0.9
+    density[orbital_index(3, 1), orbital_index(1, 1)] = 0.25
+    density[orbital_index(1, 1), orbital_index(3, 1)] = 0.25
+    density[orbital_index(1, 1), orbital_index(3, 2)] = -0.2
+    density[orbital_index(3, 2), orbital_index(1, 1)] = -0.2
+    density[orbital_index(7, 3), orbital_index(4, 3)] = 0.35
+    density[orbital_index(4, 3), orbital_index(7, 3)] = 0.35
+
+    exchange = exchange_matrix(ida, density)
+    reference = _dense_exchange_reference(ida, density)
+
+    @test size(exchange) == (norbitals, norbitals)
+    @test exchange ≈ reference atol = 1.0e-12 rtol = 1.0e-12
+    @test exchange ≈ transpose(exchange) atol = 1.0e-12 rtol = 1.0e-12
+
+    zeroed_density = copy(density)
+    zeroed_density[orbital_index(1, 1), orbital_index(3, 2)] = 0.0
+    zeroed_density[orbital_index(3, 2), orbital_index(1, 1)] = 0.0
+    zeroed_exchange = exchange_matrix(ida, zeroed_density)
+    @test exchange != zeroed_exchange
+
+    selection_density = zeros(Float64, norbitals, norbitals)
+    selection_density[orbital_index(3, 1), orbital_index(1, 2)] = 1.0
+    selection_density[orbital_index(1, 2), orbital_index(3, 1)] = 1.0
+    selection_exchange = exchange_matrix(ida, selection_density)
+    target_msum = channels[3].m + channels[1].m
+
+    for left_channel in 1:nchannels, right_channel in 1:nchannels, left_radial in 1:radial_dim, right_radial in 1:radial_dim
+        value = selection_exchange[orbital_index(left_channel, left_radial), orbital_index(right_channel, right_radial)]
+        if channels[left_channel].m + channels[right_channel].m != target_msum
+            @test abs(value) ≤ 1.0e-12
+        end
+    end
+end
+
 @testset "Atomic IDA two-electron problem" begin
     rb, grid, radial_ops, ida, problem = _tiny_atomic_ida_two_electron_fixture()
     norbitals = length(orbitals(problem))
@@ -1337,6 +1404,7 @@ end
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
     atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
     atomic_direct_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_direct.md"), String)
+    atomic_exchange_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_exchange.md"), String)
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
@@ -1407,6 +1475,10 @@ end
     @test occursin("radial-diagonal", lowercase(atomic_direct_note))
     @test occursin("dense `angular_kernel`", atomic_direct_note)
     @test occursin("exchange", lowercase(atomic_direct_note))
+    @test occursin("exchange means", lowercase(atomic_exchange_note))
+    @test occursin("radial-pair", lowercase(atomic_exchange_note))
+    @test occursin("four-index coulomb contraction", lowercase(atomic_exchange_note))
+    @test occursin("f = h + j - k", lowercase(atomic_exchange_note))
     @test occursin("GauntTables", gaunt_backend_note)
     @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
     @test occursin("src/atomic_ida.jl", gaunt_backend_note)
@@ -1414,9 +1486,11 @@ end
     @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
+    @test occursin("20_atomic_ida_exchange.jl", example_guide)
     @test occursin("17_atomic_ida_two_electron.jl", example_guide)
     @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
     @test occursin("docs/atomic_ida_direct.md", example_guide)
+    @test occursin("docs/atomic_ida_exchange.md", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -1468,6 +1542,7 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("15_atomic_hydrogen_ylm.jl")
         @test _run_example_script("16_atomic_ida_ingredients.jl")
         @test _run_example_script("19_atomic_ida_direct.jl")
+        @test _run_example_script("20_atomic_ida_exchange.jl")
         @test _run_example_script("17_atomic_ida_two_electron.jl")
         @test _run_example_script("18_atomic_ida_two_electron_lanczos.jl")
     end
