@@ -44,6 +44,12 @@ Take the same hydrogen problem one step further by adding explicit angular chann
 
 This is the first atomic example in the repository in the usual radial-plus-angular sense.
 
+### `16_atomic_ida_ingredients.jl`
+
+Build the static He-style IDA ingredients on top of the same radial-plus-angular structure.
+
+This example does **not** solve the many-electron problem. It makes the one-body blocks, radial multipoles, angular kernels, and orbital indexing explicit.
+
 ## Stage 2: primitive layers and contraction
 
 These examples explain the common Gaussian primitive layer that lies behind the basis functions.
@@ -132,6 +138,7 @@ Then read:
 
 - `docs/first_radial_workflow.md`
 - `docs/recommended_atomic_setup.md`
+- `docs/atomic_ylm_layer.md`
 
 ### If your main interest is primitive layers and contraction
 
@@ -157,3 +164,13 @@ Then, only if you want the prototype side branch, treat:
 15. `12_leaf_pgdg_augmentation.jl`
 
 as prototype studies rather than as the main public story of the package.
+
+### If your main interest is the first static atomic IDA ingredients
+
+After `15_atomic_hydrogen_ylm.jl`, continue with:
+
+16. `16_atomic_ida_ingredients.jl`
+
+Then read:
+
+- `docs/atomic_ida_layer.md`

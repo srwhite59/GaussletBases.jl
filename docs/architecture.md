@@ -47,7 +47,20 @@ The important point is that this angular layer does not replace the radial line.
 
 For hydrogen and other central one-electron problems, this is the natural next step after the radial basis and radial operator workflow.
 
-## 4. Shared primitive layer
+## 4. First static interacting atomic layer
+
+On top of the radial and angular one-body structure, the package now also has a narrow static interacting IDA assembly layer.
+
+That layer makes explicit:
+
+- the one-body atomic blocks
+- the radial multipole tables
+- the angular Gaunt and M-summed kernel data
+- the orbital indexing that ties them together
+
+This is still not a solver. It is the explicit interacting data structure that later He-style work should build on.
+
+## 5. Shared primitive layer
 
 The key advanced structural idea is the shared primitive layer.
 
@@ -62,7 +75,7 @@ This is the bridge between “basis functions as final objects” and “basis f
 
 That bridge matters scientifically because it makes matrix construction, locality, and alternative contraction strategies explicit instead of hidden.
 
-## 5. Representation, partitions, and hierarchy
+## 6. Representation, partitions, and hierarchy
 
 On top of the primitive layer, the package now has:
 
@@ -72,7 +85,7 @@ On top of the primitive layer, the package now has:
 
 These layers are not yet full nested-gausslet machinery. They are the organizational scaffolding needed to study locality and local contraction cleanly.
 
-## 6. Prototype line versus corrected direction
+## 7. Prototype line versus corrected direction
 
 There are now two distinct advanced 1D lines in the repository.
 
@@ -103,7 +116,7 @@ This is the line represented most clearly by:
 
 This direction is closer to the historical nested idea because it keeps one shared global primitive basis and performs local contraction inside that common layer.
 
-## 7. Why the global mapped layer matters
+## 8. Why the global mapped layer matters
 
 An important conceptual point is that the globally mapped uncontracted primitive/product basis is not just scaffolding.
 
@@ -114,7 +127,7 @@ It is useful in two ways:
 
 So the package should not be read as “everything is waiting for contraction before it becomes meaningful.” The global mapped layer is already a scientifically meaningful object.
 
-## 8. What is mature, what is advanced, what is still open
+## 9. What is mature, what is advanced, what is still open
 
 ### Mature
 
@@ -123,6 +136,7 @@ So the package should not be read as “everything is waiting for contraction be
 - radial one-body operator workflow
 - hydrogen validation example
 - the first explicit one-electron `(l,m)` atomic layer
+- the first static interacting He / IDA-style ingredient layer
 
 ### Advanced but structurally real
 
@@ -140,7 +154,7 @@ So the package should not be read as “everything is waiting for contraction be
 - named Gaussian chemistry basis support
 - higher-dimensional nested workflows
 
-## 9. How to read the repository now
+## 10. How to read the repository now
 
 If you are new:
 
@@ -158,7 +172,7 @@ If your interest is specifically the current nested/contraction direction:
 4. run `examples/13_global_leaf_contraction.jl`
 5. treat `11` and `12` as prototype side studies
 
-## 10. Bottom line
+## 11. Bottom line
 
 The package should be understood this way:
 

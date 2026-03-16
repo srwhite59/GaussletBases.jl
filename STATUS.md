@@ -32,6 +32,19 @@ The present objects there are:
 
 This is the right layer to add before the later interacting atomic path.
 
+## First static interacting atomic ingredients
+
+The package now also has a narrow static interacting atomic layer built in the current IDA style.
+
+This layer bundles:
+
+- the one-body atomic blocks
+- the radial multipole tables
+- the angular Gaunt and M-summed kernel data
+- explicit orbital indexing
+
+It is an assembly layer only. It does not yet solve the many-electron problem.
+
 ## Advanced but still settling: primitive layers and contraction
 
 The package also has a real one-dimensional structure for studying:
@@ -60,7 +73,7 @@ The more canonical current research direction is:
 The current repository does not yet provide:
 
 - exact non-diagonal electron-electron operators
-- the fuller interacting spherical-angular atomic layer beyond the present one-electron `(l,m)` path
+- a solved interacting atomic workflow beyond the present static IDA ingredient layer
 - full nested 2D or 3D workflows
 - named chemistry basis-set libraries
 - solver layers such as HF, DMRG, or related workflows

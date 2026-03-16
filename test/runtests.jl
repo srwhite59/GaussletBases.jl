@@ -778,6 +778,43 @@ end
     @test abs(l2_energies[1] + 1.0 / 18.0) ≤ 1.0e-3
 end
 
+@testset "Atomic IDA ingredients" begin
+    rb, grid = _radial_operator_fixture(; refine = 24)
+    radial_ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+    atom = atomic_one_body_operators(radial_ops; lmax = 2)
+    ida = atomic_ida_operators(radial_ops; lmax = 2)
+    channels = ylm_channels(2)
+    nchannels = length(channels)
+    radial_dim = length(rb)
+
+    @test ida isa AtomicIDAOperators
+    @test length(orbitals(ida)) == nchannels * radial_dim
+    @test size(radial_multipole(ida, 1)) == (radial_dim, radial_dim)
+    @test size(gaunt_tensor(ida, 1)) == (nchannels, nchannels, 3)
+    @test size(angular_kernel(ida, 1)) == (nchannels, nchannels, nchannels, nchannels)
+    @test channel_overlap(ida, YlmChannel(1, 0)) ≈ channel_overlap(atom, YlmChannel(1, 0)) atol = 1.0e-12 rtol = 1.0e-12
+    @test channel_hamiltonian(ida, YlmChannel(2, 1)) ≈ channel_hamiltonian(atom, YlmChannel(2, 1)) atol = 1.0e-12 rtol = 1.0e-12
+    @test channel_range(ida, YlmChannel(1, -1)) == channel_range(atom, YlmChannel(1, -1))
+
+    q0 = angular_kernel(ida, 0)
+    for alpha in 1:nchannels, alphap in 1:nchannels, beta in 1:nchannels, betap in 1:nchannels
+        expected = (alpha == alphap && beta == betap) ? 1.0 : 0.0
+        @test q0[alpha, alphap, beta, betap] ≈ expected atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    @test gaunt_coefficient(ida, 0, 0, YlmChannel(0, 0), YlmChannel(0, 0)) ≈ inv(sqrt(4 * pi)) atol = 1.0e-12 rtol = 1.0e-12
+    @test gaunt_coefficient(ida, 1, 0, YlmChannel(0, 0), YlmChannel(0, 0)) == 0.0
+    @test gaunt_coefficient(ida, 1, 1, YlmChannel(1, 0), YlmChannel(1, 0)) == 0.0
+    @test abs(gaunt_coefficient(ida, 1, 0, YlmChannel(1, 0), YlmChannel(0, 0))) > 1.0e-12
+
+    orbital_data = orbitals(ida)
+    @test orbital_data[1].index == 1
+    @test orbital_data[1].channel == YlmChannel(0, 0)
+    @test orbital_data[1].radial_index == 1
+    @test orbital_data[radial_dim + 1].channel == YlmChannel(1, -1)
+    @test orbital_data[radial_dim + 1].radial_index == 1
+end
+
 @testset "REPL displays" begin
     family = GaussletFamily(:G10)
     map = AsinhMapping(c = 0.15, s = 0.15)
@@ -825,6 +862,7 @@ end
     )
     channels = ylm_channels(2)
     atom = atomic_one_body_operators(ops; lmax = 2)
+    ida = atomic_ida_operators(ops; lmax = 2)
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
@@ -849,6 +887,8 @@ end
     @test occursin("YlmChannel(l=1, m=0)", sprint(show, YlmChannel(1, 0)))
     @test occursin("YlmChannelSet(lmax=2, nchannels=9)", sprint(show, channels))
     @test occursin("AtomicOneBodyOperators(nchannels=9, matrix_size=(54, 54))", sprint(show, atom))
+    @test occursin("AtomicOrbital(index=1, channel=YlmChannel(l=0, m=0), radial_index=1)", sprint(show, orbitals(ida)[1]))
+    @test occursin("AtomicIDAOperators(nchannels=9, norbitals=54, Lmax=4)", sprint(show, ida))
 end
 
 @testset "Documentation consistency" begin
@@ -860,6 +900,7 @@ end
     primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
     radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
+    atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
@@ -913,8 +954,13 @@ end
     @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
     @test occursin("hydrogen", lowercase(atomic_ylm_note))
     @test occursin("He / IDA", atomic_ylm_note)
+    @test occursin("AtomicIDAOperators", atomic_ida_note)
+    @test occursin("radial multipole", lowercase(atomic_ida_note))
+    @test occursin("not solve the many-electron problem", lowercase(atomic_ida_note))
+    @test occursin("channel-major", lowercase(atomic_ida_note))
     @test occursin("13_global_leaf_contraction.jl", example_guide)
     @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
+    @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -934,7 +980,7 @@ end
     @test occursin("Primitive set", terminology)
     @test occursin("contract_primitive_matrix", terminology)
     @test occursin("An exact non-diagonal radial electron-electron layer", roadmap)
-    @test occursin("The first interacting He / IDA-style atomic layer", roadmap)
+    @test occursin("The first actual He / IDA-style solve", roadmap)
     @test occursin("geometry-aware grouping", roadmap)
     @test !occursin("Gausslets.jl", readme)
     @test occursin("Established public-facing path: radial calculations", status)
@@ -959,6 +1005,7 @@ end
     @test _run_example_script("13_global_leaf_contraction.jl")
     @test _run_example_script("14_radial_primitive_operators.jl")
     @test _run_example_script("15_atomic_hydrogen_ylm.jl")
+    @test _run_example_script("16_atomic_ida_ingredients.jl")
 end
 
 @testset "README example slice" begin

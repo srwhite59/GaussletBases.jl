@@ -149,3 +149,7 @@ That example:
 - diagonalizes it and reports low-lying energies
 
 That is the cleanest way to see how the present radial substrate and the new angular layer fit together.
+
+If you want the next step after that, read:
+
+- [`atomic_ida_layer.md`](atomic_ida_layer.md)

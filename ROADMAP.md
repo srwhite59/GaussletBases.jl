@@ -24,11 +24,14 @@ The current package has the two-index IDA-style radial multipole matrices.
 
 A natural next scientific step is the exact non-diagonal radial electron-electron object. That would make it possible to study more carefully where the present radial approximation is strong, where it is weak, and what the true cost/accuracy tradeoffs look like.
 
-### 2. The first interacting He / IDA-style atomic layer on top of the present `(l,m)` structure
+### 2. The first actual He / IDA-style solve on top of the present static atomic ingredients
 
-The package now has the first explicit one-electron angular `(l,m)` layer.
+The package now has:
 
-The next atomic question is how to sit the interacting path on top of that:
+- the explicit one-electron angular `(l,m)` layer
+- the first static interacting IDA ingredients
+
+The next atomic question is how to turn those explicit ingredients into a first useful interacting atomic calculation:
 
 - radial one-body operators
 - explicit `(l,m)` channels
@@ -98,7 +101,7 @@ If the goal is:
 then the package should prioritize:
 
 1. exact radial electron-electron structure
-2. the first interacting He / IDA-style atomic structure on top of the present `(l,m)` layer
+2. the first interacting He / IDA-style atomic calculation on top of the present static ingredients
 3. export/interoperability
 
 If the goal is:

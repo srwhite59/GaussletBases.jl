@@ -91,13 +91,21 @@ export AbstractFunction1D,
        multipole_matrix,
        YlmChannel,
        YlmChannelSet,
+       AtomicOrbital,
        RadialAtomicOperators,
        AtomicOneBodyOperators,
+       AtomicIDAOperators,
        ylm_channels,
        atomic_one_body_operators,
+       atomic_ida_operators,
        channel_range,
        channel_hamiltonian,
        channel_overlap,
+       orbitals,
+       radial_multipole,
+       gaunt_tensor,
+       gaunt_coefficient,
+       angular_kernel,
        atomic_operators,
        centrifugal,
        multipole,
@@ -208,9 +216,15 @@ function centrifugal_matrix end
 function multipole_matrix end
 function ylm_channels end
 function atomic_one_body_operators end
+function atomic_ida_operators end
 function channel_range end
 function channel_hamiltonian end
 function channel_overlap end
+function orbitals end
+function radial_multipole end
+function gaunt_tensor end
+function gaunt_coefficient end
+function angular_kernel end
 function atomic_operators end
 function centrifugal end
 function multipole end
@@ -267,5 +281,6 @@ include("global_leaf_contraction.jl")
 include("diagnostics.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
+include("atomic_ida.jl")
 
 end

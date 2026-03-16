@@ -176,6 +176,8 @@ The main documentation surface is:
   Practical parameter choices for atom-centered radial work.
 - [`docs/atomic_ylm_layer.md`](docs/atomic_ylm_layer.md)
   The first explicit angular `(l,m)` layer built on top of the radial substrate.
+- [`docs/atomic_ida_layer.md`](docs/atomic_ida_layer.md)
+  The first static interacting He / IDA-style ingredients built on top of the radial-plus-angular layer.
 - [`docs/example_guide.md`](docs/example_guide.md)  
   The best order in which to read and run the examples.
 - [`docs/architecture.md`](docs/architecture.md)  
@@ -197,6 +199,7 @@ A good reading/running order is:
 - `03_radial_operators.jl`
 - `04_hydrogen_ground_state.jl`
 - `15_atomic_hydrogen_ylm.jl`
+- `16_atomic_ida_ingredients.jl`
 
 ### Then move to the advanced primitive-layer line
 - `05_primitive_sets.jl`
@@ -222,6 +225,7 @@ What is already useful today:
 - ordinary 1D gausslet objects and explicit Gaussian constructions
 - radial gausslet bases and radial one-body operators
 - the first explicit one-electron `(l,m)` atomic layer
+- the first static He / IDA-style interacting atomic ingredients
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction
 - the first 1D partition/hierarchy/contraction experiments
