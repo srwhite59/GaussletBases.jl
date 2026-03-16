@@ -18,8 +18,7 @@ grid = radial_quadrature(rb)
 radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
 atom = atomic_one_body_operators(radial_ops; lmax = lmax)
 
-eig = eigen(Hermitian(atom.hamiltonian), Hermitian(atom.overlap))
-energies = sort(real(eig.values))
+energies = sort(real(eigen(Hermitian(atom.hamiltonian)).values))
 
 println("channel set: ", atom.channels)
 println("basis functions per channel: ", length(rb))
@@ -31,9 +30,6 @@ end
 println()
 println("lowest energy in each (l,m) channel:")
 for channel in atom.channels
-    channel_eig = eigen(
-        Hermitian(channel_hamiltonian(atom, channel)),
-        Hermitian(channel_overlap(atom, channel)),
-    )
+    channel_eig = eigen(Hermitian(channel_hamiltonian(atom, channel)))
     println("  (l, m) = (", channel.l, ", ", channel.m, "): ", minimum(real(channel_eig.values)))
 end

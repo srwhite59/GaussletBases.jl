@@ -179,8 +179,7 @@ H = kinetic_matrix(rb, grid) +
     nuclear_matrix(rb, grid; Z = Z) +
     centrifugal_matrix(rb, grid; l = 0)
 
-eig = eigen(Hermitian(H), Hermitian(S))
-E0 = minimum(real(eig.values))
+E0 = minimum(real(eigen(Hermitian(H)).values))
 E0
 ```
 

@@ -107,125 +107,84 @@ function gaunt_coefficient(
     return gaunt_tensor(ops, L)[left_index, right_index, M + L + 1]
 end
 
-function _legal_angular_triple(l1::Int, l2::Int, L::Int)
-    return abs(l1 - l2) <= L && l1 + l2 >= L && iseven(l1 + l2 + L)
-end
-
-function _factorial_table(nmax::Int)
-    return [BigFloat(factorial(big(n))) for n in 0:nmax]
-end
-
-@inline _fact(table::AbstractVector{BigFloat}, n::Int) = table[n + 1]
-
-function _wigner3j(
-    fact_table::AbstractVector{BigFloat},
-    j1::Int,
-    j2::Int,
-    j3::Int,
-    m1::Int,
-    m2::Int,
-    m3::Int,
-)
-    m1 + m2 + m3 == 0 || return 0.0
-    abs(m1) <= j1 || return 0.0
-    abs(m2) <= j2 || return 0.0
-    abs(m3) <= j3 || return 0.0
-    _legal_angular_triple(j1, j2, j3) || return 0.0
-
-    delta = sqrt(
-        _fact(fact_table, j1 + j2 - j3) *
-        _fact(fact_table, j1 - j2 + j3) *
-        _fact(fact_table, -j1 + j2 + j3) /
-        _fact(fact_table, j1 + j2 + j3 + 1),
-    )
-
-    pref = (isodd(j1 - j2 - m3) ? -one(BigFloat) : one(BigFloat)) * delta
-    pref *= sqrt(
-        _fact(fact_table, j1 + m1) *
-        _fact(fact_table, j1 - m1) *
-        _fact(fact_table, j2 + m2) *
-        _fact(fact_table, j2 - m2) *
-        _fact(fact_table, j3 + m3) *
-        _fact(fact_table, j3 - m3),
-    )
-
-    tmin = max(0, j2 - j3 - m1, j1 - j3 + m2)
-    tmax = min(j1 + j2 - j3, j1 - m1, j2 + m2)
-    tmin <= tmax || return 0.0
-
-    total = zero(BigFloat)
-    for t in tmin:tmax
-        denom =
-            _fact(fact_table, t) *
-            _fact(fact_table, j1 + j2 - j3 - t) *
-            _fact(fact_table, j1 - m1 - t) *
-            _fact(fact_table, j2 + m2 - t) *
-            _fact(fact_table, j3 - j2 + m1 + t) *
-            _fact(fact_table, j3 - j1 - m2 + t)
-        total += (isodd(t) ? -one(BigFloat) : one(BigFloat)) / denom
+function _channel_lookup(channels::YlmChannelSet)
+    lookup = Dict{Tuple{Int,Int},Int}()
+    for index in eachindex(channels.channel_data)
+        channel = channels[index]
+        lookup[(channel.l, channel.m)] = index
     end
-
-    return Float64(pref * total)
+    return lookup
 end
 
-function _complex_gaunt(
-    fact_table::AbstractVector{BigFloat},
-    left::YlmChannel,
+function _dense_gaunt_tensor(
+    table::GauntTable{Float64},
+    channels::YlmChannelSet,
+    lookup::Dict{Tuple{Int,Int},Int},
     L::Int,
-    M::Int,
-    right::YlmChannel,
 )
-    _legal_angular_triple(left.l, right.l, L) || return 0.0
-    -left.m + M + right.m == 0 || return 0.0
-
-    pref = (isodd(left.m) ? -1.0 : 1.0) *
-           sqrt(((2 * left.l + 1) * (2 * L + 1) * (2 * right.l + 1)) / (4 * pi))
-    return pref *
-           _wigner3j(fact_table, left.l, L, right.l, 0, 0, 0) *
-           _wigner3j(fact_table, left.l, L, right.l, -left.m, M, right.m)
-end
-
-function _build_gaunt_tensors(channels::YlmChannelSet)
     nchannels = length(channels)
-    Lmax = 2 * _maximum_l(channels)
-    fact_table = _factorial_table(max(1, 4 * max(channels.lmax, Lmax) + 1))
-    gaunt_data = Vector{Array{Float64,3}}(undef, Lmax + 1)
+    tensor = zeros(Float64, nchannels, nchannels, 2 * L + 1)
 
-    for L in 0:Lmax
-        tensor = zeros(Float64, nchannels, nchannels, 2 * L + 1)
-        for alpha in eachindex(channels.channel_data)
-            left = channels[alpha]
-            for alphap in eachindex(channels.channel_data)
-                right = channels[alphap]
-                M = left.m - right.m
-                abs(M) <= L || continue
-                tensor[alpha, alphap, M + L + 1] = _complex_gaunt(fact_table, left, L, M, right)
-            end
+    for (l1, l2, entries) in gaunt_each_block(table, L)
+        for entry in entries
+            alpha = lookup[(l1, entry.m1)]
+            alphap = lookup[(l2, entry.m2)]
+            tensor[alpha, alphap, entry.M + L + 1] = entry.val
         end
-        gaunt_data[L + 1] = tensor
     end
 
-    return gaunt_data
+    return tensor
 end
 
-function _build_angular_kernels(gaunt_data::Vector{Array{Float64,3}})
-    angular_kernel_data = Vector{Array{Float64,4}}(undef, length(gaunt_data))
+function _gaunt_entries_by_M(
+    table::GauntTable{Float64},
+    channels::YlmChannelSet,
+    lookup::Dict{Tuple{Int,Int},Int},
+    L::Int,
+)
+    entries_by_M = [Tuple{Int,Int,Float64}[] for _ in 1:(2 * L + 1)]
 
-    for L in 0:(length(gaunt_data) - 1)
-        tensor = gaunt_data[L + 1]
-        nchannels = size(tensor, 1)
-        kernel = zeros(Float64, nchannels, nchannels, nchannels, nchannels)
-        pref = 4 * pi / (2 * L + 1)
-
-        for alpha in 1:nchannels, alphap in 1:nchannels, beta in 1:nchannels, betap in 1:nchannels
-            total = 0.0
-            for M in -L:L
-                phase = isodd(M) ? -1.0 : 1.0
-                total += tensor[alpha, alphap, M + L + 1] * phase * tensor[beta, betap, -M + L + 1]
-            end
-            kernel[alpha, alphap, beta, betap] = pref * total
+    for (l1, l2, entries) in gaunt_each_block(table, L)
+        for entry in entries
+            alpha = lookup[(l1, entry.m1)]
+            alphap = lookup[(l2, entry.m2)]
+            push!(entries_by_M[entry.M + L + 1], (alpha, alphap, entry.val))
         end
+    end
 
+    return entries_by_M
+end
+
+function _build_gaunt_tensors(table::GauntTable{Float64}, channels::YlmChannelSet)
+    lookup = _channel_lookup(channels)
+    return [
+        _dense_gaunt_tensor(table, channels, lookup, L)
+        for L in 0:gaunt_Lmax(table)
+    ]
+end
+
+function _build_angular_kernels(table::GauntTable{Float64}, channels::YlmChannelSet)
+    nchannels = length(channels)
+    lookup = _channel_lookup(channels)
+    angular_kernel_data = Vector{Array{Float64,4}}(undef, gaunt_Lmax(table) + 1)
+
+    for L in 0:gaunt_Lmax(table)
+        kernel = zeros(Float64, nchannels, nchannels, nchannels, nchannels)
+        prefactor = 4 * pi / (2 * L + 1)
+        entries_by_M = _gaunt_entries_by_M(table, channels, lookup, L)
+
+        for M in -L:L
+            left_entries = entries_by_M[M + L + 1]
+            right_entries = entries_by_M[-M + L + 1]
+            phase = isodd(M) ? -1.0 : 1.0
+            scale = prefactor * phase
+
+            for (alpha, alphap, left_value) in left_entries
+                for (beta, betap, right_value) in right_entries
+                    kernel[alpha, alphap, beta, betap] += scale * left_value * right_value
+                end
+            end
+        end
         angular_kernel_data[L + 1] = kernel
     end
 
@@ -274,8 +233,9 @@ function atomic_ida_operators(radial_ops::RadialAtomicOperators, channels::YlmCh
         )
 
     one_body = atomic_one_body_operators(radial_ops, channels)
-    gaunt_data = _build_gaunt_tensors(channels)
-    angular_kernel_data = _build_angular_kernels(gaunt_data)
+    gaunt_table = build_gaunt_table(maximum_l; Lmax = 2 * maximum_l, atol = 1.0e-14, basis = :complex)
+    gaunt_data = _build_gaunt_tensors(gaunt_table, channels)
+    angular_kernel_data = _build_angular_kernels(gaunt_table, channels)
     orbital_data = _atomic_orbitals(channels, size(radial_ops.overlap, 1))
     return AtomicIDAOperators(one_body, radial_ops, gaunt_data, angular_kernel_data, orbital_data)
 end

@@ -127,3 +127,7 @@ That is consistent with the current one-body atomic block structure and easy to 
 This pass should establish the static interacting atomic structure on top of the now-clean radial-plus-angular architecture.
 
 Only after that should the repository move on to an actual many-electron solve.
+
+That next narrow step is now described in:
+
+- [`atomic_ida_two_electron.md`](atomic_ida_two_electron.md)

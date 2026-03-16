@@ -95,17 +95,25 @@ export AbstractFunction1D,
        RadialAtomicOperators,
        AtomicOneBodyOperators,
        AtomicIDAOperators,
+       AtomicIDATwoElectronState,
+       AtomicIDATwoElectronProblem,
        ylm_channels,
        atomic_one_body_operators,
        atomic_ida_operators,
+       atomic_ida_two_electron_problem,
        channel_range,
        channel_hamiltonian,
        channel_overlap,
        orbitals,
+       two_electron_states,
        radial_multipole,
        gaunt_tensor,
        gaunt_coefficient,
        angular_kernel,
+       apply_overlap,
+       apply_hamiltonian,
+       ground_state_energy,
+       lanczos_ground_state,
        atomic_operators,
        centrifugal,
        multipole,
@@ -217,14 +225,20 @@ function multipole_matrix end
 function ylm_channels end
 function atomic_one_body_operators end
 function atomic_ida_operators end
+function atomic_ida_two_electron_problem end
 function channel_range end
 function channel_hamiltonian end
 function channel_overlap end
 function orbitals end
+function two_electron_states end
 function radial_multipole end
 function gaunt_tensor end
 function gaunt_coefficient end
 function angular_kernel end
+function apply_overlap end
+function apply_hamiltonian end
+function ground_state_energy end
+function lanczos_ground_state end
 function atomic_operators end
 function centrifugal end
 function multipole end
@@ -281,6 +295,8 @@ include("global_leaf_contraction.jl")
 include("diagnostics.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
+include("gaunt_tables.jl")
 include("atomic_ida.jl")
+include("atomic_ida_two_electron.jl")
 
 end

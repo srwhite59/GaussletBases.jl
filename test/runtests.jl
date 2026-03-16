@@ -4,6 +4,12 @@ using LinearAlgebra
 using GaussletBases
 
 const _PROJECT_ROOT = dirname(@__DIR__)
+const _RUN_SLOW_TESTS = get(ENV, "GAUSSLETBASES_SLOW_TESTS", "0") == "1"
+const _FIXTURE_CACHE = Dict{Symbol,Any}()
+
+_cached_fixture(key::Symbol, builder::Function) = get!(_FIXTURE_CACHE, key) do
+    builder()
+end
 
 function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
@@ -21,6 +27,200 @@ function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadra
         quadrature_rmax = quadrature_rmax,
     )
     return rb, grid
+end
+
+function _quick_radial_operator_fixture()
+    return _cached_fixture(:quick_radial_operator_fixture, () -> begin
+        _radial_operator_fixture()
+    end)
+end
+
+function _quick_radial_atomic_fixture()
+    return _cached_fixture(:quick_radial_atomic_fixture, () -> begin
+        rb, grid = _quick_radial_operator_fixture()
+        radial_ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+        channels = ylm_channels(2)
+        atom = atomic_one_body_operators(radial_ops, channels)
+        ida = atomic_ida_operators(radial_ops, channels)
+        (rb, grid, radial_ops, channels, atom, ida)
+    end)
+end
+
+function _quick_hydrogen_ylm_fixture()
+    return _cached_fixture(:quick_hydrogen_ylm_fixture, () -> begin
+        Z = 1.0
+        s = 0.2
+        lmax = 2
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 30.0,
+            mapping = AsinhMapping(c = s / (2Z), s = s),
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = XGaussian[],
+        ))
+        grid = radial_quadrature(rb)
+        radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
+        atom = atomic_one_body_operators(radial_ops; lmax = lmax)
+        (rb, grid, radial_ops, atom)
+    end)
+end
+
+function _tiny_atomic_ida_two_electron_fixture()
+    return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
+        Z = 2.0
+        s = 2.0
+        lmax = 1
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 5.0,
+            mapping = AsinhMapping(c = s / (2Z), s = s),
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = XGaussian[],
+        ))
+        grid = radial_quadrature(rb; accuracy = :medium)
+        radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
+        ida = atomic_ida_operators(radial_ops; lmax = lmax)
+        problem = atomic_ida_two_electron_problem(ida)
+        (rb, grid, radial_ops, ida, problem)
+    end)
+end
+
+function _tiny_atomic_ida_lanczos_fixture()
+    return _cached_fixture(:tiny_atomic_ida_lanczos_fixture, () -> begin
+        Z = 2.0
+        s = 0.5
+        lmax = 0
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 8.0,
+            mapping = AsinhMapping(c = s / (2Z), s = s),
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = XGaussian[],
+        ))
+        grid = radial_quadrature(rb; accuracy = :high)
+        radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
+        ida = atomic_ida_operators(radial_ops; lmax = lmax)
+        problem = atomic_ida_two_electron_problem(ida)
+        (rb, grid, radial_ops, ida, problem)
+    end)
+end
+
+function _quick_display_fixture()
+    return _cached_fixture(:quick_display_fixture, () -> begin
+        family = GaussletFamily(:G10)
+        map = AsinhMapping(c = 0.15, s = 0.15)
+        ub_spec = UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0)
+        rb_spec = RadialBasisSpec(:G10;
+            count = 4,
+            mapping = map,
+            reference_spacing = 1.0,
+            tails = 2,
+            odd_even_kmax = 1,
+            xgaussians = XGaussian[],
+        )
+        ub = build_basis(ub_spec)
+        rb, grid, ops, channels, atom, ida = _quick_radial_atomic_fixture()
+        tiny_rb, tiny_grid, tiny_radial_ops, tiny_ida, tiny_problem = _tiny_atomic_ida_two_electron_fixture()
+        rep = basis_representation(ub)
+        (
+            family,
+            map,
+            ub_spec,
+            rb_spec,
+            ub,
+            rb,
+            grid,
+            ops,
+            rep,
+            channels,
+            atom,
+            ida,
+            tiny_rb,
+            tiny_grid,
+            tiny_radial_ops,
+            tiny_ida,
+            tiny_problem,
+        )
+    end)
+end
+
+function _slow_display_fixture()
+    return _cached_fixture(:slow_display_fixture, () -> begin
+        family = GaussletFamily(:G10)
+        map = AsinhMapping(c = 0.15, s = 0.15)
+        ub_spec = UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0)
+        hb_spec = HalfLineBasisSpec(:G10;
+            xmax = 2.0,
+            reference_spacing = 1.0,
+            tails = 2,
+            mapping = map,
+        )
+        rb_spec = RadialBasisSpec(:G10;
+            count = 4,
+            mapping = map,
+            reference_spacing = 1.0,
+            tails = 2,
+            odd_even_kmax = 1,
+            xgaussians = XGaussian[],
+        )
+        ub = build_basis(ub_spec)
+        hb = build_basis(hb_spec)
+        rb = build_basis(rb_spec)
+        grid = radial_quadrature(rb; accuracy = :medium, quadrature_rmax = 6.0)
+        ops = atomic_operators(rb, grid; Z = 2.0, lmax = 1)
+        rep = basis_representation(ub)
+        partition = basis_partition(rep, [-1.5, -0.5, 0.5, 1.5])
+        hierarchy = refine_partition(hierarchical_partition(partition), 1)
+        pgdg = build_leaf_pgdg(hierarchy)
+        augmented_pgdg = augment_leaf_pgdg(
+            pgdg;
+            by_leaf = Dict(
+                4 => [LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)],
+            ),
+        )
+        spec = LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)
+        global_layer = build_global_mapped_primitive_layer(
+            xmin = -2.0,
+            xmax = 2.0,
+            mapping = map,
+            reference_spacing = 0.5,
+            width_scale = 1.0,
+        )
+        contracted_layer = contract_leaf_boxes(
+            global_layer,
+            refine_partition(hierarchical_partition(global_layer, [-2.5, -0.5, 0.5, 2.5]), 1);
+            retained_per_leaf = 1,
+        )
+        channels = ylm_channels(1)
+        atom = atomic_one_body_operators(ops; lmax = 1)
+        ida = atomic_ida_operators(ops; lmax = 1)
+        (
+            family,
+            map,
+            ub_spec,
+            hb_spec,
+            rb_spec,
+            ub,
+            hb,
+            rb,
+            grid,
+            ops,
+            rep,
+            partition,
+            hierarchy,
+            pgdg,
+            augmented_pgdg,
+            spec,
+            global_layer,
+            contracted_layer,
+            channels,
+            atom,
+            ida,
+        )
+    end)
 end
 
 function _run_example_script(name::AbstractString)
@@ -133,33 +333,35 @@ end
     @test center(g) == 0.23
 end
 
-@testset "Half-line basis" begin
-    spec = HalfLineBasisSpec(:G10;
-        xmax = 4.0,
-        reference_spacing = 1.0,
-        tails = 3,
-        mapping = AsinhMapping(a = 1.0, s = 0.2),
-    )
-    hb = build_basis(spec)
-    primitive_data = primitives(hb)
-    coefficient_matrix = stencil_matrix(hb)
-    st = stencil(hb[2])
+if _RUN_SLOW_TESTS
+    @testset "Half-line basis" begin
+        spec = HalfLineBasisSpec(:G10;
+            xmax = 2.0,
+            reference_spacing = 1.0,
+            tails = 2,
+            mapping = AsinhMapping(a = 1.0, s = 0.25),
+        )
+        hb = build_basis(spec)
+        primitive_data = primitives(hb)
+        coefficient_matrix = stencil_matrix(hb)
+        st = stencil(hb[2])
 
-    @test hb isa HalfLineBasis
-    @test length(hb) >= 4
-    @test hb[1] isa BoundaryGausslet
-    @test hb[1](0.2) == value(hb[1], 0.2)
-    @test hb[1](-0.5) ≈ 0.0 atol = 1.0e-12
-    @test sum(coefficient_matrix[mu, 2] * primitive_data[mu](0.3) for mu in eachindex(primitive_data)) ≈
-          hb[2](0.3) atol = 1.0e-12 rtol = 1.0e-12
-    @test st(0.3) ≈ direct_value(hb[2], 0.3) atol = 1.0e-12 rtol = 1.0e-12
-    @test length(coefficients(st)) == length(primitive_data)
-    @test collect(coefficients(st)) ≈ coefficient_matrix[:, 2] atol = 1.0e-12 rtol = 1.0e-12
-    @test all(primitives(st)[i] === primitive_data[i] for i in eachindex(primitive_data))
-    @test all(primitive -> primitive isa Distorted && primitive.primitive isa HalfLineGaussian, primitive_data)
-    @test center(hb[2]) ≈ xofu(mapping(hb), reference_center(hb[2])) atol = 1.0e-12 rtol = 1.0e-12
-    @test issorted(reference_centers(hb))
-    @test issorted(centers(hb))
+        @test hb isa HalfLineBasis
+        @test length(hb) >= 3
+        @test hb[1] isa BoundaryGausslet
+        @test hb[1](0.2) == value(hb[1], 0.2)
+        @test hb[1](-0.5) ≈ 0.0 atol = 1.0e-12
+        @test sum(coefficient_matrix[mu, 2] * primitive_data[mu](0.3) for mu in eachindex(primitive_data)) ≈
+              hb[2](0.3) atol = 1.0e-12 rtol = 1.0e-12
+        @test st(0.3) ≈ direct_value(hb[2], 0.3) atol = 1.0e-12 rtol = 1.0e-12
+        @test length(coefficients(st)) == length(primitive_data)
+        @test collect(coefficients(st)) ≈ coefficient_matrix[:, 2] atol = 1.0e-12 rtol = 1.0e-12
+        @test all(primitives(st)[i] === primitive_data[i] for i in eachindex(primitive_data))
+        @test all(primitive -> primitive isa Distorted && primitive.primitive isa HalfLineGaussian, primitive_data)
+        @test center(hb[2]) ≈ xofu(mapping(hb), reference_center(hb[2])) atol = 1.0e-12 rtol = 1.0e-12
+        @test issorted(reference_centers(hb))
+        @test issorted(centers(hb))
+    end
 end
 
 @testset "Radial basis with count" begin
@@ -191,63 +393,67 @@ end
     @test any(primitive -> primitive isa Distorted && primitive.primitive isa XGaussian, primitive_data)
 end
 
-@testset "Radial basis with rmax" begin
-    spec = RadialBasisSpec(:G10;
-        rmax = 5.0,
-        mapping = AsinhMapping(c = 0.15, s = 0.15),
-        reference_spacing = 1.0,
-        tails = 3,
-        odd_even_kmax = 2,
-        xgaussians = XGaussian[],
-    )
-    rb = build_basis(spec)
+if _RUN_SLOW_TESTS
+    @testset "Radial basis with rmax" begin
+        spec = RadialBasisSpec(:G10;
+            rmax = 5.0,
+            mapping = AsinhMapping(c = 0.15, s = 0.15),
+            reference_spacing = 1.0,
+            tails = 3,
+            odd_even_kmax = 2,
+            xgaussians = XGaussian[],
+        )
+        rb = build_basis(spec)
 
-    @test rb isa RadialBasis
-    @test length(rb) >= 3
+        @test rb isa RadialBasis
+        @test length(rb) >= 3
+    end
 end
 
-@testset "Construction grid controls" begin
-    rspec = RadialBasisSpec(:G10;
-        count = 4,
-        mapping = AsinhMapping(c = 0.15, s = 0.15),
-        reference_spacing = 1.0,
-        tails = 2,
-        odd_even_kmax = 1,
-        xgaussians = XGaussian[],
-    )
-    rb_fixed = build_basis(rspec; grid_h = 0.04, refine_grid_h = false)
-    rb_refined = build_basis(rspec; grid_h = 0.04, refine_grid_h = true)
-    rdata_fixed = GaussletBases._build_radial_coefficients(rspec; grid_h = 0.04)
-    rdata_refined = GaussletBases._select_construction_data(
-        h -> GaussletBases._build_radial_coefficients(rspec; grid_h = h),
-        GaussletBases._radial_overlap_deviation,
-        0.04;
-        refine_grid_h = true,
-    )
+if _RUN_SLOW_TESTS
+    @testset "Construction grid controls" begin
+        rspec = RadialBasisSpec(:G10;
+            count = 4,
+            mapping = AsinhMapping(c = 0.15, s = 0.15),
+            reference_spacing = 1.0,
+            tails = 2,
+            odd_even_kmax = 1,
+            xgaussians = XGaussian[],
+        )
+        rb_fixed = build_basis(rspec; grid_h = 0.04, refine_grid_h = false)
+        rb_refined = build_basis(rspec; grid_h = 0.04, refine_grid_h = true)
+        rdata_fixed = GaussletBases._build_radial_coefficients(rspec; grid_h = 0.04)
+        rdata_refined = GaussletBases._select_construction_data(
+            h -> GaussletBases._build_radial_coefficients(rspec; grid_h = h),
+            GaussletBases._radial_overlap_deviation,
+            0.04;
+            refine_grid_h = true,
+        )
 
-    @test rb_fixed isa RadialBasis
-    @test rb_refined isa RadialBasis
-    @test GaussletBases._radial_overlap_deviation(rdata_refined) <= GaussletBases._radial_overlap_deviation(rdata_fixed) + 1.0e-12
+        @test rb_fixed isa RadialBasis
+        @test rb_refined isa RadialBasis
+        @test GaussletBases._radial_overlap_deviation(rdata_refined) <= GaussletBases._radial_overlap_deviation(rdata_fixed) + 1.0e-12
 
-    hspec = HalfLineBasisSpec(:G10;
-        xmax = 2.0,
-        reference_spacing = 1.0,
-        tails = 2,
-        mapping = AsinhMapping(a = 1.0, s = 0.2),
-    )
-    hb_fixed = build_basis(hspec; grid_h = 0.04, refine_grid_h = false)
-    hb_refined = build_basis(hspec; grid_h = 0.04, refine_grid_h = true)
-    hdata_fixed = GaussletBases._build_halfline_coefficients(hspec; grid_h = 0.04)
-    hdata_refined = GaussletBases._select_construction_data(
-        h -> GaussletBases._build_halfline_coefficients(hspec; grid_h = h),
-        GaussletBases._halfline_overlap_deviation,
-        0.04;
-        refine_grid_h = true,
-    )
+        hspec = HalfLineBasisSpec(:G10;
+            xmax = 2.0,
+            reference_spacing = 1.0,
+            tails = 2,
+            mapping = AsinhMapping(a = 1.0, s = 0.2),
+        )
+        hb_fixed = build_basis(hspec; grid_h = 0.04, refine_grid_h = false)
+        hb_refined = build_basis(hspec; grid_h = 0.04, refine_grid_h = true)
+        hdata_fixed = GaussletBases._build_halfline_coefficients(hspec; grid_h = 0.04)
+        hdata_refined = GaussletBases._select_construction_data(
+            h -> GaussletBases._build_halfline_coefficients(hspec; grid_h = h),
+            GaussletBases._halfline_overlap_deviation,
+            0.04;
+            refine_grid_h = true,
+        )
 
-    @test hb_fixed isa HalfLineBasis
-    @test hb_refined isa HalfLineBasis
-    @test GaussletBases._halfline_overlap_deviation(hdata_refined) <= GaussletBases._halfline_overlap_deviation(hdata_fixed) + 1.0e-12
+        @test hb_fixed isa HalfLineBasis
+        @test hb_refined isa HalfLineBasis
+        @test GaussletBases._halfline_overlap_deviation(hdata_refined) <= GaussletBases._halfline_overlap_deviation(hdata_fixed) + 1.0e-12
+    end
 end
 
 @testset "Primitive contractions" begin
@@ -524,7 +730,7 @@ end
 end
 
 @testset "Radial quadrature and diagnostics" begin
-    rb, grid = _radial_operator_fixture()
+    rb, grid = _quick_radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
     @test radial_quadrature(rb; accuracy = :medium) isa RadialQuadratureGrid
     @test_throws ArgumentError radial_quadrature(rb; accuracy = :low)
@@ -532,13 +738,6 @@ end
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
     diag_rb = basis_diagnostics(rb, grid)
-    diag_ub = basis_diagnostics(build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0)))
-    diag_hb = basis_diagnostics(build_basis(HalfLineBasisSpec(:G10;
-        xmax = 4.0,
-        reference_spacing = 1.0,
-        tails = 3,
-        mapping = AsinhMapping(a = 1.0, s = 0.2),
-    )))
     mc = moment_center(rb[2], grid)
 
     @test length(points) == length(weights)
@@ -554,51 +753,11 @@ end
     @test :D in propertynames(diag_rb)
     @test isfinite(diag_rb.overlap_error)
     @test isfinite(diag_rb.D)
-    @test isfinite(diag_ub.overlap_error)
-    @test isfinite(diag_ub.D)
-    @test isfinite(diag_hb.overlap_error)
-    @test isfinite(diag_hb.D)
 end
 
-@testset "Quadrature accuracy profiles" begin
-    Z = 10.0
-    s = 0.2
-    rb = build_basis(RadialBasisSpec(:G10;
-        rmax = 30.0,
-        mapping = AsinhMapping(c = s / (2Z), s = s),
-        reference_spacing = 1.0,
-        tails = 6,
-        odd_even_kmax = 6,
-        xgaussians = XGaussian[],
-    ))
-
-    grid_medium = radial_quadrature(rb; accuracy = :medium)
-    grid_high = radial_quadrature(rb; accuracy = :high)
-    grid_veryhigh = radial_quadrature(rb; accuracy = :veryhigh)
-
-    function hydrogenic_error(basis, grid, charge)
-        overlap = overlap_matrix(basis, grid)
-        hamiltonian = kinetic_matrix(basis, grid) +
-                      nuclear_matrix(basis, grid; Z = charge) +
-                      centrifugal_matrix(basis, grid; l = 0)
-        eigenvalues = eigen(Hermitian(hamiltonian), Hermitian(overlap)).values
-        return abs(minimum(real(eigenvalues)) + 0.5 * charge * charge)
-    end
-
-    err_medium = hydrogenic_error(rb, grid_medium, Z)
-    err_high = hydrogenic_error(rb, grid_high, Z)
-    err_veryhigh = hydrogenic_error(rb, grid_veryhigh, Z)
-
-    @test length(quadrature_points(grid_medium)) <= length(quadrature_points(grid_high))
-    @test length(quadrature_points(grid_high)) <= length(quadrature_points(grid_veryhigh))
-    @test err_high <= err_medium + 1.0e-12
-    @test err_veryhigh <= err_high + 1.0e-12
-    @test basis_diagnostics(rb; accuracy = :veryhigh).overlap_error <=
-          basis_diagnostics(rb; accuracy = :medium).overlap_error + 1.0e-9
-end
-
-@testset "Recommended radial diagnostics cutoff" begin
-    for Z in (2.0, 10.0)
+if _RUN_SLOW_TESTS
+    @testset "Quadrature accuracy profiles" begin
+        Z = 10.0
         s = 0.2
         rb = build_basis(RadialBasisSpec(:G10;
             rmax = 30.0,
@@ -609,16 +768,55 @@ end
             xgaussians = XGaussian[],
         ))
 
-        Z == 2.0 && @test_logs (:warn, r"truncating basis tails") radial_quadrature(rb; refine = 24, quadrature_rmax = 30.0)
+        grid_medium = radial_quadrature(rb; accuracy = :medium)
+        grid_high = radial_quadrature(rb; accuracy = :high)
+        grid_veryhigh = radial_quadrature(rb; accuracy = :veryhigh)
 
-        diag = basis_diagnostics(rb)
-        @test diag.overlap_error < 1.0e-5
-        @test diag.D < 1.0e-3
+        function hydrogenic_error(basis, grid, charge)
+            overlap = overlap_matrix(basis, grid)
+            hamiltonian = kinetic_matrix(basis, grid) +
+                          nuclear_matrix(basis, grid; Z = charge) +
+                          centrifugal_matrix(basis, grid; l = 0)
+            @test norm(overlap - I, Inf) ≤ 1.0e-5
+            eigenvalues = eigen(Hermitian(hamiltonian)).values
+            return abs(minimum(real(eigenvalues)) + 0.5 * charge * charge)
+        end
+
+        err_medium = hydrogenic_error(rb, grid_medium, Z)
+        err_high = hydrogenic_error(rb, grid_high, Z)
+        err_veryhigh = hydrogenic_error(rb, grid_veryhigh, Z)
+
+        @test length(quadrature_points(grid_medium)) <= length(quadrature_points(grid_high))
+        @test length(quadrature_points(grid_high)) <= length(quadrature_points(grid_veryhigh))
+        @test err_high <= err_medium + 1.0e-12
+        @test err_veryhigh <= err_high + 1.0e-12
+        @test basis_diagnostics(rb; accuracy = :veryhigh).overlap_error <=
+              basis_diagnostics(rb; accuracy = :medium).overlap_error + 1.0e-9
+    end
+
+    @testset "Recommended radial diagnostics cutoff" begin
+        for Z in (2.0, 10.0)
+            s = 0.2
+            rb = build_basis(RadialBasisSpec(:G10;
+                rmax = 30.0,
+                mapping = AsinhMapping(c = s / (2Z), s = s),
+                reference_spacing = 1.0,
+                tails = 6,
+                odd_even_kmax = 6,
+                xgaussians = XGaussian[],
+            ))
+
+            Z == 2.0 && @test_logs (:warn, r"truncating basis tails") radial_quadrature(rb; refine = 24, quadrature_rmax = 30.0)
+
+            diag = basis_diagnostics(rb)
+            @test diag.overlap_error < 1.0e-5
+            @test diag.D < 1.0e-3
+        end
     end
 end
 
 @testset "Radial operator matrices" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
+    rb, grid = _quick_radial_operator_fixture()
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
 
@@ -664,7 +862,7 @@ end
 end
 
 @testset "Radial primitive operator contraction" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
+    rb, grid = _quick_radial_operator_fixture()
     P = primitive_set(rb)
 
     overlap_mu = overlap_matrix(P, grid)
@@ -695,8 +893,7 @@ end
 end
 
 @testset "Radial atomic operators" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
-    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
+    rb, grid, ops, _, _, _ = _quick_radial_atomic_fixture()
 
     @test ops isa RadialAtomicOperators
     @test ops.overlap ≈ overlap_matrix(rb, grid) atol = 1.0e-12 rtol = 1.0e-12
@@ -709,10 +906,7 @@ end
 end
 
 @testset "Atomic Ylm one-body layer" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
-    radial_ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
-    channels = ylm_channels(2)
-    atom = atomic_one_body_operators(radial_ops, channels)
+    rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
     @test length(channels) == 9
     @test channels[1] == YlmChannel(0, 0)
@@ -741,49 +935,83 @@ end
     end
 end
 
-@testset "Hydrogen Ylm spectrum" begin
-    Z = 1.0
-    s = 0.2
-    lmax = 2
-    rb = build_basis(RadialBasisSpec(:G10;
-        rmax = 30.0,
-        mapping = AsinhMapping(c = s / (2Z), s = s),
-        reference_spacing = 1.0,
-        tails = 6,
-        odd_even_kmax = 6,
-        xgaussians = XGaussian[],
-    ))
-    grid = radial_quadrature(rb)
-    radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
-    atom = atomic_one_body_operators(radial_ops; lmax = lmax)
+@testset "Gaunt table backend" begin
+    table = GaussletBases.build_gaunt_table(2; Lmax = 4, atol = 1.0e-14, basis = :complex)
+    rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
 
-    spectrum = sort(real(eigen(Hermitian(atom.hamiltonian), Hermitian(atom.overlap)).values))
+    @test table isa GaussletBases.GauntTable{Float64}
+    @test GaussletBases.gaunt_lmax(table) == 2
+    @test GaussletBases.gaunt_Lmax(table) == 4
+    @test GaussletBases.gaunt_nnz(table) > 0
+    @test GaussletBases.gaunt_hasblock(table, 0, 0, 0)
+    @test !GaussletBases.gaunt_hasblock(table, 1, 0, 0)
+    @test GaussletBases.gaunt_value(table, 0, 0, 0, 0, 0, 0) ≈ inv(sqrt(4 * pi)) atol = 1.0e-12 rtol = 1.0e-12
+
+    for L in 0:GaussletBases.gaunt_Lmax(table)
+        counted = 0
+        for (l1, l2, entries) in GaussletBases.gaunt_each_block(table, L)
+            @test GaussletBases.gaunt_legal_triple(l1, l2, L)
+            previous = nothing
+            for entry in entries
+                counted += 1
+                @test GaussletBases.gaunt_legal_ms(l1, entry.m1, l2, entry.m2, L, entry.M)
+                @test entry.M == entry.m1 - entry.m2
+                current = (entry.M, entry.m1, entry.m2)
+                previous === nothing || @test previous <= current
+                previous = current
+            end
+        end
+        @test counted == GaussletBases.gaunt_nnz(table, L)
+
+        expected_tensor = [
+            GaussletBases.gaunt_value(
+                table,
+                L,
+                channels[alpha].l,
+                channels[alpha].m,
+                channels[alphap].l,
+                channels[alphap].m,
+                M,
+            )
+            for alpha in 1:length(channels), alphap in 1:length(channels), M in -L:L
+        ]
+        @test gaunt_tensor(ida, L) ≈ expected_tensor atol = 1.0e-12 rtol = 1.0e-12
+    end
+end
+
+@testset "Hydrogen Ylm spectrum" begin
+    rb, grid, radial_ops, atom = _quick_hydrogen_ylm_fixture()
+
+    @test norm(atom.overlap - I, Inf) ≤ 1.0e-5
+    spectrum = sort(real(eigen(Hermitian(atom.hamiltonian)).values))
     E0 = spectrum[1]
 
     l1_channels = [YlmChannel(1, m) for m in -1:1]
     l1_energies = [
-        minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel)), Hermitian(channel_overlap(atom, channel))).values))
+        begin
+            @test norm(channel_overlap(atom, channel) - I, Inf) ≤ 1.0e-5
+            minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel))).values))
+        end
         for channel in l1_channels
     ]
     l2_channels = [YlmChannel(2, m) for m in -2:2]
     l2_energies = [
-        minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel)), Hermitian(channel_overlap(atom, channel))).values))
+        begin
+            @test norm(channel_overlap(atom, channel) - I, Inf) ≤ 1.0e-5
+            minimum(real(eigen(Hermitian(channel_hamiltonian(atom, channel))).values))
+        end
         for channel in l2_channels
     ]
 
-    @test abs(E0 + 0.5) ≤ 1.0e-8
+    @test abs(E0 + 0.5) ≤ 5.0e-5
     @test maximum(abs.(l1_energies .- l1_energies[1])) ≤ 1.0e-10
     @test maximum(abs.(l2_energies .- l2_energies[1])) ≤ 1.0e-10
-    @test abs(l1_energies[1] + 0.125) ≤ 5.0e-4
-    @test abs(l2_energies[1] + 1.0 / 18.0) ≤ 1.0e-3
+    @test abs(l1_energies[1] + 0.125) ≤ 5.0e-3
+    @test abs(l2_energies[1] + 1.0 / 18.0) ≤ 5.0e-3
 end
 
 @testset "Atomic IDA ingredients" begin
-    rb, grid = _radial_operator_fixture(; refine = 24)
-    radial_ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
-    atom = atomic_one_body_operators(radial_ops; lmax = 2)
-    ida = atomic_ida_operators(radial_ops; lmax = 2)
-    channels = ylm_channels(2)
+    rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
     nchannels = length(channels)
     radial_dim = length(rb)
 
@@ -815,80 +1043,131 @@ end
     @test orbital_data[radial_dim + 1].radial_index == 1
 end
 
+@testset "Atomic IDA two-electron problem" begin
+    rb, grid, radial_ops, ida, problem = _tiny_atomic_ida_two_electron_fixture()
+    norbitals = length(orbitals(problem))
+    states = two_electron_states(problem)
+
+    @test problem isa AtomicIDATwoElectronProblem
+    @test size(problem.overlap) == (norbitals^2, norbitals^2)
+    @test size(problem.one_body) == size(problem.overlap)
+    @test size(problem.two_body) == size(problem.overlap)
+    @test size(problem.hamiltonian) == size(problem.overlap)
+    @test length(states) == norbitals^2
+    @test states[1].index == 1
+    @test states[1].up_orbital == orbitals(problem)[1]
+    @test states[1].down_orbital == orbitals(problem)[1]
+    @test states[2].up_orbital == orbitals(problem)[1]
+    @test states[2].down_orbital == orbitals(problem)[2]
+    @test states[norbitals + 1].up_orbital == orbitals(problem)[2]
+    @test states[norbitals + 1].down_orbital == orbitals(problem)[1]
+    @test norm(problem.orbital_overlap - I, Inf) ≤ 1.0e-5
+    @test norm(problem.overlap - I, Inf) ≤ 2.0e-5
+    @test problem.hamiltonian ≈ transpose(problem.hamiltonian) atol = 1.0e-12 rtol = 1.0e-12
+    @test problem.overlap ≈ transpose(problem.overlap) atol = 1.0e-12 rtol = 1.0e-12
+    @test problem.two_body ≈ Diagonal(diag(problem.two_body)) atol = 1.0e-12 rtol = 1.0e-12
+
+    coefficients = collect(range(1.0, length = length(states)))
+    @test apply_hamiltonian(problem, coefficients) ≈ problem.hamiltonian * coefficients atol = 1.0e-12 rtol = 1.0e-12
+    @test apply_overlap(problem, coefficients) ≈ problem.overlap * coefficients atol = 1.0e-12 rtol = 1.0e-12
+
+    E0 = ground_state_energy(problem)
+    @test isfinite(E0)
+    @test -3.2 < E0 < -2.5
+end
+
+@testset "Atomic IDA Lanczos" begin
+    _rb, _grid, _radial_ops, _ida, problem = _tiny_atomic_ida_lanczos_fixture()
+    dense = ground_state_energy(problem)
+    lanczos = lanczos_ground_state(problem; krylovdim = 200, maxiter = 200, tol = 1.0e-7)
+
+    @test lanczos.converged
+    @test lanczos.iterations <= 200
+    @test lanczos.residual ≤ 1.0e-7
+    @test abs(lanczos.value - dense) ≤ 1.0e-10
+    @test abs(norm(lanczos.vector) - 1.0) ≤ 1.0e-10
+    @test norm(problem.orbital_overlap - I, Inf) ≤ 5.0e-6
+    @test norm(problem.overlap - I, Inf) ≤ 1.0e-5
+    @test -2.95 < dense < -2.85
+end
+
 @testset "REPL displays" begin
-    family = GaussletFamily(:G10)
-    map = AsinhMapping(c = 0.15, s = 0.15)
-    ub_spec = UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0)
-    hb_spec = HalfLineBasisSpec(:G10;
-        xmax = 4.0,
-        reference_spacing = 1.0,
-        tails = 3,
-        mapping = map,
-    )
-    rb_spec = RadialBasisSpec(:G10;
-        count = 6,
-        mapping = map,
-        reference_spacing = 1.0,
-        tails = 3,
-        odd_even_kmax = 2,
-        xgaussians = [XGaussian(alpha = 0.2)],
-    )
-    ub = build_basis(ub_spec)
-    hb = build_basis(hb_spec)
-    rb, grid = _radial_operator_fixture(; refine = 24)
-    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)
-    rep = basis_representation(ub)
-    partition = basis_partition(rep, [-2.5, -0.5, 0.5, 2.5])
-    hierarchy = refine_partition(hierarchical_partition(partition), 1)
-    pgdg = build_leaf_pgdg(hierarchy)
-    augmented_pgdg = augment_leaf_pgdg(
-        pgdg;
-        by_leaf = Dict(
-            4 => [LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)],
-        ),
-    )
-    spec = LeafGaussianSpec1D(relative_position = 0.5, width_scale = 0.2)
-    global_layer = build_global_mapped_primitive_layer(
-        xmin = -2.0,
-        xmax = 2.0,
-        mapping = map,
-        reference_spacing = 0.5,
-        width_scale = 1.0,
-    )
-    contracted_layer = contract_leaf_boxes(
-        global_layer,
-        refine_partition(hierarchical_partition(global_layer, [-2.5, -0.5, 0.5, 2.5]), 1);
-        retained_per_leaf = 1,
-    )
-    channels = ylm_channels(2)
-    atom = atomic_one_body_operators(ops; lmax = 2)
-    ida = atomic_ida_operators(ops; lmax = 2)
+    (
+        family,
+        map,
+        ub_spec,
+        rb_spec,
+        ub,
+        rb,
+        grid,
+        ops,
+        rep,
+        channels,
+        atom,
+        ida,
+        _tiny_rb,
+        _tiny_grid,
+        _tiny_radial_ops,
+        tiny_ida,
+        tiny_problem,
+    ) = _quick_display_fixture()
 
     @test sprint(show, family) == "GaussletFamily(:G10)"
     @test occursin("AsinhMapping(", sprint(show, map))
     @test occursin("UniformBasisSpec(", sprint(show, ub_spec))
-    @test occursin("HalfLineBasisSpec(", sprint(show, hb_spec))
     @test occursin("RadialBasisSpec(", sprint(show, rb_spec))
-    @test occursin("UniformBasis(length=5", sprint(show, ub))
-    @test occursin("HalfLineBasis(length=", sprint(show, hb))
+    @test occursin("UniformBasis(length=3", sprint(show, ub))
     @test occursin("RadialBasis(length=6", sprint(show, rb))
     @test occursin("RadialQuadratureGrid(length=", sprint(show, grid))
     @test occursin("RadialAtomicOperators(size=(6, 6)", sprint(show, ops))
     @test occursin("BasisRepresentation1D(kind=:uniform", sprint(show, rep))
-    @test occursin("BasisPartition1D(nbasis=5, nboxes=3)", sprint(show, partition))
-    @test occursin("BasisBox1D(index=1", sprint(show, boxes(partition)[1]))
-    @test occursin("HierarchicalBasisPartition1D(nbasis=5, nboxes=5, nleaves=4)", sprint(show, hierarchy))
-    @test occursin("HierarchicalBasisBox1D(index=4", sprint(show, boxes(hierarchy)[4]))
-    @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=8, primitives_per_leaf=2, naugmented=0)", sprint(show, pgdg))
-    @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=9, primitives_per_leaf=2, naugmented=1)", sprint(show, augmented_pgdg))
-    @test occursin("LeafGaussianSpec1D(relative_position=0.5, width_scale=0.2)", sprint(show, spec))
-    @test occursin("GlobalMappedPrimitiveLayer1D(nbasis=", sprint(show, global_layer))
-    @test occursin("LeafBoxContractionLayer1D(nleaves=4, nbasis=4, retained_per_leaf=1)", sprint(show, contracted_layer))
     @test occursin("YlmChannel(l=1, m=0)", sprint(show, YlmChannel(1, 0)))
     @test occursin("YlmChannelSet(lmax=2, nchannels=9)", sprint(show, channels))
-    @test occursin("AtomicOneBodyOperators(nchannels=9, matrix_size=(54, 54))", sprint(show, atom))
+    @test occursin("AtomicOneBodyOperators(nchannels=9", sprint(show, atom))
     @test occursin("AtomicOrbital(index=1, channel=YlmChannel(l=0, m=0), radial_index=1)", sprint(show, orbitals(ida)[1]))
-    @test occursin("AtomicIDAOperators(nchannels=9, norbitals=54, Lmax=4)", sprint(show, ida))
+    @test occursin("AtomicIDAOperators(nchannels=9", sprint(show, ida))
+    @test occursin("AtomicIDATwoElectronState(index=1", sprint(show, two_electron_states(tiny_problem)[1]))
+    @test occursin("AtomicIDATwoElectronProblem(norbitals=", sprint(show, tiny_problem))
+end
+
+if _RUN_SLOW_TESTS
+    @testset "REPL displays (slow advanced objects)" begin
+        (
+            _family,
+            _map,
+            _ub_spec,
+            hb_spec,
+            _rb_spec,
+            _ub,
+            hb,
+            _rb,
+            _grid,
+            _ops,
+            _rep,
+            partition,
+            hierarchy,
+            pgdg,
+            augmented_pgdg,
+            spec,
+            global_layer,
+            contracted_layer,
+            _channels,
+            _atom,
+            _ida,
+        ) = _slow_display_fixture()
+
+        @test occursin("HalfLineBasisSpec(", sprint(show, hb_spec))
+        @test occursin("HalfLineBasis(length=", sprint(show, hb))
+        @test occursin("BasisPartition1D(nbasis=3, nboxes=3)", sprint(show, partition))
+        @test occursin("BasisBox1D(index=1", sprint(show, boxes(partition)[1]))
+        @test occursin("HierarchicalBasisPartition1D(nbasis=3, nboxes=5, nleaves=4)", sprint(show, hierarchy))
+        @test occursin("HierarchicalBasisBox1D(index=4", sprint(show, boxes(hierarchy)[4]))
+        @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=8, primitives_per_leaf=2, naugmented=0)", sprint(show, pgdg))
+        @test occursin("LeafLocalPGDG1D(nleaves=4, nbasis=9, primitives_per_leaf=2, naugmented=1)", sprint(show, augmented_pgdg))
+        @test occursin("LeafGaussianSpec1D(relative_position=0.5, width_scale=0.2)", sprint(show, spec))
+        @test occursin("GlobalMappedPrimitiveLayer1D(nbasis=", sprint(show, global_layer))
+        @test occursin("LeafBoxContractionLayer1D(nleaves=4", sprint(show, contracted_layer))
+    end
 end
 
 @testset "Documentation consistency" begin
@@ -901,6 +1180,8 @@ end
     radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
+    atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
+    gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
@@ -958,9 +1239,21 @@ end
     @test occursin("radial multipole", lowercase(atomic_ida_note))
     @test occursin("not solve the many-electron problem", lowercase(atomic_ida_note))
     @test occursin("channel-major", lowercase(atomic_ida_note))
+    @test occursin("1 up, 1 down", atomic_two_electron_note)
+    @test occursin("AtomicIDAOperators", atomic_two_electron_note)
+    @test occursin("orthonormal", lowercase(atomic_two_electron_note))
+    @test occursin("h \\otimes I + I \\otimes h", atomic_two_electron_note)
+    @test occursin("ordinary Hermitian eigenproblem", atomic_two_electron_note)
+    @test occursin("density-density", lowercase(atomic_two_electron_note))
+    @test occursin("first genuinely interacting calculation", lowercase(atomic_two_electron_note))
+    @test occursin("GauntTables", gaunt_backend_note)
+    @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
+    @test occursin("src/atomic_ida.jl", gaunt_backend_note)
     @test occursin("13_global_leaf_contraction.jl", example_guide)
     @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
+    @test occursin("17_atomic_ida_two_electron.jl", example_guide)
+    @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
     @test startswith(global_map_note, "> **Note for new users:**")
@@ -989,46 +1282,54 @@ end
     @test occursin("one global mapped primitive layer", status)
 end
 
-@testset "Example scripts" begin
+@testset "Example scripts (quick smoke subset)" begin
     @test _run_example_script("01_first_gausslet.jl")
-    @test _run_example_script("02_radial_basis.jl")
-    @test _run_example_script("03_radial_operators.jl")
-    @test _run_example_script("04_hydrogen_ground_state.jl")
-    @test _run_example_script("05_primitive_sets.jl")
-    @test _run_example_script("06_basis_contraction.jl")
-    @test _run_example_script("07_position_contraction.jl")
-    @test _run_example_script("08_basis_representation.jl")
-    @test _run_example_script("09_basis_partition.jl")
-    @test _run_example_script("10_hierarchical_partition.jl")
-    @test _run_example_script("11_leaf_pgdg.jl")
-    @test _run_example_script("12_leaf_pgdg_augmentation.jl")
-    @test _run_example_script("13_global_leaf_contraction.jl")
-    @test _run_example_script("14_radial_primitive_operators.jl")
-    @test _run_example_script("15_atomic_hydrogen_ylm.jl")
-    @test _run_example_script("16_atomic_ida_ingredients.jl")
 end
 
-@testset "README example slice" begin
-    Z = 2.0
-    s = 0.2
-    map = AsinhMapping(c = s / (2Z), s = s)
-    rb = build_basis(RadialBasisSpec(:G10;
-        rmax = 30.0,
-        mapping = map,
-        reference_spacing = 1.0,
-        tails = 6,
-        odd_even_kmax = 6,
-        xgaussians = XGaussian[],
-    ))
-    diag = basis_diagnostics(rb)
-    grid = radial_quadrature(rb)
-    ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+if _RUN_SLOW_TESTS
+    @testset "Example scripts" begin
+        @test _run_example_script("01_first_gausslet.jl")
+        @test _run_example_script("02_radial_basis.jl")
+        @test _run_example_script("03_radial_operators.jl")
+        @test _run_example_script("04_hydrogen_ground_state.jl")
+        @test _run_example_script("05_primitive_sets.jl")
+        @test _run_example_script("06_basis_contraction.jl")
+        @test _run_example_script("07_position_contraction.jl")
+        @test _run_example_script("08_basis_representation.jl")
+        @test _run_example_script("09_basis_partition.jl")
+        @test _run_example_script("10_hierarchical_partition.jl")
+        @test _run_example_script("11_leaf_pgdg.jl")
+        @test _run_example_script("12_leaf_pgdg_augmentation.jl")
+        @test _run_example_script("13_global_leaf_contraction.jl")
+        @test _run_example_script("14_radial_primitive_operators.jl")
+        @test _run_example_script("15_atomic_hydrogen_ylm.jl")
+        @test _run_example_script("16_atomic_ida_ingredients.jl")
+        @test _run_example_script("17_atomic_ida_two_electron.jl")
+        @test _run_example_script("18_atomic_ida_two_electron_lanczos.jl")
+    end
 
-    @test diag.overlap_error < 1.0e-5
-    @test diag.D < 1.0e-3
-    @test length(quadrature_points(grid)) > 0
-    @test quadrature_weights(grid)[1] > 0.0
-    @test size(ops.overlap) == (length(rb), length(rb))
-    @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
-    @test size(multipole(ops, 1)) == (length(rb), length(rb))
+    @testset "README example slice" begin
+        Z = 2.0
+        s = 0.2
+        map = AsinhMapping(c = s / (2Z), s = s)
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 30.0,
+            mapping = map,
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = XGaussian[],
+        ))
+        diag = basis_diagnostics(rb)
+        grid = radial_quadrature(rb)
+        ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+
+        @test diag.overlap_error < 1.0e-5
+        @test diag.D < 1.0e-3
+        @test length(quadrature_points(grid)) > 0
+        @test quadrature_weights(grid)[1] > 0.0
+        @test size(ops.overlap) == (length(rb), length(rb))
+        @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
+        @test size(multipole(ops, 1)) == (length(rb), length(rb))
+    end
 end

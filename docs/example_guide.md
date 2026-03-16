@@ -50,6 +50,18 @@ Build the static He-style IDA ingredients on top of the same radial-plus-angular
 
 This example does **not** solve the many-electron problem. It makes the one-body blocks, radial multipoles, angular kernels, and orbital indexing explicit.
 
+### `17_atomic_ida_two_electron.jl`
+
+Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
+
+This is still intentionally small and explicit. It is not yet a general many-electron workflow.
+
+### `18_atomic_ida_two_electron_lanczos.jl`
+
+Take a somewhat larger He-like model and solve it with a standard Hermitian Lanczos iteration.
+
+This is the first step beyond the tiny dense reference problem, but it is still a narrow demonstration rather than a broad many-electron framework.
+
 ## Stage 2: primitive layers and contraction
 
 These examples explain the common Gaussian primitive layer that lies behind the basis functions.
@@ -170,7 +182,10 @@ as prototype studies rather than as the main public story of the package.
 After `15_atomic_hydrogen_ylm.jl`, continue with:
 
 16. `16_atomic_ida_ingredients.jl`
+17. `17_atomic_ida_two_electron.jl`
+18. `18_atomic_ida_two_electron_lanczos.jl`
 
 Then read:
 
 - `docs/atomic_ida_layer.md`
+- `docs/atomic_ida_two_electron.md`
