@@ -194,6 +194,40 @@ function _quick_mapped_cartesian_hydrogen_fixture()
     end)
 end
 
+function _truncate_coulomb_expansion(expansion::CoulombGaussianExpansion, nterms::Int)
+    return CoulombGaussianExpansion(
+        expansion.coefficients[1:nterms],
+        expansion.exponents[1:nterms];
+        del = expansion.del,
+        s = expansion.s,
+        c = expansion.c,
+        maxu = expansion.maxu,
+    )
+end
+
+function _quick_ordinary_cartesian_ida_fixture(; backend = :pgdg_experimental, mapped = true, s = 0.5)
+    key = Symbol(:ordinary_cartesian_ida, backend, mapped ? :mapped : :identity, s)
+    return _cached_fixture(key, () -> begin
+        full_expansion = coulomb_gaussian_expansion(doacc = false)
+        expansion = _truncate_coulomb_expansion(full_expansion, 3)
+        mapping_value = mapped ?
+            fit_asinh_mapping_for_strength(s = s, npoints = 5, xmax = 6.0) :
+            IdentityMapping()
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = mapping_value,
+            reference_spacing = 1.0,
+        ))
+        operators = ordinary_cartesian_ida_operators(
+            basis;
+            expansion = expansion,
+            Z = 2.0,
+            backend = backend,
+        )
+        (basis, expansion, operators)
+    end)
+end
+
 function _cartesian_hydrogen_energy(
     overlap_1d::AbstractMatrix,
     kinetic_1d::AbstractMatrix,
@@ -1162,6 +1196,54 @@ end
     @test norm(mild_reference.gaussian_factors[1] - mild_analytic.gaussian_factors[1], Inf) < 0.05
 end
 
+@testset "Ordinary Cartesian IDA operators" begin
+    mild_basis, mild_expansion, mild_analytic = _quick_ordinary_cartesian_ida_fixture(
+        backend = :pgdg_experimental,
+        mapped = true,
+        s = 0.5,
+    )
+    (_, _, identity_analytic) = _quick_ordinary_cartesian_ida_fixture(
+        backend = :pgdg_experimental,
+        mapped = false,
+    )
+
+    function reconstruct_interaction(expansion::CoulombGaussianExpansion, factors::AbstractVector{<:AbstractMatrix})
+        interaction = zeros(Float64, size(first(factors), 1)^3, size(first(factors), 1)^3)
+        for term in eachindex(expansion.coefficients)
+            factor = factors[term]
+            interaction .+= expansion.coefficients[term] .* kron(factor, kron(factor, factor))
+        end
+        return interaction
+    end
+
+    @test mild_basis isa MappedUniformBasis
+    @test mild_analytic isa OrdinaryCartesianIDAOperators
+    @test identity_analytic isa OrdinaryCartesianIDAOperators
+    @test mild_analytic.backend == :pgdg_experimental
+    @test identity_analytic.backend == :pgdg_experimental
+    @test occursin("experimental=true", sprint(show, mild_analytic))
+    @test occursin("experimental=true", sprint(show, identity_analytic))
+    @test length(orbitals(mild_analytic)) == length(mild_basis)^3
+    @test orbitals(mild_analytic)[1].ix == 1
+    @test orbitals(mild_analytic)[1].iy == 1
+    @test orbitals(mild_analytic)[1].iz == 1
+    @test orbitals(mild_analytic)[end].ix == length(mild_basis)
+    @test orbitals(mild_analytic)[end].iy == length(mild_basis)
+    @test orbitals(mild_analytic)[end].iz == length(mild_basis)
+    @test mild_analytic.overlap_3d ≈ transpose(mild_analytic.overlap_3d) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_analytic.one_body_hamiltonian ≈ transpose(mild_analytic.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_analytic.interaction_matrix ≈ transpose(mild_analytic.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test all(
+        factor -> isapprox(factor, transpose(factor); atol = 1.0e-10, rtol = 1.0e-10),
+        mild_analytic.pair_factors_1d,
+    )
+    @test mild_analytic.interaction_matrix ≈ reconstruct_interaction(mild_expansion, mild_analytic.pair_factors_1d) atol = 1.0e-10 rtol = 1.0e-10
+    @test minimum(diag(mild_analytic.interaction_matrix)) > 0.0
+    @test minimum(diag(identity_analytic.interaction_matrix)) > 0.0
+    @test size(identity_analytic.one_body_hamiltonian) == (length(identity_analytic.orbital_data), length(identity_analytic.orbital_data))
+    @test opnorm(mild_analytic.interaction_matrix, Inf) > 0.0
+end
+
 if _RUN_SLOW_TESTS
     @testset "Mapped Cartesian hydrogen" begin
         basis, mapping_value, representation, overlap_1d, kinetic_1d, expansion, hamiltonian, energy =
@@ -1320,6 +1402,72 @@ if _RUN_SLOW_TESTS
         @test stress_diff < 0.02
         @test stress_energy_analytic < -0.45
         @test stress_energy_reference < -0.45
+    end
+
+    @testset "Ordinary Cartesian IDA backend regimes" begin
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+
+        function ida_difference(s_value)
+            basis = build_basis(MappedUniformBasisSpec(:G10;
+                count = 5,
+                mapping = fit_asinh_mapping_for_strength(s = s_value, npoints = 5, xmax = 6.0),
+                reference_spacing = 1.0,
+            ))
+            reference = ordinary_cartesian_ida_operators(
+                basis;
+                expansion = expansion,
+                Z = 2.0,
+                backend = :numerical_reference,
+            )
+            analytic = ordinary_cartesian_ida_operators(
+                basis;
+                expansion = expansion,
+                Z = 2.0,
+                backend = :pgdg_experimental,
+            )
+            return (
+                norm(reference.one_body_hamiltonian - analytic.one_body_hamiltonian, Inf),
+                norm(reference.interaction_matrix - analytic.interaction_matrix, Inf),
+            )
+        end
+
+        mild_h1_diff, mild_vee_diff = ida_difference(0.5)
+        stress_h1_diff, stress_vee_diff = ida_difference(2.0)
+
+        @test mild_h1_diff < 0.05
+        @test mild_vee_diff < 0.1
+        @test stress_h1_diff > mild_h1_diff
+        @test stress_vee_diff > mild_vee_diff
+        @test stress_vee_diff < 1.0
+    end
+
+    @testset "Ordinary Cartesian IDA reference agreement" begin
+        mild_basis, mild_expansion, mild_reference = _quick_ordinary_cartesian_ida_fixture(
+            backend = :numerical_reference,
+            mapped = true,
+            s = 0.5,
+        )
+        (_, _, mild_analytic) = _quick_ordinary_cartesian_ida_fixture(
+            backend = :pgdg_experimental,
+            mapped = true,
+            s = 0.5,
+        )
+        (_, _, identity_reference) = _quick_ordinary_cartesian_ida_fixture(
+            backend = :numerical_reference,
+            mapped = false,
+        )
+        (_, _, identity_analytic) = _quick_ordinary_cartesian_ida_fixture(
+            backend = :pgdg_experimental,
+            mapped = false,
+        )
+
+        @test mild_basis isa MappedUniformBasis
+        @test mild_reference.backend == :numerical_reference
+        @test !occursin("experimental=true", sprint(show, mild_reference))
+        @test norm(identity_reference.one_body_hamiltonian - identity_analytic.one_body_hamiltonian, Inf) < 1.0e-6
+        @test norm(identity_reference.interaction_matrix - identity_analytic.interaction_matrix, Inf) < 1.0e-6
+        @test norm(mild_reference.one_body_hamiltonian - mild_analytic.one_body_hamiltonian, Inf) < 0.01
+        @test norm(mild_reference.interaction_matrix - mild_analytic.interaction_matrix, Inf) < 1.0e-3
     end
 end
 
@@ -2386,6 +2534,7 @@ end
     @test occursin("23_cartesian_hydrogen_coulomb_expansion.jl", example_guide)
     @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
+    @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2401,6 +2550,7 @@ end
     @test occursin("docs/ordinary_coulomb_expansion_path.md", example_guide)
     @test occursin("docs/mapped_ordinary_basis.md", example_guide)
     @test occursin("docs/ordinary_pgdg_backend_pivot.md", example_guide)
+    @test occursin("docs/ordinary_cartesian_ida.md", example_guide)
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))

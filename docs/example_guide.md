@@ -72,6 +72,23 @@ split now used on the one-body mapped ordinary branch:
 
 This is the example that makes the present mapped ordinary status explicit.
 
+### `26_ordinary_cartesian_ida.jl`
+
+Build the first static He-style ordinary Cartesian IDA ingredients on top of
+that same mapped one-body ordinary branch.
+
+This example keeps the scope narrow:
+
+- mapped ordinary Cartesian basis
+- separable Coulomb-expansion assembly
+- one-body `H1`
+- static two-index `Vee`
+- no He solve yet
+
+The corresponding note is:
+
+- `docs/ordinary_cartesian_ida.md`
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
