@@ -20,6 +20,29 @@ function _orthonormalize_1d(overlap::AbstractMatrix, operators::AbstractVector{<
     return Tuple(invhalf * operator * invhalf for operator in operators)
 end
 
+function _cleanup_comx_transform(
+    overlap::AbstractMatrix,
+    position::AbstractMatrix,
+    sign_vector::AbstractVector,
+)
+    vectors, invhalf = GaussletBases._s_invsqrt_reduced(overlap)
+    localizer, center_values = GaussletBases._comx_reduced(vectors, invhalf, position)
+    transform = Matrix{Float64}(vectors * (invhalf * localizer))
+    ordering = sortperm(center_values)
+    transform = transform[:, ordering]
+    for column in 1:size(transform, 2)
+        sign_probe = dot(sign_vector, view(transform, :, column))
+        if abs(sign_probe) <= 1.0e-12
+            pivot = argmax(abs.(view(transform, :, column)))
+            sign_probe = transform[pivot, column]
+        end
+        if sign_probe < 0.0
+            transform[:, column] .*= -1.0
+        end
+    end
+    return transform, Float64[Float64(center_values[index]) for index in ordering]
+end
+
 function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
@@ -126,6 +149,138 @@ function _quick_mapped_cartesian_hydrogen_fixture()
             energy,
         )
     end)
+end
+
+function _cartesian_hydrogen_energy(
+    overlap_1d::AbstractMatrix,
+    kinetic_1d::AbstractMatrix,
+    gaussian_factors::AbstractVector{<:AbstractMatrix},
+    expansion::CoulombGaussianExpansion;
+    Z::Real = 1.0,
+)
+    transformed = _orthonormalize_1d(overlap_1d, [kinetic_1d, gaussian_factors...])
+    kinetic_orth = first(transformed)
+    gaussian_orth = collect(transformed[2:end])
+    n1d = size(overlap_1d, 1)
+    identity_1d = Matrix{Float64}(I, n1d, n1d)
+    hamiltonian =
+        kron(kinetic_orth, kron(identity_1d, identity_1d)) +
+        kron(identity_1d, kron(kinetic_orth, identity_1d)) +
+        kron(identity_1d, kron(identity_1d, kinetic_orth))
+
+    for term in eachindex(expansion.coefficients)
+        factor = gaussian_orth[term]
+        hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* kron(factor, kron(factor, factor))
+    end
+
+    energy = minimum(eigen(Hermitian(hamiltonian)).values)
+    return hamiltonian, energy
+end
+
+function _mapped_pgdg_1d_fixture()
+    return _cached_fixture(:mapped_pgdg_1d_fixture, () -> begin
+        mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = mapping,
+            reference_spacing = 1.0,
+        ))
+        representation = basis_representation(basis; operators = (:overlap, :kinetic))
+        prototype = mapped_pgdg_prototype(basis)
+        localized = mapped_pgdg_localized(prototype)
+        exponent = 0.35
+        factor_numeric = gaussian_factor_matrix(basis; exponent = exponent, center = 0.0)
+        factor_pgdg = gaussian_factor_matrix(prototype; exponent = exponent, center = 0.0)
+        factor_localized = gaussian_factor_matrix(localized; exponent = exponent, center = 0.0)
+        (
+            basis,
+            mapping,
+            representation,
+            prototype,
+            localized,
+            exponent,
+            factor_numeric,
+            factor_pgdg,
+            factor_localized,
+        )
+    end)
+end
+
+function _mapped_cartesian_hydrogen_comparison(expansion::CoulombGaussianExpansion)
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+    representation = basis_representation(basis; operators = (:overlap, :kinetic))
+    overlap_numeric = representation.basis_matrices.overlap
+    kinetic_numeric = representation.basis_matrices.kinetic
+    factors_numeric = gaussian_factor_matrices(
+        basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    hamiltonian_numeric, energy_numeric = _cartesian_hydrogen_energy(
+        overlap_numeric,
+        kinetic_numeric,
+        factors_numeric,
+        expansion;
+        Z = 1.0,
+    )
+
+    prototype = mapped_pgdg_prototype(basis)
+    overlap_pgdg = overlap_matrix(prototype)
+    position_pgdg = position_matrix(prototype)
+    kinetic_pgdg = kinetic_matrix(prototype)
+    factors_pgdg = gaussian_factor_matrices(
+        prototype;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    hamiltonian_pgdg, energy_pgdg = _cartesian_hydrogen_energy(
+        overlap_pgdg,
+        kinetic_pgdg,
+        factors_pgdg,
+        expansion;
+        Z = 1.0,
+    )
+
+    localized = mapped_pgdg_localized(prototype)
+    overlap_localized = overlap_matrix(localized)
+    position_localized = position_matrix(localized)
+    kinetic_localized = kinetic_matrix(localized)
+    factors_localized = gaussian_factor_matrices(
+        localized;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    hamiltonian_localized, energy_localized = _cartesian_hydrogen_energy(
+        overlap_localized,
+        kinetic_localized,
+        factors_localized,
+        expansion;
+        Z = 1.0,
+    )
+
+    return (
+        basis,
+        prototype,
+        localized,
+        overlap_numeric,
+        kinetic_numeric,
+        hamiltonian_numeric,
+        energy_numeric,
+        overlap_pgdg,
+        position_pgdg,
+        kinetic_pgdg,
+        hamiltonian_pgdg,
+        energy_pgdg,
+        overlap_localized,
+        position_localized,
+        kinetic_localized,
+        hamiltonian_localized,
+        energy_localized,
+    )
 end
 
 function _quick_radial_atomic_fixture()
@@ -799,6 +954,44 @@ end
           transpose(mapped_representation.basis_matrices.kinetic) atol = 1.0e-10 rtol = 1.0e-10
 end
 
+@testset "Mapped PGDG prototype" begin
+    uniform = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
+    uniform_representation = basis_representation(uniform; operators = (:overlap, :kinetic))
+    identity_mapped = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = IdentityMapping(),
+        reference_spacing = 1.0,
+    ))
+    identity_representation = basis_representation(identity_mapped; operators = (:overlap, :kinetic))
+    identity_proto = mapped_pgdg_prototype(identity_mapped)
+
+    basis, mapping_value, representation, prototype, localized, exponent, factor_numeric, factor_pgdg, factor_localized =
+        _mapped_pgdg_1d_fixture()
+
+    @test identity_proto isa MappedPGDGPrototype1D
+    @test length(identity_proto) == length(uniform)
+    @test overlap_matrix(identity_proto) ≈ uniform_representation.basis_matrices.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test kinetic_matrix(identity_proto) ≈ uniform_representation.basis_matrices.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test overlap_matrix(identity_proto) ≈ identity_representation.basis_matrices.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test kinetic_matrix(identity_proto) ≈ identity_representation.basis_matrices.kinetic atol = 1.0e-12 rtol = 1.0e-12
+
+    @test mapping_value isa AsinhMapping
+    @test prototype isa MappedPGDGPrototype1D
+    @test localized isa MappedPGDGLocalized1D
+    @test occursin("experimental", sprint(show, prototype))
+    @test occursin("experimental", sprint(show, localized))
+    @test length(primitives(prototype)) == size(stencil_matrix(prototype), 1)
+    @test overlap_matrix(prototype) ≈ transpose(overlap_matrix(prototype)) atol = 1.0e-10 rtol = 1.0e-10
+    @test kinetic_matrix(prototype) ≈ transpose(kinetic_matrix(prototype)) atol = 1.0e-10 rtol = 1.0e-10
+    @test factor_pgdg ≈ transpose(factor_pgdg) atol = 1.0e-10 rtol = 1.0e-10
+    @test norm(representation.basis_matrices.overlap - overlap_matrix(prototype), Inf) < 0.06
+    @test norm(representation.basis_matrices.kinetic - kinetic_matrix(prototype), Inf) < 0.06
+    @test norm(factor_numeric - factor_pgdg, Inf) < 0.07
+    @test overlap_matrix(localized) ≈ I atol = 1.0e-10 rtol = 1.0e-10
+    @test position_matrix(localized) ≈ Diagonal(centers(localized)) atol = 1.0e-10 rtol = 1.0e-10
+    @test factor_localized ≈ transpose(factor_localized) atol = 1.0e-10 rtol = 1.0e-10
+end
+
 if _RUN_SLOW_TESTS
     @testset "Mapped Cartesian hydrogen" begin
         basis, mapping_value, representation, overlap_1d, kinetic_1d, expansion, hamiltonian, energy =
@@ -813,6 +1006,72 @@ if _RUN_SLOW_TESTS
         @test energy < unmapped_energy - 0.02
         @test energy < -0.46
         @test energy > -0.5
+    end
+
+    @testset "Mapped Coulomb expansion calibration" begin
+        expansion_115 = coulomb_gaussian_expansion(doacc = true, maxu = 115.0)
+        expansion_135 = coulomb_gaussian_expansion(doacc = true, maxu = 135.0)
+
+        (_, _, _, _, _, energy_115, _, _, _, _) = _mapped_cartesian_hydrogen_comparison(expansion_115)
+        (_, _, _, _, _, energy_135, _, _, _, _) = _mapped_cartesian_hydrogen_comparison(expansion_135)
+
+        @test length(expansion_115) == 115
+        @test length(expansion_135) == 135
+        @test abs(energy_135 - energy_115) < 1.0e-8
+    end
+
+    @testset "Mapped PGDG hydrogen prototype" begin
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        (
+            basis,
+            prototype,
+            localized,
+            overlap_numeric,
+            kinetic_numeric,
+            hamiltonian_numeric,
+            energy_numeric,
+            overlap_pgdg,
+            position_pgdg,
+            kinetic_pgdg,
+            hamiltonian_pgdg,
+            energy_pgdg,
+            overlap_localized,
+            position_localized,
+            kinetic_localized,
+            hamiltonian_localized,
+            energy_localized,
+        ) = _mapped_cartesian_hydrogen_comparison(expansion)
+
+        representation_numeric = basis_representation(basis; operators = (:overlap, :position, :kinetic))
+        transform_numeric, centers_numeric = _cleanup_comx_transform(
+            representation_numeric.basis_matrices.overlap,
+            representation_numeric.basis_matrices.position,
+            integral_weights(basis),
+        )
+        overlap_numeric_localized = transform_numeric' * representation_numeric.basis_matrices.overlap * transform_numeric
+        kinetic_numeric_localized = transform_numeric' * representation_numeric.basis_matrices.kinetic * transform_numeric
+        position_numeric_localized = transform_numeric' * representation_numeric.basis_matrices.position * transform_numeric
+        factor_numeric = gaussian_factor_matrix(basis; exponent = 0.35, center = 0.0)
+        factor_pgdg = gaussian_factor_matrix(prototype; exponent = 0.35, center = 0.0)
+        factor_numeric_localized = transform_numeric' * factor_numeric * transform_numeric
+        factor_localized = gaussian_factor_matrix(localized; exponent = 0.35, center = 0.0)
+
+        @test size(hamiltonian_numeric) == size(hamiltonian_pgdg)
+        @test size(hamiltonian_numeric) == size(hamiltonian_localized)
+        @test overlap_pgdg ≈ transpose(overlap_pgdg) atol = 1.0e-10 rtol = 1.0e-10
+        @test kinetic_pgdg ≈ transpose(kinetic_pgdg) atol = 1.0e-10 rtol = 1.0e-10
+        @test overlap_localized ≈ I atol = 1.0e-10 rtol = 1.0e-10
+        @test position_localized ≈ Diagonal(centers(localized)) atol = 1.0e-10 rtol = 1.0e-10
+        @test overlap_numeric_localized ≈ I atol = 1.0e-10 rtol = 1.0e-10
+        @test position_numeric_localized ≈ Diagonal(centers_numeric) atol = 1.0e-10 rtol = 1.0e-10
+        @test norm(kinetic_numeric_localized - kinetic_localized, Inf) < norm(kinetic_numeric - kinetic_pgdg, Inf)
+        @test norm(factor_numeric_localized - factor_localized, Inf) < norm(factor_numeric - factor_pgdg, Inf)
+        @test energy_numeric < -0.47
+        @test energy_pgdg < -0.47
+        @test energy_localized < -0.47
+        @test abs(energy_numeric - energy_pgdg) < 0.01
+        @test abs(energy_localized - energy_pgdg) < 1.0e-10
+        @test abs(energy_numeric - energy_localized) ≤ abs(energy_numeric - energy_pgdg) + 1.0e-10
     end
 end
 
@@ -1739,6 +1998,8 @@ end
     ordinary_coulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_coulomb_expansion_path.md"), String)
     mapped_ordinary_note = read(joinpath(_PROJECT_ROOT, "docs", "mapped_ordinary_basis.md"), String)
     short_gaucoulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "short_gaucoulomb_backend.md"), String)
+    ordinary_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_decision.md"), String)
+    ordinary_pgdg_comx_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_comx.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
     atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
@@ -1812,6 +2073,14 @@ end
     @test occursin("almost verbatim", lowercase(short_gaucoulomb_note))
     @test occursin("coulombgaussianexpansion", lowercase(short_gaucoulomb_note))
     @test occursin("gaussian_factor_matrix", short_gaucoulomb_note)
+    @test occursin("115", ordinary_pgdg_note)
+    @test occursin("135", ordinary_pgdg_note)
+    @test occursin("takeshi/yanai", lowercase(ordinary_pgdg_note))
+    @test occursin("primitive/contraction-level analytic prototype", lowercase(ordinary_pgdg_note))
+    @test occursin("comx/localization", lowercase(ordinary_pgdg_note))
+    @test occursin("experimental", lowercase(ordinary_pgdg_comx_note))
+    @test occursin("position-localization", lowercase(ordinary_pgdg_comx_note))
+    @test occursin("post-comx analytic path", lowercase(ordinary_pgdg_comx_note))
     @test occursin("YlmChannel", atomic_ylm_note)
     @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
     @test occursin("hydrogen", lowercase(atomic_ylm_note))

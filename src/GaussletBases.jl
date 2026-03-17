@@ -32,6 +32,8 @@ export AbstractFunction1D,
        Gausslet,
        UniformBasis,
        MappedUniformBasis,
+       MappedPGDGPrototype1D,
+       MappedPGDGLocalized1D,
        HalfLineBasis,
        RadialBasis,
        MappedGausslet,
@@ -82,6 +84,8 @@ export AbstractFunction1D,
        contract_primitive_matrix,
        CoulombGaussianExpansion,
        coulomb_gaussian_expansion,
+       mapped_pgdg_prototype,
+       mapped_pgdg_localized,
        gaussian_factor_matrix,
        gaussian_factor_matrices,
        RadialQuadratureGrid,
@@ -230,6 +234,8 @@ function contract_primitive_vector end
 function contract_primitive_diagonal end
 function contract_primitive_matrix end
 function coulomb_gaussian_expansion end
+function mapped_pgdg_prototype end
+function mapped_pgdg_localized end
 function gaussian_factor_matrix end
 function gaussian_factor_matrices end
 function radial_quadrature end
@@ -319,6 +325,7 @@ include("bases.jl")
 include("quadrature.jl")
 include("primitive_sets.jl")
 include("ordinary_coulomb.jl")
+include("ordinary_pgdg.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")
