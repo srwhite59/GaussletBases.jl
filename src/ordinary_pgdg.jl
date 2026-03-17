@@ -197,6 +197,8 @@ function _logfit_gaussian_proxy(primitive::Gaussian)
     return primitive, primitive.center_value, primitive.width, 1.0
 end
 
+_derivativefit_gaussian_proxy(primitive::Gaussian) = _logfit_gaussian_proxy(primitive)
+
 function _logfit_gaussian_proxy(primitive::Distorted{<:Gaussian})
     x_center = center(primitive)
     local_density = dudx(primitive.mapping, x_center)
@@ -235,6 +237,58 @@ function _logfit_gaussian_proxy(primitive::Distorted{<:Gaussian})
     return gaussian, center_value, width_value, amplitude_value
 end
 
+function _derivativefit_gaussian_proxy(primitive::Distorted{<:Gaussian})
+    x_center = center(primitive)
+    local_density = dudx(primitive.mapping, x_center)
+    local_density > 0.0 || throw(ArgumentError("mapped PGDG derivative-fit prototype requires a positive local mapping density"))
+
+    sigma_linear = primitive.primitive.width / local_density
+    ulo, uhi = _reference_bounds(primitive.primitive)
+    xlo = xofu(primitive.mapping, ulo)
+    xhi = xofu(primitive.mapping, uhi)
+    window_sigma = 2.0
+    left = max(xlo, x_center - window_sigma * sigma_linear)
+    right = min(xhi, x_center + window_sigma * sigma_linear)
+    right > left || return _logfit_gaussian_proxy(primitive)
+
+    sample_count = 121
+    xs = collect(range(left, right; length = sample_count))
+    values = Float64[value(primitive, x) for x in xs]
+    derivatives = Float64[derivative(primitive, x; order = 1) for x in xs]
+    weights = values .^ 2
+    maximum(weights) <= 0.0 && return _logfit_gaussian_proxy(primitive)
+
+    keep = weights .> (maximum(weights) * 1.0e-10)
+    count(keep) ≥ 5 || return _logfit_gaussian_proxy(primitive)
+
+    xs_fit = xs[keep]
+    deltas = xs_fit .- x_center
+    weights_fit = weights[keep]
+    ratios = derivatives[keep] ./ values[keep]
+    design = hcat(ones(length(xs_fit)), deltas)
+    scaled_design = design .* sqrt.(weights_fit)
+    scaled_ratios = ratios .* sqrt.(weights_fit)
+    coefficients = scaled_design \ scaled_ratios
+    intercept, slope = coefficients
+
+    slope < 0.0 || return _logfit_gaussian_proxy(primitive)
+
+    width_value = sqrt(-1.0 / slope)
+    isfinite(width_value) || return _logfit_gaussian_proxy(primitive)
+    width_value > 0.0 || return _logfit_gaussian_proxy(primitive)
+
+    center_value = x_center + intercept * width_value^2
+    center_value = clamp(center_value, left, right)
+
+    shift = ((xs_fit .- center_value) .^ 2) ./ (2.0 * width_value^2)
+    amplitude_log = sum(weights_fit .* (log.(max.(values[keep], 1.0e-300)) .+ shift)) / sum(weights_fit)
+    amplitude_value = exp(amplitude_log)
+    isfinite(amplitude_value) || return _logfit_gaussian_proxy(primitive)
+
+    gaussian = Gaussian(center = center_value, width = width_value)
+    return gaussian, center_value, width_value, amplitude_value
+end
+
 function _mapped_pgdg_logfit_primitive_data(basis::MappedUniformBasis)
     gaussian_primitives = Gaussian[]
     primitive_centers = Float64[]
@@ -258,6 +312,29 @@ function _mapped_pgdg_logfit_primitive_data(basis::MappedUniformBasis)
     return gaussian_primitives, primitive_centers, primitive_widths, primitive_amplitudes
 end
 
+function _mapped_pgdg_derivativefit_primitive_data(basis::MappedUniformBasis)
+    gaussian_primitives = Gaussian[]
+    primitive_centers = Float64[]
+    primitive_widths = Float64[]
+    primitive_amplitudes = Float64[]
+
+    for primitive in primitives(basis)
+        if primitive isa Distorted
+            primitive.primitive isa Gaussian || throw(ArgumentError("mapped_pgdg_derivativefit_prototype currently requires distorted full-line Gaussian primitives"))
+        elseif !(primitive isa Gaussian)
+            throw(ArgumentError("mapped_pgdg_derivativefit_prototype currently requires full-line Gaussian primitives"))
+        end
+
+        gaussian, center_value, width_value, amplitude_value = _derivativefit_gaussian_proxy(primitive)
+        push!(gaussian_primitives, gaussian)
+        push!(primitive_centers, center_value)
+        push!(primitive_widths, width_value)
+        push!(primitive_amplitudes, amplitude_value)
+    end
+
+    return gaussian_primitives, primitive_centers, primitive_widths, primitive_amplitudes
+end
+
 """
     mapped_pgdg_logfit_prototype(basis::MappedUniformBasis)
 
@@ -270,6 +347,25 @@ function mapped_pgdg_logfit_prototype(basis::MappedUniformBasis)
     primitive_layer = PrimitiveSet1D(
         AbstractPrimitiveFunction1D[primitive for primitive in gaussian_primitives];
         name = :mapped_pgdg_logfit_primitives,
+    )
+    amplitude_matrix = Diagonal(primitive_amplitudes)
+    coefficient_matrix = amplitude_matrix * Matrix{Float64}(stencil_matrix(basis))
+    return MappedPGDGLogFitPrototype1D(
+        basis,
+        primitive_layer,
+        coefficient_matrix,
+        primitive_widths,
+        primitive_amplitudes,
+        primitive_centers,
+    )
+end
+
+function mapped_pgdg_derivativefit_prototype(basis::MappedUniformBasis)
+    gaussian_primitives, primitive_centers, primitive_widths, primitive_amplitudes =
+        _mapped_pgdg_derivativefit_primitive_data(basis)
+    primitive_layer = PrimitiveSet1D(
+        AbstractPrimitiveFunction1D[primitive for primitive in gaussian_primitives];
+        name = :mapped_pgdg_derivativefit_primitives,
     )
     amplitude_matrix = Diagonal(primitive_amplitudes)
     coefficient_matrix = amplitude_matrix * Matrix{Float64}(stencil_matrix(basis))

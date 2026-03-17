@@ -106,6 +106,24 @@ The corresponding note is:
 
 - `docs/ordinary_pgdg_localized_backend.md`
 
+### `28_ordinary_one_body_fidelity.jl`
+
+Decompose the remaining mild-mapped one-body discrepancy on the localized
+ordinary PGDG route into:
+
+- overlap
+- kinetic
+- Gaussianized nuclear-factor matrices
+- assembled `H1`
+
+This is the example that shows the present localized backend is now limited
+mainly by the kinetic side, not by overlap and not by the static `Vee`
+assembly.
+
+The corresponding note is:
+
+- `docs/ordinary_pgdg_one_body_fidelity.md`
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
@@ -249,6 +267,9 @@ Then, if you want the first ordinary Cartesian hydrogen path, read:
 6. `23_cartesian_hydrogen_coulomb_expansion.jl`
 7. `24_mapped_cartesian_hydrogen.jl`
 8. `25_mapped_cartesian_hydrogen_backends.jl`
+9. `26_ordinary_cartesian_ida.jl`
+10. `27_ordinary_cartesian_ida_localized_backends.jl`
+11. `28_ordinary_one_body_fidelity.jl`
 
 Then read:
 
@@ -258,6 +279,8 @@ Then read:
 - `docs/ordinary_coulomb_expansion_path.md`
 - `docs/mapped_ordinary_basis.md`
 - `docs/ordinary_pgdg_backend_pivot.md`
+- `docs/ordinary_pgdg_localized_backend.md`
+- `docs/ordinary_pgdg_one_body_fidelity.md`
 
 ### If your main interest is primitive layers and contraction
 

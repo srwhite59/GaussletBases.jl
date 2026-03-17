@@ -267,7 +267,10 @@ The result is a static object, not a He solver:
 - explicit product-orbital indexing
 
 `backend = :pgdg_localized_experimental` is the candidate solver-ready
-implementation route in the mild-to-moderate mapped regime.
+implementation route in the mild-to-moderate mapped regime. In the current
+experimental implementation, that route uses the cleaned/localized PGDG-style
+one-dimensional basis together with a more derivative-aware analytic primitive
+proxy than the pre-COMX path.
 `:pgdg_experimental` retains the pre-COMX refined proxy path.
 `:numerical_reference` remains the validation route.
 """

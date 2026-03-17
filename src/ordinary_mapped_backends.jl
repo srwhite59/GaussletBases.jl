@@ -24,6 +24,56 @@ function Base.show(io::IO, operators::MappedOrdinaryOneBody1D)
     print(io, ")")
 end
 
+function _basis_sample_matrix(
+    basis_like,
+    points::AbstractVector{<:Real},
+)
+    primitive_values = _primitive_sample_matrix(
+        primitive_set(basis_like),
+        Float64[Float64(point) for point in points],
+    )
+    return primitive_values * Matrix{Float64}(stencil_matrix(basis_like))
+end
+
+function _localized_reference_data(basis::MappedUniformBasis)
+    representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
+    transform, center_values = _cleanup_comx_transform(
+        representation.basis_matrices.overlap,
+        representation.basis_matrices.position,
+        integral_weights(basis),
+    )
+    kinetic = Matrix{Float64}(transpose(transform) * representation.basis_matrices.kinetic * transform)
+    return (
+        transform = transform,
+        centers = center_values,
+        kinetic = kinetic,
+    )
+end
+
+function _localized_alignment_transform(
+    basis::MappedUniformBasis,
+    reference_transform::AbstractMatrix{<:Real},
+    localized::MappedPGDGLocalized1D;
+    h::Real = 0.02,
+)
+    xlo, xhi = _primitive_set_bounds(primitive_set(basis))
+    points, weights = _make_midpoint_grid(xlo, xhi, Float64(h))
+    reference_values = _basis_sample_matrix(basis, points) * Matrix{Float64}(reference_transform)
+    localized_values = _basis_sample_matrix(localized, points)
+    cross_overlap = transpose(reference_values) * (weights .* localized_values)
+    decomposition = svd(cross_overlap)
+    return Matrix{Float64}(decomposition.U * decomposition.Vt)
+end
+
+function _localized_corrected_kinetic(
+    basis::MappedUniformBasis,
+    localized::MappedPGDGLocalized1D,
+)
+    reference = _localized_reference_data(basis)
+    alignment = _localized_alignment_transform(basis, reference.transform, localized)
+    return Matrix{Float64}(transpose(alignment) * reference.kinetic * alignment)
+end
+
 function _mapped_ordinary_backend_layer(
     basis::MappedUniformBasis,
     backend::Symbol,
@@ -33,7 +83,7 @@ function _mapped_ordinary_backend_layer(
     elseif backend == :pgdg_experimental
         return mapped_pgdg_logfit_prototype(basis)
     elseif backend == :pgdg_localized_experimental
-        return mapped_pgdg_localized(mapped_pgdg_logfit_prototype(basis))
+        return mapped_pgdg_localized(mapped_pgdg_derivativefit_prototype(basis))
     else
         throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
     end
@@ -55,7 +105,8 @@ The backend choice is explicit:
 - `:numerical_reference` keeps the trusted mapped numerical path
 - `:pgdg_experimental` uses the refined pre-COMX analytic PGDG-style proxy
 - `:pgdg_localized_experimental` uses the refined proxy followed by overlap
-  cleanup and COMX-style localization
+  cleanup and COMX-style localization, using a more derivative-aware primitive
+  proxy than the pre-COMX path
 
 The experimental backends are intended for mild-to-moderate distortion
 regimes, with the numerical path retained as the reference route.
@@ -90,6 +141,34 @@ function mapped_ordinary_one_body_operators(
     return MappedOrdinaryOneBody1D(
         basis,
         backend,
+        overlap,
+        kinetic,
+        gaussian_factors,
+        exponents_value,
+        center_value,
+    )
+end
+
+function _mapped_ordinary_localized_oracle_operators(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+)
+    localized = _mapped_ordinary_backend_layer(basis, :pgdg_localized_experimental)
+    exponents_value = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    overlap = Matrix{Float64}(overlap_matrix(localized))
+    kinetic = _localized_corrected_kinetic(basis, localized)
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
+            localized;
+            exponents = exponents_value,
+            center = center_value,
+        )
+    ]
+    return MappedOrdinaryOneBody1D(
+        basis,
+        :pgdg_localized_oracle,
         overlap,
         kinetic,
         gaussian_factors,

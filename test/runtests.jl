@@ -254,6 +254,26 @@ function _cartesian_hydrogen_energy(
     return hamiltonian, energy
 end
 
+function _localized_numerical_reference_1d(
+    basis::MappedUniformBasis,
+    exponents::AbstractVector{<:Real};
+    center::Real = 0.0,
+)
+    representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
+    transform, centers_value = _cleanup_comx_transform(
+        representation.basis_matrices.overlap,
+        representation.basis_matrices.position,
+        integral_weights(basis),
+    )
+    overlap = Matrix{Float64}(transpose(transform) * representation.basis_matrices.overlap * transform)
+    kinetic = Matrix{Float64}(transpose(transform) * representation.basis_matrices.kinetic * transform)
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(transpose(transform) * gaussian_factor_matrix(basis; exponent = exponent, center = center) * transform)
+        for exponent in exponents
+    ]
+    return (transform, centers_value, overlap, kinetic, gaussian_factors)
+end
+
 function _mapped_pgdg_1d_fixture()
     return _cached_fixture(:mapped_pgdg_1d_fixture, () -> begin
         mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0)
@@ -1182,15 +1202,26 @@ end
         exponents = expansion.exponents[1:3],
         backend = :pgdg_localized_experimental,
     )
+    mild_oracle = GaussletBases._mapped_ordinary_localized_oracle_operators(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+    )
+    (_, _, overlap_reference_localized, kinetic_reference_localized, _) =
+        _localized_numerical_reference_1d(mild_basis, expansion.exponents[1:3])
+    raw_localized = mapped_pgdg_localized(GaussletBases.mapped_pgdg_logfit_prototype(mild_basis))
+    raw_localized_kinetic = kinetic_matrix(raw_localized)
 
     @test mild_reference isa MappedOrdinaryOneBody1D
     @test mild_analytic isa MappedOrdinaryOneBody1D
     @test mild_localized isa MappedOrdinaryOneBody1D
+    @test mild_oracle isa MappedOrdinaryOneBody1D
     @test mild_reference.backend == :numerical_reference
     @test mild_analytic.backend == :pgdg_experimental
     @test mild_localized.backend == :pgdg_localized_experimental
+    @test mild_oracle.backend == :pgdg_localized_oracle
     @test occursin("experimental=true", sprint(show, mild_analytic))
     @test occursin("experimental=true", sprint(show, mild_localized))
+    @test occursin("experimental=true", sprint(show, mild_oracle))
     @test !occursin("experimental=true", sprint(show, mild_reference))
     @test mild_reference.overlap ≈ transpose(mild_reference.overlap) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_analytic.overlap ≈ transpose(mild_analytic.overlap) atol = 1.0e-10 rtol = 1.0e-10
@@ -1207,6 +1238,11 @@ end
     @test norm(mild_reference.gaussian_factors[1] - mild_analytic.gaussian_factors[1], Inf) < 0.05
     @test norm(mild_localized.overlap - I, Inf) < 1.0e-10
     @test norm(mild_localized.overlap - I, Inf) < norm(mild_analytic.overlap - I, Inf)
+    @test norm(mild_localized.overlap - overlap_reference_localized, Inf) < 1.0e-10
+    @test norm(mild_localized.kinetic - kinetic_reference_localized, Inf) <
+          norm(raw_localized_kinetic - kinetic_reference_localized, Inf)
+    @test norm(mild_oracle.kinetic - kinetic_reference_localized, Inf) <
+          norm(mild_localized.kinetic - kinetic_reference_localized, Inf)
 end
 
 @testset "Ordinary Cartesian IDA operators" begin
@@ -1277,6 +1313,42 @@ end
         Z = 2.0,
         backend = :pgdg_localized_experimental,
     )
+    (_, _, overlap_reference_localized, kinetic_reference_localized, gaussian_reference_localized) =
+        _localized_numerical_reference_1d(basis, expansion.exponents)
+    raw_localized = mapped_pgdg_localized(GaussletBases.mapped_pgdg_logfit_prototype(basis))
+    oracle_localized = GaussletBases._mapped_ordinary_localized_oracle_operators(
+        basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    raw_h1, _ = _cartesian_hydrogen_energy(
+        overlap_matrix(raw_localized),
+        kinetic_matrix(raw_localized),
+        gaussian_factor_matrices(raw_localized; exponents = expansion.exponents, center = 0.0),
+        expansion;
+        Z = 2.0,
+    )
+    corrected_h1, _ = _cartesian_hydrogen_energy(
+        localized.one_body_1d.overlap,
+        localized.one_body_1d.kinetic,
+        localized.one_body_1d.gaussian_factors,
+        expansion;
+        Z = 2.0,
+    )
+    oracle_h1, _ = _cartesian_hydrogen_energy(
+        oracle_localized.overlap,
+        oracle_localized.kinetic,
+        oracle_localized.gaussian_factors,
+        expansion;
+        Z = 2.0,
+    )
+    reference_h1, _ = _cartesian_hydrogen_energy(
+        overlap_reference_localized,
+        kinetic_reference_localized,
+        gaussian_reference_localized,
+        expansion;
+        Z = 2.0,
+    )
 
     @test localized isa OrdinaryCartesianIDAOperators
     @test localized.backend == :pgdg_localized_experimental
@@ -1285,6 +1357,11 @@ end
     @test norm(localized.overlap_3d - I, Inf) < 1.0e-9
     @test norm(localized.one_body_1d.overlap - I, Inf) < norm(proxy.one_body_1d.overlap - I, Inf)
     @test norm(localized.overlap_3d - I, Inf) < norm(proxy.overlap_3d - I, Inf)
+    @test norm(localized.one_body_1d.overlap - overlap_reference_localized, Inf) < 1.0e-10
+    @test norm(localized.one_body_1d.kinetic - kinetic_reference_localized, Inf) <
+          norm(kinetic_matrix(raw_localized) - kinetic_reference_localized, Inf)
+    @test norm(corrected_h1 - reference_h1, Inf) < norm(raw_h1 - reference_h1, Inf)
+    @test norm(oracle_h1 - reference_h1, Inf) < norm(corrected_h1 - reference_h1, Inf)
     @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
     @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
     @test minimum(diag(localized.interaction_matrix)) > 0.0
@@ -2496,6 +2573,7 @@ end
     atomic_uhf_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_uhf.md"), String)
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
+    ordinary_one_body_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_one_body_fidelity.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
     global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
@@ -2624,6 +2702,7 @@ end
     @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
     @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
     @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
+    @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2641,6 +2720,11 @@ end
     @test occursin("docs/ordinary_pgdg_backend_pivot.md", example_guide)
     @test occursin("docs/ordinary_cartesian_ida.md", example_guide)
     @test occursin("docs/ordinary_pgdg_localized_backend.md", example_guide)
+    @test occursin("docs/ordinary_pgdg_one_body_fidelity.md", example_guide)
+    @test occursin("localized pgdg route", lowercase(ordinary_one_body_note))
+    @test occursin("remaining issue is `H1`", ordinary_one_body_note)
+    @test occursin("kinetic", lowercase(ordinary_one_body_note))
+    @test occursin("aligned-kinetic route", ordinary_one_body_note)
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
