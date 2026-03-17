@@ -43,6 +43,49 @@ function _cleanup_comx_transform(
     return transform, Float64[Float64(center_values[index]) for index in ordering]
 end
 
+function _basis_sample_matrix(basis_like, points::AbstractVector{<:Real})
+    primitive_values = GaussletBases._primitive_sample_matrix(primitive_set(basis_like), Float64[Float64(point) for point in points])
+    return primitive_values * Matrix{Float64}(stencil_matrix(basis_like))
+end
+
+function _projection_error(basis_like, target::Function; xmin = -10.0, xmax = 10.0, h = 0.05)
+    points = collect((xmin + 0.5 * h):h:(xmax - 0.5 * h))
+    weights = fill(h, length(points))
+    values = _basis_sample_matrix(basis_like, points)
+    target_values = Float64[target(point) for point in points]
+    gram = transpose(values) * (weights .* values)
+    rhs = transpose(values) * (weights .* target_values)
+    coefficients = gram \ rhs
+    residual = target_values - values * coefficients
+    residual_norm = sqrt(sum(weights .* (residual .^ 2)))
+    target_norm = sqrt(sum(weights .* (target_values .^ 2)))
+    return residual_norm / target_norm
+end
+
+function _subspace_overlap_metric(basis_a, basis_b; xmin = -10.0, xmax = 10.0, h = 0.05)
+    points = collect((xmin + 0.5 * h):h:(xmax - 0.5 * h))
+    weights_sqrt = sqrt.(fill(h, length(points)))
+    values_a = _basis_sample_matrix(basis_a, points) .* weights_sqrt
+    values_b = _basis_sample_matrix(basis_b, points) .* weights_sqrt
+    qa = Matrix(qr(values_a).Q[:, 1:size(values_a, 2)])
+    qb = Matrix(qr(values_b).Q[:, 1:size(values_b, 2)])
+    singular_values = svdvals(transpose(qa) * qb)
+    min_sv = minimum(singular_values)
+    return (min_sv = min_sv, max_angle = acos(clamp(min_sv, -1.0, 1.0)))
+end
+
+function _projector_difference_metric(basis_a, basis_b; xmin = -10.0, xmax = 10.0, h = 0.05)
+    points = collect((xmin + 0.5 * h):h:(xmax - 0.5 * h))
+    weights_sqrt = sqrt.(fill(h, length(points)))
+    values_a = _basis_sample_matrix(basis_a, points) .* weights_sqrt
+    values_b = _basis_sample_matrix(basis_b, points) .* weights_sqrt
+    qa = Matrix(qr(values_a).Q[:, 1:size(values_a, 2)])
+    qb = Matrix(qr(values_b).Q[:, 1:size(values_b, 2)])
+    pa = qa * transpose(qa)
+    pb = qb * transpose(qb)
+    return (frob = norm(pa - pb), op = opnorm(pa - pb))
+end
+
 function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadrature_rmax = 12.0)
     rb = build_basis(RadialBasisSpec(:G10;
         count = 6,
@@ -188,20 +231,28 @@ function _mapped_pgdg_1d_fixture()
         representation = basis_representation(basis; operators = (:overlap, :kinetic))
         prototype = mapped_pgdg_prototype(basis)
         localized = mapped_pgdg_localized(prototype)
+        refined = GaussletBases.mapped_pgdg_logfit_prototype(basis)
+        refined_localized = mapped_pgdg_localized(refined)
         exponent = 0.35
         factor_numeric = gaussian_factor_matrix(basis; exponent = exponent, center = 0.0)
         factor_pgdg = gaussian_factor_matrix(prototype; exponent = exponent, center = 0.0)
         factor_localized = gaussian_factor_matrix(localized; exponent = exponent, center = 0.0)
+        factor_refined = gaussian_factor_matrix(refined; exponent = exponent, center = 0.0)
+        factor_refined_localized = gaussian_factor_matrix(refined_localized; exponent = exponent, center = 0.0)
         (
             basis,
             mapping,
             representation,
             prototype,
             localized,
+            refined,
+            refined_localized,
             exponent,
             factor_numeric,
             factor_pgdg,
             factor_localized,
+            factor_refined,
+            factor_refined_localized,
         )
     end)
 end
@@ -262,10 +313,46 @@ function _mapped_cartesian_hydrogen_comparison(expansion::CoulombGaussianExpansi
         Z = 1.0,
     )
 
+    refined = GaussletBases.mapped_pgdg_logfit_prototype(basis)
+    overlap_refined = overlap_matrix(refined)
+    position_refined = position_matrix(refined)
+    kinetic_refined = kinetic_matrix(refined)
+    factors_refined = gaussian_factor_matrices(
+        refined;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    hamiltonian_refined, energy_refined = _cartesian_hydrogen_energy(
+        overlap_refined,
+        kinetic_refined,
+        factors_refined,
+        expansion;
+        Z = 1.0,
+    )
+
+    refined_localized = mapped_pgdg_localized(refined)
+    overlap_refined_localized = overlap_matrix(refined_localized)
+    position_refined_localized = position_matrix(refined_localized)
+    kinetic_refined_localized = kinetic_matrix(refined_localized)
+    factors_refined_localized = gaussian_factor_matrices(
+        refined_localized;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    hamiltonian_refined_localized, energy_refined_localized = _cartesian_hydrogen_energy(
+        overlap_refined_localized,
+        kinetic_refined_localized,
+        factors_refined_localized,
+        expansion;
+        Z = 1.0,
+    )
+
     return (
         basis,
         prototype,
         localized,
+        refined,
+        refined_localized,
         overlap_numeric,
         kinetic_numeric,
         hamiltonian_numeric,
@@ -280,6 +367,16 @@ function _mapped_cartesian_hydrogen_comparison(expansion::CoulombGaussianExpansi
         kinetic_localized,
         hamiltonian_localized,
         energy_localized,
+        overlap_refined,
+        position_refined,
+        kinetic_refined,
+        hamiltonian_refined,
+        energy_refined,
+        overlap_refined_localized,
+        position_refined_localized,
+        kinetic_refined_localized,
+        hamiltonian_refined_localized,
+        energy_refined_localized,
     )
 end
 
@@ -964,22 +1061,43 @@ end
     ))
     identity_representation = basis_representation(identity_mapped; operators = (:overlap, :kinetic))
     identity_proto = mapped_pgdg_prototype(identity_mapped)
+    identity_refined = GaussletBases.mapped_pgdg_logfit_prototype(identity_mapped)
 
-    basis, mapping_value, representation, prototype, localized, exponent, factor_numeric, factor_pgdg, factor_localized =
+    basis, mapping_value, representation, prototype, localized, refined, refined_localized, exponent, factor_numeric, factor_pgdg, factor_localized, factor_refined, factor_refined_localized =
         _mapped_pgdg_1d_fixture()
 
+    plain_gaussian = x -> exp(-0.5 * ((x - 0.4) / 0.7)^2)
+    shifted_gaussian = x -> exp(-0.5 * ((x + 1.3) / 0.5)^2)
+    xgaussian_like = x -> x * exp(-0.5 * (x / 0.8)^2)
+    span_pre = _subspace_overlap_metric(basis, prototype)
+    span_refined = _subspace_overlap_metric(basis, refined)
+    projector_pre = _projector_difference_metric(basis, prototype)
+    projector_refined = _projector_difference_metric(basis, refined)
+    plain_error_pre = _projection_error(prototype, plain_gaussian)
+    shifted_error_pre = _projection_error(prototype, shifted_gaussian)
+    xgaussian_error_pre = _projection_error(prototype, xgaussian_like)
+    plain_error_refined = _projection_error(refined, plain_gaussian)
+    shifted_error_refined = _projection_error(refined, shifted_gaussian)
+    xgaussian_error_refined = _projection_error(refined, xgaussian_like)
+
     @test identity_proto isa MappedPGDGPrototype1D
+    @test identity_refined isa GaussletBases.MappedPGDGLogFitPrototype1D
     @test length(identity_proto) == length(uniform)
     @test overlap_matrix(identity_proto) ≈ uniform_representation.basis_matrices.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test kinetic_matrix(identity_proto) ≈ uniform_representation.basis_matrices.kinetic atol = 1.0e-12 rtol = 1.0e-12
     @test overlap_matrix(identity_proto) ≈ identity_representation.basis_matrices.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test kinetic_matrix(identity_proto) ≈ identity_representation.basis_matrices.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test overlap_matrix(identity_refined) ≈ uniform_representation.basis_matrices.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test kinetic_matrix(identity_refined) ≈ uniform_representation.basis_matrices.kinetic atol = 1.0e-12 rtol = 1.0e-12
 
     @test mapping_value isa AsinhMapping
     @test prototype isa MappedPGDGPrototype1D
     @test localized isa MappedPGDGLocalized1D
+    @test refined isa GaussletBases.MappedPGDGLogFitPrototype1D
+    @test refined_localized isa MappedPGDGLocalized1D
     @test occursin("experimental", sprint(show, prototype))
     @test occursin("experimental", sprint(show, localized))
+    @test occursin("experimental", sprint(show, refined))
     @test length(primitives(prototype)) == size(stencil_matrix(prototype), 1)
     @test overlap_matrix(prototype) ≈ transpose(overlap_matrix(prototype)) atol = 1.0e-10 rtol = 1.0e-10
     @test kinetic_matrix(prototype) ≈ transpose(kinetic_matrix(prototype)) atol = 1.0e-10 rtol = 1.0e-10
@@ -990,6 +1108,18 @@ end
     @test overlap_matrix(localized) ≈ I atol = 1.0e-10 rtol = 1.0e-10
     @test position_matrix(localized) ≈ Diagonal(centers(localized)) atol = 1.0e-10 rtol = 1.0e-10
     @test factor_localized ≈ transpose(factor_localized) atol = 1.0e-10 rtol = 1.0e-10
+    @test overlap_matrix(refined) ≈ transpose(overlap_matrix(refined)) atol = 1.0e-10 rtol = 1.0e-10
+    @test kinetic_matrix(refined) ≈ transpose(kinetic_matrix(refined)) atol = 1.0e-10 rtol = 1.0e-10
+    @test factor_refined ≈ transpose(factor_refined) atol = 1.0e-10 rtol = 1.0e-10
+    @test overlap_matrix(refined_localized) ≈ I atol = 1.0e-10 rtol = 1.0e-10
+    @test position_matrix(refined_localized) ≈ Diagonal(centers(refined_localized)) atol = 1.0e-10 rtol = 1.0e-10
+    @test factor_refined_localized ≈ transpose(factor_refined_localized) atol = 1.0e-10 rtol = 1.0e-10
+    @test span_refined.min_sv > span_pre.min_sv
+    @test projector_refined.frob < projector_pre.frob
+    @test projector_refined.op < projector_pre.op
+    @test plain_error_refined ≤ plain_error_pre + 0.01
+    @test shifted_error_refined ≤ shifted_error_pre + 0.01
+    @test xgaussian_error_refined ≤ xgaussian_error_pre + 0.02
 end
 
 if _RUN_SLOW_TESTS
@@ -1026,6 +1156,8 @@ if _RUN_SLOW_TESTS
             basis,
             prototype,
             localized,
+            refined,
+            refined_localized,
             overlap_numeric,
             kinetic_numeric,
             hamiltonian_numeric,
@@ -1040,6 +1172,16 @@ if _RUN_SLOW_TESTS
             kinetic_localized,
             hamiltonian_localized,
             energy_localized,
+            overlap_refined,
+            position_refined,
+            kinetic_refined,
+            hamiltonian_refined,
+            energy_refined,
+            overlap_refined_localized,
+            position_refined_localized,
+            kinetic_refined_localized,
+            hamiltonian_refined_localized,
+            energy_refined_localized,
         ) = _mapped_cartesian_hydrogen_comparison(expansion)
 
         representation_numeric = basis_representation(basis; operators = (:overlap, :position, :kinetic))
@@ -1053,25 +1195,46 @@ if _RUN_SLOW_TESTS
         position_numeric_localized = transform_numeric' * representation_numeric.basis_matrices.position * transform_numeric
         factor_numeric = gaussian_factor_matrix(basis; exponent = 0.35, center = 0.0)
         factor_pgdg = gaussian_factor_matrix(prototype; exponent = 0.35, center = 0.0)
+        factor_refined = gaussian_factor_matrix(refined; exponent = 0.35, center = 0.0)
         factor_numeric_localized = transform_numeric' * factor_numeric * transform_numeric
         factor_localized = gaussian_factor_matrix(localized; exponent = 0.35, center = 0.0)
+        factor_refined_localized = gaussian_factor_matrix(refined_localized; exponent = 0.35, center = 0.0)
+        span_pre = _subspace_overlap_metric(basis, prototype)
+        span_refined = _subspace_overlap_metric(basis, refined)
+        projector_pre = _projector_difference_metric(basis, prototype)
+        projector_refined = _projector_difference_metric(basis, refined)
 
         @test size(hamiltonian_numeric) == size(hamiltonian_pgdg)
         @test size(hamiltonian_numeric) == size(hamiltonian_localized)
+        @test size(hamiltonian_numeric) == size(hamiltonian_refined)
+        @test size(hamiltonian_numeric) == size(hamiltonian_refined_localized)
         @test overlap_pgdg ≈ transpose(overlap_pgdg) atol = 1.0e-10 rtol = 1.0e-10
         @test kinetic_pgdg ≈ transpose(kinetic_pgdg) atol = 1.0e-10 rtol = 1.0e-10
         @test overlap_localized ≈ I atol = 1.0e-10 rtol = 1.0e-10
         @test position_localized ≈ Diagonal(centers(localized)) atol = 1.0e-10 rtol = 1.0e-10
         @test overlap_numeric_localized ≈ I atol = 1.0e-10 rtol = 1.0e-10
         @test position_numeric_localized ≈ Diagonal(centers_numeric) atol = 1.0e-10 rtol = 1.0e-10
+        @test overlap_refined ≈ transpose(overlap_refined) atol = 1.0e-10 rtol = 1.0e-10
+        @test kinetic_refined ≈ transpose(kinetic_refined) atol = 1.0e-10 rtol = 1.0e-10
+        @test overlap_refined_localized ≈ I atol = 1.0e-10 rtol = 1.0e-10
+        @test position_refined_localized ≈ Diagonal(centers(refined_localized)) atol = 1.0e-10 rtol = 1.0e-10
         @test norm(kinetic_numeric_localized - kinetic_localized, Inf) < norm(kinetic_numeric - kinetic_pgdg, Inf)
         @test norm(factor_numeric_localized - factor_localized, Inf) < norm(factor_numeric - factor_pgdg, Inf)
         @test energy_numeric < -0.47
         @test energy_pgdg < -0.47
         @test energy_localized < -0.47
+        @test energy_refined < -0.47
+        @test energy_refined_localized < -0.47
         @test abs(energy_numeric - energy_pgdg) < 0.01
         @test abs(energy_localized - energy_pgdg) < 1.0e-10
         @test abs(energy_numeric - energy_localized) ≤ abs(energy_numeric - energy_pgdg) + 1.0e-10
+        @test span_refined.min_sv > span_pre.min_sv
+        @test projector_refined.frob < projector_pre.frob
+        @test projector_refined.op < projector_pre.op
+        @test abs(energy_numeric - energy_refined) < abs(energy_numeric - energy_pgdg)
+        @test abs(energy_numeric - energy_refined_localized) ≤ abs(energy_numeric - energy_refined) + 1.0e-10
+        @test norm(factor_numeric - factor_refined, Inf) ≤ norm(factor_numeric - factor_pgdg, Inf) + 0.02
+        @test norm(factor_numeric_localized - factor_refined_localized, Inf) ≤ norm(factor_numeric_localized - factor_localized, Inf) + 0.02
     end
 end
 
@@ -2000,6 +2163,7 @@ end
     short_gaucoulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "short_gaucoulomb_backend.md"), String)
     ordinary_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_decision.md"), String)
     ordinary_pgdg_comx_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_comx.md"), String)
+    ordinary_pgdg_refinement_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_proxy_refinement.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
     atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
@@ -2081,6 +2245,10 @@ end
     @test occursin("experimental", lowercase(ordinary_pgdg_comx_note))
     @test occursin("position-localization", lowercase(ordinary_pgdg_comx_note))
     @test occursin("post-comx analytic path", lowercase(ordinary_pgdg_comx_note))
+    @test occursin("white–lindsey", lowercase(ordinary_pgdg_refinement_note))
+    @test occursin("nearly identical span", lowercase(ordinary_pgdg_refinement_note))
+    @test occursin("weighted log-quadratic gaussian fit", lowercase(ordinary_pgdg_refinement_note))
+    @test occursin("hydrogen energy only as an end-to-end check", lowercase(ordinary_pgdg_refinement_note))
     @test occursin("YlmChannel", atomic_ylm_note)
     @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
     @test occursin("hydrogen", lowercase(atomic_ylm_note))
