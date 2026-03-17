@@ -22,6 +22,7 @@ export AbstractFunction1D,
        LeafBoxContractionLayer1D,
        UniformBasisSpec,
        MappedUniformBasisSpec,
+       MappedOrdinaryOneBody1D,
        HalfLineBasisSpec,
        RadialBasisSpec,
        Gaussian,
@@ -86,6 +87,8 @@ export AbstractFunction1D,
        coulomb_gaussian_expansion,
        mapped_pgdg_prototype,
        mapped_pgdg_localized,
+       mapped_ordinary_one_body_operators,
+       mapped_cartesian_hydrogen_energy,
        gaussian_factor_matrix,
        gaussian_factor_matrices,
        RadialQuadratureGrid,
@@ -143,6 +146,7 @@ export AbstractFunction1D,
        IdentityMapping,
        AsinhMapping,
        fit_asinh_mapping_for_extent,
+       fit_asinh_mapping_for_strength,
        uofx,
        xofu,
        dudx,
@@ -236,6 +240,8 @@ function contract_primitive_matrix end
 function coulomb_gaussian_expansion end
 function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
+function mapped_ordinary_one_body_operators end
+function mapped_cartesian_hydrogen_energy end
 function gaussian_factor_matrix end
 function gaussian_factor_matrices end
 function radial_quadrature end
@@ -326,6 +332,7 @@ include("quadrature.jl")
 include("primitive_sets.jl")
 include("ordinary_coulomb.jl")
 include("ordinary_pgdg.jl")
+include("ordinary_mapped_backends.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")

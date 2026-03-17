@@ -1023,6 +1023,7 @@ end
         reference_spacing = 1.0,
     ))
     fitted_map = fit_asinh_mapping_for_extent(npoints = 9, xmax = 6.0)
+    strength_map = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0)
     mapped = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
         mapping = fit_asinh_mapping_for_extent(npoints = 5, xmax = 6.0),
@@ -1038,6 +1039,9 @@ end
     @test fitted_map isa AsinhMapping
     @test xofu(fitted_map, 4.0) ≈ 6.0 atol = 1.0e-10 rtol = 0.0
     @test xofu(fitted_map, -4.0) ≈ -6.0 atol = 1.0e-10 rtol = 0.0
+    @test strength_map isa AsinhMapping
+    @test xofu(strength_map, 2.0) ≈ 6.0 atol = 1.0e-10 rtol = 0.0
+    @test xofu(strength_map, -2.0) ≈ -6.0 atol = 1.0e-10 rtol = 0.0
 
     @test mapped isa MappedUniformBasis
     @test length(mapped) == 5
@@ -1120,6 +1124,42 @@ end
     @test plain_error_refined ≤ plain_error_pre + 0.01
     @test shifted_error_refined ≤ shifted_error_pre + 0.01
     @test xgaussian_error_refined ≤ xgaussian_error_pre + 0.02
+end
+
+@testset "Mapped ordinary one-body backends" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    mild_basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+    mild_reference = mapped_ordinary_one_body_operators(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+    )
+    mild_analytic = mapped_ordinary_one_body_operators(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_experimental,
+    )
+
+    @test mild_reference isa MappedOrdinaryOneBody1D
+    @test mild_analytic isa MappedOrdinaryOneBody1D
+    @test mild_reference.backend == :numerical_reference
+    @test mild_analytic.backend == :pgdg_experimental
+    @test occursin("experimental=true", sprint(show, mild_analytic))
+    @test !occursin("experimental=true", sprint(show, mild_reference))
+    @test mild_reference.overlap ≈ transpose(mild_reference.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_analytic.overlap ≈ transpose(mild_analytic.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_reference.kinetic ≈ transpose(mild_reference.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_analytic.kinetic ≈ transpose(mild_analytic.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test length(mild_reference.gaussian_factors) == 3
+    @test length(mild_analytic.gaussian_factors) == 3
+    @test mild_basis isa MappedUniformBasis
+    @test norm(mild_reference.overlap - mild_analytic.overlap, Inf) < 0.05
+    @test norm(mild_reference.kinetic - mild_analytic.kinetic, Inf) < 0.05
+    @test norm(mild_reference.gaussian_factors[1] - mild_analytic.gaussian_factors[1], Inf) < 0.05
 end
 
 if _RUN_SLOW_TESTS
@@ -1235,6 +1275,51 @@ if _RUN_SLOW_TESTS
         @test abs(energy_numeric - energy_refined_localized) ≤ abs(energy_numeric - energy_refined) + 1.0e-10
         @test norm(factor_numeric - factor_refined, Inf) ≤ norm(factor_numeric - factor_pgdg, Inf) + 0.02
         @test norm(factor_numeric_localized - factor_refined_localized, Inf) ≤ norm(factor_numeric_localized - factor_localized, Inf) + 0.02
+    end
+
+    @testset "Mapped ordinary backend hydrogen regimes" begin
+        expansion = coulomb_gaussian_expansion(doacc = false)
+
+        function backend_energy(s_value)
+            basis = build_basis(MappedUniformBasisSpec(:G10;
+                count = 5,
+                mapping = fit_asinh_mapping_for_strength(s = s_value, npoints = 5, xmax = 6.0),
+                reference_spacing = 1.0,
+            ))
+            reference = mapped_ordinary_one_body_operators(
+                basis;
+                exponents = expansion.exponents,
+                backend = :numerical_reference,
+            )
+            analytic = mapped_ordinary_one_body_operators(
+                basis;
+                exponents = expansion.exponents,
+                backend = :pgdg_experimental,
+            )
+            return (
+                basis,
+                mapped_cartesian_hydrogen_energy(reference, expansion; Z = 1.0),
+                mapped_cartesian_hydrogen_energy(analytic, expansion; Z = 1.0),
+            )
+        end
+
+        mild_basis, mild_energy_reference, mild_energy_analytic = backend_energy(0.5)
+        moderate_basis, moderate_energy_reference, moderate_energy_analytic = backend_energy(1.0)
+        stress_basis, stress_energy_reference, stress_energy_analytic = backend_energy(2.0)
+
+        mild_diff = abs(mild_energy_reference - mild_energy_analytic)
+        moderate_diff = abs(moderate_energy_reference - moderate_energy_analytic)
+        stress_diff = abs(stress_energy_reference - stress_energy_analytic)
+
+        @test mild_basis isa MappedUniformBasis
+        @test moderate_basis isa MappedUniformBasis
+        @test stress_basis isa MappedUniformBasis
+        @test mild_diff < 3.0e-4
+        @test moderate_diff < 1.0e-3
+        @test stress_diff > moderate_diff
+        @test stress_diff < 0.02
+        @test stress_energy_analytic < -0.45
+        @test stress_energy_reference < -0.45
     end
 end
 
@@ -2164,6 +2249,7 @@ end
     ordinary_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_decision.md"), String)
     ordinary_pgdg_comx_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_comx.md"), String)
     ordinary_pgdg_refinement_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_proxy_refinement.md"), String)
+    ordinary_pgdg_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_backend_pivot.md"), String)
     atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
     atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
     atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
@@ -2249,6 +2335,10 @@ end
     @test occursin("nearly identical span", lowercase(ordinary_pgdg_refinement_note))
     @test occursin("weighted log-quadratic gaussian fit", lowercase(ordinary_pgdg_refinement_note))
     @test occursin("hydrogen energy only as an end-to-end check", lowercase(ordinary_pgdg_refinement_note))
+    @test occursin("numerical_reference", ordinary_pgdg_backend_note)
+    @test occursin("pgdg_experimental", ordinary_pgdg_backend_note)
+    @test occursin("mild-to-moderate distortion regime", lowercase(ordinary_pgdg_backend_note))
+    @test occursin("validation route", lowercase(ordinary_pgdg_backend_note))
     @test occursin("YlmChannel", atomic_ylm_note)
     @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
     @test occursin("hydrogen", lowercase(atomic_ylm_note))
@@ -2295,6 +2385,7 @@ end
     @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
     @test occursin("23_cartesian_hydrogen_coulomb_expansion.jl", example_guide)
     @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
+    @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2309,6 +2400,7 @@ end
     @test occursin("docs/atomic_ida_uhf.md", example_guide)
     @test occursin("docs/ordinary_coulomb_expansion_path.md", example_guide)
     @test occursin("docs/mapped_ordinary_basis.md", example_guide)
+    @test occursin("docs/ordinary_pgdg_backend_pivot.md", example_guide)
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
@@ -2353,6 +2445,7 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("04_hydrogen_ground_state.jl")
         @test _run_example_script("23_cartesian_hydrogen_coulomb_expansion.jl")
         @test _run_example_script("24_mapped_cartesian_hydrogen.jl")
+        @test _run_example_script("25_mapped_cartesian_hydrogen_backends.jl")
         @test _run_example_script("05_primitive_sets.jl")
         @test _run_example_script("06_basis_contraction.jl")
         @test _run_example_script("07_position_contraction.jl")

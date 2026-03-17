@@ -61,6 +61,17 @@ This is the packaged form of the successful Asinh-mapped hydrogen study:
 - Coulomb expansion first
 - no 3D grid-first design
 
+### `25_mapped_cartesian_hydrogen_backends.jl`
+
+Build the same mapped Cartesian hydrogen problem with the explicit backend
+split now used on the one-body mapped ordinary branch:
+
+- `:pgdg_experimental` as the preferred analytic route in the mild/moderate
+  regime
+- `:numerical_reference` as the validation route
+
+This is the example that makes the present mapped ordinary status explicit.
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
@@ -203,6 +214,7 @@ Then, if you want the first ordinary Cartesian hydrogen path, read:
 
 6. `23_cartesian_hydrogen_coulomb_expansion.jl`
 7. `24_mapped_cartesian_hydrogen.jl`
+8. `25_mapped_cartesian_hydrogen_backends.jl`
 
 Then read:
 
@@ -211,6 +223,7 @@ Then read:
 - `docs/atomic_ylm_layer.md`
 - `docs/ordinary_coulomb_expansion_path.md`
 - `docs/mapped_ordinary_basis.md`
+- `docs/ordinary_pgdg_backend_pivot.md`
 
 ### If your main interest is primitive layers and contraction
 

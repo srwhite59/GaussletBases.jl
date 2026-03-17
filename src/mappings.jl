@@ -159,3 +159,66 @@ function fit_asinh_mapping_for_extent(;
     s_value = asinh(xmax_value) / denominator
     return AsinhMapping(c = s_value, s = s_value, tail_spacing = tail_value)
 end
+
+"""
+    fit_asinh_mapping_for_strength(; s, npoints, xmax, reference_spacing=1.0, tail_spacing=10.0)
+
+Build an `AsinhMapping(a=a_fit, s=s, tail_spacing=tail_spacing)` with a fixed
+distortion strength `s`, choosing `a_fit` so that the outer centers of an odd
+full-line basis land at `x = ±xmax`.
+
+This is the fixed-extent companion to `fit_asinh_mapping_for_extent`. It is
+intentionally narrow:
+
+- odd `npoints`
+- full-line basis centered at the origin
+- fixed `s`
+- `a` chosen by a one-dimensional solve
+- the endpoint condition
+
+```text
+u(xmax) = ((npoints - 1) / 2) * reference_spacing
+```
+"""
+function fit_asinh_mapping_for_strength(;
+    s::Real,
+    npoints::Int,
+    xmax::Real,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    isodd(npoints) || throw(ArgumentError("fit_asinh_mapping_for_strength requires an odd npoints"))
+    npoints >= 1 || throw(ArgumentError("fit_asinh_mapping_for_strength requires npoints >= 1"))
+
+    s_value = Float64(s)
+    xmax_value = Float64(xmax)
+    spacing_value = Float64(reference_spacing)
+    tail_value = Float64(tail_spacing)
+    s_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_strength requires s > 0"))
+    xmax_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_strength requires xmax > 0"))
+    spacing_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_strength requires reference_spacing > 0"))
+    tail_value > 0.0 || throw(ArgumentError("fit_asinh_mapping_for_strength requires tail_spacing > 0"))
+
+    uedge = 0.5 * (npoints - 1) * spacing_value
+    uedge > xmax_value / tail_value ||
+        throw(ArgumentError("fit_asinh_mapping_for_strength requires the endpoint u-range to exceed xmax / tail_spacing"))
+
+    target(a) = xmax_value / tail_value + asinh(xmax_value / a) / s_value - uedge
+
+    lo = 1.0e-12
+    hi = max(1.0, xmax_value)
+    while target(hi) > 0.0
+        hi *= 2.0
+    end
+
+    for _ in 1:200
+        mid = 0.5 * (lo + hi)
+        if target(mid) > 0.0
+            lo = mid
+        else
+            hi = mid
+        end
+    end
+
+    return AsinhMapping(a = 0.5 * (lo + hi), s = s_value, tail_spacing = tail_value)
+end
