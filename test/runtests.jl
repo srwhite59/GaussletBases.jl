@@ -1177,23 +1177,36 @@ end
         exponents = expansion.exponents[1:3],
         backend = :pgdg_experimental,
     )
+    mild_localized = mapped_ordinary_one_body_operators(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_localized_experimental,
+    )
 
     @test mild_reference isa MappedOrdinaryOneBody1D
     @test mild_analytic isa MappedOrdinaryOneBody1D
+    @test mild_localized isa MappedOrdinaryOneBody1D
     @test mild_reference.backend == :numerical_reference
     @test mild_analytic.backend == :pgdg_experimental
+    @test mild_localized.backend == :pgdg_localized_experimental
     @test occursin("experimental=true", sprint(show, mild_analytic))
+    @test occursin("experimental=true", sprint(show, mild_localized))
     @test !occursin("experimental=true", sprint(show, mild_reference))
     @test mild_reference.overlap ≈ transpose(mild_reference.overlap) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_analytic.overlap ≈ transpose(mild_analytic.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_localized.overlap ≈ transpose(mild_localized.overlap) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_reference.kinetic ≈ transpose(mild_reference.kinetic) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_analytic.kinetic ≈ transpose(mild_analytic.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test mild_localized.kinetic ≈ transpose(mild_localized.kinetic) atol = 1.0e-10 rtol = 1.0e-10
     @test length(mild_reference.gaussian_factors) == 3
     @test length(mild_analytic.gaussian_factors) == 3
+    @test length(mild_localized.gaussian_factors) == 3
     @test mild_basis isa MappedUniformBasis
     @test norm(mild_reference.overlap - mild_analytic.overlap, Inf) < 0.05
     @test norm(mild_reference.kinetic - mild_analytic.kinetic, Inf) < 0.05
     @test norm(mild_reference.gaussian_factors[1] - mild_analytic.gaussian_factors[1], Inf) < 0.05
+    @test norm(mild_localized.overlap - I, Inf) < 1.0e-10
+    @test norm(mild_localized.overlap - I, Inf) < norm(mild_analytic.overlap - I, Inf)
 end
 
 @testset "Ordinary Cartesian IDA operators" begin
@@ -1242,6 +1255,39 @@ end
     @test minimum(diag(identity_analytic.interaction_matrix)) > 0.0
     @test size(identity_analytic.one_body_hamiltonian) == (length(identity_analytic.orbital_data), length(identity_analytic.orbital_data))
     @test opnorm(mild_analytic.interaction_matrix, Inf) > 0.0
+end
+
+@testset "Ordinary Cartesian localized backend" begin
+    expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+
+    proxy = ordinary_cartesian_ida_operators(
+        basis;
+        expansion = expansion,
+        Z = 2.0,
+        backend = :pgdg_experimental,
+    )
+    localized = ordinary_cartesian_ida_operators(
+        basis;
+        expansion = expansion,
+        Z = 2.0,
+        backend = :pgdg_localized_experimental,
+    )
+
+    @test localized isa OrdinaryCartesianIDAOperators
+    @test localized.backend == :pgdg_localized_experimental
+    @test occursin("experimental=true", sprint(show, localized))
+    @test norm(localized.one_body_1d.overlap - I, Inf) < 1.0e-10
+    @test norm(localized.overlap_3d - I, Inf) < 1.0e-9
+    @test norm(localized.one_body_1d.overlap - I, Inf) < norm(proxy.one_body_1d.overlap - I, Inf)
+    @test norm(localized.overlap_3d - I, Inf) < norm(proxy.overlap_3d - I, Inf)
+    @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test minimum(diag(localized.interaction_matrix)) > 0.0
 end
 
 if _RUN_SLOW_TESTS
@@ -1468,6 +1514,48 @@ if _RUN_SLOW_TESTS
         @test norm(identity_reference.interaction_matrix - identity_analytic.interaction_matrix, Inf) < 1.0e-6
         @test norm(mild_reference.one_body_hamiltonian - mild_analytic.one_body_hamiltonian, Inf) < 0.01
         @test norm(mild_reference.interaction_matrix - mild_analytic.interaction_matrix, Inf) < 1.0e-3
+    end
+
+    @testset "Ordinary Cartesian localized backend agreement" begin
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+
+        function build_pair(s_value)
+            basis = build_basis(MappedUniformBasisSpec(:G10;
+                count = 5,
+                mapping = fit_asinh_mapping_for_strength(s = s_value, npoints = 5, xmax = 6.0),
+                reference_spacing = 1.0,
+            ))
+            reference = ordinary_cartesian_ida_operators(
+                basis;
+                expansion = expansion,
+                Z = 2.0,
+                backend = :numerical_reference,
+            )
+            localized = ordinary_cartesian_ida_operators(
+                basis;
+                expansion = expansion,
+                Z = 2.0,
+                backend = :pgdg_localized_experimental,
+            )
+            return reference, localized
+        end
+
+        mild_reference, mild_localized = build_pair(0.5)
+        stress_reference, stress_localized = build_pair(2.0)
+
+        mild_h1_diff = norm(mild_reference.one_body_hamiltonian - mild_localized.one_body_hamiltonian, Inf)
+        mild_vee_diff = norm(mild_reference.interaction_matrix - mild_localized.interaction_matrix, Inf)
+        stress_h1_diff = norm(stress_reference.one_body_hamiltonian - stress_localized.one_body_hamiltonian, Inf)
+        stress_vee_diff = norm(stress_reference.interaction_matrix - stress_localized.interaction_matrix, Inf)
+
+        @test norm(mild_localized.one_body_1d.overlap - I, Inf) < 1.0e-10
+        @test norm(mild_localized.overlap_3d - I, Inf) < 1.0e-9
+        @test mild_h1_diff < 0.02
+        @test mild_vee_diff < 1.0e-2
+        @test stress_h1_diff > mild_h1_diff
+        @test stress_vee_diff > mild_vee_diff
+        @test stress_h1_diff < 0.2
+        @test stress_vee_diff < 0.2
     end
 end
 
@@ -2535,6 +2623,7 @@ end
     @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
     @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
+    @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2551,6 +2640,7 @@ end
     @test occursin("docs/mapped_ordinary_basis.md", example_guide)
     @test occursin("docs/ordinary_pgdg_backend_pivot.md", example_guide)
     @test occursin("docs/ordinary_cartesian_ida.md", example_guide)
+    @test occursin("docs/ordinary_pgdg_localized_backend.md", example_guide)
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))

@@ -89,6 +89,23 @@ The corresponding note is:
 
 - `docs/ordinary_cartesian_ida.md`
 
+### `27_ordinary_cartesian_ida_localized_backends.jl`
+
+Compare the ordinary Cartesian IDA ingredients across the current mapped
+ordinary backend split:
+
+- `:numerical_reference`
+- `:pgdg_experimental`
+- `:pgdg_localized_experimental`
+
+This is the example that makes the next ordinary-branch question explicit:
+whether the cleaned/localized one-dimensional PGDG route is now close enough to
+serve as the solver-facing experimental path.
+
+The corresponding note is:
+
+- `docs/ordinary_pgdg_localized_backend.md`
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.

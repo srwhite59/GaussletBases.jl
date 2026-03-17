@@ -18,7 +18,7 @@ function Base.show(io::IO, operators::MappedOrdinaryOneBody1D)
         ", nfactors=",
         length(operators.gaussian_factors),
     )
-    if operators.backend == :pgdg_experimental
+    if operators.backend != :numerical_reference
         print(io, ", experimental=true")
     end
     print(io, ")")
@@ -32,8 +32,10 @@ function _mapped_ordinary_backend_layer(
         return basis
     elseif backend == :pgdg_experimental
         return mapped_pgdg_logfit_prototype(basis)
+    elseif backend == :pgdg_localized_experimental
+        return mapped_pgdg_localized(mapped_pgdg_logfit_prototype(basis))
     else
-        throw(ArgumentError("mapped ordinary backend must be :numerical_reference or :pgdg_experimental"))
+        throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
     end
 end
 
@@ -51,10 +53,12 @@ mapped basis.
 The backend choice is explicit:
 
 - `:numerical_reference` keeps the trusted mapped numerical path
-- `:pgdg_experimental` uses the experimental analytic PGDG-style proxy
+- `:pgdg_experimental` uses the refined pre-COMX analytic PGDG-style proxy
+- `:pgdg_localized_experimental` uses the refined proxy followed by overlap
+  cleanup and COMX-style localization
 
-The experimental backend is intended for mild-to-moderate distortion regimes,
-with the numerical path retained as the reference route.
+The experimental backends are intended for mild-to-moderate distortion
+regimes, with the numerical path retained as the reference route.
 """
 function mapped_ordinary_one_body_operators(
     basis::MappedUniformBasis;

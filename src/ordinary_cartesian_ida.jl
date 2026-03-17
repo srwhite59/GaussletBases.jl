@@ -55,7 +55,7 @@ function Base.show(io::IO, operators::OrdinaryCartesianIDAOperators)
         ", nterms=",
         length(operators.pair_factors_1d),
     )
-    if operators.backend == :pgdg_experimental
+    if operators.backend != :numerical_reference
         print(io, ", experimental=true")
     end
     print(io, ")")
@@ -266,9 +266,10 @@ The result is a static object, not a He solver:
 - `interaction_matrix`
 - explicit product-orbital indexing
 
-`backend = :pgdg_experimental` is the preferred implementation route in the
-mild-to-moderate mapped regime. `:numerical_reference` remains the validation
-route.
+`backend = :pgdg_localized_experimental` is the candidate solver-ready
+implementation route in the mild-to-moderate mapped regime.
+`:pgdg_experimental` retains the pre-COMX refined proxy path.
+`:numerical_reference` remains the validation route.
 """
 function ordinary_cartesian_ida_operators(
     basis::MappedUniformBasis;
