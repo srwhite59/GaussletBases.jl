@@ -93,6 +93,8 @@ export AbstractFunction1D,
        hybrid_mapped_ordinary_basis,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
+       ordinary_sho_hamiltonian,
+       ordinary_sho_spectrum,
        ordinary_cartesian_ida_operators,
        gaussian_factor_matrix,
        gaussian_factor_matrices,
@@ -248,6 +250,8 @@ function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
 function mapped_ordinary_one_body_operators end
 function mapped_cartesian_hydrogen_energy end
+function ordinary_sho_hamiltonian end
+function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
 function gaussian_factor_matrix end
 function gaussian_factor_matrices end
@@ -341,6 +345,7 @@ include("ordinary_coulomb.jl")
 include("ordinary_pgdg.jl")
 include("ordinary_hybrid.jl")
 include("ordinary_mapped_backends.jl")
+include("ordinary_sho.jl")
 include("ordinary_cartesian_ida.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")

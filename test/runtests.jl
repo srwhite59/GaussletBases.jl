@@ -314,6 +314,134 @@ function _quick_hybrid_mapped_ordinary_fixture()
     end)
 end
 
+function _quick_ordinary_sho_smoke_fixture()
+    return _cached_fixture(:quick_ordinary_sho_smoke_fixture, () -> begin
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 3,
+            mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 3, xmax = 4.0),
+            reference_spacing = 1.0,
+        ))
+        core_gaussians = [
+            Gaussian(center = 0.0, width = 0.2),
+            Gaussian(center = 0.0, width = 0.6),
+        ]
+        hybrid_reference = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :numerical_reference,
+        )
+        hybrid_analytic = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        hybrid_analytic_core = GaussletBases._ordinary_sho_core(
+            mapped_ordinary_one_body_operators(hybrid_analytic),
+        )
+        centered_analytic = GaussletBases._ordinary_sho_spectrum_from_core(
+            hybrid_analytic_core;
+            omega = 0.25,
+            center = 0.0,
+            nev = 3,
+        )
+        centered_hamiltonian = ordinary_sho_hamiltonian(
+            hybrid_analytic;
+            omega = 0.25,
+            center = 0.0,
+        )
+        (
+            hybrid_analytic,
+            centered_analytic,
+            centered_hamiltonian,
+        )
+    end)
+end
+
+function _slow_ordinary_sho_fixture()
+    return _cached_fixture(:slow_ordinary_sho_fixture, () -> begin
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 5, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        core_gaussians = [
+            Gaussian(center = 0.0, width = 0.2),
+            Gaussian(center = 0.0, width = 0.6),
+        ]
+        hybrid_reference = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :numerical_reference,
+        )
+        hybrid_analytic = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        hybrid_reference_core = GaussletBases._ordinary_sho_core(
+            mapped_ordinary_one_body_operators(hybrid_reference),
+        )
+        hybrid_analytic_core = GaussletBases._ordinary_sho_core(
+            mapped_ordinary_one_body_operators(hybrid_analytic),
+        )
+        centered_reference = GaussletBases._ordinary_sho_spectrum_from_core(
+            hybrid_reference_core;
+            omega = 0.25,
+            center = 0.0,
+            nev = 3,
+        )
+        centered_analytic = GaussletBases._ordinary_sho_spectrum_from_core(
+            hybrid_analytic_core;
+            omega = 0.25,
+            center = 0.0,
+            nev = 3,
+        )
+        shifted_reference = GaussletBases._ordinary_sho_spectrum_from_core(
+            hybrid_reference_core;
+            omega = 0.25,
+            center = 1.0,
+            nev = 3,
+        )
+        shifted_analytic = GaussletBases._ordinary_sho_spectrum_from_core(
+            hybrid_analytic_core;
+            omega = 0.25,
+            center = 1.0,
+            nev = 3,
+        )
+        stress_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 2.0, npoints = 5, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        stress_reference_core = GaussletBases._ordinary_sho_core(
+            mapped_ordinary_one_body_operators(stress_basis; backend = :numerical_reference),
+        )
+        stress_analytic_core = GaussletBases._ordinary_sho_core(
+            mapped_ordinary_one_body_operators(stress_basis; backend = :pgdg_localized_experimental),
+        )
+        stress_reference = GaussletBases._ordinary_sho_spectrum_from_core(
+            stress_reference_core;
+            omega = 0.5,
+            center = 0.0,
+            nev = 3,
+        )
+        stress_analytic = GaussletBases._ordinary_sho_spectrum_from_core(
+            stress_analytic_core;
+            omega = 0.5,
+            center = 0.0,
+            nev = 3,
+        )
+        (
+            centered_reference,
+            centered_analytic,
+            shifted_reference,
+            shifted_analytic,
+            stress_reference,
+            stress_analytic,
+        )
+    end)
+end
+
 function _cartesian_hydrogen_energy(
     overlap_1d::AbstractMatrix,
     kinetic_1d::AbstractMatrix,
@@ -1495,7 +1623,59 @@ end
           abs(hard_energy_analytic - hard_energy_reference)
 end
 
+@testset "Ordinary mapped SHO smoke" begin
+    (
+        hybrid_analytic,
+        centered_analytic,
+        centered_hamiltonian,
+    ) = _quick_ordinary_sho_smoke_fixture()
+
+    @test occursin("experimental=true", sprint(show, hybrid_analytic))
+    @test centered_hamiltonian.backend == :pgdg_localized_experimental
+    @test centered_hamiltonian.overlap ≈ transpose(centered_hamiltonian.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test centered_hamiltonian.hamiltonian ≈ transpose(centered_hamiltonian.hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test norm(centered_hamiltonian.overlap - I, Inf) < 1.0e-10
+    @test issorted(centered_analytic.eigenvalues)
+    @test centered_analytic.eigenvalues[1] > 0.0
+    @test abs(centered_analytic.eigenvalues[1] - centered_analytic.exact[1]) < 1.0e-2
+    @test centered_analytic.kinetic_expectation > 0.0
+    @test centered_analytic.displacement2_expectation > 0.0
+end
+
 if _RUN_SLOW_TESTS
+    @testset "Ordinary mapped SHO spectra" begin
+        (
+            centered_reference,
+            centered_analytic,
+            shifted_reference,
+            shifted_analytic,
+            stress_reference,
+            stress_analytic,
+        ) = _slow_ordinary_sho_fixture()
+
+        centered_diff = maximum(abs.(centered_reference.eigenvalues .- centered_analytic.eigenvalues))
+        shifted_diff = maximum(abs.(shifted_reference.eigenvalues .- shifted_analytic.eigenvalues))
+        stress_diff = maximum(abs.(stress_reference.eigenvalues .- stress_analytic.eigenvalues))
+
+        @test centered_diff < 2.0e-4
+        @test shifted_diff < 2.0e-4
+        @test stress_diff > 1.0e-2
+        @test maximum(abs.(centered_analytic.eigenvalues .- centered_analytic.exact)) <
+              maximum(abs.(stress_analytic.eigenvalues .- stress_analytic.exact))
+        @test maximum(
+            abs.(
+                abs.(centered_analytic.eigenvalues .- centered_analytic.exact) .-
+                abs.(centered_reference.eigenvalues .- centered_reference.exact),
+            ),
+        ) < 5.0e-4
+        @test maximum(
+            abs.(
+                abs.(shifted_analytic.eigenvalues .- shifted_analytic.exact) .-
+                abs.(shifted_reference.eigenvalues .- shifted_reference.exact),
+            ),
+        ) < 5.0e-4
+    end
+
     @testset "Mapped Cartesian hydrogen" begin
         basis, mapping_value, representation, overlap_1d, kinetic_1d, expansion, hamiltonian, energy =
             _quick_mapped_cartesian_hydrogen_fixture()
@@ -2703,6 +2883,7 @@ end
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     ordinary_one_body_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_one_body_fidelity.md"), String)
     ordinary_hybrid_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_regime.md"), String)
+    ordinary_sho_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_sho_spectral_test.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
     global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
@@ -2833,6 +3014,7 @@ end
     @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
     @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
     @test occursin("29_hybrid_mapped_cartesian_hydrogen.jl", example_guide)
+    @test occursin("30_ordinary_sho_spectra.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2852,6 +3034,7 @@ end
     @test occursin("docs/ordinary_pgdg_localized_backend.md", example_guide)
     @test occursin("docs/ordinary_pgdg_one_body_fidelity.md", example_guide)
     @test occursin("docs/ordinary_pgdg_hybrid_regime.md", example_guide)
+    @test occursin("docs/ordinary_sho_spectral_test.md", example_guide)
     @test occursin("localized pgdg route", lowercase(ordinary_one_body_note))
     @test occursin("remaining issue is `H1`", ordinary_one_body_note)
     @test occursin("kinetic", lowercase(ordinary_one_body_note))
@@ -2860,6 +3043,10 @@ end
     @test occursin("white-lindsey", lowercase(replace(ordinary_hybrid_note, "–" => "-")))
     @test occursin("core gaussian", lowercase(ordinary_hybrid_note))
     @test occursin("stress-test regime", lowercase(ordinary_hybrid_note))
+    @test occursin("low-energy sho", lowercase(ordinary_sho_note))
+    @test occursin("low-momentum / low-order smooth completeness", lowercase(ordinary_sho_note))
+    @test occursin("nearly identical span/subspace", lowercase(ordinary_sho_note))
+    @test occursin("friendlier hybrid/core-supported regime", lowercase(ordinary_sho_note))
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))
@@ -2905,6 +3092,8 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("23_cartesian_hydrogen_coulomb_expansion.jl")
         @test _run_example_script("24_mapped_cartesian_hydrogen.jl")
         @test _run_example_script("25_mapped_cartesian_hydrogen_backends.jl")
+        @test _run_example_script("29_hybrid_mapped_cartesian_hydrogen.jl")
+        @test _run_example_script("30_ordinary_sho_spectra.jl")
         @test _run_example_script("05_primitive_sets.jl")
         @test _run_example_script("06_basis_contraction.jl")
         @test _run_example_script("07_position_contraction.jl")

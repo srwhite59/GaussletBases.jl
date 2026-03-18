@@ -140,6 +140,21 @@ The corresponding note is:
 
 - `docs/ordinary_pgdg_hybrid_regime.md`
 
+### `30_ordinary_sho_spectra.jl`
+
+Test the ordinary mapped branch on small one-dimensional harmonic-oscillator
+problems instead of only comparing raw matrix norms.
+
+This is the spectral low-momentum check for the friendly hybrid regime:
+
+- centered and shifted SHO cases in the mild/core-supported regime
+- numerical mapped reference versus localized analytic PGDG backend
+- one harder pure mapped stress-test case for contrast
+
+The corresponding note is:
+
+- `docs/ordinary_sho_spectral_test.md`
+
 ### `15_atomic_hydrogen_ylm.jl`
 
 Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
@@ -287,6 +302,7 @@ Then, if you want the first ordinary Cartesian hydrogen path, read:
 10. `27_ordinary_cartesian_ida_localized_backends.jl`
 11. `28_ordinary_one_body_fidelity.jl`
 12. `29_hybrid_mapped_cartesian_hydrogen.jl`
+13. `30_ordinary_sho_spectra.jl`
 
 Then read:
 
@@ -295,6 +311,7 @@ Then read:
 - `docs/atomic_ylm_layer.md`
 - `docs/ordinary_coulomb_expansion_path.md`
 - `docs/ordinary_pgdg_hybrid_regime.md`
+- `docs/ordinary_sho_spectral_test.md`
 - `docs/mapped_ordinary_basis.md`
 - `docs/ordinary_pgdg_backend_pivot.md`
 - `docs/ordinary_pgdg_localized_backend.md`
