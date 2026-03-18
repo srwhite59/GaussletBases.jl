@@ -1,8 +1,12 @@
 # Reading and running the examples
 
-The examples in this repository are meant to be read in sequence.
+This page is the running guide for the examples.
 
-They do not all serve the same purpose. Some are beginner examples, some are the main radial scientific path, and some belong to the more experimental contraction and hierarchy line.
+It is not the full package manual. Its job is simpler:
+
+- tell you where to start
+- group the examples by purpose
+- point you to the right status pages and supporting notes
 
 From the repository root, each example runs as:
 
@@ -10,370 +14,157 @@ From the repository root, each example runs as:
 julia --project=. examples/NAME.jl
 ```
 
-## Stage 1: first contact
+If you are not sure where to begin, first read:
 
-These are the best starting examples for a new user.
+- [`docs/index.md`](index.md)
+- [`docs/first_radial_workflow.md`](first_radial_workflow.md)
 
-### `01_first_gausslet.jl`
+## Core starting sequence
 
-Build one ordinary gausslet, evaluate it, and inspect its exact Gaussian expansion.
+These are the best first examples for a new reader.
 
-This is the smallest possible introduction to the package.
+1. `01_first_gausslet.jl`  
+   Build one ordinary gausslet and inspect its exact Gaussian expansion.
+2. `02_radial_basis.jl`  
+   Build a small demo radial basis and inspect the basic diagnostics.
+3. `03_radial_operators.jl`  
+   Build the basic radial one-body operators on a small demo basis.
+4. `04_hydrogen_ground_state.jl`  
+   Solve the radial hydrogen ground-state problem.
 
-### `02_radial_basis.jl`
+Those four examples are still the clearest public entry path.
 
-Build a **small demo radial basis**, inspect one basis function, and evaluate the basic diagnostics.
+## Radial and atomic sequence
 
-This example is deliberately tiny and fast. It is a smoke-test-style introduction, not the package’s recommended atom setup.
+If your main interest is radial atoms, continue here after the core starting
+sequence.
 
-### `03_radial_operators.jl`
+Read first:
 
-Build the basic radial one-body operators and the current radial operator bundle on a **small demo basis**.
+- [`docs/current_atomic_branch.md`](current_atomic_branch.md)
+- [`docs/recommended_atomic_setup.md`](recommended_atomic_setup.md)
 
-Again, this is a fast introductory example rather than a production recommendation.
+Then run:
 
-### `04_hydrogen_ground_state.jl`
+5. `15_atomic_hydrogen_ylm.jl`  
+   Add explicit `(l,m)` channels on top of the radial substrate.
+6. `16_atomic_ida_ingredients.jl`  
+   Build the static He / IDA-style atomic ingredients.
+7. `19_atomic_ida_direct.jl`  
+   Build the direct/Hartree term from a trial density.
+8. `20_atomic_ida_exchange.jl`  
+   Build the matching exchange term.
+9. `21_atomic_ida_fock.jl`  
+   Combine the one-body, direct, and exchange pieces into the current small
+   Fock-style helper.
+10. `22_atomic_ida_uhf.jl`  
+    Run the present minimal UHF fixed-point kernel.
 
-Solve the hydrogen ground-state problem in the radial basis.
+If you want the tiny exact-interacting checks after that:
 
-This is the first full scientific check in the repository, and it is the most important example after the first three.
+11. `17_atomic_ida_two_electron.jl`
+12. `18_atomic_ida_two_electron_lanczos.jl`
 
-### `23_cartesian_hydrogen_coulomb_expansion.jl`
+These are still intentionally narrow examples, not a broad atomic workflow.
 
-Build the first small ordinary Cartesian hydrogen Hamiltonian by:
+## Ordinary Cartesian sequence
 
-- taking a short Gaussian expansion of `1/r`
-- building one-dimensional Gaussianized operator factors
-- assembling the 3D nuclear-attraction operator from separable pieces
+If your main interest is the ordinary Cartesian branch, use this sequence.
 
-This is the right first ordinary-gausslet hydrogen path. It should be read
-before any future 3D grid-based debug or comparison path.
+Read first:
 
-### `24_mapped_cartesian_hydrogen.jl`
+- [`docs/current_ordinary_branch.md`](current_ordinary_branch.md)
 
-Build the same ordinary Cartesian hydrogen Hamiltonian, but now on the public
-globally mapped full-line basis route.
+Then run:
 
-This is the packaged form of the current working Asinh-mapped hydrogen study:
+13. `23_cartesian_hydrogen_coulomb_expansion.jl`  
+    First ordinary Cartesian hydrogen path: Coulomb expansion first, not grid
+    first.
+14. `24_mapped_cartesian_hydrogen.jl`  
+    Move the same hydrogen problem onto the public mapped full-line basis
+    route.
+15. `25_mapped_cartesian_hydrogen_backends.jl`  
+    Compare the numerical-reference and experimental PGDG-style one-body
+    backends.
+16. `29_hybrid_mapped_cartesian_hydrogen.jl`  
+    Move into the friendlier hybrid/core-supported regime.
+17. `30_ordinary_sho_spectra.jl`  
+    Compare low-energy harmonic-oscillator spectra instead of only comparing
+    raw matrix norms.
 
-- one global map on each Cartesian axis
-- one-dimensional mapped ordinary bases
-- Coulomb expansion first
-- no 3D grid-first design
+The examples below are supporting ordinary-branch diagnostics rather than the
+first pages a new ordinary-branch reader should open:
 
-It should be read as the current working mapped ordinary route, not as a claim
-that `AsinhMapping` or the present `c,s` tuning is already final.
+18. `26_ordinary_cartesian_ida.jl`  
+    Build the first static He-style ordinary Cartesian IDA ingredients.
+19. `27_ordinary_cartesian_ida_localized_backends.jl`  
+    Compare the backend split for the ordinary static ingredients.
+20. `28_ordinary_one_body_fidelity.jl`  
+    Decompose the remaining mild-mapped one-body differences.
 
-### `25_mapped_cartesian_hydrogen_backends.jl`
+This keeps the ordinary branch readable as:
 
-Build the same mapped Cartesian hydrogen problem with the explicit backend
-split now used on the one-body mapped ordinary branch:
+- hydrogen first
+- hybrid practical regime next
+- backend diagnostics after that
 
-- `:pgdg_experimental` as the preferred analytic route in the mild/moderate
-  regime
-- `:numerical_reference` as the validation route
+## Primitive-layer and contraction sequence
 
-This is the example that makes the present mapped ordinary status explicit.
+If your main interest is the shared primitive/contraction architecture, use
+this sequence after the core starting examples.
 
-### `26_ordinary_cartesian_ida.jl`
+Read first:
 
-Build the first static He-style ordinary Cartesian IDA ingredients on top of
-that same mapped one-body ordinary branch.
+- [`docs/intermediate_primitive_layer.md`](intermediate_primitive_layer.md)
 
-This example keeps the scope narrow:
+Then run:
 
-- mapped ordinary Cartesian basis
-- separable Coulomb-expansion assembly
-- one-body `H1`
-- static two-index `Vee`
-- no He solve yet
+21. `05_primitive_sets.jl`
+22. `06_basis_contraction.jl`
+23. `07_position_contraction.jl`
+24. `08_basis_representation.jl`
+25. `14_radial_primitive_operators.jl`
 
-The corresponding note is:
+That is the shortest path from “basis functions as final objects” to “basis
+functions as contractions of a shared primitive layer.”
 
-- `docs/ordinary_cartesian_ida.md`
+## Hierarchy and current corrected direction
 
-### `27_ordinary_cartesian_ida_localized_backends.jl`
+If your main interest is the current hierarchy/contraction research direction,
+read this only after the primitive-layer line is comfortable.
 
-Compare the ordinary Cartesian IDA ingredients across the current mapped
-ordinary backend split:
+Read first:
 
-- `:numerical_reference`
-- `:pgdg_experimental`
-- `:pgdg_localized_experimental`
+- [`docs/architecture.md`](architecture.md)
+- [`docs/global_map_local_contraction.md`](global_map_local_contraction.md)
 
-This is the example that makes the next ordinary-branch question explicit:
-whether the cleaned/localized one-dimensional PGDG route is now close enough to
-serve as the solver-facing experimental path.
+Then run:
 
-The corresponding note is:
+26. `09_basis_partition.jl`
+27. `10_hierarchical_partition.jl`
+28. `13_global_leaf_contraction.jl`
 
-- `docs/ordinary_pgdg_localized_backend.md`
-
-### `28_ordinary_one_body_fidelity.jl`
-
-Decompose the remaining mild-mapped one-body discrepancy on the localized
-ordinary PGDG route into:
-
-- overlap
-- kinetic
-- Gaussianized nuclear-factor matrices
-- assembled `H1`
-
-This is now the narrow one-body fidelity comparison on the localized ordinary
-PGDG route. It shows that the present localized backend is limited mainly by
-the kinetic side, not by overlap and not by the static `Vee` assembly.
-
-The corresponding note is:
-
-- `docs/ordinary_pgdg_one_body_fidelity.md`
-
-### `29_hybrid_mapped_cartesian_hydrogen.jl`
-
-Move the ordinary PGDG branch into the friendlier hybrid regime:
-
-- mild full-line mapping
-- explicit centered core Gaussians
-- numerical mapped hybrid route as the validation path
-- localized analytic PGDG route as the candidate path
-
-This is the first example aimed at the practical White-Lindsey-style ordinary
-operating regime rather than the harsher pure mapped stress-test regime.
-
-The corresponding note is:
-
-- `docs/ordinary_pgdg_hybrid_regime.md`
-
-### `30_ordinary_sho_spectra.jl`
-
-Test the ordinary mapped branch on small one-dimensional harmonic-oscillator
-problems instead of only comparing raw matrix norms.
-
-This is the spectral low-momentum check for the friendly hybrid regime:
-
-- centered and shifted SHO cases in the mild/core-supported regime
-- numerical mapped reference versus localized analytic PGDG backend
-- one harder pure mapped stress-test case for contrast
-
-The corresponding note is:
-
-- `docs/ordinary_sho_spectral_test.md`
-- `docs/ordinary_pgdg_hybrid_consolidation.md`
-
-### `15_atomic_hydrogen_ylm.jl`
-
-Take the same hydrogen problem one step further by adding explicit angular channels `(l,m)` on top of the radial operator substrate.
-
-This is the first atomic example in the repository in the usual radial-plus-angular sense.
-
-### `16_atomic_ida_ingredients.jl`
-
-Build the static He-style IDA ingredients on top of the same radial-plus-angular structure.
-
-This example does **not** solve the many-electron problem. It makes the one-body blocks, radial multipoles, angular kernels, and orbital indexing explicit.
-
-### `19_atomic_ida_direct.jl`
-
-Build the first direct/Hartree one-body term from a trial spatial density matrix.
-
-This is the first small physical consumer of the sectorized angular preparation.
-
-### `20_atomic_ida_exchange.jl`
-
-Build the matching exchange/Fock-style one-body term from a trial spatial density matrix.
-
-This completes the first small direct-plus-exchange mean-field-style pair, still without a full SCF workflow.
-
-### `21_atomic_ida_fock.jl`
-
-Combine the one-body atomic term with the direct and exchange pieces into the first tiny Fock-style helper.
-
-This is still not an SCF driver. It is only the effective one-body matrix assembly step.
-
-### `22_atomic_ida_uhf.jl`
-
-Run the smallest self-consistent He-like UHF iteration in the current atomic IDA model.
-
-This is still intentionally narrow:
-
-- fixed occupations
-- simple damping
-- no DIIS
-- no broad workflow layer
-- no claim of a general HF implementation
-
-### `17_atomic_ida_two_electron.jl`
-
-Use those same IDA ingredients in the smallest real interacting application: one spin-up and one spin-down electron in a tiny atomic basis.
-
-This is still intentionally small and explicit. It is not yet a general many-electron workflow.
-
-### `18_atomic_ida_two_electron_lanczos.jl`
-
-Take a somewhat larger He-like model and solve it with a standard Hermitian Lanczos iteration.
-
-This is the first step beyond the tiny dense reference problem, but it is still a narrow demonstration rather than a broad many-electron framework.
-
-## Stage 2: primitive layers and contraction
-
-These examples explain the common Gaussian primitive layer that lies behind the basis functions.
-
-### `05_primitive_sets.jl`
-
-Build primitive sets directly and form simple matrices on them.
-
-### `06_basis_contraction.jl`
-
-Start from a basis, recover its primitive layer and contraction matrix, and rebuild basis-level matrices by contracting primitive matrices upward.
-
-### `07_position_contraction.jl`
-
-Do the same thing for the position matrix.
-
-### `08_basis_representation.jl`
-
-Build a compact in-memory representation of a basis together with its primitive layer and selected matrices.
-
-These examples are for users who want to understand the package at a deeper level than “build a basis and call operators.”
-
-### `14_radial_primitive_operators.jl`
-
-Build the primitive-space radial one-body operators on an explicit quadrature grid, contract them upward to the radial basis, and compare them with the current direct radial operator path.
-
-This is the clean bridge between the radial workflow and the shared primitive/contraction architecture.
-
-## Stage 3: partitions and hierarchy
-
-These examples introduce local grouping in physical space.
-
-### `09_basis_partition.jl`
-
-Partition basis functions into interval boxes using their physical-space centers, and inspect local blocks and couplings.
-
-### `10_hierarchical_partition.jl`
-
-Refine one box and inspect the resulting parent-child hierarchy.
-
-These are advanced organizational examples. They do not yet build a new basis.
-
-## Stage 4: corrected current direction
-
-These are the examples to read only after the earlier structure is clear.
-They express the current corrected nested/contraction direction more faithfully than the earlier leaf-local prototype line.
-
-### `13_global_leaf_contraction.jl`
-
-Build one globally mapped common basis over a region, then contract locally on the leaf boxes of a hierarchy.
-
-This is the example that best matches the current corrected research direction:
+This is the clearest current research direction:
 
 - one global mapped common layer
-- optional local contraction as a refinement
+- optional local contraction on top of it
 
-## Stage 5: prototype side branch
+## Prototype side branch
 
-These examples are still useful, but they should be read as prototypes rather than as the main conceptual direction.
+These examples are still useful, but they are prototype studies rather than
+the main public story:
 
-### `11_leaf_pgdg.jl`
+29. `11_leaf_pgdg.jl`
+30. `12_leaf_pgdg_augmentation.jl`
 
-Generate a simple leaf-local basis on a hierarchy.
+Read them only after the corrected-direction examples above.
 
-This is a useful prototype, but it is not the best conceptual picture of the long-term direction.
+## Supporting notes
 
-### `12_leaf_pgdg_augmentation.jl`
+For the current interpreted state of each main line, use:
 
-Add extra user-supplied Gaussian primitives in selected leaves.
+- [`docs/current_atomic_branch.md`](current_atomic_branch.md)
+- [`docs/current_ordinary_branch.md`](current_ordinary_branch.md)
 
-This is another prototype example showing local enrichment.
-
-## Recommended reading orders
-
-### If your main interest is radial atomic work
-
-Read:
-
-1. `01_first_gausslet.jl`
-2. `02_radial_basis.jl`
-3. `03_radial_operators.jl`
-4. `04_hydrogen_ground_state.jl`
-5. `15_atomic_hydrogen_ylm.jl`
-
-Then, if you want the first ordinary Cartesian hydrogen path, read:
-
-6. `23_cartesian_hydrogen_coulomb_expansion.jl`
-7. `24_mapped_cartesian_hydrogen.jl`
-8. `25_mapped_cartesian_hydrogen_backends.jl`
-9. `26_ordinary_cartesian_ida.jl`
-10. `27_ordinary_cartesian_ida_localized_backends.jl`
-11. `28_ordinary_one_body_fidelity.jl`
-12. `29_hybrid_mapped_cartesian_hydrogen.jl`
-13. `30_ordinary_sho_spectra.jl`
-
-Then read:
-
-- `docs/first_radial_workflow.md`
-- `docs/recommended_atomic_setup.md`
-- `docs/atomic_ylm_layer.md`
-- `docs/ordinary_coulomb_expansion_path.md`
-- `docs/ordinary_pgdg_hybrid_regime.md`
-- `docs/ordinary_sho_spectral_test.md`
-- `docs/mapped_ordinary_basis.md`
-- `docs/ordinary_pgdg_backend_pivot.md`
-- `docs/ordinary_pgdg_localized_backend.md`
-- `docs/ordinary_pgdg_one_body_fidelity.md`
-
-### If your main interest is primitive layers and contraction
-
-After the radial examples, continue with:
-
-6. `05_primitive_sets.jl`
-7. `06_basis_contraction.jl`
-8. `07_position_contraction.jl`
-9. `08_basis_representation.jl`
-10. `14_radial_primitive_operators.jl`
-
-### If your main interest is the current nested/hierarchy research direction
-
-Only after the earlier stages, continue with:
-
-11. `09_basis_partition.jl`
-12. `10_hierarchical_partition.jl`
-13. `13_global_leaf_contraction.jl`
-
-Then, only if you want the prototype side branch, treat:
-
-14. `11_leaf_pgdg.jl`
-15. `12_leaf_pgdg_augmentation.jl`
-
-as prototype studies rather than as the main public story of the package.
-
-### If your main interest is the current small atomic IDA / HF line
-
-After `15_atomic_hydrogen_ylm.jl`, continue with:
-
-16. `16_atomic_ida_ingredients.jl`
-17. `19_atomic_ida_direct.jl`
-18. `20_atomic_ida_exchange.jl`
-19. `21_atomic_ida_fock.jl`
-20. `22_atomic_ida_uhf.jl`
-21. `17_atomic_ida_two_electron.jl`
-22. `18_atomic_ida_two_electron_lanczos.jl`
-
-Then read:
-
-- `docs/atomic_ida_layer.md`
-- `docs/atomic_ida_direct.md`
-- `docs/atomic_ida_exchange.md`
-- `docs/atomic_ida_fock.md`
-- `docs/atomic_ida_spin_fock.md`
-- `docs/atomic_ida_uhf.md`
-- `docs/atomic_ida_two_electron.md`
-
-The important interpretation here is:
-
-- `16` gives the static interacting ingredients
-- `19` and `20` give the direct and exchange pieces
-- `21` gives the algebraic Fock-style combination
-- `22` gives the first minimal UHF fixed-point kernel in the current atomic IDA model
-
-This is already a meaningful atomic mean-field line, but it should still be read
-as a small current-model workflow rather than as a general HF package.
+For narrower supporting and historical decision notes, start from those branch
+pages rather than opening the whole note stack at random.
