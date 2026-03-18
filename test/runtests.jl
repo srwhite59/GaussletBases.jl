@@ -1,5 +1,6 @@
 using Test
 using LinearAlgebra
+using JLD2
 
 using GaussletBases
 
@@ -2511,6 +2512,82 @@ end
     @test orbital_data[radial_dim + 1].radial_index == 1
 end
 
+@testset "Atomic full-IDA dense export" begin
+    _, _, _, channels, _, ida = _quick_radial_atomic_fixture()
+    nchannels = length(channels)
+    radial_dim = size(ida.radial_operators.overlap, 1)
+    norbitals = length(orbitals(ida))
+    perm = GaussletBases._atomic_shell_major_permutation(ida)
+    expected_h1 = Matrix{Float64}(ida.one_body.hamiltonian[perm, perm])
+    expected_vee = GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[perm])
+    expected_dims = fill(nchannels, radial_dim)
+    expected_orders = collect(1:radial_dim)
+
+    mktempdir() do dir
+        path = joinpath(dir, "atomic_fullida_dense_test.jld2")
+        @test write_fullida_dense_jld2(
+            path,
+            ida;
+            nelec = 2,
+            meta = (example = "test_atomic_fullida_dense_export",),
+        ) == path
+
+        jldopen(path, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "H1" in top_keys
+            @test "Vee" in top_keys
+            @test "dims_per_shell" in top_keys
+            @test "orders" in top_keys
+            @test "basis_centers" in top_keys
+            @test "bridge" in top_keys
+            @test "meta" in top_keys
+
+            @test size(file["H1"]) == (norbitals, norbitals)
+            @test size(file["Vee"]) == (norbitals, norbitals)
+            @test size(file["basis_centers"]) == (norbitals, 3)
+            @test Int.(file["dims_per_shell"]) == expected_dims
+            @test Int.(file["orders"]) == expected_orders
+            @test Matrix{Float64}(file["H1"]) ≈ expected_h1 atol = 0.0 rtol = 0.0
+            @test Matrix{Float64}(file["Vee"]) ≈ expected_vee atol = 0.0 rtol = 0.0
+            @test Matrix{Float64}(file["basis_centers"]) == zeros(norbitals, 3)
+
+            @test String(file["bridge/format"]) == "fullida_dense_v1"
+            @test Int(file["bridge/version"]) == 1
+            @test String(file["bridge/site_type"]) == "Electron"
+            @test String(file["bridge/interaction_model"]) == "density_density"
+            @test String(file["bridge/model_detail"]) == "two_index_ida"
+            @test String(file["bridge/source_branch"]) == "atomic_ida"
+            @test String(file["bridge/onebody_key"]) == "H1"
+            @test String(file["bridge/interaction_key"]) == "Vee"
+            @test String(file["bridge/optional_interaction_key"]) == "Vps"
+            @test !Bool(file["bridge/has_optional_interaction"])
+            @test Int(file["bridge/norb"]) == norbitals
+            @test Int(file["bridge/nelec"]) == 2
+            @test Bool(file["bridge/has_nelec"])
+            @test String(file["bridge/order/convention"]) == "shell_major_by_radial_index"
+            @test String(file["bridge/order/within_shell"]) == "ylm_channel_order"
+            @test Int.(file["bridge/order/dims_per_shell"]) == expected_dims
+            @test Int.(file["bridge/order/shell_offsets"]) == collect(1:nchannels:(norbitals + 1))
+            @test Int.(file["bridge/order/shell_index"]) == vcat((fill(shell, nchannels) for shell in 1:radial_dim)...)
+            @test Int.(file["bridge/order/orders_per_shell"]) == expected_orders
+            @test String(file["bridge/order/basis_centers_kind"]) == "origin_only_atomic_orbitals"
+            @test all(isnan, Float64.(file["bridge/order/shell_centers_r"]))
+            @test isnan(Float64(file["bridge/order/basis_radius"]))
+            @test Int.(file["bridge/order/permutation_from_in_memory"]) == perm
+
+            @test String(file["meta/producer"]) == "GaussletBases.write_fullida_dense_jld2"
+            @test String(file["meta/producer_type"]) == "AtomicIDAOperators"
+            @test String(file["meta/source_branch"]) == "atomic_ida"
+            @test String(file["meta/interaction_model"]) == "density_density_ida"
+            @test Int(file["meta/nchannels"]) == nchannels
+            @test Int(file["meta/nradial"]) == radial_dim
+            @test String(file["meta/example"]) == "test_atomic_fullida_dense_export"
+        end
+    end
+end
+
 @testset "Atomic IDA direct matrix" begin
     rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
     radial_dim = length(rb)
@@ -2886,6 +2963,7 @@ end
     atomic_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_fock.md"), String)
     atomic_spin_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_spin_fock.md"), String)
     atomic_uhf_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_uhf.md"), String)
+    atomic_export_note = read(joinpath(_PROJECT_ROOT, "docs", "hamiltonian_export_fullida_dense.md"), String)
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     ordinary_one_body_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_one_body_fidelity.md"), String)
@@ -3028,6 +3106,11 @@ end
     @test occursin("orbital occupations", lowercase(atomic_uhf_note))
     @test occursin("uhf total energy", lowercase(atomic_uhf_note))
     @test occursin("fixed-point iteration", lowercase(atomic_uhf_note))
+    @test occursin("fullida_dense_v1", atomic_export_note)
+    @test occursin("dense bridge producer", lowercase(atomic_export_note))
+    @test occursin("density-density", lowercase(atomic_export_note))
+    @test occursin("two-index ida", lowercase(atomic_export_note))
+    @test occursin("atomicidaoperators", lowercase(atomic_export_note))
     @test occursin("GauntTables", gaunt_backend_note)
     @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
     @test occursin("src/atomic_ida.jl", gaunt_backend_note)
@@ -3052,6 +3135,7 @@ end
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
     @test occursin("21_atomic_ida_fock.jl", example_guide)
     @test occursin("22_atomic_ida_uhf.jl", example_guide)
+    @test occursin("31_atomic_fullida_dense_export.jl", example_guide)
     @test occursin("17_atomic_ida_two_electron.jl", example_guide)
     @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
     @test occursin("docs/index.md", example_guide)
@@ -3084,6 +3168,8 @@ end
     @test occursin("atomic_ylm_layer.md", current_atomic_branch)
     @test occursin("atomic_ida_layer.md", current_atomic_branch)
     @test occursin("atomic_ida_uhf.md", current_atomic_branch)
+    @test occursin("hamiltonian_export_fullida_dense.md", current_atomic_branch)
+    @test occursin("31_atomic_fullida_dense_export.jl", current_atomic_branch)
     @test occursin("supporting notes for the atomic line", lowercase(current_atomic_branch))
     @test occursin("atomic_mean_field_supporting_notes.md", current_atomic_branch)
     @test occursin("broad general atomic hf workflow", lowercase(current_atomic_branch))

@@ -25,6 +25,7 @@ Read these first:
 - [`docs/atomic_ylm_layer.md`](atomic_ylm_layer.md)
 - [`docs/atomic_ida_layer.md`](atomic_ida_layer.md)
 - [`docs/atomic_ida_uhf.md`](atomic_ida_uhf.md)
+- [`docs/hamiltonian_export_fullida_dense.md`](hamiltonian_export_fullida_dense.md)
 
 Then run:
 
@@ -32,6 +33,7 @@ Then run:
 2. `examples/15_atomic_hydrogen_ylm.jl`
 3. `examples/16_atomic_ida_ingredients.jl`
 4. `examples/22_atomic_ida_uhf.jl`
+5. `examples/31_atomic_fullida_dense_export.jl`
 
 ## 3. What counts as current workflow documentation
 
@@ -40,8 +42,9 @@ These are the current-status pages for the atomic line:
 - [`docs/atomic_ylm_layer.md`](atomic_ylm_layer.md)
 - [`docs/atomic_ida_layer.md`](atomic_ida_layer.md)
 - [`docs/atomic_ida_uhf.md`](atomic_ida_uhf.md)
+- [`docs/hamiltonian_export_fullida_dense.md`](hamiltonian_export_fullida_dense.md)
 
-Those three pages give the shortest current interpretation of the atomic
+Those four pages give the shortest current interpretation of the atomic
 branch.
 
 ## 4. Supporting notes for the atomic line

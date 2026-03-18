@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Steven R. White"]
 
 [deps]
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]

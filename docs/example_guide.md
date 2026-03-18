@@ -65,6 +65,12 @@ If you want the tiny exact-interacting checks after that:
 11. `17_atomic_ida_two_electron.jl`
 12. `18_atomic_ida_two_electron_lanczos.jl`
 
+If you want the current producer/export path after that:
+
+- `31_atomic_fullida_dense_export.jl`  
+  Write the current dense `fullida_dense_v1` bridge file for downstream
+  solver consumers.
+
 These are still intentionally narrow examples, not a broad atomic workflow.
 
 ## Ordinary Cartesian sequence
