@@ -54,12 +54,15 @@ before any future 3D grid-based debug or comparison path.
 Build the same ordinary Cartesian hydrogen Hamiltonian, but now on the public
 globally mapped full-line basis route.
 
-This is the packaged form of the successful Asinh-mapped hydrogen study:
+This is the packaged form of the current working Asinh-mapped hydrogen study:
 
 - one global map on each Cartesian axis
 - one-dimensional mapped ordinary bases
 - Coulomb expansion first
 - no 3D grid-first design
+
+It should be read as the current working mapped ordinary route, not as a claim
+that `AsinhMapping` or the present `c,s` tuning is already final.
 
 ### `25_mapped_cartesian_hydrogen_backends.jl`
 
@@ -154,6 +157,7 @@ This is the spectral low-momentum check for the friendly hybrid regime:
 The corresponding note is:
 
 - `docs/ordinary_sho_spectral_test.md`
+- `docs/ordinary_pgdg_hybrid_consolidation.md`
 
 ### `15_atomic_hydrogen_ylm.jl`
 

@@ -40,7 +40,7 @@ itself.
 
 ## 2. Why this is the right packaging step
 
-The successful Asinh hydrogen study showed that the ordinary Cartesian path
+The current working Asinh hydrogen study showed that the ordinary Cartesian path
 already has a clean scientific story:
 
 - one global 1D map on each axis
@@ -50,7 +50,7 @@ already has a clean scientific story:
 That is enough to justify making the mapped full-line basis a real package
 object before building anything broader.
 
-## 3. The Asinh helper
+## 3. The current Asinh helper
 
 For the first hydrogen-style studies, the package also provides the narrow
 helper
@@ -70,6 +70,10 @@ This helper is intentionally narrow. It is there to support the first mapped
 ordinary Cartesian hydrogen path, not to define every possible mapped basis
 workflow.
 
+It should be read as the current working helper family, not as a claim that
+`AsinhMapping` or the present coupled `c,s` tuning is already final or
+canonical.
+
 ## 4. What this does not mean
 
 This does **not** mean the package now has:
@@ -83,6 +87,11 @@ The public step here is much smaller:
 
 - a usable mapped 1D ordinary basis
 - a clean way to reproduce the successful ordinary Cartesian hydrogen route
+
+For the current practical reading of this branch, including the caution that
+the mapping family and `c,s` heuristics are still provisional, see:
+
+- `docs/ordinary_pgdg_hybrid_consolidation.md`
 
 ## 5. How to read this in the broader package story
 

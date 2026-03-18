@@ -112,9 +112,9 @@ end
 """
     fit_asinh_mapping_for_extent(; npoints, xmax, reference_spacing=1.0, tail_spacing=10.0)
 
-Build the symmetric one-parameter `AsinhMapping(c=s, s=s)` used in the first
-mapped ordinary Cartesian hydrogen path, choosing `s` so that the outer basis
-centers of an odd-count full-line basis land at `x = ±xmax`.
+Build the symmetric one-parameter `AsinhMapping(c=s, s=s)` used in the current
+working mapped ordinary Cartesian hydrogen path, choosing `s` so that the
+outer basis centers of an odd-count full-line basis land at `x = ±xmax`.
 
 This helper is intentionally narrow:
 
@@ -134,6 +134,10 @@ which gives the closed-form choice
 ```text
 s = asinh(xmax) / ( ((npoints - 1) / 2) * reference_spacing - xmax / tail_spacing ).
 ```
+
+This helper should be read as a narrow current working choice, not as a claim
+that `AsinhMapping` or the present coupled `c,s` tuning is already final for
+the ordinary mapped branch.
 """
 function fit_asinh_mapping_for_extent(;
     npoints::Int,
@@ -179,6 +183,9 @@ intentionally narrow:
 ```text
 u(xmax) = ((npoints - 1) / 2) * reference_spacing
 ```
+
+This is again a narrow current working helper for mapped ordinary studies, not
+a claim that the present mapping family or `c,s` heuristics are settled.
 """
 function fit_asinh_mapping_for_strength(;
     s::Real,
