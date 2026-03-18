@@ -1,3 +1,7 @@
+> **Status:** supporting development note. For the current ordinary branch,
+> read `docs/current_ordinary_branch.md` first. For this note chain, use
+> `docs/ordinary_pgdg_supporting_notes.md`.
+
 # Ordinary Mapped PGDG: Backend Pivot
 
 This note records the first controlled architectural pivot for the mapped

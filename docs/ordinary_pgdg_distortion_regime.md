@@ -1,3 +1,7 @@
+> **Status:** supporting development note. For the current ordinary branch,
+> read `docs/current_ordinary_branch.md` first. For this note chain, use
+> `docs/ordinary_pgdg_supporting_notes.md`.
+
 # Ordinary Mapped PGDG: Distortion Regimes
 
 This note records the next decision point after the first refined analytic

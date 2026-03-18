@@ -46,19 +46,17 @@ branch.
 
 ## 4. Supporting notes for the atomic line
 
-These notes are still useful, but they are supporting notes rather than
-start-here pages:
+The supporting-note stack is now grouped here:
+
+- [`docs/atomic_mean_field_supporting_notes.md`](atomic_mean_field_supporting_notes.md)
+
+Two other narrower atomic supporting notes remain useful:
 
 - [`docs/gaunt_backend_note.md`](gaunt_backend_note.md)
 - [`docs/atomic_angular_sectorization.md`](atomic_angular_sectorization.md)
-- [`docs/atomic_ida_direct.md`](atomic_ida_direct.md)
-- [`docs/atomic_ida_exchange.md`](atomic_ida_exchange.md)
-- [`docs/atomic_ida_fock.md`](atomic_ida_fock.md)
-- [`docs/atomic_ida_spin_fock.md`](atomic_ida_spin_fock.md)
-- [`docs/atomic_ida_two_electron.md`](atomic_ida_two_electron.md)
 
-They explain how the current atomic story was assembled, but they should not
-be read as equally primary with the current workflow pages above.
+These notes explain how the current atomic story was assembled, but they
+should not be read as equally primary with the current workflow pages above.
 
 ## 5. Current interpretation
 

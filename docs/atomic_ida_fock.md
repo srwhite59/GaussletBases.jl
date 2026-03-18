@@ -1,3 +1,7 @@
+> **Status:** supporting note. For the current atomic branch, read
+> `docs/current_atomic_branch.md` first. For this mean-field note chain, use
+> `docs/atomic_mean_field_supporting_notes.md`.
+
 # A tiny Fock-style helper on top of the atomic IDA layer
 
 This note describes the next small step after the direct and exchange builders.

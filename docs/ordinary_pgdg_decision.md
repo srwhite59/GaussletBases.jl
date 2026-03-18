@@ -1,3 +1,7 @@
+> **Status:** supporting development note. For the current ordinary branch,
+> read `docs/current_ordinary_branch.md` first. For this note chain, use
+> `docs/ordinary_pgdg_supporting_notes.md`.
+
 # Ordinary Mapped Hydrogen: Coulomb Calibration and PGDG Direction
 
 This note records the current decision point for the ordinary mapped branch.

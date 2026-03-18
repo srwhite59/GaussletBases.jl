@@ -58,5 +58,7 @@ Start with:
 - [`docs/current_atomic_branch.md`](current_atomic_branch.md)
 - [`docs/current_ordinary_branch.md`](current_ordinary_branch.md)
 - [`docs/documentation_structure_plan.md`](documentation_structure_plan.md)
+- [`docs/atomic_mean_field_supporting_notes.md`](atomic_mean_field_supporting_notes.md)
+- [`docs/ordinary_pgdg_supporting_notes.md`](ordinary_pgdg_supporting_notes.md)
 
 Then move to the narrower supporting notes linked from those branch pages.

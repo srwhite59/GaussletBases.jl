@@ -183,23 +183,17 @@ So the package should not be read as “everything is waiting for contraction be
 - named Gaussian chemistry basis support
 - higher-dimensional nested workflows
 
-## 11. How to read the repository now
+## 11. Where to navigate next
 
-If you are new:
+This page is the package-shape note, not the main onboarding page.
 
-1. read the README
-2. read `docs/first_radial_workflow.md`
-3. run the first four examples
-4. read `docs/intermediate_primitive_layer.md`
-5. then read `docs/example_guide.md`
+For navigation, use:
 
-If your interest is specifically the current nested/contraction direction:
-
-1. read `docs/intermediate_primitive_layer.md`
-2. read `docs/global_map_local_contraction.md`
-3. read `docs/global_mapped_leaf_contraction_1d.md`
-4. run `examples/13_global_leaf_contraction.jl`
-5. treat `11` and `12` as prototype side studies
+- `README.md` as the landing page
+- `docs/index.md` as the docs map
+- `docs/example_guide.md` as the running guide
+- `docs/current_atomic_branch.md` and `docs/current_ordinary_branch.md` for
+  the current branch interpretations
 
 ## 12. Bottom line
 

@@ -1,3 +1,7 @@
+> **Status:** supporting development note. For the current ordinary branch,
+> read `docs/current_ordinary_branch.md` first. For this note chain, use
+> `docs/ordinary_pgdg_supporting_notes.md`.
+
 # Ordinary Mapped PGDG: Minimal Cleanup and COMX Follow-On
 
 This note describes the next narrow experimental step after the first analytic

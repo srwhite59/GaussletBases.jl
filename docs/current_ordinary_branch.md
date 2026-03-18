@@ -48,19 +48,16 @@ branch.
 
 ## 4. Supporting notes for the ordinary line
 
-These notes are supporting historical or development notes:
+The main supporting-note stack is now grouped here:
 
-- [`docs/ordinary_pgdg_decision.md`](ordinary_pgdg_decision.md)
-- [`docs/ordinary_pgdg_comx.md`](ordinary_pgdg_comx.md)
-- [`docs/ordinary_pgdg_proxy_refinement.md`](ordinary_pgdg_proxy_refinement.md)
-- [`docs/ordinary_pgdg_distortion_regime.md`](ordinary_pgdg_distortion_regime.md)
-- [`docs/ordinary_pgdg_backend_pivot.md`](ordinary_pgdg_backend_pivot.md)
+- [`docs/ordinary_pgdg_supporting_notes.md`](ordinary_pgdg_supporting_notes.md)
+
+One additional narrow supporting note remains useful on top of that:
+
 - [`docs/ordinary_cartesian_ida.md`](ordinary_cartesian_ida.md)
-- [`docs/ordinary_pgdg_localized_backend.md`](ordinary_pgdg_localized_backend.md)
-- [`docs/ordinary_pgdg_one_body_fidelity.md`](ordinary_pgdg_one_body_fidelity.md)
 
-They record why the branch is interpreted the way it is now, but they are not
-the first pages a new ordinary-branch reader should open.
+These notes record why the branch is interpreted the way it is now, but they
+are not the first pages a new ordinary-branch reader should open.
 
 ## 5. Current interpretation
 

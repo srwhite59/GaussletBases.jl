@@ -1,3 +1,7 @@
+> **Status:** supporting note. For the current atomic branch, read
+> `docs/current_atomic_branch.md` first. For this mean-field note chain, use
+> `docs/atomic_mean_field_supporting_notes.md`.
+
 # Sector-aware exchange on top of the atomic IDA layer
 
 This note describes the matching exchange/Fock-style one-body term for the

@@ -1,3 +1,7 @@
+> **Status:** supporting note. For the current atomic branch, read
+> `docs/current_atomic_branch.md` first. For this mean-field note chain, use
+> `docs/atomic_mean_field_supporting_notes.md`.
+
 # Spin conventions for the atomic IDA Fock layer
 
 This note fixes the density and spin convention before any SCF loop is added.
