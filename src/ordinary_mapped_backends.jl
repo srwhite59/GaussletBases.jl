@@ -1,5 +1,5 @@
-struct MappedOrdinaryOneBody1D
-    basis::MappedUniformBasis
+struct MappedOrdinaryOneBody1D{B}
+    basis::B
     backend::Symbol
     overlap::Matrix{Float64}
     kinetic::Matrix{Float64}
@@ -105,8 +105,8 @@ The backend choice is explicit:
 - `:numerical_reference` keeps the trusted mapped numerical path
 - `:pgdg_experimental` uses the refined pre-COMX analytic PGDG-style proxy
 - `:pgdg_localized_experimental` uses the refined proxy followed by overlap
-  cleanup and COMX-style localization, using a more derivative-aware primitive
-  proxy than the pre-COMX path
+  cleanup and COMX-style localization, using the current one-Gaussian
+  derivative-aware proxy
 
 The experimental backends are intended for mild-to-moderate distortion
 regimes, with the numerical path retained as the reference route.
@@ -141,6 +141,33 @@ function mapped_ordinary_one_body_operators(
     return MappedOrdinaryOneBody1D(
         basis,
         backend,
+        overlap,
+        kinetic,
+        gaussian_factors,
+        exponents_value,
+        center_value,
+    )
+end
+
+function mapped_ordinary_one_body_operators(
+    basis::HybridMappedOrdinaryBasis1D;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+)
+    exponents_value = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    overlap = Matrix{Float64}(overlap_matrix(basis))
+    kinetic = Matrix{Float64}(kinetic_matrix(basis))
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
+            basis;
+            exponents = exponents_value,
+            center = center_value,
+        )
+    ]
+    return MappedOrdinaryOneBody1D(
+        basis,
+        basis.backend,
         overlap,
         kinetic,
         gaussian_factors,
@@ -241,6 +268,19 @@ function mapped_cartesian_hydrogen_energy(
         exponents = expansion.exponents,
         center = 0.0,
         backend = backend,
+    )
+    return _mapped_cartesian_hydrogen_energy(operators, expansion; Z = Z)
+end
+
+function mapped_cartesian_hydrogen_energy(
+    basis::HybridMappedOrdinaryBasis1D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    Z::Real = 1.0,
+)
+    operators = mapped_ordinary_one_body_operators(
+        basis;
+        exponents = expansion.exponents,
+        center = 0.0,
     )
     return _mapped_cartesian_hydrogen_energy(operators, expansion; Z = Z)
 end

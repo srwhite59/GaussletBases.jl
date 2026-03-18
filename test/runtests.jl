@@ -228,6 +228,92 @@ function _quick_ordinary_cartesian_ida_fixture(; backend = :pgdg_experimental, m
     end)
 end
 
+function _quick_hybrid_mapped_ordinary_fixture()
+    return _cached_fixture(:quick_hybrid_mapped_ordinary_fixture, () -> begin
+        full_expansion = coulomb_gaussian_expansion(doacc = false)
+        expansion = _truncate_coulomb_expansion(full_expansion, 3)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 5, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        core_gaussians = [
+            Gaussian(center = 0.0, width = 0.2),
+            Gaussian(center = 0.0, width = 0.6),
+        ]
+        hybrid_reference = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :numerical_reference,
+        )
+        hybrid_analytic = hybrid_mapped_ordinary_basis(
+            basis;
+            core_gaussians = core_gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        one_body_reference = mapped_ordinary_one_body_operators(
+            hybrid_reference;
+            exponents = expansion.exponents,
+        )
+        one_body_analytic = mapped_ordinary_one_body_operators(
+            hybrid_analytic;
+            exponents = expansion.exponents,
+        )
+        hard_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 2.0, npoints = 5, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        hard_reference = mapped_ordinary_one_body_operators(
+            hard_basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+        )
+        hard_analytic = mapped_ordinary_one_body_operators(
+            hard_basis;
+            exponents = expansion.exponents,
+            backend = :pgdg_localized_experimental,
+        )
+        energy_reference = mapped_cartesian_hydrogen_energy(
+            hybrid_reference;
+            expansion = expansion,
+            Z = 1.0,
+        )
+        energy_analytic = mapped_cartesian_hydrogen_energy(
+            hybrid_analytic;
+            expansion = expansion,
+            Z = 1.0,
+        )
+        hard_energy_reference = mapped_cartesian_hydrogen_energy(
+            hard_basis;
+            expansion = expansion,
+            Z = 1.0,
+            backend = :numerical_reference,
+        )
+        hard_energy_analytic = mapped_cartesian_hydrogen_energy(
+            hard_basis;
+            expansion = expansion,
+            Z = 1.0,
+            backend = :pgdg_localized_experimental,
+        )
+        (
+            basis,
+            core_gaussians,
+            expansion,
+            hybrid_reference,
+            hybrid_analytic,
+            one_body_reference,
+            one_body_analytic,
+            hard_reference,
+            hard_analytic,
+            energy_reference,
+            energy_analytic,
+            hard_energy_reference,
+            hard_energy_analytic,
+        )
+    end)
+end
+
 function _cartesian_hydrogen_energy(
     overlap_1d::AbstractMatrix,
     kinetic_1d::AbstractMatrix,
@@ -1365,6 +1451,48 @@ end
     @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
     @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
     @test minimum(diag(localized.interaction_matrix)) > 0.0
+end
+
+@testset "Hybrid mapped ordinary basis" begin
+    (
+        basis,
+        core_gaussians,
+        expansion,
+        hybrid_reference,
+        hybrid_analytic,
+        one_body_reference,
+        one_body_analytic,
+        hard_reference,
+        hard_analytic,
+        energy_reference,
+        energy_analytic,
+        hard_energy_reference,
+        hard_energy_analytic,
+    ) = _quick_hybrid_mapped_ordinary_fixture()
+
+    @test hybrid_reference isa HybridMappedOrdinaryBasis1D
+    @test hybrid_analytic isa HybridMappedOrdinaryBasis1D
+    @test hybrid_reference.backend == :numerical_reference
+    @test hybrid_analytic.backend == :pgdg_localized_experimental
+    @test length(core_gaussians) == 2
+    @test length(hybrid_reference) == length(basis) + length(core_gaussians)
+    @test length(hybrid_analytic) == length(basis) + length(core_gaussians)
+    @test occursin("experimental=true", sprint(show, hybrid_analytic))
+    @test !occursin("experimental=true", sprint(show, hybrid_reference))
+    @test norm(one_body_reference.overlap - I, Inf) < 1.0e-10
+    @test norm(one_body_analytic.overlap - I, Inf) < 1.0e-10
+    @test one_body_analytic.kinetic ≈ transpose(one_body_analytic.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    hybrid_factor_diff = maximum(
+        norm(one_body_analytic.gaussian_factors[index] - one_body_reference.gaussian_factors[index], Inf)
+        for index in eachindex(one_body_analytic.gaussian_factors)
+    )
+    hard_factor_diff = maximum(
+        norm(hard_analytic.gaussian_factors[index] - hard_reference.gaussian_factors[index], Inf)
+        for index in eachindex(hard_analytic.gaussian_factors)
+    )
+    @test hybrid_factor_diff < hard_factor_diff
+    @test abs(energy_analytic - energy_reference) <
+          abs(hard_energy_analytic - hard_energy_reference)
 end
 
 if _RUN_SLOW_TESTS
@@ -2574,6 +2702,7 @@ end
     gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
     example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
     ordinary_one_body_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_one_body_fidelity.md"), String)
+    ordinary_hybrid_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_regime.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
     global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
@@ -2703,6 +2832,7 @@ end
     @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
     @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
     @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
+    @test occursin("29_hybrid_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("16_atomic_ida_ingredients.jl", example_guide)
     @test occursin("19_atomic_ida_direct.jl", example_guide)
     @test occursin("20_atomic_ida_exchange.jl", example_guide)
@@ -2721,10 +2851,15 @@ end
     @test occursin("docs/ordinary_cartesian_ida.md", example_guide)
     @test occursin("docs/ordinary_pgdg_localized_backend.md", example_guide)
     @test occursin("docs/ordinary_pgdg_one_body_fidelity.md", example_guide)
+    @test occursin("docs/ordinary_pgdg_hybrid_regime.md", example_guide)
     @test occursin("localized pgdg route", lowercase(ordinary_one_body_note))
     @test occursin("remaining issue is `H1`", ordinary_one_body_note)
     @test occursin("kinetic", lowercase(ordinary_one_body_note))
     @test occursin("aligned-kinetic route", ordinary_one_body_note)
+    @test occursin("radial branch should stay numerical", lowercase(ordinary_hybrid_note))
+    @test occursin("white-lindsey", lowercase(replace(ordinary_hybrid_note, "–" => "-")))
+    @test occursin("core gaussian", lowercase(ordinary_hybrid_note))
+    @test occursin("stress-test regime", lowercase(ordinary_hybrid_note))
     @test occursin("small atomic ida / hf line", lowercase(example_guide))
     @test occursin("prototype", example_guide)
     @test occursin("radial atomic work", lowercase(example_guide))

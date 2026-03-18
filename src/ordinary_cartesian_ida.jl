@@ -29,8 +29,8 @@ function Base.show(io::IO, orbital::CartesianProductOrbital3D)
     )
 end
 
-struct OrdinaryCartesianIDAOperators
-    basis::MappedUniformBasis
+struct OrdinaryCartesianIDAOperators{B}
+    basis::B
     backend::Symbol
     expansion::CoulombGaussianExpansion
     one_body_1d::MappedOrdinaryOneBody1D
@@ -241,6 +241,45 @@ function _mapped_cartesian_one_body_matrix(
     return overlap_3d, hamiltonian
 end
 
+function _ordinary_cartesian_ida_from_layer(
+    basis,
+    backend::Symbol,
+    expansion::CoulombGaussianExpansion,
+    one_body::MappedOrdinaryOneBody1D,
+    layer;
+    Z::Real,
+)
+    pair_factors_basis = _pair_gaussian_factor_matrices(layer; exponents = expansion.exponents)
+
+    weight_1d = Float64[Float64(weight) for weight in integral_weights(layer)]
+    any(weight -> abs(weight) <= 1.0e-12, weight_1d) &&
+        throw(ArgumentError("ordinary Cartesian IDA layer requires nonzero 1D basis weights"))
+
+    weight_outer = weight_1d * transpose(weight_1d)
+    pair_factors_1d = [factor ./ weight_outer for factor in pair_factors_basis]
+    overlap_3d, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
+
+    interaction_matrix = zeros(Float64, size(overlap_3d))
+    for term in eachindex(expansion.coefficients)
+        factor = pair_factors_1d[term]
+        interaction_matrix .+= expansion.coefficients[term] .* kron(factor, kron(factor, factor))
+    end
+
+    return OrdinaryCartesianIDAOperators(
+        basis,
+        backend,
+        expansion,
+        one_body,
+        overlap_3d,
+        one_body_hamiltonian,
+        pair_factors_1d,
+        interaction_matrix,
+        _mapped_cartesian_orbitals(centers(basis)),
+        weight_1d,
+        _mapped_cartesian_weights(weight_1d),
+    )
+end
+
 """
     ordinary_cartesian_ida_operators(
         basis::MappedUniformBasis;
@@ -287,33 +326,32 @@ function ordinary_cartesian_ida_operators(
         backend = backend,
     )
     layer = _mapped_ordinary_backend_layer(basis, backend)
-    pair_factors_basis = _pair_gaussian_factor_matrices(layer; exponents = expansion.exponents)
-
-    weight_1d = Float64[Float64(weight) for weight in integral_weights(layer)]
-    any(weight -> abs(weight) <= 1.0e-12, weight_1d) &&
-        throw(ArgumentError("ordinary_cartesian_ida_operators requires nonzero 1D basis weights"))
-
-    weight_outer = weight_1d * transpose(weight_1d)
-    pair_factors_1d = [factor ./ weight_outer for factor in pair_factors_basis]
-    overlap_3d, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
-
-    interaction_matrix = zeros(Float64, size(overlap_3d))
-    for term in eachindex(expansion.coefficients)
-        factor = pair_factors_1d[term]
-        interaction_matrix .+= expansion.coefficients[term] .* kron(factor, kron(factor, factor))
-    end
-
-    return OrdinaryCartesianIDAOperators(
+    return _ordinary_cartesian_ida_from_layer(
         basis,
         backend,
         expansion,
         one_body,
-        overlap_3d,
-        one_body_hamiltonian,
-        pair_factors_1d,
-        interaction_matrix,
-        _mapped_cartesian_orbitals(centers(basis)),
-        weight_1d,
-        _mapped_cartesian_weights(weight_1d),
+        layer;
+        Z = Z,
+    )
+end
+
+function ordinary_cartesian_ida_operators(
+    basis::HybridMappedOrdinaryBasis1D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    Z::Real = 2.0,
+)
+    one_body = mapped_ordinary_one_body_operators(
+        basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    return _ordinary_cartesian_ida_from_layer(
+        basis,
+        basis.backend,
+        expansion,
+        one_body,
+        basis;
+        Z = Z,
     )
 end

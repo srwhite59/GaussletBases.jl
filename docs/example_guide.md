@@ -116,13 +116,29 @@ ordinary PGDG route into:
 - Gaussianized nuclear-factor matrices
 - assembled `H1`
 
-This is the example that shows the present localized backend is now limited
-mainly by the kinetic side, not by overlap and not by the static `Vee`
-assembly.
+This is now the narrow one-body fidelity comparison on the localized ordinary
+PGDG route. It shows that the present localized backend is limited mainly by
+the kinetic side, not by overlap and not by the static `Vee` assembly.
 
 The corresponding note is:
 
 - `docs/ordinary_pgdg_one_body_fidelity.md`
+
+### `29_hybrid_mapped_cartesian_hydrogen.jl`
+
+Move the ordinary PGDG branch into the friendlier hybrid regime:
+
+- mild full-line mapping
+- explicit centered core Gaussians
+- numerical mapped hybrid route as the validation path
+- localized analytic PGDG route as the candidate path
+
+This is the first example aimed at the practical White-Lindsey-style ordinary
+operating regime rather than the harsher pure mapped stress-test regime.
+
+The corresponding note is:
+
+- `docs/ordinary_pgdg_hybrid_regime.md`
 
 ### `15_atomic_hydrogen_ylm.jl`
 
@@ -270,6 +286,7 @@ Then, if you want the first ordinary Cartesian hydrogen path, read:
 9. `26_ordinary_cartesian_ida.jl`
 10. `27_ordinary_cartesian_ida_localized_backends.jl`
 11. `28_ordinary_one_body_fidelity.jl`
+12. `29_hybrid_mapped_cartesian_hydrogen.jl`
 
 Then read:
 
@@ -277,6 +294,7 @@ Then read:
 - `docs/recommended_atomic_setup.md`
 - `docs/atomic_ylm_layer.md`
 - `docs/ordinary_coulomb_expansion_path.md`
+- `docs/ordinary_pgdg_hybrid_regime.md`
 - `docs/mapped_ordinary_basis.md`
 - `docs/ordinary_pgdg_backend_pivot.md`
 - `docs/ordinary_pgdg_localized_backend.md`

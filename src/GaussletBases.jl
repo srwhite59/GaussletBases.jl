@@ -22,6 +22,7 @@ export AbstractFunction1D,
        LeafBoxContractionLayer1D,
        UniformBasisSpec,
        MappedUniformBasisSpec,
+       HybridMappedOrdinaryBasis1D,
        MappedOrdinaryOneBody1D,
        CartesianProductOrbital3D,
        OrdinaryCartesianIDAOperators,
@@ -89,6 +90,7 @@ export AbstractFunction1D,
        coulomb_gaussian_expansion,
        mapped_pgdg_prototype,
        mapped_pgdg_localized,
+       hybrid_mapped_ordinary_basis,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
        ordinary_cartesian_ida_operators,
@@ -243,6 +245,7 @@ function contract_primitive_matrix end
 function coulomb_gaussian_expansion end
 function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
+function hybrid_mapped_ordinary_basis end
 function mapped_ordinary_one_body_operators end
 function mapped_cartesian_hydrogen_energy end
 function ordinary_cartesian_ida_operators end
@@ -336,6 +339,7 @@ include("quadrature.jl")
 include("primitive_sets.jl")
 include("ordinary_coulomb.jl")
 include("ordinary_pgdg.jl")
+include("ordinary_hybrid.jl")
 include("ordinary_mapped_backends.jl")
 include("ordinary_cartesian_ida.jl")
 include("partitions.jl")
