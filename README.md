@@ -1,20 +1,23 @@
 # GaussletBases.jl
 
-GaussletBases.jl is a Julia package for working with gausslet basis functions.
+Gausslets are localized basis functions built from short linear combinations of
+Gaussians.
 
-Its broad foundation is the ordinary one-dimensional gausslet story:
+They are interesting because they try to keep two useful features at once:
 
-- explicit Gaussian constructions
-- mapped and distorted coordinates
-- basis functions built from a visible primitive layer
-- matrix construction through that shared primitive layer
+- the analytic convenience and explicit primitive structure of Gaussian basis
+  functions
+- the locality and near-orthogonality that make grid-like bases attractive
 
-Today its most mature public-facing path is **atom-centered radial calculations**. The repository also contains:
+GaussletBases.jl is a Julia package for building those basis functions,
+constructing the quadrature grids that go with them, and forming the current
+one-body and IDA-style operators on top of them.
 
-- a small explicit atomic line built on top of the radial substrate
-- an experimental ordinary Cartesian branch built around mapped/hybrid
-  ordinary gausslets
-- an advanced 1D primitive / contraction / hierarchy line
+Today the package can already do three scientifically useful things:
+
+- mature **atom-centered radial calculations**
+- a small explicit atomic line on top of that radial substrate
+- an experimental ordinary Cartesian mapped/hybrid branch
 
 If you are new, start with the radial path.
 
@@ -45,83 +48,66 @@ Then load it with:
 using GaussletBases
 ```
 
-## Current picture
+## A first useful calculation
 
-The package currently has three visible layers:
-
-- a mature numerical radial path
-- a small atomic radial-plus-angular / IDA / minimal-UHF line on top of that
-  radial substrate
-- an experimental ordinary Cartesian branch that is currently most promising
-  in the friendlier hybrid/core-supported regime
-
-It is **not** yet a broad electronic-structure workflow package.
-
-## Best first path through the repository
-
-If you are new to the package, a good first path is:
-
-1. run the first four examples
-2. read the radial quickstart
-3. read the recommended atomic setup note
-4. only then move on to primitive layers, contraction, and hierarchy
-
-From the repository root:
-
-```bash
-julia --project=. examples/01_first_gausslet.jl
-julia --project=. examples/02_radial_basis.jl
-julia --project=. examples/03_radial_operators.jl
-julia --project=. examples/04_hydrogen_ground_state.jl
-```
-
-Those four examples take you from one gausslet, to a radial basis, to radial
-operators, to a real hydrogen ground-state calculation.
-
-If you want the next atomic step after those four, run:
-
-```bash
-julia --project=. examples/15_atomic_hydrogen_ylm.jl
-```
-
-which adds the explicit `(l,m)` angular channels on top of the same radial
-substrate.
-
-## A good first atom-centered setup
-
-For an atom of nuclear charge `Z`, the package documentation recommends starting with:
+For a first atom-centered calculation, the recommended starting point is:
 
 - `s = 0.2`
 - `c = s / (2Z)`
-- `tails = 6`
-- `odd_even_kmax = 6`
-- `rmax = 30.0` bohr as a good first-row starting point
+- `rmax = 30.0` bohr
 
-In code:
+Here `s` roughly controls the overall radial spacing, while `c` roughly
+controls how much resolution is concentrated near the nucleus. The fuller
+setup discussion lives in [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md).
+
+The call
 
 ```julia
+AsinhMapping(c = ..., s = ...)
+```
+
+uses ordinary Julia keyword arguments to the mapping constructor. There is no
+special package-specific syntax there.
+
+This first README example carries through to a real physical result:
+
+```julia
+using LinearAlgebra
 using GaussletBases
 
-Z = 2.0
+Z = 1.0
 s = 0.2
+c = s / (2Z)
 
-map = AsinhMapping(c = s / (2Z), s = s)
+map = AsinhMapping(c = c, s = s)
 
 rb = build_basis(RadialBasisSpec(:G10;
     rmax = 30.0,
     mapping = map,
-    reference_spacing = 1.0,
-    tails = 6,
-    odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
+
+grid = radial_quadrature(rb)
+
+H = kinetic_matrix(rb, grid) +
+    nuclear_matrix(rb, grid; Z = Z) +
+    centrifugal_matrix(rb, grid; l = 0)
+
+E0 = minimum(real(eigen(Hermitian(H)).values))
+println("Lowest hydrogen energy: ", E0)
 ```
 
-This is the recommended package starting point, not the only possible one. In practice, somewhat larger values of `s`, such as `0.3` to `0.5`, can still work surprisingly well in some situations. But if you want one clean starting recipe, use `s = 0.2`.
+The exact nonrelativistic ground-state energy is `-0.5 Ha`, so this is the
+cleanest first scientific check of the radial basis and quadrature together.
+
+If you want the same workflow explained more slowly, with diagnostics and
+setup discussion, go next to:
+
+- [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)
+- [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md)
 
 ## What you usually do next
 
-Once you have a radial basis, the normal next steps are:
+Once you have a first hydrogen result, the normal next steps are:
 
 ```julia
 diag = basis_diagnostics(rb)
@@ -135,6 +121,39 @@ Here:
 - `ops` bundles the basic radial matrices for atomic-style work
 
 That basis/quadrature separation is one of the central ideas in the package.
+
+## Best first path through the repository
+
+If you are new to the package, a good first path is:
+
+1. read the example above
+2. run the first four examples
+3. read the radial quickstart
+4. use the docs map to choose where to go next
+
+From the repository root:
+
+```bash
+julia --project=. examples/01_first_gausslet.jl
+julia --project=. examples/02_radial_basis.jl
+julia --project=. examples/03_radial_operators.jl
+julia --project=. examples/04_hydrogen_ground_state.jl
+```
+
+Then continue with:
+
+- [`docs/index.md`](docs/index.md)
+- [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)
+- [`docs/example_guide.md`](docs/example_guide.md)
+
+If you want the next atomic step after those four, run:
+
+```bash
+julia --project=. examples/15_atomic_hydrogen_ylm.jl
+```
+
+which adds the explicit `(l,m)` angular channels on top of the same radial
+substrate.
 
 ## Documentation map
 

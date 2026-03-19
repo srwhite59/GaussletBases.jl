@@ -19,37 +19,48 @@ If you are new to the package, this is the best page to read after the README.
 
 ## 1. Choose a radial recipe
 
-For an atom of nuclear charge `Z`, the package documentation recommends starting with:
+For a first atom-centered radial calculation, start with:
 
 - `s = 0.2`
 - `c = s / (2Z)`
-- `tail_spacing = 10.0` through the default `AsinhMapping`
-- `tails = 6`
-- `odd_even_kmax = 6`
-- `reference_spacing = 1.0`
-- `rmax = 30.0` bohr as a good first-row starting point
+- `rmax = 30.0` bohr
 
 In code:
 
 ```julia
 using GaussletBases
 
-Z = 2.0
+Z = 1.0
 s = 0.2
+c = s / (2Z)
 
-map = AsinhMapping(c = s / (2Z), s = s)
+map = AsinhMapping(c = c, s = s)
 
 spec = RadialBasisSpec(:G10;
     rmax = 30.0,
     mapping = map,
-    reference_spacing = 1.0,
-    tails = 6,
-    odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 )
 ```
 
-This is the package’s standard starting recipe. It is not the only workable choice, but it is a good first choice if you want one recommendation rather than a large tuning discussion.
+The call
+
+```julia
+AsinhMapping(c = c, s = s)
+```
+
+uses ordinary Julia keyword arguments to the mapping constructor.
+
+At first, the only two mapping parameters you need to recognize are:
+
+- `s`: roughly controls the overall radial spacing
+- `c`: roughly controls how much extra resolution is concentrated near the nucleus
+
+The fuller discussion of `reference_spacing`, `tails`, `odd_even_kmax`, and
+`xgaussians` lives in:
+
+- [`docs/recommended_atomic_setup.md`](recommended_atomic_setup.md)
+
+This quickstart is intentionally teaching the workflow first.
 
 ## 2. Build the basis
 
@@ -160,16 +171,13 @@ using GaussletBases
 
 Z = 1.0
 s = 0.2
+c = s / (2Z)
 
-map = AsinhMapping(c = s / (2Z), s = s)
+map = AsinhMapping(c = c, s = s)
 
 rb = build_basis(RadialBasisSpec(:G10;
     rmax = 30.0,
     mapping = map,
-    reference_spacing = 1.0,
-    tails = 6,
-    odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
 
 grid = radial_quadrature(rb)
@@ -189,7 +197,28 @@ A runnable version is in:
 
 - `examples/04_hydrogen_ground_state.jl`
 
-## 8. What changes for multi-electron radial work?
+## 8. Where the deeper setup discussion lives
+
+The knobs that were intentionally kept out of the first recipe are explained
+in:
+
+- [`docs/recommended_atomic_setup.md`](recommended_atomic_setup.md)
+
+That is where to read about:
+
+- `reference_spacing`
+- `tails`
+- `odd_even_kmax`
+- `xgaussians`
+- when `s` and `c` may need to change together
+
+So the teaching order is:
+
+1. learn the workflow here
+2. get a hydrogen result
+3. only then move on to the fuller setup discussion
+
+## 9. What changes for multi-electron radial work?
 
 The basic radial structure stays the same:
 
@@ -214,7 +243,7 @@ multipole(ops, 1)
 
 In the current package, `multipole_matrix` and `multipole(ops, L)` mean the supported two-index IDA-style radial multipole matrices. They are not exact four-index electron-electron tensors.
 
-## 9. First angular step: explicit `(l,m)` channels
+## 10. First angular step: explicit `(l,m)` channels
 
 Once the radial workflow feels comfortable, the package now has a first explicit atomic angular layer built on top of it.
 
@@ -237,28 +266,6 @@ A runnable example is in:
 - `examples/15_atomic_hydrogen_ylm.jl`
 
 This is the natural next step before later atomic work involving both radial multipoles and angular coupling factors.
-
-## 10. What about x-gaussians?
-
-For a first one-electron example such as hydrogen, it is perfectly reasonable to start with:
-
-```julia
-xgaussians = XGaussian[]
-```
-
-If you later care more about near-origin behavior in the current radial interaction approximation, it can be useful to try one or two x-gaussians.
-
-A simple one-function experiment is:
-
-```julia
-xgaussians = [XGaussian(alpha = 0.2)]
-```
-
-A more serious two-function starting point is something like:
-
-```julia
-xgaussians = [XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]
-```
 
 Those are only starting points. If you use x-gaussians, check the diagnostics rather than treating any one choice as sacred.
 

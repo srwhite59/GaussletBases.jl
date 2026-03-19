@@ -1,0 +1,60 @@
+# GaussletBases.jl
+
+Gausslets are localized basis functions built from short linear combinations
+of Gaussians. They are interesting because they try to combine Gaussian
+analytic convenience with the locality and near-orthogonality that make
+grid-like bases attractive.
+
+`GaussletBases.jl` is a Julia package for building those basis functions,
+constructing the quadrature grids that go with them, and forming the current
+one-body and IDA-style operators on top of them.
+
+## Start here
+
+If you are new to the package, use this short path:
+
+1. [First radial workflow](tutorials/first_radial_workflow.md)
+2. [Recommended atomic setup](howto/recommended_atomic_setup.md)
+3. [Example guide](howto/example_guide.md)
+
+That is still the best front door because the radial line is the current
+mature numerical workflow.
+
+## Current branch pages
+
+For the current interpreted state of each main scientific line, read:
+
+- [Current atomic branch](explanations/current_atomic_branch.md)
+- [Current ordinary branch](explanations/current_ordinary_branch.md)
+- [Architecture](explanations/architecture.md)
+
+## Current scope
+
+Today the package is strongest in three areas:
+
+- atom-centered radial calculations
+- a small explicit atomic line on top of that radial substrate
+- an experimental ordinary Cartesian mapped/hybrid branch
+
+It is not yet a broad electronic-structure workflow package. The package is a
+basis, quadrature, and operator package, with narrow solver-facing layers only
+where they are already scientifically justified.
+
+## What this first Documenter site includes
+
+This first site is intentionally curated rather than exhaustive. It includes a
+small set of onboarding, workflow, and branch-status pages. The larger flat
+`docs/` tree is still present in the repository and remains the home of many
+supporting and development notes for now.
+
+## Build the docs locally
+
+From the repository root:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.instantiate()'
+julia --project=docs docs/make.jl
+```
+
+This first transition pass is meant to prove that the package can build a
+normal Documenter site before the full note tree is migrated.
