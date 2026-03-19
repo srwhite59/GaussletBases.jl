@@ -14,21 +14,23 @@ one-body and IDA-style operators on top of them.
 If you are new to the package, use this short path:
 
 1. [Manual](manual/index.md)
-2. [First radial workflow](tutorials/first_radial_workflow.md)
-3. [Recommended atomic setup](howto/recommended_atomic_setup.md)
-4. [Example guide](howto/example_guide.md)
+2. [Examples](examples/index.md)
+3. [First radial workflow](tutorials/first_radial_workflow.md)
+4. [Recommended atomic setup](howto/recommended_atomic_setup.md)
 
 That is still the best front door because the radial line is the current
 mature numerical workflow.
 
 ## Primary documents
 
-The docs site is intentionally organized around four primary clickable
+The docs site is intentionally organized around five primary clickable
 documents rather than a large visible page tree:
 
 - [Manual](manual/index.md)  
   The user-facing guide to what the package does today, where to start, and
   which workflow to follow next.
+- [Examples](examples/index.md)  
+  The curated runnable-example entry point.
 - [Reference](reference/index.md)  
   Curated API reference built from real docstrings.
 - [Developer Notes](developer/index.md)  
@@ -40,10 +42,12 @@ to call, use the [Reference](reference/index.md).
 
 ## Manual first, Reference second
 
-The Manual and Reference now divide the work in the standard Julia-package way:
+The Manual, Examples, and Reference now divide the work in the standard
+Julia-package way:
 
 - the [Manual](manual/index.md) explains workflows, branch status, and what to
   run first
+- the [Examples](examples/index.md) show which scripts to run and in what order
 - the [Reference](reference/index.md) answers API questions about the main
   exported entry points
 - the [Developer Notes](developer/index.md) preserve lower-priority design and

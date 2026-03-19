@@ -18,6 +18,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Manual" => "manual/index.md",
+        "Examples" => "examples/index.md",
         "Reference" => "reference/index.md",
         "Developer Notes" => "developer/index.md",
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),

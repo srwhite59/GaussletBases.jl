@@ -168,6 +168,8 @@ The main entry pages are:
   The rendered docs home page.
 - [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)  
   The best first read after this README.
+- [Examples](https://srwhite59.github.io/GaussletBases.jl/dev/examples/)  
+  The curated runnable-example entry point.
 - [Reference](https://srwhite59.github.io/GaussletBases.jl/dev/reference/)  
   Curated API reference for the main exported entry points.
 - [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
@@ -208,3 +210,9 @@ What is not yet here:
 - Python and Fortran interoperability layers
 
 That is deliberate. The package is still settling its scientific structure before it grows into those directions.
+
+## Acknowledgments
+
+Development of this package was accelerated substantially with the help of
+OpenAI Codex-style interactive coding assistance. Scientific direction, design
+choices, and final review remained author-driven.

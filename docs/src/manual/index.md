@@ -50,12 +50,17 @@ The ordinary branch is worth reading after you understand the radial line. It
 is the right place to learn the current mapped and hybrid ordinary workflows,
 but it is not the best first entry point into the package.
 
-## Where not to start
+## If you want more depth later
 
-Do not start with [Developer Notes](../developer/index.md) unless you already
-know the package and want design history, architecture background, or narrower
-supporting notes. Those pages are intentionally demoted so the manual can stay
-small and readable.
+After the main workflow pages are clear, the next useful documents are:
+
+- [Examples](../examples/index.md)
+- [Reference](../reference/index.md)
+- [Developer Notes](../developer/index.md)
+
+The Developer Notes section is where the design history, architecture
+background, and narrower supporting notes live. It is there when you want more
+depth, without crowding the main manual.
 
 ## Pages in this manual
 
@@ -63,4 +68,3 @@ small and readable.
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
-- [Example guide](../howto/example_guide.md)
