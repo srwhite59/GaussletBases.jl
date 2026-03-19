@@ -23,5 +23,12 @@ makedocs(
             "Current ordinary branch" => "explanations/current_ordinary_branch.md",
             "Architecture" => "explanations/architecture.md",
         ],
+        "Reference" => [
+            "Reference overview" => "reference/index.md",
+            "Bases and mappings" => "reference/bases_and_mappings.md",
+            "Operators and diagnostics" => "reference/operators_and_diagnostics.md",
+            "Atomic and ordinary workflows" => "reference/atomic_and_ordinary.md",
+            "Export layer" => "reference/export.md",
+        ],
     ],
 )

@@ -1,3 +1,11 @@
+"""
+    CartesianProductOrbital3D
+
+One orbital index in the current ordinary Cartesian product basis.
+
+The object records the Cartesian product indices `(ix, iy, iz)` together with
+the corresponding product-basis center `(x, y, z)`.
+"""
 struct CartesianProductOrbital3D
     index::Int
     ix::Int
@@ -29,6 +37,22 @@ function Base.show(io::IO, orbital::CartesianProductOrbital3D)
     )
 end
 
+"""
+    OrdinaryCartesianIDAOperators
+
+Static ordinary Cartesian one-body and density-density / IDA interaction data
+built on the current mapped or hybrid one-dimensional ordinary basis.
+
+The object bundles:
+
+- the one-dimensional one-body ingredients used to build it
+- the full Cartesian-product overlap and one-body matrices
+- the separable pair factors used in the current Coulomb-expansion assembly
+- the dense two-index interaction matrix
+- explicit product-orbital indexing metadata
+
+It is a solver-facing static Hamiltonian object, not a solver itself.
+"""
 struct OrdinaryCartesianIDAOperators{B}
     basis::B
     backend::Symbol

@@ -1,3 +1,13 @@
+"""
+    HybridMappedOrdinaryBasis1D
+
+Hybrid ordinary one-dimensional basis built from a mapped ordinary backbone
+plus a small explicit set of added core Gaussians.
+
+This is the current practical ordinary-branch object for the friendlier
+hybrid/core-supported regime. It keeps the mapped gausslet backbone visible,
+but augments it with centered Gaussian support near the origin.
+"""
 struct HybridMappedOrdinaryBasis1D
     source_basis::MappedUniformBasis
     backend::Symbol
@@ -73,6 +83,29 @@ function gaussian_factor_matrices(
     return [contract_primitive_matrix(basis, matrix) for matrix in primitive_matrices]
 end
 
+"""
+    hybrid_mapped_ordinary_basis(
+        basis::MappedUniformBasis;
+        core_gaussians,
+        backend = :pgdg_localized_experimental,
+    )
+
+Build a hybrid one-dimensional ordinary basis from a mapped ordinary backbone
+plus a small explicit set of core Gaussians.
+
+The backbone comes from the chosen mapped ordinary backend, while the added
+`core_gaussians` are kept as explicit primitives before the final overlap
+cleanup and COMX-style localization step.
+
+Typical usage is:
+
+```julia
+hybrid = hybrid_mapped_ordinary_basis(
+    basis;
+    core_gaussians = [Gaussian(center = 0.0, width = 0.2)],
+)
+```
+"""
 function hybrid_mapped_ordinary_basis(
     basis::MappedUniformBasis;
     core_gaussians::AbstractVector{<:Gaussian},

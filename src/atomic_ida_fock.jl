@@ -72,6 +72,19 @@ function fock_matrix_alpha(
     return 0.5 .* (fock .+ transpose(fock))
 end
 
+"""
+    fock_matrix_beta(ops::AtomicIDAOperators, density_alpha::AbstractMatrix, density_beta::AbstractMatrix)
+
+Build the beta-spin UHF-style Fock matrix for the current atomic IDA
+approximation:
+
+```math
+F^\beta = h + J[\rho^\alpha + \rho^\beta] - K[\rho^\beta]
+```
+
+Use this together with `fock_matrix_alpha` when assembling a spin-aware UHF
+step in the current density-density / IDA model.
+"""
 function fock_matrix_beta(
     ops::AtomicIDAOperators,
     density_alpha::AbstractMatrix{<:Real},

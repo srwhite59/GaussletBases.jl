@@ -1,3 +1,19 @@
+"""
+    MappedOrdinaryOneBody1D
+
+Bundle of one-dimensional one-body ingredients for the mapped ordinary branch.
+
+The object stores:
+
+- the source basis or hybrid basis
+- the backend label
+- the overlap matrix
+- the kinetic matrix
+- Gaussianized one-body factor matrices for the requested exponents
+
+It is the common input object for the current mapped Cartesian hydrogen,
+harmonic-oscillator, and ordinary Cartesian IDA helpers.
+"""
 struct MappedOrdinaryOneBody1D{B}
     basis::B
     backend::Symbol

@@ -34,6 +34,16 @@ The one-argument form chooses its own integration grid. For radial bases, that
 grid is intentionally conservative and uses the same default `accuracy = :high`
 quadrature profile as `radial_quadrature(basis)`, so the default diagnostics
 are less likely to be dominated by outer-tail truncation.
+
+The returned named tuple currently includes:
+
+- `overlap_error`
+- `moment_centers`
+- `center_mismatches`
+- `D`
+
+For a first check, `diag.overlap_error` and `diag.D` are usually the most
+useful fields to inspect.
 """
 function basis_diagnostics(basis, grid)
     return _basis_diagnostics_from_points_weights(basis, quadrature_points(grid), quadrature_weights(grid))

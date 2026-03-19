@@ -1019,6 +1019,21 @@ end
     build_basis(spec::RadialBasisSpec; grid_h=nothing, refine_grid_h=true)
 
 Build the concrete basis described by `spec`.
+
+This is the main public entry point for turning a basis recipe into an actual
+basis object. The returned type depends on `spec`:
+
+- `UniformBasisSpec` -> `UniformBasis`
+- `MappedUniformBasisSpec` -> `MappedUniformBasis`
+- `HalfLineBasisSpec` -> `HalfLineBasis`
+- `RadialBasisSpec` -> `RadialBasis`
+
+Typical usage is:
+
+```julia
+spec = RadialBasisSpec(:G10; rmax = 30.0, mapping = AsinhMapping(c = 0.1, s = 0.2))
+rb = build_basis(spec)
+```
 """
 function build_basis(spec::UniformBasisSpec)
     center_data = _uniform_centers(spec.xmin, spec.xmax, spec.spacing)
