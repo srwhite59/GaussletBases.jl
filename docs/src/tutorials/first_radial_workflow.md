@@ -2,6 +2,12 @@
 
 This is the best first tutorial for a new user.
 
+If you want the API details for the main objects used here, also see:
+
+- [Bases and mappings](../reference/bases_and_mappings.md)
+- [Operators and diagnostics](../reference/operators_and_diagnostics.md)
+- [Atomic and ordinary workflows](../reference/atomic_and_ordinary.md)
+
 The first radial path is:
 
 1. choose a mapping and a radial basis recipe

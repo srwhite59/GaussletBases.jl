@@ -3,6 +3,11 @@
 This page gives one practical starting recipe for atom-centered radial
 calculations.
 
+If you want the API details for the constructors used here, also see:
+
+- [Bases and mappings](../reference/bases_and_mappings.md)
+- [Operators and diagnostics](../reference/operators_and_diagnostics.md)
+
 ## Short version
 
 For an atom of nuclear charge `Z`, start with:

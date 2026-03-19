@@ -6,7 +6,7 @@ using GaussletBases
 makedocs(
     sitename = "GaussletBases.jl",
     modules = [GaussletBases],
-    doctest = false,
+    doctest = true,
     checkdocs = :none,
     format = Documenter.HTML(prettyurls = false, edit_link = nothing),
     pages = [

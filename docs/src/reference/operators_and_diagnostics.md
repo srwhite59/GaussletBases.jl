@@ -1,5 +1,23 @@
 # Operators and diagnostics
 
+If you want the narrative workflow before the API details, start with:
+
+- [First radial workflow](../tutorials/first_radial_workflow.md)
+- [Recommended atomic setup](../howto/recommended_atomic_setup.md)
+
+## Small doctest
+
+```jldoctest operators_and_diagnostics
+julia> using GaussletBases
+
+julia> rb = build_basis(RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2)));
+
+julia> grid = radial_quadrature(rb; accuracy = :medium);
+
+julia> size(kinetic_matrix(rb, grid)) == (length(rb), length(rb))
+true
+```
+
 ## Diagnostics and quadrature
 
 ```@docs

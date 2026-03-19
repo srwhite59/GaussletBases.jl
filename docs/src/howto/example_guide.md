@@ -2,6 +2,13 @@
 
 This page is the running guide for the examples.
 
+For the underlying API entry points used by these examples, also see:
+
+- [Bases and mappings](../reference/bases_and_mappings.md)
+- [Operators and diagnostics](../reference/operators_and_diagnostics.md)
+- [Atomic and ordinary workflows](../reference/atomic_and_ordinary.md)
+- [Export layer](../reference/export.md)
+
 From the repository root, each example runs as:
 
 ```bash
