@@ -98,6 +98,7 @@ export AbstractFunction1D,
        ordinary_sho_spectrum,
        ordinary_cartesian_ida_operators,
        write_fullida_dense_jld2,
+       write_sliced_ham_jld2,
        gaussian_factor_matrix,
        gaussian_factor_matrices,
        RadialQuadratureGrid,
@@ -256,6 +257,7 @@ function ordinary_sho_hamiltonian end
 function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
 function write_fullida_dense_jld2 end
+function write_sliced_ham_jld2 end
 function gaussian_factor_matrix end
 function gaussian_factor_matrices end
 function radial_quadrature end
@@ -366,5 +368,6 @@ include("atomic_ida_fock.jl")
 include("atomic_ida_uhf.jl")
 include("atomic_ida_two_electron.jl")
 include("fullida_dense_export.jl")
+include("sliced_ham_export.jl")
 
 end

@@ -70,6 +70,10 @@ If you want the current producer/export path after that:
 - `31_atomic_fullida_dense_export.jl`  
   Write the current dense `fullida_dense_v1` bridge file for downstream
   solver consumers.
+- `32_atomic_sliced_export.jl`  
+  Write the grouped sliced/block atomic Hamiltonian export for downstream
+  consumers that expect `layout/*`, `basis/*`, `ordering/*`, `onebody/*`, and
+  `twobody/*`.
 
 These are still intentionally narrow examples, not a broad atomic workflow.
 
