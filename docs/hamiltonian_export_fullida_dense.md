@@ -25,9 +25,10 @@ The first export target should be the dense bridge format already used in the
 existing ecosystem:
 
 - format note:
-  `~/Dropbox/codexhome/docs/Format.FullIDADenseBridge.v1.md`
+  the existing `Format.FullIDADenseBridge.v1.md` note in the surrounding
+  downstream docs
 - existing consumer:
-  `work/slicedmrgutils/runs/dmrg_fullida_dense.jl`
+  the `dmrg_fullida_dense.jl` consumer-side run path in `slicedmrgutils`
 
 That format is the highest-value first target because:
 

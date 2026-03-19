@@ -80,18 +80,14 @@ hard pure mapped small-`c` tests.
 
 The relevant legacy sources are:
 
-- basis-set data file:
-  `~/BasisSets`
-  which for the current setup is
-  `/Users/srw/BasisSets`
-  which currently resolves to
-  `/Users/srw/Dropbox/GaussletModules/BasisSets`
+- basis-set data source:
+  the legacy `BasisSets` file from the earlier GaussletModules tree
 - parser / file-format reference:
-  `/Users/srw/Dropbox/GaussletModules/ReadBasis.jl`
+  the legacy `ReadBasis.jl`
 - main hybrid Gaussian consumer reference:
-  `/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl`
+  the legacy `PureGaussianGausslet.jl`
 - older basis-construction / trimming reference:
-  `/Users/srw/Dropbox/GaussletModules/Old/BasisGen.jl`
+  the legacy `Old/BasisGen.jl`
 
 The natural later loader to adapt is a small modern equivalent of
 

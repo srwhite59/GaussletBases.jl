@@ -3397,7 +3397,7 @@ end
     @test occursin("nearly identical span/subspace", lowercase(ordinary_sho_note))
     @test occursin("friendlier hybrid/core-supported regime", lowercase(ordinary_sho_note))
     @test occursin("ordinary pgdg backend is good enough", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("~/basissets", lowercase(ordinary_hybrid_consolidation_note))
+    @test occursin("legacy `basissets` file", lowercase(ordinary_hybrid_consolidation_note))
     @test occursin("readbasis.jl", lowercase(ordinary_hybrid_consolidation_note))
     @test occursin("puregaussiangausslet.jl", lowercase(ordinary_hybrid_consolidation_note))
     @test occursin("old/basisgen.jl", lowercase(ordinary_hybrid_consolidation_note))
