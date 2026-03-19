@@ -1,5 +1,7 @@
 # GaussletBases.jl
 
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://srwhite59.github.io/GaussletBases.jl/dev/)
+
 Gausslets are localized basis functions built from short linear combinations of
 Gaussians.
 
@@ -20,6 +22,8 @@ Today the package can already do three scientifically useful things:
 - an experimental ordinary Cartesian mapped/hybrid branch
 
 If you are new, start with the radial path.
+
+Documentation: <https://srwhite59.github.io/GaussletBases.jl/dev/>
 
 ## Who this package is for
 
@@ -58,7 +62,8 @@ For a first atom-centered calculation, the recommended starting point is:
 
 Here `s` roughly controls the overall radial spacing, while `c` roughly
 controls how much resolution is concentrated near the nucleus. The fuller
-setup discussion lives in [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md).
+setup discussion lives in the rendered manual at
+[Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/).
 
 The call
 
@@ -102,8 +107,8 @@ cleanest first scientific check of the radial basis and quadrature together.
 If you want the same workflow explained more slowly, with diagnostics and
 setup discussion, go next to:
 
-- [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)
-- [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md)
+- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
+- [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/)
 
 ## What you usually do next
 
@@ -142,9 +147,9 @@ julia --project=. examples/04_hydrogen_ground_state.jl
 
 Then continue with:
 
-- [`docs/index.md`](docs/index.md)
-- [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)
-- [`docs/example_guide.md`](docs/example_guide.md)
+- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/dev/)
+- [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
+- [Example guide](https://srwhite59.github.io/GaussletBases.jl/dev/howto/example_guide/)
 
 If you want the next atomic step after those four, run:
 
@@ -159,20 +164,18 @@ substrate.
 
 The main entry pages are:
 
-- [`docs/index.md`](docs/index.md)  
-  The current docs map.
-- [`docs/first_radial_workflow.md`](docs/first_radial_workflow.md)  
+- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/dev/)  
+  The rendered docs home page.
+- [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)  
   The best first read after this README.
-- [`docs/recommended_atomic_setup.md`](docs/recommended_atomic_setup.md)
-  Practical starting parameters for the radial atomic path.
-- [`docs/current_atomic_branch.md`](docs/current_atomic_branch.md)
-  The shortest current status page for the atomic line.
-- [`docs/current_ordinary_branch.md`](docs/current_ordinary_branch.md)
-  The shortest current status page for the ordinary Cartesian line.
-- [`docs/example_guide.md`](docs/example_guide.md)  
-  The example reading/running guide.
-- [`docs/intermediate_primitive_layer.md`](docs/intermediate_primitive_layer.md)  
-  The first advanced note about primitive layers and contraction.
+- [Reference](https://srwhite59.github.io/GaussletBases.jl/dev/reference/)  
+  Curated API reference for the main exported entry points.
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
+  The user-facing atomic status path.
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
+  The user-facing ordinary-branch status path.
+- [Developer Notes](https://srwhite59.github.io/GaussletBases.jl/dev/developer/)
+  Lower-priority architecture and supporting-note entry points.
 
 The narrower notes remain in the repository, but they should be read as
 supporting notes after the current branch pages are clear.

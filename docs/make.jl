@@ -3,12 +3,18 @@ using Documenter
 push!(LOAD_PATH, joinpath(@__DIR__, ".."))
 using GaussletBases
 
+const DOCS_CI = get(ENV, "CI", "false") == "true"
+
 makedocs(
     sitename = "GaussletBases.jl",
     modules = [GaussletBases],
     doctest = true,
     checkdocs = :none,
-    format = Documenter.HTML(prettyurls = false, edit_link = nothing),
+    format = Documenter.HTML(
+        prettyurls = DOCS_CI,
+        edit_link = "main",
+        canonical = DOCS_CI ? "https://srwhite59.github.io/GaussletBases.jl/dev/" : nothing,
+    ),
     pages = [
         "Home" => "index.md",
         "Manual" => "manual/index.md",
@@ -26,4 +32,9 @@ makedocs(
         hide("Architecture and current direction" => "developer/architecture.md"),
         hide("Supporting note map" => "developer/supporting_notes.md"),
     ],
+)
+
+deploydocs(
+    repo = "github.com/srwhite59/GaussletBases.jl.git",
+    devbranch = "main",
 )

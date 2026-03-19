@@ -1,14 +1,22 @@
 # Documentation Map
 
-This page is the shortest current map of the documentation.
+The primary docs surface is the rendered Documenter site:
+
+- <https://srwhite59.github.io/GaussletBases.jl/dev/>
+
+GitHub's repository browser will always show `docs/` as a file tree. It will
+not display the rendered left-hand navigation. If you want the intended package
+manual, use the deployed docs site above.
+
+This page is therefore only a short repository-side pointer map.
 
 ## If you are new
 
 Read these first:
 
 1. [`README.md`](../README.md)
-2. [`docs/first_radial_workflow.md`](first_radial_workflow.md)
-3. [`docs/example_guide.md`](example_guide.md)
+2. [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
+3. [Example guide](https://srwhite59.github.io/GaussletBases.jl/dev/howto/example_guide/)
 
 Then use the branch pages below.
 
@@ -16,9 +24,10 @@ Then use the branch pages below.
 
 Read:
 
-- [`docs/first_radial_workflow.md`](first_radial_workflow.md)
-- [`docs/recommended_atomic_setup.md`](recommended_atomic_setup.md)
-- [`docs/current_atomic_branch.md`](current_atomic_branch.md)
+- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/dev/tutorials/first_radial_workflow/)
+- [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/)
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
+- [Rendered manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
 
 This is the mature numerical path in the package.
 
@@ -26,9 +35,9 @@ This is the mature numerical path in the package.
 
 Read:
 
-- [`docs/mapped_ordinary_basis.md`](mapped_ordinary_basis.md)
-- [`docs/current_ordinary_branch.md`](current_ordinary_branch.md)
-- [`docs/example_guide.md`](example_guide.md)
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
+- [Example guide](https://srwhite59.github.io/GaussletBases.jl/dev/howto/example_guide/)
+- [Rendered manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
 
 This is the current ordinary Cartesian path:
 
@@ -55,8 +64,8 @@ This is the advanced structural line:
 
 Start with:
 
-- [`docs/current_atomic_branch.md`](current_atomic_branch.md)
-- [`docs/current_ordinary_branch.md`](current_ordinary_branch.md)
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
 - [`docs/documentation_structure_plan.md`](documentation_structure_plan.md)
 - [`docs/atomic_mean_field_supporting_notes.md`](atomic_mean_field_supporting_notes.md)
 - [`docs/ordinary_pgdg_supporting_notes.md`](ordinary_pgdg_supporting_notes.md)
