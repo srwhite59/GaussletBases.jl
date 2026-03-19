@@ -89,3 +89,4 @@ Use these pages to keep the examples in context:
 - [Recommended atomic setup](recommended_atomic_setup.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
+- [Developer Notes](../developer/index.md)

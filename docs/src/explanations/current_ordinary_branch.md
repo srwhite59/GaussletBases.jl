@@ -1,6 +1,7 @@
 # Current ordinary branch
 
-This page is the shortest current status read for the ordinary Cartesian line.
+This page is the shortest current user-facing status read for the ordinary
+Cartesian line.
 
 ## What the ordinary branch is today
 
@@ -17,10 +18,10 @@ interpretation.
 
 ## Start here
 
-Within the current Documenter site, the best supporting pages are:
+Within the manual, the best supporting pages are:
 
 - [Example guide](../howto/example_guide.md)
-- [Architecture](architecture.md)
+- [First radial workflow](../tutorials/first_radial_workflow.md)
 
 The radial tutorial is still useful context because the package’s operator and
 quadrature story was established there first.
@@ -50,3 +51,8 @@ The wording discipline for the ordinary line remains:
 
 That is much closer to the practical White–Lindsey-style hybrid picture than
 to the harsher pure mapped stress-test cases.
+
+If you want the lower-priority architecture and note-history context after
+that, continue with:
+
+- [Developer Notes](../developer/index.md)

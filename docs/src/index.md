@@ -13,20 +13,24 @@ one-body and IDA-style operators on top of them.
 
 If you are new to the package, use this short path:
 
-1. [First radial workflow](tutorials/first_radial_workflow.md)
-2. [Recommended atomic setup](howto/recommended_atomic_setup.md)
-3. [Example guide](howto/example_guide.md)
+1. [Manual](manual/index.md)
+2. [First radial workflow](tutorials/first_radial_workflow.md)
+3. [Recommended atomic setup](howto/recommended_atomic_setup.md)
+4. [Example guide](howto/example_guide.md)
 
 That is still the best front door because the radial line is the current
 mature numerical workflow.
 
-## Current branch pages
+## Top-level sections
 
-For the current interpreted state of each main scientific line, read:
+The site is now organized into four top-level sections:
 
-- [Current atomic branch](explanations/current_atomic_branch.md)
-- [Current ordinary branch](explanations/current_ordinary_branch.md)
-- [Architecture](explanations/architecture.md)
+- [Manual](manual/index.md)  
+  User-facing workflows and branch-status pages.
+- [Reference](reference/index.md)  
+  Curated API reference built from real docstrings.
+- [Developer Notes](developer/index.md)  
+  Lower-priority architecture, supporting-note, and development material.
 
 ## Reference
 
@@ -53,13 +57,6 @@ It is not yet a broad electronic-structure workflow package. The package is a
 basis, quadrature, and operator package, with narrow solver-facing layers only
 where they are already scientifically justified.
 
-## What this first Documenter site includes
-
-This first site is intentionally curated rather than exhaustive. It includes a
-small set of onboarding, workflow, and branch-status pages. The larger flat
-`docs/` tree is still present in the repository and remains the home of many
-supporting and development notes for now.
-
 ## Build the docs locally
 
 From the repository root:
@@ -68,6 +65,3 @@ From the repository root:
 julia --project=docs -e 'using Pkg; Pkg.instantiate()'
 julia --project=docs docs/make.jl
 ```
-
-This first transition pass is meant to prove that the package can build a
-normal Documenter site before the full note tree is migrated.

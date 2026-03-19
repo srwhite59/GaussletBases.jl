@@ -1,6 +1,6 @@
 # Current atomic branch
 
-This page is the shortest current status read for the atomic line.
+This page is the shortest current user-facing status read for the atomic line.
 
 ## What the atomic branch is today
 
@@ -18,7 +18,7 @@ atomic HF framework.
 
 ## Start here
 
-Within the current Documenter site, the best entry path is:
+Within the manual, the best entry path is:
 
 - [First radial workflow](../tutorials/first_radial_workflow.md)
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
@@ -27,7 +27,7 @@ Within the current Documenter site, the best entry path is:
 ## Notes that are not yet migrated into the first site
 
 The following current-workflow atomic notes still live in the flat `docs/`
-tree and are not yet part of this first curated site:
+tree and are not yet part of the user-facing manual surface:
 
 - `atomic_ylm_layer.md`
 - `atomic_ida_layer.md`
@@ -36,7 +36,8 @@ tree and are not yet part of this first curated site:
 - `hamiltonian_export_sliced_blocks.md`
 
 The supporting-note chain for the atomic line also still lives in the flat
-tree for now.
+tree for now. It should be treated as developer/supporting material rather
+than as the main package manual.
 
 ## Current interpretation
 
@@ -50,3 +51,8 @@ The wording discipline for the atomic line remains:
 - solver-facing export is already supported for the atomic line
 
 That is the present atomic scope the library can stand behind.
+
+If you want the lower-priority architecture and supporting-note context after
+that, continue with:
+
+- [Developer Notes](../developer/index.md)

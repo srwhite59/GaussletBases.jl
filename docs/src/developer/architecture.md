@@ -1,0 +1,73 @@
+# Architecture and current direction
+
+This page gives the shortest useful map of how the main ideas in
+`GaussletBases.jl` fit together.
+
+If you are trying to use the package rather than understand its internal
+structure, start in the [Manual](../manual/index.md) instead.
+
+## Broad foundation
+
+The broadest foundation of the package is the ordinary one-dimensional
+gausslet construction:
+
+- explicit Gaussian primitive layers
+- coordinate mappings
+- basis functions built from visible primitive expansions
+- matrix construction either directly at the basis level or on the primitive
+  layer and contracted upward
+
+## Mature public-facing path
+
+The most mature public-facing path in the package is still the radial line.
+That is why the main onboarding path emphasizes:
+
+- radial basis construction
+- explicit radial quadrature
+- basis diagnostics
+- radial one-body operators
+- hydrogen as the first scientific validation step
+
+## Atomic line
+
+On top of the radial substrate, the package now has:
+
+- an explicit one-electron `(l,m)` layer
+- a static interacting atomic IDA layer
+- direct / exchange / Fock helpers
+- a minimal UHF kernel
+- dense and sliced export for downstream solver consumers
+
+That is a real small atomic line, but not yet a broad atomic workflow package.
+
+## Ordinary line
+
+The ordinary Cartesian branch is the experimental line for mapped and hybrid
+ordinary gausslets. Its current interpretation is:
+
+- Coulomb-expansion first
+- mild and hybrid regimes as the practical target
+- numerical validation route plus experimental PGDG-style analytic backend
+
+## Primitive, contraction, and hierarchy work
+
+The package also has an advanced structural line built around:
+
+- visible primitive layers
+- explicit contraction matrices
+- basis representations
+- partitions and hierarchy
+- global mapped primitive layers plus local contraction
+
+That is important for the package’s long-term research direction, even though
+it is not the first page a new user should start from.
+
+## Current bottom line
+
+The shortest package-shape summary is:
+
+- ordinary gausslets are the broad foundation
+- radial gausslets are the mature current workflow
+- the atomic line sits on top of the radial substrate
+- the ordinary mapped/hybrid line is promising but still experimental
+- primitive layers and contraction are the structural bridge to later work
