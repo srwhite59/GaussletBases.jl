@@ -3,7 +3,8 @@
 This section is for lower-priority development, architecture, and history
 material.
 
-If you are trying to use the package, start in:
+This is a real top-level document, but it is intentionally not the first one to
+read. If you are trying to use the package, start in:
 
 - [Manual](../manual/index.md)
 - [Reference](../reference/index.md)

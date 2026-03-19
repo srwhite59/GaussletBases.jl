@@ -1,27 +1,66 @@
 # Manual
 
-This is the user-facing manual for `GaussletBases.jl`.
+This is the main user-facing manual for `GaussletBases.jl`.
 
-If you are using the package as a scientist, this is the section you should
-read first. The pages here explain:
+If you are using the package as a scientist, this is the section to read
+first. The manual is intentionally small. It tells you:
 
-- how to get started
-- the recommended current workflows
-- how to run the main examples
-- what the current atomic and ordinary branches mean
+- what the package can already do reliably
+- which workflow is the recommended starting point
+- where the atomic and ordinary branches currently stand
+- which pages are background material rather than first-read documents
+
+## Who this manual is for
+
+Read this section if you want to:
+
+- build and use gausslet bases
+- reproduce the current radial and atomic workflows
+- understand whether the ordinary Cartesian branch is ready for your use case
+- find the right example or workflow page without digging through note history
+
+If you already know the object or function you want, jump to the
+[Reference](../reference/index.md) instead.
 
 ## Recommended reading order
 
-If you are new to the package, start here:
+For a new reader, the shortest useful path is:
 
 1. [First radial workflow](../tutorials/first_radial_workflow.md)
 2. [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 3. [Example guide](../howto/example_guide.md)
-4. [Current atomic branch](../explanations/current_atomic_branch.md)
-5. [Current ordinary branch](../explanations/current_ordinary_branch.md)
 
-## What is not in this section
+That path gets you from basis construction to a real hydrogen calculation and
+then to the current atomic examples.
 
-The lower-priority development and history material now lives under
-[Developer Notes](../developer/index.md). The API entry points live under
-[Reference](../reference/index.md).
+## Branch-specific paths
+
+If you want atom-centered radial and atomic work:
+
+1. [First radial workflow](../tutorials/first_radial_workflow.md)
+2. [Recommended atomic setup](../howto/recommended_atomic_setup.md)
+3. [Current atomic branch](../explanations/current_atomic_branch.md)
+
+If you want the ordinary Cartesian branch:
+
+1. [Current ordinary branch](../explanations/current_ordinary_branch.md)
+2. [Example guide](../howto/example_guide.md)
+
+The ordinary branch is worth reading after you understand the radial line. It
+is the right place to learn the current mapped and hybrid ordinary workflows,
+but it is not the best first entry point into the package.
+
+## Where not to start
+
+Do not start with [Developer Notes](../developer/index.md) unless you already
+know the package and want design history, architecture background, or narrower
+supporting notes. Those pages are intentionally demoted so the manual can stay
+small and readable.
+
+## Pages in this manual
+
+- [First radial workflow](../tutorials/first_radial_workflow.md)
+- [Recommended atomic setup](../howto/recommended_atomic_setup.md)
+- [Current atomic branch](../explanations/current_atomic_branch.md)
+- [Current ordinary branch](../explanations/current_ordinary_branch.md)
+- [Example guide](../howto/example_guide.md)
