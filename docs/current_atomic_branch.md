@@ -56,10 +56,11 @@ The supporting-note stack is now grouped here:
 
 - [`docs/atomic_mean_field_supporting_notes.md`](atomic_mean_field_supporting_notes.md)
 
-Two other narrower atomic supporting notes remain useful:
+Three other narrower atomic supporting notes remain useful:
 
 - [`docs/gaunt_backend_note.md`](gaunt_backend_note.md)
 - [`docs/atomic_angular_sectorization.md`](atomic_angular_sectorization.md)
+- [`docs/atomic_export_consumer_smoke.md`](atomic_export_consumer_smoke.md)
 
 These notes explain how the current atomic story was assembled, but they
 should not be read as equally primary with the current workflow pages above.
