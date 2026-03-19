@@ -1,6 +1,7 @@
 # Current Atomic Branch
 
-This page is the shortest current status read for the atomic line.
+This page is the shortest current status read for the mature radial/atomic
+line.
 
 ## 1. What the atomic branch is today
 

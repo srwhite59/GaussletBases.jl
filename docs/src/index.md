@@ -60,9 +60,10 @@ development record underneath.
 
 Today the package is strongest in three areas:
 
-- atom-centered radial calculations
-- a small explicit atomic line on top of that radial substrate
-- an experimental ordinary Cartesian mapped/hybrid branch
+- a mature radial / atomic workflow
+- a real but newer ordinary Cartesian mapped/hybrid workflow
+- a separate advanced/research line for contraction, hierarchy, and supporting
+  PGDG-related work
 
 It is not yet a broad electronic-structure workflow package. The package is a
 basis, quadrature, and operator package, with narrow solver-facing layers only

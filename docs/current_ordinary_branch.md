@@ -1,6 +1,7 @@
 # Current Ordinary Branch
 
-This page is the shortest current status read for the ordinary Cartesian line.
+This page is the shortest current status read for the newer ordinary Cartesian
+line.
 
 ## 1. What the ordinary branch is today
 
@@ -13,7 +14,7 @@ The current ordinary story is:
 - the friendlier hybrid/core-supported regime as the practical target
 
 This line is still experimental, but it now has a clear current
-interpretation.
+interpretation and should be read as a real second workflow in the package.
 
 ## 2. Start here for the ordinary line
 

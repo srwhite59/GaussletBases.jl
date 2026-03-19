@@ -7,7 +7,8 @@ first. The manual is intentionally small. It tells you:
 
 - what the package can already do reliably
 - which workflow is the recommended starting point
-- where the atomic and ordinary branches currently stand
+- where the mature radial/atomic workflow, the newer ordinary/cartesian
+  workflow, and the advanced research line currently stand
 - which pages are background material rather than first-read documents
 
 ## Who this manual is for

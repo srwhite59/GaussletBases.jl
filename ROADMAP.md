@@ -6,13 +6,17 @@ It is not a schedule. It is a statement of which directions now look most valuab
 
 ## Where the package now stands
 
-Two directions are now real in the code:
+Three directions are now real in the code:
 
-1. a mature radial basis / quadrature / operator line
-2. a first explicit one-electron atomic `(l,m)` layer on top of that radial line
-3. a newer one-dimensional primitive-layer / contraction / hierarchy line
+1. a mature radial / atomic workflow
+2. a real but newer ordinary / Cartesian workflow
+3. a separate advanced research line for contraction, hierarchy, and related
+   PGDG-oriented method work
 
-Those directions are both scientifically interesting, but they are not equally mature or equally valuable to outside users.
+Those directions are all scientifically interesting, but they are not equally
+mature or equally valuable to outside users. The first public path is still the
+radial/atomic line, the second public path is the ordinary/cartesian line, and
+the contraction/hierarchy line remains the more research-facing track.
 
 ## Highest-value next additions for outside users
 

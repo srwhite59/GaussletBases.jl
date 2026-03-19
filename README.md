@@ -17,9 +17,10 @@ one-body and IDA-style operators on top of them.
 
 Today the package can already do three scientifically useful things:
 
-- mature **atom-centered radial calculations**
-- a small explicit atomic line on top of that radial substrate
-- an experimental ordinary Cartesian mapped/hybrid branch
+- a mature **radial / atomic workflow**
+- a real but newer **ordinary Cartesian mapped/hybrid workflow**
+- a separate **advanced research line** for contraction, hierarchy, and
+  prototype PGDG-related work
 
 If you are new, start with the radial path.
 
@@ -35,7 +36,9 @@ GaussletBases is most useful today for people who want to:
 - study how primitive Gaussian layers can be contracted into more useful localized functions
 - experiment with simple one-dimensional hierarchy and contraction ideas without yet committing to a full molecular workflow
 
-It is **not** yet a complete electronic-structure workflow package. It is a basis, quadrature, and operator package, with a newer experimental line for contraction and hierarchy in 1D.
+It is **not** yet a complete electronic-structure workflow package. It is a
+basis, quadrature, and operator package, with a newer ordinary/cartesian
+workflow and a separate advanced line for contraction and hierarchy in 1D.
 
 ## Installation
 

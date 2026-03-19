@@ -1,7 +1,7 @@
 # Current ordinary branch
 
-This page is the shortest current user-facing status read for the ordinary
-Cartesian line.
+This page is the shortest current user-facing status read for the newer
+ordinary Cartesian line.
 
 ## What the ordinary branch is today
 
@@ -14,12 +14,13 @@ The current ordinary story is:
 - the friendlier hybrid/core-supported regime as the practical target
 
 This line is still experimental, but it now has a clear current
-interpretation.
+interpretation and should be read as a real second workflow in the package.
 
 ## Start here
 
 Within the manual, the best supporting pages are:
 
+- [Examples](../examples/index.md)
 - [Example guide](../howto/example_guide.md)
 - [First radial workflow](../tutorials/first_radial_workflow.md)
 

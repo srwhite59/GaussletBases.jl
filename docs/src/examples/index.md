@@ -24,7 +24,7 @@ That sequence is still the clearest public entry path.
 
 ## Then choose a branch
 
-For the current atomic line, continue with:
+For the mature radial and atomic line, continue with:
 
 - `15_atomic_hydrogen_ylm.jl`
 - `16_atomic_ida_ingredients.jl`
@@ -33,7 +33,7 @@ For the current atomic line, continue with:
 - `21_atomic_ida_fock.jl`
 - `22_atomic_ida_uhf.jl`
 
-For the current ordinary Cartesian line, continue with:
+For the newer ordinary Cartesian line, continue with:
 
 - `23_cartesian_hydrogen_coulomb_expansion.jl`
 - `24_mapped_cartesian_hydrogen.jl`
@@ -45,6 +45,9 @@ For the current ordinary Cartesian line, continue with:
 
 For the full grouped running guide, use the
 [Example guide](../howto/example_guide.md).
+
+For the advanced contraction, hierarchy, and prototype examples, use that full
+guide rather than this shorter landing page.
 
 For the workflow pages that explain these examples, also see:
 

@@ -1,8 +1,13 @@
 # Current Status
 
-GaussletBases now has one clearly established user-facing path and one newer advanced/research path.
+GaussletBases now has three clear layers in the public story:
 
-## Established public-facing path: radial calculations
+1. a mature radial / atomic workflow
+2. a real but newer ordinary / Cartesian workflow
+3. a separate advanced/research line for contraction, hierarchy, and
+   prototype PGDG-related work
+
+## Most mature public-facing workflow: radial and atomic calculations
 
 The most mature use of the package today is atom-centered radial work.
 
@@ -18,7 +23,7 @@ This includes:
 
 For a new user, this is the clearest place to begin.
 
-## First atomic angular step
+## Mature extension of that workflow: the atomic angular line
 
 The package now also has a first explicit atomic angular layer built from channels labeled by `(l,m)`.
 
@@ -32,7 +37,7 @@ The present objects there are:
 
 This is the right layer to add before the later interacting atomic path.
 
-## First static interacting atomic ingredients
+## Mature extension of that workflow: static interacting atomic ingredients
 
 The package now also has a narrow static interacting atomic layer built in the current IDA style.
 
@@ -45,7 +50,7 @@ This layer bundles:
 
 It is an assembly layer only. It does not yet solve the many-electron problem.
 
-## First minimal atomic mean-field line
+## Mature extension of that workflow: minimal atomic mean-field
 
 The repository now also has the first small Hartree/Fock-style layer built on
 top of the current atomic IDA ingredients.
@@ -67,7 +72,19 @@ workflow. It is a narrow current-model mean-field layer built on:
 - the `(l,m)` atomic channel layer
 - the current static IDA ingredients
 
-## Advanced but still settling: primitive layers and contraction
+## Newer public-facing workflow: ordinary Cartesian
+
+The package now also has a real newer ordinary Cartesian line built around:
+
+- Coulomb-expansion-first one-body construction
+- mapped and hybrid ordinary bases
+- an explicit split between validation and experimental PGDG-style backends
+- the friendlier hybrid/core-supported regime as the practical target
+
+This line is still newer and less settled than the radial/atomic workflow, but
+it is no longer just a hidden side note.
+
+## Advanced research line: primitive layers and contraction
 
 The package also has a real one-dimensional structure for studying:
 
@@ -79,21 +96,7 @@ The package also has a real one-dimensional structure for studying:
 
 This line is already useful for method development, but it is not yet as settled or beginner-friendly as the radial path.
 
-## Ordinary Cartesian hydrogen branch
-
-The package now also has the first public globally mapped full-line ordinary
-basis route for the Cartesian hydrogen branch.
-
-The important interpretation is:
-
-- one global map on each Cartesian axis
-- the usual ordinary gausslet stencil and primitive layer
-- Coulomb expansion first, not 3D grid first
-
-This is still a narrow hydrogen-focused validation line. It is not yet a broad
-3D Cartesian basis framework or a He workflow.
-
-## Prototype line
+## Prototype line inside the advanced research layer
 
 `LeafLocalPGDG1D` and its augmentation should still be viewed as useful prototypes.
 
