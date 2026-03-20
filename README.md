@@ -2,14 +2,20 @@
 
 [![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://srwhite59.github.io/GaussletBases.jl/dev/)
 
-Gausslets are localized basis functions built from short linear combinations of
-Gaussians.
+Gausslets are localized, orthogonal basis functions constructed from short
+linear combinations of Gaussians.
 
-They are interesting because they try to keep two useful features at once:
+They were developed to combine several properties that are rarely available in
+one basis at the same time: orthogonality, locality, smoothness, systematic
+improvability by refining the spacing, and a moment structure that supports
+diagonal or integral-diagonal approximations for the Coulomb interaction.
 
-- the analytic convenience and explicit primitive structure of Gaussian basis
-  functions
-- the locality and near-orthogonality that make grid-like bases attractive
+The practical attraction of gausslets is that they can produce compact
+second-quantized Hamiltonians. Compared with standard Gaussian orbital bases,
+they are much more local and naturally orthogonal; compared with ordinary grid
+or DVR constructions, they retain an explicit Gaussian primitive structure and
+fit naturally with variable-resolution mappings and hybrid Gaussian
+augmentations near nuclei.
 
 GaussletBases.jl is a Julia package for building those basis functions,
 constructing the quadrature grids that go with them, and forming the current

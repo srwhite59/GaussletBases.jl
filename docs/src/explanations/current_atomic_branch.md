@@ -3,6 +3,11 @@
 This page is the shortest current user-facing status read for the mature
 radial/atomic line.
 
+It is the clearest current realization in the package of the main gausslet
+idea from the papers: an atom-centered basis with orthonormality, locality,
+variable resolution, and a compressed two-index or diagonal-style Coulomb
+representation.
+
 ## What the atomic branch is today
 
 The present atomic story is:
@@ -13,6 +18,11 @@ The present atomic story is:
 4. direct / exchange / Fock helpers
 5. a minimal UHF kernel
 6. dense and sliced Hamiltonian export for the current density-density model
+
+Scientifically, this branch adapts gausslets to atomic coordinates while
+keeping the present electron-electron structure in a compact IDA form rather
+than a four-index Coulomb tensor. The one-body side remains variational within
+the basis, while the compression story is centered on the interaction.
 
 This is already a coherent small atomic line. It is not yet a broad general
 atomic HF framework.

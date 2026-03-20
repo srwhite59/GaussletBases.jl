@@ -1,5 +1,16 @@
 # Current Status
 
+Gausslets are localized, orthonormal basis functions built from short linear
+combinations of Gaussians. Their main attraction is that they combine
+systematic grid-like completeness, variable resolution, and explicit Gaussian
+primitive structure with moment properties that support two-index or diagonal
+approximations for the Coulomb interaction.
+
+That combination is the scientific center of gravity for this repository. The
+status story below is therefore not only about package layers; it is about
+which current workflows best realize the gausslet goal of compact one-body and
+two-electron Hamiltonian structure.
+
 GaussletBases now has three clear layers in the public story:
 
 1. a mature radial / atomic workflow

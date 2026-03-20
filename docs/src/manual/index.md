@@ -11,6 +11,11 @@ first. The manual is intentionally small. It tells you:
   workflow, and the advanced research line currently stand
 - which pages are background material rather than first-read documents
 
+The scientific motivation throughout is the gausslet one from the papers:
+localized, orthonormal Gaussian-built basis functions with systematic spacing
+refinement and a two-index or diagonal Coulomb structure. The manual is
+organized around the workflows that currently realize that idea most cleanly.
+
 ## Who this manual is for
 
 Read this section if you want to:
