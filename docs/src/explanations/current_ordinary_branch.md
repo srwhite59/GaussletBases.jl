@@ -35,6 +35,7 @@ flat `docs/` tree for now. The most important filenames are:
 - `ordinary_coulomb_expansion_path.md`
 - `mapped_ordinary_basis.md`
 - `ordinary_cartesian_vee_validation.md`
+- `ordinary_cartesian_hybrid_vee_validation.md`
 - `ordinary_pgdg_hybrid_regime.md`
 - `ordinary_sho_spectral_test.md`
 - `ordinary_pgdg_hybrid_consolidation.md`

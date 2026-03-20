@@ -124,6 +124,40 @@ function ordinary_cartesian_vee_expectation(
     return Float64(real(dot(weights, operators.interaction_matrix * weights)))
 end
 
+"""
+    ordinary_cartesian_1s2_check(
+        operators::OrdinaryCartesianIDAOperators;
+        overlap_tol = 1.0e-8,
+    )
+
+Return a small validation package for the doubly occupied noninteracting
+`1s`-style reference state on the current ordinary Cartesian IDA object.
+
+The helper diagonalizes the one-body Hamiltonian in the current basis, takes
+the lowest orbital, and evaluates its doubly occupied density-density / IDA
+interaction expectation through [`ordinary_cartesian_vee_expectation`](@ref).
+Like that lower-level helper, it is intended for the orthonormal pure-
+ordinary and localized-hybrid validation routes, not for a generic
+nonorthogonal-basis two-electron solve.
+"""
+function ordinary_cartesian_1s2_check(
+    operators::OrdinaryCartesianIDAOperators;
+    overlap_tol::Real = 1.0e-8,
+)
+    decomposition = eigen(Hermitian(operators.one_body_hamiltonian))
+    orbital = decomposition.vectors[:, 1]
+    return (
+        orbital_energy = Float64(decomposition.values[1]),
+        orbital = orbital,
+        vee_expectation = ordinary_cartesian_vee_expectation(
+            operators,
+            orbital;
+            overlap_tol = overlap_tol,
+        ),
+        overlap_error = norm(operators.overlap_3d - I, Inf),
+    )
+end
+
 function _gaussian_pair_factor(a::Gaussian, b::Gaussian, exponent::Float64)
     exponent >= 0.0 || throw(ArgumentError("pair-factor exponent must be >= 0"))
 

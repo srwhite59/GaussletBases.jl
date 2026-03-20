@@ -23,6 +23,7 @@ Read these first:
 - [`docs/ordinary_coulomb_expansion_path.md`](ordinary_coulomb_expansion_path.md)
 - [`docs/mapped_ordinary_basis.md`](mapped_ordinary_basis.md)
 - [`docs/ordinary_cartesian_vee_validation.md`](ordinary_cartesian_vee_validation.md)
+- [`docs/ordinary_cartesian_hybrid_vee_validation.md`](ordinary_cartesian_hybrid_vee_validation.md)
 - [`docs/ordinary_pgdg_hybrid_regime.md`](ordinary_pgdg_hybrid_regime.md)
 - [`docs/ordinary_sho_spectral_test.md`](ordinary_sho_spectral_test.md)
 - [`docs/ordinary_pgdg_hybrid_consolidation.md`](ordinary_pgdg_hybrid_consolidation.md)
@@ -34,7 +35,8 @@ Then run:
 3. `examples/25_mapped_cartesian_hydrogen_backends.jl`
 4. `examples/33_ordinary_cartesian_1s2_vee.jl`
 5. `examples/29_hybrid_mapped_cartesian_hydrogen.jl`
-6. `examples/30_ordinary_sho_spectra.jl`
+6. `examples/34_hybrid_cartesian_1s2_vee.jl`
+7. `examples/30_ordinary_sho_spectra.jl`
 
 ## 3. What counts as current workflow documentation
 
@@ -43,6 +45,7 @@ These are the current-status pages for the ordinary branch:
 - [`docs/ordinary_coulomb_expansion_path.md`](ordinary_coulomb_expansion_path.md)
 - [`docs/mapped_ordinary_basis.md`](mapped_ordinary_basis.md)
 - [`docs/ordinary_cartesian_vee_validation.md`](ordinary_cartesian_vee_validation.md)
+- [`docs/ordinary_cartesian_hybrid_vee_validation.md`](ordinary_cartesian_hybrid_vee_validation.md)
 - [`docs/ordinary_pgdg_hybrid_regime.md`](ordinary_pgdg_hybrid_regime.md)
 - [`docs/ordinary_sho_spectral_test.md`](ordinary_sho_spectral_test.md)
 - [`docs/ordinary_pgdg_hybrid_consolidation.md`](ordinary_pgdg_hybrid_consolidation.md)

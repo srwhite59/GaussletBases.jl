@@ -52,5 +52,6 @@ ordinary_sho_spectrum
 CartesianProductOrbital3D
 OrdinaryCartesianIDAOperators
 ordinary_cartesian_ida_operators
+GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```

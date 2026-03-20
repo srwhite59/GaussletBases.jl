@@ -250,6 +250,47 @@ function _quick_ordinary_cartesian_1s2_vee_fixture()
     end)
 end
 
+function _quick_hybrid_cartesian_1s2_vee_fixture()
+    return _cached_fixture(:hybrid_cartesian_1s2_vee, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 7,
+            mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 7, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        core_gaussians = [
+            Gaussian(center = 0.0, width = 0.2),
+            Gaussian(center = 0.0, width = 0.6),
+        ]
+        pure_operators = ordinary_cartesian_ida_operators(
+            source_basis;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            backend = :pgdg_localized_experimental,
+        )
+        hybrid_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = core_gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        hybrid_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+        )
+        pure_check = GaussletBases.ordinary_cartesian_1s2_check(pure_operators)
+        hybrid_check = GaussletBases.ordinary_cartesian_1s2_check(hybrid_operators)
+        (
+            source_basis,
+            core_gaussians,
+            pure_operators,
+            hybrid_basis,
+            hybrid_operators,
+            pure_check,
+            hybrid_check,
+        )
+    end)
+end
+
 function _quick_hybrid_mapped_ordinary_fixture()
     return _cached_fixture(:quick_hybrid_mapped_ordinary_fixture, () -> begin
         full_expansion = coulomb_gaussian_expansion(doacc = false)
@@ -1545,6 +1586,42 @@ end
     @test abs(sum(abs2, orbital) - 1.0) < 1.0e-10
     @test abs(vee - reference_value) < 0.02
     @test ordinary_cartesian_vee_expectation(operators, 2.0 .* orbital) ≈ vee atol = 1.0e-12 rtol = 0.0
+end
+
+@testset "Hybrid ordinary Cartesian 1s^2 Vee check" begin
+    (
+        source_basis,
+        core_gaussians,
+        pure_operators,
+        hybrid_basis,
+        hybrid_operators,
+        pure_check,
+        hybrid_check,
+    ) = _quick_hybrid_cartesian_1s2_vee_fixture()
+    reference_value = 1.25
+
+    @test source_basis isa MappedUniformBasis
+    @test hybrid_basis isa HybridMappedOrdinaryBasis1D
+    @test hybrid_operators isa OrdinaryCartesianIDAOperators
+    @test hybrid_operators.backend == :pgdg_localized_experimental
+    @test length(core_gaussians) == 2
+    @test length(hybrid_basis) == length(source_basis) + length(core_gaussians)
+    @test length(orbitals(hybrid_operators)) == length(hybrid_basis)^3
+    @test norm(hybrid_operators.overlap_3d - I, Inf) < 1.0e-10
+    @test hybrid_operators.one_body_hamiltonian ≈ transpose(hybrid_operators.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_operators.interaction_matrix ≈ transpose(hybrid_operators.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test isfinite(pure_check.orbital_energy)
+    @test isfinite(hybrid_check.orbital_energy)
+    @test isfinite(pure_check.vee_expectation)
+    @test isfinite(hybrid_check.vee_expectation)
+    @test pure_check.vee_expectation > 0.0
+    @test hybrid_check.vee_expectation > 0.0
+    @test hybrid_check.vee_expectation > pure_check.vee_expectation
+    @test abs(hybrid_check.vee_expectation - reference_value) <
+          abs(pure_check.vee_expectation - reference_value)
+    @test abs(hybrid_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
+    @test ordinary_cartesian_vee_expectation(hybrid_operators, 3.0 .* hybrid_check.orbital) ≈
+          hybrid_check.vee_expectation atol = 1.0e-12 rtol = 0.0
 end
 
 @testset "Ordinary Cartesian localized backend" begin
@@ -3138,6 +3215,7 @@ end
     ordinary_hybrid_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_regime.md"), String)
     ordinary_sho_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_sho_spectral_test.md"), String)
     ordinary_vee_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_cartesian_vee_validation.md"), String)
+    ordinary_hybrid_vee_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_cartesian_hybrid_vee_validation.md"), String)
     ordinary_hybrid_consolidation_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_consolidation.md"), String)
     global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
     leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
@@ -3431,6 +3509,7 @@ end
     @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
     @test occursin("33_ordinary_cartesian_1s2_vee.jl", example_guide)
+    @test occursin("34_hybrid_cartesian_1s2_vee.jl", example_guide)
     @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
     @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
     @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
@@ -3456,6 +3535,10 @@ end
     @test occursin("doubly occupied noninteracting `1s` state", ordinary_vee_note)
     @test occursin("(5 / 8) z", lowercase(ordinary_vee_note))
     @test occursin("1.25 eh", lowercase(ordinary_vee_note))
+    @test occursin("friendlier hybrid/core-supported regime", lowercase(ordinary_hybrid_vee_note))
+    @test occursin("backbone-core gaussian contributions", lowercase(ordinary_hybrid_vee_note))
+    @test occursin("there is **not yet** a separate residual-gaussian transfer", lowercase(replace(ordinary_hybrid_vee_note, "‑" => "-")))
+    @test occursin("1.25 eh", lowercase(ordinary_hybrid_vee_note))
     @test occursin("radial branch should stay numerical", lowercase(ordinary_hybrid_note))
     @test occursin("white-lindsey", lowercase(replace(ordinary_hybrid_note, "–" => "-")))
     @test occursin("core gaussian", lowercase(ordinary_hybrid_note))
@@ -3490,6 +3573,7 @@ end
     @test occursin("broad general atomic hf workflow", lowercase(current_atomic_branch))
     @test occursin("what the ordinary branch is today", lowercase(current_ordinary_branch))
     @test occursin("ordinary_cartesian_vee_validation.md", current_ordinary_branch)
+    @test occursin("ordinary_cartesian_hybrid_vee_validation.md", current_ordinary_branch)
     @test occursin("ordinary_pgdg_hybrid_regime.md", current_ordinary_branch)
     @test occursin("ordinary_sho_spectral_test.md", current_ordinary_branch)
     @test occursin("ordinary_pgdg_hybrid_consolidation.md", current_ordinary_branch)

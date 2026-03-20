@@ -257,6 +257,7 @@ function mapped_cartesian_hydrogen_energy end
 function ordinary_sho_hamiltonian end
 function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
+function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
 function write_fullida_dense_jld2 end
 function write_sliced_ham_jld2 end

@@ -101,18 +101,21 @@ Then run:
     occupied noninteracting `1s` state.
 17. `29_hybrid_mapped_cartesian_hydrogen.jl`  
     Move into the friendlier hybrid/core-supported regime.
-18. `30_ordinary_sho_spectra.jl`  
+18. `34_hybrid_cartesian_1s2_vee.jl`  
+    Check the same doubly occupied `1s` scalar after adding explicit core
+    Gaussians in the hybrid regime.
+19. `30_ordinary_sho_spectra.jl`  
     Compare low-energy harmonic-oscillator spectra instead of only comparing
     raw matrix norms.
 
 The examples below are supporting ordinary-branch diagnostics rather than the
 first pages a new ordinary-branch reader should open:
 
-19. `26_ordinary_cartesian_ida.jl`  
+20. `26_ordinary_cartesian_ida.jl`  
     Build the first static He-style ordinary Cartesian IDA ingredients.
-20. `27_ordinary_cartesian_ida_localized_backends.jl`  
+21. `27_ordinary_cartesian_ida_localized_backends.jl`  
     Compare the backend split for the ordinary static ingredients.
-21. `28_ordinary_one_body_fidelity.jl`  
+22. `28_ordinary_one_body_fidelity.jl`  
     Decompose the remaining mild-mapped one-body differences.
 
 This keeps the ordinary branch readable as:
@@ -120,6 +123,7 @@ This keeps the ordinary branch readable as:
 - hydrogen first
 - one simple pure-ordinary `Vee` check next
 - hybrid practical regime next
+- hybrid/core-Gaussian `Vee` check after that
 - backend diagnostics after that
 
 ## Primitive-layer and contraction sequence
@@ -133,11 +137,11 @@ Read first:
 
 Then run:
 
-22. `05_primitive_sets.jl`
-23. `06_basis_contraction.jl`
-24. `07_position_contraction.jl`
-25. `08_basis_representation.jl`
-26. `14_radial_primitive_operators.jl`
+23. `05_primitive_sets.jl`
+24. `06_basis_contraction.jl`
+25. `07_position_contraction.jl`
+26. `08_basis_representation.jl`
+27. `14_radial_primitive_operators.jl`
 
 That is the shortest path from “basis functions as final objects” to “basis
 functions as contractions of a shared primitive layer.”
@@ -154,9 +158,9 @@ Read first:
 
 Then run:
 
-27. `09_basis_partition.jl`
-28. `10_hierarchical_partition.jl`
-29. `13_global_leaf_contraction.jl`
+28. `09_basis_partition.jl`
+29. `10_hierarchical_partition.jl`
+30. `13_global_leaf_contraction.jl`
 
 This is the clearest current research direction:
 
@@ -168,8 +172,8 @@ This is the clearest current research direction:
 These examples are still useful, but they are prototype studies rather than
 the main public story:
 
-30. `11_leaf_pgdg.jl`
-31. `12_leaf_pgdg_augmentation.jl`
+31. `11_leaf_pgdg.jl`
+32. `12_leaf_pgdg_augmentation.jl`
 
 Read them only after the corrected-direction examples above.
 
