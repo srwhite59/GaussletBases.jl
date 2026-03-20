@@ -52,4 +52,5 @@ ordinary_sho_spectrum
 CartesianProductOrbital3D
 OrdinaryCartesianIDAOperators
 ordinary_cartesian_ida_operators
+ordinary_cartesian_vee_expectation
 ```

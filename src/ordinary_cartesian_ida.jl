@@ -87,6 +87,43 @@ end
 
 orbitals(operators::OrdinaryCartesianIDAOperators) = operators.orbital_data
 
+"""
+    ordinary_cartesian_vee_expectation(
+        operators::OrdinaryCartesianIDAOperators,
+        orbital::AbstractVector;
+        overlap_tol = 1.0e-8,
+    )
+
+Return the current density-density / IDA interaction expectation value for a
+single spatial orbital occupied once with spin up and once with spin down in
+the ordinary Cartesian branch.
+
+This helper is intentionally narrow. It assumes the Cartesian product basis is
+already orthonormal to within `overlap_tol`, which is the intended pure
+ordinary validation regime. It is therefore suitable for the current identity-
+mapped ordinary-gausslet `1s^2` check, but it is not a general nonorthogonal-
+basis two-electron expectation evaluator.
+"""
+function ordinary_cartesian_vee_expectation(
+    operators::OrdinaryCartesianIDAOperators,
+    orbital::AbstractVector;
+    overlap_tol::Real = 1.0e-8,
+)
+    length(orbital) == length(operators.orbital_data) ||
+        throw(ArgumentError("orbital length must match the ordinary Cartesian orbital dimension"))
+    overlap_error = norm(operators.overlap_3d - I, Inf)
+    overlap_error <= Float64(overlap_tol) || throw(
+        ArgumentError(
+            "ordinary_cartesian_vee_expectation currently requires an orthonormal Cartesian product basis; got overlap error $(overlap_error)",
+        ),
+    )
+    weights = Float64[abs2(coefficient) for coefficient in orbital]
+    norm2 = sum(weights)
+    norm2 > 0.0 || throw(ArgumentError("orbital must have nonzero norm"))
+    weights ./= norm2
+    return Float64(real(dot(weights, operators.interaction_matrix * weights)))
+end
+
 function _gaussian_pair_factor(a::Gaussian, b::Gaussian, exponent::Float64)
     exponent >= 0.0 || throw(ArgumentError("pair-factor exponent must be >= 0"))
 

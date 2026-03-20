@@ -38,6 +38,7 @@ For the newer ordinary Cartesian line, continue with:
 - `23_cartesian_hydrogen_coulomb_expansion.jl`
 - `24_mapped_cartesian_hydrogen.jl`
 - `25_mapped_cartesian_hydrogen_backends.jl`
+- `33_ordinary_cartesian_1s2_vee.jl`
 - `29_hybrid_mapped_cartesian_hydrogen.jl`
 - `30_ordinary_sho_spectra.jl`
 
