@@ -222,6 +222,9 @@ That is deliberate. The package is still settling its scientific structure befor
 
 ## Acknowledgments
 
-Development of this package was accelerated substantially with the help of
-OpenAI Codex-style interactive coding assistance. Scientific direction, design
-choices, and final review remained author-driven.
+This repository draws on the author's substantial collection of earlier Julia
+modules. Work on the repository itself, as a complete rewrite and
+consolidation, began on March 12, 2026. It was made public on March 19, 2026,
+with development accelerated substantially by OpenAI Codex-style interactive
+coding assistance. Scientific direction, design choices, and final review
+remain author-driven.
