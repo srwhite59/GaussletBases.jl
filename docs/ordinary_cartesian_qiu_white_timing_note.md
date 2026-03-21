@@ -82,3 +82,96 @@ So the dominant remaining cost is now much clearer:
 That means the next structural optimization should focus there first. Only
 after that shared gausslet-side path is improved will it be meaningful to
 judge how much of the remaining cost is intrinsic dense 3D reference work.
+
+## What changed after the first shared-gg optimization pass
+
+The next optimization pass moved the shared `gg` scalar/factor path closer to
+the legacy term-first Coulomb-expansion style:
+
+- direct basis-space `x^2` and Gaussian-factor construction
+- term-first `F[g,i,j]` storage
+- legacy-style short inner reduction in the `gg` 3D Coulomb-expanded assembly
+
+That produced a real improvement on the same light case:
+
+- `basis_representation(...)`: about `15.43 s`
+- direct basis-space `x^2` plus Gaussian-factor build: about `4.90 s`
+
+compared with the earlier separate costs of about:
+
+- `basis_representation(...)`: `15.12 s`
+- `_x2_matrix(basis)`: `18.97 s`
+- `gaussian_factor_matrices(...)`: `5.08 s`
+
+So the shared `gg` scalar/factor side is no longer the main concern.
+
+But the dominant bottleneck still did not move far enough. The new direct
+basis-space pair-factor builder still did not finish within about `70 s` on
+that light case, and the full Qiu-White constructor still did not get past
+phase 1 in a reasonable time.
+
+So the next bottleneck remains:
+
+- the shared mapped-gausslet `gg` pair-factor builder
+
+not yet the later dense 3D reference stages.
+
+## What changed after the legacy-style 1D pair-factor correction
+
+The next optimization pass followed the legacy ordinary code more closely at
+the one-dimensional `gg` pair-factor level.
+
+Instead of building the active pair-factor data by midpoint-grid kernel
+application in the final mapped basis, the shared numerical `gg` bundle now:
+
+- builds a legacy-style mapped pure-Gaussian proxy raw layer at the mapped
+  centers and local widths
+- folds the local Jacobian amplitude into the contraction matrix
+- evaluates the one-dimensional pair factors analytically on that proxy raw
+  layer
+- contracts those raw matrices into the working one-dimensional gausslet basis
+
+That removed the old numerical basis-space pair-factor builder from the active
+shared `gg` path.
+
+The small before/after check on
+
+- `count = 3`
+- `s = 0.8`
+- first Coulomb term only
+
+was:
+
+- old `_basis_space_pair_factor_terms(...)`: `3.3123 s`
+- new `_mapped_legacy_proxy_layer(...)`: `0.2202 s`
+- new analytic proxy pair-factor build: `0.5792 s`
+
+On the light paper-like He case
+
+- `count = 9`
+- `s = 0.8`
+- `xmax = 6`
+- He `cc-pVTZ`
+- `interaction_treatment = :mwg`
+
+the shared bundle subphases are now approximately:
+
+- `basis_representation(...)`: `15.04 s`
+- direct scalar `x^2` plus Gaussian-factor build: `38.69 s`
+- `_mapped_legacy_proxy_layer(...)`: `0.21 s`
+- analytic proxy pair-factor build: `0.42 s`
+
+and the constructor timing hook now reports:
+
+- `shared gausslet-side 1D bundle: 51.98 s`
+
+So the earlier diagnosis changed again:
+
+- the shared mapped-gausslet `gg` pair-factor builder is no longer the main
+  bottleneck
+- the next phase that failed to clear in the same observation window is now
+  the Qiu-White-specific split gausslet-Gaussian raw-block assembly
+
+That means the next structural optimization should no longer target the old
+shared `gg` numerical pair-factor path first. The remaining slowdown has moved
+to the `ga` side of the Qiu-White reference constructor.

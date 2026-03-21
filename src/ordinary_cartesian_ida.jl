@@ -448,23 +448,41 @@ function _ordinary_cartesian_ida_from_gausslet_bundle(
     expansion::CoulombGaussianExpansion;
     Z::Real,
 )
-    weight_1d = bundle.weights
-    any(weight -> abs(weight) <= 1.0e-12, weight_1d) &&
-        throw(ArgumentError("ordinary Cartesian IDA layer requires nonzero 1D basis weights"))
-
-    weight_outer = weight_1d * transpose(weight_1d)
-    pair_factors_1d = [factor ./ weight_outer for factor in bundle.pair_factors]
     one_body = _mapped_ordinary_one_body_from_bundle(bundle)
-    _, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
-    return _ordinary_cartesian_ida_from_pair_factors(
+    overlap_3d, _ = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = 0.0)
+    interaction_matrix = _mapped_coulomb_expanded_symmetric_matrix(
+        expansion.coefficients,
+        bundle.pair_factor_terms,
+        bundle.pair_factor_terms,
+        bundle.pair_factor_terms,
+    )
+    one_body_hamiltonian =
+        _mapped_coulomb_expanded_symmetric_matrix(
+            -Float64(Z) .* expansion.coefficients,
+            bundle.gaussian_factor_terms,
+            bundle.gaussian_factor_terms,
+            bundle.gaussian_factor_terms,
+        )
+    n1d = size(bundle.overlap, 1)
+    identity_1d = Matrix{Float64}(I, n1d, n1d)
+    kinetic = bundle.kinetic
+    one_body_hamiltonian .+= kron(kinetic, kron(identity_1d, identity_1d))
+    one_body_hamiltonian .+= kron(identity_1d, kron(kinetic, identity_1d))
+    one_body_hamiltonian .+= kron(identity_1d, kron(identity_1d, kinetic))
+
+    return OrdinaryCartesianIDAOperators(
         bundle.basis,
         bundle.backend,
         :combined_basis,
         expansion,
         one_body,
-        pair_factors_1d,
+        overlap_3d,
         one_body_hamiltonian,
-        weight_1d,
+        bundle.pair_factors,
+        interaction_matrix,
+        _mapped_cartesian_orbitals(bundle.centers),
+        bundle.weights,
+        _mapped_cartesian_weights(bundle.weights),
     )
 end
 

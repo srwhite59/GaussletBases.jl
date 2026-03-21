@@ -221,7 +221,9 @@ function _qwrg_gausslet_1d_blocks(bundle::_MappedOrdinaryGausslet1DBundle)
         position_gg = bundle.position,
         x2_gg = bundle.x2,
         factor_gg = bundle.gaussian_factors,
+        factor_gg_terms = bundle.gaussian_factor_terms,
         pair_gg = bundle.pair_factors,
+        pair_gg_terms = bundle.pair_factor_terms,
         weight_gg = bundle.weights,
         center_gg = bundle.centers,
     )
@@ -416,26 +418,22 @@ function _qwrg_gausslet_one_body_matrix(
     hamiltonian .+= scratch
     _qwrg_fill_product_matrix!(scratch, overlap, overlap, kinetic)
     hamiltonian .+= scratch
-    for term in eachindex(expansion.coefficients)
-        factor = data.factor_gg[term]
-        _qwrg_fill_product_matrix!(scratch, factor, factor, factor)
-        hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* scratch
-    end
+    hamiltonian .+= _mapped_coulomb_expanded_symmetric_matrix(
+        -Float64(Z) .* expansion.coefficients,
+        data.factor_gg_terms,
+        data.factor_gg_terms,
+        data.factor_gg_terms,
+    )
     return 0.5 .* (hamiltonian .+ transpose(hamiltonian))
 end
 
 function _qwrg_gausslet_interaction_matrix(data, expansion::CoulombGaussianExpansion)
-    weight_outer = data.weight_gg * transpose(data.weight_gg)
-    pair_factors = [factor ./ weight_outer for factor in data.pair_gg]
-    ngausslet3d = length(_mapped_cartesian_orbitals(1:size(data.overlap_gg, 1)))
-    interaction = zeros(Float64, ngausslet3d, ngausslet3d)
-    scratch = zeros(Float64, ngausslet3d, ngausslet3d)
-    for term in eachindex(expansion.coefficients)
-        factor = pair_factors[term]
-        _qwrg_fill_product_matrix!(scratch, factor, factor, factor)
-        interaction .+= expansion.coefficients[term] .* scratch
-    end
-    return 0.5 .* (interaction .+ transpose(interaction))
+    return _mapped_coulomb_expanded_symmetric_matrix(
+        expansion.coefficients,
+        data.pair_gg_terms,
+        data.pair_gg_terms,
+        data.pair_gg_terms,
+    )
 end
 
 function _qwrg_raw_axis_blocks(data, axis::Symbol; squared::Bool = false)
