@@ -49,6 +49,7 @@ The object bundles:
 - the full Cartesian-product overlap and one-body matrices
 - the separable pair factors used in the current Coulomb-expansion assembly
 - the dense two-index interaction matrix
+- the interaction treatment label used for the current hybrid ordinary branch
 - explicit product-orbital indexing metadata
 
 It is a solver-facing static Hamiltonian object, not a solver itself.
@@ -56,6 +57,7 @@ It is a solver-facing static Hamiltonian object, not a solver itself.
 struct OrdinaryCartesianIDAOperators{B}
     basis::B
     backend::Symbol
+    interaction_treatment::Symbol
     expansion::CoulombGaussianExpansion
     one_body_1d::MappedOrdinaryOneBody1D
     overlap_3d::Matrix{Float64}
@@ -78,6 +80,8 @@ function Base.show(io::IO, operators::OrdinaryCartesianIDAOperators)
         length(operators.orbital_data),
         ", nterms=",
         length(operators.pair_factors_1d),
+        ", interaction=:",
+        operators.interaction_treatment,
     )
     if operators.backend != :numerical_reference
         print(io, ", experimental=true")
@@ -157,6 +161,18 @@ function ordinary_cartesian_1s2_check(
         overlap_error = norm(operators.overlap_3d - I, Inf),
     )
 end
+
+struct _AuxiliaryContractedLayer1D
+    primitive_layer::PrimitiveSet1D
+    coefficient_matrix::Matrix{Float64}
+    center_data::Vector{Float64}
+    integral_weight_data::Vector{Float64}
+end
+
+primitive_set(layer::_AuxiliaryContractedLayer1D) = layer.primitive_layer
+stencil_matrix(layer::_AuxiliaryContractedLayer1D) = layer.coefficient_matrix
+centers(layer::_AuxiliaryContractedLayer1D) = layer.center_data
+integral_weights(layer::_AuxiliaryContractedLayer1D) = layer.integral_weight_data
 
 function _gaussian_pair_factor(a::Gaussian, b::Gaussian, exponent::Float64)
     exponent >= 0.0 || throw(ArgumentError("pair-factor exponent must be >= 0"))
@@ -336,6 +352,68 @@ function _mapped_cartesian_one_body_matrix(
     return overlap_3d, hamiltonian
 end
 
+function _symmetrize_ida_matrix(matrix::AbstractMatrix{<:Real})
+    matrix_value = Matrix{Float64}(matrix)
+    return 0.5 .* (matrix_value .+ transpose(matrix_value))
+end
+
+function _normalized_density_transfer(overlaps::AbstractMatrix{<:Real})
+    transfer = abs2.(Matrix{Float64}(overlaps))
+    for column in axes(transfer, 2)
+        total = sum(view(transfer, :, column))
+        total > 0.0 || throw(ArgumentError("density transfer requires nonzero overlap into every target column"))
+        transfer[:, column] ./= total
+    end
+    return transfer
+end
+
+function _nearest_density_transfer(
+    source_centers::AbstractVector{<:Real},
+    target_centers::AbstractVector{<:Real},
+)
+    transfer = zeros(Float64, length(source_centers), length(target_centers))
+    for (column, target_center) in enumerate(target_centers)
+        index = argmin(abs.(Float64.(source_centers) .- Float64(target_center)))
+        transfer[index, column] = 1.0
+    end
+    return transfer
+end
+
+function _ordinary_cartesian_ida_from_pair_factors(
+    basis,
+    backend::Symbol,
+    interaction_treatment::Symbol,
+    expansion::CoulombGaussianExpansion,
+    one_body::MappedOrdinaryOneBody1D,
+    pair_factors_1d::Vector{Matrix{Float64}},
+    one_body_hamiltonian::AbstractMatrix{<:Real},
+    weight_1d::AbstractVector{<:Real},
+)
+    overlap_3d, _ = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = 0.0)
+    interaction_matrix = zeros(Float64, size(overlap_3d))
+    for term in eachindex(expansion.coefficients)
+        factor = pair_factors_1d[term]
+        interaction_matrix .+= expansion.coefficients[term] .* kron(factor, kron(factor, factor))
+    end
+
+    weight_values = Float64[Float64(weight) for weight in weight_1d]
+
+    return OrdinaryCartesianIDAOperators(
+        basis,
+        backend,
+        interaction_treatment,
+        expansion,
+        one_body,
+        overlap_3d,
+        Matrix{Float64}(one_body_hamiltonian),
+        pair_factors_1d,
+        interaction_matrix,
+        _mapped_cartesian_orbitals(centers(basis)),
+        weight_values,
+        _mapped_cartesian_weights(weight_values),
+    )
+end
+
 function _ordinary_cartesian_ida_from_layer(
     basis,
     backend::Symbol,
@@ -352,27 +430,222 @@ function _ordinary_cartesian_ida_from_layer(
 
     weight_outer = weight_1d * transpose(weight_1d)
     pair_factors_1d = [factor ./ weight_outer for factor in pair_factors_basis]
-    overlap_3d, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
-
-    interaction_matrix = zeros(Float64, size(overlap_3d))
-    for term in eachindex(expansion.coefficients)
-        factor = pair_factors_1d[term]
-        interaction_matrix .+= expansion.coefficients[term] .* kron(factor, kron(factor, factor))
-    end
-
-    return OrdinaryCartesianIDAOperators(
+    _, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
+    return _ordinary_cartesian_ida_from_pair_factors(
         basis,
         backend,
+        :combined_basis,
         expansion,
         one_body,
-        overlap_3d,
-        one_body_hamiltonian,
         pair_factors_1d,
-        interaction_matrix,
-        _mapped_cartesian_orbitals(centers(basis)),
+        one_body_hamiltonian,
         weight_1d,
-        _mapped_cartesian_weights(weight_1d),
     )
+end
+
+function _ordinary_cartesian_ida_from_gausslet_bundle(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion;
+    Z::Real,
+)
+    weight_1d = bundle.weights
+    any(weight -> abs(weight) <= 1.0e-12, weight_1d) &&
+        throw(ArgumentError("ordinary Cartesian IDA layer requires nonzero 1D basis weights"))
+
+    weight_outer = weight_1d * transpose(weight_1d)
+    pair_factors_1d = [factor ./ weight_outer for factor in bundle.pair_factors]
+    one_body = _mapped_ordinary_one_body_from_bundle(bundle)
+    _, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
+    return _ordinary_cartesian_ida_from_pair_factors(
+        bundle.basis,
+        bundle.backend,
+        :combined_basis,
+        expansion,
+        one_body,
+        pair_factors_1d,
+        one_body_hamiltonian,
+        weight_1d,
+    )
+end
+
+# Alg QW-RG step 4: Define residual Gaussians by orthogonalizing the added Gaussian channel.
+# See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+function _hybrid_residual_gaussian_seed(hybrid::HybridMappedOrdinaryBasis1D)
+    backbone = _mapped_ordinary_backend_layer(hybrid.source_basis, hybrid.backend)
+    nbackbone = length(backbone)
+    ncore = length(hybrid.core_gaussians)
+    ncore > 0 || throw(ArgumentError("residual Gaussian interaction treatment requires at least one added core Gaussian"))
+
+    backbone_coefficients_small = Matrix{Float64}(stencil_matrix(backbone))
+    hybrid_coefficients = Matrix{Float64}(stencil_matrix(hybrid))
+    nbackbone_primitives = size(backbone_coefficients_small, 1)
+    nprimitives = size(hybrid_coefficients, 1)
+    nprimitives == nbackbone_primitives + ncore || throw(
+        ArgumentError("hybrid primitive layout must be backbone primitives followed by core Gaussian primitives"),
+    )
+
+    backbone_coefficients = zeros(Float64, nprimitives, nbackbone)
+    backbone_coefficients[1:nbackbone_primitives, :] .= backbone_coefficients_small
+    raw_core_coefficients = zeros(Float64, nprimitives, ncore)
+    for index in 1:ncore
+        raw_core_coefficients[nbackbone_primitives + index, index] = 1.0
+    end
+
+    primitive_overlap = overlap_matrix(primitive_set(hybrid))
+    overlap_backbone = Matrix{Float64}(backbone_coefficients' * primitive_overlap * backbone_coefficients)
+    overlap_cross = Matrix{Float64}(backbone_coefficients' * primitive_overlap * raw_core_coefficients)
+    residual_projector = vcat(
+        -(overlap_backbone \ overlap_cross),
+        Matrix{Float64}(I, ncore, ncore),
+    )
+
+    seed_coefficients = hcat(backbone_coefficients, raw_core_coefficients)
+    residual_overlap = Matrix{Float64}(residual_projector' * (seed_coefficients' * primitive_overlap * seed_coefficients) * residual_projector)
+    residual_decomposition = eigen(Symmetric(residual_overlap))
+    keep = findall(>(1.0e-10), residual_decomposition.values)
+    isempty(keep) && throw(ArgumentError("residual Gaussian interaction treatment produced no nontrivial residual Gaussian directions"))
+    residual_transform =
+        residual_decomposition.vectors[:, keep] *
+        Diagonal(1.0 ./ sqrt.(residual_decomposition.values[keep]))
+    residual_coefficients = seed_coefficients * residual_projector * residual_transform
+    orthogonal_seed = hcat(backbone_coefficients, residual_coefficients)
+
+    transfer = _normalized_density_transfer(orthogonal_seed' * primitive_overlap * hybrid_coefficients)
+    raw_centers = Float64[gaussian.center_value for gaussian in hybrid.core_gaussians]
+    residual_mixing = abs2.(Matrix{Float64}(residual_transform))
+    residual_centers = Float64[]
+    for column in axes(residual_mixing, 2)
+        column_view = view(residual_mixing, :, column)
+        total = sum(column_view)
+        total > 0.0 || throw(ArgumentError("residual Gaussian center reconstruction requires nonzero Gaussian weight"))
+        push!(residual_centers, dot(column_view, raw_centers) / total)
+    end
+
+    return (
+        backbone = backbone,
+        backbone_coefficients = backbone_coefficients,
+        residual_coefficients = residual_coefficients,
+        transfer = transfer,
+        residual_centers = residual_centers,
+    )
+end
+
+# Alg QW-RG step 8b: Compute residual-Gaussian first and second moments for MWG.
+# See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+function _hybrid_residual_gaussian_mwg_data(hybrid::HybridMappedOrdinaryBasis1D)
+    seed = _hybrid_residual_gaussian_seed(hybrid)
+    primitive_layer = primitive_set(hybrid)
+    primitive_overlap = Matrix{Float64}(overlap_matrix(primitive_layer))
+    primitive_position = Matrix{Float64}(position_matrix(primitive_layer))
+    primitive_x2 = Matrix{Float64}(_x2_matrix(primitive_layer))
+
+    residual_overlap = Matrix{Float64}(seed.residual_coefficients' * primitive_overlap * seed.residual_coefficients)
+    residual_position = Matrix{Float64}(seed.residual_coefficients' * primitive_position * seed.residual_coefficients)
+    residual_x2 = Matrix{Float64}(seed.residual_coefficients' * primitive_x2 * seed.residual_coefficients)
+
+    residual_centers = Float64[]
+    residual_widths = Float64[]
+    effective_gaussians = Gaussian[]
+    for index in axes(residual_overlap, 1)
+        norm_value = Float64(residual_overlap[index, index])
+        norm_value > 1.0e-12 || throw(
+            ArgumentError("MWG residual Gaussian reconstruction requires nonzero residual norm"),
+        )
+        center_value = Float64(residual_position[index, index] / norm_value)
+        second_moment = Float64(residual_x2[index, index] / norm_value)
+        variance = second_moment - center_value^2
+        variance > 1.0e-12 || throw(
+            ArgumentError("MWG residual Gaussian reconstruction requires positive residual variance"),
+        )
+        width_value = sqrt(2.0 * variance)
+        push!(residual_centers, center_value)
+        push!(residual_widths, width_value)
+        push!(effective_gaussians, Gaussian(center = center_value, width = width_value))
+    end
+
+    return (
+        backbone = seed.backbone,
+        backbone_coefficients = seed.backbone_coefficients,
+        residual_coefficients = seed.residual_coefficients,
+        transfer = seed.transfer,
+        residual_centers = residual_centers,
+        residual_widths = residual_widths,
+        effective_gaussians = effective_gaussians,
+    )
+end
+
+function _hybrid_residual_gaussian_mwg_seed_layer(
+    hybrid::HybridMappedOrdinaryBasis1D,
+    mwg_data,
+)
+    hybrid_primitives = primitives(primitive_set(hybrid))
+    effective_primitives = mwg_data.effective_gaussians
+    primitive_layer = PrimitiveSet1D(
+        AbstractPrimitiveFunction1D[vcat(hybrid_primitives, effective_primitives)...];
+        name = :hybrid_residual_mwg_primitives,
+    )
+
+    nprimitive_hybrid = length(hybrid_primitives)
+    nresidual = length(effective_primitives)
+    nbackbone = size(mwg_data.backbone_coefficients, 2)
+    coefficient_matrix = zeros(Float64, nprimitive_hybrid + nresidual, nbackbone + nresidual)
+    coefficient_matrix[1:nprimitive_hybrid, 1:nbackbone] .= mwg_data.backbone_coefficients
+    for index in 1:nresidual
+        coefficient_matrix[nprimitive_hybrid + index, nbackbone + index] = 1.0
+    end
+
+    primitive_weights = Float64[integral_weight(primitive) for primitive in primitives(primitive_layer)]
+    integral_weight_data = vec(transpose(coefficient_matrix) * primitive_weights)
+    center_data = vcat(Float64.(centers(mwg_data.backbone)), mwg_data.residual_centers)
+    return _AuxiliaryContractedLayer1D(
+        primitive_layer,
+        coefficient_matrix,
+        center_data,
+        integral_weight_data,
+    )
+end
+
+# Alg QW-RG step 8a: Build nearest-center / GGT residual-Gaussian interaction data.
+# See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+function _hybrid_residual_gaussian_pair_factors_nearest(
+    hybrid::HybridMappedOrdinaryBasis1D,
+    expansion::CoulombGaussianExpansion,
+)
+    seed = _hybrid_residual_gaussian_seed(hybrid)
+    backbone = seed.backbone
+    backbone_pair_factors = _pair_gaussian_factor_matrices(backbone; exponents = expansion.exponents)
+    weight_backbone = Float64[Float64(weight) for weight in integral_weights(backbone)]
+    any(weight -> abs(weight) <= 1.0e-12, weight_backbone) &&
+        throw(ArgumentError("residual Gaussian interaction treatment requires nonzero backbone integral weights"))
+    weight_outer = weight_backbone * transpose(weight_backbone)
+    pair_backbone = [factor ./ weight_outer for factor in backbone_pair_factors]
+
+    transfer_rg = _nearest_density_transfer(centers(backbone), seed.residual_centers)
+    pair_seed = Matrix{Float64}[]
+    for factor in pair_backbone
+        factor_bg = factor * transfer_rg
+        factor_gg = transpose(transfer_rg) * factor * transfer_rg
+        push!(pair_seed, _symmetrize_ida_matrix([factor factor_bg; transpose(factor_bg) factor_gg]))
+    end
+
+    return [Matrix{Float64}(_symmetrize_ida_matrix(transpose(seed.transfer) * factor * seed.transfer)) for factor in pair_seed]
+end
+
+# Alg QW-RG step 8c and 8d: Build MWG effective Gaussian data and diagonal RG interaction factors.
+# See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+function _hybrid_residual_gaussian_pair_factors_mwg(
+    hybrid::HybridMappedOrdinaryBasis1D,
+    expansion::CoulombGaussianExpansion,
+)
+    mwg_data = _hybrid_residual_gaussian_mwg_data(hybrid)
+    seed_layer = _hybrid_residual_gaussian_mwg_seed_layer(hybrid, mwg_data)
+    pair_seed_basis = _pair_gaussian_factor_matrices(seed_layer; exponents = expansion.exponents)
+    weight_seed = Float64[Float64(weight) for weight in integral_weights(seed_layer)]
+    any(weight -> abs(weight) <= 1.0e-12, weight_seed) &&
+        throw(ArgumentError("MWG residual Gaussian interaction treatment requires nonzero seed integral weights"))
+    weight_outer = weight_seed * transpose(weight_seed)
+    pair_seed = [factor ./ weight_outer for factor in pair_seed_basis]
+    return [Matrix{Float64}(_symmetrize_ida_matrix(transpose(mwg_data.transfer) * factor * mwg_data.transfer)) for factor in pair_seed]
 end
 
 """
@@ -414,39 +687,97 @@ function ordinary_cartesian_ida_operators(
     Z::Real = 2.0,
     backend::Symbol = :pgdg_experimental,
 )
-    one_body = mapped_ordinary_one_body_operators(
+    gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
         exponents = expansion.exponents,
         center = 0.0,
         backend = backend,
     )
-    layer = _mapped_ordinary_backend_layer(basis, backend)
-    return _ordinary_cartesian_ida_from_layer(
-        basis,
-        backend,
+    return _ordinary_cartesian_ida_from_gausslet_bundle(
+        gausslet_bundle,
         expansion,
-        one_body,
-        layer;
         Z = Z,
     )
 end
 
+"""
+    ordinary_cartesian_ida_operators(
+        basis::HybridMappedOrdinaryBasis1D;
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        Z = 2.0,
+        interaction_treatment = :combined_basis,
+    )
+
+Build the current ordinary Cartesian static IDA ingredients for the hybrid
+ordinary branch.
+
+The hybrid path keeps the existing one-body construction and offers two narrow
+interaction treatments:
+
+- `:combined_basis` keeps the present combined hybrid-basis density-density
+  construction
+- `:residual_gaussian_nearest` uses a separate residual-Gaussian interaction
+  ansatz that assigns the residual Gaussian channel to the nearest ordinary
+  backbone centers before transferring the interaction back into the final
+  localized hybrid basis
+- `:residual_gaussian_mwg` uses the paper-style matched-width-Gaussian (MWG)
+  approximation: residual Gaussians are orthogonalized against the backbone,
+  their exact `x` and `x^2` moments are matched by effective Gaussian
+  orbitals, and those effective orbitals are used to build the residual
+  interaction seed before transferring it back into the final localized hybrid
+  basis
+
+The residual-Gaussian treatments are experimental and validation-oriented.
+They are intended for the current `1s^2` scalar checks, not as a claim that
+the hybrid ordinary branch is already solver-ready.
+"""
 function ordinary_cartesian_ida_operators(
     basis::HybridMappedOrdinaryBasis1D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
+    interaction_treatment::Symbol = :combined_basis,
 )
     one_body = mapped_ordinary_one_body_operators(
         basis;
         exponents = expansion.exponents,
         center = 0.0,
     )
-    return _ordinary_cartesian_ida_from_layer(
-        basis,
-        basis.backend,
-        expansion,
-        one_body,
-        basis;
-        Z = Z,
-    )
+    if interaction_treatment == :combined_basis
+        return _ordinary_cartesian_ida_from_layer(
+            basis,
+            basis.backend,
+            expansion,
+            one_body,
+            basis;
+            Z = Z,
+        )
+    elseif interaction_treatment == :residual_gaussian_nearest
+        pair_factors_1d = _hybrid_residual_gaussian_pair_factors_nearest(basis, expansion)
+        _, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
+        return _ordinary_cartesian_ida_from_pair_factors(
+            basis,
+            basis.backend,
+            interaction_treatment,
+            expansion,
+            one_body,
+            pair_factors_1d,
+            one_body_hamiltonian,
+            integral_weights(basis),
+        )
+    elseif interaction_treatment == :residual_gaussian_mwg
+        pair_factors_1d = _hybrid_residual_gaussian_pair_factors_mwg(basis, expansion)
+        _, one_body_hamiltonian = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = Z)
+        return _ordinary_cartesian_ida_from_pair_factors(
+            basis,
+            basis.backend,
+            interaction_treatment,
+            expansion,
+            one_body,
+            pair_factors_1d,
+            one_body_hamiltonian,
+            integral_weights(basis),
+        )
+    else
+        throw(ArgumentError("hybrid ordinary Cartesian interaction_treatment must be :combined_basis, :residual_gaussian_nearest, or :residual_gaussian_mwg"))
+    end
 end

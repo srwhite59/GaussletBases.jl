@@ -45,6 +45,8 @@ uhf_scf
 
 ```@docs
 MappedOrdinaryOneBody1D
+LegacySGaussianData
+legacy_s_gaussian_data
 mapped_ordinary_one_body_operators
 mapped_cartesian_hydrogen_energy
 ordinary_sho_hamiltonian
@@ -52,6 +54,9 @@ ordinary_sho_spectrum
 CartesianProductOrbital3D
 OrdinaryCartesianIDAOperators
 ordinary_cartesian_ida_operators
+QiuWhiteHybridOrbital3D
+QiuWhiteResidualGaussianOperators
+ordinary_cartesian_qiu_white_operators
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```

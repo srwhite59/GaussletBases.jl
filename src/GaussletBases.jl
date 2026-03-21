@@ -24,9 +24,12 @@ export AbstractFunction1D,
        UniformBasisSpec,
        MappedUniformBasisSpec,
        HybridMappedOrdinaryBasis1D,
+       LegacySGaussianData,
        MappedOrdinaryOneBody1D,
        CartesianProductOrbital3D,
+       QiuWhiteHybridOrbital3D,
        OrdinaryCartesianIDAOperators,
+       QiuWhiteResidualGaussianOperators,
        HalfLineBasisSpec,
        RadialBasisSpec,
        Gaussian,
@@ -92,11 +95,13 @@ export AbstractFunction1D,
        mapped_pgdg_prototype,
        mapped_pgdg_localized,
        hybrid_mapped_ordinary_basis,
+       legacy_s_gaussian_data,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
        ordinary_sho_hamiltonian,
        ordinary_sho_spectrum,
        ordinary_cartesian_ida_operators,
+       ordinary_cartesian_qiu_white_operators,
        ordinary_cartesian_vee_expectation,
        write_fullida_dense_jld2,
        write_sliced_ham_jld2,
@@ -257,6 +262,7 @@ function mapped_cartesian_hydrogen_energy end
 function ordinary_sho_hamiltonian end
 function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
+function ordinary_cartesian_qiu_white_operators end
 function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
 function write_fullida_dense_jld2 end
@@ -352,9 +358,11 @@ include("primitive_sets.jl")
 include("ordinary_coulomb.jl")
 include("ordinary_pgdg.jl")
 include("ordinary_hybrid.jl")
+include("legacy_basis_adapter.jl")
 include("ordinary_mapped_backends.jl")
 include("ordinary_sho.jl")
 include("ordinary_cartesian_ida.jl")
+include("ordinary_qiu_white_rg.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")

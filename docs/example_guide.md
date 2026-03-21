@@ -104,18 +104,31 @@ Then run:
 18. `34_hybrid_cartesian_1s2_vee.jl`  
     Check the same doubly occupied `1s` scalar after adding explicit core
     Gaussians in the hybrid regime.
-19. `30_ordinary_sho_spectra.jl`  
+19. `35_hybrid_cartesian_residual_vee.jl`  
+    Recheck the same hybrid `1s^2` scalar with a separate residual-Gaussian
+    interaction treatment once the ordinary backbone is more complete.
+20. `36_hybrid_cartesian_legacy_he_s_vee.jl`  
+    Replace the toy Gaussian add-on by real He `s` primitives from a legacy
+    standard basis and compare the same scalar again.
+21. `37_hybrid_cartesian_mwg_vee.jl`  
+    Compare the nearest-center and matched-width-Gaussian (MWG) residual
+    interaction treatments in the same legacy-He hybrid regime.
+22. `38_qiu_white_reference_vee.jl`  
+    Switch to the separate paper-faithful Qiu-White residual-Gaussian
+    reference path and compare it against the current surrogate MWG route on
+    the same He `1s^2` scalar.
+23. `30_ordinary_sho_spectra.jl`  
     Compare low-energy harmonic-oscillator spectra instead of only comparing
     raw matrix norms.
 
 The examples below are supporting ordinary-branch diagnostics rather than the
 first pages a new ordinary-branch reader should open:
 
-20. `26_ordinary_cartesian_ida.jl`  
+24. `26_ordinary_cartesian_ida.jl`  
     Build the first static He-style ordinary Cartesian IDA ingredients.
-21. `27_ordinary_cartesian_ida_localized_backends.jl`  
+25. `27_ordinary_cartesian_ida_localized_backends.jl`  
     Compare the backend split for the ordinary static ingredients.
-22. `28_ordinary_one_body_fidelity.jl`  
+26. `28_ordinary_one_body_fidelity.jl`  
     Decompose the remaining mild-mapped one-body differences.
 
 This keeps the ordinary branch readable as:

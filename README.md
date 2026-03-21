@@ -19,7 +19,8 @@ augmentations near nuclei.
 
 GaussletBases.jl is a Julia package for building those basis functions,
 constructing the quadrature grids that go with them, and forming the current
-one-body and IDA-style operators on top of them.
+one-body and integral-diagonal approximation (IDA)-style operators on top of
+them.
 
 Today the package can already do three scientifically useful things:
 
@@ -31,6 +32,9 @@ Today the package can already do three scientifically useful things:
 If you are new, start with the radial path.
 
 Documentation: <https://srwhite59.github.io/GaussletBases.jl/dev/>
+
+The rendered docs are now organized into a small set of primary sections:
+Manual, Algorithms, Examples, Reference, and Developer Notes.
 
 ## Who this package is for
 
@@ -177,6 +181,9 @@ The main entry pages are:
   The rendered docs home page.
 - [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)  
   The best first read after this README.
+- [Algorithms](https://srwhite59.github.io/GaussletBases.jl/dev/algorithms/)  
+  Basis-construction and operator-construction recipes with pseudocode, code
+  pointers, and paper references.
 - [Examples](https://srwhite59.github.io/GaussletBases.jl/dev/examples/)  
   The curated runnable-example entry point.
 - [Reference](https://srwhite59.github.io/GaussletBases.jl/dev/reference/)  

@@ -57,31 +57,35 @@ For the ordinary Cartesian line, use this sequence:
 18. `33_ordinary_cartesian_1s2_vee.jl`
 19. `29_hybrid_mapped_cartesian_hydrogen.jl`
 20. `34_hybrid_cartesian_1s2_vee.jl`
-21. `30_ordinary_sho_spectra.jl`
+21. `35_hybrid_cartesian_residual_vee.jl`
+22. `36_hybrid_cartesian_legacy_he_s_vee.jl`
+23. `37_hybrid_cartesian_mwg_vee.jl`
+24. `38_qiu_white_reference_vee.jl`
+25. `30_ordinary_sho_spectra.jl`
 
 The more diagnostic ordinary examples are:
 
-22. `26_ordinary_cartesian_ida.jl`
-23. `27_ordinary_cartesian_ida_localized_backends.jl`
-24. `28_ordinary_one_body_fidelity.jl`
+26. `26_ordinary_cartesian_ida.jl`
+27. `27_ordinary_cartesian_ida_localized_backends.jl`
+28. `28_ordinary_one_body_fidelity.jl`
 
 ## Primitive and hierarchy sequence
 
 If your focus is the primitive/contraction architecture, continue with:
 
-25. `05_primitive_sets.jl`
-26. `06_basis_contraction.jl`
-27. `07_position_contraction.jl`
-28. `08_basis_representation.jl`
-29. `14_radial_primitive_operators.jl`
-30. `09_basis_partition.jl`
-31. `10_hierarchical_partition.jl`
-32. `13_global_leaf_contraction.jl`
+28. `05_primitive_sets.jl`
+29. `06_basis_contraction.jl`
+30. `07_position_contraction.jl`
+31. `08_basis_representation.jl`
+32. `14_radial_primitive_operators.jl`
+33. `09_basis_partition.jl`
+34. `10_hierarchical_partition.jl`
+34. `13_global_leaf_contraction.jl`
 
 The prototype side branch remains:
 
-33. `11_leaf_pgdg.jl`
-34. `12_leaf_pgdg_augmentation.jl`
+35. `11_leaf_pgdg.jl`
+36. `12_leaf_pgdg_augmentation.jl`
 
 ## Read these pages alongside the examples
 

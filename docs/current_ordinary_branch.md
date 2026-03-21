@@ -11,6 +11,7 @@ The current ordinary story is:
 - one-dimensional mapped ordinary bases on each Cartesian axis
 - an explicit backend split between validation and experimental PGDG-style
   analytic construction
+- a separate paper-faithful Qiu-White residual-Gaussian reference path
 - the friendlier hybrid/core-supported regime as the practical target
 
 This line is still experimental, but it now has a clear current
@@ -24,6 +25,11 @@ Read these first:
 - [`docs/mapped_ordinary_basis.md`](mapped_ordinary_basis.md)
 - [`docs/ordinary_cartesian_vee_validation.md`](ordinary_cartesian_vee_validation.md)
 - [`docs/ordinary_cartesian_hybrid_vee_validation.md`](ordinary_cartesian_hybrid_vee_validation.md)
+- [`docs/ordinary_cartesian_residual_gaussian_interaction.md`](ordinary_cartesian_residual_gaussian_interaction.md)
+- [`docs/ordinary_cartesian_mwg_interaction.md`](ordinary_cartesian_mwg_interaction.md)
+- [`docs/ordinary_cartesian_legacy_he_s_adapter.md`](ordinary_cartesian_legacy_he_s_adapter.md)
+- [`docs/ordinary_cartesian_qiu_white_reference.md`](ordinary_cartesian_qiu_white_reference.md)
+- [`docs/ordinary_cartesian_qiu_white_crossblock_correction.md`](ordinary_cartesian_qiu_white_crossblock_correction.md)
 - [`docs/ordinary_pgdg_hybrid_regime.md`](ordinary_pgdg_hybrid_regime.md)
 - [`docs/ordinary_sho_spectral_test.md`](ordinary_sho_spectral_test.md)
 - [`docs/ordinary_pgdg_hybrid_consolidation.md`](ordinary_pgdg_hybrid_consolidation.md)
@@ -36,7 +42,10 @@ Then run:
 4. `examples/33_ordinary_cartesian_1s2_vee.jl`
 5. `examples/29_hybrid_mapped_cartesian_hydrogen.jl`
 6. `examples/34_hybrid_cartesian_1s2_vee.jl`
-7. `examples/30_ordinary_sho_spectra.jl`
+7. `examples/35_hybrid_cartesian_residual_vee.jl`
+8. `examples/36_hybrid_cartesian_legacy_he_s_vee.jl`
+9. `examples/37_hybrid_cartesian_mwg_vee.jl`
+10. `examples/30_ordinary_sho_spectra.jl`
 
 ## 3. What counts as current workflow documentation
 
@@ -46,6 +55,11 @@ These are the current-status pages for the ordinary branch:
 - [`docs/mapped_ordinary_basis.md`](mapped_ordinary_basis.md)
 - [`docs/ordinary_cartesian_vee_validation.md`](ordinary_cartesian_vee_validation.md)
 - [`docs/ordinary_cartesian_hybrid_vee_validation.md`](ordinary_cartesian_hybrid_vee_validation.md)
+- [`docs/ordinary_cartesian_residual_gaussian_interaction.md`](ordinary_cartesian_residual_gaussian_interaction.md)
+- [`docs/ordinary_cartesian_mwg_interaction.md`](ordinary_cartesian_mwg_interaction.md)
+- [`docs/ordinary_cartesian_legacy_he_s_adapter.md`](ordinary_cartesian_legacy_he_s_adapter.md)
+- [`docs/ordinary_cartesian_qiu_white_reference.md`](ordinary_cartesian_qiu_white_reference.md)
+- [`docs/ordinary_cartesian_qiu_white_crossblock_correction.md`](ordinary_cartesian_qiu_white_crossblock_correction.md)
 - [`docs/ordinary_pgdg_hybrid_regime.md`](ordinary_pgdg_hybrid_regime.md)
 - [`docs/ordinary_sho_spectral_test.md`](ordinary_sho_spectral_test.md)
 - [`docs/ordinary_pgdg_hybrid_consolidation.md`](ordinary_pgdg_hybrid_consolidation.md)

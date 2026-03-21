@@ -41,6 +41,10 @@ For the newer ordinary Cartesian line, continue with:
 - `33_ordinary_cartesian_1s2_vee.jl`
 - `29_hybrid_mapped_cartesian_hydrogen.jl`
 - `34_hybrid_cartesian_1s2_vee.jl`
+- `35_hybrid_cartesian_residual_vee.jl`
+- `36_hybrid_cartesian_legacy_he_s_vee.jl`
+- `37_hybrid_cartesian_mwg_vee.jl`
+- `38_qiu_white_reference_vee.jl`
 - `30_ordinary_sho_spectra.jl`
 
 ## Full curated guide

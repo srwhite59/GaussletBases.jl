@@ -11,10 +11,21 @@ The current ordinary story is:
 - one-dimensional mapped ordinary bases on each Cartesian axis
 - an explicit backend split between validation and experimental PGDG-style
   analytic construction
+- a separate paper-faithful Qiu-White residual-Gaussian reference path
 - the friendlier hybrid/core-supported regime as the practical target
+
+The hybrid motivation is the same as in the hybrid gausslet/Gaussian papers:
+the Gaussian supplement is there to improve the near-nuclear/core region while
+letting the gausslet backbone stay at a relatively moderate spacing, instead
+of asking the gausslets alone to resolve the whole core.
 
 This line is still experimental, but it now has a clear current
 interpretation and should be read as a real second workflow in the package.
+
+For terms involving residual Gaussians, the intended interaction stays in the
+same two-index integral-diagonal-approximation (IDA) representation used for
+the gausslet channel, rather than being treated as a four-index tensor with
+only diagonal index patterns retained.
 
 ## Start here
 
@@ -36,6 +47,11 @@ flat `docs/` tree for now. The most important filenames are:
 - `mapped_ordinary_basis.md`
 - `ordinary_cartesian_vee_validation.md`
 - `ordinary_cartesian_hybrid_vee_validation.md`
+- `ordinary_cartesian_residual_gaussian_interaction.md`
+- `ordinary_cartesian_mwg_interaction.md`
+- `ordinary_cartesian_legacy_he_s_adapter.md`
+- `ordinary_cartesian_qiu_white_reference.md`
+- `ordinary_cartesian_qiu_white_crossblock_correction.md`
 - `ordinary_pgdg_hybrid_regime.md`
 - `ordinary_sho_spectral_test.md`
 - `ordinary_pgdg_hybrid_consolidation.md`

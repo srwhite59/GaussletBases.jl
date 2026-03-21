@@ -291,6 +291,53 @@ function _quick_hybrid_cartesian_1s2_vee_fixture()
     end)
 end
 
+function _friendly_hybrid_residual_vee_fixture(count::Int, s::Float64)
+    key = Symbol(:friendly_hybrid_residual_vee, count, round(Int, 1000 * s))
+    return _cached_fixture(key, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        core_gaussians = [
+            Gaussian(center = 0.0, width = 0.2),
+            Gaussian(center = 0.0, width = 0.6),
+        ]
+        pure_operators = ordinary_cartesian_ida_operators(
+            source_basis;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            backend = :pgdg_localized_experimental,
+        )
+        hybrid_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = core_gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        combined_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+        )
+        residual_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :residual_gaussian_nearest,
+        )
+        (
+            source_basis,
+            hybrid_basis,
+            pure_operators,
+            combined_operators,
+            residual_operators,
+            GaussletBases.ordinary_cartesian_1s2_check(pure_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(combined_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(residual_operators),
+        )
+    end)
+end
+
 function _quick_hybrid_mapped_ordinary_fixture()
     return _cached_fixture(:quick_hybrid_mapped_ordinary_fixture, () -> begin
         full_expansion = coulomb_gaussian_expansion(doacc = false)
@@ -373,6 +420,160 @@ function _quick_hybrid_mapped_ordinary_fixture()
             energy_analytic,
             hard_energy_reference,
             hard_energy_analytic,
+        )
+    end)
+end
+
+_legacy_basisfile_path_for_tests() = get(ENV, "GAUSSLETBASES_BASISSETS_PATH", joinpath(homedir(), "BasisSets"))
+_legacy_basisfile_available() = isfile(_legacy_basisfile_path_for_tests())
+
+function _legacy_he_s_hybrid_fixture(basis_name::String)
+    key = Symbol(:legacy_he_s_hybrid_fixture, Symbol(lowercase(basis_name)))
+    return _cached_fixture(key, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 11,
+            mapping = fit_asinh_mapping_for_strength(s = 0.6, npoints = 11, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        pure_operators = ordinary_cartesian_ida_operators(
+            source_basis;
+            expansion = expansion,
+            Z = 2.0,
+            backend = :pgdg_localized_experimental,
+        )
+        toy_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = [Gaussian(center = 0.0, width = 0.2), Gaussian(center = 0.0, width = 0.6)],
+            backend = :pgdg_localized_experimental,
+        )
+        toy_operators = ordinary_cartesian_ida_operators(
+            toy_basis;
+            expansion = expansion,
+            Z = 2.0,
+        )
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = legacy.gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        legacy_operators = ordinary_cartesian_ida_operators(
+            legacy_basis;
+            expansion = expansion,
+            Z = 2.0,
+        )
+        (
+            source_basis,
+            legacy,
+            GaussletBases.ordinary_cartesian_1s2_check(pure_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(toy_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(legacy_operators),
+        )
+    end)
+end
+
+function _legacy_he_s_mwg_fixture(basis_name::String; s::Float64 = 0.6)
+    key = Symbol(:legacy_he_s_mwg_fixture, Symbol(lowercase(basis_name)), round(Int, 1000 * s))
+    return _cached_fixture(key, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 11,
+            mapping = fit_asinh_mapping_for_strength(s = s, npoints = 11, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        pure_operators = ordinary_cartesian_ida_operators(
+            source_basis;
+            expansion = expansion,
+            Z = 2.0,
+            backend = :pgdg_localized_experimental,
+        )
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        hybrid_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = legacy.gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        combined_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :combined_basis,
+        )
+        nearest_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :residual_gaussian_nearest,
+        )
+        mwg_operators = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :residual_gaussian_mwg,
+        )
+        mwg_data = GaussletBases._hybrid_residual_gaussian_mwg_data(hybrid_basis)
+        (
+            source_basis,
+            legacy,
+            hybrid_basis,
+            pure_operators,
+            combined_operators,
+            nearest_operators,
+            mwg_operators,
+            GaussletBases.ordinary_cartesian_1s2_check(pure_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(combined_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(nearest_operators),
+            GaussletBases.ordinary_cartesian_1s2_check(mwg_operators),
+            mwg_data,
+        )
+    end)
+end
+
+function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::Int = 9, s::Float64 = 0.8, nterms::Int = 3)
+    key = Symbol(:qiu_white_reference_fixture, Symbol(lowercase(basis_name)), count, round(Int, 1000 * s), nterms)
+    return _cached_fixture(key, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), nterms)
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        hybrid_basis = hybrid_mapped_ordinary_basis(
+            source_basis;
+            core_gaussians = legacy.gaussians,
+            backend = :pgdg_localized_experimental,
+        )
+        surrogate_mwg = ordinary_cartesian_ida_operators(
+            hybrid_basis;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :residual_gaussian_mwg,
+        )
+        qiu_nearest = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        qiu_mwg = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
+        )
+        (
+            source_basis,
+            legacy,
+            surrogate_mwg,
+            qiu_nearest,
+            qiu_mwg,
+            GaussletBases.ordinary_cartesian_1s2_check(surrogate_mwg),
+            GaussletBases.ordinary_cartesian_1s2_check(qiu_nearest),
+            GaussletBases.ordinary_cartesian_1s2_check(qiu_mwg),
         )
     end)
 end
@@ -1620,8 +1821,181 @@ end
     @test abs(hybrid_check.vee_expectation - reference_value) <
           abs(pure_check.vee_expectation - reference_value)
     @test abs(hybrid_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
-    @test ordinary_cartesian_vee_expectation(hybrid_operators, 3.0 .* hybrid_check.orbital) ≈
+@test ordinary_cartesian_vee_expectation(hybrid_operators, 3.0 .* hybrid_check.orbital) ≈
           hybrid_check.vee_expectation atol = 1.0e-12 rtol = 0.0
+end
+
+@testset "Hybrid residual Gaussian interaction treatment" begin
+    (
+        source_basis,
+        hybrid_basis,
+        pure_operators,
+        combined_operators,
+        residual_operators,
+        pure_check,
+        combined_check,
+        residual_check,
+    ) = _friendly_hybrid_residual_vee_fixture(11, 0.6)
+    reference_value = 1.25
+
+    @test source_basis isa MappedUniformBasis
+    @test hybrid_basis isa HybridMappedOrdinaryBasis1D
+    @test combined_operators.interaction_treatment == :combined_basis
+    @test residual_operators.interaction_treatment == :residual_gaussian_nearest
+    @test norm(combined_operators.overlap_3d - residual_operators.overlap_3d, Inf) < 1.0e-12
+    @test norm(combined_operators.one_body_hamiltonian - residual_operators.one_body_hamiltonian, Inf) < 1.0e-12
+    @test combined_operators.interaction_matrix ≈ transpose(combined_operators.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test residual_operators.interaction_matrix ≈ transpose(residual_operators.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test pure_check.vee_expectation > 0.0
+    @test combined_check.vee_expectation > 0.0
+    @test residual_check.vee_expectation > 0.0
+    @test abs(combined_check.vee_expectation - residual_check.vee_expectation) > 1.0e-2
+    @test abs(combined_check.vee_expectation - reference_value) <
+          abs(residual_check.vee_expectation - reference_value)
+    @test abs(combined_check.orbital_energy - residual_check.orbital_energy) < 1.0e-12
+    @test abs(pure_check.vee_expectation - reference_value) < 0.02
+    @test abs(combined_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
+end
+
+@testset "Legacy He s Gaussian adapter" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        vtz = legacy_s_gaussian_data("He", "cc-pVTZ")
+        vqz = legacy_s_gaussian_data("He", "cc-pVQZ")
+
+        @test vtz isa LegacySGaussianData
+        @test vqz isa LegacySGaussianData
+        @test vtz.uncontracted
+        @test vqz.uncontracted
+        @test vtz.max_width === nothing
+        @test vqz.max_width === nothing
+        @test vtz.primitive_exponents == [234.0, 35.16, 7.989, 2.212, 0.6669, 0.2089]
+        @test vqz.primitive_exponents == [528.5, 79.31, 18.05, 5.085, 1.609, 0.5363, 0.1833]
+        @test length(vtz.gaussians) == 6
+        @test length(vqz.gaussians) == 7
+        @test vtz.widths[1] ≈ inv(sqrt(2 * 234.0)) atol = 1.0e-12 rtol = 0.0
+        @test vqz.widths[end] ≈ inv(sqrt(2 * 0.1833)) atol = 1.0e-12 rtol = 0.0
+    end
+end
+
+@testset "Legacy He s hybrid supplement check" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        (
+            source_basis,
+            legacy,
+            pure_check,
+            toy_check,
+            legacy_check,
+        ) = _legacy_he_s_hybrid_fixture("cc-pVTZ")
+
+        @test source_basis isa MappedUniformBasis
+        @test legacy isa LegacySGaussianData
+        @test isfinite(pure_check.orbital_energy)
+        @test isfinite(toy_check.orbital_energy)
+        @test isfinite(legacy_check.orbital_energy)
+        @test isfinite(pure_check.vee_expectation)
+        @test isfinite(toy_check.vee_expectation)
+        @test isfinite(legacy_check.vee_expectation)
+        @test abs(legacy_check.orbital_energy + 2.0) < abs(toy_check.orbital_energy + 2.0)
+        @test abs(legacy_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
+        @test abs(legacy_check.vee_expectation - 1.25) < 0.02
+    end
+end
+
+@testset "Legacy He s MWG residual interaction" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        (
+            source_basis,
+            legacy,
+            hybrid_basis,
+            pure_operators,
+            combined_operators,
+            nearest_operators,
+            mwg_operators,
+            pure_check,
+            combined_check,
+            nearest_check,
+            mwg_check,
+            mwg_data,
+        ) = _legacy_he_s_mwg_fixture("cc-pVTZ")
+
+        @test source_basis isa MappedUniformBasis
+        @test legacy isa LegacySGaussianData
+        @test hybrid_basis isa HybridMappedOrdinaryBasis1D
+        @test combined_operators.interaction_treatment == :combined_basis
+        @test nearest_operators.interaction_treatment == :residual_gaussian_nearest
+        @test mwg_operators.interaction_treatment == :residual_gaussian_mwg
+        @test norm(combined_operators.overlap_3d - nearest_operators.overlap_3d, Inf) < 1.0e-12
+        @test norm(combined_operators.overlap_3d - mwg_operators.overlap_3d, Inf) < 1.0e-12
+        @test norm(combined_operators.one_body_hamiltonian - nearest_operators.one_body_hamiltonian, Inf) < 1.0e-12
+        @test norm(combined_operators.one_body_hamiltonian - mwg_operators.one_body_hamiltonian, Inf) < 1.0e-12
+        @test mwg_operators.interaction_matrix ≈ transpose(mwg_operators.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test all(isfinite, mwg_data.residual_centers)
+        @test all(isfinite, mwg_data.residual_widths)
+        @test all(>(0.0), mwg_data.residual_widths)
+        @test maximum(abs.(mwg_data.residual_centers)) < 1.0e-8
+        @test pure_check.vee_expectation > 0.0
+        @test combined_check.vee_expectation > 0.0
+        @test nearest_check.vee_expectation > 0.0
+        @test mwg_check.vee_expectation > 0.0
+        @test abs(mwg_check.vee_expectation - nearest_check.vee_expectation) > 1.0e-3
+        @test abs(mwg_check.orbital_energy - combined_check.orbital_energy) < 1.0e-12
+    end
+end
+
+@testset "Qiu-White residual Gaussian reference path" begin
+    if !_legacy_basisfile_available() || !_RUN_SLOW_TESTS
+        @test true
+    else
+        (
+            source_basis,
+            legacy,
+            surrogate_mwg,
+            qiu_nearest,
+            qiu_mwg,
+            surrogate_check,
+            nearest_check,
+            mwg_check,
+        ) = _qiu_white_reference_fixture()
+
+        @test source_basis isa MappedUniformBasis
+        @test legacy isa LegacySGaussianData
+        @test surrogate_mwg isa OrdinaryCartesianIDAOperators
+        @test qiu_nearest isa QiuWhiteResidualGaussianOperators
+        @test qiu_mwg isa QiuWhiteResidualGaussianOperators
+        @test qiu_nearest.interaction_treatment == :ggt_nearest
+        @test qiu_mwg.interaction_treatment == :mwg
+        @test qiu_mwg.gausslet_backend == :numerical_reference
+        @test qiu_mwg.gausslet_count == length(source_basis)^3
+        @test qiu_mwg.residual_count > 0
+        @test size(qiu_mwg.raw_to_final, 1) == qiu_mwg.gausslet_count + length(legacy.gaussians)
+        @test size(qiu_mwg.raw_to_final, 2) == qiu_mwg.gausslet_count + qiu_mwg.residual_count
+        @test norm(qiu_nearest.overlap - I, Inf) < 1.0e-8
+        @test norm(qiu_mwg.overlap - I, Inf) < 1.0e-8
+        @test qiu_nearest.one_body_hamiltonian ≈ transpose(qiu_nearest.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test qiu_mwg.one_body_hamiltonian ≈ transpose(qiu_mwg.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test qiu_nearest.interaction_matrix ≈ transpose(qiu_nearest.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test qiu_mwg.interaction_matrix ≈ transpose(qiu_mwg.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test size(qiu_mwg.interaction_matrix) == (qiu_mwg.gausslet_count + qiu_mwg.residual_count, qiu_mwg.gausslet_count + qiu_mwg.residual_count)
+        @test all(isfinite, qiu_mwg.residual_centers)
+        @test all(isfinite, qiu_mwg.residual_widths)
+        @test all(>(0.0), vec(qiu_mwg.residual_widths))
+        @test maximum(abs.(qiu_mwg.residual_centers)) < 1.0e-6
+        @test isfinite(surrogate_check.orbital_energy)
+        @test isfinite(nearest_check.orbital_energy)
+        @test isfinite(mwg_check.orbital_energy)
+        @test isfinite(surrogate_check.vee_expectation)
+        @test isfinite(nearest_check.vee_expectation)
+        @test isfinite(mwg_check.vee_expectation)
+        @test surrogate_check.vee_expectation > 0.0
+        @test nearest_check.vee_expectation > 0.0
+        @test mwg_check.vee_expectation > 0.0
+    end
 end
 
 @testset "Ordinary Cartesian localized backend" begin
@@ -3228,8 +3602,8 @@ end
     @test !occursin("CombinedMapping", design)
     @test !occursin("ScaledMapping", design)
     @test !occursin("NoDiagonalApproximation", design)
-    @test occursin("Gausslets are localized basis functions built from short linear combinations of", readme)
-    @test occursin("They are interesting because", readme)
+    @test occursin("Gausslets are localized, orthogonal basis functions constructed from short", readme)
+    @test occursin("They were developed to combine several properties", readme)
     @test occursin("mature **radial / atomic workflow**", readme)
     @test occursin("A first useful calculation", readme)
     @test occursin("Best first path through the repository", readme)
@@ -3241,7 +3615,7 @@ end
     @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/reference/", readme)
     @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/developer/", readme)
     @test occursin("## Acknowledgments", readme)
-    @test occursin("OpenAI Codex-style interactive coding assistance", readme)
+    @test occursin("OpenAI Codex-style interactive", readme)
     @test occursin("author-driven", readme)
     @test occursin("AsinhMapping(c = c, s = s)", readme)
     @test occursin("ordinary Julia keyword arguments", readme)
@@ -3337,7 +3711,7 @@ end
     @test occursin("Examples", docs_site_index)
     @test occursin("Reference", docs_site_index)
     @test occursin("Developer Notes", docs_site_index)
-    @test occursin("Manual, Examples, and Reference", docs_site_index)
+    @test occursin("Manual, Algorithms, Examples, and Reference", docs_site_index)
     @test occursin("user-facing manual", lowercase(docs_site_manual))
     @test occursin("Who this manual is for", docs_site_manual)
     @test occursin("Recommended reading order", docs_site_manual)
@@ -3382,6 +3756,8 @@ end
     @test occursin("mapped_cartesian_hydrogen_energy", docs_site_reference_atomic)
     @test occursin("write_fullida_dense_jld2", docs_site_reference_export)
     @test occursin("write_sliced_ham_jld2", docs_site_reference_export)
+    @test occursin("integral-diagonal approximation (IDA)", readme)
+    @test occursin("integral-diagonal approximation (IDA)", docs_site_index)
     @test occursin("ordinary gausslets are the broad foundation", lowercase(architecture))
     @test occursin("radial gausslets are the current mature public-facing workflow", lowercase(architecture))
     @test occursin("first minimal atomic mean-field line", lowercase(architecture))

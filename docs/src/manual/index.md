@@ -11,6 +11,10 @@ first. The manual is intentionally small. It tells you:
   workflow, and the advanced research line currently stand
 - which pages are background material rather than first-read documents
 
+Detailed basis-construction and operator-construction recipes live in the
+[Algorithms](../algorithms/index.md) section. The Manual tells you what to
+read and run; Algorithms records how the main constructions are built.
+
 The scientific motivation throughout is the gausslet one from the papers:
 localized, orthonormal Gaussian-built basis functions with systematic spacing
 refinement and a two-index or diagonal Coulomb structure. The manual is
@@ -26,7 +30,8 @@ Read this section if you want to:
 - find the right example or workflow page without digging through note history
 
 If you already know the object or function you want, jump to the
-[Reference](../reference/index.md) instead.
+[Reference](../reference/index.md). If you want the exact construction order
+for a basis or operator path, jump to [Algorithms](../algorithms/index.md).
 
 ## Recommended reading order
 
@@ -60,6 +65,7 @@ but it is not the best first entry point into the package.
 
 After the main workflow pages are clear, the next useful documents are:
 
+- [Algorithms](../algorithms/index.md)
 - [Examples](../examples/index.md)
 - [Reference](../reference/index.md)
 - [Developer Notes](../developer/index.md)

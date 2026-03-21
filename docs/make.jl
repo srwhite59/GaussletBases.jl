@@ -18,9 +18,11 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Manual" => "manual/index.md",
+        "Algorithms" => "algorithms/index.md",
         "Examples" => "examples/index.md",
         "Reference" => "reference/index.md",
         "Developer Notes" => "developer/index.md",
+        hide("Qiu-White residual-Gaussian route" => "algorithms/qiu_white_residual_gaussian_route.md"),
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
         hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),
         hide("Current atomic branch" => "explanations/current_atomic_branch.md"),

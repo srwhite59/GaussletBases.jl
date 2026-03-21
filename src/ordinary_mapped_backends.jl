@@ -24,6 +24,22 @@ struct MappedOrdinaryOneBody1D{B}
     center::Float64
 end
 
+struct _MappedOrdinaryGausslet1DBundle{B,L}
+    basis::B
+    layer::L
+    backend::Symbol
+    overlap::Matrix{Float64}
+    kinetic::Matrix{Float64}
+    position::Matrix{Float64}
+    x2::Matrix{Float64}
+    gaussian_factors::Vector{Matrix{Float64}}
+    pair_factors::Vector{Matrix{Float64}}
+    exponents::Vector{Float64}
+    center::Float64
+    weights::Vector{Float64}
+    centers::Vector{Float64}
+end
+
 function Base.show(io::IO, operators::MappedOrdinaryOneBody1D)
     print(
         io,
@@ -103,6 +119,75 @@ function _mapped_ordinary_backend_layer(
     else
         throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
     end
+end
+
+function _mapped_ordinary_gausslet_1d_bundle(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    backend::Symbol = :pgdg_experimental,
+)
+    exponents_value = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    layer = _mapped_ordinary_backend_layer(basis, backend)
+
+    if backend == :numerical_reference
+        representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
+        overlap = Matrix{Float64}(representation.basis_matrices.overlap)
+        position = Matrix{Float64}(representation.basis_matrices.position)
+        kinetic = Matrix{Float64}(representation.basis_matrices.kinetic)
+    else
+        overlap = Matrix{Float64}(overlap_matrix(layer))
+        position = Matrix{Float64}(position_matrix(layer))
+        kinetic = Matrix{Float64}(kinetic_matrix(layer))
+    end
+
+    x2 = Matrix{Float64}(_x2_matrix(layer))
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
+            layer;
+            exponents = exponents_value,
+            center = center_value,
+        )
+    ]
+    pair_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
+            layer;
+            exponents = exponents_value,
+        )
+    ]
+    weight_values = Float64[Float64(weight) for weight in integral_weights(layer)]
+    center_values = Float64[Float64(point) for point in centers(layer)]
+
+    return _MappedOrdinaryGausslet1DBundle(
+        basis,
+        layer,
+        backend,
+        overlap,
+        kinetic,
+        position,
+        x2,
+        gaussian_factors,
+        pair_factors,
+        exponents_value,
+        center_value,
+        weight_values,
+        center_values,
+    )
+end
+
+function _mapped_ordinary_one_body_from_bundle(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+)
+    return MappedOrdinaryOneBody1D(
+        bundle.basis,
+        bundle.backend,
+        bundle.overlap,
+        bundle.kinetic,
+        bundle.gaussian_factors,
+        bundle.exponents,
+        bundle.center,
+    )
 end
 
 """

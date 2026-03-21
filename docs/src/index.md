@@ -17,7 +17,8 @@ augmentations near nuclei.
 
 `GaussletBases.jl` is a Julia package for building those basis functions,
 constructing the quadrature grids that go with them, and forming the current
-one-body operators and IDA-style interaction objects on top of them.
+one-body operators and integral-diagonal approximation (IDA)-style
+interaction objects on top of them.
 
 ## Start here
 
@@ -33,12 +34,15 @@ mature numerical workflow.
 
 ## Primary documents
 
-The docs site is intentionally organized around five primary clickable
-documents rather than a large visible page tree:
+The docs site is intentionally organized around this home page plus five
+primary clickable documents rather than a large visible page tree:
 
 - [Manual](manual/index.md)  
   The user-facing guide to what the package does today, where to start, and
   which workflow to follow next.
+- [Algorithms](algorithms/index.md)  
+  Implementation-facing basis-construction and operator-construction recipes,
+  with pseudocode, code pointers, and references.
 - [Examples](examples/index.md)  
   The curated runnable-example entry point.
 - [Reference](reference/index.md)  
@@ -52,11 +56,13 @@ to call, use the [Reference](reference/index.md).
 
 ## Manual first, Reference second
 
-The Manual, Examples, and Reference now divide the work in the standard
-Julia-package way:
+The Manual, Algorithms, Examples, and Reference now divide the work in the
+standard Julia-package way:
 
 - the [Manual](manual/index.md) explains workflows, branch status, and what to
   run first
+- the [Algorithms](algorithms/index.md) record the exact construction order for
+  important basis and operator paths
 - the [Examples](examples/index.md) show which scripts to run and in what order
 - the [Reference](reference/index.md) answers API questions about the main
   exported entry points
