@@ -12,6 +12,7 @@ struct HybridMappedOrdinaryBasis1D
     source_basis::MappedUniformBasis
     backend::Symbol
     core_gaussians::Vector{Gaussian}
+    core_coefficient_matrix::Matrix{Float64}
     primitive_layer::PrimitiveSet1D
     coefficient_matrix::Matrix{Float64}
     center_data::Vector{Float64}
@@ -91,11 +92,17 @@ end
     )
 
 Build a hybrid one-dimensional ordinary basis from a mapped ordinary backbone
-plus a small explicit set of core Gaussians.
+plus a small explicit Gaussian supplement.
 
-The backbone comes from the chosen mapped ordinary backend, while the added
-`core_gaussians` are kept as explicit primitives before the final overlap
-cleanup and COMX-style localization step.
+The backbone comes from the chosen mapped ordinary backend. The added
+`core_gaussians` can be either:
+
+- a small explicit `Gaussian` list
+- a `LegacySGaussianData` contracted `s` supplement
+
+In both cases the active seed is built from explicit primitive Gaussians, with
+any legacy shell contraction applied on the added channel before the final
+overlap cleanup and COMX-style localization step.
 
 Typical usage is:
 
@@ -108,12 +115,25 @@ hybrid = hybrid_mapped_ordinary_basis(
 """
 function hybrid_mapped_ordinary_basis(
     basis::MappedUniformBasis;
-    core_gaussians::AbstractVector{<:Gaussian},
+    core_gaussians,
     backend::Symbol = :pgdg_localized_experimental,
 )
     layer = _mapped_ordinary_backend_layer(basis, backend)
     backbone_primitives = primitives(primitive_set(layer))
-    core_primitive_list = Gaussian[gaussian for gaussian in core_gaussians]
+    core_primitive_list, core_representatives, core_coefficients = if core_gaussians isa LegacySGaussianData
+        (
+            Gaussian[gaussian for gaussian in core_gaussians.primitive_gaussians],
+            Gaussian[gaussian for gaussian in core_gaussians.gaussians],
+            Matrix{Float64}(core_gaussians.contraction_matrix),
+        )
+    else
+        primitive_list = Gaussian[gaussian for gaussian in core_gaussians]
+        (
+            primitive_list,
+            primitive_list,
+            Matrix{Float64}(I, length(primitive_list), length(primitive_list)),
+        )
+    end
     primitive_layer = PrimitiveSet1D(
         AbstractPrimitiveFunction1D[vcat(backbone_primitives, core_primitive_list)...];
         name = :hybrid_mapped_ordinary_primitives,
@@ -121,13 +141,15 @@ function hybrid_mapped_ordinary_basis(
 
     backbone_coefficients = Matrix{Float64}(stencil_matrix(layer))
     nbackbone_primitives = length(backbone_primitives)
-    ncore = length(core_primitive_list)
+    ncore_primitives = length(core_primitive_list)
+    ncore = size(core_coefficients, 2)
     nbackbone_basis = size(backbone_coefficients, 2)
-    coefficient_matrix = zeros(Float64, nbackbone_primitives + ncore, nbackbone_basis + ncore)
+    size(core_coefficients, 1) == ncore_primitives || throw(
+        ArgumentError("hybrid mapped ordinary basis requires core contraction rows to match core primitive count"),
+    )
+    coefficient_matrix = zeros(Float64, nbackbone_primitives + ncore_primitives, nbackbone_basis + ncore)
     coefficient_matrix[1:nbackbone_primitives, 1:nbackbone_basis] .= backbone_coefficients
-    for index in 1:ncore
-        coefficient_matrix[nbackbone_primitives + index, nbackbone_basis + index] = 1.0
-    end
+    coefficient_matrix[(nbackbone_primitives + 1):end, (nbackbone_basis + 1):end] .= core_coefficients
 
     overlap_seed = transpose(coefficient_matrix) * overlap_matrix(primitive_layer) * coefficient_matrix
     position_seed = transpose(coefficient_matrix) * position_matrix(primitive_layer) * coefficient_matrix
@@ -140,7 +162,8 @@ function hybrid_mapped_ordinary_basis(
     return HybridMappedOrdinaryBasis1D(
         basis,
         backend,
-        core_primitive_list,
+        core_representatives,
+        core_coefficients,
         primitive_layer,
         final_coefficients,
         center_values,

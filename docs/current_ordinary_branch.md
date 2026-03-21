@@ -30,6 +30,8 @@ Read these first:
 - [`docs/ordinary_cartesian_legacy_he_s_adapter.md`](ordinary_cartesian_legacy_he_s_adapter.md)
 - [`docs/ordinary_cartesian_qiu_white_reference.md`](ordinary_cartesian_qiu_white_reference.md)
 - [`docs/ordinary_cartesian_qiu_white_crossblock_correction.md`](ordinary_cartesian_qiu_white_crossblock_correction.md)
+- [`docs/qw_pgdg_base_milestone_note.md`](qw_pgdg_base_milestone_note.md)
+- [`docs/qw_pgdg_fixed_a_mapping_note.md`](qw_pgdg_fixed_a_mapping_note.md)
 - [`docs/ordinary_pgdg_hybrid_regime.md`](ordinary_pgdg_hybrid_regime.md)
 - [`docs/ordinary_sho_spectral_test.md`](ordinary_sho_spectral_test.md)
 - [`docs/ordinary_pgdg_hybrid_consolidation.md`](ordinary_pgdg_hybrid_consolidation.md)
@@ -88,7 +90,9 @@ The current wording discipline for the ordinary line is:
 - the PGDG-style analytic route is good enough in the friendly hybrid regime
 - hard pure mapped small-`c` cases remain stress tests
 - `AsinhMapping` is the current working map, not final truth
-- current `c,s` heuristics are provisional
+- for pre-nesting Cartesian convergence tests, the current default family is
+  fixed `a = 1/(2Z)` with `s` solved from `count` and `xmax` rather than a
+  fixed-`s` scan
 - the radial branch remains numerical rather than PGDG-driven
 
 That is much closer to the practical White–Lindsey-style hybrid picture than

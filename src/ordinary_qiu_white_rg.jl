@@ -81,6 +81,9 @@ struct QiuWhiteResidualGaussianOperators{B,D}
     residual_widths::Matrix{Float64}
 end
 
+const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
+const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
+
 function _qwrg_elapsed_seconds(start_ns::UInt64)
     return (time_ns() - start_ns) / 1.0e9
 end
@@ -111,6 +114,11 @@ function _qwrg_record_timing!(
     println(io, "QW-RG timing  ", label, ": ", value, " s")
     flush(io)
     return value
+end
+
+function _qwrg_residual_keep_tol(values::AbstractVector{<:Real})
+    isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
+    return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
 end
 
 function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
@@ -168,6 +176,22 @@ function ordinary_cartesian_1s2_check(
     )
 end
 
+function _qwrg_gausslet_1d_blocks(bundle::_MappedOrdinaryGausslet1DBundle)
+    pgdg_intermediate = bundle.pgdg_intermediate
+    return (
+        overlap_gg = pgdg_intermediate.overlap,
+        kinetic_gg = pgdg_intermediate.kinetic,
+        position_gg = pgdg_intermediate.position,
+        x2_gg = pgdg_intermediate.x2,
+        factor_gg = pgdg_intermediate.gaussian_factors,
+        factor_gg_terms = pgdg_intermediate.gaussian_factor_terms,
+        pair_gg = pgdg_intermediate.pair_factors,
+        pair_gg_terms = pgdg_intermediate.pair_factor_terms,
+        weight_gg = pgdg_intermediate.weights,
+        center_gg = pgdg_intermediate.centers,
+    )
+end
+
 function _qwrg_basis_derivative_matrix(
     basis::MappedUniformBasis,
     points::AbstractVector{Float64},
@@ -214,26 +238,12 @@ function _qwrg_support_bounds(
     return min(basis_lo, gaussian_lo), max(basis_hi, gaussian_hi)
 end
 
-function _qwrg_gausslet_1d_blocks(bundle::_MappedOrdinaryGausslet1DBundle)
-    return (
-        overlap_gg = bundle.overlap,
-        kinetic_gg = bundle.kinetic,
-        position_gg = bundle.position,
-        x2_gg = bundle.x2,
-        factor_gg = bundle.gaussian_factors,
-        factor_gg_terms = bundle.gaussian_factor_terms,
-        pair_gg = bundle.pair_factors,
-        pair_gg_terms = bundle.pair_factor_terms,
-        weight_gg = bundle.weights,
-        center_gg = bundle.centers,
-    )
-end
-
-function _qwrg_cross_1d_blocks(
+function _qwrg_cross_1d_blocks_midpoint(
     basis::MappedUniformBasis,
     gaussians::AbstractVector{<:Gaussian},
     expansion::CoulombGaussianExpansion;
     h = nothing,
+    include_pair::Bool = true,
 )
     xlo, xhi = _qwrg_support_bounds(basis, gaussians)
     h_try = h === nothing ? _primitive_matrix_start_h(primitive_set(basis)) : Float64(h)
@@ -257,11 +267,13 @@ function _qwrg_cross_1d_blocks(
         factors = Matrix{Float64}[
             Matrix{Float64}(transpose(basis_values) * ((weights .* exp.(-exponent .* (points .^ 2))) .* gaussian_values)) for exponent in exponent_values
         ]
-        distance2 = (points .- transpose(points)) .^ 2
         pair_factors = Matrix{Float64}[]
-        for exponent in exponent_values
-            kernel = exp.(-exponent .* distance2)
-            push!(pair_factors, Matrix{Float64}(transpose(weighted_basis) * (kernel * weighted_gaussians)))
+        if include_pair
+            distance2 = (points .- transpose(points)) .^ 2
+            for exponent in exponent_values
+                kernel = exp.(-exponent .* distance2)
+                push!(pair_factors, Matrix{Float64}(transpose(weighted_basis) * (kernel * weighted_gaussians)))
+            end
         end
 
         current = (
@@ -273,16 +285,23 @@ function _qwrg_cross_1d_blocks(
             pair_ga = pair_factors,
         )
         if previous !== nothing
-            maxdiff = maximum(
-                vcat(
-                    norm(current.overlap_ga - previous.overlap_ga, Inf),
-                    norm(current.kinetic_ga - previous.kinetic_ga, Inf),
-                    norm(current.position_ga - previous.position_ga, Inf),
-                    norm(current.x2_ga - previous.x2_ga, Inf),
-                    [norm(current.factor_ga[index] - previous.factor_ga[index], Inf) for index in eachindex(current.factor_ga)]...,
-                    [norm(current.pair_ga[index] - previous.pair_ga[index], Inf) for index in eachindex(current.pair_ga)]...,
-                ),
+            differences = Float64[
+                norm(current.overlap_ga - previous.overlap_ga, Inf),
+                norm(current.kinetic_ga - previous.kinetic_ga, Inf),
+                norm(current.position_ga - previous.position_ga, Inf),
+                norm(current.x2_ga - previous.x2_ga, Inf),
+            ]
+            append!(
+                differences,
+                [norm(current.factor_ga[index] - previous.factor_ga[index], Inf) for index in eachindex(current.factor_ga)],
             )
+            if include_pair
+                append!(
+                    differences,
+                    [norm(current.pair_ga[index] - previous.pair_ga[index], Inf) for index in eachindex(current.pair_ga)],
+                )
+            end
+            maxdiff = maximum(differences)
             maxdiff <= _PRIMITIVE_MATRIX_TOL && return current
         end
         previous = current
@@ -291,9 +310,171 @@ function _qwrg_cross_1d_blocks(
     return current
 end
 
+function _qwrg_proxy_gaussian_primitives(
+    proxy_layer::_MappedLegacyProxyLayer1D,
+)
+    return Gaussian[primitive for primitive in primitives(primitive_set(proxy_layer))]
+end
+
+function _qwrg_supplement_primitives_and_contraction(
+    gaussians::AbstractVector{<:Gaussian},
+)
+    primitive_gaussians = Gaussian[gaussian for gaussian in gaussians]
+    contraction_matrix = Matrix{Float64}(I, length(primitive_gaussians), length(primitive_gaussians))
+    return primitive_gaussians, contraction_matrix
+end
+
+function _qwrg_supplement_primitives_and_contraction(
+    gaussian_data::LegacySGaussianData,
+)
+    return (
+        Gaussian[gaussian for gaussian in gaussian_data.primitive_gaussians],
+        Matrix{Float64}(gaussian_data.contraction_matrix),
+    )
+end
+
+function _qwrg_left_contract_cross_matrix(
+    proxy_layer::_MappedLegacyProxyLayer1D,
+    primitive_cross::AbstractMatrix{<:Real},
+)
+    coefficient_matrix = Matrix{Float64}(stencil_matrix(proxy_layer))
+    size(primitive_cross, 1) == size(coefficient_matrix, 1) || throw(
+        DimensionMismatch("Qiu-White proxy cross contraction requires primitive row count to match proxy coefficients"),
+    )
+    return Matrix{Float64}(transpose(coefficient_matrix) * primitive_cross)
+end
+
+function _qwrg_right_contract_cross_matrix(
+    primitive_cross::AbstractMatrix{<:Real},
+    contraction_matrix::AbstractMatrix{<:Real},
+)
+    size(primitive_cross, 2) == size(contraction_matrix, 1) || throw(
+        DimensionMismatch("Qiu-White proxy cross contraction requires primitive column count to match supplement contraction rows"),
+    )
+    return Matrix{Float64}(Matrix{Float64}(primitive_cross) * Matrix{Float64}(contraction_matrix))
+end
+
+function _qwrg_gaussian_cross_matrix(
+    left::AbstractVector{<:Gaussian},
+    right::AbstractVector{<:Gaussian},
+    builder,
+)
+    matrix = zeros(Float64, length(left), length(right))
+    @inbounds for j in eachindex(right), i in eachindex(left)
+        matrix[i, j] = builder(left[i], right[j])
+    end
+    return matrix
+end
+
+function _qwrg_gaussian_cross_matrices(
+    left::AbstractVector{<:Gaussian},
+    right::AbstractVector{<:Gaussian},
+    builders::NamedTuple,
+)
+    return (
+        overlap = _qwrg_gaussian_cross_matrix(left, right, builders.overlap),
+        kinetic = _qwrg_gaussian_cross_matrix(left, right, builders.kinetic),
+        position = _qwrg_gaussian_cross_matrix(left, right, builders.position),
+        x2 = _qwrg_gaussian_cross_matrix(left, right, builders.x2),
+    )
+end
+
+function _qwrg_gaussian_cross_matrices(
+    left::AbstractVector{<:Gaussian},
+    right::AbstractVector{<:Gaussian},
+    exponents::AbstractVector{<:Real},
+    builder,
+)
+    matrices = Matrix{Float64}[]
+    for exponent in exponents
+        push!(matrices, _qwrg_gaussian_cross_matrix(left, right, (a, b) -> builder(a, b, Float64(exponent))))
+    end
+    return matrices
+end
+
+function _qwrg_cross_1d_blocks_proxy(
+    proxy_layer::_MappedLegacyProxyLayer1D,
+    supplement,
+    expansion::CoulombGaussianExpansion,
+)
+    gaussians, contraction_matrix = _qwrg_supplement_primitives_and_contraction(supplement)
+    proxy_gaussians = _qwrg_proxy_gaussian_primitives(proxy_layer)
+    scalar_raw = _qwrg_gaussian_cross_matrices(
+        proxy_gaussians,
+        gaussians,
+        (
+            overlap = _gaussian_overlap,
+            kinetic = _gaussian_kinetic,
+            position = _gaussian_position,
+            x2 = _gaussian_x2,
+        ),
+    )
+    factor_raw = _qwrg_gaussian_cross_matrices(
+        proxy_gaussians,
+        gaussians,
+        expansion.exponents,
+        (a, b, exponent) -> _gaussian_factor(a, b, exponent, 0.0),
+    )
+    pair_raw = _qwrg_gaussian_cross_matrices(
+        proxy_gaussians,
+        gaussians,
+        expansion.exponents,
+        _gaussian_pair_factor,
+    )
+
+    return (
+        overlap_ga = _qwrg_right_contract_cross_matrix(
+            _qwrg_left_contract_cross_matrix(proxy_layer, scalar_raw.overlap),
+            contraction_matrix,
+        ),
+        kinetic_ga = _qwrg_right_contract_cross_matrix(
+            _qwrg_left_contract_cross_matrix(proxy_layer, scalar_raw.kinetic),
+            contraction_matrix,
+        ),
+        position_ga = _qwrg_right_contract_cross_matrix(
+            _qwrg_left_contract_cross_matrix(proxy_layer, scalar_raw.position),
+            contraction_matrix,
+        ),
+        x2_ga = _qwrg_right_contract_cross_matrix(
+            _qwrg_left_contract_cross_matrix(proxy_layer, scalar_raw.x2),
+            contraction_matrix,
+        ),
+        factor_ga = [
+            _qwrg_right_contract_cross_matrix(
+                _qwrg_left_contract_cross_matrix(proxy_layer, matrix),
+                contraction_matrix,
+            ) for matrix in factor_raw
+        ],
+        pair_ga = [
+            _qwrg_right_contract_cross_matrix(
+                _qwrg_left_contract_cross_matrix(proxy_layer, matrix),
+                contraction_matrix,
+            ) for matrix in pair_raw
+        ],
+    )
+end
+
+function _qwrg_cross_1d_blocks(
+    gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
+    supplement,
+    expansion::CoulombGaussianExpansion,
+)
+    # Alg QW-RG step 6: Build the gausslet-Gaussian raw 1D cross blocks on the
+    # same contracted proxy route used successfully for the pair terms:
+    # analytic Gaussian primitive cross blocks plus contraction only on the
+    # gausslet side. This keeps the base PGDG one-body side off midpoint
+    # sampling as well.
+    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
+    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("Qiu-White cross-block construction currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
+    )
+    return _qwrg_cross_1d_blocks_proxy(proxy_layer, supplement, expansion)
+end
+
 function _qwrg_split_block_matrices(
     gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
-    gaussians::AbstractVector{<:Gaussian},
+    supplement,
     expansion::CoulombGaussianExpansion,
 )
     # Alg QW-RG step 6: Build split 1D raw-space blocks in the legacy style:
@@ -301,8 +482,8 @@ function _qwrg_split_block_matrices(
     # analytically, and gausslet-Gaussian by a dedicated cross-block route.
     # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
     gausslet_blocks = _qwrg_gausslet_1d_blocks(gausslet_bundle)
-    gaussian_blocks = _qwrg_gaussian_analytic_blocks(gaussians, expansion)
-    cross_blocks = _qwrg_cross_1d_blocks(gausslet_bundle.basis, gaussians, expansion)
+    gaussian_blocks = _qwrg_gaussian_analytic_blocks(supplement, expansion)
+    cross_blocks = _qwrg_cross_1d_blocks(gausslet_bundle, supplement, expansion)
     return merge(gausslet_blocks, cross_blocks, gaussian_blocks)
 end
 
@@ -493,7 +674,10 @@ function _qwrg_raw_axis_blocks(data, axis::Symbol; squared::Bool = false)
 end
 
 # Alg QW-RG step 4: Define residual Gaussians by orthogonalizing 3D GTOs
-# to the full 3D gausslet space.
+# to the full 3D fixed working space. For the active PGDG-mediated route,
+# the carried 1D PGDG auxiliary line includes the COMX cleanup step inside the
+# bundle, so this fixed block should already be orthonormal to numerical
+# precision before the residual construction.
 # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
 function _qwrg_residual_space(
     gausslet_overlap::AbstractMatrix{<:Real},
@@ -501,10 +685,13 @@ function _qwrg_residual_space(
     overlap_aa::AbstractMatrix{<:Real},
 )
     gausslet_overlap_value = Matrix{Float64}(gausslet_overlap)
-    gausslet_overlap_error = norm(gausslet_overlap_value - I, Inf)
-    gausslet_overlap_error <= 1.0e-8 || throw(
+    overlap_error = norm(
+        gausslet_overlap_value - Matrix{Float64}(I, size(gausslet_overlap_value, 1), size(gausslet_overlap_value, 2)),
+        Inf,
+    )
+    overlap_error <= 1.0e-8 || throw(
         ArgumentError(
-            "Qiu-White reference path requires the fixed gausslet 3D block to be orthonormal without COMX; got overlap error $(gausslet_overlap_error)",
+            "Qiu-White / QW-PGDG residual construction requires an orthonormal fixed 3D overlap block",
         ),
     )
 
@@ -520,7 +707,11 @@ function _qwrg_residual_space(
     )
     residual_overlap = Matrix{Float64}(transpose(seed_projector) * raw_overlap * seed_projector)
     decomposition = eigen(Symmetric(residual_overlap))
-    keep = findall(>(1.0e-10), decomposition.values)
+    # The retained residual directions should be physically meaningful compared
+    # with the case's own residual scale, while true near-null modes are
+    # dropped. A pure absolute cutoff was too brittle across count = 9/11/13.
+    keep_tol = _qwrg_residual_keep_tol(decomposition.values)
+    keep = findall(>(keep_tol), decomposition.values)
     isempty(keep) && throw(
         ArgumentError("Qiu-White residual-Gaussian construction produced no nontrivial 3D residual directions"),
     )
@@ -559,33 +750,61 @@ function _qwrg_one_body_matrices(
     return raw_one_body, 0.5 .* (final_one_body .+ transpose(final_one_body))
 end
 
-function _qwrg_residual_moment_data(
+function _qwrg_residual_center_data(
     raw_overlap::AbstractMatrix{<:Real},
     x_raw::AbstractMatrix{<:Real},
-    x2_raw::AbstractMatrix{<:Real},
     y_raw::AbstractMatrix{<:Real},
-    y2_raw::AbstractMatrix{<:Real},
     z_raw::AbstractMatrix{<:Real},
-    z2_raw::AbstractMatrix{<:Real},
     raw_to_final::AbstractMatrix{<:Real},
     ngausslet::Int,
 )
     residual_coefficients = Matrix{Float64}(raw_to_final[:, (ngausslet + 1):end])
     nresidual = size(residual_coefficients, 2)
     centers = zeros(Float64, nresidual, 3)
-    widths = zeros(Float64, nresidual, 3)
+    norms = zeros(Float64, nresidual)
 
     overlap_residual = Matrix{Float64}(transpose(residual_coefficients) * raw_overlap * residual_coefficients)
     for index in 1:nresidual
         vector = view(residual_coefficients, :, index)
         norm_value = Float64(dot(vector, raw_overlap * vector))
         norm_value > 1.0e-12 || throw(
-            ArgumentError("residual moment extraction requires nonzero residual norm"),
+            ArgumentError("residual center extraction requires nonzero residual norm"),
         )
 
-        x1 = Float64(dot(vector, x_raw * vector) / norm_value)
-        y1 = Float64(dot(vector, y_raw * vector) / norm_value)
-        z1 = Float64(dot(vector, z_raw * vector) / norm_value)
+        norms[index] = norm_value
+        centers[index, 1] = Float64(dot(vector, x_raw * vector) / norm_value)
+        centers[index, 2] = Float64(dot(vector, y_raw * vector) / norm_value)
+        centers[index, 3] = Float64(dot(vector, z_raw * vector) / norm_value)
+    end
+
+    overlap_error = norm(overlap_residual - I, Inf)
+    return (
+        centers = centers,
+        overlap_error = overlap_error,
+        residual_coefficients = residual_coefficients,
+        norms = norms,
+    )
+end
+
+function _qwrg_residual_width_data(
+    raw_overlap::AbstractMatrix{<:Real},
+    x2_raw::AbstractMatrix{<:Real},
+    y2_raw::AbstractMatrix{<:Real},
+    z2_raw::AbstractMatrix{<:Real},
+    center_data,
+)
+    residual_coefficients = center_data.residual_coefficients
+    centers = center_data.centers
+    norms = center_data.norms
+    nresidual = size(residual_coefficients, 2)
+    widths = zeros(Float64, nresidual, 3)
+
+    for index in 1:nresidual
+        vector = view(residual_coefficients, :, index)
+        norm_value = norms[index]
+        x1 = centers[index, 1]
+        y1 = centers[index, 2]
+        z1 = centers[index, 3]
         x2 = Float64(dot(vector, x2_raw * vector) / norm_value)
         y2 = Float64(dot(vector, y2_raw * vector) / norm_value)
         z2 = Float64(dot(vector, z2_raw * vector) / norm_value)
@@ -597,19 +816,70 @@ function _qwrg_residual_moment_data(
             ArgumentError("MWG residual moment extraction requires positive residual variances"),
         )
 
-        centers[index, 1] = x1
-        centers[index, 2] = y1
-        centers[index, 3] = z1
         widths[index, 1] = sqrt(2.0 * varx)
         widths[index, 2] = sqrt(2.0 * vary)
         widths[index, 3] = sqrt(2.0 * varz)
     end
 
+    overlap_residual = Matrix{Float64}(transpose(residual_coefficients) * raw_overlap * residual_coefficients)
     overlap_error = norm(overlap_residual - I, Inf)
     return (
         centers = centers,
         widths = widths,
         overlap_error = overlap_error,
+    )
+end
+
+function _qwrg_residual_moment_data(
+    raw_overlap::AbstractMatrix{<:Real},
+    x_raw::AbstractMatrix{<:Real},
+    x2_raw::AbstractMatrix{<:Real},
+    y2_raw::AbstractMatrix{<:Real},
+    z2_raw::AbstractMatrix{<:Real},
+    center_data,
+)
+    width_data = _qwrg_residual_width_data(
+        raw_overlap,
+        x2_raw,
+        y2_raw,
+        z2_raw,
+        center_data,
+    )
+    return (
+        centers = center_data.centers,
+        widths = width_data.widths,
+        overlap_error = width_data.overlap_error,
+    )
+end
+
+function _qwrg_residual_moment_data(
+    raw_overlap::AbstractMatrix{<:Real},
+    x_raw::AbstractMatrix{<:Real},
+    x2_raw::AbstractMatrix{<:Real},
+    y_raw::AbstractMatrix{<:Real},
+    y2_raw::AbstractMatrix{<:Real},
+    z_raw::AbstractMatrix{<:Real},
+    z2_raw::AbstractMatrix{<:Real},
+    raw_to_final::AbstractMatrix{<:Real},
+    ngausslet::Int,
+)
+    center_data = _qwrg_residual_center_data(
+        raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        raw_to_final,
+        ngausslet,
+    )
+    return _qwrg_residual_moment_data(
+        raw_overlap,
+        x_raw,
+        x2_raw,
+        y_raw,
+        y2_raw,
+        z_raw,
+        z2_raw,
+        center_data,
     )
 end
 
@@ -667,32 +937,35 @@ function _qwrg_same_gaussians(
 end
 
 function _qwrg_gaussian_analytic_blocks(
-    gaussians::AbstractVector{<:Gaussian},
+    supplement,
     expansion::CoulombGaussianExpansion,
 )
+    gaussians, contraction_matrix = _qwrg_supplement_primitives_and_contraction(supplement)
     gaussian_set = PrimitiveSet1D(
         AbstractPrimitiveFunction1D[gaussian for gaussian in gaussians];
         name = :qiu_white_analytic_gaussians,
     )
-    factors = Matrix{Float64}[
+    primitive_factors = Matrix{Float64}[
         Matrix{Float64}(gaussian_factor_matrix(
             gaussian_set;
             exponent = exponent,
             center = 0.0,
         )) for exponent in expansion.exponents
     ]
-    pair_factors = _primitive_pair_gaussian_factor_matrices(
+    primitive_pair_factors = _primitive_pair_gaussian_factor_matrices(
         gaussian_set,
         _select_primitive_matrix_backend(gaussian_set);
         exponents = expansion.exponents,
     )
+    factor_terms = _congruence_transform_terms(_term_tensor(primitive_factors), contraction_matrix)
+    pair_terms = _congruence_transform_terms(_term_tensor(primitive_pair_factors), contraction_matrix)
     return (
-        overlap = Matrix{Float64}(overlap_matrix(gaussian_set)),
-        kinetic = Matrix{Float64}(kinetic_matrix(gaussian_set)),
-        position = Matrix{Float64}(position_matrix(gaussian_set)),
-        x2 = Matrix{Float64}(_x2_matrix(gaussian_set)),
-        factors = factors,
-        pair_factors = pair_factors,
+        overlap_aa = _congruence_transform(Matrix{Float64}(overlap_matrix(gaussian_set)), contraction_matrix),
+        kinetic_aa = _congruence_transform(Matrix{Float64}(kinetic_matrix(gaussian_set)), contraction_matrix),
+        position_aa = _congruence_transform(Matrix{Float64}(position_matrix(gaussian_set)), contraction_matrix),
+        x2_aa = _congruence_transform(Matrix{Float64}(_x2_matrix(gaussian_set)), contraction_matrix),
+        factor_aa = _tensor_to_matrix_vector(factor_terms),
+        pair_aa = _tensor_to_matrix_vector(pair_terms),
     )
 end
 
@@ -712,7 +985,7 @@ function _qwrg_interaction_matrix_nearest(
     for residual in 1:nresidual
         index = nearest[residual]
         interaction[1:ngausslet, ngausslet + residual] .= gausslet_interaction[:, index]
-        interaction[ngausslet + residual, 1:ngausslet] .= transpose(gausslet_interaction[:, index])
+        interaction[ngausslet + residual, 1:ngausslet] .= gausslet_interaction[:, index]
     end
     for i in 1:nresidual, j in i:nresidual
         value = gausslet_interaction[nearest[i], nearest[j]]
@@ -783,9 +1056,9 @@ function _qwrg_interaction_matrix_mwg(
         value = 0.0
         for term in eachindex(expansion.coefficients)
             value += expansion.coefficients[term] *
-                analytic_x.pair_factors[term][i, j] *
-                analytic_y.pair_factors[term][i, j] *
-                analytic_z.pair_factors[term][i, j]
+                analytic_x.pair_aa[term][i, j] *
+                analytic_y.pair_aa[term][i, j] *
+                analytic_z.pair_aa[term][i, j]
         end
         interaction[ngausslet + i, ngausslet + j] = value
         interaction[ngausslet + j, ngausslet + i] = value
@@ -898,12 +1171,12 @@ function ordinary_cartesian_qiu_white_operators(
     start_ns = time_ns()
     blocks = _qwrg_split_block_matrices(
         gausslet_bundle,
-        gaussian_data.gaussians,
+        gaussian_data,
         expansion,
     )
     timing && _qwrg_record_timing!(timing_io, timings, "split gausslet-Gaussian raw-block assembly", start_ns)
 
-    gausslet_orbitals = _mapped_cartesian_orbitals(gausslet_bundle.centers)
+    gausslet_orbitals = _mapped_cartesian_orbitals(gausslet_bundle.pgdg_intermediate.centers)
     gausslet_count = length(gausslet_orbitals)
     start_ns = time_ns()
     gausslet_overlap_3d = zeros(Float64, length(gausslet_orbitals), length(gausslet_orbitals))
@@ -979,59 +1252,78 @@ function ordinary_cartesian_qiu_white_operators(
         x2_ga = blocks.x2_ga,
         x2_aa = blocks.x2_aa,
     ), :z)
-    x2_gg, x2_ga, x2_aa = _qwrg_raw_axis_blocks((
-        overlap_gg = blocks.overlap_gg,
-        overlap_ga = blocks.overlap_ga,
-        overlap_aa = blocks.overlap_aa,
-        position_gg = blocks.position_gg,
-        position_ga = blocks.position_ga,
-        position_aa = blocks.position_aa,
-        x2_gg = blocks.x2_gg,
-        x2_ga = blocks.x2_ga,
-        x2_aa = blocks.x2_aa,
-    ), :x; squared = true)
-    y2_gg, y2_ga, y2_aa = _qwrg_raw_axis_blocks((
-        overlap_gg = blocks.overlap_gg,
-        overlap_ga = blocks.overlap_ga,
-        overlap_aa = blocks.overlap_aa,
-        position_gg = blocks.position_gg,
-        position_ga = blocks.position_ga,
-        position_aa = blocks.position_aa,
-        x2_gg = blocks.x2_gg,
-        x2_ga = blocks.x2_ga,
-        x2_aa = blocks.x2_aa,
-    ), :y; squared = true)
-    z2_gg, z2_ga, z2_aa = _qwrg_raw_axis_blocks((
-        overlap_gg = blocks.overlap_gg,
-        overlap_ga = blocks.overlap_ga,
-        overlap_aa = blocks.overlap_aa,
-        position_gg = blocks.position_gg,
-        position_ga = blocks.position_ga,
-        position_aa = blocks.position_aa,
-        x2_gg = blocks.x2_gg,
-        x2_ga = blocks.x2_ga,
-        x2_aa = blocks.x2_aa,
-    ), :z; squared = true)
 
     x_raw = [x_gg x_ga; transpose(x_ga) x_aa]
     y_raw = [y_gg y_ga; transpose(y_ga) y_aa]
     z_raw = [z_gg z_ga; transpose(z_ga) z_aa]
-    x2_raw = [x2_gg x2_ga; transpose(x2_ga) x2_aa]
-    y2_raw = [y2_gg y2_ga; transpose(y2_ga) y2_aa]
-    z2_raw = [z2_gg z2_ga; transpose(z2_ga) z2_aa]
-
-    moment_data = _qwrg_residual_moment_data(
+    center_data = _qwrg_residual_center_data(
         residual_data.raw_overlap,
         x_raw,
-        x2_raw,
         y_raw,
-        y2_raw,
         z_raw,
-        z2_raw,
         residual_data.raw_to_final,
         gausslet_count,
     )
-    timing && _qwrg_record_timing!(timing_io, timings, "raw moment-matrix assembly", start_ns)
+
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= 1.0e-8 || throw(
+        ArgumentError("Qiu-White residual-center extraction requires an orthonormal residual block"),
+    )
+
+    if interaction_treatment == :mwg
+        x2_gg_exact = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis))
+        x2_gg, x2_ga, x2_aa = _qwrg_raw_axis_blocks((
+            overlap_gg = blocks.overlap_gg,
+            overlap_ga = blocks.overlap_ga,
+            overlap_aa = blocks.overlap_aa,
+            position_gg = blocks.position_gg,
+            position_ga = blocks.position_ga,
+            position_aa = blocks.position_aa,
+            x2_gg = x2_gg_exact,
+            x2_ga = blocks.x2_ga,
+            x2_aa = blocks.x2_aa,
+        ), :x; squared = true)
+        y2_gg, y2_ga, y2_aa = _qwrg_raw_axis_blocks((
+            overlap_gg = blocks.overlap_gg,
+            overlap_ga = blocks.overlap_ga,
+            overlap_aa = blocks.overlap_aa,
+            position_gg = blocks.position_gg,
+            position_ga = blocks.position_ga,
+            position_aa = blocks.position_aa,
+            x2_gg = x2_gg_exact,
+            x2_ga = blocks.x2_ga,
+            x2_aa = blocks.x2_aa,
+        ), :y; squared = true)
+        z2_gg, z2_ga, z2_aa = _qwrg_raw_axis_blocks((
+            overlap_gg = blocks.overlap_gg,
+            overlap_ga = blocks.overlap_ga,
+            overlap_aa = blocks.overlap_aa,
+            position_gg = blocks.position_gg,
+            position_ga = blocks.position_ga,
+            position_aa = blocks.position_aa,
+            x2_gg = x2_gg_exact,
+            x2_ga = blocks.x2_ga,
+            x2_aa = blocks.x2_aa,
+        ), :z; squared = true)
+
+        x2_raw = [x2_gg x2_ga; transpose(x2_ga) x2_aa]
+        y2_raw = [y2_gg y2_ga; transpose(y2_ga) y2_aa]
+        z2_raw = [z2_gg z2_ga; transpose(z2_ga) z2_aa]
+        moment_data = _qwrg_residual_moment_data(
+            residual_data.raw_overlap,
+            x_raw,
+            x2_raw,
+            y_raw,
+            y2_raw,
+            z_raw,
+            z2_raw,
+            center_data,
+        )
+        residual_centers = moment_data.centers
+        residual_widths = moment_data.widths
+    end
+    timing && _qwrg_record_timing!(timing_io, timings, interaction_treatment == :mwg ? "raw moment-matrix assembly" : "raw center-matrix assembly", start_ns)
 
     start_ns = time_ns()
     gausslet_interaction = _qwrg_gausslet_interaction_matrix(blocks, expansion)
@@ -1042,15 +1334,15 @@ function ordinary_cartesian_qiu_white_operators(
         _qwrg_interaction_matrix_nearest(
             gausslet_interaction,
             gausslet_orbitals,
-            moment_data.centers,
+            residual_centers,
         )
     elseif interaction_treatment == :mwg
         _qwrg_interaction_matrix_mwg(
             gausslet_bundle,
             gausslet_interaction,
             expansion,
-            moment_data.centers,
-            moment_data.widths,
+            residual_centers,
+            residual_widths,
         )
     else
         throw(ArgumentError("Qiu-White interaction_treatment must be :ggt_nearest or :mwg"))
@@ -1069,13 +1361,13 @@ function ordinary_cartesian_qiu_white_operators(
         Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
         _qwrg_orbital_data(
             gausslet_orbitals,
-            moment_data.centers,
-            moment_data.widths,
+            residual_centers,
+            residual_widths,
         ),
         gausslet_count,
-        size(moment_data.centers, 1),
+        size(residual_centers, 1),
         Matrix{Float64}(residual_data.raw_to_final),
-        Matrix{Float64}(moment_data.centers),
-        Matrix{Float64}(moment_data.widths),
+        Matrix{Float64}(residual_centers),
+        Matrix{Float64}(residual_widths),
     )
 end

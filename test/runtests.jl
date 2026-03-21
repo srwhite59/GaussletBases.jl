@@ -455,7 +455,7 @@ function _legacy_he_s_hybrid_fixture(basis_name::String)
         legacy = legacy_s_gaussian_data("He", basis_name)
         legacy_basis = hybrid_mapped_ordinary_basis(
             source_basis;
-            core_gaussians = legacy.gaussians,
+            core_gaussians = legacy,
             backend = :pgdg_localized_experimental,
         )
         legacy_operators = ordinary_cartesian_ida_operators(
@@ -491,7 +491,7 @@ function _legacy_he_s_mwg_fixture(basis_name::String; s::Float64 = 0.6)
         legacy = legacy_s_gaussian_data("He", basis_name)
         hybrid_basis = hybrid_mapped_ordinary_basis(
             source_basis;
-            core_gaussians = legacy.gaussians,
+            core_gaussians = legacy,
             backend = :pgdg_localized_experimental,
         )
         combined_operators = ordinary_cartesian_ida_operators(
@@ -542,7 +542,7 @@ function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::I
         legacy = legacy_s_gaussian_data("He", basis_name)
         hybrid_basis = hybrid_mapped_ordinary_basis(
             source_basis;
-            core_gaussians = legacy.gaussians,
+            core_gaussians = legacy,
             backend = :pgdg_localized_experimental,
         )
         surrogate_mwg = ordinary_cartesian_ida_operators(
@@ -574,6 +574,31 @@ function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::I
             GaussletBases.ordinary_cartesian_1s2_check(surrogate_mwg),
             GaussletBases.ordinary_cartesian_1s2_check(qiu_nearest),
             GaussletBases.ordinary_cartesian_1s2_check(qiu_mwg),
+        )
+    end)
+end
+
+function _qiu_white_full_nearest_fixture(; basis_name::String = "cc-pVTZ", count::Int = 9, s::Float64 = 0.8)
+    key = Symbol(:qiu_white_full_nearest_fixture, Symbol(lowercase(basis_name)), count, round(Int, 1000 * s))
+    return _cached_fixture(key, () -> begin
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        operators = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            source_basis,
+            legacy,
+            operators,
+            GaussletBases.ordinary_cartesian_1s2_check(operators),
         )
     end)
 end
@@ -1695,6 +1720,56 @@ end
     @test three_step_repeat.offset == -(mask.factor^3 - 1) ÷ (mask.factor - 1) * mask.support_radius
 end
 
+@testset "Mapped ordinary PGDG intermediate layer" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+
+    intermediate = GaussletBases._mapped_ordinary_pgdg_intermediate_1d(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+
+    @test intermediate isa GaussletBases._MappedOrdinaryPGDGIntermediate1D
+    @test intermediate.refinement_levels == 0
+    @test intermediate.refinement_mask.factor == 3
+    @test intermediate.refinement_mask.rho ≈ 1.2 atol = 0.0 rtol = 0.0
+    @test intermediate.base_layer !== intermediate.auxiliary_layer
+    @test size(intermediate.overlap) == (length(basis), length(basis))
+    @test size(intermediate.kinetic) == (length(basis), length(basis))
+    @test size(intermediate.position) == (length(basis), length(basis))
+    @test size(intermediate.x2) == (length(basis), length(basis))
+    @test length(intermediate.gaussian_factors) == 3
+    @test size(intermediate.gaussian_factor_terms) == (3, length(basis), length(basis))
+    @test length(intermediate.pair_factors) == 3
+    @test size(intermediate.pair_factor_terms) == (3, length(basis), length(basis))
+    @test length(intermediate.weights) == length(basis)
+    @test length(intermediate.centers) == length(basis)
+    @test intermediate.overlap ≈ transpose(intermediate.overlap) atol = 1.0e-10 rtol = 1.0e-10
+    @test norm(intermediate.overlap - I, Inf) < 1.0e-10
+    @test intermediate.kinetic ≈ transpose(intermediate.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test maximum(abs.(intermediate.pair_factor_terms[1, :, :] .- transpose(intermediate.pair_factor_terms[1, :, :]))) < 1.0e-10
+    @test bundle.pgdg_intermediate.refinement_levels == 0
+    @test bundle.pgdg_intermediate.gaussian_factor_terms ≈ intermediate.gaussian_factor_terms atol = 0.0 rtol = 0.0
+    @test_throws ArgumentError GaussletBases._mapped_ordinary_pgdg_intermediate_1d(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 1,
+    )
+end
+
 @testset "Mapped ordinary one-body backends" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     mild_basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -1900,19 +1975,34 @@ end
     else
         vtz = legacy_s_gaussian_data("He", "cc-pVTZ")
         vqz = legacy_s_gaussian_data("He", "cc-pVQZ")
+        vtz_uncontracted = legacy_s_gaussian_data("He", "cc-pVTZ"; uncontracted = true)
 
         @test vtz isa LegacySGaussianData
         @test vqz isa LegacySGaussianData
-        @test vtz.uncontracted
-        @test vqz.uncontracted
+        @test !vtz.uncontracted
+        @test !vqz.uncontracted
         @test vtz.max_width === nothing
         @test vqz.max_width === nothing
         @test vtz.primitive_exponents == [234.0, 35.16, 7.989, 2.212, 0.6669, 0.2089]
         @test vqz.primitive_exponents == [528.5, 79.31, 18.05, 5.085, 1.609, 0.5363, 0.1833]
-        @test length(vtz.gaussians) == 6
-        @test length(vqz.gaussians) == 7
-        @test vtz.widths[1] ≈ inv(sqrt(2 * 234.0)) atol = 1.0e-12 rtol = 0.0
-        @test vqz.widths[end] ≈ inv(sqrt(2 * 0.1833)) atol = 1.0e-12 rtol = 0.0
+        @test length(vtz.primitive_gaussians) == 6
+        @test length(vqz.primitive_gaussians) == 7
+        @test size(vtz.contraction_matrix) == (6, 3)
+        @test size(vqz.contraction_matrix) == (7, 4)
+        @test length(vtz.gaussians) == 3
+        @test length(vqz.gaussians) == 4
+        @test all(isfinite, vtz.widths)
+        @test all(isfinite, vqz.widths)
+        @test all(>(0.0), vtz.widths)
+        @test all(>(0.0), vqz.widths)
+        @test all(abs(gaussian.center_value) < 1.0e-12 for gaussian in vtz.gaussians)
+        @test all(abs(gaussian.center_value) < 1.0e-12 for gaussian in vqz.gaussians)
+        @test vtz.primitive_widths[1] ≈ inv(sqrt(2 * 234.0)) atol = 1.0e-12 rtol = 0.0
+        @test vqz.primitive_widths[end] ≈ inv(sqrt(2 * 0.1833)) atol = 1.0e-12 rtol = 0.0
+        @test vtz_uncontracted.uncontracted
+        @test size(vtz_uncontracted.contraction_matrix) == (6, 6)
+        @test vtz_uncontracted.contraction_matrix ≈ Matrix{Float64}(I, 6, 6) atol = 0.0 rtol = 0.0
+        @test length(vtz_uncontracted.gaussians) == 6
     end
 end
 
@@ -1936,9 +2026,9 @@ end
         @test isfinite(pure_check.vee_expectation)
         @test isfinite(toy_check.vee_expectation)
         @test isfinite(legacy_check.vee_expectation)
+        @test legacy_check.vee_expectation > 0.0
         @test abs(legacy_check.orbital_energy + 2.0) < abs(toy_check.orbital_energy + 2.0)
         @test abs(legacy_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
-        @test abs(legacy_check.vee_expectation - 1.25) < 0.02
     end
 end
 
@@ -2008,6 +2098,7 @@ end
         @test qiu_nearest.interaction_treatment == :ggt_nearest
         @test qiu_mwg.interaction_treatment == :mwg
         @test qiu_mwg.gausslet_backend == :numerical_reference
+        @test qiu_nearest.residual_count > 0
         @test qiu_mwg.gausslet_count == length(source_basis)^3
         @test qiu_mwg.residual_count > 0
         @test size(qiu_mwg.raw_to_final, 1) == qiu_mwg.gausslet_count + length(legacy.gaussians)
@@ -2019,6 +2110,8 @@ end
         @test qiu_nearest.interaction_matrix ≈ transpose(qiu_nearest.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
         @test qiu_mwg.interaction_matrix ≈ transpose(qiu_mwg.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
         @test size(qiu_mwg.interaction_matrix) == (qiu_mwg.gausslet_count + qiu_mwg.residual_count, qiu_mwg.gausslet_count + qiu_mwg.residual_count)
+        @test all(isfinite, qiu_nearest.residual_centers)
+        @test all(isnan, qiu_nearest.residual_widths)
         @test all(isfinite, qiu_mwg.residual_centers)
         @test all(isfinite, qiu_mwg.residual_widths)
         @test all(>(0.0), vec(qiu_mwg.residual_widths))
@@ -2032,6 +2125,19 @@ end
         @test surrogate_check.vee_expectation > 0.0
         @test nearest_check.vee_expectation > 0.0
         @test mwg_check.vee_expectation > 0.0
+
+        (
+            _full_source_basis,
+            _full_legacy,
+            qiu_full_nearest,
+            qiu_full_nearest_check,
+        ) = _qiu_white_full_nearest_fixture()
+
+        @test norm(qiu_full_nearest.overlap - I, Inf) < 1.0e-8
+        @test qiu_full_nearest.residual_count > 0
+        @test -3.5 < qiu_full_nearest_check.orbital_energy < -1.8
+        @test 1.0 < qiu_full_nearest_check.vee_expectation < 1.4
+        @test abs(qiu_full_nearest_check.vee_expectation - 1.25) < 0.05
     end
 end
 

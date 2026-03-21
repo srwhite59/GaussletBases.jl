@@ -449,23 +449,24 @@ function _ordinary_cartesian_ida_from_gausslet_bundle(
     Z::Real,
 )
     one_body = _mapped_ordinary_one_body_from_bundle(bundle)
+    pgdg_intermediate = bundle.pgdg_intermediate
     overlap_3d, _ = _mapped_cartesian_one_body_matrix(one_body, expansion; Z = 0.0)
     interaction_matrix = _mapped_coulomb_expanded_symmetric_matrix(
         expansion.coefficients,
-        bundle.pair_factor_terms,
-        bundle.pair_factor_terms,
-        bundle.pair_factor_terms,
+        pgdg_intermediate.pair_factor_terms,
+        pgdg_intermediate.pair_factor_terms,
+        pgdg_intermediate.pair_factor_terms,
     )
     one_body_hamiltonian =
         _mapped_coulomb_expanded_symmetric_matrix(
             -Float64(Z) .* expansion.coefficients,
-            bundle.gaussian_factor_terms,
-            bundle.gaussian_factor_terms,
-            bundle.gaussian_factor_terms,
+            pgdg_intermediate.gaussian_factor_terms,
+            pgdg_intermediate.gaussian_factor_terms,
+            pgdg_intermediate.gaussian_factor_terms,
         )
-    n1d = size(bundle.overlap, 1)
+    n1d = size(pgdg_intermediate.overlap, 1)
     identity_1d = Matrix{Float64}(I, n1d, n1d)
-    kinetic = bundle.kinetic
+    kinetic = pgdg_intermediate.kinetic
     one_body_hamiltonian .+= kron(kinetic, kron(identity_1d, identity_1d))
     one_body_hamiltonian .+= kron(identity_1d, kron(kinetic, identity_1d))
     one_body_hamiltonian .+= kron(identity_1d, kron(identity_1d, kinetic))
@@ -478,11 +479,11 @@ function _ordinary_cartesian_ida_from_gausslet_bundle(
         one_body,
         overlap_3d,
         one_body_hamiltonian,
-        bundle.pair_factors,
+        pgdg_intermediate.pair_factors,
         interaction_matrix,
-        _mapped_cartesian_orbitals(bundle.centers),
-        bundle.weights,
-        _mapped_cartesian_weights(bundle.weights),
+        _mapped_cartesian_orbitals(pgdg_intermediate.centers),
+        pgdg_intermediate.weights,
+        _mapped_cartesian_weights(pgdg_intermediate.weights),
     )
 end
 
@@ -497,17 +498,20 @@ function _hybrid_residual_gaussian_seed(hybrid::HybridMappedOrdinaryBasis1D)
     backbone_coefficients_small = Matrix{Float64}(stencil_matrix(backbone))
     hybrid_coefficients = Matrix{Float64}(stencil_matrix(hybrid))
     nbackbone_primitives = size(backbone_coefficients_small, 1)
+    core_coefficients_small = Matrix{Float64}(hybrid.core_coefficient_matrix)
+    ncore_primitives = size(core_coefficients_small, 1)
     nprimitives = size(hybrid_coefficients, 1)
-    nprimitives == nbackbone_primitives + ncore || throw(
-        ArgumentError("hybrid primitive layout must be backbone primitives followed by core Gaussian primitives"),
+    nprimitives == nbackbone_primitives + ncore_primitives || throw(
+        ArgumentError("hybrid primitive layout must be backbone primitives followed by contracted core Gaussian primitives"),
+    )
+    size(core_coefficients_small, 2) == ncore || throw(
+        ArgumentError("hybrid residual seed requires core contraction columns to match core supplement count"),
     )
 
     backbone_coefficients = zeros(Float64, nprimitives, nbackbone)
     backbone_coefficients[1:nbackbone_primitives, :] .= backbone_coefficients_small
     raw_core_coefficients = zeros(Float64, nprimitives, ncore)
-    for index in 1:ncore
-        raw_core_coefficients[nbackbone_primitives + index, index] = 1.0
-    end
+    raw_core_coefficients[(nbackbone_primitives + 1):end, :] .= core_coefficients_small
 
     primitive_overlap = overlap_matrix(primitive_set(hybrid))
     overlap_backbone = Matrix{Float64}(backbone_coefficients' * primitive_overlap * backbone_coefficients)

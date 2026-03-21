@@ -1,18 +1,21 @@
 """
     LegacySGaussianData
 
-Tiny legacy-informed adapter result for the current ordinary-hybrid Gaussian
-supplement tests.
+Tiny legacy-informed centered `s`-supplement adapter for the current
+ordinary-hybrid and QW-PGDG tests.
 
 The object stores:
 
 - the requested `atom` and `basis_name`
 - the legacy `basisfile` path used
-- the primitive `s` exponents extracted from that file
-- the converted one-dimensional Gaussian widths used by the current hybrid
-  ordinary basis builder
-- the explicit centered `Gaussian` list
-- whether the data were uncontracted and whether any width filter was applied
+- the primitive `s` exponents and widths
+- the primitive centered one-dimensional Gaussians
+- the shell contraction matrix for the active supplement functions
+- representative contracted widths / `Gaussian`s for the active supplement
+- whether the active data are uncontracted and whether any width filter was applied
+
+The primitive integral route remains analytic. Contraction happens only on the
+added-Gaussian side when the active paths consume this object.
 
 This is intentionally narrow. It is not a general Gaussian-basis subsystem.
 """
@@ -21,6 +24,9 @@ struct LegacySGaussianData
     basis_name::String
     basisfile::String
     primitive_exponents::Vector{Float64}
+    primitive_widths::Vector{Float64}
+    primitive_gaussians::Vector{Gaussian}
+    contraction_matrix::Matrix{Float64}
     widths::Vector{Float64}
     gaussians::Vector{Gaussian}
     uncontracted::Bool
@@ -34,7 +40,9 @@ function Base.show(io::IO, data::LegacySGaussianData)
         data.atom,
         "\", basis=\"",
         data.basis_name,
-        "\", n=",
+        "\", nprimitive=",
+        length(data.primitive_gaussians),
+        ", ncontracted=",
         length(data.gaussians),
         ", uncontracted=",
         data.uncontracted,
@@ -144,13 +152,47 @@ end
 
 _zeta_to_width(zeta::Real) = inv(sqrt(2.0 * Float64(zeta)))
 
+function _legacy_contracted_gaussian_representatives(
+    primitive_gaussians::AbstractVector{<:Gaussian},
+    contraction_matrix::AbstractMatrix{<:Real},
+)
+    primitive_set_1d = PrimitiveSet1D(
+        AbstractPrimitiveFunction1D[gaussian for gaussian in primitive_gaussians];
+        name = :legacy_supplement_primitives,
+    )
+    overlap = Matrix{Float64}(overlap_matrix(primitive_set_1d))
+    position = Matrix{Float64}(position_matrix(primitive_set_1d))
+    x2 = Matrix{Float64}(_x2_matrix(primitive_set_1d))
+    coefficients = Matrix{Float64}(contraction_matrix)
+
+    widths = Float64[]
+    gaussians = Gaussian[]
+    for column in axes(coefficients, 2)
+        vector = view(coefficients, :, column)
+        norm_value = Float64(dot(vector, overlap * vector))
+        norm_value > 1.0e-12 || throw(
+            ArgumentError("legacy contracted supplement requires nonzero contracted norm"),
+        )
+        center_value = Float64(dot(vector, position * vector) / norm_value)
+        second_moment = Float64(dot(vector, x2 * vector) / norm_value)
+        variance = second_moment - center_value^2
+        variance > 1.0e-12 || throw(
+            ArgumentError("legacy contracted supplement requires positive contracted variance"),
+        )
+        width_value = sqrt(2.0 * variance)
+        push!(widths, width_value)
+        push!(gaussians, Gaussian(center = center_value, width = width_value))
+    end
+    return widths, gaussians
+end
+
 """
     legacy_s_gaussian_data(
         atom,
         basis_name;
         basisfile = nothing,
         center = 0.0,
-        uncontracted = true,
+        uncontracted = false,
         max_width = nothing,
     )
 
@@ -162,8 +204,8 @@ This adapter is intentionally small:
 
 - it reads the legacy `BasisSets` file in the style of `ReadBasis.jl`
 - it keeps only `s` shells
-- in the current first pass it uses the primitive exponents directly
-  (`uncontracted = true`)
+- by default it follows the legacy contraction pattern shell by shell
+- `uncontracted = true` keeps the old primitive-only route as a diagnostic mode
 - it converts each `exp(-zeta * x^2)` primitive into the current width
   convention
 
@@ -174,35 +216,88 @@ function legacy_s_gaussian_data(
     basis_name::AbstractString;
     basisfile::Union{Nothing, AbstractString} = nothing,
     center::Real = 0.0,
-    uncontracted::Bool = true,
+    uncontracted::Bool = false,
     max_width::Union{Nothing, Real} = nothing,
 )
-    uncontracted || throw(ArgumentError("legacy_s_gaussian_data currently supports only uncontracted primitive `s` shells"))
-
     shells, path = _legacy_basis_shells(atom, basis_name; basisfile = basisfile)
     s_shells = filter(shell -> shell[1] == 0, shells)
     isempty(s_shells) && throw(ArgumentError("legacy basis \"$basis_name\" for atom \"$atom\" contains no s shells"))
 
-    exponents = Float64[]
+    primitive_exponents = Float64[]
+    primitive_widths = Float64[]
+    contraction_columns = Vector{Vector{Float64}}()
+
     for shell in s_shells
-        append!(exponents, shell[2])
-    end
-    exponents = sort(unique(exponents); rev = true)
+        shell_exponents = Float64[shell[2]...]
+        shell_coefficients = Float64[shell[3]...]
+        shell_widths = _zeta_to_width.(shell_exponents)
 
-    widths = _zeta_to_width.(exponents)
-    if max_width !== nothing
-        width_limit = Float64(max_width)
-        keep = findall(width -> width <= width_limit, widths)
-        exponents = exponents[keep]
-        widths = widths[keep]
+        if max_width !== nothing
+            width_limit = Float64(max_width)
+            keep = findall(width -> width <= width_limit, shell_widths)
+            shell_exponents = shell_exponents[keep]
+            shell_coefficients = shell_coefficients[keep]
+            shell_widths = shell_widths[keep]
+        end
+
+        isempty(shell_exponents) && continue
+
+        append!(primitive_exponents, shell_exponents)
+        append!(primitive_widths, shell_widths)
+        if uncontracted
+            for index in eachindex(shell_exponents)
+                column = zeros(Float64, length(shell_exponents))
+                column[index] = 1.0
+                push!(contraction_columns, column)
+            end
+        else
+            push!(contraction_columns, normalize(shell_coefficients))
+        end
     end
 
-    gaussians = Gaussian[Gaussian(center = center, width = width) for width in widths]
+    isempty(primitive_exponents) && throw(
+        ArgumentError("legacy s-shell filtering removed every primitive for atom=\"$atom\", basis=\"$basis_name\""),
+    )
+
+    contraction_matrix = zeros(Float64, length(primitive_exponents), length(contraction_columns))
+    primitive_offset = 0
+    column_offset = 0
+    for shell in s_shells
+        shell_exponents = Float64[shell[2]...]
+        shell_coefficients = Float64[shell[3]...]
+        shell_widths = _zeta_to_width.(shell_exponents)
+        if max_width !== nothing
+            width_limit = Float64(max_width)
+            keep = findall(width -> width <= width_limit, shell_widths)
+            shell_exponents = shell_exponents[keep]
+            shell_coefficients = shell_coefficients[keep]
+            shell_widths = shell_widths[keep]
+        end
+        nshell = length(shell_exponents)
+        nshell == 0 && continue
+        if uncontracted
+            contraction_matrix[(primitive_offset + 1):(primitive_offset + nshell), (column_offset + 1):(column_offset + nshell)] .= Matrix{Float64}(I, nshell, nshell)
+            column_offset += nshell
+        else
+            contraction_matrix[(primitive_offset + 1):(primitive_offset + nshell), column_offset + 1] .= normalize(shell_coefficients)
+            column_offset += 1
+        end
+        primitive_offset += nshell
+    end
+
+    primitive_gaussians = Gaussian[Gaussian(center = center, width = width) for width in primitive_widths]
+    widths, gaussians = _legacy_contracted_gaussian_representatives(
+        primitive_gaussians,
+        contraction_matrix,
+    )
     return LegacySGaussianData(
         String(atom),
         String(basis_name),
         path,
-        exponents,
+        primitive_exponents,
+        primitive_widths,
+        primitive_gaussians,
+        contraction_matrix,
         widths,
         gaussians,
         uncontracted,

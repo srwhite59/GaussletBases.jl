@@ -24,10 +24,13 @@ struct MappedOrdinaryOneBody1D{B}
     center::Float64
 end
 
-struct _MappedOrdinaryGausslet1DBundle{B,L}
+struct _MappedOrdinaryPGDGIntermediate1D{B,L,A,M}
     basis::B
-    layer::L
     backend::Symbol
+    refinement_levels::Int
+    refinement_mask::M
+    base_layer::L
+    auxiliary_layer::A
     overlap::Matrix{Float64}
     kinetic::Matrix{Float64}
     position::Matrix{Float64}
@@ -40,6 +43,15 @@ struct _MappedOrdinaryGausslet1DBundle{B,L}
     center::Float64
     weights::Vector{Float64}
     centers::Vector{Float64}
+end
+
+struct _MappedOrdinaryGausslet1DBundle{B,L,P}
+    basis::B
+    layer::L
+    pgdg_intermediate::P
+    backend::Symbol
+    exponents::Vector{Float64}
+    center::Float64
 end
 
 struct _MappedLegacyProxyLayer1D
@@ -68,6 +80,21 @@ function Base.show(io::IO, operators::MappedOrdinaryOneBody1D)
         print(io, ", experimental=true")
     end
     print(io, ")")
+end
+
+function Base.show(io::IO, intermediate::_MappedOrdinaryPGDGIntermediate1D)
+    print(
+        io,
+        "_MappedOrdinaryPGDGIntermediate1D(backend=:",
+        intermediate.backend,
+        ", refinement_levels=",
+        intermediate.refinement_levels,
+        ", nbasis=",
+        size(intermediate.overlap, 1),
+        ", nfactors=",
+        length(intermediate.gaussian_factors),
+        ")",
+    )
 end
 
 function _basis_sample_matrix(
@@ -132,6 +159,22 @@ function _mapped_ordinary_backend_layer(
         return mapped_pgdg_localized(mapped_pgdg_derivativefit_prototype(basis))
     else
         throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
+    end
+end
+
+function _mapped_ordinary_pgdg_base_layer(
+    basis::MappedUniformBasis,
+    backend::Symbol,
+    working_layer,
+)
+    if backend == :numerical_reference
+        return _mapped_legacy_proxy_layer(basis)
+    elseif backend == :pgdg_experimental
+        return working_layer
+    elseif backend == :pgdg_localized_experimental
+        return working_layer
+    else
+        throw(ArgumentError("mapped ordinary PGDG intermediate requires a supported backend"))
     end
 end
 
@@ -298,6 +341,52 @@ function _mapped_legacy_proxy_layer(
     )
 end
 
+function _congruence_transform(
+    matrix::AbstractMatrix{<:Real},
+    transform::AbstractMatrix{<:Real},
+)
+    transformed = Matrix{Float64}(transpose(transform) * Matrix{Float64}(matrix) * Matrix{Float64}(transform))
+    return 0.5 .* (transformed .+ transpose(transformed))
+end
+
+function _congruence_transform_terms(
+    terms::AbstractArray{<:Real,3},
+    transform::AbstractMatrix{<:Real},
+)
+    nterms = size(terms, 1)
+    nfinal = size(transform, 2)
+    transformed = zeros(Float64, nterms, nfinal, nfinal)
+    for term in 1:nterms
+        @views transformed[term, :, :] .= _congruence_transform(terms[term, :, :], transform)
+    end
+    return transformed
+end
+
+function _mapped_legacy_proxy_localized(
+    proxy_layer::_MappedLegacyProxyLayer1D,
+)
+    overlap = Matrix{Float64}(contract_primitive_matrix(proxy_layer, overlap_matrix(primitive_set(proxy_layer))))
+    position = Matrix{Float64}(contract_primitive_matrix(proxy_layer, position_matrix(primitive_set(proxy_layer))))
+    transform, center_values = _cleanup_comx_transform(
+        overlap,
+        position,
+        integral_weights(proxy_layer),
+    )
+    coefficient_matrix = Matrix{Float64}(stencil_matrix(proxy_layer) * transform)
+    primitive_weights = Float64[integral_weight(primitive) for primitive in primitives(primitive_set(proxy_layer))]
+    integral_weight_data = vec(transpose(coefficient_matrix) * primitive_weights)
+    localized = _MappedLegacyProxyLayer1D(
+        primitive_set(proxy_layer),
+        coefficient_matrix,
+        center_values,
+        integral_weight_data,
+    )
+    return (
+        layer = localized,
+        transform = Matrix{Float64}(transform),
+    )
+end
+
 function _mapped_legacy_proxy_scalar_data(
     proxy_layer::_MappedLegacyProxyLayer1D;
     exponents::AbstractVector{<:Real},
@@ -314,6 +403,26 @@ function _mapped_legacy_proxy_scalar_data(
     return (
         x2 = x2,
         factor_terms = _term_tensor(gaussian_factors),
+    )
+end
+
+function _mapped_legacy_proxy_core_data(
+    proxy_layer::_MappedLegacyProxyLayer1D;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    primitive_layer = primitive_set(proxy_layer)
+    scalar_data = _mapped_legacy_proxy_scalar_data(
+        proxy_layer;
+        exponents = exponents,
+        center = center,
+    )
+    return (
+        overlap = Matrix{Float64}(contract_primitive_matrix(proxy_layer, overlap_matrix(primitive_layer))),
+        position = Matrix{Float64}(contract_primitive_matrix(proxy_layer, position_matrix(primitive_layer))),
+        kinetic = Matrix{Float64}(contract_primitive_matrix(proxy_layer, kinetic_matrix(primitive_layer))),
+        x2 = scalar_data.x2,
+        factor_terms = scalar_data.factor_terms,
     )
 end
 
@@ -356,74 +465,88 @@ function _mapped_coulomb_expanded_symmetric_matrix(
     return matrix
 end
 
-function _mapped_ordinary_gausslet_1d_bundle(
+function _mapped_ordinary_pgdg_intermediate_1d(
     basis::MappedUniformBasis;
     exponents::AbstractVector{<:Real} = Float64[],
     center::Real = 0.0,
     backend::Symbol = :pgdg_experimental,
+    working_layer = nothing,
+    refinement_levels::Integer = 0,
+    refinement_mask::_TernaryGaussianRefinementMask1D = _default_ternary_gaussian_refinement_mask(),
 )
+    refinement_levels >= 0 || throw(ArgumentError("PGDG intermediate refinement levels must be nonnegative"))
+    refinement_levels == 0 || throw(
+        ArgumentError(
+            "PGDG intermediate refinement levels > 0 are structured for later work, but this first pass only implements refinement_levels = 0",
+        ),
+    )
+
     exponents_value = Float64[Float64(exponent) for exponent in exponents]
     center_value = Float64(center)
-    layer = _mapped_ordinary_backend_layer(basis, backend)
+    layer = working_layer === nothing ? _mapped_ordinary_backend_layer(basis, backend) : working_layer
+    base_layer = _mapped_ordinary_pgdg_base_layer(basis, backend, layer)
+    auxiliary_layer = base_layer
 
     if backend == :numerical_reference
-        representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
-        overlap = Matrix{Float64}(representation.basis_matrices.overlap)
-        position = Matrix{Float64}(representation.basis_matrices.position)
-        kinetic = Matrix{Float64}(representation.basis_matrices.kinetic)
-        proxy_layer = _mapped_legacy_proxy_layer(basis)
-        scalar_data = _mapped_legacy_proxy_scalar_data(
-            proxy_layer;
+        core_data = _mapped_legacy_proxy_core_data(
+            base_layer;
             exponents = exponents_value,
             center = center_value,
         )
-        x2 = scalar_data.x2
-        gaussian_factor_terms = scalar_data.factor_terms
-        # Follow the legacy ordinary pattern more closely here: build the
-        # Coulomb-expansion factors from a mapped pure-Gaussian proxy raw
-        # layer, then contract to the working 1D gausslet basis.
-        pair_factors = Matrix{Float64}[
+        localized = _mapped_legacy_proxy_localized(base_layer)
+        auxiliary_layer = localized.layer
+        transform = localized.transform
+
+        overlap = _congruence_transform(core_data.overlap, transform)
+        position = _congruence_transform(core_data.position, transform)
+        kinetic = _congruence_transform(core_data.kinetic, transform)
+        x2 = _congruence_transform(core_data.x2, transform)
+        gaussian_factor_terms = _congruence_transform_terms(core_data.factor_terms, transform)
+        pair_factor_basis = Matrix{Float64}[
             Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
-                proxy_layer;
+                base_layer;
                 exponents = exponents_value,
             )
         ]
-        pair_factor_terms_raw = _term_tensor(pair_factors)
+        pair_factor_terms_raw = _congruence_transform_terms(_term_tensor(pair_factor_basis), transform)
     else
         overlap = Matrix{Float64}(overlap_matrix(layer))
         position = Matrix{Float64}(position_matrix(layer))
         kinetic = Matrix{Float64}(kinetic_matrix(layer))
-        x2 = Matrix{Float64}(_x2_matrix(layer))
-        gaussian_factors = Matrix{Float64}[
+        x2 = Matrix{Float64}(_x2_matrix(auxiliary_layer))
+        gaussian_factor_basis = Matrix{Float64}[
             Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
-                layer;
+                auxiliary_layer;
                 exponents = exponents_value,
                 center = center_value,
             )
         ]
-        gaussian_factor_terms = _term_tensor(gaussian_factors)
-        pair_factors = Matrix{Float64}[
+        gaussian_factor_terms = _term_tensor(gaussian_factor_basis)
+        pair_factor_basis = Matrix{Float64}[
             Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
-                layer;
+                auxiliary_layer;
                 exponents = exponents_value,
             )
         ]
-        pair_factor_terms_raw = _term_tensor(pair_factors)
+        pair_factor_terms_raw = _term_tensor(pair_factor_basis)
     end
 
-    weight_values = Float64[Float64(weight) for weight in integral_weights(layer)]
-    center_values = Float64[Float64(point) for point in centers(layer)]
-    gaussian_factors = backend == :numerical_reference ? _tensor_to_matrix_vector(gaussian_factor_terms) : gaussian_factors
+    weight_values = Float64[Float64(weight) for weight in integral_weights(auxiliary_layer)]
+    center_values = Float64[Float64(point) for point in centers(auxiliary_layer)]
+    gaussian_factors = _tensor_to_matrix_vector(gaussian_factor_terms)
     weight_outer = weight_values * transpose(weight_values)
     pair_factors = [
         Matrix{Float64}(pair_factor_terms_raw[term, :, :] ./ weight_outer) for term in eachindex(exponents_value)
     ]
     pair_factor_terms = _term_tensor(pair_factors)
 
-    return _MappedOrdinaryGausslet1DBundle(
+    return _MappedOrdinaryPGDGIntermediate1D(
         basis,
-        layer,
         backend,
+        Int(refinement_levels),
+        refinement_mask,
+        base_layer,
+        auxiliary_layer,
         overlap,
         kinetic,
         position,
@@ -439,15 +562,44 @@ function _mapped_ordinary_gausslet_1d_bundle(
     )
 end
 
+function _mapped_ordinary_gausslet_1d_bundle(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    backend::Symbol = :pgdg_experimental,
+    refinement_levels::Integer = 0,
+)
+    exponents_value = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    layer = _mapped_ordinary_backend_layer(basis, backend)
+    pgdg_intermediate = _mapped_ordinary_pgdg_intermediate_1d(
+        basis;
+        exponents = exponents_value,
+        center = center_value,
+        backend = backend,
+        working_layer = layer,
+        refinement_levels = refinement_levels,
+    )
+
+    return _MappedOrdinaryGausslet1DBundle(
+        basis,
+        layer,
+        pgdg_intermediate,
+        backend,
+        exponents_value,
+        center_value,
+    )
+end
+
 function _mapped_ordinary_one_body_from_bundle(
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
     return MappedOrdinaryOneBody1D(
         bundle.basis,
         bundle.backend,
-        bundle.overlap,
-        bundle.kinetic,
-        bundle.gaussian_factors,
+        bundle.pgdg_intermediate.overlap,
+        bundle.pgdg_intermediate.kinetic,
+        bundle.pgdg_intermediate.gaussian_factors,
         bundle.exponents,
         bundle.center,
     )

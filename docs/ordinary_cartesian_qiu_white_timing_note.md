@@ -233,3 +233,69 @@ After that timing line printed, the next phase still did not clear within the
 next observation window. So the next exposed bottleneck is now the
 Qiu-White-specific split gausslet-Gaussian raw-block assembly, not the shared
 `gg` scalar/factor side.
+
+## What changed after the legacy-style GA cross-block correction
+
+The next optimization pass then moved the active Qiu-White `ga` cross-block
+route onto the legacy-style contracted proxy path as well.
+
+Instead of building active `ga` blocks by midpoint-grid sampling in the final
+mapped basis, the constructor now:
+
+- reuses the mapped Gaussian proxy layer already introduced on the gausslet
+  side
+- evaluates the primitive gausslet-proxy / added-Gaussian cross matrices
+  analytically for
+  - overlap
+  - kinetic
+  - position
+  - `x^2`
+  - Gaussian-factor blocks
+  - pair-factor blocks
+- contracts those primitive cross blocks only on the gausslet side
+
+The old midpoint-grid implementation was kept only as a diagnostic helper.
+
+On a warmed small development case
+
+- `count = 3`
+- `s = 0.8`
+- `xmax = 6`
+- He `cc-pVTZ`
+- first Coulomb term only
+
+the comparison was:
+
+- midpoint diagnostic path: did not finish within a `20 s` observation window
+- active proxy cross path: about `1.88885e-4 s`
+
+So the active `ga` cross-block route is no longer a serious cost center.
+
+On the same light paper-like reference case
+
+- `count = 9`
+- `s = 0.8`
+- `xmax = 6`
+- He `cc-pVTZ`
+- `interaction_treatment = :mwg`
+
+the warmed constructor timing is now:
+
+- `shared gausslet-side 1D bundle`: `14.668781604 s`
+- `split gausslet-Gaussian raw-block assembly`: `0.421365972 s`
+- `3D gausslet overlap assembly`: `0.037123932 s`
+- `residual-space construction`: `0.123772256 s`
+- `3D gausslet one-body assembly`: `0.671861544 s`
+- `raw one-body transform`: `0.034547631 s`
+- `raw moment-matrix assembly`: `0.164400885 s`
+- `3D gausslet interaction assembly`: `0.020893667 s`
+- `RG interaction assembly`: `0.402140442 s`
+- total: `16.544887933 s`
+
+So the diagnosis changed again:
+
+- the Qiu-White-specific `ga` split raw-block assembly is no longer the next
+  bottleneck
+- the dominant remaining cost is back on the shared mapped-gausslet 1D bundle
+- within the remaining Qiu-White-specific stages, the largest single phase on
+  this light case is now the `3D gausslet one-body assembly`

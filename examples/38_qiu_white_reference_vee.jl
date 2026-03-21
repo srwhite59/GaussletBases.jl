@@ -1,22 +1,10 @@
 using GaussletBases
 
-function _truncate_coulomb_expansion(expansion::CoulombGaussianExpansion, nterms::Int)
-    return CoulombGaussianExpansion(
-        expansion.coefficients[1:nterms],
-        expansion.exponents[1:nterms];
-        del = expansion.del,
-        s = expansion.s,
-        c = expansion.c,
-        maxu = expansion.maxu,
-    )
-end
-
 basis_name = "cc-pVTZ"
-count = 11
-s = 0.6
+count = 9
+s = 0.8
 xmax = 6.0
 z_value = 2.0
-nterms = 3
 reference_value = 1.25
 
 source_basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -25,11 +13,11 @@ source_basis = build_basis(MappedUniformBasisSpec(:G10;
     reference_spacing = 1.0,
 ))
 legacy = legacy_s_gaussian_data("He", basis_name)
-expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), nterms)
+expansion = coulomb_gaussian_expansion(doacc = false)
 
 hybrid_basis = hybrid_mapped_ordinary_basis(
     source_basis;
-    core_gaussians = legacy.gaussians,
+    core_gaussians = legacy,
     backend = :pgdg_localized_experimental,
 )
 surrogate_mwg = ordinary_cartesian_ida_operators(
@@ -63,9 +51,11 @@ println("Qiu-White residual-Gaussian reference check")
 println("  basis: ", source_basis)
 println("  He basis supplement: ", legacy.basis_name)
 println("  primitive exponents: ", legacy.primitive_exponents)
-println("  converted widths: ", legacy.widths)
+println("  primitive widths: ", legacy.primitive_widths)
+println("  contraction matrix size: ", size(legacy.contraction_matrix))
+println("  contracted widths: ", legacy.widths)
 println("  count = ", count, ", s = ", s, ", xmax = ", xmax)
-println("  Coulomb validation expansion terms: ", nterms)
+println("  note: this is a slow full-expansion light reference run, not a quick smoke check.")
 println("  hydrogenic 1s^2 target: ", reference_value)
 println()
 

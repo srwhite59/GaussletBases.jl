@@ -38,8 +38,9 @@ It:
 
 1. reads the legacy `BasisSets` file in the style of `ReadBasis.jl`
 2. extracts only the `l = 0` shells
-3. uses the primitive exponents directly
-4. converts each legacy primitive
+3. keeps the primitive exponents and analytic primitive integral route
+4. contracts the `s` shells in the legacy `makeallcontractions(...)` style
+5. converts each legacy primitive
 
 ```text
 exp(-zeta * r^2)
@@ -51,37 +52,40 @@ into the current one-dimensional Gaussian width convention
 exp(-0.5 * (x / width)^2),   width = 1 / sqrt(2 zeta)
 ```
 
-## What is used in this first pass
+## What is used in the active path
 
-This pass uses:
+The active supplement path now uses:
 
 - all primitive `s` exponents from the chosen He basis
-- uncontracted primitives only
+- contracted `s` shells on top of the primitive data
 - no diffuse filtering
 
-So the old contraction coefficients are read but not used in the present
-hybrid ordinary tests.
+The primitive overlap / kinetic / position / `x^2` / Gaussian-factor /
+pair-factor blocks remain analytic. Contraction is applied only on the
+added-Gaussian side when the hybrid ordinary and QW-PGDG paths consume the
+legacy supplement object.
 
-That is intentional. The first serious real-basis pass should avoid adding a
-second subjective trimming rule at the same time.
+## He `s` primitives and contracted shells used
 
-## He `s` primitives used
-
-For `cc-pVTZ`, the adapter uses all `s` primitives:
+For `cc-pVTZ`, the adapter keeps all `s` primitives and contracts them into
+three centered `s` supplement functions:
 
 ```text
 zetas  = [234.0, 35.16, 7.989, 2.212, 0.6669, 0.2089]
 widths = [0.046225016352102424, 0.11925059893763726, 0.2501720524494329,
           0.4754364132056024, 0.8658738891102185, 1.547090723905439]
+contraction shape = (6, 3)
 ```
 
-For `cc-pVQZ`, the adapter uses all `s` primitives:
+For `cc-pVQZ`, it keeps all `s` primitives and contracts them into four
+centered `s` supplement functions:
 
 ```text
 zetas  = [528.5, 79.31, 18.05, 5.085, 1.609, 0.5363, 0.1833]
 widths = [0.03075831259604325, 0.07940009594713392, 0.16643566632465154,
           0.31357362279453244, 0.5574513610066167, 0.9655640855770945,
           1.6515957995876271]
+contraction shape = (7, 4)
 ```
 
 ## Friendly-regime check

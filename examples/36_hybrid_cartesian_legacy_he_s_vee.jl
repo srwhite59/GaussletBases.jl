@@ -36,8 +36,10 @@ end
 
 function print_legacy(label::String, data::LegacySGaussianData)
     println(label)
-    println("  exponents: ", data.primitive_exponents)
-    println("  widths: ", data.widths)
+    println("  primitive exponents: ", data.primitive_exponents)
+    println("  primitive widths: ", data.primitive_widths)
+    println("  contraction matrix size: ", size(data.contraction_matrix))
+    println("  contracted widths: ", data.widths)
 end
 
 toy_gaussians = [
@@ -52,7 +54,7 @@ println("  count = 11")
 println("  s = 0.6")
 println("  xmax = 6.0")
 println("  backend = :pgdg_localized_experimental")
-println("  using all primitive He s exponents, uncontracted, with no diffuse filtering")
+println("  using contracted He s shells, with analytic primitive integrals underneath")
 println()
 
 print_legacy("He cc-pVTZ s primitives", vtz)
@@ -63,8 +65,8 @@ println()
 for result in (
     run_case("pure ordinary", Gaussian[]),
     run_case("toy widths [0.2, 0.6]", toy_gaussians),
-    run_case("He cc-pVTZ s primitives", vtz.gaussians),
-    run_case("He cc-pVQZ s primitives", vqz.gaussians),
+    run_case("He cc-pVTZ contracted s supplement", vtz),
+    run_case("He cc-pVQZ contracted s supplement", vqz),
 )
     println(result.label)
     println("  E1: ", result.E1)

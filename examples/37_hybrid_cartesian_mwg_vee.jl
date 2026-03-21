@@ -9,7 +9,7 @@ function run_case(basis_name::String; count::Int = 11, s::Float64 = 0.6, xmax::F
     legacy = legacy_s_gaussian_data("He", basis_name)
     hybrid_basis = hybrid_mapped_ordinary_basis(
         source_basis;
-        core_gaussians = legacy.gaussians,
+        core_gaussians = legacy,
         backend = :pgdg_localized_experimental,
     )
     expansion = coulomb_gaussian_expansion(doacc = false)
@@ -65,8 +65,9 @@ function print_case(basis_name::String)
     println("He ", basis_name, " s-primitives")
     println("  source basis: ", result.source_basis)
     println("  hybrid basis: ", result.hybrid_basis)
-    println("  exponents used: ", result.legacy.primitive_exponents)
-    println("  widths used: ", result.legacy.widths)
+    println("  primitive exponents: ", result.legacy.primitive_exponents)
+    println("  contracted widths: ", result.legacy.widths)
+    println("  contraction matrix size: ", size(result.legacy.contraction_matrix))
     println("  representative MWG residual centers: ", result.mwg_centers[1:sample_count])
     println("  representative MWG residual widths: ", result.mwg_widths[1:sample_count])
     println("  pure ordinary E1: ", result.pure.orbital_energy)
