@@ -1658,6 +1658,43 @@ end
     @test xgaussian_error_refined ≤ xgaussian_error_pre + 0.02
 end
 
+@testset "Ternary PGDG refinement mask" begin
+    mask = GaussletBases._default_ternary_gaussian_refinement_mask()
+    offsets = GaussletBases._refinement_mask_offsets(mask)
+    residue_sums = GaussletBases._refinement_mask_residue_sums(mask)
+    residue_ripple = GaussletBases._refinement_mask_residue_ripple(mask)
+
+    @test mask.factor == 3
+    @test mask.rho ≈ 1.2 atol = 0.0 rtol = 0.0
+    @test mask.support_radius == 24
+    @test mask.half_window ≈ 8.0 atol = 0.0 rtol = 0.0
+    @test length(mask) == 49
+    @test offsets == collect(-24:24)
+    @test mask.coefficients ≈ reverse(mask.coefficients) atol = 0.0 rtol = 0.0
+    @test all(>(0.0), mask.coefficients)
+    @test maximum(
+        abs(
+            coefficient - GaussletBases._analytic_ternary_refinement_coefficient(offset, mask.rho),
+        ) for (offset, coefficient) in zip(offsets, mask.coefficients)
+    ) == 0.0
+    @test abs(sum(mask.coefficients) - 3.0) < 1.0e-10
+    @test maximum(abs.(residue_sums .- 1.0)) < 3.0e-11
+    @test residue_ripple < 3.0e-11
+
+    one_step = GaussletBases._apply_gaussian_refinement_mask(mask, [1.0])
+    two_step_direct = GaussletBases._apply_gaussian_refinement_mask(mask, one_step)
+    two_step_repeat = GaussletBases._apply_gaussian_refinement_mask_repeated(mask, [1.0]; levels = 2)
+    three_step_repeat = GaussletBases._apply_gaussian_refinement_mask_repeated(mask, [1.0]; levels = 3)
+
+    @test one_step.offset == -mask.support_radius
+    @test one_step.coefficients ≈ mask.coefficients atol = 0.0 rtol = 0.0
+    @test two_step_direct.offset == two_step_repeat.offset
+    @test two_step_direct.coefficients ≈ two_step_repeat.coefficients atol = 1.0e-14 rtol = 1.0e-14
+    @test abs(sum(two_step_repeat.coefficients) - sum(mask.coefficients)^2) < 1.0e-9
+    @test abs(sum(three_step_repeat.coefficients) - sum(mask.coefficients)^3) < 1.0e-7
+    @test three_step_repeat.offset == -(mask.factor^3 - 1) ÷ (mask.factor - 1) * mask.support_radius
+end
+
 @testset "Mapped ordinary one-body backends" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     mild_basis = build_basis(MappedUniformBasisSpec(:G10;
