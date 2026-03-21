@@ -24,6 +24,7 @@ makedocs(
         "Developer Notes" => "developer/index.md",
         hide("Qiu-White residual-Gaussian route" => "algorithms/qiu_white_residual_gaussian_route.md"),
         hide("1D distorted-gausslet PGDG refinement hierarchy" => "algorithms/distorted_gausslet_pgdg_refinement_hierarchy.md"),
+        hide("Cartesian nested face construction" => "algorithms/cartesian_nested_face_construction.md"),
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
         hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),
         hide("Current atomic branch" => "explanations/current_atomic_branch.md"),

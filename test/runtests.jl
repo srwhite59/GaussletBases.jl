@@ -1770,6 +1770,129 @@ end
     )
 end
 
+@testset "Cartesian nested face first primitive" begin
+    function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        return basis, s
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis, s = _fixed_a_nested_test_basis(13)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+    pgdg = bundle.pgdg_intermediate
+    interval = 2:(length(basis) - 1)
+    side = GaussletBases._nested_doside_1d(bundle, interval, 4)
+
+    @test s > 0.0
+    @test side isa GaussletBases._CartesianNestedDoSide1D
+    @test side.interval == interval
+    @test side.retained_count == 4
+    @test size(side.local_coefficients) == (length(interval), 4)
+    @test size(side.coefficient_matrix) == (length(basis), 4)
+    @test maximum(abs.(side.coefficient_matrix[1:(first(interval) - 1), :])) == 0.0
+    @test maximum(abs.(side.coefficient_matrix[(last(interval) + 1):end, :])) == 0.0
+    @test norm(transpose(side.local_coefficients) * side.local_overlap * side.local_coefficients - I, Inf) < 1.0e-10
+    @test norm(transpose(side.coefficient_matrix) * pgdg.overlap * side.coefficient_matrix - I, Inf) < 1.0e-10
+    @test issorted(side.localized_centers)
+    @test length(side.localized_weights) == 4
+
+    face_lo = GaussletBases._nested_xy_face_product(
+        pgdg,
+        interval,
+        interval,
+        1;
+        retain_x = 4,
+        retain_y = 3,
+    )
+    face_hi = GaussletBases._nested_xy_face_product(
+        pgdg,
+        interval,
+        interval,
+        length(basis);
+        retain_x = 4,
+        retain_y = 3,
+    )
+    face_overlap = GaussletBases._nested_xy_face_overlap(face_lo, pgdg.overlap)
+    face_cross = GaussletBases._nested_xy_face_cross_overlap(face_lo, face_hi, pgdg.overlap)
+
+    @test face_lo isa GaussletBases._CartesianNestedXYFace3D
+    @test size(face_lo.coefficient_matrix) == (length(basis)^3, 12)
+    @test length(face_lo.support_indices) == length(interval)^2
+    @test isempty(intersect(face_lo.support_indices, face_hi.support_indices))
+    @test norm(face_overlap - I, Inf) < 1.0e-10
+    @test norm(face_cross, Inf) < 1.0e-10
+end
+
+@testset "Cartesian nested shell first packet" begin
+    function _fixed_a_nested_shell_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        return basis, s
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis, s = _fixed_a_nested_shell_basis(13)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+    interval = 2:(length(basis) - 1)
+    shell = GaussletBases._nested_xy_shell_pair(
+        bundle,
+        interval,
+        interval;
+        retain_x = 4,
+        retain_y = 3,
+    )
+    packet = shell.packet
+    face_low, face_high = shell.faces
+    nface = size(face_low.coefficient_matrix, 2)
+    direct_overlap = transpose(shell.coefficient_matrix) * shell.coefficient_matrix
+    low_z_mean = sum(diag(packet.position_z)[1:nface]) / nface
+    high_z_mean = sum(diag(packet.position_z)[(nface + 1):end]) / nface
+
+    @test s > 0.0
+    @test shell isa GaussletBases._CartesianNestedXYShell3D
+    @test size(shell.coefficient_matrix) == (length(basis)^3, 2 * nface)
+    @test nface == 12
+    @test length(shell.support_indices) == 2 * length(interval)^2
+    @test length(shell.support_states) == length(shell.support_indices)
+    @test isempty(intersect(face_low.support_indices, face_high.support_indices))
+    @test norm(packet.overlap - I, Inf) < 1.0e-10
+    @test packet.overlap ≈ direct_overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test packet.kinetic ≈ transpose(packet.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_x ≈ transpose(packet.position_x) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_y ≈ transpose(packet.position_y) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_z ≈ transpose(packet.position_z) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.x2_x ≈ transpose(packet.x2_x) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.x2_y ≈ transpose(packet.x2_y) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
+    @test size(packet.gaussian_terms) == (3, 24, 24)
+    @test size(packet.pair_terms) == (3, 24, 24)
+    @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
+    @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
+    @test low_z_mean < 0.0
+    @test high_z_mean > 0.0
+end
+
 @testset "Mapped ordinary one-body backends" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     mild_basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -4099,7 +4222,7 @@ end
     @test occursin("supporting notes for the ordinary line", lowercase(current_ordinary_branch))
     @test occursin("ordinary_pgdg_supporting_notes.md", current_ordinary_branch)
     @test occursin("asinhmapping is the current working map", lowercase(replace(current_ordinary_branch, "`" => "")))
-    @test occursin("current `c,s` heuristics are provisional", current_ordinary_branch)
+    @test occursin("fixed `a = 1/(2Z)` with `s` solved from `count` and `xmax`", current_ordinary_branch)
     @test occursin("real second workflow", lowercase(current_ordinary_branch))
     @test occursin("recommended supporting-note order", lowercase(atomic_mean_field_supporting))
     @test occursin("atomic_ida_direct.md", atomic_mean_field_supporting)
