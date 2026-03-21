@@ -175,3 +175,61 @@ So the earlier diagnosis changed again:
 That means the next structural optimization should no longer target the old
 shared `gg` numerical pair-factor path first. The remaining slowdown has moved
 to the `ga` side of the Qiu-White reference constructor.
+
+## What changed after the legacy-style 1D scalar/factor correction
+
+The next optimization pass followed the legacy ordinary code more closely for
+the shared mapped-gausslet `gg` scalar/factor path as well.
+
+Instead of building active `x^2` and Gaussian-factor data by midpoint-grid
+basis-space sampling, the shared numerical bundle now:
+
+- reuses the mapped Gaussian proxy raw layer introduced for the pair-factor
+  correction
+- evaluates `x^2` analytically on that proxy raw layer
+- evaluates Gaussian-factor blocks analytically on that proxy raw layer
+- contracts those raw matrices into the working one-dimensional gausslet basis
+
+The old `_basis_space_scalar_factor_data(...)` route is therefore no longer
+the active shared `gg` scalar/factor path.
+
+On a small development case
+
+- `count = 3`
+- `s = 0.8`
+- first two Coulomb terms
+
+the scalar-side timing changed from:
+
+- old `_basis_space_scalar_factor_data(...)`: `6.8826 s`
+
+to:
+
+- `_mapped_legacy_proxy_layer(...)`: `0.5479 s`
+- `_mapped_legacy_proxy_scalar_data(...)`: `2.0202 s`
+
+On the light paper-like He case
+
+- `count = 9`
+- `s = 0.8`
+- `xmax = 6`
+- He `cc-pVTZ`
+- `interaction_treatment = :mwg`
+
+the shared bundle subphases were approximately:
+
+- `basis_representation(...)`: `25.76 s`
+- `_mapped_legacy_proxy_layer(...)`: `0.51 s`
+- `_mapped_legacy_proxy_scalar_data(...)`: `1.43 s`
+- analytic proxy pair-factor build: `0.63 s`
+
+and the constructor timing hook now reports:
+
+- `shared gausslet-side 1D bundle: 20.99 s`
+
+So the shared `gg` bundle is now materially below the earlier `~52 s` regime.
+
+After that timing line printed, the next phase still did not clear within the
+next observation window. So the next exposed bottleneck is now the
+Qiu-White-specific split gausslet-Gaussian raw-block assembly, not the shared
+`gg` scalar/factor side.

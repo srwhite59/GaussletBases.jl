@@ -298,6 +298,25 @@ function _mapped_legacy_proxy_layer(
     )
 end
 
+function _mapped_legacy_proxy_scalar_data(
+    proxy_layer::_MappedLegacyProxyLayer1D;
+    exponents::AbstractVector{<:Real},
+    center::Real = 0.0,
+)
+    x2 = Matrix{Float64}(_x2_matrix(proxy_layer))
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
+            proxy_layer;
+            exponents = exponents,
+            center = center,
+        )
+    ]
+    return (
+        x2 = x2,
+        factor_terms = _term_tensor(gaussian_factors),
+    )
+end
+
 function _mapped_coulomb_expanded_symmetric_matrix(
     coefficients::AbstractVector{<:Real},
     x_terms::AbstractArray{<:Real,3},
@@ -352,17 +371,17 @@ function _mapped_ordinary_gausslet_1d_bundle(
         overlap = Matrix{Float64}(representation.basis_matrices.overlap)
         position = Matrix{Float64}(representation.basis_matrices.position)
         kinetic = Matrix{Float64}(representation.basis_matrices.kinetic)
-        scalar_data = _basis_space_scalar_factor_data(
-            basis;
+        proxy_layer = _mapped_legacy_proxy_layer(basis)
+        scalar_data = _mapped_legacy_proxy_scalar_data(
+            proxy_layer;
             exponents = exponents_value,
             center = center_value,
         )
         x2 = scalar_data.x2
         gaussian_factor_terms = scalar_data.factor_terms
         # Follow the legacy ordinary pattern more closely here: build the
-        # Coulomb-expansion pair terms from a mapped pure-Gaussian proxy raw
+        # Coulomb-expansion factors from a mapped pure-Gaussian proxy raw
         # layer, then contract to the working 1D gausslet basis.
-        proxy_layer = _mapped_legacy_proxy_layer(basis)
         pair_factors = Matrix{Float64}[
             Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
                 proxy_layer;
