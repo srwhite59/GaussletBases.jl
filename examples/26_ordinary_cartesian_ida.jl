@@ -9,7 +9,6 @@ mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = npoints, xmax = rmax
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = npoints,
     mapping = mapping,
-    reference_spacing = 1.0,
 ))
 
 ops = ordinary_cartesian_ida_operators(

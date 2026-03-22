@@ -56,7 +56,6 @@ expansion = CoulombGaussianExpansion(
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 5,
     mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
-    reference_spacing = 1.0,
 ))
 
 prototype = GaussletBases.mapped_pgdg_logfit_prototype(basis)

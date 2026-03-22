@@ -21,7 +21,6 @@ mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = npoints, xmax = rmax
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = npoints,
     mapping = mapping,
-    reference_spacing = 1.0,
 ))
 
 reference_1d = mapped_ordinary_one_body_operators(

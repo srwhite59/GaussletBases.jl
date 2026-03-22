@@ -4,7 +4,6 @@ function run_case(label::String, core_gaussians)
     source_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 11,
         mapping = fit_asinh_mapping_for_strength(s = 0.6, npoints = 11, xmax = 6.0),
-        reference_spacing = 1.0,
     ))
     operators = if label == "pure ordinary"
         ordinary_cartesian_ida_operators(

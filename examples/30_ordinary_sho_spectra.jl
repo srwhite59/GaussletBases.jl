@@ -24,7 +24,6 @@ end
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 5,
     mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 5, xmax = 6.0),
-    reference_spacing = 1.0,
 ))
 core_gaussians = [
     Gaussian(center = 0.0, width = 0.2),
@@ -54,7 +53,6 @@ stiff_analytic = ordinary_sho_spectrum(hybrid_analytic; omega = 0.75, center = 0
 stress_basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 5,
     mapping = fit_asinh_mapping_for_strength(s = 2.0, npoints = 5, xmax = 6.0),
-    reference_spacing = 1.0,
 ))
 stress_reference = ordinary_sho_spectrum(
     stress_basis;

@@ -47,6 +47,9 @@ For the newer ordinary Cartesian line, continue with:
 - `38_qiu_white_reference_vee.jl`
 - `30_ordinary_sho_spectra.jl`
 
+`38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
+path is the default public run; the MWG branch remains opt-in and experimental.
+
 ## Full curated guide
 
 For the full grouped running guide, use the

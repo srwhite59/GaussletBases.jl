@@ -18,7 +18,6 @@ mapping = fit_asinh_mapping_for_extent(npoints = npoints, xmax = rmax)
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = npoints,
     mapping = mapping,
-    reference_spacing = 1.0,
 ))
 
 representation = basis_representation(basis; operators = (:overlap, :kinetic))

@@ -4,7 +4,6 @@ Z = 2.0
 source_basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 7,
     mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 7, xmax = 6.0),
-    reference_spacing = 1.0,
 ))
 core_gaussians = [
     Gaussian(center = 0.0, width = 0.2),

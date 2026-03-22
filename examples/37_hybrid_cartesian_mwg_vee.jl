@@ -4,7 +4,6 @@ function run_case(basis_name::String; count::Int = 11, s::Float64 = 0.6, xmax::F
     source_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = count,
         mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = xmax),
-        reference_spacing = 1.0,
     ))
     legacy = legacy_s_gaussian_data("He", basis_name)
     hybrid_basis = hybrid_mapped_ordinary_basis(

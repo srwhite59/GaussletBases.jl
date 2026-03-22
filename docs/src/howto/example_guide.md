@@ -32,6 +32,10 @@ If you are new, start here:
 
 Those four examples are still the clearest public entry path.
 
+For the radial and atomic examples below, first runs can still be compile-heavy.
+For tutorial-style runs, the examples now use cheaper quadrature settings where
+that is enough to keep the workflow clear. Reruns are much faster.
+
 ## Radial and atomic sequence
 
 After the core starting sequence, the atomic line is:
@@ -60,6 +64,13 @@ The current export examples are:
 13. `31_atomic_fullida_dense_export.jl`
 14. `32_atomic_sliced_export.jl`
 
+These are now explicit export demonstrations, not just raw smoke tests: they
+check a few structural invariants after writing the file. They are still
+heavier than the earlier atomic examples and are best treated as advanced
+workflow examples. They also use a deliberately simpler radial setup than the
+default two-`xgaussian` atomic front door so the export layer itself stays the
+focus.
+
 ## Ordinary Cartesian sequence
 
 For the ordinary Cartesian line, use this sequence:
@@ -75,6 +86,11 @@ For the ordinary Cartesian line, use this sequence:
 23. `37_hybrid_cartesian_mwg_vee.jl`
 24. `38_qiu_white_reference_vee.jl`
 25. `30_ordinary_sho_spectra.jl`
+
+`38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
+path is part of the public ordinary workflow; the MWG branch is still
+experimental and is skipped unless you opt in with
+`GAUSSLETBASES_RUN_EXPERIMENTAL_MWG=1`.
 
 The more diagnostic ordinary examples are:
 

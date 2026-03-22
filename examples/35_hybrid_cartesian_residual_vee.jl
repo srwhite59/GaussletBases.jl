@@ -4,7 +4,6 @@ function report_case(count::Int, s::Float64)
     source_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = count,
         mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
-        reference_spacing = 1.0,
     ))
     core_gaussians = [
         Gaussian(center = 0.0, width = 0.2),
