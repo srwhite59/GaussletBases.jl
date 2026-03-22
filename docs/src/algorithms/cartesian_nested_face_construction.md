@@ -112,12 +112,15 @@ What the repo now has is the first narrow primitive described on this page:
 - one first simple `x-y` face-product constructor on that fixed line
 - one first opposite-face shell object with shell-level packet propagation
 - one first generalized six-face shell-packet interface
+- one first nested fixed-block adapter consumed by the QW-PGDG nearest/GGT route
+- one first shell-plus-core fixed block for that same nonrecursive consumer path
 
 What the repo still does not yet have is the broader nested rollout:
 
 - no recursive shell or box nesting
 - no operator-packet propagation through a full nested hierarchy
 - no recursive shell tree beyond the first generalized single-shell interface
+- no recursive shell-plus-core sequence yet
 
 So this page now stabilizes both the algorithm and the intended boundary of the
 first implementation step.

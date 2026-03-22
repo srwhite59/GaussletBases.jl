@@ -626,6 +626,88 @@ function _qiu_white_full_nearest_fixture(; basis_name::String = "cc-pVTZ", count
     end)
 end
 
+function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", count::Int = 13, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+    key = Symbol(
+        :nested_qiu_white_nearest_fixture,
+        Symbol(lowercase(basis_name)),
+        count,
+        round(Int, 1000 * a),
+        round(Int, 1000 * xmax),
+    )
+    return _cached_fixture(key, () -> begin
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            source_basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+            refinement_levels = 0,
+        )
+        interval = 2:(length(source_basis) - 1)
+        shell = GaussletBases._nested_rectangular_shell(
+            bundle,
+            interval,
+            interval,
+            interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+        )
+        fixed_block = GaussletBases._nested_fixed_block(shell, bundle)
+        shell_plus_core = GaussletBases._nested_shell_plus_core(
+            bundle,
+            shell,
+            interval,
+            interval,
+            interval,
+        )
+        fixed_block_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        baseline = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        nested = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        nested_shell_plus_core = ordinary_cartesian_qiu_white_operators(
+            fixed_block_shell_plus_core,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            source_basis,
+            bundle,
+            shell,
+            fixed_block,
+            shell_plus_core,
+            fixed_block_shell_plus_core,
+            legacy,
+            baseline,
+            nested,
+            nested_shell_plus_core,
+            GaussletBases.ordinary_cartesian_1s2_check(baseline),
+            GaussletBases.ordinary_cartesian_1s2_check(nested),
+            GaussletBases.ordinary_cartesian_1s2_check(nested_shell_plus_core),
+        )
+    end)
+end
+
 function _quick_ordinary_sho_smoke_fixture()
     return _cached_fixture(:quick_ordinary_sho_smoke_fixture, () -> begin
         basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -1982,6 +2064,77 @@ end
             @test mean_value > 0.0
         end
     end
+end
+
+@testset "Cartesian nested fixed-block QW-PGDG adapter" begin
+    (
+        basis,
+        bundle,
+        shell,
+        fixed_block,
+        shell_plus_core,
+        fixed_block_shell_plus_core,
+        legacy,
+        baseline,
+        nested,
+        nested_shell_plus_core,
+        baseline_check,
+        nested_check,
+        nested_shell_plus_core_check,
+    ) = _nested_qiu_white_nearest_fixture()
+
+    @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test fixed_block.parent_basis === basis
+    @test fixed_block.shell === shell
+    @test size(fixed_block.coefficient_matrix) == size(shell.coefficient_matrix)
+    @test size(fixed_block.overlap) == (72, 72)
+    @test size(fixed_block.kinetic) == (72, 72)
+    @test size(fixed_block.fixed_centers) == (72, 3)
+    @test length(fixed_block.support_indices) == length(shell.support_indices)
+    @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
+    @test fixed_block.overlap ≈ shell.packet.overlap atol = 0.0 rtol = 0.0
+    @test maximum(abs.(fixed_block.gaussian_terms[1, :, :] .- shell.packet.gaussian_terms[1, :, :])) == 0.0
+    @test maximum(abs.(fixed_block.pair_terms[1, :, :] .- shell.packet.pair_terms[1, :, :])) == 0.0
+
+    @test baseline.interaction_treatment == :ggt_nearest
+    @test nested.interaction_treatment == :ggt_nearest
+    @test nested.basis === fixed_block
+    @test nested.gausslet_count == size(fixed_block.overlap, 1)
+    @test nested.residual_count >= 1
+    @test baseline.gausslet_count == length(bundle.pgdg_intermediate.centers)^3
+    @test norm(nested.overlap - I, Inf) < 1.0e-10
+    @test nested_check.overlap_error < 1.0e-10
+    @test isfinite(nested_check.orbital_energy)
+    @test isfinite(nested_check.vee_expectation)
+    @test nested_check.orbital_energy < 0.0
+    @test nested_check.vee_expectation > 0.0
+    @test any(orbital.kind == :nested_fixed for orbital in orbitals(nested))
+    @test all(startswith(orbital.label, "nf") for orbital in orbitals(nested)[1:nested.gausslet_count])
+
+    @test shell_plus_core isa GaussletBases._CartesianNestedShellPlusCore3D
+    @test fixed_block_shell_plus_core isa GaussletBases._NestedFixedBlock3D
+    @test fixed_block_shell_plus_core.parent_basis === basis
+    @test fixed_block_shell_plus_core.shell === shell_plus_core
+    inner_len = length(basis) - 2
+    @test first(shell_plus_core.core_column_range) == 1
+    @test last(shell_plus_core.core_column_range) == length(shell_plus_core.core_indices)
+    @test length(shell_plus_core.core_indices) == inner_len^3
+    @test isempty(intersect(shell_plus_core.core_indices, shell.support_indices))
+    @test size(fixed_block_shell_plus_core.overlap, 1) == length(shell_plus_core.core_indices) + size(shell.coefficient_matrix, 2)
+    @test norm(fixed_block_shell_plus_core.overlap - I, Inf) < 1.0e-10
+    @test nested_shell_plus_core.interaction_treatment == :ggt_nearest
+    @test nested_shell_plus_core.basis === fixed_block_shell_plus_core
+    @test nested_shell_plus_core.gausslet_count == size(fixed_block_shell_plus_core.overlap, 1)
+    @test nested_shell_plus_core.residual_count >= 1
+    @test nested_shell_plus_core_check.overlap_error < 1.0e-10
+    @test isfinite(nested_shell_plus_core_check.orbital_energy)
+    @test isfinite(nested_shell_plus_core_check.vee_expectation)
+    @test nested_shell_plus_core_check.orbital_energy < 0.0
+    @test nested_shell_plus_core_check.vee_expectation > 0.0
+    @test abs(nested_shell_plus_core_check.vee_expectation - baseline_check.vee_expectation) < abs(nested_check.vee_expectation - baseline_check.vee_expectation)
+    @test abs(nested_shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < abs(nested_check.orbital_energy - baseline_check.orbital_energy)
+    @test abs(nested_shell_plus_core_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
+    @test abs(nested_shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-4
 end
 
 @testset "Mapped ordinary one-body backends" begin

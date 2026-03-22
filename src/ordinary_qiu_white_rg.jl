@@ -544,6 +544,60 @@ function _qwrg_raw_overlap_blocks(data)
     return overlap_ga, overlap_aa
 end
 
+function _qwrg_raw_kinetic_cross_block(data)
+    ngaussian = size(data.overlap_ga, 2)
+    ngausslet3d = size(data.overlap_ga, 1)^3
+    kinetic_ga = zeros(Float64, ngausslet3d, ngaussian)
+    scratch = zeros(Float64, ngausslet3d)
+    for index in 1:ngaussian
+        overlap_vector = view(data.overlap_ga, :, index)
+        kinetic_vector = view(data.kinetic_ga, :, index)
+        column = view(kinetic_ga, :, index)
+        _qwrg_fill_product_column!(column, kinetic_vector, overlap_vector, overlap_vector)
+        _qwrg_fill_product_column!(scratch, overlap_vector, kinetic_vector, overlap_vector)
+        column .+= scratch
+        _qwrg_fill_product_column!(scratch, overlap_vector, overlap_vector, kinetic_vector)
+        column .+= scratch
+    end
+    return kinetic_ga
+end
+
+function _qwrg_raw_factor_cross_blocks(data, expansion::CoulombGaussianExpansion)
+    ngaussian = size(data.overlap_ga, 2)
+    ngausslet3d = size(data.overlap_ga, 1)^3
+    factor_ga = Matrix{Float64}[]
+    scratch = zeros(Float64, ngausslet3d)
+    for term in eachindex(expansion.coefficients)
+        matrix = zeros(Float64, ngausslet3d, ngaussian)
+        for index in 1:ngaussian
+            factor_vector = view(data.factor_ga[term], :, index)
+            _qwrg_fill_product_column!(scratch, factor_vector, factor_vector, factor_vector)
+            view(matrix, :, index) .= scratch
+        end
+        push!(factor_ga, matrix)
+    end
+    return factor_ga
+end
+
+function _qwrg_raw_one_body_aa_block(
+    data,
+    expansion::CoulombGaussianExpansion;
+    Z::Real,
+)
+    ngaussian = size(data.overlap_aa, 1)
+    one_body_aa = zeros(Float64, ngaussian, ngaussian)
+    z_value = Float64(Z)
+    for i in 1:ngaussian, j in i:ngaussian
+        value = 3.0 * data.kinetic_aa[i, j] * data.overlap_aa[i, j]^2
+        for term in eachindex(expansion.coefficients)
+            value -= z_value * expansion.coefficients[term] * data.factor_aa[term][i, j]^3
+        end
+        one_body_aa[i, j] = value
+        one_body_aa[j, i] = value
+    end
+    return one_body_aa
+end
+
 function _qwrg_raw_one_body_blocks(
     data,
     expansion::CoulombGaussianExpansion;
@@ -572,14 +626,7 @@ function _qwrg_raw_one_body_blocks(
         end
     end
 
-    for i in 1:ngaussian, j in i:ngaussian
-        value = 3.0 * data.kinetic_aa[i, j] * data.overlap_aa[i, j]^2
-        for term in eachindex(expansion.coefficients)
-            value -= z_value * expansion.coefficients[term] * data.factor_aa[term][i, j]^3
-        end
-        one_body_aa[i, j] = value
-        one_body_aa[j, i] = value
-    end
+    one_body_aa .= _qwrg_raw_one_body_aa_block(data, expansion; Z = Z)
 
     return one_body_ga, one_body_aa
 end
@@ -898,6 +945,24 @@ function _qwrg_nearest_indices(
     ]
 end
 
+function _qwrg_nearest_indices(
+    fixed_centers::AbstractMatrix{<:Real},
+    residual_centers::AbstractMatrix{<:Real},
+)
+    size(fixed_centers, 2) == 3 || throw(
+        ArgumentError("nearest-center selection for a nested fixed block requires centers as an n×3 matrix"),
+    )
+    return Int[
+        argmin(
+            [
+                (fixed_centers[fixed, 1] - residual_centers[index, 1])^2 +
+                (fixed_centers[fixed, 2] - residual_centers[index, 2])^2 +
+                (fixed_centers[fixed, 3] - residual_centers[index, 3])^2 for fixed in axes(fixed_centers, 1)
+            ],
+        ) for index in axes(residual_centers, 1)
+    ]
+end
+
 function _qwrg_effective_gaussians(
     residual_centers::AbstractMatrix{<:Real},
     residual_widths::AbstractMatrix{<:Real},
@@ -991,6 +1056,29 @@ function _qwrg_interaction_matrix_nearest(
         value = gausslet_interaction[nearest[i], nearest[j]]
         interaction[ngausslet + i, ngausslet + j] = value
         interaction[ngausslet + j, ngausslet + i] = value
+    end
+    return interaction
+end
+
+function _qwrg_interaction_matrix_nearest(
+    fixed_interaction::AbstractMatrix{<:Real},
+    fixed_centers::AbstractMatrix{<:Real},
+    residual_centers::AbstractMatrix{<:Real},
+)
+    nfixed = size(fixed_interaction, 1)
+    nresidual = size(residual_centers, 1)
+    interaction = zeros(Float64, nfixed + nresidual, nfixed + nresidual)
+    interaction[1:nfixed, 1:nfixed] .= Matrix{Float64}(fixed_interaction)
+    nearest = _qwrg_nearest_indices(fixed_centers, residual_centers)
+    for residual in 1:nresidual
+        index = nearest[residual]
+        interaction[1:nfixed, nfixed + residual] .= fixed_interaction[:, index]
+        interaction[nfixed + residual, 1:nfixed] .= fixed_interaction[:, index]
+    end
+    for i in 1:nresidual, j in i:nresidual
+        value = fixed_interaction[nearest[i], nearest[j]]
+        interaction[nfixed + i, nfixed + j] = value
+        interaction[nfixed + j, nfixed + i] = value
     end
     return interaction
 end
@@ -1107,6 +1195,93 @@ function _qwrg_orbital_data(
         )
     end
     return orbitals_out
+end
+
+function _qwrg_orbital_data(
+    fixed_centers::AbstractMatrix{<:Real},
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real};
+    fixed_kind::Symbol = :nested_fixed,
+    fixed_label_prefix::AbstractString = "nf",
+)
+    size(fixed_centers, 2) == 3 || throw(
+        ArgumentError("nested fixed-block orbital data requires an n×3 center matrix"),
+    )
+    orbitals_out = QiuWhiteHybridOrbital3D[]
+    for index in axes(fixed_centers, 1)
+        push!(
+            orbitals_out,
+            QiuWhiteHybridOrbital3D(
+                index,
+                fixed_kind,
+                string(fixed_label_prefix, index),
+                fixed_centers[index, 1],
+                fixed_centers[index, 2],
+                fixed_centers[index, 3],
+                NaN,
+                NaN,
+                NaN,
+            ),
+        )
+    end
+    base_index = size(fixed_centers, 1)
+    for index in axes(residual_centers, 1)
+        push!(
+            orbitals_out,
+            QiuWhiteHybridOrbital3D(
+                base_index + index,
+                :residual_gaussian,
+                "rg$index",
+                residual_centers[index, 1],
+                residual_centers[index, 2],
+                residual_centers[index, 3],
+                residual_widths[index, 1],
+                residual_widths[index, 2],
+                residual_widths[index, 3],
+            ),
+        )
+    end
+    return orbitals_out
+end
+
+function _qwrg_contract_parent_ga_matrix(
+    contraction::AbstractMatrix{<:Real},
+    parent_ga::AbstractMatrix{<:Real},
+)
+    size(contraction, 1) == size(parent_ga, 1) || throw(
+        DimensionMismatch("nested fixed-block contraction requires parent fixed rows to match the parent raw fixed-Gaussian block"),
+    )
+    return Matrix{Float64}(transpose(contraction) * parent_ga)
+end
+
+function _qwrg_contract_parent_ga_terms(
+    contraction::AbstractMatrix{<:Real},
+    parent_terms::AbstractVector{<:AbstractMatrix{<:Real}},
+)
+    return [_qwrg_contract_parent_ga_matrix(contraction, term) for term in parent_terms]
+end
+
+function _qwrg_fixed_block_one_body_matrix(
+    fixed_block::_NestedFixedBlock3D,
+    expansion::CoulombGaussianExpansion;
+    Z::Real,
+)
+    hamiltonian = Matrix{Float64}(fixed_block.kinetic)
+    for term in eachindex(expansion.coefficients)
+        hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* @view(fixed_block.gaussian_terms[term, :, :])
+    end
+    return Matrix{Float64}(0.5 .* (hamiltonian .+ transpose(hamiltonian)))
+end
+
+function _qwrg_fixed_block_interaction_matrix(
+    fixed_block::_NestedFixedBlock3D,
+    expansion::CoulombGaussianExpansion,
+)
+    interaction = zeros(Float64, size(fixed_block.pair_terms, 2), size(fixed_block.pair_terms, 3))
+    for term in eachindex(expansion.coefficients)
+        interaction .+= expansion.coefficients[term] .* @view(fixed_block.pair_terms[term, :, :])
+    end
+    return Matrix{Float64}(0.5 .* (interaction .+ transpose(interaction)))
 end
 
 """
@@ -1365,6 +1540,235 @@ function ordinary_cartesian_qiu_white_operators(
             residual_widths,
         ),
         gausslet_count,
+        size(residual_centers, 1),
+        Matrix{Float64}(residual_data.raw_to_final),
+        Matrix{Float64}(residual_centers),
+        Matrix{Float64}(residual_widths),
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        fixed_block::_NestedFixedBlock3D,
+        gaussian_data::LegacySGaussianData;
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        Z = 2.0,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first nested fixed-block QW-PGDG consumer path.
+
+This overload reuses the stabilized parent PGDG raw fixed-to-Gaussian blocks,
+contracts them through the supplied shell-level fixed map, and then runs the
+same downstream residual-space / one-body / nearest-GGT algebra as the
+unnested QW-PGDG route.
+
+This first adapter is intentionally narrow:
+
+- it consumes an already-assembled nonseparable 3D fixed packet
+- it keeps the shell packet as the fixed-fixed block directly
+- it supports only `interaction_treatment = :ggt_nearest`
+"""
+function ordinary_cartesian_qiu_white_operators(
+    fixed_block::_NestedFixedBlock3D,
+    gaussian_data::LegacySGaussianData;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    Z::Real = 2.0,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    )
+    interaction_treatment == :ggt_nearest || throw(
+        ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),
+    )
+
+    timings = Pair{String,Float64}[]
+    timing_io = stdout
+
+    start_ns = time_ns()
+    gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
+        fixed_block.parent_basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "shared parent 1D bundle", start_ns)
+
+    start_ns = time_ns()
+    blocks = _qwrg_split_block_matrices(
+        gausslet_bundle,
+        gaussian_data,
+        expansion,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "parent split raw-block assembly", start_ns)
+
+    contraction = fixed_block.coefficient_matrix
+    fixed_count = size(fixed_block.overlap, 1)
+
+    start_ns = time_ns()
+    overlap_parent_ga, overlap_aa = _qwrg_raw_overlap_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+    ))
+    overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, overlap_parent_ga)
+    residual_data = _qwrg_residual_space(fixed_block.overlap, overlap_fg, overlap_aa)
+    timing && _qwrg_record_timing!(timing_io, timings, "nested residual-space construction", start_ns)
+
+    start_ns = time_ns()
+    kinetic_parent_ga = _qwrg_raw_kinetic_cross_block((
+        overlap_ga = blocks.overlap_ga,
+        kinetic_ga = blocks.kinetic_ga,
+    ))
+    factor_parent_ga = _qwrg_raw_factor_cross_blocks((
+        overlap_ga = blocks.overlap_ga,
+        factor_ga = blocks.factor_ga,
+    ), expansion)
+    kinetic_fg = _qwrg_contract_parent_ga_matrix(contraction, kinetic_parent_ga)
+    factor_fg = _qwrg_contract_parent_ga_terms(contraction, factor_parent_ga)
+    one_body_fg = Matrix{Float64}(kinetic_fg)
+    for term in eachindex(expansion.coefficients)
+        one_body_fg .-= Float64(Z) * expansion.coefficients[term] .* factor_fg[term]
+    end
+    one_body_aa = _qwrg_raw_one_body_aa_block((
+        overlap_aa = blocks.overlap_aa,
+        kinetic_aa = blocks.kinetic_aa,
+        factor_aa = blocks.factor_aa,
+    ), expansion; Z = Z)
+    fixed_one_body = _qwrg_fixed_block_one_body_matrix(fixed_block, expansion; Z = Z)
+    _, final_one_body = _qwrg_one_body_matrices(
+        fixed_one_body,
+        one_body_fg,
+        one_body_aa,
+        residual_data.raw_to_final,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "nested raw one-body assembly and transform", start_ns)
+
+    start_ns = time_ns()
+    x_parent_gg, x_parent_ga, x_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :x)
+    y_parent_gg, y_parent_ga, y_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :y)
+    z_parent_gg, z_parent_ga, z_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :z)
+    x_fg = _qwrg_contract_parent_ga_matrix(contraction, x_parent_ga)
+    y_fg = _qwrg_contract_parent_ga_matrix(contraction, y_parent_ga)
+    z_fg = _qwrg_contract_parent_ga_matrix(contraction, z_parent_ga)
+
+    x2_parent_gg, x2_parent_ga, x2_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :x; squared = true)
+    y2_parent_gg, y2_parent_ga, y2_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :y; squared = true)
+    z2_parent_gg, z2_parent_ga, z2_aa = _qwrg_raw_axis_blocks((
+        overlap_gg = blocks.overlap_gg,
+        overlap_ga = blocks.overlap_ga,
+        overlap_aa = blocks.overlap_aa,
+        position_gg = blocks.position_gg,
+        position_ga = blocks.position_ga,
+        position_aa = blocks.position_aa,
+        x2_gg = blocks.x2_gg,
+        x2_ga = blocks.x2_ga,
+        x2_aa = blocks.x2_aa,
+    ), :z; squared = true)
+    x2_fg = _qwrg_contract_parent_ga_matrix(contraction, x2_parent_ga)
+    y2_fg = _qwrg_contract_parent_ga_matrix(contraction, y2_parent_ga)
+    z2_fg = _qwrg_contract_parent_ga_matrix(contraction, z2_parent_ga)
+
+    x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) x_aa]
+    y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) y_aa]
+    z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) z_aa]
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        residual_data.raw_to_final,
+        fixed_count,
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= 1.0e-8 || throw(
+        ArgumentError("nested QW-PGDG residual-center extraction requires an orthonormal residual block"),
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "nested raw center-matrix assembly", start_ns)
+
+    start_ns = time_ns()
+    fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    interaction_matrix = _qwrg_interaction_matrix_nearest(
+        fixed_interaction,
+        fixed_block.fixed_centers,
+        residual_centers,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "nested RG interaction assembly", start_ns)
+    timing && _qwrg_maybe_print_timings(timing_io, timings)
+
+    return QiuWhiteResidualGaussianOperators(
+        fixed_block,
+        gaussian_data,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        Matrix{Float64}(residual_data.final_overlap),
+        final_one_body,
+        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+        _qwrg_orbital_data(
+            fixed_block.fixed_centers,
+            residual_centers,
+            residual_widths;
+            fixed_kind = :nested_fixed,
+            fixed_label_prefix = "nf",
+        ),
+        fixed_count,
         size(residual_centers, 1),
         Matrix{Float64}(residual_data.raw_to_final),
         Matrix{Float64}(residual_centers),

@@ -139,6 +139,58 @@ struct _CartesianNestedShell3D
     packet::_CartesianNestedShellPacket3D
 end
 
+"""
+    _CartesianNestedShellPlusCore3D
+
+First nonrecursive shell-plus-core fixed-space object.
+
+This augments the existing shell-face packet with a direct interior block taken
+from the parent fixed basis itself. The shell faces keep their current disjoint
+face-interior role, while the core block fills the missing interior volume.
+"""
+struct _CartesianNestedShellPlusCore3D
+    shell::_CartesianNestedShell3D
+    core_indices::Vector{Int}
+    core_states::Vector{NTuple{3,Int}}
+    core_column_range::UnitRange{Int}
+    shell_column_ranges::Vector{UnitRange{Int}}
+    coefficient_matrix::Matrix{Float64}
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    packet::_CartesianNestedShellPacket3D
+end
+
+"""
+    _NestedFixedBlock3D
+
+Adapter object exposing one generalized nested shell packet in the same
+fixed-block language that a downstream Cartesian/QW-PGDG consumer can read.
+
+The object keeps:
+
+- the parent mapped basis used to define the raw fixed-to-Gaussian blocks
+- the shell-level contraction map
+- the propagated fixed-fixed packet on the nested shell basis
+- simple shell-center metadata for nearest/GGT diagnostics
+"""
+struct _NestedFixedBlock3D{B,S}
+    parent_basis::B
+    shell::S
+    coefficient_matrix::Matrix{Float64}
+    support_indices::Vector{Int}
+    overlap::Matrix{Float64}
+    kinetic::Matrix{Float64}
+    position_x::Matrix{Float64}
+    position_y::Matrix{Float64}
+    position_z::Matrix{Float64}
+    x2_x::Matrix{Float64}
+    x2_y::Matrix{Float64}
+    x2_z::Matrix{Float64}
+    gaussian_terms::Array{Float64,3}
+    pair_terms::Array{Float64,3}
+    fixed_centers::Matrix{Float64}
+end
+
 function Base.show(io::IO, side::_CartesianNestedDoSide1D)
     print(
         io,
@@ -196,6 +248,30 @@ function Base.show(io::IO, shell::_CartesianNestedShell3D)
         size(shell.coefficient_matrix, 2),
         ", nsupport=",
         length(shell.support_indices),
+        ")",
+    )
+end
+
+function Base.show(io::IO, shell::_CartesianNestedShellPlusCore3D)
+    print(
+        io,
+        "_CartesianNestedShellPlusCore3D(ncore=",
+        length(shell.core_indices),
+        ", nfaces=",
+        length(shell.shell.faces),
+        ", nshell=",
+        size(shell.coefficient_matrix, 2),
+        ")",
+    )
+end
+
+function Base.show(io::IO, fixed_block::_NestedFixedBlock3D)
+    print(
+        io,
+        "_NestedFixedBlock3D(nfixed=",
+        size(fixed_block.overlap, 1),
+        ", nsupport=",
+        length(fixed_block.support_indices),
         ")",
     )
 end
@@ -490,6 +566,30 @@ function _nested_face_support_indices(
         throw(ArgumentError("nested face support requires face kind :xy, :xz, or :yz"))
     end
     return support
+end
+
+function _nested_box_support_indices(
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    n1d::Int,
+)
+    support = Int[]
+    for ix in x_interval, iy in y_interval, iz in z_interval
+        push!(support, _cartesian_flat_index(ix, iy, iz, n1d))
+    end
+    return support
+end
+
+function _nested_direct_core_coefficients(
+    support_indices::AbstractVector{Int},
+    nparent::Int,
+)
+    coefficients = zeros(Float64, nparent, length(support_indices))
+    for (column, index) in enumerate(support_indices)
+        coefficients[index, column] = 1.0
+    end
+    return coefficients
 end
 
 function _nested_face_product(
@@ -802,4 +902,119 @@ function _nested_rectangular_shell(
     kwargs...,
 )
     return _nested_rectangular_shell(bundle.pgdg_intermediate, x_interval, y_interval, z_interval; kwargs...)
+end
+
+function _nested_fixed_block(
+    shell::_CartesianNestedShell3D,
+    parent_basis::MappedUniformBasis,
+)
+    packet = shell.packet
+    fixed_centers = hcat(
+        diag(packet.position_x),
+        diag(packet.position_y),
+        diag(packet.position_z),
+    )
+    return _NestedFixedBlock3D(
+        parent_basis,
+        shell,
+        shell.coefficient_matrix,
+        shell.support_indices,
+        packet.overlap,
+        packet.kinetic,
+        packet.position_x,
+        packet.position_y,
+        packet.position_z,
+        packet.x2_x,
+        packet.x2_y,
+        packet.x2_z,
+        packet.gaussian_terms,
+        packet.pair_terms,
+        Matrix{Float64}(fixed_centers),
+    )
+end
+
+function _nested_shell_plus_core(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    shell::_CartesianNestedShell3D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+)
+    n1d = size(pgdg.overlap, 1)
+    core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
+    isempty(intersect(core_indices, shell.support_indices)) || throw(
+        ArgumentError("nested shell-plus-core construction requires the direct core block to stay disjoint from the shell-face supports"),
+    )
+    core_coefficients = _nested_direct_core_coefficients(core_indices, n1d^3)
+    coefficient_matrix = hcat(core_coefficients, shell.coefficient_matrix)
+    support_indices = sort(vcat(core_indices, shell.support_indices))
+    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    ncore = length(core_indices)
+    shell_column_ranges = UnitRange{Int}[
+        (ncore + first(range)):(ncore + last(range)) for range in shell.face_column_ranges
+    ]
+    return _CartesianNestedShellPlusCore3D(
+        shell,
+        core_indices,
+        [_cartesian_unflat_index(index, n1d) for index in core_indices],
+        1:ncore,
+        shell_column_ranges,
+        coefficient_matrix,
+        support_indices,
+        shell_data.support_states,
+        shell_data.packet,
+    )
+end
+
+function _nested_shell_plus_core(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    shell::_CartesianNestedShell3D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+)
+    return _nested_shell_plus_core(bundle.pgdg_intermediate, shell, x_interval, y_interval, z_interval)
+end
+
+function _nested_fixed_block(
+    shell::_CartesianNestedShellPlusCore3D,
+    parent_basis::MappedUniformBasis,
+)
+    packet = shell.packet
+    fixed_centers = hcat(
+        diag(packet.position_x),
+        diag(packet.position_y),
+        diag(packet.position_z),
+    )
+    return _NestedFixedBlock3D(
+        parent_basis,
+        shell,
+        shell.coefficient_matrix,
+        shell.support_indices,
+        packet.overlap,
+        packet.kinetic,
+        packet.position_x,
+        packet.position_y,
+        packet.position_z,
+        packet.x2_x,
+        packet.x2_y,
+        packet.x2_z,
+        packet.gaussian_terms,
+        packet.pair_terms,
+        Matrix{Float64}(fixed_centers),
+    )
+end
+
+function _nested_fixed_block(
+    shell::_CartesianNestedShell3D,
+    bundle::_MappedOrdinaryGausslet1DBundle,
+)
+    return _nested_fixed_block(shell, bundle.basis)
+end
+
+function _nested_fixed_block(
+    shell::_CartesianNestedShellPlusCore3D,
+    bundle::_MappedOrdinaryGausslet1DBundle,
+)
+    return _nested_fixed_block(shell, bundle.basis)
 end
