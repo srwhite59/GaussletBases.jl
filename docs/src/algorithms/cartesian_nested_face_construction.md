@@ -114,6 +114,7 @@ What the repo now has is the first narrow primitive described on this page:
 - one first generalized six-face shell-packet interface
 - one first nested fixed-block adapter consumed by the QW-PGDG nearest/GGT route
 - one first shell-plus-core fixed block for that same nonrecursive consumer path
+- one first nonrecursive shell-sequence fixed-block source in the same consumer language
 
 What the repo still does not yet have is the broader nested rollout:
 
@@ -121,6 +122,7 @@ What the repo still does not yet have is the broader nested rollout:
 - no operator-packet propagation through a full nested hierarchy
 - no recursive shell tree beyond the first generalized single-shell interface
 - no recursive shell-plus-core sequence yet
+- no true recursive shell generation or shell-tree reuse yet
 
 So this page now stabilizes both the algorithm and the intended boundary of the
 first implementation step.

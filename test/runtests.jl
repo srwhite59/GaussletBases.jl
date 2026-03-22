@@ -708,6 +708,471 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
     end)
 end
 
+function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVTZ", count::Int = 17, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+    key = Symbol(
+        :nested_qiu_white_shell_sequence_fixture,
+        Symbol(lowercase(basis_name)),
+        count,
+        round(Int, 1000 * a),
+        round(Int, 1000 * xmax),
+    )
+    return _cached_fixture(key, () -> begin
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            source_basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+            refinement_levels = 0,
+        )
+        core_interval = 4:14
+        shell1 = GaussletBases._nested_rectangular_shell(
+            bundle,
+            core_interval,
+            core_interval,
+            core_interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (3, 15),
+            y_fixed = (3, 15),
+            z_fixed = (3, 15),
+        )
+        shell_plus_core = GaussletBases._nested_shell_plus_core(
+            bundle,
+            shell1,
+            core_interval,
+            core_interval,
+            core_interval,
+        )
+        fixed_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
+        outer_interval = 3:15
+        shell2 = GaussletBases._nested_rectangular_shell(
+            bundle,
+            outer_interval,
+            outer_interval,
+            outer_interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (2, 16),
+            y_fixed = (2, 16),
+            z_fixed = (2, 16),
+        )
+        shell_sequence = GaussletBases._nested_shell_sequence(
+            bundle,
+            core_interval,
+            core_interval,
+            core_interval,
+            [shell1, shell2];
+            enforce_coverage = false,
+        )
+        fixed_sequence = GaussletBases._nested_fixed_block(shell_sequence, bundle)
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        baseline = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        shell_plus_core_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_shell_plus_core,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        shell_sequence_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_sequence,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            source_basis,
+            bundle,
+            shell1,
+            shell2,
+            shell_plus_core,
+            shell_sequence,
+            fixed_shell_plus_core,
+            fixed_sequence,
+            legacy,
+            baseline,
+            shell_plus_core_ops,
+            shell_sequence_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(baseline),
+            GaussletBases.ordinary_cartesian_1s2_check(shell_plus_core_ops),
+            GaussletBases.ordinary_cartesian_1s2_check(shell_sequence_ops),
+        )
+    end)
+end
+
+function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVTZ", count::Int = 17, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0, nside::Int = 5)
+    key = Symbol(
+        :nested_qiu_white_nside_sequence_fixture,
+        Symbol(lowercase(basis_name)),
+        count,
+        round(Int, 1000 * a),
+        round(Int, 1000 * xmax),
+        nside,
+    )
+    return _cached_fixture(key, () -> begin
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            source_basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+            refinement_levels = 0,
+        )
+        core_interval = 4:14
+        shell1 = GaussletBases._nested_rectangular_shell(
+            bundle,
+            core_interval,
+            core_interval,
+            core_interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (3, 15),
+            y_fixed = (3, 15),
+            z_fixed = (3, 15),
+        )
+        middle_interval = 5:13
+        shell2 = GaussletBases._nested_rectangular_shell(
+            bundle,
+            middle_interval,
+            middle_interval,
+            middle_interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (4, 14),
+            y_fixed = (4, 14),
+            z_fixed = (4, 14),
+        )
+        inner_shell_interval = 6:12
+        shell3 = GaussletBases._nested_rectangular_shell(
+            bundle,
+            inner_shell_interval,
+            inner_shell_interval,
+            inner_shell_interval;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (5, 13),
+            y_fixed = (5, 13),
+            z_fixed = (5, 13),
+        )
+        inner_direct_interval = 7:11
+        grow_sequence = GaussletBases._nested_shell_sequence(
+            bundle,
+            inner_direct_interval,
+            inner_direct_interval,
+            inner_direct_interval,
+            [shell1, shell2, shell3];
+            enforce_coverage = false,
+        )
+        shrinking_sequence = GaussletBases._nested_nside_shell_sequence(
+            bundle,
+            core_interval,
+            core_interval,
+            core_interval,
+            [shell1, shell2, shell3];
+            nside = nside,
+        )
+        fixed_grow = GaussletBases._nested_fixed_block(grow_sequence, bundle)
+        fixed_shrink = GaussletBases._nested_fixed_block(shrinking_sequence, bundle)
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        baseline = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        grow_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_grow,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        shrink_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_shrink,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            source_basis,
+            bundle,
+            shell1,
+            shell2,
+            shell3,
+            grow_sequence,
+            shrinking_sequence,
+            fixed_grow,
+            fixed_shrink,
+            legacy,
+            baseline,
+            grow_ops,
+            shrink_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(baseline),
+            GaussletBases.ordinary_cartesian_1s2_check(grow_ops),
+            GaussletBases.ordinary_cartesian_1s2_check(shrink_ops),
+        )
+    end)
+end
+
+function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String = "cc-pVTZ", count::Int = 17, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+    key = Symbol(
+        :nested_qiu_white_complete_shell_sequence_fixture,
+        Symbol(lowercase(basis_name)),
+        count,
+        round(Int, 1000 * a),
+        round(Int, 1000 * xmax),
+    )
+    return _cached_fixture(key, () -> begin
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            source_basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+            refinement_levels = 0,
+        )
+
+        interval1 = 4:14
+        interval2 = 5:13
+        interval3 = 6:12
+        interval4 = 7:11
+        core5 = 7:11
+
+        shell1_face = GaussletBases._nested_rectangular_shell(
+            bundle,
+            interval1,
+            interval1,
+            interval1;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (3, 15),
+            y_fixed = (3, 15),
+            z_fixed = (3, 15),
+        )
+        shell2_face = GaussletBases._nested_rectangular_shell(
+            bundle,
+            interval2,
+            interval2,
+            interval2;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (4, 14),
+            y_fixed = (4, 14),
+            z_fixed = (4, 14),
+        )
+        shell3_face = GaussletBases._nested_rectangular_shell(
+            bundle,
+            interval3,
+            interval3,
+            interval3;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (5, 13),
+            y_fixed = (5, 13),
+            z_fixed = (5, 13),
+        )
+        shell4_face = GaussletBases._nested_rectangular_shell(
+            bundle,
+            interval4,
+            interval4,
+            interval4;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            x_fixed = (6, 12),
+            y_fixed = (6, 12),
+            z_fixed = (6, 12),
+        )
+
+        shell1_complete = GaussletBases._nested_complete_rectangular_shell(
+            bundle,
+            interval1,
+            interval1,
+            interval1;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            retain_x_edge = 3,
+            retain_y_edge = 3,
+            retain_z_edge = 3,
+            x_fixed = (3, 15),
+            y_fixed = (3, 15),
+            z_fixed = (3, 15),
+        )
+        shell2_complete = GaussletBases._nested_complete_rectangular_shell(
+            bundle,
+            interval2,
+            interval2,
+            interval2;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            retain_x_edge = 3,
+            retain_y_edge = 3,
+            retain_z_edge = 3,
+            x_fixed = (4, 14),
+            y_fixed = (4, 14),
+            z_fixed = (4, 14),
+        )
+        shell3_complete = GaussletBases._nested_complete_rectangular_shell(
+            bundle,
+            interval3,
+            interval3,
+            interval3;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            retain_x_edge = 3,
+            retain_y_edge = 3,
+            retain_z_edge = 3,
+            x_fixed = (5, 13),
+            y_fixed = (5, 13),
+            z_fixed = (5, 13),
+        )
+        shell4_complete = GaussletBases._nested_complete_rectangular_shell(
+            bundle,
+            interval4,
+            interval4,
+            interval4;
+            retain_xy = (4, 3),
+            retain_xz = (4, 3),
+            retain_yz = (4, 3),
+            retain_x_edge = 3,
+            retain_y_edge = 3,
+            retain_z_edge = 3,
+            x_fixed = (6, 12),
+            y_fixed = (6, 12),
+            z_fixed = (6, 12),
+        )
+
+        shell_plus_core = GaussletBases._nested_shell_plus_core(
+            bundle,
+            shell1_face,
+            interval1,
+            interval1,
+            interval1,
+        )
+        face_sequence = GaussletBases._nested_shell_sequence(
+            bundle,
+            core5,
+            core5,
+            core5,
+            [shell1_face, shell2_face, shell3_face, shell4_face];
+            enforce_coverage = false,
+        )
+        complete_sequence = GaussletBases._nested_shell_sequence(
+            bundle,
+            core5,
+            core5,
+            core5,
+            [shell1_complete, shell2_complete, shell3_complete, shell4_complete],
+        )
+
+        fixed_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
+        fixed_face_sequence = GaussletBases._nested_fixed_block(face_sequence, bundle)
+        fixed_complete_sequence = GaussletBases._nested_fixed_block(complete_sequence, bundle)
+
+        legacy = legacy_s_gaussian_data("He", basis_name)
+        baseline = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        shell_plus_core_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_shell_plus_core,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        face_sequence_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_face_sequence,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        complete_sequence_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_complete_sequence,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+
+        (
+            source_basis,
+            bundle,
+            shell1_face,
+            shell2_face,
+            shell3_face,
+            shell4_face,
+            shell1_complete,
+            shell2_complete,
+            shell3_complete,
+            shell4_complete,
+            interval1,
+            interval2,
+            interval3,
+            interval4,
+            core5,
+            shell_plus_core,
+            face_sequence,
+            complete_sequence,
+            fixed_shell_plus_core,
+            fixed_face_sequence,
+            fixed_complete_sequence,
+            legacy,
+            baseline,
+            shell_plus_core_ops,
+            face_sequence_ops,
+            complete_sequence_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(baseline),
+            GaussletBases.ordinary_cartesian_1s2_check(shell_plus_core_ops),
+            GaussletBases.ordinary_cartesian_1s2_check(face_sequence_ops),
+            GaussletBases.ordinary_cartesian_1s2_check(complete_sequence_ops),
+        )
+    end)
+end
+
 function _quick_ordinary_sho_smoke_fixture()
     return _cached_fixture(:quick_ordinary_sho_smoke_fixture, () -> begin
         basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -2135,6 +2600,216 @@ end
     @test abs(nested_shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < abs(nested_check.orbital_energy - baseline_check.orbital_energy)
     @test abs(nested_shell_plus_core_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
     @test abs(nested_shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-4
+end
+
+@testset "Cartesian nested shell sequence fixed-block" begin
+    (
+        basis,
+        bundle,
+        shell1,
+        shell2,
+        shell_plus_core,
+        shell_sequence,
+        fixed_shell_plus_core,
+        fixed_sequence,
+        legacy,
+        baseline,
+        shell_plus_core_ops,
+        shell_sequence_ops,
+        baseline_check,
+        shell_plus_core_check,
+        shell_sequence_check,
+    ) = _nested_qiu_white_shell_sequence_fixture()
+
+    @test shell_sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test length(shell_sequence.shell_layers) == 2
+    @test shell_sequence.shell_layers[1] === shell1
+    @test shell_sequence.shell_layers[2] === shell2
+    @test first(shell_sequence.core_column_range) == 1
+    @test last(shell_sequence.core_column_range) == length(shell_sequence.core_indices)
+    @test length(shell_sequence.layer_column_ranges) == 2
+    @test length(shell_sequence.core_indices) == 11^3
+    @test isempty(intersect(shell_sequence.core_indices, shell1.support_indices))
+    @test isempty(intersect(shell_sequence.core_indices, shell2.support_indices))
+    @test isempty(intersect(shell1.support_indices, shell2.support_indices))
+
+    @test fixed_sequence isa GaussletBases._NestedFixedBlock3D
+    @test fixed_sequence.parent_basis === basis
+    @test fixed_sequence.shell === shell_sequence
+    @test shell_plus_core_ops.gausslet_count == 1403
+    @test shell_sequence_ops.gausslet_count == 1475
+    @test baseline.gausslet_count == 17^3
+    @test norm(fixed_shell_plus_core.overlap - I, Inf) < 1.0e-10
+    @test norm(fixed_sequence.overlap - I, Inf) < 1.0e-10
+    @test shell_plus_core_check.overlap_error < 1.0e-10
+    @test shell_sequence_check.overlap_error < 1.0e-10
+    @test shell_plus_core_check.orbital_energy < 0.0
+    @test shell_sequence_check.orbital_energy < 0.0
+    @test shell_plus_core_check.vee_expectation > 0.0
+    @test shell_sequence_check.vee_expectation > 0.0
+    @test abs(shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-4
+    @test abs(shell_plus_core_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
+    @test abs(shell_sequence_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-4
+    @test abs(shell_sequence_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
+    @test abs(shell_sequence_check.orbital_energy - shell_plus_core_check.orbital_energy) < 1.0e-4
+    @test abs(shell_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 1.0e-4
+end
+
+@testset "Cartesian nested fixed-nside compression policy" begin
+    (
+        basis,
+        bundle,
+        shell1,
+        shell2,
+        shell3,
+        grow_sequence,
+        shrinking_sequence,
+        fixed_grow,
+        fixed_shrink,
+        legacy,
+        baseline,
+        grow_ops,
+        shrink_ops,
+        baseline_check,
+        grow_check,
+        shrink_check,
+    ) = _nested_qiu_white_nside_sequence_fixture()
+
+    @test GaussletBases._nested_shrunk_interval(4:14, 0; nside = 5) == 4:14
+    @test GaussletBases._nested_shrunk_interval(4:14, 1; nside = 5) == 5:13
+    @test GaussletBases._nested_shrunk_interval(4:14, 2; nside = 5) == 6:12
+    @test GaussletBases._nested_shrunk_interval(4:14, 3; nside = 5) == 7:11
+    @test GaussletBases._nested_shrunk_interval(4:14, 4; nside = 5) == 7:11
+
+    @test shrinking_sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test length(shrinking_sequence.shell_layers) == 3
+    @test shrinking_sequence.shell_layers[1] === shell1
+    @test shrinking_sequence.shell_layers[2] === shell2
+    @test shrinking_sequence.shell_layers[3] === shell3
+    @test length(grow_sequence.core_indices) == 5^3
+    @test length(shrinking_sequence.core_indices) == 5^3
+    @test first(shrinking_sequence.core_column_range) == 1
+    @test last(shrinking_sequence.core_column_range) == 3^3
+    @test isempty(intersect(shrinking_sequence.core_indices, shell1.support_indices))
+    @test isempty(intersect(shrinking_sequence.core_indices, shell2.support_indices))
+    @test isempty(intersect(shrinking_sequence.core_indices, shell3.support_indices))
+    @test isempty(intersect(shell1.support_indices, shell2.support_indices))
+    @test isempty(intersect(shell1.support_indices, shell3.support_indices))
+    @test isempty(intersect(shell2.support_indices, shell3.support_indices))
+
+    @test fixed_grow isa GaussletBases._NestedFixedBlock3D
+    @test fixed_shrink isa GaussletBases._NestedFixedBlock3D
+    @test grow_ops.gausslet_count == 341
+    @test shrink_ops.gausslet_count == 243
+    @test baseline.gausslet_count == 17^3
+    @test norm(fixed_grow.overlap - I, Inf) < 1.0e-10
+    @test norm(fixed_shrink.overlap - I, Inf) < 1.0e-10
+    @test grow_check.overlap_error < 1.0e-10
+    @test shrink_check.overlap_error < 1.0e-10
+    @test isfinite(grow_check.orbital_energy)
+    @test isfinite(grow_check.vee_expectation)
+    @test isfinite(shrink_check.orbital_energy)
+    @test isfinite(shrink_check.vee_expectation)
+    @test grow_check.orbital_energy < 0.0
+    @test shrink_check.orbital_energy < 0.0
+    @test grow_check.vee_expectation > 0.0
+    @test shrink_check.vee_expectation > 0.0
+    @test shrink_ops.gausslet_count < grow_ops.gausslet_count
+end
+
+@testset "Cartesian nested complete shell layer" begin
+    (
+        basis,
+        bundle,
+        shell1_face,
+        shell2_face,
+        shell3_face,
+        shell4_face,
+        shell1_complete,
+        shell2_complete,
+        shell3_complete,
+        shell4_complete,
+        interval1,
+        interval2,
+        interval3,
+        interval4,
+        core5,
+        shell_plus_core,
+        face_sequence,
+        complete_sequence,
+        fixed_shell_plus_core,
+        fixed_face_sequence,
+        fixed_complete_sequence,
+        legacy,
+        baseline,
+        shell_plus_core_ops,
+        face_sequence_ops,
+        complete_sequence_ops,
+        baseline_check,
+        shell_plus_core_check,
+        face_sequence_check,
+        complete_sequence_check,
+    ) = _nested_qiu_white_complete_shell_sequence_fixture()
+
+    @test shell1_complete isa GaussletBases._CartesianNestedCompleteShell3D
+    @test shell2_complete isa GaussletBases._CartesianNestedCompleteShell3D
+    @test shell3_complete isa GaussletBases._CartesianNestedCompleteShell3D
+    @test shell4_complete isa GaussletBases._CartesianNestedCompleteShell3D
+    @test length(shell1_complete.faces) == 6
+    @test length(shell1_complete.edges) == 12
+    @test length(shell1_complete.corners) == 8
+    @test length(shell2_complete.faces) == 6
+    @test length(shell2_complete.edges) == 12
+    @test length(shell2_complete.corners) == 8
+    @test length(shell3_complete.faces) == 6
+    @test length(shell3_complete.edges) == 12
+    @test length(shell3_complete.corners) == 8
+    @test length(shell4_complete.faces) == 6
+    @test length(shell4_complete.edges) == 12
+    @test length(shell4_complete.corners) == 8
+
+    @test length(shell1_complete.support_indices) == 13^3 - 11^3
+    @test length(shell2_complete.support_indices) == 11^3 - 9^3
+    @test length(shell3_complete.support_indices) == 9^3 - 7^3
+    @test length(shell4_complete.support_indices) == 7^3 - 5^3
+    @test sum(length(face.support_indices) for face in shell1_complete.faces) == 6 * 11^2
+    @test sum(length(edge.support_indices) for edge in shell1_complete.edges) == 12 * 11
+    @test sum(length(corner.support_indices) for corner in shell1_complete.corners) == 8
+    @test isempty(intersect(shell1_face.support_indices, shell2_face.support_indices))
+    @test isempty(intersect(shell2_face.support_indices, shell3_face.support_indices))
+    @test isempty(intersect(shell3_face.support_indices, shell4_face.support_indices))
+
+    @test face_sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test complete_sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test length(face_sequence.core_indices) == 5^3
+    @test length(complete_sequence.core_indices) == 5^3
+    @test complete_sequence.working_box == (3:15, 3:15, 3:15)
+    @test shell_plus_core_ops.gausslet_count == 1403
+    @test face_sequence_ops.gausslet_count < complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
+    @test baseline.gausslet_count == 17^3
+    @test norm(fixed_face_sequence.overlap - I, Inf) < 1.0e-10
+    @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
+    @test complete_sequence_check.overlap_error < 1.0e-10
+    @test isfinite(complete_sequence_check.orbital_energy)
+    @test isfinite(complete_sequence_check.vee_expectation)
+    @test abs(complete_sequence_check.orbital_energy - baseline_check.orbital_energy) <
+        abs(face_sequence_check.orbital_energy - baseline_check.orbital_energy)
+    @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) <
+        abs(face_sequence_check.vee_expectation - baseline_check.vee_expectation)
+    @test_throws ArgumentError GaussletBases._nested_shell_sequence(
+        bundle,
+        core5,
+        core5,
+        core5,
+        [shell1_face, shell2_face, shell3_face, shell4_face],
+    )
+    @test_throws ArgumentError GaussletBases._nested_shell_sequence(
+        bundle,
+        core5,
+        core5,
+        core5,
+        [shell1_complete, shell2_complete, shell3_complete],
+    )
 end
 
 @testset "Mapped ordinary one-body backends" begin
