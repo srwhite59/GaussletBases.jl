@@ -3,6 +3,10 @@
 This note records the first interaction-side diagnostic after the
 coverage-fixed complete shell sequence.
 
+Its direct-contraction diagnosis is now resolved by the weight-aware IDA
+transfer fix recorded in
+[cartesian_nested_ida_weight_transfer_fix.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/cartesian_nested_ida_weight_transfer_fix.md).
+
 The current starting point is:
 
 - shell-plus-core is the last trusted physical nonrecursive state

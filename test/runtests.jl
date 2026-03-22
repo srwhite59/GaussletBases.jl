@@ -1173,6 +1173,36 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
     end)
 end
 
+function _nested_parent_fixed_problem(bundle, expansion; Z::Float64 = 2.0)
+    gg = GaussletBases._qwrg_gausslet_1d_blocks(bundle)
+    n1d = size(gg.overlap_gg, 1)
+    overlap = zeros(Float64, n1d^3, n1d^3)
+    GaussletBases._qwrg_fill_product_matrix!(overlap, gg.overlap_gg, gg.overlap_gg, gg.overlap_gg)
+    one_body = GaussletBases._qwrg_gausslet_one_body_matrix(gg, expansion; Z = Z)
+    interaction = GaussletBases._qwrg_gausslet_interaction_matrix(gg, expansion)
+    return overlap, one_body, interaction
+end
+
+function _nested_fixed_projected_orbital(
+    overlap_parent::AbstractMatrix{<:Real},
+    fixed_block,
+    parent_vector::AbstractVector{<:Real},
+)
+    rhs = transpose(fixed_block.coefficient_matrix) * (overlap_parent * parent_vector)
+    coeffs = fixed_block.overlap \ rhs
+    norm2 = real(dot(coeffs, fixed_block.overlap * coeffs))
+    return coeffs ./ sqrt(norm2)
+end
+
+function _nested_vee_from_orbital(
+    interaction::AbstractMatrix{<:Real},
+    orbital::AbstractVector{<:Real},
+)
+    weights = Float64[abs2(coefficient) for coefficient in orbital]
+    weights ./= sum(weights)
+    return Float64(real(dot(weights, interaction * weights)))
+end
+
 function _quick_ordinary_sho_smoke_fixture()
     return _cached_fixture(:quick_ordinary_sho_smoke_fixture, () -> begin
         basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -2789,6 +2819,10 @@ end
     @test baseline.gausslet_count == 17^3
     @test norm(fixed_face_sequence.overlap - I, Inf) < 1.0e-10
     @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
+    @test all(isfinite, fixed_shell_plus_core.weights)
+    @test minimum(fixed_shell_plus_core.weights) > 0.0
+    @test all(isfinite, fixed_complete_sequence.weights)
+    @test minimum(fixed_complete_sequence.weights) > 0.0
     @test complete_sequence_check.overlap_error < 1.0e-10
     @test isfinite(complete_sequence_check.orbital_energy)
     @test isfinite(complete_sequence_check.vee_expectation)
@@ -2796,6 +2830,26 @@ end
         abs(face_sequence_check.orbital_energy - baseline_check.orbital_energy)
     @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) <
         abs(face_sequence_check.vee_expectation - baseline_check.vee_expectation)
+    @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-4
+    @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 1.0e-4
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    overlap_parent, one_body_parent, interaction_parent = _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
+    parent_modes = eigen(Hermitian(one_body_parent), Hermitian(overlap_parent))
+    parent_ground = parent_modes.vectors[:, 1]
+    parent_ground_vee = _nested_vee_from_orbital(interaction_parent, parent_ground)
+    projected_shell_plus_core = _nested_fixed_projected_orbital(overlap_parent, fixed_shell_plus_core, parent_ground)
+    projected_complete = _nested_fixed_projected_orbital(overlap_parent, fixed_complete_sequence, parent_ground)
+    projected_shell_plus_core_vee = _nested_vee_from_orbital(
+        GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_shell_plus_core, expansion),
+        projected_shell_plus_core,
+    )
+    projected_complete_vee = _nested_vee_from_orbital(
+        GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_complete_sequence, expansion),
+        projected_complete,
+    )
+    @test abs(projected_shell_plus_core_vee - parent_ground_vee) < 1.0e-4
+    @test abs(projected_complete_vee - parent_ground_vee) < 5.0e-4
     @test_throws ArgumentError GaussletBases._nested_shell_sequence(
         bundle,
         core5,

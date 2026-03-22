@@ -59,6 +59,7 @@ fixed-block ingredients:
 - kinetic
 - Cartesian position operators
 - Cartesian second-moment operators
+- contracted integral weights for the nested IDA transfer
 - Gaussian-factor term packet
 - pair-factor term packet
 """
@@ -71,6 +72,7 @@ struct _CartesianNestedShellPacket3D
     x2_x::Matrix{Float64}
     x2_y::Matrix{Float64}
     x2_z::Matrix{Float64}
+    weights::Vector{Float64}
     gaussian_terms::Array{Float64,3}
     pair_terms::Array{Float64,3}
 end
@@ -256,6 +258,8 @@ The object keeps:
 - the parent mapped basis used to define the raw fixed-to-Gaussian blocks
 - the shell-level contraction map
 - the propagated fixed-fixed packet on the nested shell basis
+- the contracted fixed-block integral weights used by the IDA interaction
+  representation
 - simple shell-center metadata for nearest/GGT diagnostics
 """
 struct _NestedFixedBlock3D{B,S}
@@ -271,6 +275,7 @@ struct _NestedFixedBlock3D{B,S}
     x2_x::Matrix{Float64}
     x2_y::Matrix{Float64}
     x2_z::Matrix{Float64}
+    weights::Vector{Float64}
     gaussian_terms::Array{Float64,3}
     pair_terms::Array{Float64,3}
     fixed_centers::Matrix{Float64}
@@ -1056,6 +1061,59 @@ function _nested_sum_of_support_products(
     return accumulator
 end
 
+function _nested_support_weights(
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    weights_1d::AbstractVector{<:Real},
+)
+    weights = zeros(Float64, length(support_states))
+    for (index, state) in enumerate(support_states)
+        ix, iy, iz = state
+        weights[index] =
+            Float64(weights_1d[ix]) *
+            Float64(weights_1d[iy]) *
+            Float64(weights_1d[iz])
+    end
+    return weights
+end
+
+function _nested_weight_aware_pair_terms(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+)
+    nterms = size(pgdg.pair_factor_terms, 1)
+    nfixed = size(support_coefficients, 2)
+    parent_weight_outer = pgdg.weights * transpose(pgdg.weights)
+    support_weights = _nested_support_weights(support_states, pgdg.weights)
+    fixed_weights = vec(transpose(support_coefficients) * support_weights)
+    all(isfinite, fixed_weights) || throw(
+        ArgumentError("nested fixed-block IDA transfer requires finite contracted integral weights"),
+    )
+    minimum(fixed_weights) > 0.0 || throw(
+        ArgumentError("nested fixed-block IDA transfer requires positive contracted integral weights"),
+    )
+    fixed_weight_outer = fixed_weights * transpose(fixed_weights)
+    pair_terms = zeros(Float64, nterms, nfixed, nfixed)
+
+    for term in 1:nterms
+        raw_1d = @view(pgdg.pair_factor_terms[term, :, :]) .* parent_weight_outer
+        raw_support = _nested_support_product_matrix(
+            support_states,
+            raw_1d,
+            raw_1d,
+            raw_1d,
+        )
+        raw_contracted = transpose(support_coefficients) * raw_support * support_coefficients
+        matrix = Matrix{Float64}(raw_contracted ./ fixed_weight_outer)
+        @views pair_terms[term, :, :] .= 0.5 .* (matrix .+ transpose(matrix))
+    end
+
+    return (
+        weights = fixed_weights,
+        pair_terms = pair_terms,
+    )
+end
+
 function _nested_shell_support_indices(
     faces::NTuple{2,_CartesianNestedXYFace3D},
 )
@@ -1104,8 +1162,8 @@ function _nested_shell_packet(
 
     nshell = size(coefficient_matrix, 2)
     nterms = size(pgdg.gaussian_factor_terms, 1)
+    pair_data = _nested_weight_aware_pair_terms(pgdg, support_states, support_coefficients)
     gaussian_terms = zeros(Float64, nterms, nshell, nshell)
-    pair_terms = zeros(Float64, nterms, nshell, nshell)
     for term in 1:nterms
         factor_support = _nested_support_product_matrix(
             support_states,
@@ -1113,14 +1171,7 @@ function _nested_shell_packet(
             @view(pgdg.gaussian_factor_terms[term, :, :]),
             @view(pgdg.gaussian_factor_terms[term, :, :]),
         )
-        pair_support = _nested_support_product_matrix(
-            support_states,
-            @view(pgdg.pair_factor_terms[term, :, :]),
-            @view(pgdg.pair_factor_terms[term, :, :]),
-            @view(pgdg.pair_factor_terms[term, :, :]),
-        )
         @views gaussian_terms[term, :, :] .= transpose(support_coefficients) * factor_support * support_coefficients
-        @views pair_terms[term, :, :] .= transpose(support_coefficients) * pair_support * support_coefficients
     end
 
     return (
@@ -1133,8 +1184,9 @@ function _nested_shell_packet(
             transpose(support_coefficients) * x2_x_support * support_coefficients,
             transpose(support_coefficients) * x2_y_support * support_coefficients,
             transpose(support_coefficients) * x2_z_support * support_coefficients,
+            pair_data.weights,
             gaussian_terms,
-            pair_terms,
+            pair_data.pair_terms,
         ),
         support_states = support_states,
     )
@@ -1433,6 +1485,7 @@ function _nested_fixed_block(
         packet.x2_x,
         packet.x2_y,
         packet.x2_z,
+        packet.weights,
         packet.gaussian_terms,
         packet.pair_terms,
         Matrix{Float64}(fixed_centers),
@@ -1643,6 +1696,7 @@ function _nested_fixed_block(
         packet.x2_x,
         packet.x2_y,
         packet.x2_z,
+        packet.weights,
         packet.gaussian_terms,
         packet.pair_terms,
         Matrix{Float64}(fixed_centers),
@@ -1679,6 +1733,7 @@ function _nested_fixed_block(
         packet.x2_x,
         packet.x2_y,
         packet.x2_z,
+        packet.weights,
         packet.gaussian_terms,
         packet.pair_terms,
         Matrix{Float64}(fixed_centers),
@@ -1722,6 +1777,7 @@ function _nested_fixed_block(
         packet.x2_x,
         packet.x2_y,
         packet.x2_z,
+        packet.weights,
         packet.gaussian_terms,
         packet.pair_terms,
         Matrix{Float64}(fixed_centers),
