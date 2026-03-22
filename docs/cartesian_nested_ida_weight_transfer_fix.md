@@ -1,22 +1,31 @@
-# Cartesian Nested IDA Weight-transfer Fix
+# Cartesian Nested IDA Weight-transfer Milestone
 
-This note records the first fixed-fixed interaction correction after the
-coverage-fixed shell-sequence diagnostics.
+This note records the nesting branch-point reached in commit
+`5b0460b9d561b2e15d69e00f79d8897a313fb916`.
 
-The starting diagnosis was:
+## Milestone Summary
 
-- shell-plus-core remained the trusted physical nonrecursive anchor
-- the corrected complete shell sequence already recovered the parent low-energy
-  one-body content well
-- `E1` was back in the right regime
-- but `⟨Vee⟩` was still far too large, and the excess was already in the
-  fixed-fixed block
+Exact bug, in one sentence:
 
-That made the next question very specific:
+- the nested fixed-block path was linearly contracting
+  `pgdg.pair_factor_terms` even though those PGDG terms were already
+  weight-divided IDA objects, so the contraction was being applied to the
+  wrong object
 
-- is the nested fixed-block path transforming the wrong IDA object?
+Exact fix, in one sentence:
 
-## Current Code Meaning
+- the nested fixed-block path now reconstructs the raw IDA numerator, carries
+  the contracted fixed-block integral weights through the same map, and only
+  then divides by the new weight outer product
+
+Why this was a real milestone:
+
+- before this fix, the corrected complete-shell nonrecursive line still looked
+  physically wrong because `⟨Vee⟩` was grossly inflated
+- after this fix, that large discrepancy closes almost entirely, so the line is
+  no longer blocked by a spurious fixed-block IDA transfer bug
+
+## Legacy Rule That Had To Be Restored
 
 In the current PGDG bundle, the one-dimensional pair-factor terms are already
 stored as weight-divided IDA objects, not as raw numerators.
@@ -36,47 +45,21 @@ pair_factor_terms = _term_tensor(pair_factors)
 So `pgdg_intermediate.pair_factor_terms` are already divided by the finalized
 one-dimensional integral weights.
 
-Before this fix, the nested shell packet then linearly contracted those
-already-divided `pair_terms` directly.
+The legacy nested/PGDG line did not contract those divided objects directly.
+It restored the raw numerator first, transformed that, transformed the weights,
+and only then reweighted the result. The same rule appears in:
 
-That is the wrong transfer for an IDA object once a nontrivial contraction is
-applied.
-
-## Legacy Evidence
-
-The legacy nested/PGDG line does the weight-aware transform instead.
-
-In
-[PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L991),
-the raw one-dimensional Coulomb numerators are first assembled and transformed:
-
-- raw primitive-to-basis numerators at
-  [PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L991)
-  through
-  [PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L1009)
-- only after the contraction are they divided by the new weights at
-  [PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L1079)
+- [PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L991)
   through
   [PureGaussianGausslet.jl](/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl#L1081)
-
-In the older nested decimation line, the same rule appears even more directly:
-
-- multiply by old weights first at
-  [facedecimate3steve.jl](/Users/srw/Dropbox/GaussletModules/facedecimate3steve.jl#L346)
-  and
-  [fd4.jl](/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/fd4.jl#L463)
-- transform the raw numerator
-- transform the weights
-- divide by the new weights afterward at
-  [facedecimate3steve.jl](/Users/srw/Dropbox/GaussletModules/facedecimate3steve.jl#L348)
+- [facedecimate3steve.jl](/Users/srw/Dropbox/GaussletModules/facedecimate3steve.jl#L346)
   through
   [facedecimate3steve.jl](/Users/srw/Dropbox/GaussletModules/facedecimate3steve.jl#L351)
-  and
-  [fd4.jl](/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/fd4.jl#L465)
+- [fd4.jl](/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/fd4.jl#L463)
   through
   [fd4.jl](/Users/srw/Library/CloudStorage/Dropbox/GaussletModules/fd4.jl#L468)
 
-So the legacy rule is:
+The restored rule is:
 
 ```math
 M = D(w)\,V\,D(w), \qquad
@@ -85,77 +68,97 @@ w' = C^T w, \qquad
 V' = D(1/w')\,M'\,D(1/w').
 ```
 
-## Implemented Fix
+## Numerical Before/After
 
-The nested shell packet in
-[cartesian_nested_faces.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl)
-now follows that rule.
+Test case used throughout:
 
-For the fixed-block interaction packet:
+- He
+- stabilized count-17 fixed-`a`
+- `a = 1/4`
+- `xmax = 10`
+- `s = 0.626026121152214`
 
-1. reconstruct the raw one-dimensional pair numerator from the stored PGDG
-   `pair_factor_terms` and parent integral weights
-2. build the three-dimensional raw support numerator on the shell support
-3. contract that raw numerator through the shell coefficient matrix
-4. contract the parent three-dimensional integral weights through the same map
-5. divide the contracted numerator by the new fixed-block weight outer product
+### Projected-parent Fixed-only `⟨Vee⟩`
 
-The nested packet and fixed-block adapter now also carry the contracted
-fixed-block integral weights explicitly.
+| Case | Parent comparison | Before fix | After fix | After shift vs parent |
+| --- | ---: | ---: | ---: | ---: |
+| Parent fixed space | `1.2486322227019246` | `1.2486322227019246` | `1.2486322227019246` | `0.0` |
+| Shell-plus-core | parent anchor | `1.2486612176560734` | `1.248633734959628` | `+1.5122577034e-6` |
+| Corrected complete four-shell | parent comparison line | `1.818451883926288` | `1.2487650946681053` | `+1.3287196618e-4` |
 
-## Weight Diagnostics
+### Full Nearest/GGT `1s^2` `⟨Vee⟩`
 
-On the stabilized He count-17 fixed-`a` case:
+| Case | Shell-plus-core comparison | Before fix | After fix | After shift vs shell-plus-core |
+| --- | ---: | ---: | ---: | ---: |
+| Shell-plus-core | physical anchor | `1.2489197930296585` | `1.2489021100178215` | `0.0` |
+| Corrected complete four-shell | nonrecursive comparison line | `1.816303754935915` | `1.2489346080730335` | `+3.2498055212e-5` |
 
-- shell-plus-core contracted weights:
+The same full nearest/GGT check gives:
+
+- shell-plus-core: `E1 = -1.9985629071304167`
+- corrected complete four-shell: `E1 = -1.9981842264017424`
+
+So the large previous `⟨Vee⟩` discrepancy is gone. The remaining difference is
+small and no longer points to a broken interaction transfer.
+
+## Fixed-block Weight Check
+
+The transformed fixed-block weights are finite and strictly positive in the
+intended regime.
+
+- shell-plus-core:
   - min `0.061468156103430815`
   - max `2.977482219200775`
   - nonpositive entries: `0`
-- corrected complete four-shell contracted weights:
+- corrected complete four-shell:
   - min `0.061468156103430815`
   - max `3.2591670283995673`
   - nonpositive entries: `0`
 
-So the intended nested fixed-block weights are finite and strictly positive in
-this regime.
+## Validation
 
-## Interaction-transfer Comparison
+Validation run for this milestone:
 
-Same stabilized He fixed-`a` count-17 case, fixed-only projected parent-ground
-diagnostic:
+- `julia --project=. test/runtests.jl`
+- `julia --project=docs docs/make.jl`
 
-- parent fixed-space `⟨Vee⟩`: `1.2486322227019246`
-- shell-plus-core:
-  - old direct-IDA contraction: `1.2486612176560734`
-  - corrected weight-aware transfer: `1.248633734959628`
-- corrected complete four-shell sequence:
-  - old direct-IDA contraction: `1.818451883926288`
-  - corrected weight-aware transfer: `1.2487650946681053`
+The docs build only emitted the usual Documenter no-deploy-environment warning.
 
-So the old nested path really was transforming the wrong IDA object.
+## Current Trust Status
 
-## End-to-end He nearest/GGT Result After the Fix
+What is now trusted:
 
-Same final `1s^2` nearest/GGT check:
+- shell-plus-core remains the trusted physical nonrecursive anchor
+- the nested fixed-block IDA transfer in the current code now follows the
+  correct legacy weight-aware rule
+- the claim that the corrected complete-shell `⟨Vee⟩` blow-up was caused by the
+  wrong IDA transfer, not by a deeper unresolved interaction failure
 
-- shell-plus-core:
-  - `E1 = -1.9985629071304167`
-  - `⟨Vee⟩ = 1.2489021100178215`
-- corrected complete four-shell sequence:
-  - `E1 = -1.9981842264017424`
-  - `⟨Vee⟩ = 1.2489346080730335`
+What is still only diagnostic:
 
-The large previous discrepancy is gone.
+- the corrected complete four-shell sequence as a fully promoted nonrecursive
+  anchor for the roadmap as a whole
+- any broader claim that the nonrecursive nesting line is completely settled
+  beyond this He branch-point
 
-## Conclusion
+## Practical Roadmap Consequence
 
-Yes: the current nested fixed-block path had been transforming the wrong IDA
-object.
+This is no longer "another `⟨Vee⟩` bug hunt" because the dominant interaction
+error has been explained, fixed, and reduced from an `O(10^{-1})` to `O(1)`
+failure to a small `10^{-5}` to `10^{-4}` difference.
 
-The legacy code transformed the raw numerator and only then reweighted by the
-new contracted basis integrals.
+The next short trust-establishment pass should decide whether the corrected
+complete-shell sequence is now good enough to promote from a diagnostic line to
+the first trustworthy nonrecursive comparison state beyond shell-plus-core, or
+whether one more small cleanup is needed before that promotion. In practice,
+that pass should judge the corrected complete-shell line against the parent and
+shell-plus-core anchors on:
 
-With that correction in place, the bad corrected-complete-sequence
-`⟨Vee⟩` discrepancy closes almost entirely on the stabilized He test. The
-remaining difference from shell-plus-core is small, on the order of
-`10^{-5}` to `10^{-4}`, not the earlier `O(10^{-1})` to `O(1)` failure.
+- projected-parent fixed-only interaction transfer
+- final nearest/GGT `⟨Vee⟩`
+- remaining one-body / `E1` gap
+- continued finite-positive transformed weights
+
+If that pass is favorable, the nesting roadmap can move on from interaction
+repair to trust establishment, and then back toward the radial public/tryout
+cleanup path and later radial-vs-Cartesian comparison.
