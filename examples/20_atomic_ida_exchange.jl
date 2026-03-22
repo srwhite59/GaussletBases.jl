@@ -34,7 +34,6 @@ rb = build_basis(RadialBasisSpec(:G10;
     reference_spacing = 1.0,
     tails = 6,
     odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
 
 grid = radial_quadrature(rb; accuracy = :high)
@@ -46,23 +45,33 @@ nchannels = length(ida.one_body.channels)
 norbitals = length(orbitals(ida))
 orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
 
-density = zeros(Float64, norbitals, norbitals)
-density[orbital_index(1, 1), orbital_index(1, 1)] = 0.8
-density[orbital_index(3, 1), orbital_index(1, 1)] = 0.25
-density[orbital_index(1, 1), orbital_index(3, 1)] = 0.25
-density[orbital_index(1, 1), orbital_index(3, 2)] = -0.2
-density[orbital_index(3, 2), orbital_index(1, 1)] = -0.2
-density[orbital_index(4, 2), orbital_index(4, 2)] = 0.4
+channel_labels = [(channel.l, channel.m) for channel in ida.one_body.channels]
+
+# Positive-semidefinite trial spatial density built from two inspectable orbitals.
+orbital1 = zeros(Float64, norbitals)
+orbital1[orbital_index(1, 1)] = sqrt(0.8)   # channel 1 = (0,0), first radial function
+orbital1[orbital_index(3, 1)] = sqrt(0.2)   # channel 3 = (1,0), first radial function
+
+orbital2 = zeros(Float64, norbitals)
+orbital2[orbital_index(4, 2)] = 1.0         # channel 4 = (1,1), second radial function
+
+density = 1.2 .* (orbital1 * orbital1') .+ 0.4 .* (orbital2 * orbital2')
 
 exchange = exchange_matrix(ida, density)
 reference = dense_exchange_reference(ida, density)
 
 hermiticity_error = norm(exchange - transpose(exchange), Inf)
 comparison_error = norm(exchange - reference, Inf)
+density_eigmin = minimum(real(eigen(Hermitian(density)).values))
 
 println("channel set: ", ida.one_body.channels)
+println("channel index map:")
+for (index, label) in enumerate(channel_labels)
+    println("  ", index, " => (l, m) = ", label)
+end
 println("radial basis functions per channel: ", radial_dim)
 println("spatial orbitals: ", norbitals)
+println("trial density minimum eigenvalue: ", density_eigmin)
 println("exchange matrix size: ", size(exchange))
 println("exchange Hermiticity error: ", hermiticity_error)
 println("sectorized vs dense difference: ", comparison_error)

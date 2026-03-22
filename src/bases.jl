@@ -610,12 +610,16 @@ HalfLineBasisSpec(
 
 """
     RadialBasisSpec(family; rmax, mapping, reference_spacing=1.0, tails=6,
-                    odd_even_kmax=6, xgaussians=XGaussian[])
+                    odd_even_kmax=6, xgaussian_count=2, xgaussians=nothing)
     RadialBasisSpec(family; count, mapping, reference_spacing=1.0, tails=6,
-                    odd_even_kmax=6, xgaussians=XGaussian[])
+                    odd_even_kmax=6, xgaussian_count=2, xgaussians=nothing)
 
 Recipe for building a radial gausslet basis for the reduced radial function
 `u(r) = r R(r)`.
+
+By default this uses the current preset two-`XGaussian` supplement from
+`recommended_xgaussians(2)`. Advanced users can override that by passing an
+explicit `xgaussians` vector.
 """
 struct RadialBasisSpec{M <: AbstractCoordinateMapping} <: AbstractBasisSpec
     family_value::GaussletFamily
@@ -658,8 +662,14 @@ RadialBasisSpec(
     reference_spacing::Real = 1.0,
     tails::Int = 6,
     odd_even_kmax::Int = 6,
-    xgaussians::AbstractVector{XGaussian} = XGaussian[],
-) = RadialBasisSpec(_as_family(family_value), rmax, count, mapping, reference_spacing, tails, odd_even_kmax, xgaussians)
+    xgaussian_count::Int = 2,
+    xgaussians::Union{Nothing, AbstractVector{XGaussian}} = nothing,
+) = begin
+    xgaussians !== nothing && xgaussian_count != 2 &&
+        throw(ArgumentError("pass either explicit xgaussians or xgaussian_count, not both"))
+    chosen_xgaussians = xgaussians === nothing ? recommended_xgaussians(xgaussian_count) : xgaussians
+    RadialBasisSpec(_as_family(family_value), rmax, count, mapping, reference_spacing, tails, odd_even_kmax, chosen_xgaussians)
+end
 
 """
     UniformBasis

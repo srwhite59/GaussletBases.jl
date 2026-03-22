@@ -24,6 +24,7 @@ UniformBasisSpec
 MappedUniformBasisSpec
 HalfLineBasisSpec
 RadialBasisSpec
+recommended_xgaussians
 build_basis
 ```
 

@@ -125,6 +125,31 @@ struct XGaussian <: AbstractPrimitiveFunction1D
     end
 end
 
+const _RECOMMENDED_XGAUSSIAN_ALPHAS = (0.1, 0.025)
+
+"""
+    recommended_xgaussians(count::Integer = 2)
+
+Return the current preset near-origin `XGaussian` supplement used for the
+radial front door.
+
+The current preset family is:
+
+- `count = 0`: no `xgaussians`
+- `count = 1`: `[XGaussian(alpha = 0.1)]`
+- `count = 2`: `[XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]`
+
+This is intended as a practical preset family, not a per-run optimization.
+Advanced users can still pass explicit `xgaussians` vectors when they want a
+different supplement.
+"""
+function recommended_xgaussians(count::Integer = 2)
+    count >= 0 || throw(ArgumentError("recommended_xgaussians requires count >= 0"))
+    count <= length(_RECOMMENDED_XGAUSSIAN_ALPHAS) ||
+        throw(ArgumentError("recommended_xgaussians currently supports count = 0, 1, or 2"))
+    return XGaussian[XGaussian(alpha = alpha) for alpha in _RECOMMENDED_XGAUSSIAN_ALPHAS[1:count]]
+end
+
 function value(g::XGaussian, x::Real)
     xval = Float64(x)
     xval < 0.0 && return 0.0

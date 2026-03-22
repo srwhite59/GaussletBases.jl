@@ -111,12 +111,13 @@ What the repo now has is the first narrow primitive described on this page:
 - a dedicated one-dimensional `doside` helper on the finalized fixed line
 - one first simple `x-y` face-product constructor on that fixed line
 - one first opposite-face shell object with shell-level packet propagation
+- one first generalized six-face shell-packet interface
 
 What the repo still does not yet have is the broader nested rollout:
 
 - no recursive shell or box nesting
 - no operator-packet propagation through a full nested hierarchy
-- no broader shell tree beyond the first narrow opposite-face shell object
+- no recursive shell tree beyond the first generalized single-shell interface
 
 So this page now stabilizes both the algorithm and the intended boundary of the
 first implementation step.

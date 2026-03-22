@@ -95,6 +95,50 @@ struct _CartesianNestedXYShell3D
     packet::_CartesianNestedShellPacket3D
 end
 
+"""
+    _CartesianNestedFace3D
+
+Uniform shell-face object for the first generalized shell-packet interface.
+
+Each face stores:
+
+- the face kind `:xy`, `:xz`, or `:yz`
+- the fixed axis and whether it is the low or high face
+- the two tangential `doside` contractions
+- the full parent-space coefficient matrix for that face piece
+- the parent-space support rows for the face interior
+"""
+struct _CartesianNestedFace3D
+    face_kind::Symbol
+    fixed_axis::Symbol
+    fixed_side::Symbol
+    fixed_index::Int
+    side_first::_CartesianNestedDoSide1D
+    side_second::_CartesianNestedDoSide1D
+    coefficient_matrix::Matrix{Float64}
+    support_indices::Vector{Int}
+end
+
+"""
+    _CartesianNestedShell3D
+
+First generalized shell-packet interface built from a uniform collection of
+shell faces.
+
+The object is intended to look like a plausible future consumer input for the
+existing Cartesian/QW-PGDG assembly style: one shell-level fixed basis plus one
+transformed shell-level packet carrying the same operator ingredients as the
+current fixed block.
+"""
+struct _CartesianNestedShell3D
+    faces::Vector{_CartesianNestedFace3D}
+    face_column_ranges::Vector{UnitRange{Int}}
+    coefficient_matrix::Matrix{Float64}
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    packet::_CartesianNestedShellPacket3D
+end
+
 function Base.show(io::IO, side::_CartesianNestedDoSide1D)
     print(
         io,
@@ -123,6 +167,32 @@ function Base.show(io::IO, shell::_CartesianNestedXYShell3D)
     print(
         io,
         "_CartesianNestedXYShell3D(nfaces=2, nshell=",
+        size(shell.coefficient_matrix, 2),
+        ", nsupport=",
+        length(shell.support_indices),
+        ")",
+    )
+end
+
+function Base.show(io::IO, face::_CartesianNestedFace3D)
+    print(
+        io,
+        "_CartesianNestedFace3D(",
+        face.face_kind,
+        ", ",
+        face.fixed_side,
+        ", ncols=",
+        size(face.coefficient_matrix, 2),
+        ")",
+    )
+end
+
+function Base.show(io::IO, shell::_CartesianNestedShell3D)
+    print(
+        io,
+        "_CartesianNestedShell3D(nfaces=",
+        length(shell.faces),
+        ", nshell=",
         size(shell.coefficient_matrix, 2),
         ", nsupport=",
         length(shell.support_indices),
@@ -384,6 +454,94 @@ function _nested_xy_face_cross_overlap(
     return z_overlap .* kron(x_overlap, y_overlap)
 end
 
+function _nested_face_axes(face_kind::Symbol)
+    if face_kind == :xy
+        return ((:x, :y), :z)
+    elseif face_kind == :xz
+        return ((:x, :z), :y)
+    elseif face_kind == :yz
+        return ((:y, :z), :x)
+    else
+        throw(ArgumentError("nested face kind must be :xy, :xz, or :yz"))
+    end
+end
+
+function _nested_face_support_indices(
+    face_kind::Symbol,
+    interval_first::UnitRange{Int},
+    interval_second::UnitRange{Int},
+    fixed_index::Int,
+    n1d::Int,
+)
+    support = Int[]
+    if face_kind == :xy
+        for ix in interval_first, iy in interval_second
+            push!(support, _cartesian_flat_index(ix, iy, fixed_index, n1d))
+        end
+    elseif face_kind == :xz
+        for ix in interval_first, iz in interval_second
+            push!(support, _cartesian_flat_index(ix, fixed_index, iz, n1d))
+        end
+    elseif face_kind == :yz
+        for iy in interval_first, iz in interval_second
+            push!(support, _cartesian_flat_index(fixed_index, iy, iz, n1d))
+        end
+    else
+        throw(ArgumentError("nested face support requires face kind :xy, :xz, or :yz"))
+    end
+    return support
+end
+
+function _nested_face_product(
+    face_kind::Symbol,
+    fixed_side::Symbol,
+    side_first::_CartesianNestedDoSide1D,
+    side_second::_CartesianNestedDoSide1D,
+    fixed_index::Int,
+    n1d::Int,
+)
+    1 <= fixed_index <= n1d || throw(ArgumentError("nested face requires a fixed index inside the finalized Cartesian line"))
+    (fixed_side == :low || fixed_side == :high) || throw(ArgumentError("nested face fixed_side must be :low or :high"))
+    _, fixed_axis = _nested_face_axes(face_kind)
+    nfirst = size(side_first.coefficient_matrix, 2)
+    nsecond = size(side_second.coefficient_matrix, 2)
+    coefficients = zeros(Float64, n1d^3, nfirst * nsecond)
+    column = 0
+    for ifirst in 1:nfirst, isecond in 1:nsecond
+        column += 1
+        for index_first in side_first.interval
+            value_first = side_first.coefficient_matrix[index_first, ifirst]
+            iszero(value_first) && continue
+            for index_second in side_second.interval
+                value_second = side_second.coefficient_matrix[index_second, isecond]
+                iszero(value_second) && continue
+                flat_index =
+                    face_kind == :xy ? _cartesian_flat_index(index_first, index_second, fixed_index, n1d) :
+                    face_kind == :xz ? _cartesian_flat_index(index_first, fixed_index, index_second, n1d) :
+                    _cartesian_flat_index(fixed_index, index_first, index_second, n1d)
+                coefficients[flat_index, column] = value_first * value_second
+            end
+        end
+    end
+    support_indices = _nested_face_support_indices(
+        face_kind,
+        side_first.interval,
+        side_second.interval,
+        fixed_index,
+        n1d,
+    )
+    return _CartesianNestedFace3D(
+        face_kind,
+        fixed_axis,
+        fixed_side,
+        fixed_index,
+        side_first,
+        side_second,
+        coefficients,
+        support_indices,
+    )
+end
+
 function _nested_support_product_matrix(
     support_states::AbstractVector{<:NTuple{3,Int}},
     operator_x::AbstractMatrix{<:Real},
@@ -561,4 +719,87 @@ function _nested_xy_shell_pair(
         retain_x = retain_x,
         retain_y = retain_y,
     )
+end
+
+function _nested_shell_support_indices(
+    faces::AbstractVector{<:_CartesianNestedFace3D},
+)
+    support = Int[]
+    seen = Set{Int}()
+    for face in faces
+        for index in face.support_indices
+            if index in seen
+                throw(ArgumentError("nested shell assembly requires disjoint face interiors"))
+            end
+            push!(support, index)
+            push!(seen, index)
+        end
+    end
+    sort!(support)
+    return support
+end
+
+# Alg Nested-Face steps 8-9: Assemble one first generalized shell-level fixed
+# space from all six face interiors and propagate the carried operator packet
+# through the same contractions.
+# See docs/src/algorithms/cartesian_nested_face_construction.md.
+function _nested_rectangular_shell(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    x_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
+    y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
+    z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
+)
+    n1d = size(pgdg.overlap, 1)
+    side_x_xy = _nested_doside_1d(pgdg, x_interval, retain_xy[1])
+    side_y_xy = _nested_doside_1d(pgdg, y_interval, retain_xy[2])
+    side_x_xz = _nested_doside_1d(pgdg, x_interval, retain_xz[1])
+    side_z_xz = _nested_doside_1d(pgdg, z_interval, retain_xz[2])
+    side_y_yz = _nested_doside_1d(pgdg, y_interval, retain_yz[1])
+    side_z_yz = _nested_doside_1d(pgdg, z_interval, retain_yz[2])
+
+    faces = _CartesianNestedFace3D[
+        _nested_face_product(:xy, :low, side_x_xy, side_y_xy, z_fixed[1], n1d),
+        _nested_face_product(:xy, :high, side_x_xy, side_y_xy, z_fixed[2], n1d),
+        _nested_face_product(:xz, :low, side_x_xz, side_z_xz, y_fixed[1], n1d),
+        _nested_face_product(:xz, :high, side_x_xz, side_z_xz, y_fixed[2], n1d),
+        _nested_face_product(:yz, :low, side_y_yz, side_z_yz, x_fixed[1], n1d),
+        _nested_face_product(:yz, :high, side_y_yz, side_z_yz, x_fixed[2], n1d),
+    ]
+
+    coefficient_blocks = [face.coefficient_matrix for face in faces]
+    coefficient_matrix = hcat(coefficient_blocks...)
+    face_column_ranges = UnitRange{Int}[]
+    column_start = 1
+    for face in faces
+        ncols = size(face.coefficient_matrix, 2)
+        push!(face_column_ranges, column_start:(column_start + ncols - 1))
+        column_start += ncols
+    end
+
+    support_indices = _nested_shell_support_indices(faces)
+    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    return _CartesianNestedShell3D(
+        faces,
+        face_column_ranges,
+        coefficient_matrix,
+        support_indices,
+        shell_data.support_states,
+        shell_data.packet,
+    )
+end
+
+function _nested_rectangular_shell(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    kwargs...,
+)
+    return _nested_rectangular_shell(bundle.pgdg_intermediate, x_interval, y_interval, z_interval; kwargs...)
 end

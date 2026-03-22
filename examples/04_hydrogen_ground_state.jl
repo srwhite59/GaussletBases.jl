@@ -4,15 +4,11 @@ using GaussletBases
 Z = 1.0
 s = 0.2
 
-map = AsinhMapping(c = s / (2Z), s = s, tail_spacing = 10.0)
+map = AsinhMapping(c = s / (2Z), s = s)
 
 rb = build_basis(RadialBasisSpec(:G10;
     rmax = 30.0,
     mapping = map,
-    reference_spacing = 1.0,
-    tails = 6,
-    odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
 
 grid = radial_quadrature(rb)

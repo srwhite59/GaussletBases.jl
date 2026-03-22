@@ -10,7 +10,7 @@ If you want the narrative workflow before the API details, start with:
 ```jldoctest operators_and_diagnostics
 julia> using GaussletBases
 
-julia> rb = build_basis(RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2)));
+julia> rb = build_basis(RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussian_count = 0));
 
 julia> grid = radial_quadrature(rb; accuracy = :medium);
 
@@ -36,6 +36,16 @@ nuclear_matrix
 centrifugal_matrix
 multipole_matrix
 ```
+
+`centrifugal_matrix(rb, grid; l)` is a single fixed-`l` radial block. It is
+not yet the full explicit atomic `(l,m)` Hamiltonian. The usual next step is:
+
+```julia
+radial_ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+atom = atomic_one_body_operators(radial_ops; lmax = 2)
+```
+
+which repeats the fixed-`l` radial blocks over the explicit `YlmChannel` list.
 
 ## Radial atomic bundle
 

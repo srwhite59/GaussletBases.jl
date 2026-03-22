@@ -11,9 +11,9 @@ For the workflow pages that explain when to use these entry points, start with:
 ```jldoctest atomic_and_ordinary
 julia> using GaussletBases
 
-julia> rb = build_basis(RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2)));
+julia> rb = build_basis(RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussian_count = 0));
 
-julia> grid = radial_quadrature(rb; accuracy = :medium);
+julia> grid = radial_quadrature(rb; accuracy = :high);
 
 julia> radial_ops = atomic_operators(rb, grid; Z = 1.0, lmax = 0);
 

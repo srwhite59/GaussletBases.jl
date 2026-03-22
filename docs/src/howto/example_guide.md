@@ -15,6 +15,12 @@ From the repository root, each example runs as:
 julia --project=. examples/NAME.jl
 ```
 
+From a fresh checkout, instantiate once first:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+```
+
 ## Core starting sequence
 
 If you are new, start here:
@@ -36,6 +42,13 @@ After the core starting sequence, the atomic line is:
 8. `20_atomic_ida_exchange.jl`
 9. `21_atomic_ida_fock.jl`
 10. `22_atomic_ida_uhf.jl`
+
+The key conceptual jump happens between:
+
+- `04_hydrogen_ground_state.jl`, which is still a single fixed-`l` radial
+  block
+- and `15_atomic_hydrogen_ylm.jl`, which introduces the explicit `(l,m)`
+  channel list and the full one-electron atomic block structure
 
 The tiny exact-interacting checks are:
 

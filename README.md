@@ -149,6 +149,12 @@ If you are new to the package, a good first path is:
 3. read the radial quickstart
 4. use the docs map to choose where to go next
 
+From a fresh checkout, instantiate once before running examples:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+```
+
 From the repository root:
 
 ```bash

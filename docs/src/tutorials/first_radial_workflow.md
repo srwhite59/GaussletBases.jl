@@ -52,6 +52,9 @@ level, the only two parameters you need to recognize are:
 The fuller tuning discussion lives in
 [Recommended atomic setup](../howto/recommended_atomic_setup.md).
 
+The first-read workflow deliberately leaves deeper construction controls such
+as `reference_spacing`, `tails`, and `odd_even_kmax` at their defaults.
+
 ## Diagnostics and quadrature
 
 After building the basis, the first quick numerical check is:
@@ -89,19 +92,29 @@ result checks the basis and the quadrature together.
 
 The corresponding runnable example is `examples/04_hydrogen_ground_state.jl`.
 
+At this stage, `centrifugal_matrix(rb, grid; l = 0)` is only the radial block
+for one fixed angular momentum channel. The explicit atomic `(l,m)` layer
+comes one step later.
+
 ## What you usually do next
 
 Once hydrogen is working, the normal next steps are:
 
 ```julia
-ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+radial_ops = atomic_operators(rb, grid; Z = Z, lmax = 2)
+atom = atomic_one_body_operators(radial_ops; lmax = 2)
 ```
 
-That moves you from a one-electron radial test into the current small atomic
-operator line.
+That moves you from a one-electron radial test into the current explicit atomic
+line:
+
+- `atomic_operators(...)` builds the radial operator bundle for all `l <= lmax`
+- `atomic_one_body_operators(...)` repeats those radial blocks over the
+  explicit `(l,m)` channels
 
 For more detail after this tutorial, continue with:
 
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
+- [Atomic and ordinary workflows](../reference/atomic_and_ordinary.md)
 - [Example guide](../howto/example_guide.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)

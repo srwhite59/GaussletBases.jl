@@ -2,12 +2,8 @@ using GaussletBases
 
 map = AsinhMapping(c = 0.15, s = 0.15)
 rb = build_basis(RadialBasisSpec(:G10;
-    count = 6,
+    count = 9,
     mapping = map,
-    reference_spacing = 1.0,
-    tails = 3,
-    odd_even_kmax = 2,
-    xgaussians = [XGaussian(alpha = 0.2)],
 ))
 grid = radial_quadrature(rb)
 ops = atomic_operators(rb, grid; Z = 2.0, lmax = 2)

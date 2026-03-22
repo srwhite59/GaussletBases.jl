@@ -8,10 +8,6 @@ lmax = 2
 rb = build_basis(RadialBasisSpec(:G10;
     rmax = 30.0,
     mapping = AsinhMapping(c = s / (2Z), s = s),
-    reference_spacing = 1.0,
-    tails = 6,
-    odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
 
 grid = radial_quadrature(rb)

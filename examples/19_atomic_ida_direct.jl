@@ -33,7 +33,6 @@ rb = build_basis(RadialBasisSpec(:G10;
     reference_spacing = 1.0,
     tails = 6,
     odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 ))
 
 grid = radial_quadrature(rb; accuracy = :high)

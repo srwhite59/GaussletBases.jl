@@ -105,6 +105,29 @@ function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadra
     return rb, grid
 end
 
+@testset "Recommended xgaussian presets" begin
+    @test isempty(recommended_xgaussians(0))
+    @test [g.alpha for g in recommended_xgaussians(1)] == [0.1]
+    @test [g.alpha for g in recommended_xgaussians(2)] == [0.1, 0.025]
+    @test_throws ArgumentError recommended_xgaussians(-1)
+    @test_throws ArgumentError recommended_xgaussians(3)
+
+    spec_default = RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2))
+    spec_none = RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussian_count = 0)
+    spec_explicit = RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussians = XGaussian[])
+
+    @test [g.alpha for g in spec_default.xgaussians] == [0.1, 0.025]
+    @test isempty(spec_none.xgaussians)
+    @test isempty(spec_explicit.xgaussians)
+    @test_throws ArgumentError RadialBasisSpec(
+        :G10;
+        rmax = 8.0,
+        mapping = AsinhMapping(c = 0.1, s = 0.2),
+        xgaussian_count = 0,
+        xgaussians = recommended_xgaussians(),
+    )
+end
+
 function _quick_radial_operator_fixture()
     return _cached_fixture(:quick_radial_operator_fixture, () -> begin
         _radial_operator_fixture()
@@ -1891,6 +1914,74 @@ end
     @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
     @test low_z_mean < 0.0
     @test high_z_mean > 0.0
+end
+
+@testset "Cartesian nested shell interface" begin
+    function _fixed_a_multi_face_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        return basis, s
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis, s = _fixed_a_multi_face_basis(13)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+    interval = 2:(length(basis) - 1)
+    shell = GaussletBases._nested_rectangular_shell(
+        bundle,
+        interval,
+        interval,
+        interval;
+        retain_xy = (4, 3),
+        retain_xz = (4, 3),
+        retain_yz = (4, 3),
+    )
+    packet = shell.packet
+    direct_overlap = transpose(shell.coefficient_matrix) * shell.coefficient_matrix
+
+    @test s > 0.0
+    @test shell isa GaussletBases._CartesianNestedShell3D
+    @test length(shell.faces) == 6
+    @test length(shell.face_column_ranges) == 6
+    @test size(shell.coefficient_matrix) == (length(basis)^3, 72)
+    @test length(shell.support_indices) == 6 * length(interval)^2
+    @test length(shell.support_states) == length(shell.support_indices)
+    @test all(length(face.support_indices) == length(interval)^2 for face in shell.faces)
+    for left in 1:length(shell.faces), right in (left + 1):length(shell.faces)
+        @test isempty(intersect(shell.faces[left].support_indices, shell.faces[right].support_indices))
+    end
+    @test norm(packet.overlap - I, Inf) < 1.0e-10
+    @test packet.overlap ≈ direct_overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test packet.kinetic ≈ transpose(packet.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_x ≈ transpose(packet.position_x) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_y ≈ transpose(packet.position_y) atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.position_z ≈ transpose(packet.position_z) atol = 1.0e-10 rtol = 1.0e-10
+    @test size(packet.gaussian_terms) == (3, 72, 72)
+    @test size(packet.pair_terms) == (3, 72, 72)
+    @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
+    @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
+
+    for (face, columns) in zip(shell.faces, shell.face_column_ranges)
+        mean_value =
+            face.fixed_axis == :x ? sum(diag(packet.position_x)[columns]) / length(columns) :
+            face.fixed_axis == :y ? sum(diag(packet.position_y)[columns]) / length(columns) :
+            sum(diag(packet.position_z)[columns]) / length(columns)
+        if face.fixed_side == :low
+            @test mean_value < 0.0
+        else
+            @test mean_value > 0.0
+        end
+    end
 end
 
 @testset "Mapped ordinary one-body backends" begin
