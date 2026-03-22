@@ -177,6 +177,8 @@ That means the next diagnostic should probably move to the interaction side:
 - or a two-electron retained-subspace diagnostic
 
 rather than immediately changing the retained-count policy again.
+That follow-up is now recorded in
+[cartesian_nested_interaction_transfer_diagnostic.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/cartesian_nested_interaction_transfer_diagnostic.md).
 
 ## Conclusion
 
