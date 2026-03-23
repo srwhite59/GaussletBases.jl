@@ -661,7 +661,7 @@ function _legacy_he_s_hybrid_fixture(basis_name::String)
             expansion = expansion,
             Z = 2.0,
         )
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         legacy_basis = hybrid_mapped_ordinary_basis(
             source_basis;
             core_gaussians = legacy,
@@ -697,7 +697,7 @@ function _legacy_he_s_mwg_fixture(basis_name::String; s::Float64 = 0.6)
             Z = 2.0,
             backend = :pgdg_localized_experimental,
         )
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         hybrid_basis = hybrid_mapped_ordinary_basis(
             source_basis;
             core_gaussians = legacy,
@@ -748,7 +748,7 @@ function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::I
             reference_spacing = 1.0,
         ))
         expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), nterms)
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         hybrid_basis = hybrid_mapped_ordinary_basis(
             source_basis;
             core_gaussians = legacy,
@@ -795,7 +795,7 @@ function _qiu_white_full_nearest_fixture(; basis_name::String = "cc-pVTZ", count
             mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
             reference_spacing = 1.0,
         ))
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         operators = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
@@ -854,7 +854,7 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
             interval,
         )
         fixed_block_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         baseline = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
@@ -960,7 +960,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             enforce_coverage = false,
         )
         fixed_sequence = GaussletBases._nested_fixed_block(shell_sequence, bundle)
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         baseline = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
@@ -1084,7 +1084,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
         )
         fixed_grow = GaussletBases._nested_fixed_block(grow_sequence, bundle)
         fixed_shrink = GaussletBases._nested_fixed_block(shrinking_sequence, bundle)
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         baseline = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
@@ -1127,6 +1127,17 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
     end)
 end
 
+function _nested_complete_shell_intervals(count::Int)
+    count >= 15 || throw(ArgumentError("complete-shell fixture expects count >= 15"))
+    outer_start = div(count - 13, 2) + 1
+    outer_stop = outer_start + 12
+    interval1 = (outer_start + 1):(outer_stop - 1)
+    interval2 = (outer_start + 2):(outer_stop - 2)
+    interval3 = (outer_start + 3):(outer_stop - 3)
+    interval4 = (outer_start + 4):(outer_stop - 4)
+    return interval1, interval2, interval3, interval4, interval4
+end
+
 function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String = "cc-pVTZ", count::Int = 17, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
     key = Symbol(
         :nested_qiu_white_complete_shell_sequence_fixture,
@@ -1151,11 +1162,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             refinement_levels = 0,
         )
 
-        interval1 = 4:14
-        interval2 = 5:13
-        interval3 = 6:12
-        interval4 = 7:11
-        core5 = 7:11
+        interval1, interval2, interval3, interval4, core5 = _nested_complete_shell_intervals(count)
 
         shell1_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -1165,9 +1172,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_xy = (4, 3),
             retain_xz = (4, 3),
             retain_yz = (4, 3),
-            x_fixed = (3, 15),
-            y_fixed = (3, 15),
-            z_fixed = (3, 15),
+            x_fixed = (first(interval1) - 1, last(interval1) + 1),
+            y_fixed = (first(interval1) - 1, last(interval1) + 1),
+            z_fixed = (first(interval1) - 1, last(interval1) + 1),
         )
         shell2_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -1177,9 +1184,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_xy = (4, 3),
             retain_xz = (4, 3),
             retain_yz = (4, 3),
-            x_fixed = (4, 14),
-            y_fixed = (4, 14),
-            z_fixed = (4, 14),
+            x_fixed = (first(interval2) - 1, last(interval2) + 1),
+            y_fixed = (first(interval2) - 1, last(interval2) + 1),
+            z_fixed = (first(interval2) - 1, last(interval2) + 1),
         )
         shell3_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -1189,9 +1196,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_xy = (4, 3),
             retain_xz = (4, 3),
             retain_yz = (4, 3),
-            x_fixed = (5, 13),
-            y_fixed = (5, 13),
-            z_fixed = (5, 13),
+            x_fixed = (first(interval3) - 1, last(interval3) + 1),
+            y_fixed = (first(interval3) - 1, last(interval3) + 1),
+            z_fixed = (first(interval3) - 1, last(interval3) + 1),
         )
         shell4_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -1201,9 +1208,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_xy = (4, 3),
             retain_xz = (4, 3),
             retain_yz = (4, 3),
-            x_fixed = (6, 12),
-            y_fixed = (6, 12),
-            z_fixed = (6, 12),
+            x_fixed = (first(interval4) - 1, last(interval4) + 1),
+            y_fixed = (first(interval4) - 1, last(interval4) + 1),
+            z_fixed = (first(interval4) - 1, last(interval4) + 1),
         )
 
         shell1_complete = GaussletBases._nested_complete_rectangular_shell(
@@ -1217,9 +1224,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_x_edge = 3,
             retain_y_edge = 3,
             retain_z_edge = 3,
-            x_fixed = (3, 15),
-            y_fixed = (3, 15),
-            z_fixed = (3, 15),
+            x_fixed = (first(interval1) - 1, last(interval1) + 1),
+            y_fixed = (first(interval1) - 1, last(interval1) + 1),
+            z_fixed = (first(interval1) - 1, last(interval1) + 1),
         )
         shell2_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -1232,9 +1239,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_x_edge = 3,
             retain_y_edge = 3,
             retain_z_edge = 3,
-            x_fixed = (4, 14),
-            y_fixed = (4, 14),
-            z_fixed = (4, 14),
+            x_fixed = (first(interval2) - 1, last(interval2) + 1),
+            y_fixed = (first(interval2) - 1, last(interval2) + 1),
+            z_fixed = (first(interval2) - 1, last(interval2) + 1),
         )
         shell3_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -1247,9 +1254,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_x_edge = 3,
             retain_y_edge = 3,
             retain_z_edge = 3,
-            x_fixed = (5, 13),
-            y_fixed = (5, 13),
-            z_fixed = (5, 13),
+            x_fixed = (first(interval3) - 1, last(interval3) + 1),
+            y_fixed = (first(interval3) - 1, last(interval3) + 1),
+            z_fixed = (first(interval3) - 1, last(interval3) + 1),
         )
         shell4_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -1262,9 +1269,9 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             retain_x_edge = 3,
             retain_y_edge = 3,
             retain_z_edge = 3,
-            x_fixed = (6, 12),
-            y_fixed = (6, 12),
-            z_fixed = (6, 12),
+            x_fixed = (first(interval4) - 1, last(interval4) + 1),
+            y_fixed = (first(interval4) - 1, last(interval4) + 1),
+            z_fixed = (first(interval4) - 1, last(interval4) + 1),
         )
 
         shell_plus_core = GaussletBases._nested_shell_plus_core(
@@ -1294,7 +1301,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
         fixed_face_sequence = GaussletBases._nested_fixed_block(face_sequence, bundle)
         fixed_complete_sequence = GaussletBases._nested_fixed_block(complete_sequence, bundle)
 
-        legacy = legacy_s_gaussian_data("He", basis_name)
+        legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         baseline = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
@@ -1387,6 +1394,22 @@ function _nested_vee_from_orbital(
     weights = Float64[abs2(coefficient) for coefficient in orbital]
     weights ./= sum(weights)
     return Float64(real(dot(weights, interaction * weights)))
+end
+
+function _nested_projector_stats(
+    overlap_parent::AbstractMatrix{<:Real},
+    one_body_parent::AbstractMatrix{<:Real},
+    fixed_block,
+    parent_vector::AbstractVector{<:Real},
+)
+    rhs = transpose(fixed_block.coefficient_matrix) * (overlap_parent * parent_vector)
+    projected_coords = fixed_block.overlap \ rhs
+    retained =
+        Float64(real(dot(rhs, projected_coords) / dot(parent_vector, overlap_parent * parent_vector)))
+    projected = fixed_block.coefficient_matrix * projected_coords
+    projected_norm = real(dot(projected, overlap_parent * projected))
+    projected_energy = Float64(real(dot(projected, one_body_parent * projected) / projected_norm))
+    return retained, projected_energy
 end
 
 function _quick_ordinary_sho_smoke_fixture()
@@ -3050,6 +3073,95 @@ end
         core5,
         [shell1_complete, shell2_complete, shell3_complete],
     )
+end
+
+@testset "Atomic hybrid anchor comparison" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        (
+            _source_basis,
+            bundle,
+            _shell1_face,
+            _shell2_face,
+            _shell3_face,
+            _shell4_face,
+            _shell1_complete,
+            _shell2_complete,
+            _shell3_complete,
+            _shell4_complete,
+            _interval1,
+            _interval2,
+            _interval3,
+            _interval4,
+            _core5,
+            _shell_plus_core,
+            _face_sequence,
+            complete_sequence,
+            fixed_shell_plus_core,
+            _fixed_face_sequence,
+            fixed_complete_sequence,
+            legacy,
+            baseline,
+            shell_plus_core_ops,
+            _face_sequence_ops,
+            complete_sequence_ops,
+            baseline_check,
+            shell_plus_core_check,
+            _face_sequence_check,
+            complete_sequence_check,
+        ) = _nested_qiu_white_complete_shell_sequence_fixture(count = 15)
+
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        overlap_parent, one_body_parent, interaction_parent =
+            _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
+        parent_modes = eigen(Hermitian(one_body_parent), Hermitian(overlap_parent))
+        parent_ground = parent_modes.vectors[:, 1]
+        parent_ground_vee = _nested_vee_from_orbital(interaction_parent, parent_ground)
+        projected_complete = _nested_fixed_projected_orbital(
+            overlap_parent,
+            fixed_complete_sequence,
+            parent_ground,
+        )
+        projected_complete_vee = _nested_vee_from_orbital(
+            GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_complete_sequence, expansion),
+            projected_complete,
+        )
+        complete_ground_capture, complete_ground_energy = _nested_projector_stats(
+            overlap_parent,
+            one_body_parent,
+            fixed_complete_sequence,
+            parent_ground,
+        )
+        complete_average4_capture =
+            sum(
+                _nested_projector_stats(
+                    overlap_parent,
+                    one_body_parent,
+                    fixed_complete_sequence,
+                    parent_modes.vectors[:, index],
+                )[1] for index in 1:4
+            ) / 4
+
+        @test legacy isa LegacyAtomicGaussianSupplement
+        @test legacy.lmax == 0
+        @test complete_sequence.working_box == (2:14, 2:14, 2:14)
+        @test baseline.gausslet_count == 15^3
+        @test shell_plus_core_ops.gausslet_count == 1403
+        @test complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
+        @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
+        @test complete_sequence_check.overlap_error < 1.0e-10
+        @test all(isfinite, fixed_complete_sequence.weights)
+        @test minimum(fixed_complete_sequence.weights) > 0.0
+        @test maximum(fixed_complete_sequence.weights) < 10.0
+        @test abs(complete_sequence_check.orbital_energy - baseline_check.orbital_energy) < 2.0e-4
+        @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
+        @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 5.0e-5
+        @test abs(projected_complete_vee - parent_ground_vee) < 1.0e-4
+        @test complete_ground_capture > 0.99999
+        @test complete_average4_capture > 0.999
+        @test complete_ground_energy - parent_modes.values[1] < 1.0e-4
+    end
 end
 
 @testset "Mapped ordinary one-body backends" begin
