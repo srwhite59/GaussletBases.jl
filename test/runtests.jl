@@ -1367,6 +1367,97 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
     end)
 end
 
+function _nested_qiu_white_hierarchical_core_fixture(; basis_name::String = "cc-pVTZ", count::Int = 17, a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
+    key = Symbol(
+        :nested_qiu_white_hierarchical_core_fixture,
+        Symbol(lowercase(basis_name)),
+        count,
+        round(Int, 1000 * a),
+        round(Int, 1000 * xmax),
+    )
+    return _cached_fixture(key, () -> begin
+        (
+            source_basis,
+            bundle,
+            _shell1_face,
+            _shell2_face,
+            _shell3_face,
+            _shell4_face,
+            shell1_complete,
+            shell2_complete,
+            shell3_complete,
+            shell4_complete,
+            _interval1,
+            _interval2,
+            _interval3,
+            _interval4,
+            core5,
+            _shell_plus_core,
+            _face_sequence,
+            complete_sequence,
+            _fixed_shell_plus_core,
+            _fixed_face_sequence,
+            fixed_complete_sequence,
+            legacy,
+            baseline,
+            _shell_plus_core_ops,
+            _face_sequence_ops,
+            complete_sequence_ops,
+            baseline_check,
+            _shell_plus_core_check,
+            _face_sequence_check,
+            complete_sequence_check,
+        ) = _nested_qiu_white_complete_shell_sequence_fixture(
+            basis_name = basis_name,
+            count = count,
+            a = a,
+            xmax = xmax,
+            tail_spacing = tail_spacing,
+        )
+
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        refined_data = GaussletBases._nested_shell_sequence_with_hierarchical_core_refinement(
+            bundle,
+            core5,
+            core5,
+            core5,
+            [shell1_complete, shell2_complete, shell3_complete, shell4_complete];
+            retain_xy = (2, 2),
+            retain_xz = (2, 2),
+            retain_yz = (2, 2),
+            retain_x_edge = 2,
+            retain_y_edge = 2,
+            retain_z_edge = 2,
+        )
+        fixed_refined_sequence = GaussletBases._nested_fixed_block(refined_data.sequence, bundle)
+        refined_sequence_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_refined_sequence,
+            legacy;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+
+        (
+            source_basis,
+            bundle,
+            core5,
+            complete_sequence,
+            fixed_complete_sequence,
+            complete_sequence_ops,
+            complete_sequence_check,
+            refined_data.refined_core,
+            refined_data.sequence,
+            fixed_refined_sequence,
+            refined_sequence_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(refined_sequence_ops),
+            legacy,
+            baseline,
+            baseline_check,
+        )
+    end)
+end
+
 function _nested_parent_fixed_problem(bundle, expansion; Z::Float64 = 2.0)
     gg = GaussletBases._qwrg_gausslet_1d_blocks(bundle)
     n1d = size(gg.overlap_gg, 1)
@@ -3162,6 +3253,74 @@ end
         @test complete_ground_capture > 0.99999
         @test complete_average4_capture > 0.999
         @test complete_ground_energy - parent_modes.values[1] < 1.0e-4
+    end
+end
+
+@testset "Atomic hierarchical core-only refinement" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        for count in (17, 15)
+            (
+                _source_basis,
+                bundle,
+                core5,
+                complete_sequence,
+                fixed_complete_sequence,
+                complete_sequence_ops,
+                complete_sequence_check,
+                refined_core,
+                refined_sequence,
+                fixed_refined_sequence,
+                refined_sequence_ops,
+                refined_sequence_check,
+                legacy,
+                _baseline,
+                _baseline_check,
+            ) = _nested_qiu_white_hierarchical_core_fixture(count = count)
+
+            expansion = coulomb_gaussian_expansion(doacc = false)
+            overlap_parent, one_body_parent, interaction_parent =
+                _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
+            parent_modes = eigen(Hermitian(one_body_parent), Hermitian(overlap_parent))
+            parent_ground = parent_modes.vectors[:, 1]
+            parent_ground_vee = _nested_vee_from_orbital(interaction_parent, parent_ground)
+            projected_refined = _nested_fixed_projected_orbital(
+                overlap_parent,
+                fixed_refined_sequence,
+                parent_ground,
+            )
+            projected_refined_vee = _nested_vee_from_orbital(
+                GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_refined_sequence, expansion),
+                projected_refined,
+            )
+            refined_ground_capture, refined_ground_energy = _nested_projector_stats(
+                overlap_parent,
+                one_body_parent,
+                fixed_refined_sequence,
+                parent_ground,
+            )
+
+            inner_core = (first(core5) + 1):(last(core5) - 1)
+            @test legacy isa LegacyAtomicGaussianSupplement
+            @test legacy.lmax == 0
+            @test refined_core isa GaussletBases._CartesianNestedShellSequence3D
+            @test refined_sequence isa GaussletBases._CartesianNestedShellSequence3D
+            @test refined_core.working_box == (core5, core5, core5)
+            @test refined_sequence.working_box == complete_sequence.working_box
+            @test length(refined_core.core_indices) == length(inner_core)^3
+            @test size(refined_core.coefficient_matrix, 2) == 83
+            @test refined_sequence_ops.gausslet_count == 547
+            @test refined_sequence_ops.gausslet_count < complete_sequence_ops.gausslet_count
+            @test norm(fixed_refined_sequence.overlap - I, Inf) < 1.0e-10
+            @test refined_sequence_check.overlap_error < 1.0e-10
+            @test all(isfinite, fixed_refined_sequence.weights)
+            @test minimum(fixed_refined_sequence.weights) > 0.0
+            @test refined_ground_capture > 0.999
+            @test abs(refined_sequence_check.vee_expectation - complete_sequence_check.vee_expectation) > 5.0e-4
+            @test abs(projected_refined_vee - parent_ground_vee) > 1.0e-3
+            @test refined_ground_energy - parent_modes.values[1] > 1.0e-2
+        end
     end
 end
 

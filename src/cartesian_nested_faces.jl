@@ -1596,6 +1596,120 @@ function _nested_shell_sequence_from_core_block(
     )
 end
 
+# Alg Nested-Face hierarchy step: Refine only the retained direct core block
+# inside a trusted nonrecursive shell anchor, using the original parent-space
+# functions assigned to that core region rather than re-coarsening already
+# renormalized shell functions.
+function _nested_hierarchical_core_refinement(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    retain_xy::Tuple{Int,Int} = (2, 2),
+    retain_xz::Tuple{Int,Int} = (2, 2),
+    retain_yz::Tuple{Int,Int} = (2, 2),
+    retain_x_edge::Int = 2,
+    retain_y_edge::Int = 2,
+    retain_z_edge::Int = 2,
+)
+    length(x_interval) >= 5 || throw(
+        ArgumentError("hierarchical core refinement requires an x interval of length at least 5"),
+    )
+    length(y_interval) >= 5 || throw(
+        ArgumentError("hierarchical core refinement requires a y interval of length at least 5"),
+    )
+    length(z_interval) >= 5 || throw(
+        ArgumentError("hierarchical core refinement requires a z interval of length at least 5"),
+    )
+
+    inner_x = (first(x_interval) + 1):(last(x_interval) - 1)
+    inner_y = (first(y_interval) + 1):(last(y_interval) - 1)
+    inner_z = (first(z_interval) + 1):(last(z_interval) - 1)
+    inner_shell = _nested_complete_rectangular_shell(
+        pgdg,
+        inner_x,
+        inner_y,
+        inner_z;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+        x_fixed = (first(x_interval), last(x_interval)),
+        y_fixed = (first(y_interval), last(y_interval)),
+        z_fixed = (first(z_interval), last(z_interval)),
+    )
+    return _nested_shell_sequence(
+        pgdg,
+        inner_x,
+        inner_y,
+        inner_z,
+        [inner_shell],
+    )
+end
+
+function _nested_hierarchical_core_refinement(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    kwargs...,
+)
+    return _nested_hierarchical_core_refinement(
+        bundle.pgdg_intermediate,
+        x_interval,
+        y_interval,
+        z_interval;
+        kwargs...,
+    )
+end
+
+function _nested_shell_sequence_with_hierarchical_core_refinement(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
+    kwargs...,
+)
+    refined_core = _nested_hierarchical_core_refinement(
+        pgdg,
+        x_interval,
+        y_interval,
+        z_interval;
+        kwargs...,
+    )
+    sequence = _nested_shell_sequence_from_core_block(
+        pgdg,
+        refined_core.support_indices,
+        refined_core.coefficient_matrix,
+        shell_layers,
+    )
+    return (
+        refined_core = refined_core,
+        sequence = sequence,
+    )
+end
+
+function _nested_shell_sequence_with_hierarchical_core_refinement(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
+    kwargs...,
+)
+    return _nested_shell_sequence_with_hierarchical_core_refinement(
+        bundle.pgdg_intermediate,
+        x_interval,
+        y_interval,
+        z_interval,
+        shell_layers;
+        kwargs...,
+    )
+end
+
 function _nested_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle,
     x_interval::UnitRange{Int},
