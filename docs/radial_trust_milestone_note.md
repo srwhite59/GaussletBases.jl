@@ -1,23 +1,52 @@
-# Radial Trust Milestone Note
+# Radial Extent And Interval-sampled Build Milestone
 
-This note records a short trust-establishment sweep for the current radial
-line after three coupled changes:
+This note records commit `ae7ed92` (`Land radial extent and interval-sampled build milestone`).
 
-- runtime family tables trimmed to machine-significant tails
-- public `rmax` separated from internal `build_umax` and `quadrature_umax`
-- interval-sampled setup-grid construction replacing the old dense setup path
+Milestone name, in one sentence:
 
-The point of this pass was not another optimization. It was to check that the
-faster construction path still reproduces the expected radial scientific
-behavior on representative cases.
+- this milestone lands the radial line in a coherent and trusted state after
+  cleaning up its extent semantics and replacing the old dense setup-grid build
+  with a much faster interval-sampled construction path
 
-The sweep script is:
+Old public/runtime problem, in one sentence:
 
-- `tmp/work/radial_trust_sweep.jl`
+- the radial public path mixed the user-facing meaning of `rmax` with internal
+  numerical extents, while the old dense setup-grid construction made
+  `build_basis(spec)` so slow that the standard radial workflow remained a live
+  stabilization problem
 
-## Representative checks
+New extent contract, in one sentence:
 
-### Standard hydrogen front door
+- `rmax` is the public user-facing last-center extent, `build_umax` and
+  `quadrature_umax` are internal library-owned extents, and `quadrature_rmax`
+  remains only an expert override
+
+Construction-side change, in one sentence:
+
+- the runtime family tables are now trimmed to machine-significant tails while
+  the full high-precision tables are preserved internally, and the old dense
+  setup-grid build has been replaced by interval-sampled construction without
+  changing the public `RadialBasis` form
+
+The supporting notes for this milestone are:
+
+- [radial_extent_policy_note.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/radial_extent_policy_note.md)
+- [radial_default_path_cache_study.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/radial_default_path_cache_study.md)
+
+The trust sweep script is:
+
+- [radial_trust_sweep.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/radial_trust_sweep.jl)
+
+## Numerical Trust Sweep
+
+### Standard Front-door Hydrogen
+
+| Quantity | Value |
+| --- | ---: |
+| basis length | `35` |
+| `diag.overlap_error` | `8.797053967946056e-6` |
+| `diag.D` | `1.3554300216193975e-7` |
+| `E0` | `-0.4999999972288096` |
 
 Recipe:
 
@@ -28,40 +57,25 @@ Recipe:
 - `rmax = 30`
 - default two-`xgaussian` front-door supplement
 
-Result:
+### `(l,m)` One-body Hydrogen, `lmax = 2`
 
-- basis length `35`
-- `diag.overlap_error = 8.797053967946056e-6`
-- `diag.D = 1.3554300216193975e-7`
-- hydrogen ground-state energy `E0 = -0.4999999972288096`
-- build time about `6.03 s`
+| Lowest energies | Value |
+| --- | ---: |
+| lowest energy | `-0.4999999945176998` |
+| lowest `l = 1` energy | `-0.12499999988503978` |
+| lowest `l = 2` energy | `-0.05555046143346199` |
 
-So the front-door hydrogen check remains in the expected scientific regime.
+This keeps the expected hydrogenic pattern through the current atomic one-body
+route.
 
-### `(l,m)` hydrogen one-body path
+### Smaller Nondefault Radial Recipe
 
-Recipe:
-
-- `:G10`
-- `Z = 1`
-- `s = 0.2`
-- `rmax = 30`
-- `lmax = 2`
-- no extra `xgaussians` to match the existing `(l,m)` reference fixture
-
-Result:
-
-- basis length `33`
-- overlap error `4.0596246031296215e-7`
-- lowest energy `-0.4999999945176998`
-- lowest `l = 1` energy `-0.12499999988503978`
-- lowest `l = 2` energy `-0.05555046143346199`
-- build time about `0.39 s`
-
-This keeps the expected hydrogenic `-1/(2n^2)` pattern through the existing
-angular decomposition route.
-
-### Smaller nondefault radial recipe
+| Quantity | Value |
+| --- | ---: |
+| basis length | `21` |
+| `diag.overlap_error` | `4.0596245811904994e-7` |
+| `diag.D` | `2.4278240367355398e-4` |
+| `E0` | `-0.49999997523710266` |
 
 Recipe:
 
@@ -72,48 +86,74 @@ Recipe:
 - `rmax = 12`
 - no `xgaussians`
 
-Result:
+### Runtime Table Trim Versus Preserved Internal Tables
 
-- basis length `21`
-- `diag.overlap_error = 4.0596245811904994e-7`
-- `diag.D = 2.4278240367355398e-4`
-- hydrogen ground-state energy `E0 = -0.49999997523710266`
-- build time about `0.27 s`
+| Quantity | Value |
+| --- | ---: |
+| trimmed runtime `:G10` radius | `75` |
+| preserved internal high-precision `:G10` radius | `132` |
+| max sampled value difference after trimming | `4.440892098500626e-16` |
 
-So the new setup path also behaves sensibly away from the standard public
-recipe.
+So the shorter runtime tables are materially cleaner for runtime support logic
+without changing representative basis values at a scientifically meaningful
+level.
 
-## Runtime-table trim check
+## Timing
 
-For `:G10`:
+Standard timing recipe:
 
-- runtime radius `75`
-- preserved high-precision internal radius `132`
-- max absolute value difference on a dense sample over `[-8, 8]`:
-  `4.440892098500626e-16`
+- `:G10`
+- `Z = 2`
+- `s = 0.2`
+- `c = s / (2Z)`
+- `rmax = 30`
+- `tails = 6`
+- `odd_even_kmax = 6`
+- two `xgaussians`
 
-So the machine-significant runtime tables are materially shorter without
-changing representative basis values at a scientifically meaningful level.
+### Old Versus New Build Time
 
-## Current standard timing
+| Step | Time |
+| --- | ---: |
+| old `build_basis(spec)` | about `173 s` |
+| new `build_basis(spec)` | about `6.5 s` |
 
-From the cache-study timing on the recommended two-`xgaussian`, `K = 6`
-recipe:
+### Current Full Front-door Sequence
 
-- `build_basis(spec)`: about `6.5 s`
-- `basis_diagnostics(rb)`: about `0.6 s`
-- `radial_quadrature(rb)`: about `0.44 s`
-- `atomic_operators(rb, grid; Z = 2, lmax = 2)`: about `1.6 s`
-- full front-door sequence: about `9.4 s`
+| Step | Time |
+| --- | ---: |
+| `build_basis(spec)` | about `6.5 s` |
+| `basis_diagnostics(rb)` | about `0.6 s` |
+| `radial_quadrature(rb)` | about `0.44 s` |
+| `atomic_operators(rb, grid; Z = 2, lmax = 2)` | about `1.6 s` |
+| full front-door sequence | about `9.4 s` |
 
-That is a large improvement over the earlier `~173 s` build path.
+So the standard radial path is no longer dominated by a construction cost large
+enough to block normal public use.
 
-## Practical conclusion
+## Validation
 
-The fast interval-sampled build path is now trusted for the radial line.
+Validation run for this milestone:
 
-The present radial branch is no longer primarily a live stabilization front.
-Its scientific checks are in the right regime, the public extent story is now
-coherent, and the standard public path is fast enough that the next work can
-move on to comparison/cleanup priorities rather than emergency radial
-stabilization.
+- `julia --project=. test/runtests.jl`
+- `julia --project=docs docs/make.jl`
+
+## Current Trust Status
+
+- the radial line is now coherent and trusted
+- the public story is now consistent: users choose `rmax`, and the library
+  owns the internal build and quadrature extents
+- the interval-sampled construction path is trusted for the current radial
+  line, not just as a provisional optimization
+
+## Roadmap Consequence
+
+- radial is no longer the main live stabilization front
+- basis caching is no longer the first urgent fix
+- the next likely repo priorities are:
+  - promote the best current nonrecursive nesting state
+  - or do the first serious radial-vs-Cartesian comparison
+
+In short, this milestone changes the repo priorities because the radial branch
+has moved from “still stabilizing” to “scientifically usable and operationally
+coherent.”
