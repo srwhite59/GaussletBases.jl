@@ -32,7 +32,6 @@ spec = RadialBasisSpec(:G10;
     reference_spacing = 1.0,
     tails = 6,
     odd_even_kmax = 6,
-    xgaussians = XGaussian[],
 )
 
 rb = build_basis(spec)
@@ -106,15 +105,16 @@ Smaller values are useful only for very small demos.
 
 ### `rmax`
 
-`rmax` is a physical cutoff in bohr.
+`rmax` is the center of the last retained radial gausslet, expressed in bohr.
 
 A good first guess is:
 
 * `rmax = 30.0` for first-row atoms
 * smaller values for compact test problems like hydrogen
-* larger values for diffuse states or if you want safer tail coverage
+* larger values for diffuse states or if you want safer retained-basis coverage
 
-Unlike the internal construction grid, `rmax` is a genuinely physical modeling choice. It depends on the system you want to describe.
+Unlike the internal setup and quadrature extents, `rmax` is a genuinely
+physical modeling choice. It depends on the system you want to describe.
 
 ## What about x-gaussians?
 
@@ -191,7 +191,13 @@ grid = radial_quadrature(rb)
 
 This grid is the one used for one-body operators, moment centers, diagnostics, and the current radial multipole matrices.
 
-For most users, this no-keyword call is the right place to start. The package chooses a conservative quadrature cutoff and uses the default `accuracy = :high` quadrature profile internally. `accuracy = :medium` is the cheaper exploratory option, and `accuracy = :veryhigh` pushes the quadrature harder when you want additional safety. The keywords `quadrature_rmax` and `refine` are advanced overrides underneath those profiles.
+For most users, this no-keyword call is the right place to start. The package
+chooses the internal quadrature extent automatically from the retained radial
+basis support and uses the default `accuracy = :high` quadrature profile
+internally. `accuracy = :medium` is the cheaper exploratory option, and
+`accuracy = :veryhigh` pushes the quadrature harder when you want additional
+safety. The keywords `quadrature_rmax` and `refine` are expert overrides
+underneath those profiles and are not part of the normal front-door workflow.
 
 The basis and the quadrature grid are intentionally separate. That is one of the main ideas behind the package.
 
@@ -220,6 +226,6 @@ If you are starting a new atom-centered calculation, this is a good checklist:
 6. start with `rmax = 30.0` bohr for a first-row atom
 7. build the default quadrature grid with `radial_quadrature(rb)`
 8. check `basis_diagnostics(rb)`
-9. if needed, raise the quadrature accuracy, increase the basis `rmax`, override `quadrature_rmax`, refine the quadrature manually, or try one or two x-gaussians
+9. if needed, raise the quadrature accuracy, increase the basis `rmax`, refine the quadrature manually, or try one or two x-gaussians
 
 That is enough to get most first calculations off the ground without immediately disappearing into tuning details.

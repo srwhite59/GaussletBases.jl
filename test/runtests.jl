@@ -8,8 +8,54 @@ const _PROJECT_ROOT = dirname(@__DIR__)
 const _RUN_SLOW_TESTS = get(ENV, "GAUSSLETBASES_SLOW_TESTS", "0") == "1"
 const _FIXTURE_CACHE = Dict{Symbol,Any}()
 
+module _HighPrecFamilyReference
+include(joinpath(dirname(@__DIR__), "src", "internal", "families_high_prec.jl"))
+end
+
+const _HIGH_PREC_FAMILY_REFERENCE = _HighPrecFamilyReference._HIGH_PREC_POSITIVE_COEFFICIENTS
+
 _cached_fixture(key::Symbol, builder::Function) = get!(_FIXTURE_CACHE, key) do
     builder()
+end
+
+function _high_prec_gausslet_value(
+    family_name::Symbol,
+    x::Real;
+    center::Real = 0.0,
+    spacing::Real = 1.0,
+)
+    positive_coefficients = _HIGH_PREC_FAMILY_REFERENCE[family_name]
+    coefficients_full = GaussletBases._full_family_coefficients(positive_coefficients)
+    radius = length(positive_coefficients) - 1
+    primitive_spacing = Float64(spacing) / 3.0
+    scale = 1.0 / sqrt(2.0 * pi * Float64(spacing))
+
+    total = 0.0
+    for (offset, coefficient) in zip((-radius):radius, coefficients_full)
+        primitive_center = Float64(center) + primitive_spacing * offset
+        total += coefficient * exp(-0.5 * ((Float64(x) - primitive_center) / primitive_spacing)^2)
+    end
+    return scale * total
+end
+
+function _high_prec_radial_tail_bound(basis::RadialBasis)
+    positive_coefficients = _HIGH_PREC_FAMILY_REFERENCE[basis.spec.family_value.name]
+    raw_radius = length(positive_coefficients) - 1
+    primitive_spacing = basis.spec.reference_spacing / 3.0
+    reference_upper =
+        maximum(reference_centers(basis)) +
+        primitive_spacing * (raw_radius + 12.0)
+    mapped_upper = xofu(mapping(basis), reference_upper)
+
+    xgaussian_upper = -Inf
+    for primitive in primitives(basis)
+        if primitive isa XGaussian || (primitive isa Distorted && primitive.primitive isa XGaussian)
+            _, xhi = GaussletBases._primitive_physical_bounds(primitive)
+            xgaussian_upper = max(xgaussian_upper, xhi)
+        end
+    end
+
+    return max(mapped_upper, xgaussian_upper)
 end
 
 function _orthonormalize_1d(overlap::AbstractMatrix, operators::AbstractVector{<:AbstractMatrix})
@@ -126,6 +172,146 @@ end
         xgaussian_count = 0,
         xgaussians = recommended_xgaussians(),
     )
+end
+
+@testset "Runtime family tables use trimmed machine-significant tails" begin
+    high_prec_path = joinpath(_PROJECT_ROOT, "src", "internal", "families_high_prec.jl")
+    @test isfile(high_prec_path)
+
+    expected_runtime_radii = Dict(:G4 => 54, :G6 => 48, :G8 => 67, :G10 => 75)
+    expected_high_prec_radii = Dict(:G4 => 91, :G6 => 104, :G8 => 118, :G10 => 132)
+    for family_name in (:G4, :G6, :G8, :G10)
+        runtime_radius = length(GaussletFamily(family_name).positive_coefficients) - 1
+        high_prec_radius = length(_HIGH_PREC_FAMILY_REFERENCE[family_name]) - 1
+        @test runtime_radius == expected_runtime_radii[family_name]
+        @test high_prec_radius == expected_high_prec_radii[family_name]
+        @test high_prec_radius > runtime_radius
+    end
+
+    gausslet = Gausslet(:G10; center = 0.0, spacing = 1.0)
+    sample_points = collect(-8.0:0.25:8.0)
+    runtime_values = Float64[direct_value(gausslet, point) for point in sample_points]
+    high_prec_values = Float64[
+        _high_prec_gausslet_value(:G10, point; center = 0.0, spacing = 1.0)
+        for point in sample_points
+    ]
+    @test maximum(abs.(runtime_values .- high_prec_values)) < 1.0e-12
+
+    overlap_points = -10.0:0.02:10.0
+    h = step(overlap_points)
+    runtime_basis = [
+        Float64[direct_value(Gausslet(:G10; center = center_value, spacing = 1.0), point) for point in overlap_points]
+        for center_value in (-1.0, 0.0, 1.0)
+    ]
+    high_prec_basis = [
+        Float64[_high_prec_gausslet_value(:G10, point; center = center_value, spacing = 1.0) for point in overlap_points]
+        for center_value in (-1.0, 0.0, 1.0)
+    ]
+    runtime_overlap = h .* reduce(hcat, runtime_basis)' * reduce(hcat, runtime_basis)
+    high_prec_overlap = h .* reduce(hcat, high_prec_basis)' * reduce(hcat, high_prec_basis)
+    @test runtime_overlap ≈ high_prec_overlap atol = 1.0e-11 rtol = 1.0e-11
+
+    Z = 10.0
+    s = 0.2
+    radial_basis = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = AsinhMapping(c = s / (2Z), s = s),
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 6,
+        xgaussians = XGaussian[],
+    ))
+    runtime_tail_bound = GaussletBases._radial_quadrature_tail_bound(radial_basis)
+    high_prec_tail_bound = _high_prec_radial_tail_bound(radial_basis)
+
+    @test runtime_tail_bound < high_prec_tail_bound
+    @test runtime_tail_bound / high_prec_tail_bound < 0.8
+end
+
+@testset "Radial quadrature extent policy" begin
+    Z = 2.0
+    s = 0.2
+    map = AsinhMapping(c = s / (2Z), s = s)
+
+    basis_tails4 = build_basis(RadialBasisSpec(:G10;
+        count = 11,
+        mapping = map,
+        reference_spacing = 1.0,
+        tails = 4,
+        odd_even_kmax = 2,
+        xgaussian_count = 0,
+    ))
+    basis_tails6 = build_basis(RadialBasisSpec(:G10;
+        count = 11,
+        mapping = map,
+        reference_spacing = 1.0,
+        tails = 6,
+        odd_even_kmax = 2,
+        xgaussian_count = 0,
+    ))
+
+    primitive_spacing = basis_tails4.spec.reference_spacing / 3.0
+    family_radius = length(family(basis_tails4).positive_coefficients) - 1
+    expected_quadrature_umax =
+        maximum(reference_centers(basis_tails4)) +
+        primitive_spacing * (family_radius + 12.0)
+
+    @test GaussletBases._radial_quadrature_umax(basis_tails4) ≈ expected_quadrature_umax atol = 1.0e-12 rtol = 1.0e-12
+    @test GaussletBases._radial_quadrature_umax(basis_tails6) ≈ expected_quadrature_umax atol = 1.0e-12 rtol = 1.0e-12
+    @test GaussletBases._radial_build_umax(basis_tails6) > GaussletBases._radial_build_umax(basis_tails4)
+    @test abs(GaussletBases._radial_quadrature_umax(basis_tails6) - GaussletBases._radial_quadrature_umax(basis_tails4)) < 1.0e-9
+    @test abs(GaussletBases._radial_quadrature_tail_bound(basis_tails6) - GaussletBases._radial_quadrature_tail_bound(basis_tails4)) < 1.0e-7
+end
+
+@testset "Interval-sampled radial setup layer" begin
+    family = GaussletFamily(:G10)
+    spacing = 1.0
+    seed = Gausslet(family; center = 0.0, spacing = spacing)
+    js = collect(-2:2)
+    xgrid, weights = GaussletBases._make_erf_grid(; h = 0.05, rmax = 6.0)
+    phi = (j::Int, x::Float64) -> seed(x - j * spacing)
+
+    _, _, sampled_dense = GaussletBases._seed_scalar_integrals(phi, js, xgrid, weights)
+    overlap_dense = sampled_dense' * (weights .* sampled_dense)
+    position_dense = sampled_dense' * ((xgrid .* weights) .* sampled_dense)
+
+    _, sampled_intervals = GaussletBases._sample_shifted_gausslets(family, js, xgrid, spacing)
+    sampled_interval = GaussletBases._interval_sample_matrix(sampled_intervals, length(xgrid))
+    overlap_interval = GaussletBases._interval_gram_matrix(sampled_intervals, weights)
+    position_interval = GaussletBases._interval_gram_matrix(sampled_intervals, xgrid .* weights)
+
+    @test sampled_interval ≈ sampled_dense atol = 1.0e-12 rtol = 1.0e-12
+    @test overlap_interval ≈ overlap_dense atol = 1.0e-12 rtol = 1.0e-12
+    @test position_interval ≈ position_dense atol = 1.0e-12 rtol = 1.0e-12
+
+    xgaussians = recommended_xgaussians(2)
+    sampled_x_dense = GaussletBases._xgaussian_sample_matrix(xgaussians, xgrid)
+    sampled_x_interval = GaussletBases._interval_sample_matrix(
+        GaussletBases._sample_xgaussian_intervals(xgaussians, xgrid),
+        length(xgrid),
+    )
+
+    @test sampled_x_interval ≈ sampled_x_dense atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "Recommended radial front-door hydrogen" begin
+    Z = 1.0
+    s = 0.2
+    rb = build_basis(RadialBasisSpec(:G10;
+        rmax = 30.0,
+        mapping = AsinhMapping(c = s / (2Z), s = s),
+    ))
+    diag = basis_diagnostics(rb)
+    grid = radial_quadrature(rb)
+    hamiltonian = kinetic_matrix(rb, grid) +
+                  nuclear_matrix(rb, grid; Z = Z) +
+                  centrifugal_matrix(rb, grid; l = 0)
+    ground_energy = minimum(real(eigen(Hermitian(hamiltonian)).values))
+
+    @test length(rb) == 35
+    @test diag.overlap_error < 1.0e-5
+    @test diag.D < 1.0e-5
+    @test abs(ground_energy + 0.5) < 1.0e-6
 end
 
 function _quick_radial_operator_fixture()

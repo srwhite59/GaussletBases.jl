@@ -90,8 +90,8 @@ function _basis_support_bounds(basis)
 end
 
 function _radial_quadrature_tail_bound(basis::RadialBasis)
-    _, xhi = _basis_support_bounds(basis)
-    return xhi
+    quadrature_umax = _radial_quadrature_umax(basis)
+    return xofu(mapping(basis), quadrature_umax)
 end
 
 function _make_midpoint_grid(xmin::Float64, xmax::Float64, h::Float64)
@@ -196,18 +196,18 @@ quadrature_weights(grid::RadialQuadratureGrid) = grid.weight_data
 Build a fine physical-space quadrature grid matched to `basis`.
 
 With no keywords, the routine chooses a conservative quadrature cutoff from the
-basis itself and uses the `:high` accuracy profile. Construction grids used
-while building the basis are separate internal objects and are not set by this
-API.
+retained radial basis support itself and uses the `:high` accuracy profile.
+Construction/setup extents used while building the basis are separate internal
+objects and are not set by this API.
 
 `accuracy` may be `:medium`, `:high`, or `:veryhigh`. `:medium` reproduces the
 older cheaper overlap-focused behavior. `:high` is the default and also checks
 that simple basis diagnostics have stabilized across refinement. `:veryhigh`
 pushes the same checks farther. `refine` is an optional expert starting
 resolution hint. `quadrature_rmax` is an optional explicit physical-space
-cutoff override for expert use. If an explicit cutoff is too short to cover the
-basis tails, the routine warns rather than silently reporting good overlap on a
-truncated grid.
+cutoff override kept for expert compatibility. If an explicit cutoff is too
+short to cover the retained basis support, the routine warns rather than
+silently reporting good overlap on a truncated grid.
 """
 function radial_quadrature(
     basis::RadialBasis;

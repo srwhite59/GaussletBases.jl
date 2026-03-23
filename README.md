@@ -74,8 +74,11 @@ For a first atom-centered calculation, the recommended starting point is:
 - `rmax = 30.0` bohr
 
 Here `s` roughly controls the overall radial spacing, while `c` roughly
-controls how much resolution is concentrated near the nucleus. The fuller
-setup discussion lives in the rendered manual at
+controls how much resolution is concentrated near the nucleus. `rmax` is the
+center of the last retained radial gausslet, so it is the main user-facing
+scientific extent. The library chooses the separate internal build and
+quadrature extents automatically. The fuller setup discussion lives in the
+rendered manual at
 [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/).
 
 The call
@@ -116,6 +119,10 @@ println("Lowest hydrogen energy: ", E0)
 
 The exact nonrelativistic ground-state energy is `-0.5 Ha`, so this is the
 cleanest first scientific check of the radial basis and quadrature together.
+
+In the normal user workflow, `radial_quadrature(rb)` should be the default.
+The expert keyword `quadrature_rmax` still exists for compatibility, but the
+library normally owns the internal quadrature extent.
 
 If you want the same workflow explained more slowly, with diagnostics and
 setup discussion, go next to:

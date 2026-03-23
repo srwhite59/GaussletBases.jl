@@ -88,6 +88,189 @@ function _seed_scalar_integrals(phi::Function, js::Vector{Int}, x::Vector{Float6
     return norms, totals, sampled
 end
 
+struct _IntervalSampledSetupVector
+    first_index::Int
+    values::Vector{Float64}
+end
+
+_interval_last_index(sample::_IntervalSampledSetupVector) = sample.first_index + length(sample.values) - 1
+
+function _grid_active_interval(xgrid::Vector{Float64}, lower::Float64, upper::Float64)
+    first_index = searchsortedfirst(xgrid, lower)
+    last_index = searchsortedlast(xgrid, upper)
+    if first_index > last_index || first_index > length(xgrid) || last_index < 1
+        return 1, 0
+    end
+    return max(1, first_index), min(length(xgrid), last_index)
+end
+
+struct _GaussletSetupSampler
+    gausslet_spacing::Float64
+    primitive_spacing::Float64
+    support_radius::Float64
+    coefficients::Vector{Float64}
+    relative_centers::Vector{Float64}
+end
+
+function _gausslet_setup_sampler(family_value::GaussletFamily, spacing::Float64)
+    coefficients_full = _full_family_coefficients(family_value.positive_coefficients)
+    family_radius = length(family_value.positive_coefficients) - 1
+    primitive_spacing = spacing / 3.0
+    scale = 1.0 / sqrt(2.0 * pi * spacing)
+    coefficients = Float64[scale * coefficient for coefficient in coefficients_full]
+    relative_centers = Float64[primitive_spacing * offset for offset in (-family_radius):family_radius]
+    support_radius = primitive_spacing * (family_radius + 12.0)
+    return _GaussletSetupSampler(spacing, primitive_spacing, support_radius, coefficients, relative_centers)
+end
+
+function _sample_shifted_gausslet(
+    sampler::_GaussletSetupSampler,
+    shift_index::Int,
+    xgrid::Vector{Float64},
+)
+    center_value = shift_index * sampler.gausslet_spacing
+    first_index, last_index = _grid_active_interval(
+        xgrid,
+        center_value - sampler.support_radius,
+        center_value + sampler.support_radius,
+    )
+    last_index < first_index && return _IntervalSampledSetupVector(1, Float64[])
+
+    values = Vector{Float64}(undef, last_index - first_index + 1)
+    @inbounds for grid_index in first_index:last_index
+        x = xgrid[grid_index]
+        total = 0.0
+        for term in eachindex(sampler.coefficients)
+            z = (x - center_value - sampler.relative_centers[term]) / sampler.primitive_spacing
+            total += sampler.coefficients[term] * exp(-0.5 * z * z)
+        end
+        values[grid_index - first_index + 1] = total
+    end
+    return _IntervalSampledSetupVector(first_index, values)
+end
+
+function _shifted_gausslet_value(
+    sampler::_GaussletSetupSampler,
+    shift_index::Int,
+    x::Float64,
+)
+    center_value = shift_index * sampler.gausslet_spacing
+    abs(x - center_value) > sampler.support_radius && return 0.0
+
+    total = 0.0
+    @inbounds for term in eachindex(sampler.coefficients)
+        z = (x - center_value - sampler.relative_centers[term]) / sampler.primitive_spacing
+        total += sampler.coefficients[term] * exp(-0.5 * z * z)
+    end
+    return total
+end
+
+function _sample_shifted_gausslets(
+    family_value::GaussletFamily,
+    js::Vector{Int},
+    xgrid::Vector{Float64},
+    spacing::Float64,
+)
+    sampler = _gausslet_setup_sampler(family_value, spacing)
+    samples = Vector{_IntervalSampledSetupVector}(undef, length(js))
+    for index in eachindex(js)
+        samples[index] = _sample_shifted_gausslet(sampler, js[index], xgrid)
+    end
+    return sampler, samples
+end
+
+function _sample_xgaussian_interval(xgaussian::XGaussian, xgrid::Vector{Float64})
+    lower, upper = _reference_bounds(xgaussian)
+    first_index, last_index = _grid_active_interval(xgrid, lower, upper)
+    last_index < first_index && return _IntervalSampledSetupVector(1, Float64[])
+
+    values = Vector{Float64}(undef, last_index - first_index + 1)
+    @inbounds for grid_index in first_index:last_index
+        x = xgrid[grid_index]
+        values[grid_index - first_index + 1] = value(xgaussian, x)
+    end
+    return _IntervalSampledSetupVector(first_index, values)
+end
+
+function _sample_xgaussian_intervals(xgaussians::Vector{XGaussian}, xgrid::Vector{Float64})
+    samples = Vector{_IntervalSampledSetupVector}(undef, length(xgaussians))
+    for index in eachindex(xgaussians)
+        samples[index] = _sample_xgaussian_interval(xgaussians[index], xgrid)
+    end
+    return samples
+end
+
+function _interval_weighted_sum(sample::_IntervalSampledSetupVector, weights::Vector{Float64})
+    total = 0.0
+    @inbounds for local_index in eachindex(sample.values)
+        grid_index = sample.first_index + local_index - 1
+        total += sample.values[local_index] * weights[grid_index]
+    end
+    return total
+end
+
+function _interval_weighted_dot(
+    a::_IntervalSampledSetupVector,
+    b::_IntervalSampledSetupVector,
+    weights::Vector{Float64},
+)
+    overlap_first = max(a.first_index, b.first_index)
+    overlap_last = min(_interval_last_index(a), _interval_last_index(b))
+    overlap_last < overlap_first && return 0.0
+
+    offset_a = overlap_first - a.first_index + 1
+    offset_b = overlap_first - b.first_index + 1
+    total = 0.0
+    @inbounds for grid_index in overlap_first:overlap_last
+        total += a.values[offset_a] * b.values[offset_b] * weights[grid_index]
+        offset_a += 1
+        offset_b += 1
+    end
+    return total
+end
+
+function _interval_gram_matrix(
+    samples::Vector{_IntervalSampledSetupVector},
+    weights::Vector{Float64},
+)
+    nsamples = length(samples)
+    gram = zeros(Float64, nsamples, nsamples)
+    for a in 1:nsamples
+        gram[a, a] = _interval_weighted_dot(samples[a], samples[a], weights)
+        for b in (a + 1):nsamples
+            value_ab = _interval_weighted_dot(samples[a], samples[b], weights)
+            gram[a, b] = value_ab
+            gram[b, a] = value_ab
+        end
+    end
+    return gram
+end
+
+function _interval_cross_gram_matrix(
+    left_samples::Vector{_IntervalSampledSetupVector},
+    right_samples::Vector{_IntervalSampledSetupVector},
+    weights::Vector{Float64},
+)
+    gram = zeros(Float64, length(left_samples), length(right_samples))
+    for a in eachindex(left_samples)
+        for b in eachindex(right_samples)
+            gram[a, b] = _interval_weighted_dot(left_samples[a], right_samples[b], weights)
+        end
+    end
+    return gram
+end
+
+function _interval_sample_matrix(samples::Vector{_IntervalSampledSetupVector}, npoints::Int)
+    matrix = zeros(Float64, npoints, length(samples))
+    for column in eachindex(samples)
+        sample = samples[column]
+        isempty(sample.values) && continue
+        last_index = _interval_last_index(sample)
+        matrix[sample.first_index:last_index, column] = sample.values
+    end
+    return matrix
+end
+
 function _assemble_halfline_seed(
     phi::Function,
     js::Vector{Int},
@@ -343,17 +526,16 @@ function _build_radial_coefficients(spec; grid_h::Float64)
     spec.odd_even_kmax <= lseed ||
         throw(ArgumentError("odd_even_kmax must not exceed the internal seed-window size"))
 
-    seed = Gausslet(spec.family_value; center = 0.0, spacing = spacing)
-    phi = (j::Int, x::Float64) -> seed(x - j * spacing)
     reference_target =
         spec.count === nothing ? uofx(spec.mapping_value, spec.rmax) : target_odd_count * spacing
     grid_max = max(reference_target + _BASIS_GRID_MARGIN * spacing, (lseed + _BASIS_GRID_MARGIN) * spacing)
     xgrid, weights = _make_erf_grid(; h = grid_h, rmax = grid_max)
+    xweights = xgrid .* weights
     js = collect(-lseed:lseed)
 
-    _, seed_integrals, sampled_seed = _seed_scalar_integrals(phi, js, xgrid, weights)
-    overlap_seed = sampled_seed' * (weights .* sampled_seed)
-    position_seed = sampled_seed' * ((xgrid .* weights) .* sampled_seed)
+    seed_sampler, sampled_seed_intervals = _sample_shifted_gausslets(spec.family_value, js, xgrid, spacing)
+    overlap_seed = _interval_gram_matrix(sampled_seed_intervals, weights)
+    position_seed = _interval_gram_matrix(sampled_seed_intervals, xweights)
 
     nseed = length(js)
     odd_block = zeros(Float64, nseed, lseed)
@@ -393,7 +575,7 @@ function _build_radial_coefficients(spec; grid_h::Float64)
         even_projection = odd_coefficients' * (overlap_seed * even_normalized)
         even_clean = even_normalized .- (odd_coefficients * even_projection)
 
-        delta_values = [seed(-j * spacing) for j in js]
+        delta_values = [_shifted_gausslet_value(seed_sampler, j, 0.0) for j in js]
         delta_direction = vec(delta_values' * even_clean)
         denom = dot(delta_direction, delta_direction)
         if denom > 0.0
@@ -410,15 +592,16 @@ function _build_radial_coefficients(spec; grid_h::Float64)
     end
 
     combined_base = hcat(odd_coefficients, even_clean)
-    sampled_combined = sampled_seed
+    sampled_combined = _interval_sample_matrix(sampled_seed_intervals, length(xgrid))
     position_combined = position_seed
 
     if ninj > 0
-        sampled_x = _xgaussian_sample_matrix(spec.xgaussians, xgrid)
-        position_sx = sampled_seed' * ((xgrid .* weights) .* sampled_x)
-        position_xx = sampled_x' * ((xgrid .* weights) .* sampled_x)
+        sampled_x_intervals = _sample_xgaussian_intervals(spec.xgaussians, xgrid)
+        sampled_x = _interval_sample_matrix(sampled_x_intervals, length(xgrid))
+        position_sx = _interval_cross_gram_matrix(sampled_seed_intervals, sampled_x_intervals, xweights)
+        position_xx = _interval_gram_matrix(sampled_x_intervals, xweights)
         position_combined = [position_seed position_sx; position_sx' position_xx]
-        sampled_combined = hcat(sampled_seed, sampled_x)
+        sampled_combined = hcat(sampled_combined, sampled_x)
         combined_base = hcat(
             vcat(combined_base, zeros(Float64, ninj, size(combined_base, 2))),
             vcat(zeros(Float64, nseed, ninj), Matrix{Float64}(I, ninj, ninj)),
@@ -440,7 +623,7 @@ function _build_radial_coefficients(spec; grid_h::Float64)
         grid_h = grid_h,
         grid_max = grid_max,
         spacing = spacing,
-        seed = seed,
+        seed_sampler = seed_sampler,
         js = js,
         xgaussians = copy(spec.xgaussians),
         coefficient_full = final_coefficients[:, 1:target_count],
@@ -449,13 +632,17 @@ function _build_radial_coefficients(spec; grid_h::Float64)
 end
 
 function _radial_overlap_deviation(data)
-    phi = (j::Int, x::Float64) -> data.seed(x - j * data.spacing)
     xcheck, weights_check = _make_erf_grid(; h = data.grid_h / 2.0, rmax = data.grid_max)
-    _, _, sampled_seed = _seed_scalar_integrals(phi, data.js, xcheck, weights_check)
+    sampled_seed = _interval_sample_matrix(
+        _IntervalSampledSetupVector[
+            _sample_shifted_gausslet(data.seed_sampler, j, xcheck) for j in data.js
+        ],
+        length(xcheck),
+    )
     sampled_combined =
         isempty(data.xgaussians) ?
         sampled_seed :
-        hcat(sampled_seed, _xgaussian_sample_matrix(data.xgaussians, xcheck))
+        hcat(sampled_seed, _interval_sample_matrix(_sample_xgaussian_intervals(data.xgaussians, xcheck), length(xcheck)))
     basis_values = sampled_combined * data.coefficient_full
     overlap = basis_values' * (weights_check .* basis_values)
     return norm(overlap - I, Inf)
@@ -497,6 +684,21 @@ function _radial_primitive_layer(
 
     public_primitives = _with_mapping(primitive_ref, mapping_value)
     return public_primitives, radial_coefficients
+end
+
+function _gausslet_reference_support_umax(
+    reference_center_data::AbstractVector{<:Real},
+    family_value::GaussletFamily,
+    reference_spacing::Float64,
+)
+    primitive_spacing = reference_spacing / 3.0
+    family_radius = length(family_value.positive_coefficients) - 1
+    return maximum(reference_center_data) + primitive_spacing * (family_radius + 12.0)
+end
+
+function _xgaussian_reference_support_umax(xgaussians::AbstractVector{XGaussian})
+    isempty(xgaussians) && return -Inf
+    return maximum(last(_reference_bounds(xgaussian)) for xgaussian in xgaussians)
 end
 
 function _physical_centers(reference_center_data::Vector{Float64}, mapping_value::AbstractCoordinateMapping)
@@ -725,6 +927,7 @@ struct RadialBasis{M <: AbstractCoordinateMapping}
     reference_center_data::Vector{Float64}
     center_data::Vector{Float64}
     integral_weight_data::Vector{Float64}
+    build_umax::Float64
 end
 
 """
@@ -933,6 +1136,22 @@ integral_weights(basis::UniformBasis) = basis.integral_weight_data
 integral_weights(basis::MappedUniformBasis) = basis.integral_weight_data
 integral_weights(basis::HalfLineBasis) = basis.integral_weight_data
 integral_weights(basis::RadialBasis) = basis.integral_weight_data
+
+# Internal mapped-coordinate setup extent used while building/localizing the
+# radial basis.
+_radial_build_umax(basis::RadialBasis) = basis.build_umax
+
+# Internal mapped-coordinate operator extent derived from retained basis
+# support, not from broader construction padding.
+function _radial_quadrature_umax(basis::RadialBasis)
+    gausslet_umax = _gausslet_reference_support_umax(
+        reference_centers(basis),
+        family(basis),
+        basis.spec.reference_spacing,
+    )
+    xgaussian_umax = _xgaussian_reference_support_umax(basis.spec.xgaussians)
+    return max(gausslet_umax, xgaussian_umax)
+end
 
 """
     primitives(basis)
@@ -1148,5 +1367,6 @@ function build_basis(spec::RadialBasisSpec; grid_h = nothing, refine_grid_h::Boo
         data.reference_center_data,
         center_data,
         integral_weight_data,
+        data.grid_max,
     )
 end

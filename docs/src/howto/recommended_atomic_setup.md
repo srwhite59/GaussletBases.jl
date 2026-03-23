@@ -43,7 +43,7 @@ deeper construction controls at their standard defaults.
 - `s` controls the overall radial spacing.
 - `c = s / (2Z)` sets the near-origin scale in a way that naturally tightens
   as `Z` grows.
-- `rmax` is the physical outer radius of the basis.
+- `rmax` is the center of the last retained radial gausslet.
 
 ## What about x-gaussians?
 
@@ -98,6 +98,13 @@ So the practical rule is:
 - do not expose these in the beginner examples
 - revisit them only when tuning accuracy or debugging basis construction
 
+The library also owns two separate internal extents:
+
+- a build/setup extent in mapped `u` space used while constructing the basis
+- an active quadrature extent in mapped `u` space used for operators and diagnostics
+
+Those internal extents are not the same thing as user-facing `rmax`.
+
 ## What to check
 
 After building the basis, inspect:
@@ -112,6 +119,15 @@ Those are the quickest signs that the basis and quadrature are behaving
 sensibly. `diag.overlap_error` is the first orthonormality check. `diag.D` is
 the aggregate center/moment mismatch and is often the next thing to watch when
 you are deciding whether the near-origin setup needs tightening.
+
+For the normal workflow, let the package choose the internal quadrature extent:
+
+```julia
+grid = radial_quadrature(rb)
+```
+
+The expert keyword `quadrature_rmax` still exists for compatibility, but it is
+not part of the recommended front-door story.
 
 ## What this page is for
 
