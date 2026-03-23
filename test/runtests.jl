@@ -3626,6 +3626,89 @@ end
     end
 end
 
+@testset "Active atomic lmax=1 supplement is explicit and physical in QW routes" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 1)
+        supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+
+        @test GaussletBases._legacy_atomic_has_nonseparable_shells(supplement)
+        @test any(orbital -> orbital.label == "px1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "py1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "pz1", supplement3d.orbitals)
+
+        source_basis_hybrid, _legacy_old, _pure_check, _toy_check, _legacy_check =
+            _legacy_he_s_hybrid_fixture("cc-pVTZ")
+        hybrid_err = try
+            hybrid_mapped_ordinary_basis(
+                source_basis_hybrid;
+                core_gaussians = supplement,
+                backend = :pgdg_localized_experimental,
+            )
+            nothing
+        catch err
+            err
+        end
+        @test hybrid_err isa ArgumentError
+        @test occursin("l > 0", sprint(showerror, hybrid_err))
+        @test occursin("explicit 3D", sprint(showerror, hybrid_err))
+
+        source_basis_qw, _legacy_qw, ordinary_l0, ordinary_l0_check = _qiu_white_full_nearest_fixture()
+        ordinary_l1 = ordinary_cartesian_qiu_white_operators(
+            source_basis_qw,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        ordinary_l1_check = GaussletBases.ordinary_cartesian_1s2_check(ordinary_l1)
+        @test ordinary_l1.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test ordinary_l1.residual_count > 0
+        @test ordinary_l1_check.overlap_error < 1.0e-8
+        @test isfinite(ordinary_l1_check.orbital_energy)
+        @test isfinite(ordinary_l1_check.vee_expectation)
+        @test ordinary_l1_check.vee_expectation > 0.0
+        @test abs(ordinary_l1_check.orbital_energy - ordinary_l0_check.orbital_energy) > 1.0e-6
+        @test abs(ordinary_l1_check.vee_expectation - ordinary_l0_check.vee_expectation) > 1.0e-4
+        @test norm(ordinary_l1.one_body_hamiltonian - ordinary_l0.one_body_hamiltonian, Inf) > 1.0e-6
+
+        (
+            _source_basis_nested,
+            _bundle_nested,
+            _shell_nested,
+            _fixed_block_nested,
+            _shell_plus_core_nested,
+            fixed_block_shell_plus_core,
+            _legacy_nested,
+            _baseline_nested,
+            _nested_shell_only,
+            nested_l0,
+            _baseline_nested_check,
+            _nested_shell_only_check,
+            nested_l0_check,
+        ) = _nested_qiu_white_nearest_fixture()
+        nested_l1 = ordinary_cartesian_qiu_white_operators(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        nested_l1_check = GaussletBases.ordinary_cartesian_1s2_check(nested_l1)
+        @test nested_l1.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test nested_l1.residual_count > 0
+        @test nested_l1_check.overlap_error < 1.0e-8
+        @test isfinite(nested_l1_check.orbital_energy)
+        @test isfinite(nested_l1_check.vee_expectation)
+        @test nested_l1_check.vee_expectation > 0.0
+        @test abs(nested_l1_check.orbital_energy - nested_l0_check.orbital_energy) > 1.0e-6
+        @test abs(nested_l1_check.vee_expectation - nested_l0_check.vee_expectation) > 1.0e-4
+        @test size(nested_l1.one_body_hamiltonian) != size(nested_l0.one_body_hamiltonian) ||
+              norm(nested_l1.one_body_hamiltonian - nested_l0.one_body_hamiltonian, Inf) > 1.0e-6
+    end
+end
+
 @testset "Legacy He s hybrid supplement check" begin
     if !_legacy_basisfile_available()
         @test true

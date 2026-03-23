@@ -104,6 +104,10 @@ In both cases the active seed is built from explicit primitive Gaussians, with
 any legacy shell contraction applied on the added channel before the final
 overlap cleanup and COMX-style localization step.
 
+At present, passing a `LegacyAtomicGaussianSupplement` with non-`s` shell
+content is rejected explicitly. A true active `p` supplement needs an explicit
+3D shell route rather than the current centered separable 1D supplement path.
+
 Typical usage is:
 
 ```julia
@@ -118,6 +122,14 @@ function hybrid_mapped_ordinary_basis(
     core_gaussians,
     backend::Symbol = :pgdg_localized_experimental,
 )
+    if core_gaussians isa LegacyAtomicGaussianSupplement &&
+       _legacy_atomic_has_nonseparable_shells(core_gaussians)
+        throw(
+            ArgumentError(
+                "hybrid_mapped_ordinary_basis does not yet support true active l > 0 atomic supplements; the current hybrid route is still centered separable s-only and needs an explicit 3D shell supplement path before lmax = 1 can be used honestly",
+            ),
+        )
+    end
     layer = _mapped_ordinary_backend_layer(basis, backend)
     backbone_primitives = primitives(primitive_set(layer))
     core_primitive_list, core_representatives, core_coefficients = if core_gaussians isa LegacyAtomicGaussianSupplement

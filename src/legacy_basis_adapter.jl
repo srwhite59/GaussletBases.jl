@@ -29,11 +29,16 @@ The object keeps two views at once:
 
 - the full legacy shell list up to the requested `lmax`
 - the active centered `l = 0` projection used by the present analytic 1D
-  supplement route
+  supplement route where that still applies
 
 That mirrors the legacy `basisaddname` / `lmaxadd` intent while staying honest
-about the current consumer model: the current separable Cartesian residual path
-still consumes only the centered `s` channel analytically.
+about the current consumer split:
+
+- the one-dimensional hybrid builder still only has a true active centered `s`
+  channel and rejects non-`s` shells
+- the ordinary-QW and nested-QW atomic paths can now consume the full shell
+  metadata through an explicit atomic-centered 3D Cartesian shell route for
+  `lmax <= 1`
 
 The stored active fields:
 
@@ -64,6 +69,78 @@ struct LegacyAtomicGaussianSupplement
 end
 
 const LegacySGaussianData = LegacyAtomicGaussianSupplement
+
+function _legacy_atomic_has_nonseparable_shells(data::LegacyAtomicGaussianSupplement)
+    return any(shell -> shell.l > 0, data.shells)
+end
+
+struct _AtomicCartesianShellOrbital3D
+    label::String
+    lx::Int
+    ly::Int
+    lz::Int
+    exponents::Vector{Float64}
+    coefficients::Vector{Float64}
+    center::NTuple{3,Float64}
+end
+
+struct _AtomicCartesianShellSupplement3D
+    source::LegacyAtomicGaussianSupplement
+    orbitals::Vector{_AtomicCartesianShellOrbital3D}
+end
+
+function _legacy_atomic_shell_contraction_columns(
+    shell::LegacyAtomicGaussianShell,
+    uncontracted::Bool,
+)
+    nprimitive = length(shell.exponents)
+    if uncontracted
+        return [Vector{Float64}(view(Matrix{Float64}(I, nprimitive, nprimitive), :, column)) for column in 1:nprimitive]
+    end
+    coefficients = normalize(shell.coefficients)
+    return [Float64[coefficients...]]
+end
+
+function _atomic_cartesian_shell_labels(l::Int)
+    l == 0 && return [("s", (0, 0, 0))]
+    l == 1 && return [("px", (1, 0, 0)), ("py", (0, 1, 0)), ("pz", (0, 0, 1))]
+    throw(ArgumentError("atomic Cartesian shell support currently stops at l = 1"))
+end
+
+function _atomic_cartesian_shell_supplement_3d(
+    data::LegacyAtomicGaussianSupplement,
+)
+    any(shell -> shell.l > 1, data.shells) && throw(
+        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= 1"),
+    )
+    center_value =
+        isempty(data.primitive_gaussians) ? 0.0 : Float64(data.primitive_gaussians[1].center_value)
+    orbitals = _AtomicCartesianShellOrbital3D[]
+    shell_counts = Dict{String,Int}()
+    for shell in data.shells
+        shell_entries = _atomic_cartesian_shell_labels(shell.l)
+        contraction_columns = _legacy_atomic_shell_contraction_columns(shell, data.uncontracted)
+        for coefficients in contraction_columns
+            for (prefix, (lx, ly, lz)) in shell_entries
+                shell_counts[prefix] = get(shell_counts, prefix, 0) + 1
+                label = string(prefix, shell_counts[prefix])
+                push!(
+                    orbitals,
+                    _AtomicCartesianShellOrbital3D(
+                        label,
+                        lx,
+                        ly,
+                        lz,
+                        Float64[shell.exponents...],
+                        Float64[coefficients...],
+                        (center_value, center_value, center_value),
+                    ),
+                )
+            end
+        end
+    end
+    return _AtomicCartesianShellSupplement3D(data, orbitals)
+end
 
 function Base.show(io::IO, data::LegacyAtomicGaussianSupplement)
     shell_ls = unique(sort([shell.l for shell in data.shells]))
@@ -351,10 +428,13 @@ style and form the shared atomic supplement object used by the current
 ordinary-QW and nested-QW atomic comparison path.
 
 This pass is intentionally atomic-only. It does not place functions on multiple
-atoms and it does not yet turn `l > 0` shells into a richer nonseparable
-Cartesian supplement. Instead, it records all shell metadata up to `lmax` and
-exposes the centered `s` projection through the same analytic primitive route
-the current hybrid/QW code already consumes.
+atoms. It records all shell metadata up to `lmax` and also exposes the centered
+`s` projection through the analytic 1D primitive route still used by the
+one-dimensional hybrid builder.
+
+For atomic ordinary-QW and nested-QW, non-`s` shells up to `lmax = 1` are now
+consumed through an explicit atomic-centered 3D Cartesian shell supplement
+route. The one-dimensional hybrid builder remains honestly `s`-only.
 """
 function legacy_atomic_gaussian_supplement(
     atom::AbstractString,

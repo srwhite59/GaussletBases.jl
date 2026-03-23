@@ -30,24 +30,25 @@ This matches the old `basisaddname` / `lmaxadd` idea in the legacy line:
 
 That is the right atomic modernization target before comparing atomic anchors.
 
-## Important current limitation
+## Current active split
 
-The present ordinary-QW and nested-QW residual consumers still use a separable
-centered 1D supplement route underneath. So in this pass the new shared object
-stores:
+The shared object now supports two different active consumer styles:
 
-- the full named-basis shell metadata up to `lmax`
-- plus the active centered `s` projection used by the current analytic
-  primitive path
+- ordinary-QW and nested-QW use the full named-basis shell metadata through an
+  explicit atomic-centered 3D Cartesian shell route for `s, p_x, p_y, p_z`
+- the one-dimensional hybrid builder still uses the centered analytic `s`
+  projection only
 
 That means:
 
 - `lmax = 0` is the fully active and validated case
-- `lmax = 1` already loads and preserves the right atomic shell metadata
-- but it is not yet a true active `p`-enabled QW/nested supplement path
+- `lmax = 1` now loads the right atomic shell metadata and is a true active
+  physical `SP` supplement path for ordinary-QW and nested-QW
+- the one-dimensional hybrid builder still rejects `l > 0` honestly, because
+  it remains a centered separable 1D route
 
-So this pass fixes the atomic interface footing without pretending the current
-separable residual machinery already supports the full angular supplement.
+So the shared atomic interface is now on the intended named-basis-plus-`lmax`
+footing, while remaining honest about the narrower one-dimensional hybrid path.
 
 ## Scope kept intentionally atomic-only
 
@@ -57,6 +58,6 @@ This pass does not add:
 - a general molecule-wide basis subsystem
 - a new nesting geometry policy
 
-It only puts ordinary QW and nested QW onto the same named-basis-plus-`lmax`
-atomic supplement interface so the next atomic anchor comparison can be made on
-the right footing.
+It puts ordinary QW and nested QW onto the same named-basis-plus-`lmax`
+atomic supplement interface and makes true atomic `SP` support real there,
+without broadening into molecular placement.
