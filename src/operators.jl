@@ -307,6 +307,7 @@ struct RadialAtomicOperators{A <: AbstractDiagonalApproximation}
     nuclear::Matrix{Float64}
     centrifugal_data::Vector{Matrix{Float64}}
     multipole_data::Vector{Matrix{Float64}}
+    shell_centers_r::Vector{Float64}
     approximation::A
 end
 
@@ -319,6 +320,8 @@ function Base.show(io::IO, ops::RadialAtomicOperators)
         length(ops.centrifugal_data) - 1,
         ", Lmax=",
         length(ops.multipole_data) - 1,
+        ", nradial=",
+        length(ops.shell_centers_r),
         ", approximation=",
     )
     show(io, ops.approximation)
@@ -355,7 +358,16 @@ function atomic_operators(
     nuclear = nuclear_matrix(basis, grid; Z = Z)
     centrifugal_data = Matrix{Float64}[centrifugal_matrix(basis, grid; l = l) for l in 0:lmax]
     multipole_data = Matrix{Float64}[multipole_matrix(basis, grid; L = L, approximation = approximation) for L in 0:(2 * lmax)]
-    return RadialAtomicOperators(overlap, kinetic, nuclear, centrifugal_data, multipole_data, approximation)
+    shell_centers_r = Float64[Float64(value) for value in centers(basis)]
+    return RadialAtomicOperators(
+        overlap,
+        kinetic,
+        nuclear,
+        centrifugal_data,
+        multipole_data,
+        shell_centers_r,
+        approximation,
+    )
 end
 
 """

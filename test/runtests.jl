@@ -634,7 +634,7 @@ function _quick_hybrid_mapped_ordinary_fixture()
     end)
 end
 
-_legacy_basisfile_path_for_tests() = get(ENV, "GAUSSLETBASES_BASISSETS_PATH", joinpath(homedir(), "BasisSets"))
+_legacy_basisfile_path_for_tests() = GaussletBases._legacy_basisfile_path()
 _legacy_basisfile_available() = isfile(_legacy_basisfile_path_for_tests())
 
 function _legacy_he_s_hybrid_fixture(basis_name::String)
@@ -3576,6 +3576,40 @@ end
     end
 end
 
+@testset "Vendored legacy BasisSets lookup and overrides" begin
+    vendored = GaussletBases._vendored_legacy_basisfile_path()
+    @test isfile(vendored)
+    @test occursin(joinpath("data", "legacy", "BasisSets"), vendored)
+
+    withenv("GAUSSLETBASES_BASISSETS_PATH" => nothing) do
+        @test GaussletBases._legacy_basisfile_path() == vendored
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        @test supplement.basisfile == vendored
+    end
+
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: He repo-test\n" *
+            "He    S\n" *
+            "      1.0000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+
+        withenv("GAUSSLETBASES_BASISSETS_PATH" => path) do
+            @test GaussletBases._legacy_basisfile_path() == path
+            supplement = legacy_atomic_gaussian_supplement("He", "repo-test"; lmax = 0)
+            @test supplement.basisfile == path
+            @test supplement.primitive_exponents == [1.0]
+        end
+
+        supplement = legacy_atomic_gaussian_supplement("He", "repo-test"; lmax = 0, basisfile = path)
+        @test supplement.basisfile == path
+        @test supplement.primitive_exponents == [1.0]
+    end
+end
+
 @testset "Shared atomic supplement ordinary and nested QW consumers" begin
     if !_legacy_basisfile_available()
         @test true
@@ -4853,11 +4887,17 @@ end
     nchannels = length(channels)
     radial_dim = size(ida.radial_operators.overlap, 1)
     norbitals = length(orbitals(ida))
+    shell_centers_r = Float64[Float64(value) for value in ida.radial_operators.shell_centers_r]
     perm = GaussletBases._atomic_shell_major_permutation(ida)
     expected_h1 = Matrix{Float64}(ida.one_body.hamiltonian[perm, perm])
     expected_vee = GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[perm])
     expected_dims = fill(nchannels, radial_dim)
     expected_orders = collect(1:radial_dim)
+    payload_data = fullida_dense_payload(
+        ida;
+        nelec = 2,
+        meta = (example = "test_atomic_fullida_dense_export",),
+    )
 
     mktempdir() do dir
         path = joinpath(dir, "atomic_fullida_dense_test.jld2")
@@ -4909,9 +4949,13 @@ end
             @test Int.(file["bridge/order/shell_index"]) == vcat((fill(shell, nchannels) for shell in 1:radial_dim)...)
             @test Int.(file["bridge/order/orders_per_shell"]) == expected_orders
             @test String(file["bridge/order/basis_centers_kind"]) == "origin_only_atomic_orbitals"
-            @test all(isnan, Float64.(file["bridge/order/shell_centers_r"]))
-            @test isnan(Float64(file["bridge/order/basis_radius"]))
+            @test Float64.(file["bridge/order/shell_centers_r"]) == shell_centers_r
+            @test !any(isnan, Float64.(file["bridge/order/shell_centers_r"]))
+            @test Float64(file["bridge/order/basis_radius"]) == maximum(shell_centers_r)
             @test Int.(file["bridge/order/permutation_from_in_memory"]) == perm
+            @test file["bridge/order/shell_centers_r"] == payload_data.bridge_meta["order/shell_centers_r"]
+            @test Matrix{Float64}(file["H1"]) == payload_data.payload["H1"]
+            @test Matrix{Float64}(file["Vee"]) == payload_data.payload["Vee"]
 
             @test String(file["meta/producer"]) == "GaussletBases.write_fullida_dense_jld2"
             @test String(file["meta/producer_type"]) == "AtomicIDAOperators"
@@ -4929,6 +4973,7 @@ end
     nchannels = length(channels)
     radial_dim = size(ida.radial_operators.overlap, 1)
     norbitals = length(orbitals(ida))
+    shell_centers_r = Float64[Float64(value) for value in ida.radial_operators.shell_centers_r]
     orbital_perm, channel_perm = GaussletBases._atomic_sliced_permutation(ida)
     ordered_channels = ida.one_body.channels.channel_data[channel_perm]
     expected_dims = fill(nchannels, radial_dim)
@@ -4941,6 +4986,11 @@ end
     expected_t = Matrix{Float64}(components.T[orbital_perm, orbital_perm])
     expected_vnuc = Matrix{Float64}(components.Vnuc[orbital_perm, orbital_perm])
     expected_vee = GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[orbital_perm])
+    payload_data = sliced_ham_payload(
+        ida;
+        nelec = 2,
+        meta = (example = "test_atomic_sliced_export",),
+    )
 
     mktempdir() do dir
         path = joinpath(dir, "atomic_sliced_ham_test.jld2")
@@ -4965,7 +5015,10 @@ end
             @test Int(file["layout/nslices"]) == radial_dim
             @test Int.(file["layout/dims"]) == expected_dims
             @test Int.(file["layout/offs"]) == expected_offs
-            @test Float64.(file["layout/slice_coord"]) == Float64.(collect(1:radial_dim))
+            @test Float64.(file["layout/slice_coord"]) == shell_centers_r
+            @test !any(isnan, Float64.(file["layout/slice_coord"]))
+            @test Int.(file["layout/slice_index"]) == collect(1:radial_dim)
+            @test file["layout/slice_coord"] == payload_data.layout_values["slice_coord"]
 
             m_by_slice = [Int.(collect(v)) for v in file["basis/m_by_slice"]]
             l_by_slice = [Int.(collect(v)) for v in file["basis/l_by_slice"]]
@@ -5012,6 +5065,8 @@ end
             @test String(file["meta/interaction_model"]) == "density_density_ida"
             @test String(file["meta/twobody_encoding"]) == "pair_diagonal_density_density"
             @test String(file["meta/slice_kind"]) == "radial_shell"
+            @test String(file["meta/slice_coord_kind"]) == "physical_radial_center"
+            @test String(file["meta/slice_index_kind"]) == "radial_index"
             @test String(file["meta/orbital_ordering"]) == "slice_major_by_radial_index_then_l0_desc_mzigzag"
             @test Int(file["meta/nchannels"]) == nchannels
             @test Int(file["meta/nradial"]) == radial_dim

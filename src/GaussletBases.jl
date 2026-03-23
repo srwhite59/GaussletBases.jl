@@ -107,6 +107,8 @@ export AbstractFunction1D,
        ordinary_cartesian_ida_operators,
        ordinary_cartesian_qiu_white_operators,
        ordinary_cartesian_vee_expectation,
+       fullida_dense_payload,
+       sliced_ham_payload,
        write_fullida_dense_jld2,
        write_sliced_ham_jld2,
        gaussian_factor_matrix,
@@ -269,6 +271,8 @@ function ordinary_cartesian_ida_operators end
 function ordinary_cartesian_qiu_white_operators end
 function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
+function fullida_dense_payload end
+function sliced_ham_payload end
 function write_fullida_dense_jld2 end
 function write_sliced_ham_jld2 end
 function gaussian_factor_matrix end

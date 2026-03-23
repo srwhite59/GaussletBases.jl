@@ -59,6 +59,14 @@ The first sliced export scope is:
 - one-body blocks `H1blocks`, `Tblocks`, `Vnucblocks`
 - density-density `Vblocks`
 
+The export surface now also exposes the same grouped payload in memory through:
+
+- `sliced_ham_payload(ops; ...)`
+
+and the sliced layout now carries honest physical radial shell centers in
+`layout/slice_coord`. The old radial index remains available separately as
+`layout/slice_index`.
+
 The ordinary Cartesian line should still come later. This pass stays atomic
 only because the atomic branch already has the natural shell/channel structure
 needed for a clean sliced export.

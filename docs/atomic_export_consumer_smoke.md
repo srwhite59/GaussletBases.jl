@@ -46,6 +46,10 @@ Observed:
 So the current sliced export is already compatible as written with the present
 `HamIO.jl` reader shape.
 
+The producer surface now also provides honest physical shell coordinates
+through `layout/slice_coord`, while keeping the radial index available
+separately for compatibility.
+
 ## 4. Interpretation
 
 This is still producer/export work.

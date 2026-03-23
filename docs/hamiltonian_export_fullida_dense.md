@@ -65,6 +65,13 @@ The first implementation scope is:
 - dense `Vee`
 - `fullida_dense_v1` bridge metadata
 
+The export surface now also exposes the same dense payload in memory through:
+
+- `fullida_dense_payload(ops; ...)`
+
+and the dense bridge metadata now reports honest physical radial shell centers
+through `bridge/order/shell_centers_r` rather than placeholder `NaN` values.
+
 The ordinary Cartesian line can come second once it is clearly in the same
 solver-facing state. The dense bridge format has no overlap channel, so the
 ordinary line should not be exported casually before its basis side is settled

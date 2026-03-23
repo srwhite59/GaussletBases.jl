@@ -44,7 +44,21 @@ function _atomic_shell_major_permutation(ops::AtomicIDAOperators)
     return Int[(channel - 1) * radial_dim + radial for radial in 1:radial_dim for channel in 1:nchannels]
 end
 
-function _atomic_fullida_dense_payload(
+"""
+    fullida_dense_payload(ops::AtomicIDAOperators; Vps=nothing, nelec=nothing, meta=nothing)
+
+Build the current dense full-IDA export payload in memory without writing a
+JLD2 file.
+
+The returned named tuple contains:
+
+- `payload`
+- `bridge_meta`
+- `meta_values`
+
+and matches the data written by [`write_fullida_dense_jld2`](@ref).
+"""
+function fullida_dense_payload(
     ops::AtomicIDAOperators;
     Vps = nothing,
     nelec::Union{Nothing,Int} = nothing,
@@ -55,6 +69,7 @@ function _atomic_fullida_dense_payload(
     nchannels = length(ops.one_body.channels)
     radial_dim = size(ops.radial_operators.overlap, 1)
     norb = length(orbital_data)
+    shell_centers_r = Float64[Float64(value) for value in ops.radial_operators.shell_centers_r]
 
     H1 = Matrix{Float64}(ops.one_body.hamiltonian[perm, perm])
     Vee = _ida_density_interaction_matrix(ops, orbital_data)
@@ -85,8 +100,8 @@ function _atomic_fullida_dense_payload(
         "order/shell_index" => shell_index,
         "order/orders_per_shell" => orders,
         "order/basis_centers_kind" => "origin_only_atomic_orbitals",
-        "order/shell_centers_r" => fill(NaN, radial_dim),
-        "order/basis_radius" => NaN,
+        "order/shell_centers_r" => shell_centers_r,
+        "order/basis_radius" => isempty(shell_centers_r) ? NaN : maximum(shell_centers_r),
         "order/permutation_from_in_memory" => perm,
     )
 
@@ -142,7 +157,7 @@ function write_fullida_dense_jld2(
     nelec::Union{Nothing,Int} = nothing,
     meta = nothing,
 )
-    data = _atomic_fullida_dense_payload(ops; Vps = Vps, nelec = nelec, meta = meta)
+    data = fullida_dense_payload(ops; Vps = Vps, nelec = nelec, meta = meta)
     jldopen(path, "w") do file
         for (key, value) in data.payload
             file[key] = value

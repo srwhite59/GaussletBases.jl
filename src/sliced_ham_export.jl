@@ -102,7 +102,24 @@ function _atomic_onebody_component_matrices(ops::AtomicIDAOperators)
     )
 end
 
-function _atomic_sliced_payload(
+"""
+    sliced_ham_payload(ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
+
+Build the current sliced/block atomic Hamiltonian export payload in memory
+without writing a JLD2 file.
+
+The returned named tuple contains:
+
+- `layout_values`
+- `basis_values`
+- `ordering_values`
+- `onebody_values`
+- `twobody_values`
+- `meta_values`
+
+and matches the data written by [`write_sliced_ham_jld2`](@ref).
+"""
+function sliced_ham_payload(
     ops::AtomicIDAOperators;
     nelec::Union{Nothing,Int} = nothing,
     meta = nothing,
@@ -113,6 +130,7 @@ function _atomic_sliced_payload(
     nchannels = length(ordered_channels)
     radial_dim = size(ops.radial_operators.overlap, 1)
     norb = nchannels * radial_dim
+    shell_centers_r = Float64[Float64(value) for value in ops.radial_operators.shell_centers_r]
     dims = fill(nchannels, radial_dim)
     offs = _shell_offsets(dims)
 
@@ -176,7 +194,8 @@ function _atomic_sliced_payload(
         "nslices" => radial_dim,
         "dims" => dims,
         "offs" => offs,
-        "slice_coord" => Float64.(collect(1:radial_dim)),
+        "slice_coord" => shell_centers_r,
+        "slice_index" => collect(1:radial_dim),
     )
     basis_values = Dict{String,Any}(
         "m_by_slice" => m_by_slice,
@@ -215,7 +234,8 @@ function _atomic_sliced_payload(
         "onebody_model" => "H1 = Tblocks + Vnucblocks, with centrifugal included in Tblocks",
         "twobody_encoding" => "pair_diagonal_density_density",
         "slice_kind" => "radial_shell",
-        "slice_coord_kind" => "radial_index",
+        "slice_coord_kind" => "physical_radial_center",
+        "slice_index_kind" => "radial_index",
         "orbital_ordering" => "slice_major_by_radial_index_then_l0_desc_mzigzag",
         "nchannels" => nchannels,
         "nradial" => radial_dim,
@@ -263,7 +283,7 @@ function write_sliced_ham_jld2(
     meta = nothing,
     threshold::Real = 0.0,
 )
-    data = _atomic_sliced_payload(ops; nelec = nelec, meta = meta, threshold = threshold)
+    data = sliced_ham_payload(ops; nelec = nelec, meta = meta, threshold = threshold)
     jldopen(path, "w") do file
         _write_prefixed_values!(file, "layout", data.layout_values)
         _write_prefixed_values!(file, "basis", data.basis_values)
