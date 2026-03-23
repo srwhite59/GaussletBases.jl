@@ -3,6 +3,7 @@ const _QUADRATURE_GRID_S0 = 3.0
 const _QUADRATURE_MEDIUM_REFINES = (8, 16, 24, 32, 48)
 const _QUADRATURE_HIGH_REFINES = (24, 32, 48, 64)
 const _QUADRATURE_VERYHIGH_REFINES = (48, 64, 96, 128)
+const _QUADRATURE_PUBLIC_OVERLAP_TOL = 1.0e-5
 
 function _quadrature_accuracy_profile(accuracy)
     accuracy isa Symbol ||
@@ -207,7 +208,10 @@ pushes the same checks farther. `refine` is an optional expert starting
 resolution hint. `quadrature_rmax` is an optional explicit physical-space
 cutoff override kept for expert compatibility. If an explicit cutoff is too
 short to cover the retained basis support, the routine warns rather than
-silently reporting good overlap on a truncated grid.
+silently reporting good overlap on a truncated grid. On the automatic default
+path, the routine returns quietly once it reaches the repo's public-quality
+overlap regime even if the stricter internal refinement-stability target has
+not been met yet.
 """
 function radial_quadrature(
     basis::RadialBasis;
@@ -246,6 +250,12 @@ function radial_quadrature(
             return grid
         end
         previous_metrics = metrics
+    end
+
+    if !explicit_cutoff &&
+       profile.name != :veryhigh &&
+       latest_metrics.overlap_error <= _QUADRATURE_PUBLIC_OVERLAP_TOL
+        return latest_grid
     end
 
     if explicit_cutoff && cutoff < tail_bound

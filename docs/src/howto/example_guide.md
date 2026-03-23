@@ -33,8 +33,8 @@ If you are new, start here:
 Those four examples are still the clearest public entry path.
 
 For the radial and atomic examples below, first runs can still be compile-heavy.
-For tutorial-style runs, the examples now use cheaper quadrature settings where
-that is enough to keep the workflow clear. Reruns are much faster.
+Some of the heavier examples use cheaper quadrature settings where that is
+enough to keep the workflow clear. Reruns are much faster.
 
 ## Radial and atomic sequence
 
@@ -102,19 +102,19 @@ The more diagnostic ordinary examples are:
 
 If your focus is the primitive/contraction architecture, continue with:
 
-28. `05_primitive_sets.jl`
-29. `06_basis_contraction.jl`
-30. `07_position_contraction.jl`
-31. `08_basis_representation.jl`
-32. `14_radial_primitive_operators.jl`
-33. `09_basis_partition.jl`
-34. `10_hierarchical_partition.jl`
-34. `13_global_leaf_contraction.jl`
+29. `05_primitive_sets.jl`
+30. `06_basis_contraction.jl`
+31. `07_position_contraction.jl`
+32. `08_basis_representation.jl`
+33. `14_radial_primitive_operators.jl`
+34. `09_basis_partition.jl`
+35. `10_hierarchical_partition.jl`
+36. `13_global_leaf_contraction.jl`
 
 The prototype side branch remains:
 
-35. `11_leaf_pgdg.jl`
-36. `12_leaf_pgdg_augmentation.jl`
+37. `11_leaf_pgdg.jl`
+38. `12_leaf_pgdg_augmentation.jl`
 
 ## Read these pages alongside the examples
 

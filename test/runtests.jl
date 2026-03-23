@@ -1,4 +1,5 @@
 using Test
+using Logging
 using LinearAlgebra
 using JLD2
 
@@ -301,8 +302,8 @@ end
         rmax = 30.0,
         mapping = AsinhMapping(c = s / (2Z), s = s),
     ))
-    diag = basis_diagnostics(rb)
-    grid = radial_quadrature(rb)
+    diag = @test_logs min_level = Logging.Warn basis_diagnostics(rb)
+    grid = @test_logs min_level = Logging.Warn radial_quadrature(rb)
     hamiltonian = kinetic_matrix(rb, grid) +
                   nuclear_matrix(rb, grid; Z = Z) +
                   centrifugal_matrix(rb, grid; l = 0)

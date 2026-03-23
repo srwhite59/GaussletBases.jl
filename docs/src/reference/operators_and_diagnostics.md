@@ -18,6 +18,10 @@ julia> size(kinetic_matrix(rb, grid)) == (length(rb), length(rb))
 true
 ```
 
+This tiny doctest uses `xgaussian_count = 0` to keep the reference example
+lightweight. The recommended public atomic setup still uses the default
+`xgaussian` supplement unless you have a specific reason to turn it off.
+
 ## Diagnostics and quadrature
 
 ```@docs

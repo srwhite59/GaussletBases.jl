@@ -40,6 +40,7 @@ radial_dim = length(rb)
 nchannels = length(ida.one_body.channels)
 norbitals = length(orbitals(ida))
 orbital_index(channel_index, radial_index) = (channel_index - 1) * radial_dim + radial_index
+channel_labels = [(channel.l, channel.m) for channel in ida.one_body.channels]
 
 # One simple inspectable trial density: a rank-one projector with mild s/p mixing.
 trial_orbital = zeros(Float64, norbitals)
@@ -64,6 +65,10 @@ off_radial_norm = let maximum_off_radial = 0.0
 end
 
 println("channel set: ", ida.one_body.channels)
+println("channel index map:")
+for (index, label) in enumerate(channel_labels)
+    println("  ", index, " => (l, m) = ", label)
+end
 println("radial basis functions per channel: ", radial_dim)
 println("spatial orbitals: ", norbitals)
 println("density rank: ", rank(density))
@@ -71,5 +76,5 @@ println("direct matrix size: ", size(direct))
 println("direct Hermiticity error: ", hermiticity_error)
 println("sectorized vs dense difference: ", comparison_error)
 println("largest off-radial entry: ", off_radial_norm)
-println("first radial direct block:")
+println("first radial direct block (p=1):")
 println(direct[[orbital_index(channel, 1) for channel in 1:nchannels], [orbital_index(channel, 1) for channel in 1:nchannels]])

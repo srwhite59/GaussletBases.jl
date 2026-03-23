@@ -62,13 +62,7 @@ function _halfline_diagnostics_grid(basis::HalfLineBasis; refine::Int = 8)
 end
 
 function _radial_diagnostics_grid(basis::RadialBasis; accuracy = :high, refine = nothing)
-    cutoff = _radial_quadrature_tail_bound(basis)
-    return radial_quadrature(
-        basis;
-        accuracy = accuracy,
-        refine = refine,
-        quadrature_rmax = cutoff,
-    )
+    return radial_quadrature(basis; accuracy = accuracy, refine = refine)
 end
 
 function basis_diagnostics(basis::HalfLineBasis)

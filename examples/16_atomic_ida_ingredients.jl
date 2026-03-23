@@ -12,8 +12,13 @@ rb = build_basis(RadialBasisSpec(:G10;
 grid = radial_quadrature(rb)
 radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
 ida = atomic_ida_operators(radial_ops; lmax = lmax)
+channel_labels = [(channel.l, channel.m) for channel in ida.one_body.channels]
 
 println("channel set: ", ida.one_body.channels)
+println("channel index map:")
+for (index, label) in enumerate(channel_labels)
+    println("  ", index, " => (l, m) = ", label)
+end
 println("radial basis functions per channel: ", length(rb))
 println("total orbitals: ", length(orbitals(ida)))
 println("expected channel count for lmax = ", lmax, ": ", sum(2l + 1 for l in 0:lmax))
@@ -24,7 +29,7 @@ println("Gaunt tensor L=1 size: ", size(gaunt_tensor(ida, 1)))
 println("angular kernel L=1 size: ", size(angular_kernel(ida, 1)))
 println("L=1 radial multipoles are radial-only blocks; the angular kernel carries the channel coupling.")
 println("Next step: examples/19_atomic_ida_direct.jl uses these ingredients to build a direct matrix from a trial density.")
-println("first three orbitals:")
+println("first three orbitals with channel labels:")
 for orbital in orbitals(ida)[1:3]
     println("  ", orbital)
 end
