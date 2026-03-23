@@ -325,7 +325,7 @@ function _qwrg_supplement_primitives_and_contraction(
 end
 
 function _qwrg_supplement_primitives_and_contraction(
-    gaussian_data::LegacySGaussianData,
+    gaussian_data::LegacyAtomicGaussianSupplement,
 )
     return (
         Gaussian[gaussian for gaussian in gaussian_data.primitive_gaussians],
@@ -1287,7 +1287,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         basis::MappedUniformBasis,
-        gaussian_data::LegacySGaussianData;
+        gaussian_data::LegacyAtomicGaussianSupplement;
         expansion = coulomb_gaussian_expansion(doacc = false),
         Z = 2.0,
         interaction_treatment = :mwg,
@@ -1321,7 +1321,7 @@ claim that the ordinary branch is solver-ready.
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
-    gaussian_data::LegacySGaussianData;
+    gaussian_data::LegacyAtomicGaussianSupplement;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
     interaction_treatment::Symbol = :mwg,
@@ -1550,7 +1550,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         fixed_block::_NestedFixedBlock3D,
-        gaussian_data::LegacySGaussianData;
+        gaussian_data::LegacyAtomicGaussianSupplement;
         expansion = coulomb_gaussian_expansion(doacc = false),
         Z = 2.0,
         interaction_treatment = :ggt_nearest,
@@ -1573,7 +1573,7 @@ This first adapter is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,
-    gaussian_data::LegacySGaussianData;
+    gaussian_data::LegacyAtomicGaussianSupplement;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
     interaction_treatment::Symbol = :ggt_nearest,

@@ -3251,16 +3251,32 @@ end
     @test abs(combined_check.orbital_energy + 2.0) < abs(pure_check.orbital_energy + 2.0)
 end
 
-@testset "Legacy He s Gaussian adapter" begin
+@testset "Legacy atomic Gaussian supplement" begin
     if !_legacy_basisfile_available()
         @test true
     else
+        vtz0 = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        vtz1 = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 1)
         vtz = legacy_s_gaussian_data("He", "cc-pVTZ")
         vqz = legacy_s_gaussian_data("He", "cc-pVQZ")
         vtz_uncontracted = legacy_s_gaussian_data("He", "cc-pVTZ"; uncontracted = true)
 
+        @test vtz0 isa LegacyAtomicGaussianSupplement
         @test vtz isa LegacySGaussianData
         @test vqz isa LegacySGaussianData
+        @test vtz0.lmax == 0
+        @test vtz1.lmax == 1
+        @test length(vtz0.shells) == 3
+        @test any(shell -> shell.l == 1, vtz1.shells)
+        @test length(vtz1.shells) > length(vtz0.shells)
+        @test vtz.primitive_exponents == vtz0.primitive_exponents
+        @test vtz.primitive_widths == vtz0.primitive_widths
+        @test vtz.contraction_matrix ≈ vtz0.contraction_matrix atol = 0.0 rtol = 0.0
+        @test vtz.widths ≈ vtz0.widths atol = 0.0 rtol = 0.0
+        @test vtz1.primitive_exponents == vtz0.primitive_exponents
+        @test vtz1.primitive_widths == vtz0.primitive_widths
+        @test vtz1.contraction_matrix ≈ vtz0.contraction_matrix atol = 0.0 rtol = 0.0
+        @test vtz1.widths ≈ vtz0.widths atol = 0.0 rtol = 0.0
         @test !vtz.uncontracted
         @test !vqz.uncontracted
         @test vtz.max_width === nothing
@@ -3285,6 +3301,56 @@ end
         @test size(vtz_uncontracted.contraction_matrix) == (6, 6)
         @test vtz_uncontracted.contraction_matrix ≈ Matrix{Float64}(I, 6, 6) atol = 0.0 rtol = 0.0
         @test length(vtz_uncontracted.gaussians) == 6
+    end
+end
+
+@testset "Shared atomic supplement ordinary and nested QW consumers" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        source_basis, _legacy_old, baseline_ops, baseline_check = _qiu_white_full_nearest_fixture()
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        ordinary_ops = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        ordinary_check = GaussletBases.ordinary_cartesian_1s2_check(ordinary_ops)
+
+        (
+            _source_basis_nested,
+            _bundle_nested,
+            _shell_nested,
+            _fixed_block_nested,
+            _shell_plus_core_nested,
+            fixed_block_shell_plus_core,
+            _legacy_nested,
+            _baseline_nested,
+            _nested_shell_only,
+            nested_shell_plus_core,
+            _baseline_nested_check,
+            _nested_shell_only_check,
+            nested_shell_plus_core_check,
+        ) = _nested_qiu_white_nearest_fixture()
+        nested_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        nested_check = GaussletBases.ordinary_cartesian_1s2_check(nested_ops)
+
+        @test ordinary_ops.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test nested_ops.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test ordinary_check.orbital_energy ≈ baseline_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
+        @test ordinary_check.vee_expectation ≈ baseline_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
+        @test nested_check.orbital_energy ≈ nested_shell_plus_core_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
+        @test nested_check.vee_expectation ≈ nested_shell_plus_core_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
+        @test norm(ordinary_ops.overlap - baseline_ops.overlap, Inf) < 1.0e-12
+        @test norm(nested_ops.overlap - nested_shell_plus_core.overlap, Inf) < 1.0e-12
     end
 end
 

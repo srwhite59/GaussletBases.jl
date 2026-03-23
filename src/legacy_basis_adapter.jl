@@ -1,28 +1,58 @@
 """
-    LegacySGaussianData
+    LegacyAtomicGaussianShell
 
-Tiny legacy-informed centered `s`-supplement adapter for the current
-ordinary-hybrid and QW-PGDG tests.
+One filtered shell from the legacy named-basis loader.
 
-The object stores:
+Each shell records:
 
-- the requested `atom` and `basis_name`
-- the legacy `basisfile` path used
-- the primitive `s` exponents and widths
-- the primitive centered one-dimensional Gaussians
-- the shell contraction matrix for the active supplement functions
-- representative contracted widths / `Gaussian`s for the active supplement
-- whether the active data are uncontracted and whether any width filter was applied
+- angular momentum `l`
+- primitive exponents / widths
+- shell contraction coefficients
 
-The primitive integral route remains analytic. Contraction happens only on the
-added-Gaussian side when the active paths consume this object.
-
-This is intentionally narrow. It is not a general Gaussian-basis subsystem.
+This stays atomic-only and centered on one atom. It is not a molecule-wide
+placement object.
 """
-struct LegacySGaussianData
+struct LegacyAtomicGaussianShell
+    l::Int
+    exponents::Vector{Float64}
+    widths::Vector{Float64}
+    coefficients::Vector{Float64}
+end
+
+"""
+    LegacyAtomicGaussianSupplement
+
+Shared atomic named-basis-plus-`lmax` supplement object for the current
+ordinary-QW and nested-QW atomic comparison line.
+
+The object keeps two views at once:
+
+- the full legacy shell list up to the requested `lmax`
+- the active centered `l = 0` projection used by the present analytic 1D
+  supplement route
+
+That mirrors the legacy `basisaddname` / `lmaxadd` intent while staying honest
+about the current consumer model: the current separable Cartesian residual path
+still consumes only the centered `s` channel analytically.
+
+The stored active fields:
+
+- `primitive_exponents`
+- `primitive_widths`
+- `primitive_gaussians`
+- `contraction_matrix`
+- `widths`
+- `gaussians`
+
+are exactly the active centered `s` supplement seen by the present hybrid/QW
+code. The broader shell metadata is kept in `shells`.
+"""
+struct LegacyAtomicGaussianSupplement
     atom::String
     basis_name::String
     basisfile::String
+    lmax::Int
+    shells::Vector{LegacyAtomicGaussianShell}
     primitive_exponents::Vector{Float64}
     primitive_widths::Vector{Float64}
     primitive_gaussians::Vector{Gaussian}
@@ -33,16 +63,25 @@ struct LegacySGaussianData
     max_width::Union{Nothing, Float64}
 end
 
-function Base.show(io::IO, data::LegacySGaussianData)
+const LegacySGaussianData = LegacyAtomicGaussianSupplement
+
+function Base.show(io::IO, data::LegacyAtomicGaussianSupplement)
+    shell_ls = unique(sort([shell.l for shell in data.shells]))
     print(
         io,
-        "LegacySGaussianData(atom=\"",
+        "LegacyAtomicGaussianSupplement(atom=\"",
         data.atom,
         "\", basis=\"",
         data.basis_name,
-        "\", nprimitive=",
+        "\", lmax=",
+        data.lmax,
+        ", shell_ls=",
+        shell_ls,
+        ", nshells=",
+        length(data.shells),
+        ", nactive_primitive=",
         length(data.primitive_gaussians),
-        ", ncontracted=",
+        ", nactive_contracted=",
         length(data.gaussians),
         ", uncontracted=",
         data.uncontracted,
@@ -186,100 +225,88 @@ function _legacy_contracted_gaussian_representatives(
     return widths, gaussians
 end
 
-"""
-    legacy_s_gaussian_data(
-        atom,
-        basis_name;
-        basisfile = nothing,
-        center = 0.0,
-        uncontracted = false,
-        max_width = nothing,
-    )
-
-Read one atom's legacy Gaussian basis data and convert the `l = 0` shells into
-the explicit centered one-dimensional `Gaussian` list used by the current
-ordinary-hybrid tests.
-
-This adapter is intentionally small:
-
-- it reads the legacy `BasisSets` file in the style of `ReadBasis.jl`
-- it keeps only `s` shells
-- by default it follows the legacy contraction pattern shell by shell
-- `uncontracted = true` keeps the old primitive-only route as a diagnostic mode
-- it converts each `exp(-zeta * x^2)` primitive into the current width
-  convention
-
-By default, no diffuse primitives are dropped.
-"""
-function legacy_s_gaussian_data(
-    atom::AbstractString,
-    basis_name::AbstractString;
-    basisfile::Union{Nothing, AbstractString} = nothing,
-    center::Real = 0.0,
-    uncontracted::Bool = false,
-    max_width::Union{Nothing, Real} = nothing,
+function _legacy_filter_shell(
+    shell::Tuple{Int, Vector{Float64}, Vector{Float64}},
+    max_width::Union{Nothing, Real},
 )
-    shells, path = _legacy_basis_shells(atom, basis_name; basisfile = basisfile)
-    s_shells = filter(shell -> shell[1] == 0, shells)
-    isempty(s_shells) && throw(ArgumentError("legacy basis \"$basis_name\" for atom \"$atom\" contains no s shells"))
+    shell_exponents = Float64[shell[2]...]
+    shell_coefficients = Float64[shell[3]...]
+    shell_widths = _zeta_to_width.(shell_exponents)
+    if max_width !== nothing
+        width_limit = Float64(max_width)
+        keep = findall(width -> width <= width_limit, shell_widths)
+        shell_exponents = shell_exponents[keep]
+        shell_coefficients = shell_coefficients[keep]
+        shell_widths = shell_widths[keep]
+    end
+    return shell_exponents, shell_widths, shell_coefficients
+end
 
+function _legacy_atomic_shell_data(
+    atom::AbstractString,
+    basis_name::AbstractString,
+    shells_raw::Vector{Tuple{Int, Vector{Float64}, Vector{Float64}}},
+    path::AbstractString;
+    lmax::Int,
+    center::Real,
+    uncontracted::Bool,
+    max_width::Union{Nothing, Real},
+)
+    filtered_shells = LegacyAtomicGaussianShell[]
     primitive_exponents = Float64[]
     primitive_widths = Float64[]
-    contraction_columns = Vector{Vector{Float64}}()
 
-    for shell in s_shells
-        shell_exponents = Float64[shell[2]...]
-        shell_coefficients = Float64[shell[3]...]
-        shell_widths = _zeta_to_width.(shell_exponents)
-
-        if max_width !== nothing
-            width_limit = Float64(max_width)
-            keep = findall(width -> width <= width_limit, shell_widths)
-            shell_exponents = shell_exponents[keep]
-            shell_coefficients = shell_coefficients[keep]
-            shell_widths = shell_widths[keep]
-        end
-
+    for shell in shells_raw
+        shell_l = shell[1]
+        shell_l <= lmax || continue
+        shell_exponents, shell_widths, shell_coefficients = _legacy_filter_shell(shell, max_width)
         isempty(shell_exponents) && continue
+        push!(
+            filtered_shells,
+            LegacyAtomicGaussianShell(
+                shell_l,
+                shell_exponents,
+                shell_widths,
+                shell_coefficients,
+            ),
+        )
+        if shell_l == 0
+            append!(primitive_exponents, shell_exponents)
+            append!(primitive_widths, shell_widths)
+        end
+    end
 
-        append!(primitive_exponents, shell_exponents)
-        append!(primitive_widths, shell_widths)
+    isempty(filtered_shells) && throw(
+        ArgumentError("legacy basis \"$basis_name\" for atom \"$atom\" contains no shells at or below lmax = $lmax after filtering"),
+    )
+    isempty(primitive_exponents) && throw(
+        ArgumentError("current atomic legacy supplement needs at least one centered s shell in \"$basis_name\" for atom \"$atom\""),
+    )
+
+    s_shells = filter(shell -> shell.l == 0, filtered_shells)
+    contraction_columns = Vector{Vector{Float64}}()
+    for shell in s_shells
         if uncontracted
-            for index in eachindex(shell_exponents)
-                column = zeros(Float64, length(shell_exponents))
+            for index in eachindex(shell.exponents)
+                column = zeros(Float64, length(shell.exponents))
                 column[index] = 1.0
                 push!(contraction_columns, column)
             end
         else
-            push!(contraction_columns, normalize(shell_coefficients))
+            push!(contraction_columns, normalize(shell.coefficients))
         end
     end
-
-    isempty(primitive_exponents) && throw(
-        ArgumentError("legacy s-shell filtering removed every primitive for atom=\"$atom\", basis=\"$basis_name\""),
-    )
 
     contraction_matrix = zeros(Float64, length(primitive_exponents), length(contraction_columns))
     primitive_offset = 0
     column_offset = 0
     for shell in s_shells
-        shell_exponents = Float64[shell[2]...]
-        shell_coefficients = Float64[shell[3]...]
-        shell_widths = _zeta_to_width.(shell_exponents)
-        if max_width !== nothing
-            width_limit = Float64(max_width)
-            keep = findall(width -> width <= width_limit, shell_widths)
-            shell_exponents = shell_exponents[keep]
-            shell_coefficients = shell_coefficients[keep]
-            shell_widths = shell_widths[keep]
-        end
-        nshell = length(shell_exponents)
-        nshell == 0 && continue
+        nshell = length(shell.exponents)
         if uncontracted
             contraction_matrix[(primitive_offset + 1):(primitive_offset + nshell), (column_offset + 1):(column_offset + nshell)] .= Matrix{Float64}(I, nshell, nshell)
             column_offset += nshell
         else
-            contraction_matrix[(primitive_offset + 1):(primitive_offset + nshell), column_offset + 1] .= normalize(shell_coefficients)
+            contraction_matrix[(primitive_offset + 1):(primitive_offset + nshell), column_offset + 1] .= normalize(shell.coefficients)
             column_offset += 1
         end
         primitive_offset += nshell
@@ -290,10 +317,13 @@ function legacy_s_gaussian_data(
         primitive_gaussians,
         contraction_matrix,
     )
-    return LegacySGaussianData(
+
+    return LegacyAtomicGaussianSupplement(
         String(atom),
         String(basis_name),
-        path,
+        String(path),
+        lmax,
+        filtered_shells,
         primitive_exponents,
         primitive_widths,
         primitive_gaussians,
@@ -302,5 +332,75 @@ function legacy_s_gaussian_data(
         gaussians,
         uncontracted,
         max_width === nothing ? nothing : Float64(max_width),
+    )
+end
+
+"""
+    legacy_atomic_gaussian_supplement(
+        atom,
+        basis_name;
+        lmax = 0,
+        basisfile = nothing,
+        center = 0.0,
+        uncontracted = false,
+        max_width = nothing,
+    )
+
+Load one atom's legacy named basis in the old `getbasis(...; maxl = lmax)`
+style and form the shared atomic supplement object used by the current
+ordinary-QW and nested-QW atomic comparison path.
+
+This pass is intentionally atomic-only. It does not place functions on multiple
+atoms and it does not yet turn `l > 0` shells into a richer nonseparable
+Cartesian supplement. Instead, it records all shell metadata up to `lmax` and
+exposes the centered `s` projection through the same analytic primitive route
+the current hybrid/QW code already consumes.
+"""
+function legacy_atomic_gaussian_supplement(
+    atom::AbstractString,
+    basis_name::AbstractString;
+    lmax::Integer = 0,
+    basisfile::Union{Nothing, AbstractString} = nothing,
+    center::Real = 0.0,
+    uncontracted::Bool = false,
+    max_width::Union{Nothing, Real} = nothing,
+)
+    Int(lmax) >= 0 || throw(ArgumentError("legacy_atomic_gaussian_supplement requires lmax >= 0"))
+    shells, path = _legacy_basis_shells(atom, basis_name; basisfile = basisfile)
+    return _legacy_atomic_shell_data(
+        atom,
+        basis_name,
+        shells,
+        path;
+        lmax = Int(lmax),
+        center = center,
+        uncontracted = uncontracted,
+        max_width = max_width,
+    )
+end
+
+"""
+    legacy_s_gaussian_data(atom, basis_name; kwargs...)
+
+Thin compatibility wrapper for the earlier He-`s` supplement helper.
+
+This now forwards to `legacy_atomic_gaussian_supplement(...; lmax = 0)`.
+"""
+function legacy_s_gaussian_data(
+    atom::AbstractString,
+    basis_name::AbstractString;
+    basisfile::Union{Nothing, AbstractString} = nothing,
+    center::Real = 0.0,
+    uncontracted::Bool = false,
+    max_width::Union{Nothing, Real} = nothing,
+)
+    return legacy_atomic_gaussian_supplement(
+        atom,
+        basis_name;
+        lmax = 0,
+        basisfile = basisfile,
+        center = center,
+        uncontracted = uncontracted,
+        max_width = max_width,
     )
 end

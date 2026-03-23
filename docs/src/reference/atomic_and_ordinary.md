@@ -45,7 +45,10 @@ uhf_scf
 
 ```@docs
 MappedOrdinaryOneBody1D
+LegacyAtomicGaussianShell
+LegacyAtomicGaussianSupplement
 LegacySGaussianData
+legacy_atomic_gaussian_supplement
 legacy_s_gaussian_data
 mapped_ordinary_one_body_operators
 mapped_cartesian_hydrogen_energy

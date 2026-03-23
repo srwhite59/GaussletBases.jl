@@ -98,7 +98,7 @@ The backbone comes from the chosen mapped ordinary backend. The added
 `core_gaussians` can be either:
 
 - a small explicit `Gaussian` list
-- a `LegacySGaussianData` contracted `s` supplement
+- a `LegacyAtomicGaussianSupplement` centered atomic supplement
 
 In both cases the active seed is built from explicit primitive Gaussians, with
 any legacy shell contraction applied on the added channel before the final
@@ -120,7 +120,7 @@ function hybrid_mapped_ordinary_basis(
 )
     layer = _mapped_ordinary_backend_layer(basis, backend)
     backbone_primitives = primitives(primitive_set(layer))
-    core_primitive_list, core_representatives, core_coefficients = if core_gaussians isa LegacySGaussianData
+    core_primitive_list, core_representatives, core_coefficients = if core_gaussians isa LegacyAtomicGaussianSupplement
         (
             Gaussian[gaussian for gaussian in core_gaussians.primitive_gaussians],
             Gaussian[gaussian for gaussian in core_gaussians.gaussians],
