@@ -637,26 +637,6 @@ end
 _legacy_basisfile_path_for_tests() = GaussletBases._legacy_basisfile_path()
 _legacy_basisfile_available() = isfile(_legacy_basisfile_path_for_tests())
 
-function _legacy_basisfile_with_block_for_tests(
-    atom::AbstractString,
-    basis_name::AbstractString,
-)
-    candidates = String[]
-    push!(candidates, GaussletBases._legacy_basisfile_path())
-    home_basis = joinpath(homedir(), "BasisSets")
-    home_basis ∉ candidates && push!(candidates, home_basis)
-    for path in candidates
-        isfile(path) || continue
-        try
-            GaussletBases._legacy_basis_shells(atom, basis_name; basisfile = path)
-            return path
-        catch error
-            error isa ArgumentError || rethrow()
-        end
-    end
-    return nothing
-end
-
 function _legacy_he_s_hybrid_fixture(basis_name::String)
     key = Symbol(:legacy_he_s_hybrid_fixture, Symbol(lowercase(basis_name)))
     return _cached_fixture(key, () -> begin
@@ -1249,9 +1229,6 @@ function _bond_aligned_diatomic_nested_qw_fixture(; bond_length::Float64 = 1.4)
 end
 
 function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
-    h_basisfile = _legacy_basisfile_with_block_for_tests("H", "cc-pVTZ")
-    h_basisfile === nothing && return nothing
-
     key = Symbol(:bond_aligned_diatomic_hybrid_qw_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
         basis, parent_ops, parent_check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
@@ -1260,7 +1237,6 @@ function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
             "cc-pVTZ",
             basis.nuclei;
             lmax = 1,
-            basisfile = h_basisfile,
         )
         ordinary_ops = ordinary_cartesian_qiu_white_operators(
             basis,
@@ -1280,9 +1256,6 @@ function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
 end
 
 function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
-    h_basisfile = _legacy_basisfile_with_block_for_tests("H", "cc-pVTZ")
-    h_basisfile === nothing && return nothing
-
     key = Symbol(:bond_aligned_diatomic_nested_hybrid_qw_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
         (
@@ -1304,7 +1277,6 @@ function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 
             "cc-pVTZ",
             basis.nuclei;
             lmax = 1,
-            basisfile = h_basisfile,
         )
         nested_ops = ordinary_cartesian_qiu_white_operators(
             fixed_block,
@@ -3802,8 +3774,10 @@ end
 
     withenv("GAUSSLETBASES_BASISSETS_PATH" => nothing) do
         @test GaussletBases._legacy_basisfile_path() == vendored
-        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-        @test supplement.basisfile == vendored
+        he_supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        h_supplement = legacy_atomic_gaussian_supplement("H", "cc-pVTZ"; lmax = 1)
+        @test he_supplement.basisfile == vendored
+        @test h_supplement.basisfile == vendored
     end
 
     mktemp() do path, io
