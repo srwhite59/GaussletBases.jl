@@ -12,7 +12,11 @@
 
 3. Form the added three-dimensional Gaussian orbitals `A = {a_I}`, typically
    from a standard basis set.
-   Code: `src/legacy_basis_adapter.jl`
+   On the current atomic QW routes, these added 3D orbitals can now come from
+   the true atomic-centered Cartesian supplement object built from the shared
+   named-basis loader, including active `s, p_x, p_y, p_z` content for
+   `lmax = 1`.
+   Code: `src/legacy_basis_adapter.jl`, `src/ordinary_qiu_white_rg.jl`
 
 4. Define the residual Gaussians by orthogonalizing the added 3D Gaussian
    orbitals to the full 3D gausslet space:
@@ -106,6 +110,9 @@ Current split:
   - exact contracted 1D raw-space blocks assembled into the 3D one-body and
     moment matrices, then transformed into the final basis
   - RG interaction terms kept in the same two-index IDA form
+- on the atomic line, the added 3D Gaussian orbitals used in this route may now
+  come from the explicit atomic-centered Cartesian `s/p` supplement object
+  built from `LegacyAtomicGaussianSupplement`
 - the public hybrid path in `src/ordinary_hybrid.jl` is still the later
   COMX/localized hybrid route
 - the current `:residual_gaussian_nearest` and `:residual_gaussian_mwg`

@@ -37,3 +37,5 @@ The comment should:
 - [Qiu-White residual-Gaussian route](qiu_white_residual_gaussian_route.md)
 - [1D distorted-gausslet PGDG refinement hierarchy](distorted_gausslet_pgdg_refinement_hierarchy.md)
 - [Cartesian nested face construction](cartesian_nested_face_construction.md)
+- [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
+- [Radial interval-sampled build and extents](radial_interval_sampled_build_and_extents.md)

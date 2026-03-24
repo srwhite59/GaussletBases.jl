@@ -2,152 +2,106 @@
 
 ## Pseudocode
 
-1. Start from one finalized Cartesian fixed block.
-   In the intended first practical route, this is the finalized QW-PGDG fixed
-   block: the Cartesian product gausslet side after the PGDG-mediated one-body
-   and two-electron auxiliary construction, including the final COMX cleanup of
-   the base PGDG basis-realization layer.
-   Code: current fixed-block inputs live mainly in `src/ordinary_mapped_backends.jl` and `src/ordinary_qiu_white_rg.jl`
+1. Start from one finalized Cartesian fixed line.
+   In the current repo this means the finalized QW-PGDG fixed line used as the
+   parent line for later atomic nesting work.
+   Code: `src/ordinary_mapped_backends.jl`, `src/ordinary_qiu_white_rg.jl`
 
-2. Partition space into rectangular shells around the atom or atoms.
-   The first practical atomic case is a centered rectangular shell sequence.
-   Later generalizations may use deeper recursion or more general partitions,
-   but the basic primitive is already present at the level of one shell and its
-   faces.
-   Code: framing for now; related infrastructure exists in `src/hierarchical_partitions.jl`
+2. Choose one one-dimensional interval on that fixed line.
+   The first primitive is local, not global: one interval of finalized parent
+   functions that will be compressed into a smaller side space.
+   Code: `src/cartesian_nested_faces.jl`
 
-3. On one one-dimensional interval, define the local side contraction
-   (`doside`) from `n` distorted functions to `m < n` retained functions.
-   The side basis is built by keeping the low-order local directions of the
-   interval and then localizing them with a local COMX/COMU step.
-   The intended retained space is not an arbitrary SVD truncation. It is the
-   low-order local polynomial or coordinate content of the interval.
-   Legacy model: `GaussletModules/PureGaussianGausslet.jl` `getsideu(...)` and `getside(...)`
+3. Build one local `doside` contraction on that interval.
+   The retained span is not an arbitrary truncation. It is the low-order local
+   coordinate content of the interval.
+   Code: `src/cartesian_nested_faces.jl`
+   Legacy model:
+   `GaussletModules/PureGaussianGausslet.jl` `getsideu(...)`, `getside(...)`
 
-4. Build the one-dimensional retained side space by a local moment/coordinate
-   process.
-   In the legacy pattern:
-   - start from local weights or local density information
-   - build the retained span by repeated multiplication by a local coordinate
-     (`u` or `x`)
-   - orthogonalize each added direction against the previous ones
+4. Form the retained side space by the legacy local moment/coordinate rule.
+   In the current pattern:
+   - start from local weights
+   - build directions by repeated multiplication by the local coordinate
+   - orthogonalize in the local metric
    - diagonalize the projected local coordinate operator
-   - sign-fix the final side functions with the local weights
-   This produces a small, ordered, localized side space for one interval.
-   Legacy model: `GaussletModules/PureGaussianGausslet.jl` `getsideu(...)`, `getside(...)`
+   - sign-fix with the local weights
+   Code: `src/cartesian_nested_faces.jl`
 
-5. For one face of a rectangular shell, apply the one-dimensional `doside`
-   construction in the two tangential directions.
-   For an `x-y` face, contract the local `x` interval and the local `y`
-   interval; for an `x-z` face, contract `x` and `z`; for a `y-z` face,
-   contract `y` and `z`.
-   Legacy model: face branches in `GaussletModules/PureGaussianGausslet.jl`
+5. Build one tangential face product from those side spaces.
+   For one rectangular face:
+   - contract the first tangential interval with `doside`
+   - contract the second tangential interval with `doside`
+   - take the product of the two retained side spaces
+   Code: `src/cartesian_nested_faces.jl`
 
-6. Form the two-dimensional face basis as the product of the two tangential
-   side spaces.
-   This is the first true nested Cartesian object: a product-space basis
-   attached to one face interior.
-   Legacy model: face assembly in `GaussletModules/PureGaussianGausslet.jl`
+6. Restrict to face interiors so different faces remain disjoint.
+   The first primitive shell language already depends on disjoint support
+   between opposite or neighboring faces.
+   Code: `src/cartesian_nested_faces.jl`
 
-7. Use only the interiors of faces so different faces do not overlap.
-   Distinct face spaces should remain disjoint by construction.
-   This is part of what makes the later nested assembly simple and local.
-   Code: framing for now; intended first implementation target
+7. Assemble the first shell packet from those face pieces.
+   The shell packet carries:
+   - one shell coefficient map
+   - shell overlap
+   - one-body packet pieces
+   - Gaussian-factor and pair-factor packet pieces
+   Code: `src/cartesian_nested_faces.jl`
 
-8. Assemble the nested fixed space from the face spaces and any needed retained
-   core/interior space.
-   The first implementation does not need the full recursive tree. A single
-   shell with a small set of face spaces is enough to establish the machinery.
-   Code: framing for now
-
-9. Transform the carried operator packet through the same local contractions.
-   The fixed block is not only a basis. The carried one-dimensional or
-   separable operator data must be transformed consistently through the nesting
-   contractions so that the existing Cartesian assembly logic can be reused.
-   Code: intended future consumer path on top of `src/ordinary_mapped_backends.jl`
-
-10. Extend later to shell recursion, box hierarchies, and sliced variants.
-   Once the one-dimensional `doside` primitive and the first face-product
-   construction are in place, the same logic extends naturally to:
-   - deeper rectangular shell recursion
-   - atomic box hierarchies
-   - sliced bases that contract only in transverse directions
-   This page stops before those later generalizations.
+8. Stop at the first shell packet.
+   This page is only the primitive page:
+   - `doside`
+   - tangential face products
+   - first shell packet
+   The full landed atomic nonrecursive route now lives in:
+   [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 
 ## References
 
-- Legacy model: `GaussletModules/PureGaussianGausslet.jl`
+- Legacy primitive model: `GaussletModules/PureGaussianGausslet.jl`
   - `getsideu(...)`
   - `getside(...)`
   - `getsidexyznew(...)`
   - face branches around the `x-y face`, `x-z face`, and `y-z face` code
-- Repo framing page:
-  `algorithms/distorted_gausslet_pgdg_refinement_hierarchy.md`
+- Upstream fixed-line framing:
+  [1D distorted-gausslet PGDG refinement hierarchy](distorted_gausslet_pgdg_refinement_hierarchy.md)
+- Landed nonrecursive atomic route:
+  [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 
 ## What This Frames
 
-This page records the intended starting point for the Cartesian nesting line.
+This page records the local primitive language for Cartesian nesting:
 
-The main distinction is that the first real nesting primitive is not a global
-three-dimensional contraction. It is the one-dimensional interval contraction
-`doside`, followed by a face-product construction in the two tangential
-directions.
+- one-dimensional `doside`
+- two-dimensional tangential face products
+- one first shell packet with transferred operator data
 
-This keeps the nesting logic local and makes the relationship to the legacy
-code explicit.
+It is no longer the source-of-truth page for the whole landed atomic nonrecursive
+route.
 
 ## Current Repo Status
 
-The repo now has a stabilized base QW-PGDG path that is suitable as the
-starting point for this nesting line:
+The repo now has the primitive pieces described on this page:
 
-- active PGDG-mediated auxiliary construction is analytic in current use
-- the base PGDG basis-realization layer includes its final COMX cleanup
-- the current Cartesian fixed block is converging cleanly enough to serve as a
-  pre-nesting starting point
+- dedicated one-dimensional `doside` helpers
+- tangential face-product constructors
+- first shell packet propagation on those face pieces
 
-What the repo now has is the first narrow primitive described on this page:
-
-- a dedicated one-dimensional `doside` helper on the finalized fixed line
-- one first simple `x-y` face-product constructor on that fixed line
-- one first opposite-face shell object with shell-level packet propagation
-- one first generalized six-face shell-packet interface
-- one first nested fixed-block adapter consumed by the QW-PGDG nearest/GGT route
-- one first shell-plus-core fixed block for that same nonrecursive consumer path
-- one first nonrecursive shell-sequence fixed-block source in the same consumer language
-
-What the repo still does not yet have is the broader nested rollout:
-
-- no recursive shell or box nesting
-- no operator-packet propagation through a full nested hierarchy
-- no recursive shell tree beyond the first generalized single-shell interface
-- no recursive shell-plus-core sequence yet
-- no true recursive shell generation or shell-tree reuse yet
-
-So this page now stabilizes both the algorithm and the intended boundary of the
-first implementation step.
+The repo has moved beyond this primitive stage for the active atomic line. For
+the landed nonrecursive fixed-block route, coverage rule, shell-plus-core,
+corrected complete-shell source, and fixed-block adapter, use:
+[Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 
 ## Relation To Other Pages
 
-This page is downstream of, but separate from:
-
-- `algorithms/qiu_white_residual_gaussian_route.md`
-- `algorithms/distorted_gausslet_pgdg_refinement_hierarchy.md`
-
-Those pages explain how to build the current Qiu-White / QW-PGDG starting
-point. This page explains the next contraction/localization layer that should
-sit on top of that starting point.
+- This page is the primitive local-contraction page.
+- [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
+  records the landed nonrecursive atomic fixed-block route built from these
+  primitives.
+- [Qiu-White residual-Gaussian route](qiu_white_residual_gaussian_route.md)
+  records the later hybrid completion once a fixed block is already in hand.
 
 ## Implementation Notes
-
-The first implementation target should stay narrow:
-
-- one finalized Cartesian fixed block
-- one local one-dimensional `doside` primitive
-- one simple shell or face test
-
-The first implementation should follow the legacy `getsideu/getside` logic
-closely rather than inventing a different contraction rule.
 
 Recommended code-comment style:
 
@@ -156,8 +110,10 @@ Recommended code-comment style:
 # See docs/src/algorithms/cartesian_nested_face_construction.md.
 ```
 
-The same comment rules used elsewhere in the Algorithms section apply here:
+Guidelines:
 
-- keep step numbers aligned with this page
-- keep wording close to the pseudocode
-- include the docs path exactly
+- keep this page focused on local primitives
+- do not use it as the source-of-truth page for the full atomic nonrecursive
+  nesting route
+- keep later fixed-block assembly and residual-Gaussian completion on their own
+  algorithm pages
