@@ -1151,6 +1151,47 @@ function _bond_aligned_diatomic_qw_fixture(; bond_length::Float64 = 1.4)
     end)
 end
 
+function _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length::Float64 = 1.4)
+    key = Symbol(:bond_aligned_diatomic_nested_fixed_block_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        basis, operators, check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion = expansion,
+        )
+        source = nested.source
+        fixed_block = nested.fixed_block
+        parent_modes = eigen(Hermitian(operators.one_body_hamiltonian), Hermitian(operators.overlap))
+        parent_ground = parent_modes.vectors[:, 1]
+        projected = _nested_fixed_projected_orbital(operators.overlap, fixed_block, parent_ground)
+        projected_vee = _nested_vee_from_orbital(
+            GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_block, expansion),
+            projected,
+        )
+        capture, projected_energy = _nested_projector_stats(
+            operators.overlap,
+            operators.one_body_hamiltonian,
+            fixed_block,
+            parent_ground,
+        )
+        (
+            basis,
+            operators,
+            check,
+            expansion,
+            source,
+            fixed_block,
+            parent_modes,
+            parent_ground,
+            projected,
+            projected_vee,
+            capture,
+            projected_energy,
+        )
+    end)
+end
+
 function _nested_complete_shell_intervals(count::Int)
     count >= 15 || throw(ArgumentError("complete-shell fixture expects count >= 15"))
     outer_start = div(count - 13, 2) + 1
@@ -3947,6 +3988,105 @@ end
     @test length(basis14.basis_x) == length(basis14.basis_y)
     @test length(basis14.basis_z) > length(basis14.basis_x)
     @test length(basis20.basis_z) >= length(basis14.basis_z)
+end
+
+@testset "Bond-aligned diatomic split geometry" begin
+    basis, _operators, _check = _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    parent_box = (
+        1:length(basis.basis_x),
+        1:length(basis.basis_y),
+        1:length(basis.basis_z),
+    )
+    working_box = (2:8, 2:8, 2:12)
+    midpoint = 0.0
+
+    geometry = GaussletBases._nested_bond_aligned_diatomic_split_geometry(
+        bundles,
+        parent_box,
+        working_box;
+        bond_axis = :z,
+        midpoint = midpoint,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.4,
+    )
+    sliver_geometry = GaussletBases._nested_bond_aligned_diatomic_split_geometry(
+        bundles,
+        parent_box,
+        working_box;
+        bond_axis = :z,
+        midpoint = midpoint,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.75,
+    )
+    short_geometry = GaussletBases._nested_bond_aligned_diatomic_split_geometry(
+        bundles,
+        parent_box,
+        (3:7, 3:7, 4:12);
+        bond_axis = :z,
+        midpoint = midpoint,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.4,
+    )
+
+    @test geometry.did_split
+    @test geometry.count_eligible
+    @test geometry.shape_eligible
+    @test geometry.split_index == 7
+    @test geometry.working_box == working_box
+    @test geometry.child_boxes == [(2:8, 2:8, 2:7), (2:8, 2:8, 8:12)]
+    @test all(widths[3] >= 0.4 * max(widths[1], widths[2]) for widths in geometry.child_physical_widths)
+
+    @test sliver_geometry.count_eligible
+    @test !sliver_geometry.shape_eligible
+    @test !sliver_geometry.did_split
+
+    @test !short_geometry.count_eligible
+    @test !short_geometry.did_split
+end
+
+@testset "Bond-aligned diatomic nested fixed block" begin
+    (
+        basis,
+        operators,
+        check,
+        expansion,
+        source,
+        fixed_block,
+        parent_modes,
+        _parent_ground,
+        _projected,
+        projected_vee,
+        capture,
+        projected_energy,
+    ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
+
+    @test source isa GaussletBases._CartesianNestedBondAlignedDiatomicSource3D
+    @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test source.geometry.did_split
+    @test length(source.shared_shell_layers) == 1
+    @test length(source.child_sequences) == 2
+    @test size(fixed_block.overlap, 1) == 577
+    @test source.sequence.working_box == (
+        1:length(basis.basis_x),
+        1:length(basis.basis_y),
+        1:length(basis.basis_z),
+    )
+    @test length(source.sequence.support_indices) ==
+        length(basis.basis_x) * length(basis.basis_y) * length(basis.basis_z)
+    @test size(fixed_block.coefficient_matrix, 1) ==
+        length(basis.basis_x) * length(basis.basis_y) * length(basis.basis_z)
+    @test size(fixed_block.coefficient_matrix, 2) < size(fixed_block.coefficient_matrix, 1)
+    @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
+    @test all(isfinite, fixed_block.weights)
+    @test minimum(fixed_block.weights) > 0.0
+    @test all(isfinite, fixed_block.fixed_centers)
+    @test capture > 0.998
+    @test projected_energy < -1.2
+    @test abs(projected_energy - parent_modes.values[1]) < 0.03
+    @test 0.7 < projected_vee < 0.8
+    @test abs(projected_vee - check.vee_expectation) < 5.0e-4
 end
 
 @testset "Ordinary Cartesian localized backend" begin

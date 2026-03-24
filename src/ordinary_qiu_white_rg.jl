@@ -254,6 +254,79 @@ function _qwrg_basis_for_axis(
     throw(ArgumentError("axis must be :x, :y, or :z"))
 end
 
+function _qwrg_bond_aligned_axis_bundles(
+    basis::BondAlignedDiatomicQWBasis3D,
+    expansion::CoulombGaussianExpansion;
+    gausslet_backend::Symbol = :numerical_reference,
+)
+    bundle_x = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_x;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_y = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_y;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_z = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_z;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    return _CartesianNestedAxisBundles3D(bundle_x, bundle_y, bundle_z)
+end
+
+function _bond_aligned_diatomic_nested_fixed_source(
+    basis::BondAlignedDiatomicQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+    )
+    midpoint =
+        sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) / length(basis.nuclei)
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+    return _nested_bond_aligned_diatomic_source(
+        basis,
+        bundles;
+        bond_axis = basis.bond_axis,
+        midpoint = midpoint,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+end
+
+function _bond_aligned_diatomic_nested_fixed_block(
+    basis::BondAlignedDiatomicQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    source = _bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+    return (
+        source = source,
+        fixed_block = _nested_fixed_block(source),
+    )
+end
+
 function _qwrg_elapsed_seconds(start_ns::UInt64)
     return (time_ns() - start_ns) / 1.0e9
 end

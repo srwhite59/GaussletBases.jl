@@ -281,6 +281,70 @@ struct _NestedFixedBlock3D{B,S}
     fixed_centers::Matrix{Float64}
 end
 
+"""
+    _CartesianNestedAxisBundles3D
+
+Narrow mixed-axis parent bundle container for the first bond-aligned diatomic
+nested fixed-block route.
+
+The atomic shell language already assumes localized 1D PGDG data on each axis.
+This object lifts that assumption to three explicit axes so the shell language
+can be reused on a rectangular parent box with unequal axis lengths.
+"""
+struct _CartesianNestedAxisBundles3D{BX,BY,BZ}
+    bundle_x::BX
+    bundle_y::BY
+    bundle_z::BZ
+end
+
+"""
+    _BondAlignedDiatomicSplitGeometry3D
+
+Geometry report for the first bond-aligned diatomic split/no-split decision.
+
+The split is attached to the original parent grid:
+
+- `working_box` is the shared box remaining after the outer shared shell stage
+- `split_index` is the bond-axis parent-grid index nearest the bond midpoint
+- `child_boxes` are the two nonoverlapping child boxes if the split is allowed
+- `child_physical_widths` records the mapped physical widths of those children
+"""
+struct _BondAlignedDiatomicSplitGeometry3D
+    parent_box::NTuple{3,UnitRange{Int}}
+    working_box::NTuple{3,UnitRange{Int}}
+    bond_axis::Symbol
+    midpoint::Float64
+    split_index::Int
+    count_eligible::Bool
+    shape_eligible::Bool
+    did_split::Bool
+    child_boxes::Vector{NTuple{3,UnitRange{Int}}}
+    child_physical_widths::Vector{NTuple{3,Float64}}
+end
+
+"""
+    _CartesianNestedBondAlignedDiatomicSource3D
+
+First bond-aligned diatomic nested fixed-space source built on top of the
+existing atomic shell language.
+
+The source keeps:
+
+- the mixed-axis parent bundle data
+- the shared-box split/no-split geometry decision
+- the outer shared shell layers
+- the child atomic-style subtrees after the bond-axis split
+- the merged shell-sequence object used to build the fixed block
+"""
+struct _CartesianNestedBondAlignedDiatomicSource3D{B}
+    basis::B
+    axis_bundles::_CartesianNestedAxisBundles3D
+    geometry::_BondAlignedDiatomicSplitGeometry3D
+    shared_shell_layers::Vector{_CartesianNestedCompleteShell3D}
+    child_sequences::Vector{_CartesianNestedShellSequence3D}
+    sequence::_CartesianNestedShellSequence3D
+end
+
 function Base.show(io::IO, side::_CartesianNestedDoSide1D)
     print(
         io,
@@ -413,6 +477,75 @@ function Base.show(io::IO, fixed_block::_NestedFixedBlock3D)
         ", nsupport=",
         length(fixed_block.support_indices),
         ")",
+    )
+end
+
+function Base.show(io::IO, bundles::_CartesianNestedAxisBundles3D)
+    dims = _nested_axis_lengths(bundles)
+    print(
+        io,
+        "_CartesianNestedAxisBundles3D(nx=",
+        dims[1],
+        ", ny=",
+        dims[2],
+        ", nz=",
+        dims[3],
+        ")",
+    )
+end
+
+function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
+    print(
+        io,
+        "_BondAlignedDiatomicSplitGeometry3D(axis=:",
+        geometry.bond_axis,
+        ", working_box=",
+        geometry.working_box,
+        ", split_index=",
+        geometry.split_index,
+        ", did_split=",
+        geometry.did_split,
+        ")",
+    )
+end
+
+function Base.show(io::IO, source::_CartesianNestedBondAlignedDiatomicSource3D)
+    print(
+        io,
+        "_CartesianNestedBondAlignedDiatomicSource3D(nshared=",
+        length(source.shared_shell_layers),
+        ", nchild=",
+        length(source.child_sequences),
+        ", nfixed=",
+        size(source.sequence.coefficient_matrix, 2),
+        ", did_split=",
+        source.geometry.did_split,
+        ")",
+    )
+end
+
+function _nested_axis_bundle(
+    bundles::_CartesianNestedAxisBundles3D,
+    axis::Symbol,
+)
+    axis == :x && return bundles.bundle_x
+    axis == :y && return bundles.bundle_y
+    axis == :z && return bundles.bundle_z
+    throw(ArgumentError("nested axis bundle lookup requires axis :x, :y, or :z"))
+end
+
+function _nested_axis_pgdg(
+    bundles::_CartesianNestedAxisBundles3D,
+    axis::Symbol,
+)
+    return _nested_axis_bundle(bundles, axis).pgdg_intermediate
+end
+
+function _nested_axis_lengths(bundles::_CartesianNestedAxisBundles3D)
+    return (
+        size(_nested_axis_pgdg(bundles, :x).overlap, 1),
+        size(_nested_axis_pgdg(bundles, :y).overlap, 1),
+        size(_nested_axis_pgdg(bundles, :z).overlap, 1),
     )
 end
 
@@ -571,18 +704,52 @@ function _nested_doside_1d(
     return _nested_doside_1d(bundle.pgdg_intermediate, interval, retained_count)
 end
 
+function _cartesian_flat_index(
+    ix::Int,
+    iy::Int,
+    iz::Int,
+    dims::NTuple{3,Int},
+)
+    nx, ny, nz = dims
+    1 <= ix <= nx || throw(ArgumentError("x index must lie inside the parent Cartesian box"))
+    1 <= iy <= ny || throw(ArgumentError("y index must lie inside the parent Cartesian box"))
+    1 <= iz <= nz || throw(ArgumentError("z index must lie inside the parent Cartesian box"))
+    return (ix - 1) * ny * nz + (iy - 1) * nz + iz
+end
+
 function _cartesian_flat_index(ix::Int, iy::Int, iz::Int, n1d::Int)
-    return (ix - 1) * n1d * n1d + (iy - 1) * n1d + iz
+    return _cartesian_flat_index(ix, iy, iz, (n1d, n1d, n1d))
+end
+
+function _cartesian_unflat_index(index::Int, dims::NTuple{3,Int})
+    nx, ny, nz = dims
+    1 <= index <= nx * ny * nz || throw(
+        ArgumentError("flat parent index must lie inside the parent Cartesian box"),
+    )
+    shifted = index - 1
+    plane = ny * nz
+    ix = shifted ÷ plane + 1
+    remainder = shifted % plane
+    iy = remainder ÷ nz + 1
+    iz = remainder % nz + 1
+    return (ix, iy, iz)
 end
 
 function _cartesian_unflat_index(index::Int, n1d::Int)
-    shifted = index - 1
-    plane = n1d * n1d
-    ix = shifted ÷ plane + 1
-    remainder = shifted % plane
-    iy = remainder ÷ n1d + 1
-    iz = remainder % n1d + 1
-    return (ix, iy, iz)
+    return _cartesian_unflat_index(index, (n1d, n1d, n1d))
+end
+
+function _nested_xy_face_support_indices(
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_index::Int,
+    dims::NTuple{3,Int},
+)
+    support = Int[]
+    for ix in x_interval, iy in y_interval
+        push!(support, _cartesian_flat_index(ix, iy, z_index, dims))
+    end
+    return support
 end
 
 function _nested_xy_face_support_indices(
@@ -591,11 +758,7 @@ function _nested_xy_face_support_indices(
     z_index::Int,
     n1d::Int,
 )
-    support = Int[]
-    for ix in x_interval, iy in y_interval
-        push!(support, _cartesian_flat_index(ix, iy, z_index, n1d))
-    end
-    return support
+    return _nested_xy_face_support_indices(x_interval, y_interval, z_index, (n1d, n1d, n1d))
 end
 
 # Alg Nested-Face steps 5-7: Build one simple x-y face product from two local
@@ -687,23 +850,61 @@ function _nested_face_support_indices(
     interval_first::UnitRange{Int},
     interval_second::UnitRange{Int},
     fixed_index::Int,
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
     support = Int[]
     if face_kind == :xy
         for ix in interval_first, iy in interval_second
-            push!(support, _cartesian_flat_index(ix, iy, fixed_index, n1d))
+            push!(support, _cartesian_flat_index(ix, iy, fixed_index, dims))
         end
     elseif face_kind == :xz
         for ix in interval_first, iz in interval_second
-            push!(support, _cartesian_flat_index(ix, fixed_index, iz, n1d))
+            push!(support, _cartesian_flat_index(ix, fixed_index, iz, dims))
         end
     elseif face_kind == :yz
         for iy in interval_first, iz in interval_second
-            push!(support, _cartesian_flat_index(fixed_index, iy, iz, n1d))
+            push!(support, _cartesian_flat_index(fixed_index, iy, iz, dims))
         end
     else
         throw(ArgumentError("nested face support requires face kind :xy, :xz, or :yz"))
+    end
+    return support
+end
+
+function _nested_face_support_indices(
+    face_kind::Symbol,
+    interval_first::UnitRange{Int},
+    interval_second::UnitRange{Int},
+    fixed_index::Int,
+    n1d::Int,
+)
+    return _nested_face_support_indices(face_kind, interval_first, interval_second, fixed_index, (n1d, n1d, n1d))
+end
+
+function _nested_edge_support_indices(
+    free_axis::Symbol,
+    free_interval::UnitRange{Int},
+    fixed_indices::NTuple{2,Int},
+    dims::NTuple{3,Int},
+)
+    support = Int[]
+    if free_axis == :x
+        iy, iz = fixed_indices
+        for ix in free_interval
+            push!(support, _cartesian_flat_index(ix, iy, iz, dims))
+        end
+    elseif free_axis == :y
+        ix, iz = fixed_indices
+        for iy in free_interval
+            push!(support, _cartesian_flat_index(ix, iy, iz, dims))
+        end
+    elseif free_axis == :z
+        ix, iy = fixed_indices
+        for iz in free_interval
+            push!(support, _cartesian_flat_index(ix, iy, iz, dims))
+        end
+    else
+        throw(ArgumentError("nested edge support requires free axis :x, :y, or :z"))
     end
     return support
 end
@@ -714,26 +915,7 @@ function _nested_edge_support_indices(
     fixed_indices::NTuple{2,Int},
     n1d::Int,
 )
-    support = Int[]
-    if free_axis == :x
-        iy, iz = fixed_indices
-        for ix in free_interval
-            push!(support, _cartesian_flat_index(ix, iy, iz, n1d))
-        end
-    elseif free_axis == :y
-        ix, iz = fixed_indices
-        for iy in free_interval
-            push!(support, _cartesian_flat_index(ix, iy, iz, n1d))
-        end
-    elseif free_axis == :z
-        ix, iy = fixed_indices
-        for iz in free_interval
-            push!(support, _cartesian_flat_index(ix, iy, iz, n1d))
-        end
-    else
-        throw(ArgumentError("nested edge support requires free axis :x, :y, or :z"))
-    end
-    return support
+    return _nested_edge_support_indices(free_axis, free_interval, fixed_indices, (n1d, n1d, n1d))
 end
 
 function _nested_edge_product(
@@ -741,20 +923,27 @@ function _nested_edge_product(
     fixed_sides::NTuple{2,Symbol},
     side::_CartesianNestedDoSide1D,
     fixed_indices::NTuple{2,Int},
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
-    1 <= minimum(fixed_indices) <= maximum(fixed_indices) <= n1d || throw(
-        ArgumentError("nested edge requires fixed indices inside the finalized Cartesian line"),
+    limits =
+        free_axis == :x ? (dims[2], dims[3]) :
+        free_axis == :y ? (dims[1], dims[3]) :
+        (dims[1], dims[2])
+    1 <= fixed_indices[1] <= limits[1] || throw(
+        ArgumentError("nested edge requires the first fixed index inside the finalized Cartesian line"),
     )
-    coefficient_matrix = zeros(Float64, n1d^3, size(side.coefficient_matrix, 2))
+    1 <= fixed_indices[2] <= limits[2] || throw(
+        ArgumentError("nested edge requires the second fixed index inside the finalized Cartesian line"),
+    )
+    coefficient_matrix = zeros(Float64, prod(dims), size(side.coefficient_matrix, 2))
     for col in 1:size(side.coefficient_matrix, 2)
         for free_index in side.interval
             value = side.coefficient_matrix[free_index, col]
             iszero(value) && continue
             flat =
-                free_axis == :x ? _cartesian_flat_index(free_index, fixed_indices[1], fixed_indices[2], n1d) :
-                free_axis == :y ? _cartesian_flat_index(fixed_indices[1], free_index, fixed_indices[2], n1d) :
-                _cartesian_flat_index(fixed_indices[1], fixed_indices[2], free_index, n1d)
+                free_axis == :x ? _cartesian_flat_index(free_index, fixed_indices[1], fixed_indices[2], dims) :
+                free_axis == :y ? _cartesian_flat_index(fixed_indices[1], free_index, fixed_indices[2], dims) :
+                _cartesian_flat_index(fixed_indices[1], fixed_indices[2], free_index, dims)
             coefficient_matrix[flat, col] = value
         end
     end
@@ -762,7 +951,7 @@ function _nested_edge_product(
         free_axis == :x ? (:y, :z) :
         free_axis == :y ? (:x, :z) :
         (:x, :y)
-    support_indices = _nested_edge_support_indices(free_axis, side.interval, fixed_indices, n1d)
+    support_indices = _nested_edge_support_indices(free_axis, side.interval, fixed_indices, dims)
     return _CartesianNestedEdge3D(
         free_axis,
         fixed_axes,
@@ -774,13 +963,23 @@ function _nested_edge_product(
     )
 end
 
+function _nested_edge_product(
+    free_axis::Symbol,
+    fixed_sides::NTuple{2,Symbol},
+    side::_CartesianNestedDoSide1D,
+    fixed_indices::NTuple{2,Int},
+    n1d::Int,
+)
+    return _nested_edge_product(free_axis, fixed_sides, side, fixed_indices, (n1d, n1d, n1d))
+end
+
 function _nested_corner_piece(
     fixed_sides::NTuple{3,Symbol},
     fixed_indices::NTuple{3,Int},
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
-    flat = _cartesian_flat_index(fixed_indices[1], fixed_indices[2], fixed_indices[3], n1d)
-    coefficient_matrix = zeros(Float64, n1d^3, 1)
+    flat = _cartesian_flat_index(fixed_indices[1], fixed_indices[2], fixed_indices[3], dims)
+    coefficient_matrix = zeros(Float64, prod(dims), 1)
     coefficient_matrix[flat, 1] = 1.0
     return _CartesianNestedCorner3D(
         fixed_sides,
@@ -790,17 +989,34 @@ function _nested_corner_piece(
     )
 end
 
+function _nested_corner_piece(
+    fixed_sides::NTuple{3,Symbol},
+    fixed_indices::NTuple{3,Int},
+    n1d::Int,
+)
+    return _nested_corner_piece(fixed_sides, fixed_indices, (n1d, n1d, n1d))
+end
+
+function _nested_box_support_indices(
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    dims::NTuple{3,Int},
+)
+    support = Int[]
+    for ix in x_interval, iy in y_interval, iz in z_interval
+        push!(support, _cartesian_flat_index(ix, iy, iz, dims))
+    end
+    return support
+end
+
 function _nested_box_support_indices(
     x_interval::UnitRange{Int},
     y_interval::UnitRange{Int},
     z_interval::UnitRange{Int},
     n1d::Int,
 )
-    support = Int[]
-    for ix in x_interval, iy in y_interval, iz in z_interval
-        push!(support, _cartesian_flat_index(ix, iy, iz, n1d))
-    end
-    return support
+    return _nested_box_support_indices(x_interval, y_interval, z_interval, (n1d, n1d, n1d))
 end
 
 function _nested_direct_core_coefficients(
@@ -818,9 +1034,9 @@ function _nested_product_coefficients(
     x_side::_CartesianNestedDoSide1D,
     y_side::_CartesianNestedDoSide1D,
     z_side::_CartesianNestedDoSide1D,
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
-    nparent = n1d^3
+    nparent = prod(dims)
     ncols = size(x_side.coefficient_matrix, 2) * size(y_side.coefficient_matrix, 2) * size(z_side.coefficient_matrix, 2)
     coefficients = zeros(Float64, nparent, ncols)
     column = 0
@@ -837,13 +1053,22 @@ function _nested_product_coefficients(
                 for iz in z_side.interval
                     vz = z_side.coefficient_matrix[iz, izcol]
                     iszero(vz) && continue
-                    flat = _cartesian_flat_index(ix, iy, iz, n1d)
+                    flat = _cartesian_flat_index(ix, iy, iz, dims)
                     coefficients[flat, column] = vx * vy * vz
                 end
             end
         end
     end
     return coefficients
+end
+
+function _nested_product_coefficients(
+    x_side::_CartesianNestedDoSide1D,
+    y_side::_CartesianNestedDoSide1D,
+    z_side::_CartesianNestedDoSide1D,
+    n1d::Int,
+)
+    return _nested_product_coefficients(x_side, y_side, z_side, (n1d, n1d, n1d))
 end
 
 function _nested_contracted_core_coefficients(
@@ -896,7 +1121,7 @@ end
 function _nested_sequence_working_box(
     core_indices::AbstractVector{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D},
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
     xmin = typemax(Int)
     ymin = typemax(Int)
@@ -917,7 +1142,7 @@ function _nested_sequence_working_box(
     end
 
     for index in core_indices
-        update_bounds(_cartesian_unflat_index(index, n1d))
+        update_bounds(_cartesian_unflat_index(index, dims))
     end
     for shell in shell_layers, state in shell.support_states
         update_bounds(state)
@@ -927,14 +1152,22 @@ function _nested_sequence_working_box(
     return (xmin:xmax, ymin:ymax, zmin:zmax)
 end
 
+function _nested_sequence_working_box(
+    core_indices::AbstractVector{Int},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D},
+    n1d::Int,
+)
+    return _nested_sequence_working_box(core_indices, shell_layers, (n1d, n1d, n1d))
+end
+
 function _nested_assert_sequence_coverage(
     core_indices::AbstractVector{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D},
     support_indices::AbstractVector{Int},
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
-    working_box = _nested_sequence_working_box(core_indices, shell_layers, n1d)
-    target_indices = _nested_box_support_indices(working_box..., n1d)
+    working_box = _nested_sequence_working_box(core_indices, shell_layers, dims)
+    target_indices = _nested_box_support_indices(working_box..., dims)
     if target_indices != support_indices
         support_set = Set(support_indices)
         target_set = Set(target_indices)
@@ -943,6 +1176,15 @@ function _nested_assert_sequence_coverage(
         throw(ArgumentError("nested shell-sequence construction requires full coverage of the inferred working box $(working_box): missing $missing parent rows and extra $extra rows"))
     end
     return working_box
+end
+
+function _nested_assert_sequence_coverage(
+    core_indices::AbstractVector{Int},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D},
+    support_indices::AbstractVector{Int},
+    n1d::Int,
+)
+    return _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, (n1d, n1d, n1d))
 end
 
 function _nested_shrunk_interval(
@@ -979,14 +1221,18 @@ function _nested_face_product(
     side_first::_CartesianNestedDoSide1D,
     side_second::_CartesianNestedDoSide1D,
     fixed_index::Int,
-    n1d::Int,
+    dims::NTuple{3,Int},
 )
-    1 <= fixed_index <= n1d || throw(ArgumentError("nested face requires a fixed index inside the finalized Cartesian line"))
+    max_fixed =
+        face_kind == :xy ? dims[3] :
+        face_kind == :xz ? dims[2] :
+        dims[1]
+    1 <= fixed_index <= max_fixed || throw(ArgumentError("nested face requires a fixed index inside the finalized Cartesian line"))
     (fixed_side == :low || fixed_side == :high) || throw(ArgumentError("nested face fixed_side must be :low or :high"))
     _, fixed_axis = _nested_face_axes(face_kind)
     nfirst = size(side_first.coefficient_matrix, 2)
     nsecond = size(side_second.coefficient_matrix, 2)
-    coefficients = zeros(Float64, n1d^3, nfirst * nsecond)
+    coefficients = zeros(Float64, prod(dims), nfirst * nsecond)
     column = 0
     for ifirst in 1:nfirst, isecond in 1:nsecond
         column += 1
@@ -997,9 +1243,9 @@ function _nested_face_product(
                 value_second = side_second.coefficient_matrix[index_second, isecond]
                 iszero(value_second) && continue
                 flat_index =
-                    face_kind == :xy ? _cartesian_flat_index(index_first, index_second, fixed_index, n1d) :
-                    face_kind == :xz ? _cartesian_flat_index(index_first, fixed_index, index_second, n1d) :
-                    _cartesian_flat_index(fixed_index, index_first, index_second, n1d)
+                    face_kind == :xy ? _cartesian_flat_index(index_first, index_second, fixed_index, dims) :
+                    face_kind == :xz ? _cartesian_flat_index(index_first, fixed_index, index_second, dims) :
+                    _cartesian_flat_index(fixed_index, index_first, index_second, dims)
                 coefficients[flat_index, column] = value_first * value_second
             end
         end
@@ -1009,7 +1255,7 @@ function _nested_face_product(
         side_first.interval,
         side_second.interval,
         fixed_index,
-        n1d,
+        dims,
     )
     return _CartesianNestedFace3D(
         face_kind,
@@ -1021,6 +1267,17 @@ function _nested_face_product(
         coefficients,
         support_indices,
     )
+end
+
+function _nested_face_product(
+    face_kind::Symbol,
+    fixed_side::Symbol,
+    side_first::_CartesianNestedDoSide1D,
+    side_second::_CartesianNestedDoSide1D,
+    fixed_index::Int,
+    n1d::Int,
+)
+    return _nested_face_product(face_kind, fixed_side, side_first, side_second, fixed_index, (n1d, n1d, n1d))
 end
 
 function _nested_support_product_matrix(
@@ -1065,13 +1322,22 @@ function _nested_support_weights(
     support_states::AbstractVector{<:NTuple{3,Int}},
     weights_1d::AbstractVector{<:Real},
 )
+    return _nested_support_weights(support_states, weights_1d, weights_1d, weights_1d)
+end
+
+function _nested_support_weights(
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    weights_x::AbstractVector{<:Real},
+    weights_y::AbstractVector{<:Real},
+    weights_z::AbstractVector{<:Real},
+)
     weights = zeros(Float64, length(support_states))
     for (index, state) in enumerate(support_states)
         ix, iy, iz = state
         weights[index] =
-            Float64(weights_1d[ix]) *
-            Float64(weights_1d[iy]) *
-            Float64(weights_1d[iz])
+            Float64(weights_x[ix]) *
+            Float64(weights_y[iy]) *
+            Float64(weights_z[iz])
     end
     return weights
 end
@@ -1102,6 +1368,59 @@ function _nested_weight_aware_pair_terms(
             raw_1d,
             raw_1d,
             raw_1d,
+        )
+        raw_contracted = transpose(support_coefficients) * raw_support * support_coefficients
+        matrix = Matrix{Float64}(raw_contracted ./ fixed_weight_outer)
+        @views pair_terms[term, :, :] .= 0.5 .* (matrix .+ transpose(matrix))
+    end
+
+    return (
+        weights = fixed_weights,
+        pair_terms = pair_terms,
+    )
+end
+
+function _nested_weight_aware_pair_terms(
+    bundles::_CartesianNestedAxisBundles3D,
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+)
+    pgdg_x = _nested_axis_pgdg(bundles, :x)
+    pgdg_y = _nested_axis_pgdg(bundles, :y)
+    pgdg_z = _nested_axis_pgdg(bundles, :z)
+    nterms = size(pgdg_x.pair_factor_terms, 1)
+    nterms == size(pgdg_y.pair_factor_terms, 1) == size(pgdg_z.pair_factor_terms, 1) || throw(
+        ArgumentError("mixed-axis nested IDA transfer requires the same Gaussian expansion term count on all axes"),
+    )
+    nfixed = size(support_coefficients, 2)
+    parent_weight_outer_x = pgdg_x.weights * transpose(pgdg_x.weights)
+    parent_weight_outer_y = pgdg_y.weights * transpose(pgdg_y.weights)
+    parent_weight_outer_z = pgdg_z.weights * transpose(pgdg_z.weights)
+    support_weights = _nested_support_weights(
+        support_states,
+        pgdg_x.weights,
+        pgdg_y.weights,
+        pgdg_z.weights,
+    )
+    fixed_weights = vec(transpose(support_coefficients) * support_weights)
+    all(isfinite, fixed_weights) || throw(
+        ArgumentError("mixed-axis nested fixed-block IDA transfer requires finite contracted integral weights"),
+    )
+    minimum(fixed_weights) > 0.0 || throw(
+        ArgumentError("mixed-axis nested fixed-block IDA transfer requires positive contracted integral weights"),
+    )
+    fixed_weight_outer = fixed_weights * transpose(fixed_weights)
+    pair_terms = zeros(Float64, nterms, nfixed, nfixed)
+
+    for term in 1:nterms
+        raw_x = @view(pgdg_x.pair_factor_terms[term, :, :]) .* parent_weight_outer_x
+        raw_y = @view(pgdg_y.pair_factor_terms[term, :, :]) .* parent_weight_outer_y
+        raw_z = @view(pgdg_z.pair_factor_terms[term, :, :]) .* parent_weight_outer_z
+        raw_support = _nested_support_product_matrix(
+            support_states,
+            raw_x,
+            raw_y,
+            raw_z,
         )
         raw_contracted = transpose(support_coefficients) * raw_support * support_coefficients
         matrix = Matrix{Float64}(raw_contracted ./ fixed_weight_outer)
@@ -1170,6 +1489,103 @@ function _nested_shell_packet(
             @view(pgdg.gaussian_factor_terms[term, :, :]),
             @view(pgdg.gaussian_factor_terms[term, :, :]),
             @view(pgdg.gaussian_factor_terms[term, :, :]),
+        )
+        @views gaussian_terms[term, :, :] .= transpose(support_coefficients) * factor_support * support_coefficients
+    end
+
+    return (
+        packet = _CartesianNestedShellPacket3D(
+            transpose(support_coefficients) * overlap_support * support_coefficients,
+            transpose(support_coefficients) * kinetic_support * support_coefficients,
+            transpose(support_coefficients) * position_x_support * support_coefficients,
+            transpose(support_coefficients) * position_y_support * support_coefficients,
+            transpose(support_coefficients) * position_z_support * support_coefficients,
+            transpose(support_coefficients) * x2_x_support * support_coefficients,
+            transpose(support_coefficients) * x2_y_support * support_coefficients,
+            transpose(support_coefficients) * x2_z_support * support_coefficients,
+            pair_data.weights,
+            gaussian_terms,
+            pair_data.pair_terms,
+        ),
+        support_states = support_states,
+    )
+end
+
+function _nested_shell_packet(
+    bundles::_CartesianNestedAxisBundles3D,
+    coefficient_matrix::AbstractMatrix{<:Real},
+    support_indices::AbstractVector{Int},
+)
+    dims = _nested_axis_lengths(bundles)
+    pgdg_x = _nested_axis_pgdg(bundles, :x)
+    pgdg_y = _nested_axis_pgdg(bundles, :y)
+    pgdg_z = _nested_axis_pgdg(bundles, :z)
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
+    overlap_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    kinetic_support = _nested_sum_of_support_products(
+        support_states,
+        (
+            (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
+            (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
+            (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
+        ),
+    )
+    position_x_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.position,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    position_y_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.position,
+        pgdg_z.overlap,
+    )
+    position_z_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.position,
+    )
+    x2_x_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.x2,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    x2_y_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.x2,
+        pgdg_z.overlap,
+    )
+    x2_z_support = _nested_support_product_matrix(
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.x2,
+    )
+
+    nshell = size(coefficient_matrix, 2)
+    nterms = size(pgdg_x.gaussian_factor_terms, 1)
+    nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
+        ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
+    )
+    pair_data = _nested_weight_aware_pair_terms(bundles, support_states, support_coefficients)
+    gaussian_terms = zeros(Float64, nterms, nshell, nshell)
+    for term in 1:nterms
+        factor_support = _nested_support_product_matrix(
+            support_states,
+            @view(pgdg_x.gaussian_factor_terms[term, :, :]),
+            @view(pgdg_y.gaussian_factor_terms[term, :, :]),
+            @view(pgdg_z.gaussian_factor_terms[term, :, :]),
         )
         @views gaussian_terms[term, :, :] .= transpose(support_coefficients) * factor_support * support_coefficients
     end
@@ -1596,6 +2012,517 @@ function _nested_shell_sequence_from_core_block(
     )
 end
 
+function _nested_rectangular_shell(
+    bundles::_CartesianNestedAxisBundles3D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
+    y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
+    z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+)
+    dims = _nested_axis_lengths(bundles)
+    side_x_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xy[1])
+    side_y_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_xy[2])
+    side_x_xz = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xz[1])
+    side_z_xz = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_xz[2])
+    side_y_yz = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_yz[1])
+    side_z_yz = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_yz[2])
+
+    faces = _CartesianNestedFace3D[
+        _nested_face_product(:xy, :low, side_x_xy, side_y_xy, z_fixed[1], dims),
+        _nested_face_product(:xy, :high, side_x_xy, side_y_xy, z_fixed[2], dims),
+        _nested_face_product(:xz, :low, side_x_xz, side_z_xz, y_fixed[1], dims),
+        _nested_face_product(:xz, :high, side_x_xz, side_z_xz, y_fixed[2], dims),
+        _nested_face_product(:yz, :low, side_y_yz, side_z_yz, x_fixed[1], dims),
+        _nested_face_product(:yz, :high, side_y_yz, side_z_yz, x_fixed[2], dims),
+    ]
+
+    coefficient_blocks = [face.coefficient_matrix for face in faces]
+    coefficient_matrix = hcat(coefficient_blocks...)
+    face_column_ranges = UnitRange{Int}[]
+    column_start = 1
+    for face in faces
+        ncols = size(face.coefficient_matrix, 2)
+        push!(face_column_ranges, column_start:(column_start + ncols - 1))
+        column_start += ncols
+    end
+
+    support_indices = _nested_shell_support_indices(faces)
+    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+    return _CartesianNestedShell3D(
+        faces,
+        face_column_ranges,
+        coefficient_matrix,
+        support_indices,
+        shell_data.support_states,
+        shell_data.packet,
+    )
+end
+
+function _nested_complete_rectangular_shell(
+    bundles::_CartesianNestedAxisBundles3D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int};
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+    x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
+    y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
+    z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+)
+    dims = _nested_axis_lengths(bundles)
+    shell_faces = _nested_rectangular_shell(
+        bundles,
+        x_interval,
+        y_interval,
+        z_interval;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        x_fixed = x_fixed,
+        y_fixed = y_fixed,
+        z_fixed = z_fixed,
+    )
+
+    side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
+    side_y_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_y_edge)
+    side_z_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_z_edge)
+
+    edges = _CartesianNestedEdge3D[
+        _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), dims),
+        _nested_edge_product(:x, (:low, :high), side_x_edge, (y_fixed[1], z_fixed[2]), dims),
+        _nested_edge_product(:x, (:high, :low), side_x_edge, (y_fixed[2], z_fixed[1]), dims),
+        _nested_edge_product(:x, (:high, :high), side_x_edge, (y_fixed[2], z_fixed[2]), dims),
+        _nested_edge_product(:y, (:low, :low), side_y_edge, (x_fixed[1], z_fixed[1]), dims),
+        _nested_edge_product(:y, (:low, :high), side_y_edge, (x_fixed[1], z_fixed[2]), dims),
+        _nested_edge_product(:y, (:high, :low), side_y_edge, (x_fixed[2], z_fixed[1]), dims),
+        _nested_edge_product(:y, (:high, :high), side_y_edge, (x_fixed[2], z_fixed[2]), dims),
+        _nested_edge_product(:z, (:low, :low), side_z_edge, (x_fixed[1], y_fixed[1]), dims),
+        _nested_edge_product(:z, (:low, :high), side_z_edge, (x_fixed[1], y_fixed[2]), dims),
+        _nested_edge_product(:z, (:high, :low), side_z_edge, (x_fixed[2], y_fixed[1]), dims),
+        _nested_edge_product(:z, (:high, :high), side_z_edge, (x_fixed[2], y_fixed[2]), dims),
+    ]
+
+    corners = _CartesianNestedCorner3D[
+        _nested_corner_piece((:low, :low, :low), (x_fixed[1], y_fixed[1], z_fixed[1]), dims),
+        _nested_corner_piece((:low, :low, :high), (x_fixed[1], y_fixed[1], z_fixed[2]), dims),
+        _nested_corner_piece((:low, :high, :low), (x_fixed[1], y_fixed[2], z_fixed[1]), dims),
+        _nested_corner_piece((:low, :high, :high), (x_fixed[1], y_fixed[2], z_fixed[2]), dims),
+        _nested_corner_piece((:high, :low, :low), (x_fixed[2], y_fixed[1], z_fixed[1]), dims),
+        _nested_corner_piece((:high, :low, :high), (x_fixed[2], y_fixed[1], z_fixed[2]), dims),
+        _nested_corner_piece((:high, :high, :low), (x_fixed[2], y_fixed[2], z_fixed[1]), dims),
+        _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), dims),
+    ]
+
+    coefficient_blocks = Matrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
+    append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
+    append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
+    coefficient_matrix = hcat(coefficient_blocks...)
+
+    face_column_ranges = shell_faces.face_column_ranges
+    edge_column_ranges = UnitRange{Int}[]
+    column_start = size(shell_faces.coefficient_matrix, 2) + 1
+    for edge in edges
+        ncols = size(edge.coefficient_matrix, 2)
+        push!(edge_column_ranges, column_start:(column_start + ncols - 1))
+        column_start += ncols
+    end
+    corner_column_ranges = UnitRange{Int}[]
+    for corner in corners
+        ncols = size(corner.coefficient_matrix, 2)
+        push!(corner_column_ranges, column_start:(column_start + ncols - 1))
+        column_start += ncols
+    end
+
+    support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
+    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+
+    return _CartesianNestedCompleteShell3D(
+        shell_faces.faces,
+        face_column_ranges,
+        edges,
+        edge_column_ranges,
+        corners,
+        corner_column_ranges,
+        coefficient_matrix,
+        support_indices,
+        shell_data.support_states,
+        shell_data.packet,
+    )
+end
+
+function _nested_shell_sequence(
+    bundles::_CartesianNestedAxisBundles3D,
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
+    enforce_coverage::Bool = true,
+)
+    dims = _nested_axis_lengths(bundles)
+    core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
+    core_coefficients = _nested_direct_core_coefficients(core_indices, prod(dims))
+    return _nested_shell_sequence_from_core_block(
+        bundles,
+        core_indices,
+        core_coefficients,
+        shell_layers;
+        enforce_coverage = enforce_coverage,
+    )
+end
+
+function _nested_shell_sequence_from_core_block(
+    bundles::_CartesianNestedAxisBundles3D,
+    core_indices::AbstractVector{Int},
+    core_coefficients::AbstractMatrix{<:Real},
+    shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
+    enforce_coverage::Bool = true,
+)
+    dims = _nested_axis_lengths(bundles)
+    support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
+    working_box =
+        enforce_coverage ?
+        _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, dims) :
+        _nested_sequence_working_box(core_indices, shell_layers, dims)
+    coefficient_blocks = Matrix{Float64}[Matrix{Float64}(core_coefficients)]
+    append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
+    coefficient_matrix = hcat(coefficient_blocks...)
+    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+
+    ncore = size(core_coefficients, 2)
+    layer_column_ranges = UnitRange{Int}[]
+    column_start = ncore + 1
+    for shell in shell_layers
+        ncols = size(shell.coefficient_matrix, 2)
+        push!(layer_column_ranges, column_start:(column_start + ncols - 1))
+        column_start += ncols
+    end
+
+    return _CartesianNestedShellSequence3D(
+        collect(core_indices),
+        [_cartesian_unflat_index(index, dims) for index in core_indices],
+        1:ncore,
+        collect(shell_layers),
+        layer_column_ranges,
+        working_box,
+        coefficient_matrix,
+        support_indices,
+        shell_data.support_states,
+        shell_data.packet,
+    )
+end
+
+function _nested_can_shrink_box(box::NTuple{3,UnitRange{Int}})
+    return all(length(interval) >= 3 for interval in box)
+end
+
+function _nested_inner_box(box::NTuple{3,UnitRange{Int}})
+    _nested_can_shrink_box(box) || throw(
+        ArgumentError("nested box shrink requires at least three raw sites along each axis"),
+    )
+    return (
+        (first(box[1]) + 1):(last(box[1]) - 1),
+        (first(box[2]) + 1):(last(box[2]) - 1),
+        (first(box[3]) + 1):(last(box[3]) - 1),
+    )
+end
+
+function _nested_complete_shell_sequence_for_box(
+    bundles::_CartesianNestedAxisBundles3D,
+    box::NTuple{3,UnitRange{Int}};
+    nside::Int = 5,
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+)
+    nside >= 1 || throw(ArgumentError("diatomic child shell sequence requires nside >= 1"))
+    current_box = box
+    shell_layers = _CartesianNestedCompleteShell3D[]
+    while minimum(length.(current_box)) > nside
+        _nested_can_shrink_box(current_box) || break
+        inner_box = _nested_inner_box(current_box)
+        push!(
+            shell_layers,
+            _nested_complete_rectangular_shell(
+                bundles,
+                inner_box...;
+                retain_xy = retain_xy,
+                retain_xz = retain_xz,
+                retain_yz = retain_yz,
+                retain_x_edge = retain_x_edge,
+                retain_y_edge = retain_y_edge,
+                retain_z_edge = retain_z_edge,
+                x_fixed = (first(current_box[1]), last(current_box[1])),
+                y_fixed = (first(current_box[2]), last(current_box[2])),
+                z_fixed = (first(current_box[3]), last(current_box[3])),
+            ),
+        )
+        current_box = inner_box
+    end
+    return _nested_shell_sequence(
+        bundles,
+        current_box...,
+        shell_layers,
+    )
+end
+
+function _nested_interval_physical_width(
+    centers_axis::AbstractVector{<:Real},
+    interval::UnitRange{Int},
+)
+    length(interval) <= 1 && return 0.0
+    return Float64(centers_axis[last(interval)] - centers_axis[first(interval)])
+end
+
+function _nested_box_physical_widths(
+    bundles::_CartesianNestedAxisBundles3D,
+    box::NTuple{3,UnitRange{Int}},
+)
+    return (
+        _nested_interval_physical_width(_nested_axis_pgdg(bundles, :x).centers, box[1]),
+        _nested_interval_physical_width(_nested_axis_pgdg(bundles, :y).centers, box[2]),
+        _nested_interval_physical_width(_nested_axis_pgdg(bundles, :z).centers, box[3]),
+    )
+end
+
+function _nested_diatomic_split_index(
+    centers_axis::AbstractVector{<:Real},
+    interval::UnitRange{Int},
+    midpoint::Real,
+)
+    length(interval) >= 2 || throw(
+        ArgumentError("diatomic midpoint splitting requires at least two raw sites on the bond axis"),
+    )
+    candidates = collect(first(interval):(last(interval) - 1))
+    _, local_index = findmin(abs.(Float64.(centers_axis[candidates]) .- Float64(midpoint)))
+    return candidates[local_index]
+end
+
+function _nested_diatomic_child_boxes(
+    box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    split_index::Int,
+)
+    axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
+    axis != 0 || throw(ArgumentError("bond-axis child-box construction requires bond_axis = :x, :y, or :z"))
+    interval = box[axis]
+    first(interval) <= split_index < last(interval) || throw(
+        ArgumentError("diatomic child-box construction requires the split index to lie strictly inside the working box"),
+    )
+    left_axis = first(interval):split_index
+    right_axis = (split_index + 1):last(interval)
+    left_box =
+        axis == 1 ? (left_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], left_axis, box[3]) :
+        (box[1], box[2], left_axis)
+    right_box =
+        axis == 1 ? (right_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], right_axis, box[3]) :
+        (box[1], box[2], right_axis)
+    return left_box, right_box
+end
+
+function _nested_diatomic_children_are_roughly_cubic(
+    bundles::_CartesianNestedAxisBundles3D,
+    child_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
+    bond_axis::Symbol;
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    min_parallel_to_transverse_ratio > 0.0 || throw(
+        ArgumentError("diatomic anti-sliver check requires min_parallel_to_transverse_ratio > 0"),
+    )
+    axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
+    axis != 0 || throw(ArgumentError("bond-axis anti-sliver check requires bond_axis = :x, :y, or :z"))
+    for child_box in child_boxes
+        widths = _nested_box_physical_widths(bundles, child_box)
+        parallel = widths[axis]
+        transverse = maximum(widths[index] for index in 1:3 if index != axis)
+        parallel > 0.0 || return false
+        transverse > 0.0 || return false
+        parallel >= min_parallel_to_transverse_ratio * transverse || return false
+    end
+    return true
+end
+
+# Alg Nested-Diatomic step 5 and 6: Choose the bond-axis split plane at the
+# parent-grid index nearest the midpoint, then reject it if the child boxes are
+# too short or too thin in physical coordinates.
+# See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
+function _nested_bond_aligned_diatomic_split_geometry(
+    bundles::_CartesianNestedAxisBundles3D,
+    parent_box::NTuple{3,UnitRange{Int}},
+    working_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    midpoint::Real = 0.0,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
+    axis != 0 || throw(ArgumentError("diatomic split geometry requires bond_axis = :x, :y, or :z"))
+    parallel_interval = working_box[axis]
+    parallel_centers = _nested_axis_pgdg(bundles, bond_axis).centers
+    split_index = _nested_diatomic_split_index(parallel_centers, parallel_interval, midpoint)
+    left_box, right_box = _nested_diatomic_child_boxes(working_box, bond_axis, split_index)
+    child_boxes = [left_box, right_box]
+    count_eligible =
+        length(parallel_interval) > 2 * nside &&
+        minimum(length(box[axis]) for box in child_boxes) >= nside
+    shape_eligible =
+        count_eligible &&
+        _nested_diatomic_children_are_roughly_cubic(
+            bundles,
+            child_boxes,
+            bond_axis;
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        )
+    return _BondAlignedDiatomicSplitGeometry3D(
+        parent_box,
+        working_box,
+        bond_axis,
+        Float64(midpoint),
+        split_index,
+        count_eligible,
+        shape_eligible,
+        count_eligible && shape_eligible,
+        child_boxes,
+        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
+    )
+end
+
+function _nested_bond_aligned_diatomic_source(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    bond_axis::Symbol = :z,
+    midpoint::Real = 0.0,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+)
+    dims = _nested_axis_lengths(bundles)
+    parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
+    shared_shell_layers = _CartesianNestedCompleteShell3D[]
+    current_box = parent_box
+    geometry = _nested_bond_aligned_diatomic_split_geometry(
+        bundles,
+        parent_box,
+        current_box;
+        bond_axis = bond_axis,
+        midpoint = midpoint,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+
+    while true
+        parallel_length = length(current_box[bond_axis == :x ? 1 : bond_axis == :y ? 2 : 3])
+        if parallel_length <= 2 * nside || minimum(length.(current_box)) <= nside || !_nested_can_shrink_box(current_box)
+            break
+        end
+        inner_box = _nested_inner_box(current_box)
+        push!(
+            shared_shell_layers,
+            _nested_complete_rectangular_shell(
+                bundles,
+                inner_box...;
+                retain_xy = retain_xy,
+                retain_xz = retain_xz,
+                retain_yz = retain_yz,
+                retain_x_edge = retain_x_edge,
+                retain_y_edge = retain_y_edge,
+                retain_z_edge = retain_z_edge,
+                x_fixed = (first(current_box[1]), last(current_box[1])),
+                y_fixed = (first(current_box[2]), last(current_box[2])),
+                z_fixed = (first(current_box[3]), last(current_box[3])),
+            ),
+        )
+        current_box = inner_box
+        geometry = _nested_bond_aligned_diatomic_split_geometry(
+            bundles,
+            parent_box,
+            current_box;
+            bond_axis = bond_axis,
+            midpoint = midpoint,
+            nside = nside,
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        )
+        geometry.did_split && break
+    end
+
+    child_sequences = _CartesianNestedShellSequence3D[]
+    merged_sequence = nothing
+    if geometry.did_split
+        for child_box in geometry.child_boxes
+            push!(
+                child_sequences,
+                _nested_complete_shell_sequence_for_box(
+                    bundles,
+                    child_box;
+                    nside = nside,
+                    retain_xy = retain_xy,
+                    retain_xz = retain_xz,
+                    retain_yz = retain_yz,
+                    retain_x_edge = retain_x_edge,
+                    retain_y_edge = retain_y_edge,
+                    retain_z_edge = retain_z_edge,
+                ),
+            )
+        end
+        child_support = vcat([child.support_indices for child in child_sequences]...)
+        child_coefficients = hcat([child.coefficient_matrix for child in child_sequences]...)
+        merged_sequence = _nested_shell_sequence_from_core_block(
+            bundles,
+            child_support,
+            child_coefficients,
+            shared_shell_layers,
+        )
+    else
+        shared_child = _nested_complete_shell_sequence_for_box(
+            bundles,
+            current_box;
+            nside = nside,
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            retain_x_edge = retain_x_edge,
+            retain_y_edge = retain_y_edge,
+            retain_z_edge = retain_z_edge,
+        )
+        push!(child_sequences, shared_child)
+        merged_sequence =
+            isempty(shared_shell_layers) ? shared_child :
+            _nested_shell_sequence_from_core_block(
+                bundles,
+                shared_child.support_indices,
+                shared_child.coefficient_matrix,
+                shared_shell_layers,
+            )
+    end
+
+    return _CartesianNestedBondAlignedDiatomicSource3D(
+        basis,
+        bundles,
+        geometry,
+        shared_shell_layers,
+        child_sequences,
+        merged_sequence,
+    )
+end
+
 # Alg Nested-Face hierarchy step: Refine only the retained direct core block
 # inside a trusted nonrecursive shell anchor, using the original parent-space
 # functions assigned to that core region rather than re-coarsening already
@@ -1900,7 +2827,41 @@ end
 
 function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
+    parent_basis,
+)
+    packet = shell.packet
+    fixed_centers = hcat(
+        diag(packet.position_x),
+        diag(packet.position_y),
+        diag(packet.position_z),
+    )
+    return _NestedFixedBlock3D(
+        parent_basis,
+        shell,
+        shell.coefficient_matrix,
+        shell.support_indices,
+        packet.overlap,
+        packet.kinetic,
+        packet.position_x,
+        packet.position_y,
+        packet.position_z,
+        packet.x2_x,
+        packet.x2_y,
+        packet.x2_z,
+        packet.weights,
+        packet.gaussian_terms,
+        packet.pair_terms,
+        Matrix{Float64}(fixed_centers),
+    )
+end
+
+function _nested_fixed_block(
+    shell::_CartesianNestedShellSequence3D,
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
     return _nested_fixed_block(shell, bundle.basis)
+end
+
+function _nested_fixed_block(source::_CartesianNestedBondAlignedDiatomicSource3D)
+    return _nested_fixed_block(source.sequence, source.basis)
 end
