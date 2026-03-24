@@ -122,6 +122,29 @@ Current split:
 This page is still the source-of-truth algorithm for the Qiu-White reference
 implementation.
 
+## Code Map
+
+The current code is concentrated in:
+
+- `src/ordinary_qiu_white_rg.jl`
+  - `ordinary_cartesian_qiu_white_operators(...)`
+    public entry points for the ordinary and nested QW routes
+  - `_ordinary_cartesian_qiu_white_operators_atomic_shell_3d(...)`
+    active atomic-centered 3D `s/p` supplement path on the ordinary line
+  - `_ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(...)`
+    same active 3D `s/p` supplement path for the nested fixed-block consumer
+  - `_qwrg_interaction_matrix_nearest(...)`
+    step `8a`, nearest-center / GGT residual interaction
+  - `_qwrg_interaction_matrix_mwg(...)`
+    steps `8b`-`8d`, MWG residual moment matching and interaction
+- `src/legacy_basis_adapter.jl`
+  - `LegacyAtomicGaussianSupplement`
+    shared named-basis loader object for the added 3D Gaussian orbitals in step
+    `3`
+
+The older landed comments already follow this page reasonably well, especially
+the `# Alg QW-RG step ...` comments in `src/ordinary_qiu_white_rg.jl`.
+
 ## Implementation Notes
 
 For this algorithm family, code comments should track the pseudocode steps.

@@ -439,10 +439,7 @@ function _mapped_coulomb_expanded_symmetric_matrix(
     n1x = size(x_terms, 2)
     n1y = size(y_terms, 2)
     n1z = size(z_terms, 2)
-    orbitals = _mapped_cartesian_orbitals(1:n1x)
-    length(orbitals) == n1x * n1y * n1z || throw(
-        ArgumentError("term-first Coulomb-expanded assembly currently expects equal 1D dimensions on each axis"),
-    )
+    orbitals = _mapped_cartesian_orbitals(1:n1x, 1:n1y, 1:n1z)
     matrix = zeros(Float64, length(orbitals), length(orbitals))
     coeffs = Float64[Float64(value) for value in coefficients]
 

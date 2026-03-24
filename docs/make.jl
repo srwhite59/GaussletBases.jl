@@ -27,6 +27,7 @@ makedocs(
         hide("Cartesian nested face construction" => "algorithms/cartesian_nested_face_construction.md"),
         hide("Cartesian nested atomic nonrecursive route" => "algorithms/cartesian_nested_atomic_nonrecursive_route.md"),
         hide("Cartesian nested diatomic box policy" => "algorithms/cartesian_nested_diatomic_box_policy.md"),
+        hide("Cartesian nested diatomic coordinate distortion" => "algorithms/cartesian_nested_diatomic_coordinate_distortion.md"),
         hide("Radial interval-sampled build and extents" => "algorithms/radial_interval_sampled_build_and_extents.md"),
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
         hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),

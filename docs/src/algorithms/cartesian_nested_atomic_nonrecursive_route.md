@@ -161,6 +161,34 @@ primitive shell milestones.
   then takes over once the nested fixed block and its transferred packet are in
   hand.
 
+## Code Map
+
+The current landed implementation is concentrated in
+`src/cartesian_nested_faces.jl`:
+
+- `_nested_doside_1d(...)`
+  primitive local `doside` construction for step `4`
+- `_nested_complete_rectangular_shell(...)`
+  complete shell-layer construction with faces, edges, and corners for steps
+  `3`-`6`
+- `_nested_assert_sequence_coverage(...)`
+  explicit coverage/disjointness enforcement for step `5`
+- `_nested_shell_plus_core(...)`
+  shell-plus-core source construction for step `6`
+- `_nested_shell_sequence_from_core_block(...)`
+  general nonrecursive shell-sequence assembly for step `6`
+- `_nested_fixed_block(...)`
+  fixed-block adapter construction for step `8`
+
+The downstream handoff point lives in `src/ordinary_qiu_white_rg.jl`:
+
+- `ordinary_cartesian_qiu_white_operators(fixed_block::_NestedFixedBlock3D, ...)`
+  consumes the adapted fixed block and then follows the QW residual-Gaussian
+  route from step `9` onward
+
+The code comments on this line are present but still a bit uneven; this page is
+the place to tighten that mapping over time.
+
 ## Implementation Notes
 
 Recommended code-comment style:

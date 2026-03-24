@@ -81,8 +81,178 @@ struct QiuWhiteResidualGaussianOperators{B,D}
     residual_widths::Matrix{Float64}
 end
 
+"""
+    BondAlignedDiatomicQWBasis3D
+
+Narrow mixed-axis basis container for the first bond-aligned diatomic QW
+reference route.
+
+The first supported geometry family is a bond-aligned homonuclear diatomic:
+
+- one combined multi-center mapping on the distinguished bond axis
+- one shared single-center mapping on the two transverse axes
+- one rectangular 3D product basis built from those three one-dimensional
+  mapped bases
+"""
+struct BondAlignedDiatomicQWBasis3D{B<:MappedUniformBasis}
+    bond_axis::Symbol
+    basis_x::B
+    basis_y::B
+    basis_z::B
+    nuclei::Vector{NTuple{3,Float64}}
+    target_core_spacing::Float64
+end
+
+function Base.show(io::IO, basis::BondAlignedDiatomicQWBasis3D)
+    print(
+        io,
+        "BondAlignedDiatomicQWBasis3D(bond_axis=:",
+        basis.bond_axis,
+        ", nx=",
+        length(basis.basis_x),
+        ", ny=",
+        length(basis.basis_y),
+        ", nz=",
+        length(basis.basis_z),
+        ", nuclei=",
+        basis.nuclei,
+        ", target_core_spacing=",
+        basis.target_core_spacing,
+        ")",
+    )
+end
+
 const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
 const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
+
+function _qwrg_axis_coordinate(
+    point::NTuple{3,Float64},
+    axis::Symbol,
+)
+    axis == :x && return point[1]
+    axis == :y && return point[2]
+    axis == :z && return point[3]
+    throw(ArgumentError("axis must be :x, :y, or :z"))
+end
+
+function _qwrg_mapped_odd_count_for_extent(
+    mapping_value::AbstractCoordinateMapping,
+    xmax::Real;
+    reference_spacing::Real = 1.0,
+)
+    xmax_value = Float64(xmax)
+    spacing_value = Float64(reference_spacing)
+    xmax_value > 0.0 || throw(ArgumentError("mapped extent helper requires xmax > 0"))
+    spacing_value > 0.0 || throw(ArgumentError("mapped extent helper requires reference_spacing > 0"))
+    uedge = uofx(mapping_value, xmax_value)
+    count = 2 * ceil(Int, uedge / spacing_value) + 1
+    isodd(count) || throw(ArgumentError("mapped extent helper must produce an odd count"))
+    return count
+end
+
+function _qwrg_bond_aligned_homonuclear_nuclei(
+    bond_length::Real,
+    bond_axis::Symbol,
+)
+    half = 0.5 * Float64(bond_length)
+    bond_axis == :x && return [(-half, 0.0, 0.0), (half, 0.0, 0.0)]
+    bond_axis == :y && return [(0.0, -half, 0.0), (0.0, half, 0.0)]
+    bond_axis == :z && return [(0.0, 0.0, -half), (0.0, 0.0, half)]
+    throw(ArgumentError("bond_axis must be :x, :y, or :z"))
+end
+
+"""
+    bond_aligned_homonuclear_qw_basis(; ...)
+
+Build the first bond-aligned homonuclear diatomic 3D product basis for the
+ordinary QW reference line.
+
+The bond axis uses a combined multi-center inverse-sqrt-density mapping, while
+the two transverse axes share a single-center inverse-sqrt mapping at the
+common transverse projection.
+"""
+function bond_aligned_homonuclear_qw_basis(;
+    family = :G10,
+    bond_length::Real,
+    core_spacing::Real = 0.5,
+    xmax_parallel::Real = 8.0,
+    xmax_transverse::Real = 6.0,
+    bond_axis::Symbol = :z,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    core_spacing_value = Float64(core_spacing)
+    nuclear_charge_value = Float64(nuclear_charge)
+    core_spacing_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_qw_basis requires core_spacing > 0"))
+    nuclear_charge_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_qw_basis requires nuclear_charge > 0"))
+
+    nuclei = _qwrg_bond_aligned_homonuclear_nuclei(bond_length, bond_axis)
+    parallel_centers = Float64[_qwrg_axis_coordinate(nucleus, bond_axis) for nucleus in nuclei]
+    core_range = sqrt(core_spacing_value / nuclear_charge_value)
+
+    # Alg Nested-Diatomic-Map step 4 and 6: use a combined inverse-sqrt map on
+    # the bond axis and one shared single-center map on the transverse axes.
+    # See docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md.
+    parallel_mapping = fit_combined_invsqrt_mapping(
+        centers = parallel_centers,
+        core_ranges = fill(core_range, length(parallel_centers)),
+        target_spacings = fill(core_spacing_value, length(parallel_centers)),
+        tail_spacing = tail_spacing,
+    )
+    transverse_mapping = fit_combined_invsqrt_mapping(
+        centers = [0.0],
+        core_ranges = [core_range],
+        target_spacings = [core_spacing_value],
+        tail_spacing = tail_spacing,
+    )
+
+    count_parallel = _qwrg_mapped_odd_count_for_extent(
+        parallel_mapping,
+        xmax_parallel;
+        reference_spacing = reference_spacing,
+    )
+    count_transverse = _qwrg_mapped_odd_count_for_extent(
+        transverse_mapping,
+        xmax_transverse;
+        reference_spacing = reference_spacing,
+    )
+
+    parallel_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_parallel,
+        mapping = parallel_mapping,
+        reference_spacing = reference_spacing,
+    ))
+    transverse_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_transverse,
+        mapping = transverse_mapping,
+        reference_spacing = reference_spacing,
+    ))
+
+    basis_x = bond_axis == :x ? parallel_basis : transverse_basis
+    basis_y = bond_axis == :y ? parallel_basis : transverse_basis
+    basis_z = bond_axis == :z ? parallel_basis : transverse_basis
+    return BondAlignedDiatomicQWBasis3D(
+        bond_axis,
+        basis_x,
+        basis_y,
+        basis_z,
+        nuclei,
+        core_spacing_value,
+    )
+end
+
+function _qwrg_basis_for_axis(
+    basis::BondAlignedDiatomicQWBasis3D,
+    axis::Symbol,
+)
+    axis == :x && return basis.basis_x
+    axis == :y && return basis.basis_y
+    axis == :z && return basis.basis_z
+    throw(ArgumentError("axis must be :x, :y, or :z"))
+end
 
 function _qwrg_elapsed_seconds(start_ns::UInt64)
     return (time_ns() - start_ns) / 1.0e9
@@ -1843,6 +2013,222 @@ function _qwrg_orbital_data(
         )
     end
     return orbitals_out
+end
+
+function _qwrg_diatomic_overlap_matrix(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+)
+    overlap_x = bundle_x.pgdg_intermediate.overlap
+    overlap_y = bundle_y.pgdg_intermediate.overlap
+    overlap_z = bundle_z.pgdg_intermediate.overlap
+    matrix = zeros(
+        Float64,
+        size(overlap_x, 1) * size(overlap_y, 1) * size(overlap_z, 1),
+        size(overlap_x, 2) * size(overlap_y, 2) * size(overlap_z, 2),
+    )
+    _qwrg_fill_product_matrix!(matrix, overlap_x, overlap_y, overlap_z)
+    return matrix
+end
+
+function _qwrg_diatomic_interaction_matrix(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+)
+    return _mapped_coulomb_expanded_symmetric_matrix(
+        expansion.coefficients,
+        bundle_x.pgdg_intermediate.pair_factor_terms,
+        bundle_y.pgdg_intermediate.pair_factor_terms,
+        bundle_z.pgdg_intermediate.pair_factor_terms,
+    )
+end
+
+function _qwrg_diatomic_factor_term_cache(
+    basis::MappedUniformBasis,
+    centers_1d::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    gausslet_backend::Symbol,
+)
+    cache = Dict{Float64,Array{Float64,3}}()
+    for center_value in unique(Float64[Float64(value) for value in centers_1d])
+        bundle = _mapped_ordinary_gausslet_1d_bundle(
+            basis;
+            exponents = expansion.exponents,
+            center = center_value,
+            backend = gausslet_backend,
+        )
+        cache[center_value] = bundle.pgdg_intermediate.gaussian_factor_terms
+    end
+    return cache
+end
+
+function _qwrg_diatomic_one_body_matrix(
+    basis::BondAlignedDiatomicQWBasis3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    nuclear_charges::AbstractVector{<:Real},
+)
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic QW path requires one nuclear charge per nucleus"),
+    )
+
+    overlap_x = bundle_x.pgdg_intermediate.overlap
+    overlap_y = bundle_y.pgdg_intermediate.overlap
+    overlap_z = bundle_z.pgdg_intermediate.overlap
+    kinetic_x = bundle_x.pgdg_intermediate.kinetic
+    kinetic_y = bundle_y.pgdg_intermediate.kinetic
+    kinetic_z = bundle_z.pgdg_intermediate.kinetic
+
+    matrix = zeros(
+        Float64,
+        size(overlap_x, 1) * size(overlap_y, 1) * size(overlap_z, 1),
+        size(overlap_x, 2) * size(overlap_y, 2) * size(overlap_z, 2),
+    )
+    scratch = similar(matrix)
+    _qwrg_fill_product_matrix!(matrix, kinetic_x, overlap_y, overlap_z)
+    _qwrg_fill_product_matrix!(scratch, overlap_x, kinetic_y, overlap_z)
+    matrix .+= scratch
+    _qwrg_fill_product_matrix!(scratch, overlap_x, overlap_y, kinetic_z)
+    matrix .+= scratch
+
+    factor_x = _qwrg_diatomic_factor_term_cache(
+        basis.basis_x,
+        [nucleus[1] for nucleus in basis.nuclei],
+        expansion,
+        bundle_x.backend,
+    )
+    factor_y = _qwrg_diatomic_factor_term_cache(
+        basis.basis_y,
+        [nucleus[2] for nucleus in basis.nuclei],
+        expansion,
+        bundle_y.backend,
+    )
+    factor_z = _qwrg_diatomic_factor_term_cache(
+        basis.basis_z,
+        [nucleus[3] for nucleus in basis.nuclei],
+        expansion,
+        bundle_z.backend,
+    )
+
+    for (nucleus, charge_value_raw) in zip(basis.nuclei, nuclear_charges)
+        charge_value = Float64(charge_value_raw)
+        charge_value > 0.0 || throw(ArgumentError("bond-aligned diatomic QW path requires positive nuclear charges"))
+        matrix .+= _mapped_coulomb_expanded_symmetric_matrix(
+            -charge_value .* expansion.coefficients,
+            factor_x[nucleus[1]],
+            factor_y[nucleus[2]],
+            factor_z[nucleus[3]],
+        )
+    end
+    return 0.5 .* (matrix .+ transpose(matrix))
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        basis::BondAlignedDiatomicQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first bond-aligned diatomic ordinary QW reference Hamiltonian on the
+diatomic distortion path.
+
+This first molecular pass is intentionally narrow:
+
+- one bond-aligned homonuclear diatomic basis object
+- no nested fixed block yet
+- no molecular Gaussian supplement yet
+- the final basis is the distorted 3D gausslet product basis itself, so the
+  residual-Gaussian sector is empty
+"""
+function ordinary_cartesian_qiu_white_operators(
+    basis::BondAlignedDiatomicQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned diatomic ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    )
+    interaction_treatment in (:ggt_nearest, :mwg) || throw(
+        ArgumentError("bond-aligned diatomic ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
+    )
+    timing && println("QW-RG timing  note: bond-aligned diatomic path currently has no residual-Gaussian sector")
+
+    bundle_x = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_x;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_y = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_y;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_z = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_z;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+
+    overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
+    one_body_hamiltonian = _qwrg_diatomic_one_body_matrix(
+        basis,
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+        nuclear_charges,
+    )
+    interaction_matrix = _qwrg_diatomic_interaction_matrix(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+    )
+
+    gausslet_orbitals = _mapped_cartesian_orbitals(
+        centers(basis.basis_x),
+        centers(basis.basis_y),
+        centers(basis.basis_z),
+    )
+    gausslet_count = length(gausslet_orbitals)
+    zero_residual_centers = zeros(Float64, 0, 3)
+    zero_residual_widths = zeros(Float64, 0, 3)
+
+    return QiuWhiteResidualGaussianOperators(
+        basis,
+        nothing,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+        _qwrg_orbital_data(
+            gausslet_orbitals,
+            zero_residual_centers,
+            zero_residual_widths,
+        ),
+        gausslet_count,
+        0,
+        Matrix{Float64}(I, gausslet_count, gausslet_count),
+        zero_residual_centers,
+        zero_residual_widths,
+    )
 end
 
 function _qwrg_contract_parent_ga_matrix(

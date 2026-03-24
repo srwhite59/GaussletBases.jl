@@ -121,6 +121,34 @@ This algorithm page replaces two older confusions:
 
 The present route is both faster and conceptually cleaner.
 
+## Code Map
+
+The current trusted radial path is split across three files:
+
+- `src/bases.jl`
+  - `_select_construction_data(...)`
+    build-grid selection and refinement framing for steps `3` and `7`
+  - `_seed_scalar_integrals(...)`
+    setup-grid seed sampling used by the interval-sampled layer in steps `4`
+    and `6`
+  - `_xgaussian_sample_matrix(...)`
+    setup-grid `xgaussian` sampling in steps `4` and `6`
+  - `_build_radial_coefficients(...)`
+    main radial construction path for steps `3`-`8`
+  - `_radial_overlap_deviation(...)`
+    construction-quality gate used during grid refinement
+  - `build_basis(spec::RadialBasisSpec; ...)`
+    public front door for the whole build route
+- `src/quadrature.jl`
+  - `radial_quadrature(basis::RadialBasis; ...)`
+    automatic retained-support quadrature construction for steps `9` and `10`
+- `src/diagnostics.jl`
+  - `basis_diagnostics(basis::RadialBasis; ...)`
+    public diagnostics path sharing the same automatic quadrature policy
+
+The code-comment linkage on this line is still lighter than on the QW route.
+This page is the main source-of-truth for tightening it further.
+
 ## Implementation Notes
 
 Recommended code-comment style:

@@ -299,10 +299,14 @@ function _pair_gaussian_factor_matrices(
     return [Matrix{Float64}(contract_primitive_matrix(layer, matrix)) for matrix in primitive_matrices]
 end
 
-function _mapped_cartesian_orbitals(centers_1d::AbstractVector{<:Real})
+function _mapped_cartesian_orbitals(
+    x_centers::AbstractVector{<:Real},
+    y_centers::AbstractVector{<:Real},
+    z_centers::AbstractVector{<:Real},
+)
     orbitals_out = CartesianProductOrbital3D[]
     index = 0
-    for ix in eachindex(centers_1d), iy in eachindex(centers_1d), iz in eachindex(centers_1d)
+    for ix in eachindex(x_centers), iy in eachindex(y_centers), iz in eachindex(z_centers)
         index += 1
         push!(
             orbitals_out,
@@ -311,21 +315,33 @@ function _mapped_cartesian_orbitals(centers_1d::AbstractVector{<:Real})
                 ix,
                 iy,
                 iz,
-                Float64(centers_1d[ix]),
-                Float64(centers_1d[iy]),
-                Float64(centers_1d[iz]),
+                Float64(x_centers[ix]),
+                Float64(y_centers[iy]),
+                Float64(z_centers[iz]),
             ),
         )
     end
     return orbitals_out
 end
 
-function _mapped_cartesian_weights(weight_1d::AbstractVector{<:Real})
+function _mapped_cartesian_orbitals(centers_1d::AbstractVector{<:Real})
+    return _mapped_cartesian_orbitals(centers_1d, centers_1d, centers_1d)
+end
+
+function _mapped_cartesian_weights(
+    weight_x::AbstractVector{<:Real},
+    weight_y::AbstractVector{<:Real},
+    weight_z::AbstractVector{<:Real},
+)
     weights_out = Float64[]
-    for wx in weight_1d, wy in weight_1d, wz in weight_1d
+    for wx in weight_x, wy in weight_y, wz in weight_z
         push!(weights_out, Float64(wx) * Float64(wy) * Float64(wz))
     end
     return weights_out
+end
+
+function _mapped_cartesian_weights(weight_1d::AbstractVector{<:Real})
+    return _mapped_cartesian_weights(weight_1d, weight_1d, weight_1d)
 end
 
 function _mapped_cartesian_one_body_matrix(

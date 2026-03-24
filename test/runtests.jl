@@ -1128,6 +1128,29 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
     end)
 end
 
+function _bond_aligned_diatomic_qw_fixture(; bond_length::Float64 = 1.4)
+    key = Symbol(:bond_aligned_diatomic_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = bond_length,
+            core_spacing = 0.5,
+            xmax_parallel = 6.0,
+            xmax_transverse = 4.0,
+            bond_axis = :z,
+        )
+        operators = ordinary_cartesian_qiu_white_operators(
+            basis;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            operators,
+            GaussletBases.ordinary_cartesian_1s2_check(operators),
+        )
+    end)
+end
+
 function _nested_complete_shell_intervals(count::Int)
     count >= 15 || throw(ArgumentError("complete-shell fixture expects count >= 15"))
     outer_start = div(count - 13, 2) + 1
@@ -2235,6 +2258,27 @@ end
 
     @test uofx(map, x) ≈ x / t0 + asinh(x / a0) / s0 atol = 1.0e-12 rtol = 1.0e-12
     @test dudx(map, x) ≈ 1.0 / t0 + 1.0 / (s0 * sqrt(x * x + a0 * a0)) atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "CombinedInvsqrtMapping supports bond-aligned diatomic symmetry" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+
+    @test basis isa BondAlignedDiatomicQWBasis3D
+    @test mapping(basis.basis_x) === mapping(basis.basis_y)
+    @test mapping(basis.basis_z) isa CombinedInvsqrtMapping
+    @test centers(basis.basis_z) ≈ -reverse(centers(basis.basis_z)) atol = 1.0e-12 rtol = 1.0e-12
+    @test xofu(mapping(basis.basis_z), uofx(mapping(basis.basis_z), 0.7)) ≈ 0.7 atol = 1.0e-10 rtol = 0.0
+    @test xofu(mapping(basis.basis_z), uofx(mapping(basis.basis_z), -0.7)) ≈ -0.7 atol = 1.0e-10 rtol = 0.0
+    @test 1.0 / dudx(mapping(basis.basis_z), -0.7) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
+    @test 1.0 / dudx(mapping(basis.basis_z), 0.7) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
+    @test mapping(basis.basis_x).centers == [0.0]
+    @test 1.0 / dudx(mapping(basis.basis_x), 0.0) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
 end
 
 @testset "XGaussian center" begin
@@ -3876,6 +3920,33 @@ end
         @test 1.0 < qiu_full_nearest_check.vee_expectation < 1.4
         @test abs(qiu_full_nearest_check.vee_expectation - 1.25) < 0.05
     end
+end
+
+@testset "Bond-aligned diatomic QW reference path" begin
+    basis14, operators14, check14 = _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
+    basis20, operators20, check20 = _bond_aligned_diatomic_qw_fixture(; bond_length = 2.0)
+
+    @test basis14 isa BondAlignedDiatomicQWBasis3D
+    @test operators14 isa QiuWhiteResidualGaussianOperators
+    @test operators14.gaussian_data === nothing
+    @test operators14.residual_count == 0
+    @test operators14.gausslet_count == length(basis14.basis_x) * length(basis14.basis_y) * length(basis14.basis_z)
+    @test norm(operators14.overlap - I, Inf) < 1.0e-8
+    @test norm(operators20.overlap - I, Inf) < 1.0e-8
+    @test operators14.one_body_hamiltonian ≈ transpose(operators14.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test operators14.interaction_matrix ≈ transpose(operators14.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test isfinite(check14.orbital_energy)
+    @test isfinite(check14.vee_expectation)
+    @test isfinite(check20.orbital_energy)
+    @test isfinite(check20.vee_expectation)
+    @test check14.orbital_energy < -1.0
+    @test check20.orbital_energy < -1.0
+    @test 0.5 < check14.vee_expectation < 1.0
+    @test 0.5 < check20.vee_expectation < 1.0
+    @test check14.orbital_energy < check20.orbital_energy
+    @test length(basis14.basis_x) == length(basis14.basis_y)
+    @test length(basis14.basis_z) > length(basis14.basis_x)
+    @test length(basis20.basis_z) >= length(basis14.basis_z)
 end
 
 @testset "Ordinary Cartesian localized backend" begin
