@@ -1192,6 +1192,42 @@ function _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length::Float6
     end)
 end
 
+function _bond_aligned_diatomic_nested_qw_fixture(; bond_length::Float64 = 1.4)
+    key = Symbol(:bond_aligned_diatomic_nested_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            expansion,
+            source,
+            fixed_block,
+            _parent_modes,
+            _parent_ground,
+            _projected,
+            _projected_vee,
+            _capture,
+            _projected_energy,
+        ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = bond_length)
+        nested_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block;
+            nuclear_charges = [1.0, 1.0],
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            expansion,
+            source,
+            fixed_block,
+            nested_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(nested_ops),
+        )
+    end)
+end
+
 function _nested_complete_shell_intervals(count::Int)
     count >= 15 || throw(ArgumentError("complete-shell fixture expects count >= 15"))
     outer_start = div(count - 13, 2) + 1
@@ -4087,6 +4123,40 @@ end
     @test abs(projected_energy - parent_modes.values[1]) < 0.03
     @test 0.7 < projected_vee < 0.8
     @test abs(projected_vee - check.vee_expectation) < 5.0e-4
+end
+
+@testset "Bond-aligned diatomic nested QW consumer path" begin
+    (
+        _basis,
+        parent_ops,
+        parent_check,
+        _expansion,
+        _source,
+        fixed_block,
+        nested_ops,
+        nested_check,
+    ) = _bond_aligned_diatomic_nested_qw_fixture(; bond_length = 1.4)
+
+    @test nested_ops isa GaussletBases.QiuWhiteResidualGaussianOperators
+    @test nested_ops.basis === fixed_block
+    @test nested_ops.gaussian_data === nothing
+    @test nested_ops.interaction_treatment == :ggt_nearest
+    @test nested_ops.residual_count == 0
+    @test nested_ops.gausslet_count == size(fixed_block.overlap, 1)
+    @test size(nested_ops.residual_centers) == (0, 3)
+    @test size(nested_ops.residual_widths) == (0, 3)
+    @test norm(nested_ops.overlap - I, Inf) < 1.0e-10
+    @test norm(nested_ops.one_body_hamiltonian - transpose(nested_ops.one_body_hamiltonian), Inf) < 1.0e-12
+    @test norm(nested_ops.interaction_matrix - transpose(nested_ops.interaction_matrix), Inf) < 1.0e-12
+    @test all(orbital.kind == :nested_fixed for orbital in orbitals(nested_ops))
+    @test all(isfinite, fixed_block.weights)
+    @test minimum(fixed_block.weights) > 0.0
+    @test nested_check.overlap_error < 1.0e-10
+    @test nested_check.orbital_energy < -1.2
+    @test 0.7 < nested_check.vee_expectation < 0.8
+    @test abs(nested_check.orbital_energy - parent_check.orbital_energy) < 0.03
+    @test abs(nested_check.vee_expectation - parent_check.vee_expectation) < 0.03
+    @test parent_ops.residual_count == 0
 end
 
 @testset "Ordinary Cartesian localized backend" begin

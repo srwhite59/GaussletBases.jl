@@ -2304,6 +2304,80 @@ function ordinary_cartesian_qiu_white_operators(
     )
 end
 
+function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    )
+    interaction_treatment == :ggt_nearest || throw(
+        ArgumentError("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),
+    )
+    timing && println("QW-RG timing  note: bond-aligned diatomic nested path currently has no residual-Gaussian sector")
+
+    basis = fixed_block.parent_basis
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic nested QW path requires one nuclear charge per nucleus"),
+    )
+
+    # Alg Nested-Diatomic-Map step 2: keep the landed bond-aligned distortion
+    # fixed and build the nested consumer on the same mixed-axis parent basis.
+    # See docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md.
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+
+    # Alg Nested-Diatomic step 6: consume the already-assembled diatomic fixed
+    # block directly, contracting the parent one-body problem while keeping the
+    # transferred fixed-fixed interaction packet as the active interaction.
+    # See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
+    parent_one_body = _qwrg_diatomic_one_body_matrix(
+        basis,
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+        expansion,
+        nuclear_charges,
+    )
+    contraction = fixed_block.coefficient_matrix
+    one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
+    one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
+    interaction_matrix = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+
+    fixed_count = size(fixed_block.overlap, 1)
+    zero_residual_centers = zeros(Float64, 0, 3)
+    zero_residual_widths = zeros(Float64, 0, 3)
+    return QiuWhiteResidualGaussianOperators(
+        fixed_block,
+        nothing,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        Matrix{Float64}(fixed_block.overlap),
+        one_body_hamiltonian,
+        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+        _qwrg_orbital_data(
+            fixed_block.fixed_centers,
+            zero_residual_centers,
+            zero_residual_widths;
+            fixed_kind = :nested_fixed,
+            fixed_label_prefix = "nf",
+        ),
+        fixed_count,
+        0,
+        Matrix{Float64}(I, fixed_count, fixed_count),
+        zero_residual_centers,
+        zero_residual_widths,
+    )
+end
+
 function _qwrg_contract_parent_ga_matrix(
     contraction::AbstractMatrix{<:Real},
     parent_ga::AbstractMatrix{<:Real},
@@ -3139,5 +3213,44 @@ function ordinary_cartesian_qiu_white_operators(
         Matrix{Float64}(residual_data.raw_to_final),
         Matrix{Float64}(residual_centers),
         Matrix{Float64}(residual_widths),
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
+        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first bond-aligned diatomic nested fixed-block ordinary QW path.
+
+This is intentionally narrower than the atomic hybrid route:
+
+- it consumes the already-assembled bond-aligned diatomic `_NestedFixedBlock3D`
+- it keeps the residual-Gaussian sector empty
+- it supports only `interaction_treatment = :ggt_nearest`
+
+The point of this first pass is to validate the diatomic fixed-block geometry
+and transferred packet cleanly before molecular Gaussian completion is added.
+"""
+function ordinary_cartesian_qiu_white_operators(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
     )
 end
