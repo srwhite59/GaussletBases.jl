@@ -29,6 +29,11 @@ export AbstractFunction1D,
        LegacyBondAlignedDiatomicGaussianSupplement,
        LegacySGaussianData,
        BondAlignedDiatomicQWBasis3D,
+       BondAlignedDiatomicGeometryPoint3D,
+       BondAlignedDiatomicGeometryNucleus3D,
+       BondAlignedDiatomicGeometryBox3D,
+       BondAlignedDiatomicGeometryPayload3D,
+       BondAlignedDiatomicGeometryPlaneSlice3D,
        MappedOrdinaryOneBody1D,
        CartesianProductOrbital3D,
        QiuWhiteHybridOrbital3D,
@@ -104,6 +109,11 @@ export AbstractFunction1D,
        legacy_bond_aligned_diatomic_gaussian_supplement,
        legacy_s_gaussian_data,
        bond_aligned_homonuclear_qw_basis,
+       bond_aligned_diatomic_geometry_payload,
+       bond_aligned_diatomic_source_geometry_payload,
+       bond_aligned_diatomic_plane_slice,
+       write_bond_aligned_diatomic_points3d,
+       write_bond_aligned_diatomic_plane_projection,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
        ordinary_sho_hamiltonian,
@@ -269,6 +279,11 @@ function coulomb_gaussian_expansion end
 function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
+function bond_aligned_diatomic_geometry_payload end
+function bond_aligned_diatomic_source_geometry_payload end
+function bond_aligned_diatomic_plane_slice end
+function write_bond_aligned_diatomic_points3d end
+function write_bond_aligned_diatomic_plane_projection end
 function mapped_ordinary_one_body_operators end
 function mapped_cartesian_hydrogen_energy end
 function ordinary_sho_hamiltonian end
@@ -379,6 +394,8 @@ include("ordinary_sho.jl")
 include("ordinary_cartesian_ida.jl")
 include("cartesian_nested_faces.jl")
 include("ordinary_qiu_white_rg.jl")
+include("bond_aligned_diatomic_geometry.jl")
+include("bond_aligned_diatomic_geometry_export.jl")
 include("partitions.jl")
 include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")

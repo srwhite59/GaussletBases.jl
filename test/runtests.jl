@@ -4143,7 +4143,8 @@ end
     @test geometry.shape_eligible
     @test geometry.split_index == 7
     @test geometry.working_box == working_box
-    @test geometry.child_boxes == [(2:8, 2:8, 2:7), (2:8, 2:8, 8:12)]
+    @test geometry.shared_midpoint_box == (2:8, 2:8, 7:7)
+    @test geometry.child_boxes == [(2:8, 2:8, 2:6), (2:8, 2:8, 8:12)]
     @test all(widths[3] >= 0.4 * max(widths[1], widths[2]) for widths in geometry.child_physical_widths)
 
     @test sliver_geometry.count_eligible
@@ -4175,7 +4176,13 @@ end
     @test source.geometry.did_split
     @test length(source.shared_shell_layers) == 1
     @test length(source.child_sequences) == 2
-    @test size(fixed_block.overlap, 1) == 577
+    @test source.geometry.shared_midpoint_box == (2:8, 2:8, 7:7)
+    @test !isnothing(source.midpoint_slab_column_range)
+    @test length(source.child_column_ranges) == 2
+    @test length(source.midpoint_slab_column_range) == 7 * 7
+    @test length(source.child_column_ranges[1]) == 7 * 7 * 5
+    @test length(source.child_column_ranges[2]) == 7 * 7 * 5
+    @test size(fixed_block.overlap, 1) > 577
     @test source.sequence.working_box == (
         1:length(basis.basis_x),
         1:length(basis.basis_y),
@@ -4294,6 +4301,270 @@ end
         @test abs(nested_check.orbital_energy - parent_check.orbital_energy) < 0.03
         @test abs(nested_check.vee_expectation - parent_check.vee_expectation) < 0.01
         @test parent_ops.residual_count == 0
+    end
+end
+
+@testset "Bond-aligned diatomic geometry payloads and plane slices" begin
+    basis, ordinary_ops, _check = _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
+    basis_payload = bond_aligned_diatomic_geometry_payload(basis)
+    ordinary_payload = bond_aligned_diatomic_geometry_payload(ordinary_ops)
+    basis_slice = bond_aligned_diatomic_plane_slice(
+        basis_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-12,
+    )
+
+    @test basis_payload isa GaussletBases.BondAlignedDiatomicGeometryPayload3D
+    @test length(basis_payload.nuclei) == 2
+    @test basis_payload.bond_axis == :z
+    @test length(basis_payload.points) ==
+        length(basis.basis_x) * length(basis.basis_y) * length(basis.basis_z)
+    @test Set(point.group_kind for point in basis_payload.points) == Set([:gausslet_product])
+    @test length(basis_payload.box_outlines) == 1
+    @test basis_payload.box_outlines[1].group_kind == :basis_box
+    @test ordinary_payload.bond_axis == :z
+    @test length(ordinary_payload.points) == ordinary_ops.gausslet_count
+    @test Set(point.group_kind for point in ordinary_payload.points) == Set([:gausslet_product])
+    @test basis_slice.plane_axis == :y
+    @test basis_slice.plane_value == 0.0
+    @test basis_slice.plane_tol == 1.0e-12
+    @test basis_slice.total_count == length(basis_payload.points)
+    expected_y_count = count(y -> abs(y) <= 1.0e-12, centers(basis.basis_y))
+    @test basis_slice.selected_count == length(basis.basis_x) * expected_y_count * length(basis.basis_z)
+    @test all(abs(point.y) <= basis_slice.plane_tol for point in basis_slice.points)
+    @test length(basis_slice.nuclei) == 2
+
+    (
+        _nested_basis,
+        _parent_ops,
+        _parent_check,
+        _expansion,
+        source,
+        fixed_block,
+        _nested_ops,
+        _nested_check,
+    ) = _bond_aligned_diatomic_nested_qw_fixture(; bond_length = 1.4)
+    nested_payload = bond_aligned_diatomic_geometry_payload(fixed_block, source)
+
+    @test nested_payload isa GaussletBases.BondAlignedDiatomicGeometryPayload3D
+    @test length(nested_payload.points) == size(fixed_block.fixed_centers, 1)
+    @test Set(point.group_kind for point in nested_payload.points) ==
+        Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child])
+    @test length(nested_payload.box_outlines) == 5
+    @test nested_payload.box_outlines[1].group_kind == :parent_box
+    @test nested_payload.box_outlines[2].group_kind == :working_box
+    @test count(box -> box.group_kind == :child_box, nested_payload.box_outlines) == 2
+    @test any(box -> box.group_kind == :shared_midpoint_slab_box, nested_payload.box_outlines)
+
+    hybrid_fixture = _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length = 1.4)
+    @test hybrid_fixture !== nothing
+    if hybrid_fixture !== nothing
+        (
+            _hybrid_basis,
+            _hybrid_parent_ops,
+            _hybrid_parent_check,
+            _supplement,
+            hybrid_ops,
+            _hybrid_check,
+        ) = hybrid_fixture
+        hybrid_payload = bond_aligned_diatomic_geometry_payload(hybrid_ops)
+        @test count(point -> point.group_kind == :residual_gaussian, hybrid_payload.points) == hybrid_ops.residual_count
+    end
+
+    nested_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length = 1.4)
+    @test nested_hybrid_fixture !== nothing
+    if nested_hybrid_fixture !== nothing
+        (
+            _basis2,
+            _parent_ops2,
+            _parent_check2,
+            hybrid_source,
+            _hybrid_fixed_block,
+            _hybrid_supplement,
+            hybrid_nested_ops,
+            _hybrid_nested_check,
+        ) = nested_hybrid_fixture
+        hybrid_nested_payload = bond_aligned_diatomic_geometry_payload(hybrid_nested_ops, hybrid_source)
+        @test count(point -> point.group_kind == :residual_gaussian, hybrid_nested_payload.points) ==
+            hybrid_nested_ops.residual_count
+        @test Set(point.group_kind for point in hybrid_nested_payload.points) ==
+            Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child, :residual_gaussian])
+    end
+end
+
+@testset "Bond-aligned diatomic raw source geometry and 3d export" begin
+    nested_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length = 1.4)
+    @test nested_hybrid_fixture !== nothing
+    if nested_hybrid_fixture !== nothing
+        (
+            _basis,
+            _parent_ops,
+            _parent_check,
+            source,
+            _fixed_block,
+            _supplement,
+            hybrid_nested_ops,
+            _hybrid_nested_check,
+        ) = nested_hybrid_fixture
+
+        fixed_payload = bond_aligned_diatomic_geometry_payload(hybrid_nested_ops, source)
+        source_payload = bond_aligned_diatomic_source_geometry_payload(source)
+
+        @test Set(point.group_kind for point in source_payload.points) ==
+            Set([:shared_shell_region, :left_child_region, :shared_midpoint_slab_region, :right_child_region])
+        @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
+        @test any(box.group_kind == :parent_box for box in source_payload.box_outlines)
+        @test any(box.group_kind == :working_box for box in source_payload.box_outlines)
+        @test count(box -> box.group_kind == :child_box, source_payload.box_outlines) == 2
+        @test any(box -> box.group_kind == :shared_midpoint_slab_box, source_payload.box_outlines)
+
+        fixed_slice = bond_aligned_diatomic_plane_slice(
+            fixed_payload;
+            plane_axis = :y,
+            plane_value = 0.0,
+            plane_tol = 1.0e-12,
+        )
+        debug_slice = bond_aligned_diatomic_plane_slice(
+            fixed_payload;
+            plane_axis = :y,
+            plane_value = 0.0,
+            plane_tol = 1.0e-5,
+        )
+        source_slice = bond_aligned_diatomic_plane_slice(
+            source_payload;
+            plane_axis = :y,
+            plane_value = 0.0,
+            plane_tol = 1.0e-5,
+        )
+        @test debug_slice.selected_count == fixed_slice.selected_count
+        @test source_slice.selected_count > debug_slice.selected_count
+
+        mktemp() do path, io
+            close(io)
+            payload = write_bond_aligned_diatomic_points3d(path, source_payload)
+            text = read(path, String)
+            @test payload === source_payload
+            @test occursin("# bond_axis = z", text)
+            @test occursin("# point_count = $(length(source_payload.points))", text)
+            @test occursin("# nucleus_count = 2", text)
+            @test occursin("# columns = x y z role kind group_kind group_id label", text)
+            @test occursin("# box label=parent_box", text)
+            @test occursin("# box label=working_box", text)
+            @test occursin("# box label=left_child_box", text)
+            @test occursin("# box label=right_child_box", text)
+            @test occursin("# box label=shared_midpoint_slab_box", text)
+            @test occursin("\tpoint\tsource_region\tshared_shell_region\t1\t", text)
+            @test occursin("\tpoint\tsource_region\tleft_child_region\t1\t", text)
+            @test occursin("\tpoint\tsource_region\tshared_midpoint_slab_region\t1\t", text)
+            @test occursin("\tpoint\tsource_region\tright_child_region\t2\t", text)
+            @test occursin("\tnucleus\tnucleus\tnucleus\t1\tA", text)
+            @test occursin("\tnucleus\tnucleus\tnucleus\t2\tB", text)
+        end
+    end
+end
+
+@testset "Bond-aligned diatomic plane projection export" begin
+    hybrid_fixture = _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length = 1.4)
+    @test hybrid_fixture !== nothing
+    if hybrid_fixture !== nothing
+        (
+            _basis,
+            _parent_ops,
+            _parent_check,
+            _supplement,
+            hybrid_ops,
+            _hybrid_check,
+        ) = hybrid_fixture
+        payload = bond_aligned_diatomic_geometry_payload(hybrid_ops)
+        mktemp() do path, io
+            close(io)
+            slice = write_bond_aligned_diatomic_plane_projection(
+                path,
+                payload;
+                plane_axis = :y,
+                plane_value = 0.0,
+                plane_tol = 1.0e-12,
+            )
+            text = read(path, String)
+            @test slice.plane_axis == :y
+            @test slice.plane_value == 0.0
+            @test slice.plane_tol == 1.0e-12
+            @test occursin("# plane_axis = y", text)
+            @test occursin("# plane_value = 0.0", text)
+            @test occursin("# plane_tol = 1.0e-12", text)
+            @test occursin("# bond_axis = z", text)
+            @test occursin("# selected_count = $(slice.selected_count)", text)
+            @test occursin("# total_count = $(slice.total_count)", text)
+            @test occursin("# projection_axes = x z", text)
+            @test occursin("role=point group_kind=gausslet_product group_id=1", text)
+            selected_residual_count = count(
+                point -> point.group_kind == :residual_gaussian,
+                slice.points,
+            )
+            @test count(==('@'), text) == 1 + selected_residual_count + 2
+            @test sum(occursin("role=point group_kind=residual_gaussian", line) for line in split(text, '\n')) ==
+                selected_residual_count
+            gausslet_pos = findfirst("role=point group_kind=gausslet_product", text)
+            residual_pos = findfirst("role=point group_kind=residual_gaussian", text)
+            nucleus_pos = findfirst("role=nucleus group_kind=nucleus", text)
+            @test gausslet_pos !== nothing
+            @test residual_pos !== nothing
+            @test nucleus_pos !== nothing
+            @test gausslet_pos < residual_pos < nucleus_pos
+        end
+    end
+
+    nested_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length = 1.4)
+    @test nested_hybrid_fixture !== nothing
+    if nested_hybrid_fixture !== nothing
+        (
+            _basis2,
+            _parent_ops2,
+            _parent_check2,
+            source,
+            _fixed_block,
+            _supplement2,
+            hybrid_nested_ops,
+            _nested_check2,
+        ) = nested_hybrid_fixture
+        payload = bond_aligned_diatomic_geometry_payload(hybrid_nested_ops, source)
+        mktemp() do path, io
+            close(io)
+            slice = write_bond_aligned_diatomic_plane_projection(
+                path,
+                payload;
+                plane_axis = :y,
+                plane_value = 0.0,
+                plane_tol = 1.0e-12,
+            )
+            text = read(path, String)
+            @test slice.selected_count <= slice.total_count
+            @test occursin("role=point group_kind=left_child group_id=1", text)
+            @test occursin("role=point group_kind=shared_midpoint_slab group_id=1", text)
+            @test occursin("role=point group_kind=right_child group_id=2", text)
+            @test occursin("role=point group_kind=shared_shell_layer group_id=1", text)
+            selected_residual_count = count(
+                point -> point.group_kind == :residual_gaussian,
+                slice.points,
+            )
+            @test sum(occursin("role=point group_kind=residual_gaussian", line) for line in split(text, '\n')) ==
+                selected_residual_count
+            left_pos = findfirst("role=point group_kind=left_child", text)
+            slab_pos = findfirst("role=point group_kind=shared_midpoint_slab", text)
+            right_pos = findfirst("role=point group_kind=right_child", text)
+            shared_pos = findfirst("role=point group_kind=shared_shell_layer", text)
+            residual_pos = findfirst("role=point group_kind=residual_gaussian", text)
+            nucleus_pos = findfirst("role=nucleus group_kind=nucleus", text)
+            @test left_pos !== nothing
+            @test slab_pos !== nothing
+            @test right_pos !== nothing
+            @test shared_pos !== nothing
+            @test residual_pos !== nothing
+            @test nucleus_pos !== nothing
+            @test left_pos < slab_pos < right_pos < shared_pos < residual_pos < nucleus_pos
+            @test count(==('@'), text) == 4 + selected_residual_count + 2
+        end
     end
 end
 

@@ -306,6 +306,8 @@ The split is attached to the original parent grid:
 
 - `working_box` is the shared box remaining after the outer shared shell stage
 - `split_index` is the bond-axis parent-grid index nearest the bond midpoint
+- `shared_midpoint_box` is the direct shared midpoint slab for the odd-length
+  homonuclear case
 - `child_boxes` are the two nonoverlapping child boxes if the split is allowed
 - `child_physical_widths` records the mapped physical widths of those children
 """
@@ -318,6 +320,7 @@ struct _BondAlignedDiatomicSplitGeometry3D
     count_eligible::Bool
     shape_eligible::Bool
     did_split::Bool
+    shared_midpoint_box::Union{Nothing,NTuple{3,UnitRange{Int}}}
     child_boxes::Vector{NTuple{3,UnitRange{Int}}}
     child_physical_widths::Vector{NTuple{3,Float64}}
 end
@@ -342,6 +345,8 @@ struct _CartesianNestedBondAlignedDiatomicSource3D{B}
     geometry::_BondAlignedDiatomicSplitGeometry3D
     shared_shell_layers::Vector{_CartesianNestedCompleteShell3D}
     child_sequences::Vector{_CartesianNestedShellSequence3D}
+    child_column_ranges::Vector{UnitRange{Int}}
+    midpoint_slab_column_range::Union{Nothing,UnitRange{Int}}
     sequence::_CartesianNestedShellSequence3D
 end
 
@@ -503,6 +508,8 @@ function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
         geometry.working_box,
         ", split_index=",
         geometry.split_index,
+        ", midpoint_slab=",
+        isnothing(geometry.shared_midpoint_box) ? "nothing" : geometry.shared_midpoint_box,
         ", did_split=",
         geometry.did_split,
         ")",
@@ -518,6 +525,8 @@ function Base.show(io::IO, source::_CartesianNestedBondAlignedDiatomicSource3D)
         length(source.child_sequences),
         ", nfixed=",
         size(source.sequence.coefficient_matrix, 2),
+        ", midpoint_slab=",
+        !isnothing(source.midpoint_slab_column_range),
         ", did_split=",
         source.geometry.did_split,
         ")",
@@ -2333,6 +2342,58 @@ function _nested_diatomic_child_boxes(
     return left_box, right_box
 end
 
+function _nested_diatomic_midpoint_slab_split(
+    box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    split_index::Int,
+)
+    axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
+    axis != 0 || throw(ArgumentError("bond-axis midpoint-slab construction requires bond_axis = :x, :y, or :z"))
+    interval = box[axis]
+    first(interval) < split_index < last(interval) || throw(
+        ArgumentError("diatomic midpoint-slab construction requires the split index to lie strictly inside the working box"),
+    )
+    left_axis = first(interval):(split_index - 1)
+    slab_axis = split_index:split_index
+    right_axis = (split_index + 1):last(interval)
+    left_box =
+        axis == 1 ? (left_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], left_axis, box[3]) :
+        (box[1], box[2], left_axis)
+    slab_box =
+        axis == 1 ? (slab_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], slab_axis, box[3]) :
+        (box[1], box[2], slab_axis)
+    right_box =
+        axis == 1 ? (right_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], right_axis, box[3]) :
+        (box[1], box[2], right_axis)
+    return left_box, slab_box, right_box
+end
+
+function _nested_direct_box_coefficients(
+    dims::NTuple{3,Int},
+    support_indices::AbstractVector{Int},
+)
+    coefficients = zeros(Float64, prod(dims), length(support_indices))
+    for (column, index) in pairs(support_indices)
+        coefficients[index, column] = 1.0
+    end
+    return coefficients
+end
+
+function _nested_direct_box_coefficients(
+    bundles::_CartesianNestedAxisBundles3D,
+    box::NTuple{3,UnitRange{Int}},
+)
+    dims = _nested_axis_lengths(bundles)
+    support_indices = _nested_box_support_indices(box..., dims)
+    return (
+        support_indices = support_indices,
+        coefficient_matrix = _nested_direct_box_coefficients(dims, support_indices),
+    )
+end
+
 function _nested_diatomic_children_are_roughly_cubic(
     bundles::_CartesianNestedAxisBundles3D,
     child_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
@@ -2367,13 +2428,20 @@ function _nested_bond_aligned_diatomic_split_geometry(
     midpoint::Real = 0.0,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    use_midpoint_slab::Bool = true,
 )
     axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
     axis != 0 || throw(ArgumentError("diatomic split geometry requires bond_axis = :x, :y, or :z"))
     parallel_interval = working_box[axis]
     parallel_centers = _nested_axis_pgdg(bundles, bond_axis).centers
     split_index = _nested_diatomic_split_index(parallel_centers, parallel_interval, midpoint)
-    left_box, right_box = _nested_diatomic_child_boxes(working_box, bond_axis, split_index)
+    use_slab = use_midpoint_slab && isodd(length(parallel_interval))
+    left_box, midpoint_slab_box, right_box = if use_slab
+        _nested_diatomic_midpoint_slab_split(working_box, bond_axis, split_index)
+    else
+        left_box, right_box = _nested_diatomic_child_boxes(working_box, bond_axis, split_index)
+        (left_box, nothing, right_box)
+    end
     child_boxes = [left_box, right_box]
     count_eligible =
         length(parallel_interval) > 2 * nside &&
@@ -2386,6 +2454,7 @@ function _nested_bond_aligned_diatomic_split_geometry(
             bond_axis;
             min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         )
+    did_split = count_eligible && shape_eligible
     return _BondAlignedDiatomicSplitGeometry3D(
         parent_box,
         working_box,
@@ -2394,7 +2463,8 @@ function _nested_bond_aligned_diatomic_split_geometry(
         split_index,
         count_eligible,
         shape_eligible,
-        count_eligible && shape_eligible,
+        did_split,
+        did_split ? midpoint_slab_box : nothing,
         child_boxes,
         [_nested_box_physical_widths(bundles, box) for box in child_boxes],
     )
@@ -2407,6 +2477,7 @@ function _nested_bond_aligned_diatomic_source(
     midpoint::Real = 0.0,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    use_midpoint_slab::Bool = true,
     retain_xy::Tuple{Int,Int} = (4, 3),
     retain_xz::Tuple{Int,Int} = (4, 3),
     retain_yz::Tuple{Int,Int} = (4, 3),
@@ -2426,6 +2497,7 @@ function _nested_bond_aligned_diatomic_source(
         midpoint = midpoint,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        use_midpoint_slab = use_midpoint_slab,
     )
 
     while true
@@ -2459,11 +2531,14 @@ function _nested_bond_aligned_diatomic_source(
             midpoint = midpoint,
             nside = nside,
             min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            use_midpoint_slab = use_midpoint_slab,
         )
         geometry.did_split && break
     end
 
     child_sequences = _CartesianNestedShellSequence3D[]
+    child_column_ranges = UnitRange{Int}[]
+    midpoint_slab_column_range = nothing
     merged_sequence = nothing
     if geometry.did_split
         for child_box in geometry.child_boxes
@@ -2482,14 +2557,36 @@ function _nested_bond_aligned_diatomic_source(
                 ),
             )
         end
-        child_support = vcat([child.support_indices for child in child_sequences]...)
-        child_coefficients = hcat([child.coefficient_matrix for child in child_sequences]...)
+        core_support_blocks = Vector{Vector{Int}}()
+        core_coefficient_blocks = Matrix{Float64}[]
+        push!(core_support_blocks, child_sequences[1].support_indices)
+        push!(core_coefficient_blocks, child_sequences[1].coefficient_matrix)
+        if !isnothing(geometry.shared_midpoint_box)
+            slab_data = _nested_direct_box_coefficients(bundles, geometry.shared_midpoint_box)
+            push!(core_support_blocks, slab_data.support_indices)
+            push!(core_coefficient_blocks, slab_data.coefficient_matrix)
+        end
+        push!(core_support_blocks, child_sequences[2].support_indices)
+        push!(core_coefficient_blocks, child_sequences[2].coefficient_matrix)
+        child_support = vcat(core_support_blocks...)
+        child_coefficients = hcat(core_coefficient_blocks...)
         merged_sequence = _nested_shell_sequence_from_core_block(
             bundles,
             child_support,
             child_coefficients,
             shared_shell_layers,
         )
+        column_start = first(merged_sequence.core_column_range)
+        left_columns = size(child_sequences[1].coefficient_matrix, 2)
+        push!(child_column_ranges, column_start:(column_start + left_columns - 1))
+        column_start = last(child_column_ranges[end]) + 1
+        if !isnothing(geometry.shared_midpoint_box)
+            slab_columns = prod(length.(geometry.shared_midpoint_box))
+            midpoint_slab_column_range = column_start:(column_start + slab_columns - 1)
+            column_start = last(midpoint_slab_column_range) + 1
+        end
+        right_columns = size(child_sequences[2].coefficient_matrix, 2)
+        push!(child_column_ranges, column_start:(column_start + right_columns - 1))
     else
         shared_child = _nested_complete_shell_sequence_for_box(
             bundles,
@@ -2511,6 +2608,7 @@ function _nested_bond_aligned_diatomic_source(
                 shared_child.coefficient_matrix,
                 shared_shell_layers,
             )
+        push!(child_column_ranges, merged_sequence.core_column_range)
     end
 
     return _CartesianNestedBondAlignedDiatomicSource3D(
@@ -2519,6 +2617,8 @@ function _nested_bond_aligned_diatomic_source(
         geometry,
         shared_shell_layers,
         child_sequences,
+        child_column_ranges,
+        midpoint_slab_column_range,
         merged_sequence,
     )
 end
