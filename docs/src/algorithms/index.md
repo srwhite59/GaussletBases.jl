@@ -38,4 +38,5 @@ The comment should:
 - [1D distorted-gausslet PGDG refinement hierarchy](distorted_gausslet_pgdg_refinement_hierarchy.md)
 - [Cartesian nested face construction](cartesian_nested_face_construction.md)
 - [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
+- [Cartesian nested diatomic box policy](cartesian_nested_diatomic_box_policy.md)
 - [Radial interval-sampled build and extents](radial_interval_sampled_build_and_extents.md)
