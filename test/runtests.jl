@@ -637,6 +637,26 @@ end
 _legacy_basisfile_path_for_tests() = GaussletBases._legacy_basisfile_path()
 _legacy_basisfile_available() = isfile(_legacy_basisfile_path_for_tests())
 
+function _legacy_basisfile_with_block_for_tests(
+    atom::AbstractString,
+    basis_name::AbstractString,
+)
+    candidates = String[]
+    push!(candidates, GaussletBases._legacy_basisfile_path())
+    home_basis = joinpath(homedir(), "BasisSets")
+    home_basis ∉ candidates && push!(candidates, home_basis)
+    for path in candidates
+        isfile(path) || continue
+        try
+            GaussletBases._legacy_basis_shells(atom, basis_name; basisfile = path)
+            return path
+        catch error
+            error isa ArgumentError || rethrow()
+        end
+    end
+    return nothing
+end
+
 function _legacy_he_s_hybrid_fixture(basis_name::String)
     key = Symbol(:legacy_he_s_hybrid_fixture, Symbol(lowercase(basis_name)))
     return _cached_fixture(key, () -> begin
@@ -1222,6 +1242,84 @@ function _bond_aligned_diatomic_nested_qw_fixture(; bond_length::Float64 = 1.4)
             expansion,
             source,
             fixed_block,
+            nested_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(nested_ops),
+        )
+    end)
+end
+
+function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
+    h_basisfile = _legacy_basisfile_with_block_for_tests("H", "cc-pVTZ")
+    h_basisfile === nothing && return nothing
+
+    key = Symbol(:bond_aligned_diatomic_hybrid_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        basis, parent_ops, parent_check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 1,
+            basisfile = h_basisfile,
+        )
+        ordinary_ops = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            supplement,
+            ordinary_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(ordinary_ops),
+        )
+    end)
+end
+
+function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
+    h_basisfile = _legacy_basisfile_with_block_for_tests("H", "cc-pVTZ")
+    h_basisfile === nothing && return nothing
+
+    key = Symbol(:bond_aligned_diatomic_nested_hybrid_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            expansion,
+            source,
+            fixed_block,
+            _parent_modes,
+            _parent_ground,
+            _projected,
+            _projected_vee,
+            _capture,
+            _projected_energy,
+        ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = bond_length)
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 1,
+            basisfile = h_basisfile,
+        )
+        nested_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            source,
+            fixed_block,
+            supplement,
             nested_ops,
             GaussletBases.ordinary_cartesian_1s2_check(nested_ops),
         )
@@ -4157,6 +4255,72 @@ end
     @test abs(nested_check.orbital_energy - parent_check.orbital_energy) < 0.03
     @test abs(nested_check.vee_expectation - parent_check.vee_expectation) < 0.03
     @test parent_ops.residual_count == 0
+end
+
+@testset "Bond-aligned diatomic molecular supplement ordinary QW path" begin
+    fixture = _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length = 1.4)
+    if fixture === nothing
+        @test true
+    else
+        (
+            _basis,
+            parent_ops,
+            parent_check,
+            supplement,
+            ordinary_ops,
+            ordinary_check,
+        ) = fixture
+
+        @test supplement isa LegacyBondAlignedDiatomicGaussianSupplement
+        @test supplement.atomic_source.lmax == 1
+        @test ordinary_ops.gaussian_data === supplement
+        @test ordinary_ops.interaction_treatment == :ggt_nearest
+        @test ordinary_ops.residual_count > 0
+        @test size(ordinary_ops.residual_centers, 1) == ordinary_ops.residual_count
+        @test size(ordinary_ops.residual_widths, 1) == ordinary_ops.residual_count
+        @test norm(ordinary_ops.overlap - I, Inf) < 1.0e-10
+        @test ordinary_check.overlap_error < 1.0e-10
+        @test ordinary_check.orbital_energy < -1.25
+        @test 0.75 < ordinary_check.vee_expectation < 0.81
+        @test abs(ordinary_check.orbital_energy - parent_check.orbital_energy) < 0.01
+        @test abs(ordinary_check.vee_expectation - parent_check.vee_expectation) < 0.01
+        @test parent_ops.residual_count == 0
+    end
+end
+
+@testset "Bond-aligned diatomic molecular supplement nested QW path" begin
+    fixture = _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length = 1.4)
+    if fixture === nothing
+        @test true
+    else
+        (
+            _basis,
+            parent_ops,
+            parent_check,
+            _source,
+            fixed_block,
+            supplement,
+            nested_ops,
+            nested_check,
+        ) = fixture
+
+        @test supplement isa LegacyBondAlignedDiatomicGaussianSupplement
+        @test nested_ops.basis === fixed_block
+        @test nested_ops.gaussian_data === supplement
+        @test nested_ops.interaction_treatment == :ggt_nearest
+        @test nested_ops.residual_count > 0
+        @test size(nested_ops.residual_centers, 1) == nested_ops.residual_count
+        @test size(nested_ops.residual_widths, 1) == nested_ops.residual_count
+        @test norm(nested_ops.overlap - I, Inf) < 1.0e-10
+        @test nested_check.overlap_error < 1.0e-10
+        @test all(isfinite, fixed_block.weights)
+        @test minimum(fixed_block.weights) > 0.0
+        @test nested_check.orbital_energy < -1.25
+        @test 0.75 < nested_check.vee_expectation < 0.81
+        @test abs(nested_check.orbital_energy - parent_check.orbital_energy) < 0.03
+        @test abs(nested_check.vee_expectation - parent_check.vee_expectation) < 0.01
+        @test parent_ops.residual_count == 0
+    end
 end
 
 @testset "Ordinary Cartesian localized backend" begin

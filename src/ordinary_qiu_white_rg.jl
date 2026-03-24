@@ -886,6 +886,87 @@ function _qwrg_atomic_axis_aa_data(
     )
 end
 
+function _qwrg_atomic_axis_factor_cross_data(
+    proxy_layer::_MappedLegacyProxyLayer1D,
+    orbital::_AtomicCartesianShellOrbital3D,
+    axis::Symbol,
+    expansion::CoulombGaussianExpansion,
+    factor_center::Float64,
+)
+    proxy_gaussians = _qwrg_proxy_gaussian_primitives(proxy_layer)
+    center_value = axis == :x ? orbital.center[1] : axis == :y ? orbital.center[2] : orbital.center[3]
+    power = _qwrg_atomic_orbital_axis_power(orbital, axis)
+    nproxy = length(proxy_gaussians)
+    nprimitive = length(orbital.exponents)
+    factor = [zeros(Float64, nproxy, nprimitive) for _ in expansion.exponents]
+
+    for primitive in 1:nprimitive
+        exponent = Float64(orbital.exponents[primitive])
+        prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
+        for proxy in 1:nproxy
+            gaussian = proxy_gaussians[proxy]
+            alpha_proxy = _qwrg_gaussian_exponent(gaussian)
+            for term in eachindex(expansion.exponents)
+                factor[term][proxy, primitive] = _qwrg_atomic_basic_integral(
+                    alpha_proxy,
+                    gaussian.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor;
+                    extra_exponent = Float64(expansion.exponents[term]),
+                    extra_center = factor_center,
+                )
+            end
+        end
+    end
+
+    return [_qwrg_left_contract_cross_matrix(proxy_layer, matrix) for matrix in factor]
+end
+
+function _qwrg_atomic_axis_factor_aa_data(
+    left::_AtomicCartesianShellOrbital3D,
+    right::_AtomicCartesianShellOrbital3D,
+    axis::Symbol,
+    expansion::CoulombGaussianExpansion,
+    factor_center::Float64,
+)
+    center_left = axis == :x ? left.center[1] : axis == :y ? left.center[2] : left.center[3]
+    center_right = axis == :x ? right.center[1] : axis == :y ? right.center[2] : right.center[3]
+    power_left = _qwrg_atomic_orbital_axis_power(left, axis)
+    power_right = _qwrg_atomic_orbital_axis_power(right, axis)
+    nleft = length(left.exponents)
+    nright = length(right.exponents)
+    factor = [zeros(Float64, nleft, nright) for _ in expansion.exponents]
+
+    for j in 1:nright
+        exponent_right = Float64(right.exponents[j])
+        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
+        for i in 1:nleft
+            exponent_left = Float64(left.exponents[i])
+            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
+            for term in eachindex(expansion.exponents)
+                factor[term][i, j] = _qwrg_atomic_basic_integral(
+                    exponent_left,
+                    center_left,
+                    power_left,
+                    prefactor_left,
+                    exponent_right,
+                    center_right,
+                    power_right,
+                    prefactor_right;
+                    extra_exponent = Float64(expansion.exponents[term]),
+                    extra_center = factor_center,
+                )
+            end
+        end
+    end
+
+    return factor
+end
+
 function _qwrg_atomic_weighted_hadamard(
     left_coefficients::AbstractVector{<:Real},
     x::AbstractMatrix{<:Real},
@@ -2201,6 +2282,315 @@ function _qwrg_diatomic_one_body_matrix(
     return 0.5 .* (matrix .+ transpose(matrix))
 end
 
+function _qwrg_same_nuclei(
+    left::AbstractVector{<:NTuple{3,<:Real}},
+    right::AbstractVector{<:NTuple{3,<:Real}};
+    tol::Real = 1.0e-12,
+)
+    length(left) == length(right) || return false
+    for index in eachindex(left, right)
+        for axis in 1:3
+            abs(Float64(left[index][axis]) - Float64(right[index][axis])) <= tol || return false
+        end
+    end
+    return true
+end
+
+function _qwrg_diatomic_gausslet_axis_matrix(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    axis::Symbol;
+    squared::Bool = false,
+)
+    overlap_x = bundle_x.pgdg_intermediate.overlap
+    overlap_y = bundle_y.pgdg_intermediate.overlap
+    overlap_z = bundle_z.pgdg_intermediate.overlap
+    axis_x = squared ? bundle_x.pgdg_intermediate.x2 : bundle_x.pgdg_intermediate.position
+    axis_y = squared ? bundle_y.pgdg_intermediate.x2 : bundle_y.pgdg_intermediate.position
+    axis_z = squared ? bundle_z.pgdg_intermediate.x2 : bundle_z.pgdg_intermediate.position
+    matrix = zeros(
+        Float64,
+        size(overlap_x, 1) * size(overlap_y, 1) * size(overlap_z, 1),
+        size(overlap_x, 2) * size(overlap_y, 2) * size(overlap_z, 2),
+    )
+    if axis == :x
+        _qwrg_fill_product_matrix!(matrix, axis_x, overlap_y, overlap_z)
+    elseif axis == :y
+        _qwrg_fill_product_matrix!(matrix, overlap_x, axis_y, overlap_z)
+    elseif axis == :z
+        _qwrg_fill_product_matrix!(matrix, overlap_x, overlap_y, axis_z)
+    else
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    end
+    return matrix
+end
+
+function _qwrg_diatomic_cartesian_shell_blocks_3d(
+    bundles::_CartesianNestedAxisBundles3D,
+    supplement::_BondAlignedDiatomicCartesianShellSupplement3D,
+    basis::BondAlignedDiatomicQWBasis3D,
+    expansion::CoulombGaussianExpansion,
+    nuclear_charges::AbstractVector{<:Real},
+)
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement route requires one nuclear charge per nucleus"),
+    )
+    _qwrg_same_nuclei(supplement.source.nuclei, basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the basis nuclei"),
+    )
+
+    proxy_x = bundles.bundle_x.pgdg_intermediate.auxiliary_layer
+    proxy_y = bundles.bundle_y.pgdg_intermediate.auxiliary_layer
+    proxy_z = bundles.bundle_z.pgdg_intermediate.auxiliary_layer
+    proxy_x isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the x axis"),
+    )
+    proxy_y isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the y axis"),
+    )
+    proxy_z isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the z axis"),
+    )
+
+    n1x = size(bundles.bundle_x.pgdg_intermediate.overlap, 1)
+    n1y = size(bundles.bundle_y.pgdg_intermediate.overlap, 1)
+    n1z = size(bundles.bundle_z.pgdg_intermediate.overlap, 1)
+    ngausslet3d = n1x * n1y * n1z
+    norbital = length(supplement.orbitals)
+
+    overlap_ga = zeros(Float64, ngausslet3d, norbital)
+    kinetic_ga = zeros(Float64, ngausslet3d, norbital)
+    one_body_ga = zeros(Float64, ngausslet3d, norbital)
+    position_x_ga = zeros(Float64, ngausslet3d, norbital)
+    position_y_ga = zeros(Float64, ngausslet3d, norbital)
+    position_z_ga = zeros(Float64, ngausslet3d, norbital)
+
+    overlap_aa = zeros(Float64, norbital, norbital)
+    kinetic_aa = zeros(Float64, norbital, norbital)
+    one_body_aa = zeros(Float64, norbital, norbital)
+    position_x_aa = zeros(Float64, norbital, norbital)
+    position_y_aa = zeros(Float64, norbital, norbital)
+    position_z_aa = zeros(Float64, norbital, norbital)
+
+    cross_cache = Dict{Tuple{Int,Symbol},Any}()
+    factor_cross_cache = Dict{Tuple{Int,Symbol,Int},Any}()
+    aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
+    factor_aa_cache = Dict{Tuple{Int,Int,Symbol,Int},Any}()
+    scratch = zeros(Float64, ngausslet3d)
+
+    # Alg QW-RG step 3: build the added 3D molecular Gaussian orbitals as one
+    # explicit two-center Cartesian shell set on the bond-aligned nuclei.
+    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+    for (orbital_index, orbital) in pairs(supplement.orbitals)
+        x_data = get!(cross_cache, (orbital_index, :x)) do
+            _qwrg_atomic_axis_cross_data(proxy_x, orbital, :x, expansion)
+        end
+        y_data = get!(cross_cache, (orbital_index, :y)) do
+            _qwrg_atomic_axis_cross_data(proxy_y, orbital, :y, expansion)
+        end
+        z_data = get!(cross_cache, (orbital_index, :z)) do
+            _qwrg_atomic_axis_cross_data(proxy_z, orbital, :z, expansion)
+        end
+
+        for primitive in eachindex(orbital.coefficients)
+            coefficient = Float64(orbital.coefficients[primitive])
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            overlap_ga[:, orbital_index] .+= coefficient .* scratch
+
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.kinetic, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.kinetic, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.kinetic, :, primitive),
+            )
+            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
+
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.position, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            position_x_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.position, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            position_y_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.position, :, primitive),
+            )
+            position_z_ga[:, orbital_index] .+= coefficient .* scratch
+        end
+
+        one_body_ga[:, orbital_index] .= kinetic_ga[:, orbital_index]
+        for (nucleus_index, nucleus) in pairs(basis.nuclei)
+            charge_value = Float64(nuclear_charges[nucleus_index])
+            x_factor = get!(factor_cross_cache, (orbital_index, :x, nucleus_index)) do
+                _qwrg_atomic_axis_factor_cross_data(
+                    proxy_x,
+                    orbital,
+                    :x,
+                    expansion,
+                    nucleus[1],
+                )
+            end
+            y_factor = get!(factor_cross_cache, (orbital_index, :y, nucleus_index)) do
+                _qwrg_atomic_axis_factor_cross_data(
+                    proxy_y,
+                    orbital,
+                    :y,
+                    expansion,
+                    nucleus[2],
+                )
+            end
+            z_factor = get!(factor_cross_cache, (orbital_index, :z, nucleus_index)) do
+                _qwrg_atomic_axis_factor_cross_data(
+                    proxy_z,
+                    orbital,
+                    :z,
+                    expansion,
+                    nucleus[3],
+                )
+            end
+            for term in eachindex(expansion.coefficients), primitive in eachindex(orbital.coefficients)
+                coefficient = Float64(orbital.coefficients[primitive])
+                _qwrg_fill_product_column!(
+                    scratch,
+                    view(x_factor[term], :, primitive),
+                    view(y_factor[term], :, primitive),
+                    view(z_factor[term], :, primitive),
+                )
+                one_body_ga[:, orbital_index] .-= charge_value * expansion.coefficients[term] .* coefficient .* scratch
+            end
+        end
+    end
+
+    for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
+        x_data = get!(aa_cache, (left_index, right_index, :x)) do
+            _qwrg_atomic_axis_aa_data(left, right, :x, expansion)
+        end
+        y_data = get!(aa_cache, (left_index, right_index, :y)) do
+            _qwrg_atomic_axis_aa_data(left, right, :y, expansion)
+        end
+        z_data = get!(aa_cache, (left_index, right_index, :z)) do
+            _qwrg_atomic_axis_aa_data(left, right, :z, expansion)
+        end
+        overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.overlap,
+            z_data.overlap,
+            right.coefficients,
+        )
+        kinetic_aa[left_index, right_index] =
+            _qwrg_atomic_weighted_hadamard(
+                left.coefficients,
+                x_data.kinetic,
+                y_data.overlap,
+                z_data.overlap,
+                right.coefficients,
+            ) +
+            _qwrg_atomic_weighted_hadamard(
+                left.coefficients,
+                x_data.overlap,
+                y_data.kinetic,
+                z_data.overlap,
+                right.coefficients,
+            ) +
+            _qwrg_atomic_weighted_hadamard(
+                left.coefficients,
+                x_data.overlap,
+                y_data.overlap,
+                z_data.kinetic,
+                right.coefficients,
+            )
+        position_x_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.position,
+            y_data.overlap,
+            z_data.overlap,
+            right.coefficients,
+        )
+        position_y_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.position,
+            z_data.overlap,
+            right.coefficients,
+        )
+        position_z_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.overlap,
+            z_data.position,
+            right.coefficients,
+        )
+
+        one_body_value = kinetic_aa[left_index, right_index]
+        for (nucleus_index, nucleus) in pairs(basis.nuclei)
+            charge_value = Float64(nuclear_charges[nucleus_index])
+            x_factor = get!(factor_aa_cache, (left_index, right_index, :x, nucleus_index)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :x, expansion, nucleus[1])
+            end
+            y_factor = get!(factor_aa_cache, (left_index, right_index, :y, nucleus_index)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :y, expansion, nucleus[2])
+            end
+            z_factor = get!(factor_aa_cache, (left_index, right_index, :z, nucleus_index)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :z, expansion, nucleus[3])
+            end
+            for term in eachindex(expansion.coefficients)
+                one_body_value -= charge_value * expansion.coefficients[term] * _qwrg_atomic_weighted_hadamard(
+                    left.coefficients,
+                    x_factor[term],
+                    y_factor[term],
+                    z_factor[term],
+                    right.coefficients,
+                )
+            end
+        end
+        one_body_aa[left_index, right_index] = one_body_value
+    end
+
+    return (
+        overlap_ga = overlap_ga,
+        overlap_aa = Matrix{Float64}(0.5 .* (overlap_aa .+ transpose(overlap_aa))),
+        one_body_ga = one_body_ga,
+        one_body_aa = Matrix{Float64}(0.5 .* (one_body_aa .+ transpose(one_body_aa))),
+        position_x_ga = position_x_ga,
+        position_y_ga = position_y_ga,
+        position_z_ga = position_z_ga,
+        position_x_aa = Matrix{Float64}(0.5 .* (position_x_aa .+ transpose(position_x_aa))),
+        position_y_aa = Matrix{Float64}(0.5 .* (position_y_aa .+ transpose(position_y_aa))),
+        position_z_aa = Matrix{Float64}(0.5 .* (position_z_aa .+ transpose(position_z_aa))),
+    )
+end
+
 """
     ordinary_cartesian_qiu_white_operators(
         basis::BondAlignedDiatomicQWBasis3D;
@@ -2304,6 +2694,151 @@ function ordinary_cartesian_qiu_white_operators(
     )
 end
 
+function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned diatomic molecular QW path currently supports only gausslet_backend = :numerical_reference"),
+    )
+    interaction_treatment == :ggt_nearest || throw(
+        ArgumentError("bond-aligned diatomic molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
+    )
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular QW path requires one nuclear charge per nucleus"),
+    )
+    _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
+    )
+
+    timings = Pair{String,Float64}[]
+    timing_io = stdout
+
+    start_ns = time_ns()
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "bond-aligned shared 1D bundles", start_ns)
+
+    # Alg QW-RG step 3: lift the named-basis shell metadata into one explicit
+    # two-center molecular Cartesian shell supplement before the residual
+    # construction.
+    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+    supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(gaussian_data)
+
+    start_ns = time_ns()
+    blocks = _qwrg_diatomic_cartesian_shell_blocks_3d(
+        bundles,
+        supplement3d,
+        basis,
+        expansion,
+        nuclear_charges,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "explicit 3D diatomic raw-block assembly", start_ns)
+
+    gausslet_orbitals = _mapped_cartesian_orbitals(
+        centers(basis.basis_x),
+        centers(basis.basis_y),
+        centers(basis.basis_z),
+    )
+    gausslet_count = length(gausslet_orbitals)
+
+    start_ns = time_ns()
+    gausslet_overlap_3d = _qwrg_diatomic_overlap_matrix(
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+    )
+    # Alg QW-RG step 4: define the residual molecular Gaussians by
+    # orthogonalizing the added two-center 3D shell set to the full diatomic
+    # gausslet product space.
+    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+    residual_data = _qwrg_residual_space(gausslet_overlap_3d, blocks.overlap_ga, blocks.overlap_aa)
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic residual-space construction", start_ns)
+
+    start_ns = time_ns()
+    gausslet_one_body = _qwrg_diatomic_one_body_matrix(
+        basis,
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+        expansion,
+        nuclear_charges,
+    )
+    _, final_one_body = _qwrg_one_body_matrices(
+        gausslet_one_body,
+        blocks.one_body_ga,
+        blocks.one_body_aa,
+        residual_data.raw_to_final,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic raw one-body transform", start_ns)
+
+    start_ns = time_ns()
+    x_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :x)
+    y_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :y)
+    z_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :z)
+    x_raw = [x_gg blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
+    y_raw = [y_gg blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
+    z_raw = [z_gg blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        residual_data.raw_to_final,
+        gausslet_count,
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= 1.0e-8 || throw(
+        ArgumentError("bond-aligned diatomic residual-center extraction requires an orthonormal residual block"),
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic raw center-matrix assembly", start_ns)
+
+    start_ns = time_ns()
+    gausslet_interaction = _qwrg_diatomic_interaction_matrix(
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+        expansion,
+    )
+    interaction_matrix = _qwrg_interaction_matrix_nearest(
+        gausslet_interaction,
+        gausslet_orbitals,
+        residual_centers,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic RG interaction assembly", start_ns)
+    timing && _qwrg_maybe_print_timings(timing_io, timings)
+
+    return QiuWhiteResidualGaussianOperators(
+        basis,
+        gaussian_data,
+        gausslet_backend,
+        :ggt_nearest,
+        expansion,
+        Matrix{Float64}(residual_data.final_overlap),
+        final_one_body,
+        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+        _qwrg_orbital_data(
+            gausslet_orbitals,
+            residual_centers,
+            residual_widths,
+        ),
+        gausslet_count,
+        size(residual_centers, 1),
+        Matrix{Float64}(residual_data.raw_to_final),
+        Matrix{Float64}(residual_centers),
+        Matrix{Float64}(residual_widths),
+    )
+end
+
 function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
@@ -2375,6 +2910,137 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
         Matrix{Float64}(I, fixed_count, fixed_count),
         zero_residual_centers,
         zero_residual_widths,
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned diatomic nested molecular QW path currently supports only gausslet_backend = :numerical_reference"),
+    )
+
+    basis = fixed_block.parent_basis
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic nested molecular QW path requires one nuclear charge per nucleus"),
+    )
+    _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
+    )
+
+    timings = Pair{String,Float64}[]
+    timing_io = stdout
+
+    start_ns = time_ns()
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "bond-aligned shared parent 1D bundles", start_ns)
+
+    supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(gaussian_data)
+
+    start_ns = time_ns()
+    blocks = _qwrg_diatomic_cartesian_shell_blocks_3d(
+        bundles,
+        supplement3d,
+        basis,
+        expansion,
+        nuclear_charges,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "explicit 3D diatomic parent raw-block assembly", start_ns)
+
+    contraction = fixed_block.coefficient_matrix
+    fixed_count = size(fixed_block.overlap, 1)
+
+    start_ns = time_ns()
+    # Alg QW-RG step 4: keep the same residual construction after contracting
+    # the parent diatomic gausslet-plus-molecular-shell overlap into the
+    # nested fixed block.
+    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
+    overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
+    residual_data = _qwrg_residual_space(fixed_block.overlap, overlap_fg, blocks.overlap_aa)
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested residual-space construction", start_ns)
+
+    start_ns = time_ns()
+    parent_one_body = _qwrg_diatomic_one_body_matrix(
+        basis,
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+        expansion,
+        nuclear_charges,
+    )
+    fixed_one_body = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
+    fixed_one_body = 0.5 .* (fixed_one_body .+ transpose(fixed_one_body))
+    one_body_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga)
+    _, final_one_body = _qwrg_one_body_matrices(
+        fixed_one_body,
+        one_body_fg,
+        blocks.one_body_aa,
+        residual_data.raw_to_final,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested raw one-body assembly and transform", start_ns)
+
+    start_ns = time_ns()
+    x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
+    y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
+    z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
+    x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
+    y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
+    z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        residual_data.raw_to_final,
+        fixed_count,
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= 1.0e-8 || throw(
+        ArgumentError("bond-aligned diatomic nested residual-center extraction requires an orthonormal residual block"),
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested raw center-matrix assembly", start_ns)
+
+    start_ns = time_ns()
+    fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    interaction_matrix = _qwrg_interaction_matrix_nearest(
+        fixed_interaction,
+        fixed_block.fixed_centers,
+        residual_centers,
+    )
+    timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested RG interaction assembly", start_ns)
+    timing && _qwrg_maybe_print_timings(timing_io, timings)
+
+    return QiuWhiteResidualGaussianOperators(
+        fixed_block,
+        gaussian_data,
+        gausslet_backend,
+        :ggt_nearest,
+        expansion,
+        Matrix{Float64}(residual_data.final_overlap),
+        final_one_body,
+        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+        _qwrg_orbital_data(
+            fixed_block.fixed_centers,
+            residual_centers,
+            residual_widths;
+            fixed_kind = :nested_fixed,
+            fixed_label_prefix = "nf",
+        ),
+        fixed_count,
+        size(residual_centers, 1),
+        Matrix{Float64}(residual_data.raw_to_final),
+        Matrix{Float64}(residual_centers),
+        Matrix{Float64}(residual_widths),
     )
 end
 
@@ -3250,6 +3916,83 @@ function ordinary_cartesian_qiu_white_operators(
         nuclear_charges = nuclear_charges,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        basis::BondAlignedDiatomicQWBasis3D,
+        gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first bond-aligned diatomic ordinary QW route with a true molecular
+supplement and residual-Gaussian completion.
+
+This first molecular supplement pass is intentionally narrow:
+
+- one bond-aligned diatomic basis
+- one explicit two-center molecular shell supplement built from a named atomic
+  basis
+- only `interaction_treatment = :ggt_nearest`
+"""
+function ordinary_cartesian_qiu_white_operators(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
+        basis,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+        gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first bond-aligned diatomic nested fixed-block QW route with a true
+molecular supplement and residual-Gaussian completion.
+"""
+function ordinary_cartesian_qiu_white_operators(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    interaction_treatment == :ggt_nearest || throw(
+        ArgumentError("bond-aligned diatomic nested molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
+    )
+    return _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
+        fixed_block,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
         gausslet_backend = gausslet_backend,
         timing = timing,
     )

@@ -70,6 +70,25 @@ end
 
 const LegacySGaussianData = LegacyAtomicGaussianSupplement
 
+"""
+    LegacyBondAlignedDiatomicGaussianSupplement
+
+Narrow bond-aligned diatomic molecular supplement assembled from one named
+atomic basis and two explicit nuclear centers.
+
+This stays deliberately small in scope:
+
+- one homonuclear atomic shell definition loaded by the legacy named-basis path
+- two physical centers on a bond-aligned diatomic
+- explicit 3D Cartesian `s/p` shell content for the active QW routes
+
+It is not yet a general arbitrary-molecule placement object.
+"""
+struct LegacyBondAlignedDiatomicGaussianSupplement
+    atomic_source::LegacyAtomicGaussianSupplement
+    nuclei::Vector{NTuple{3,Float64}}
+end
+
 function _legacy_atomic_has_nonseparable_shells(data::LegacyAtomicGaussianSupplement)
     return any(shell -> shell.l > 0, data.shells)
 end
@@ -86,6 +105,11 @@ end
 
 struct _AtomicCartesianShellSupplement3D
     source::LegacyAtomicGaussianSupplement
+    orbitals::Vector{_AtomicCartesianShellOrbital3D}
+end
+
+struct _BondAlignedDiatomicCartesianShellSupplement3D
+    source::LegacyBondAlignedDiatomicGaussianSupplement
     orbitals::Vector{_AtomicCartesianShellOrbital3D}
 end
 
@@ -140,6 +164,49 @@ function _atomic_cartesian_shell_supplement_3d(
         end
     end
     return _AtomicCartesianShellSupplement3D(data, orbitals)
+end
+
+function _bond_aligned_diatomic_cartesian_shell_supplement_3d(
+    data::LegacyBondAlignedDiatomicGaussianSupplement,
+)
+    any(shell -> shell.l > 1, data.atomic_source.shells) && throw(
+        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently supports only lmax <= 1"),
+    )
+    length(data.nuclei) == 2 || throw(
+        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently expects exactly two nuclear centers"),
+    )
+
+    orbitals = _AtomicCartesianShellOrbital3D[]
+    shell_counts = Dict{Tuple{Int,String},Int}()
+    for (nucleus_index, nucleus) in pairs(data.nuclei)
+        for shell in data.atomic_source.shells
+            shell_entries = _atomic_cartesian_shell_labels(shell.l)
+            contraction_columns = _legacy_atomic_shell_contraction_columns(
+                shell,
+                data.atomic_source.uncontracted,
+            )
+            for coefficients in contraction_columns
+                for (prefix, (lx, ly, lz)) in shell_entries
+                    key = (nucleus_index, prefix)
+                    shell_counts[key] = get(shell_counts, key, 0) + 1
+                    label = string(nucleus_index == 1 ? "a_" : "b_", prefix, shell_counts[key])
+                    push!(
+                        orbitals,
+                        _AtomicCartesianShellOrbital3D(
+                            label,
+                            lx,
+                            ly,
+                            lz,
+                            Float64[shell.exponents...],
+                            Float64[coefficients...],
+                            nucleus,
+                        ),
+                    )
+                end
+            end
+        end
+    end
+    return _BondAlignedDiatomicCartesianShellSupplement3D(data, orbitals)
 end
 
 function Base.show(io::IO, data::LegacyAtomicGaussianSupplement)
@@ -456,6 +523,52 @@ function legacy_atomic_gaussian_supplement(
         center = center,
         uncontracted = uncontracted,
         max_width = max_width,
+    )
+end
+
+"""
+    legacy_bond_aligned_diatomic_gaussian_supplement(
+        atom,
+        basis_name,
+        nuclei;
+        lmax = 0,
+        basisfile = nothing,
+        uncontracted = false,
+        max_width = nothing,
+    )
+
+Build the first narrow molecular supplement object for a bond-aligned
+homonuclear diatomic.
+
+The object reuses one atomic named-basis shell definition and places the
+resulting explicit Cartesian shell content on the two supplied nuclear centers.
+It is intended for the first honest molecular QW residual-Gaussian completion
+and does not yet attempt arbitrary molecular placement.
+"""
+function legacy_bond_aligned_diatomic_gaussian_supplement(
+    atom::AbstractString,
+    basis_name::AbstractString,
+    nuclei::AbstractVector{<:NTuple{3,<:Real}};
+    lmax::Integer = 0,
+    basisfile::Union{Nothing,AbstractString} = nothing,
+    uncontracted::Bool = false,
+    max_width::Union{Nothing,Real} = nothing,
+)
+    length(nuclei) == 2 || throw(
+        ArgumentError("legacy_bond_aligned_diatomic_gaussian_supplement currently expects exactly two nuclear centers"),
+    )
+    atomic_source = legacy_atomic_gaussian_supplement(
+        atom,
+        basis_name;
+        lmax = lmax,
+        basisfile = basisfile,
+        center = 0.0,
+        uncontracted = uncontracted,
+        max_width = max_width,
+    )
+    return LegacyBondAlignedDiatomicGaussianSupplement(
+        atomic_source,
+        [(Float64(center[1]), Float64(center[2]), Float64(center[3])) for center in nuclei],
     )
 end
 
