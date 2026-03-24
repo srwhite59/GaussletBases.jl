@@ -43,12 +43,20 @@
      the transverse directions and large enough relative to `doside`
 
 5. Choose split planes by nearest midpoint in index space between neighboring
-   atoms along that axis.
+   atoms along that axis, but preserve homonuclear midpoint symmetry
+   explicitly.
    For a diatomic there is one midpoint. For a chain, order the atoms along the
    distinguished axis and use the midpoint between each neighboring pair.
-   The split plane should be the grid index nearest that physical midpoint, so
-   the split stays attached to the actual mapped grid rather than to a
-   continuous idealized coordinate.
+   The split plane should stay attached to the actual mapped grid rather than
+   to a continuous idealized coordinate. The first explicit homonuclear rule
+   is:
+   - for a bond-aligned homonuclear diatomic whose bond-axis working interval
+     has odd length, reserve the midpoint index as a shared `nx × ny × 1` slab
+   - split the remaining bond-axis rows into equal left/right child boxes
+   - treat the midpoint slab as a direct shared region between the two child
+     subtrees rather than assigning it to either child
+   This replaces the earlier implicit behavior of giving the midpoint row to
+   one child.
    Historical support:
    - `Boxes.jl` computes physical midpoints between neighboring atoms and picks
      the nearest grid index
@@ -64,16 +72,37 @@
    - `Boxes.jl` rejects narrow splits and adds extra bars when needed to keep
      shells more square
 
-7. After the split, treat each child as an atomic-style subtree.
+7. Keep shell resolution roughly matched across directions.
+   The current fixed retain tuples are only provisional. The guiding policy is:
+   - local side contractions should aim to preserve roughly matched physical
+     spacing across shell directions
+   - if a fixed global retain tuple visibly violates that constant-resolution
+     idea, it should be treated as provisional rather than as the intended
+     long-term rule
+   The current landed homonuclear correction is intentionally narrower than a
+   full adaptive rule:
+   - in the shared shell of the current bond-aligned homonuclear diatomic
+     route, if a tangential local interval is symmetric about zero and the
+     provisional face retain count is even, reduce that retain count by one so
+     the localized side space keeps an odd center-bearing pattern
+   - keep this correction confined to the shared shell
+   - do not yet generalize it to edges, child boxes, heteronuclear cases, or
+     chains
+   This page does not yet freeze an adaptive local-side-count formula. That
+   should wait for explicit 1D `doside` / `COMX` diagnostics.
+
+8. After the split, treat each child as an atomic-style subtree.
    Once the shared parent box has split:
    - each child box inherits the same shell language as the atomic route
    - each child shrinks shell-by-shell independently
    - each child remains defined on original parent-space rows assigned to that
      box region, not by re-coarsening already-renormalized functions
+   If a homonuclear midpoint slab is present, it stays as a direct shared
+   region between the child subtrees rather than belonging to either one.
    Landed atomic route:
    [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 
-8. Extend to linear chains by repeated midpoint splitting on the same axis.
+9. Extend to linear chains by repeated midpoint splitting on the same axis.
    The immediate extension beyond a diatomic is:
    - one shared parent box for the full chain
    - repeated midpoint splits only along the distinguished chain axis
@@ -81,7 +110,7 @@
    This keeps the policy inside one geometry family:
    one distinguished axis plus rectangular shells.
 
-9. Stop before arbitrary non-linear molecular box policies.
+10. Stop before arbitrary non-linear molecular box policies.
    The first diatomic/chain page does not settle:
    - bent geometries
    - multiple distinguished axes
@@ -109,7 +138,8 @@ nesting:
 - one large shared rectangular box around a bond-aligned diatomic or linear
   chain
 - shell shrinkage at large radius before any split
-- midpoint-based splits only along the distinguished molecular axis
+- midpoint-based splits only along the distinguished molecular axis, with a
+  shared midpoint slab for odd-length homonuclear working intervals
 - child boxes that then continue as atomic-style shell subtrees
 
 It is a geometry-policy page, not an implementation page.
@@ -128,36 +158,45 @@ What is a modernized repo policy choice:
 
 - start with bond-aligned diatomics only
 - extend immediately only to linear chains on the same distinguished axis
-- make the split rule explicit as nearest-midpoint index selection
+- make the split rule explicit as nearest-midpoint index selection plus the
+  homonuclear midpoint-slab correction
 - require `N_parallel > 2 * nside` before splitting
 - require child boxes to stay roughly cubic in physical extent
+- record constant-resolution shell matching as a policy guideline, with one
+  landed narrow homonuclear shared-shell odd-retain correction but without yet
+  fixing the general adaptive formula
 - defer arbitrary non-linear geometries until a different policy is written
 
 ## Current Recommendation
 
-This policy is precise enough for the first implementation pass if the code
+This policy is now precise enough for the midpoint-slab code update if the code
 stays within the intended scope:
 
 - one distinguished molecular axis
 - one shared parent box first
 - midpoint splits only along that axis
+- explicit shared midpoint slab for odd-length homonuclear working intervals
 - atomic-style shell language reused after the split
 
-The first implementation should therefore target:
+The next implementation should therefore target:
 
-- one bond-aligned diatomic
-- one split/no-split decision based on raw-site count and physical shape
-- one child-box handoff into the existing atomic shell language
+- one bond-aligned homonuclear diatomic
+- one midpoint-slab split/no-split decision based on raw-site count and
+  physical shape
+- one child-box plus direct shared-slab handoff into the existing atomic shell
+  language
 
-It should not yet target arbitrary molecules.
+It should not yet target arbitrary molecules or a final adaptive local-side
+formula.
 
 ## Implementation Notes
 
 Recommended code-comment style once implementation starts:
 
 ```julia
-# Alg Nested-Diatomic step 5: Choose the bond-axis split plane at the parent
-# grid index nearest the midpoint between neighboring atoms.
+# Alg Nested-Diatomic step 5: For an odd-length homonuclear working interval,
+# reserve the midpoint row as a shared slab and split the remaining bond-axis
+# rows into equal left/right child boxes.
 # See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
 ```
 

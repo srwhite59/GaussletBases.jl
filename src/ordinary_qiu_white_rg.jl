@@ -286,6 +286,9 @@ function _bond_aligned_diatomic_nested_fixed_source(
     gausslet_backend::Symbol = :numerical_reference,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
 )
     gausslet_backend == :numerical_reference || throw(
         ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
@@ -304,6 +307,9 @@ function _bond_aligned_diatomic_nested_fixed_source(
         midpoint = midpoint,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        shared_shell_retain_xy = shared_shell_retain_xy,
+        shared_shell_retain_xz = shared_shell_retain_xz,
+        shared_shell_retain_yz = shared_shell_retain_yz,
     )
 end
 
@@ -313,6 +319,9 @@ function _bond_aligned_diatomic_nested_fixed_block(
     gausslet_backend::Symbol = :numerical_reference,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
 )
     source = _bond_aligned_diatomic_nested_fixed_source(
         basis;
@@ -320,6 +329,9 @@ function _bond_aligned_diatomic_nested_fixed_block(
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        shared_shell_retain_xy = shared_shell_retain_xy,
+        shared_shell_retain_xz = shared_shell_retain_xz,
+        shared_shell_retain_yz = shared_shell_retain_yz,
     )
     return (
         source = source,

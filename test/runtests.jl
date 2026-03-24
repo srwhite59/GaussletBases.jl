@@ -1298,6 +1298,84 @@ function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 
     end)
 end
 
+function _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture(
+    ;
+    bond_length::Float64 = 1.4,
+    shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+)
+    retain_xy_key = isnothing(shared_shell_retain_xy) ? "default" : string(shared_shell_retain_xy[1], "_", shared_shell_retain_xy[2])
+    retain_xz_key = isnothing(shared_shell_retain_xz) ? "default" : string(shared_shell_retain_xz[1], "_", shared_shell_retain_xz[2])
+    retain_yz_key = isnothing(shared_shell_retain_yz) ? "default" : string(shared_shell_retain_yz[1], "_", shared_shell_retain_yz[2])
+    key = Symbol(
+        :bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture,
+        round(Int, 1000 * bond_length),
+        :_,
+        retain_xy_key,
+        :_,
+        retain_xz_key,
+        :_,
+        retain_yz_key,
+    )
+    return _cached_fixture(key, () -> begin
+        basis, parent_ops, parent_check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion = expansion,
+            shared_shell_retain_xy = shared_shell_retain_xy,
+            shared_shell_retain_xz = shared_shell_retain_xz,
+            shared_shell_retain_yz = shared_shell_retain_yz,
+        )
+        source = nested.source
+        fixed_block = nested.fixed_block
+        parent_modes = eigen(Hermitian(parent_ops.one_body_hamiltonian), Hermitian(parent_ops.overlap))
+        parent_ground = parent_modes.vectors[:, 1]
+        projected = _nested_fixed_projected_orbital(parent_ops.overlap, fixed_block, parent_ground)
+        projected_vee = _nested_vee_from_orbital(
+            GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_block, expansion),
+            projected,
+        )
+        capture, projected_energy = _nested_projector_stats(
+            parent_ops.overlap,
+            parent_ops.one_body_hamiltonian,
+            fixed_block,
+            parent_ground,
+        )
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 1,
+        )
+        nested_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            expansion,
+            source,
+            fixed_block,
+            parent_modes,
+            parent_ground,
+            projected,
+            projected_vee,
+            capture,
+            projected_energy,
+            supplement,
+            nested_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(nested_ops),
+        )
+    end)
+end
+
 function _nested_complete_shell_intervals(count::Int)
     count >= 15 || throw(ArgumentError("complete-shell fixture expects count >= 15"))
     outer_start = div(count - 13, 2) + 1
@@ -4462,6 +4540,238 @@ end
             @test occursin("\tnucleus\tnucleus\tnucleus\t2\tB", text)
         end
     end
+end
+
+@testset "Bond-aligned diatomic doside / COMX trace diagnostics" begin
+    (
+        _basis,
+        _parent_ops,
+        _parent_check,
+        _expansion,
+        source,
+        _fixed_block,
+        _nested_ops,
+        _nested_check,
+    ) = _bond_aligned_diatomic_nested_qw_fixture(; bond_length = 1.4)
+
+    traces = GaussletBases._bond_aligned_diatomic_doside_traces(
+        source;
+        symmetry_tol = 1.0e-8,
+        zero_tol = 1.0e-8,
+    )
+    lost_center = filter(
+        trace -> trace.symmetric_about_zero && !trace.contains_near_zero_center,
+        traces,
+    )
+
+    @test length(traces) == 9
+    @test all(trace.group_kind == :shared_shell for trace in traces)
+    @test all(trace.layer_index == 1 for trace in traces)
+    @test all(trace.symmetric_about_zero for trace in traces)
+    @test isempty(lost_center)
+    retained_three = filter(trace -> trace.retained_count == 3, traces)
+    @test Set(trace.context_label for trace in retained_three) == Set([
+        "shared_shell/layer_1/face_xy/tangential_x",
+        "shared_shell/layer_1/face_xy/tangential_y",
+        "shared_shell/layer_1/face_xz/tangential_x",
+        "shared_shell/layer_1/face_xz/tangential_z",
+        "shared_shell/layer_1/face_yz/tangential_y",
+        "shared_shell/layer_1/face_yz/tangential_z",
+        "shared_shell/layer_1/edge_x/free_axis_x",
+        "shared_shell/layer_1/edge_y/free_axis_y",
+        "shared_shell/layer_1/edge_z/free_axis_z",
+    ])
+    @test all(trace.contains_near_zero_center for trace in traces)
+
+    mktemp() do path, io
+        close(io)
+        written = GaussletBases._write_bond_aligned_diatomic_doside_trace(
+            path,
+            source;
+            symmetry_tol = 1.0e-8,
+            zero_tol = 1.0e-8,
+        )
+        text = read(path, String)
+        @test length(written) == length(traces)
+        @test occursin("# trace_count = 9", text)
+        @test occursin("# note left_child has no local side contractions; it remains a direct core block", text)
+        @test occursin("# note right_child has no local side contractions; it remains a direct core block", text)
+        @test occursin("context_label = shared_shell/layer_1/face_xy/tangential_x", text)
+        @test occursin("context_label = shared_shell/layer_1/edge_z/free_axis_z", text)
+        @test occursin("parent_centers = [", text)
+        @test occursin("localized_centers = [", text)
+        @test occursin("contains_near_zero_center = true", text)
+        @test occursin("even_retained_count = false", text)
+    end
+end
+
+@testset "Bond-aligned diatomic shared-shell odd-retain experiment" begin
+    (
+        _basis,
+        _parent_ops,
+        _parent_check,
+        _expansion,
+        baseline_source,
+        baseline_fixed_block,
+        _baseline_parent_modes,
+        _baseline_parent_ground,
+        _baseline_projected,
+        baseline_projected_vee,
+        baseline_capture,
+        baseline_projected_energy,
+        _baseline_supplement,
+        baseline_ops,
+        baseline_check,
+    ) = _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture(
+        ;
+        bond_length = 1.4,
+        shared_shell_retain_xy = (4, 3),
+        shared_shell_retain_xz = (4, 3),
+        shared_shell_retain_yz = (4, 3),
+    )
+    (
+        _basis2,
+        _parent_ops2,
+        _parent_check2,
+        _expansion2,
+        experiment_source,
+        experiment_fixed_block,
+        _experiment_parent_modes,
+        _experiment_parent_ground,
+        _experiment_projected,
+        experiment_projected_vee,
+        experiment_capture,
+        experiment_projected_energy,
+        _experiment_supplement,
+        experiment_ops,
+        experiment_check,
+    ) = _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture(
+        ;
+        bond_length = 1.4,
+    )
+
+    experiment_traces = GaussletBases._bond_aligned_diatomic_doside_traces(experiment_source)
+    trace_map = Dict(trace.context_label => trace for trace in experiment_traces)
+    fixed_payload = bond_aligned_diatomic_geometry_payload(baseline_ops, baseline_source)
+    experiment_payload = bond_aligned_diatomic_geometry_payload(experiment_ops, experiment_source)
+    fixed_slice = bond_aligned_diatomic_plane_slice(
+        fixed_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+    experiment_slice = bond_aligned_diatomic_plane_slice(
+        experiment_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+
+    @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
+    @test all(isfinite, experiment_fixed_block.weights)
+    @test minimum(experiment_fixed_block.weights) > 0.0
+    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
+    @test size(experiment_fixed_block.overlap, 1) == 637
+    @test Set([
+        trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
+        trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
+        trace_map["shared_shell/layer_1/face_yz/tangential_y"].contains_near_zero_center,
+    ]) == Set([true])
+    @test Set([
+        trace_map["shared_shell/layer_1/face_xy/tangential_x"].retained_count,
+        trace_map["shared_shell/layer_1/face_xz/tangential_x"].retained_count,
+        trace_map["shared_shell/layer_1/face_yz/tangential_y"].retained_count,
+    ]) == Set([3])
+    @test experiment_slice.selected_count > fixed_slice.selected_count
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points)
+    @test abs(experiment_projected_vee - baseline_projected_vee) < 1.0e-5
+    @test abs(experiment_capture - baseline_capture) < 1.0e-10
+    @test abs(experiment_projected_energy - baseline_projected_energy) < 1.0e-10
+    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-8
+    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-6
+end
+
+@testset "Bond-aligned diatomic shared-shell odd-retain confirmation at R=2.0" begin
+    (
+        _basis,
+        _parent_ops,
+        _parent_check,
+        _expansion,
+        baseline_source,
+        baseline_fixed_block,
+        _baseline_parent_modes,
+        _baseline_parent_ground,
+        _baseline_projected,
+        baseline_projected_vee,
+        baseline_capture,
+        baseline_projected_energy,
+        _baseline_supplement,
+        baseline_ops,
+        baseline_check,
+    ) = _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture(
+        ;
+        bond_length = 2.0,
+        shared_shell_retain_xy = (4, 3),
+        shared_shell_retain_xz = (4, 3),
+        shared_shell_retain_yz = (4, 3),
+    )
+    (
+        _basis2,
+        _parent_ops2,
+        _parent_check2,
+        _expansion2,
+        experiment_source,
+        experiment_fixed_block,
+        _experiment_parent_modes,
+        _experiment_parent_ground,
+        _experiment_projected,
+        experiment_projected_vee,
+        experiment_capture,
+        experiment_projected_energy,
+        _experiment_supplement,
+        experiment_ops,
+        experiment_check,
+    ) = _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture(
+        ;
+        bond_length = 2.0,
+    )
+
+    experiment_traces = GaussletBases._bond_aligned_diatomic_doside_traces(experiment_source)
+    trace_map = Dict(trace.context_label => trace for trace in experiment_traces)
+    baseline_payload = bond_aligned_diatomic_geometry_payload(baseline_ops, baseline_source)
+    experiment_payload = bond_aligned_diatomic_geometry_payload(experiment_ops, experiment_source)
+    baseline_slice = bond_aligned_diatomic_plane_slice(
+        baseline_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+    experiment_slice = bond_aligned_diatomic_plane_slice(
+        experiment_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+
+    @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
+    @test all(isfinite, experiment_fixed_block.weights)
+    @test minimum(experiment_fixed_block.weights) > 0.0
+    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
+    @test size(experiment_fixed_block.overlap, 1) == 579
+    @test Set([
+        trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
+        trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
+        trace_map["shared_shell/layer_1/face_yz/tangential_y"].contains_near_zero_center,
+    ]) == Set([true])
+    @test experiment_slice.selected_count > baseline_slice.selected_count
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points)
+    @test abs(experiment_projected_vee - baseline_projected_vee) < 1.0e-5
+    @test abs(experiment_capture - baseline_capture) < 1.0e-10
+    @test abs(experiment_projected_energy - baseline_projected_energy) < 1.0e-10
+    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-8
+    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-6
 end
 
 @testset "Bond-aligned diatomic plane projection export" begin
