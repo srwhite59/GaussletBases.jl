@@ -4888,6 +4888,9 @@ end
     radial_dim = size(ida.radial_operators.overlap, 1)
     norbitals = length(orbitals(ida))
     shell_centers_r = Float64[Float64(value) for value in ida.radial_operators.shell_centers_r]
+    expected_channel_l = Int[channel.l for channel in channels]
+    expected_channel_m = Int[channel.m for channel in channels]
+    package_version = string(Base.pkgversion(GaussletBases))
     perm = GaussletBases._atomic_shell_major_permutation(ida)
     expected_h1 = Matrix{Float64}(ida.one_body.hamiltonian[perm, perm])
     expected_vee = GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[perm])
@@ -4963,6 +4966,40 @@ end
             @test String(file["meta/interaction_model"]) == "density_density_ida"
             @test Int(file["meta/nchannels"]) == nchannels
             @test Int(file["meta/nradial"]) == radial_dim
+            @test String(file["meta/manifest/producer/package"]) == "GaussletBases"
+            @test String(file["meta/manifest/producer/version"]) == package_version
+            @test String(file["meta/manifest/producer/entrypoint"]) == "GaussletBases.write_fullida_dense_jld2"
+            @test String(file["meta/manifest/producer/object_type"]) == "AtomicIDAOperators"
+            @test String(file["meta/manifest/interaction/model"]) == "density_density_ida"
+            @test String(file["meta/manifest/interaction/detail"]) == "two_index_ida"
+            @test String(file["meta/manifest/source/branch"]) == "atomic_ida"
+            @test String(file["meta/manifest/source/model"]) == "radial_atomic_ida"
+            @test Float64(file["meta/manifest/source/atomic_charge"]) == 2.0
+            @test String(file["meta/manifest/source/basis_spec_type"]) == "RadialBasisSpec"
+            @test String(file["meta/manifest/source/basis_family"]) == "G10"
+            @test String(file["meta/manifest/source/public_extent_kind"]) == "count"
+            @test isnan(Float64(file["meta/manifest/source/public_rmax"]))
+            @test Int(file["meta/manifest/source/public_count"]) == 6
+            @test !Bool(file["meta/manifest/source/has_public_rmax"])
+            @test Bool(file["meta/manifest/source/has_public_count"])
+            @test Float64(file["meta/manifest/source/reference_spacing"]) == 1.0
+            @test Int(file["meta/manifest/source/tails"]) == 3
+            @test Int(file["meta/manifest/source/odd_even_kmax"]) == 2
+            @test String(file["meta/manifest/source/supplement_kind"]) == "xgaussian"
+            @test Int(file["meta/manifest/source/supplement_count"]) == 1
+            @test Float64.(file["meta/manifest/source/supplement/xgaussian_alphas"]) == [0.2]
+            @test String(file["meta/manifest/source/mapping/type"]) == "AsinhMapping"
+            @test !Bool(file["meta/manifest/source/mapping/is_identity"])
+            @test Float64(file["meta/manifest/source/mapping/a"]) == 1.0
+            @test Float64(file["meta/manifest/source/mapping/c"]) == 0.15
+            @test Float64(file["meta/manifest/source/mapping/s"]) == 0.15
+            @test Float64(file["meta/manifest/source/mapping/tail_spacing"]) == 10.0
+            @test Int(file["meta/manifest/source/radial_dimension"]) == radial_dim
+            @test Int(file["meta/manifest/source/channel_count"]) == nchannels
+            @test Int(file["meta/manifest/source/channel_lmax"]) == channels.lmax
+            @test Int.(file["meta/manifest/source/channel_l"]) == expected_channel_l
+            @test Int.(file["meta/manifest/source/channel_m"]) == expected_channel_m
+            @test String(file["meta/manifest/source/channel_convention"]) == "ylm_channels_increasing_l_then_m"
             @test String(file["meta/example"]) == "test_atomic_fullida_dense_export"
         end
     end
@@ -4974,6 +5011,9 @@ end
     radial_dim = size(ida.radial_operators.overlap, 1)
     norbitals = length(orbitals(ida))
     shell_centers_r = Float64[Float64(value) for value in ida.radial_operators.shell_centers_r]
+    expected_channel_l = Int[channel.l for channel in channels]
+    expected_channel_m = Int[channel.m for channel in channels]
+    package_version = string(Base.pkgversion(GaussletBases))
     orbital_perm, channel_perm = GaussletBases._atomic_sliced_permutation(ida)
     ordered_channels = ida.one_body.channels.channel_data[channel_perm]
     expected_dims = fill(nchannels, radial_dim)
@@ -5074,9 +5114,60 @@ end
             @test Int(file["meta/nelec"]) == 2
             @test Bool(file["meta/has_nelec"])
             @test Int.(file["meta/permutation_from_in_memory"]) == orbital_perm
+            @test String(file["meta/manifest/producer/package"]) == "GaussletBases"
+            @test String(file["meta/manifest/producer/version"]) == package_version
+            @test String(file["meta/manifest/producer/entrypoint"]) == "GaussletBases.write_sliced_ham_jld2"
+            @test String(file["meta/manifest/producer/object_type"]) == "AtomicIDAOperators"
+            @test String(file["meta/manifest/interaction/model"]) == "density_density_ida"
+            @test String(file["meta/manifest/interaction/detail"]) == "two_index_ida_pair_diagonal"
+            @test String(file["meta/manifest/source/branch"]) == "atomic_ida"
+            @test String(file["meta/manifest/source/model"]) == "radial_atomic_ida"
+            @test Float64(file["meta/manifest/source/atomic_charge"]) == 2.0
+            @test String(file["meta/manifest/source/basis_spec_type"]) == "RadialBasisSpec"
+            @test String(file["meta/manifest/source/basis_family"]) == "G10"
+            @test String(file["meta/manifest/source/public_extent_kind"]) == "count"
+            @test isnan(Float64(file["meta/manifest/source/public_rmax"]))
+            @test Int(file["meta/manifest/source/public_count"]) == 6
+            @test !Bool(file["meta/manifest/source/has_public_rmax"])
+            @test Bool(file["meta/manifest/source/has_public_count"])
+            @test Float64(file["meta/manifest/source/reference_spacing"]) == 1.0
+            @test Int(file["meta/manifest/source/tails"]) == 3
+            @test Int(file["meta/manifest/source/odd_even_kmax"]) == 2
+            @test String(file["meta/manifest/source/supplement_kind"]) == "xgaussian"
+            @test Int(file["meta/manifest/source/supplement_count"]) == 1
+            @test Float64.(file["meta/manifest/source/supplement/xgaussian_alphas"]) == [0.2]
+            @test String(file["meta/manifest/source/mapping/type"]) == "AsinhMapping"
+            @test !Bool(file["meta/manifest/source/mapping/is_identity"])
+            @test Float64(file["meta/manifest/source/mapping/a"]) == 1.0
+            @test Float64(file["meta/manifest/source/mapping/c"]) == 0.15
+            @test Float64(file["meta/manifest/source/mapping/s"]) == 0.15
+            @test Float64(file["meta/manifest/source/mapping/tail_spacing"]) == 10.0
+            @test Int(file["meta/manifest/source/radial_dimension"]) == radial_dim
+            @test Int(file["meta/manifest/source/channel_count"]) == nchannels
+            @test Int(file["meta/manifest/source/channel_lmax"]) == channels.lmax
+            @test Int.(file["meta/manifest/source/channel_l"]) == expected_channel_l
+            @test Int.(file["meta/manifest/source/channel_m"]) == expected_channel_m
+            @test String(file["meta/manifest/source/channel_convention"]) == "ylm_channels_increasing_l_then_m"
             @test String(file["meta/example"]) == "test_atomic_sliced_export"
         end
     end
+end
+
+@testset "Atomic export source metadata supports rmax-based recipes" begin
+    _, _, radial_ops, atom = _quick_hydrogen_ylm_fixture()
+    ida = atomic_ida_operators(radial_ops; lmax = atom.channels.lmax)
+    dense_payload = fullida_dense_payload(ida)
+    sliced_payload = sliced_ham_payload(ida)
+
+    @test String(dense_payload.meta_values["manifest/source/public_extent_kind"]) == "rmax"
+    @test dense_payload.meta_values["manifest/source/public_rmax"] == 30.0
+    @test !Bool(dense_payload.meta_values["manifest/source/has_public_count"])
+    @test Bool(dense_payload.meta_values["manifest/source/has_public_rmax"])
+    @test String(dense_payload.meta_values["manifest/source/mapping/type"]) == "AsinhMapping"
+    @test sliced_payload.meta_values["manifest/source/public_rmax"] == dense_payload.meta_values["manifest/source/public_rmax"]
+    @test sliced_payload.meta_values["manifest/source/atomic_charge"] == dense_payload.meta_values["manifest/source/atomic_charge"]
+    @test sliced_payload.meta_values["manifest/source/channel_l"] == dense_payload.meta_values["manifest/source/channel_l"]
+    @test sliced_payload.meta_values["manifest/source/channel_m"] == dense_payload.meta_values["manifest/source/channel_m"]
 end
 
 @testset "Atomic IDA direct matrix" begin

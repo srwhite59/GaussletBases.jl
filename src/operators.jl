@@ -291,6 +291,11 @@ function multipole_matrix(
     throw(ArgumentError("unsupported diagonal approximation $(typeof(approximation))"))
 end
 
+struct _AtomicRadialSourceManifest{S <: RadialBasisSpec}
+    basis_spec::S
+    nuclear_charge::Float64
+end
+
 """
     RadialAtomicOperators
 
@@ -301,13 +306,14 @@ Use `ops.overlap`, `ops.kinetic`, and `ops.nuclear` for the fixed one-body
 matrices, and `centrifugal(ops, l)` / `multipole(ops, L)` for the indexed
 families.
 """
-struct RadialAtomicOperators{A <: AbstractDiagonalApproximation}
+struct RadialAtomicOperators{A <: AbstractDiagonalApproximation,S <: _AtomicRadialSourceManifest}
     overlap::Matrix{Float64}
     kinetic::Matrix{Float64}
     nuclear::Matrix{Float64}
     centrifugal_data::Vector{Matrix{Float64}}
     multipole_data::Vector{Matrix{Float64}}
     shell_centers_r::Vector{Float64}
+    source_manifest::S
     approximation::A
 end
 
@@ -359,6 +365,7 @@ function atomic_operators(
     centrifugal_data = Matrix{Float64}[centrifugal_matrix(basis, grid; l = l) for l in 0:lmax]
     multipole_data = Matrix{Float64}[multipole_matrix(basis, grid; L = L, approximation = approximation) for L in 0:(2 * lmax)]
     shell_centers_r = Float64[Float64(value) for value in centers(basis)]
+    source_manifest = _AtomicRadialSourceManifest(basis.spec, Float64(Z))
     return RadialAtomicOperators(
         overlap,
         kinetic,
@@ -366,6 +373,7 @@ function atomic_operators(
         centrifugal_data,
         multipole_data,
         shell_centers_r,
+        source_manifest,
         approximation,
     )
 end

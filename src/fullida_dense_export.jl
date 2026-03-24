@@ -38,6 +38,114 @@ function _write_prefixed_values!(file, prefix::AbstractString, values::AbstractD
     return nothing
 end
 
+function _atomic_mapping_manifest(mapping_value::IdentityMapping)
+    return Dict{String,Any}(
+        "manifest/source/mapping/type" => "IdentityMapping",
+        "manifest/source/mapping/is_identity" => true,
+        "manifest/source/mapping/a" => NaN,
+        "manifest/source/mapping/c" => NaN,
+        "manifest/source/mapping/s" => NaN,
+        "manifest/source/mapping/tail_spacing" => NaN,
+    )
+end
+
+function _atomic_mapping_manifest(mapping_value::AsinhMapping)
+    return Dict{String,Any}(
+        "manifest/source/mapping/type" => "AsinhMapping",
+        "manifest/source/mapping/is_identity" => false,
+        "manifest/source/mapping/a" => mapping_value.a,
+        "manifest/source/mapping/c" => mapping_value.a * mapping_value.s,
+        "manifest/source/mapping/s" => mapping_value.s,
+        "manifest/source/mapping/tail_spacing" => mapping_value.tail_spacing,
+    )
+end
+
+function _atomic_mapping_manifest(mapping_value::AbstractCoordinateMapping)
+    return Dict{String,Any}(
+        "manifest/source/mapping/type" => string(nameof(typeof(mapping_value))),
+        "manifest/source/mapping/is_identity" => false,
+        "manifest/source/mapping/a" => NaN,
+        "manifest/source/mapping/c" => NaN,
+        "manifest/source/mapping/s" => NaN,
+        "manifest/source/mapping/tail_spacing" => NaN,
+    )
+end
+
+function _atomic_source_manifest(ops::AtomicIDAOperators)
+    source = ops.radial_operators.source_manifest
+    spec = source.basis_spec
+    channels = ops.one_body.channels
+    xgaussian_alphas = Float64[xgaussian.alpha for xgaussian in spec.xgaussians]
+    basis_description =
+        spec.rmax === nothing ?
+        "RadialBasisSpec(count=$(spec.count), family=$(spec.family_value.name))" :
+        "RadialBasisSpec(rmax=$(spec.rmax), family=$(spec.family_value.name))"
+    supplement_description =
+        isempty(xgaussian_alphas) ?
+        "none" :
+        "XGaussian(alpha=$(join(string.(xgaussian_alphas), ",")))"
+
+    values = Dict{String,Any}(
+        "manifest/source/branch" => "atomic_ida",
+        "manifest/source/model" => "radial_atomic_ida",
+        "manifest/source/atomic_charge" => source.nuclear_charge,
+        "manifest/source/basis_spec_type" => "RadialBasisSpec",
+        "manifest/source/basis_family" => string(spec.family_value.name),
+        "manifest/source/basis_description" => basis_description,
+        "manifest/source/public_extent_kind" => spec.rmax === nothing ? "count" : "rmax",
+        "manifest/source/public_rmax" => spec.rmax === nothing ? NaN : spec.rmax,
+        "manifest/source/public_count" => spec.count === nothing ? 0 : spec.count,
+        "manifest/source/has_public_rmax" => spec.rmax !== nothing,
+        "manifest/source/has_public_count" => spec.count !== nothing,
+        "manifest/source/reference_spacing" => spec.reference_spacing,
+        "manifest/source/tails" => spec.tails,
+        "manifest/source/odd_even_kmax" => spec.odd_even_kmax,
+        "manifest/source/supplement_kind" => "xgaussian",
+        "manifest/source/supplement_count" => length(spec.xgaussians),
+        "manifest/source/supplement/xgaussian_alphas" => xgaussian_alphas,
+        "manifest/source/supplement_description" => supplement_description,
+        "manifest/source/radial_dimension" => size(ops.radial_operators.overlap, 1),
+        "manifest/source/channel_count" => length(channels),
+        "manifest/source/channel_lmax" => channels.lmax,
+        "manifest/source/channel_l" => Int[channel.l for channel in channels],
+        "manifest/source/channel_m" => Int[channel.m for channel in channels],
+        "manifest/source/channel_convention" => "ylm_channels_increasing_l_then_m",
+    )
+    merge!(values, _atomic_mapping_manifest(spec.mapping_value))
+    return values
+end
+
+function _atomic_export_meta_values(
+    ops::AtomicIDAOperators;
+    producer_entrypoint::AbstractString,
+    interaction_model::AbstractString,
+    interaction_detail::AbstractString,
+    extra_values::AbstractDict{String,Any} = Dict{String,Any}(),
+    meta = nothing,
+)
+    meta_values = _normalize_meta_dict(meta)
+    merge!(
+        meta_values,
+        Dict{String,Any}(
+            "producer" => producer_entrypoint,
+            "producer_type" => "AtomicIDAOperators",
+            "source_branch" => "atomic_ida",
+            "interaction_model" => interaction_model,
+            "nchannels" => length(ops.one_body.channels),
+            "nradial" => size(ops.radial_operators.overlap, 1),
+            "manifest/producer/package" => "GaussletBases",
+            "manifest/producer/version" => string(Base.pkgversion(@__MODULE__)),
+            "manifest/producer/entrypoint" => producer_entrypoint,
+            "manifest/producer/object_type" => "AtomicIDAOperators",
+            "manifest/interaction/model" => interaction_model,
+            "manifest/interaction/detail" => interaction_detail,
+        ),
+    )
+    merge!(meta_values, _atomic_source_manifest(ops))
+    merge!(meta_values, extra_values)
+    return meta_values
+end
+
 function _atomic_shell_major_permutation(ops::AtomicIDAOperators)
     nchannels = length(ops.one_body.channels)
     radial_dim = size(ops.radial_operators.overlap, 1)
@@ -105,15 +213,13 @@ function fullida_dense_payload(
         "order/permutation_from_in_memory" => perm,
     )
 
-    meta_values = Dict{String,Any}(
-        "producer" => "GaussletBases.write_fullida_dense_jld2",
-        "producer_type" => "AtomicIDAOperators",
-        "source_branch" => "atomic_ida",
-        "interaction_model" => "density_density_ida",
-        "nchannels" => nchannels,
-        "nradial" => radial_dim,
+    meta_values = _atomic_export_meta_values(
+        ops;
+        producer_entrypoint = "GaussletBases.write_fullida_dense_jld2",
+        interaction_model = "density_density_ida",
+        interaction_detail = "two_index_ida",
+        meta = meta,
     )
-    merge!(meta_values, _normalize_meta_dict(meta))
 
     payload = Dict{String,Any}(
         "H1" => H1,

@@ -71,6 +71,9 @@ The export surface now also exposes the same dense payload in memory through:
 
 and the dense bridge metadata now reports honest physical radial shell centers
 through `bridge/order/shell_centers_r` rather than placeholder `NaN` values.
+It also carries the same package-owned atomic producer/source manifest used by
+the sliced export under `meta/manifest/producer/...`,
+`meta/manifest/source/...`, and `meta/manifest/interaction/...`.
 
 The ordinary Cartesian line can come second once it is clearly in the same
 solver-facing state. The dense bridge format has no overlap channel, so the

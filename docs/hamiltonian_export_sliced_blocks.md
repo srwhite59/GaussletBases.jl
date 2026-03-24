@@ -66,6 +66,9 @@ The export surface now also exposes the same grouped payload in memory through:
 and the sliced layout now carries honest physical radial shell centers in
 `layout/slice_coord`. The old radial index remains available separately as
 `layout/slice_index`.
+It also carries the same package-owned atomic producer/source manifest as the
+dense export under `meta/manifest/producer/...`,
+`meta/manifest/source/...`, and `meta/manifest/interaction/...`.
 
 The ordinary Cartesian line should still come later. This pass stays atomic
 only because the atomic branch already has the natural shell/channel structure

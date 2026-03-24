@@ -224,27 +224,27 @@ function sliced_ham_payload(
         "Vblocks" => Vblocks,
     )
 
-    meta_values = Dict{String,Any}(
-        "format" => "atomic_ida_sliced_v1",
-        "consumer_shape" => "slicedmrgutils.HamIO",
-        "producer" => "GaussletBases.write_sliced_ham_jld2",
-        "producer_type" => "AtomicIDAOperators",
-        "source_branch" => "atomic_ida",
-        "interaction_model" => "density_density_ida",
-        "onebody_model" => "H1 = Tblocks + Vnucblocks, with centrifugal included in Tblocks",
-        "twobody_encoding" => "pair_diagonal_density_density",
-        "slice_kind" => "radial_shell",
-        "slice_coord_kind" => "physical_radial_center",
-        "slice_index_kind" => "radial_index",
-        "orbital_ordering" => "slice_major_by_radial_index_then_l0_desc_mzigzag",
-        "nchannels" => nchannels,
-        "nradial" => radial_dim,
-        "norb" => norb,
-        "nelec" => something(nelec, 0),
-        "has_nelec" => nelec !== nothing,
-        "permutation_from_in_memory" => orbital_perm,
+    meta_values = _atomic_export_meta_values(
+        ops;
+        producer_entrypoint = "GaussletBases.write_sliced_ham_jld2",
+        interaction_model = "density_density_ida",
+        interaction_detail = "two_index_ida_pair_diagonal",
+        extra_values = Dict{String,Any}(
+            "format" => "atomic_ida_sliced_v1",
+            "consumer_shape" => "slicedmrgutils.HamIO",
+            "onebody_model" => "H1 = Tblocks + Vnucblocks, with centrifugal included in Tblocks",
+            "twobody_encoding" => "pair_diagonal_density_density",
+            "slice_kind" => "radial_shell",
+            "slice_coord_kind" => "physical_radial_center",
+            "slice_index_kind" => "radial_index",
+            "orbital_ordering" => "slice_major_by_radial_index_then_l0_desc_mzigzag",
+            "norb" => norb,
+            "nelec" => something(nelec, 0),
+            "has_nelec" => nelec !== nothing,
+            "permutation_from_in_memory" => orbital_perm,
+        ),
+        meta = meta,
     )
-    merge!(meta_values, _normalize_meta_dict(meta))
 
     return (
         layout_values = layout_values,
