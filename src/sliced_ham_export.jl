@@ -1,5 +1,15 @@
 _m_sign_rank(m::Integer) = m == 0 ? 0 : (m < 0 ? 1 : 2)
 
+function _mzigzag_then_l_channel_permutation(channels::YlmChannelSet)
+    idxs = collect(eachindex(channels.channel_data))
+    return sortperm(idxs, by = i -> (
+        abs(channels[i].m),
+        _m_sign_rank(channels[i].m),
+        channels[i].l,
+        i,
+    ))
+end
+
 function _l0_desc_mzigzag_channel_permutation(channels::YlmChannelSet)
     idxs = collect(eachindex(channels.channel_data))
     return sortperm(idxs, by = i -> (
@@ -14,6 +24,15 @@ end
 function _atomic_sliced_permutation(ops::AtomicIDAOperators)
     radial_dim = size(ops.radial_operators.overlap, 1)
     channel_perm = _l0_desc_mzigzag_channel_permutation(ops.one_body.channels)
+    orbital_perm = Int[
+        (channel - 1) * radial_dim + radial for radial in 1:radial_dim for channel in channel_perm
+    ]
+    return orbital_perm, channel_perm
+end
+
+function _atomic_hamv6_permutation(ops::AtomicIDAOperators)
+    radial_dim = size(ops.radial_operators.overlap, 1)
+    channel_perm = _mzigzag_then_l_channel_permutation(ops.one_body.channels)
     orbital_perm = Int[
         (channel - 1) * radial_dim + radial for radial in 1:radial_dim for channel in channel_perm
     ]
@@ -102,30 +121,20 @@ function _atomic_onebody_component_matrices(ops::AtomicIDAOperators)
     )
 end
 
-"""
-    sliced_ham_payload(ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
-
-Build the current sliced/block atomic Hamiltonian export payload in memory
-without writing a JLD2 file.
-
-The returned named tuple contains:
-
-- `layout_values`
-- `basis_values`
-- `ordering_values`
-- `onebody_values`
-- `twobody_values`
-- `meta_values`
-
-and matches the data written by [`write_sliced_ham_jld2`](@ref).
-"""
-function sliced_ham_payload(
+function _atomic_sliced_payload_impl(
     ops::AtomicIDAOperators;
+    orbital_perm::AbstractVector{<:Integer},
+    channel_perm::AbstractVector{<:Integer},
+    within_slice::AbstractString,
+    ordering_description::AbstractString,
+    orbital_ordering::AbstractString,
+    producer_entrypoint::AbstractString,
+    consumer_shape::AbstractString,
+    format_name::AbstractString,
+    threshold::Real = 0.0,
     nelec::Union{Nothing,Int} = nothing,
     meta = nothing,
-    threshold::Real = 0.0,
 )
-    orbital_perm, channel_perm = _atomic_sliced_permutation(ops)
     ordered_channels = ops.one_body.channels.channel_data[channel_perm]
     nchannels = length(ordered_channels)
     radial_dim = size(ops.radial_operators.overlap, 1)
@@ -138,7 +147,7 @@ function sliced_ham_payload(
     H1 = Matrix{Float64}(components.H1[orbital_perm, orbital_perm])
     T = Matrix{Float64}(components.T[orbital_perm, orbital_perm])
     Vnuc = Matrix{Float64}(components.Vnuc[orbital_perm, orbital_perm])
-    Vee = _ida_density_interaction_matrix(ops, ops.orbital_data[orbital_perm])
+    Vee = atomic_ida_density_interaction_matrix(ops; ordering = collect(Int, orbital_perm))
 
     H1blocks = [
         [
@@ -205,8 +214,11 @@ function sliced_ham_payload(
         "labels_by_slice" => labels_by_slice,
     )
     ordering_values = Dict{String,Any}(
-        "within_slice" => "l0_desc_mzigzag",
-        "description" => "slice-major by radial index; within slice l=0 first, then descending l with m-zigzag order",
+        "major" => "slice_major",
+        "slice_meaning" => "radial_shell",
+        "within_slice" => within_slice,
+        "description" => ordering_description,
+        "permutation_from_in_memory" => collect(Int, orbital_perm),
     )
     onebody_values = Dict{String,Any}(
         "stored" => "coo",
@@ -226,22 +238,22 @@ function sliced_ham_payload(
 
     meta_values = _atomic_export_meta_values(
         ops;
-        producer_entrypoint = "GaussletBases.write_sliced_ham_jld2",
+        producer_entrypoint = producer_entrypoint,
         interaction_model = "density_density_ida",
         interaction_detail = "two_index_ida_pair_diagonal",
         extra_values = Dict{String,Any}(
-            "format" => "atomic_ida_sliced_v1",
-            "consumer_shape" => "slicedmrgutils.HamIO",
+            "format" => format_name,
+            "consumer_shape" => consumer_shape,
             "onebody_model" => "H1 = Tblocks + Vnucblocks, with centrifugal included in Tblocks",
             "twobody_encoding" => "pair_diagonal_density_density",
             "slice_kind" => "radial_shell",
             "slice_coord_kind" => "physical_radial_center",
             "slice_index_kind" => "radial_index",
-            "orbital_ordering" => "slice_major_by_radial_index_then_l0_desc_mzigzag",
+            "orbital_ordering" => orbital_ordering,
             "norb" => norb,
             "nelec" => something(nelec, 0),
             "has_nelec" => nelec !== nothing,
-            "permutation_from_in_memory" => orbital_perm,
+            "permutation_from_in_memory" => collect(Int, orbital_perm),
         ),
         meta = meta,
     )
@@ -254,6 +266,103 @@ function sliced_ham_payload(
         twobody_values = twobody_values,
         meta_values = meta_values,
     )
+end
+
+"""
+    sliced_ham_payload(ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
+
+Build the current sliced/block atomic Hamiltonian export payload in memory
+without writing a JLD2 file.
+
+The returned named tuple contains:
+
+- `layout_values`
+- `basis_values`
+- `ordering_values`
+- `onebody_values`
+- `twobody_values`
+- `meta_values`
+
+and matches the data written by [`write_sliced_ham_jld2`](@ref).
+"""
+function sliced_ham_payload(
+    ops::AtomicIDAOperators;
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    orbital_perm, channel_perm = _atomic_sliced_permutation(ops)
+    return _atomic_sliced_payload_impl(
+        ops;
+        orbital_perm = orbital_perm,
+        channel_perm = channel_perm,
+        within_slice = "l0_desc_mzigzag",
+        ordering_description = "slice-major by radial index; within slice l=0 first, then descending l with m-zigzag order",
+        orbital_ordering = "slice_major_by_radial_index_then_l0_desc_mzigzag",
+        producer_entrypoint = "GaussletBases.write_sliced_ham_jld2",
+        consumer_shape = "slicedmrgutils.HamIO",
+        format_name = "atomic_ida_sliced_v1",
+        threshold = threshold,
+        nelec = nelec,
+        meta = meta,
+    )
+end
+
+"""
+    atomic_hamv6_payload(ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
+
+Build the current atomic IDA sliced/block payload in the explicit HamV6 /
+`HamIO.jl` compatibility ordering used by the present downstream bridge stack.
+
+This keeps the current atomic density-density IDA model and grouped COO block
+storage, but adapts the within-slice orbital order to `mzigzag_then_l`.
+"""
+function atomic_hamv6_payload(
+    ops::AtomicIDAOperators;
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    orbital_perm, channel_perm = _atomic_hamv6_permutation(ops)
+    return _atomic_sliced_payload_impl(
+        ops;
+        orbital_perm = orbital_perm,
+        channel_perm = channel_perm,
+        within_slice = "mzigzag_then_l",
+        ordering_description = "slice-major; within slice m=0,-1,+1,-2,+2,...; for each m, l increasing",
+        orbital_ordering = "slice_major_by_radial_index_then_mzigzag_then_l",
+        producer_entrypoint = "GaussletBases.write_atomic_hamv6_jld2",
+        consumer_shape = "slicedmrgutils.HamIO/HamV6",
+        format_name = "atomic_hamv6_v1",
+        threshold = threshold,
+        nelec = nelec,
+        meta = meta,
+    )
+end
+
+"""
+    write_atomic_hamv6_jld2(path, ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
+
+Write the explicit HamV6 / `HamIO.jl` compatibility export for the current
+atomic density-density IDA model.
+"""
+function write_atomic_hamv6_jld2(
+    path::AbstractString,
+    ops::AtomicIDAOperators;
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    data = atomic_hamv6_payload(ops; nelec = nelec, meta = meta, threshold = threshold)
+    jldopen(path, "w") do file
+        _write_prefixed_values!(file, "layout", data.layout_values)
+        _write_prefixed_values!(file, "basis", data.basis_values)
+        _write_prefixed_values!(file, "ordering", data.ordering_values)
+        _write_prefixed_values!(file, "onebody", data.onebody_values)
+        _write_prefixed_values!(file, "twobody", data.twobody_values)
+        _write_prefixed_values!(file, "meta", data.meta_values)
+    end
+    return path
 end
 
 """

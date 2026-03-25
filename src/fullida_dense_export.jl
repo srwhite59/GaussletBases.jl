@@ -123,16 +123,26 @@ function _atomic_export_meta_values(
     extra_values::AbstractDict{String,Any} = Dict{String,Any}(),
     meta = nothing,
 )
+    source = ops.radial_operators.source_manifest
+    spec = source.basis_spec
     meta_values = _normalize_meta_dict(meta)
     merge!(
         meta_values,
         Dict{String,Any}(
+            "Z" => source.nuclear_charge,
             "producer" => producer_entrypoint,
             "producer_type" => "AtomicIDAOperators",
             "source_branch" => "atomic_ida",
+            "source_model" => "radial_atomic_ida",
             "interaction_model" => interaction_model,
+            "interaction_detail" => interaction_detail,
             "nchannels" => length(ops.one_body.channels),
             "nradial" => size(ops.radial_operators.overlap, 1),
+            "public_extent_kind" => spec.rmax === nothing ? "count" : "rmax",
+            "public_rmax" => spec.rmax === nothing ? NaN : spec.rmax,
+            "public_count" => spec.count === nothing ? 0 : spec.count,
+            "has_public_rmax" => spec.rmax !== nothing,
+            "has_public_count" => spec.count !== nothing,
             "manifest/producer/package" => "GaussletBases",
             "manifest/producer/version" => string(Base.pkgversion(@__MODULE__)),
             "manifest/producer/entrypoint" => producer_entrypoint,
@@ -180,7 +190,7 @@ function fullida_dense_payload(
     shell_centers_r = Float64[Float64(value) for value in ops.radial_operators.shell_centers_r]
 
     H1 = Matrix{Float64}(ops.one_body.hamiltonian[perm, perm])
-    Vee = _ida_density_interaction_matrix(ops, orbital_data)
+    Vee = atomic_ida_density_interaction_matrix(ops; ordering = perm)
     basis_centers = zeros(Float64, norb, 3)
     dims_per_shell = fill(nchannels, radial_dim)
     orders = collect(1:radial_dim)

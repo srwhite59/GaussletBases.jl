@@ -6298,10 +6298,18 @@ end
 
             @test String(file["meta/producer"]) == "GaussletBases.write_fullida_dense_jld2"
             @test String(file["meta/producer_type"]) == "AtomicIDAOperators"
+            @test Float64(file["meta/Z"]) == 2.0
             @test String(file["meta/source_branch"]) == "atomic_ida"
+            @test String(file["meta/source_model"]) == "radial_atomic_ida"
             @test String(file["meta/interaction_model"]) == "density_density_ida"
+            @test String(file["meta/interaction_detail"]) == "two_index_ida"
             @test Int(file["meta/nchannels"]) == nchannels
             @test Int(file["meta/nradial"]) == radial_dim
+            @test String(file["meta/public_extent_kind"]) == "count"
+            @test isnan(Float64(file["meta/public_rmax"]))
+            @test Int(file["meta/public_count"]) == 6
+            @test !Bool(file["meta/has_public_rmax"])
+            @test Bool(file["meta/has_public_count"])
             @test String(file["meta/manifest/producer/package"]) == "GaussletBases"
             @test String(file["meta/manifest/producer/version"]) == package_version
             @test String(file["meta/manifest/producer/entrypoint"]) == "GaussletBases.write_fullida_dense_jld2"
@@ -6408,8 +6416,11 @@ end
             @test Int.(file["basis/l_flat"]) == vcat(fill(expected_l, radial_dim)...)
             @test labels_by_slice[1] == expected_labels
 
+            @test String(file["ordering/major"]) == "slice_major"
+            @test String(file["ordering/slice_meaning"]) == "radial_shell"
             @test String(file["ordering/within_slice"]) == "l0_desc_mzigzag"
             @test occursin("slice-major by radial index", String(file["ordering/description"]))
+            @test Int.(file["ordering/permutation_from_in_memory"]) == orbital_perm
 
             @test String(file["onebody/stored"]) == "coo"
             @test Bool(file["onebody/is_hermitian"])
@@ -6435,10 +6446,13 @@ end
 
             @test String(file["meta/format"]) == "atomic_ida_sliced_v1"
             @test String(file["meta/consumer_shape"]) == "slicedmrgutils.HamIO"
+            @test Float64(file["meta/Z"]) == 2.0
             @test String(file["meta/producer"]) == "GaussletBases.write_sliced_ham_jld2"
             @test String(file["meta/producer_type"]) == "AtomicIDAOperators"
             @test String(file["meta/source_branch"]) == "atomic_ida"
+            @test String(file["meta/source_model"]) == "radial_atomic_ida"
             @test String(file["meta/interaction_model"]) == "density_density_ida"
+            @test String(file["meta/interaction_detail"]) == "two_index_ida_pair_diagonal"
             @test String(file["meta/twobody_encoding"]) == "pair_diagonal_density_density"
             @test String(file["meta/slice_kind"]) == "radial_shell"
             @test String(file["meta/slice_coord_kind"]) == "physical_radial_center"
@@ -6446,6 +6460,11 @@ end
             @test String(file["meta/orbital_ordering"]) == "slice_major_by_radial_index_then_l0_desc_mzigzag"
             @test Int(file["meta/nchannels"]) == nchannels
             @test Int(file["meta/nradial"]) == radial_dim
+            @test String(file["meta/public_extent_kind"]) == "count"
+            @test isnan(Float64(file["meta/public_rmax"]))
+            @test Int(file["meta/public_count"]) == 6
+            @test !Bool(file["meta/has_public_rmax"])
+            @test Bool(file["meta/has_public_count"])
             @test Int(file["meta/norb"]) == norbitals
             @test Int(file["meta/nelec"]) == 2
             @test Bool(file["meta/has_nelec"])
@@ -6489,6 +6508,117 @@ end
     end
 end
 
+@testset "Atomic HamV6 compatibility export and interaction accessor" begin
+    _, _, _, channels, _, ida = _quick_radial_atomic_fixture()
+    nchannels = length(channels)
+    radial_dim = size(ida.radial_operators.overlap, 1)
+    norbitals = length(orbitals(ida))
+    shell_centers_r = Float64[Float64(value) for value in ida.radial_operators.shell_centers_r]
+    expected_dims = fill(nchannels, radial_dim)
+    expected_offs = collect(1:nchannels:(norbitals + 1))
+    package_version = string(Base.pkgversion(GaussletBases))
+    shell_perm = GaussletBases._atomic_shell_major_permutation(ida)
+    native_perm, _ = GaussletBases._atomic_sliced_permutation(ida)
+    orbital_perm, channel_perm = GaussletBases._atomic_hamv6_permutation(ida)
+    ordered_channels = ida.one_body.channels.channel_data[channel_perm]
+    expected_m = Int[channel.m for channel in ordered_channels]
+    expected_l = Int[channel.l for channel in ordered_channels]
+    expected_labels = String["r=1,l=$(channel.l),m=$(channel.m)" for channel in ordered_channels]
+    components = GaussletBases._atomic_onebody_component_matrices(ida)
+    expected_h1 = Matrix{Float64}(components.H1[orbital_perm, orbital_perm])
+    expected_t = Matrix{Float64}(components.T[orbital_perm, orbital_perm])
+    expected_vnuc = Matrix{Float64}(components.Vnuc[orbital_perm, orbital_perm])
+    expected_vee = GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[orbital_perm])
+
+    @test atomic_ida_density_interaction_matrix(ida) ≈
+        GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)) atol = 0.0 rtol = 0.0
+    @test atomic_ida_density_interaction_matrix(ida; ordering = :shell_major) ≈
+        GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[shell_perm]) atol = 0.0 rtol = 0.0
+    @test atomic_ida_density_interaction_matrix(ida; ordering = :sliced_native) ≈
+        GaussletBases._ida_density_interaction_matrix(ida, orbitals(ida)[native_perm]) atol = 0.0 rtol = 0.0
+    @test atomic_ida_density_interaction_matrix(ida; ordering = :hamv6) ≈ expected_vee atol = 0.0 rtol = 0.0
+    @test atomic_ida_density_interaction_matrix(ida; ordering = orbital_perm) ≈ expected_vee atol = 0.0 rtol = 0.0
+
+    payload_data = atomic_hamv6_payload(
+        ida;
+        nelec = 2,
+        meta = (example = "test_atomic_hamv6_export",),
+    )
+
+    mktempdir() do dir
+        path = joinpath(dir, "atomic_hamv6_test.jld2")
+        @test write_atomic_hamv6_jld2(
+            path,
+            ida;
+            nelec = 2,
+            meta = (example = "test_atomic_hamv6_export",),
+        ) == path
+
+        jldopen(path, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "layout" in top_keys
+            @test "basis" in top_keys
+            @test "ordering" in top_keys
+            @test "onebody" in top_keys
+            @test "twobody" in top_keys
+            @test "meta" in top_keys
+
+            @test Int(file["layout/nslices"]) == radial_dim
+            @test Int.(file["layout/dims"]) == expected_dims
+            @test Int.(file["layout/offs"]) == expected_offs
+            @test Float64.(file["layout/slice_coord"]) == shell_centers_r
+            @test Int.(file["layout/slice_index"]) == collect(1:radial_dim)
+
+            m_by_slice = [Int.(collect(v)) for v in file["basis/m_by_slice"]]
+            l_by_slice = [Int.(collect(v)) for v in file["basis/l_by_slice"]]
+            labels_by_slice = [String.(collect(v)) for v in file["basis/labels_by_slice"]]
+            @test m_by_slice[1] == expected_m
+            @test l_by_slice[1] == expected_l
+            @test Int.(file["basis/m_flat"]) == vcat(fill(expected_m, radial_dim)...)
+            @test Int.(file["basis/l_flat"]) == vcat(fill(expected_l, radial_dim)...)
+            @test labels_by_slice[1] == expected_labels
+
+            @test String(file["ordering/major"]) == "slice_major"
+            @test String(file["ordering/slice_meaning"]) == "radial_shell"
+            @test String(file["ordering/within_slice"]) == "mzigzag_then_l"
+            @test occursin("for each m, l increasing", String(file["ordering/description"]))
+            @test Int.(file["ordering/permutation_from_in_memory"]) == orbital_perm
+
+            H1blocks = file["onebody/H1blocks"]
+            Tblocks = file["onebody/Tblocks"]
+            Vnucblocks = file["onebody/Vnucblocks"]
+            Vblocks = file["twobody/Vblocks"]
+            @test GaussletBases._coo_blocks_to_dense(H1blocks, expected_dims) ≈ expected_h1 atol = 0.0 rtol = 0.0
+            @test GaussletBases._coo_blocks_to_dense(Tblocks, expected_dims) ≈ expected_t atol = 0.0 rtol = 0.0
+            @test GaussletBases._coo_blocks_to_dense(Vnucblocks, expected_dims) ≈ expected_vnuc atol = 0.0 rtol = 0.0
+            @test GaussletBases._pairdiag_blocks_to_density_matrix(Vblocks, expected_dims) ≈ expected_vee atol = 0.0 rtol = 0.0
+
+            @test String(file["meta/format"]) == "atomic_hamv6_v1"
+            @test String(file["meta/consumer_shape"]) == "slicedmrgutils.HamIO/HamV6"
+            @test Float64(file["meta/Z"]) == 2.0
+            @test String(file["meta/source_model"]) == "radial_atomic_ida"
+            @test String(file["meta/interaction_model"]) == "density_density_ida"
+            @test String(file["meta/interaction_detail"]) == "two_index_ida_pair_diagonal"
+            @test String(file["meta/orbital_ordering"]) == "slice_major_by_radial_index_then_mzigzag_then_l"
+            @test Int(file["meta/norb"]) == norbitals
+            @test Int(file["meta/nelec"]) == 2
+            @test String(file["meta/public_extent_kind"]) == "count"
+            @test Int.(file["meta/permutation_from_in_memory"]) == orbital_perm
+            @test String(file["meta/manifest/producer/package"]) == "GaussletBases"
+            @test String(file["meta/manifest/producer/version"]) == package_version
+            @test String(file["meta/manifest/producer/entrypoint"]) == "GaussletBases.write_atomic_hamv6_jld2"
+            @test String(file["meta/example"]) == "test_atomic_hamv6_export"
+
+            @test file["layout/slice_coord"] == payload_data.layout_values["slice_coord"]
+            @test file["basis/m_flat"] == payload_data.basis_values["m_flat"]
+            @test file["ordering/permutation_from_in_memory"] == payload_data.ordering_values["permutation_from_in_memory"]
+            @test file["meta/Z"] == payload_data.meta_values["Z"]
+        end
+    end
+end
+
 @testset "Atomic export source metadata supports rmax-based recipes" begin
     _, _, radial_ops, atom = _quick_hydrogen_ylm_fixture()
     ida = atomic_ida_operators(radial_ops; lmax = atom.channels.lmax)
@@ -6496,12 +6626,17 @@ end
     sliced_payload = sliced_ham_payload(ida)
 
     @test String(dense_payload.meta_values["manifest/source/public_extent_kind"]) == "rmax"
+    @test dense_payload.meta_values["Z"] == 1.0
+    @test String(dense_payload.meta_values["source_model"]) == "radial_atomic_ida"
+    @test String(dense_payload.meta_values["public_extent_kind"]) == "rmax"
+    @test dense_payload.meta_values["public_rmax"] == 30.0
     @test dense_payload.meta_values["manifest/source/public_rmax"] == 30.0
     @test !Bool(dense_payload.meta_values["manifest/source/has_public_count"])
     @test Bool(dense_payload.meta_values["manifest/source/has_public_rmax"])
     @test String(dense_payload.meta_values["manifest/source/mapping/type"]) == "AsinhMapping"
     @test sliced_payload.meta_values["manifest/source/public_rmax"] == dense_payload.meta_values["manifest/source/public_rmax"]
     @test sliced_payload.meta_values["manifest/source/atomic_charge"] == dense_payload.meta_values["manifest/source/atomic_charge"]
+    @test sliced_payload.meta_values["Z"] == dense_payload.meta_values["Z"]
     @test sliced_payload.meta_values["manifest/source/channel_l"] == dense_payload.meta_values["manifest/source/channel_l"]
     @test sliced_payload.meta_values["manifest/source/channel_m"] == dense_payload.meta_values["manifest/source/channel_m"]
 end
@@ -7082,7 +7217,10 @@ end
     @test occursin("basis_diagnostics", docs_site_reference_ops)
     @test occursin("atomic_ida_operators", docs_site_reference_atomic)
     @test occursin("mapped_cartesian_hydrogen_energy", docs_site_reference_atomic)
+    @test occursin("atomic_ida_density_interaction_matrix", docs_site_reference_export)
+    @test occursin("atomic_hamv6_payload", docs_site_reference_export)
     @test occursin("write_fullida_dense_jld2", docs_site_reference_export)
+    @test occursin("write_atomic_hamv6_jld2", docs_site_reference_export)
     @test occursin("write_sliced_ham_jld2", docs_site_reference_export)
     @test occursin("integral-diagonal approximation (IDA)", readme)
     @test occursin("integral-diagonal approximation (IDA)", docs_site_index)

@@ -222,6 +222,58 @@ function _ida_density_interaction_matrix(ops::AtomicIDAOperators, orbital_data::
     return 0.5 .* (matrix .+ transpose(matrix))
 end
 
+function _atomic_ida_density_interaction_orbitals(
+    ops::AtomicIDAOperators,
+    ordering::Symbol,
+)
+    if ordering == :channel_major
+        return orbitals(ops)
+    elseif ordering == :shell_major
+        return orbitals(ops)[_atomic_shell_major_permutation(ops)]
+    elseif ordering in (:sliced_native, :l0_desc_mzigzag)
+        orbital_perm, _ = _atomic_sliced_permutation(ops)
+        return orbitals(ops)[orbital_perm]
+    elseif ordering in (:hamv6, :mzigzag_then_l)
+        orbital_perm, _ = _atomic_hamv6_permutation(ops)
+        return orbitals(ops)[orbital_perm]
+    else
+        throw(ArgumentError(
+            "unsupported atomic IDA interaction ordering $(repr(ordering)); use :channel_major, :shell_major, :sliced_native, or :hamv6",
+        ))
+    end
+end
+
+function _atomic_ida_density_interaction_orbitals(
+    ops::AtomicIDAOperators,
+    ordering::AbstractVector{<:Integer},
+)
+    return orbitals(ops)[collect(Int, ordering)]
+end
+
+"""
+    atomic_ida_density_interaction_matrix(ops::AtomicIDAOperators; ordering=:channel_major)
+
+Return the current atomic IDA density-density interaction matrix in an explicit
+orbital ordering.
+
+Supported symbolic orderings are:
+
+- `:channel_major`
+- `:shell_major`
+- `:sliced_native`
+- `:hamv6`
+
+An explicit orbital permutation vector may also be supplied through
+`ordering = perm`.
+"""
+function atomic_ida_density_interaction_matrix(
+    ops::AtomicIDAOperators;
+    ordering::Union{Symbol,AbstractVector{<:Integer}} = :channel_major,
+)
+    orbital_data = _atomic_ida_density_interaction_orbitals(ops, ordering)
+    return _ida_density_interaction_matrix(ops, orbital_data)
+end
+
 function _ida_two_body_matrix(ops::AtomicIDAOperators, orbital_data::AbstractVector{AtomicOrbital})
     density_interaction = _ida_density_interaction_matrix(ops, orbital_data)
     norb = length(orbital_data)
