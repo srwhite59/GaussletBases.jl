@@ -14,18 +14,20 @@ The present angular direction in `GaussletBases.jl` should be read as:
   imported into the package
 - intentionally narrower than the mature radial/atomic producer line
 
-The repo now contains only the first controlled scaffold needed to start that
-import:
+The repo now contains the first controlled scaffold needed to start that
+import, plus the first shell-local experimental construction on top of it:
 
 - the existing atomic `(l,m)` and Gaunt/sectorized IDA foundation
 - a read-only curated sphere-point-set access layer
+- a shell-local injected angular basis constructor on one curated sphere-point
+  set
 
 It does **not** yet contain:
 
-- shell-local injected angular basis construction
 - the full `sphgatomps`-style workflow
 - optimizer/sweep drivers for sphere-point generation
 - manuscript figure scripts
+- shell-to-atom angular assembly
 
 ## Near-term target
 
@@ -48,7 +50,14 @@ optimized sphere-point sets through:
 
 These helpers are experimental and read-only. They are there so later
 shell-local basis construction can start from stable curated point-set data
-without importing the optimization workflow itself.
+without importing the optimization workflow itself. The first shell-local basis
+layer is now available through:
+
+- `build_shell_local_injected_angular_basis(order; ...)`
+- `build_shell_local_injected_angular_basis(point_set; ...)`
+- `shell_local_injected_angular_diagnostics(shell)`
+
+This remains an experimental research-track surface, not a frozen public API.
 
 The vendored subset currently lives in:
 
@@ -76,7 +85,7 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- shell-local injected angular basis construction
+- shell-to-atom angular assembly built from the shell-local injected basis
 
-That is the first step that turns the current angular placeholder into a live
-scientific branch inside `GaussletBases`.
+That is the next step that turns the shell-local angular import into a real
+atomic angular benchmark branch inside `GaussletBases`.

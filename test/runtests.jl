@@ -2250,6 +2250,13 @@ function _quick_hydrogen_ylm_fixture()
     end)
 end
 
+function _shell_local_injected_angular_fixture(order::Int)
+    key = Symbol("shell_local_injected_angular_fixture_", order)
+    return _cached_fixture(key, () -> begin
+        build_shell_local_injected_angular_basis(order)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6119,6 +6126,44 @@ end
     @test set32.coordinates[1, :] ≈ [0.40002938831494556, -0.0010525966270966628, 0.9165017078678638] atol = 0.0 rtol = 1.0e-14
 end
 
+@testset "Shell-local injected angular basis" begin
+    shell15 = _shell_local_injected_angular_fixture(15)
+    shell32 = _shell_local_injected_angular_fixture(32)
+    shell51 = _shell_local_injected_angular_fixture(51)
+
+    @test shell15 isa ShellLocalInjectedAngularBasis
+    @test shell32 isa ShellLocalInjectedAngularBasis
+    @test shell51 isa ShellLocalInjectedAngularBasis
+
+    @test shell15.l_inject == 1
+    @test shell32.l_inject == 3
+    @test shell51.l_inject == 4
+
+    for shell in (shell15, shell32, shell51)
+        diagnostics = shell_local_injected_angular_diagnostics(shell)
+        expected_kinetic = Diagonal(diagnostics.expected_injected_kinetic_eigenvalues)
+
+        @test shell.prototype_count == shell.point_set.order
+        @test shell.final_count == shell.prototype_count
+        @test shell.injected_count == (shell.l_inject + 1)^2
+        @test shell.whitened_complement_count ≥ shell.final_count - shell.injected_count
+        @test size(shell.prototype_overlap) == (shell.prototype_count, shell.prototype_count)
+        @test size(shell.final_overlap) == (shell.final_count, shell.final_count)
+        @test size(shell.final_kinetic) == (shell.final_count, shell.final_count)
+        @test size(shell.injected_overlap) == (shell.injected_count, shell.final_count)
+        @test sum(shell.shell_weights) ≈ 4 * pi atol = 1.0e-12 rtol = 1.0e-12
+        @test minimum(shell.theta_nn) > 0.0
+        @test minimum(shell.kappa) > 0.0
+        @test diagnostics.overlap_error ≤ 1.0e-10
+        @test diagnostics.injected_exactness_error ≤ 1.0e-10
+        @test diagnostics.injected_kinetic_error ≤ 1.0e-9
+        @test norm(shell.injected_kinetic - expected_kinetic, Inf) ≤ 1.0e-9
+        @test issorted(diagnostics.expected_injected_kinetic_eigenvalues)
+        @test sort(diagnostics.injected_kinetic_eigenvalues) ≈
+              diagnostics.expected_injected_kinetic_eigenvalues atol = 1.0e-9 rtol = 1.0e-9
+    end
+end
+
 @testset "Atomic Ylm one-body layer" begin
     rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
@@ -7299,6 +7344,8 @@ end
     @test occursin("small ed", lowercase(docs_site_angular_track))
     @test occursin("dmrg-facing bridge", lowercase(docs_site_angular_track))
     @test occursin("curated_sphere_point_set", docs_site_angular_track)
+    @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
+    @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))
