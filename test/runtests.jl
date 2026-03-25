@@ -2257,6 +2257,14 @@ function _shell_local_injected_angular_fixture(order::Int)
     end)
 end
 
+function _atomic_shell_local_angular_fixture()
+    return _cached_fixture(:atomic_shell_local_angular_fixture, () -> begin
+        shell_radii = [0.3, 0.8, 1.5, 3.5]
+        shell_orders = [15, 32, 51, 32]
+        build_atomic_shell_local_angular_assembly(shell_radii; shell_orders = shell_orders)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6164,6 +6172,43 @@ end
     end
 end
 
+@testset "Atomic shell-local angular assembly" begin
+    assembly = _atomic_shell_local_angular_fixture()
+    diagnostics = atomic_shell_local_angular_diagnostics(assembly)
+    scheduled_orders = assign_atomic_angular_shell_orders(
+        [0.05, 0.5, 1.2, 3.0, 8.0];
+        ord_min = 15,
+        ord_max = 51,
+        r_lo = 0.2,
+        r_hi = 4.5,
+        w_lo = 0.2,
+        w_hi = 0.7,
+    )
+
+    @test assembly isa AtomicShellLocalInjectedAngularAssembly
+    @test assembly.shell_orders == [15, 32, 51, 32]
+    @test assembly.shell_dimensions == [15, 32, 51, 32]
+    @test assembly.shell_offsets == [1, 16, 48, 99]
+    @test assembly.shell_exact_lmax == [1, 3, 4, 3]
+    @test assembly.shells[2] === assembly.shells[4]
+    @test size(assembly.overlap) == (130, 130)
+    @test size(assembly.kinetic) == (130, 130)
+    @test diagnostics.nshells == 4
+    @test diagnostics.total_dim == 130
+    @test diagnostics.max_shell_overlap_error ≤ 1.0e-10
+    @test diagnostics.max_shell_injected_exactness_error ≤ 1.0e-10
+    @test diagnostics.max_shell_injected_kinetic_error ≤ 1.0e-9
+    @test diagnostics.max_diagonal_overlap_error ≤ 1.0e-10
+    @test diagnostics.max_diagonal_injected_kinetic_error ≤ 1.0e-9
+    @test diagnostics.max_pair_overlap_symmetry_error ≤ 1.0e-10
+    @test diagnostics.max_pair_kinetic_symmetry_error ≤ 1.0e-10
+
+    @test scheduled_orders[1] == 15
+    @test scheduled_orders[end] == 15
+    @test all(order in (15, 32, 51) for order in scheduled_orders)
+    @test maximum(scheduled_orders) ≥ 32
+end
+
 @testset "Atomic Ylm one-body layer" begin
     rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
@@ -7345,7 +7390,9 @@ end
     @test occursin("dmrg-facing bridge", lowercase(docs_site_angular_track))
     @test occursin("curated_sphere_point_set", docs_site_angular_track)
     @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
+    @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
     @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
+    @test occursin("first atomic angular benchmark ladder step", lowercase(docs_site_angular_track))
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))

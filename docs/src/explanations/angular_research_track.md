@@ -21,6 +21,7 @@ import, plus the first shell-local experimental construction on top of it:
 - a read-only curated sphere-point-set access layer
 - a shell-local injected angular basis constructor on one curated sphere-point
   set
+- a first shell-to-atom angular assembly layer over shell radii
 
 It does **not** yet contain:
 
@@ -59,6 +60,15 @@ layer is now available through:
 
 This remains an experimental research-track surface, not a frozen public API.
 
+The first shell-to-atom assembly layer is now available through:
+
+- `assign_atomic_angular_shell_orders(shell_radii; ...)`
+- `build_atomic_shell_local_angular_assembly(shell_radii; ...)`
+- `atomic_shell_local_angular_diagnostics(assembly)`
+
+This assembly layer is still angular-only. It stops before Coulomb assembly,
+HF/ED workflow wiring, or end-to-end atomic angular drivers.
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
@@ -85,7 +95,8 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- shell-to-atom angular assembly built from the shell-local injected basis
+- the first atomic angular benchmark ladder step on top of the shell-to-atom
+  assembly layer
 
-That is the next step that turns the shell-local angular import into a real
-atomic angular benchmark branch inside `GaussletBases`.
+That is the next step that turns the current angular assembly layer into a real
+atomic benchmark branch inside `GaussletBases`.
