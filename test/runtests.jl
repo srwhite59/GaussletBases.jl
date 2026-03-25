@@ -2265,6 +2265,13 @@ function _atomic_shell_local_angular_fixture()
     end)
 end
 
+function _atomic_injected_angular_one_body_benchmark_fixture()
+    return _cached_fixture(:atomic_injected_angular_one_body_benchmark_fixture, () -> begin
+        _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
+        build_atomic_injected_angular_one_body_benchmark(radial_ops)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6209,6 +6216,38 @@ end
     @test maximum(scheduled_orders) ≥ 32
 end
 
+@testset "Atomic injected angular one-body benchmark" begin
+    benchmark = _atomic_injected_angular_one_body_benchmark_fixture()
+    diagnostics = atomic_injected_angular_one_body_diagnostics(benchmark)
+    _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
+    exact_atom = atomic_one_body_operators(radial_ops; lmax = diagnostics.exact_common_lmax)
+    exact_benchmark_spectrum =
+        GaussletBases._generalized_spectrum(benchmark.exact_hamiltonian, benchmark.exact_overlap)
+    exact_atom_spectrum =
+        GaussletBases._generalized_spectrum(exact_atom.hamiltonian, exact_atom.overlap)
+
+    @test benchmark isa AtomicInjectedAngularOneBodyBenchmark
+    @test benchmark.angular_assembly isa AtomicShellLocalInjectedAngularAssembly
+    @test benchmark.angular_assembly.shell_radii == radial_ops.shell_centers_r
+    @test benchmark.exact_common_lmax ≥ 1
+    @test length(benchmark.exact_channels) == (benchmark.exact_common_lmax + 1)^2
+    @test size(benchmark.overlap) == size(benchmark.hamiltonian)
+    @test size(benchmark.overlap, 1) == sum(benchmark.angular_assembly.shell_dimensions)
+    @test size(benchmark.exact_overlap) == size(exact_atom.overlap)
+    @test size(benchmark.exact_hamiltonian) == size(exact_atom.hamiltonian)
+    @test exact_benchmark_spectrum ≈ exact_atom_spectrum atol = 1.0e-10 rtol = 1.0e-10
+
+    @test diagnostics.overlap_symmetry_error ≤ 1.0e-10
+    @test diagnostics.hamiltonian_symmetry_error ≤ 1.0e-10
+    @test diagnostics.min_overlap_eigenvalue > 1.0e-6
+    @test diagnostics.projected_exact_overlap_error ≤ 1.0e-9
+    @test diagnostics.projected_exact_hamiltonian_error ≤ 1.0e-8
+    @test diagnostics.projected_exact_low_eigenvalue_count == 4
+    @test diagnostics.projected_exact_low_eigenvalue_error ≤ 1.0e-8
+    @test diagnostics.benchmark_ground_state_error ≤ 1.0e-8
+    @test diagnostics.benchmark_ground_state_energy ≈ diagnostics.exact_ground_state_energy atol = 1.0e-8 rtol = 1.0e-8
+end
+
 @testset "Atomic Ylm one-body layer" begin
     rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
@@ -7392,7 +7431,8 @@ end
     @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
     @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
     @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
-    @test occursin("first atomic angular benchmark ladder step", lowercase(docs_site_angular_track))
+    @test occursin("build_atomic_injected_angular_one_body_benchmark", docs_site_angular_track)
+    @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))

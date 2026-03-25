@@ -123,13 +123,16 @@ export AbstractFunction1D,
        CuratedSpherePointSet,
        ShellLocalInjectedAngularBasis,
        AtomicShellLocalInjectedAngularAssembly,
+       AtomicInjectedAngularOneBodyBenchmark,
        curated_sphere_point_set,
        curated_sphere_point_set_orders,
        build_shell_local_injected_angular_basis,
        assign_atomic_angular_shell_orders,
        build_atomic_shell_local_angular_assembly,
+       build_atomic_injected_angular_one_body_benchmark,
        shell_local_injected_angular_diagnostics,
        atomic_shell_local_angular_diagnostics,
+       atomic_injected_angular_one_body_diagnostics,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
        ordinary_sho_hamiltonian,
@@ -426,6 +429,7 @@ include("gaunt_tables.jl")
 include("angular_point_sets.jl")
 include("angular_shell_basis.jl")
 include("angular_shell_assembly.jl")
+include("angular_atomic_benchmark.jl")
 include("atomic_angular_sectors.jl")
 include("atomic_ida.jl")
 include("atomic_ida_direct.jl")

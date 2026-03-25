@@ -22,13 +22,14 @@ import, plus the first shell-local experimental construction on top of it:
 - a shell-local injected angular basis constructor on one curated sphere-point
   set
 - a first shell-to-atom angular assembly layer over shell radii
+- a first atom-side one-electron angular benchmark path built on that assembly
 
 It does **not** yet contain:
 
 - the full `sphgatomps`-style workflow
 - optimizer/sweep drivers for sphere-point generation
 - manuscript figure scripts
-- shell-to-atom angular assembly
+- the later HF / small-ED / DMRG-facing ladder stages
 
 ## Near-term target
 
@@ -69,6 +70,15 @@ The first shell-to-atom assembly layer is now available through:
 This assembly layer is still angular-only. It stops before Coulomb assembly,
 HF/ED workflow wiring, or end-to-end atomic angular drivers.
 
+The first narrow atom-side benchmark path is now available through:
+
+- `build_atomic_injected_angular_one_body_benchmark(radial_ops; ...)`
+- `atomic_injected_angular_one_body_diagnostics(benchmark)`
+
+This benchmark stays on the one-electron central-potential line. It is there to
+prove that the shell-local angular assembly supports a real atom-side Galerkin
+calculation before the later benchmark ladder stages are imported.
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
@@ -95,8 +105,8 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- the first atomic angular benchmark ladder step on top of the shell-to-atom
-  assembly layer
+- the next atomic angular benchmark ladder step on top of the first one-electron
+  assembly benchmark
 
-That is the next step that turns the current angular assembly layer into a real
-atomic benchmark branch inside `GaussletBases`.
+That is the next step that turns the current one-electron benchmark branch into
+the later HF / small-ED / bridge-facing ladder inside `GaussletBases`.
