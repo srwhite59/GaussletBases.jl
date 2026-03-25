@@ -42,21 +42,27 @@
    - `Boxes.jl` only splits when the long direction is sufficiently larger than
      the transverse directions and large enough relative to `doside`
 
-5. Choose split planes by nearest midpoint in index space between neighboring
-   atoms along that axis, but preserve homonuclear midpoint symmetry
-   explicitly.
+5. Choose split planes by nearest physical midpoint in mapped-grid index
+   space, and treat the homonuclear midpoint slab as a symmetry special case.
    For a diatomic there is one midpoint. For a chain, order the atoms along the
-   distinguished axis and use the midpoint between each neighboring pair.
-   The split plane should stay attached to the actual mapped grid rather than
-   to a continuous idealized coordinate. The first explicit homonuclear rule
-   is:
+   distinguished axis and use the physical midpoint between each neighboring
+   pair. The split plane should stay attached to the actual mapped grid rather
+   than to a continuous idealized coordinate.
+   The first heteronuclear rule is deliberately narrow:
+   - split only along the distinguished bond axis
+   - choose the split index as the parent-grid index nearest the physical
+     midpoint between the two nuclei
+   - do not reserve a shared midpoint slab by default
+   - if the discrete midpoint choice is tied, assign the extra row to the
+     tighter/heavier side rather than inventing a heteronuclear slab rule
+   The first explicit homonuclear correction is narrower and symmetry-driven:
    - for a bond-aligned homonuclear diatomic whose bond-axis working interval
      has odd length, reserve the midpoint index as a shared `nx × ny × 1` slab
    - split the remaining bond-axis rows into equal left/right child boxes
    - treat the midpoint slab as a direct shared region between the two child
      subtrees rather than assigning it to either child
-   This replaces the earlier implicit behavior of giving the midpoint row to
-   one child.
+   So the midpoint slab is a homonuclear symmetry special case, not the
+   default diatomic rule.
    Historical support:
    - `Boxes.jl` computes physical midpoints between neighboring atoms and picks
      the nearest grid index
@@ -81,15 +87,17 @@
      long-term rule
    The current landed homonuclear correction is intentionally narrower than a
    full adaptive rule:
-   - in the shared shell of the current bond-aligned homonuclear diatomic
-     route, if a tangential local interval is symmetric about zero and the
-     provisional face retain count is even, reduce that retain count by one so
-     the localized side space keeps an odd center-bearing pattern
-   - keep this correction confined to the shared shell
-   - do not yet generalize it to edges, child boxes, heteronuclear cases, or
-     chains
+   - at the 1D `doside` / `COMX` boundary, if the local interval is symmetric
+     about zero and the provisional retained count is even, reduce it by one
+     so the localized side space keeps an odd center-bearing pattern
+   - this is a structural symmetry correction at the actual contraction
+     boundary, not yet a general adaptive retain-count formula
+   - this structural `doside` correction does not by itself settle the broader
+     heteronuclear or chain box policy
    This page does not yet freeze an adaptive local-side-count formula. That
    should wait for explicit 1D `doside` / `COMX` diagnostics.
+   Endcap slabs are also still deferred by default for the first
+   heteronuclear start.
 
 8. After the split, treat each child as an atomic-style subtree.
    Once the shared parent box has split:
@@ -138,8 +146,9 @@ nesting:
 - one large shared rectangular box around a bond-aligned diatomic or linear
   chain
 - shell shrinkage at large radius before any split
-- midpoint-based splits only along the distinguished molecular axis, with a
-  shared midpoint slab for odd-length homonuclear working intervals
+- midpoint-based splits only along the distinguished molecular axis, with the
+  shared midpoint slab reserved only for odd-length homonuclear working
+  intervals
 - child boxes that then continue as atomic-style shell subtrees
 
 It is a geometry-policy page, not an implementation page.
@@ -157,20 +166,22 @@ What is historically supported by the paper/provenance:
 What is a modernized repo policy choice:
 
 - start with bond-aligned diatomics only
-- extend immediately only to linear chains on the same distinguished axis
-- make the split rule explicit as nearest-midpoint index selection plus the
-  homonuclear midpoint-slab correction
+- extend next to heteronuclear diatomics and linear chains on the same
+  distinguished axis
+- make the split rule explicit as nearest-physical-midpoint index selection
+  plus a homonuclear-only midpoint-slab correction
 - require `N_parallel > 2 * nside` before splitting
 - require child boxes to stay roughly cubic in physical extent
 - record constant-resolution shell matching as a policy guideline, with one
-  landed narrow homonuclear shared-shell odd-retain correction but without yet
-  fixing the general adaptive formula
+  landed narrow odd-on-symmetric `doside` correction but without yet fixing
+  the general adaptive formula
+- keep endcap slabs deferred by default for the first heteronuclear pass
 - defer arbitrary non-linear geometries until a different policy is written
 
 ## Current Recommendation
 
-This policy is now precise enough for the midpoint-slab code update if the code
-stays within the intended scope:
+This policy is now precise enough for the first heteronuclear implementation
+pass if the code stays within the intended scope:
 
 - one distinguished molecular axis
 - one shared parent box first
@@ -178,13 +189,19 @@ stays within the intended scope:
 - explicit shared midpoint slab for odd-length homonuclear working intervals
 - atomic-style shell language reused after the split
 
-The next implementation should therefore target:
+The next heteronuclear implementation should therefore target:
 
-- one bond-aligned homonuclear diatomic
-- one midpoint-slab split/no-split decision based on raw-site count and
-  physical shape
-- one child-box plus direct shared-slab handoff into the existing atomic shell
-  language
+- bond-aligned ordinary-QW `HeH+` first
+- heteronuclear nested fixed-block `HeH+` second
+- the same split-eligibility and anti-sliver checks already used on the
+  homonuclear line
+- nearest-physical-midpoint split placement without a default heteronuclear
+  midpoint slab
+- endcap slabs still deferred by default
+- the existing visualization/debug path used to check the first heteronuclear
+  geometry before broader promotion:
+  ordinary and nested representative `xz` views, plus 3D center/source
+  inspection through the same regenerate-first workflow already used on `H2`
 
 It should not yet target arbitrary molecules or a final adaptive local-side
 formula.

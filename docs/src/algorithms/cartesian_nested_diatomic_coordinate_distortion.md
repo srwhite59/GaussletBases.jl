@@ -30,6 +30,8 @@
    - use one common target local spacing `d_core`
    For later heteronuclear extension:
    - allow a per-atom target local spacing `d_core,I`
+   - for the first concrete heteronuclear start, this means explicit targets
+     such as `d_core,He` and `d_core,H`
    Historical support:
    - the paper states that the spacing at each nucleus should stay at the
      intended local core spacing
@@ -46,6 +48,9 @@
      `d_core,I`
    - for the first homonuclear diatomic case, symmetry about the bond midpoint
      with the same target local spacing at both nuclei
+   - for the first heteronuclear diatomic case, the same combined bond-axis
+     family but with unequal per-atom local spacing targets carried honestly
+     into the fit
    Historical support:
    - the paper explicitly says the molecular mapping density is the sum of the
      atomic ones, with a slight modification
@@ -75,8 +80,11 @@
    - use one atomic-style transverse map centered at the shared transverse
      coordinate
    - choose its local target spacing from the same atomic core-spacing policy
-   - for heteronuclear extension, if the requested spacings differ, use the
-     finer of the coincident projected spacings on that transverse axis
+   - for the first heteronuclear pass, if the requested spacings differ, use
+     the finer of the two coincident projected spacings on that transverse
+     axis
+   - phrase that as the first practical rule for unequal atoms, not as a final
+     general theorem
    - if the nuclei do not share the same transverse projection, that geometry
      is out of scope for this first page and should not be forced into this
      policy
@@ -101,6 +109,7 @@
    - a combined smooth one-dimensional molecular mapping on the bond axis
    - with the same conceptual ingredients as the old `getmapping(...)`
      inverse-sqrt construction
+   This remains the intended first heteronuclear bond-axis family too.
    A fitted surrogate family is acceptable only if it preserves the same
    implementation-facing constraints:
    - local spacing at each nucleus
@@ -172,7 +181,11 @@ What is a modernized repo policy choice:
   `d_core,I`
 - require the first homonuclear bond-axis map to be symmetric about the bond
   midpoint
+- keep the first heteronuclear bond-axis map on the same combined
+  inverse-sqrt-density family, but with unequal per-atom local spacing targets
 - use a single-center atomic-style map on the transverse axes
+- for unequal atoms, choose the transverse target spacing from the tighter /
+  heavier side by taking the finer of the two requested local spacings
 - rely on that transverse policy only when both nuclei project to the same
   transverse coordinate
 - keep the first bond-axis implementation close to the legacy combined
@@ -195,11 +208,17 @@ stays within the intended scope:
 
 The first implementation should therefore target:
 
-- one bond-aligned homonuclear diatomic
-- one bond-axis mapping that matches the requested local spacing at both nuclei
-- one transverse mapping reused on both transverse axes
+- bond-aligned ordinary-QW `HeH+` first
+- heteronuclear nested fixed-block `HeH+` second
+- one combined bond-axis inverse-sqrt-density map with explicit per-atom local
+  spacing targets, such as `d_core,He` and `d_core,H`
+- one shared transverse map on the common transverse projection, controlled by
+  the finer of the two requested local spacings
 - one validation that the resulting mapped centers support the split/no-split
   box policy on the companion diatomic box page
+- the existing visualization/debug path kept in the loop before broader
+  promotion: representative `xz` views and 3D center/source inspection through
+  the same regenerate-first workflow already used on the `H2` line
 
 It should not yet target arbitrary molecules or a general molecular mapping
 API.

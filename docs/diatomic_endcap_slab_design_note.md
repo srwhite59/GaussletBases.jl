@@ -56,6 +56,8 @@ What is still *not* implied:
 - it does not settle chain behavior
 - it does not decide when a whole slab or region should exist as a separate
   object in the first place
+- endcap slabs therefore remain deferred by default for the first
+  heteronuclear start
 
 ## Visualization/Interpretation Clarification
 
@@ -334,3 +336,41 @@ That keeps the current diatomic line disciplined:
   boundary
 - endcap slabs treated as the next design question, not prematurely as a fixed
   policy
+
+## Current Calibration Outcome
+
+The first calibration pass was carried out with:
+
+- `tmp/work/diatomic_endcap_slab_calibration.jl`
+
+and wrote:
+
+- `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/plots/atomic_nside5_calibration.txt`
+- `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/plots/h2_endcap_slab_trials.txt`
+
+For the representative atomic reference contractions used there, the empirical
+`nside = 5` angular-resolution band came out to:
+
+- `theta_rad = [0.386145136300, 0.535753044873]`
+- `theta_deg = [22.124486589479, 30.696388332521]`
+
+Applying that calibrated criterion to tentative `7 × 7 × 1 -> 5 × 5 × 1`
+endcap-slab trials on the current larger-box bond-aligned `H2`, `R = 1.4`
+line gave a clear negative result:
+
+- the outermost candidate slab already fails the calibrated band
+- inner candidates are worse
+- so the current answer is zero admissible endcap slabs on this line
+
+This is a useful negative result. It means the visually tempting endcap-slab
+idea is not yet justified here, and it supports a disciplined refinement
+philosophy:
+
+1. propose a local refinement
+2. measure the realized localized geometry from the actual `doside` basis
+3. compare against an empirical resolution band and continuity guard
+4. accept or reject greedily
+
+So the next slab decision should come only after re-running the same calibrated
+test on a different geometry, such as a larger bond length, rather than by
+promoting an endcap rule now.
