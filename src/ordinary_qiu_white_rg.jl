@@ -161,6 +161,28 @@ function _qwrg_bond_aligned_homonuclear_nuclei(
     throw(ArgumentError("bond_axis must be :x, :y, or :z"))
 end
 
+function _qwrg_bond_aligned_diatomic_nuclei(
+    bond_length::Real,
+    bond_axis::Symbol,
+)
+    return _qwrg_bond_aligned_homonuclear_nuclei(bond_length, bond_axis)
+end
+
+function _qwrg_tighter_heavier_index(
+    core_spacings::NTuple{2,Float64},
+    nuclear_charges::NTuple{2,Float64},
+)
+    if core_spacings[1] < core_spacings[2]
+        return 1
+    elseif core_spacings[2] < core_spacings[1]
+        return 2
+    elseif nuclear_charges[1] >= nuclear_charges[2]
+        return 1
+    else
+        return 2
+    end
+end
+
 """
     bond_aligned_homonuclear_qw_basis(; ...)
 
@@ -241,6 +263,114 @@ function bond_aligned_homonuclear_qw_basis(;
         basis_z,
         nuclei,
         core_spacing_value,
+    )
+end
+
+"""
+    bond_aligned_heteronuclear_qw_basis(; ...)
+
+Build the first bond-aligned heteronuclear diatomic 3D product basis for the
+ordinary QW reference line.
+
+The bond axis stays on the current combined inverse-sqrt-density family, but
+now with explicit per-atom local spacing targets. The transverse axes still use
+one shared single-center inverse-sqrt mapping at the common transverse
+projection, controlled by the tighter/heavier side.
+"""
+function bond_aligned_heteronuclear_qw_basis(;
+    family = :G10,
+    atoms::Tuple{<:AbstractString,<:AbstractString},
+    bond_length::Real,
+    core_spacings::Tuple{<:Real,<:Real},
+    nuclear_charges::Tuple{<:Real,<:Real},
+    xmax_parallel::Real = 8.0,
+    xmax_transverse::Real = 6.0,
+    transverse_core_spacing::Union{Nothing,Real} = nothing,
+    bond_axis::Symbol = :z,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    atom_a = String(atoms[1])
+    atom_b = String(atoms[2])
+    !isempty(atom_a) || throw(ArgumentError("bond_aligned_heteronuclear_qw_basis requires a nonempty first atom label"))
+    !isempty(atom_b) || throw(ArgumentError("bond_aligned_heteronuclear_qw_basis requires a nonempty second atom label"))
+    core_spacing_values = (Float64(core_spacings[1]), Float64(core_spacings[2]))
+    nuclear_charge_values = (Float64(nuclear_charges[1]), Float64(nuclear_charges[2]))
+    all(value -> value > 0.0, core_spacing_values) || throw(
+        ArgumentError("bond_aligned_heteronuclear_qw_basis requires positive per-atom core spacings"),
+    )
+    all(value -> value > 0.0, nuclear_charge_values) || throw(
+        ArgumentError("bond_aligned_heteronuclear_qw_basis requires positive nuclear charges"),
+    )
+
+    nuclei = _qwrg_bond_aligned_diatomic_nuclei(bond_length, bond_axis)
+    parallel_centers = Float64[_qwrg_axis_coordinate(nucleus, bond_axis) for nucleus in nuclei]
+    parallel_core_ranges = [
+        sqrt(core_spacing_values[index] / nuclear_charge_values[index]) for index in 1:2
+    ]
+    transverse_index = _qwrg_tighter_heavier_index(core_spacing_values, nuclear_charge_values)
+    transverse_spacing_value =
+        transverse_core_spacing === nothing ? core_spacing_values[transverse_index] :
+        Float64(transverse_core_spacing)
+    transverse_spacing_value > 0.0 || throw(
+        ArgumentError("bond_aligned_heteronuclear_qw_basis requires transverse_core_spacing > 0 when provided"),
+    )
+    transverse_core_range = sqrt(
+        transverse_spacing_value / nuclear_charge_values[transverse_index],
+    )
+
+    # Alg Nested-Diatomic-Map step 4 and 6: keep the first heteronuclear bond
+    # axis on the same combined inverse-sqrt family with explicit per-atom
+    # spacing targets, and let the tighter/heavier side control the shared
+    # transverse map.
+    # See docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md.
+    parallel_mapping = fit_combined_invsqrt_mapping(
+        centers = parallel_centers,
+        core_ranges = parallel_core_ranges,
+        target_spacings = collect(core_spacing_values),
+        tail_spacing = tail_spacing,
+    )
+    transverse_mapping = fit_combined_invsqrt_mapping(
+        centers = [0.0],
+        core_ranges = [transverse_core_range],
+        target_spacings = [transverse_spacing_value],
+        tail_spacing = tail_spacing,
+    )
+
+    count_parallel = _qwrg_mapped_odd_count_for_extent(
+        parallel_mapping,
+        xmax_parallel;
+        reference_spacing = reference_spacing,
+    )
+    count_transverse = _qwrg_mapped_odd_count_for_extent(
+        transverse_mapping,
+        xmax_transverse;
+        reference_spacing = reference_spacing,
+    )
+
+    parallel_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_parallel,
+        mapping = parallel_mapping,
+        reference_spacing = reference_spacing,
+    ))
+    transverse_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_transverse,
+        mapping = transverse_mapping,
+        reference_spacing = reference_spacing,
+    ))
+
+    basis_x = bond_axis == :x ? parallel_basis : transverse_basis
+    basis_y = bond_axis == :y ? parallel_basis : transverse_basis
+    basis_z = bond_axis == :z ? parallel_basis : transverse_basis
+    return BondAlignedDiatomicQWBasis3D(
+        bond_axis,
+        basis_x,
+        basis_y,
+        basis_z,
+        nuclei,
+        transverse_spacing_value,
     )
 end
 
@@ -2708,7 +2838,10 @@ end
 
 function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     basis::BondAlignedDiatomicQWBasis3D,
-    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
     nuclear_charges::AbstractVector{<:Real},
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
@@ -3956,7 +4089,10 @@ This first molecular supplement pass is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedDiatomicQWBasis3D,
-    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -3977,7 +4113,10 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
-        gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+        gaussian_data::Union{
+            LegacyBondAlignedDiatomicGaussianSupplement,
+            LegacyBondAlignedHeteronuclearGaussianSupplement,
+        };
         nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,

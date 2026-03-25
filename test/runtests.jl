@@ -1255,6 +1255,48 @@ function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
     end)
 end
 
+function _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length::Float64 = 1.45)
+    key = Symbol(:bond_aligned_heteronuclear_hybrid_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        basis = bond_aligned_heteronuclear_qw_basis(
+            atoms = ("He", "H"),
+            bond_length = bond_length,
+            core_spacings = (0.25, 0.5),
+            nuclear_charges = (2.0, 1.0),
+            xmax_parallel = 6.0,
+            xmax_transverse = 4.0,
+            bond_axis = :z,
+        )
+        parent_ops = ordinary_cartesian_qiu_white_operators(
+            basis;
+            nuclear_charges = [2.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+        )
+        supplement = legacy_bond_aligned_heteronuclear_gaussian_supplement(
+            "He",
+            "cc-pVTZ",
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 1,
+        )
+        ordinary_ops = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [2.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(parent_ops),
+            supplement,
+            ordinary_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(ordinary_ops),
+        )
+    end)
+end
+
 function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
     key = Symbol(:bond_aligned_diatomic_nested_hybrid_qw_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
@@ -2504,6 +2546,30 @@ end
     @test 1.0 / dudx(mapping(basis.basis_z), 0.7) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
     @test mapping(basis.basis_x).centers == [0.0]
     @test 1.0 / dudx(mapping(basis.basis_x), 0.0) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
+end
+
+@testset "CombinedInvsqrtMapping supports first bond-aligned heteronuclear rule" begin
+    bond_length = 1.45
+    basis = bond_aligned_heteronuclear_qw_basis(
+        atoms = ("He", "H"),
+        bond_length = bond_length,
+        core_spacings = (0.25, 0.5),
+        nuclear_charges = (2.0, 1.0),
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    zmap = mapping(basis.basis_z)
+    xmap = mapping(basis.basis_x)
+
+    @test basis isa BondAlignedDiatomicQWBasis3D
+    @test mapping(basis.basis_x) === mapping(basis.basis_y)
+    @test zmap isa CombinedInvsqrtMapping
+    @test xmap isa CombinedInvsqrtMapping
+    @test 1.0 / dudx(zmap, -0.5 * bond_length) ≈ 0.25 atol = 1.0e-10 rtol = 0.0
+    @test 1.0 / dudx(zmap, 0.5 * bond_length) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
+    @test xmap.centers == [0.0]
+    @test 1.0 / dudx(xmap, 0.0) ≈ 0.25 atol = 1.0e-10 rtol = 0.0
 end
 
 @testset "XGaussian center" begin
@@ -4345,6 +4411,50 @@ end
         @test abs(ordinary_check.vee_expectation - parent_check.vee_expectation) < 0.01
         @test parent_ops.residual_count == 0
     end
+end
+
+@testset "Bond-aligned heteronuclear molecular supplement ordinary QW path" begin
+    (
+        basis,
+        parent_ops,
+        parent_check,
+        supplement,
+        ordinary_ops,
+        ordinary_check,
+    ) = _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length = 1.45)
+
+    @test supplement isa LegacyBondAlignedHeteronuclearGaussianSupplement
+    @test supplement.atomic_sources[1].atom == "He"
+    @test supplement.atomic_sources[2].atom == "H"
+    @test supplement.atomic_sources[1].basis_name == "cc-pVTZ"
+    @test supplement.atomic_sources[2].basis_name == "cc-pVTZ"
+    @test supplement.atomic_sources[1].lmax == 1
+    @test supplement.atomic_sources[2].lmax == 1
+    @test ordinary_ops.gaussian_data === supplement
+    @test ordinary_ops.interaction_treatment == :ggt_nearest
+    @test ordinary_ops.residual_count > 0
+    @test size(ordinary_ops.residual_centers, 1) == ordinary_ops.residual_count
+    @test size(ordinary_ops.residual_widths, 1) == ordinary_ops.residual_count
+    @test norm(ordinary_ops.overlap - I, Inf) < 1.0e-10
+    @test ordinary_check.overlap_error < 1.0e-10
+    @test ordinary_check.orbital_energy < -2.0
+    @test 0.8 < ordinary_check.vee_expectation < 1.5
+    @test ordinary_check.orbital_energy < parent_check.orbital_energy
+    @test ordinary_check.vee_expectation > parent_check.vee_expectation
+
+    payload = bond_aligned_diatomic_geometry_payload(ordinary_ops)
+    slice = bond_aligned_diatomic_plane_slice(
+        payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-12,
+    )
+    @test payload.bond_axis == :z
+    @test length(payload.nuclei) == 2
+    @test count(point -> point.group_kind == :residual_gaussian, payload.points) == ordinary_ops.residual_count
+    @test slice.selected_count > 0
+    @test all(abs(point.y) <= slice.plane_tol for point in slice.points)
+    @test parent_ops.residual_count == 0
 end
 
 @testset "Bond-aligned diatomic molecular supplement nested QW path" begin
