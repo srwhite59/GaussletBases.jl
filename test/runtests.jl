@@ -1297,6 +1297,97 @@ function _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length::Float64 = 
     end)
 end
 
+function _bond_aligned_heteronuclear_nested_fixed_block_fixture(; bond_length::Float64 = 1.45)
+    key = Symbol(:bond_aligned_heteronuclear_nested_fixed_block_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            supplement,
+            ordinary_ops,
+            ordinary_check,
+        ) = _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length = bond_length)
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion = expansion,
+        )
+        source = nested.source
+        fixed_block = nested.fixed_block
+        parent_modes = eigen(Hermitian(parent_ops.one_body_hamiltonian), Hermitian(parent_ops.overlap))
+        parent_ground = parent_modes.vectors[:, 1]
+        projected = _nested_fixed_projected_orbital(parent_ops.overlap, fixed_block, parent_ground)
+        projected_vee = _nested_vee_from_orbital(
+            GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_block, expansion),
+            projected,
+        )
+        capture, projected_energy = _nested_projector_stats(
+            parent_ops.overlap,
+            parent_ops.one_body_hamiltonian,
+            fixed_block,
+            parent_ground,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            supplement,
+            ordinary_ops,
+            ordinary_check,
+            expansion,
+            source,
+            fixed_block,
+            parent_modes,
+            parent_ground,
+            projected,
+            projected_vee,
+            capture,
+            projected_energy,
+        )
+    end)
+end
+
+function _bond_aligned_heteronuclear_nested_hybrid_qw_fixture(; bond_length::Float64 = 1.45)
+    key = Symbol(:bond_aligned_heteronuclear_nested_hybrid_qw_fixture, round(Int, 1000 * bond_length))
+    return _cached_fixture(key, () -> begin
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            supplement,
+            _ordinary_ops,
+            _ordinary_check,
+            expansion,
+            source,
+            fixed_block,
+            _parent_modes,
+            _parent_ground,
+            _projected,
+            _projected_vee,
+            _capture,
+            _projected_energy,
+        ) = _bond_aligned_heteronuclear_nested_fixed_block_fixture(; bond_length = bond_length)
+        nested_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = [2.0, 1.0],
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            parent_ops,
+            parent_check,
+            source,
+            fixed_block,
+            supplement,
+            nested_ops,
+            GaussletBases.ordinary_cartesian_1s2_check(nested_ops),
+        )
+    end)
+end
+
 function _bond_aligned_diatomic_nested_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
     key = Symbol(:bond_aligned_diatomic_nested_hybrid_qw_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
@@ -4299,6 +4390,60 @@ end
     @test !short_geometry.did_split
 end
 
+@testset "Bond-aligned heteronuclear split geometry" begin
+    centers_axis = collect(-5.0:1.0:5.0)
+    @test GaussletBases._nested_diatomic_split_plane_index(
+        centers_axis,
+        1:11,
+        0.0;
+        prefer_midpoint_tie_side = :left,
+    ) == 6
+    @test GaussletBases._nested_diatomic_split_plane_index(
+        centers_axis,
+        1:11,
+        0.0;
+        prefer_midpoint_tie_side = :right,
+    ) == 5
+
+    basis = bond_aligned_heteronuclear_qw_basis(
+        atoms = ("He", "H"),
+        bond_length = 1.45,
+        core_spacings = (0.25, 0.5),
+        nuclear_charges = (2.0, 1.0),
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    parent_box = (
+        1:length(basis.basis_x),
+        1:length(basis.basis_y),
+        1:length(basis.basis_z),
+    )
+    working_box = (2:(length(basis.basis_x) - 1), 2:(length(basis.basis_y) - 1), 2:(length(basis.basis_z) - 1))
+    midpoint = sum(GaussletBases._qwrg_axis_coordinate(nucleus, :z) for nucleus in basis.nuclei) / 2
+    geometry = GaussletBases._nested_bond_aligned_diatomic_split_geometry(
+        bundles,
+        parent_box,
+        working_box;
+        bond_axis = :z,
+        midpoint = midpoint,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.4,
+        use_midpoint_slab = false,
+        prefer_midpoint_tie_side = :left,
+    )
+
+    @test geometry.did_split
+    @test geometry.count_eligible
+    @test geometry.shape_eligible
+    @test geometry.shared_midpoint_box === nothing
+    @test length(geometry.child_boxes) == 2
+    @test sum(length(box[3]) for box in geometry.child_boxes) == length(working_box[3])
+    @test all(widths[3] >= 0.4 * max(widths[1], widths[2]) for widths in geometry.child_physical_widths)
+end
+
 @testset "Bond-aligned diatomic nested fixed block" begin
     (
         basis,
@@ -4454,6 +4599,87 @@ end
     @test count(point -> point.group_kind == :residual_gaussian, payload.points) == ordinary_ops.residual_count
     @test slice.selected_count > 0
     @test all(abs(point.y) <= slice.plane_tol for point in slice.points)
+    @test parent_ops.residual_count == 0
+end
+
+@testset "Bond-aligned heteronuclear nested fixed block" begin
+    (
+        basis,
+        parent_ops,
+        parent_check,
+        _supplement,
+        ordinary_ops,
+        ordinary_check,
+        _expansion,
+        source,
+        fixed_block,
+        _parent_modes,
+        _parent_ground,
+        _projected,
+        projected_vee,
+        capture,
+        projected_energy,
+    ) = _bond_aligned_heteronuclear_nested_fixed_block_fixture(; bond_length = 1.45)
+
+    @test source isa GaussletBases._CartesianNestedBondAlignedDiatomicSource3D
+    @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test source.geometry.did_split
+    @test source.geometry.shared_midpoint_box === nothing
+    @test isnothing(source.midpoint_slab_column_range)
+    @test length(source.shared_shell_layers) >= 1
+    @test length(source.child_sequences) == 2
+    @test length(source.child_column_ranges) == 2
+    @test source.sequence.working_box == (
+        1:length(basis.basis_x),
+        1:length(basis.basis_y),
+        1:length(basis.basis_z),
+    )
+    @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
+    @test all(isfinite, fixed_block.weights)
+    @test minimum(fixed_block.weights) > 0.0
+    @test all(isfinite, fixed_block.fixed_centers)
+    @test parent_check.overlap_error < 1.0e-10
+    @test ordinary_check.overlap_error < 1.0e-10
+    @test capture > 0.99
+    @test projected_energy < -2.0
+    @test projected_vee > 0.8
+    @test size(fixed_block.overlap, 1) < ordinary_ops.gausslet_count
+    @test size(fixed_block.overlap, 1) < parent_ops.gausslet_count
+    @test source.geometry.child_boxes[1][3] != source.geometry.child_boxes[2][3]
+end
+
+@testset "Bond-aligned heteronuclear nested QW consumer path" begin
+    (
+        _basis,
+        parent_ops,
+        parent_check,
+        source,
+        fixed_block,
+        supplement,
+        nested_ops,
+        nested_check,
+    ) = _bond_aligned_heteronuclear_nested_hybrid_qw_fixture(; bond_length = 1.45)
+
+    @test nested_ops isa GaussletBases.QiuWhiteResidualGaussianOperators
+    @test nested_ops.basis === fixed_block
+    @test nested_ops.gaussian_data === supplement
+    @test nested_ops.interaction_treatment == :ggt_nearest
+    @test nested_ops.residual_count > 0
+    @test nested_check.overlap_error < 1.0e-8
+    @test nested_check.orbital_energy < -2.0
+    @test nested_check.vee_expectation > 0.8
+    @test abs(nested_check.orbital_energy - parent_check.orbital_energy) < 0.01
+    @test nested_check.vee_expectation > parent_check.vee_expectation
+    payload = bond_aligned_diatomic_geometry_payload(nested_ops, source)
+    slice = bond_aligned_diatomic_plane_slice(
+        payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+    @test count(point -> point.group_kind == :shared_midpoint_slab, payload.points) == 0
+    @test count(point -> point.group_kind == :residual_gaussian, payload.points) == nested_ops.residual_count
+    @test slice.selected_count > 0
     @test parent_ops.residual_count == 0
 end
 

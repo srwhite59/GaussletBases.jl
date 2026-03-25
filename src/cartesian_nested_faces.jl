@@ -2741,7 +2741,7 @@ function _nested_box_physical_widths(
     )
 end
 
-function _nested_diatomic_split_index(
+function _nested_diatomic_midpoint_row_index(
     centers_axis::AbstractVector{<:Real},
     interval::UnitRange{Int},
     midpoint::Real,
@@ -2752,6 +2752,38 @@ function _nested_diatomic_split_index(
     candidates = collect(first(interval):(last(interval) - 1))
     _, local_index = findmin(abs.(Float64.(centers_axis[candidates]) .- Float64(midpoint)))
     return candidates[local_index]
+end
+
+function _nested_diatomic_split_plane_index(
+    centers_axis::AbstractVector{<:Real},
+    interval::UnitRange{Int},
+    midpoint::Real;
+    prefer_midpoint_tie_side::Symbol = :left,
+    atol::Float64 = 1.0e-12,
+    rtol::Float64 = 1.0e-10,
+)
+    length(interval) >= 2 || throw(
+        ArgumentError("diatomic split-plane selection requires at least two raw sites on the bond axis"),
+    )
+    prefer_midpoint_tie_side in (:left, :right) || throw(
+        ArgumentError("diatomic split-plane selection requires prefer_midpoint_tie_side = :left or :right"),
+    )
+    candidates = collect(first(interval):(last(interval) - 1))
+    plane_positions = Float64[
+        0.5 * (Float64(centers_axis[index]) + Float64(centers_axis[index + 1])) for index in candidates
+    ]
+    distances = abs.(plane_positions .- Float64(midpoint))
+    minimum_distance = minimum(distances)
+    tied = Int[
+        candidates[index] for index in eachindex(candidates) if
+        isapprox(distances[index], minimum_distance; atol = atol, rtol = rtol)
+    ]
+    length(tied) >= 1 || throw(ArgumentError("diatomic split-plane selection failed to find a nearest candidate"))
+    if prefer_midpoint_tie_side == :left
+        return maximum(tied)
+    else
+        return minimum(tied)
+    end
 end
 
 function _nested_diatomic_child_boxes(
@@ -2912,13 +2944,21 @@ function _nested_bond_aligned_diatomic_split_geometry(
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     use_midpoint_slab::Bool = true,
+    prefer_midpoint_tie_side::Symbol = :left,
 )
     axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
     axis != 0 || throw(ArgumentError("diatomic split geometry requires bond_axis = :x, :y, or :z"))
     parallel_interval = working_box[axis]
     parallel_centers = _nested_axis_pgdg(bundles, bond_axis).centers
-    split_index = _nested_diatomic_split_index(parallel_centers, parallel_interval, midpoint)
     use_slab = use_midpoint_slab && isodd(length(parallel_interval))
+    split_index = use_slab ?
+        _nested_diatomic_midpoint_row_index(parallel_centers, parallel_interval, midpoint) :
+        _nested_diatomic_split_plane_index(
+            parallel_centers,
+            parallel_interval,
+            midpoint;
+            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+        )
     left_box, midpoint_slab_box, right_box = if use_slab
         _nested_diatomic_midpoint_slab_split(working_box, bond_axis, split_index)
     else
@@ -2961,6 +3001,7 @@ function _nested_bond_aligned_diatomic_source(
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     use_midpoint_slab::Bool = true,
+    prefer_midpoint_tie_side::Symbol = :left,
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
@@ -2984,6 +3025,7 @@ function _nested_bond_aligned_diatomic_source(
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         use_midpoint_slab = use_midpoint_slab,
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
     )
 
     while true
@@ -3031,6 +3073,7 @@ function _nested_bond_aligned_diatomic_source(
             nside = nside,
             min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
             use_midpoint_slab = use_midpoint_slab,
+            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
         )
         geometry.did_split && break
     end

@@ -384,6 +384,58 @@ function _qwrg_basis_for_axis(
     throw(ArgumentError("axis must be :x, :y, or :z"))
 end
 
+function _qwrg_bond_axis_local_spacings(
+    basis::BondAlignedDiatomicQWBasis3D,
+)
+    axis_basis = _qwrg_basis_for_axis(basis, basis.bond_axis)
+    axis_mapping = mapping(axis_basis)
+    return Float64[
+        1.0 / dudx(axis_mapping, _qwrg_axis_coordinate(nucleus, basis.bond_axis)) for
+        nucleus in basis.nuclei
+    ]
+end
+
+function _qwrg_bond_axis_order(
+    basis::BondAlignedDiatomicQWBasis3D,
+)
+    coordinates = Float64[_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei]
+    return sortperm(coordinates), coordinates
+end
+
+function _qwrg_bond_aligned_uses_midpoint_slab(
+    basis::BondAlignedDiatomicQWBasis3D;
+    atol::Float64 = 1.0e-10,
+    rtol::Float64 = 1.0e-8,
+)
+    order, coordinates = _qwrg_bond_axis_order(basis)
+    length(order) == 2 || return false
+    midpoint = 0.5 * (coordinates[order[1]] + coordinates[order[2]])
+    distances = abs.([coordinates[index] - midpoint for index in order])
+    spacings = _qwrg_bond_axis_local_spacings(basis)[order]
+    return isapprox(distances[1], distances[2]; atol = atol, rtol = rtol) &&
+        isapprox(spacings[1], spacings[2]; atol = atol, rtol = rtol)
+end
+
+function _qwrg_bond_aligned_preferred_split_side(
+    basis::BondAlignedDiatomicQWBasis3D;
+    atol::Float64 = 1.0e-10,
+    rtol::Float64 = 1.0e-8,
+)
+    order, _coordinates = _qwrg_bond_axis_order(basis)
+    length(order) == 2 || return :left
+    left_index, right_index = order
+    spacings = _qwrg_bond_axis_local_spacings(basis)
+    left_spacing = spacings[left_index]
+    right_spacing = spacings[right_index]
+    if left_spacing < right_spacing && !isapprox(left_spacing, right_spacing; atol = atol, rtol = rtol)
+        return :left
+    elseif right_spacing < left_spacing && !isapprox(left_spacing, right_spacing; atol = atol, rtol = rtol)
+        return :right
+    else
+        return :left
+    end
+end
+
 function _qwrg_bond_aligned_axis_bundles(
     basis::BondAlignedDiatomicQWBasis3D,
     expansion::CoulombGaussianExpansion;
@@ -430,6 +482,8 @@ function _bond_aligned_diatomic_nested_fixed_source(
         expansion;
         gausslet_backend = gausslet_backend,
     )
+    use_midpoint_slab = _qwrg_bond_aligned_uses_midpoint_slab(basis)
+    preferred_split_side = _qwrg_bond_aligned_preferred_split_side(basis)
     return _nested_bond_aligned_diatomic_source(
         basis,
         bundles;
@@ -437,6 +491,8 @@ function _bond_aligned_diatomic_nested_fixed_source(
         midpoint = midpoint,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        use_midpoint_slab = use_midpoint_slab,
+        prefer_midpoint_tie_side = preferred_split_side,
         shared_shell_retain_xy = shared_shell_retain_xy,
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
@@ -3060,7 +3116,10 @@ end
 
 function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
-    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
     nuclear_charges::AbstractVector{<:Real},
     expansion::CoulombGaussianExpansion,
     gausslet_backend::Symbol,
@@ -4129,7 +4188,10 @@ molecular supplement and residual-Gaussian completion.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
-    gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
