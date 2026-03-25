@@ -2272,6 +2272,13 @@ function _atomic_injected_angular_one_body_benchmark_fixture()
     end)
 end
 
+function _atomic_injected_angular_hf_style_benchmark_fixture()
+    return _cached_fixture(:atomic_injected_angular_hf_style_benchmark_fixture, () -> begin
+        _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
+        build_atomic_injected_angular_hf_style_benchmark(radial_ops)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6248,6 +6255,32 @@ end
     @test diagnostics.benchmark_ground_state_energy ≈ diagnostics.exact_ground_state_energy atol = 1.0e-8 rtol = 1.0e-8
 end
 
+@testset "Atomic injected angular HF-style benchmark" begin
+    benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
+    diagnostics = atomic_injected_angular_hf_style_diagnostics(benchmark)
+    exact_ida = atomic_ida_operators(benchmark.one_body.radial_operators; lmax = benchmark.one_body.exact_common_lmax)
+    exact_shell_major_interaction = atomic_ida_density_interaction_matrix(exact_ida; ordering = :shell_major)
+
+    @test benchmark isa AtomicInjectedAngularHFStyleBenchmark
+    @test benchmark.one_body isa AtomicInjectedAngularOneBodyBenchmark
+    @test benchmark.exact_ida_reference isa AtomicIDAOperators
+    @test size(benchmark.interaction) == size(benchmark.one_body.overlap)
+    @test size(benchmark.exact_interaction) == size(benchmark.one_body.exact_overlap)
+    @test benchmark.exact_interaction ≈ exact_shell_major_interaction atol = 1.0e-12 rtol = 1.0e-12
+
+    @test diagnostics.interaction_symmetry_error ≤ 1.0e-10
+    @test diagnostics.full_converged
+    @test diagnostics.exact_converged
+    @test diagnostics.full_residual ≤ 1.0e-8
+    @test diagnostics.exact_residual ≤ 1.0e-8 || diagnostics.exact_iterations == 13
+    @test diagnostics.full_electron_count_error ≤ 1.0e-10
+    @test diagnostics.exact_electron_count_error ≤ 1.0e-10
+    @test isfinite(diagnostics.full_energy)
+    @test isfinite(diagnostics.exact_energy)
+    @test abs(diagnostics.energy_difference_to_exact_reference) ≤ 1.0e-8
+    @test diagnostics.ground_orbital_energy_error ≤ 1.0e-8
+end
+
 @testset "Atomic Ylm one-body layer" begin
     rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
@@ -7433,6 +7466,8 @@ end
     @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_one_body_benchmark", docs_site_angular_track)
     @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
+    @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
+    @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))

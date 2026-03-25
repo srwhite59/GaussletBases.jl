@@ -79,6 +79,15 @@ This benchmark stays on the one-electron central-potential line. It is there to
 prove that the shell-local angular assembly supports a real atom-side Galerkin
 calculation before the later benchmark ladder stages are imported.
 
+The first narrow angular HF-style benchmark is now available through:
+
+- `build_atomic_injected_angular_hf_style_benchmark(radial_ops; ...)`
+- `atomic_injected_angular_hf_style_diagnostics(benchmark)`
+
+This remains benchmark-oriented and density-density / manuscript-facing. It is
+there to prove that the angular line can support a real atom-side mean-field
+solve before the later small-ED and bridge-facing stages are imported.
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
@@ -105,8 +114,8 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- the next atomic angular benchmark ladder step on top of the first one-electron
-  assembly benchmark
+- the next atomic angular ladder step after the first mean-field benchmark,
+  most likely the first small-ED benchmark on the same narrow atomic line
 
-That is the next step that turns the current one-electron benchmark branch into
-the later HF / small-ED / bridge-facing ladder inside `GaussletBases`.
+That is the next step that turns the current one-electron / HF-style benchmark
+branch into the later small-ED / bridge-facing ladder inside `GaussletBases`.
