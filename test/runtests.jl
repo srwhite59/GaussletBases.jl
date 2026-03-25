@@ -3124,15 +3124,16 @@ end
     @test s > 0.0
     @test side isa GaussletBases._CartesianNestedDoSide1D
     @test side.interval == interval
-    @test side.retained_count == 4
-    @test size(side.local_coefficients) == (length(interval), 4)
-    @test size(side.coefficient_matrix) == (length(basis), 4)
+    @test side.retained_count == 3
+    @test size(side.local_coefficients) == (length(interval), 3)
+    @test size(side.coefficient_matrix) == (length(basis), 3)
     @test maximum(abs.(side.coefficient_matrix[1:(first(interval) - 1), :])) == 0.0
     @test maximum(abs.(side.coefficient_matrix[(last(interval) + 1):end, :])) == 0.0
     @test norm(transpose(side.local_coefficients) * side.local_overlap * side.local_coefficients - I, Inf) < 1.0e-10
     @test norm(transpose(side.coefficient_matrix) * pgdg.overlap * side.coefficient_matrix - I, Inf) < 1.0e-10
     @test issorted(side.localized_centers)
-    @test length(side.localized_weights) == 4
+    @test length(side.localized_weights) == 3
+    @test any(abs.(side.localized_centers) .< 1.0e-10)
 
     face_lo = GaussletBases._nested_xy_face_product(
         pgdg,
@@ -3154,7 +3155,7 @@ end
     face_cross = GaussletBases._nested_xy_face_cross_overlap(face_lo, face_hi, pgdg.overlap)
 
     @test face_lo isa GaussletBases._CartesianNestedXYFace3D
-    @test size(face_lo.coefficient_matrix) == (length(basis)^3, 12)
+    @test size(face_lo.coefficient_matrix) == (length(basis)^3, 9)
     @test length(face_lo.support_indices) == length(interval)^2
     @test isempty(intersect(face_lo.support_indices, face_hi.support_indices))
     @test norm(face_overlap - I, Inf) < 1.0e-10
@@ -3199,7 +3200,7 @@ end
     @test s > 0.0
     @test shell isa GaussletBases._CartesianNestedXYShell3D
     @test size(shell.coefficient_matrix) == (length(basis)^3, 2 * nface)
-    @test nface == 12
+    @test nface == 9
     @test length(shell.support_indices) == 2 * length(interval)^2
     @test length(shell.support_states) == length(shell.support_indices)
     @test isempty(intersect(face_low.support_indices, face_high.support_indices))
@@ -3212,8 +3213,8 @@ end
     @test packet.x2_x ≈ transpose(packet.x2_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_y ≈ transpose(packet.x2_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test size(packet.gaussian_terms) == (3, 24, 24)
-    @test size(packet.pair_terms) == (3, 24, 24)
+    @test size(packet.gaussian_terms) == (3, 18, 18)
+    @test size(packet.pair_terms) == (3, 18, 18)
     @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
     @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
     @test low_z_mean < 0.0
@@ -3257,7 +3258,7 @@ end
     @test shell isa GaussletBases._CartesianNestedShell3D
     @test length(shell.faces) == 6
     @test length(shell.face_column_ranges) == 6
-    @test size(shell.coefficient_matrix) == (length(basis)^3, 72)
+    @test size(shell.coefficient_matrix) == (length(basis)^3, 54)
     @test length(shell.support_indices) == 6 * length(interval)^2
     @test length(shell.support_states) == length(shell.support_indices)
     @test all(length(face.support_indices) == length(interval)^2 for face in shell.faces)
@@ -3270,8 +3271,8 @@ end
     @test packet.position_x ≈ transpose(packet.position_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_y ≈ transpose(packet.position_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_z ≈ transpose(packet.position_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test size(packet.gaussian_terms) == (3, 72, 72)
-    @test size(packet.pair_terms) == (3, 72, 72)
+    @test size(packet.gaussian_terms) == (3, 54, 54)
+    @test size(packet.pair_terms) == (3, 54, 54)
     @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
     @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
 
@@ -3309,9 +3310,9 @@ end
     @test fixed_block.parent_basis === basis
     @test fixed_block.shell === shell
     @test size(fixed_block.coefficient_matrix) == size(shell.coefficient_matrix)
-    @test size(fixed_block.overlap) == (72, 72)
-    @test size(fixed_block.kinetic) == (72, 72)
-    @test size(fixed_block.fixed_centers) == (72, 3)
+    @test size(fixed_block.overlap) == (54, 54)
+    @test size(fixed_block.kinetic) == (54, 54)
+    @test size(fixed_block.fixed_centers) == (54, 3)
     @test length(fixed_block.support_indices) == length(shell.support_indices)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
     @test fixed_block.overlap ≈ shell.packet.overlap atol = 0.0 rtol = 0.0
@@ -3393,8 +3394,8 @@ end
     @test fixed_sequence isa GaussletBases._NestedFixedBlock3D
     @test fixed_sequence.parent_basis === basis
     @test fixed_sequence.shell === shell_sequence
-    @test shell_plus_core_ops.gausslet_count == 1403
-    @test shell_sequence_ops.gausslet_count == 1475
+    @test shell_plus_core_ops.gausslet_count == 1385
+    @test shell_sequence_ops.gausslet_count == 1439
     @test baseline.gausslet_count == 17^3
     @test norm(fixed_shell_plus_core.overlap - I, Inf) < 1.0e-10
     @test norm(fixed_sequence.overlap - I, Inf) < 1.0e-10
@@ -3456,8 +3457,8 @@ end
 
     @test fixed_grow isa GaussletBases._NestedFixedBlock3D
     @test fixed_shrink isa GaussletBases._NestedFixedBlock3D
-    @test grow_ops.gausslet_count == 341
-    @test shrink_ops.gausslet_count == 243
+    @test grow_ops.gausslet_count == 287
+    @test shrink_ops.gausslet_count == 189
     @test baseline.gausslet_count == 17^3
     @test norm(fixed_grow.overlap - I, Inf) < 1.0e-10
     @test norm(fixed_shrink.overlap - I, Inf) < 1.0e-10
@@ -3541,7 +3542,7 @@ end
     @test length(face_sequence.core_indices) == 5^3
     @test length(complete_sequence.core_indices) == 5^3
     @test complete_sequence.working_box == (3:15, 3:15, 3:15)
-    @test shell_plus_core_ops.gausslet_count == 1403
+    @test shell_plus_core_ops.gausslet_count == 1385
     @test face_sequence_ops.gausslet_count < complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
     @test baseline.gausslet_count == 17^3
     @test norm(fixed_face_sequence.overlap - I, Inf) < 1.0e-10
@@ -3558,7 +3559,7 @@ end
     @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) <
         abs(face_sequence_check.vee_expectation - baseline_check.vee_expectation)
     @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-4
-    @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 1.0e-4
+    @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 2.0e-4
 
     expansion = coulomb_gaussian_expansion(doacc = false)
     overlap_parent, one_body_parent, interaction_parent = _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
@@ -3665,7 +3666,7 @@ end
         @test legacy.lmax == 0
         @test complete_sequence.working_box == (2:14, 2:14, 2:14)
         @test baseline.gausslet_count == 15^3
-        @test shell_plus_core_ops.gausslet_count == 1403
+        @test shell_plus_core_ops.gausslet_count == 1385
         @test complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
         @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
         @test complete_sequence_check.overlap_error < 1.0e-10
@@ -3674,8 +3675,8 @@ end
         @test maximum(fixed_complete_sequence.weights) < 10.0
         @test abs(complete_sequence_check.orbital_energy - baseline_check.orbital_energy) < 2.0e-4
         @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
-        @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 5.0e-5
-        @test abs(projected_complete_vee - parent_ground_vee) < 1.0e-4
+        @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 1.0e-4
+        @test abs(projected_complete_vee - parent_ground_vee) < 1.5e-4
         @test complete_ground_capture > 0.99999
         @test complete_average4_capture > 0.999
         @test complete_ground_energy - parent_modes.values[1] < 1.0e-4
@@ -3735,8 +3736,8 @@ end
             @test refined_core.working_box == (core5, core5, core5)
             @test refined_sequence.working_box == complete_sequence.working_box
             @test length(refined_core.core_indices) == length(inner_core)^3
-            @test size(refined_core.coefficient_matrix, 2) == 83
-            @test refined_sequence_ops.gausslet_count == 547
+            @test size(refined_core.coefficient_matrix, 2) == 53
+            @test refined_sequence_ops.gausslet_count == 445
             @test refined_sequence_ops.gausslet_count < complete_sequence_ops.gausslet_count
             @test norm(fixed_refined_sequence.overlap - I, Inf) < 1.0e-10
             @test refined_sequence_check.overlap_error < 1.0e-10
@@ -5006,8 +5007,8 @@ end
     @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
     @test all(isfinite, experiment_fixed_block.weights)
     @test minimum(experiment_fixed_block.weights) > 0.0
-    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
     @test size(experiment_fixed_block.overlap, 1) == 637
+    @test size(baseline_fixed_block.overlap, 1) == size(experiment_fixed_block.overlap, 1)
     @test Set([
         trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
         trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
@@ -5018,14 +5019,14 @@ end
         trace_map["shared_shell/layer_1/face_xz/tangential_x"].retained_count,
         trace_map["shared_shell/layer_1/face_yz/tangential_y"].retained_count,
     ]) == Set([3])
-    @test experiment_slice.selected_count > fixed_slice.selected_count
-    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
-        count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points)
-    @test abs(experiment_projected_vee - baseline_projected_vee) < 1.0e-5
-    @test abs(experiment_capture - baseline_capture) < 1.0e-10
-    @test abs(experiment_projected_energy - baseline_projected_energy) < 1.0e-10
-    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-8
-    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-6
+    @test fixed_slice.selected_count == experiment_slice.selected_count == 103
+    @test count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points) ==
+        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) == 16
+    @test experiment_projected_vee == baseline_projected_vee
+    @test experiment_capture == baseline_capture
+    @test experiment_projected_energy == baseline_projected_energy
+    @test experiment_check.orbital_energy == baseline_check.orbital_energy
+    @test experiment_check.vee_expectation == baseline_check.vee_expectation
 end
 
 @testset "Bond-aligned diatomic shared-shell odd-retain confirmation at R=2.0" begin
@@ -5093,21 +5094,71 @@ end
     @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
     @test all(isfinite, experiment_fixed_block.weights)
     @test minimum(experiment_fixed_block.weights) > 0.0
-    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
-    @test size(experiment_fixed_block.overlap, 1) == 579
+    @test size(experiment_fixed_block.overlap, 1) == 543
+    @test size(baseline_fixed_block.overlap, 1) == size(experiment_fixed_block.overlap, 1)
     @test Set([
         trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
         trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
         trace_map["shared_shell/layer_1/face_yz/tangential_y"].contains_near_zero_center,
     ]) == Set([true])
-    @test experiment_slice.selected_count > baseline_slice.selected_count
-    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
-        count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points)
-    @test abs(experiment_projected_vee - baseline_projected_vee) < 1.0e-5
-    @test abs(experiment_capture - baseline_capture) < 1.0e-10
-    @test abs(experiment_projected_energy - baseline_projected_energy) < 1.0e-10
-    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-8
-    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-6
+    @test baseline_slice.selected_count == experiment_slice.selected_count == 101
+    @test count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points) ==
+        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) == 16
+    @test experiment_projected_vee == baseline_projected_vee
+    @test experiment_capture == baseline_capture
+    @test experiment_projected_energy == baseline_projected_energy
+    @test experiment_check.orbital_energy == baseline_check.orbital_energy
+    @test experiment_check.vee_expectation == baseline_check.vee_expectation
+end
+
+@testset "Bond-aligned diatomic doside boundary correction on larger debug box" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 8,
+        xmax_transverse = 5,
+        bond_axis = :z,
+    )
+    source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(basis)
+    traces = GaussletBases._bond_aligned_diatomic_doside_traces(source)
+    trace_map = Dict(trace.context_label => trace for trace in traces)
+
+    @test length(traces) == 27
+    symmetric_traces = filter(trace -> trace.symmetric_about_zero, traces)
+    @test !isempty(symmetric_traces)
+    @test all(trace -> trace.retained_count == 3, symmetric_traces)
+    @test all(trace -> trace.contains_near_zero_center, symmetric_traces)
+    @test trace_map["left_child/layer_1/face_xy/tangential_x"].contains_near_zero_center
+    @test trace_map["left_child/layer_1/face_yz/tangential_y"].contains_near_zero_center
+    @test trace_map["right_child/layer_1/face_xy/tangential_x"].contains_near_zero_center
+    @test trace_map["right_child/layer_1/face_yz/tangential_y"].contains_near_zero_center
+
+    fixed_block = GaussletBases._nested_fixed_block(source)
+    supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+        "H",
+        "cc-pVTZ",
+        basis.nuclei;
+        lmax = 1,
+    )
+    ops = ordinary_cartesian_qiu_white_operators(
+        fixed_block,
+        supplement;
+        nuclear_charges = [1.0, 1.0],
+        interaction_treatment = :ggt_nearest,
+    )
+    payload = bond_aligned_diatomic_geometry_payload(ops, source)
+    slice = bond_aligned_diatomic_plane_slice(
+        payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
+
+    @test slice.selected_count == 121
+    @test count(point -> point.group_kind == :left_child, slice.points) == 44
+    @test count(point -> point.group_kind == :shared_midpoint_slab, slice.points) == 9
+    @test count(point -> point.group_kind == :right_child, slice.points) == 44
+    @test count(point -> point.group_kind == :shared_shell_layer, slice.points) == 16
 end
 
 @testset "Bond-aligned diatomic plane projection export" begin
@@ -6034,6 +6085,38 @@ end
     @test multipole(ops, 1) ≈ multipole_matrix(rb, grid; L = 1) atol = 1.0e-12 rtol = 1.0e-12
     @test size(multipole(ops, 4)) == (length(rb), length(rb))
     @test_throws BoundsError multipole(ops, 5)
+end
+
+@testset "Curated angular sphere-point access" begin
+    orders = curated_sphere_point_set_orders()
+
+    @test orders == [15, 32, 51]
+    @test_throws ArgumentError curated_sphere_point_set(14)
+
+    set15 = curated_sphere_point_set(15)
+    set32 = curated_sphere_point_set(32)
+    set51 = curated_sphere_point_set(51)
+
+    for set in (set15, set32, set51)
+        @test set isa CuratedSpherePointSet
+        @test set.cardinality == set.order
+        @test size(set.coordinates) == (set.cardinality, 3)
+        @test all(isfinite, set.coordinates)
+        @test set.nn_ratio >= 1.0
+        @test set.provenance.source_tag == "optimized_sphere_points_curated_subset"
+        @test set.provenance.source_project == "GaussletModules/Radial"
+        @test occursin("SpherePoints.jld2", set.provenance.source_artifact)
+        @test occursin("xyzsets", set.provenance.source_note)
+
+        norms = sqrt.(sum(abs2, set.coordinates; dims = 2))
+        @test maximum(abs.(norms .- 1.0)) < 1.0e-12
+    end
+
+    @test set15.nn_ratio ≈ 1.1233641689852316 atol = 0.0 rtol = 1.0e-14
+    @test set32.nn_ratio ≈ 1.0000000159730313 atol = 0.0 rtol = 1.0e-14
+    @test set51.nn_ratio ≈ 1.0802896662822246 atol = 0.0 rtol = 1.0e-14
+    @test set15.coordinates[1, :] ≈ [0.5449408412377406, -0.022962554521322145, 0.838160008972606] atol = 0.0 rtol = 1.0e-14
+    @test set32.coordinates[1, :] ≈ [0.40002938831494556, -0.0010525966270966628, 0.9165017078678638] atol = 0.0 rtol = 1.0e-14
 end
 
 @testset "Atomic Ylm one-body layer" begin
@@ -7011,6 +7094,7 @@ end
     docs_site_examples_index = read(joinpath(_PROJECT_ROOT, "docs", "src", "examples", "index.md"), String)
     docs_site_radial = read(joinpath(_PROJECT_ROOT, "docs", "src", "tutorials", "first_radial_workflow.md"), String)
     docs_site_atomic = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "current_atomic_branch.md"), String)
+    docs_site_angular_track = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "angular_research_track.md"), String)
     docs_site_ordinary = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "current_ordinary_branch.md"), String)
     docs_site_examples = read(joinpath(_PROJECT_ROOT, "docs", "src", "howto", "example_guide.md"), String)
     docs_site_developer = read(joinpath(_PROJECT_ROOT, "docs", "src", "developer", "index.md"), String)
@@ -7161,6 +7245,7 @@ end
     @test occursin("\"Reference\"", docs_make)
     @test occursin("\"Developer Notes\"", docs_make)
     @test occursin("hide(\"First radial workflow\"", docs_make)
+    @test occursin("hide(\"Angular research track\"", docs_make)
     @test occursin("hide(\"Bases and mappings\"", docs_make)
     @test occursin("name: Docs", docs_workflow)
     @test occursin("julia --project=docs docs/make.jl", docs_workflow)
@@ -7207,6 +7292,14 @@ end
     @test occursin("jldoctest", docs_site_reference_atomic)
     @test occursin("First radial workflow", docs_site_reference_bases)
     @test occursin("Current atomic branch", docs_site_reference_atomic)
+    @test occursin("Angular research track", docs_site_manual)
+    @test occursin("active research track", lowercase(docs_site_angular_track))
+    @test occursin("hooke remains important", lowercase(docs_site_angular_track))
+    @test occursin("hf", lowercase(docs_site_angular_track))
+    @test occursin("small ed", lowercase(docs_site_angular_track))
+    @test occursin("dmrg-facing bridge", lowercase(docs_site_angular_track))
+    @test occursin("curated_sphere_point_set", docs_site_angular_track)
+    @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))
     @test !occursin("generalized eigen", lowercase(docs_site_manual))

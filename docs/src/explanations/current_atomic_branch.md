@@ -8,6 +8,11 @@ idea from the papers: an atom-centered basis with orthonormality, locality,
 variable resolution, and a compressed two-index or diagonal-style Coulomb
 representation.
 
+The most recent posted paper on this line is the radial gausslet manuscript on
+arXiv:
+
+- <https://doi.org/10.48550/arXiv.2603.22646>
+
 ## What the atomic branch is today
 
 The present atomic story is:
@@ -26,6 +31,21 @@ the basis, while the compression story is centered on the interaction.
 
 This is already a coherent small atomic line. It is not yet a broad general
 atomic HF framework.
+
+## Angular research track
+
+The next active scientific direction is the manuscript-facing angular gausslet
+line. That branch is now tracked explicitly, but only as an experimental
+research scaffold:
+
+- [Angular research track](angular_research_track.md)
+
+That page is the right place to read the current boundary:
+
+- shell-local injected angular basis construction has **not** yet been ported
+- Hooke is deferred for a later dedicated workflow line
+- the near-term target is an atomic angular benchmark ladder:
+  HF, small ED, and one DMRG-facing bridge
 
 ## Start here
 

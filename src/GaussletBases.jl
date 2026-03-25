@@ -2,6 +2,7 @@ module GaussletBases
 
 using JLD2
 using LinearAlgebra
+using TOML
 
 export AbstractFunction1D,
        AbstractPrimitiveFunction1D,
@@ -117,6 +118,10 @@ export AbstractFunction1D,
        bond_aligned_diatomic_plane_slice,
        write_bond_aligned_diatomic_points3d,
        write_bond_aligned_diatomic_plane_projection,
+       SpherePointSetProvenance,
+       CuratedSpherePointSet,
+       curated_sphere_point_set,
+       curated_sphere_point_set_orders,
        mapped_ordinary_one_body_operators,
        mapped_cartesian_hydrogen_energy,
        ordinary_sho_hamiltonian,
@@ -410,6 +415,7 @@ include("diagnostics.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
 include("gaunt_tables.jl")
+include("angular_point_sets.jl")
 include("atomic_angular_sectors.jl")
 include("atomic_ida.jl")
 include("atomic_ida_direct.jl")

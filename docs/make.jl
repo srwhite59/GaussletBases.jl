@@ -32,6 +32,7 @@ makedocs(
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
         hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),
         hide("Current atomic branch" => "explanations/current_atomic_branch.md"),
+        hide("Angular research track" => "explanations/angular_research_track.md"),
         hide("Current ordinary branch" => "explanations/current_ordinary_branch.md"),
         hide("Example guide" => "howto/example_guide.md"),
         hide("Bases and mappings" => "reference/bases_and_mappings.md"),
@@ -39,6 +40,7 @@ makedocs(
         hide("Atomic and ordinary workflows" => "reference/atomic_and_ordinary.md"),
         hide("Export layer" => "reference/export.md"),
         hide("Architecture and current direction" => "developer/architecture.md"),
+        hide("Numerical contracts" => "developer/numerical_contracts.md"),
         hide("Supporting note map" => "developer/supporting_notes.md"),
     ],
 )

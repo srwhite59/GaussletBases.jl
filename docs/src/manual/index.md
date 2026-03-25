@@ -61,6 +61,13 @@ The ordinary branch is worth reading after you understand the radial line. It
 is the right place to learn the current mapped and hybrid ordinary workflows,
 but it is not the best first entry point into the package.
 
+If you want the active experimental angular line:
+
+1. [Angular research track](../explanations/angular_research_track.md)
+
+That page is intentionally narrow. It is there to mark the current research
+boundary, not to present a finished angular workflow.
+
 ## If you want more depth later
 
 After the main workflow pages are clear, the next useful documents are:
@@ -80,3 +87,4 @@ depth, without crowding the main manual.
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
+- [Angular research track](../explanations/angular_research_track.md)
