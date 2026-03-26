@@ -6488,16 +6488,25 @@ end
 
     hfdmrg = _local_hfdmrg_module()
     if hfdmrg !== nothing
-        adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+        payload = build_atomic_injected_angular_hfdmrg_payload(benchmark)
+        @test payload isa AtomicInjectedAngularHFDMRGHFAdapter
+        @test payload.route == :dense_density_density
+        @test payload.solver_mode == :restricted_closed_shell
+        @test payload.nup == 1
+        @test payload.ndn == 1
         hfdmrg_result = run_atomic_injected_angular_hfdmrg_hf(
-            adapter;
+            payload;
             hfmod = hfdmrg,
+            nblockcenter = 1,
             maxiter = 40,
-            blocksize = 16,
             cutoff = 1.0e-10,
             scf_cutoff = 1.0e-11,
             verbose = false,
         )
+        @test hfdmrg_result.route == payload.route
+        @test hfdmrg_result.solver_mode == :restricted_closed_shell
+        @test hfdmrg_result.nblockcenter == 1
+        @test hfdmrg_result.blocksize == min(size(payload.hamiltonian, 1), 64)
         @test abs(diagnostics.full_energy - hfdmrg_result.energy) ≤ 1.0e-8
     end
 end
@@ -6507,6 +6516,7 @@ end
     diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(adapter)
     benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
     from_benchmark = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+    payload_from_benchmark = build_atomic_injected_angular_hfdmrg_payload(benchmark)
     from_small_ed =
         build_atomic_injected_angular_hfdmrg_hf_adapter(_atomic_injected_angular_small_ed_benchmark_fixture())
     benchmark_diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(from_benchmark)
@@ -6543,6 +6553,7 @@ end
     @test size(adapter.psidn0) == (diagnostics.basis_dim, diagnostics.ndn)
     @test diagnostics.nup == 1
     @test diagnostics.ndn == 1
+    @test diagnostics.solver_mode == :restricted_closed_shell
     @test diagnostics.overlap_identity_error ≤ 2.0e-6
     @test diagnostics.hamiltonian_symmetry_error ≤ 1.0e-8
     @test diagnostics.interaction_symmetry_error ≤ 1.0e-10
@@ -6554,7 +6565,9 @@ end
     @test ismissing(diagnostics.benchmark_full_energy)
     @test ismissing(diagnostics.benchmark_exact_energy)
     @test from_benchmark.hf_style === benchmark
+    @test payload_from_benchmark.hf_style === benchmark
     @test benchmark_diagnostics.has_benchmark_reference
+    @test benchmark_diagnostics.solver_mode == :restricted_closed_shell
     @test isfinite(benchmark_diagnostics.benchmark_full_energy)
     @test isfinite(benchmark_diagnostics.benchmark_exact_energy)
     @test from_benchmark.route == adapter.route
@@ -6564,6 +6577,12 @@ end
     @test from_benchmark.interaction ≈ adapter.interaction atol = 1.0e-12 rtol = 1.0e-12
     @test from_benchmark.psiup0 ≈ adapter.psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test from_benchmark.psidn0 ≈ adapter.psidn0 atol = 1.0e-12 rtol = 1.0e-12
+    @test payload_from_benchmark.route == from_benchmark.route
+    @test payload_from_benchmark.solver_mode == from_benchmark.solver_mode
+    @test payload_from_benchmark.hamiltonian ≈ from_benchmark.hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test payload_from_benchmark.interaction ≈ from_benchmark.interaction atol = 1.0e-12 rtol = 1.0e-12
+    @test payload_from_benchmark.psiup0 ≈ from_benchmark.psiup0 atol = 1.0e-12 rtol = 1.0e-12
+    @test payload_from_benchmark.psidn0 ≈ from_benchmark.psidn0 atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.route == adapter.route
     @test from_small_ed.nup == adapter.nup
     @test from_small_ed.ndn == adapter.ndn
@@ -6575,14 +6594,17 @@ end
     @test size(open_shell_seeds.psidn0) == (diagnostics.basis_dim, 1)
     @test open_shell_adapter.nup == 2
     @test open_shell_adapter.ndn == 1
+    @test open_shell_adapter.solver_mode == :unrestricted
     @test open_shell_adapter.psiup0_source == :default_one_body_orbitals
     @test open_shell_adapter.psidn0_source == :default_one_body_orbitals
     @test opnorm(transpose(open_shell_adapter.psiup0) * open_shell_adapter.psiup0 - Matrix{Float64}(I, 2, 2), Inf) ≤ 1.0e-12
     @test opnorm(transpose(open_shell_adapter.psidn0) * open_shell_adapter.psidn0 - Matrix{Float64}(I, 1, 1), Inf) ≤ 1.0e-12
+    @test explicit_open_shell_adapter.solver_mode == :unrestricted
     @test explicit_open_shell_adapter.psiup0_source == :explicit_seed
     @test explicit_open_shell_adapter.psidn0_source == :explicit_seed
     @test explicit_open_shell_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test explicit_open_shell_adapter.psidn0 ≈ explicit_psidn0 atol = 1.0e-12 rtol = 1.0e-12
+    @test mixed_seed_adapter.solver_mode == :unrestricted
     @test mixed_seed_adapter.psiup0_source == :explicit_seed
     @test mixed_seed_adapter.psidn0_source == :default_one_body_orbitals
     @test mixed_seed_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
@@ -7887,10 +7909,12 @@ if _test_group_enabled(:docs)
     @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
     @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
+    @test occursin("build_atomic_injected_angular_hfdmrg_payload", docs_site_angular_track)
     @test occursin("build_atomic_injected_angular_hfdmrg_hf_adapter", docs_site_angular_track)
     @test occursin("build_atomic_injected_angular_hfdmrg_hf_seeds", docs_site_angular_track)
     @test occursin("run_atomic_injected_angular_hfdmrg_hf", docs_site_angular_track)
     @test occursin("in-memory hfdmrg-facing hf adapter", lowercase(docs_site_angular_track))
+    @test occursin("primary stable handshake", lowercase(docs_site_angular_track))
     @test occursin("open-shell", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
     @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))

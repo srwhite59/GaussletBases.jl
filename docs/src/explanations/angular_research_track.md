@@ -135,20 +135,32 @@ DMRG bridge.
 
 The first narrow in-memory HFDMRG-facing HF adapter is now available through:
 
+- `build_atomic_injected_angular_hfdmrg_payload(...)`
 - `build_atomic_injected_angular_hfdmrg_hf_seeds(one_body; nup, ndn)`
 - `build_atomic_injected_angular_hfdmrg_hf_adapter(radial_ops; ...)`
 - `build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark; ...)`
 - `run_atomic_injected_angular_hfdmrg_hf(adapter; ...)`
 
-This adapter reuses the current dense `H, V, psiup0, psidn0` handshake and
-lets the mixed-basis angular benchmark line call `HFDMRG.solve_hfdmrg(...)`
-without a file round-trip. It now supports explicit open-shell control through
+The primary stable handshake is now the payload builder:
+
+- `build_atomic_injected_angular_hfdmrg_payload(...)`
+
+It returns the dense `H`, `V`, `psiup0`, `psidn0`, occupations, and payload
+diagnostics/provenance needed for a consumer to call `HFDMRG.solve_hfdmrg(...)`
+directly without a file round-trip. The convenience wrapper:
+
+- `run_atomic_injected_angular_hfdmrg_hf(...)`
+
+is intentionally thin. It forwards the real HFDMRG controls, including
+`nblockcenter`, `blocksize`, `maxiter`, `cutoff`, and `scf_cutoff`, and it
+uses the restricted `solve_hfdmrg(H, V, psiup0; ...)` entrypoint for true
+closed-shell payloads. It now supports explicit open-shell control through
 `nup`, `ndn`, `psiup0`, and `psidn0`, while the narrow default seed helper
 builds first practical orbital guesses from the assembled one-body orbital
-frame if explicit seeds are not supplied. The direct `radial_ops` adapter
+frame if explicit seeds are not supplied. The direct `radial_ops` payload
 entrypoint assembles the Hamiltonian and interaction without running the repo's
 internal HF-style benchmark first. It does **not** solve the separate
-mixed-basis HamIO/HamV6 export problem.
+mixed-basis HamIO/HamV6 export problem. HFDMRG still owns the actual solve.
 
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be

@@ -60,7 +60,8 @@ and interaction matrices already present in
 `AtomicInjectedAngularHFStyleBenchmark` and packages them into the dense
 `H, V, psiup0, psidn0` handshake expected by `HFDMRG.solve_hfdmrg(...)`.
 
-It is an HF adapter surface, not a general many-body or file-export contract.
+It is the current in-memory payload/adapter surface for HFDMRG-facing HF
+hand-off, not a general many-body or file-export contract.
 """
 struct AtomicInjectedAngularHFDMRGHFAdapter{
     O <: AtomicInjectedAngularOneBodyBenchmark,
@@ -68,6 +69,7 @@ struct AtomicInjectedAngularHFDMRGHFAdapter{
     one_body::O
     hf_style::Union{Nothing,AtomicInjectedAngularHFStyleBenchmark}
     route::Symbol
+    solver_mode::Symbol
     hamiltonian::Matrix{Float64}
     interaction::Matrix{Float64}
     psiup0::Matrix{Float64}
@@ -123,6 +125,8 @@ function Base.show(io::IO, adapter::AtomicInjectedAngularHFDMRGHFAdapter)
         io,
         "AtomicInjectedAngularHFDMRGHFAdapter(route=",
         adapter.route,
+        ", solver_mode=",
+        adapter.solver_mode,
         ", dim=",
         size(adapter.hamiltonian, 1),
         ", nup=",
@@ -227,6 +231,26 @@ _default_angular_hfdmrg_spin_count(benchmark::AtomicInjectedAngularSmallEDBenchm
 function _default_angular_hfdmrg_spin_counts_from_nelec(nelec::Int)
     nelec ≥ 0 || throw(ArgumentError("nelec must be nonnegative"))
     return (cld(nelec, 2), fld(nelec, 2))
+end
+
+function _default_angular_hfdmrg_blocksize(norb::Int)
+    norb >= 1 || throw(ArgumentError("HFDMRG blocksize default requires a nonempty basis"))
+    return min(norb, 64)
+end
+
+function _angular_hfdmrg_solver_mode(
+    nup::Int,
+    ndn::Int,
+    psiup0::AbstractMatrix{<:Real},
+    psidn0::AbstractMatrix{<:Real};
+    tol::Real = 1.0e-12,
+)
+    if nup == ndn &&
+       size(psiup0) == size(psidn0) &&
+       opnorm(Matrix{Float64}(psiup0) - Matrix{Float64}(psidn0), Inf) <= tol
+        return :restricted_closed_shell
+    end
+    return :unrestricted
 end
 
 function _matrix_ranges(offsets::Vector{Int}, dims::Vector{Int})
@@ -955,8 +979,8 @@ end
         psidn0=nothing,
     )
 
-Build the first in-memory HFDMRG-facing HF adapter on top of the angular
-benchmark line.
+Build the first in-memory HFDMRG-facing HF payload/adapter on top of the
+angular benchmark line.
 
 The current adapter uses the dense density-density route expected by
 `HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)`. It deliberately avoids the
@@ -1102,11 +1126,19 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
         _validated_hfdmrg_seed(psidn0, norb, ndn, "psidn0")
     psiup0_source = psiup0 === nothing ? default_seeds.psiup0_source : :explicit_seed
     psidn0_source = psidn0 === nothing ? default_seeds.psidn0_source : :explicit_seed
+    solver_mode =
+        _angular_hfdmrg_solver_mode(
+            nup,
+            ndn,
+            resolved_psiup0,
+            resolved_psidn0,
+        )
 
     return AtomicInjectedAngularHFDMRGHFAdapter(
         benchmark,
         hf_style,
         :dense_density_density,
+        solver_mode,
         Matrix{Float64}(benchmark.hamiltonian),
         resolved_interaction,
         resolved_psiup0,
@@ -1166,6 +1198,22 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
 end
 
 """
+    build_atomic_injected_angular_hfdmrg_payload(args...; kwargs...)
+
+Build the primary in-memory HFDMRG-facing HF payload for the current angular
+benchmark line.
+
+This is the recommended producer-side handshake for paper-facing and other
+consumer-side use. It returns the current
+`AtomicInjectedAngularHFDMRGHFAdapter` payload object containing the dense
+`H`, `V`, seeds, occupations, and diagnostics/provenance needed to call
+`HFDMRG.solve_hfdmrg(...)` directly.
+"""
+function build_atomic_injected_angular_hfdmrg_payload(args...; kwargs...)
+    return build_atomic_injected_angular_hfdmrg_hf_adapter(args...; kwargs...)
+end
+
+"""
     atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
         adapter::AtomicInjectedAngularHFDMRGHFAdapter
     )
@@ -1177,6 +1225,7 @@ function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
 )
     return (
         route = adapter.route,
+        solver_mode = adapter.solver_mode,
         basis_dim = size(adapter.hamiltonian, 1),
         nup = adapter.nup,
         ndn = adapter.ndn,
@@ -1205,8 +1254,9 @@ end
     run_atomic_injected_angular_hfdmrg_hf(
         adapter::AtomicInjectedAngularHFDMRGHFAdapter;
         hfmod=nothing,
+        nblockcenter=1,
         maxiter=40,
-        blocksize=16,
+        blocksize=nothing,
         cutoff=1e-10,
         scf_cutoff=cutoff/10,
         verbose=false,
@@ -1215,39 +1265,58 @@ end
 Run the first in-memory HFDMRG-facing HF handshake on top of the angular
 benchmark line.
 
-This keeps the scope narrow: it delegates directly to
-`HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)` using the adapter's dense
-density-density data. It is not a mixed-basis file-export solution and not a
-true many-body DMRG adapter.
+This keeps the scope narrow: it is a thin convenience wrapper over
+`HFDMRG.solve_hfdmrg(...)` using the payload's dense density-density data. It
+is not a mixed-basis file-export solution and not a true many-body DMRG
+adapter.
 """
 function run_atomic_injected_angular_hfdmrg_hf(
     adapter::AtomicInjectedAngularHFDMRGHFAdapter;
     hfmod = nothing,
+    nblockcenter::Int = 1,
     maxiter::Int = 40,
-    blocksize::Int = 16,
+    blocksize::Union{Nothing,Int} = nothing,
     cutoff::Real = 1.0e-10,
     scf_cutoff::Real = cutoff / 10,
     verbose::Bool = false,
 )
     hf = _resolve_hfdmrg_module(hfmod)
-    psiup, psidn, energy = hf.solve_hfdmrg(
-        adapter.hamiltonian,
-        adapter.interaction,
-        adapter.psiup0,
-        adapter.psidn0;
-        maxiter = maxiter,
-        blocksize = blocksize,
-        cutoff = cutoff,
-        scf_cutoff = scf_cutoff,
-        verbose = verbose,
-    )
+    resolved_blocksize = something(blocksize, _default_angular_hfdmrg_blocksize(size(adapter.hamiltonian, 1)))
+    if adapter.solver_mode == :restricted_closed_shell
+        psiup, psidn, energy = hf.solve_hfdmrg(
+            adapter.hamiltonian,
+            adapter.interaction,
+            adapter.psiup0;
+            nblockcenter = nblockcenter,
+            maxiter = maxiter,
+            blocksize = resolved_blocksize,
+            cutoff = cutoff,
+            scf_cutoff = scf_cutoff,
+            verbose = verbose,
+        )
+    else
+        psiup, psidn, energy = hf.solve_hfdmrg(
+            adapter.hamiltonian,
+            adapter.interaction,
+            adapter.psiup0,
+            adapter.psidn0;
+            nblockcenter = nblockcenter,
+            maxiter = maxiter,
+            blocksize = resolved_blocksize,
+            cutoff = cutoff,
+            scf_cutoff = scf_cutoff,
+            verbose = verbose,
+        )
+    end
     return (
         psiup = psiup,
         psidn = psidn,
         energy = energy,
         route = adapter.route,
+        solver_mode = adapter.solver_mode,
+        nblockcenter = nblockcenter,
         maxiter = maxiter,
-        blocksize = blocksize,
+        blocksize = resolved_blocksize,
         cutoff = cutoff,
         scf_cutoff = scf_cutoff,
     )
