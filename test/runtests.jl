@@ -2279,6 +2279,13 @@ function _atomic_injected_angular_hf_style_benchmark_fixture()
     end)
 end
 
+function _atomic_injected_angular_small_ed_benchmark_fixture()
+    return _cached_fixture(:atomic_injected_angular_small_ed_benchmark_fixture, () -> begin
+        _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
+        build_atomic_injected_angular_small_ed_benchmark(radial_ops)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6281,6 +6288,36 @@ end
     @test diagnostics.ground_orbital_energy_error ≤ 1.0e-8
 end
 
+@testset "Atomic injected angular small-ED benchmark" begin
+    benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
+    diagnostics = atomic_injected_angular_small_ed_diagnostics(benchmark)
+    exact_problem = benchmark.exact_reference_problem
+
+    @test benchmark isa AtomicInjectedAngularSmallEDBenchmark
+    @test benchmark.hf_style isa AtomicInjectedAngularHFStyleBenchmark
+    @test benchmark.orbital_count == size(benchmark.hf_style.one_body.overlap, 1)
+    @test benchmark.state_count == benchmark.orbital_count^2
+    @test size(benchmark.orbital_overlap) == (benchmark.orbital_count, benchmark.orbital_count)
+    @test size(benchmark.orbital_one_body) == size(benchmark.orbital_overlap)
+    @test size(benchmark.orbital_interaction) == size(benchmark.orbital_overlap)
+    @test exact_problem isa AtomicIDATwoElectronProblem
+
+    @test diagnostics.orbital_overlap_symmetry_error ≤ 1.0e-10
+    @test diagnostics.orbital_one_body_symmetry_error ≤ 1.0e-8
+    @test diagnostics.orbital_interaction_symmetry_error ≤ 1.0e-10
+    @test diagnostics.orbital_overlap_identity_error ≤ 1.0e-6
+    @test diagnostics.state_overlap_identity_error_estimate ≤ 2.0e-6
+    @test diagnostics.min_orbital_overlap_eigenvalue > 1.0e-6
+    @test diagnostics.min_state_overlap_eigenvalue_estimate > 1.0e-6
+    @test diagnostics.state_interaction_diagonal_min > 0.0
+    @test diagnostics.state_interaction_diagonal_max > diagnostics.state_interaction_diagonal_min
+    @test diagnostics.full_converged
+    @test diagnostics.full_residual ≤ 1.0e-7
+    @test diagnostics.exact_reference_energy ≈ 13.020668426715936 atol = 1.0e-8 rtol = 1.0e-8
+    @test diagnostics.full_energy ≈ 12.978209255282911 atol = 1.0e-5 rtol = 1.0e-8
+    @test diagnostics.energy_difference_to_exact_reference < -1.0e-3
+end
+
 @testset "Atomic Ylm one-body layer" begin
     rb, grid, radial_ops, channels, atom = _quick_radial_atomic_fixture()[1:5]
 
@@ -7468,6 +7505,8 @@ end
     @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
     @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
+    @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
+    @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))

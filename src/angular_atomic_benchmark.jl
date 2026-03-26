@@ -47,6 +47,45 @@ struct AtomicInjectedAngularHFStyleBenchmark{
     exact_scf_result::NamedTuple
 end
 
+"""
+    AtomicInjectedAngularSmallEDBenchmark
+
+Experimental tiny `1 up, 1 down` density-density benchmark on top of the
+injected angular assembly line.
+
+This is the next narrow ladder step after the first angular HF-style
+benchmark. It reuses the same shell-assembled one-body and interaction
+ingredients and solves the closed-shell He reference-sized product problem with
+a matrix-free Lanczos kernel. It is a benchmark path, not a general ED
+framework.
+"""
+struct AtomicInjectedAngularSmallEDBenchmark{
+    H <: AtomicInjectedAngularHFStyleBenchmark,
+    P,
+}
+    hf_style::H
+    orbital_count::Int
+    state_count::Int
+    orbital_overlap::Matrix{Float64}
+    orbital_one_body::Matrix{Float64}
+    orbital_interaction::Matrix{Float64}
+    exact_reference_problem::P
+    lanczos_result::NamedTuple
+end
+
+function Base.show(io::IO, benchmark::AtomicInjectedAngularSmallEDBenchmark)
+    print(
+        io,
+        "AtomicInjectedAngularSmallEDBenchmark(norbitals=",
+        benchmark.orbital_count,
+        ", nstates=",
+        benchmark.state_count,
+        ", exact_common_lmax=",
+        benchmark.hf_style.one_body.exact_common_lmax,
+        ")",
+    )
+end
+
 function Base.show(io::IO, benchmark::AtomicInjectedAngularHFStyleBenchmark)
     print(
         io,
@@ -127,6 +166,17 @@ end
 function _exact_channel_ranges(nshells::Int, channels::YlmChannelSet)
     nchannels = length(channels)
     return [((i - 1) * nchannels + 1):(i * nchannels) for i in 1:nshells]
+end
+
+function _shell_major_orbital_permutation(radial_dim::Int, channels::YlmChannelSet)
+    nchannels = length(channels)
+    perm = Int[]
+    for radial_index in 1:radial_dim
+        for channel_index in 1:nchannels
+            push!(perm, (channel_index - 1) * radial_dim + radial_index)
+        end
+    end
+    return perm
 end
 
 function _assembly_exact_channel_transform(
@@ -466,6 +516,105 @@ function atomic_injected_angular_one_body_diagnostics(
     )
 end
 
+function _apply_density_density_two_electron_hamiltonian!(
+    out::AbstractVector{Float64},
+    coefficients::AbstractVector{<:Real},
+    one_body_orbital::AbstractMatrix{<:Real},
+    interaction::AbstractMatrix{<:Real},
+)
+    norb = size(one_body_orbital, 1)
+    length(coefficients) == norb^2 ||
+        throw(DimensionMismatch("coefficient vector length must match the product-space dimension"))
+    X = reshape(Vector{Float64}(coefficients), norb, norb)
+    H = Matrix{Float64}(one_body_orbital)
+    V = transpose(Matrix{Float64}(interaction))
+    Y = H * X + X * transpose(H) + V .* X
+    out .= vec(Y)
+    return out
+end
+
+function _lanczos_ground_state_apply(
+    apply_hamiltonian!::Function,
+    n::Int;
+    krylovdim::Int = 200,
+    maxiter::Int = 200,
+    tol::Real = 1.0e-10,
+    v0::Union{Nothing,AbstractVector{<:Real}} = nothing,
+)
+    n >= 1 || throw(ArgumentError("_lanczos_ground_state_apply requires a nonempty problem"))
+    krylovdim >= 2 || throw(ArgumentError("_lanczos_ground_state_apply requires krylovdim >= 2"))
+    maxiter >= 1 || throw(ArgumentError("_lanczos_ground_state_apply requires maxiter >= 1"))
+    tol > 0 || throw(ArgumentError("_lanczos_ground_state_apply requires tol > 0"))
+
+    if v0 === nothing
+        v = ones(Float64, n)
+    else
+        length(v0) == n || throw(DimensionMismatch("initial Lanczos vector length must match the Hamiltonian dimension"))
+        v = Vector{Float64}(v0)
+    end
+
+    norm(v) > 0 || throw(ArgumentError("initial Lanczos vector must be nonzero"))
+    v ./= norm(v)
+
+    vectors = Vector{Vector{Float64}}()
+    push!(vectors, copy(v))
+    alpha = Float64[]
+    beta = Float64[]
+    converged = false
+    residual = Inf
+    iterations = 0
+    best_small_vector = ones(Float64, 1)
+    best_value = NaN
+    previous = zeros(Float64, n)
+    scratch = zeros(Float64, n)
+
+    maxsteps = min(maxiter, krylovdim, n)
+    for step in 1:maxsteps
+        iterations = step
+        apply_hamiltonian!(scratch, v)
+        w = copy(scratch)
+        step > 1 && (w .-= beta[end] .* previous)
+
+        a = dot(v, w)
+        push!(alpha, a)
+        w .-= a .* v
+
+        for basis_vector in vectors
+            w .-= dot(basis_vector, w) .* basis_vector
+        end
+
+        b = norm(w)
+        small_eig = eigen(SymTridiagonal(alpha, beta))
+        best_value = real(small_eig.values[1])
+        best_small_vector = Vector{Float64}(small_eig.vectors[:, 1])
+        residual = abs(b * best_small_vector[end])
+
+        if residual <= tol || step == maxsteps || b <= sqrt(eps(Float64))
+            converged = residual <= tol || b <= sqrt(eps(Float64))
+            break
+        end
+
+        push!(beta, b)
+        previous = v
+        v = w ./ b
+        push!(vectors, copy(v))
+    end
+
+    lanczos_vector = zeros(Float64, n)
+    for j in eachindex(best_small_vector)
+        lanczos_vector .+= best_small_vector[j] .* vectors[j]
+    end
+    lanczos_vector ./= norm(lanczos_vector)
+
+    return (
+        value = best_value,
+        vector = lanczos_vector,
+        residual = residual,
+        iterations = iterations,
+        converged = converged,
+    )
+end
+
 """
     build_atomic_injected_angular_hf_style_benchmark(radial_ops::RadialAtomicOperators;
                                                      shell_orders=nothing,
@@ -611,5 +760,148 @@ function atomic_injected_angular_hf_style_diagnostics(
         exact_low_orbital_energies = exact.orbital_energies[1:ncompare],
         exact_reference_low_orbital_error =
             maximum(abs.(full.orbital_energies[1:ncompare] .- exact.orbital_energies[1:ncompare])),
+    )
+end
+
+"""
+    build_atomic_injected_angular_small_ed_benchmark(radial_ops::RadialAtomicOperators;
+                                                     shell_orders=nothing,
+                                                     beta=2.0,
+                                                     l_inject=:auto,
+                                                     tau=1e-12,
+                                                     whiten=:svd,
+                                                     nelec::Int=2,
+                                                     maxiter::Int=50,
+                                                     damping::Real=0.25,
+                                                     tol::Real=1e-8,
+                                                     ord_min=minimum(curated_sphere_point_set_orders()),
+                                                     ord_max=maximum(curated_sphere_point_set_orders()),
+                                                     r_lo=0.15,
+                                                     r_hi=7.0,
+                                                     w_lo=0.2,
+                                                     w_hi=0.7)
+
+Build the first narrow interacting small-ED angular benchmark on top of the
+existing one-electron and HF-style benchmark layer.
+"""
+function build_atomic_injected_angular_small_ed_benchmark(
+    radial_ops::RadialAtomicOperators;
+    shell_orders::Union{Nothing,AbstractVector{<:Integer}} = nothing,
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+    nelec::Int = 2,
+    maxiter::Int = 50,
+    damping::Real = 0.25,
+    tol::Real = 1.0e-8,
+    ord_min::Int = minimum(curated_sphere_point_set_orders()),
+    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    r_lo::Real = 0.15,
+    r_hi::Real = 7.0,
+    w_lo::Real = 0.2,
+    w_hi::Real = 0.7,
+)
+    hf_style = build_atomic_injected_angular_hf_style_benchmark(
+        radial_ops;
+        shell_orders = shell_orders,
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+        nelec = nelec,
+        maxiter = maxiter,
+        damping = damping,
+        tol = tol,
+        ord_min = ord_min,
+        ord_max = ord_max,
+        r_lo = r_lo,
+        r_hi = r_hi,
+        w_lo = w_lo,
+        w_hi = w_hi,
+    )
+    return build_atomic_injected_angular_small_ed_benchmark(radial_ops, hf_style)
+end
+
+function build_atomic_injected_angular_small_ed_benchmark(
+    radial_ops::RadialAtomicOperators,
+    hf_style::AtomicInjectedAngularHFStyleBenchmark,
+)
+    one_body = hf_style.one_body
+    exact_perm = _shell_major_orbital_permutation(
+        size(radial_ops.overlap, 1),
+        hf_style.exact_ida_reference.one_body.channels,
+    )
+    exact_reference_problem = atomic_ida_two_electron_problem(
+        hf_style.exact_ida_reference;
+        orbital_indices = exact_perm,
+    )
+    initial_orbital = hf_style.scf_result.occupied_coefficients[:, 1]
+    initial_product = vec(initial_orbital * transpose(initial_orbital))
+    lanczos = _lanczos_ground_state_apply(
+        (out, v) -> _apply_density_density_two_electron_hamiltonian!(
+            out,
+            v,
+            one_body.hamiltonian,
+            hf_style.interaction,
+        ),
+        size(one_body.overlap, 1)^2;
+        krylovdim = 160,
+        maxiter = 160,
+        tol = 1.0e-8,
+        v0 = initial_product,
+    )
+
+    norb = size(one_body.overlap, 1)
+    return AtomicInjectedAngularSmallEDBenchmark(
+        hf_style,
+        norb,
+        norb^2,
+        Matrix{Float64}(one_body.overlap),
+        Matrix{Float64}(one_body.hamiltonian),
+        Matrix{Float64}(hf_style.interaction),
+        exact_reference_problem,
+        lanczos,
+    )
+end
+
+"""
+    atomic_injected_angular_small_ed_diagnostics(benchmark::AtomicInjectedAngularSmallEDBenchmark)
+
+Return compact diagnostics for the first narrow interacting angular small-ED
+benchmark.
+"""
+function atomic_injected_angular_small_ed_diagnostics(
+    benchmark::AtomicInjectedAngularSmallEDBenchmark,
+)
+    exact_problem = benchmark.exact_reference_problem
+    full_energy = benchmark.lanczos_result.value
+    exact_energy = ground_state_energy(exact_problem)
+    norb = benchmark.orbital_count
+    state_interaction_diagonal = vec(benchmark.orbital_interaction)
+
+    return (
+        nshells = length(benchmark.hf_style.one_body.angular_assembly.shells),
+        orbital_count = benchmark.orbital_count,
+        state_count = benchmark.state_count,
+        shell_orders = copy(benchmark.hf_style.one_body.angular_assembly.shell_orders),
+        exact_common_lmax = benchmark.hf_style.one_body.exact_common_lmax,
+        orbital_overlap_symmetry_error = opnorm(benchmark.orbital_overlap - transpose(benchmark.orbital_overlap), Inf),
+        orbital_one_body_symmetry_error = opnorm(benchmark.orbital_one_body - transpose(benchmark.orbital_one_body), Inf),
+        orbital_interaction_symmetry_error = opnorm(benchmark.orbital_interaction - transpose(benchmark.orbital_interaction), Inf),
+        orbital_overlap_identity_error =
+            opnorm(benchmark.orbital_overlap - Matrix{Float64}(I, benchmark.orbital_count, benchmark.orbital_count), Inf),
+        min_orbital_overlap_eigenvalue = minimum(eigvals(Symmetric(benchmark.orbital_overlap))),
+        state_overlap_identity_error_estimate =
+            opnorm(benchmark.orbital_overlap - Matrix{Float64}(I, norb, norb), Inf) * (1 + opnorm(benchmark.orbital_overlap, Inf)),
+        min_state_overlap_eigenvalue_estimate = minimum(eigvals(Symmetric(benchmark.orbital_overlap)))^2,
+        state_interaction_diagonal_min = minimum(state_interaction_diagonal),
+        state_interaction_diagonal_max = maximum(state_interaction_diagonal),
+        full_energy = full_energy,
+        full_residual = benchmark.lanczos_result.residual,
+        full_iterations = benchmark.lanczos_result.iterations,
+        full_converged = benchmark.lanczos_result.converged,
+        exact_reference_energy = exact_energy,
+        energy_difference_to_exact_reference = full_energy - exact_energy,
     )
 end

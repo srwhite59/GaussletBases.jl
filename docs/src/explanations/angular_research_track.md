@@ -88,6 +88,16 @@ This remains benchmark-oriented and density-density / manuscript-facing. It is
 there to prove that the angular line can support a real atom-side mean-field
 solve before the later small-ED and bridge-facing stages are imported.
 
+The first narrow angular small-ED benchmark is now available through:
+
+- `build_atomic_injected_angular_small_ed_benchmark(radial_ops; ...)`
+- `atomic_injected_angular_small_ed_diagnostics(benchmark)`
+
+This remains a tiny `1 up, 1 down` benchmark on the same He-sized line. It is
+there to prove that the shell-local angular assembly supports a real
+interacting benchmark beyond the HF stage without importing the whole old
+workflow.
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
@@ -114,8 +124,9 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- the next atomic angular ladder step after the first mean-field benchmark,
-  most likely the first small-ED benchmark on the same narrow atomic line
+- the next atomic angular ladder step after the first small-ED benchmark,
+  most likely the first DMRG-facing bridge check on the same narrow atomic line
 
-That is the next step that turns the current one-electron / HF-style benchmark
-branch into the later small-ED / bridge-facing ladder inside `GaussletBases`.
+That is the next step that turns the current one-electron / HF-style /
+small-ED benchmark branch into the later bridge-facing ladder inside
+`GaussletBases`.
