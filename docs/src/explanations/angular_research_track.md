@@ -37,7 +37,7 @@ The near-term scientific target is an **atomic angular benchmark ladder**:
 
 1. HF
 2. small ED
-3. one DMRG-facing bridge
+3. one HamIO / HFDMRG-facing HF bridge
 
 That is the first clean way to prove the angular line through the same
 producer/consumer boundary now established for the current atomic IDA branch.
@@ -98,6 +98,18 @@ there to prove that the shell-local angular assembly supports a real
 interacting benchmark beyond the HF stage without importing the whole old
 workflow.
 
+The first narrow HamIO / HFDMRG-facing HF bridge surface is now available through:
+
+- `angular_benchmark_exact_hamv6_payload(benchmark; ...)`
+- `write_angular_benchmark_exact_hamv6_jld2(path, benchmark; ...)`
+
+This bridge is intentionally honest about the current contract boundary. It
+exports the benchmark line's exact common low-`l` reference in the proven
+HamV6 / `HamIO` language for the current HF consumer path, but it does **not**
+yet claim that the full mixed shell-local angular basis is directly
+representable in that consumer language, and it is not yet a true many-body
+DMRG bridge.
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
@@ -124,9 +136,9 @@ line after the first atomic angular benchmark ladder is real.
 
 If this scaffold stays sound, the next real scientific import should be:
 
-- the next atomic angular ladder step after the first small-ED benchmark,
-  most likely the first DMRG-facing bridge check on the same narrow atomic line
+- the first cleaner angular consumer-contract formalization beyond the current
+  exact-common-reference bridge
 
-That is the next step that turns the current one-electron / HF-style /
-small-ED benchmark branch into the later bridge-facing ladder inside
+That is the step that turns the current one-electron / HF-style / small-ED /
+bridge-reference branch into a broader downstream-facing angular line inside
 `GaussletBases`.

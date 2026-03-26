@@ -6901,6 +6901,70 @@ end
     end
 end
 
+@testset "Angular benchmark exact HamV6 bridge export" begin
+    benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
+    hf_payload = angular_benchmark_exact_hamv6_payload(
+        benchmark.hf_style;
+        nelec = 2,
+        meta = (example = "test_angular_bridge_export",),
+    )
+    payload = angular_benchmark_exact_hamv6_payload(
+        benchmark;
+        nelec = 2,
+        meta = (example = "test_angular_bridge_export",),
+    )
+    reference_payload = atomic_hamv6_payload(
+        benchmark.hf_style.exact_ida_reference;
+        nelec = 2,
+        meta = (example = "test_angular_bridge_export",),
+    )
+
+    @test payload.layout_values == reference_payload.layout_values
+    @test payload.basis_values == reference_payload.basis_values
+    @test payload.ordering_values == reference_payload.ordering_values
+    @test payload.onebody_values == reference_payload.onebody_values
+    @test payload.twobody_values == reference_payload.twobody_values
+    @test payload.layout_values == hf_payload.layout_values
+    @test payload.basis_values == hf_payload.basis_values
+    @test payload.ordering_values == hf_payload.ordering_values
+    @test payload.onebody_values == hf_payload.onebody_values
+    @test payload.twobody_values == hf_payload.twobody_values
+
+    @test payload.meta_values["Z"] == 2.0
+    @test payload.meta_values["consumer_shape"] == "slicedmrgutils.HamIO/HamV6"
+    @test payload.meta_values["angular_bridge_kind"] == "exact_common_low_l_reference"
+    @test payload.meta_values["angular_bridge_scope"] == "exact_common_low_l_reference_only"
+    @test payload.meta_values["angular_bridge_consumer_language"] == "slicedmrgutils.HamIO/HamV6"
+    @test payload.meta_values["angular_exact_common_lmax"] == benchmark.hf_style.one_body.exact_common_lmax
+    @test payload.meta_values["angular_shell_orders"] == benchmark.hf_style.one_body.angular_assembly.shell_orders
+    @test payload.meta_values["producer"] == "GaussletBases.write_angular_benchmark_exact_hamv6_jld2"
+    @test payload.meta_values["producer_type"] == "AtomicInjectedAngularSmallEDBenchmark"
+    @test hf_payload.meta_values["producer_type"] == "AtomicInjectedAngularHFStyleBenchmark"
+
+    mktempdir() do dir
+        path = joinpath(dir, "angular_exact_hamv6_bridge_test.jld2")
+        @test write_angular_benchmark_exact_hamv6_jld2(
+            path,
+            benchmark;
+            nelec = 2,
+            meta = (example = "test_angular_bridge_export",),
+        ) == path
+
+        jldopen(path, "r") do file
+            @test String(file["ordering/within_slice"]) == "mzigzag_then_l"
+            @test String(file["meta/producer"]) == "GaussletBases.write_angular_benchmark_exact_hamv6_jld2"
+            @test String(file["meta/producer_type"]) == "AtomicInjectedAngularSmallEDBenchmark"
+            @test String(file["meta/angular_bridge_kind"]) == "exact_common_low_l_reference"
+            @test String(file["meta/angular_bridge_scope"]) == "exact_common_low_l_reference_only"
+            @test Int(file["meta/angular_exact_common_lmax"]) == benchmark.hf_style.one_body.exact_common_lmax
+            @test Int.(file["meta/angular_shell_orders"]) == benchmark.hf_style.one_body.angular_assembly.shell_orders
+            @test Float64(file["meta/Z"]) == 2.0
+            @test file["layout/dims"] == payload.layout_values["dims"]
+            @test file["basis/l_flat"] == payload.basis_values["l_flat"]
+        end
+    end
+end
+
 @testset "Atomic export source metadata supports rmax-based recipes" begin
     _, _, radial_ops, atom = _quick_hydrogen_ylm_fixture()
     ida = atomic_ida_operators(radial_ops; lmax = atom.channels.lmax)
@@ -7496,7 +7560,7 @@ end
     @test occursin("hooke remains important", lowercase(docs_site_angular_track))
     @test occursin("hf", lowercase(docs_site_angular_track))
     @test occursin("small ed", lowercase(docs_site_angular_track))
-    @test occursin("dmrg-facing bridge", lowercase(docs_site_angular_track))
+    @test occursin("hamio / hfdmrg-facing hf bridge", lowercase(docs_site_angular_track))
     @test occursin("curated_sphere_point_set", docs_site_angular_track)
     @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
     @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
@@ -7507,6 +7571,8 @@ end
     @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
     @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))
+    @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_angular_track)
+    @test occursin("exact common low-`l` reference", docs_site_angular_track)
     @test occursin("Angular research track", docs_site_atomic)
     @test !occursin("generalized eigen", lowercase(readme))
     @test !occursin("generalized eigen", lowercase(docs_site_index))
@@ -7520,8 +7586,10 @@ end
     @test occursin("mapped_cartesian_hydrogen_energy", docs_site_reference_atomic)
     @test occursin("atomic_ida_density_interaction_matrix", docs_site_reference_export)
     @test occursin("atomic_hamv6_payload", docs_site_reference_export)
+    @test occursin("angular_benchmark_exact_hamv6_payload", docs_site_reference_export)
     @test occursin("write_fullida_dense_jld2", docs_site_reference_export)
     @test occursin("write_atomic_hamv6_jld2", docs_site_reference_export)
+    @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_reference_export)
     @test occursin("write_sliced_ham_jld2", docs_site_reference_export)
     @test occursin("integral-diagonal approximation (IDA)", readme)
     @test occursin("integral-diagonal approximation (IDA)", docs_site_index)

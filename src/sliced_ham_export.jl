@@ -340,6 +340,108 @@ function atomic_hamv6_payload(
     )
 end
 
+function _angular_benchmark_exact_hamv6_payload_impl(
+    ops::AtomicIDAOperators;
+    benchmark_type::AbstractString,
+    exact_common_lmax::Int,
+    shell_orders::AbstractVector{<:Integer},
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+    producer_entrypoint::AbstractString,
+)
+    data = atomic_hamv6_payload(ops; nelec = nelec, meta = meta, threshold = threshold)
+    meta_values = copy(data.meta_values)
+    merge!(
+        meta_values,
+        Dict{String,Any}(
+            "producer" => producer_entrypoint,
+            "producer_type" => benchmark_type,
+            "manifest/producer/entrypoint" => producer_entrypoint,
+            "manifest/producer/object_type" => benchmark_type,
+            "angular_bridge_kind" => "exact_common_low_l_reference",
+            "angular_bridge_scope" => "exact_common_low_l_reference_only",
+            "angular_bridge_consumer_language" => "slicedmrgutils.HamIO/HamV6",
+            "angular_exact_common_lmax" => exact_common_lmax,
+            "angular_shell_orders" => Int.(collect(shell_orders)),
+            "angular_shell_count" => length(shell_orders),
+            "angular_underlying_export" => "atomic_hamv6_payload",
+            "angular_underlying_object_type" => "AtomicIDAOperators",
+        ),
+    )
+    return (
+        layout_values = data.layout_values,
+        basis_values = data.basis_values,
+        ordering_values = data.ordering_values,
+        onebody_values = data.onebody_values,
+        twobody_values = data.twobody_values,
+        meta_values = meta_values,
+    )
+end
+
+"""
+    angular_benchmark_exact_hamv6_payload(
+        benchmark::AtomicInjectedAngularHFStyleBenchmark;
+        nelec=nothing,
+        meta=nothing,
+        threshold=0.0,
+    )
+
+Build an explicit HamV6 / `HamIO.jl` compatibility payload for the exact common
+low-`l` reference embedded in the angular benchmark line.
+
+This is intentionally narrow. It does **not** export the full mixed shell-local
+angular basis, because that basis is not yet representable in the current
+consumer language that assumes definite per-orbital `l,m` labels. Instead, it
+exports the honest exact common reference already carried by the benchmark.
+"""
+function angular_benchmark_exact_hamv6_payload(
+    benchmark::AtomicInjectedAngularHFStyleBenchmark;
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    return _angular_benchmark_exact_hamv6_payload_impl(
+        benchmark.exact_ida_reference;
+        benchmark_type = "AtomicInjectedAngularHFStyleBenchmark",
+        exact_common_lmax = benchmark.one_body.exact_common_lmax,
+        shell_orders = benchmark.one_body.angular_assembly.shell_orders,
+        nelec = nelec,
+        meta = meta,
+        threshold = threshold,
+        producer_entrypoint = "GaussletBases.write_angular_benchmark_exact_hamv6_jld2",
+    )
+end
+
+"""
+    angular_benchmark_exact_hamv6_payload(
+        benchmark::AtomicInjectedAngularSmallEDBenchmark;
+        nelec=nothing,
+        meta=nothing,
+        threshold=0.0,
+    )
+
+Build the same exact-common-reference HamV6 payload starting from the small-ED
+benchmark wrapper.
+"""
+function angular_benchmark_exact_hamv6_payload(
+    benchmark::AtomicInjectedAngularSmallEDBenchmark;
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    return _angular_benchmark_exact_hamv6_payload_impl(
+        benchmark.hf_style.exact_ida_reference;
+        benchmark_type = "AtomicInjectedAngularSmallEDBenchmark",
+        exact_common_lmax = benchmark.hf_style.one_body.exact_common_lmax,
+        shell_orders = benchmark.hf_style.one_body.angular_assembly.shell_orders,
+        nelec = nelec,
+        meta = meta,
+        threshold = threshold,
+        producer_entrypoint = "GaussletBases.write_angular_benchmark_exact_hamv6_jld2",
+    )
+end
+
 """
     write_atomic_hamv6_jld2(path, ops::AtomicIDAOperators; nelec=nothing, meta=nothing, threshold=0.0)
 
@@ -354,6 +456,48 @@ function write_atomic_hamv6_jld2(
     threshold::Real = 0.0,
 )
     data = atomic_hamv6_payload(ops; nelec = nelec, meta = meta, threshold = threshold)
+    jldopen(path, "w") do file
+        _write_prefixed_values!(file, "layout", data.layout_values)
+        _write_prefixed_values!(file, "basis", data.basis_values)
+        _write_prefixed_values!(file, "ordering", data.ordering_values)
+        _write_prefixed_values!(file, "onebody", data.onebody_values)
+        _write_prefixed_values!(file, "twobody", data.twobody_values)
+        _write_prefixed_values!(file, "meta", data.meta_values)
+    end
+    return path
+end
+
+"""
+    write_angular_benchmark_exact_hamv6_jld2(
+        path,
+        benchmark::Union{
+            AtomicInjectedAngularHFStyleBenchmark,
+            AtomicInjectedAngularSmallEDBenchmark,
+        };
+        nelec=nothing,
+        meta=nothing,
+        threshold=0.0,
+    )
+
+Write the narrow angular bridge artifact that reuses the proven HamV6 grouped
+shape for the benchmark's exact common low-`l` reference only.
+"""
+function write_angular_benchmark_exact_hamv6_jld2(
+    path::AbstractString,
+    benchmark::Union{
+        AtomicInjectedAngularHFStyleBenchmark,
+        AtomicInjectedAngularSmallEDBenchmark,
+    };
+    nelec::Union{Nothing,Int} = nothing,
+    meta = nothing,
+    threshold::Real = 0.0,
+)
+    data = angular_benchmark_exact_hamv6_payload(
+        benchmark;
+        nelec = nelec,
+        meta = meta,
+        threshold = threshold,
+    )
     jldopen(path, "w") do file
         _write_prefixed_values!(file, "layout", data.layout_values)
         _write_prefixed_values!(file, "basis", data.basis_values)
