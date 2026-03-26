@@ -69,6 +69,8 @@ struct AtomicInjectedAngularHFDMRGHFAdapter{
     interaction::Matrix{Float64}
     psiup0::Matrix{Float64}
     psidn0::Matrix{Float64}
+    psiup0_source::Symbol
+    psidn0_source::Symbol
     nup::Int
     ndn::Int
     overlap_identity_error::Float64
@@ -124,6 +126,10 @@ function Base.show(io::IO, adapter::AtomicInjectedAngularHFDMRGHFAdapter)
         adapter.nup,
         ", ndn=",
         adapter.ndn,
+        ", psiup0_source=",
+        adapter.psiup0_source,
+        ", psidn0_source=",
+        adapter.psidn0_source,
         ", exact_common_lmax=",
         adapter.hf_style.one_body.exact_common_lmax,
         ")",
@@ -167,6 +173,38 @@ function _orthonormalize_columns(columns::AbstractMatrix{<:Real})
     return q[:, 1:ncols]
 end
 
+function _validated_hfdmrg_seed(
+    seed::AbstractMatrix{<:Real},
+    norb::Int,
+    nspin::Int,
+    name::AbstractString;
+    tol::Real = 1.0e-10,
+)
+    size(seed) == (norb, nspin) ||
+        throw(
+            DimensionMismatch(
+                "$name must have size ($norb, $nspin), got $(size(seed))",
+            ),
+        )
+    matrix = Matrix{Float64}(seed)
+    nspin == 0 && return matrix
+    orthogonality_error =
+        opnorm(transpose(matrix) * matrix - Matrix{Float64}(I, nspin, nspin), Inf)
+    orthogonality_error <= tol ||
+        throw(
+            ArgumentError(
+                "$name must have orthonormal columns for HFDMRG; got orthogonality error $orthogonality_error",
+            ),
+        )
+    return matrix
+end
+
+function _validate_hfdmrg_spin_count(nspin::Int, norb::Int, name::AbstractString)
+    0 <= nspin <= norb ||
+        throw(ArgumentError("$name must satisfy 0 <= $name <= $norb"))
+    return nspin
+end
+
 function _resolve_hfdmrg_module(hfmod)
     hfmod !== nothing && return hfmod
     if isdefined(Main, :HFDMRG)
@@ -176,6 +214,12 @@ function _resolve_hfdmrg_module(hfmod)
         "HFDMRG module not loaded. Add it to LOAD_PATH and run `using HFDMRG` before calling `run_atomic_injected_angular_hfdmrg_hf`.",
     )
 end
+
+_default_angular_hfdmrg_spin_count(benchmark::AtomicInjectedAngularHFStyleBenchmark) =
+    size(benchmark.scf_result.occupied_coefficients, 2)
+
+_default_angular_hfdmrg_spin_count(benchmark::AtomicInjectedAngularSmallEDBenchmark) =
+    _default_angular_hfdmrg_spin_count(benchmark.hf_style)
 
 function _matrix_ranges(offsets::Vector{Int}, dims::Vector{Int})
     return [offsets[i]:(offsets[i] + dims[i] - 1) for i in eachindex(dims)]
@@ -842,6 +886,10 @@ end
         r_hi=7.0,
         w_lo=0.2,
         w_hi=0.7,
+        nup=nothing,
+        ndn=nothing,
+        psiup0=nothing,
+        psidn0=nothing,
     )
 
 Build the first in-memory HFDMRG-facing HF adapter on top of the angular
@@ -868,6 +916,10 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
     w_hi::Real = 0.7,
+    nup::Union{Nothing,Int} = nothing,
+    ndn::Union{Nothing,Int} = nothing,
+    psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
 )
     hf_style = build_atomic_injected_angular_hf_style_benchmark(
         radial_ops;
@@ -887,7 +939,45 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
         w_lo = w_lo,
         w_hi = w_hi,
     )
-    return build_atomic_injected_angular_hfdmrg_hf_adapter(hf_style)
+    default_nocc = _default_angular_hfdmrg_spin_count(hf_style)
+    resolved_nup = something(nup, psiup0 === nothing ? default_nocc : size(psiup0, 2))
+    resolved_ndn = something(ndn, psidn0 === nothing ? resolved_nup : size(psidn0, 2))
+    return build_atomic_injected_angular_hfdmrg_hf_adapter(
+        hf_style;
+        nup = resolved_nup,
+        ndn = resolved_ndn,
+        psiup0 = psiup0,
+        psidn0 = psidn0,
+    )
+end
+
+"""
+    build_atomic_injected_angular_hfdmrg_hf_seeds(
+        benchmark::AtomicInjectedAngularHFStyleBenchmark;
+        nup=size(benchmark.scf_result.occupied_coefficients, 2),
+        ndn=nup,
+    )
+
+Build the default open-shell-capable HFDMRG seed orbitals from the current
+angular HF-style benchmark object.
+"""
+function build_atomic_injected_angular_hfdmrg_hf_seeds(
+    benchmark::AtomicInjectedAngularHFStyleBenchmark;
+    nup::Int = size(benchmark.scf_result.occupied_coefficients, 2),
+    ndn::Int = nup,
+)
+    coefficients = benchmark.scf_result.coefficients
+    norb = size(coefficients, 1)
+    _validate_hfdmrg_spin_count(nup, norb, "nup")
+    _validate_hfdmrg_spin_count(ndn, norb, "ndn")
+    psiup0 = nup == 0 ? zeros(Float64, norb, 0) : _orthonormalize_columns(coefficients[:, 1:nup])
+    psidn0 = ndn == 0 ? zeros(Float64, norb, 0) : _orthonormalize_columns(coefficients[:, 1:ndn])
+    return (
+        psiup0 = psiup0,
+        psidn0 = psidn0,
+        psiup0_source = :default_benchmark_orbitals,
+        psidn0_source = :default_benchmark_orbitals,
+    )
 end
 
 """
@@ -895,34 +985,53 @@ end
         benchmark::AtomicInjectedAngularHFStyleBenchmark;
         nup=size(benchmark.scf_result.occupied_coefficients, 2),
         ndn=nup,
+        psiup0=nothing,
+        psidn0=nothing,
     )
 
 Build the dense in-memory HFDMRG-facing HF adapter directly from the current
-angular HF-style benchmark object.
+angular HF-style benchmark object, with explicit open-shell occupation and seed
+control.
 """
 function build_atomic_injected_angular_hfdmrg_hf_adapter(
     benchmark::AtomicInjectedAngularHFStyleBenchmark;
     nup::Int = size(benchmark.scf_result.occupied_coefficients, 2),
     ndn::Int = nup,
+    psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
 )
-    nocc = size(benchmark.scf_result.occupied_coefficients, 2)
-    nup <= nocc || throw(ArgumentError("nup cannot exceed the occupied column count $nocc"))
-    ndn <= nocc || throw(ArgumentError("ndn cannot exceed the occupied column count $nocc"))
+    norb = size(benchmark.one_body.hamiltonian, 1)
+    _validate_hfdmrg_spin_count(nup, norb, "nup")
+    _validate_hfdmrg_spin_count(ndn, norb, "ndn")
+
+    default_seeds =
+        psiup0 === nothing || psidn0 === nothing ?
+        build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = nup, ndn = ndn) :
+        nothing
 
     overlap = benchmark.one_body.overlap
     overlap_identity_error =
         opnorm(overlap - Matrix{Float64}(I, size(overlap, 1), size(overlap, 2)), Inf)
-    occupied = benchmark.scf_result.occupied_coefficients
-    psiup0 = _orthonormalize_columns(occupied[:, 1:nup])
-    psidn0 = _orthonormalize_columns(occupied[:, 1:ndn])
+    resolved_psiup0 =
+        psiup0 === nothing ?
+        default_seeds.psiup0 :
+        _validated_hfdmrg_seed(psiup0, norb, nup, "psiup0")
+    resolved_psidn0 =
+        psidn0 === nothing ?
+        default_seeds.psidn0 :
+        _validated_hfdmrg_seed(psidn0, norb, ndn, "psidn0")
+    psiup0_source = psiup0 === nothing ? default_seeds.psiup0_source : :explicit_seed
+    psidn0_source = psidn0 === nothing ? default_seeds.psidn0_source : :explicit_seed
 
     return AtomicInjectedAngularHFDMRGHFAdapter(
         benchmark,
         :dense_density_density,
         Matrix{Float64}(benchmark.one_body.hamiltonian),
         Matrix{Float64}(benchmark.interaction),
-        psiup0,
-        psidn0,
+        resolved_psiup0,
+        resolved_psidn0,
+        psiup0_source,
+        psidn0_source,
         nup,
         ndn,
         overlap_identity_error,
@@ -959,6 +1068,8 @@ function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
         basis_dim = size(adapter.hamiltonian, 1),
         nup = adapter.nup,
         ndn = adapter.ndn,
+        psiup0_source = adapter.psiup0_source,
+        psidn0_source = adapter.psidn0_source,
         shell_orders = copy(adapter.hf_style.one_body.angular_assembly.shell_orders),
         exact_common_lmax = adapter.hf_style.one_body.exact_common_lmax,
         overlap_identity_error = adapter.overlap_identity_error,
@@ -1032,9 +1143,19 @@ function run_atomic_injected_angular_hfdmrg_hf(
         AtomicInjectedAngularHFStyleBenchmark,
         AtomicInjectedAngularSmallEDBenchmark,
     };
+    nup::Int = _default_angular_hfdmrg_spin_count(benchmark),
+    ndn::Int = nup,
+    psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     kwargs...,
 )
-    adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+    adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark;
+        nup = nup,
+        ndn = ndn,
+        psiup0 = psiup0,
+        psidn0 = psidn0,
+    )
     return run_atomic_injected_angular_hfdmrg_hf(adapter; kwargs...)
 end
 

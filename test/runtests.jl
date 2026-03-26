@@ -6300,6 +6300,29 @@ end
     diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(adapter)
     from_small_ed =
         build_atomic_injected_angular_hfdmrg_hf_adapter(_atomic_injected_angular_small_ed_benchmark_fixture())
+    benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
+    open_shell_seeds =
+        build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = 2, ndn = 1)
+    explicit_psiup0 = open_shell_seeds.psiup0[:, [2, 1]]
+    explicit_psidn0 = open_shell_seeds.psidn0
+    open_shell_adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark;
+        nup = 2,
+        ndn = 1,
+    )
+    explicit_open_shell_adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark;
+        nup = 2,
+        ndn = 1,
+        psiup0 = explicit_psiup0,
+        psidn0 = explicit_psidn0,
+    )
+    mixed_seed_adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark;
+        nup = 2,
+        ndn = 1,
+        psiup0 = explicit_psiup0,
+    )
 
     @test adapter isa AtomicInjectedAngularHFDMRGHFAdapter
     @test adapter.hf_style isa AtomicInjectedAngularHFStyleBenchmark
@@ -6315,6 +6338,8 @@ end
     @test diagnostics.interaction_symmetry_error ≤ 1.0e-10
     @test diagnostics.psiup0_orthogonality_error ≤ 1.0e-12
     @test diagnostics.psidn0_orthogonality_error ≤ 1.0e-12
+    @test diagnostics.psiup0_source == :default_benchmark_orbitals
+    @test diagnostics.psidn0_source == :default_benchmark_orbitals
     @test isfinite(diagnostics.benchmark_full_energy)
     @test isfinite(diagnostics.benchmark_exact_energy)
     @test from_small_ed.route == adapter.route
@@ -6324,6 +6349,22 @@ end
     @test from_small_ed.interaction ≈ adapter.interaction atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.psiup0 ≈ adapter.psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.psidn0 ≈ adapter.psidn0 atol = 1.0e-12 rtol = 1.0e-12
+    @test size(open_shell_seeds.psiup0) == (diagnostics.basis_dim, 2)
+    @test size(open_shell_seeds.psidn0) == (diagnostics.basis_dim, 1)
+    @test open_shell_adapter.nup == 2
+    @test open_shell_adapter.ndn == 1
+    @test open_shell_adapter.psiup0_source == :default_benchmark_orbitals
+    @test open_shell_adapter.psidn0_source == :default_benchmark_orbitals
+    @test opnorm(transpose(open_shell_adapter.psiup0) * open_shell_adapter.psiup0 - Matrix{Float64}(I, 2, 2), Inf) ≤ 1.0e-12
+    @test opnorm(transpose(open_shell_adapter.psidn0) * open_shell_adapter.psidn0 - Matrix{Float64}(I, 1, 1), Inf) ≤ 1.0e-12
+    @test explicit_open_shell_adapter.psiup0_source == :explicit_seed
+    @test explicit_open_shell_adapter.psidn0_source == :explicit_seed
+    @test explicit_open_shell_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
+    @test explicit_open_shell_adapter.psidn0 ≈ explicit_psidn0 atol = 1.0e-12 rtol = 1.0e-12
+    @test mixed_seed_adapter.psiup0_source == :explicit_seed
+    @test mixed_seed_adapter.psidn0_source == :default_benchmark_orbitals
+    @test mixed_seed_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
+    @test mixed_seed_adapter.psidn0 ≈ open_shell_seeds.psidn0 atol = 1.0e-12 rtol = 1.0e-12
 end
 
 @testset "Atomic injected angular small-ED benchmark" begin
@@ -7608,8 +7649,10 @@ end
     @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
     @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_hfdmrg_hf_adapter", docs_site_angular_track)
+    @test occursin("build_atomic_injected_angular_hfdmrg_hf_seeds", docs_site_angular_track)
     @test occursin("run_atomic_injected_angular_hfdmrg_hf", docs_site_angular_track)
     @test occursin("in-memory hfdmrg-facing hf adapter", lowercase(docs_site_angular_track))
+    @test occursin("open-shell", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
     @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))
     @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_angular_track)
