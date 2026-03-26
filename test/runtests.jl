@@ -2448,6 +2448,30 @@ function _paper_style_angular_one_body_benchmark_fixture(
     end)
 end
 
+function _paper_style_angular_hf_style_benchmark_fixture(
+    order::Int;
+    Z::Float64 = 10.0,
+    lmax::Int = 6,
+)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    key = Symbol(
+        "paper_style_angular_hf_style_benchmark_fixture_Z",
+        ztag,
+        "_order",
+        order,
+        "_lmax",
+        lmax,
+    )
+    return _cached_fixture(key, () -> begin
+        _, _, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = Z, lmax = lmax)
+        build_atomic_injected_angular_hf_style_benchmark(
+            radial_ops;
+            shell_orders = fill(order, length(radial_ops.shell_centers_r)),
+            nelec = Int(round(Z)),
+        )
+    end)
+end
+
 function _solve_hfdmrg_from_payload_direct(
     payload::AtomicInjectedAngularHFDMRGHFAdapter,
     hfdmrg;
@@ -6553,6 +6577,13 @@ end
     @test diagnostics.max_diagonal_injected_kinetic_error ≤ 1.0e-9
     @test diagnostics.max_pair_overlap_symmetry_error ≤ 1.0e-10
     @test diagnostics.max_pair_kinetic_symmetry_error ≤ 1.0e-10
+    @test all(
+        diagnostics.shell_interaction_lcap[i] ≥
+        diagnostics.shell_interaction_lexpand[i] ≥
+        diagnostics.shell_exact_lmax[i] for i in eachindex(diagnostics.shell_exact_lmax)
+    )
+    @test diagnostics.interaction_pair_plan ≥ diagnostics.interaction_exact_lower_bound
+    @test diagnostics.max_shell_interaction_tail ≤ 1.0e-6
 
     @test scheduled_orders[1] == 15
     @test scheduled_orders[end] == 15
@@ -6801,6 +6832,75 @@ end
     end
 end
 
+@testset "Angular Ne legacy-trim one-body discriminator" begin
+    for order in (10, 15, 32)
+        benchmark = _paper_style_angular_one_body_benchmark_fixture(order; Z = 10.0, lmax = 6)
+        full_spectrum = sort(real(eigvals(Hermitian(benchmark.hamiltonian), Hermitian(benchmark.overlap))))
+        exact_spectrum =
+            sort(real(eigvals(Hermitian(benchmark.exact_hamiltonian), Hermitian(benchmark.exact_overlap))))
+        low_count = 8
+        nocc = 5
+        closed_shell_noninteracting = 2.0 * sum(full_spectrum[1:nocc])
+        exact_noninteracting = 2.0 * sum(exact_spectrum[1:nocc])
+        one_s_like_count = count(<(-20.0), full_spectrum[1:nocc])
+
+        @test benchmark.angular_assembly.shell_orders == fill(order, length(benchmark.angular_assembly.shell_orders))
+        if order in (10, 15)
+            @test benchmark.exact_common_lmax == 1
+        else
+            @test benchmark.exact_common_lmax ≥ 3
+        end
+        @test one_s_like_count == 1
+        @test full_spectrum[1] < -40.0
+        @test full_spectrum[2] > -20.0
+        @test closed_shell_noninteracting > -201.0
+        @test closed_shell_noninteracting < -199.0
+        @test closed_shell_noninteracting ≈ exact_noninteracting atol = 1.0e-5 rtol = 1.0e-7
+        @test full_spectrum[1:low_count] ≈ exact_spectrum[1:low_count] atol = 1.0e-6 rtol = 1.0e-8
+    end
+end
+
+@testset "Angular Ne legacy-trim interaction moment-span discriminator" begin
+    for order in (10, 15)
+        benchmark = _paper_style_angular_one_body_benchmark_fixture(order; Z = 10.0, lmax = 6)
+        assembly = benchmark.angular_assembly
+        bare_moment_lmax =
+            maximum(maximum(keys(blocks)) for blocks in assembly.shell_moment_blocks)
+        interaction_moment_lmax =
+            maximum(maximum(keys(blocks)) for blocks in assembly.shell_interaction_moment_blocks)
+        required_product_lmax = 2 * benchmark.exact_common_lmax
+        current_interaction =
+            GaussletBases._assemble_atomic_injected_angular_interaction(
+                benchmark.radial_operators,
+                assembly,
+            )
+        interaction_pair_plan = 2 * maximum(assembly.shell_interaction_lexpand)
+
+        @test benchmark.exact_common_lmax == 1
+        @test bare_moment_lmax == benchmark.exact_common_lmax
+        @test bare_moment_lmax < required_product_lmax
+        @test interaction_moment_lmax > bare_moment_lmax
+        @test interaction_moment_lmax ≥ required_product_lmax
+        @test interaction_pair_plan ≥ required_product_lmax
+        @test opnorm(current_interaction - transpose(current_interaction), Inf) ≤ 1.0e-10
+        @test minimum(diag(current_interaction)) > 0.0
+    end
+end
+
+@testset "Angular Ne legacy-trim HF branch repair" begin
+    benchmark10 = _paper_style_angular_hf_style_benchmark_fixture(10)
+    benchmark15 = _paper_style_angular_hf_style_benchmark_fixture(15)
+    benchmark32 = _paper_style_angular_hf_style_benchmark_fixture(32)
+    energy10 = benchmark10.scf_result.energy
+    energy15 = benchmark15.scf_result.energy
+    energy32 = benchmark32.scf_result.energy
+
+    @test energy10 < -128.4
+    @test energy15 < -128.5
+    @test abs(energy10 - energy32) < 0.1
+    @test abs(energy15 - energy32) < 0.05
+end
+
 @testset "Atomic injected angular small-ED benchmark" begin
     benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
     diagnostics = atomic_injected_angular_small_ed_diagnostics(benchmark)
@@ -6827,7 +6927,7 @@ end
     @test diagnostics.full_converged
     @test diagnostics.full_residual ≤ 1.0e-7
     @test diagnostics.exact_reference_energy ≈ 13.020668426715936 atol = 1.0e-8 rtol = 1.0e-8
-    @test diagnostics.full_energy ≈ 12.978227403130989 atol = 1.0e-5 rtol = 1.0e-8
+    @test diagnostics.full_energy ≈ 12.97749161121589 atol = 1.0e-5 rtol = 1.0e-8
     @test diagnostics.energy_difference_to_exact_reference < -1.0e-3
 end
 

@@ -16,10 +16,14 @@ struct AtomicShellLocalInjectedAngularAssembly
     shells::Vector{ShellLocalInjectedAngularBasis}
     shell_moment_blocks::Vector{Dict{Int,Matrix{Float64}}}
     shell_kinetic_moment_blocks::Vector{Dict{Int,Matrix{Float64}}}
+    shell_interaction_moment_blocks::Vector{Dict{Int,Matrix{Float64}}}
     shell_exact_lmax::Vector{Int}
     shell_kinetic_lcap::Vector{Int}
     shell_kinetic_lexpand::Vector{Int}
     shell_kinetic_tail::Vector{Float64}
+    shell_interaction_lcap::Vector{Int}
+    shell_interaction_lexpand::Vector{Int}
+    shell_interaction_tail::Vector{Float64}
     overlap_blocks::Matrix{Matrix{Float64}}
     kinetic_blocks::Matrix{Matrix{Float64}}
     overlap::Matrix{Float64}
@@ -216,7 +220,8 @@ end
 _shell_ylm_residual_tol() = 1.0e-12
 _shell_ylm_span_cap() = 256
 _shell_ylm_small_streak() = 2
-_shell_ylm_extra_required() = 4
+_shell_ylm_kinetic_extra_required() = 4
+_shell_ylm_interaction_extra_required() = 4
 
 function _ylm_increment!(captured::AbstractVector{<:Real}, mat::AbstractMatrix{<:Real})
     contrib = vec(sum(abs2, mat; dims = 1))
@@ -234,22 +239,21 @@ function _ylm_tail_max(diag_norms::AbstractVector{<:Real}, captured::AbstractVec
     return tail
 end
 
-function _build_shell_local_kinetic_moment_blocks(
+function _build_shell_local_expanded_moment_blocks(
     shell::ShellLocalInjectedAngularBasis;
     residual_tol::Real = _shell_ylm_residual_tol(),
     span_cap::Int = _shell_ylm_span_cap(),
     small_streak_required::Int = _shell_ylm_small_streak(),
-    lextra::Int = _shell_ylm_extra_required(),
+    required_min::Int,
 )
     residual_tol > 0 || throw(ArgumentError("residual_tol must be positive"))
     span_cap >= 0 || throw(ArgumentError("span_cap must be nonnegative"))
     small_streak_required >= 1 ||
         throw(ArgumentError("small_streak_required must be at least one"))
-    lextra >= 0 || throw(ArgumentError("lextra must be nonnegative"))
+    required_min >= 0 || throw(ArgumentError("required_min must be nonnegative"))
 
     diag_norms = Float64[shell.final_overlap[i, i] for i in 1:shell.final_count]
     captured = zeros(Float64, shell.final_count)
-    required_min = max(0, shell.l_inject + lextra)
     blocks = Dict{Int,Matrix{Float64}}()
     lcap = -1
     lexpand = 0
@@ -275,6 +279,42 @@ function _build_shell_local_kinetic_moment_blocks(
 
     lcap >= 0 || error("_build_shell_local_kinetic_moment_blocks failed to build any shell moments")
     return (blocks = blocks, lcap = lcap, lexpand = max(lexpand, required_min), tail = tail)
+end
+
+function _build_shell_local_kinetic_moment_blocks(
+    shell::ShellLocalInjectedAngularBasis;
+    residual_tol::Real = _shell_ylm_residual_tol(),
+    span_cap::Int = _shell_ylm_span_cap(),
+    small_streak_required::Int = _shell_ylm_small_streak(),
+    lextra::Int = _shell_ylm_kinetic_extra_required(),
+)
+    lextra >= 0 || throw(ArgumentError("lextra must be nonnegative"))
+    required_min = max(0, shell.l_inject + lextra)
+    return _build_shell_local_expanded_moment_blocks(
+        shell;
+        residual_tol = residual_tol,
+        span_cap = span_cap,
+        small_streak_required = small_streak_required,
+        required_min = required_min,
+    )
+end
+
+function _build_shell_local_interaction_moment_blocks(
+    shell::ShellLocalInjectedAngularBasis;
+    residual_tol::Real = _shell_ylm_residual_tol(),
+    span_cap::Int = _shell_ylm_span_cap(),
+    small_streak_required::Int = _shell_ylm_small_streak(),
+    lextra::Int = _shell_ylm_interaction_extra_required(),
+)
+    lextra >= 0 || throw(ArgumentError("lextra must be nonnegative"))
+    required_min = max(2 * shell.l_inject, shell.l_inject + lextra)
+    return _build_shell_local_expanded_moment_blocks(
+        shell;
+        residual_tol = residual_tol,
+        span_cap = span_cap,
+        small_streak_required = small_streak_required,
+        required_min = required_min,
+    )
 end
 
 function _assemble_shell_block_matrix(blocks::Matrix{Matrix{Float64}}, offsets::Vector{Int}, dims::Vector{Int})
@@ -339,10 +379,18 @@ function build_atomic_shell_local_angular_assembly(
         NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
     }()
     shell_kinetic_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
+    cached_interaction_moment_blocks = Dict{
+        Tuple{Int,Float64,Union{Int,Symbol},Float64,Symbol},
+        NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
+    }()
+    shell_interaction_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
     shell_exact_lmax = Vector{Int}(undef, nshells)
     shell_kinetic_lcap = Vector{Int}(undef, nshells)
     shell_kinetic_lexpand = Vector{Int}(undef, nshells)
     shell_kinetic_tail = Vector{Float64}(undef, nshells)
+    shell_interaction_lcap = Vector{Int}(undef, nshells)
+    shell_interaction_lexpand = Vector{Int}(undef, nshells)
+    shell_interaction_tail = Vector{Float64}(undef, nshells)
 
     for i in 1:nshells
         key = (assigned_orders[i], Float64(beta), l_inject, Float64(tau), whiten)
@@ -367,11 +415,22 @@ function build_atomic_shell_local_angular_assembly(
         kinetic_moment_data = get!(cached_kinetic_moment_blocks, key) do
             _build_shell_local_kinetic_moment_blocks(shell)
         end
+        # The interaction needs at least the product span of the exact injected
+        # sector, but for the mixed shell-local basis this is only a lower
+        # bound. Follow the legacy sphgatomps principle and grow the shell
+        # Y-moment tables adaptively beyond 2*l_inject.
+        interaction_moment_data = get!(cached_interaction_moment_blocks, key) do
+            _build_shell_local_interaction_moment_blocks(shell)
+        end
         shell_kinetic_moment_blocks[i] = kinetic_moment_data.blocks
+        shell_interaction_moment_blocks[i] = interaction_moment_data.blocks
         shell_exact_lmax[i] = shell.l_inject
         shell_kinetic_lcap[i] = kinetic_moment_data.lcap
         shell_kinetic_lexpand[i] = kinetic_moment_data.lexpand
         shell_kinetic_tail[i] = kinetic_moment_data.tail
+        shell_interaction_lcap[i] = interaction_moment_data.lcap
+        shell_interaction_lexpand[i] = interaction_moment_data.lexpand
+        shell_interaction_tail[i] = interaction_moment_data.tail
     end
 
     shell_dimensions = [shell.final_count for shell in shells]
@@ -407,10 +466,14 @@ function build_atomic_shell_local_angular_assembly(
         shells,
         shell_moment_blocks,
         shell_kinetic_moment_blocks,
+        shell_interaction_moment_blocks,
         shell_exact_lmax,
         shell_kinetic_lcap,
         shell_kinetic_lexpand,
         shell_kinetic_tail,
+        shell_interaction_lcap,
+        shell_interaction_lexpand,
+        shell_interaction_tail,
         overlap_blocks,
         kinetic_blocks,
         overlap,
@@ -454,7 +517,12 @@ function atomic_shell_local_angular_diagnostics(assembly::AtomicShellLocalInject
         shell_exact_lmax = copy(assembly.shell_exact_lmax),
         shell_kinetic_lcap = copy(assembly.shell_kinetic_lcap),
         shell_kinetic_lexpand = copy(assembly.shell_kinetic_lexpand),
+        shell_interaction_lcap = copy(assembly.shell_interaction_lcap),
+        shell_interaction_lexpand = copy(assembly.shell_interaction_lexpand),
+        interaction_pair_plan = 2 * maximum(assembly.shell_interaction_lexpand),
+        interaction_exact_lower_bound = 2 * maximum(assembly.shell_exact_lmax),
         max_shell_kinetic_tail = maximum(assembly.shell_kinetic_tail),
+        max_shell_interaction_tail = maximum(assembly.shell_interaction_tail),
         max_shell_overlap_error = maximum(diag.overlap_error for diag in shell_diags),
         max_shell_injected_exactness_error = maximum(diag.injected_exactness_error for diag in shell_diags),
         max_shell_injected_kinetic_error = maximum(diag.injected_kinetic_error for diag in shell_diags),

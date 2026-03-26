@@ -93,6 +93,16 @@ The first shell-to-atom assembly layer is now available through:
 This assembly layer is still angular-only. It stops before Coulomb assembly,
 HF/ED workflow wiring, or end-to-end atomic angular drivers.
 
+The shell-local exact injected span, the one-body kinetic span, and the
+interaction moment span are now treated as distinct contracts. In particular,
+the interaction assembly no longer truncates at `L <= l_inject`. Following the
+legacy `sphgatomps.jl` principle, it now grows a separate per-shell expanded
+interaction Y-moment span beyond the injected cutoff, because `2*l_inject` is
+only a lower bound for the full mixed shell-local basis. The durable repo note
+for that policy is:
+
+- `docs/angular_interaction_moment_span_note.md`
+
 The first narrow atom-side benchmark path is now available through:
 
 - `build_atomic_injected_angular_one_body_benchmark(radial_ops; ...)`

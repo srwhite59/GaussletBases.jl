@@ -395,11 +395,11 @@ function _assemble_atomic_injected_angular_interaction(
         radial_block = multipole(radial_ops, L)
         for a in 1:nshells
             ia = shell_ranges[a]
-            left = _scaled_shell_moment_block(assembly.shell_moment_blocks[a], L)
+            left = _scaled_shell_moment_block(assembly.shell_interaction_moment_blocks[a], L)
             left === nothing && continue
             for b in 1:nshells
                 ib = shell_ranges[b]
-                right = _scaled_shell_moment_block(assembly.shell_moment_blocks[b], L)
+                right = _scaled_shell_moment_block(assembly.shell_interaction_moment_blocks[b], L)
                 right === nothing && continue
                 interaction[ia, ib] .+= prefactor .* radial_block[a, b] .* (transpose(left) * right)
             end
