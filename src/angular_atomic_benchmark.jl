@@ -48,6 +48,33 @@ struct AtomicInjectedAngularHFStyleBenchmark{
 end
 
 """
+    AtomicInjectedAngularHFDMRGHFAdapter
+
+Experimental in-memory HFDMRG-facing HF adapter for the current angular
+benchmark line.
+
+This adapter is intentionally narrow. It reuses the shell-assembled one-body
+and interaction matrices already present in
+`AtomicInjectedAngularHFStyleBenchmark` and packages them into the dense
+`H, V, psiup0, psidn0` handshake expected by `HFDMRG.solve_hfdmrg(...)`.
+
+It is an HF adapter surface, not a general many-body or file-export contract.
+"""
+struct AtomicInjectedAngularHFDMRGHFAdapter{
+    H <: AtomicInjectedAngularHFStyleBenchmark,
+}
+    hf_style::H
+    route::Symbol
+    hamiltonian::Matrix{Float64}
+    interaction::Matrix{Float64}
+    psiup0::Matrix{Float64}
+    psidn0::Matrix{Float64}
+    nup::Int
+    ndn::Int
+    overlap_identity_error::Float64
+end
+
+"""
     AtomicInjectedAngularSmallEDBenchmark
 
 Experimental tiny `1 up, 1 down` density-density benchmark on top of the
@@ -86,6 +113,23 @@ function Base.show(io::IO, benchmark::AtomicInjectedAngularSmallEDBenchmark)
     )
 end
 
+function Base.show(io::IO, adapter::AtomicInjectedAngularHFDMRGHFAdapter)
+    print(
+        io,
+        "AtomicInjectedAngularHFDMRGHFAdapter(route=",
+        adapter.route,
+        ", dim=",
+        size(adapter.hamiltonian, 1),
+        ", nup=",
+        adapter.nup,
+        ", ndn=",
+        adapter.ndn,
+        ", exact_common_lmax=",
+        adapter.hf_style.one_body.exact_common_lmax,
+        ")",
+    )
+end
+
 function Base.show(io::IO, benchmark::AtomicInjectedAngularHFStyleBenchmark)
     print(
         io,
@@ -113,6 +157,23 @@ function Base.show(io::IO, benchmark::AtomicInjectedAngularOneBodyBenchmark)
         ", shell_orders=",
         repr(benchmark.angular_assembly.shell_orders),
         ")",
+    )
+end
+
+function _orthonormalize_columns(columns::AbstractMatrix{<:Real})
+    matrix = Matrix{Float64}(columns)
+    ncols = size(matrix, 2)
+    q = Matrix(qr(matrix).Q)
+    return q[:, 1:ncols]
+end
+
+function _resolve_hfdmrg_module(hfmod)
+    hfmod !== nothing && return hfmod
+    if isdefined(Main, :HFDMRG)
+        return getfield(Main, :HFDMRG)
+    end
+    error(
+        "HFDMRG module not loaded. Add it to LOAD_PATH and run `using HFDMRG` before calling `run_atomic_injected_angular_hfdmrg_hf`.",
     )
 end
 
@@ -761,6 +822,220 @@ function atomic_injected_angular_hf_style_diagnostics(
         exact_reference_low_orbital_error =
             maximum(abs.(full.orbital_energies[1:ncompare] .- exact.orbital_energies[1:ncompare])),
     )
+end
+
+"""
+    build_atomic_injected_angular_hfdmrg_hf_adapter(
+        radial_ops::RadialAtomicOperators;
+        shell_orders=nothing,
+        beta=2.0,
+        l_inject=:auto,
+        tau=1e-12,
+        whiten=:svd,
+        nelec::Int=2,
+        maxiter::Int=50,
+        damping::Real=0.25,
+        tol::Real=1e-8,
+        ord_min=minimum(curated_sphere_point_set_orders()),
+        ord_max=maximum(curated_sphere_point_set_orders()),
+        r_lo=0.15,
+        r_hi=7.0,
+        w_lo=0.2,
+        w_hi=0.7,
+    )
+
+Build the first in-memory HFDMRG-facing HF adapter on top of the angular
+benchmark line.
+
+The current adapter uses the dense density-density route expected by
+`HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)`. It deliberately avoids the
+separate mixed-basis file-export question.
+"""
+function build_atomic_injected_angular_hfdmrg_hf_adapter(
+    radial_ops::RadialAtomicOperators;
+    shell_orders::Union{Nothing,AbstractVector{<:Integer}} = nothing,
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+    nelec::Int = 2,
+    maxiter::Int = 50,
+    damping::Real = 0.25,
+    tol::Real = 1.0e-8,
+    ord_min::Int = minimum(curated_sphere_point_set_orders()),
+    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    r_lo::Real = 0.15,
+    r_hi::Real = 7.0,
+    w_lo::Real = 0.2,
+    w_hi::Real = 0.7,
+)
+    hf_style = build_atomic_injected_angular_hf_style_benchmark(
+        radial_ops;
+        shell_orders = shell_orders,
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+        nelec = nelec,
+        maxiter = maxiter,
+        damping = damping,
+        tol = tol,
+        ord_min = ord_min,
+        ord_max = ord_max,
+        r_lo = r_lo,
+        r_hi = r_hi,
+        w_lo = w_lo,
+        w_hi = w_hi,
+    )
+    return build_atomic_injected_angular_hfdmrg_hf_adapter(hf_style)
+end
+
+"""
+    build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark::AtomicInjectedAngularHFStyleBenchmark;
+        nup=size(benchmark.scf_result.occupied_coefficients, 2),
+        ndn=nup,
+    )
+
+Build the dense in-memory HFDMRG-facing HF adapter directly from the current
+angular HF-style benchmark object.
+"""
+function build_atomic_injected_angular_hfdmrg_hf_adapter(
+    benchmark::AtomicInjectedAngularHFStyleBenchmark;
+    nup::Int = size(benchmark.scf_result.occupied_coefficients, 2),
+    ndn::Int = nup,
+)
+    nocc = size(benchmark.scf_result.occupied_coefficients, 2)
+    nup <= nocc || throw(ArgumentError("nup cannot exceed the occupied column count $nocc"))
+    ndn <= nocc || throw(ArgumentError("ndn cannot exceed the occupied column count $nocc"))
+
+    overlap = benchmark.one_body.overlap
+    overlap_identity_error =
+        opnorm(overlap - Matrix{Float64}(I, size(overlap, 1), size(overlap, 2)), Inf)
+    occupied = benchmark.scf_result.occupied_coefficients
+    psiup0 = _orthonormalize_columns(occupied[:, 1:nup])
+    psidn0 = _orthonormalize_columns(occupied[:, 1:ndn])
+
+    return AtomicInjectedAngularHFDMRGHFAdapter(
+        benchmark,
+        :dense_density_density,
+        Matrix{Float64}(benchmark.one_body.hamiltonian),
+        Matrix{Float64}(benchmark.interaction),
+        psiup0,
+        psidn0,
+        nup,
+        ndn,
+        overlap_identity_error,
+    )
+end
+
+"""
+    build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark::AtomicInjectedAngularSmallEDBenchmark;
+        kwargs...
+    )
+
+Build the same adapter starting from the small-ED benchmark wrapper.
+"""
+function build_atomic_injected_angular_hfdmrg_hf_adapter(
+    benchmark::AtomicInjectedAngularSmallEDBenchmark;
+    kwargs...,
+)
+    return build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark.hf_style; kwargs...)
+end
+
+"""
+    atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
+        adapter::AtomicInjectedAngularHFDMRGHFAdapter
+    )
+
+Return compact diagnostics for the in-memory angular HFDMRG-facing HF adapter.
+"""
+function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
+    adapter::AtomicInjectedAngularHFDMRGHFAdapter,
+)
+    return (
+        route = adapter.route,
+        basis_dim = size(adapter.hamiltonian, 1),
+        nup = adapter.nup,
+        ndn = adapter.ndn,
+        shell_orders = copy(adapter.hf_style.one_body.angular_assembly.shell_orders),
+        exact_common_lmax = adapter.hf_style.one_body.exact_common_lmax,
+        overlap_identity_error = adapter.overlap_identity_error,
+        hamiltonian_symmetry_error =
+            opnorm(adapter.hamiltonian - transpose(adapter.hamiltonian), Inf),
+        interaction_symmetry_error =
+            opnorm(adapter.interaction - transpose(adapter.interaction), Inf),
+        psiup0_orthogonality_error =
+            opnorm(transpose(adapter.psiup0) * adapter.psiup0 - Matrix{Float64}(I, adapter.nup, adapter.nup), Inf),
+        psidn0_orthogonality_error =
+            opnorm(transpose(adapter.psidn0) * adapter.psidn0 - Matrix{Float64}(I, adapter.ndn, adapter.ndn), Inf),
+        benchmark_full_energy = adapter.hf_style.scf_result.energy,
+        benchmark_exact_energy = adapter.hf_style.exact_scf_result.energy,
+    )
+end
+
+"""
+    run_atomic_injected_angular_hfdmrg_hf(
+        adapter::AtomicInjectedAngularHFDMRGHFAdapter;
+        hfmod=nothing,
+        maxiter=40,
+        blocksize=16,
+        cutoff=1e-10,
+        scf_cutoff=cutoff/10,
+        verbose=false,
+    )
+
+Run the first in-memory HFDMRG-facing HF handshake on top of the angular
+benchmark line.
+
+This keeps the scope narrow: it delegates directly to
+`HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)` using the adapter's dense
+density-density data. It is not a mixed-basis file-export solution and not a
+true many-body DMRG adapter.
+"""
+function run_atomic_injected_angular_hfdmrg_hf(
+    adapter::AtomicInjectedAngularHFDMRGHFAdapter;
+    hfmod = nothing,
+    maxiter::Int = 40,
+    blocksize::Int = 16,
+    cutoff::Real = 1.0e-10,
+    scf_cutoff::Real = cutoff / 10,
+    verbose::Bool = false,
+)
+    hf = _resolve_hfdmrg_module(hfmod)
+    psiup, psidn, energy = hf.solve_hfdmrg(
+        adapter.hamiltonian,
+        adapter.interaction,
+        adapter.psiup0,
+        adapter.psidn0;
+        maxiter = maxiter,
+        blocksize = blocksize,
+        cutoff = cutoff,
+        scf_cutoff = scf_cutoff,
+        verbose = verbose,
+    )
+    return (
+        psiup = psiup,
+        psidn = psidn,
+        energy = energy,
+        route = adapter.route,
+        maxiter = maxiter,
+        blocksize = blocksize,
+        cutoff = cutoff,
+        scf_cutoff = scf_cutoff,
+    )
+end
+
+function run_atomic_injected_angular_hfdmrg_hf(
+    benchmark::Union{
+        AtomicInjectedAngularHFStyleBenchmark,
+        AtomicInjectedAngularSmallEDBenchmark,
+    };
+    kwargs...,
+)
+    adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+    return run_atomic_injected_angular_hfdmrg_hf(adapter; kwargs...)
 end
 
 """

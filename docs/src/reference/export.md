@@ -33,6 +33,10 @@ low-`l` reference. The full mixed shell-local angular basis is not yet exported
 as HamV6, because the current consumer language still assumes definite
 per-orbital `l,m` labels.
 
+The current branch-point note for that boundary is:
+
+- `docs/angular_consumer_contract_boundary.md`
+
 For the narrative explanation of the current producer-side story, see:
 
 - [Current atomic branch](../explanations/current_atomic_branch.md)

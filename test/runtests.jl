@@ -2286,6 +2286,13 @@ function _atomic_injected_angular_small_ed_benchmark_fixture()
     end)
 end
 
+function _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
+    return _cached_fixture(:atomic_injected_angular_hfdmrg_hf_adapter_fixture, () -> begin
+        benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
+        build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6288,6 +6295,37 @@ end
     @test diagnostics.ground_orbital_energy_error ≤ 1.0e-8
 end
 
+@testset "Atomic injected angular HFDMRG-facing HF adapter" begin
+    adapter = _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
+    diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(adapter)
+    from_small_ed =
+        build_atomic_injected_angular_hfdmrg_hf_adapter(_atomic_injected_angular_small_ed_benchmark_fixture())
+
+    @test adapter isa AtomicInjectedAngularHFDMRGHFAdapter
+    @test adapter.hf_style isa AtomicInjectedAngularHFStyleBenchmark
+    @test adapter.route == :dense_density_density
+    @test size(adapter.hamiltonian) == size(adapter.interaction)
+    @test size(adapter.hamiltonian, 1) == diagnostics.basis_dim
+    @test size(adapter.psiup0) == (diagnostics.basis_dim, diagnostics.nup)
+    @test size(adapter.psidn0) == (diagnostics.basis_dim, diagnostics.ndn)
+    @test diagnostics.nup == 1
+    @test diagnostics.ndn == 1
+    @test diagnostics.overlap_identity_error ≤ 1.0e-6
+    @test diagnostics.hamiltonian_symmetry_error ≤ 1.0e-8
+    @test diagnostics.interaction_symmetry_error ≤ 1.0e-10
+    @test diagnostics.psiup0_orthogonality_error ≤ 1.0e-12
+    @test diagnostics.psidn0_orthogonality_error ≤ 1.0e-12
+    @test isfinite(diagnostics.benchmark_full_energy)
+    @test isfinite(diagnostics.benchmark_exact_energy)
+    @test from_small_ed.route == adapter.route
+    @test from_small_ed.nup == adapter.nup
+    @test from_small_ed.ndn == adapter.ndn
+    @test from_small_ed.hamiltonian ≈ adapter.hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test from_small_ed.interaction ≈ adapter.interaction atol = 1.0e-12 rtol = 1.0e-12
+    @test from_small_ed.psiup0 ≈ adapter.psiup0 atol = 1.0e-12 rtol = 1.0e-12
+    @test from_small_ed.psidn0 ≈ adapter.psidn0 atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Atomic injected angular small-ED benchmark" begin
     benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
     diagnostics = atomic_injected_angular_small_ed_diagnostics(benchmark)
@@ -7569,6 +7607,9 @@ end
     @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
     @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
+    @test occursin("build_atomic_injected_angular_hfdmrg_hf_adapter", docs_site_angular_track)
+    @test occursin("run_atomic_injected_angular_hfdmrg_hf", docs_site_angular_track)
+    @test occursin("in-memory hfdmrg-facing hf adapter", lowercase(docs_site_angular_track))
     @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
     @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))
     @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_angular_track)

@@ -110,6 +110,20 @@ yet claim that the full mixed shell-local angular basis is directly
 representable in that consumer language, and it is not yet a true many-body
 DMRG bridge.
 
+The first narrow in-memory HFDMRG-facing HF adapter is now available through:
+
+- `build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark; ...)`
+- `run_atomic_injected_angular_hfdmrg_hf(adapter; ...)`
+
+This adapter reuses the current dense `H, V, psiup0, psidn0` handshake and
+lets the mixed-basis angular benchmark line call `HFDMRG.solve_hfdmrg(...)`
+without a file round-trip. It does **not** solve the separate mixed-basis
+HamIO/HamV6 export problem.
+
+The durable repo-local boundary note for this state is:
+
+- `docs/angular_consumer_contract_boundary.md`
+
 The vendored subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
