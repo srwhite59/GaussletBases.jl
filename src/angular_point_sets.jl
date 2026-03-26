@@ -1,7 +1,7 @@
 """
     SpherePointSetProvenance
 
-Minimal provenance record for one vendored sphere-point-set source.
+Minimal provenance record for one sphere-point-set source or derivation path.
 
 This is an experimental research-track data container, not a frozen public
 format contract.
@@ -27,12 +27,12 @@ end
 """
     SpherePointSet
 
-Read-only vendored sphere-point-set entry for the experimental angular
-research track.
+Read-only sphere-point-set entry for the experimental angular research track.
 
 The normal/default angular backing store is the full vendored JLD2 point-set
 collection under `data/angular/SpherePoints.jld2`. The smaller curated subset
-remains available through explicit fixture helpers.
+remains available through explicit fixture helpers, while deterministic
+Fibonacci and explicit optimization paths remain opt-in.
 """
 struct SpherePointSet
     order::Int
@@ -82,6 +82,283 @@ function Base.show(io::IO, set::SpherePointSet)
         repr(set.provenance.source_tag),
         ")",
     )
+end
+
+function _sphere_point_set_nn_ratio(coordinates::AbstractMatrix{<:Real})
+    npoints = size(coordinates, 1)
+    npoints >= 2 || return 1.0
+    min_nn = Inf
+    max_nn = 0.0
+    for i in 1:npoints
+        best = Inf
+        xi = view(coordinates, i, :)
+        for j in 1:npoints
+            i == j && continue
+            best = min(best, norm(xi .- view(coordinates, j, :)))
+        end
+        min_nn = min(min_nn, best)
+        max_nn = max(max_nn, best)
+    end
+    return max_nn / min_nn
+end
+
+function _fibonacci_sphere_coordinates(order::Int)
+    order >= 1 || throw(ArgumentError("fibonacci_sphere_point_set requires order >= 1"))
+    phi_golden = (1.0 + sqrt(5.0)) / 2.0
+    coordinates = Matrix{Float64}(undef, order, 3)
+    for i in 0:(order - 1)
+        z = 1.0 - 2.0 * (i + 0.5) / order
+        r = sqrt(max(0.0, 1.0 - z * z))
+        phi = 2.0 * pi * i / phi_golden
+        coordinates[i + 1, 1] = r * cos(phi)
+        coordinates[i + 1, 2] = r * sin(phi)
+        coordinates[i + 1, 3] = z
+    end
+    return coordinates
+end
+
+function _pack_sphere_point_angles(coordinates::AbstractMatrix{<:Real})
+    npoints = size(coordinates, 1)
+    angles = Vector{Float64}(undef, 2 * npoints)
+    for i in 1:npoints
+        x, y, z = coordinates[i, 1], coordinates[i, 2], coordinates[i, 3]
+        z_clamped = clamp(z, -1 + 1.0e-15, 1 - 1.0e-15)
+        angles[2 * i - 1] = atanh(z_clamped)
+        angles[2 * i] = atan(y, x)
+    end
+    return angles
+end
+
+function _wrap_azimuth(phi::Real)
+    return mod(Float64(phi) + pi, 2pi) - pi
+end
+
+function _unpack_sphere_point_angles(angles::AbstractVector{<:Real})
+    iseven(length(angles)) ||
+        throw(ArgumentError("packed sphere-point angles must have even length"))
+    npoints = length(angles) ÷ 2
+    coordinates = Matrix{Float64}(undef, npoints, 3)
+    for i in 1:npoints
+        xi = Float64(angles[2 * i - 1])
+        phi = _wrap_azimuth(angles[2 * i])
+        z = tanh(xi)
+        r = sqrt(max(0.0, 1.0 - z * z))
+        coordinates[i, 1] = r * cos(phi)
+        coordinates[i, 2] = r * sin(phi)
+        coordinates[i, 3] = z
+    end
+    return coordinates
+end
+
+@inline function _sphere_point_sinhc_and_deriv(x::Float64)
+    ax = abs(x)
+    if ax < 1.0e-8
+        x2 = x * x
+        s = 1.0 + x2 / 6.0 + x2 * x2 / 120.0
+        ds = x / 3.0 + x2 * x / 30.0
+        return (s, ds)
+    end
+    return (sinh(x) / x, (x * cosh(x) - sinh(x)) / (x * x))
+end
+
+@inline function _sphere_point_sinhc_scalar(x::Float64)
+    s, _ = _sphere_point_sinhc_and_deriv(x)
+    return s
+end
+
+@inline function _sphere_point_kappa_from_beta(order::Int, beta::Real)
+    theta_nn = sqrt(4.0 * pi / order)
+    return (Float64(beta) / theta_nn)^2
+end
+
+function _sphere_point_gaussian_gram(
+    coordinates::AbstractMatrix{<:Real},
+    kappa::Real;
+    return_r::Bool = false,
+)
+    npoints = size(coordinates, 1)
+    dot_products = Matrix{Float64}(coordinates * transpose(coordinates))
+    for j in 1:npoints
+        for i in 1:npoints
+            dot_products[i, j] = clamp(dot_products[i, j], -1.0 + 1.0e-12, 1.0)
+        end
+    end
+
+    radii = Matrix{Float64}(undef, npoints, npoints)
+    kappaf = Float64(kappa)
+    for j in 1:npoints
+        for i in 1:npoints
+            t = max(0.0, 2.0 * (1.0 + dot_products[i, j]))
+            radii[i, j] = kappaf * sqrt(t)
+        end
+    end
+
+    gram = Matrix{Float64}(undef, npoints, npoints)
+    prefactor = 4.0 * pi * exp(-2.0 * kappaf)
+    for j in 1:npoints
+        for i in 1:npoints
+            gram[i, j] = prefactor * _sphere_point_sinhc_scalar(radii[i, j])
+        end
+    end
+    for i in 1:npoints
+        gram[i, i] += 1.0e-15
+    end
+
+    if return_r
+        return gram, radii
+    end
+    return gram
+end
+
+function _sphere_point_logdet(gram::AbstractMatrix{<:Real})
+    eig = eigvals(Symmetric(Matrix{Float64}(gram)))
+    shift = minimum(eig) < 0.0 ? max(1.0e-15, -2.0 * minimum(eig)) : 0.0
+    stabilized = shift == 0.0 ? Matrix{Float64}(gram) : Matrix{Float64}(gram) + Diagonal(fill(shift, size(gram, 1)))
+    factor = cholesky(Symmetric(stabilized); check = true)
+    return 2.0 * sum(log, diag(factor.U))
+end
+
+function _sphere_point_objective_and_gradient(
+    angles::AbstractVector{<:Real},
+    kappa::Real;
+    compute_gradient::Bool = true,
+)
+    npoints = length(angles) ÷ 2
+    z = Vector{Float64}(undef, npoints)
+    r = Vector{Float64}(undef, npoints)
+    cphi = Vector{Float64}(undef, npoints)
+    sphi = Vector{Float64}(undef, npoints)
+    coordinates = Matrix{Float64}(undef, npoints, 3)
+
+    for i in 1:npoints
+        xi = Float64(angles[2 * i - 1])
+        phi = _wrap_azimuth(angles[2 * i])
+        zi = tanh(xi)
+        ri = sqrt(max(0.0, 1.0 - zi * zi))
+        cph = cos(phi)
+        sph = sin(phi)
+        z[i] = zi
+        r[i] = ri
+        cphi[i] = cph
+        sphi[i] = sph
+        coordinates[i, 1] = ri * cph
+        coordinates[i, 2] = ri * sph
+        coordinates[i, 3] = zi
+    end
+
+    gram, radii = _sphere_point_gaussian_gram(coordinates, kappa; return_r = true)
+    objective = -_sphere_point_logdet(gram)
+    compute_gradient || return (objective = objective, gradient = nothing, coordinates = coordinates)
+
+    eig = eigvals(Symmetric(gram))
+    shift = minimum(eig) < 0.0 ? max(1.0e-15, -2.0 * minimum(eig)) : 0.0
+    stabilized = shift == 0.0 ? gram : gram + Diagonal(fill(shift, size(gram, 1)))
+    factor = cholesky(Symmetric(stabilized); check = true)
+    inv_u = inv(factor.U)
+    gram_inv = inv_u * transpose(inv_u)
+
+    gradient = Vector{Float64}(undef, length(angles))
+    prefactor = 4.0 * pi * exp(-2.0 * Float64(kappa))
+    kappa2 = Float64(kappa)^2
+
+    for i in 1:npoints
+        gi1 = 0.0
+        gi2 = 0.0
+        gi3 = 0.0
+        for j in 1:npoints
+            rij = radii[i, j]
+            _, ds = _sphere_point_sinhc_and_deriv(rij)
+            aij = prefactor * ds * (kappa2 / rij)
+            coeff = 2.0 * gram_inv[i, j] * aij
+            gi1 += coeff * coordinates[j, 1]
+            gi2 += coeff * coordinates[j, 2]
+            gi3 += coeff * coordinates[j, 3]
+        end
+
+        gi1 = -gi1
+        gi2 = -gi2
+        gi3 = -gi3
+
+        zi = z[i]
+        ri = r[i]
+        cph = cphi[i]
+        sph = sphi[i]
+        ds_dxi = -zi * ri
+        dz_dxi = ri * ri
+
+        gradient[2 * i - 1] = gi1 * (ds_dxi * cph) + gi2 * (ds_dxi * sph) + gi3 * dz_dxi
+        gradient[2 * i] = gi1 * (-ri * sph) + gi2 * (ri * cph)
+    end
+
+    return (objective = objective, gradient = gradient, coordinates = coordinates)
+end
+
+function _optimized_sphere_point_coordinates(
+    coordinates::AbstractMatrix{<:Real};
+    beta::Real = 2.0,
+    iters::Int = 200,
+    gtol::Real = 1.0e-8,
+    trace::Bool = false,
+)
+    npoints = size(coordinates, 1)
+    iters >= 0 || throw(ArgumentError("optimize_sphere_point_set requires iters >= 0"))
+    gtol > 0 || throw(ArgumentError("optimize_sphere_point_set requires gtol > 0"))
+    beta > 0 || throw(ArgumentError("optimize_sphere_point_set requires beta > 0"))
+
+    angles = _pack_sphere_point_angles(coordinates)
+    kappa = _sphere_point_kappa_from_beta(npoints, beta)
+    current = _sphere_point_objective_and_gradient(angles, kappa)
+    trace &&
+        @info(
+            "sphere-point optimization start",
+            order = npoints,
+            beta = Float64(beta),
+            objective = current.objective,
+            gradient_supnorm = norm(current.gradient, Inf),
+        )
+
+    for iteration in 1:iters
+        gradient_supnorm = norm(current.gradient, Inf)
+        gradient_supnorm <= gtol && break
+
+        direction = -current.gradient
+        slope = dot(current.gradient, direction)
+        step = 1.0
+        accepted = false
+        best = current
+        best_angles = angles
+
+        while step >= 1.0e-12
+            trial_angles = copy(angles)
+            trial_angles .+= step .* direction
+            for i in 1:npoints
+                trial_angles[2 * i] = _wrap_azimuth(trial_angles[2 * i])
+            end
+
+            trial = _sphere_point_objective_and_gradient(trial_angles, kappa)
+            if trial.objective <= current.objective + 1.0e-4 * step * slope
+                accepted = true
+                best = trial
+                best_angles = trial_angles
+                break
+            end
+            step *= 0.5
+        end
+
+        accepted || break
+        angles = best_angles
+        current = best
+        trace &&
+            (iteration == 1 || iteration % 10 == 0 || iteration == iters) &&
+            @info(
+                "sphere-point optimization step",
+                iteration = iteration,
+                objective = current.objective,
+                gradient_supnorm = norm(current.gradient, Inf),
+            )
+    end
+
+    return current.coordinates
 end
 
 _sphere_point_sets_path() =
@@ -224,6 +501,75 @@ function sphere_point_set(order::Int)
         ),
     )
     return set
+end
+
+"""
+    fibonacci_sphere_point_set(order::Int)
+
+Build one deterministic Fibonacci sphere point set using the canonical
+`z = 1 - 2*(i + 0.5)/N`, `phi = 2π*i/φ_golden` convention.
+
+This is an explicit debug/experimental path. It does not affect the vendored
+default `sphere_point_set(order)` behavior.
+"""
+function fibonacci_sphere_point_set(order::Int)
+    coordinates = _fibonacci_sphere_coordinates(order)
+    provenance = SpherePointSetProvenance(
+        "deterministic_fibonacci_seed",
+        "GaussletBases",
+        "in_memory_generation",
+        "canonical Fibonacci sphere seed with i=0:N-1, z=1-2*(i+0.5)/N, phi=2π*i/φ_golden; no randomization or rotation",
+    )
+    return SpherePointSet(
+        order,
+        order,
+        coordinates,
+        _sphere_point_set_nn_ratio(coordinates),
+        provenance,
+    )
+end
+
+"""
+    optimize_sphere_point_set(
+        set::SpherePointSet;
+        beta=2.0,
+        iters=200,
+        gtol=1e-8,
+        trace=false,
+    )
+
+Optimize an existing sphere point set explicitly on request.
+
+This is an experimental deterministic optimization path layered on top of an
+existing point set. It does not run implicitly inside `sphere_point_set(order)`.
+"""
+function optimize_sphere_point_set(
+    set::SpherePointSet;
+    beta::Real = 2.0,
+    iters::Int = 200,
+    gtol::Real = 1.0e-8,
+    trace::Bool = false,
+)
+    coordinates = _optimized_sphere_point_coordinates(
+        set.coordinates;
+        beta = beta,
+        iters = iters,
+        gtol = gtol,
+        trace = trace,
+    )
+    provenance = SpherePointSetProvenance(
+        "optimized_from_input_point_set",
+        "GaussletBases",
+        "in_memory_optimization",
+        "explicit Gaussian-Gram logdet optimization from $(repr(set.provenance.source_tag)) with beta=$(Float64(beta)), iters=$(iters), gtol=$(Float64(gtol))",
+    )
+    return SpherePointSet(
+        set.order,
+        set.cardinality,
+        coordinates,
+        _sphere_point_set_nn_ratio(coordinates),
+        provenance,
+    )
 end
 
 """

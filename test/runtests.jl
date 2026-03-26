@@ -6299,6 +6299,49 @@ end
     @test set32.coordinates[1, :] ≈ [0.40002938831494556, -0.0010525966270966628, 0.9165017078678638] atol = 0.0 rtol = 1.0e-14
 end
 
+@testset "Explicit angular Fibonacci and optimization paths" begin
+    fib10_a = fibonacci_sphere_point_set(10)
+    fib10_b = fibonacci_sphere_point_set(10)
+    fib15 = fibonacci_sphere_point_set(15)
+    optimized10 = optimize_sphere_point_set(fib10_a; beta = 2.0, iters = 20, gtol = 1.0e-8)
+
+    @test fib10_a isa SpherePointSet
+    @test fib15 isa SpherePointSet
+    @test fib10_a.order == fib10_a.cardinality == 10
+    @test fib15.order == fib15.cardinality == 15
+    @test fib10_a.coordinates ≈ fib10_b.coordinates atol = 0.0 rtol = 0.0
+    @test fib10_a.nn_ratio == fib10_b.nn_ratio
+    @test fib10_a.provenance.source_tag == "deterministic_fibonacci_seed"
+    @test fib10_a.provenance.source_project == "GaussletBases"
+    @test fib10_a.provenance.source_artifact == "in_memory_generation"
+    @test occursin("Fibonacci sphere seed", fib10_a.provenance.source_note)
+    @test occursin("no randomization", fib10_a.provenance.source_note)
+
+    fib10_kappa = GaussletBases._sphere_point_kappa_from_beta(fib10_a.order, 2.0)
+    fib10_initial_logdet =
+        GaussletBases._sphere_point_logdet(
+            GaussletBases._sphere_point_gaussian_gram(fib10_a.coordinates, fib10_kappa),
+        )
+    fib10_optimized_logdet =
+        GaussletBases._sphere_point_logdet(
+            GaussletBases._sphere_point_gaussian_gram(optimized10.coordinates, fib10_kappa),
+        )
+
+    @test optimized10 isa SpherePointSet
+    @test optimized10.order == fib10_a.order
+    @test optimized10.cardinality == fib10_a.cardinality
+    @test optimized10.provenance.source_tag == "optimized_from_input_point_set"
+    @test optimized10.provenance.source_project == "GaussletBases"
+    @test optimized10.provenance.source_artifact == "in_memory_optimization"
+    @test occursin("deterministic_fibonacci_seed", optimized10.provenance.source_note)
+    @test occursin("beta=2.0", optimized10.provenance.source_note)
+    @test occursin("iters=20", optimized10.provenance.source_note)
+    @test occursin("gtol=1.0e-8", optimized10.provenance.source_note)
+    @test maximum(abs.(sqrt.(sum(abs2, optimized10.coordinates; dims = 2)) .- 1.0)) < 1.0e-12
+    @test optimized10.nn_ratio >= 1.0
+    @test fib10_optimized_logdet ≥ fib10_initial_logdet - 1.0e-10
+end
+
 @testset "Shell-local injected angular basis" begin
     shell15 = _shell_local_injected_angular_fixture(15)
     shell32 = _shell_local_injected_angular_fixture(32)
@@ -7831,9 +7874,12 @@ if _test_group_enabled(:docs)
     @test occursin("sphere_point_set_orders", docs_site_angular_track)
     @test occursin("sphere_point_set(order)", docs_site_angular_track)
     @test occursin("curated_sphere_point_set", docs_site_angular_track)
+    @test occursin("fibonacci_sphere_point_set", docs_site_angular_track)
+    @test occursin("optimize_sphere_point_set", docs_site_angular_track)
     @test occursin("full vendored optimized", lowercase(docs_site_angular_track))
     @test occursin("sphere-point collection", lowercase(docs_site_angular_track))
     @test occursin("curated fixture subset", lowercase(docs_site_angular_track))
+    @test occursin("explicit optional paths", lowercase(docs_site_angular_track))
     @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
     @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
     @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))

@@ -63,7 +63,19 @@ The smaller curated subset remains available through:
 
 Those curated helpers are experimental and read-only fixture surfaces. They are
 there for tiny tests, pinned examples, and paper-stable demo cases, not as the
-normal angular order pool. The first shell-local basis layer is now available
+normal angular order pool.
+
+For controlled small-`N` debugging and explicit experiments, the repo also now
+provides:
+
+- `fibonacci_sphere_point_set(order)`
+- `optimize_sphere_point_set(set; beta=..., iters=..., gtol=..., trace=false)`
+
+These are explicit optional paths. They do **not** change the normal/default
+vendored `sphere_point_set(order)` behavior, and optimization does not happen
+implicitly inside the default loader.
+
+The first shell-local basis layer is now available
 through:
 
 - `build_shell_local_injected_angular_basis(order; ...)`
