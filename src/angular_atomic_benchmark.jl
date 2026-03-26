@@ -31,8 +31,10 @@ angular assembly layer.
 
 This stays intentionally narrow. It uses the assembled one-electron operators
 from `AtomicInjectedAngularOneBodyBenchmark`, a two-index density-density
-interaction assembled from shell moment blocks, and a simple closed-shell SCF
-iteration. It is an HF-style benchmark path, not a general HF framework.
+interaction assembled from shell moment blocks, and a simple orthonormal-basis
+closed-shell SCF iteration aligned with the current HFnn / HFDMRG
+density-density model. The overlap matrix is kept only as a conditioning
+diagnostic. It is an HF-style benchmark path, not a general HF framework.
 """
 struct AtomicInjectedAngularHFStyleBenchmark{
     B <: AtomicInjectedAngularOneBodyBenchmark,
@@ -392,6 +394,33 @@ function _assemble_atomic_injected_angular_interaction(
     )
 end
 
+function _restricted_density_density_fock(
+    one_body::AbstractMatrix{<:Real},
+    interaction::AbstractMatrix{<:Real},
+    density::AbstractMatrix{<:Real},
+)
+    H = Matrix{Float64}(one_body)
+    V = Matrix{Float64}(interaction)
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    occupations = vec(diag(rho))
+    F = H + 2.0 .* Diagonal(V * occupations) - rho .* V
+    return 0.5 .* (F .+ transpose(F))
+end
+
+function _restricted_density_density_energy(
+    one_body::AbstractMatrix{<:Real},
+    interaction::AbstractMatrix{<:Real},
+    density::AbstractMatrix{<:Real},
+)
+    H = Matrix{Float64}(one_body)
+    V = Matrix{Float64}(interaction)
+    rho = 0.5 .* (Matrix{Float64}(density) .+ transpose(Matrix{Float64}(density)))
+    occupations = vec(diag(rho))
+    direct = 2.0 * dot(occupations, V * occupations)
+    exchange = dot(vec(rho), vec(V .* rho))
+    return 2.0 * tr(rho * H) + direct - exchange
+end
+
 function _closed_shell_density_density_scf(
     one_body::AbstractMatrix{<:Real},
     overlap::AbstractMatrix{<:Real},
@@ -414,8 +443,18 @@ function _closed_shell_density_density_scf(
     nocc = nelec ÷ 2
     nocc <= norb || throw(ArgumentError("occupied closed-shell orbital count cannot exceed the basis dimension"))
 
-    initial = _generalized_eigensystem(one_body, overlap)
-    density = 2.0 .* (initial.coefficients[:, 1:nocc] * transpose(initial.coefficients[:, 1:nocc]))
+    H = 0.5 .* (Matrix{Float64}(one_body) .+ transpose(Matrix{Float64}(one_body)))
+    V = 0.5 .* (Matrix{Float64}(interaction) .+ transpose(Matrix{Float64}(interaction)))
+    S = 0.5 .* (Matrix{Float64}(overlap) .+ transpose(Matrix{Float64}(overlap)))
+    # The injected/angular working basis is intended to be orthonormal. Any
+    # residual overlap defect is tracked as a conditioning diagnostic only.
+    overlap_identity_error =
+        opnorm(S - Matrix{Float64}(I, size(S, 1), size(S, 2)), Inf)
+
+    initial = eigen(Symmetric(H))
+    density =
+        nocc == 0 ? zeros(Float64, norb, norb) :
+        initial.vectors[:, 1:nocc] * transpose(initial.vectors[:, 1:nocc])
     density = 0.5 .* (density .+ transpose(density))
 
     energies = Float64[]
@@ -427,19 +466,27 @@ function _closed_shell_density_density_scf(
     result = nothing
     for iteration in 1:maxiter
         iterations = iteration
-        occupations = vec(diag(density * overlap))
-        fock = Matrix{Float64}(one_body) + Diagonal(Matrix{Float64}(interaction) * occupations)
-        eig = _generalized_eigensystem(fock, overlap)
-        occupied = eig.coefficients[:, 1:nocc]
-        density_new = 2.0 .* (occupied * transpose(occupied))
+        fock = _restricted_density_density_fock(H, V, density)
+        eig = eigen(Symmetric(fock))
+        occupied = nocc == 0 ? zeros(Float64, norb, 0) : eig.vectors[:, 1:nocc]
+        density_new =
+            nocc == 0 ? zeros(Float64, norb, norb) :
+            occupied * transpose(occupied)
         density_new = 0.5 .* (density_new .+ transpose(density_new))
         mixed_density = (1 - damping) .* density_new .+ damping .* density
         mixed_density = 0.5 .* (mixed_density .+ transpose(mixed_density))
 
-        mixed_occupations = vec(diag(mixed_density * overlap))
-        energy = sum(Matrix{Float64}(one_body) .* mixed_density) +
-                 0.5 * dot(mixed_occupations, Matrix{Float64}(interaction) * mixed_occupations)
-        residual = norm(mixed_density - density, Inf)
+        mixed_fock = _restricted_density_density_fock(H, V, mixed_density)
+        mixed_eig = eigen(Symmetric(mixed_fock))
+        mixed_occupied =
+            nocc == 0 ? zeros(Float64, norb, 0) : mixed_eig.vectors[:, 1:nocc]
+        mixed_projector =
+            nocc == 0 ? zeros(Float64, norb, norb) :
+            mixed_occupied * transpose(mixed_occupied)
+        mixed_projector = 0.5 .* (mixed_projector .+ transpose(mixed_projector))
+        mixed_occupations = 2.0 .* vec(diag(mixed_density))
+        energy = _restricted_density_density_energy(H, V, mixed_density)
+        residual = opnorm(mixed_projector - mixed_density, Inf)
         energy_change = isempty(energies) ? Inf : abs(energy - energies[end])
         push!(energies, energy)
         push!(residuals, residual)
@@ -448,10 +495,10 @@ function _closed_shell_density_density_scf(
         result = (
             density = mixed_density,
             occupations = mixed_occupations,
-            fock = 0.5 .* (fock .+ transpose(fock)),
-            coefficients = eig.coefficients,
-            occupied_coefficients = occupied,
-            orbital_energies = eig.values,
+            fock = mixed_fock,
+            coefficients = Matrix{Float64}(mixed_eig.vectors),
+            occupied_coefficients = mixed_occupied,
+            orbital_energies = Vector{Float64}(mixed_eig.values),
             energy = energy,
         )
 
@@ -475,6 +522,7 @@ function _closed_shell_density_density_scf(
             electron_count_error = abs(electron_count - nelec),
             max_occupation = maximum(result.occupations),
             min_occupation = minimum(result.occupations),
+            overlap_identity_error = overlap_identity_error,
         ),
     )
 end

@@ -141,7 +141,10 @@ mixed-basis HamIO/HamV6 export problem.
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be
 treated as a conditioning/construction diagnostic, not as a physically
-meaningful generalized-overlap model.
+meaningful generalized-overlap model. The internal angular HF-style benchmark
+therefore uses the same conventional orthonormal-basis density-density SCF
+model as the current HFnn / HFDMRG references, rather than a generalized
+overlap reinterpretation.
 
 The durable repo-local boundary note for this state is:
 

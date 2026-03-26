@@ -2353,6 +2353,20 @@ function _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
     end)
 end
 
+function _local_hfdmrg_module()
+    return _cached_fixture(:local_hfdmrg_module, () -> begin
+        path = "/Users/srw/Dropbox/codexhome/work/hfdmrg/src"
+        isdir(path) || return nothing
+        path in LOAD_PATH || push!(LOAD_PATH, path)
+        try
+            @eval Main using HFDMRG
+            return getfield(Main, :HFDMRG)
+        catch
+            return nothing
+        end
+    end)
+end
+
 function _tiny_atomic_ida_two_electron_fixture()
     return _cached_fixture(:tiny_atomic_ida_two_electron_fixture, () -> begin
         Z = 2.0
@@ -6428,6 +6442,21 @@ end
     @test isfinite(diagnostics.exact_energy)
     @test abs(diagnostics.energy_difference_to_exact_reference) ≤ 1.0e-8
     @test diagnostics.ground_orbital_energy_error ≤ 1.0e-8
+
+    hfdmrg = _local_hfdmrg_module()
+    if hfdmrg !== nothing
+        adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+        hfdmrg_result = run_atomic_injected_angular_hfdmrg_hf(
+            adapter;
+            hfmod = hfdmrg,
+            maxiter = 40,
+            blocksize = 16,
+            cutoff = 1.0e-10,
+            scf_cutoff = 1.0e-11,
+            verbose = false,
+        )
+        @test abs(diagnostics.full_energy - hfdmrg_result.energy) ≤ 1.0e-8
+    end
 end
 
 @testset "Atomic injected angular HFDMRG-facing HF adapter" begin
