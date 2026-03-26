@@ -162,6 +162,35 @@ entrypoint assembles the Hamiltonian and interaction without running the repo's
 internal HF-style benchmark first. It does **not** solve the separate
 mixed-basis HamIO/HamV6 export problem. HFDMRG still owns the actual solve.
 
+A minimal direct caller looks like:
+
+```julia
+payload = build_atomic_injected_angular_hfdmrg_payload(
+    radial_ops;
+    ord_min = 32,
+    ord_max = 32,
+    nelec = 2,
+)
+psiup, psidn, energy = HFDMRG.solve_hfdmrg(
+    payload.hamiltonian,
+    payload.interaction,
+    payload.psiup0;
+    nblockcenter = 2,
+    blocksize = 100,
+    maxiter = 100,
+    cutoff = 1e-8,
+    scf_cutoff = 1e-9,
+    verbose = false,
+)
+```
+
+For paper-facing direct scans, the repo-local helper
+`tmp/work/angular_hfdmrg_payload_direct_scan.jl` keeps the package on the
+producer side while reducing small workflow friction. It supports a global
+`Nlist`, optional per-atom overrides via `Nlist_by_atom = Dict("Be" => [15, 32],
+:Ne => [32])`, and an optional `outfile_base`. If `outfile_base` is left empty,
+the helper writes to a timestamped default stem under `tmp/work/`.
+
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be
 treated as a conditioning/construction diagnostic, not as a physically
