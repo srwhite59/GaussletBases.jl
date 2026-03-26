@@ -10,7 +10,7 @@ It is an active research track, not a frozen public workflow branch.
 The present angular direction in `GaussletBases.jl` should be read as:
 
 - manuscript-facing and experimental
-- centered on shell-local injected angular basis work that has not yet been
+- centered on shell-local injected angular basis work that is now partially
   imported into the package
 - intentionally narrower than the mature radial/atomic producer line
 
@@ -184,12 +184,14 @@ psiup, psidn, energy = HFDMRG.solve_hfdmrg(
 )
 ```
 
-For paper-facing direct scans, the repo-local helper
-`tmp/work/angular_hfdmrg_payload_direct_scan.jl` keeps the package on the
-producer side while reducing small workflow friction. It supports a global
-`Nlist`, optional per-atom overrides via `Nlist_by_atom = Dict("Be" => [15, 32],
-:Ne => [32])`, and an optional `outfile_base`. If `outfile_base` is left empty,
-the helper writes to a timestamped default stem under `tmp/work/`.
+For paper-facing direct scans, the intended split remains:
+
+- `GaussletBases` builds the payload with
+  `build_atomic_injected_angular_hfdmrg_payload(...)`
+- external paper-side drivers call `HFDMRG.solve_hfdmrg(...)` directly
+
+That keeps the package on the producer/payload side without claiming that scan
+orchestration belongs in the repo itself.
 
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be

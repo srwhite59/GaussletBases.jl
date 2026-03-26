@@ -33,6 +33,15 @@ low-`l` reference. The full mixed shell-local angular basis is not yet exported
 as HamV6, because the current consumer language still assumes definite
 per-orbital `l,m` labels.
 
+For the current mixed-basis angular line, the direct in-memory HF handshake is
+instead:
+
+- `build_atomic_injected_angular_hfdmrg_payload`
+
+That payload builder hands dense `H`, `V`, seeds, and occupations directly to
+`HFDMRG.solve_hfdmrg(...)` without claiming full mixed-basis HamV6
+compatibility.
+
 The current branch-point note for that boundary is:
 
 - `docs/angular_consumer_contract_boundary.md`

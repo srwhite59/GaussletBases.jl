@@ -22,14 +22,19 @@ constructing the quadrature grids that go with them, and forming the current
 one-body and integral-diagonal approximation (IDA)-style operators on top of
 them.
 
-Today the package can already do three scientifically useful things:
+Today the package can already do four scientifically useful things:
 
 - a mature **radial / atomic workflow**
 - a real but newer **ordinary Cartesian mapped/hybrid workflow**
+- an experimental **angular research track** with shell-local injected basis
+  construction, shell-to-atom assembly, one-electron / HF-style / small-ED
+  benchmarks, and a direct in-memory HFDMRG payload handshake
 - a separate **advanced research line** for contraction, hierarchy, and
   prototype PGDG-related work
 
-If you are new, start with the radial path.
+If you are new, start with the radial path. It is also the most recent
+published line in the repo: the radial gausslet paper is now posted on arXiv,
+<https://doi.org/10.48550/arXiv.2603.22646>.
 
 Documentation: <https://srwhite59.github.io/GaussletBases.jl/dev/>
 
@@ -42,13 +47,18 @@ GaussletBases is most useful today for people who want to:
 
 - explore ordinary gausslets as localized basis functions built from explicit Gaussian primitive layers
 - explore radial gausslet bases for atoms and related model problems
+  The most recent posted paper on that line is
+  <https://doi.org/10.48550/arXiv.2603.22646>.
+- experiment with the manuscript-facing angular injected-basis research track
+  while treating it as experimental rather than stable workflow surface
 - inspect the underlying Gaussian layer behind a basis
 - study how primitive Gaussian layers can be contracted into more useful localized functions
 - experiment with simple one-dimensional hierarchy and contraction ideas without yet committing to a full molecular workflow
 
 It is **not** yet a complete electronic-structure workflow package. It is a
-basis, quadrature, and operator package, with a newer ordinary/cartesian
-workflow and a separate advanced line for contraction and hierarchy in 1D.
+basis, quadrature, and operator package, with a mature radial/atomic line, a
+newer ordinary/cartesian line, an experimental angular benchmark line, and a
+separate advanced line for contraction and hierarchy in 1D.
 
 ## Installation
 
@@ -216,13 +226,15 @@ supporting notes after the current branch pages are clear.
 What is already useful today:
 
 - ordinary 1D gausslet objects and explicit Gaussian constructions
-- radial gausslet bases and radial one-body operators
-- the first explicit one-electron `(l,m)` atomic layer
-- the first static He / IDA-style interacting atomic ingredients
-- the first direct / exchange / Fock / minimal-UHF atomic line in the current
-  IDA model
+- the mature radial/atomic line: radial bases, radial one-body operators, the
+  current `(l,m)` atomic layer, static He / IDA-style interacting ingredients,
+  direct / exchange / Fock helpers, a minimal UHF kernel, and dense/sliced
+  export for the current density-density model
 - the experimental ordinary Cartesian mapped/hybrid one-body route in the
   friendlier regime
+- the experimental angular research track: shell-local injected angular basis
+  construction, shell-to-atom assembly, one-electron benchmark, HF-style
+  benchmark, small-ED benchmark, and a direct in-memory HFDMRG payload path
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction
 - the first 1D partition/hierarchy/contraction experiments
@@ -230,12 +242,12 @@ What is already useful today:
 What is not yet here:
 
 - exact non-diagonal electron-electron operators
-- the fuller interacting spherical-angular atomic layer beyond the present
-  one-electron `(l,m)` path
+- a broad stabilized angular atomic workflow beyond the current experimental
+  benchmark ladder and direct HF payload handoff
 - a broad general HF workflow beyond the present minimal atomic IDA UHF kernel
 - 2D or 3D nested workflows
 - named Gaussian chemistry basis libraries
-- larger solver layers such as DMRG or related workflows
+- true many-body DMRG or related workflow layers
 - Python and Fortran interoperability layers
 
 That is deliberate. The package is still settling its scientific structure before it grows into those directions.

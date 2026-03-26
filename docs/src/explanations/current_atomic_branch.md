@@ -35,17 +35,22 @@ atomic HF framework.
 ## Angular research track
 
 The next active scientific direction is the manuscript-facing angular gausslet
-line. That branch is now tracked explicitly, but only as an experimental
-research scaffold:
+line. That branch is now tracked explicitly, but it remains experimental and
+manuscript-facing rather than part of the mature atomic user workflow:
 
 - [Angular research track](angular_research_track.md)
 
 That page is the right place to read the current boundary:
 
-- shell-local injected angular basis construction has **not** yet been ported
+- shell-local injected angular basis construction and shell-to-atom assembly
+  are now present in the repo
+- the angular line already has one-electron, HF-style, and small-ED benchmark
+  paths plus a direct in-memory HFDMRG payload handshake
+- the exact common low-`l` reference already fits the current HamIO / HamV6
+  consumer language cleanly, but the full mixed basis does not yet
 - Hooke is deferred for a later dedicated workflow line
-- the near-term target is an atomic angular benchmark ladder:
-  HF, small ED, and one DMRG-facing bridge
+- the angular line should still be read as experimental, not as a mature
+  public atomic workflow branch
 
 ## Start here
 
@@ -80,6 +85,9 @@ The wording discipline for the atomic line remains:
   Coulomb Hamiltonian
 - direct / exchange / Fock / UHF are narrow current-model layers
 - solver-facing export is already supported for the atomic line
+- the newer injected-angular benchmark line is real, but it belongs to the
+  separate experimental angular research track rather than to this mature
+  atomic branch page
 
 That is the present atomic scope the library can stand behind.
 
