@@ -7,7 +7,7 @@ if !(HFDMRG_PATH in LOAD_PATH)
 end
 using HFDMRG
 
-function build_he_hf_benchmark()
+function build_he_radial_ops()
     Z = 2.0
     s = 0.15
     basis = build_basis(
@@ -22,13 +22,12 @@ function build_he_hf_benchmark()
         ),
     )
     grid = radial_quadrature(basis; accuracy = :medium, quadrature_rmax = 12.0)
-    radial_ops = atomic_operators(basis, grid; Z = Z, lmax = 2)
-    return build_atomic_injected_angular_hf_style_benchmark(radial_ops)
+    return atomic_operators(basis, grid; Z = Z, lmax = 2)
 end
 
 function main()
-    benchmark = build_he_hf_benchmark()
-    adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+    radial_ops = build_he_radial_ops()
+    adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(radial_ops)
     adapter_diag = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(adapter)
     result = run_atomic_injected_angular_hfdmrg_hf(
         adapter;
@@ -45,6 +44,7 @@ function main()
     println("nup=$(adapter.nup)")
     println("ndn=$(adapter.ndn)")
     println("overlap_identity_error=$(adapter_diag.overlap_identity_error)")
+    println("has_benchmark_reference=$(adapter_diag.has_benchmark_reference)")
     println("benchmark_full_energy=$(adapter_diag.benchmark_full_energy)")
     println("benchmark_exact_energy=$(adapter_diag.benchmark_exact_energy)")
     println("hfdmrg_energy=$(result.energy)")

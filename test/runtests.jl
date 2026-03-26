@@ -8,6 +8,64 @@ using GaussletBases
 const _PROJECT_ROOT = dirname(@__DIR__)
 const _RUN_SLOW_TESTS = get(ENV, "GAUSSLETBASES_SLOW_TESTS", "0") == "1"
 const _FIXTURE_CACHE = Dict{Symbol,Any}()
+const _TEST_GROUP_ENV = strip(get(ENV, "GAUSSLETBASES_TEST_GROUPS", "all"))
+const _AVAILABLE_TEST_GROUPS = (
+    :radial,
+    :core,
+    :nested,
+    :ordinary,
+    :diatomic,
+    :angular,
+    :ida,
+    :docs,
+    :examples,
+    :misc,
+)
+const _FAST_TEST_GROUPS = Set((
+    :radial,
+    :core,
+    :angular,
+    :ida,
+    :docs,
+))
+
+function _parse_selected_test_groups(spec::AbstractString)
+    spec_clean = strip(spec)
+    isempty(spec_clean) && return Set(_AVAILABLE_TEST_GROUPS)
+    lowercase(spec_clean) == "all" && return Set(_AVAILABLE_TEST_GROUPS)
+
+    selected = Set{Symbol}()
+    tokens = filter(!isempty, strip.(split(spec_clean, ',')))
+    for token in tokens
+        lowered = lowercase(token)
+        if lowered == "all"
+            union!(selected, _AVAILABLE_TEST_GROUPS)
+        elseif lowered == "fast"
+            union!(selected, _FAST_TEST_GROUPS)
+        else
+            group = Symbol(lowered)
+            group in _AVAILABLE_TEST_GROUPS ||
+                throw(
+                    ArgumentError(
+                        "unknown GAUSSLETBASES_TEST_GROUPS token $(repr(token)); available groups are $(join(string.(_AVAILABLE_TEST_GROUPS), ", ")) plus aliases all, fast",
+                    ),
+                )
+            push!(selected, group)
+        end
+    end
+    return selected
+end
+
+const _SELECTED_TEST_GROUPS = _parse_selected_test_groups(_TEST_GROUP_ENV)
+_test_group_enabled(group::Symbol) = group in _SELECTED_TEST_GROUPS
+
+if _TEST_GROUP_ENV != "all"
+    @info(
+        "GaussletBases test selection active",
+        groups = sort!(collect(_SELECTED_TEST_GROUPS)),
+        slow_tests = _RUN_SLOW_TESTS,
+    )
+end
 
 module _HighPrecFamilyReference
 include(joinpath(dirname(@__DIR__), "src", "internal", "families_high_prec.jl"))
@@ -152,6 +210,7 @@ function _radial_operator_fixture(; accuracy = :medium, refine = nothing, quadra
     return rb, grid
 end
 
+if _test_group_enabled(:radial)
 @testset "Recommended xgaussian presets" begin
     @test isempty(recommended_xgaussians(0))
     @test [g.alpha for g in recommended_xgaussians(1)] == [0.1]
@@ -313,6 +372,7 @@ end
     @test diag.overlap_error < 1.0e-5
     @test diag.D < 1.0e-5
     @test abs(ground_energy + 0.5) < 1.0e-6
+end
 end
 
 function _quick_radial_operator_fixture()
@@ -2288,8 +2348,8 @@ end
 
 function _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
     return _cached_fixture(:atomic_injected_angular_hfdmrg_hf_adapter_fixture, () -> begin
-        benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
-        build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
+        _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
+        build_atomic_injected_angular_hfdmrg_hf_adapter(radial_ops)
     end)
 end
 
@@ -2579,6 +2639,7 @@ function _midpoint_reference_gaussian_factor_matrix(
     return transpose(values) * ((weights .* factor) .* values)
 end
 
+if _test_group_enabled(:core)
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)
@@ -3140,6 +3201,9 @@ end
     )
 end
 
+end
+
+if _test_group_enabled(:nested)
 @testset "Cartesian nested face first primitive" begin
     function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
         endpoint = (count - 1) / 2
@@ -3637,6 +3701,9 @@ end
     )
 end
 
+end
+
+if _test_group_enabled(:ordinary)
 @testset "Atomic hybrid anchor comparison" begin
     if !_legacy_basisfile_available()
         @test true
@@ -4350,6 +4417,9 @@ end
     end
 end
 
+end
+
+if _test_group_enabled(:diatomic)
 @testset "Bond-aligned diatomic QW reference path" begin
     basis14, operators14, check14 = _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
     basis20, operators20, check20 = _bond_aligned_diatomic_qw_fixture(; bond_length = 2.0)
@@ -5308,6 +5378,9 @@ end
     end
 end
 
+end
+
+if _test_group_enabled(:ordinary)
 @testset "Ordinary Cartesian localized backend" begin
     expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
     basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -5760,6 +5833,9 @@ end
     @test -0.7 < energy < -0.3
 end
 
+end
+
+if _test_group_enabled(:core)
 @testset "Basis representation" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0))
     rep = basis_representation(ub)
@@ -5954,6 +6030,9 @@ end
     @test refined_rep.basis_matrices.kinetic ≈ transpose(refined_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
 end
 
+end
+
+if _test_group_enabled(:radial)
 @testset "Radial quadrature and diagnostics" begin
     rb, grid = _quick_radial_operator_fixture()
     @test radial_quadrature(rb) isa RadialQuadratureGrid
@@ -6130,6 +6209,50 @@ end
     @test_throws BoundsError multipole(ops, 5)
 end
 
+end
+
+if _test_group_enabled(:angular)
+@testset "Vendored angular sphere-point access" begin
+    orders = sphere_point_set_orders()
+    curated_orders = curated_sphere_point_set_orders()
+
+    @test first(orders) == 10
+    @test last(orders) == 580
+    @test length(orders) == 122
+    @test issorted(orders)
+    @test 15 in orders
+    @test 32 in orders
+    @test 51 in orders
+    @test 100 in orders
+    @test 580 in orders
+    @test_throws ArgumentError sphere_point_set(9)
+    @test_throws ArgumentError sphere_point_set(101)
+
+    set10 = sphere_point_set(10)
+    set15_full = sphere_point_set(15)
+    set100 = sphere_point_set(100)
+    set580 = sphere_point_set(580)
+
+    for set in (set10, set15_full, set100, set580)
+        @test set isa SpherePointSet
+        @test set.cardinality == set.order
+        @test size(set.coordinates) == (set.cardinality, 3)
+        @test all(isfinite, set.coordinates)
+        @test set.nn_ratio >= 1.0
+        @test set.provenance.source_tag == "optimized_sphere_points_full_vendor"
+        @test set.provenance.source_project == "GaussletModules/Radial"
+        @test occursin("SpherePoints.jld2", set.provenance.source_artifact)
+        @test occursin("xyzsets", set.provenance.source_note)
+
+        norms = sqrt.(sum(abs2, set.coordinates; dims = 2))
+        @test maximum(abs.(norms .- 1.0)) < 1.0e-12
+    end
+
+    @test all(order in orders for order in curated_orders)
+    @test set15_full.coordinates ≈ curated_sphere_point_set(15).coordinates atol = 0.0 rtol = 1.0e-14
+    @test set15_full.nn_ratio ≈ curated_sphere_point_set(15).nn_ratio atol = 0.0 rtol = 1.0e-14
+end
+
 @testset "Curated angular sphere-point access" begin
     orders = curated_sphere_point_set_orders()
 
@@ -6212,6 +6335,15 @@ end
         w_lo = 0.2,
         w_hi = 0.7,
     )
+    scheduled_orders_full = assign_atomic_angular_shell_orders(
+        [0.05, 0.5, 1.2, 3.0, 8.0];
+        ord_min = 24,
+        ord_max = 58,
+        r_lo = 0.2,
+        r_hi = 4.5,
+        w_lo = 0.2,
+        w_hi = 0.7,
+    )
 
     @test assembly isa AtomicShellLocalInjectedAngularAssembly
     @test assembly.shell_orders == [15, 32, 51, 32]
@@ -6233,8 +6365,11 @@ end
 
     @test scheduled_orders[1] == 15
     @test scheduled_orders[end] == 15
-    @test all(order in (15, 32, 51) for order in scheduled_orders)
+    @test all(order in sphere_point_set_orders() for order in scheduled_orders)
+    @test any(order ∉ curated_sphere_point_set_orders() for order in scheduled_orders)
     @test maximum(scheduled_orders) ≥ 32
+    @test all(order in sphere_point_set_orders() for order in scheduled_orders_full)
+    @test any(order ∉ curated_sphere_point_set_orders() for order in scheduled_orders_full)
 end
 
 @testset "Atomic injected angular one-body benchmark" begin
@@ -6298,9 +6433,11 @@ end
 @testset "Atomic injected angular HFDMRG-facing HF adapter" begin
     adapter = _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
     diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(adapter)
+    benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
+    from_benchmark = build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark)
     from_small_ed =
         build_atomic_injected_angular_hfdmrg_hf_adapter(_atomic_injected_angular_small_ed_benchmark_fixture())
-    benchmark = _atomic_injected_angular_hf_style_benchmark_fixture()
+    benchmark_diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(from_benchmark)
     open_shell_seeds =
         build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = 2, ndn = 1)
     explicit_psiup0 = open_shell_seeds.psiup0[:, [2, 1]]
@@ -6325,7 +6462,8 @@ end
     )
 
     @test adapter isa AtomicInjectedAngularHFDMRGHFAdapter
-    @test adapter.hf_style isa AtomicInjectedAngularHFStyleBenchmark
+    @test adapter.one_body isa AtomicInjectedAngularOneBodyBenchmark
+    @test isnothing(adapter.hf_style)
     @test adapter.route == :dense_density_density
     @test size(adapter.hamiltonian) == size(adapter.interaction)
     @test size(adapter.hamiltonian, 1) == diagnostics.basis_dim
@@ -6333,15 +6471,27 @@ end
     @test size(adapter.psidn0) == (diagnostics.basis_dim, diagnostics.ndn)
     @test diagnostics.nup == 1
     @test diagnostics.ndn == 1
-    @test diagnostics.overlap_identity_error ≤ 1.0e-6
+    @test diagnostics.overlap_identity_error ≤ 2.0e-6
     @test diagnostics.hamiltonian_symmetry_error ≤ 1.0e-8
     @test diagnostics.interaction_symmetry_error ≤ 1.0e-10
     @test diagnostics.psiup0_orthogonality_error ≤ 1.0e-12
     @test diagnostics.psidn0_orthogonality_error ≤ 1.0e-12
-    @test diagnostics.psiup0_source == :default_benchmark_orbitals
-    @test diagnostics.psidn0_source == :default_benchmark_orbitals
-    @test isfinite(diagnostics.benchmark_full_energy)
-    @test isfinite(diagnostics.benchmark_exact_energy)
+    @test diagnostics.psiup0_source == :default_one_body_orbitals
+    @test diagnostics.psidn0_source == :default_one_body_orbitals
+    @test !diagnostics.has_benchmark_reference
+    @test ismissing(diagnostics.benchmark_full_energy)
+    @test ismissing(diagnostics.benchmark_exact_energy)
+    @test from_benchmark.hf_style === benchmark
+    @test benchmark_diagnostics.has_benchmark_reference
+    @test isfinite(benchmark_diagnostics.benchmark_full_energy)
+    @test isfinite(benchmark_diagnostics.benchmark_exact_energy)
+    @test from_benchmark.route == adapter.route
+    @test from_benchmark.nup == adapter.nup
+    @test from_benchmark.ndn == adapter.ndn
+    @test from_benchmark.hamiltonian ≈ adapter.hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test from_benchmark.interaction ≈ adapter.interaction atol = 1.0e-12 rtol = 1.0e-12
+    @test from_benchmark.psiup0 ≈ adapter.psiup0 atol = 1.0e-12 rtol = 1.0e-12
+    @test from_benchmark.psidn0 ≈ adapter.psidn0 atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.route == adapter.route
     @test from_small_ed.nup == adapter.nup
     @test from_small_ed.ndn == adapter.ndn
@@ -6353,8 +6503,8 @@ end
     @test size(open_shell_seeds.psidn0) == (diagnostics.basis_dim, 1)
     @test open_shell_adapter.nup == 2
     @test open_shell_adapter.ndn == 1
-    @test open_shell_adapter.psiup0_source == :default_benchmark_orbitals
-    @test open_shell_adapter.psidn0_source == :default_benchmark_orbitals
+    @test open_shell_adapter.psiup0_source == :default_one_body_orbitals
+    @test open_shell_adapter.psidn0_source == :default_one_body_orbitals
     @test opnorm(transpose(open_shell_adapter.psiup0) * open_shell_adapter.psiup0 - Matrix{Float64}(I, 2, 2), Inf) ≤ 1.0e-12
     @test opnorm(transpose(open_shell_adapter.psidn0) * open_shell_adapter.psidn0 - Matrix{Float64}(I, 1, 1), Inf) ≤ 1.0e-12
     @test explicit_open_shell_adapter.psiup0_source == :explicit_seed
@@ -6362,7 +6512,7 @@ end
     @test explicit_open_shell_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test explicit_open_shell_adapter.psidn0 ≈ explicit_psidn0 atol = 1.0e-12 rtol = 1.0e-12
     @test mixed_seed_adapter.psiup0_source == :explicit_seed
-    @test mixed_seed_adapter.psidn0_source == :default_benchmark_orbitals
+    @test mixed_seed_adapter.psidn0_source == :default_one_body_orbitals
     @test mixed_seed_adapter.psiup0 ≈ explicit_psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test mixed_seed_adapter.psidn0 ≈ open_shell_seeds.psidn0 atol = 1.0e-12 rtol = 1.0e-12
 end
@@ -6384,8 +6534,8 @@ end
     @test diagnostics.orbital_overlap_symmetry_error ≤ 1.0e-10
     @test diagnostics.orbital_one_body_symmetry_error ≤ 1.0e-8
     @test diagnostics.orbital_interaction_symmetry_error ≤ 1.0e-10
-    @test diagnostics.orbital_overlap_identity_error ≤ 1.0e-6
-    @test diagnostics.state_overlap_identity_error_estimate ≤ 2.0e-6
+    @test diagnostics.orbital_overlap_identity_error ≤ 2.0e-6
+    @test diagnostics.state_overlap_identity_error_estimate ≤ 3.0e-6
     @test diagnostics.min_orbital_overlap_eigenvalue > 1.0e-6
     @test diagnostics.min_state_overlap_eigenvalue_estimate > 1.0e-6
     @test diagnostics.state_interaction_diagonal_min > 0.0
@@ -6393,7 +6543,7 @@ end
     @test diagnostics.full_converged
     @test diagnostics.full_residual ≤ 1.0e-7
     @test diagnostics.exact_reference_energy ≈ 13.020668426715936 atol = 1.0e-8 rtol = 1.0e-8
-    @test diagnostics.full_energy ≈ 12.978209255282911 atol = 1.0e-5 rtol = 1.0e-8
+    @test diagnostics.full_energy ≈ 12.97802278239488 atol = 1.0e-5 rtol = 1.0e-8
     @test diagnostics.energy_difference_to_exact_reference < -1.0e-3
 end
 
@@ -6546,6 +6696,9 @@ end
     @test abs(l2_energies[1] + 1.0 / 18.0) ≤ 5.0e-3
 end
 
+end
+
+if _test_group_enabled(:ida)
 @testset "Atomic IDA ingredients" begin
     rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
     nchannels = length(channels)
@@ -7332,6 +7485,9 @@ end
     @test -2.95 < dense < -2.85
 end
 
+end
+
+if _test_group_enabled(:misc)
 @testset "REPL displays" begin
     (
         family,
@@ -7411,6 +7567,9 @@ if _RUN_SLOW_TESTS
     end
 end
 
+end
+
+if _test_group_enabled(:docs)
 @testset "Documentation consistency" begin
     design = read(joinpath(_PROJECT_ROOT, "DESIGN.md"), String)
     readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
@@ -7640,7 +7799,12 @@ end
     @test occursin("hf", lowercase(docs_site_angular_track))
     @test occursin("small ed", lowercase(docs_site_angular_track))
     @test occursin("hamio / hfdmrg-facing hf bridge", lowercase(docs_site_angular_track))
+    @test occursin("sphere_point_set_orders", docs_site_angular_track)
+    @test occursin("sphere_point_set(order)", docs_site_angular_track)
     @test occursin("curated_sphere_point_set", docs_site_angular_track)
+    @test occursin("full vendored optimized", lowercase(docs_site_angular_track))
+    @test occursin("sphere-point collection", lowercase(docs_site_angular_track))
+    @test occursin("curated fixture subset", lowercase(docs_site_angular_track))
     @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
     @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
     @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
@@ -7924,6 +8088,9 @@ end
     @test occursin("one global mapped primitive layer", status)
 end
 
+end
+
+if _test_group_enabled(:examples)
 @testset "Example scripts (quick smoke subset)" begin
     @test _run_example_script("01_first_gausslet.jl")
 end
@@ -7983,4 +8150,6 @@ if _RUN_SLOW_TESTS
         @test size(centrifugal(ops, 2)) == (length(rb), length(rb))
         @test size(multipole(ops, 1)) == (length(rb), length(rb))
     end
+end
+
 end

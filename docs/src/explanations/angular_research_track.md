@@ -18,7 +18,8 @@ The repo now contains the first controlled scaffold needed to start that
 import, plus the first shell-local experimental construction on top of it:
 
 - the existing atomic `(l,m)` and Gaunt/sectorized IDA foundation
-- a read-only curated sphere-point-set access layer
+- a read-only vendored full sphere-point-set access layer
+- an explicit curated fixture subset for tiny tests and pinned examples
 - a shell-local injected angular basis constructor on one curated sphere-point
   set
 - a first shell-to-atom angular assembly layer over shell radii
@@ -29,7 +30,8 @@ It does **not** yet contain:
 - the full `sphgatomps`-style workflow
 - optimizer/sweep drivers for sphere-point generation
 - manuscript figure scripts
-- the later HF / small-ED / DMRG-facing ladder stages
+- a full mixed-basis HamIO/HamV6 export contract
+- a broader downstream migration beyond the current HF-facing bridge surfaces
 
 ## Near-term target
 
@@ -42,18 +44,27 @@ The near-term scientific target is an **atomic angular benchmark ladder**:
 That is the first clean way to prove the angular line through the same
 producer/consumer boundary now established for the current atomic IDA branch.
 
-## Curated point-set scaffold
+## Sphere-point backing store
 
-The current repo-side angular scaffold exposes a small curated subset of
-optimized sphere-point sets through:
+The normal/default angular backing store is now the full vendored optimized
+sphere-point collection under:
+
+- `data/angular/SpherePoints.jld2`
+- `sphere_point_set_orders()`
+- `sphere_point_set(order)`
+
+This full JLD2 collection is the default pool used by order-based shell-local
+and shell-assembly helpers.
+
+The smaller curated subset remains available through:
 
 - `curated_sphere_point_set_orders()`
 - `curated_sphere_point_set(order)`
 
-These helpers are experimental and read-only. They are there so later
-shell-local basis construction can start from stable curated point-set data
-without importing the optimization workflow itself. The first shell-local basis
-layer is now available through:
+Those curated helpers are experimental and read-only fixture surfaces. They are
+there for tiny tests, pinned examples, and paper-stable demo cases, not as the
+normal angular order pool. The first shell-local basis layer is now available
+through:
 
 - `build_shell_local_injected_angular_basis(order; ...)`
 - `build_shell_local_injected_angular_basis(point_set; ...)`
@@ -112,7 +123,8 @@ DMRG bridge.
 
 The first narrow in-memory HFDMRG-facing HF adapter is now available through:
 
-- `build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup, ndn)`
+- `build_atomic_injected_angular_hfdmrg_hf_seeds(one_body; nup, ndn)`
+- `build_atomic_injected_angular_hfdmrg_hf_adapter(radial_ops; ...)`
 - `build_atomic_injected_angular_hfdmrg_hf_adapter(benchmark; ...)`
 - `run_atomic_injected_angular_hfdmrg_hf(adapter; ...)`
 
@@ -120,15 +132,27 @@ This adapter reuses the current dense `H, V, psiup0, psidn0` handshake and
 lets the mixed-basis angular benchmark line call `HFDMRG.solve_hfdmrg(...)`
 without a file round-trip. It now supports explicit open-shell control through
 `nup`, `ndn`, `psiup0`, and `psidn0`, while the narrow default seed helper
-builds first practical orbital guesses from the current benchmark orbitals if
-explicit seeds are not supplied. It does **not** solve the separate mixed-basis
-HamIO/HamV6 export problem.
+builds first practical orbital guesses from the assembled one-body orbital
+frame if explicit seeds are not supplied. The direct `radial_ops` adapter
+entrypoint assembles the Hamiltonian and interaction without running the repo's
+internal HF-style benchmark first. It does **not** solve the separate
+mixed-basis HamIO/HamV6 export problem.
+
+The intended post-whitening/injection working basis remains orthonormal.
+Accordingly, any residual nonidentity part of the final overlap matrix is to be
+treated as a conditioning/construction diagnostic, not as a physically
+meaningful generalized-overlap model.
 
 The durable repo-local boundary note for this state is:
 
 - `docs/angular_consumer_contract_boundary.md`
 
-The vendored subset currently lives in:
+The vendored full collection currently lives in:
+
+- `data/angular/SpherePoints.jld2`
+- `data/angular/SpherePoints_manifest.toml`
+
+The explicit curated fixture subset currently lives in:
 
 - `data/angular/curated_sphere_points.toml`
 

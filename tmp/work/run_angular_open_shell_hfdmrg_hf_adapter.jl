@@ -6,7 +6,7 @@ if !(HFDMRG_PATH in LOAD_PATH)
 end
 using HFDMRG
 
-function build_open_shell_benchmark()
+function build_open_shell_radial_ops()
     Z = 3.0
     s = 0.15
     basis = build_basis(
@@ -21,23 +21,23 @@ function build_open_shell_benchmark()
         ),
     )
     grid = radial_quadrature(basis; accuracy = :medium, quadrature_rmax = 12.0)
-    radial_ops = atomic_operators(basis, grid; Z = Z, lmax = 2)
-    return build_atomic_injected_angular_hf_style_benchmark(radial_ops)
+    return atomic_operators(basis, grid; Z = Z, lmax = 2)
 end
 
 function main()
-    benchmark = build_open_shell_benchmark()
-    default_seeds = build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = 2, ndn = 1)
+    radial_ops = build_open_shell_radial_ops()
+    one_body = build_atomic_injected_angular_one_body_benchmark(radial_ops)
+    default_seeds = build_atomic_injected_angular_hfdmrg_hf_seeds(one_body; nup = 2, ndn = 1)
     explicit_psiup0 = default_seeds.psiup0[:, [2, 1]]
     explicit_psidn0 = default_seeds.psidn0
 
     default_adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
-        benchmark;
+        radial_ops;
         nup = 2,
         ndn = 1,
     )
     explicit_adapter = build_atomic_injected_angular_hfdmrg_hf_adapter(
-        benchmark;
+        radial_ops;
         nup = 2,
         ndn = 1,
         psiup0 = explicit_psiup0,

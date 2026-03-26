@@ -63,18 +63,18 @@ function _promote_to_available_shell_order(order::Int, available_orders::Vector{
     idx = searchsortedfirst(available_orders, order)
     idx <= length(available_orders) || throw(
         ArgumentError(
-            "requested shell order $order is above the vendored curated range; available orders are $(join(available_orders, ", "))",
+            "requested shell order $order is above the vendored point-set range; available orders are $(join(available_orders, ", "))",
         ),
     )
     return available_orders[idx]
 end
 
 """
-    assign_atomic_angular_shell_orders(shell_radii; ord_min, ord_max, r_lo=0.15, r_hi=7.0, w_lo=0.2, w_hi=0.7, available_orders=curated_sphere_point_set_orders())
+    assign_atomic_angular_shell_orders(shell_radii; ord_min, ord_max, r_lo=0.15, r_hi=7.0, w_lo=0.2, w_hi=0.7, available_orders=sphere_point_set_orders())
 
 Assign experimental angular shell orders across a list of shell radii using the
 first narrow smooth schedule, then promote each requested order to the next
-available curated point-set order.
+available vendored point-set order.
 """
 function assign_atomic_angular_shell_orders(
     shell_radii::AbstractVector{<:Real};
@@ -84,12 +84,12 @@ function assign_atomic_angular_shell_orders(
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
     w_hi::Real = 0.7,
-    available_orders::AbstractVector{<:Integer} = curated_sphere_point_set_orders(),
+    available_orders::AbstractVector{<:Integer} = sphere_point_set_orders(),
 )
     available = sort(Int[order for order in available_orders])
-    isempty(available) && throw(ArgumentError("no curated sphere-point-set orders are available"))
-    ord_min ≥ available[1] || throw(ArgumentError("ord_min must be within the curated order range"))
-    ord_max ≤ available[end] || throw(ArgumentError("ord_max must be within the curated order range"))
+    isempty(available) && throw(ArgumentError("no vendored sphere-point-set orders are available"))
+    ord_min ≥ available[1] || throw(ArgumentError("ord_min must be within the vendored order range"))
+    ord_max ≤ available[end] || throw(ArgumentError("ord_max must be within the vendored order range"))
 
     assigned = Int[]
     for radius in shell_radii
@@ -222,7 +222,7 @@ function _assemble_shell_block_matrix(blocks::Matrix{Matrix{Float64}}, offsets::
 end
 
 """
-    build_atomic_shell_local_angular_assembly(shell_radii; shell_orders=nothing, beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd, ord_min=minimum(curated_sphere_point_set_orders()), ord_max=maximum(curated_sphere_point_set_orders()), r_lo=0.15, r_hi=7.0, w_lo=0.2, w_hi=0.7)
+    build_atomic_shell_local_angular_assembly(shell_radii; shell_orders=nothing, beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd, ord_min=minimum(sphere_point_set_orders()), ord_max=maximum(sphere_point_set_orders()), r_lo=0.15, r_hi=7.0, w_lo=0.2, w_hi=0.7)
 
 Build the first experimental atom-side angular assembly layer by assigning one
 shell-local injected angular basis to each shell radius and assembling exact
@@ -235,8 +235,8 @@ function build_atomic_shell_local_angular_assembly(
     l_inject::Union{Int,Symbol} = :auto,
     tau::Real = 1.0e-12,
     whiten::Symbol = :svd,
-    ord_min::Int = minimum(curated_sphere_point_set_orders()),
-    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
     r_lo::Real = 0.15,
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,

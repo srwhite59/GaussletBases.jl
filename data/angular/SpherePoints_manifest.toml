@@ -1,0 +1,25 @@
+[meta]
+format = "gaussletbases_sphere_points_vendor_v1"
+source_tag = "optimized_sphere_points_full_vendor"
+source_project = "GaussletModules/Radial"
+source_artifact = "artifacts/radial/SpherePoints.jld2"
+source_note = "Vendored full read-only sphere-point collection copied from the live optimized artifact; xyzsets[order] = (xyz, nn_ratio), and only populated entries participate in the default order pool."
+order_count = 122
+min_order = 10
+max_order = 580
+orders = [
+  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+  20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+  40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+  50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+  60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+  70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+  80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+  90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+  100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
+  200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
+  300, 320, 340, 360, 380, 400, 430, 460, 490, 520,
+  550, 580,
+]
+curated_fixture_orders = [15, 32, 51]

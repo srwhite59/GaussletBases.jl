@@ -61,9 +61,10 @@ and interaction matrices already present in
 It is an HF adapter surface, not a general many-body or file-export contract.
 """
 struct AtomicInjectedAngularHFDMRGHFAdapter{
-    H <: AtomicInjectedAngularHFStyleBenchmark,
+    O <: AtomicInjectedAngularOneBodyBenchmark,
 }
-    hf_style::H
+    one_body::O
+    hf_style::Union{Nothing,AtomicInjectedAngularHFStyleBenchmark}
     route::Symbol
     hamiltonian::Matrix{Float64}
     interaction::Matrix{Float64}
@@ -131,7 +132,7 @@ function Base.show(io::IO, adapter::AtomicInjectedAngularHFDMRGHFAdapter)
         ", psidn0_source=",
         adapter.psidn0_source,
         ", exact_common_lmax=",
-        adapter.hf_style.one_body.exact_common_lmax,
+        adapter.one_body.exact_common_lmax,
         ")",
     )
 end
@@ -220,6 +221,11 @@ _default_angular_hfdmrg_spin_count(benchmark::AtomicInjectedAngularHFStyleBenchm
 
 _default_angular_hfdmrg_spin_count(benchmark::AtomicInjectedAngularSmallEDBenchmark) =
     _default_angular_hfdmrg_spin_count(benchmark.hf_style)
+
+function _default_angular_hfdmrg_spin_counts_from_nelec(nelec::Int)
+    nelec ≥ 0 || throw(ArgumentError("nelec must be nonnegative"))
+    return (cld(nelec, 2), fld(nelec, 2))
+end
 
 function _matrix_ranges(offsets::Vector{Int}, dims::Vector{Int})
     return [offsets[i]:(offsets[i] + dims[i] - 1) for i in eachindex(dims)]
@@ -377,6 +383,15 @@ function _assemble_atomic_injected_angular_interaction(
     return 0.5 .* (interaction .+ transpose(interaction))
 end
 
+function _assemble_atomic_injected_angular_interaction(
+    benchmark::AtomicInjectedAngularOneBodyBenchmark,
+)
+    return _assemble_atomic_injected_angular_interaction(
+        benchmark.radial_operators,
+        benchmark.angular_assembly,
+    )
+end
+
 function _closed_shell_density_density_scf(
     one_body::AbstractMatrix{<:Real},
     overlap::AbstractMatrix{<:Real},
@@ -471,8 +486,8 @@ end
                                                      l_inject=:auto,
                                                      tau=1e-12,
                                                      whiten=:svd,
-                                                     ord_min=minimum(curated_sphere_point_set_orders()),
-                                                     ord_max=maximum(curated_sphere_point_set_orders()),
+                                                     ord_min=minimum(sphere_point_set_orders()),
+                                                     ord_max=maximum(sphere_point_set_orders()),
                                                      r_lo=0.15,
                                                      r_hi=7.0,
                                                      w_lo=0.2,
@@ -495,8 +510,8 @@ function build_atomic_injected_angular_one_body_benchmark(
     l_inject::Union{Int,Symbol} = :auto,
     tau::Real = 1.0e-12,
     whiten::Symbol = :svd,
-    ord_min::Int = minimum(curated_sphere_point_set_orders()),
-    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
     r_lo::Real = 0.15,
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
@@ -731,8 +746,8 @@ end
                                                      maxiter::Int=50,
                                                      damping::Real=0.25,
                                                      tol::Real=1e-8,
-                                                     ord_min=minimum(curated_sphere_point_set_orders()),
-                                                     ord_max=maximum(curated_sphere_point_set_orders()),
+                                                     ord_min=minimum(sphere_point_set_orders()),
+                                                     ord_max=maximum(sphere_point_set_orders()),
                                                      r_lo=0.15,
                                                      r_hi=7.0,
                                                      w_lo=0.2,
@@ -753,8 +768,8 @@ function build_atomic_injected_angular_hf_style_benchmark(
     maxiter::Int = 50,
     damping::Real = 0.25,
     tol::Real = 1.0e-8,
-    ord_min::Int = minimum(curated_sphere_point_set_orders()),
-    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
     r_lo::Real = 0.15,
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
@@ -880,8 +895,8 @@ end
         maxiter::Int=50,
         damping::Real=0.25,
         tol::Real=1e-8,
-        ord_min=minimum(curated_sphere_point_set_orders()),
-        ord_max=maximum(curated_sphere_point_set_orders()),
+        ord_min=minimum(sphere_point_set_orders()),
+        ord_max=maximum(sphere_point_set_orders()),
         r_lo=0.15,
         r_hi=7.0,
         w_lo=0.2,
@@ -897,7 +912,9 @@ benchmark line.
 
 The current adapter uses the dense density-density route expected by
 `HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)`. It deliberately avoids the
-separate mixed-basis file-export question.
+separate mixed-basis file-export question. This entrypoint assembles the
+Hamiltonian and interaction directly from the one-body angular benchmark line;
+it does not run the repo's internal HF-style SCF.
 """
 function build_atomic_injected_angular_hfdmrg_hf_adapter(
     radial_ops::RadialAtomicOperators;
@@ -910,8 +927,8 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     maxiter::Int = 50,
     damping::Real = 0.25,
     tol::Real = 1.0e-8,
-    ord_min::Int = minimum(curated_sphere_point_set_orders()),
-    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
     r_lo::Real = 0.15,
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
@@ -921,17 +938,13 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
 )
-    hf_style = build_atomic_injected_angular_hf_style_benchmark(
+    one_body = build_atomic_injected_angular_one_body_benchmark(
         radial_ops;
         shell_orders = shell_orders,
         beta = beta,
         l_inject = l_inject,
         tau = tau,
         whiten = whiten,
-        nelec = nelec,
-        maxiter = maxiter,
-        damping = damping,
-        tol = tol,
         ord_min = ord_min,
         ord_max = ord_max,
         r_lo = r_lo,
@@ -939,11 +952,12 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
         w_lo = w_lo,
         w_hi = w_hi,
     )
-    default_nocc = _default_angular_hfdmrg_spin_count(hf_style)
-    resolved_nup = something(nup, psiup0 === nothing ? default_nocc : size(psiup0, 2))
-    resolved_ndn = something(ndn, psidn0 === nothing ? resolved_nup : size(psidn0, 2))
+    _ = (maxiter, damping, tol)
+    default_nup, default_ndn = _default_angular_hfdmrg_spin_counts_from_nelec(nelec)
+    resolved_nup = something(nup, psiup0 === nothing ? default_nup : size(psiup0, 2))
+    resolved_ndn = something(ndn, psidn0 === nothing ? default_ndn : size(psidn0, 2))
     return build_atomic_injected_angular_hfdmrg_hf_adapter(
-        hf_style;
+        one_body;
         nup = resolved_nup,
         ndn = resolved_ndn,
         psiup0 = psiup0,
@@ -953,30 +967,107 @@ end
 
 """
     build_atomic_injected_angular_hfdmrg_hf_seeds(
-        benchmark::AtomicInjectedAngularHFStyleBenchmark;
-        nup=size(benchmark.scf_result.occupied_coefficients, 2),
+        one_body::AtomicInjectedAngularOneBodyBenchmark;
+        nup=1,
         ndn=nup,
     )
 
 Build the default open-shell-capable HFDMRG seed orbitals from the current
-angular HF-style benchmark object.
+one-body angular benchmark object.
 """
+function build_atomic_injected_angular_hfdmrg_hf_seeds(
+    benchmark::AtomicInjectedAngularOneBodyBenchmark;
+    nup::Int = 1,
+    ndn::Int = nup,
+)
+    coefficients = Matrix{Float64}(eigen(Symmetric(Matrix{Float64}(benchmark.hamiltonian))).vectors)
+    norb = size(coefficients, 1)
+    _validate_hfdmrg_spin_count(nup, norb, "nup")
+    _validate_hfdmrg_spin_count(ndn, norb, "ndn")
+    psiup0 = nup == 0 ? zeros(Float64, norb, 0) : Matrix{Float64}(coefficients[:, 1:nup])
+    psidn0 = ndn == 0 ? zeros(Float64, norb, 0) : Matrix{Float64}(coefficients[:, 1:ndn])
+    return (
+        psiup0 = psiup0,
+        psidn0 = psidn0,
+        psiup0_source = :default_one_body_orbitals,
+        psidn0_source = :default_one_body_orbitals,
+    )
+end
+
 function build_atomic_injected_angular_hfdmrg_hf_seeds(
     benchmark::AtomicInjectedAngularHFStyleBenchmark;
     nup::Int = size(benchmark.scf_result.occupied_coefficients, 2),
     ndn::Int = nup,
 )
-    coefficients = benchmark.scf_result.coefficients
-    norb = size(coefficients, 1)
+    return build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark.one_body; nup = nup, ndn = ndn)
+end
+
+"""
+    build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark::AtomicInjectedAngularOneBodyBenchmark;
+        interaction=nothing,
+        nup=1,
+        ndn=nup,
+        psiup0=nothing,
+        psidn0=nothing,
+    )
+
+Build the dense in-memory HFDMRG-facing HF adapter directly from the current
+angular one-body benchmark object and density-density interaction, with explicit
+open-shell occupation and seed control.
+"""
+function build_atomic_injected_angular_hfdmrg_hf_adapter(
+    benchmark::AtomicInjectedAngularOneBodyBenchmark;
+    interaction::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    nup::Int = 1,
+    ndn::Int = nup,
+    psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    hf_style::Union{Nothing,AtomicInjectedAngularHFStyleBenchmark} = nothing,
+)
+    norb = size(benchmark.hamiltonian, 1)
     _validate_hfdmrg_spin_count(nup, norb, "nup")
     _validate_hfdmrg_spin_count(ndn, norb, "ndn")
-    psiup0 = nup == 0 ? zeros(Float64, norb, 0) : _orthonormalize_columns(coefficients[:, 1:nup])
-    psidn0 = ndn == 0 ? zeros(Float64, norb, 0) : _orthonormalize_columns(coefficients[:, 1:ndn])
-    return (
-        psiup0 = psiup0,
-        psidn0 = psidn0,
-        psiup0_source = :default_benchmark_orbitals,
-        psidn0_source = :default_benchmark_orbitals,
+
+    resolved_interaction =
+        interaction === nothing ?
+        _assemble_atomic_injected_angular_interaction(benchmark) :
+        Matrix{Float64}(interaction)
+    size(resolved_interaction) == (norb, norb) ||
+        throw(DimensionMismatch("interaction must have size ($norb, $norb)"))
+
+    default_seeds =
+        psiup0 === nothing || psidn0 === nothing ?
+        build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = nup, ndn = ndn) :
+        nothing
+
+    overlap = benchmark.overlap
+    overlap_identity_error =
+        opnorm(overlap - Matrix{Float64}(I, size(overlap, 1), size(overlap, 2)), Inf)
+    resolved_psiup0 =
+        psiup0 === nothing ?
+        default_seeds.psiup0 :
+        _validated_hfdmrg_seed(psiup0, norb, nup, "psiup0")
+    resolved_psidn0 =
+        psidn0 === nothing ?
+        default_seeds.psidn0 :
+        _validated_hfdmrg_seed(psidn0, norb, ndn, "psidn0")
+    psiup0_source = psiup0 === nothing ? default_seeds.psiup0_source : :explicit_seed
+    psidn0_source = psidn0 === nothing ? default_seeds.psidn0_source : :explicit_seed
+
+    return AtomicInjectedAngularHFDMRGHFAdapter(
+        benchmark,
+        hf_style,
+        :dense_density_density,
+        Matrix{Float64}(benchmark.hamiltonian),
+        resolved_interaction,
+        resolved_psiup0,
+        resolved_psidn0,
+        psiup0_source,
+        psidn0_source,
+        nup,
+        ndn,
+        overlap_identity_error,
     )
 end
 
@@ -1000,41 +1091,14 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
 )
-    norb = size(benchmark.one_body.hamiltonian, 1)
-    _validate_hfdmrg_spin_count(nup, norb, "nup")
-    _validate_hfdmrg_spin_count(ndn, norb, "ndn")
-
-    default_seeds =
-        psiup0 === nothing || psidn0 === nothing ?
-        build_atomic_injected_angular_hfdmrg_hf_seeds(benchmark; nup = nup, ndn = ndn) :
-        nothing
-
-    overlap = benchmark.one_body.overlap
-    overlap_identity_error =
-        opnorm(overlap - Matrix{Float64}(I, size(overlap, 1), size(overlap, 2)), Inf)
-    resolved_psiup0 =
-        psiup0 === nothing ?
-        default_seeds.psiup0 :
-        _validated_hfdmrg_seed(psiup0, norb, nup, "psiup0")
-    resolved_psidn0 =
-        psidn0 === nothing ?
-        default_seeds.psidn0 :
-        _validated_hfdmrg_seed(psidn0, norb, ndn, "psidn0")
-    psiup0_source = psiup0 === nothing ? default_seeds.psiup0_source : :explicit_seed
-    psidn0_source = psidn0 === nothing ? default_seeds.psidn0_source : :explicit_seed
-
-    return AtomicInjectedAngularHFDMRGHFAdapter(
-        benchmark,
-        :dense_density_density,
-        Matrix{Float64}(benchmark.one_body.hamiltonian),
-        Matrix{Float64}(benchmark.interaction),
-        resolved_psiup0,
-        resolved_psidn0,
-        psiup0_source,
-        psidn0_source,
-        nup,
-        ndn,
-        overlap_identity_error,
+    return build_atomic_injected_angular_hfdmrg_hf_adapter(
+        benchmark.one_body;
+        interaction = benchmark.interaction,
+        nup = nup,
+        ndn = ndn,
+        psiup0 = psiup0,
+        psidn0 = psidn0,
+        hf_style = benchmark,
     )
 end
 
@@ -1070,8 +1134,8 @@ function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
         ndn = adapter.ndn,
         psiup0_source = adapter.psiup0_source,
         psidn0_source = adapter.psidn0_source,
-        shell_orders = copy(adapter.hf_style.one_body.angular_assembly.shell_orders),
-        exact_common_lmax = adapter.hf_style.one_body.exact_common_lmax,
+        shell_orders = copy(adapter.one_body.angular_assembly.shell_orders),
+        exact_common_lmax = adapter.one_body.exact_common_lmax,
         overlap_identity_error = adapter.overlap_identity_error,
         hamiltonian_symmetry_error =
             opnorm(adapter.hamiltonian - transpose(adapter.hamiltonian), Inf),
@@ -1081,8 +1145,11 @@ function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
             opnorm(transpose(adapter.psiup0) * adapter.psiup0 - Matrix{Float64}(I, adapter.nup, adapter.nup), Inf),
         psidn0_orthogonality_error =
             opnorm(transpose(adapter.psidn0) * adapter.psidn0 - Matrix{Float64}(I, adapter.ndn, adapter.ndn), Inf),
-        benchmark_full_energy = adapter.hf_style.scf_result.energy,
-        benchmark_exact_energy = adapter.hf_style.exact_scf_result.energy,
+        has_benchmark_reference = adapter.hf_style !== nothing,
+        benchmark_full_energy =
+            adapter.hf_style === nothing ? missing : adapter.hf_style.scf_result.energy,
+        benchmark_exact_energy =
+            adapter.hf_style === nothing ? missing : adapter.hf_style.exact_scf_result.energy,
     )
 end
 
@@ -1170,8 +1237,8 @@ end
                                                      maxiter::Int=50,
                                                      damping::Real=0.25,
                                                      tol::Real=1e-8,
-                                                     ord_min=minimum(curated_sphere_point_set_orders()),
-                                                     ord_max=maximum(curated_sphere_point_set_orders()),
+                                                     ord_min=minimum(sphere_point_set_orders()),
+                                                     ord_max=maximum(sphere_point_set_orders()),
                                                      r_lo=0.15,
                                                      r_hi=7.0,
                                                      w_lo=0.2,
@@ -1191,8 +1258,8 @@ function build_atomic_injected_angular_small_ed_benchmark(
     maxiter::Int = 50,
     damping::Real = 0.25,
     tol::Real = 1.0e-8,
-    ord_min::Int = minimum(curated_sphere_point_set_orders()),
-    ord_max::Int = maximum(curated_sphere_point_set_orders()),
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
     r_lo::Real = 0.15,
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,

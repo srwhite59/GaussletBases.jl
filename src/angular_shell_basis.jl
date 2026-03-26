@@ -1,7 +1,7 @@
 """
     ShellLocalInjectedAngularBasis
 
-Experimental shell-local injected angular basis built on one curated sphere
+Experimental shell-local injected angular basis built on one vendored sphere
 point set.
 
 This is the first narrow scientific import for the angular research track. It
@@ -9,7 +9,7 @@ is intentionally shell-local only: no radial coupling, no shell schedule, and
 no atom-wide assembly are included here yet.
 """
 struct ShellLocalInjectedAngularBasis
-    point_set::CuratedSpherePointSet
+    point_set::SpherePointSet
     beta::Float64
     shell_weights::Vector{Float64}
     theta_nn::Vector{Float64}
@@ -98,7 +98,9 @@ function _real_spherical_harmonic(channel::YlmChannel, direction::AbstractVector
     l = channel.l
     m = channel.m
     mm = abs(m)
-    prefactor = sqrt(((2 * l + 1) / (4 * pi)) * (factorial(l - mm) / factorial(l + mm)))
+    log_ratio =
+        SpecialFunctions.loggamma(l - mm + 1) - SpecialFunctions.loggamma(l + mm + 1)
+    prefactor = sqrt(((2 * l + 1) / (4 * pi)) * exp(log_ratio))
     plm = _associated_legendre(l, mm, cos(theta))
 
     if m == 0
@@ -343,9 +345,9 @@ end
 
 """
     build_shell_local_injected_angular_basis(order::Int; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
-    build_shell_local_injected_angular_basis(point_set::CuratedSpherePointSet; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
+    build_shell_local_injected_angular_basis(point_set::SpherePointSet; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
 
-Build the first experimental shell-local injected angular basis on one curated
+Build the first experimental shell-local injected angular basis on one vendored
 sphere point set.
 
 This constructor intentionally stops at shell-local overlap and angular kinetic
@@ -360,7 +362,7 @@ function build_shell_local_injected_angular_basis(
     whiten::Symbol = :svd,
 )
     return build_shell_local_injected_angular_basis(
-        curated_sphere_point_set(order);
+        sphere_point_set(order);
         beta = beta,
         l_inject = l_inject,
         tau = tau,
@@ -369,7 +371,7 @@ function build_shell_local_injected_angular_basis(
 end
 
 function build_shell_local_injected_angular_basis(
-    point_set::CuratedSpherePointSet;
+    point_set::SpherePointSet;
     beta::Real = 2.0,
     l_inject::Union{Int,Symbol} = :auto,
     tau::Real = 1.0e-12,
