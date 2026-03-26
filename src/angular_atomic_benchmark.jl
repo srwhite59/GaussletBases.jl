@@ -1426,8 +1426,8 @@ function build_atomic_injected_angular_small_ed_benchmark(
             hf_style.interaction,
         ),
         size(one_body.overlap, 1)^2;
-        krylovdim = 160,
-        maxiter = 160,
+        krylovdim = 220,
+        maxiter = 220,
         tol = 1.0e-8,
         v0 = initial_product,
     )

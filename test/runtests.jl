@@ -225,6 +225,7 @@ if _test_group_enabled(:radial)
     @test [g.alpha for g in spec_default.xgaussians] == [0.1, 0.025]
     @test isempty(spec_none.xgaussians)
     @test isempty(spec_explicit.xgaussians)
+    @test spec_default.rmax_count_policy == :ceil_reference
     @test_throws ArgumentError RadialBasisSpec(
         :G10;
         rmax = 8.0,
@@ -232,6 +233,44 @@ if _test_group_enabled(:radial)
         xgaussian_count = 0,
         xgaussians = recommended_xgaussians(),
     )
+    @test_throws ArgumentError RadialBasisSpec(
+        :G10;
+        rmax = 8.0,
+        mapping = AsinhMapping(c = 0.1, s = 0.2),
+        rmax_count_policy = :bogus,
+    )
+end
+
+@testset "Radial rmax count policy can imitate legacy strict trim" begin
+    cases = (
+        (2.0, 10.0, 31, 30),
+        (10.0, 30.0, 47, 46),
+    )
+    for (Z, rmax, nceil, nlegacy) in cases
+        mapping = AsinhMapping(c = 0.2 / (2Z), s = 0.2)
+        spec_current = RadialBasisSpec(
+            :G10;
+            rmax = rmax,
+            mapping = mapping,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussian_count = 2,
+        )
+        spec_legacy = RadialBasisSpec(
+            :G10;
+            rmax = rmax,
+            mapping = mapping,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussian_count = 2,
+            rmax_count_policy = :legacy_strict_trim,
+        )
+        basis_current = build_basis(spec_current)
+        basis_legacy = build_basis(spec_legacy)
+        @test length(basis_current) == nceil
+        @test length(basis_legacy) == nlegacy
+        @test maximum(reference_centers(basis_current)) ≈ maximum(reference_centers(basis_legacy)) + 1.0 atol = 1.0e-10 rtol = 1.0e-10
+    end
 end
 
 @testset "Runtime family tables use trimmed machine-significant tails" begin
@@ -2353,6 +2392,101 @@ function _atomic_injected_angular_hfdmrg_hf_adapter_fixture()
     end)
 end
 
+function _paper_style_angular_anchor_radial_fixture(; Z::Float64 = 2.0, lmax::Int = 2)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    key = Symbol("paper_style_angular_anchor_radial_fixture_Z", ztag, "_lmax", lmax)
+    return _cached_fixture(key, () -> begin
+        s = 0.2
+        rb = build_basis(RadialBasisSpec(:G10;
+            rmax = 30.0,
+            mapping = AsinhMapping(c = s / (2Z), s = s),
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussian_count = 2,
+            rmax_count_policy = :legacy_strict_trim,
+        ))
+        grid = radial_quadrature(rb)
+        radial_ops = atomic_operators(rb, grid; Z = Z, lmax = lmax)
+        (rb, grid, radial_ops)
+    end)
+end
+
+function _paper_style_angular_hfdmrg_payload_fixture(order::Int; Z::Float64 = 2.0, lmax::Int = 2)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    key = Symbol("paper_style_angular_hfdmrg_payload_fixture_Z", ztag, "_order", order, "_lmax", lmax)
+    return _cached_fixture(key, () -> begin
+        _, _, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = Z, lmax = lmax)
+        build_atomic_injected_angular_hfdmrg_payload(
+            radial_ops;
+            shell_orders = fill(order, length(radial_ops.shell_centers_r)),
+            nelec = Int(round(Z)),
+        )
+    end)
+end
+
+function _paper_style_angular_one_body_benchmark_fixture(
+    order::Int;
+    Z::Float64 = 4.0,
+    lmax::Int = 2,
+)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    key = Symbol(
+        "paper_style_angular_one_body_benchmark_fixture_Z",
+        ztag,
+        "_order",
+        order,
+        "_lmax",
+        lmax,
+    )
+    return _cached_fixture(key, () -> begin
+        _, _, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = Z, lmax = lmax)
+        build_atomic_injected_angular_one_body_benchmark(
+            radial_ops;
+            shell_orders = fill(order, length(radial_ops.shell_centers_r)),
+        )
+    end)
+end
+
+function _solve_hfdmrg_from_payload_direct(
+    payload::AtomicInjectedAngularHFDMRGHFAdapter,
+    hfdmrg;
+    nblockcenter::Int = 2,
+    blocksize::Int = 100,
+    maxiter::Int = 100,
+    cutoff::Real = 1.0e-8,
+    scf_cutoff::Real = 1.0e-9,
+    verbose::Bool = false,
+)
+    if payload.solver_mode == :restricted_closed_shell
+        psiup, psidn, energy = hfdmrg.solve_hfdmrg(
+            payload.hamiltonian,
+            payload.interaction,
+            payload.psiup0;
+            nblockcenter = nblockcenter,
+            blocksize = blocksize,
+            maxiter = maxiter,
+            cutoff = cutoff,
+            scf_cutoff = scf_cutoff,
+            verbose = verbose,
+        )
+    else
+        psiup, psidn, energy = hfdmrg.solve_hfdmrg(
+            payload.hamiltonian,
+            payload.interaction,
+            payload.psiup0,
+            payload.psidn0;
+            nblockcenter = nblockcenter,
+            blocksize = blocksize,
+            maxiter = maxiter,
+            cutoff = cutoff,
+            scf_cutoff = scf_cutoff,
+            verbose = verbose,
+        )
+    end
+    return (psiup = psiup, psidn = psidn, energy = energy)
+end
+
 function _local_hfdmrg_module()
     return _cached_fixture(:local_hfdmrg_module, () -> begin
         path = "/Users/srw/Dropbox/codexhome/work/hfdmrg/src"
@@ -2360,7 +2494,7 @@ function _local_hfdmrg_module()
         path in LOAD_PATH || push!(LOAD_PATH, path)
         try
             @eval Main using HFDMRG
-            return getfield(Main, :HFDMRG)
+            return Base.invokelatest(getfield, Main, :HFDMRG)
         catch
             return nothing
         end
@@ -6611,6 +6745,62 @@ end
     @test mixed_seed_adapter.psidn0 ≈ open_shell_seeds.psidn0 atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Angular He legacy-trim HF payload anchors" begin
+    hfdmrg = _local_hfdmrg_module()
+    hfdmrg === nothing && return
+
+    he_anchor_reference = -2.861679990485
+    anchor_settings = (
+        nblockcenter = 2,
+        blocksize = 100,
+        maxiter = 100,
+        cutoff = 1.0e-8,
+        scf_cutoff = 1.0e-9,
+        verbose = false,
+    )
+
+    payload10 = _paper_style_angular_hfdmrg_payload_fixture(10)
+    payload15 = _paper_style_angular_hfdmrg_payload_fixture(15)
+    result10 = _solve_hfdmrg_from_payload_direct(payload10, hfdmrg; anchor_settings...)
+    result15 = _solve_hfdmrg_from_payload_direct(payload15, hfdmrg; anchor_settings...)
+
+    @test payload10.solver_mode == :restricted_closed_shell
+    @test payload15.solver_mode == :restricted_closed_shell
+    @test payload10.nup == 1
+    @test payload10.ndn == 1
+    @test payload15.nup == 1
+    @test payload15.ndn == 1
+    @test first(payload10.one_body.angular_assembly.shell_orders) == 10
+    @test first(payload15.one_body.angular_assembly.shell_orders) == 15
+    @test all(==(10), payload10.one_body.angular_assembly.shell_orders)
+    @test all(==(15), payload15.one_body.angular_assembly.shell_orders)
+    @test result10.energy ≈ he_anchor_reference atol = 5.0e-6 rtol = 1.0e-6
+    @test result15.energy ≈ he_anchor_reference atol = 5.0e-6 rtol = 1.0e-6
+    @test abs(result15.energy - he_anchor_reference) ≤ abs(result10.energy - he_anchor_reference)
+end
+
+@testset "Angular Be legacy-trim one-body anchors" begin
+    for order in (10, 15)
+        benchmark = _paper_style_angular_one_body_benchmark_fixture(order)
+        full_spectrum = sort(real(eigvals(Hermitian(benchmark.hamiltonian), Hermitian(benchmark.overlap))))
+        exact_spectrum =
+            sort(real(eigvals(Hermitian(benchmark.exact_hamiltonian), Hermitian(benchmark.exact_overlap))))
+        low_count = 8
+        closed_shell_noninteracting = 2.0 * (full_spectrum[1] + full_spectrum[2])
+        one_s_like_count = count(<(-4.0), full_spectrum[1:10])
+
+        @test benchmark.exact_common_lmax == 1
+        @test benchmark.angular_assembly.shell_orders == fill(order, length(benchmark.angular_assembly.shell_orders))
+        @test all(lcap ≥ benchmark.exact_common_lmax + 4 for lcap in benchmark.angular_assembly.shell_kinetic_lcap)
+        @test one_s_like_count == 1
+        @test full_spectrum[1] < -7.0
+        @test full_spectrum[2] > -3.0
+        @test closed_shell_noninteracting > -22.0
+        @test closed_shell_noninteracting < -18.0
+        @test full_spectrum[1:low_count] ≈ exact_spectrum[1:low_count] atol = 1.0e-8 rtol = 1.0e-8
+    end
+end
+
 @testset "Atomic injected angular small-ED benchmark" begin
     benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
     diagnostics = atomic_injected_angular_small_ed_diagnostics(benchmark)
@@ -6637,7 +6827,7 @@ end
     @test diagnostics.full_converged
     @test diagnostics.full_residual ≤ 1.0e-7
     @test diagnostics.exact_reference_energy ≈ 13.020668426715936 atol = 1.0e-8 rtol = 1.0e-8
-    @test diagnostics.full_energy ≈ 12.97802278239488 atol = 1.0e-5 rtol = 1.0e-8
+    @test diagnostics.full_energy ≈ 12.978227403130989 atol = 1.0e-5 rtol = 1.0e-8
     @test diagnostics.energy_difference_to_exact_reference < -1.0e-3
 end
 
