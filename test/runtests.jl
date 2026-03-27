@@ -6424,6 +6424,33 @@ end
     @test multipole1 ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
 end
 
+@testset "Stabilized radial multipole builder" begin
+    rb, grid = _quick_radial_operator_fixture()
+    points = quadrature_points(grid)
+    weights = quadrature_weights(grid)
+    values = GaussletBases._basis_values_matrix(rb, points)
+
+    raw_benign = GaussletBases._integral_diagonal_kernel_matrix_raw(values, points, weights, 3)
+    stable_benign = GaussletBases._integral_diagonal_kernel_matrix(values, points, weights, 3)
+    @test opnorm(stable_benign - raw_benign, Inf) / opnorm(raw_benign, Inf) < 1.0e-12
+
+    risky_points = exp.(range(log(1.0e-6), log(1.0e6), length = 401))
+    risky_weights = fill((risky_points[end] - risky_points[1]) / (length(risky_points) - 1), length(risky_points))
+    risky_values = hcat(
+        exp.(-risky_points ./ 10.0),
+        sqrt.(risky_points) .* exp.(-risky_points ./ 20.0),
+    )
+
+    raw_risky =
+        GaussletBases._integral_diagonal_kernel_matrix_raw(risky_values, risky_points, risky_weights, 120)
+    stable_risky =
+        GaussletBases._integral_diagonal_kernel_matrix(risky_values, risky_points, risky_weights, 120)
+
+    @test !all(isfinite, raw_risky)
+    @test all(isfinite, stable_risky)
+    @test stable_risky ≈ transpose(stable_risky) atol = 1.0e-12 rtol = 1.0e-12
+end
+
 @testset "Radial primitive operator contraction" begin
     rb, grid = _quick_radial_operator_fixture()
     P = primitive_set(rb)

@@ -236,7 +236,7 @@ function centrifugal_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; l::
     return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
 end
 
-function _integral_diagonal_kernel_matrix(
+function _integral_diagonal_kernel_matrix_raw(
     values::AbstractMatrix{<:Real},
     points::AbstractVector{Float64},
     weights::AbstractVector{Float64},
@@ -260,6 +260,111 @@ function _integral_diagonal_kernel_matrix(
     integral_weights = _check_integral_weights(_radial_basis_integral_weights(values, weights))
     inv_integral_weights = 1.0 ./ integral_weights
     return _symmetrize_matrix(Diagonal(inv_integral_weights) * numerator * Diagonal(inv_integral_weights))
+end
+
+function _scaled_log_power(logvals::AbstractVector{Float64}, exponent::Int)
+    exponent >= 0 || throw(ArgumentError("scaled log powers require a nonnegative exponent"))
+    exponent == 0 && return ones(Float64, length(logvals)), 0.0
+    logs = exponent .* logvals
+    shift = maximum(logs)
+    isfinite(shift) || throw(ArgumentError("scaled log powers require finite logarithmic coordinates"))
+    return exp.(logs .- shift), shift
+end
+
+function _recover_scaled_kernel_value(
+    sum_scaled::Float64,
+    shift_total::Float64,
+    log_extra::Float64,
+    sign_extra::Float64;
+    L::Int,
+    rmin::Float64,
+    rmax::Float64,
+)
+    isfinite(sum_scaled) || throw(
+        ArgumentError(
+            "multipole_matrix produced a non-finite scaled accumulation for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), sum_scaled=$(sum_scaled)",
+        ),
+    )
+    sum_scaled == 0.0 && return 0.0
+
+    logv = shift_total + log_extra + log(abs(sum_scaled))
+    log_floatmax = log(floatmax(Float64))
+    log_floatmin = log(floatmin(Float64))
+    logv < log_floatmin && return 0.0
+    logv > log_floatmax && throw(
+        ArgumentError(
+            "multipole_matrix overflowed during scaled recovery for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), logv=$(logv)",
+        ),
+    )
+
+    recovered = sign(sum_scaled) * sign_extra * exp(logv)
+    isfinite(recovered) || throw(
+        ArgumentError(
+            "multipole_matrix recovered a non-finite value for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), recovered=$(recovered)",
+        ),
+    )
+    return recovered
+end
+
+function _integral_diagonal_kernel_matrix(
+    values::AbstractMatrix{<:Real},
+    points::AbstractVector{Float64},
+    weights::AbstractVector{Float64},
+    L::Int,
+)
+    any(point -> point <= 0.0, points) &&
+        throw(ArgumentError("multipole_matrix requires quadrature points strictly above zero"))
+
+    log_r = log.(max.(points, eps(Float64)))
+    rpow_scaled, shift_r = _scaled_log_power(log_r, L)
+    invrpow_scaled, shift_invr = _scaled_log_power(-log_r, L + 1)
+    shift_sum = shift_r + shift_invr
+
+    weighted_prefix_scaled = (weights .* rpow_scaled) .* values
+    prefix_scaled = cumsum(weighted_prefix_scaled; dims = 1)
+
+    weighted_suffix_scaled = (weights .* invrpow_scaled) .* values
+    suffix_inclusive_scaled =
+        reverse(cumsum(reverse(weighted_suffix_scaled; dims = 1); dims = 1); dims = 1)
+    suffix_exclusive_scaled = suffix_inclusive_scaled .- weighted_suffix_scaled
+
+    inner_scaled =
+        (invrpow_scaled .* prefix_scaled) .+ (rpow_scaled .* suffix_exclusive_scaled)
+    all(isfinite, inner_scaled) || throw(
+        ArgumentError(
+            "multipole_matrix produced non-finite scaled inner data for L=$(L) over radial range [$(minimum(points)), $(maximum(points))]; shift_r=$(shift_r), shift_invr=$(shift_invr)",
+        ),
+    )
+
+    numerator_scaled = _weighted_basis_gram(values, inner_scaled, weights)
+    all(isfinite, numerator_scaled) || throw(
+        ArgumentError(
+            "multipole_matrix produced non-finite scaled numerator data for L=$(L) over radial range [$(minimum(points)), $(maximum(points))]; shift_r=$(shift_r), shift_invr=$(shift_invr)",
+        ),
+    )
+
+    integral_weights = _check_integral_weights(_radial_basis_integral_weights(values, weights))
+    inv_integral_weights = 1.0 ./ integral_weights
+    log_abs_inv_integral_weights = log.(abs.(inv_integral_weights))
+    sign_inv_integral_weights = sign.(inv_integral_weights)
+
+    kernel = zeros(Float64, size(numerator_scaled))
+    rmin = minimum(points)
+    rmax = maximum(points)
+    @inbounds for i in axes(kernel, 1), j in i:size(kernel, 2)
+        value = _recover_scaled_kernel_value(
+            numerator_scaled[i, j],
+            shift_sum,
+            log_abs_inv_integral_weights[i] + log_abs_inv_integral_weights[j],
+            sign_inv_integral_weights[i] * sign_inv_integral_weights[j];
+            L = L,
+            rmin = rmin,
+            rmax = rmax,
+        )
+        kernel[i, j] = value
+        kernel[j, i] = value
+    end
+    return _symmetrize_matrix(kernel)
 end
 
 """
