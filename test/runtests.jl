@@ -360,6 +360,58 @@ end
           opnorm(multipole(numerical_ops, 0), Inf) < 1.0e-9
 end
 
+@testset "Paper-parity radial prototype plus tail extension" begin
+    prototype = radial_boundary_prototype()
+
+    ne_map = AsinhMapping(c = 0.2 / (2 * 10.0), s = 0.2)
+    ne_extended = build_paper_parity_radial_basis(prototype; rmax = 30.0, mapping = ne_map)
+    ne_overload = build_basis(prototype; rmax = 30.0, mapping = ne_map)
+    ne_reference = build_basis(
+        RadialBasisSpec(
+            :G10;
+            rmax = 30.0,
+            mapping = ne_map,
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = prototype.xgaussians,
+            rmax_count_policy = :legacy_strict_trim,
+        ),
+    )
+    @test length(ne_extended) == 46
+    @test last(centers(ne_extended)) ≈ 28.34082360929913 atol = 1.0e-9 rtol = 1.0e-12
+    @test reference_centers(ne_overload) ≈ reference_centers(ne_extended) atol = 1.0e-12 rtol = 1.0e-12
+    @test maximum(abs.(reference_centers(ne_extended) .- reference_centers(ne_reference))) < 5.0e-8
+    ne_points = collect(0.0:0.05:30.0)
+    ne_sample_extended = _basis_sample_matrix(ne_extended, ne_points)
+    ne_sample_reference = _basis_sample_matrix(ne_reference, ne_points)
+    @test maximum(abs.(ne_sample_extended .- ne_sample_reference)) < 1.0e-6
+    @test norm(ne_sample_extended .- ne_sample_reference) / sqrt(length(ne_sample_extended)) < 1.0e-8
+
+    he_map = AsinhMapping(c = 0.2 / (2 * 2.0), s = 0.2)
+    he_extended = build_paper_parity_radial_basis(prototype; rmax = 10.0, mapping = he_map)
+    he_reference = build_basis(
+        RadialBasisSpec(
+            :G10;
+            rmax = 10.0,
+            mapping = he_map,
+            reference_spacing = 1.0,
+            tails = 6,
+            odd_even_kmax = 6,
+            xgaussians = prototype.xgaussians,
+            rmax_count_policy = :legacy_strict_trim,
+        ),
+    )
+    @test length(he_extended) == 30
+    @test length(he_extended) < length(build_basis(prototype; mapping = he_map))
+    @test maximum(abs.(reference_centers(he_extended) .- reference_centers(he_reference))) < 5.0e-8
+    he_points = collect(0.0:0.05:10.0)
+    he_sample_extended = _basis_sample_matrix(he_extended, he_points)
+    he_sample_reference = _basis_sample_matrix(he_reference, he_points)
+    @test maximum(abs.(he_sample_extended .- he_sample_reference)) < 1.0e-6
+    @test norm(he_sample_extended .- he_sample_reference) / sqrt(length(he_sample_extended)) < 1.0e-8
+end
+
 @testset "Runtime family tables use trimmed machine-significant tails" begin
     high_prec_path = joinpath(_PROJECT_ROOT, "src", "internal", "families_high_prec.jl")
     @test isfile(high_prec_path)

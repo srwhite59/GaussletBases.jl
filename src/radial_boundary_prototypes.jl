@@ -72,6 +72,24 @@ function _paper_parity_runtime_spec(mapping_value::AbstractCoordinateMapping)
     )
 end
 
+function _paper_parity_full_runtime_spec(
+    prototype::RadialBoundaryPrototype,
+    rmax::Real,
+    mapping_value::AbstractCoordinateMapping;
+    rmax_count_policy::Symbol = :legacy_strict_trim,
+)
+    return RadialBasisSpec(
+        prototype.family_value;
+        rmax = rmax,
+        mapping = mapping_value,
+        reference_spacing = prototype.reference_spacing,
+        tails = prototype.even_tail_kmax,
+        odd_even_kmax = prototype.even_tail_kmax,
+        xgaussians = prototype.xgaussians,
+        rmax_count_policy = rmax_count_policy,
+    )
+end
+
 function _radial_boundary_prototype_path(name::Symbol)
     name == _RADIAL_BOUNDARY_PROTOTYPE_NAME ||
         throw(
@@ -413,6 +431,8 @@ function _paper_parity_prototype_runtime_basis(
     runtime_coefficients::AbstractMatrix{<:Real},
     reference_centers::AbstractVector{<:Real};
     mapping_value::AbstractCoordinateMapping = IdentityMapping(),
+    spec::RadialBasisSpec = _paper_parity_runtime_spec(mapping_value),
+    build_umax::Float64 = _RADIAL_BOUNDARY_PROTOTYPE_RMAX_INT,
 )
     coefficient_matrix = Matrix{Float64}(runtime_coefficients)
     reference_center_data = Float64[Float64(value) for value in reference_centers]
@@ -420,7 +440,6 @@ function _paper_parity_prototype_runtime_basis(
     center_data = _physical_centers(reference_center_data, mapping_value)
     integral_weight_data =
         _integral_weights_from_representation(primitive_data, coefficient_matrix)
-    spec = _paper_parity_runtime_spec(mapping_value)
     return RadialBasis(
         spec,
         primitive_data,
@@ -428,7 +447,151 @@ function _paper_parity_prototype_runtime_basis(
         reference_center_data,
         center_data,
         integral_weight_data,
+        build_umax,
+    )
+end
+
+function _paper_parity_halfline_primitive_count(prototype::RadialBoundaryPrototype)
+    return length(prototype.runtime_primitives) - length(prototype.xgaussians)
+end
+
+function _halfline_primitive_grid_index(
+    primitive::HalfLineGaussian,
+    primitive_spacing::Float64,
+)
+    grid_index = round(Int, primitive.center_value / primitive_spacing)
+    abs(primitive.center_value - grid_index * primitive_spacing) <= 1.0e-12 ||
+        throw(
+            ArgumentError(
+                "paper-parity radial tail extension expected half-line primitive centers on the primitive grid; got center=$(primitive.center_value), primitive_spacing=$(primitive_spacing)",
+            ),
+        )
+    return grid_index
+end
+
+function _paper_parity_tail_extended_runtime_basis(
+    prototype::RadialBoundaryPrototype;
+    mapping_value::AbstractCoordinateMapping,
+    rmax::Real,
+    rmax_count_policy::Symbol = :legacy_strict_trim,
+)
+    full_spec = _paper_parity_full_runtime_spec(
+        prototype,
+        rmax,
+        mapping_value;
+        rmax_count_policy = rmax_count_policy,
+    )
+    target_odd_count =
+        _radial_rmax_target_odd_count(full_spec, prototype.reference_spacing)
+    ninj = length(prototype.xgaussians)
+    target_count = target_odd_count + prototype.even_tail_kmax + ninj
+    prototype_dimension = prototype.stage_dimensions.final_dimension
+    target_count >= 1 ||
+        throw(ArgumentError("paper-parity radial extension requires a positive target count"))
+
+    if target_count <= prototype_dimension
+        truncated_coefficients = prototype.runtime_coefficients[:, 1:target_count]
+        truncated_centers = prototype.reference_centers[1:target_count]
+        build_umax = max(
+            _RADIAL_BOUNDARY_PROTOTYPE_RMAX_INT,
+            _gausslet_reference_support_umax(
+                truncated_centers,
+                prototype.family_value,
+                prototype.reference_spacing,
+            ),
+            _xgaussian_reference_support_umax(prototype.xgaussians),
+        )
+        return _paper_parity_prototype_runtime_basis(
+            prototype.runtime_primitives,
+            truncated_coefficients,
+            truncated_centers;
+            mapping_value = mapping_value,
+            spec = full_spec,
+            build_umax = build_umax,
+        )
+    end
+
+    target_odd_count > prototype.odd_seed_half_width ||
+        throw(ArgumentError("paper-parity radial extension expected the odd count to exceed the cached boundary prototype before tail appending"))
+
+    js_tail = collect((prototype.odd_seed_half_width + 1):target_odd_count)
+    tail_primitive_matrix, tail_primitives_ref =
+        _halfline_seed_primitive_layer(
+            js_tail,
+            prototype.family_value,
+            prototype.reference_spacing,
+        )
+
+    primitive_spacing = prototype.reference_spacing / 3.0
+    nprototype_halfline = _paper_parity_halfline_primitive_count(prototype)
+    prototype_halfline = prototype.runtime_primitives[1:nprototype_halfline]
+    prototype_xgaussians = prototype.runtime_primitives[(nprototype_halfline + 1):end]
+
+    merged_halfline = AbstractPrimitiveFunction1D[primitive for primitive in prototype_halfline]
+    merged_halfline_index = Dict{Int, Int}()
+    for primitive_index in eachindex(prototype_halfline)
+        primitive = prototype_halfline[primitive_index]
+        primitive isa HalfLineGaussian ||
+            throw(ArgumentError("paper-parity cached runtime primitives must begin with half-line primitives"))
+        merged_halfline_index[_halfline_primitive_grid_index(primitive, primitive_spacing)] =
+            primitive_index
+    end
+
+    tail_row_to_merged = Vector{Int}(undef, length(tail_primitives_ref))
+    for tail_row in eachindex(tail_primitives_ref)
+        primitive = tail_primitives_ref[tail_row]
+        primitive isa HalfLineGaussian ||
+            throw(ArgumentError("paper-parity tail extension expected half-line primitive data"))
+        grid_index = _halfline_primitive_grid_index(primitive, primitive_spacing)
+        merged_index = get(merged_halfline_index, grid_index, 0)
+        if merged_index == 0
+            push!(merged_halfline, primitive)
+            merged_index = length(merged_halfline)
+            merged_halfline_index[grid_index] = merged_index
+        end
+        tail_row_to_merged[tail_row] = merged_index
+    end
+
+    merged_primitives_ref = vcat(merged_halfline, prototype_xgaussians)
+    merged_coefficients =
+        zeros(
+            Float64,
+            length(merged_primitives_ref),
+            prototype_dimension + length(js_tail),
+        )
+
+    merged_coefficients[1:nprototype_halfline, 1:prototype_dimension] .=
+        prototype.runtime_coefficients[1:nprototype_halfline, :]
+    merged_x_offset = length(merged_halfline)
+    merged_coefficients[(merged_x_offset + 1):end, 1:prototype_dimension] .=
+        prototype.runtime_coefficients[(nprototype_halfline + 1):end, :]
+
+    for tail_row in eachindex(tail_row_to_merged)
+        merged_row = tail_row_to_merged[tail_row]
+        @views merged_coefficients[merged_row, (prototype_dimension + 1):end] .+=
+            tail_primitive_matrix[tail_row, :]
+    end
+
+    extended_reference_centers = vcat(
+        prototype.reference_centers,
+        Float64[prototype.reference_spacing * index for index in js_tail],
+    )
+    build_umax = max(
         _RADIAL_BOUNDARY_PROTOTYPE_RMAX_INT,
+        _gausslet_reference_support_umax(
+            extended_reference_centers,
+            prototype.family_value,
+            prototype.reference_spacing,
+        ),
+        _xgaussian_reference_support_umax(prototype.xgaussians),
+    )
+    return _paper_parity_prototype_runtime_basis(
+        merged_primitives_ref,
+        merged_coefficients,
+        extended_reference_centers;
+        mapping_value = mapping_value,
+        spec = full_spec,
+        build_umax = build_umax,
     )
 end
 
@@ -806,10 +969,49 @@ function radial_boundary_prototype(name::Symbol = _RADIAL_BOUNDARY_PROTOTYPE_NAM
     return prototype
 end
 
+function build_paper_parity_radial_basis(
+    prototype::RadialBoundaryPrototype;
+    rmax::Real,
+    mapping::AbstractCoordinateMapping = IdentityMapping(),
+    rmax_count_policy::Symbol = :legacy_strict_trim,
+)
+    return _paper_parity_tail_extended_runtime_basis(
+        prototype;
+        mapping_value = mapping,
+        rmax = rmax,
+        rmax_count_policy = rmax_count_policy,
+    )
+end
+
+function build_paper_parity_radial_basis(
+    ;
+    rmax::Real,
+    mapping::AbstractCoordinateMapping = IdentityMapping(),
+    prototype_name::Symbol = _RADIAL_BOUNDARY_PROTOTYPE_NAME,
+    rmax_count_policy::Symbol = :legacy_strict_trim,
+)
+    return build_paper_parity_radial_basis(
+        radial_boundary_prototype(prototype_name);
+        rmax = rmax,
+        mapping = mapping,
+        rmax_count_policy = rmax_count_policy,
+    )
+end
+
 function build_basis(
     prototype::RadialBoundaryPrototype;
     mapping::AbstractCoordinateMapping = IdentityMapping(),
+    rmax::Union{Nothing, Real} = nothing,
+    rmax_count_policy::Symbol = :legacy_strict_trim,
 )
+    if rmax !== nothing
+        return build_paper_parity_radial_basis(
+            prototype;
+            rmax = rmax,
+            mapping = mapping,
+            rmax_count_policy = rmax_count_policy,
+        )
+    end
     return _paper_parity_prototype_runtime_basis(
         prototype.runtime_primitives,
         prototype.runtime_coefficients,

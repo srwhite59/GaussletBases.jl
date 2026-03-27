@@ -54,6 +54,32 @@ The loaded prototype can then be realized as a runtime `RadialBasis` through:
 
 - `build_basis(prototype; mapping = ...)`
 
+That boundary realization is the sealed `32`-function manuscript prototype
+itself. It is not the full atom-style radial basis used in the paper reruns for
+larger `Rmax`.
+
+## Full paper-style radial basis
+
+The full paper-style radial basis is now built by taking the sealed cached
+boundary prototype and then restoring the old outer positive-side extension as
+ordinary shifted `:G10` gausslets, trimmed by the atom-specific `Rmax`.
+
+The public builder for that full basis is:
+
+- `build_paper_parity_radial_basis(; rmax, mapping, rmax_count_policy = :legacy_strict_trim)`
+
+or, if the prototype is already loaded:
+
+- `build_basis(prototype; mapping = ..., rmax = ..., rmax_count_policy = :legacy_strict_trim)`
+
+This extension step is append-only:
+
+- the cached boundary prototype is not rebuilt or re-localized
+- no global orthogonalization is re-run over the extended basis
+- the outer tail is ordinary positive-side `:G10` gausslets
+- shorter `Rmax` cases are produced by taking the needed leading prefix of the
+  sealed prototype
+
 ## Strict semantics
 
 This named prototype uses strict manuscript semantics:
