@@ -2,6 +2,7 @@ module GaussletBases
 
 using JLD2
 using LinearAlgebra
+using SHA
 using SpecialFunctions
 using TOML
 
@@ -44,6 +45,7 @@ export AbstractFunction1D,
        QiuWhiteResidualGaussianOperators,
        HalfLineBasisSpec,
        RadialBasisSpec,
+       RadialBoundaryPrototype,
        Gaussian,
        HalfLineGaussian,
        XGaussian,
@@ -72,6 +74,8 @@ export AbstractFunction1D,
        stencil,
        stencil_matrix,
        build_basis,
+       radial_boundary_prototype_names,
+       radial_boundary_prototype,
        basis_metadata,
        basis_representation,
        basis_partition,
@@ -444,6 +448,7 @@ include("hierarchical_partitions.jl")
 include("leaf_pgdg.jl")
 include("global_leaf_contraction.jl")
 include("diagnostics.jl")
+include("radial_boundary_prototypes.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
 include("gaunt_tables.jl")

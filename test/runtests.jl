@@ -273,6 +273,93 @@ end
     end
 end
 
+@testset "Named paper-parity radial prototype" begin
+    @test radial_boundary_prototype_names() == [:paper_parity_g10_k6_x2]
+    @test isfile(joinpath(_PROJECT_ROOT, "data", "radial", "paper_parity_g10_k6_x2.jld2"))
+    @test_throws ArgumentError radial_boundary_prototype(:bogus_named_prototype)
+
+    prototype = radial_boundary_prototype()
+    @test prototype.name == :paper_parity_g10_k6_x2
+    @test prototype.family_value.name == :G10
+    @test prototype.reference_spacing == 1.0
+    @test prototype.odd_seed_half_width == 24
+    @test prototype.even_tail_kmax == 6
+    @test [gaussian.alpha for gaussian in prototype.xgaussians] ==
+          [0.09358986806, 0.02357750369]
+    @test prototype.stage_dimensions ==
+          (
+              seed_count = 49,
+              raw_odd_count = 24,
+              raw_even_count = 7,
+              cleaned_even_count = 6,
+              xgaussian_count = 2,
+              canonical_base_count = 51,
+              final_dimension = 32,
+              runtime_primitive_count = 411,
+          )
+    @test size(prototype.canonical_coefficients_big) == (51, 32)
+    @test size(prototype.canonical_coefficients) == (51, 32)
+    @test size(prototype.runtime_coefficients) == (411, 32)
+    @test length(prototype.runtime_primitives) == 411
+    @test prototype.diagnostics.expected_final_dimension == 32
+    @test prototype.diagnostics.retained_dimension == 32
+    @test prototype.diagnostics.mode_drop_count == 0
+    @test prototype.diagnostics.smallest_overlap_eigenvalue > 1.0e-12
+    @test prototype.diagnostics.overlap_identity_error < 1.0e-25
+    @test prototype.diagnostics.evaluation_overlap_identity_error < 1.0e-8
+    @test prototype.diagnostics.D < 5.0e-5
+    @test prototype.diagnostics.centers_monotone
+    @test prototype.checksums.reference_centers ==
+          "1a62d84b4572b588dbc3bb0d872dbc62804aa481"
+    @test prototype.checksums.canonical_coefficients ==
+          "5b29d6bdcaf6b6001b80d1b328b47d250ec57490"
+    @test prototype.checksums.runtime_coefficients ==
+          "8e5a2d1d14cc704db3f65aabb19b4f38825fe436"
+    @test prototype.checksums.sampled_basis_u0_10_du0_01 ==
+          "d5394fabb5f9376897175b806a1262e2cb7a536d"
+
+    analytic_basis = build_basis(prototype)
+    diag_grid = GaussletBases._paper_parity_prototype_grid(IdentityMapping())
+    analytic_diag = basis_diagnostics(analytic_basis, diag_grid)
+    @test reference_centers(analytic_basis) ≈ prototype.reference_centers atol = 1.0e-12 rtol = 1.0e-12
+    @test analytic_diag.overlap_error ≈
+          prototype.diagnostics.evaluation_overlap_identity_error atol = 1.0e-12 rtol = 1.0e-8
+    @test analytic_diag.D ≈ prototype.diagnostics.D atol = 1.0e-12 rtol = 1.0e-8
+
+    numerical_basis = GaussletBases._paper_parity_numerical_reference_basis()
+    @test maximum(abs.(reference_centers(analytic_basis) .- reference_centers(numerical_basis))) <
+          5.0e-10
+    points = Float64[0.01 * i for i in 0:1000]
+    analytic_sample = _basis_sample_matrix(analytic_basis, points)
+    numerical_sample = _basis_sample_matrix(numerical_basis, points)
+    @test maximum(abs.(analytic_sample .- numerical_sample)) < 5.0e-9
+    @test norm(analytic_sample .- numerical_sample) / sqrt(length(analytic_sample)) < 1.0e-9
+
+    paper_map = AsinhMapping(c = 0.2 / (2 * 10.0), s = 0.2)
+    analytic_mapped = build_basis(prototype; mapping = paper_map)
+    numerical_mapped = GaussletBases._paper_parity_numerical_reference_basis(mapping = paper_map)
+    grid_points, grid_weights = GaussletBases._make_erf_grid(
+        ;
+        h = 0.001,
+        rmax = 80.0,
+        sigma = 3.0,
+        s0 = 6.5,
+    )
+    paper_grid = RadialQuadratureGrid(grid_points, grid_weights; mapping = paper_map)
+    analytic_ops = atomic_operators(analytic_mapped, paper_grid; Z = 10.0, lmax = 2)
+    numerical_ops = atomic_operators(numerical_mapped, paper_grid; Z = 10.0, lmax = 2)
+    @test opnorm(analytic_ops.overlap - numerical_ops.overlap, Inf) /
+          opnorm(numerical_ops.overlap, Inf) < 1.0e-9
+    @test opnorm(analytic_ops.kinetic - numerical_ops.kinetic, Inf) /
+          opnorm(numerical_ops.kinetic, Inf) < 1.0e-9
+    @test opnorm(analytic_ops.nuclear - numerical_ops.nuclear, Inf) /
+          opnorm(numerical_ops.nuclear, Inf) < 1.0e-9
+    @test opnorm(centrifugal(analytic_ops, 1) - centrifugal(numerical_ops, 1), Inf) /
+          opnorm(centrifugal(numerical_ops, 1), Inf) < 2.0e-7
+    @test opnorm(multipole(analytic_ops, 0) - multipole(numerical_ops, 0), Inf) /
+          opnorm(multipole(numerical_ops, 0), Inf) < 1.0e-9
+end
+
 @testset "Runtime family tables use trimmed machine-significant tails" begin
     high_prec_path = joinpath(_PROJECT_ROOT, "src", "internal", "families_high_prec.jl")
     @test isfile(high_prec_path)
