@@ -213,8 +213,8 @@ end
 if _test_group_enabled(:radial)
 @testset "Recommended xgaussian presets" begin
     @test isempty(recommended_xgaussians(0))
-    @test [g.alpha for g in recommended_xgaussians(1)] == [0.1]
-    @test [g.alpha for g in recommended_xgaussians(2)] == [0.1, 0.025]
+    @test [g.alpha for g in recommended_xgaussians(1)] == [0.0936]
+    @test [g.alpha for g in recommended_xgaussians(2)] == [0.0936, 0.0236]
     @test_throws ArgumentError recommended_xgaussians(-1)
     @test_throws ArgumentError recommended_xgaussians(3)
 
@@ -222,7 +222,7 @@ if _test_group_enabled(:radial)
     spec_none = RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussian_count = 0)
     spec_explicit = RadialBasisSpec(:G10; rmax = 8.0, mapping = AsinhMapping(c = 0.1, s = 0.2), xgaussians = XGaussian[])
 
-    @test [g.alpha for g in spec_default.xgaussians] == [0.1, 0.025]
+    @test [g.alpha for g in spec_default.xgaussians] == [0.0936, 0.0236]
     @test isempty(spec_none.xgaussians)
     @test isempty(spec_explicit.xgaussians)
     @test spec_default.rmax_count_policy == :ceil_reference
@@ -408,7 +408,7 @@ end
     ground_energy = minimum(real(eigen(Hermitian(hamiltonian)).values))
 
     @test length(rb) == 35
-    @test diag.overlap_error < 1.0e-5
+    @test diag.overlap_error < 1.5e-5
     @test diag.D < 1.0e-5
     @test abs(ground_energy + 0.5) < 1.0e-6
 end

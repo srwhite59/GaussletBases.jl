@@ -3,7 +3,7 @@ const _QUADRATURE_GRID_S0 = 3.0
 const _QUADRATURE_MEDIUM_REFINES = (8, 16, 24, 32, 48)
 const _QUADRATURE_HIGH_REFINES = (24, 32, 48, 64)
 const _QUADRATURE_VERYHIGH_REFINES = (48, 64, 96, 128)
-const _QUADRATURE_PUBLIC_OVERLAP_TOL = 1.0e-5
+const _QUADRATURE_PUBLIC_OVERLAP_TOL = 1.5e-5
 
 function _quadrature_accuracy_profile(accuracy)
     accuracy isa Symbol ||

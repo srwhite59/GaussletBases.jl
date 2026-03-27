@@ -56,15 +56,18 @@ with no extra near-origin supplement:
 xgaussians = XGaussian[]
 ```
 
-For more serious atomic / IDA work, a simple two-function starting point is:
+For more serious atomic / IDA work, the default paper-parity two-function
+supplement is:
 
 ```julia
-xgaussians = [XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]
+xgaussians = [XGaussian(alpha = 0.0936), XGaussian(alpha = 0.0236)]
 ```
 
 Those extra functions are meant to improve the near-origin radial behavior
 without changing the outer mapping family. If the diagnostics remain clean
 without them for the problem you care about, it is also fine to leave them out.
+These are the published optimized widths for the `K = 6` radial-gausslet paper
+construction; they are not meant to imply a fresh per-run optimization.
 
 So the front-door interpretation is:
 

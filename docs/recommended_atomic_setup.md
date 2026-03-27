@@ -139,13 +139,16 @@ A simple one-function choice for experiments is:
 xgaussians = [XGaussian(alpha = 0.2)]
 ```
 
-A more serious two-function starting point is something like:
+A more serious two-function starting point, and now the standard paper-parity
+preset, is:
 
 ```julia
-xgaussians = [XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]
+xgaussians = [XGaussian(alpha = 0.0936), XGaussian(alpha = 0.0236)]
 ```
 
-These are starting points, not sacred values. If you are using x-gaussians, check the basis diagnostics rather than assuming one choice is always best.
+These are the published optimized widths for the `K = 6` radial-gausslet paper
+construction. If you override them, check the basis diagnostics rather than
+assuming another choice is automatically better.
 
 ## How to tell whether the basis is behaving well
 

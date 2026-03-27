@@ -125,7 +125,7 @@ struct XGaussian <: AbstractPrimitiveFunction1D
     end
 end
 
-const _RECOMMENDED_XGAUSSIAN_ALPHAS = (0.1, 0.025)
+const _RECOMMENDED_XGAUSSIAN_ALPHAS = (0.0936, 0.0236)
 
 """
     recommended_xgaussians(count::Integer = 2)
@@ -136,12 +136,12 @@ radial front door.
 The current preset family is:
 
 - `count = 0`: no `xgaussians`
-- `count = 1`: `[XGaussian(alpha = 0.1)]`
-- `count = 2`: `[XGaussian(alpha = 0.1), XGaussian(alpha = 0.025)]`
+- `count = 1`: `[XGaussian(alpha = 0.0936)]`
+- `count = 2`: `[XGaussian(alpha = 0.0936), XGaussian(alpha = 0.0236)]`
 
-This is intended as a practical preset family, not a per-run optimization.
-Advanced users can still pass explicit `xgaussians` vectors when they want a
-different supplement.
+These are the published paper-parity widths for the `K = 6` two-`xgaussian`
+radial-gausslet construction. Advanced users can still pass explicit
+`xgaussians` vectors when they want a different supplement.
 """
 function recommended_xgaussians(count::Integer = 2)
     count >= 0 || throw(ArgumentError("recommended_xgaussians requires count >= 0"))
