@@ -34,6 +34,50 @@ struct ShellLocalInjectedAngularBasis
     injected_kinetic::Matrix{Float64}
 end
 
+struct ShellLocalAngularProfileKey
+    point_set_source_tag::String
+    point_set_checksum::String
+    order::Int
+    beta::Float64
+    l_inject::Int
+    tau::Float64
+    whiten::Symbol
+    gauge_version::Symbol
+end
+
+struct ShellLocalAngularProfile
+    key::ShellLocalAngularProfileKey
+    basis::ShellLocalInjectedAngularBasis
+    labels::Vector{String}
+    block_kinds::Vector{Symbol}
+    exact_labels::Vector{String}
+    mixed_labels::Vector{String}
+    gauge_metadata::NamedTuple
+    diagnostics::NamedTuple
+    profile_id::String
+end
+
+struct ShellLocalAngularProfileOverlap
+    source_profile_id::String
+    target_profile_id::String
+    source_labels::Vector{String}
+    target_labels::Vector{String}
+    overlap::Matrix{Float64}
+    source_exact_count::Int
+    source_mixed_count::Int
+    target_exact_count::Int
+    target_mixed_count::Int
+    shell_independent::Bool
+    diagnostics::NamedTuple
+end
+
+const _SHELL_LOCAL_ANGULAR_PROFILE_GAUGE_VERSION =
+    :v1_seed_order_dominant_positive
+const _SHELL_LOCAL_ANGULAR_PROFILE_CACHE =
+    Ref{Union{Nothing,Dict{ShellLocalAngularProfileKey,ShellLocalAngularProfile}}}(nothing)
+const _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE =
+    Ref{Union{Nothing,Dict{Tuple{String,String},ShellLocalAngularProfileOverlap}}}(nothing)
+
 function Base.show(io::IO, shell::ShellLocalInjectedAngularBasis)
     print(
         io,
@@ -49,6 +93,69 @@ function Base.show(io::IO, shell::ShellLocalInjectedAngularBasis)
         shell.final_count,
         ")",
     )
+end
+
+function Base.show(io::IO, profile::ShellLocalAngularProfile)
+    print(
+        io,
+        "ShellLocalAngularProfile(order=",
+        profile.key.order,
+        ", l_inject=",
+        profile.key.l_inject,
+        ", dim=",
+        profile.basis.final_count,
+        ", profile_id=",
+        repr(profile.profile_id),
+        ")",
+    )
+end
+
+function Base.show(io::IO, overlap::ShellLocalAngularProfileOverlap)
+    print(
+        io,
+        "ShellLocalAngularProfileOverlap(source=",
+        repr(overlap.source_profile_id),
+        ", target=",
+        repr(overlap.target_profile_id),
+        ", size=",
+        size(overlap.overlap),
+        ", shell_independent=",
+        overlap.shell_independent,
+        ")",
+    )
+end
+
+function _angular_digest_float_vector(values::AbstractVector{<:Real})
+    text = join((bitstring(Float64(value)) for value in values), "\n")
+    return bytes2hex(SHA.sha1(text))
+end
+
+function _angular_digest_float_matrix(values::AbstractMatrix{<:Real})
+    text =
+        join((bitstring(Float64(value)) for value in vec(Matrix{Float64}(values))), "\n")
+    return bytes2hex(SHA.sha1(text))
+end
+
+function _angular_digest_strings(values::AbstractVector{<:AbstractString})
+    return bytes2hex(SHA.sha1(join(values, "\n")))
+end
+
+function _shell_local_angular_profile_cache()
+    cache = _SHELL_LOCAL_ANGULAR_PROFILE_CACHE[]
+    if cache === nothing
+        cache = Dict{ShellLocalAngularProfileKey,ShellLocalAngularProfile}()
+        _SHELL_LOCAL_ANGULAR_PROFILE_CACHE[] = cache
+    end
+    return cache
+end
+
+function _shell_local_angular_profile_overlap_cache()
+    cache = _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE[]
+    if cache === nothing
+        cache = Dict{Tuple{String,String},ShellLocalAngularProfileOverlap}()
+        _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE[] = cache
+    end
+    return cache
 end
 
 _angular_small_argument_cutoff() = 1.0e-8
@@ -307,6 +414,75 @@ function _put_in_orbitals(seed::AbstractMatrix{<:Real}, exact_orbitals::Abstract
     return projected * inv(sqrt(norm_square))
 end
 
+function _dominant_column_index(values::AbstractVector{<:Real})
+    best_index = 1
+    best_value = abs(Float64(values[1]))
+    for i in 2:length(values)
+        trial = abs(Float64(values[i]))
+        if trial > best_value + 1.0e-15
+            best_index = i
+            best_value = trial
+        elseif abs(trial - best_value) <= 1.0e-15 && i < best_index
+            best_index = i
+        end
+    end
+    return best_index
+end
+
+function _canonicalize_grand_orbitals(
+    grand_coefficients::AbstractMatrix{<:Real},
+    injected_count::Int,
+)
+    grand = Matrix{Float64}(grand_coefficients)
+    nambient, norbitals = size(grand)
+    injected_count <= norbitals ||
+        throw(ArgumentError("canonical grand orbital split requires injected_count <= norbitals"))
+
+    exact = copy(grand[:, 1:injected_count])
+    exact_signs = ones(Float64, injected_count)
+    for i in 1:injected_count
+        exact[i, i] < 0.0 && (exact[:, i] .*= -1.0; exact_signs[i] = -1.0)
+    end
+
+    mixed_count = norbitals - injected_count
+    mixed = zeros(Float64, nambient, mixed_count)
+    dominant_indices = Int[]
+    dominant_values = Float64[]
+    mixed_signs = Float64[]
+
+    if mixed_count > 0
+        # Preserve the seed-order mixed complement produced by `_put_in_orbitals`
+        # so downstream density-density benchmarks keep the historical working
+        # basis. The explicit gauge layer here only fixes per-vector signs.
+        mixed .= grand[:, injected_count+1:end]
+        dominant_indices = Vector{Int}(undef, mixed_count)
+        dominant_values = Vector{Float64}(undef, mixed_count)
+        mixed_signs = ones(Float64, mixed_count)
+        for j in 1:mixed_count
+            dominant_index = _dominant_column_index(view(mixed, :, j))
+            dominant_value = mixed[dominant_index, j]
+            if dominant_value < 0.0
+                mixed[:, j] .*= -1.0
+                dominant_value = -dominant_value
+                mixed_signs[j] = -1.0
+            end
+            dominant_indices[j] = dominant_index
+            dominant_values[j] = dominant_value
+        end
+    end
+
+    canonical = hcat(exact, mixed)
+    metadata = (
+        gauge_version = _SHELL_LOCAL_ANGULAR_PROFILE_GAUGE_VERSION,
+        mixed_orientation_strategy = :seed_order,
+        exact_signs = exact_signs,
+        mixed_dominant_grand_indices = dominant_indices,
+        mixed_dominant_grand_values = dominant_values,
+        mixed_signs = mixed_signs,
+    )
+    return canonical, metadata
+end
+
 function _kinetic_eigenvalue(channel::YlmChannel)
     return 0.5 * channel.l * (channel.l + 1)
 end
@@ -343,6 +519,300 @@ function _shell_local_raw_kinetic(
     return kinetic
 end
 
+function _shell_local_point_set_checksum(point_set::SpherePointSet)
+    return _angular_digest_float_matrix(point_set.coordinates)
+end
+
+function _shell_local_profile_key(
+    point_set::SpherePointSet;
+    beta::Real,
+    l_inject::Union{Int,Symbol},
+    tau::Real,
+    whiten::Symbol,
+)
+    resolved_l_inject =
+        l_inject === :auto ? _choose_l_inject(point_set.cardinality) : Int(l_inject)
+    resolved_l_inject >= 0 || throw(ArgumentError("l_inject must be >= 0"))
+    return ShellLocalAngularProfileKey(
+        point_set.provenance.source_tag,
+        _shell_local_point_set_checksum(point_set),
+        point_set.order,
+        Float64(beta),
+        resolved_l_inject,
+        Float64(tau),
+        whiten,
+        _SHELL_LOCAL_ANGULAR_PROFILE_GAUGE_VERSION,
+    )
+end
+
+function _exact_profile_labels(channels::YlmChannelSet)
+    return ["exact_l$(channel.l)_m$(channel.m)" for channel in channels.channel_data]
+end
+
+function _mixed_profile_labels(mixed_count::Int)
+    return ["mixed_$(i)" for i in 1:mixed_count]
+end
+
+function _build_shell_local_angular_profile_uncached(
+    point_set::SpherePointSet;
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+)
+    key = _shell_local_profile_key(
+        point_set;
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    )
+    prototype_count = point_set.cardinality
+    shell_weights = fill(4 * pi / prototype_count, prototype_count)
+    coordinates = point_set.coordinates
+    kappa, theta_nn = _kappa_from_nearest_neighbor(coordinates; beta = key.beta)
+    prototype_overlap = _prototype_overlap_matrix(coordinates, kappa)
+    prototype_kinetic = _prototype_kinetic_matrix(coordinates, kappa)
+    prototype_orthonormalizer =
+        _symmetric_inverse_square_root(prototype_overlap; tau = key.tau)
+
+    injected_channels = ylm_channels(key.l_inject)
+    injected_count = length(injected_channels)
+    injected_count < prototype_count ||
+        throw(
+            ArgumentError(
+                "shell-local injection requires injected_count < prototype_count; got $(injected_count) and $(prototype_count)",
+            ),
+        )
+
+    ylm_to_prototype, ylm_to_orthogonalized =
+        _ylm_prototype_coupling(
+            coordinates,
+            kappa,
+            prototype_orthonormalizer,
+            injected_channels,
+        )
+    raw_to_grand, complement_transform, complement_count =
+        _grand_from_injected_coupling(ylm_to_orthogonalized; tau = key.tau, whiten = key.whiten)
+
+    exact_orbitals =
+        vcat(
+            Matrix(I, injected_count, injected_count),
+            zeros(Float64, complement_count, injected_count),
+        )
+    seed_complement =
+        Symmetric(
+            Matrix(I, prototype_count, prototype_count) .-
+            transpose(ylm_to_orthogonalized) * ylm_to_orthogonalized,
+        )
+    seed =
+        vcat(
+            ylm_to_orthogonalized,
+            transpose(complement_transform) * seed_complement,
+        )
+    grand_coefficients_raw = _put_in_orbitals(seed, exact_orbitals)
+    grand_coefficients, gauge_metadata =
+        _canonicalize_grand_orbitals(grand_coefficients_raw, injected_count)
+
+    raw_coefficients_ylm_phi = raw_to_grand * grand_coefficients
+    ylm_coefficients = raw_coefficients_ylm_phi[1:injected_count, :]
+    phi_coefficients = raw_coefficients_ylm_phi[injected_count+1:end, :]
+    prototype_coefficients = prototype_orthonormalizer * phi_coefficients
+
+    raw_overlap = _shell_local_raw_overlap(ylm_to_prototype, prototype_overlap)
+    raw_kinetic =
+        _shell_local_raw_kinetic(
+            injected_channels,
+            ylm_to_prototype,
+            prototype_kinetic,
+        )
+    raw_coefficients = vcat(ylm_coefficients, prototype_coefficients)
+
+    final_overlap = transpose(raw_coefficients) * raw_overlap * raw_coefficients
+    final_overlap = 0.5 .* (final_overlap .+ transpose(final_overlap))
+    final_kinetic = transpose(raw_coefficients) * raw_kinetic * raw_coefficients
+    final_kinetic = 0.5 .* (final_kinetic .+ transpose(final_kinetic))
+    injected_overlap = raw_overlap[1:injected_count, :] * raw_coefficients
+    injected_kinetic = injected_overlap * final_kinetic * transpose(injected_overlap)
+    injected_kinetic = 0.5 .* (injected_kinetic .+ transpose(injected_kinetic))
+
+    basis = ShellLocalInjectedAngularBasis(
+        point_set,
+        key.beta,
+        shell_weights,
+        theta_nn,
+        kappa,
+        key.l_inject,
+        injected_channels,
+        prototype_count,
+        injected_count,
+        complement_count,
+        prototype_count,
+        prototype_overlap,
+        prototype_kinetic,
+        prototype_orthonormalizer,
+        ylm_to_prototype,
+        raw_to_grand,
+        grand_coefficients,
+        ylm_coefficients,
+        prototype_coefficients,
+        final_overlap,
+        final_kinetic,
+        injected_overlap,
+        injected_kinetic,
+    )
+
+    exact_labels = _exact_profile_labels(injected_channels)
+    mixed_labels = _mixed_profile_labels(prototype_count - injected_count)
+    labels = vcat(exact_labels, mixed_labels)
+    block_kinds = vcat(
+        fill(:exact, injected_count),
+        fill(:mixed, prototype_count - injected_count),
+    )
+
+    diagnostics = (
+        shell = shell_local_injected_angular_diagnostics(basis),
+        final_overlap_checksum = _angular_digest_float_matrix(final_overlap),
+        final_kinetic_checksum = _angular_digest_float_matrix(final_kinetic),
+        grand_coefficients_checksum = _angular_digest_float_matrix(grand_coefficients),
+        label_checksum = _angular_digest_strings(labels),
+        exact_count = injected_count,
+        mixed_count = prototype_count - injected_count,
+    )
+    profile_id = bytes2hex(
+        SHA.sha1(
+            join(
+                (
+                    key.point_set_source_tag,
+                    key.point_set_checksum,
+                    string(key.order),
+                    bitstring(key.beta),
+                    string(key.l_inject),
+                    bitstring(key.tau),
+                    string(key.whiten),
+                    string(key.gauge_version),
+                    diagnostics.final_overlap_checksum,
+                    diagnostics.grand_coefficients_checksum,
+                ),
+                "\n",
+            ),
+        ),
+    )
+
+    return ShellLocalAngularProfile(
+        key,
+        basis,
+        labels,
+        block_kinds,
+        exact_labels,
+        mixed_labels,
+        gauge_metadata,
+        diagnostics,
+        profile_id,
+    )
+end
+
+function shell_local_angular_profile(
+    order::Int;
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+)
+    return shell_local_angular_profile(
+        sphere_point_set(order);
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    )
+end
+
+function shell_local_angular_profile(
+    point_set::SpherePointSet;
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+)
+    key = _shell_local_profile_key(
+        point_set;
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    )
+    cache = _shell_local_angular_profile_cache()
+    return get!(cache, key) do
+        _build_shell_local_angular_profile_uncached(
+            point_set;
+            beta = beta,
+            l_inject = key.l_inject,
+            tau = tau,
+            whiten = whiten,
+        )
+    end
+end
+
+function adjacent_shell_local_angular_profile_overlap(
+    source::ShellLocalAngularProfile,
+    target::ShellLocalAngularProfile,
+)
+    cache = _shell_local_angular_profile_overlap_cache()
+    cache_key = (source.profile_id, target.profile_id)
+    return get!(cache, cache_key) do
+        overlap = _shell_local_overlap(source.basis, target.basis)
+        singular_values = svdvals(overlap)
+        diagnostics = (
+            overlap_checksum = _angular_digest_float_matrix(overlap),
+            inf_norm = opnorm(overlap, Inf),
+            frobenius_norm = norm(overlap),
+            min_singular_value = minimum(singular_values),
+            max_singular_value = maximum(singular_values),
+            exact_block_inf_norm =
+                opnorm(overlap[1:source.basis.injected_count, 1:target.basis.injected_count], Inf),
+        )
+        ShellLocalAngularProfileOverlap(
+            source.profile_id,
+            target.profile_id,
+            copy(source.labels),
+            copy(target.labels),
+            overlap,
+            source.basis.injected_count,
+            source.basis.final_count - source.basis.injected_count,
+            target.basis.injected_count,
+            target.basis.final_count - target.basis.injected_count,
+            true,
+            diagnostics,
+        )
+    end
+end
+
+function adjacent_shell_local_angular_profile_overlap(
+    source_order::Int,
+    target_order::Int;
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+)
+    source = shell_local_angular_profile(
+        source_order;
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    )
+    target = shell_local_angular_profile(
+        target_order;
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    )
+    return adjacent_shell_local_angular_profile_overlap(source, target)
+end
+
 """
     build_shell_local_injected_angular_basis(order::Int; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
     build_shell_local_injected_angular_basis(point_set::SpherePointSet; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
@@ -377,77 +847,13 @@ function build_shell_local_injected_angular_basis(
     tau::Real = 1.0e-12,
     whiten::Symbol = :svd,
 )
-    prototype_count = point_set.cardinality
-    shell_weights = fill(4 * pi / prototype_count, prototype_count)
-    coordinates = point_set.coordinates
-    kappa, theta_nn = _kappa_from_nearest_neighbor(coordinates; beta = beta)
-    prototype_overlap = _prototype_overlap_matrix(coordinates, kappa)
-    prototype_kinetic = _prototype_kinetic_matrix(coordinates, kappa)
-    prototype_orthonormalizer = _symmetric_inverse_square_root(prototype_overlap; tau = tau)
-
-    l_inject_resolved = l_inject === :auto ? _choose_l_inject(prototype_count) : Int(l_inject)
-    l_inject_resolved >= 0 || throw(ArgumentError("l_inject must be >= 0"))
-    injected_channels = ylm_channels(l_inject_resolved)
-    injected_count = length(injected_channels)
-    injected_count < prototype_count ||
-        throw(
-            ArgumentError(
-                "shell-local injection requires injected_count < prototype_count; got $(injected_count) and $(prototype_count)",
-            ),
-        )
-
-    ylm_to_prototype, ylm_to_orthogonalized =
-        _ylm_prototype_coupling(coordinates, kappa, prototype_orthonormalizer, injected_channels)
-    raw_to_grand, complement_transform, complement_count =
-        _grand_from_injected_coupling(ylm_to_orthogonalized; tau = tau, whiten = whiten)
-
-    exact_orbitals = vcat(Matrix(I, injected_count, injected_count), zeros(Float64, complement_count, injected_count))
-    seed_complement = Symmetric(Matrix(I, prototype_count, prototype_count) .- transpose(ylm_to_orthogonalized) * ylm_to_orthogonalized)
-    seed = vcat(ylm_to_orthogonalized, transpose(complement_transform) * seed_complement)
-    grand_coefficients = _put_in_orbitals(seed, exact_orbitals)
-
-    raw_coefficients_ylm_phi = raw_to_grand * grand_coefficients
-    ylm_coefficients = raw_coefficients_ylm_phi[1:injected_count, :]
-    phi_coefficients = raw_coefficients_ylm_phi[injected_count+1:end, :]
-    prototype_coefficients = prototype_orthonormalizer * phi_coefficients
-
-    raw_overlap = _shell_local_raw_overlap(ylm_to_prototype, prototype_overlap)
-    raw_kinetic = _shell_local_raw_kinetic(injected_channels, ylm_to_prototype, prototype_kinetic)
-    raw_coefficients = vcat(ylm_coefficients, prototype_coefficients)
-
-    final_overlap = transpose(raw_coefficients) * raw_overlap * raw_coefficients
-    final_overlap = 0.5 .* (final_overlap .+ transpose(final_overlap))
-    final_kinetic = transpose(raw_coefficients) * raw_kinetic * raw_coefficients
-    final_kinetic = 0.5 .* (final_kinetic .+ transpose(final_kinetic))
-    injected_overlap = raw_overlap[1:injected_count, :] * raw_coefficients
-    injected_kinetic = injected_overlap * final_kinetic * transpose(injected_overlap)
-    injected_kinetic = 0.5 .* (injected_kinetic .+ transpose(injected_kinetic))
-
-    return ShellLocalInjectedAngularBasis(
-        point_set,
-        Float64(beta),
-        shell_weights,
-        theta_nn,
-        kappa,
-        l_inject_resolved,
-        injected_channels,
-        prototype_count,
-        injected_count,
-        complement_count,
-        prototype_count,
-        prototype_overlap,
-        prototype_kinetic,
-        prototype_orthonormalizer,
-        ylm_to_prototype,
-        raw_to_grand,
-        grand_coefficients,
-        ylm_coefficients,
-        prototype_coefficients,
-        final_overlap,
-        final_kinetic,
-        injected_overlap,
-        injected_kinetic,
-    )
+    return shell_local_angular_profile(
+        point_set;
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+    ).basis
 end
 
 """

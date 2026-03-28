@@ -46,6 +46,25 @@ The current branch-point note for that boundary is:
 
 - `docs/angular_consumer_contract_boundary.md`
 
+The same angular line now also exposes one native fixed-radial sequence export
+surface for increasing-`N_sph` ladders:
+
+- `build_atomic_fixed_radial_angular_sequence`
+- `atomic_fixed_radial_angular_level_dense_payload`
+- `write_atomic_fixed_radial_angular_level_jld2`
+- `atomic_fixed_radial_angular_overlap_sidecar_payload`
+- `write_atomic_fixed_radial_angular_overlap_sidecar_jld2`
+
+This is a producer-side contract for external continuation studies. It exports:
+
+- one dense native level artifact per `N_sph`
+- one adjacent shell-local overlap sidecar per `N_sph[k] -> N_sph[k+1]`
+- stable radial shell ids and shell centers across the sequence
+- stable within-shell labels from cached shell-local angular profiles
+
+It does not yet include the later common-target embedding/lift layer, and it
+does not claim compatibility with older dense consumer formats.
+
 For the narrative explanation of the current producer-side story, see:
 
 - [Current atomic branch](../explanations/current_atomic_branch.md)
@@ -53,10 +72,15 @@ For the narrative explanation of the current producer-side story, see:
 
 ```@docs
 atomic_ida_density_interaction_matrix
+build_atomic_fixed_radial_angular_sequence
+atomic_fixed_radial_angular_level_dense_payload
+atomic_fixed_radial_angular_overlap_sidecar_payload
 fullida_dense_payload
 sliced_ham_payload
 atomic_hamv6_payload
 angular_benchmark_exact_hamv6_payload
+write_atomic_fixed_radial_angular_level_jld2
+write_atomic_fixed_radial_angular_overlap_sidecar_jld2
 write_fullida_dense_jld2
 write_sliced_ham_jld2
 write_atomic_hamv6_jld2

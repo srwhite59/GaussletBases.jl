@@ -46,6 +46,8 @@ That page is the right place to read the current boundary:
   are now present in the repo
 - the angular line already has one-electron, HF-style, and small-ED benchmark
   paths plus a direct in-memory HFDMRG payload handshake
+- the same experimental line also has a native fixed-radial
+  increasing-`N_sph` sequence producer for external continuation studies
 - the exact common low-`l` reference already fits the current HamIO / HamV6
   consumer language cleanly, but the full mixed basis does not yet
 - Hooke is deferred for a later dedicated workflow line

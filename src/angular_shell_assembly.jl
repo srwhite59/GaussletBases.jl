@@ -13,6 +13,7 @@ struct AtomicShellLocalInjectedAngularAssembly
     shell_orders::Vector{Int}
     shell_offsets::Vector{Int}
     shell_dimensions::Vector{Int}
+    profiles::Vector{ShellLocalAngularProfile}
     shells::Vector{ShellLocalInjectedAngularBasis}
     shell_moment_blocks::Vector{Dict{Int,Matrix{Float64}}}
     shell_kinetic_moment_blocks::Vector{Dict{Int,Matrix{Float64}}}
@@ -371,16 +372,16 @@ function build_atomic_shell_local_angular_assembly(
     length(assigned_orders) == nshells ||
         throw(ArgumentError("shell_orders length must match the number of shell radii"))
 
-    cached_shells = Dict{Tuple{Int,Float64,Union{Int,Symbol},Float64,Symbol},ShellLocalInjectedAngularBasis}()
+    profiles = Vector{ShellLocalAngularProfile}(undef, nshells)
     shells = Vector{ShellLocalInjectedAngularBasis}(undef, nshells)
     shell_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
     cached_kinetic_moment_blocks = Dict{
-        Tuple{Int,Float64,Union{Int,Symbol},Float64,Symbol},
+        ShellLocalAngularProfileKey,
         NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
     }()
     shell_kinetic_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
     cached_interaction_moment_blocks = Dict{
-        Tuple{Int,Float64,Union{Int,Symbol},Float64,Symbol},
+        ShellLocalAngularProfileKey,
         NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
     }()
     shell_interaction_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
@@ -393,17 +394,18 @@ function build_atomic_shell_local_angular_assembly(
     shell_interaction_tail = Vector{Float64}(undef, nshells)
 
     for i in 1:nshells
-        key = (assigned_orders[i], Float64(beta), l_inject, Float64(tau), whiten)
-        shell = get!(cached_shells, key) do
-            build_shell_local_injected_angular_basis(
+        profile =
+            shell_local_angular_profile(
                 assigned_orders[i];
                 beta = beta,
                 l_inject = l_inject,
                 tau = tau,
                 whiten = whiten,
             )
-        end
+        shell = profile.basis
+        profiles[i] = profile
         shells[i] = shell
+        key = profile.key
         moment_blocks = Dict{Int,Matrix{Float64}}()
         for l in 0:shell.l_inject
             moment_blocks[l] = _shell_local_ylm_moment_block(shell, l)
@@ -463,6 +465,7 @@ function build_atomic_shell_local_angular_assembly(
         assigned_orders,
         shell_offsets,
         shell_dimensions,
+        profiles,
         shells,
         shell_moment_blocks,
         shell_kinetic_moment_blocks,

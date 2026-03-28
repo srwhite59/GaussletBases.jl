@@ -128,6 +128,12 @@ export AbstractFunction1D,
        SpherePointSet,
        CuratedSpherePointSet,
        ShellLocalInjectedAngularBasis,
+       ShellLocalAngularProfileKey,
+       ShellLocalAngularProfile,
+       ShellLocalAngularProfileOverlap,
+       AtomicFixedRadialAngularSequenceLevel,
+       AtomicFixedRadialAngularSequenceOverlapSidecar,
+       AtomicFixedRadialAngularSequence,
        AtomicShellLocalInjectedAngularAssembly,
        AtomicInjectedAngularOneBodyBenchmark,
        AtomicInjectedAngularHFStyleBenchmark,
@@ -139,6 +145,11 @@ export AbstractFunction1D,
        sphere_point_set_orders,
        curated_sphere_point_set,
        curated_sphere_point_set_orders,
+       shell_local_angular_profile,
+       adjacent_shell_local_angular_profile_overlap,
+       build_atomic_fixed_radial_angular_sequence,
+       atomic_fixed_radial_angular_level_dense_payload,
+       atomic_fixed_radial_angular_overlap_sidecar_payload,
        build_shell_local_injected_angular_basis,
        assign_atomic_angular_shell_orders,
        build_atomic_shell_local_angular_assembly,
@@ -168,6 +179,8 @@ export AbstractFunction1D,
        fullida_dense_payload,
        sliced_ham_payload,
        write_angular_benchmark_exact_hamv6_jld2,
+       write_atomic_fixed_radial_angular_level_jld2,
+       write_atomic_fixed_radial_angular_overlap_sidecar_jld2,
        write_atomic_hamv6_jld2,
        write_fullida_dense_jld2,
        write_sliced_ham_jld2,
@@ -339,9 +352,14 @@ function ordinary_cartesian_qiu_white_operators end
 function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
 function angular_benchmark_exact_hamv6_payload end
+function build_atomic_fixed_radial_angular_sequence end
+function atomic_fixed_radial_angular_level_dense_payload end
+function atomic_fixed_radial_angular_overlap_sidecar_payload end
 function fullida_dense_payload end
 function sliced_ham_payload end
 function write_angular_benchmark_exact_hamv6_jld2 end
+function write_atomic_fixed_radial_angular_level_jld2 end
+function write_atomic_fixed_radial_angular_overlap_sidecar_jld2 end
 function write_fullida_dense_jld2 end
 function write_sliced_ham_jld2 end
 function gaussian_factor_matrix end
@@ -465,6 +483,7 @@ include("atomic_ida_fock.jl")
 include("atomic_ida_uhf.jl")
 include("atomic_ida_two_electron.jl")
 include("fullida_dense_export.jl")
+include("angular_sequence_export.jl")
 include("sliced_ham_export.jl")
 
 end

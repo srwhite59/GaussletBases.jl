@@ -2495,6 +2495,20 @@ function _shell_local_injected_angular_fixture(order::Int)
     end)
 end
 
+function _shell_local_angular_profile_fixture(order::Int)
+    key = Symbol("shell_local_angular_profile_fixture_", order)
+    return _cached_fixture(key, () -> begin
+        shell_local_angular_profile(order)
+    end)
+end
+
+function _shell_local_angular_profile_overlap_fixture(source_order::Int, target_order::Int)
+    key = Symbol("shell_local_angular_profile_overlap_fixture_$(source_order)_$(target_order)")
+    return _cached_fixture(key, () -> begin
+        adjacent_shell_local_angular_profile_overlap(source_order, target_order)
+    end)
+end
+
 function _atomic_shell_local_angular_fixture()
     return _cached_fixture(:atomic_shell_local_angular_fixture, () -> begin
         shell_radii = [0.3, 0.8, 1.5, 3.5]
@@ -2559,6 +2573,31 @@ function _paper_style_angular_hfdmrg_payload_fixture(order::Int; Z::Float64 = 2.
         build_atomic_injected_angular_hfdmrg_payload(
             radial_ops;
             shell_orders = fill(order, length(radial_ops.shell_centers_r)),
+            nelec = Int(round(Z)),
+        )
+    end)
+end
+
+function _paper_style_fixed_radial_angular_sequence_fixture(;
+    Z::Float64 = 2.0,
+    lmax::Int = 2,
+    N_sph_values::AbstractVector{<:Integer} = [10, 15, 32],
+)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    ntag = join(Int.(N_sph_values), "_")
+    key = Symbol(
+        "paper_style_fixed_radial_angular_sequence_fixture_Z",
+        ztag,
+        "_Nsph_",
+        ntag,
+        "_lmax_",
+        lmax,
+    )
+    return _cached_fixture(key, () -> begin
+        _, _, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = Z, lmax = lmax)
+        build_atomic_fixed_radial_angular_sequence(
+            radial_ops,
+            Int[Int(value) for value in N_sph_values];
             nelec = Int(round(Z)),
         )
     end)
@@ -6704,6 +6743,59 @@ end
     end
 end
 
+@testset "Shell-local angular profiles" begin
+    profile15 = _shell_local_angular_profile_fixture(15)
+    profile15_again = shell_local_angular_profile(15)
+    profile15_uncached =
+        GaussletBases._build_shell_local_angular_profile_uncached(sphere_point_set(15))
+    profile32 = _shell_local_angular_profile_fixture(32)
+    overlap15_32 = _shell_local_angular_profile_overlap_fixture(15, 32)
+    overlap15_32_again = adjacent_shell_local_angular_profile_overlap(profile15, profile32)
+
+    @test profile15 isa ShellLocalAngularProfile
+    @test profile15.key.order == 15
+    @test profile15.key.point_set_source_tag == sphere_point_set(15).provenance.source_tag
+    @test profile15.key.gauge_version == :v1_seed_order_dominant_positive
+    @test profile15 === profile15_again
+    @test build_shell_local_injected_angular_basis(15) === profile15.basis
+    @test profile15.profile_id == profile15_uncached.profile_id
+    @test profile15.labels == profile15_uncached.labels
+    @test profile15.block_kinds == profile15_uncached.block_kinds
+    @test profile15.diagnostics.grand_coefficients_checksum ==
+          profile15_uncached.diagnostics.grand_coefficients_checksum
+
+    expected_exact_labels = [
+        "exact_l$(channel.l)_m$(channel.m)" for channel in profile15.basis.injected_channels.channel_data
+    ]
+    @test profile15.exact_labels == expected_exact_labels
+    @test profile15.labels[1:profile15.basis.injected_count] == expected_exact_labels
+    @test profile15.mixed_labels == ["mixed_$(i)" for i in 1:(profile15.basis.final_count - profile15.basis.injected_count)]
+    @test profile15.block_kinds ==
+          vcat(fill(:exact, profile15.basis.injected_count), fill(:mixed, profile15.basis.final_count - profile15.basis.injected_count))
+    @test all(diag(profile15.basis.injected_overlap[:, 1:profile15.basis.injected_count]) .> 0.0)
+
+    mixed_offset = profile15.basis.injected_count
+    mixed_metadata = profile15.gauge_metadata
+    @test mixed_metadata.mixed_orientation_strategy == :seed_order
+    @test length(mixed_metadata.mixed_dominant_grand_indices) == profile15.basis.final_count - profile15.basis.injected_count
+    @test length(mixed_metadata.mixed_signs) == profile15.basis.final_count - profile15.basis.injected_count
+    for j in 1:(profile15.basis.final_count - profile15.basis.injected_count)
+        idx = mixed_metadata.mixed_dominant_grand_indices[j]
+        @test profile15.basis.grand_coefficients[idx, mixed_offset + j] > 0.0
+    end
+
+    @test overlap15_32 isa ShellLocalAngularProfileOverlap
+    @test overlap15_32 === overlap15_32_again
+    @test size(overlap15_32.overlap) == (profile15.basis.final_count, profile32.basis.final_count)
+    @test overlap15_32.source_labels == profile15.labels
+    @test overlap15_32.target_labels == profile32.labels
+    @test overlap15_32.source_exact_count == profile15.basis.injected_count
+    @test overlap15_32.target_exact_count == profile32.basis.injected_count
+    @test overlap15_32.shell_independent
+    @test overlap15_32.diagnostics.min_singular_value > 1.0e-8
+    @test isfinite(overlap15_32.diagnostics.exact_block_inf_norm)
+end
+
 @testset "Atomic shell-local angular assembly" begin
     assembly = _atomic_shell_local_angular_fixture()
     diagnostics = atomic_shell_local_angular_diagnostics(assembly)
@@ -6731,6 +6823,10 @@ end
     @test assembly.shell_dimensions == [15, 32, 51, 32]
     @test assembly.shell_offsets == [1, 16, 48, 99]
     @test assembly.shell_exact_lmax == [1, 3, 4, 3]
+    @test assembly.profiles[1] === shell_local_angular_profile(15)
+    @test assembly.profiles[2] === shell_local_angular_profile(32)
+    @test assembly.profiles[2] === assembly.profiles[4]
+    @test assembly.shells[2] === assembly.profiles[2].basis
     @test assembly.shells[2] === assembly.shells[4]
     @test size(assembly.overlap) == (130, 130)
     @test size(assembly.kinetic) == (130, 130)
@@ -6758,6 +6854,89 @@ end
     @test maximum(scheduled_orders) ≥ 32
     @test all(order in sphere_point_set_orders() for order in scheduled_orders_full)
     @test any(order ∉ curated_sphere_point_set_orders() for order in scheduled_orders_full)
+end
+
+@testset "Atomic fixed-radial angular sequence" begin
+    sequence = _paper_style_fixed_radial_angular_sequence_fixture()
+    level10 = sequence.levels[1]
+    level15 = sequence.levels[2]
+    level32 = sequence.levels[3]
+    sidecar10_15 = sequence.adjacent_overlaps[1]
+    sidecar15_32 = sequence.adjacent_overlaps[2]
+    nr = length(sequence.shell_ids)
+
+    @test sequence isa AtomicFixedRadialAngularSequence
+    @test sequence.N_sph_values == [10, 15, 32]
+    @test length(sequence.levels) == 3
+    @test length(sequence.adjacent_overlaps) == 2
+    @test sequence.shell_ids == collect(1:nr)
+    @test issorted(sequence.shell_centers_r)
+    @test all(level -> level.radial_basis_id == sequence.radial_basis_id, sequence.levels)
+    @test all(level -> level.shell_ids == sequence.shell_ids, sequence.levels)
+    @test all(level -> level.shell_centers_r == sequence.shell_centers_r, sequence.levels)
+    @test level10.profile === shell_local_angular_profile(10)
+    @test level15.profile === shell_local_angular_profile(15)
+    @test level32.profile === shell_local_angular_profile(32)
+    @test all(profile -> profile === level10.profile, level10.payload.one_body.angular_assembly.profiles)
+    @test all(profile -> profile === level15.profile, level15.payload.one_body.angular_assembly.profiles)
+    @test all(profile -> profile === level32.profile, level32.payload.one_body.angular_assembly.profiles)
+    @test level10.shell_dimensions == fill(level10.profile.basis.final_count, nr)
+    @test level15.shell_dimensions == fill(level15.profile.basis.final_count, nr)
+    @test level32.shell_dimensions == fill(level32.profile.basis.final_count, nr)
+
+    level_payload = atomic_fixed_radial_angular_level_dense_payload(level10)
+    @test level_payload.payload["H1"] ≈ level10.payload.hamiltonian atol = 0.0 rtol = 0.0
+    @test level_payload.payload["Vee"] ≈ level10.payload.interaction atol = 0.0 rtol = 0.0
+    @test level_payload.payload["shell_ids"] == sequence.shell_ids
+    @test level_payload.payload["shell_centers_r"] == sequence.shell_centers_r
+    @test level_payload.payload["shell_dimensions"] == level10.shell_dimensions
+    @test level_payload.payload["within_shell_labels"] == level10.profile.labels
+    @test level_payload.bridge_meta["sequence_id"] == sequence.sequence_id
+    @test level_payload.bridge_meta["N_sph"] == 10
+    @test level_payload.bridge_meta["angular_profile_id"] == level10.profile.profile_id
+    @test level_payload.bridge_meta["gauge_version"] == string(level10.profile.key.gauge_version)
+
+    overlap_payload = atomic_fixed_radial_angular_overlap_sidecar_payload(sidecar10_15)
+    @test overlap_payload.payload["overlap"] ≈ sidecar10_15.overlap atol = 0.0 rtol = 0.0
+    @test overlap_payload.payload["source_labels"] == level10.profile.labels
+    @test overlap_payload.payload["target_labels"] == level15.profile.labels
+    @test overlap_payload.bridge_meta["sequence_id"] == sequence.sequence_id
+    @test overlap_payload.bridge_meta["source_N_sph"] == 10
+    @test overlap_payload.bridge_meta["target_N_sph"] == 15
+    @test overlap_payload.bridge_meta["shell_independent"]
+    @test sidecar10_15.source_profile_id == level10.profile.profile_id
+    @test sidecar10_15.target_profile_id == level15.profile.profile_id
+    @test sidecar10_15.source_labels == level10.profile.labels
+    @test sidecar10_15.target_labels == level15.profile.labels
+    @test sidecar10_15.shell_independent
+    @test sidecar15_32.source_profile_id == level15.profile.profile_id
+    @test sidecar15_32.target_profile_id == level32.profile.profile_id
+
+    mktempdir() do dir
+        level_path = joinpath(dir, "he_fixed_radial_level10.jld2")
+        sidecar_path = joinpath(dir, "he_fixed_radial_10_15_overlap.jld2")
+        @test write_atomic_fixed_radial_angular_level_jld2(level_path, level10) == level_path
+        @test write_atomic_fixed_radial_angular_overlap_sidecar_jld2(sidecar_path, sidecar10_15) == sidecar_path
+        jldopen(level_path, "r") do file
+            @test String(file["bridge/format"]) == "angular_fixed_radial_dense_v1"
+            @test Int(file["bridge/level_index"]) == 1
+            @test Int(file["bridge/N_sph"]) == 10
+            @test String(file["bridge/sequence_id"]) == sequence.sequence_id
+            @test String(file["bridge/angular_profile_id"]) == level10.profile.profile_id
+            @test Int.(file["shell_ids"]) == sequence.shell_ids
+            @test Float64.(file["shell_centers_r"]) == sequence.shell_centers_r
+            @test String.(file["within_shell_labels"]) == level10.profile.labels
+        end
+        jldopen(sidecar_path, "r") do file
+            @test String(file["bridge/format"]) == "angular_fixed_radial_profile_overlap_v1"
+            @test Int(file["bridge/source_N_sph"]) == 10
+            @test Int(file["bridge/target_N_sph"]) == 15
+            @test Bool(file["bridge/shell_independent"])
+            @test String.(file["source_labels"]) == level10.profile.labels
+            @test String.(file["target_labels"]) == level15.profile.labels
+            @test Matrix{Float64}(file["overlap"]) ≈ sidecar10_15.overlap atol = 0.0 rtol = 0.0
+        end
+    end
 end
 
 @testset "Atomic injected angular one-body benchmark" begin
