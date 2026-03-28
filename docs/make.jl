@@ -31,6 +31,7 @@ makedocs(
         hide("Radial interval-sampled build and extents" => "algorithms/radial_interval_sampled_build_and_extents.md"),
         hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
         hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),
+        hide("Visualization utilities" => "howto/visualization.md"),
         hide("Current atomic branch" => "explanations/current_atomic_branch.md"),
         hide("Angular research track" => "explanations/angular_research_track.md"),
         hide("Current ordinary branch" => "explanations/current_ordinary_branch.md"),

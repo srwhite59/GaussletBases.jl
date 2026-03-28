@@ -63,3 +63,6 @@ For the workflow pages that explain these examples, also see:
 - [Manual](../manual/index.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
+
+For the lightweight point-cloud and path viewers used to inspect emitted 2D/3D
+geometry datasets, also see [Visualization utilities](../howto/visualization.md).

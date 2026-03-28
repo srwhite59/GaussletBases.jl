@@ -29,6 +29,9 @@ If you are new to the package, use this short path:
 3. [First radial workflow](tutorials/first_radial_workflow.md)
 4. [Recommended atomic setup](howto/recommended_atomic_setup.md)
 
+For lightweight point-cloud and path inspection utilities, also see
+[Visualization utilities](howto/visualization.md).
+
 That is still the best front door because the radial line is the current
 mature numerical workflow.
 

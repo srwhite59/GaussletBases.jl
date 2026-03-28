@@ -79,6 +79,10 @@ This page records the local primitive language for Cartesian nesting:
 It is no longer the source-of-truth page for the whole landed atomic nonrecursive
 route.
 
+For emitted 2D/3D point-set diagnostics from this construction family, the repo
+`viz/` viewers provide a lightweight inspection path. For the current public
+entry points, see [Visualization utilities](../howto/visualization.md).
+
 ## Current Repo Status
 
 The repo now has the primitive pieces described on this page:

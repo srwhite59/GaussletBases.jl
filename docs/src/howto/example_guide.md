@@ -122,6 +122,7 @@ Use these pages to keep the examples in context:
 
 - [First radial workflow](../tutorials/first_radial_workflow.md)
 - [Recommended atomic setup](recommended_atomic_setup.md)
+- [Visualization utilities](visualization.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
 - [Developer Notes](../developer/index.md)

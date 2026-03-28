@@ -122,6 +122,11 @@ Current split:
 This page is still the source-of-truth algorithm for the Qiu-White reference
 implementation.
 
+When this route emits geometric point or path datasets for inspection, the repo
+`viz/` viewers can be used to inspect them quickly. For the lightweight entry
+points and usage conventions, see
+[Visualization utilities](../howto/visualization.md).
+
 ## Code Map
 
 The current code is concentrated in:
