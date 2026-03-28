@@ -266,6 +266,70 @@ function _path_color_3d(group_id::Int)
     return palette[mod1(group_id, length(palette))]
 end
 
+function _primary_ordering_path_payload_3d(payload::GeometryPayload3D)
+    selected_path = nothing
+    for path in payload.paths
+        isempty(path.points) && continue
+        selected_path = path
+        break
+    end
+    selected_paths = isnothing(selected_path) ? GeometryPath3D[] : [selected_path]
+    nucleus_points = [point for point in payload.points if point.role == :nucleus]
+    return GeometryPayload3D(
+        payload.bond_axis,
+        payload.point_count,
+        payload.nucleus_count,
+        nucleus_points,
+        GeometryBox3D[],
+        selected_paths,
+    )
+end
+
+function _interpolate_rgba_3d(c1, c2, t::Float64, GLM)
+    s = clamp(t, 0.0, 1.0)
+    return GLM.RGBAf(
+        (1 - s) * c1.r + s * c2.r,
+        (1 - s) * c1.g + s * c2.g,
+        (1 - s) * c1.b + s * c2.b,
+        (1 - s) * c1.alpha + s * c2.alpha,
+    )
+end
+
+function _path_segment_palette_3d(nsegments::Int, GLM)
+    nsegments <= 0 && return GLM.RGBAf[]
+    anchors = [
+        GLM.RGBAf(0.00, 0.38, 1.00, 1.0),
+        GLM.RGBAf(0.00, 0.78, 1.00, 1.0),
+        GLM.RGBAf(0.00, 0.80, 0.52, 1.0),
+        GLM.RGBAf(0.55, 0.82, 0.12, 1.0),
+        GLM.RGBAf(0.98, 0.78, 0.05, 1.0),
+        GLM.RGBAf(1.00, 0.42, 0.00, 1.0),
+        GLM.RGBAf(0.92, 0.12, 0.62, 1.0),
+        GLM.RGBAf(0.88, 0.12, 0.18, 1.0),
+    ]
+    if nsegments == 1
+        return [anchors[1]]
+    end
+
+    colors = Vector{typeof(anchors[1])}(undef, nsegments)
+    nblocks = length(anchors) - 1
+    @inbounds for idx in 1:nsegments
+        t = (idx - 1) / (nsegments - 1)
+        scaled = t * nblocks
+        block = min(floor(Int, scaled) + 1, nblocks)
+        local_t = scaled - (block - 1)
+        colors[idx] = _interpolate_rgba_3d(anchors[block], anchors[block + 1], local_t, GLM)
+    end
+    return colors
+end
+
+function _path_point_palette_3d(npoints::Int, GLM)
+    npoints <= 0 && return GLM.RGBAf[]
+    npoints == 1 && return [GLM.RGBAf(0.10, 0.35, 0.95, 1.0)]
+    segment_colors = _path_segment_palette_3d(npoints - 1, GLM)
+    return vcat(segment_colors, [segment_colors[end]])
+end
+
 function _legend_elements_3d(payload::GeometryPayload3D, GLM)
     elements = Any[]
     labels = String[]
@@ -431,22 +495,25 @@ function render_bond_aligned_diatomic_points3d(
         xs = [point[1] for point in path.points]
         ys = [point[2] for point in path.points]
         zs = [point[3] for point in path.points]
-        path_color = _path_color_3d(path.group_id)
-        GLM.lines!(
-            axis,
-            xs,
-            ys,
-            zs;
-            color = path_color,
-            linewidth = style.linewidth,
-            linestyle = style.linestyle,
-        )
+        point_colors = _path_point_palette_3d(length(path.points), GLM)
+        segment_colors = _path_segment_palette_3d(length(path.points) - 1, GLM)
+        @inbounds for idx in 1:(length(path.points) - 1)
+            GLM.lines!(
+                axis,
+                [xs[idx], xs[idx + 1]],
+                [ys[idx], ys[idx + 1]],
+                [zs[idx], zs[idx + 1]];
+                color = segment_colors[idx],
+                linewidth = style.linewidth,
+                linestyle = style.linestyle,
+            )
+        end
         GLM.scatter!(
             axis,
             xs,
             ys,
             zs;
-            color = path_color,
+            color = point_colors,
             marker = :circle,
             markersize = 12,
         )
@@ -490,12 +557,12 @@ function _ordering_path_legend_elements_3d(payload::GeometryPayload3D, GLM)
         push!(
             elements,
             GLM.LineElement(
-                color = _path_color_3d(path.group_id),
+                color = isempty(path.points) ? :darkorange2 : _path_segment_palette_3d(max(length(path.points) - 1, 1), GLM)[clamp(length(path.points) ÷ 2, 1, max(length(path.points) - 1, 1))],
                 linewidth = _group_style_3d(path.group_kind).linewidth,
                 linestyle = _group_style_3d(path.group_kind).linestyle,
             ),
         )
-        push!(labels, path.label)
+        push!(labels, "ordering path")
     end
     return elements, labels
 end
@@ -504,7 +571,7 @@ function render_ordering_path3d(
     input_path::AbstractString;
     title::AbstractString = DEFAULT_PATH_TITLE_3D,
 )
-    payload = read_bond_aligned_diatomic_points3d(input_path)
+    payload = _primary_ordering_path_payload_3d(read_bond_aligned_diatomic_points3d(input_path))
     GLM = _load_glmakie()
     GLM.activate!(; focus_on_show = true)
 
@@ -513,7 +580,7 @@ function render_ordering_path3d(
     GLM.Label(figure[0, 1], title; fontsize = 28, tellwidth = false)
     GLM.Label(
         figure[1, 1],
-        "paths=$(length(payload.paths)), nuclei=$(payload.nucleus_count), point cloud hidden";
+        "showing $(length(payload.paths)) path, nuclei=$(payload.nucleus_count), point cloud hidden";
         fontsize = 20,
         tellwidth = false,
     )
@@ -549,24 +616,28 @@ function render_ordering_path3d(
         xs = [point[1] for point in path.points]
         ys = [point[2] for point in path.points]
         zs = [point[3] for point in path.points]
-        path_color = _path_color_3d(path.group_id)
-        GLM.lines!(
-            axis,
-            xs,
-            ys,
-            zs;
-            color = path_color,
-            linewidth = style.linewidth,
-            linestyle = style.linestyle,
-        )
+        point_colors = _path_point_palette_3d(length(path.points), GLM)
+        segment_colors = _path_segment_palette_3d(length(path.points) - 1, GLM)
+        path_linewidth = max(style.linewidth, 3.15)
+        @inbounds for idx in 1:(length(path.points) - 1)
+            GLM.lines!(
+                axis,
+                [xs[idx], xs[idx + 1]],
+                [ys[idx], ys[idx + 1]],
+                [zs[idx], zs[idx + 1]];
+                color = segment_colors[idx],
+                linewidth = path_linewidth,
+                linestyle = style.linestyle,
+            )
+        end
         GLM.scatter!(
             axis,
             xs,
             ys,
             zs;
-            color = path_color,
+            color = point_colors,
             marker = :circle,
-            markersize = 12,
+            markersize = 18,
         )
         GLM.scatter!(
             axis,
@@ -585,6 +656,18 @@ function render_ordering_path3d(
             color = :black,
             marker = :rect,
             markersize = 22,
+        )
+        mid = cld(length(xs), 2)
+        GLM.scatter!(
+            axis,
+            [xs[mid]],
+            [ys[mid]],
+            [zs[mid]];
+            color = :white,
+            marker = :diamond,
+            markersize = 20,
+            strokecolor = :black,
+            strokewidth = 2,
         )
     end
 
