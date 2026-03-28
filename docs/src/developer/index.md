@@ -18,6 +18,7 @@ This section is where to go when you want:
 ## Main developer-facing pages
 
 - [Architecture and current direction](architecture.md)
+- [Numerical contracts](numerical_contracts.md)
 - [Supporting note map](supporting_notes.md)
 
 The broader flat `docs/` tree still contains the full supporting-note history.
