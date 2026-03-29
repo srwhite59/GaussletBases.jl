@@ -497,6 +497,95 @@ function _fixed_radial_overlap_meta_values(
     return meta_values
 end
 
+const _LEGACY_DMRGATOM_CENTER_POLICY_NAME =
+    "representative_dominant_prototype_direction_v1"
+
+function _legacy_dmrgatom_within_shell_dominant_prototype_indices(
+    profile::ShellLocalAngularProfile,
+)
+    coefficients = profile.basis.prototype_coefficients
+    size(coefficients, 1) == profile.basis.point_set.cardinality || throw(
+        DimensionMismatch(
+            "prototype coefficient rows must match point-set cardinality for legacy dmrgatom representative centers",
+        ),
+    )
+    norbitals = size(coefficients, 2)
+    indices = Vector{Int}(undef, norbitals)
+    magnitudes = Vector{Float64}(undef, norbitals)
+    for orbital in 1:norbitals
+        dominant = _dominant_column_index(view(coefficients, :, orbital))
+        magnitude = abs(coefficients[dominant, orbital])
+        magnitude > 0.0 || throw(
+            ArgumentError(
+                "legacy dmrgatom representative centers require a nonzero dominant prototype coefficient for every orbital",
+            ),
+        )
+        indices[orbital] = dominant
+        magnitudes[orbital] = magnitude
+    end
+    return indices, magnitudes
+end
+
+function _legacy_dmrgatom_basis_centers(
+    level::AtomicFixedRadialAngularSequenceLevel,
+)
+    profile = level.profile
+    per_shell_dim = profile.basis.final_count
+    all(dim -> dim == per_shell_dim, level.shell_dimensions) || throw(
+        ArgumentError(
+            "legacy dmrgatom export currently requires shell-independent profile dimensions matching the cached profile final count",
+        ),
+    )
+
+    dominant_indices, dominant_magnitudes =
+        _legacy_dmrgatom_within_shell_dominant_prototype_indices(profile)
+    directions = profile.basis.point_set.coordinates[dominant_indices, :]
+    nshells = length(level.shell_dimensions)
+    norbitals = sum(level.shell_dimensions)
+    basis_centers = Matrix{Float64}(undef, norbitals, 3)
+    row = 1
+    for shell in 1:nshells
+        radius = level.shell_centers_r[shell]
+        for orbital in 1:per_shell_dim
+            basis_centers[row, :] .= radius .* view(directions, orbital, :)
+            row += 1
+        end
+    end
+    return basis_centers, dominant_indices, dominant_magnitudes
+end
+
+function _legacy_dmrgatom_meta_values(
+    level::AtomicFixedRadialAngularSequenceLevel;
+    meta = nothing,
+)
+    nuclear_charge = level.payload.one_body.radial_operators.source_manifest.nuclear_charge
+    nuclear_charge_integer = round(Int, nuclear_charge)
+    isapprox(nuclear_charge, nuclear_charge_integer; atol = 1.0e-12, rtol = 0.0) || throw(
+        ArgumentError(
+            "legacy dmrgatom export requires an integer-valued atomic charge for meta/Z; got $(nuclear_charge)",
+        ),
+    )
+    meta_values = _fixed_radial_level_meta_values(level; meta = meta)
+    merge!(
+        meta_values,
+        Dict{String,Any}(
+            "Z" => nuclear_charge_integer,
+            "producer" => "GaussletBases.write_atomic_fixed_radial_legacy_dmrgatom_jld2",
+            "producer_type" => "AtomicFixedRadialAngularSequenceLevel",
+            "manifest/producer/entrypoint" =>
+                "GaussletBases.write_atomic_fixed_radial_legacy_dmrgatom_jld2",
+            "manifest/producer/object_type" => "AtomicFixedRadialAngularSequenceLevel",
+            "manifest/consumer/family" => "legacy_dmrgatom",
+            "manifest/consumer/target" => "GaussletModules/bin/dmrgatom.jl",
+            "manifest/geometry/basis_centers_kind" =>
+                "representative_orbital_centers_for_legacy_ordering",
+            "manifest/geometry/center_policy_name" =>
+                _LEGACY_DMRGATOM_CENTER_POLICY_NAME,
+        ),
+    )
+    return meta_values
+end
+
 """
     atomic_fixed_radial_angular_overlap_sidecar_payload(sidecar; meta=nothing)
 
@@ -556,6 +645,94 @@ function write_atomic_fixed_radial_angular_overlap_sidecar_jld2(
     meta = nothing,
 )
     data = atomic_fixed_radial_angular_overlap_sidecar_payload(sidecar; meta = meta)
+    jldopen(path, "w") do file
+        for (key, value) in data.payload
+            file[key] = value
+        end
+        _write_prefixed_values!(file, "bridge", data.bridge_meta)
+        _write_prefixed_values!(file, "meta", data.meta_values)
+    end
+    return path
+end
+
+"""
+    atomic_fixed_radial_legacy_dmrgatom_payload(level; meta=nothing)
+
+Build the narrow legacy-direct dense payload for the `dmrgatom.jl` consumer
+family from one fixed-radial angular sequence level without writing a file.
+
+The required top-level datasets are:
+
+- `H1`
+- `Vee`
+- `basis_centers`
+- `dims_per_shell`
+
+with `meta/Z` and additional provenance carried under `meta/` and `bridge/`.
+The exported `basis_centers` use a representative-center policy for legacy
+ordering heuristics, not exact physical orbital centers.
+"""
+function atomic_fixed_radial_legacy_dmrgatom_payload(
+    level::AtomicFixedRadialAngularSequenceLevel;
+    meta = nothing,
+)
+    profile = level.profile
+    basis_centers, dominant_indices, dominant_magnitudes =
+        _legacy_dmrgatom_basis_centers(level)
+    bridge_meta = Dict{String,Any}(
+        "format" => "legacy_dmrgatom_dense_v1",
+        "version" => 1,
+        "sequence_id" => level.sequence_id,
+        "level_id" => level.level_id,
+        "level_index" => level.level_index,
+        "N_sph" => level.N_sph,
+        "radial_basis_id" => level.radial_basis_id,
+        "angular_profile_id" => profile.profile_id,
+        "gauge_version" => string(profile.key.gauge_version),
+        "shell_count" => length(level.shell_ids),
+        "shell_ids" => copy(level.shell_ids),
+        "shell_centers_r" => copy(level.shell_centers_r),
+        "dims_per_shell" => copy(level.shell_dimensions),
+        "within_shell_labels" => copy(profile.labels),
+        "within_shell_block_kinds" => String[string(kind) for kind in profile.block_kinds],
+        "within_shell_exact_labels" => copy(profile.exact_labels),
+        "within_shell_mixed_labels" => copy(profile.mixed_labels),
+        "within_shell_dominant_prototype_indices" => copy(dominant_indices),
+        "within_shell_dominant_prototype_magnitudes" => copy(dominant_magnitudes),
+        "basis_centers_kind" => "representative_orbital_centers_for_legacy_ordering",
+        "basis_centers_center_policy_name" => _LEGACY_DMRGATOM_CENTER_POLICY_NAME,
+        "basis_centers_are_representative" => true,
+        "route" => string(level.payload.route),
+        "solver_mode" => string(level.payload.solver_mode),
+    )
+    payload = Dict{String,Any}(
+        "H1" => Matrix{Float64}(level.payload.hamiltonian),
+        "Vee" => Matrix{Float64}(level.payload.interaction),
+        "basis_centers" => basis_centers,
+        "dims_per_shell" => copy(level.shell_dimensions),
+    )
+    return (
+        payload = payload,
+        bridge_meta = bridge_meta,
+        meta_values = _legacy_dmrgatom_meta_values(level; meta = meta),
+    )
+end
+
+"""
+    write_atomic_fixed_radial_legacy_dmrgatom_jld2(path, level; meta=nothing)
+
+Write the narrow legacy-direct dense export for the `dmrgatom.jl` consumer
+family from one fixed-radial angular sequence level.
+
+This writer is intentionally consumer-specific. It does not attempt to solve
+the broader legacy chemistry-style JLD2 compatibility problem.
+"""
+function write_atomic_fixed_radial_legacy_dmrgatom_jld2(
+    path::AbstractString,
+    level::AtomicFixedRadialAngularSequenceLevel;
+    meta = nothing,
+)
+    data = atomic_fixed_radial_legacy_dmrgatom_payload(level; meta = meta)
     jldopen(path, "w") do file
         for (key, value) in data.payload
             file[key] = value

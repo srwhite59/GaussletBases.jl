@@ -6912,11 +6912,37 @@ end
     @test sidecar15_32.source_profile_id == level15.profile.profile_id
     @test sidecar15_32.target_profile_id == level32.profile.profile_id
 
+    legacy_payload = atomic_fixed_radial_legacy_dmrgatom_payload(level10)
+    @test legacy_payload.payload["H1"] ≈ level10.payload.hamiltonian atol = 0.0 rtol = 0.0
+    @test legacy_payload.payload["Vee"] ≈ level10.payload.interaction atol = 0.0 rtol = 0.0
+    @test legacy_payload.payload["dims_per_shell"] == level10.shell_dimensions
+    @test legacy_payload.meta_values["Z"] == 2
+    @test legacy_payload.bridge_meta["angular_profile_id"] == level10.profile.profile_id
+    @test legacy_payload.bridge_meta["gauge_version"] == string(level10.profile.key.gauge_version)
+    @test legacy_payload.bridge_meta["basis_centers_are_representative"]
+    @test legacy_payload.bridge_meta["basis_centers_center_policy_name"] ==
+          "representative_dominant_prototype_direction_v1"
+    dominant_indices =
+        Int.(legacy_payload.bridge_meta["within_shell_dominant_prototype_indices"])
+    @test length(dominant_indices) == level10.profile.basis.final_count
+    @test all(index -> 1 <= index <= level10.profile.basis.prototype_count, dominant_indices)
+    basis_centers = Matrix{Float64}(legacy_payload.payload["basis_centers"])
+    @test size(basis_centers) ==
+          (size(level10.payload.hamiltonian, 1), 3)
+    point_coordinates = level10.profile.basis.point_set.coordinates
+    shell_size = level10.profile.basis.final_count
+    first_shell_centers = basis_centers[1:shell_size, :]
+    expected_first_shell_centers =
+        level10.shell_centers_r[1] .* point_coordinates[dominant_indices, :]
+    @test first_shell_centers ≈ expected_first_shell_centers atol = 1.0e-12 rtol = 1.0e-12
+
     mktempdir() do dir
         level_path = joinpath(dir, "he_fixed_radial_level10.jld2")
         sidecar_path = joinpath(dir, "he_fixed_radial_10_15_overlap.jld2")
+        legacy_path = joinpath(dir, "he_fixed_radial_level10.legacy_dmrgatom.jld2")
         @test write_atomic_fixed_radial_angular_level_jld2(level_path, level10) == level_path
         @test write_atomic_fixed_radial_angular_overlap_sidecar_jld2(sidecar_path, sidecar10_15) == sidecar_path
+        @test write_atomic_fixed_radial_legacy_dmrgatom_jld2(legacy_path, level10) == legacy_path
         jldopen(level_path, "r") do file
             @test String(file["bridge/format"]) == "angular_fixed_radial_dense_v1"
             @test Int(file["bridge/level_index"]) == 1
@@ -6935,6 +6961,20 @@ end
             @test String.(file["source_labels"]) == level10.profile.labels
             @test String.(file["target_labels"]) == level15.profile.labels
             @test Matrix{Float64}(file["overlap"]) ≈ sidecar10_15.overlap atol = 0.0 rtol = 0.0
+        end
+        jldopen(legacy_path, "r") do file
+            @test String(file["bridge/format"]) == "legacy_dmrgatom_dense_v1"
+            @test Int(file["bridge/N_sph"]) == 10
+            @test Int(file["meta/Z"]) == 2
+            @test Int.(file["dims_per_shell"]) == level10.shell_dimensions
+            @test Matrix{Float64}(file["H1"]) ≈ level10.payload.hamiltonian atol = 0.0 rtol = 0.0
+            @test Matrix{Float64}(file["Vee"]) ≈ level10.payload.interaction atol = 0.0 rtol = 0.0
+            @test String(file["bridge/basis_centers_center_policy_name"]) ==
+                  "representative_dominant_prototype_direction_v1"
+            @test Bool(file["bridge/basis_centers_are_representative"])
+            @test Int.(file["bridge/within_shell_dominant_prototype_indices"]) ==
+                  dominant_indices
+            @test Matrix{Float64}(file["basis_centers"]) ≈ basis_centers atol = 0.0 rtol = 0.0
         end
     end
 end
