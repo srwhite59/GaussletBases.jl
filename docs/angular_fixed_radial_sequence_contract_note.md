@@ -20,9 +20,13 @@ What changes across levels:
 - the dense per-level bridge Hamiltonian built on that profile
 
 Under the current contract, the shell-local construction is radius-independent
-for fixed profile settings. That means the adjacent shell-local profile overlap
-for `N_sph[k] -> N_sph[k+1]` is common across shells and is exported once as a
-shell-independent sidecar.
+for fixed profile settings. That means every source-target shell-local profile
+overlap inside one fixed-radial sequence is common across shells and can be
+exported once as a shell-independent sidecar. The current sequence object keeps:
+
+- `adjacent_overlaps` for neighboring `N_sph[k] -> N_sph[k+1]` pairs
+- `direct_overlaps` for the full non-adjacent upper triangle inside the same
+  sequence
 
 What is not included yet:
 

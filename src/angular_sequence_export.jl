@@ -18,8 +18,13 @@ struct AtomicFixedRadialAngularSequenceOverlapSidecar
     target_level_index::Int
     source_N_sph::Int
     target_N_sph::Int
+    source_level_id::String
+    target_level_id::String
     source_profile_id::String
     target_profile_id::String
+    source_gauge_version::Symbol
+    target_gauge_version::Symbol
+    pair_kind::Symbol
     source_labels::Vector{String}
     target_labels::Vector{String}
     overlap::Matrix{Float64}
@@ -40,6 +45,7 @@ struct AtomicFixedRadialAngularSequence
     profile_settings::NamedTuple
     levels::Vector{AtomicFixedRadialAngularSequenceLevel}
     adjacent_overlaps::Vector{AtomicFixedRadialAngularSequenceOverlapSidecar}
+    direct_overlaps::Vector{AtomicFixedRadialAngularSequenceOverlapSidecar}
 end
 
 function Base.show(io::IO, level::AtomicFixedRadialAngularSequenceLevel)
@@ -66,6 +72,8 @@ function Base.show(io::IO, sidecar::AtomicFixedRadialAngularSequenceOverlapSidec
         sidecar.target_N_sph,
         ", size=",
         size(sidecar.overlap),
+        ", kind=",
+        sidecar.pair_kind,
         ", shell_independent=",
         sidecar.shell_independent,
         ")",
@@ -81,6 +89,8 @@ function Base.show(io::IO, sequence::AtomicFixedRadialAngularSequence)
         repr(sequence.N_sph_values),
         ", radial_basis_id=",
         repr(sequence.radial_basis_id),
+        ", direct_overlaps=",
+        length(sequence.direct_overlaps),
         ")",
     )
 end
@@ -246,7 +256,8 @@ end
 function _build_atomic_fixed_radial_overlap_sidecar(
     sequence_id::AbstractString,
     source::AtomicFixedRadialAngularSequenceLevel,
-    target::AtomicFixedRadialAngularSequenceLevel,
+    target::AtomicFixedRadialAngularSequenceLevel;
+    pair_kind::Symbol = :adjacent,
 )
     overlap =
         adjacent_shell_local_angular_profile_overlap(source.profile, target.profile)
@@ -256,8 +267,13 @@ function _build_atomic_fixed_radial_overlap_sidecar(
         target.level_index,
         source.N_sph,
         target.N_sph,
+        source.level_id,
+        target.level_id,
         overlap.source_profile_id,
         overlap.target_profile_id,
+        source.profile.key.gauge_version,
+        target.profile.key.gauge_version,
+        pair_kind,
         copy(overlap.source_labels),
         copy(overlap.target_labels),
         Matrix{Float64}(overlap.overlap),
@@ -268,6 +284,28 @@ function _build_atomic_fixed_radial_overlap_sidecar(
         overlap.shell_independent,
         overlap.diagnostics,
     )
+end
+
+function _build_atomic_fixed_radial_direct_overlaps(
+    sequence_id::AbstractString,
+    levels::AbstractVector{AtomicFixedRadialAngularSequenceLevel},
+)
+    sidecars = AtomicFixedRadialAngularSequenceOverlapSidecar[]
+    nlevels = length(levels)
+    for i in 1:(nlevels - 2)
+        for j in (i + 2):nlevels
+            push!(
+                sidecars,
+                _build_atomic_fixed_radial_overlap_sidecar(
+                    sequence_id,
+                    levels[i],
+                    levels[j];
+                    pair_kind = :direct,
+                ),
+            )
+        end
+    end
+    return sidecars
 end
 
 """
@@ -286,7 +324,11 @@ of `N_sph` values.
 
 The radial substrate is held fixed across every level. Each level reuses one
 cached shell-local angular profile for its `N_sph` value and exports the dense
-HF-facing bridge data independently.
+HF-facing bridge data independently. The returned sequence also carries:
+
+- `adjacent_overlaps` for each neighboring `N_sph[k] -> N_sph[k+1]` pair
+- `direct_overlaps` for every non-adjacent source-target pair inside the same
+  sequence
 """
 function build_atomic_fixed_radial_angular_sequence(
     radial_ops::RadialAtomicOperators,
@@ -336,6 +378,8 @@ function build_atomic_fixed_radial_angular_sequence(
             _build_atomic_fixed_radial_overlap_sidecar(sequence_id, levels[i], levels[i + 1]),
         )
     end
+    direct_overlaps =
+        _build_atomic_fixed_radial_direct_overlaps(sequence_id, levels)
 
     return AtomicFixedRadialAngularSequence(
         sequence_id,
@@ -346,6 +390,7 @@ function build_atomic_fixed_radial_angular_sequence(
         profile_settings,
         levels,
         adjacent_overlaps,
+        direct_overlaps,
     )
 end
 
@@ -589,8 +634,8 @@ end
 """
     atomic_fixed_radial_angular_overlap_sidecar_payload(sidecar; meta=nothing)
 
-Build the adjacent shell-local profile-overlap sidecar for one neighboring
-`N_sph[k] -> N_sph[k+1]` pair without writing a file.
+Build one shell-local profile-overlap sidecar for a source-target pair inside
+the fixed-radial `N_sph` sequence without writing a file.
 """
 function atomic_fixed_radial_angular_overlap_sidecar_payload(
     sidecar::AtomicFixedRadialAngularSequenceOverlapSidecar;
@@ -604,8 +649,13 @@ function atomic_fixed_radial_angular_overlap_sidecar_payload(
         "target_level_index" => sidecar.target_level_index,
         "source_N_sph" => sidecar.source_N_sph,
         "target_N_sph" => sidecar.target_N_sph,
+        "source_level_id" => sidecar.source_level_id,
+        "target_level_id" => sidecar.target_level_id,
         "source_profile_id" => sidecar.source_profile_id,
         "target_profile_id" => sidecar.target_profile_id,
+        "source_gauge_version" => string(sidecar.source_gauge_version),
+        "target_gauge_version" => string(sidecar.target_gauge_version),
+        "pair_kind" => string(sidecar.pair_kind),
         "source_exact_count" => sidecar.source_exact_count,
         "source_mixed_count" => sidecar.source_mixed_count,
         "target_exact_count" => sidecar.target_exact_count,
@@ -632,8 +682,8 @@ end
 """
     write_atomic_fixed_radial_angular_overlap_sidecar_jld2(path, sidecar; meta=nothing)
 
-Write the native adjacent-overlap sidecar for one neighboring
-`N_sph[k] -> N_sph[k+1]` pair in the fixed-radial sequence line.
+Write the native shell-local profile-overlap sidecar for one source-target pair
+in the fixed-radial sequence line.
 
 This writer stores the compact shell-local cross-overlap, stable source/target
 labels, and overlap diagnostics/provenance needed by external continuation

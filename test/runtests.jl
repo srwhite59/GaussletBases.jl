@@ -6863,12 +6863,14 @@ end
     level32 = sequence.levels[3]
     sidecar10_15 = sequence.adjacent_overlaps[1]
     sidecar15_32 = sequence.adjacent_overlaps[2]
+    sidecar10_32 = sequence.direct_overlaps[1]
     nr = length(sequence.shell_ids)
 
     @test sequence isa AtomicFixedRadialAngularSequence
     @test sequence.N_sph_values == [10, 15, 32]
     @test length(sequence.levels) == 3
     @test length(sequence.adjacent_overlaps) == 2
+    @test length(sequence.direct_overlaps) == 1
     @test sequence.shell_ids == collect(1:nr)
     @test issorted(sequence.shell_centers_r)
     @test all(level -> level.radial_basis_id == sequence.radial_basis_id, sequence.levels)
@@ -6903,14 +6905,29 @@ end
     @test overlap_payload.bridge_meta["sequence_id"] == sequence.sequence_id
     @test overlap_payload.bridge_meta["source_N_sph"] == 10
     @test overlap_payload.bridge_meta["target_N_sph"] == 15
+    @test overlap_payload.bridge_meta["pair_kind"] == "adjacent"
     @test overlap_payload.bridge_meta["shell_independent"]
     @test sidecar10_15.source_profile_id == level10.profile.profile_id
     @test sidecar10_15.target_profile_id == level15.profile.profile_id
+    @test sidecar10_15.source_gauge_version == level10.profile.key.gauge_version
+    @test sidecar10_15.target_gauge_version == level15.profile.key.gauge_version
     @test sidecar10_15.source_labels == level10.profile.labels
     @test sidecar10_15.target_labels == level15.profile.labels
     @test sidecar10_15.shell_independent
+    @test sidecar10_15.pair_kind == :adjacent
     @test sidecar15_32.source_profile_id == level15.profile.profile_id
     @test sidecar15_32.target_profile_id == level32.profile.profile_id
+    @test sidecar15_32.pair_kind == :adjacent
+    @test sidecar10_32.source_N_sph == 10
+    @test sidecar10_32.target_N_sph == 32
+    @test sidecar10_32.source_profile_id == level10.profile.profile_id
+    @test sidecar10_32.target_profile_id == level32.profile.profile_id
+    @test sidecar10_32.source_gauge_version == level10.profile.key.gauge_version
+    @test sidecar10_32.target_gauge_version == level32.profile.key.gauge_version
+    @test sidecar10_32.source_labels == level10.profile.labels
+    @test sidecar10_32.target_labels == level32.profile.labels
+    @test sidecar10_32.shell_independent
+    @test sidecar10_32.pair_kind == :direct
 
     legacy_payload = atomic_fixed_radial_legacy_dmrgatom_payload(level10)
     @test legacy_payload.payload["H1"] ≈ level10.payload.hamiltonian atol = 0.0 rtol = 0.0
@@ -6939,9 +6956,11 @@ end
     mktempdir() do dir
         level_path = joinpath(dir, "he_fixed_radial_level10.jld2")
         sidecar_path = joinpath(dir, "he_fixed_radial_10_15_overlap.jld2")
+        direct_sidecar_path = joinpath(dir, "he_fixed_radial_10_32_overlap.jld2")
         legacy_path = joinpath(dir, "he_fixed_radial_level10.legacy_dmrgatom.jld2")
         @test write_atomic_fixed_radial_angular_level_jld2(level_path, level10) == level_path
         @test write_atomic_fixed_radial_angular_overlap_sidecar_jld2(sidecar_path, sidecar10_15) == sidecar_path
+        @test write_atomic_fixed_radial_angular_overlap_sidecar_jld2(direct_sidecar_path, sidecar10_32) == direct_sidecar_path
         @test write_atomic_fixed_radial_legacy_dmrgatom_jld2(legacy_path, level10) == legacy_path
         jldopen(level_path, "r") do file
             @test String(file["bridge/format"]) == "angular_fixed_radial_dense_v1"
@@ -6957,10 +6976,31 @@ end
             @test String(file["bridge/format"]) == "angular_fixed_radial_profile_overlap_v1"
             @test Int(file["bridge/source_N_sph"]) == 10
             @test Int(file["bridge/target_N_sph"]) == 15
+            @test String(file["bridge/source_level_id"]) == level10.level_id
+            @test String(file["bridge/target_level_id"]) == level15.level_id
+            @test String(file["bridge/source_gauge_version"]) == string(level10.profile.key.gauge_version)
+            @test String(file["bridge/target_gauge_version"]) == string(level15.profile.key.gauge_version)
+            @test String(file["bridge/pair_kind"]) == "adjacent"
             @test Bool(file["bridge/shell_independent"])
             @test String.(file["source_labels"]) == level10.profile.labels
             @test String.(file["target_labels"]) == level15.profile.labels
             @test Matrix{Float64}(file["overlap"]) ≈ sidecar10_15.overlap atol = 0.0 rtol = 0.0
+        end
+        jldopen(direct_sidecar_path, "r") do file
+            @test String(file["bridge/format"]) == "angular_fixed_radial_profile_overlap_v1"
+            @test Int(file["bridge/source_N_sph"]) == 10
+            @test Int(file["bridge/target_N_sph"]) == 32
+            @test String(file["bridge/source_level_id"]) == level10.level_id
+            @test String(file["bridge/target_level_id"]) == level32.level_id
+            @test String(file["bridge/source_profile_id"]) == level10.profile.profile_id
+            @test String(file["bridge/target_profile_id"]) == level32.profile.profile_id
+            @test String(file["bridge/source_gauge_version"]) == string(level10.profile.key.gauge_version)
+            @test String(file["bridge/target_gauge_version"]) == string(level32.profile.key.gauge_version)
+            @test String(file["bridge/pair_kind"]) == "direct"
+            @test Bool(file["bridge/shell_independent"])
+            @test String.(file["source_labels"]) == level10.profile.labels
+            @test String.(file["target_labels"]) == level32.profile.labels
+            @test Matrix{Float64}(file["overlap"]) ≈ sidecar10_32.overlap atol = 0.0 rtol = 0.0
         end
         jldopen(legacy_path, "r") do file
             @test String(file["bridge/format"]) == "legacy_dmrgatom_dense_v1"

@@ -59,6 +59,8 @@ This is a producer-side contract for external continuation studies. It exports:
 
 - one dense native level artifact per `N_sph`
 - one adjacent shell-local overlap sidecar per `N_sph[k] -> N_sph[k+1]`
+- one full non-adjacent upper-triangle family of direct shell-local overlap
+  sidecars inside the same sequence
 - stable radial shell ids and shell centers across the sequence
 - stable within-shell labels from cached shell-local angular profiles
 

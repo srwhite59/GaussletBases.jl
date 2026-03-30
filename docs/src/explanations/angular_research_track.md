@@ -213,9 +213,11 @@ increasing-`N_sph` sequence line:
 This is a foundation contract for external continuation studies, not an
 application workflow. The package fixes one radial basis, builds one cached
 shell-local angular profile per `N_sph`, exports one native dense level
-artifact per level, and exports one adjacent shell-local overlap sidecar per
-level pair. The repo stops there: it does not implement restart ladders,
-Givens lifts, or atom-campaign orchestration.
+artifact per level, exports one adjacent shell-local overlap sidecar per level
+pair, and also exports the full non-adjacent upper triangle of direct
+source-target shell-local overlaps inside the same sequence. The repo stops
+there: it does not implement restart ladders, Givens lifts, or atom-campaign
+orchestration.
 
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be
