@@ -33,6 +33,7 @@ export AbstractFunction1D,
        LegacyBondAlignedHeteronuclearGaussianSupplement,
        LegacySGaussianData,
        BondAlignedDiatomicQWBasis3D,
+       BondAlignedHomonuclearChainQWBasis3D,
        BondAlignedDiatomicGeometryPoint3D,
        BondAlignedDiatomicGeometryNucleus3D,
        BondAlignedDiatomicGeometryBox3D,
@@ -118,7 +119,9 @@ export AbstractFunction1D,
        legacy_bond_aligned_heteronuclear_gaussian_supplement,
        legacy_s_gaussian_data,
        bond_aligned_homonuclear_qw_basis,
+       bond_aligned_homonuclear_chain_qw_basis,
        bond_aligned_heteronuclear_qw_basis,
+       bond_aligned_homonuclear_chain_geometry_diagnostics,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
@@ -340,6 +343,7 @@ function coulomb_gaussian_expansion end
 function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
+function bond_aligned_homonuclear_chain_geometry_diagnostics end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end

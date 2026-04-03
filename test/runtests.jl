@@ -3117,6 +3117,41 @@ end
     @test 1.0 / dudx(xmap, 0.0) ≈ 0.25 atol = 1.0e-10 rtol = 0.0
 end
 
+@testset "CombinedInvsqrtMapping supports experimental homonuclear chain geometry" begin
+    basis4 = bond_aligned_homonuclear_chain_qw_basis(
+        natoms = 4,
+        spacing = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.5,
+        chain_axis = :z,
+    )
+    explicit_basis = bond_aligned_homonuclear_chain_qw_basis(
+        chain_coordinates = [-1.4, 0.0, 1.4],
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.5,
+        chain_axis = :x,
+    )
+    diagnostics4 = bond_aligned_homonuclear_chain_geometry_diagnostics(basis4)
+    explicit_diagnostics = bond_aligned_homonuclear_chain_geometry_diagnostics(explicit_basis)
+
+    @test basis4 isa BondAlignedHomonuclearChainQWBasis3D
+    @test explicit_basis isa BondAlignedHomonuclearChainQWBasis3D
+    @test mapping(basis4.basis_x) === mapping(basis4.basis_y)
+    @test mapping(basis4.basis_z) isa CombinedInvsqrtMapping
+    @test mapping(explicit_basis.basis_x) isa CombinedInvsqrtMapping
+    @test diagnostics4.axis_monotone
+    @test diagnostics4.chain_coordinates ≈ [-2.1, -0.7, 0.7, 2.1] atol = 1.0e-12 rtol = 0.0
+    @test centers(basis4.basis_z) ≈ -reverse(centers(basis4.basis_z)) atol = 1.0e-12 rtol = 1.0e-12
+    @test diagnostics4.axis_center_symmetry_error < 1.0e-12
+    @test diagnostics4.local_spacings_at_nuclei ≈ fill(0.5, 4) atol = 1.0e-10 rtol = 0.0
+    @test all(diagnostics4.local_spacings_at_midpoints .> 0.45)
+    @test explicit_diagnostics.chain_coordinates ≈ [-1.4, 0.0, 1.4] atol = 1.0e-12 rtol = 0.0
+    @test explicit_diagnostics.local_spacings_at_nuclei ≈ fill(0.5, 3) atol = 1.0e-10 rtol = 0.0
+    @test xofu(mapping(explicit_basis.basis_x), uofx(mapping(explicit_basis.basis_x), 0.0)) ≈ 0.0 atol = 1.0e-10 rtol = 0.0
+end
+
 @testset "XGaussian center" begin
     g = XGaussian(alpha = 0.23)
     @test center(g) == 0.23

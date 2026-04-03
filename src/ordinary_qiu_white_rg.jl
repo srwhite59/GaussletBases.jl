@@ -94,7 +94,9 @@ The first supported geometry family is a bond-aligned homonuclear diatomic:
 - one rectangular 3D product basis built from those three one-dimensional
   mapped bases
 """
-struct BondAlignedDiatomicQWBasis3D{B<:MappedUniformBasis}
+abstract type AbstractBondAlignedOrdinaryQWBasis3D end
+
+struct BondAlignedDiatomicQWBasis3D{B<:MappedUniformBasis} <: AbstractBondAlignedOrdinaryQWBasis3D
     bond_axis::Symbol
     basis_x::B
     basis_y::B
@@ -116,6 +118,41 @@ function Base.show(io::IO, basis::BondAlignedDiatomicQWBasis3D)
         length(basis.basis_z),
         ", nuclei=",
         basis.nuclei,
+        ", target_core_spacing=",
+        basis.target_core_spacing,
+        ")",
+    )
+end
+
+"""
+    BondAlignedHomonuclearChainQWBasis3D
+
+Experimental ordinary QW basis container for a homonuclear linear chain on one
+distinguished Cartesian axis.
+"""
+struct BondAlignedHomonuclearChainQWBasis3D{B<:MappedUniformBasis} <: AbstractBondAlignedOrdinaryQWBasis3D
+    chain_axis::Symbol
+    basis_x::B
+    basis_y::B
+    basis_z::B
+    nuclei::Vector{NTuple{3,Float64}}
+    chain_coordinates::Vector{Float64}
+    target_core_spacing::Float64
+end
+
+function Base.show(io::IO, basis::BondAlignedHomonuclearChainQWBasis3D)
+    print(
+        io,
+        "BondAlignedHomonuclearChainQWBasis3D(chain_axis=:",
+        basis.chain_axis,
+        ", natoms=",
+        length(basis.nuclei),
+        ", nx=",
+        length(basis.basis_x),
+        ", ny=",
+        length(basis.basis_y),
+        ", nz=",
+        length(basis.basis_z),
         ", target_core_spacing=",
         basis.target_core_spacing,
         ")",
@@ -148,6 +185,55 @@ function _qwrg_mapped_odd_count_for_extent(
     count = 2 * ceil(Int, uedge / spacing_value) + 1
     isodd(count) || throw(ArgumentError("mapped extent helper must produce an odd count"))
     return count
+end
+
+function _qwrg_mapped_odd_count_for_interval(
+    mapping_value::AbstractCoordinateMapping,
+    xmin::Real,
+    xmax::Real;
+    reference_spacing::Real = 1.0,
+)
+    xmin_value = Float64(xmin)
+    xmax_value = Float64(xmax)
+    xmin_value < xmax_value || throw(ArgumentError("mapped interval helper requires xmin < xmax"))
+    spacing_value = Float64(reference_spacing)
+    spacing_value > 0.0 || throw(ArgumentError("mapped interval helper requires reference_spacing > 0"))
+    uextent = max(abs(uofx(mapping_value, xmin_value)), abs(uofx(mapping_value, xmax_value)))
+    count = 2 * ceil(Int, uextent / spacing_value) + 1
+    isodd(count) || throw(ArgumentError("mapped interval helper must produce an odd count"))
+    return count
+end
+
+function _qwrg_centered_chain_coordinates(
+    natoms::Integer,
+    spacing::Real,
+)
+    natoms > 0 || throw(ArgumentError("homonuclear chain helper requires natoms > 0"))
+    spacing_value = Float64(spacing)
+    spacing_value > 0.0 || throw(ArgumentError("homonuclear chain helper requires spacing > 0"))
+    midpoint = 0.5 * (Int(natoms) + 1)
+    return Float64[(index - midpoint) * spacing_value for index in 1:Int(natoms)]
+end
+
+function _qwrg_validate_chain_coordinates(chain_coordinates::AbstractVector{<:Real})
+    length(chain_coordinates) > 0 || throw(ArgumentError("homonuclear chain basis requires at least one nuclear coordinate"))
+    values = Float64[Float64(value) for value in chain_coordinates]
+    issorted(values) || throw(ArgumentError("explicit homonuclear chain coordinates must be ordered along the chain axis"))
+    for index in 2:length(values)
+        values[index] > values[index - 1] || throw(ArgumentError("explicit homonuclear chain coordinates must be strictly increasing"))
+    end
+    return values
+end
+
+function _qwrg_homonuclear_chain_nuclei(
+    chain_coordinates::AbstractVector{<:Real},
+    chain_axis::Symbol,
+)
+    coordinates = _qwrg_validate_chain_coordinates(chain_coordinates)
+    chain_axis == :x && return NTuple{3,Float64}[(value, 0.0, 0.0) for value in coordinates]
+    chain_axis == :y && return NTuple{3,Float64}[(0.0, value, 0.0) for value in coordinates]
+    chain_axis == :z && return NTuple{3,Float64}[(0.0, 0.0, value) for value in coordinates]
+    throw(ArgumentError("chain_axis must be :x, :y, or :z"))
 end
 
 function _qwrg_bond_aligned_homonuclear_nuclei(
@@ -267,6 +353,104 @@ function bond_aligned_homonuclear_qw_basis(;
 end
 
 """
+    bond_aligned_homonuclear_chain_qw_basis(; ...)
+
+Build the first experimental ordinary QW basis for a homonuclear linear chain.
+
+The chain axis uses a combined inverse-sqrt map fitted to all nuclear centers
+on that axis. The transverse axes share one single-center combined inverse-sqrt
+map at the common transverse projection.
+"""
+function bond_aligned_homonuclear_chain_qw_basis(;
+    family = :G10,
+    natoms::Union{Nothing,Integer} = nothing,
+    spacing::Union{Nothing,Real} = nothing,
+    chain_coordinates::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    core_spacing::Real = 0.5,
+    xmax_parallel::Real = 4.0,
+    xmax_transverse::Real = 4.0,
+    chain_axis::Symbol = :z,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    helper_mode = natoms !== nothing || spacing !== nothing
+    explicit_mode = chain_coordinates !== nothing
+    helper_mode ⊻ explicit_mode || throw(
+        ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires either natoms+spacing or explicit chain_coordinates"),
+    )
+    helper_mode && (natoms === nothing || spacing === nothing) && throw(
+        ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires both natoms and spacing in helper mode"),
+    )
+
+    core_spacing_value = Float64(core_spacing)
+    nuclear_charge_value = Float64(nuclear_charge)
+    xmax_parallel_value = Float64(xmax_parallel)
+    xmax_transverse_value = Float64(xmax_transverse)
+    core_spacing_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires core_spacing > 0"))
+    nuclear_charge_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires nuclear_charge > 0"))
+    xmax_parallel_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires xmax_parallel > 0"))
+    xmax_transverse_value > 0.0 || throw(ArgumentError("bond_aligned_homonuclear_chain_qw_basis requires xmax_transverse > 0"))
+
+    chain_coordinate_values =
+        explicit_mode ? _qwrg_validate_chain_coordinates(chain_coordinates) :
+        _qwrg_centered_chain_coordinates(natoms, spacing)
+    nuclei = _qwrg_homonuclear_chain_nuclei(chain_coordinate_values, chain_axis)
+    core_range = sqrt(core_spacing_value / nuclear_charge_value)
+
+    parallel_mapping = fit_combined_invsqrt_mapping(
+        centers = chain_coordinate_values,
+        core_ranges = fill(core_range, length(chain_coordinate_values)),
+        target_spacings = fill(core_spacing_value, length(chain_coordinate_values)),
+        tail_spacing = tail_spacing,
+    )
+    transverse_mapping = fit_combined_invsqrt_mapping(
+        centers = [0.0],
+        core_ranges = [core_range],
+        target_spacings = [core_spacing_value],
+        tail_spacing = tail_spacing,
+    )
+
+    count_parallel = _qwrg_mapped_odd_count_for_interval(
+        parallel_mapping,
+        minimum(chain_coordinate_values) - xmax_parallel_value,
+        maximum(chain_coordinate_values) + xmax_parallel_value;
+        reference_spacing = reference_spacing,
+    )
+    count_transverse = _qwrg_mapped_odd_count_for_extent(
+        transverse_mapping,
+        xmax_transverse_value;
+        reference_spacing = reference_spacing,
+    )
+
+    parallel_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_parallel,
+        mapping = parallel_mapping,
+        reference_spacing = reference_spacing,
+    ))
+    transverse_basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_transverse,
+        mapping = transverse_mapping,
+        reference_spacing = reference_spacing,
+    ))
+
+    basis_x = chain_axis == :x ? parallel_basis : transverse_basis
+    basis_y = chain_axis == :y ? parallel_basis : transverse_basis
+    basis_z = chain_axis == :z ? parallel_basis : transverse_basis
+    return BondAlignedHomonuclearChainQWBasis3D(
+        chain_axis,
+        basis_x,
+        basis_y,
+        basis_z,
+        nuclei,
+        chain_coordinate_values,
+        core_spacing_value,
+    )
+end
+
+"""
     bond_aligned_heteronuclear_qw_basis(; ...)
 
 Build the first bond-aligned heteronuclear diatomic 3D product basis for the
@@ -375,7 +559,7 @@ function bond_aligned_heteronuclear_qw_basis(;
 end
 
 function _qwrg_basis_for_axis(
-    basis::BondAlignedDiatomicQWBasis3D,
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
     axis::Symbol,
 )
     axis == :x && return basis.basis_x
@@ -385,21 +569,54 @@ function _qwrg_basis_for_axis(
 end
 
 function _qwrg_bond_axis_local_spacings(
-    basis::BondAlignedDiatomicQWBasis3D,
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
 )
-    axis_basis = _qwrg_basis_for_axis(basis, basis.bond_axis)
+    axis_symbol = basis isa BondAlignedDiatomicQWBasis3D ? basis.bond_axis : basis.chain_axis
+    axis_basis = _qwrg_basis_for_axis(basis, axis_symbol)
     axis_mapping = mapping(axis_basis)
     return Float64[
-        1.0 / dudx(axis_mapping, _qwrg_axis_coordinate(nucleus, basis.bond_axis)) for
+        1.0 / dudx(axis_mapping, _qwrg_axis_coordinate(nucleus, axis_symbol)) for
         nucleus in basis.nuclei
     ]
 end
 
 function _qwrg_bond_axis_order(
-    basis::BondAlignedDiatomicQWBasis3D,
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
 )
-    coordinates = Float64[_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei]
+    axis_symbol = basis isa BondAlignedDiatomicQWBasis3D ? basis.bond_axis : basis.chain_axis
+    coordinates = Float64[_qwrg_axis_coordinate(nucleus, axis_symbol) for nucleus in basis.nuclei]
     return sortperm(coordinates), coordinates
+end
+
+function bond_aligned_homonuclear_chain_geometry_diagnostics(
+    basis::BondAlignedHomonuclearChainQWBasis3D,
+)
+    axis_basis = _qwrg_basis_for_axis(basis, basis.chain_axis)
+    transverse_axis = basis.chain_axis == :x ? :y : :x
+    transverse_basis = _qwrg_basis_for_axis(basis, transverse_axis)
+    chain_coordinates = copy(basis.chain_coordinates)
+    midpoint_spacings = if length(chain_coordinates) <= 1
+        Float64[]
+    else
+        axis_mapping = mapping(axis_basis)
+        Float64[
+            1.0 / dudx(axis_mapping, 0.5 * (chain_coordinates[index] + chain_coordinates[index + 1])) for
+            index in 1:(length(chain_coordinates) - 1)
+        ]
+    end
+    return (
+        chain_axis = basis.chain_axis,
+        natoms = length(basis.nuclei),
+        chain_coordinates = chain_coordinates,
+        chain_axis_centers = centers(axis_basis),
+        transverse_centers = centers(transverse_basis),
+        local_spacings_at_nuclei = _qwrg_bond_axis_local_spacings(basis),
+        local_spacings_at_midpoints = midpoint_spacings,
+        axis_mapping_kind = typeof(mapping(axis_basis)),
+        transverse_mapping_kind = typeof(mapping(transverse_basis)),
+        axis_monotone = all(diff(centers(axis_basis)) .> 0.0),
+        axis_center_symmetry_error = maximum(abs.(centers(axis_basis) .+ reverse(centers(axis_basis)))),
+    )
 end
 
 function _qwrg_bond_aligned_uses_midpoint_slab(
