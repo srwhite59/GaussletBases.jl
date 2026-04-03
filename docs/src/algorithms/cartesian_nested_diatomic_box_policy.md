@@ -189,7 +189,7 @@ pass if the code stays within the intended scope:
 - explicit shared midpoint slab for odd-length homonuclear working intervals
 - atomic-style shell language reused after the split
 
-The next heteronuclear implementation should therefore target:
+The first narrow heteronuclear implementation now follows this target shape:
 
 - bond-aligned ordinary-QW `HeH+` first
 - heteronuclear nested fixed-block `HeH+` second
@@ -208,7 +208,8 @@ formula.
 
 ## Implementation Notes
 
-Recommended code-comment style once implementation starts:
+Recommended code-comment style while this narrow heteronuclear line remains in
+checkpoint scope:
 
 ```julia
 # Alg Nested-Diatomic step 5: For an odd-length homonuclear working interval,

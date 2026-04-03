@@ -161,29 +161,33 @@ The related constant-resolution shell-matching issue is also real, but it is
 not yet fixed as a hard rule here. That should wait for explicit 1D `doside` /
 `COMX` diagnostics.
 
-## Current Local Shared-Shell Resolution Correction
+## Current Local DoSide Symmetry Correction
 
 The subsequent local `doside` / `COMX` trace pass and two-point follow-up on
-`H2` now support one narrow default correction on the homonuclear shared shell:
+`H2` now support one narrow default correction at the actual `doside`
+boundary:
 
-- on symmetric tangential shared-shell intervals, if the provisional face
-  retain count is even, reduce it by one
-- in the current `H2` line this changes the implicated shared-shell face
-  retains from `(4, 3)` to `(3, 3)` on the symmetric tangential directions
-- keep that rule confined to the shared shell of the current homonuclear
-  bond-aligned route
+- when a local interval passed to `doside` is symmetric about zero, reduce an
+  even provisional retained count by one before the `COMX` renormalization
+- in the current `H2` line this first landed as a shared-shell correction and
+  then moved to the actual 1D contraction boundary so the same symmetry rule
+  applies to symmetric child-shell `doside` intervals too
+- keep this as a narrow symmetry correction rather than a full adaptive local
+  retain-count policy
 
 What that correction achieved at both `R = 1.4` and `R = 2.0`:
 
-- the traced shared-shell tangential contractions regained the near-zero center
+- the traced symmetric `doside` contractions regained the near-zero center
 - the representative nested `xz` projection became visibly more centered
 - the fixed dimension dropped slightly
-- the main fixed-only and nearest/GGT diagnostics stayed essentially unchanged
+- the main fixed-only and nearest/GGT diagnostics stayed acceptable while the
+  local symmetry became structurally consistent
 
 What it does not yet claim:
 
 - it is not a general adaptive local-side-count formula
-- it is not yet extended to heteronuclear diatomics
+- it does not by itself settle the already-landed narrow heteronuclear
+  `HeH+`-style line into a broader public diatomic workflow
 - it is not yet extended to chains
 - it is not yet applied to edges or child/core local retains
 
@@ -204,7 +208,8 @@ The docs build emitted only the usual Documenter no-deploy-environment warning.
 
 What is still deliberately out of scope for this `H2` completion state:
 
-- heteronuclear diatomics
+- broader heteronuclear promotion beyond the existing narrow bond-aligned
+  `HeH+`-style implementation
 - linear-chain implementation
 - arbitrary non-linear geometries
 - a general molecule-wide basis-placement subsystem
@@ -222,9 +227,10 @@ The next likely implementation priorities are:
 
 - commit the small vendored-`H` packaging follow-up so the `H2` tests are
   repo-self-contained
-- then extend the same distinguished-axis policy to:
-  - heteronuclear diatomics
-  - linear chains
+- then either:
+  - promote/summarize the already-landed narrow heteronuclear line more
+    explicitly in the docs
+  - or extend the same distinguished-axis policy further to linear chains
 
 In short, the bond-aligned `H2` line has crossed from “policy and scaffolding”
 to “real landed working path.”

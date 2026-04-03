@@ -206,7 +206,7 @@ stays within the intended scope:
 - for the first homonuclear case, bond-axis symmetry about the midpoint
 - shared transverse projection at the two nuclei
 
-The first implementation should therefore target:
+The first narrow heteronuclear implementation now follows this target shape:
 
 - bond-aligned ordinary-QW `HeH+` first
 - heteronuclear nested fixed-block `HeH+` second
