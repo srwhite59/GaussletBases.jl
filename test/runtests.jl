@@ -3265,6 +3265,70 @@ end
     @test xofu(mapping(explicit_basis.basis_x), uofx(mapping(explicit_basis.basis_x), 0.0)) ≈ 0.0 atol = 1.0e-10 rtol = 0.0
 end
 
+@testset "CombinedInvsqrtMapping supports experimental homonuclear square-lattice geometry" begin
+    basis2 = axis_aligned_homonuclear_square_lattice_qw_basis(
+        n = 2,
+        spacing = 1.4,
+        core_spacing = 0.5,
+        xmax_in_plane = 3.5,
+        xmax_transverse = 3.0,
+    )
+    basis3 = axis_aligned_homonuclear_square_lattice_qw_basis(
+        n = 3,
+        spacing = 1.2,
+        core_spacing = 0.5,
+        xmax_in_plane = 3.5,
+        xmax_transverse = 3.0,
+    )
+    explicit_basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+        x_coordinates = [-1.2, 0.0, 1.2],
+        y_coordinates = [-1.2, 0.0, 1.2],
+        core_spacing = 0.5,
+        xmax_in_plane = 3.5,
+        xmax_transverse = 3.0,
+    )
+
+    diagnostics2 = axis_aligned_homonuclear_square_lattice_geometry_diagnostics(basis2)
+    diagnostics3 = axis_aligned_homonuclear_square_lattice_geometry_diagnostics(basis3)
+    explicit_diagnostics = axis_aligned_homonuclear_square_lattice_geometry_diagnostics(explicit_basis)
+
+    @test basis2 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test basis3 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test explicit_basis isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test length(basis2.nuclei) == 4
+    @test length(basis3.nuclei) == 9
+    @test mapping(basis2.basis_x) isa CombinedInvsqrtMapping
+    @test mapping(basis2.basis_y) isa CombinedInvsqrtMapping
+    @test mapping(basis2.basis_z) isa CombinedInvsqrtMapping
+    @test diagnostics2.x_axis_monotone
+    @test diagnostics2.y_axis_monotone
+    @test diagnostics2.z_axis_monotone
+    @test diagnostics2.x_coordinates ≈ [-0.7, 0.7] atol = 1.0e-12 rtol = 0.0
+    @test diagnostics2.y_coordinates ≈ [-0.7, 0.7] atol = 1.0e-12 rtol = 0.0
+    @test diagnostics3.x_coordinates ≈ [-1.2, 0.0, 1.2] atol = 1.0e-12 rtol = 0.0
+    @test diagnostics3.y_coordinates ≈ [-1.2, 0.0, 1.2] atol = 1.0e-12 rtol = 0.0
+    @test diagnostics2.x_axis_center_symmetry_error < 1.0e-12
+    @test diagnostics2.y_axis_center_symmetry_error < 1.0e-12
+    @test diagnostics3.x_axis_center_symmetry_error < 1.0e-12
+    @test diagnostics3.y_axis_center_symmetry_error < 1.0e-12
+    @test diagnostics2.xy_axis_center_match_error < 1.0e-12
+    @test diagnostics3.xy_axis_center_match_error < 1.0e-12
+    @test diagnostics2.local_spacings_at_x_coordinates ≈ fill(0.5, 2) atol = 1.0e-10 rtol = 0.0
+    @test diagnostics2.local_spacings_at_y_coordinates ≈ fill(0.5, 2) atol = 1.0e-10 rtol = 0.0
+    @test diagnostics3.local_spacings_at_x_coordinates ≈ fill(0.5, 3) atol = 1.0e-10 rtol = 0.0
+    @test diagnostics3.local_spacings_at_y_coordinates ≈ fill(0.5, 3) atol = 1.0e-10 rtol = 0.0
+    @test diagnostics2.local_spacing_at_plane_center_x > 0.45
+    @test diagnostics2.local_spacing_at_plane_center_y > 0.45
+    @test diagnostics3.local_spacing_at_plane_center_x ≥ 0.5 - 1.0e-10
+    @test diagnostics3.local_spacing_at_plane_center_y ≥ 0.5 - 1.0e-10
+    @test all(diagnostics3.representative_midpoint_spacings_x .> 0.45)
+    @test all(diagnostics3.representative_midpoint_spacings_y .> 0.45)
+    @test diagnostics2.local_spacing_at_plane_center_z ≈ 0.5 atol = 1.0e-10 rtol = 0.0
+    @test explicit_diagnostics.x_coordinates ≈ [-1.2, 0.0, 1.2] atol = 1.0e-12 rtol = 0.0
+    @test explicit_diagnostics.y_coordinates ≈ [-1.2, 0.0, 1.2] atol = 1.0e-12 rtol = 0.0
+    @test explicit_diagnostics.xy_axis_center_match_error < 1.0e-12
+end
+
 @testset "XGaussian center" begin
     g = XGaussian(alpha = 0.23)
     @test center(g) == 0.23

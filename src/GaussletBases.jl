@@ -34,6 +34,7 @@ export AbstractFunction1D,
        LegacySGaussianData,
        BondAlignedDiatomicQWBasis3D,
        BondAlignedHomonuclearChainQWBasis3D,
+       AxisAlignedHomonuclearSquareLatticeQWBasis3D,
        BondAlignedDiatomicGeometryPoint3D,
        BondAlignedDiatomicGeometryNucleus3D,
        BondAlignedDiatomicGeometryBox3D,
@@ -121,8 +122,10 @@ export AbstractFunction1D,
        legacy_s_gaussian_data,
        bond_aligned_homonuclear_qw_basis,
        bond_aligned_homonuclear_chain_qw_basis,
+       axis_aligned_homonuclear_square_lattice_qw_basis,
        bond_aligned_heteronuclear_qw_basis,
        bond_aligned_homonuclear_chain_geometry_diagnostics,
+       axis_aligned_homonuclear_square_lattice_geometry_diagnostics,
        bond_aligned_homonuclear_chain_nested_geometry_diagnostics,
        experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
        experimental_homonuclear_chain_nested_dense_payload,
@@ -350,6 +353,8 @@ function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
 function bond_aligned_homonuclear_chain_geometry_diagnostics end
+function axis_aligned_homonuclear_square_lattice_qw_basis end
+function axis_aligned_homonuclear_square_lattice_geometry_diagnostics end
 function bond_aligned_homonuclear_chain_nested_geometry_diagnostics end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
 function experimental_homonuclear_chain_nested_dense_payload end

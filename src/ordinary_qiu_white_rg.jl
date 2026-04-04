@@ -177,6 +177,40 @@ function Base.show(io::IO, basis::BondAlignedHomonuclearChainQWBasis3D)
     )
 end
 
+"""
+    AxisAlignedHomonuclearSquareLatticeQWBasis3D
+
+Experimental ordinary QW basis container for an axis-aligned homonuclear
+`n × n` square lattice in the `xy` plane.
+"""
+struct AxisAlignedHomonuclearSquareLatticeQWBasis3D{B<:MappedUniformBasis}
+    lattice_size::Int
+    basis_x::B
+    basis_y::B
+    basis_z::B
+    nuclei::Vector{NTuple{3,Float64}}
+    x_coordinates::Vector{Float64}
+    y_coordinates::Vector{Float64}
+    target_core_spacing::Float64
+end
+
+function Base.show(io::IO, basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D)
+    print(
+        io,
+        "AxisAlignedHomonuclearSquareLatticeQWBasis3D(n=",
+        basis.lattice_size,
+        ", nx=",
+        length(basis.basis_x),
+        ", ny=",
+        length(basis.basis_y),
+        ", nz=",
+        length(basis.basis_z),
+        ", target_core_spacing=",
+        basis.target_core_spacing,
+        ")",
+    )
+end
+
 const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
 const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
 
@@ -243,6 +277,38 @@ function _qwrg_validate_chain_coordinates(chain_coordinates::AbstractVector{<:Re
     return values
 end
 
+function _qwrg_validate_square_lattice_axis_coordinates(
+    x_coordinates::AbstractVector{<:Real},
+    y_coordinates::AbstractVector{<:Real};
+    atol::Float64 = 1.0e-10,
+    rtol::Float64 = 1.0e-8,
+)
+    x_values = _qwrg_validate_chain_coordinates(x_coordinates)
+    y_values = _qwrg_validate_chain_coordinates(y_coordinates)
+    length(x_values) == length(y_values) || throw(
+        ArgumentError("square lattice explicit coordinates require equally sized x and y coordinate lists"),
+    )
+    length(x_values) > 0 || throw(ArgumentError("square lattice explicit coordinates require at least one site per axis"))
+
+    if length(x_values) > 1
+        x_steps = diff(x_values)
+        y_steps = diff(y_values)
+        x_step = first(x_steps)
+        y_step = first(y_steps)
+        all(step -> isapprox(step, x_step; atol = atol, rtol = rtol), x_steps) || throw(
+            ArgumentError("square lattice explicit x coordinates must be uniformly spaced"),
+        )
+        all(step -> isapprox(step, y_step; atol = atol, rtol = rtol), y_steps) || throw(
+            ArgumentError("square lattice explicit y coordinates must be uniformly spaced"),
+        )
+        isapprox(x_step, y_step; atol = atol, rtol = rtol) || throw(
+            ArgumentError("square lattice explicit x and y coordinates must use the same lattice spacing"),
+        )
+    end
+
+    return x_values, y_values
+end
+
 function _qwrg_homonuclear_chain_nuclei(
     chain_coordinates::AbstractVector{<:Real},
     chain_axis::Symbol,
@@ -252,6 +318,17 @@ function _qwrg_homonuclear_chain_nuclei(
     chain_axis == :y && return NTuple{3,Float64}[(0.0, value, 0.0) for value in coordinates]
     chain_axis == :z && return NTuple{3,Float64}[(0.0, 0.0, value) for value in coordinates]
     throw(ArgumentError("chain_axis must be :x, :y, or :z"))
+end
+
+function _qwrg_homonuclear_square_lattice_nuclei(
+    x_coordinates::AbstractVector{<:Real},
+    y_coordinates::AbstractVector{<:Real},
+)
+    x_values, y_values = _qwrg_validate_square_lattice_axis_coordinates(
+        x_coordinates,
+        y_coordinates,
+    )
+    return NTuple{3,Float64}[(x, y, 0.0) for y in y_values for x in x_values]
 end
 
 function _qwrg_bond_aligned_homonuclear_nuclei(
@@ -469,6 +546,131 @@ function bond_aligned_homonuclear_chain_qw_basis(;
 end
 
 """
+    axis_aligned_homonuclear_square_lattice_qw_basis(; ...)
+
+Build the first experimental ordinary QW basis for an axis-aligned homonuclear
+`n × n` square lattice in the `xy` plane.
+
+The in-plane `x` and `y` axes each use a combined inverse-sqrt map fitted to
+the unique lattice coordinates on that axis. The transverse `z` axis uses one
+shared single-center combined inverse-sqrt map at the common lattice plane.
+"""
+function axis_aligned_homonuclear_square_lattice_qw_basis(;
+    family = :G10,
+    n::Union{Nothing,Integer} = nothing,
+    spacing::Union{Nothing,Real} = nothing,
+    x_coordinates::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    y_coordinates::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    core_spacing::Real = 0.5,
+    xmax_in_plane::Real = 4.0,
+    xmax_transverse::Real = 4.0,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+)
+    helper_mode = n !== nothing || spacing !== nothing
+    explicit_mode = x_coordinates !== nothing || y_coordinates !== nothing
+    helper_mode ⊻ explicit_mode || throw(
+        ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires either n+spacing or explicit x_coordinates+y_coordinates"),
+    )
+    helper_mode && (n === nothing || spacing === nothing) && throw(
+        ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires both n and spacing in helper mode"),
+    )
+    explicit_mode && (x_coordinates === nothing || y_coordinates === nothing) && throw(
+        ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires both x_coordinates and y_coordinates in explicit mode"),
+    )
+
+    core_spacing_value = Float64(core_spacing)
+    nuclear_charge_value = Float64(nuclear_charge)
+    xmax_in_plane_value = Float64(xmax_in_plane)
+    xmax_transverse_value = Float64(xmax_transverse)
+    core_spacing_value > 0.0 || throw(ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires core_spacing > 0"))
+    nuclear_charge_value > 0.0 || throw(ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires nuclear_charge > 0"))
+    xmax_in_plane_value > 0.0 || throw(ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires xmax_in_plane > 0"))
+    xmax_transverse_value > 0.0 || throw(ArgumentError("axis_aligned_homonuclear_square_lattice_qw_basis requires xmax_transverse > 0"))
+
+    x_coordinate_values, y_coordinate_values =
+        explicit_mode ? _qwrg_validate_square_lattice_axis_coordinates(
+            x_coordinates,
+            y_coordinates,
+        ) :
+        (
+            _qwrg_centered_chain_coordinates(n, spacing),
+            _qwrg_centered_chain_coordinates(n, spacing),
+        )
+    lattice_size = length(x_coordinate_values)
+    nuclei = _qwrg_homonuclear_square_lattice_nuclei(x_coordinate_values, y_coordinate_values)
+    core_range = sqrt(core_spacing_value / nuclear_charge_value)
+
+    x_mapping = fit_combined_invsqrt_mapping(
+        centers = x_coordinate_values,
+        core_ranges = fill(core_range, lattice_size),
+        target_spacings = fill(core_spacing_value, lattice_size),
+        tail_spacing = tail_spacing,
+    )
+    y_mapping = fit_combined_invsqrt_mapping(
+        centers = y_coordinate_values,
+        core_ranges = fill(core_range, lattice_size),
+        target_spacings = fill(core_spacing_value, lattice_size),
+        tail_spacing = tail_spacing,
+    )
+    z_mapping = fit_combined_invsqrt_mapping(
+        centers = [0.0],
+        core_ranges = [core_range],
+        target_spacings = [core_spacing_value],
+        tail_spacing = tail_spacing,
+    )
+
+    count_x = _qwrg_mapped_odd_count_for_interval(
+        x_mapping,
+        minimum(x_coordinate_values) - xmax_in_plane_value,
+        maximum(x_coordinate_values) + xmax_in_plane_value;
+        reference_spacing = reference_spacing,
+    )
+    count_y = _qwrg_mapped_odd_count_for_interval(
+        y_mapping,
+        minimum(y_coordinate_values) - xmax_in_plane_value,
+        maximum(y_coordinate_values) + xmax_in_plane_value;
+        reference_spacing = reference_spacing,
+    )
+    count_z = _qwrg_mapped_odd_count_for_extent(
+        z_mapping,
+        xmax_transverse_value;
+        reference_spacing = reference_spacing,
+    )
+
+    basis_x = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_x,
+        mapping = x_mapping,
+        reference_spacing = reference_spacing,
+    ))
+    basis_y = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_y,
+        mapping = y_mapping,
+        reference_spacing = reference_spacing,
+    ))
+    basis_z = build_basis(MappedUniformBasisSpec(
+        family;
+        count = count_z,
+        mapping = z_mapping,
+        reference_spacing = reference_spacing,
+    ))
+
+    return AxisAlignedHomonuclearSquareLatticeQWBasis3D(
+        lattice_size,
+        basis_x,
+        basis_y,
+        basis_z,
+        nuclei,
+        x_coordinate_values,
+        y_coordinate_values,
+        core_spacing_value,
+    )
+end
+
+"""
     bond_aligned_heteronuclear_qw_basis(; ...)
 
 Build the first bond-aligned heteronuclear diatomic 3D product basis for the
@@ -634,6 +836,68 @@ function bond_aligned_homonuclear_chain_geometry_diagnostics(
         transverse_mapping_kind = typeof(mapping(transverse_basis)),
         axis_monotone = all(diff(centers(axis_basis)) .> 0.0),
         axis_center_symmetry_error = maximum(abs.(centers(axis_basis) .+ reverse(centers(axis_basis)))),
+    )
+end
+
+function axis_aligned_homonuclear_square_lattice_geometry_diagnostics(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D,
+)
+    x_mapping = mapping(basis.basis_x)
+    y_mapping = mapping(basis.basis_y)
+    z_mapping = mapping(basis.basis_z)
+    x_centers = centers(basis.basis_x)
+    y_centers = centers(basis.basis_y)
+    z_centers = centers(basis.basis_z)
+    x_midpoints = if length(basis.x_coordinates) <= 1
+        Float64[]
+    else
+        Float64[
+            0.5 * (basis.x_coordinates[index] + basis.x_coordinates[index + 1]) for
+            index in 1:(length(basis.x_coordinates) - 1)
+        ]
+    end
+    y_midpoints = if length(basis.y_coordinates) <= 1
+        Float64[]
+    else
+        Float64[
+            0.5 * (basis.y_coordinates[index] + basis.y_coordinates[index + 1]) for
+            index in 1:(length(basis.y_coordinates) - 1)
+        ]
+    end
+
+    return (
+        lattice_size = basis.lattice_size,
+        natoms = length(basis.nuclei),
+        x_coordinates = copy(basis.x_coordinates),
+        y_coordinates = copy(basis.y_coordinates),
+        x_axis_centers = x_centers,
+        y_axis_centers = y_centers,
+        z_axis_centers = z_centers,
+        local_spacings_at_x_coordinates = Float64[
+            1.0 / dudx(x_mapping, coordinate) for coordinate in basis.x_coordinates
+        ],
+        local_spacings_at_y_coordinates = Float64[
+            1.0 / dudx(y_mapping, coordinate) for coordinate in basis.y_coordinates
+        ],
+        representative_midpoint_spacings_x = Float64[
+            1.0 / dudx(x_mapping, coordinate) for coordinate in x_midpoints
+        ],
+        representative_midpoint_spacings_y = Float64[
+            1.0 / dudx(y_mapping, coordinate) for coordinate in y_midpoints
+        ],
+        local_spacing_at_plane_center_x = 1.0 / dudx(x_mapping, 0.0),
+        local_spacing_at_plane_center_y = 1.0 / dudx(y_mapping, 0.0),
+        local_spacing_at_plane_center_z = 1.0 / dudx(z_mapping, 0.0),
+        x_mapping_kind = typeof(x_mapping),
+        y_mapping_kind = typeof(y_mapping),
+        z_mapping_kind = typeof(z_mapping),
+        x_axis_monotone = all(diff(x_centers) .> 0.0),
+        y_axis_monotone = all(diff(y_centers) .> 0.0),
+        z_axis_monotone = all(diff(z_centers) .> 0.0),
+        x_axis_center_symmetry_error = maximum(abs.(x_centers .+ reverse(x_centers))),
+        y_axis_center_symmetry_error = maximum(abs.(y_centers .+ reverse(y_centers))),
+        xy_axis_center_match_error = length(x_centers) == length(y_centers) ?
+            maximum(abs.(x_centers .- y_centers)) : Inf,
     )
 end
 
