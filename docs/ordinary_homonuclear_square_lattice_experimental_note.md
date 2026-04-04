@@ -39,12 +39,24 @@ Milestone D now also lands:
   policy knob
 - no final planar split contract claim
 
+Milestone E now also lands:
+
+- `experimental_homonuclear_square_lattice_nested_dense_payload(...)`
+- `write_experimental_homonuclear_square_lattice_nested_dense_jld2(...)`
+- a producer-side experimental dense export for tiny homonuclear square
+  lattices on the exploratory planar branch
+- explicit export provenance for the accepted root split and the
+  `min_in_plane_aspect_ratio` threshold
+- no claim that this is a settled or general-purpose square-lattice export
+  standard
+
 What is explicitly not claimed here:
 
 - no nested planar splitting policy
 - no settled nested planar operator milestone
 - no molecular-shell supplement route
 - no HF/DMRG workflow or application contract
+- no settled producer/export contract beyond the experimental path above
 - no settled square-lattice policy inherited from the diatomic or chain notes
 
 The current diatomic and chain policy notes should be treated as guidance for

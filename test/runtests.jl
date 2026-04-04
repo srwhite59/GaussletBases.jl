@@ -4584,6 +4584,97 @@ end
     @test !path3.diagnostics.root_node.local_resolution_warning
 end
 
+@testset "Experimental homonuclear square-lattice nested dense export" begin
+    basis2, path2, _check2 =
+        _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 2, spacing = 1.4)
+    basis3, path3, _check3 =
+        _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 3, spacing = 1.2)
+
+    for (basis, path, n, natoms, expected_family) in (
+        (basis2, path2, 2, 4, "split_x_binary"),
+        (basis3, path3, 3, 9, "split_x_ternary"),
+    )
+        payload_data = experimental_homonuclear_square_lattice_nested_dense_payload(
+            path;
+            meta = (example = "test_experimental_square_lattice_nested_dense_export",),
+        )
+        @test payload_data.bridge_meta["format"] ==
+            "experimental_homonuclear_square_lattice_nested_dense_v1"
+        @test payload_data.bridge_meta["experimental"]
+        @test payload_data.bridge_meta["lattice_size"] == n
+        @test payload_data.bridge_meta["fixed_dimension"] == size(path.fixed_block.overlap, 1)
+        @test payload_data.bridge_meta["leaf_count"] == path.diagnostics.leaf_count
+        @test payload_data.bridge_meta["root_accepted_candidate_index"] ==
+            something(path.diagnostics.root_node.accepted_candidate_index, 0)
+        @test payload_data.bridge_meta["root_accepted_split_family"] == expected_family
+        @test payload_data.bridge_meta["root_child_count"] == path.diagnostics.root_node.child_count
+        @test payload_data.bridge_meta["min_in_plane_aspect_ratio"] == path.min_in_plane_aspect_ratio
+        @test payload_data.bridge_meta["residual_sector_empty"]
+        @test payload_data.bridge_meta["coordinate_provenance"] == "uniform_square_spacing"
+        @test size(payload_data.payload["S"]) == size(path.operators.overlap)
+        @test size(payload_data.payload["H1"]) == size(path.operators.one_body_hamiltonian)
+        @test size(payload_data.payload["Vee"]) == size(path.operators.interaction_matrix)
+        @test size(payload_data.payload["basis_centers"]) == size(path.fixed_block.fixed_centers)
+        @test size(payload_data.payload["nuclear_coordinates_xyz"]) == (natoms, 3)
+        @test payload_data.payload["nuclear_charges"] == fill(1.0, natoms)
+        @test payload_data.payload["lattice_x_coordinates"] == basis.x_coordinates
+        @test payload_data.payload["lattice_y_coordinates"] == basis.y_coordinates
+        @test payload_data.payload["orbital_labels"] ==
+            String[orbital.label for orbital in orbitals(path.operators)]
+        @test payload_data.payload["geometry_report_text"] isa String
+        @test occursin("min_in_plane_aspect_ratio = 0.15", payload_data.payload["geometry_report_text"])
+        @test occursin("[node root]", payload_data.payload["geometry_report_text"])
+        @test size(payload_data.payload["root_accepted_child_planar_counts"], 2) == 2
+        @test size(payload_data.payload["root_accepted_child_physical_widths"], 2) == 3
+        @test payload_data.meta_values["manifest/contract/status"] == "experimental"
+        @test payload_data.meta_values["manifest/source/lattice_size"] == n
+        @test payload_data.meta_values["manifest/source/min_in_plane_aspect_ratio"] ==
+            path.min_in_plane_aspect_ratio
+        @test payload_data.meta_values["manifest/source/fixed_dimension"] ==
+            path.diagnostics.fixed_dimension
+    end
+
+    payload3 = experimental_homonuclear_square_lattice_nested_dense_payload(
+        path3;
+        meta = (example = "test_experimental_square_lattice_nested_dense_export",),
+    )
+    @test payload3.payload["root_accepted_child_in_plane_aspect_ratios"][2] < 0.2
+
+    mktempdir() do dir
+        export_path = joinpath(dir, "h3_square_lattice_nested_dense.jld2")
+        @test write_experimental_homonuclear_square_lattice_nested_dense_jld2(
+            export_path,
+            path3;
+            meta = (example = "test_experimental_square_lattice_nested_dense_export",),
+        ) == export_path
+        jldopen(export_path, "r") do file
+            @test String(file["bridge/format"]) ==
+                "experimental_homonuclear_square_lattice_nested_dense_v1"
+            @test Bool(file["bridge/experimental"])
+            @test Int(file["bridge/lattice_size"]) == 3
+            @test String(file["bridge/root_accepted_split_family"]) == "split_x_ternary"
+            @test String(file["bridge/root_accepted_split_axis"]) == "x"
+            @test Int(file["bridge/root_accepted_candidate_index"]) == 1
+            @test Int(file["bridge/root_child_count"]) == 3
+            @test Float64(file["bridge/min_in_plane_aspect_ratio"]) == 0.15
+            @test Bool(file["bridge/residual_sector_empty"])
+            @test size(file["S"]) == size(path3.operators.overlap)
+            @test size(file["H1"]) == size(path3.operators.one_body_hamiltonian)
+            @test size(file["Vee"]) == size(path3.operators.interaction_matrix)
+            @test size(file["nuclear_coordinates_xyz"]) == (9, 3)
+            @test size(file["root_accepted_child_planar_counts"]) == (3, 2)
+            @test Float64(file["root_accepted_child_in_plane_aspect_ratios"][2]) < 0.2
+            @test String(file["meta/producer"]) ==
+                "GaussletBases.write_experimental_homonuclear_square_lattice_nested_dense_jld2"
+            @test String(file["meta/manifest/contract/status"]) == "experimental"
+            @test Int(file["meta/manifest/source/lattice_size"]) == 3
+            @test Float64(file["meta/manifest/source/min_in_plane_aspect_ratio"]) == 0.15
+            @test String(file["meta/example"]) ==
+                "test_experimental_square_lattice_nested_dense_export"
+        end
+    end
+end
+
 @testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin
     basis3, source3, fixed3, diagnostics3 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 3, spacing = 1.2)
     basis4, source4, fixed4, diagnostics4 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 4, spacing = 1.2)

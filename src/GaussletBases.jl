@@ -132,9 +132,11 @@ export AbstractFunction1D,
        experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
        experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators,
        experimental_homonuclear_chain_nested_dense_payload,
+       experimental_homonuclear_square_lattice_nested_dense_payload,
        write_bond_aligned_homonuclear_chain_nested_geometry_report,
        write_axis_aligned_homonuclear_square_lattice_nested_geometry_report,
        write_experimental_homonuclear_chain_nested_dense_jld2,
+       write_experimental_homonuclear_square_lattice_nested_dense_jld2,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
@@ -364,9 +366,11 @@ function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
 function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators end
 function experimental_homonuclear_chain_nested_dense_payload end
+function experimental_homonuclear_square_lattice_nested_dense_payload end
 function write_bond_aligned_homonuclear_chain_nested_geometry_report end
 function write_axis_aligned_homonuclear_square_lattice_nested_geometry_report end
 function write_experimental_homonuclear_chain_nested_dense_jld2 end
+function write_experimental_homonuclear_square_lattice_nested_dense_jld2 end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end
