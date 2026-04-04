@@ -32,6 +32,16 @@ Current experimental nested-chain status:
   the current no-split outcome behind one implicit heuristic
 - the repo is not yet claiming a settled odd-chain split/local-resolution rule
 
+Milestone E now also lands:
+
+- a first experimental nested-chain ordinary-QW operator path
+- odd chains on that operator path use `odd_chain_policy = :central_ternary_relaxed`
+  explicitly
+- `:strict_current` remains the conservative default/reference policy for the
+  lower-level geometry path
+- the nested-chain operator line is still experimental and not yet a final
+  chain contract
+
 What is explicitly deferred here:
 
 - any production nested-chain operator route

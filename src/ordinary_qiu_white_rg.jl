@@ -82,6 +82,23 @@ struct QiuWhiteResidualGaussianOperators{B,D}
 end
 
 """
+    ExperimentalBondAlignedHomonuclearChainNestedQWPath
+
+First experimental nested fixed-block ordinary-QW chain consumer payload.
+
+This keeps the operator object together with the chain nested geometry source
+and the explicit odd-chain policy diagnostics used to build it.
+"""
+struct ExperimentalBondAlignedHomonuclearChainNestedQWPath{B,S,F,O,D}
+    basis::B
+    source::S
+    fixed_block::F
+    operators::O
+    diagnostics::D
+    odd_chain_policy::Symbol
+end
+
+"""
     BondAlignedDiatomicQWBasis3D
 
 Narrow mixed-axis basis container for the first bond-aligned diatomic QW
@@ -834,6 +851,18 @@ function _chain_nested_geometry_report_lines(
     return lines
 end
 
+function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    return (
+        source = source,
+        root_node = _nested_chain_node_summary(source.root_geometry),
+        node_summaries = _nested_chain_collect_node_summaries(source.root_geometry),
+        leaf_count = length(source.leaf_sequences),
+        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+    )
+end
+
 function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     basis::BondAlignedHomonuclearChainQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -850,13 +879,7 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
     )
-    return (
-        source = source,
-        root_node = _nested_chain_node_summary(source.root_geometry),
-        node_summaries = _nested_chain_collect_node_summaries(source.root_geometry),
-        leaf_count = length(source.leaf_sequences),
-        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
-    )
+    return _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(source)
 end
 
 function write_bond_aligned_homonuclear_chain_nested_geometry_report(
@@ -926,6 +949,21 @@ function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
         ", nresidual=",
         operators.residual_count,
         ", reference=true)",
+    )
+end
+
+function Base.show(io::IO, path::ExperimentalBondAlignedHomonuclearChainNestedQWPath)
+    print(
+        io,
+        "ExperimentalBondAlignedHomonuclearChainNestedQWPath(odd_chain_policy=:",
+        path.odd_chain_policy,
+        ", nfixed=",
+        size(path.fixed_block.overlap, 1),
+        ", nleaf=",
+        path.diagnostics.leaf_count,
+        ", did_split=",
+        path.diagnostics.root_node.did_split,
+        ")",
     )
 end
 
@@ -3448,40 +3486,34 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     )
 end
 
-function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
-    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
+function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
     timing::Bool,
+    context_label::AbstractString,
 )
     gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+        ArgumentError("$(context_label) currently supports only gausslet_backend = :numerical_reference"),
     )
     interaction_treatment == :ggt_nearest || throw(
-        ArgumentError("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),
+        ArgumentError("$(context_label) currently supports only interaction_treatment = :ggt_nearest"),
     )
-    timing && println("QW-RG timing  note: bond-aligned diatomic nested path currently has no residual-Gaussian sector")
+    timing && println("QW-RG timing  note: ", context_label, " currently has no residual-Gaussian sector")
 
     basis = fixed_block.parent_basis
     length(nuclear_charges) == length(basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic nested QW path requires one nuclear charge per nucleus"),
+        ArgumentError("$(context_label) requires one nuclear charge per nucleus"),
     )
 
-    # Alg Nested-Diatomic-Map step 2: keep the landed bond-aligned distortion
-    # fixed and build the nested consumer on the same mixed-axis parent basis.
-    # See docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md.
     bundles = _qwrg_bond_aligned_axis_bundles(
         basis,
         expansion;
         gausslet_backend = gausslet_backend,
     )
 
-    # Alg Nested-Diatomic step 6: consume the already-assembled diatomic fixed
-    # block directly, contracting the parent one-body problem while keeping the
-    # transferred fixed-fixed interaction packet as the active interaction.
-    # See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
     parent_one_body = _qwrg_diatomic_one_body_matrix(
         basis,
         bundles.bundle_x,
@@ -3519,6 +3551,44 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
         Matrix{Float64}(I, fixed_count, fixed_count),
         zero_residual_centers,
         zero_residual_widths,
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+        context_label = "bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators",
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+        context_label = "experimental bond-aligned homonuclear chain nested ordinary_cartesian_qiu_white_operators",
     )
 end
 
@@ -4530,6 +4600,105 @@ function ordinary_cartesian_qiu_white_operators(
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
         timing = timing,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
+        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first experimental bond-aligned homonuclear-chain nested fixed-block
+ordinary QW path.
+
+This path is intentionally narrow:
+
+- homonuclear chains only
+- nested fixed-block route only
+- no supplement route
+- no residual-Gaussian sector
+- no claim that the odd-chain split policy is settled globally
+"""
+function ordinary_cartesian_qiu_white_operators(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
+    experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
+        basis::BondAlignedHomonuclearChainQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.4,
+        odd_chain_policy = :central_ternary_relaxed,
+        timing = false,
+    )
+
+Build the first experimental nested-chain ordinary-QW path on top of the
+chain nested fixed-block geometry.
+
+For odd chains, this milestone uses `odd_chain_policy = :central_ternary_relaxed`
+explicitly by default. The stricter `:strict_current` branch remains available
+through the lower-level geometry/fixed-block diagnostics and is not replaced as
+the conservative reference policy.
+"""
+function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :central_ternary_relaxed,
+    timing::Bool = false,
+)
+    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
+    )
+    diagnostics = _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(source)
+    fixed_block = _nested_fixed_block(source)
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+    return ExperimentalBondAlignedHomonuclearChainNestedQWPath(
+        basis,
+        source,
+        fixed_block,
+        operators,
+        diagnostics,
+        odd_chain_policy,
     )
 end
 

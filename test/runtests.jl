@@ -1464,6 +1464,44 @@ function _bond_aligned_homonuclear_chain_nested_fixture(;
     end)
 end
 
+function _bond_aligned_homonuclear_chain_nested_qw_fixture(;
+    natoms::Int = 3,
+    spacing::Float64 = 1.2,
+    chain_axis::Symbol = :z,
+    nside::Int = 5,
+    odd_chain_policy::Symbol = :central_ternary_relaxed,
+)
+    key = Symbol(
+        :bond_aligned_homonuclear_chain_nested_qw_fixture,
+        natoms,
+        round(Int, 1000 * spacing),
+        chain_axis,
+        nside,
+        odd_chain_policy,
+    )
+    return _cached_fixture(key, () -> begin
+        basis = bond_aligned_homonuclear_chain_qw_basis(
+            natoms = natoms,
+            spacing = spacing,
+            core_spacing = 0.5,
+            xmax_parallel = 2.0,
+            xmax_transverse = 2.0,
+            chain_axis = chain_axis,
+        )
+        path = experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
+            basis;
+            nuclear_charges = fill(1.0, natoms),
+            nside = nside,
+            odd_chain_policy = odd_chain_policy,
+        )
+        return (
+            basis,
+            path,
+            GaussletBases.ordinary_cartesian_1s2_check(path.operators),
+        )
+    end)
+end
+
 function _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length::Float64 = 1.4)
     key = Symbol(:bond_aligned_diatomic_nested_fixed_block_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
@@ -4305,6 +4343,64 @@ end
         @test occursin("candidate[2].child_parallel_counts = [6, 3, 6]", report_text)
         @test occursin("candidate[2].accepted = true", report_text)
     end
+end
+
+@testset "Experimental bond-aligned homonuclear chain nested QW consumer path" begin
+    basis3, path3, check3 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 3, spacing = 1.2)
+    basis4, path4, check4 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 4, spacing = 1.2)
+    basis5, path5, check5 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 5, spacing = 1.2)
+
+    for (basis, path, check, natoms) in ((basis3, path3, check3, 3), (basis4, path4, check4, 4), (basis5, path5, check5, 5))
+        operators = path.operators
+        fixed_block = path.fixed_block
+        diagnostics = path.diagnostics
+        @test basis isa BondAlignedHomonuclearChainQWBasis3D
+        @test path isa GaussletBases.ExperimentalBondAlignedHomonuclearChainNestedQWPath
+        @test path.basis === basis
+        @test path.source === diagnostics.source
+        @test path.fixed_block === fixed_block
+        @test operators isa GaussletBases.QiuWhiteResidualGaussianOperators
+        @test operators.basis === fixed_block
+        @test operators.gaussian_data === nothing
+        @test operators.interaction_treatment == :ggt_nearest
+        @test operators.residual_count == 0
+        @test operators.gausslet_count == size(fixed_block.overlap, 1)
+        @test size(operators.residual_centers) == (0, 3)
+        @test size(operators.residual_widths) == (0, 3)
+        @test norm(operators.overlap - I, Inf) < 1.0e-8
+        @test norm(operators.one_body_hamiltonian - transpose(operators.one_body_hamiltonian), Inf) < 1.0e-10
+        @test norm(operators.interaction_matrix - transpose(operators.interaction_matrix), Inf) < 1.0e-10
+        @test all(isfinite, operators.one_body_hamiltonian)
+        @test all(isfinite, operators.interaction_matrix)
+        @test all(isfinite, fixed_block.weights)
+        @test minimum(fixed_block.weights) > 0.0
+        @test all(isfinite, fixed_block.fixed_centers)
+        @test diagnostics.root_node.odd_chain_policy == :central_ternary_relaxed
+        @test path.odd_chain_policy == :central_ternary_relaxed
+        @test size(fixed_block.overlap, 1) == diagnostics.fixed_dimension
+        @test size(fixed_block.overlap, 1) < 1000
+        @test check.overlap_error < 1.0e-8
+        @test isfinite(check.orbital_energy)
+        @test isfinite(check.vee_expectation)
+        @test length(basis.nuclei) == natoms
+    end
+
+    @test path3.diagnostics.root_node.did_split
+    @test path3.diagnostics.root_node.accepted_candidate_index == 1
+    @test path3.diagnostics.leaf_count == 3
+    @test path3.diagnostics.root_node.child_count == 3
+
+    @test path4.diagnostics.root_node.did_split
+    @test path4.diagnostics.root_node.accepted_candidate_index == 2
+    @test path4.diagnostics.leaf_count == 2
+    @test path4.diagnostics.root_node.child_count == 2
+
+    @test path5.diagnostics.root_node.did_split
+    @test path5.diagnostics.root_node.accepted_candidate_index == 2
+    @test path5.diagnostics.leaf_count == 3
+    @test path5.diagnostics.root_node.child_count == 3
+    @test path5.diagnostics.root_node.candidate_summaries[2].child_parallel_counts == [6, 3, 6]
+    @test path5.diagnostics.root_node.candidate_summaries[2].child_parallel_to_transverse_ratios[2] > 0.35
 end
 
 @testset "Atomic hybrid anchor comparison" begin
