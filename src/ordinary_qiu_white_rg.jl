@@ -183,7 +183,7 @@ end
 Experimental ordinary QW basis container for an axis-aligned homonuclear
 `n × n` square lattice in the `xy` plane.
 """
-struct AxisAlignedHomonuclearSquareLatticeQWBasis3D{B<:MappedUniformBasis}
+struct AxisAlignedHomonuclearSquareLatticeQWBasis3D{B<:MappedUniformBasis} <: AbstractBondAlignedOrdinaryQWBasis3D
     lattice_size::Int
     basis_x::B
     basis_y::B
@@ -3587,6 +3587,44 @@ This chain milestone is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
+        basis;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first experimental ordinary QW reference Hamiltonian on the
+homonuclear square-lattice distortion path.
+
+This lattice milestone is intentionally narrow:
+
+- homonuclear `n × n` square lattices only
+- ordinary QW product basis only
+- no nested planar splitting
+- no molecular-shell supplement route
+"""
+function ordinary_cartesian_qiu_white_operators(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,

@@ -1422,6 +1422,37 @@ function _bond_aligned_homonuclear_chain_qw_fixture(;
     end)
 end
 
+function _axis_aligned_homonuclear_square_lattice_qw_fixture(;
+    n::Int = 2,
+    spacing::Float64 = 1.2,
+)
+    key = Symbol(
+        :axis_aligned_homonuclear_square_lattice_qw_fixture,
+        n,
+        round(Int, 1000 * spacing),
+    )
+    return _cached_fixture(key, () -> begin
+        basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+            n = n,
+            spacing = spacing,
+            core_spacing = 0.5,
+            xmax_in_plane = 2.0,
+            xmax_transverse = 2.0,
+        )
+        operators = ordinary_cartesian_qiu_white_operators(
+            basis;
+            nuclear_charges = fill(1.0, length(basis.nuclei)),
+            interaction_treatment = :ggt_nearest,
+        )
+        (
+            basis,
+            operators,
+            axis_aligned_homonuclear_square_lattice_geometry_diagnostics(basis),
+            GaussletBases.ordinary_cartesian_1s2_check(operators),
+        )
+    end)
+end
+
 function _bond_aligned_homonuclear_chain_nested_fixture(;
     natoms::Int = 4,
     spacing::Float64 = 1.2,
@@ -4300,6 +4331,52 @@ if _test_group_enabled(:ordinary)
     @test all(diagnostics3.local_spacings_at_midpoints .> 0.45)
     @test length(basis2.basis_z) >= length(basis2.basis_x)
     @test length(basis3.basis_z) > length(basis3.basis_x)
+end
+
+@testset "Axis-aligned homonuclear square-lattice ordinary QW reference path" begin
+    basis2, operators2, diagnostics2, check2 =
+        _axis_aligned_homonuclear_square_lattice_qw_fixture(; n = 2, spacing = 1.4)
+    basis3, operators3, diagnostics3, check3 =
+        _axis_aligned_homonuclear_square_lattice_qw_fixture(; n = 3, spacing = 1.2)
+
+    @test basis2 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test basis3 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test operators2 isa QiuWhiteResidualGaussianOperators
+    @test operators3 isa QiuWhiteResidualGaussianOperators
+    @test operators2.gaussian_data === nothing
+    @test operators3.gaussian_data === nothing
+    @test operators2.residual_count == 0
+    @test operators3.residual_count == 0
+    @test operators2.gausslet_count == length(basis2.basis_x) * length(basis2.basis_y) * length(basis2.basis_z)
+    @test operators3.gausslet_count == length(basis3.basis_x) * length(basis3.basis_y) * length(basis3.basis_z)
+    @test size(operators2.overlap, 1) < 1500
+    @test size(operators3.overlap, 1) < 4000
+    @test norm(operators2.overlap - I, Inf) < 1.0e-8
+    @test norm(operators3.overlap - I, Inf) < 1.0e-8
+    @test operators2.one_body_hamiltonian ≈ transpose(operators2.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test operators3.one_body_hamiltonian ≈ transpose(operators3.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+    @test operators2.interaction_matrix ≈ transpose(operators2.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test operators3.interaction_matrix ≈ transpose(operators3.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+    @test all(isfinite, operators2.one_body_hamiltonian)
+    @test all(isfinite, operators3.one_body_hamiltonian)
+    @test all(isfinite, operators2.interaction_matrix)
+    @test all(isfinite, operators3.interaction_matrix)
+    @test minimum(diag(operators2.interaction_matrix)) > 0.0
+    @test minimum(diag(operators3.interaction_matrix)) > 0.0
+    @test diagnostics2.x_axis_monotone
+    @test diagnostics2.y_axis_monotone
+    @test diagnostics3.x_axis_monotone
+    @test diagnostics3.y_axis_monotone
+    @test diagnostics2.xy_axis_center_match_error < 1.0e-12
+    @test diagnostics3.xy_axis_center_match_error < 1.0e-12
+    @test diagnostics2.local_spacing_at_plane_center_x > 0.45
+    @test diagnostics2.local_spacing_at_plane_center_y > 0.45
+    @test all(diagnostics3.representative_midpoint_spacings_x .> 0.45)
+    @test all(diagnostics3.representative_midpoint_spacings_y .> 0.45)
+    @test isfinite(check2.orbital_energy)
+    @test isfinite(check3.orbital_energy)
+    @test isfinite(check2.vee_expectation)
+    @test isfinite(check3.vee_expectation)
 end
 
 @testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin

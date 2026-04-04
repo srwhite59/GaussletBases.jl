@@ -14,10 +14,17 @@ Milestone A lands only the ordinary basis, mapping, and geometry layer:
 - one shared single-center inverse-sqrt map on `z` at the common lattice plane
 - cheap geometry-first validation on small H square lattices
 
+Milestone B now also lands:
+
+- `ordinary_cartesian_qiu_white_operators(::AxisAlignedHomonuclearSquareLatticeQWBasis3D; ...)`
+- cheap H `2 x 2` and `3 x 3` ordinary-operator smoke coverage on the same
+  experimental line
+- no nested planar splitting policy or planar nested operator claim yet
+
 What is explicitly not claimed here:
 
 - no nested planar splitting policy
-- no square-lattice operator milestone yet
+- no nested planar operator milestone
 - no molecular-shell supplement route
 - no HF/DMRG workflow or application contract
 - no settled square-lattice policy inherited from the diatomic or chain notes
