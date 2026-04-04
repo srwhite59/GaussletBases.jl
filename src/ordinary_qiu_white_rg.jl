@@ -2635,7 +2635,7 @@ function _qwrg_diatomic_factor_term_cache(
 end
 
 function _qwrg_diatomic_one_body_matrix(
-    basis::BondAlignedDiatomicQWBasis3D,
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
     bundle_x::_MappedOrdinaryGausslet1DBundle,
     bundle_y::_MappedOrdinaryGausslet1DBundle,
     bundle_z::_MappedOrdinaryGausslet1DBundle,
@@ -2643,7 +2643,7 @@ function _qwrg_diatomic_one_body_matrix(
     nuclear_charges::AbstractVector{<:Real},
 )
     length(nuclear_charges) == length(basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic QW path requires one nuclear charge per nucleus"),
+        ArgumentError("bond-aligned ordinary QW path requires one nuclear charge per nucleus"),
     )
 
     overlap_x = bundle_x.pgdg_intermediate.overlap
@@ -2686,7 +2686,7 @@ function _qwrg_diatomic_one_body_matrix(
 
     for (nucleus, charge_value_raw) in zip(basis.nuclei, nuclear_charges)
         charge_value = Float64(charge_value_raw)
-        charge_value > 0.0 || throw(ArgumentError("bond-aligned diatomic QW path requires positive nuclear charges"))
+        charge_value > 0.0 || throw(ArgumentError("bond-aligned ordinary QW path requires positive nuclear charges"))
         matrix .+= _mapped_coulomb_expanded_symmetric_matrix(
             -charge_value .* expansion.coefficients,
             factor_x[nucleus[1]],
@@ -3006,42 +3006,21 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     )
 end
 
-"""
-    ordinary_cartesian_qiu_white_operators(
-        basis::BondAlignedDiatomicQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
-        expansion = coulomb_gaussian_expansion(doacc = false),
-        interaction_treatment = :ggt_nearest,
-        gausslet_backend = :numerical_reference,
-        timing = false,
-    )
-
-Build the first bond-aligned diatomic ordinary QW reference Hamiltonian on the
-diatomic distortion path.
-
-This first molecular pass is intentionally narrow:
-
-- one bond-aligned homonuclear diatomic basis object
-- no nested fixed block yet
-- no molecular Gaussian supplement yet
-- the final basis is the distorted 3D gausslet product basis itself, so the
-  residual-Gaussian sector is empty
-"""
-function ordinary_cartesian_qiu_white_operators(
-    basis::BondAlignedDiatomicQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
-    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
-    interaction_treatment::Symbol = :ggt_nearest,
-    gausslet_backend::Symbol = :numerical_reference,
-    timing::Bool = false,
+function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
 )
     gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned diatomic ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+        ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
     )
     interaction_treatment in (:ggt_nearest, :mwg) || throw(
-        ArgumentError("bond-aligned diatomic ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
+        ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
     )
-    timing && println("QW-RG timing  note: bond-aligned diatomic path currently has no residual-Gaussian sector")
+    timing && println("QW-RG timing  note: bond-aligned ordinary path currently has no residual-Gaussian sector")
 
     bundle_x = _mapped_ordinary_gausslet_1d_bundle(
         basis.basis_x;
@@ -3106,6 +3085,83 @@ function ordinary_cartesian_qiu_white_operators(
         Matrix{Float64}(I, gausslet_count, gausslet_count),
         zero_residual_centers,
         zero_residual_widths,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        basis::BondAlignedDiatomicQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first bond-aligned diatomic ordinary QW reference Hamiltonian on the
+diatomic distortion path.
+
+This first molecular pass is intentionally narrow:
+
+- one bond-aligned homonuclear diatomic basis object
+- no nested fixed block yet
+- no molecular Gaussian supplement yet
+- the final basis is the distorted 3D gausslet product basis itself, so the
+  residual-Gaussian sector is empty
+"""
+function ordinary_cartesian_qiu_white_operators(
+    basis::BondAlignedDiatomicQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
+        basis;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
+    ordinary_cartesian_qiu_white_operators(
+        basis::BondAlignedHomonuclearChainQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first experimental ordinary QW reference Hamiltonian on the
+homonuclear chain distortion path.
+
+This chain milestone is intentionally narrow:
+
+- homonuclear linear chains only
+- ordinary QW product basis only
+- no nested chain splitting
+- no molecular-shell supplement route
+"""
+function ordinary_cartesian_qiu_white_operators(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
+        basis;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
     )
 end
 

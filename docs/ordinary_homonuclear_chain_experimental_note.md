@@ -5,12 +5,17 @@ homonuclear linear chains:
 
 - `bond_aligned_homonuclear_chain_qw_basis(...)`
 
-This milestone is intentionally narrow:
+Milestone A landed:
 
 - ordinary QW product basis only
 - combined inverse-sqrt map on the chain axis
 - one shared transverse projection map
 - cheap geometry-first validation on small H-chain cases
+
+Milestone B now also lands:
+
+- `ordinary_cartesian_qiu_white_operators(::BondAlignedHomonuclearChainQWBasis3D; ...)`
+- cheap H-chain ordinary-operator smoke coverage on the same experimental line
 
 What is explicitly deferred here:
 
