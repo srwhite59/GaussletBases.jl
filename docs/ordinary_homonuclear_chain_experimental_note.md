@@ -42,9 +42,18 @@ Milestone E now also lands:
 - the nested-chain operator line is still experimental and not yet a final
   chain contract
 
+Milestone F now also lands:
+
+- an experimental dense export path for downstream homonuclear H-chain use
+- producer-side metadata that records chain geometry, odd-chain policy, nested
+  geometry provenance, and fixed-block dimensions explicitly
+- a producer-side experimental contract only, not a settled or general-purpose
+  chain export standard
+
 What is explicitly deferred here:
 
 - any production nested-chain operator route
+- any production nested-chain export standard
 - any frozen split/local-resolution or endcap policy
 - molecular-shell supplement routes
 - any HF/DMRG study contract for chains

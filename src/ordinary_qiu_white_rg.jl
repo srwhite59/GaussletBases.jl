@@ -95,6 +95,7 @@ struct ExperimentalBondAlignedHomonuclearChainNestedQWPath{B,S,F,O,D}
     fixed_block::F
     operators::O
     diagnostics::D
+    nuclear_charges::Vector{Float64}
     odd_chain_policy::Symbol
 end
 
@@ -4698,6 +4699,7 @@ function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         fixed_block,
         operators,
         diagnostics,
+        Float64[Float64(value) for value in nuclear_charges],
         odd_chain_policy,
     )
 end

@@ -125,7 +125,9 @@ export AbstractFunction1D,
        bond_aligned_homonuclear_chain_geometry_diagnostics,
        bond_aligned_homonuclear_chain_nested_geometry_diagnostics,
        experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
+       experimental_homonuclear_chain_nested_dense_payload,
        write_bond_aligned_homonuclear_chain_nested_geometry_report,
+       write_experimental_homonuclear_chain_nested_dense_jld2,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
@@ -350,7 +352,9 @@ function hybrid_mapped_ordinary_basis end
 function bond_aligned_homonuclear_chain_geometry_diagnostics end
 function bond_aligned_homonuclear_chain_nested_geometry_diagnostics end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
+function experimental_homonuclear_chain_nested_dense_payload end
 function write_bond_aligned_homonuclear_chain_nested_geometry_report end
+function write_experimental_homonuclear_chain_nested_dense_jld2 end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end
@@ -497,6 +501,7 @@ include("atomic_ida_uhf.jl")
 include("atomic_ida_two_electron.jl")
 include("fullida_dense_export.jl")
 include("angular_sequence_export.jl")
+include("experimental_chain_export.jl")
 include("sliced_ham_export.jl")
 
 end

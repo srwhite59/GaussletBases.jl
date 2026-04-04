@@ -4403,6 +4403,68 @@ end
     @test path5.diagnostics.root_node.candidate_summaries[2].child_parallel_to_transverse_ratios[2] > 0.35
 end
 
+@testset "Experimental homonuclear chain nested dense export" begin
+    basis3, path3, _check3 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 3, spacing = 1.2)
+    basis4, path4, _check4 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 4, spacing = 1.2)
+    basis5, path5, _check5 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 5, spacing = 1.2)
+
+    for (basis, path, natoms) in ((basis3, path3, 3), (basis4, path4, 4), (basis5, path5, 5))
+        payload_data = experimental_homonuclear_chain_nested_dense_payload(
+            path;
+            meta = (example = "test_experimental_chain_nested_dense_export",),
+        )
+        @test payload_data.bridge_meta["format"] == "experimental_homonuclear_chain_nested_dense_v1"
+        @test payload_data.bridge_meta["experimental"]
+        @test payload_data.bridge_meta["odd_chain_policy"] == "central_ternary_relaxed"
+        @test payload_data.bridge_meta["fixed_dimension"] == size(path.fixed_block.overlap, 1)
+        @test payload_data.bridge_meta["leaf_count"] == path.diagnostics.leaf_count
+        @test payload_data.bridge_meta["root_accepted_candidate_index"] ==
+            something(path.diagnostics.root_node.accepted_candidate_index, 0)
+        @test payload_data.bridge_meta["residual_sector_empty"]
+        @test size(payload_data.payload["S"]) == size(path.operators.overlap)
+        @test size(payload_data.payload["H1"]) == size(path.operators.one_body_hamiltonian)
+        @test size(payload_data.payload["Vee"]) == size(path.operators.interaction_matrix)
+        @test size(payload_data.payload["basis_centers"]) == size(path.fixed_block.fixed_centers)
+        @test size(payload_data.payload["nuclear_coordinates_xyz"]) == (natoms, 3)
+        @test payload_data.payload["nuclear_charges"] == fill(1.0, natoms)
+        @test payload_data.payload["orbital_labels"] ==
+            String[orbital.label for orbital in orbitals(path.operators)]
+        @test payload_data.payload["geometry_report_text"] isa String
+        @test occursin("odd_chain_policy = central_ternary_relaxed", payload_data.payload["geometry_report_text"])
+        @test occursin("[node root]", payload_data.payload["geometry_report_text"])
+        @test payload_data.meta_values["manifest/contract/status"] == "experimental"
+        @test payload_data.meta_values["manifest/source/odd_chain_policy"] == "central_ternary_relaxed"
+        @test payload_data.meta_values["manifest/source/fixed_dimension"] == path.diagnostics.fixed_dimension
+    end
+
+    mktempdir() do dir
+        export_path = joinpath(dir, "h5_chain_nested_dense.jld2")
+        @test write_experimental_homonuclear_chain_nested_dense_jld2(
+            export_path,
+            path5;
+            meta = (example = "test_experimental_chain_nested_dense_export",),
+        ) == export_path
+        jldopen(export_path, "r") do file
+            @test String(file["bridge/format"]) == "experimental_homonuclear_chain_nested_dense_v1"
+            @test Bool(file["bridge/experimental"])
+            @test String(file["bridge/odd_chain_policy"]) == "central_ternary_relaxed"
+            @test Bool(file["bridge/root_did_split"])
+            @test Int(file["bridge/root_accepted_candidate_index"]) == 2
+            @test Int(file["bridge/fixed_dimension"]) == size(path5.fixed_block.overlap, 1)
+            @test Bool(file["bridge/residual_sector_empty"])
+            @test size(file["S"]) == size(path5.operators.overlap)
+            @test size(file["H1"]) == size(path5.operators.one_body_hamiltonian)
+            @test size(file["Vee"]) == size(path5.operators.interaction_matrix)
+            @test size(file["nuclear_coordinates_xyz"]) == (5, 3)
+            @test String(file["meta/producer"]) ==
+                "GaussletBases.write_experimental_homonuclear_chain_nested_dense_jld2"
+            @test String(file["meta/manifest/contract/status"]) == "experimental"
+            @test String(file["meta/manifest/source/odd_chain_policy"]) == "central_ternary_relaxed"
+            @test String(file["meta/example"]) == "test_experimental_chain_nested_dense_export"
+        end
+    end
+end
+
 @testset "Atomic hybrid anchor comparison" begin
     if !_legacy_basisfile_available()
         @test true
