@@ -122,6 +122,8 @@ export AbstractFunction1D,
        bond_aligned_homonuclear_chain_qw_basis,
        bond_aligned_heteronuclear_qw_basis,
        bond_aligned_homonuclear_chain_geometry_diagnostics,
+       bond_aligned_homonuclear_chain_nested_geometry_diagnostics,
+       write_bond_aligned_homonuclear_chain_nested_geometry_report,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
@@ -344,6 +346,8 @@ function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
 function bond_aligned_homonuclear_chain_geometry_diagnostics end
+function bond_aligned_homonuclear_chain_nested_geometry_diagnostics end
+function write_bond_aligned_homonuclear_chain_nested_geometry_report end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end

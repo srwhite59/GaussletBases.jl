@@ -1422,6 +1422,42 @@ function _bond_aligned_homonuclear_chain_qw_fixture(;
     end)
 end
 
+function _bond_aligned_homonuclear_chain_nested_fixture(;
+    natoms::Int = 4,
+    spacing::Float64 = 1.2,
+    chain_axis::Symbol = :z,
+)
+    key = Symbol(
+        :bond_aligned_homonuclear_chain_nested_fixture,
+        natoms,
+        round(Int, 1000 * spacing),
+        chain_axis,
+    )
+    return _cached_fixture(key, () -> begin
+        basis = bond_aligned_homonuclear_chain_qw_basis(
+            natoms = natoms,
+            spacing = spacing,
+            core_spacing = 0.5,
+            xmax_parallel = 2.0,
+            xmax_transverse = 2.0,
+            chain_axis = chain_axis,
+        )
+        source = GaussletBases._bond_aligned_homonuclear_chain_nested_fixed_source(
+            basis;
+            nside = 5,
+        )
+        (
+            basis,
+            source,
+            GaussletBases._nested_fixed_block(source),
+            bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
+                basis;
+                nside = 5,
+            ),
+        )
+    end)
+end
+
 function _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length::Float64 = 1.4)
     key = Symbol(:bond_aligned_diatomic_nested_fixed_block_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
@@ -4156,6 +4192,62 @@ if _test_group_enabled(:ordinary)
     @test all(diagnostics3.local_spacings_at_midpoints .> 0.45)
     @test length(basis2.basis_z) >= length(basis2.basis_x)
     @test length(basis3.basis_z) > length(basis3.basis_x)
+end
+
+@testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin
+    basis3, source3, fixed3, diagnostics3 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 3, spacing = 1.2)
+    basis4, source4, fixed4, diagnostics4 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 4, spacing = 1.2)
+
+    @test basis3 isa BondAlignedHomonuclearChainQWBasis3D
+    @test basis4 isa BondAlignedHomonuclearChainQWBasis3D
+    @test diagnostics3.leaf_count == 1
+    @test diagnostics4.leaf_count == 2
+    @test !diagnostics3.root_node.did_split
+    @test diagnostics4.root_node.did_split
+    @test diagnostics3.root_node.child_count == 0
+    @test diagnostics4.root_node.child_count == 2
+    @test diagnostics3.root_node.accepted_candidate_index === nothing
+    @test diagnostics4.root_node.accepted_candidate_index == 2
+    @test diagnostics3.root_node.candidate_summaries[1].split_kind == :ternary
+    @test diagnostics4.root_node.candidate_summaries[2].split_kind == :binary
+    @test diagnostics3.root_node.candidate_summaries[1].nucleus_ranges == [1:1, 2:2, 3:3]
+    @test diagnostics4.root_node.candidate_summaries[2].nucleus_ranges == [1:2, 3:4]
+    @test diagnostics3.root_node.local_resolution_warning
+    @test !diagnostics4.root_node.local_resolution_warning
+    @test length(source3.root_geometry.child_nodes) == 0
+    @test length(source4.root_geometry.child_nodes) == 2
+    @test !diagnostics3.root_node.candidate_summaries[1].did_split
+    @test diagnostics4.root_node.candidate_summaries[2].did_split
+    @test diagnostics4.root_node.candidate_summaries[2].midpoint_values == [0.0]
+    @test abs(
+        length(diagnostics4.root_node.candidate_summaries[2].child_boxes[1][3]) -
+        length(diagnostics4.root_node.candidate_summaries[2].child_boxes[2][3]),
+    ) <= 1
+    @test all(
+        widths[3] > 0.0 for
+        widths in diagnostics4.root_node.candidate_summaries[2].child_physical_widths
+    )
+    @test size(fixed3.overlap, 1) == diagnostics3.fixed_dimension
+    @test size(fixed4.overlap, 1) == diagnostics4.fixed_dimension
+    @test norm(fixed3.overlap - I, Inf) < 1.0e-8
+    @test norm(fixed4.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, fixed3.weights)
+    @test all(isfinite, fixed4.weights)
+    @test all(isfinite, fixed3.fixed_centers)
+    @test all(isfinite, fixed4.fixed_centers)
+
+    mktempdir() do dir
+        report_path = joinpath(dir, "chain_nested_report.txt")
+        written = write_bond_aligned_homonuclear_chain_nested_geometry_report(
+            report_path,
+            basis4;
+            nside = 5,
+        )
+        report_text = read(report_path, String)
+        @test written.leaf_count == diagnostics4.leaf_count
+        @test occursin("[node root]", report_text)
+        @test occursin("candidate[2].accepted = true", report_text)
+    end
 end
 
 @testset "Atomic hybrid anchor comparison" begin

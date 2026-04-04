@@ -351,6 +351,62 @@ struct _CartesianNestedBondAlignedDiatomicSource3D{B}
 end
 
 """
+    _BondAlignedHomonuclearChainSplitCandidate3D
+
+Experimental split candidate record for one homonuclear chain subtree.
+
+This keeps the candidate midpoint policy explicit rather than burying it in the
+tree builder.
+"""
+struct _BondAlignedHomonuclearChainSplitCandidate3D
+    split_kind::Symbol
+    nucleus_ranges::Vector{UnitRange{Int}}
+    midpoint_values::Vector{Float64}
+    split_indices::Vector{Int}
+    child_boxes::Vector{NTuple{3,UnitRange{Int}}}
+    child_physical_widths::Vector{NTuple{3,Float64}}
+    count_eligible::Bool
+    shape_eligible::Bool
+    did_split::Bool
+end
+
+"""
+    _BondAlignedHomonuclearChainNodeGeometry3D
+
+Experimental recursive split-tree geometry record for the first homonuclear
+chain nesting pass.
+"""
+struct _BondAlignedHomonuclearChainNodeGeometry3D
+    node_label::String
+    parent_box::NTuple{3,UnitRange{Int}}
+    working_box::NTuple{3,UnitRange{Int}}
+    chain_axis::Symbol
+    nucleus_range::UnitRange{Int}
+    chain_coordinates::Vector{Float64}
+    shared_shell_count::Int
+    shared_shell_dimensions::Vector{Int}
+    candidate_splits::Vector{_BondAlignedHomonuclearChainSplitCandidate3D}
+    accepted_candidate_index::Union{Nothing,Int}
+    local_resolution_warning::Bool
+    child_nodes::Vector{_BondAlignedHomonuclearChainNodeGeometry3D}
+    subtree_fixed_dimension::Int
+end
+
+"""
+    _CartesianNestedBondAlignedHomonuclearChainSource3D
+
+Experimental fixed-source container for the first homonuclear chain nested
+geometry line.
+"""
+struct _CartesianNestedBondAlignedHomonuclearChainSource3D{B}
+    basis::B
+    axis_bundles::_CartesianNestedAxisBundles3D
+    root_geometry::_BondAlignedHomonuclearChainNodeGeometry3D
+    leaf_sequences::Vector{_CartesianNestedShellSequence3D}
+    sequence::_CartesianNestedShellSequence3D
+end
+
+"""
     _CartesianNestedDoSideTrace1D
 
 Structured diagnostic record for one local 1D `doside` / COMX contraction
@@ -566,6 +622,49 @@ function Base.show(io::IO, source::_CartesianNestedBondAlignedDiatomicSource3D)
     )
 end
 
+function Base.show(io::IO, candidate::_BondAlignedHomonuclearChainSplitCandidate3D)
+    print(
+        io,
+        "_BondAlignedHomonuclearChainSplitCandidate3D(kind=:",
+        candidate.split_kind,
+        ", nchild=",
+        length(candidate.child_boxes),
+        ", did_split=",
+        candidate.did_split,
+        ")",
+    )
+end
+
+function Base.show(io::IO, node::_BondAlignedHomonuclearChainNodeGeometry3D)
+    print(
+        io,
+        "_BondAlignedHomonuclearChainNodeGeometry3D(node=",
+        node.node_label,
+        ", nuclei=",
+        node.nucleus_range,
+        ", nchild=",
+        length(node.child_nodes),
+        ", did_split=",
+        !isnothing(node.accepted_candidate_index),
+        ", nfixed=",
+        node.subtree_fixed_dimension,
+        ")",
+    )
+end
+
+function Base.show(io::IO, source::_CartesianNestedBondAlignedHomonuclearChainSource3D)
+    print(
+        io,
+        "_CartesianNestedBondAlignedHomonuclearChainSource3D(nleaf=",
+        length(source.leaf_sequences),
+        ", nfixed=",
+        size(source.sequence.coefficient_matrix, 2),
+        ", did_split=",
+        !isnothing(source.root_geometry.accepted_candidate_index),
+        ")",
+    )
+end
+
 function Base.show(io::IO, trace::_CartesianNestedDoSideTrace1D)
     print(
         io,
@@ -729,6 +828,20 @@ function _nested_contains_near_zero(
     tol::Float64 = 1.0e-8,
 )
     return any(abs(Float64(value)) <= tol for value in values)
+end
+
+function _nested_doside_retained_count(
+    local_centers::AbstractVector{<:Real},
+    provisional_retained_count::Int,
+)
+    provisional_retained_count >= 1 || throw(
+        ArgumentError("nested doside retained local count must be at least 1"),
+    )
+    symmetric_about_zero, _ = _nested_is_symmetric_about_zero(local_centers)
+    if symmetric_about_zero && iseven(provisional_retained_count) && provisional_retained_count > 1
+        return provisional_retained_count - 1
+    end
+    return provisional_retained_count
 end
 
 function _nested_doside_trace(
@@ -1105,7 +1218,8 @@ function _embed_local_side_coefficients(
     return full_coefficients
 end
 
-# Alg Nested-Face step 3: Build a local 1D doside contraction on one interval.
+# Alg Nested-Face step 3: Build a local 1D doside contraction on one interval,
+# forcing odd retained counts on intervals symmetric about zero before COMX.
 # See docs/src/algorithms/cartesian_nested_face_construction.md.
 function _nested_doside_1d(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
@@ -1113,6 +1227,7 @@ function _nested_doside_1d(
     retained_count::Int,
 )
     interval_data = _nested_interval_data(pgdg, interval)
+    retained_count = _nested_doside_retained_count(interval_data.centers, retained_count)
     raw_basis = _nested_retained_span(
         interval_data.weights,
         interval_data.centers,
@@ -2884,53 +2999,6 @@ function _nested_diatomic_children_are_roughly_cubic(
     return true
 end
 
-function _nested_symmetric_interval_retained_count(
-    bundles::_CartesianNestedAxisBundles3D,
-    axis::Symbol,
-    interval::UnitRange{Int},
-    provisional_retained_count::Int,
-)
-    provisional_retained_count >= 1 || throw(
-        ArgumentError("shared-shell retained local count must be at least 1"),
-    )
-    centers = Float64[_nested_axis_pgdg(bundles, axis).centers[index] for index in interval]
-    symmetric_about_zero, _ = _nested_is_symmetric_about_zero(centers)
-    if symmetric_about_zero && iseven(provisional_retained_count) && provisional_retained_count > 1
-        return provisional_retained_count - 1
-    end
-    return provisional_retained_count
-end
-
-# Alg Nested-Diatomic step 7: In the current homonuclear shared-shell path,
-# keep tangential retained local counts odd on intervals symmetric about zero.
-# This preserves the near-zero localized center without freezing a general
-# adaptive retain-count rule.
-# See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
-function _nested_homonuclear_shared_shell_face_retains(
-    bundles::_CartesianNestedAxisBundles3D,
-    x_interval::UnitRange{Int},
-    y_interval::UnitRange{Int},
-    z_interval::UnitRange{Int};
-    retain_xy::Tuple{Int,Int},
-    retain_xz::Tuple{Int,Int},
-    retain_yz::Tuple{Int,Int},
-)
-    return (
-        retain_xy = (
-            _nested_symmetric_interval_retained_count(bundles, :x, x_interval, retain_xy[1]),
-            _nested_symmetric_interval_retained_count(bundles, :y, y_interval, retain_xy[2]),
-        ),
-        retain_xz = (
-            _nested_symmetric_interval_retained_count(bundles, :x, x_interval, retain_xz[1]),
-            _nested_symmetric_interval_retained_count(bundles, :z, z_interval, retain_xz[2]),
-        ),
-        retain_yz = (
-            _nested_symmetric_interval_retained_count(bundles, :y, y_interval, retain_yz[1]),
-            _nested_symmetric_interval_retained_count(bundles, :z, z_interval, retain_yz[2]),
-        ),
-    )
-end
-
 # Alg Nested-Diatomic step 5 and 6: Choose the bond-axis split plane at the
 # parent-grid index nearest the midpoint, then reject it if the child boxes are
 # too short or too thin in physical coordinates.
@@ -3034,19 +3102,12 @@ function _nested_bond_aligned_diatomic_source(
             break
         end
         inner_box = _nested_inner_box(current_box)
-        shared_default_retains = _nested_homonuclear_shared_shell_face_retains(
-            bundles,
-            inner_box...;
-            retain_xy = retain_xy,
-            retain_xz = retain_xz,
-            retain_yz = retain_yz,
-        )
         shared_retain_xy =
-            isnothing(shared_shell_retain_xy) ? shared_default_retains.retain_xy : shared_shell_retain_xy
+            isnothing(shared_shell_retain_xy) ? retain_xy : shared_shell_retain_xy
         shared_retain_xz =
-            isnothing(shared_shell_retain_xz) ? shared_default_retains.retain_xz : shared_shell_retain_xz
+            isnothing(shared_shell_retain_xz) ? retain_xz : shared_shell_retain_xz
         shared_retain_yz =
-            isnothing(shared_shell_retain_yz) ? shared_default_retains.retain_yz : shared_shell_retain_yz
+            isnothing(shared_shell_retain_yz) ? retain_yz : shared_shell_retain_yz
         push!(
             shared_shell_layers,
             _nested_complete_rectangular_shell(
@@ -3162,6 +3223,513 @@ function _nested_bond_aligned_diatomic_source(
         child_column_ranges,
         midpoint_slab_column_range,
         merged_sequence,
+    )
+end
+
+function _nested_axis_index(axis::Symbol)
+    axis == :x && return 1
+    axis == :y && return 2
+    axis == :z && return 3
+    throw(ArgumentError("nested axis lookup requires axis = :x, :y, or :z"))
+end
+
+function _nested_chain_three_child_boxes(
+    box::NTuple{3,UnitRange{Int}},
+    chain_axis::Symbol,
+    left_split_index::Int,
+    right_split_index::Int,
+)
+    axis = _nested_axis_index(chain_axis)
+    interval = box[axis]
+    first(interval) <= left_split_index < right_split_index < last(interval) || throw(
+        ArgumentError("chain three-way child-box construction requires strictly ordered interior split indices"),
+    )
+    left_axis = first(interval):left_split_index
+    middle_axis = (left_split_index + 1):right_split_index
+    right_axis = (right_split_index + 1):last(interval)
+    left_box =
+        axis == 1 ? (left_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], left_axis, box[3]) :
+        (box[1], box[2], left_axis)
+    middle_box =
+        axis == 1 ? (middle_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], middle_axis, box[3]) :
+        (box[1], box[2], middle_axis)
+    right_box =
+        axis == 1 ? (right_axis, box[2], box[3]) :
+        axis == 2 ? (box[1], right_axis, box[3]) :
+        (box[1], box[2], right_axis)
+    return [left_box, middle_box, right_box]
+end
+
+function _nested_chain_children_are_roughly_cubic(
+    bundles::_CartesianNestedAxisBundles3D,
+    child_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
+    child_nucleus_ranges::AbstractVector{<:UnitRange{Int}},
+    chain_axis::Symbol;
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    min_parallel_to_transverse_ratio > 0.0 || throw(
+        ArgumentError("chain anti-sliver check requires min_parallel_to_transverse_ratio > 0"),
+    )
+    axis = _nested_axis_index(chain_axis)
+    for (child_box, nucleus_range) in zip(child_boxes, child_nucleus_ranges)
+        if length(child_box[axis]) == 1 && length(nucleus_range) == 1
+            continue
+        end
+        widths = _nested_box_physical_widths(bundles, child_box)
+        parallel = widths[axis]
+        transverse = maximum(widths[index] for index in 1:3 if index != axis)
+        parallel > 0.0 || return false
+        transverse > 0.0 || return false
+        parallel >= min_parallel_to_transverse_ratio * transverse || return false
+    end
+    return true
+end
+
+function _nested_chain_binary_candidate(
+    bundles::_CartesianNestedAxisBundles3D,
+    working_box::NTuple{3,UnitRange{Int}},
+    chain_axis::Symbol,
+    nucleus_range::UnitRange{Int},
+    chain_coordinates::AbstractVector{<:Real},
+    split_after::Int;
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    prefer_midpoint_tie_side::Symbol = :left,
+)
+    midpoint = 0.5 * (Float64(chain_coordinates[split_after]) + Float64(chain_coordinates[split_after + 1]))
+    axis = _nested_axis_index(chain_axis)
+    parallel_centers = _nested_axis_pgdg(bundles, chain_axis).centers
+    split_index = _nested_diatomic_split_plane_index(
+        parallel_centers,
+        working_box[axis],
+        midpoint;
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+    )
+    left_box, right_box = _nested_diatomic_child_boxes(working_box, chain_axis, split_index)
+    child_boxes = [left_box, right_box]
+    nucleus_ranges = [first(nucleus_range):(first(nucleus_range) + split_after - 1), (first(nucleus_range) + split_after):last(nucleus_range)]
+    count_eligible =
+        length(working_box[axis]) > 2 * nside &&
+        minimum(length(box[axis]) for box in child_boxes) >= nside
+    shape_eligible =
+        count_eligible &&
+        _nested_chain_children_are_roughly_cubic(
+            bundles,
+            child_boxes,
+            nucleus_ranges,
+            chain_axis;
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        )
+    return _BondAlignedHomonuclearChainSplitCandidate3D(
+        :binary,
+        collect(nucleus_ranges),
+        [midpoint],
+        [split_index],
+        child_boxes,
+        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
+        count_eligible,
+        shape_eligible,
+        count_eligible && shape_eligible,
+    )
+end
+
+function _nested_chain_ternary_candidate(
+    bundles::_CartesianNestedAxisBundles3D,
+    working_box::NTuple{3,UnitRange{Int}},
+    chain_axis::Symbol,
+    nucleus_range::UnitRange{Int},
+    chain_coordinates::AbstractVector{<:Real},
+    center_index::Int;
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    prefer_midpoint_tie_side::Symbol = :left,
+)
+    left_midpoint = 0.5 * (Float64(chain_coordinates[center_index - 1]) + Float64(chain_coordinates[center_index]))
+    right_midpoint = 0.5 * (Float64(chain_coordinates[center_index]) + Float64(chain_coordinates[center_index + 1]))
+    axis = _nested_axis_index(chain_axis)
+    parallel_centers = _nested_axis_pgdg(bundles, chain_axis).centers
+    left_split_index = _nested_diatomic_split_plane_index(
+        parallel_centers,
+        working_box[axis],
+        left_midpoint;
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+    )
+    right_split_index = _nested_diatomic_split_plane_index(
+        parallel_centers,
+        working_box[axis],
+        right_midpoint;
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+    )
+    child_boxes =
+        left_split_index < right_split_index ?
+        _nested_chain_three_child_boxes(working_box, chain_axis, left_split_index, right_split_index) :
+        NTuple{3,UnitRange{Int}}[]
+    nucleus_ranges = [
+        first(nucleus_range):(first(nucleus_range) + center_index - 2),
+        (first(nucleus_range) + center_index - 1):(first(nucleus_range) + center_index - 1),
+        (first(nucleus_range) + center_index):last(nucleus_range),
+    ]
+    count_eligible =
+        !isempty(child_boxes) &&
+        length(working_box[axis]) > 2 * nside + 1 &&
+        min(length(child_boxes[1][axis]), length(child_boxes[end][axis])) >= nside
+    shape_eligible =
+        count_eligible &&
+        _nested_chain_children_are_roughly_cubic(
+            bundles,
+            child_boxes,
+            nucleus_ranges,
+            chain_axis;
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        )
+    return _BondAlignedHomonuclearChainSplitCandidate3D(
+        :ternary,
+        collect(nucleus_ranges),
+        [left_midpoint, right_midpoint],
+        [left_split_index, right_split_index],
+        collect(child_boxes),
+        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
+        count_eligible,
+        shape_eligible,
+        count_eligible && shape_eligible,
+    )
+end
+
+function _nested_chain_split_candidates(
+    bundles::_CartesianNestedAxisBundles3D,
+    working_box::NTuple{3,UnitRange{Int}},
+    chain_axis::Symbol,
+    nucleus_range::UnitRange{Int},
+    chain_coordinates::AbstractVector{<:Real};
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    prefer_midpoint_tie_side::Symbol = :left,
+)
+    natoms = length(chain_coordinates)
+    natoms <= 1 && return _BondAlignedHomonuclearChainSplitCandidate3D[]
+    candidates = _BondAlignedHomonuclearChainSplitCandidate3D[]
+    if iseven(natoms)
+        for split_after in 1:(natoms - 1)
+            push!(
+                candidates,
+                _nested_chain_binary_candidate(
+                    bundles,
+                    working_box,
+                    chain_axis,
+                    nucleus_range,
+                    chain_coordinates,
+                    split_after;
+                    nside = nside,
+                    min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                    prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+                ),
+            )
+        end
+    else
+        for center_index in 2:(natoms - 1)
+            push!(
+                candidates,
+                _nested_chain_ternary_candidate(
+                    bundles,
+                    working_box,
+                    chain_axis,
+                    nucleus_range,
+                    chain_coordinates,
+                    center_index;
+                    nside = nside,
+                    min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                    prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+                ),
+            )
+        end
+    end
+    return candidates
+end
+
+function _nested_chain_candidate_center(candidate::_BondAlignedHomonuclearChainSplitCandidate3D)
+    if candidate.split_kind == :binary
+        return candidate.midpoint_values[1]
+    else
+        return mean(candidate.midpoint_values)
+    end
+end
+
+function _nested_choose_chain_candidate(
+    candidates::AbstractVector{_BondAlignedHomonuclearChainSplitCandidate3D},
+    chain_coordinates::AbstractVector{<:Real};
+    atol::Float64 = 1.0e-12,
+    rtol::Float64 = 1.0e-10,
+)
+    accepted = Int[index for index in eachindex(candidates) if candidates[index].did_split]
+    isempty(accepted) && return nothing
+    target = 0.5 * (Float64(first(chain_coordinates)) + Float64(last(chain_coordinates)))
+    distances = Float64[abs(_nested_chain_candidate_center(candidates[index]) - target) for index in accepted]
+    minimum_distance = minimum(distances)
+    tied = Int[
+        accepted[index] for index in eachindex(accepted) if
+        isapprox(distances[index], minimum_distance; atol = atol, rtol = rtol)
+    ]
+    return minimum(tied)
+end
+
+function _nested_chain_node_summary(
+    node::_BondAlignedHomonuclearChainNodeGeometry3D,
+)
+    candidate_summaries = [
+        (
+            split_kind = candidate.split_kind,
+            nucleus_ranges = candidate.nucleus_ranges,
+            midpoint_values = candidate.midpoint_values,
+            split_indices = candidate.split_indices,
+            child_boxes = candidate.child_boxes,
+            child_physical_widths = candidate.child_physical_widths,
+            count_eligible = candidate.count_eligible,
+            shape_eligible = candidate.shape_eligible,
+            did_split = candidate.did_split,
+            accepted = index == node.accepted_candidate_index,
+        ) for (index, candidate) in pairs(node.candidate_splits)
+    ]
+    return (
+        node_label = node.node_label,
+        parent_box = node.parent_box,
+        working_box = node.working_box,
+        chain_axis = node.chain_axis,
+        nucleus_range = node.nucleus_range,
+        chain_coordinates = node.chain_coordinates,
+        shared_shell_count = node.shared_shell_count,
+        shared_shell_dimensions = node.shared_shell_dimensions,
+        accepted_candidate_index = node.accepted_candidate_index,
+        did_split = !isnothing(node.accepted_candidate_index),
+        local_resolution_warning = node.local_resolution_warning,
+        child_count = length(node.child_nodes),
+        subtree_fixed_dimension = node.subtree_fixed_dimension,
+        candidate_summaries = candidate_summaries,
+    )
+end
+
+function _nested_chain_collect_node_summaries(
+    node::_BondAlignedHomonuclearChainNodeGeometry3D,
+)
+    summaries = Any[_nested_chain_node_summary(node)]
+    for child in node.child_nodes
+        append!(summaries, _nested_chain_collect_node_summaries(child))
+    end
+    return summaries
+end
+
+function _nested_bond_aligned_homonuclear_chain_node(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    parent_box::NTuple{3,UnitRange{Int}},
+    nucleus_range::UnitRange{Int},
+    node_label::AbstractString;
+    chain_axis::Symbol = :z,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    prefer_midpoint_tie_side::Symbol = :left,
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+)
+    current_box = parent_box
+    shared_shell_layers = _CartesianNestedCompleteShell3D[]
+    shared_shell_dimensions = Int[]
+    local_coordinates = basis.chain_coordinates[nucleus_range]
+
+    while true
+        candidates = _nested_chain_split_candidates(
+            bundles,
+            current_box,
+            chain_axis,
+            nucleus_range,
+            local_coordinates;
+            nside = nside,
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+        )
+        accepted_candidate = _nested_choose_chain_candidate(candidates, local_coordinates)
+        (accepted_candidate !== nothing || minimum(length.(current_box)) <= nside || !_nested_can_shrink_box(current_box)) && break
+
+        inner_box = _nested_inner_box(current_box)
+        shell = _nested_complete_rectangular_shell(
+            bundles,
+            inner_box...;
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            retain_x_edge = retain_x_edge,
+            retain_y_edge = retain_y_edge,
+            retain_z_edge = retain_z_edge,
+            x_fixed = (first(current_box[1]), last(current_box[1])),
+            y_fixed = (first(current_box[2]), last(current_box[2])),
+            z_fixed = (first(current_box[3]), last(current_box[3])),
+        )
+        push!(shared_shell_layers, shell)
+        push!(shared_shell_dimensions, size(shell.coefficient_matrix, 2))
+        current_box = inner_box
+    end
+
+    candidates = _nested_chain_split_candidates(
+        bundles,
+        current_box,
+        chain_axis,
+        nucleus_range,
+        local_coordinates;
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+    )
+    accepted_candidate = _nested_choose_chain_candidate(candidates, local_coordinates)
+
+    if isnothing(accepted_candidate)
+        leaf_sequence = _nested_complete_shell_sequence_for_box(
+            bundles,
+            current_box;
+            nside = nside,
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            retain_x_edge = retain_x_edge,
+            retain_y_edge = retain_y_edge,
+            retain_z_edge = retain_z_edge,
+        )
+        merged_sequence =
+            isempty(shared_shell_layers) ? leaf_sequence :
+            _nested_shell_sequence_from_core_block(
+                bundles,
+                leaf_sequence.support_indices,
+                leaf_sequence.coefficient_matrix,
+                shared_shell_layers,
+            )
+        node = _BondAlignedHomonuclearChainNodeGeometry3D(
+            String(node_label),
+            parent_box,
+            current_box,
+            chain_axis,
+            nucleus_range,
+            collect(local_coordinates),
+            length(shared_shell_layers),
+            shared_shell_dimensions,
+            candidates,
+            nothing,
+            !isempty(candidates),
+            _BondAlignedHomonuclearChainNodeGeometry3D[],
+            size(merged_sequence.coefficient_matrix, 2),
+        )
+        return (
+            geometry = node,
+            sequence = merged_sequence,
+            leaf_sequences = _CartesianNestedShellSequence3D[leaf_sequence],
+        )
+    end
+
+    candidate = candidates[accepted_candidate]
+    child_results = [
+        _nested_bond_aligned_homonuclear_chain_node(
+            basis,
+            bundles,
+            candidate.child_boxes[index],
+            candidate.nucleus_ranges[index],
+            string(node_label, "_", index);
+            chain_axis = chain_axis,
+            nside = nside,
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            retain_x_edge = retain_x_edge,
+            retain_y_edge = retain_y_edge,
+            retain_z_edge = retain_z_edge,
+        ) for index in eachindex(candidate.child_boxes)
+    ]
+    child_nodes = [result.geometry for result in child_results]
+    child_leaf_sequences = _CartesianNestedShellSequence3D[]
+    for result in child_results
+        append!(child_leaf_sequences, result.leaf_sequences)
+    end
+    core_support = reduce(vcat, [result.sequence.support_indices for result in child_results])
+    core_coefficients = reduce(hcat, [result.sequence.coefficient_matrix for result in child_results])
+    merged_sequence =
+        isempty(shared_shell_layers) ? _nested_shell_sequence_from_core_block(
+            bundles,
+            core_support,
+            core_coefficients,
+            _AbstractCartesianNestedShellLayer3D[];
+            enforce_coverage = false,
+        ) :
+        _nested_shell_sequence_from_core_block(
+            bundles,
+            core_support,
+            core_coefficients,
+            shared_shell_layers,
+        )
+    node = _BondAlignedHomonuclearChainNodeGeometry3D(
+        String(node_label),
+        parent_box,
+        current_box,
+        chain_axis,
+        nucleus_range,
+        collect(local_coordinates),
+        length(shared_shell_layers),
+        shared_shell_dimensions,
+        candidates,
+        accepted_candidate,
+        false,
+        child_nodes,
+        size(merged_sequence.coefficient_matrix, 2),
+    )
+    return (
+        geometry = node,
+        sequence = merged_sequence,
+        leaf_sequences = child_leaf_sequences,
+    )
+end
+
+function _nested_bond_aligned_homonuclear_chain_source(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    chain_axis::Symbol = :z,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    prefer_midpoint_tie_side::Symbol = :left,
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+)
+    dims = _nested_axis_lengths(bundles)
+    parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
+    result = _nested_bond_aligned_homonuclear_chain_node(
+        basis,
+        bundles,
+        parent_box,
+        1:length(basis.chain_coordinates),
+        "root";
+        chain_axis = chain_axis,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
+    return _CartesianNestedBondAlignedHomonuclearChainSource3D(
+        basis,
+        bundles,
+        result.geometry,
+        result.leaf_sequences,
+        result.sequence,
     )
 end
 
@@ -3505,5 +4073,9 @@ function _nested_fixed_block(
 end
 
 function _nested_fixed_block(source::_CartesianNestedBondAlignedDiatomicSource3D)
+    return _nested_fixed_block(source.sequence, source.basis)
+end
+
+function _nested_fixed_block(source::_CartesianNestedBondAlignedHomonuclearChainSource3D)
     return _nested_fixed_block(source.sequence, source.basis)
 end

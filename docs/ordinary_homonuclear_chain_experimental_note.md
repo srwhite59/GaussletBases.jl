@@ -17,9 +17,17 @@ Milestone B now also lands:
 - `ordinary_cartesian_qiu_white_operators(::BondAlignedHomonuclearChainQWBasis3D; ...)`
 - cheap H-chain ordinary-operator smoke coverage on the same experimental line
 
+Milestone C now begins:
+
+- experimental nested-chain geometry and split-tree diagnostics
+- a first geometry-backed nested fixed-block object for small chain tests
+- exploratory repeated-midpoint chain split policy only
+- no production nested-chain operator claim yet
+
 What is explicitly deferred here:
 
-- nested chain splitting
+- any production nested-chain operator route
+- any frozen split/local-resolution or endcap policy
 - molecular-shell supplement routes
 - any HF/DMRG study contract for chains
 

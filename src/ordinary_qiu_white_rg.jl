@@ -654,7 +654,7 @@ function _qwrg_bond_aligned_preferred_split_side(
 end
 
 function _qwrg_bond_aligned_axis_bundles(
-    basis::BondAlignedDiatomicQWBasis3D,
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
     expansion::CoulombGaussianExpansion;
     gausslet_backend::Symbol = :numerical_reference,
 )
@@ -740,6 +740,127 @@ function _bond_aligned_diatomic_nested_fixed_block(
         source = source,
         fixed_block = _nested_fixed_block(source),
     )
+end
+
+function _bond_aligned_homonuclear_chain_nested_fixed_source(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("bond-aligned homonuclear chain nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+    )
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+    return _nested_bond_aligned_homonuclear_chain_source(
+        basis,
+        bundles;
+        chain_axis = basis.chain_axis,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+end
+
+function _bond_aligned_homonuclear_chain_nested_fixed_block(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+    return (
+        source = source,
+        fixed_block = _nested_fixed_block(source),
+    )
+end
+
+function _chain_nested_geometry_report_lines(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    lines = String[
+        "# GaussletBases bond-aligned homonuclear chain nested geometry report",
+        "# chain_axis = $(source.basis.chain_axis)",
+        "# natoms = $(length(source.basis.nuclei))",
+        "# nleaf = $(length(source.leaf_sequences))",
+        "# nfixed = $(size(source.sequence.coefficient_matrix, 2))",
+    ]
+    for node in _nested_chain_collect_node_summaries(source.root_geometry)
+        push!(lines, "")
+        push!(lines, "[node $(node.node_label)]")
+        push!(lines, "nucleus_range = $(node.nucleus_range)")
+        push!(lines, "working_box = $(node.working_box)")
+        push!(lines, "shared_shell_count = $(node.shared_shell_count)")
+        push!(lines, "shared_shell_dimensions = $(node.shared_shell_dimensions)")
+        push!(lines, "accepted_candidate_index = $(node.accepted_candidate_index)")
+        push!(lines, "local_resolution_warning = $(node.local_resolution_warning)")
+        push!(lines, "child_count = $(node.child_count)")
+        push!(lines, "subtree_fixed_dimension = $(node.subtree_fixed_dimension)")
+        for (index, candidate) in pairs(node.candidate_summaries)
+            push!(lines, "candidate[$index].split_kind = $(candidate.split_kind)")
+            push!(lines, "candidate[$index].nucleus_ranges = $(candidate.nucleus_ranges)")
+            push!(lines, "candidate[$index].midpoint_values = $(candidate.midpoint_values)")
+            push!(lines, "candidate[$index].split_indices = $(candidate.split_indices)")
+            push!(lines, "candidate[$index].child_boxes = $(candidate.child_boxes)")
+            push!(lines, "candidate[$index].count_eligible = $(candidate.count_eligible)")
+            push!(lines, "candidate[$index].shape_eligible = $(candidate.shape_eligible)")
+            push!(lines, "candidate[$index].did_split = $(candidate.did_split)")
+            push!(lines, "candidate[$index].accepted = $(candidate.accepted)")
+        end
+    end
+    return lines
+end
+
+function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+)
+    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+    )
+    return (
+        source = source,
+        root_node = _nested_chain_node_summary(source.root_geometry),
+        node_summaries = _nested_chain_collect_node_summaries(source.root_geometry),
+        leaf_count = length(source.leaf_sequences),
+        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+    )
+end
+
+function write_bond_aligned_homonuclear_chain_nested_geometry_report(
+    path::AbstractString,
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    kwargs...,
+)
+    diagnostics = bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
+        basis;
+        kwargs...,
+    )
+    mkpath(dirname(String(path)))
+    open(path, "w") do io
+        for line in _chain_nested_geometry_report_lines(diagnostics.source)
+            write(io, line, "\n")
+        end
+    end
+    return diagnostics
 end
 
 function _qwrg_elapsed_seconds(start_ns::UInt64)
