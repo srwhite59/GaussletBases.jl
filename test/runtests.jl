@@ -1426,12 +1426,16 @@ function _bond_aligned_homonuclear_chain_nested_fixture(;
     natoms::Int = 4,
     spacing::Float64 = 1.2,
     chain_axis::Symbol = :z,
+    nside::Int = 5,
+    odd_chain_policy::Symbol = :strict_current,
 )
     key = Symbol(
         :bond_aligned_homonuclear_chain_nested_fixture,
         natoms,
         round(Int, 1000 * spacing),
         chain_axis,
+        nside,
+        odd_chain_policy,
     )
     return _cached_fixture(key, () -> begin
         basis = bond_aligned_homonuclear_chain_qw_basis(
@@ -1444,7 +1448,8 @@ function _bond_aligned_homonuclear_chain_nested_fixture(;
         )
         source = GaussletBases._bond_aligned_homonuclear_chain_nested_fixed_source(
             basis;
-            nside = 5,
+            nside = nside,
+            odd_chain_policy = odd_chain_policy,
         )
         (
             basis,
@@ -1452,7 +1457,8 @@ function _bond_aligned_homonuclear_chain_nested_fixture(;
             GaussletBases._nested_fixed_block(source),
             bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
                 basis;
-                nside = 5,
+                nside = nside,
+                odd_chain_policy = odd_chain_policy,
             ),
         )
     end)
@@ -4197,27 +4203,46 @@ end
 @testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin
     basis3, source3, fixed3, diagnostics3 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 3, spacing = 1.2)
     basis4, source4, fixed4, diagnostics4 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 4, spacing = 1.2)
+    basis5, source5, fixed5, diagnostics5 = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 5, spacing = 1.2)
+    basis3r, source3r, fixed3r, diagnostics3r = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 3, spacing = 1.2, odd_chain_policy = :central_ternary_relaxed)
+    basis5r, source5r, fixed5r, diagnostics5r = _bond_aligned_homonuclear_chain_nested_fixture(; natoms = 5, spacing = 1.2, odd_chain_policy = :central_ternary_relaxed)
 
     @test basis3 isa BondAlignedHomonuclearChainQWBasis3D
     @test basis4 isa BondAlignedHomonuclearChainQWBasis3D
+    @test basis5 isa BondAlignedHomonuclearChainQWBasis3D
     @test diagnostics3.leaf_count == 1
     @test diagnostics4.leaf_count == 2
+    @test diagnostics5.leaf_count == 1
     @test !diagnostics3.root_node.did_split
     @test diagnostics4.root_node.did_split
+    @test !diagnostics5.root_node.did_split
     @test diagnostics3.root_node.child_count == 0
     @test diagnostics4.root_node.child_count == 2
+    @test diagnostics5.root_node.child_count == 0
+    @test diagnostics3.root_node.odd_chain_policy == :strict_current
+    @test diagnostics5.root_node.odd_chain_policy == :strict_current
     @test diagnostics3.root_node.accepted_candidate_index === nothing
     @test diagnostics4.root_node.accepted_candidate_index == 2
+    @test diagnostics5.root_node.accepted_candidate_index === nothing
     @test diagnostics3.root_node.candidate_summaries[1].split_kind == :ternary
     @test diagnostics4.root_node.candidate_summaries[2].split_kind == :binary
+    @test diagnostics5.root_node.candidate_summaries[2].split_kind == :ternary
     @test diagnostics3.root_node.candidate_summaries[1].nucleus_ranges == [1:1, 2:2, 3:3]
     @test diagnostics4.root_node.candidate_summaries[2].nucleus_ranges == [1:2, 3:4]
+    @test diagnostics5.root_node.candidate_summaries[2].nucleus_ranges == [1:2, 3:3, 4:5]
     @test diagnostics3.root_node.local_resolution_warning
     @test !diagnostics4.root_node.local_resolution_warning
+    @test diagnostics5.root_node.local_resolution_warning
     @test length(source3.root_geometry.child_nodes) == 0
     @test length(source4.root_geometry.child_nodes) == 2
+    @test length(source5.root_geometry.child_nodes) == 0
     @test !diagnostics3.root_node.candidate_summaries[1].did_split
     @test diagnostics4.root_node.candidate_summaries[2].did_split
+    @test diagnostics5.root_node.candidate_summaries[2].count_eligible
+    @test !diagnostics5.root_node.candidate_summaries[2].shape_eligible
+    @test diagnostics5.root_node.candidate_summaries[2].child_parallel_counts == [6, 3, 6]
+    @test diagnostics5.root_node.candidate_summaries[2].child_parallel_to_transverse_ratios[2] <
+        diagnostics5.root_node.odd_chain_policy_thresholds.center_parallel_to_transverse_ratio_min
     @test diagnostics4.root_node.candidate_summaries[2].midpoint_values == [0.0]
     @test abs(
         length(diagnostics4.root_node.candidate_summaries[2].child_boxes[1][3]) -
@@ -4229,23 +4254,55 @@ end
     )
     @test size(fixed3.overlap, 1) == diagnostics3.fixed_dimension
     @test size(fixed4.overlap, 1) == diagnostics4.fixed_dimension
+    @test size(fixed5.overlap, 1) == diagnostics5.fixed_dimension
     @test norm(fixed3.overlap - I, Inf) < 1.0e-8
     @test norm(fixed4.overlap - I, Inf) < 1.0e-8
+    @test norm(fixed5.overlap - I, Inf) < 1.0e-8
     @test all(isfinite, fixed3.weights)
     @test all(isfinite, fixed4.weights)
+    @test all(isfinite, fixed5.weights)
     @test all(isfinite, fixed3.fixed_centers)
     @test all(isfinite, fixed4.fixed_centers)
+    @test all(isfinite, fixed5.fixed_centers)
+
+    @test diagnostics3r.root_node.odd_chain_policy == :central_ternary_relaxed
+    @test diagnostics5r.root_node.odd_chain_policy == :central_ternary_relaxed
+    @test diagnostics3r.root_node.did_split
+    @test diagnostics5r.root_node.did_split
+    @test diagnostics3r.root_node.accepted_candidate_index == 1
+    @test diagnostics5r.root_node.accepted_candidate_index == 2
+    @test diagnostics3r.root_node.child_count == 3
+    @test diagnostics5r.root_node.child_count == 3
+    @test diagnostics3r.root_node.candidate_summaries[1].did_split
+    @test diagnostics5r.root_node.candidate_summaries[2].did_split
+    @test diagnostics3r.root_node.candidate_summaries[1].child_parallel_counts == [4, 3, 4]
+    @test diagnostics5r.root_node.candidate_summaries[2].child_parallel_counts == [6, 3, 6]
+    @test diagnostics3r.root_node.odd_chain_policy_thresholds.center_parallel_count_min == 3
+    @test diagnostics5r.root_node.odd_chain_policy_thresholds.center_parallel_to_transverse_ratio_min == 0.35
+    @test size(fixed3r.overlap, 1) == diagnostics3r.fixed_dimension
+    @test size(fixed5r.overlap, 1) == diagnostics5r.fixed_dimension
+    @test norm(fixed3r.overlap - I, Inf) < 1.0e-8
+    @test norm(fixed5r.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, fixed3r.weights)
+    @test all(isfinite, fixed5r.weights)
+    @test all(isfinite, fixed3r.fixed_centers)
+    @test all(isfinite, fixed5r.fixed_centers)
+    @test length(source3r.root_geometry.child_nodes) == 3
+    @test length(source5r.root_geometry.child_nodes) == 3
 
     mktempdir() do dir
         report_path = joinpath(dir, "chain_nested_report.txt")
         written = write_bond_aligned_homonuclear_chain_nested_geometry_report(
             report_path,
-            basis4;
+            basis5r;
             nside = 5,
+            odd_chain_policy = :central_ternary_relaxed,
         )
         report_text = read(report_path, String)
-        @test written.leaf_count == diagnostics4.leaf_count
+        @test written.leaf_count == diagnostics5r.leaf_count
         @test occursin("[node root]", report_text)
+        @test occursin("odd_chain_policy = central_ternary_relaxed", report_text)
+        @test occursin("candidate[2].child_parallel_counts = [6, 3, 6]", report_text)
         @test occursin("candidate[2].accepted = true", report_text)
     end
 end

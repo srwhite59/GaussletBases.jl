@@ -24,6 +24,14 @@ Milestone C now begins:
 - exploratory repeated-midpoint chain split policy only
 - no production nested-chain operator claim yet
 
+Current experimental nested-chain status:
+
+- even-chain central binary splitting looks coherent on cheap H-chain cases
+- odd-chain nested policy is still under active experimental development
+- the repo now exposes explicit odd-chain policy diagnostics rather than hiding
+  the current no-split outcome behind one implicit heuristic
+- the repo is not yet claiming a settled odd-chain split/local-resolution rule
+
 What is explicitly deferred here:
 
 - any production nested-chain operator route

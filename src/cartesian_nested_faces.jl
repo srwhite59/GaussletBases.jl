@@ -365,6 +365,8 @@ struct _BondAlignedHomonuclearChainSplitCandidate3D
     split_indices::Vector{Int}
     child_boxes::Vector{NTuple{3,UnitRange{Int}}}
     child_physical_widths::Vector{NTuple{3,Float64}}
+    child_parallel_counts::Vector{Int}
+    child_parallel_to_transverse_ratios::Vector{Float64}
     count_eligible::Bool
     shape_eligible::Bool
     did_split::Bool
@@ -381,6 +383,9 @@ struct _BondAlignedHomonuclearChainNodeGeometry3D
     parent_box::NTuple{3,UnitRange{Int}}
     working_box::NTuple{3,UnitRange{Int}}
     chain_axis::Symbol
+    odd_chain_policy::Symbol
+    nside::Int
+    min_parallel_to_transverse_ratio::Float64
     nucleus_range::UnitRange{Int}
     chain_coordinates::Vector{Float64}
     shared_shell_count::Int
@@ -3262,6 +3267,61 @@ function _nested_chain_three_child_boxes(
     return [left_box, middle_box, right_box]
 end
 
+function _nested_odd_chain_policy_thresholds(
+    odd_chain_policy::Symbol,
+    nside::Int,
+    min_parallel_to_transverse_ratio::Float64,
+)
+    nside >= 1 || throw(ArgumentError("odd-chain nested policy requires nside >= 1"))
+    min_parallel_to_transverse_ratio > 0.0 || throw(
+        ArgumentError("odd-chain nested policy requires min_parallel_to_transverse_ratio > 0"),
+    )
+    if odd_chain_policy == :strict_current
+        return (
+            label = odd_chain_policy,
+            outer_parallel_count_min = nside,
+            center_parallel_count_min = 1,
+            total_parallel_count_min = 2 * nside + 2,
+            outer_parallel_to_transverse_ratio_min = min_parallel_to_transverse_ratio,
+            center_parallel_to_transverse_ratio_min = min_parallel_to_transverse_ratio,
+        )
+    elseif odd_chain_policy == :central_ternary_relaxed
+        return (
+            label = odd_chain_policy,
+            outer_parallel_count_min = max(nside - 1, 3),
+            center_parallel_count_min = 3,
+            total_parallel_count_min = 2 * nside + 1,
+            outer_parallel_to_transverse_ratio_min = min_parallel_to_transverse_ratio,
+            center_parallel_to_transverse_ratio_min = min(
+                min_parallel_to_transverse_ratio,
+                0.35,
+            ),
+        )
+    else
+        throw(ArgumentError("unknown odd-chain nested policy $(repr(odd_chain_policy)); expected :strict_current or :central_ternary_relaxed"))
+    end
+end
+
+function _nested_chain_parallel_diagnostics(
+    bundles::_CartesianNestedAxisBundles3D,
+    child_box::NTuple{3,UnitRange{Int}},
+    chain_axis::Symbol,
+)
+    axis = _nested_axis_index(chain_axis)
+    widths = _nested_box_physical_widths(bundles, child_box)
+    parallel = widths[axis]
+    transverse = maximum(widths[index] for index in 1:3 if index != axis)
+    ratio =
+        transverse > 0.0 ?
+        parallel / transverse :
+        (parallel > 0.0 ? Inf : 0.0)
+    return (
+        widths = widths,
+        parallel_count = length(child_box[axis]),
+        parallel_to_transverse_ratio = ratio,
+    )
+end
+
 function _nested_chain_children_are_roughly_cubic(
     bundles::_CartesianNestedAxisBundles3D,
     child_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
@@ -3309,6 +3369,9 @@ function _nested_chain_binary_candidate(
     )
     left_box, right_box = _nested_diatomic_child_boxes(working_box, chain_axis, split_index)
     child_boxes = [left_box, right_box]
+    child_diagnostics = [
+        _nested_chain_parallel_diagnostics(bundles, box, chain_axis) for box in child_boxes
+    ]
     nucleus_ranges = [first(nucleus_range):(first(nucleus_range) + split_after - 1), (first(nucleus_range) + split_after):last(nucleus_range)]
     count_eligible =
         length(working_box[axis]) > 2 * nside &&
@@ -3328,7 +3391,9 @@ function _nested_chain_binary_candidate(
         [midpoint],
         [split_index],
         child_boxes,
-        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
+        [entry.widths for entry in child_diagnostics],
+        [entry.parallel_count for entry in child_diagnostics],
+        [entry.parallel_to_transverse_ratio for entry in child_diagnostics],
         count_eligible,
         shape_eligible,
         count_eligible && shape_eligible,
@@ -3344,6 +3409,7 @@ function _nested_chain_ternary_candidate(
     center_index::Int;
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
     prefer_midpoint_tie_side::Symbol = :left,
 )
     left_midpoint = 0.5 * (Float64(chain_coordinates[center_index - 1]) + Float64(chain_coordinates[center_index]))
@@ -3366,31 +3432,42 @@ function _nested_chain_ternary_candidate(
         left_split_index < right_split_index ?
         _nested_chain_three_child_boxes(working_box, chain_axis, left_split_index, right_split_index) :
         NTuple{3,UnitRange{Int}}[]
+    child_diagnostics = [
+        _nested_chain_parallel_diagnostics(bundles, box, chain_axis) for box in child_boxes
+    ]
     nucleus_ranges = [
         first(nucleus_range):(first(nucleus_range) + center_index - 2),
         (first(nucleus_range) + center_index - 1):(first(nucleus_range) + center_index - 1),
         (first(nucleus_range) + center_index):last(nucleus_range),
     ]
+    thresholds = _nested_odd_chain_policy_thresholds(
+        odd_chain_policy,
+        nside,
+        min_parallel_to_transverse_ratio,
+    )
+    child_parallel_counts = [entry.parallel_count for entry in child_diagnostics]
+    child_parallel_to_transverse_ratios = [
+        entry.parallel_to_transverse_ratio for entry in child_diagnostics
+    ]
     count_eligible =
         !isempty(child_boxes) &&
-        length(working_box[axis]) > 2 * nside + 1 &&
-        min(length(child_boxes[1][axis]), length(child_boxes[end][axis])) >= nside
+        length(working_box[axis]) >= thresholds.total_parallel_count_min &&
+        min(child_parallel_counts[1], child_parallel_counts[end]) >= thresholds.outer_parallel_count_min &&
+        child_parallel_counts[2] >= thresholds.center_parallel_count_min
     shape_eligible =
         count_eligible &&
-        _nested_chain_children_are_roughly_cubic(
-            bundles,
-            child_boxes,
-            nucleus_ranges,
-            chain_axis;
-            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
-        )
+        child_parallel_to_transverse_ratios[1] >= thresholds.outer_parallel_to_transverse_ratio_min &&
+        child_parallel_to_transverse_ratios[end] >= thresholds.outer_parallel_to_transverse_ratio_min &&
+        child_parallel_to_transverse_ratios[2] >= thresholds.center_parallel_to_transverse_ratio_min
     return _BondAlignedHomonuclearChainSplitCandidate3D(
         :ternary,
         collect(nucleus_ranges),
         [left_midpoint, right_midpoint],
         [left_split_index, right_split_index],
         collect(child_boxes),
-        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
+        [entry.widths for entry in child_diagnostics],
+        child_parallel_counts,
+        child_parallel_to_transverse_ratios,
         count_eligible,
         shape_eligible,
         count_eligible && shape_eligible,
@@ -3405,6 +3482,7 @@ function _nested_chain_split_candidates(
     chain_coordinates::AbstractVector{<:Real};
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
     prefer_midpoint_tie_side::Symbol = :left,
 )
     natoms = length(chain_coordinates)
@@ -3440,6 +3518,7 @@ function _nested_chain_split_candidates(
                     center_index;
                     nside = nside,
                     min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                    odd_chain_policy = odd_chain_policy,
                     prefer_midpoint_tie_side = prefer_midpoint_tie_side,
                 ),
             )
@@ -3452,7 +3531,7 @@ function _nested_chain_candidate_center(candidate::_BondAlignedHomonuclearChainS
     if candidate.split_kind == :binary
         return candidate.midpoint_values[1]
     else
-        return mean(candidate.midpoint_values)
+        return sum(candidate.midpoint_values) / length(candidate.midpoint_values)
     end
 end
 
@@ -3477,6 +3556,11 @@ end
 function _nested_chain_node_summary(
     node::_BondAlignedHomonuclearChainNodeGeometry3D,
 )
+    policy_thresholds = _nested_odd_chain_policy_thresholds(
+        node.odd_chain_policy,
+        node.nside,
+        node.min_parallel_to_transverse_ratio,
+    )
     candidate_summaries = [
         (
             split_kind = candidate.split_kind,
@@ -3485,6 +3569,8 @@ function _nested_chain_node_summary(
             split_indices = candidate.split_indices,
             child_boxes = candidate.child_boxes,
             child_physical_widths = candidate.child_physical_widths,
+            child_parallel_counts = candidate.child_parallel_counts,
+            child_parallel_to_transverse_ratios = candidate.child_parallel_to_transverse_ratios,
             count_eligible = candidate.count_eligible,
             shape_eligible = candidate.shape_eligible,
             did_split = candidate.did_split,
@@ -3496,6 +3582,8 @@ function _nested_chain_node_summary(
         parent_box = node.parent_box,
         working_box = node.working_box,
         chain_axis = node.chain_axis,
+        odd_chain_policy = node.odd_chain_policy,
+        odd_chain_policy_thresholds = policy_thresholds,
         nucleus_range = node.nucleus_range,
         chain_coordinates = node.chain_coordinates,
         shared_shell_count = node.shared_shell_count,
@@ -3528,6 +3616,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
     chain_axis::Symbol = :z,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
     prefer_midpoint_tie_side::Symbol = :left,
     retain_xy::Tuple{Int,Int} = (4, 3),
     retain_xz::Tuple{Int,Int} = (4, 3),
@@ -3550,6 +3639,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             local_coordinates;
             nside = nside,
             min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            odd_chain_policy = odd_chain_policy,
             prefer_midpoint_tie_side = prefer_midpoint_tie_side,
         )
         accepted_candidate = _nested_choose_chain_candidate(candidates, local_coordinates)
@@ -3582,6 +3672,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
         local_coordinates;
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
         prefer_midpoint_tie_side = prefer_midpoint_tie_side,
     )
     accepted_candidate = _nested_choose_chain_candidate(candidates, local_coordinates)
@@ -3611,6 +3702,9 @@ function _nested_bond_aligned_homonuclear_chain_node(
             parent_box,
             current_box,
             chain_axis,
+            odd_chain_policy,
+            nside,
+            min_parallel_to_transverse_ratio,
             nucleus_range,
             collect(local_coordinates),
             length(shared_shell_layers),
@@ -3639,6 +3733,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             chain_axis = chain_axis,
             nside = nside,
             min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            odd_chain_policy = odd_chain_policy,
             prefer_midpoint_tie_side = prefer_midpoint_tie_side,
             retain_xy = retain_xy,
             retain_xz = retain_xz,
@@ -3674,6 +3769,9 @@ function _nested_bond_aligned_homonuclear_chain_node(
         parent_box,
         current_box,
         chain_axis,
+        odd_chain_policy,
+        nside,
+        min_parallel_to_transverse_ratio,
         nucleus_range,
         collect(local_coordinates),
         length(shared_shell_layers),
@@ -3697,6 +3795,7 @@ function _nested_bond_aligned_homonuclear_chain_source(
     chain_axis::Symbol = :z,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
     prefer_midpoint_tie_side::Symbol = :left,
     retain_xy::Tuple{Int,Int} = (4, 3),
     retain_xz::Tuple{Int,Int} = (4, 3),
@@ -3716,6 +3815,7 @@ function _nested_bond_aligned_homonuclear_chain_source(
         chain_axis = chain_axis,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
         prefer_midpoint_tie_side = prefer_midpoint_tie_side,
         retain_xy = retain_xy,
         retain_xz = retain_xz,

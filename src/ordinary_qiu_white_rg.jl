@@ -748,6 +748,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
     gausslet_backend::Symbol = :numerical_reference,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
 )
     gausslet_backend == :numerical_reference || throw(
         ArgumentError("bond-aligned homonuclear chain nested fixed source currently supports only gausslet_backend = :numerical_reference"),
@@ -763,6 +764,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
         chain_axis = basis.chain_axis,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
     )
 end
 
@@ -772,6 +774,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_block(
     gausslet_backend::Symbol = :numerical_reference,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
 )
     source = _bond_aligned_homonuclear_chain_nested_fixed_source(
         basis;
@@ -779,6 +782,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_block(
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
     )
     return (
         source = source,
@@ -801,6 +805,12 @@ function _chain_nested_geometry_report_lines(
         push!(lines, "[node $(node.node_label)]")
         push!(lines, "nucleus_range = $(node.nucleus_range)")
         push!(lines, "working_box = $(node.working_box)")
+        push!(lines, "odd_chain_policy = $(node.odd_chain_policy)")
+        push!(lines, "odd_policy.outer_parallel_count_min = $(node.odd_chain_policy_thresholds.outer_parallel_count_min)")
+        push!(lines, "odd_policy.center_parallel_count_min = $(node.odd_chain_policy_thresholds.center_parallel_count_min)")
+        push!(lines, "odd_policy.total_parallel_count_min = $(node.odd_chain_policy_thresholds.total_parallel_count_min)")
+        push!(lines, "odd_policy.outer_parallel_to_transverse_ratio_min = $(node.odd_chain_policy_thresholds.outer_parallel_to_transverse_ratio_min)")
+        push!(lines, "odd_policy.center_parallel_to_transverse_ratio_min = $(node.odd_chain_policy_thresholds.center_parallel_to_transverse_ratio_min)")
         push!(lines, "shared_shell_count = $(node.shared_shell_count)")
         push!(lines, "shared_shell_dimensions = $(node.shared_shell_dimensions)")
         push!(lines, "accepted_candidate_index = $(node.accepted_candidate_index)")
@@ -813,6 +823,8 @@ function _chain_nested_geometry_report_lines(
             push!(lines, "candidate[$index].midpoint_values = $(candidate.midpoint_values)")
             push!(lines, "candidate[$index].split_indices = $(candidate.split_indices)")
             push!(lines, "candidate[$index].child_boxes = $(candidate.child_boxes)")
+            push!(lines, "candidate[$index].child_parallel_counts = $(candidate.child_parallel_counts)")
+            push!(lines, "candidate[$index].child_parallel_to_transverse_ratios = $(candidate.child_parallel_to_transverse_ratios)")
             push!(lines, "candidate[$index].count_eligible = $(candidate.count_eligible)")
             push!(lines, "candidate[$index].shape_eligible = $(candidate.shape_eligible)")
             push!(lines, "candidate[$index].did_split = $(candidate.did_split)")
@@ -828,6 +840,7 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     gausslet_backend::Symbol = :numerical_reference,
     nside::Int = 5,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
 )
     source = _bond_aligned_homonuclear_chain_nested_fixed_source(
         basis;
@@ -835,6 +848,7 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        odd_chain_policy = odd_chain_policy,
     )
     return (
         source = source,
