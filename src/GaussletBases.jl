@@ -154,6 +154,7 @@ export AbstractFunction1D,
        AtomicFixedRadialAngularSequence,
        AtomicShellLocalInjectedAngularAssembly,
        AtomicInjectedAngularOneBodyBenchmark,
+       AtomicInjectedAngularCartesianMomentBundle,
        AtomicInjectedAngularHFStyleBenchmark,
        AtomicInjectedAngularHFDMRGHFAdapter,
        AtomicInjectedAngularSmallEDBenchmark,
@@ -173,6 +174,7 @@ export AbstractFunction1D,
        assign_atomic_angular_shell_orders,
        build_atomic_shell_local_angular_assembly,
        build_atomic_injected_angular_one_body_benchmark,
+       build_atomic_injected_angular_cartesian_moments,
        build_atomic_injected_angular_hf_style_benchmark,
        build_atomic_injected_angular_hfdmrg_payload,
        build_atomic_injected_angular_hfdmrg_hf_adapter,
@@ -388,6 +390,7 @@ function angular_benchmark_exact_hamv6_payload end
 function build_atomic_fixed_radial_angular_sequence end
 function atomic_fixed_radial_angular_level_dense_payload end
 function atomic_fixed_radial_angular_overlap_sidecar_payload end
+function build_atomic_injected_angular_cartesian_moments end
 function fullida_dense_payload end
 function sliced_ham_payload end
 function write_angular_benchmark_exact_hamv6_jld2 end

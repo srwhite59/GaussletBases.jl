@@ -24,6 +24,37 @@ struct AtomicInjectedAngularOneBodyBenchmark{R <: RadialAtomicOperators}
 end
 
 """
+    AtomicInjectedAngularCartesianMomentBundle
+
+In-memory Cartesian one-electron moment bundle for the injected angular atomic
+line.
+
+This bundle stays on the same mixed radial/angular assembly contract as
+`AtomicInjectedAngularOneBodyBenchmark`, but exposes Cartesian dipole and
+quadratic one-body matrices directly:
+
+- `S`
+- `X`, `Y`, `Z`
+- `X2`, `Y2`, `Z2`
+- `R2`
+"""
+struct AtomicInjectedAngularCartesianMomentBundle{R <: RadialAtomicOperators}
+    radial_operators::R
+    angular_assembly::AtomicShellLocalInjectedAngularAssembly
+    shell_ranges::Vector{UnitRange{Int}}
+    exact_common_lmax::Int
+    radial_moment_source::Symbol
+    S::Matrix{Float64}
+    X::Matrix{Float64}
+    Y::Matrix{Float64}
+    Z::Matrix{Float64}
+    X2::Matrix{Float64}
+    Y2::Matrix{Float64}
+    Z2::Matrix{Float64}
+    R2::Matrix{Float64}
+end
+
+"""
     AtomicInjectedAngularHFStyleBenchmark
 
 Experimental closed-shell density-density SCF benchmark on top of the injected
@@ -169,6 +200,21 @@ function Base.show(io::IO, benchmark::AtomicInjectedAngularOneBodyBenchmark)
         benchmark.exact_common_lmax,
         ", shell_orders=",
         repr(benchmark.angular_assembly.shell_orders),
+        ")",
+    )
+end
+
+function Base.show(io::IO, bundle::AtomicInjectedAngularCartesianMomentBundle)
+    print(
+        io,
+        "AtomicInjectedAngularCartesianMomentBundle(nshells=",
+        length(bundle.angular_assembly.shells),
+        ", total_dim=",
+        size(bundle.S, 1),
+        ", exact_common_lmax=",
+        bundle.exact_common_lmax,
+        ", radial_moment_source=",
+        bundle.radial_moment_source,
         ")",
     )
 end
@@ -364,6 +410,183 @@ function _exact_channel_hamiltonian_matrix(
         Diagonal([_kinetic_eigenvalue(channel) for channel in exact_channels.channel_data])
     return kron(radial_one_body, Matrix{Float64}(I, nchannels, nchannels)) +
            kron(Matrix{Float64}(inverse_r2), Matrix{Float64}(angular_kinetic))
+end
+
+function _radial_polynomial_matrix(
+    basis::RadialBasis,
+    grid::RadialQuadratureGrid;
+    power::Int,
+)
+    power >= 0 || throw(ArgumentError("_radial_polynomial_matrix requires power >= 0"))
+    points = quadrature_points(grid)
+    weights = quadrature_weights(grid)
+    values = _basis_values_matrix(basis, points)
+    radial_factor = power == 0 ? ones(Float64, length(points)) : points .^ power
+    return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
+end
+
+function _resolve_atomic_angular_cartesian_radial_source(
+    radial_ops::RadialAtomicOperators;
+    radial_basis::Union{Nothing,RadialBasis} = nothing,
+    radial_grid::Union{Nothing,RadialQuadratureGrid} = nothing,
+    overlap_tol::Real = 1.0e-8,
+)
+    overlap_tol > 0 || throw(ArgumentError("overlap_tol must be positive"))
+
+    if (radial_basis === nothing) != (radial_grid === nothing)
+        throw(
+            ArgumentError(
+                "build_atomic_injected_angular_cartesian_moments requires radial_basis and radial_grid together when either is supplied",
+            ),
+        )
+    end
+
+    resolved_basis =
+        radial_basis === nothing ? build_basis(radial_ops.source_manifest.basis_spec) : radial_basis
+    resolved_grid =
+        radial_grid === nothing ? radial_quadrature(resolved_basis) : radial_grid
+    source =
+        radial_basis === nothing ? :reconstructed_from_source_manifest : :explicit_basis_and_grid
+
+    overlap_error =
+        opnorm(overlap_matrix(resolved_basis, resolved_grid) - radial_ops.overlap, Inf)
+    overlap_error <= overlap_tol || throw(
+        ArgumentError(
+            "resolved radial moment source does not reproduce the supplied radial overlap (error = $(overlap_error)); pass the exact radial_basis and radial_grid used to build the RadialAtomicOperators",
+        ),
+    )
+
+    return (basis = resolved_basis, grid = resolved_grid, source = source)
+end
+
+_cartesian_real_ylm_row(L::Int, M::Int) = M + L + 1
+
+function _cartesian_dipole_components(axis::Symbol)
+    axis in (:x, :y, :z) || throw(ArgumentError("dipole axis must be one of :x, :y, or :z"))
+    if axis === :x
+        return [(1, Dict(1 => -sqrt(4 * pi / 3)))]
+    elseif axis === :y
+        return [(1, Dict(-1 => -sqrt(4 * pi / 3)))]
+    else
+        return [(1, Dict(0 => sqrt(4 * pi / 3)))]
+    end
+end
+
+function _cartesian_quadratic_components(axis::Symbol)
+    axis in (:x, :y, :z) || throw(ArgumentError("quadratic axis must be one of :x, :y, or :z"))
+    if axis === :x
+        return [
+            (0, Dict(0 => sqrt(4 * pi) / 3)),
+            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => sqrt(8 * pi / 15))),
+        ]
+    elseif axis === :y
+        return [
+            (0, Dict(0 => sqrt(4 * pi) / 3)),
+            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => -sqrt(8 * pi / 15))),
+        ]
+    else
+        return [
+            (0, Dict(0 => sqrt(4 * pi) / 3)),
+            (2, Dict(0 => sqrt(16 * pi / 45))),
+        ]
+    end
+end
+
+function _assembly_cartesian_moment_lmax(assembly::AtomicShellLocalInjectedAngularAssembly)
+    return maximum(maximum(keys(blocks)) for blocks in assembly.shell_interaction_moment_blocks)
+end
+
+function _precompute_cartesian_angular_couplings(
+    lmax::Int,
+    components::AbstractVector,
+)
+    lmax >= 0 || throw(ArgumentError("_precompute_cartesian_angular_couplings requires lmax >= 0"))
+    Lrequired = maximum(component[1] for component in components)
+    table = build_gaunt_table(lmax; Lmax = Lrequired, basis = :real)
+    couplings = Dict{Tuple{Int,Int},Matrix{Float64}}()
+
+    for l1 in 0:lmax, l2 in 0:lmax
+        coupling = zeros(Float64, 2 * l1 + 1, 2 * l2 + 1)
+        for (L, coeffs) in components
+            gaunt_legal_triple(l1, l2, L) || continue
+            for entry in gaunt_block(table, L, l1, l2)
+                coefficient = get(coeffs, entry.M, 0.0)
+                coefficient == 0.0 && continue
+                coupling[_cartesian_real_ylm_row(l1, entry.m1), _cartesian_real_ylm_row(l2, entry.m2)] +=
+                    coefficient * Float64(entry.val)
+            end
+        end
+        any(x -> !iszero(x), coupling) && (couplings[(l1, l2)] = coupling)
+    end
+
+    return couplings
+end
+
+function _assemble_shell_local_cartesian_operator_block(
+    left_blocks::Dict{Int,Matrix{Float64}},
+    right_blocks::Dict{Int,Matrix{Float64}},
+    couplings::Dict{Tuple{Int,Int},Matrix{Float64}},
+    left_dim::Int,
+    right_dim::Int,
+)
+    block = zeros(Float64, left_dim, right_dim)
+    for (l1, left) in pairs(left_blocks)
+        for (l2, right) in pairs(right_blocks)
+            coupling = get(couplings, (l1, l2), nothing)
+            coupling === nothing && continue
+            block .+= transpose(left) * coupling * right
+        end
+    end
+    return block
+end
+
+function _assemble_atomic_injected_angular_cartesian_matrix(
+    radial_matrix::AbstractMatrix{<:Real},
+    assembly::AtomicShellLocalInjectedAngularAssembly,
+    components::AbstractVector,
+)
+    nshells = length(assembly.shells)
+    shell_ranges = _matrix_ranges(assembly.shell_offsets, assembly.shell_dimensions)
+    total_dim = size(assembly.overlap, 1)
+    matrix = zeros(Float64, total_dim, total_dim)
+    lmax = _assembly_cartesian_moment_lmax(assembly)
+    couplings = _precompute_cartesian_angular_couplings(lmax, components)
+
+    for a in 1:nshells
+        ia = shell_ranges[a]
+        left_blocks = assembly.shell_interaction_moment_blocks[a]
+        for b in 1:nshells
+            ib = shell_ranges[b]
+            right_blocks = assembly.shell_interaction_moment_blocks[b]
+            angular_block = _assemble_shell_local_cartesian_operator_block(
+                left_blocks,
+                right_blocks,
+                couplings,
+                assembly.shell_dimensions[a],
+                assembly.shell_dimensions[b],
+            )
+            matrix[ia, ib] .= radial_matrix[a, b] .* angular_block
+        end
+    end
+
+    return 0.5 .* (matrix .+ transpose(matrix))
+end
+
+function _assemble_atomic_injected_angular_radius_squared(
+    radial_r2::AbstractMatrix{<:Real},
+    assembly::AtomicShellLocalInjectedAngularAssembly,
+)
+    nshells = length(assembly.shells)
+    shell_ranges = _matrix_ranges(assembly.shell_offsets, assembly.shell_dimensions)
+    matrix = zeros(Float64, size(assembly.overlap))
+    for a in 1:nshells
+        ia = shell_ranges[a]
+        for b in 1:nshells
+            ib = shell_ranges[b]
+            matrix[ia, ib] .= radial_r2[a, b] .* assembly.overlap_blocks[a, b]
+        end
+    end
+    return 0.5 .* (matrix .+ transpose(matrix))
 end
 
 function _shell_angular_weights(moment_blocks::Dict{Int,Matrix{Float64}})
@@ -663,6 +886,167 @@ function build_atomic_injected_angular_one_body_benchmark(
         exact_transform,
         exact_overlap,
         exact_hamiltonian,
+    )
+end
+
+"""
+    build_atomic_injected_angular_cartesian_moments(benchmark::AtomicInjectedAngularOneBodyBenchmark;
+                                                    radial_basis=nothing,
+                                                    radial_grid=nothing,
+                                                    overlap_tol=1e-8)
+
+Build the in-memory Cartesian one-electron moment bundle for the injected
+angular atomic line on top of an existing one-body benchmark.
+
+The bundle returns:
+
+- `S`
+- `X`, `Y`, `Z`
+- `X2`, `Y2`, `Z2`
+- `R2`
+
+When `radial_basis` and `radial_grid` are not supplied, the builder rebuilds
+the radial source from `benchmark.radial_operators.source_manifest` and checks
+that the reconstructed overlap reproduces the supplied radial overlap.
+"""
+function build_atomic_injected_angular_cartesian_moments(
+    benchmark::AtomicInjectedAngularOneBodyBenchmark;
+    radial_basis::Union{Nothing,RadialBasis} = nothing,
+    radial_grid::Union{Nothing,RadialQuadratureGrid} = nothing,
+    overlap_tol::Real = 1.0e-8,
+)
+    radial_source = _resolve_atomic_angular_cartesian_radial_source(
+        benchmark.radial_operators;
+        radial_basis = radial_basis,
+        radial_grid = radial_grid,
+        overlap_tol = overlap_tol,
+    )
+    radial_r = _radial_polynomial_matrix(radial_source.basis, radial_source.grid; power = 1)
+    radial_r2 = _radial_polynomial_matrix(radial_source.basis, radial_source.grid; power = 2)
+    assembly = benchmark.angular_assembly
+
+    X = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r,
+        assembly,
+        _cartesian_dipole_components(:x),
+    )
+    Y = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r,
+        assembly,
+        _cartesian_dipole_components(:y),
+    )
+    Z = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r,
+        assembly,
+        _cartesian_dipole_components(:z),
+    )
+    X2 = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r2,
+        assembly,
+        _cartesian_quadratic_components(:x),
+    )
+    Y2 = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r2,
+        assembly,
+        _cartesian_quadratic_components(:y),
+    )
+    Z2 = _assemble_atomic_injected_angular_cartesian_matrix(
+        radial_r2,
+        assembly,
+        _cartesian_quadratic_components(:z),
+    )
+    R2 = _assemble_atomic_injected_angular_radius_squared(radial_r2, assembly)
+
+    return AtomicInjectedAngularCartesianMomentBundle(
+        benchmark.radial_operators,
+        assembly,
+        benchmark.shell_ranges,
+        benchmark.exact_common_lmax,
+        radial_source.source,
+        Matrix{Float64}(benchmark.overlap),
+        X,
+        Y,
+        Z,
+        X2,
+        Y2,
+        Z2,
+        R2,
+    )
+end
+
+"""
+    build_atomic_injected_angular_cartesian_moments(radial_ops::RadialAtomicOperators,
+                                                    assembly::AtomicShellLocalInjectedAngularAssembly;
+                                                    kwargs...)
+
+Build the in-memory Cartesian moment bundle from an explicit radial substrate
+and a prebuilt shell-local angular assembly.
+"""
+function build_atomic_injected_angular_cartesian_moments(
+    radial_ops::RadialAtomicOperators,
+    assembly::AtomicShellLocalInjectedAngularAssembly;
+    kwargs...,
+)
+    benchmark = build_atomic_injected_angular_one_body_benchmark(radial_ops, assembly)
+    return build_atomic_injected_angular_cartesian_moments(benchmark; kwargs...)
+end
+
+"""
+    build_atomic_injected_angular_cartesian_moments(radial_ops::RadialAtomicOperators;
+                                                    shell_orders=nothing,
+                                                    beta=2.0,
+                                                    l_inject=:auto,
+                                                    tau=1e-12,
+                                                    whiten=:svd,
+                                                    ord_min=minimum(sphere_point_set_orders()),
+                                                    ord_max=maximum(sphere_point_set_orders()),
+                                                    r_lo=0.15,
+                                                    r_hi=7.0,
+                                                    w_lo=0.2,
+                                                    w_hi=0.7,
+                                                    radial_basis=nothing,
+                                                    radial_grid=nothing,
+                                                    overlap_tol=1e-8)
+
+Build the in-memory Cartesian moment bundle directly from the same high-level
+arguments used by the injected angular one-body benchmark path.
+"""
+function build_atomic_injected_angular_cartesian_moments(
+    radial_ops::RadialAtomicOperators;
+    shell_orders::Union{Nothing,AbstractVector{<:Integer}} = nothing,
+    beta::Real = 2.0,
+    l_inject::Union{Int,Symbol} = :auto,
+    tau::Real = 1.0e-12,
+    whiten::Symbol = :svd,
+    ord_min::Int = minimum(sphere_point_set_orders()),
+    ord_max::Int = maximum(sphere_point_set_orders()),
+    r_lo::Real = 0.15,
+    r_hi::Real = 7.0,
+    w_lo::Real = 0.2,
+    w_hi::Real = 0.7,
+    radial_basis::Union{Nothing,RadialBasis} = nothing,
+    radial_grid::Union{Nothing,RadialQuadratureGrid} = nothing,
+    overlap_tol::Real = 1.0e-8,
+)
+    benchmark = build_atomic_injected_angular_one_body_benchmark(
+        radial_ops;
+        shell_orders = shell_orders,
+        beta = beta,
+        l_inject = l_inject,
+        tau = tau,
+        whiten = whiten,
+        ord_min = ord_min,
+        ord_max = ord_max,
+        r_lo = r_lo,
+        r_hi = r_hi,
+        w_lo = w_lo,
+        w_hi = w_hi,
+    )
+    return build_atomic_injected_angular_cartesian_moments(
+        benchmark;
+        radial_basis = radial_basis,
+        radial_grid = radial_grid,
+        overlap_tol = overlap_tol,
     )
 end
 

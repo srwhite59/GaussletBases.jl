@@ -2844,6 +2844,41 @@ function _paper_style_angular_one_body_benchmark_fixture(
     end)
 end
 
+function _paper_style_angular_cartesian_moments_fixture(
+    order::Int;
+    Z::Float64 = 2.0,
+    lmax::Int = 2,
+    l_inject::Union{Int,Symbol} = :auto,
+)
+    ztag = replace(string(round(Z; digits = 2)), "." => "p")
+    ltag = l_inject isa Symbol ? String(l_inject) : string(l_inject)
+    key = Symbol(
+        "paper_style_angular_cartesian_moments_fixture_Z",
+        ztag,
+        "_order",
+        order,
+        "_lmax",
+        lmax,
+        "_linject_",
+        ltag,
+    )
+    return _cached_fixture(key, () -> begin
+        rb, grid, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = Z, lmax = lmax)
+        benchmark = build_atomic_injected_angular_one_body_benchmark(
+            radial_ops;
+            shell_orders = fill(order, length(radial_ops.shell_centers_r)),
+            l_inject = l_inject,
+        )
+        bundle_explicit = build_atomic_injected_angular_cartesian_moments(
+            benchmark;
+            radial_basis = rb,
+            radial_grid = grid,
+        )
+        bundle_reconstructed = build_atomic_injected_angular_cartesian_moments(benchmark)
+        return (rb, grid, radial_ops, benchmark, bundle_explicit, bundle_reconstructed)
+    end)
+end
+
 function _paper_style_angular_hf_style_benchmark_fixture(
     order::Int;
     Z::Float64 = 10.0,
@@ -7897,6 +7932,67 @@ end
     @test diagnostics.projected_exact_low_eigenvalue_error ≤ 1.0e-8
     @test diagnostics.benchmark_ground_state_error ≤ 1.0e-8
     @test diagnostics.benchmark_ground_state_energy ≈ diagnostics.exact_ground_state_energy atol = 1.0e-8 rtol = 1.0e-8
+end
+
+@testset "Atomic injected angular Cartesian moments" begin
+    rb, grid, radial_ops, benchmark, bundle, bundle_reconstructed =
+        _paper_style_angular_cartesian_moments_fixture(15; Z = 2.0, lmax = 2)
+
+    @test bundle isa AtomicInjectedAngularCartesianMomentBundle
+    @test bundle.radial_operators === radial_ops
+    @test bundle.angular_assembly === benchmark.angular_assembly
+    @test bundle.shell_ranges == benchmark.shell_ranges
+    @test bundle.S ≈ benchmark.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test bundle.radial_moment_source == :explicit_basis_and_grid
+    @test bundle_reconstructed.radial_moment_source == :reconstructed_from_source_manifest
+    @test bundle_reconstructed.S ≈ bundle.S atol = 0.0 rtol = 0.0
+    @test bundle_reconstructed.X ≈ bundle.X atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.Y ≈ bundle.Y atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.Z ≈ bundle.Z atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.X2 ≈ bundle.X2 atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.Y2 ≈ bundle.Y2 atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.Z2 ≈ bundle.Z2 atol = 1.0e-10 rtol = 1.0e-10
+    @test bundle_reconstructed.R2 ≈ bundle.R2 atol = 1.0e-10 rtol = 1.0e-10
+
+    for matrix in (bundle.S, bundle.X, bundle.Y, bundle.Z, bundle.X2, bundle.Y2, bundle.Z2, bundle.R2)
+        @test all(isfinite, matrix)
+        @test opnorm(matrix - transpose(matrix), Inf) ≤ 1.0e-8
+    end
+
+    @test opnorm(bundle.X, Inf) > 1.0e-8
+    @test opnorm(bundle.Y, Inf) > 1.0e-8
+    @test opnorm(bundle.Z, Inf) > 1.0e-8
+    @test opnorm(bundle.X2, Inf) > 1.0e-8
+    @test opnorm(bundle.Y2, Inf) > 1.0e-8
+    @test opnorm(bundle.Z2, Inf) > 1.0e-8
+    @test bundle.R2 ≈ bundle.X2 + bundle.Y2 + bundle.Z2 atol = 1.0e-8 rtol = 1.0e-8
+
+    s_exact = build_atomic_injected_angular_one_body_benchmark(
+        radial_ops;
+        shell_orders = fill(10, length(radial_ops.shell_centers_r)),
+        l_inject = 0,
+    )
+    s_bundle = build_atomic_injected_angular_cartesian_moments(
+        s_exact;
+        radial_basis = rb,
+        radial_grid = grid,
+    )
+    exact_transform = s_exact.exact_transform
+    projected_X = exact_transform * s_bundle.X * transpose(exact_transform)
+    projected_Y = exact_transform * s_bundle.Y * transpose(exact_transform)
+    projected_Z = exact_transform * s_bundle.Z * transpose(exact_transform)
+    projected_X2 = exact_transform * s_bundle.X2 * transpose(exact_transform)
+    projected_Y2 = exact_transform * s_bundle.Y2 * transpose(exact_transform)
+    projected_Z2 = exact_transform * s_bundle.Z2 * transpose(exact_transform)
+    projected_R2 = exact_transform * s_bundle.R2 * transpose(exact_transform)
+
+    @test s_exact.exact_common_lmax == 0
+    @test projected_X ≈ zeros(size(projected_X)) atol = 1.0e-10 rtol = 0.0
+    @test projected_Y ≈ zeros(size(projected_Y)) atol = 1.0e-10 rtol = 0.0
+    @test projected_Z ≈ zeros(size(projected_Z)) atol = 1.0e-10 rtol = 0.0
+    @test projected_X2 ≈ projected_Y2 atol = 1.0e-9 rtol = 1.0e-9
+    @test projected_Y2 ≈ projected_Z2 atol = 1.0e-9 rtol = 1.0e-9
+    @test projected_R2 ≈ projected_X2 + projected_Y2 + projected_Z2 atol = 1.0e-9 rtol = 1.0e-9
 end
 
 @testset "Atomic injected angular HF-style benchmark" begin
