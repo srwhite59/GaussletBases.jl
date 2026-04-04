@@ -1492,6 +1492,41 @@ function _axis_aligned_homonuclear_square_lattice_nested_fixture(;
     end)
 end
 
+function _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(;
+    n::Int = 2,
+    spacing::Float64 = 1.2,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+)
+    key = Symbol(
+        :axis_aligned_homonuclear_square_lattice_nested_qw_fixture,
+        n,
+        round(Int, 1000 * spacing),
+        nside,
+        round(Int, 1000 * min_in_plane_aspect_ratio),
+    )
+    return _cached_fixture(key, () -> begin
+        basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+            n = n,
+            spacing = spacing,
+            core_spacing = 0.5,
+            xmax_in_plane = 2.0,
+            xmax_transverse = 2.0,
+        )
+        path = experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
+            basis;
+            nuclear_charges = fill(1.0, length(basis.nuclei)),
+            nside = nside,
+            min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+        )
+        return (
+            basis,
+            path,
+            GaussletBases.ordinary_cartesian_1s2_check(path.operators),
+        )
+    end)
+end
+
 function _bond_aligned_homonuclear_chain_nested_fixture(;
     natoms::Int = 4,
     spacing::Float64 = 1.2,
@@ -4482,6 +4517,71 @@ end
         @test occursin("candidate[2].split_family = split_y_ternary", report_text)
         @test occursin("[node root_1]", report_text)
     end
+end
+
+@testset "Experimental axis-aligned homonuclear square-lattice nested QW consumer path" begin
+    basis2, path2, check2 =
+        _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 2, spacing = 1.4)
+    basis3, path3, check3 =
+        _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 3, spacing = 1.2)
+
+    for (basis, path, check, n, expected_dim) in (
+        (basis2, path2, check2, 2, 791),
+        (basis3, path3, check3, 3, 703),
+    )
+        operators = path.operators
+        fixed_block = path.fixed_block
+        diagnostics = path.diagnostics
+        @test basis isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+        @test path isa GaussletBases.ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath
+        @test path.basis === basis
+        @test path.source === diagnostics.source
+        @test path.fixed_block === fixed_block
+        @test path.min_in_plane_aspect_ratio == 0.15
+        @test operators isa GaussletBases.QiuWhiteResidualGaussianOperators
+        @test operators.basis === fixed_block
+        @test operators.gaussian_data === nothing
+        @test operators.interaction_treatment == :ggt_nearest
+        @test operators.residual_count == 0
+        @test operators.gausslet_count == size(fixed_block.overlap, 1)
+        @test size(operators.residual_centers) == (0, 3)
+        @test size(operators.residual_widths) == (0, 3)
+        @test norm(operators.overlap - I, Inf) < 1.0e-8
+        @test norm(operators.one_body_hamiltonian - transpose(operators.one_body_hamiltonian), Inf) < 1.0e-10
+        @test norm(operators.interaction_matrix - transpose(operators.interaction_matrix), Inf) < 1.0e-10
+        @test all(isfinite, operators.one_body_hamiltonian)
+        @test all(isfinite, operators.interaction_matrix)
+        @test all(isfinite, fixed_block.weights)
+        @test minimum(fixed_block.weights) > 0.0
+        @test all(isfinite, fixed_block.fixed_centers)
+        @test size(fixed_block.overlap, 1) == diagnostics.fixed_dimension
+        @test size(fixed_block.overlap, 1) == expected_dim
+        @test check.overlap_error < 1.0e-8
+        @test isfinite(check.orbital_energy)
+        @test isfinite(check.vee_expectation)
+        @test length(basis.nuclei) == n * n
+    end
+
+    @test path2.diagnostics.root_node.did_split
+    @test path2.diagnostics.root_node.accepted_candidate_index == 1
+    @test path2.diagnostics.leaf_count == 4
+    @test path2.diagnostics.root_node.child_count == 2
+    @test path2.diagnostics.root_node.min_in_plane_aspect_ratio == 0.15
+    @test path2.diagnostics.root_node.candidate_summaries[1].split_family == :split_x_binary
+    @test path2.diagnostics.root_node.candidate_summaries[1].did_split
+
+    @test path3.diagnostics.root_node.did_split
+    @test path3.diagnostics.root_node.accepted_candidate_index == 1
+    @test path3.diagnostics.leaf_count == 9
+    @test path3.diagnostics.root_node.child_count == 3
+    @test path3.diagnostics.root_node.min_in_plane_aspect_ratio == 0.15
+    @test path3.diagnostics.root_node.candidate_summaries[1].split_family == :split_x_ternary
+    @test path3.diagnostics.root_node.candidate_summaries[2].split_family == :split_y_ternary
+    @test path3.diagnostics.root_node.candidate_summaries[1].did_split
+    @test path3.diagnostics.root_node.candidate_summaries[1].child_in_plane_aspect_ratios[2] < 0.2
+    @test path3.diagnostics.root_node.candidate_summaries[1].child_in_plane_aspect_ratios[2] >=
+        path3.min_in_plane_aspect_ratio
+    @test !path3.diagnostics.root_node.local_resolution_warning
 end
 
 @testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin

@@ -29,10 +29,20 @@ Milestone C now begins:
 - explicit planar candidate reporting rather than an implicit split policy
 - no production planar nested-operator claim yet
 
+Milestone D now also lands:
+
+- `experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(...)`
+- a first experimental nested square-lattice operator path on top of the
+  exploratory planar split-tree branch
+- cheap H `2 x 2` and `3 x 3` nested-operator smoke coverage
+- explicit retention of the center-strip aspect threshold as an experimental
+  policy knob
+- no final planar split contract claim
+
 What is explicitly not claimed here:
 
 - no nested planar splitting policy
-- no nested planar operator milestone
+- no settled nested planar operator milestone
 - no molecular-shell supplement route
 - no HF/DMRG workflow or application contract
 - no settled square-lattice policy inherited from the diatomic or chain notes

@@ -100,6 +100,25 @@ struct ExperimentalBondAlignedHomonuclearChainNestedQWPath{B,S,F,O,D}
 end
 
 """
+    ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath
+
+First experimental nested fixed-block ordinary-QW square-lattice consumer
+payload.
+
+This keeps the operator object together with the exploratory planar split-tree
+geometry source and the explicit in-plane aspect threshold used to build it.
+"""
+struct ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath{B,S,F,O,D}
+    basis::B
+    source::S
+    fixed_block::F
+    operators::O
+    diagnostics::D
+    nuclear_charges::Vector{Float64}
+    min_in_plane_aspect_ratio::Float64
+end
+
+"""
     BondAlignedDiatomicQWBasis3D
 
 Narrow mixed-axis basis container for the first bond-aligned diatomic QW
@@ -1356,6 +1375,21 @@ function Base.show(io::IO, path::ExperimentalBondAlignedHomonuclearChainNestedQW
         io,
         "ExperimentalBondAlignedHomonuclearChainNestedQWPath(odd_chain_policy=:",
         path.odd_chain_policy,
+        ", nfixed=",
+        size(path.fixed_block.overlap, 1),
+        ", nleaf=",
+        path.diagnostics.leaf_count,
+        ", did_split=",
+        path.diagnostics.root_node.did_split,
+        ")",
+    )
+end
+
+function Base.show(io::IO, path::ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath)
+    print(
+        io,
+        "ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath(min_in_plane_aspect_ratio=",
+        path.min_in_plane_aspect_ratio,
         ", nfixed=",
         size(path.fixed_block.overlap, 1),
         ", nleaf=",
@@ -4029,6 +4063,25 @@ function _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
     )
 end
 
+function _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
+    fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+        context_label = "experimental axis-aligned homonuclear square-lattice nested ordinary_cartesian_qiu_white_operators",
+    )
+end
+
 function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
     gaussian_data::Union{
@@ -5080,6 +5133,45 @@ function ordinary_cartesian_qiu_white_operators(
 end
 
 """
+    ordinary_cartesian_qiu_white_operators(
+        fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
+        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        timing = false,
+    )
+
+Build the first experimental nested fixed-block ordinary-QW square-lattice
+Hamiltonian.
+
+This path is intentionally narrow:
+
+- homonuclear square lattices only
+- nested fixed-block route only
+- no supplement route
+- no residual-Gaussian sector
+- no claim that the planar split policy is settled globally
+"""
+function ordinary_cartesian_qiu_white_operators(
+    fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    timing::Bool = false,
+)
+    return _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+end
+
+"""
     experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         basis::BondAlignedHomonuclearChainQWBasis3D;
         nuclear_charges = fill(1.0, length(basis.nuclei)),
@@ -5137,6 +5229,63 @@ function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         diagnostics,
         Float64[Float64(value) for value in nuclear_charges],
         odd_chain_policy,
+    )
+end
+
+"""
+    experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
+        basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        expansion = coulomb_gaussian_expansion(doacc = false),
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :numerical_reference,
+        nside = 5,
+        min_in_plane_aspect_ratio = 0.15,
+        timing = false,
+    )
+
+Build the first experimental nested square-lattice ordinary-QW path on top of
+the planar nested fixed-block geometry.
+
+This remains explicitly exploratory. In particular, the center-strip aspect
+threshold is carried as an exposed policy knob rather than a hidden settled
+contract.
+"""
+function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+    timing::Bool = false,
+)
+    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+    )
+    diagnostics = _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(source)
+    fixed_block = _nested_fixed_block(source)
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
+    return ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath(
+        basis,
+        source,
+        fixed_block,
+        operators,
+        diagnostics,
+        Float64[Float64(value) for value in nuclear_charges],
+        min_in_plane_aspect_ratio,
     )
 end
 
