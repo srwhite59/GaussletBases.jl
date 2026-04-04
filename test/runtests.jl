@@ -1453,6 +1453,45 @@ function _axis_aligned_homonuclear_square_lattice_qw_fixture(;
     end)
 end
 
+function _axis_aligned_homonuclear_square_lattice_nested_fixture(;
+    n::Int = 2,
+    spacing::Float64 = 1.2,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+)
+    key = Symbol(
+        :axis_aligned_homonuclear_square_lattice_nested_fixture,
+        n,
+        round(Int, 1000 * spacing),
+        nside,
+        round(Int, 1000 * min_in_plane_aspect_ratio),
+    )
+    return _cached_fixture(key, () -> begin
+        basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+            n = n,
+            spacing = spacing,
+            core_spacing = 0.5,
+            xmax_in_plane = 2.0,
+            xmax_transverse = 2.0,
+        )
+        source = GaussletBases._axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+            basis;
+            nside = nside,
+            min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+        )
+        (
+            basis,
+            source,
+            GaussletBases._nested_fixed_block(source),
+            axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
+                basis;
+                nside = nside,
+                min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+            ),
+        )
+    end)
+end
+
 function _bond_aligned_homonuclear_chain_nested_fixture(;
     natoms::Int = 4,
     spacing::Float64 = 1.2,
@@ -4377,6 +4416,72 @@ end
     @test isfinite(check3.orbital_energy)
     @test isfinite(check2.vee_expectation)
     @test isfinite(check3.vee_expectation)
+end
+
+@testset "Axis-aligned homonuclear square-lattice nested geometry diagnostics" begin
+    basis2, source2, fixed2, diagnostics2 =
+        _axis_aligned_homonuclear_square_lattice_nested_fixture(; n = 2, spacing = 1.4)
+    basis3, source3, fixed3, diagnostics3 =
+        _axis_aligned_homonuclear_square_lattice_nested_fixture(; n = 3, spacing = 1.2)
+
+    @test basis2 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test basis3 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test diagnostics2.leaf_count == 4
+    @test diagnostics3.leaf_count == 9
+    @test diagnostics2.root_node.did_split
+    @test diagnostics3.root_node.did_split
+    @test diagnostics2.root_node.accepted_candidate_index == 1
+    @test diagnostics3.root_node.accepted_candidate_index == 1
+    @test diagnostics2.root_node.child_count == 2
+    @test diagnostics3.root_node.child_count == 3
+    @test !diagnostics2.root_node.local_resolution_warning
+    @test !diagnostics3.root_node.local_resolution_warning
+    @test diagnostics2.root_node.candidate_summaries[1].split_family == :split_x_binary
+    @test diagnostics2.root_node.candidate_summaries[2].split_family == :split_y_binary
+    @test diagnostics3.root_node.candidate_summaries[1].split_family == :split_x_ternary
+    @test diagnostics3.root_node.candidate_summaries[2].split_family == :split_y_ternary
+    @test diagnostics2.root_node.candidate_summaries[1].symmetry_preserving
+    @test diagnostics2.root_node.candidate_summaries[2].symmetry_preserving
+    @test diagnostics3.root_node.candidate_summaries[1].symmetry_preserving
+    @test diagnostics3.root_node.candidate_summaries[2].symmetry_preserving
+    @test all(
+        ratio >= diagnostics2.root_node.min_in_plane_aspect_ratio for
+        ratio in diagnostics2.root_node.candidate_summaries[1].child_in_plane_aspect_ratios
+    )
+    @test all(
+        ratio >= diagnostics3.root_node.min_in_plane_aspect_ratio for
+        ratio in diagnostics3.root_node.candidate_summaries[1].child_in_plane_aspect_ratios
+    )
+    @test length(source2.root_geometry.child_nodes) == 2
+    @test length(source3.root_geometry.child_nodes) == 3
+    @test source2.root_geometry.child_nodes[1].accepted_candidate_index == 1
+    @test source2.root_geometry.child_nodes[2].accepted_candidate_index == 1
+    @test all(child.accepted_candidate_index == 1 for child in source3.root_geometry.child_nodes)
+    @test size(fixed2.overlap, 1) == diagnostics2.fixed_dimension
+    @test size(fixed3.overlap, 1) == diagnostics3.fixed_dimension
+    @test norm(fixed2.overlap - I, Inf) < 1.0e-8
+    @test norm(fixed3.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, fixed2.weights)
+    @test all(isfinite, fixed3.weights)
+    @test minimum(fixed2.weights) > 0.0
+    @test minimum(fixed3.weights) > 0.0
+    @test all(isfinite, fixed2.fixed_centers)
+    @test all(isfinite, fixed3.fixed_centers)
+
+    mktempdir() do dir
+        report_path = joinpath(dir, "square_lattice_nested_geometry_report.txt")
+        written = write_axis_aligned_homonuclear_square_lattice_nested_geometry_report(
+            report_path,
+            basis3;
+            nside = 5,
+            min_in_plane_aspect_ratio = 0.15,
+        )
+        @test written.leaf_count == diagnostics3.leaf_count
+        report_text = read(report_path, String)
+        @test occursin("candidate[1].split_family = split_x_ternary", report_text)
+        @test occursin("candidate[2].split_family = split_y_ternary", report_text)
+        @test occursin("[node root_1]", report_text)
+    end
 end
 
 @testset "Bond-aligned homonuclear chain nested geometry diagnostics" begin

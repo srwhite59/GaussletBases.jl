@@ -901,6 +901,140 @@ function axis_aligned_homonuclear_square_lattice_geometry_diagnostics(
     )
 end
 
+function _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError("axis-aligned homonuclear square-lattice nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+    )
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+    return _nested_axis_aligned_homonuclear_square_lattice_source(
+        basis,
+        bundles;
+        nside = nside,
+        min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+    )
+end
+
+function _axis_aligned_homonuclear_square_lattice_nested_fixed_block(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+)
+    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+    )
+    return (
+        source = source,
+        fixed_block = _nested_fixed_block(source),
+    )
+end
+
+function _square_lattice_nested_geometry_report_lines(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    lines = String[
+        "# GaussletBases axis-aligned homonuclear square-lattice nested geometry report",
+        "# lattice_size = $(source.basis.lattice_size)",
+        "# natoms = $(length(source.basis.nuclei))",
+        "# nleaf = $(length(source.leaf_sequences))",
+        "# nfixed = $(size(source.sequence.coefficient_matrix, 2))",
+    ]
+    for node in _nested_square_lattice_collect_node_summaries(source.root_geometry)
+        push!(lines, "")
+        push!(lines, "[node $(node.node_label)]")
+        push!(lines, "x_coordinate_range = $(node.x_coordinate_range)")
+        push!(lines, "y_coordinate_range = $(node.y_coordinate_range)")
+        push!(lines, "working_box = $(node.working_box)")
+        push!(lines, "min_in_plane_aspect_ratio = $(node.min_in_plane_aspect_ratio)")
+        push!(lines, "shared_shell_count = $(node.shared_shell_count)")
+        push!(lines, "shared_shell_dimensions = $(node.shared_shell_dimensions)")
+        push!(lines, "accepted_candidate_index = $(node.accepted_candidate_index)")
+        push!(lines, "local_resolution_warning = $(node.local_resolution_warning)")
+        push!(lines, "child_count = $(node.child_count)")
+        push!(lines, "subtree_fixed_dimension = $(node.subtree_fixed_dimension)")
+        for (index, candidate) in pairs(node.candidate_summaries)
+            push!(lines, "candidate[$index].split_family = $(candidate.split_family)")
+            push!(lines, "candidate[$index].split_axis = $(candidate.split_axis)")
+            push!(lines, "candidate[$index].x_coordinate_ranges = $(candidate.x_coordinate_ranges)")
+            push!(lines, "candidate[$index].y_coordinate_ranges = $(candidate.y_coordinate_ranges)")
+            push!(lines, "candidate[$index].split_values = $(candidate.split_values)")
+            push!(lines, "candidate[$index].split_indices = $(candidate.split_indices)")
+            push!(lines, "candidate[$index].child_boxes = $(candidate.child_boxes)")
+            push!(lines, "candidate[$index].child_planar_counts = $(candidate.child_planar_counts)")
+            push!(lines, "candidate[$index].child_physical_widths = $(candidate.child_physical_widths)")
+            push!(lines, "candidate[$index].child_in_plane_aspect_ratios = $(candidate.child_in_plane_aspect_ratios)")
+            push!(lines, "candidate[$index].count_eligible = $(candidate.count_eligible)")
+            push!(lines, "candidate[$index].shape_eligible = $(candidate.shape_eligible)")
+            push!(lines, "candidate[$index].symmetry_preserving = $(candidate.symmetry_preserving)")
+            push!(lines, "candidate[$index].did_split = $(candidate.did_split)")
+            push!(lines, "candidate[$index].accepted = $(candidate.accepted)")
+        end
+    end
+    return lines
+end
+
+function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    return (
+        source = source,
+        root_node = _nested_square_lattice_node_summary(source.root_geometry),
+        node_summaries = _nested_square_lattice_collect_node_summaries(source.root_geometry),
+        leaf_count = length(source.leaf_sequences),
+        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+    )
+end
+
+function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+)
+    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+    )
+    return _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(source)
+end
+
+function write_axis_aligned_homonuclear_square_lattice_nested_geometry_report(
+    path::AbstractString,
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    kwargs...,
+)
+    diagnostics = axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
+        basis;
+        kwargs...,
+    )
+    mkpath(dirname(String(path)))
+    open(path, "w") do io
+        for line in _square_lattice_nested_geometry_report_lines(diagnostics.source)
+            write(io, line, "\n")
+        end
+    end
+    return diagnostics
+end
+
 function _qwrg_bond_aligned_uses_midpoint_slab(
     basis::BondAlignedDiatomicQWBasis3D;
     atol::Float64 = 1.0e-10,

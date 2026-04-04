@@ -21,6 +21,14 @@ Milestone B now also lands:
   experimental line
 - no nested planar splitting policy or planar nested operator claim yet
 
+Milestone C now begins:
+
+- an experimental planar nested-geometry and split-tree diagnostics line for
+  tiny square lattices
+- a first geometry-backed experimental planar fixed-block probe
+- explicit planar candidate reporting rather than an implicit split policy
+- no production planar nested-operator claim yet
+
 What is explicitly not claimed here:
 
 - no nested planar splitting policy
