@@ -98,6 +98,24 @@ The more diagnostic ordinary examples are:
 27. `27_ordinary_cartesian_ida_localized_backends.jl`
 28. `28_ordinary_one_body_fidelity.jl`
 
+There is also one narrow experimental homonuclear-chain export line. It does
+not yet have a full public example script, but the current shape is:
+
+```julia
+basis = bond_aligned_homonuclear_chain_qw_basis(...)
+path = experimental_bond_aligned_homonuclear_chain_nested_qw_operators(basis)
+write_experimental_homonuclear_chain_nested_dense_jld2("chain.jld2", path)
+```
+
+Treat that line as:
+
+- homonuclear-chain-specific
+- producer-side only
+- explicitly experimental
+
+For the current milestone/status framing, see
+`docs/ordinary_homonuclear_chain_experimental_note.md`.
+
 ## Primitive and hierarchy sequence
 
 If your focus is the primitive/contraction architecture, continue with:

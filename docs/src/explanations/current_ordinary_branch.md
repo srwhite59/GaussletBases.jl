@@ -58,6 +58,7 @@ flat `docs/` tree for now. The most important filenames are:
 - `ordinary_sho_spectral_test.md`
 - `ordinary_pgdg_hybrid_consolidation.md`
 - `ordinary_pgdg_supporting_notes.md`
+- `ordinary_homonuclear_chain_experimental_note.md`
 
 ## Current interpretation
 
@@ -74,6 +75,23 @@ The wording discipline for the ordinary line remains:
 
 That is much closer to the practical White–Lindsey-style hybrid picture than
 to the harsher pure mapped stress-test cases.
+
+The ordinary branch also now includes one narrow experimental homonuclear
+chain line. Its current producer-side export surface is:
+
+- `experimental_homonuclear_chain_nested_dense_payload`
+- `write_experimental_homonuclear_chain_nested_dense_jld2`
+
+That line should still be read as explicitly experimental:
+
+- homonuclear chains only
+- nested-chain policy still explicit rather than frozen
+- producer-side continuation/export only
+- not a settled general-purpose chain workflow
+
+For the current status and milestone framing of that line, use:
+
+- `docs/ordinary_homonuclear_chain_experimental_note.md`
 
 If you want the lower-priority architecture and note-history context after
 that, continue with:

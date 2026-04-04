@@ -67,6 +67,24 @@ This is a producer-side contract for external continuation studies. It exports:
 It does not yet include the later common-target embedding/lift layer, and it
 does not claim compatibility with older dense consumer formats.
 
+The experimental ordinary-chain line now also exposes one narrow dense export
+surface for homonuclear linear chains built on the experimental nested-chain
+path:
+
+- `experimental_homonuclear_chain_nested_dense_payload`
+- `write_experimental_homonuclear_chain_nested_dense_jld2`
+
+This export is intentionally scoped and policy-explicit. It is:
+
+- homonuclear-chain-specific
+- producer-side only
+- experimental rather than a settled public standard
+- explicit about the odd-chain policy used to construct the nested path
+
+The current contract is meant for downstream experimental HF/DMRG continuation
+work, not for backward compatibility with older consumer formats or as a
+general molecular export layer.
+
 For the narrative explanation of the current producer-side story, see:
 
 - [Current atomic branch](../explanations/current_atomic_branch.md)
@@ -77,12 +95,14 @@ atomic_ida_density_interaction_matrix
 build_atomic_fixed_radial_angular_sequence
 atomic_fixed_radial_angular_level_dense_payload
 atomic_fixed_radial_angular_overlap_sidecar_payload
+experimental_homonuclear_chain_nested_dense_payload
 fullida_dense_payload
 sliced_ham_payload
 atomic_hamv6_payload
 angular_benchmark_exact_hamv6_payload
 write_atomic_fixed_radial_angular_level_jld2
 write_atomic_fixed_radial_angular_overlap_sidecar_jld2
+write_experimental_homonuclear_chain_nested_dense_jld2
 write_fullida_dense_jld2
 write_sliced_ham_jld2
 write_atomic_hamv6_jld2
