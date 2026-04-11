@@ -1681,7 +1681,8 @@ end
 function _qwrg_atomic_derivative_terms(power::Int, exponent::Float64)
     power == 0 && return ((1, -2.0 * exponent),)
     power == 1 && return ((0, 1.0), (2, -2.0 * exponent))
-    throw(ArgumentError("atomic shell derivative terms currently support only powers 0 and 1"))
+    power == 2 && return ((1, 2.0), (3, -2.0 * exponent))
+    throw(ArgumentError("atomic shell derivative terms currently support only powers 0, 1, and 2"))
 end
 
 function _qwrg_atomic_kinetic_integral(
@@ -4567,8 +4568,8 @@ claim that the ordinary branch is solver-ready.
 This path now has two active supplement modes:
 
 - the earlier centered separable `s` route for `lmax = 0`
-- an explicit atomic-centered 3D Cartesian shell route for `s` and `p`
-  (`lmax <= 1`)
+- an explicit atomic-centered 3D Cartesian shell route for `s`, `p`, and `d`
+  (`lmax <= 2`)
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
@@ -4836,8 +4837,8 @@ This first adapter is intentionally narrow:
 It also shares the same supplement split as the ordinary path:
 
 - the earlier centered separable `s` route for `lmax = 0`
-- an explicit atomic-centered 3D Cartesian shell route for `s` and `p`
-  (`lmax <= 1`)
+- an explicit atomic-centered 3D Cartesian shell route for `s`, `p`, and `d`
+  (`lmax <= 2`)
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,

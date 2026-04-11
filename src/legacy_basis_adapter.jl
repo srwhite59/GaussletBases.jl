@@ -38,7 +38,9 @@ about the current consumer split:
   channel and rejects non-`s` shells
 - the ordinary-QW and nested-QW atomic paths can now consume the full shell
   metadata through an explicit atomic-centered 3D Cartesian shell route for
-  `lmax <= 1`
+  `lmax <= 2`
+- the narrower two-center molecular QW routes remain intentionally smaller for
+  now and still stop at `lmax <= 1`
 
 The stored active fields:
 
@@ -148,14 +150,22 @@ end
 function _atomic_cartesian_shell_labels(l::Int)
     l == 0 && return [("s", (0, 0, 0))]
     l == 1 && return [("px", (1, 0, 0)), ("py", (0, 1, 0)), ("pz", (0, 0, 1))]
-    throw(ArgumentError("atomic Cartesian shell support currently stops at l = 1"))
+    l == 2 && return [
+        ("dxx", (2, 0, 0)),
+        ("dyy", (0, 2, 0)),
+        ("dzz", (0, 0, 2)),
+        ("dxy", (1, 1, 0)),
+        ("dxz", (1, 0, 1)),
+        ("dyz", (0, 1, 1)),
+    ]
+    throw(ArgumentError("atomic Cartesian shell support currently stops at l = 2"))
 end
 
 function _atomic_cartesian_shell_supplement_3d(
     data::LegacyAtomicGaussianSupplement,
 )
-    any(shell -> shell.l > 1, data.shells) && throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= 1"),
+    any(shell -> shell.l > 2, data.shells) && throw(
+        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= 2"),
     )
     center_value =
         isempty(data.primitive_gaussians) ? 0.0 : Float64(data.primitive_gaussians[1].center_value)
@@ -284,9 +294,71 @@ function Base.show(io::IO, data::LegacyAtomicGaussianSupplement)
     print(io, ")")
 end
 
+function Base.show(io::IO, data::LegacyBondAlignedDiatomicGaussianSupplement)
+    print(
+        io,
+        "LegacyBondAlignedDiatomicGaussianSupplement(atom=\"",
+        data.atomic_source.atom,
+        "\", basis=\"",
+        data.atomic_source.basis_name,
+        "\", lmax=",
+        data.atomic_source.lmax,
+        ", nuclei=",
+        data.nuclei,
+        ", nshells=",
+        length(data.atomic_source.shells),
+        ", uncontracted=",
+        data.atomic_source.uncontracted,
+    )
+    if data.atomic_source.max_width !== nothing
+        print(io, ", max_width=", data.atomic_source.max_width)
+    end
+    print(io, ")")
+end
+
+function Base.show(io::IO, data::LegacyBondAlignedHeteronuclearGaussianSupplement)
+    print(
+        io,
+        "LegacyBondAlignedHeteronuclearGaussianSupplement(atoms=(",
+        "\"",
+        data.atomic_sources[1].atom,
+        "\", \"",
+        data.atomic_sources[2].atom,
+        "\"), bases=(",
+        "\"",
+        data.atomic_sources[1].basis_name,
+        "\", \"",
+        data.atomic_sources[2].basis_name,
+        "\"), lmax=",
+        max(data.atomic_sources[1].lmax, data.atomic_sources[2].lmax),
+        ", nuclei=",
+        data.nuclei,
+        ", nshells=(",
+        length(data.atomic_sources[1].shells),
+        ", ",
+        length(data.atomic_sources[2].shells),
+        "), uncontracted=(",
+        data.atomic_sources[1].uncontracted,
+        ", ",
+        data.atomic_sources[2].uncontracted,
+        "))",
+    )
+end
+
+function _vendored_legacy_basisfile_path()
+    return normpath(joinpath(@__DIR__, "..", "data", "legacy", "BasisSets"))
+end
+
 function _legacy_basisfile_path(; basisfile::Union{Nothing, AbstractString} = nothing)
     basisfile !== nothing && return String(basisfile)
-    return get(ENV, "GAUSSLETBASES_BASISSETS_PATH", joinpath(homedir(), "BasisSets"))
+
+    env_path = get(ENV, "GAUSSLETBASES_BASISSETS_PATH", "")
+    !isempty(env_path) && return env_path
+
+    vendored_path = _vendored_legacy_basisfile_path()
+    isfile(vendored_path) && return vendored_path
+
+    return joinpath(homedir(), "BasisSets")
 end
 
 function _legacy_basis_angular_momentum(label::AbstractString)
@@ -547,9 +619,17 @@ atoms. It records all shell metadata up to `lmax` and also exposes the centered
 `s` projection through the analytic 1D primitive route still used by the
 one-dimensional hybrid builder.
 
-For atomic ordinary-QW and nested-QW, non-`s` shells up to `lmax = 1` are now
+The basis-file lookup order is:
+
+1. explicit `basisfile = ...`
+2. `GAUSSLETBASES_BASISSETS_PATH`
+3. vendored repo copy at `data/legacy/BasisSets`
+4. legacy fallback `~/BasisSets`
+
+For atomic ordinary-QW and nested-QW, non-`s` shells up to `lmax = 2` are now
 consumed through an explicit atomic-centered 3D Cartesian shell supplement
-route. The one-dimensional hybrid builder remains honestly `s`-only.
+route. The one-dimensional hybrid builder remains honestly `s`-only, and the
+separate two-center molecular shell route remains narrower for now.
 """
 function legacy_atomic_gaussian_supplement(
     atom::AbstractString,

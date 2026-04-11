@@ -5520,6 +5520,69 @@ end
     end
 end
 
+@testset "Atomic lmax=2 supplement is explicit in QW routes but not yet molecular" begin
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: He repo-spd\n" *
+            "He    S\n" *
+            "      1.0000000              1.0000000\n" *
+            "He    P\n" *
+            "      0.8000000              1.0000000\n" *
+            "He    D\n" *
+            "      0.6000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+
+        supplement = legacy_atomic_gaussian_supplement("He", "repo-spd"; lmax = 2, basisfile = path)
+        supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+
+        @test any(orbital -> orbital.label == "dxx1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "dyy1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "dzz1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "dxy1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "dxz1", supplement3d.orbitals)
+        @test any(orbital -> orbital.label == "dyz1", supplement3d.orbitals)
+
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 9,
+            mapping = fit_asinh_mapping_for_strength(s = 0.8, npoints = 9, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        ordinary_ops = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        ordinary_check = GaussletBases.ordinary_cartesian_1s2_check(ordinary_ops)
+        @test ordinary_ops.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test ordinary_ops.residual_count > 0
+        @test ordinary_check.overlap_error < 1.0e-8
+        @test isfinite(ordinary_check.orbital_energy)
+        @test isfinite(ordinary_check.vee_expectation)
+        @test ordinary_check.vee_expectation > 0.0
+
+        diatomic = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "He",
+            "repo-spd",
+            [(-0.7, 0.0, 0.0), (0.7, 0.0, 0.0)];
+            lmax = 2,
+            basisfile = path,
+        )
+        diatomic_err = try
+            GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(diatomic)
+            nothing
+        catch err
+            err
+        end
+        @test diatomic_err isa ArgumentError
+        @test occursin("lmax <= 1", sprint(showerror, diatomic_err))
+    end
+end
+
 @testset "Legacy He s hybrid supplement check" begin
     if !_legacy_basisfile_available()
         @test true
