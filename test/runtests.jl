@@ -3330,6 +3330,36 @@ end
     @test dudx(map, x) ≈ 1.0 / t0 + 1.0 / (s0 * sqrt(x * x + a0 * a0)) atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "White-Lindsey atomic mapping matches the legacy one-center formula" begin
+    function legacy_atomic_wl_u(x::Float64, Z::Float64, d::Float64, wi::Float64)
+        a = sqrt(d / Z)
+        s = sqrt(d * Z)
+        return x / wi + asinh(x / a) / s
+    end
+
+    function legacy_atomic_wl_dudx(x::Float64, Z::Float64, d::Float64, wi::Float64)
+        a = sqrt(d / Z)
+        s = sqrt(d * Z)
+        return 1.0 / wi + 1.0 / (s * sqrt(x * x + a * a))
+    end
+
+    for (Z, d, wi, expected_s) in ((10.0, 0.02, 6.0, sqrt(0.2)), (10.0, 0.03, 6.0, sqrt(0.3)), (2.0, 0.2, 10.0, sqrt(0.4)))
+        map = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = wi)
+
+        @test map isa AsinhMapping
+        @test map.a ≈ sqrt(d / Z) atol = 1.0e-14 rtol = 0.0
+        @test map.s ≈ expected_s atol = 1.0e-14 rtol = 0.0
+        @test map.a * map.s ≈ d atol = 1.0e-14 rtol = 0.0
+        @test map.tail_spacing ≈ wi atol = 1.0e-14 rtol = 0.0
+
+        for x in (-12.0, -1.25, 0.0, 2.5, 11.0)
+            xval = Float64(x)
+            @test uofx(map, xval) ≈ legacy_atomic_wl_u(xval, Z, d, wi) atol = 1.0e-12 rtol = 1.0e-12
+            @test dudx(map, xval) ≈ legacy_atomic_wl_dudx(xval, Z, d, wi) atol = 1.0e-12 rtol = 1.0e-12
+        end
+    end
+end
+
 @testset "CombinedInvsqrtMapping supports bond-aligned diatomic symmetry" begin
     basis = bond_aligned_homonuclear_qw_basis(
         bond_length = 1.4,

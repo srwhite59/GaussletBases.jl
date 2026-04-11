@@ -1,5 +1,59 @@
 # QW-PGDG Fixed-`a` Mapping Note
 
+## White-Lindsey atomic one-center contract
+
+This note is about the current Cartesian QW-PGDG fixed-`a` scan family. It is
+not a redefinition of the old one-center White-Lindsey atomic mapping
+contract.
+
+For the one-center atomic `Invsqrt` path, the front-door physical knob is
+still `d = corespacing`, not `s` and not `count`.
+
+With nuclear charge `Z` and tail spacing `wi`, the old one-center formula is
+
+```text
+u(x) = x / wi + asinh(x / a) / s
+a = sqrt(d / Z)
+s = sqrt(d Z)
+```
+
+In the modern repo language this is exactly
+
+```text
+AsinhMapping(a = sqrt(d / Z), s = sqrt(d Z), tail_spacing = wi)
+```
+
+or equivalently
+
+```text
+AsinhMapping(c = d, s = sqrt(d Z), tail_spacing = wi)
+```
+
+because the modern repo parameter satisfies `c = a s = d`.
+
+The repo-native helper for this one-center atomic contract is now:
+
+```julia
+white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = wi)
+```
+
+For this path:
+
+- choose `d` first
+- record `d`, `a`, `s`, `c`, and `tail_spacing` explicitly
+- use `count` only to resolve the extent or endpoint placement of an already
+  chosen map
+- do **not** treat `count -> s` as the front-door contract
+
+The multi-center legacy `getmapping(...)` construction is separate. That is a
+combined inverse-sqrt-density story and is not part of this narrow one-center
+equivalence.
+
+Two legacy Ne anchors from the old one-center `doInvsqrt` line are:
+
+- `Z = 10`, `d = 0.03`, `wi = 6.0` gives `s = sqrt(0.3) ≈ 0.5477225575`
+- `Z = 10`, `d = 0.02`, `wi = 6.0` gives `s = sqrt(0.2) ≈ 0.4472135955`
+
 ## Why change families
 
 The earlier fixed-`s` scans were useful as diagnostics, but they are not the

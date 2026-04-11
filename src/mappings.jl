@@ -239,6 +239,44 @@ function AsinhMapping(;
     return AsinhMapping(c === nothing ? a : c / s, s, tail_spacing)
 end
 
+"""
+    white_lindsey_atomic_mapping(; Z, d, tail_spacing=10.0)
+
+Return the one-center atomic White-Lindsey-style mapping as a repo-native
+`AsinhMapping`.
+
+This is the old one-center atomic inverse-sqrt/asinh family written in the
+modern repo parameterization:
+
+```text
+u(x) = x / tail_spacing + asinh(x / a) / s
+a = sqrt(d / Z)
+s = sqrt(d Z)
+```
+
+Equivalently, the modern near-origin parameter is
+
+```text
+c = a s = d
+```
+
+so this helper is exactly the same map as
+`AsinhMapping(c=d, s=sqrt(d * Z), tail_spacing=tail_spacing)`.
+
+This helper is only for the one-center atomic White-Lindsey contract. The
+legacy multi-center `getmapping(...)` construction is a separate combined
+inverse-sqrt-density path and is not represented by this helper.
+"""
+function white_lindsey_atomic_mapping(; Z::Real, d::Real, tail_spacing::Real = 10.0)
+    zval = Float64(Z)
+    dval = Float64(d)
+    tail = Float64(tail_spacing)
+    zval > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires Z > 0"))
+    dval > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires d > 0"))
+    tail > 0.0 || throw(ArgumentError("white_lindsey_atomic_mapping requires tail_spacing > 0"))
+    return AsinhMapping(c = dval, s = sqrt(dval * zval), tail_spacing = tail)
+end
+
 function uofx(mapping::AsinhMapping, x::Real)
     xval = Float64(x)
     return xval / mapping.tail_spacing + asinh(xval / mapping.a) / mapping.s
