@@ -39,16 +39,14 @@ For the newer ordinary Cartesian line, continue with:
 - `24_mapped_cartesian_hydrogen.jl`
 - `25_mapped_cartesian_hydrogen_backends.jl`
 - `33_ordinary_cartesian_1s2_vee.jl`
-- `29_hybrid_mapped_cartesian_hydrogen.jl`
-- `34_hybrid_cartesian_1s2_vee.jl`
-- `35_hybrid_cartesian_residual_vee.jl`
-- `36_hybrid_cartesian_legacy_he_s_vee.jl`
-- `37_hybrid_cartesian_mwg_vee.jl`
 - `38_qiu_white_reference_vee.jl`
-- `30_ordinary_sho_spectra.jl`
 
 `38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
 path is the default public run; the MWG branch remains opt-in and experimental.
+
+The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
+legacy/internal experimental regressions and are intentionally omitted from
+this public sequence.
 
 ## Full curated guide
 

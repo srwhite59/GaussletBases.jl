@@ -1,3 +1,8 @@
+# Legacy/internal experimental example.
+# The old 1D COMX-cleaned hybrid route is not part of the supported public
+# GaussletBases workflow. This file is kept only for surrogate regression and
+# historical comparison.
+
 using LinearAlgebra
 using GaussletBases
 
@@ -24,12 +29,12 @@ core_gaussians = [
     Gaussian(center = 0.0, width = 0.6),
 ]
 
-hybrid_reference = hybrid_mapped_ordinary_basis(
+hybrid_reference = GaussletBases.hybrid_mapped_ordinary_basis(
     basis;
     core_gaussians = core_gaussians,
     backend = :numerical_reference,
 )
-hybrid_analytic = hybrid_mapped_ordinary_basis(
+hybrid_analytic = GaussletBases.hybrid_mapped_ordinary_basis(
     basis;
     core_gaussians = core_gaussians,
     backend = :pgdg_localized_experimental,

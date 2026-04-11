@@ -38,9 +38,9 @@ route.
 
 At present, the ordinary hybrid branch does something different.
 
-### 2.1 Combined hybrid basis construction
+### 2.1 Legacy combined hybrid basis construction
 
-The public hybrid basis constructor is:
+The legacy/internal hybrid basis constructor is:
 
 - [`hybrid_mapped_ordinary_basis(...)`](../src/ordinary_hybrid.jl)
 

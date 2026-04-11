@@ -11,8 +11,9 @@ The ordinary Cartesian code had accumulated a mixed hybrid story:
 
 That was the wrong mixture for the original Qiu-White residual-Gaussian route.
 
-The present pass therefore adds a separate paper-faithful reference path
-without pruning the later COMX/localized path yet.
+The present pass therefore adds a separate paper-faithful reference path while
+leaving the older COMX/localized surrogate path in the tree only for legacy
+regression and comparison work.
 
 There is now one important follow-on correction to that first implementation:
 
@@ -32,8 +33,8 @@ The reference algorithm is:
 
 The important implementation split is now explicit:
 
-- the existing `hybrid_mapped_ordinary_basis(...)` route remains the later
-  COMX/localized ordinary-hybrid path
+- the older `hybrid_mapped_ordinary_basis(...)` route remains only as a
+  quarantined legacy/internal surrogate path
 - the new Qiu-White reference route builds the full 3D gausslet product basis
   first, then orthogonalizes the added 3D Gaussian orbitals to that full 3D
   space
@@ -54,6 +55,6 @@ if the earlier large RG effects were mostly caused by the incorrect mixture of:
 
 What this pass does not do:
 
-- it does not prune the current COMX/localized hybrid path yet
+- it does not delete the legacy COMX/localized surrogate path from source yet
 - it does not open an ordinary He solver
 - it does not broaden the Gaussian adapter into a larger basis subsystem

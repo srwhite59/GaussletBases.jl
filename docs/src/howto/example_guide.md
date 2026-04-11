@@ -79,24 +79,29 @@ For the ordinary Cartesian line, use this sequence:
 16. `24_mapped_cartesian_hydrogen.jl`
 17. `25_mapped_cartesian_hydrogen_backends.jl`
 18. `33_ordinary_cartesian_1s2_vee.jl`
-19. `29_hybrid_mapped_cartesian_hydrogen.jl`
-20. `34_hybrid_cartesian_1s2_vee.jl`
-21. `35_hybrid_cartesian_residual_vee.jl`
-22. `36_hybrid_cartesian_legacy_he_s_vee.jl`
-23. `37_hybrid_cartesian_mwg_vee.jl`
-24. `38_qiu_white_reference_vee.jl`
-25. `30_ordinary_sho_spectra.jl`
+19. `38_qiu_white_reference_vee.jl`
 
 `38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
 path is part of the public ordinary workflow; the MWG branch is still
 experimental and is skipped unless you opt in with
 `GAUSSLETBASES_RUN_EXPERIMENTAL_MWG=1`.
 
+The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
+legacy/internal experimental regressions and are intentionally omitted from
+the supported ordinary sequence:
+
+- `29_hybrid_mapped_cartesian_hydrogen.jl`
+- `30_ordinary_sho_spectra.jl`
+- `34_hybrid_cartesian_1s2_vee.jl`
+- `35_hybrid_cartesian_residual_vee.jl`
+- `36_hybrid_cartesian_legacy_he_s_vee.jl`
+- `37_hybrid_cartesian_mwg_vee.jl`
+
 The more diagnostic ordinary examples are:
 
-26. `26_ordinary_cartesian_ida.jl`
-27. `27_ordinary_cartesian_ida_localized_backends.jl`
-28. `28_ordinary_one_body_fidelity.jl`
+20. `26_ordinary_cartesian_ida.jl`
+21. `27_ordinary_cartesian_ida_localized_backends.jl`
+22. `28_ordinary_one_body_fidelity.jl`
 
 There is also one narrow experimental homonuclear-chain export line. It does
 not yet have a full public example script, but the current shape is:

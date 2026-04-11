@@ -1,3 +1,8 @@
+# Legacy/internal experimental example.
+# The old 1D COMX-cleaned hybrid route is not part of the supported public
+# GaussletBases workflow. This file is kept only for surrogate regression and
+# historical comparison.
+
 using GaussletBases
 
 function report_case(count::Int, s::Float64)
@@ -16,7 +21,7 @@ function report_case(count::Int, s::Float64)
         Z = 2.0,
         backend = :pgdg_localized_experimental,
     )
-    hybrid_basis = hybrid_mapped_ordinary_basis(
+    hybrid_basis = GaussletBases.hybrid_mapped_ordinary_basis(
         source_basis;
         core_gaussians = core_gaussians,
         backend = :pgdg_localized_experimental,

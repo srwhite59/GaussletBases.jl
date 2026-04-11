@@ -1,12 +1,13 @@
 """
     HybridMappedOrdinaryBasis1D
 
-Hybrid ordinary one-dimensional basis built from a mapped ordinary backbone
-plus a small explicit set of added core Gaussians.
+Legacy/internal experimental one-dimensional hybrid basis built from a mapped
+ordinary backbone plus a small explicit set of added core Gaussians.
 
-This is the current practical ordinary-branch object for the friendlier
-hybrid/core-supported regime. It keeps the mapped gausslet backbone visible,
-but augments it with centered Gaussian support near the origin.
+This COMX-cleaned 1D route is kept only for surrogate comparisons and
+historical regression checks. It is not part of the current supported public
+ordinary workflow, which should use the full 3D Qiu-White-style
+gausslet-plus-Gaussian construction instead.
 """
 struct HybridMappedOrdinaryBasis1D
     source_basis::MappedUniformBasis
@@ -93,6 +94,10 @@ end
 
 Build a hybrid one-dimensional ordinary basis from a mapped ordinary backbone
 plus a small explicit Gaussian supplement.
+
+This constructor is intentionally legacy/internal experimental. It remains in
+the source tree for surrogate comparisons and regression checks, but it is no
+longer part of the supported public ordinary workflow.
 
 The backbone comes from the chosen mapped ordinary backend. The added
 `core_gaussians` can be either:

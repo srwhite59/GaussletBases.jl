@@ -37,9 +37,6 @@ fit_asinh_mapping_for_extent
 fit_asinh_mapping_for_strength
 ```
 
-## Hybrid ordinary basis
-
-```@docs
-HybridMappedOrdinaryBasis1D
-hybrid_mapped_ordinary_basis
-```
+The old one-dimensional COMX-cleaned hybrid constructor is intentionally
+omitted from the public reference. It remains only as legacy/internal
+experimental code for surrogate comparisons and historical regression checks.

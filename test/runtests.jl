@@ -5,6 +5,11 @@ using JLD2
 
 using GaussletBases
 
+# The old 1D COMX-cleaned hybrid route is intentionally unexported from the
+# public API, but we keep a few internal regression checks for it here.
+const hybrid_mapped_ordinary_basis = GaussletBases.hybrid_mapped_ordinary_basis
+const HybridMappedOrdinaryBasis1D = GaussletBases.HybridMappedOrdinaryBasis1D
+
 const _PROJECT_ROOT = dirname(@__DIR__)
 const _RUN_SLOW_TESTS = get(ENV, "GAUSSLETBASES_SLOW_TESTS", "0") == "1"
 const _FIXTURE_CACHE = Dict{Symbol,Any}()
@@ -5225,7 +5230,7 @@ end
     @test ordinary_cartesian_vee_expectation(operators, 2.0 .* orbital) ≈ vee atol = 1.0e-12 rtol = 0.0
 end
 
-@testset "Hybrid ordinary Cartesian 1s^2 Vee check" begin
+@testset "Legacy 1D hybrid ordinary Cartesian 1s^2 Vee check" begin
     (
         source_basis,
         core_gaussians,
@@ -5261,7 +5266,7 @@ end
           hybrid_check.vee_expectation atol = 1.0e-12 rtol = 0.0
 end
 
-@testset "Hybrid residual Gaussian interaction treatment" begin
+@testset "Legacy 1D hybrid residual Gaussian interaction treatment" begin
     (
         source_basis,
         hybrid_basis,
@@ -6688,7 +6693,7 @@ if _test_group_enabled(:ordinary)
     @test minimum(diag(localized.interaction_matrix)) > 0.0
 end
 
-@testset "Hybrid mapped ordinary basis" begin
+@testset "Legacy 1D hybrid mapped ordinary basis" begin
     (
         basis,
         core_gaussians,
@@ -6730,7 +6735,7 @@ end
           abs(hard_energy_analytic - hard_energy_reference)
 end
 
-@testset "Ordinary mapped SHO smoke" begin
+@testset "Legacy 1D hybrid ordinary mapped SHO smoke" begin
     (
         hybrid_analytic,
         centered_analytic,
@@ -9733,7 +9738,7 @@ if _test_group_enabled(:docs)
     @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
     @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
     @test occursin("33_ordinary_cartesian_1s2_vee.jl", example_guide)
-    @test occursin("34_hybrid_cartesian_1s2_vee.jl", example_guide)
+    @test occursin("38_qiu_white_reference_vee.jl", example_guide)
     @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
     @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
     @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
@@ -9869,8 +9874,6 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("23_cartesian_hydrogen_coulomb_expansion.jl")
         @test _run_example_script("24_mapped_cartesian_hydrogen.jl")
         @test _run_example_script("25_mapped_cartesian_hydrogen_backends.jl")
-        @test _run_example_script("29_hybrid_mapped_cartesian_hydrogen.jl")
-        @test _run_example_script("30_ordinary_sho_spectra.jl")
         @test _run_example_script("05_primitive_sets.jl")
         @test _run_example_script("06_basis_contraction.jl")
         @test _run_example_script("07_position_contraction.jl")

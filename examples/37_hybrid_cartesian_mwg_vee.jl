@@ -1,3 +1,8 @@
+# Legacy/internal experimental example.
+# The old 1D COMX-cleaned hybrid route is not part of the supported public
+# GaussletBases workflow. This file is kept only for surrogate regression and
+# historical comparison.
+
 using GaussletBases
 
 function run_case(basis_name::String; count::Int = 11, s::Float64 = 0.6, xmax::Float64 = 6.0)
@@ -6,7 +11,7 @@ function run_case(basis_name::String; count::Int = 11, s::Float64 = 0.6, xmax::F
         mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = xmax),
     ))
     legacy = legacy_s_gaussian_data("He", basis_name)
-    hybrid_basis = hybrid_mapped_ordinary_basis(
+    hybrid_basis = GaussletBases.hybrid_mapped_ordinary_basis(
         source_basis;
         core_gaussians = legacy,
         backend = :pgdg_localized_experimental,

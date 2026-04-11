@@ -58,8 +58,9 @@ If you want the ordinary Cartesian branch:
 2. [Example guide](../howto/example_guide.md)
 
 The ordinary branch is worth reading after you understand the radial line. It
-is the right place to learn the current mapped and hybrid ordinary workflows,
-but it is not the best first entry point into the package.
+is the right place to learn the current mapped ordinary workflow and the
+separate paper-faithful Qiu-White ordinary reference path, but it is not the
+best first entry point into the package.
 
 If you want the active experimental angular line:
 

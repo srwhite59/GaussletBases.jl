@@ -14,18 +14,6 @@ source_basis = build_basis(MappedUniformBasisSpec(:G10;
 legacy = legacy_s_gaussian_data("He", basis_name)
 expansion = coulomb_gaussian_expansion(doacc = false)
 run_experimental_mwg = get(ENV, "GAUSSLETBASES_RUN_EXPERIMENTAL_MWG", "0") == "1"
-
-hybrid_basis = hybrid_mapped_ordinary_basis(
-    source_basis;
-    core_gaussians = legacy,
-    backend = :pgdg_localized_experimental,
-)
-surrogate_mwg = ordinary_cartesian_ida_operators(
-    hybrid_basis;
-    expansion = expansion,
-    Z = z_value,
-    interaction_treatment = :residual_gaussian_mwg,
-)
 qiu_white_nearest = ordinary_cartesian_qiu_white_operators(
     source_basis,
     legacy;
@@ -33,7 +21,6 @@ qiu_white_nearest = ordinary_cartesian_qiu_white_operators(
     Z = z_value,
     interaction_treatment = :ggt_nearest,
 )
-surrogate_check = GaussletBases.ordinary_cartesian_1s2_check(surrogate_mwg)
 nearest_check = GaussletBases.ordinary_cartesian_1s2_check(qiu_white_nearest)
 mwg_result, mwg_error = if run_experimental_mwg
     try
@@ -68,13 +55,6 @@ println("  contracted widths: ", legacy.widths)
 println("  count = ", count, ", s = ", s, ", xmax = ", xmax)
 println("  note: this is a slow full-expansion light reference run, not a quick smoke check.")
 println("  hydrogenic 1s^2 target: ", reference_value)
-println()
-
-println("Current surrogate MWG path")
-println("  basis: ", hybrid_basis)
-println("  E1: ", surrogate_check.orbital_energy)
-println("  <Vee>: ", surrogate_check.vee_expectation)
-println("  difference from 1.25: ", surrogate_check.vee_expectation - reference_value)
 println()
 
 println("Paper-faithful Qiu-White nearest / GGT path")
