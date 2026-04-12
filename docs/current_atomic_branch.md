@@ -3,6 +3,11 @@
 This page is the shortest current status read for the mature radial/atomic
 line.
 
+The most recent posted paper on this line is the radial gausslet manuscript on
+arXiv:
+
+- <https://doi.org/10.48550/arXiv.2603.22646>
+
 ## 1. What the atomic branch is today
 
 The present atomic story is:
