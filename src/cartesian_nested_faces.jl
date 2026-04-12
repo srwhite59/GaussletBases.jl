@@ -2013,16 +2013,118 @@ function _nested_support_product_matrix(
     operator_y::AbstractMatrix{<:Real},
     operator_z::AbstractMatrix{<:Real},
 )
+    # Retained as a convenience/reference wrapper. The hot packet-assembly path
+    # now reuses one workspace through `_nested_fill_support_product_matrix!`
+    # and `_nested_contract_support_product!` instead of allocating several
+    # support-scale matrices at once.
+    matrix = Matrix{Float64}(undef, length(support_states), length(support_states))
+    return _nested_fill_support_product_matrix!(
+        matrix,
+        support_states,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
+end
+
+function _nested_fill_support_product_matrix!(
+    workspace::AbstractMatrix{<:Real},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
     nsupport = length(support_states)
-    matrix = zeros(Float64, nsupport, nsupport)
-    for row in 1:nsupport
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    @inbounds for row in 1:nsupport
         ix, iy, iz = support_states[row]
         for col in 1:nsupport
             jx, jy, jz = support_states[col]
-            matrix[row, col] =
+            workspace[row, col] =
                 Float64(operator_x[ix, jx]) *
                 Float64(operator_y[iy, jy]) *
                 Float64(operator_z[iz, jz])
+        end
+    end
+    return workspace
+end
+
+function _nested_contract_support_product!(
+    destination::AbstractMatrix{<:Real},
+    workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    alpha::Float64 = 1.0,
+    beta::Float64 = 0.0,
+)
+    nsupport = length(support_states)
+    nfixed = size(support_coefficients, 2)
+    size(destination) == (nfixed, nfixed) || throw(
+        ArgumentError("nested support contraction destination must have size ($(nfixed), $(nfixed))"),
+    )
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support contraction workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    size(contraction_scratch) == (nfixed, nsupport) || throw(
+        ArgumentError("nested support contraction scratch must have size ($(nfixed), $(nsupport))"),
+    )
+    _nested_fill_support_product_matrix!(
+        workspace,
+        support_states,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
+    mul!(contraction_scratch, transpose(support_coefficients), workspace)
+    mul!(destination, contraction_scratch, support_coefficients, alpha, beta)
+    return destination
+end
+
+function _nested_contract_sum_of_support_products!(
+    destination::AbstractMatrix{<:Real},
+    workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+    terms;
+    beta::Float64 = 0.0,
+)
+    isempty(terms) && return (iszero(beta) ? fill!(destination, 0.0) : rmul!(destination, beta))
+    first_term = true
+    for term in terms
+        _nested_contract_support_product!(
+            destination,
+            workspace,
+            contraction_scratch,
+            support_states,
+            support_coefficients,
+            term[1],
+            term[2],
+            term[3];
+            alpha = 1.0,
+            beta = first_term ? beta : 1.0,
+        )
+        first_term = false
+    end
+    return destination
+end
+
+function _nested_symmetrize_matrix!(matrix::AbstractMatrix{<:Real})
+    size(matrix, 1) == size(matrix, 2) || throw(
+        ArgumentError("nested symmetrization requires a square matrix"),
+    )
+    n = size(matrix, 1)
+    @inbounds for col in 1:n
+        for row in 1:col
+            value = 0.5 * (Float64(matrix[row, col]) + Float64(matrix[col, row]))
+            matrix[row, col] = value
+            matrix[col, row] = value
         end
     end
     return matrix
@@ -2032,6 +2134,9 @@ function _nested_sum_of_support_products(
     support_states::AbstractVector{<:NTuple{3,Int}},
     terms,
 )
+    # Retained as an allocating reference helper. Kinetic assembly in
+    # `_nested_shell_packet(...)` now sums directly at fixed-block scale via
+    # `_nested_contract_sum_of_support_products!`.
     isempty(terms) && return zeros(Float64, length(support_states), length(support_states))
     accumulator = zeros(Float64, length(support_states), length(support_states))
     for term in terms
@@ -2073,6 +2178,8 @@ function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    support_workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
 )
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
@@ -2090,15 +2197,20 @@ function _nested_weight_aware_pair_terms(
 
     for term in 1:nterms
         raw_1d = @view(pgdg.pair_factor_terms[term, :, :]) .* parent_weight_outer
-        raw_support = _nested_support_product_matrix(
+        pair_term = @view(pair_terms[term, :, :])
+        _nested_contract_support_product!(
+            pair_term,
+            support_workspace,
+            contraction_scratch,
             support_states,
+            support_coefficients,
             raw_1d,
             raw_1d,
-            raw_1d,
+            raw_1d;
+            beta = 0.0,
         )
-        raw_contracted = transpose(support_coefficients) * raw_support * support_coefficients
-        matrix = Matrix{Float64}(raw_contracted ./ fixed_weight_outer)
-        @views pair_terms[term, :, :] .= 0.5 .* (matrix .+ transpose(matrix))
+        pair_term ./= fixed_weight_outer
+        _nested_symmetrize_matrix!(pair_term)
     end
 
     return (
@@ -2111,6 +2223,8 @@ function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    support_workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
 )
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
@@ -2143,20 +2257,61 @@ function _nested_weight_aware_pair_terms(
         raw_x = @view(pgdg_x.pair_factor_terms[term, :, :]) .* parent_weight_outer_x
         raw_y = @view(pgdg_y.pair_factor_terms[term, :, :]) .* parent_weight_outer_y
         raw_z = @view(pgdg_z.pair_factor_terms[term, :, :]) .* parent_weight_outer_z
-        raw_support = _nested_support_product_matrix(
+        pair_term = @view(pair_terms[term, :, :])
+        _nested_contract_support_product!(
+            pair_term,
+            support_workspace,
+            contraction_scratch,
             support_states,
+            support_coefficients,
             raw_x,
             raw_y,
-            raw_z,
+            raw_z;
+            beta = 0.0,
         )
-        raw_contracted = transpose(support_coefficients) * raw_support * support_coefficients
-        matrix = Matrix{Float64}(raw_contracted ./ fixed_weight_outer)
-        @views pair_terms[term, :, :] .= 0.5 .* (matrix .+ transpose(matrix))
+        pair_term ./= fixed_weight_outer
+        _nested_symmetrize_matrix!(pair_term)
     end
 
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
+    )
+end
+
+function _nested_weight_aware_pair_terms(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+)
+    nsupport = length(support_states)
+    nfixed = size(support_coefficients, 2)
+    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
+    contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    return _nested_weight_aware_pair_terms(
+        pgdg,
+        support_states,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+    )
+end
+
+function _nested_weight_aware_pair_terms(
+    bundles::_CartesianNestedAxisBundles3D,
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::AbstractMatrix{<:Real},
+)
+    nsupport = length(support_states)
+    nfixed = size(support_coefficients, 2)
+    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
+    contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    return _nested_weight_aware_pair_terms(
+        bundles,
+        support_states,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
     )
 end
 
@@ -2185,51 +2340,141 @@ function _nested_shell_packet(
 )
     support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
     support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
-    overlap_support = _nested_support_product_matrix(
+    nshell = size(coefficient_matrix, 2)
+    nsupport = length(support_states)
+    nterms = size(pgdg.gaussian_factor_terms, 1)
+    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
+    contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
+    overlap = Matrix{Float64}(undef, nshell, nshell)
+    kinetic = Matrix{Float64}(undef, nshell, nshell)
+    position_x = Matrix{Float64}(undef, nshell, nshell)
+    position_y = Matrix{Float64}(undef, nshell, nshell)
+    position_z = Matrix{Float64}(undef, nshell, nshell)
+    x2_x = Matrix{Float64}(undef, nshell, nshell)
+    x2_y = Matrix{Float64}(undef, nshell, nshell)
+    x2_z = Matrix{Float64}(undef, nshell, nshell)
+    _nested_contract_support_product!(
+        overlap,
+        support_workspace,
+        contraction_scratch,
         support_states,
+        support_coefficients,
         pgdg.overlap,
         pgdg.overlap,
-        pgdg.overlap,
+        pgdg.overlap;
+        beta = 0.0,
     )
-    kinetic_support = _nested_sum_of_support_products(
+    _nested_contract_sum_of_support_products!(
+        kinetic,
+        support_workspace,
+        contraction_scratch,
         support_states,
+        support_coefficients,
         (
             (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
             (pgdg.overlap, pgdg.kinetic, pgdg.overlap),
             (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
-        ),
+        );
+        beta = 0.0,
     )
-    position_x_support = _nested_support_product_matrix(support_states, pgdg.position, pgdg.overlap, pgdg.overlap)
-    position_y_support = _nested_support_product_matrix(support_states, pgdg.overlap, pgdg.position, pgdg.overlap)
-    position_z_support = _nested_support_product_matrix(support_states, pgdg.overlap, pgdg.overlap, pgdg.position)
-    x2_x_support = _nested_support_product_matrix(support_states, pgdg.x2, pgdg.overlap, pgdg.overlap)
-    x2_y_support = _nested_support_product_matrix(support_states, pgdg.overlap, pgdg.x2, pgdg.overlap)
-    x2_z_support = _nested_support_product_matrix(support_states, pgdg.overlap, pgdg.overlap, pgdg.x2)
-
-    nshell = size(coefficient_matrix, 2)
-    nterms = size(pgdg.gaussian_factor_terms, 1)
-    pair_data = _nested_weight_aware_pair_terms(pgdg, support_states, support_coefficients)
+    _nested_contract_support_product!(
+        position_x,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.position,
+        pgdg.overlap,
+        pgdg.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        position_y,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.overlap,
+        pgdg.position,
+        pgdg.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        position_z,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.overlap,
+        pgdg.overlap,
+        pgdg.position;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_x,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.x2,
+        pgdg.overlap,
+        pgdg.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_y,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.overlap,
+        pgdg.x2,
+        pgdg.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_z,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg.overlap,
+        pgdg.overlap,
+        pgdg.x2;
+        beta = 0.0,
+    )
+    pair_data = _nested_weight_aware_pair_terms(
+        pgdg,
+        support_states,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+    )
     gaussian_terms = zeros(Float64, nterms, nshell, nshell)
     for term in 1:nterms
-        factor_support = _nested_support_product_matrix(
+        _nested_contract_support_product!(
+            @view(gaussian_terms[term, :, :]),
+            support_workspace,
+            contraction_scratch,
             support_states,
+            support_coefficients,
             @view(pgdg.gaussian_factor_terms[term, :, :]),
             @view(pgdg.gaussian_factor_terms[term, :, :]),
-            @view(pgdg.gaussian_factor_terms[term, :, :]),
+            @view(pgdg.gaussian_factor_terms[term, :, :]);
+            beta = 0.0,
         )
-        @views gaussian_terms[term, :, :] .= transpose(support_coefficients) * factor_support * support_coefficients
     end
 
     return (
         packet = _CartesianNestedShellPacket3D(
-            transpose(support_coefficients) * overlap_support * support_coefficients,
-            transpose(support_coefficients) * kinetic_support * support_coefficients,
-            transpose(support_coefficients) * position_x_support * support_coefficients,
-            transpose(support_coefficients) * position_y_support * support_coefficients,
-            transpose(support_coefficients) * position_z_support * support_coefficients,
-            transpose(support_coefficients) * x2_x_support * support_coefficients,
-            transpose(support_coefficients) * x2_y_support * support_coefficients,
-            transpose(support_coefficients) * x2_z_support * support_coefficients,
+            overlap,
+            kinetic,
+            position_x,
+            position_y,
+            position_z,
+            x2_x,
+            x2_y,
+            x2_z,
             pair_data.weights,
             gaussian_terms,
             pair_data.pair_terms,
@@ -2249,84 +2494,144 @@ function _nested_shell_packet(
     pgdg_z = _nested_axis_pgdg(bundles, :z)
     support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
     support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
-    overlap_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.overlap,
-    )
-    kinetic_support = _nested_sum_of_support_products(
-        support_states,
-        (
-            (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
-            (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
-            (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
-        ),
-    )
-    position_x_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.position,
-        pgdg_y.overlap,
-        pgdg_z.overlap,
-    )
-    position_y_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.overlap,
-        pgdg_y.position,
-        pgdg_z.overlap,
-    )
-    position_z_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.position,
-    )
-    x2_x_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.x2,
-        pgdg_y.overlap,
-        pgdg_z.overlap,
-    )
-    x2_y_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.overlap,
-        pgdg_y.x2,
-        pgdg_z.overlap,
-    )
-    x2_z_support = _nested_support_product_matrix(
-        support_states,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.x2,
-    )
-
     nshell = size(coefficient_matrix, 2)
+    nsupport = length(support_states)
     nterms = size(pgdg_x.gaussian_factor_terms, 1)
     nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
         ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
     )
-    pair_data = _nested_weight_aware_pair_terms(bundles, support_states, support_coefficients)
+    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
+    contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
+    overlap = Matrix{Float64}(undef, nshell, nshell)
+    kinetic = Matrix{Float64}(undef, nshell, nshell)
+    position_x = Matrix{Float64}(undef, nshell, nshell)
+    position_y = Matrix{Float64}(undef, nshell, nshell)
+    position_z = Matrix{Float64}(undef, nshell, nshell)
+    x2_x = Matrix{Float64}(undef, nshell, nshell)
+    x2_y = Matrix{Float64}(undef, nshell, nshell)
+    x2_z = Matrix{Float64}(undef, nshell, nshell)
+    _nested_contract_support_product!(
+        overlap,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_sum_of_support_products!(
+        kinetic,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        (
+            (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
+            (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
+            (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
+        );
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        position_x,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.position,
+        pgdg_y.overlap,
+        pgdg_z.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        position_y,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.overlap,
+        pgdg_y.position,
+        pgdg_z.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        position_z,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.position;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_x,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.x2,
+        pgdg_y.overlap,
+        pgdg_z.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_y,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.overlap,
+        pgdg_y.x2,
+        pgdg_z.overlap;
+        beta = 0.0,
+    )
+    _nested_contract_support_product!(
+        x2_z,
+        support_workspace,
+        contraction_scratch,
+        support_states,
+        support_coefficients,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.x2;
+        beta = 0.0,
+    )
+    pair_data = _nested_weight_aware_pair_terms(
+        bundles,
+        support_states,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+    )
     gaussian_terms = zeros(Float64, nterms, nshell, nshell)
     for term in 1:nterms
-        factor_support = _nested_support_product_matrix(
+        _nested_contract_support_product!(
+            @view(gaussian_terms[term, :, :]),
+            support_workspace,
+            contraction_scratch,
             support_states,
+            support_coefficients,
             @view(pgdg_x.gaussian_factor_terms[term, :, :]),
             @view(pgdg_y.gaussian_factor_terms[term, :, :]),
-            @view(pgdg_z.gaussian_factor_terms[term, :, :]),
+            @view(pgdg_z.gaussian_factor_terms[term, :, :]);
+            beta = 0.0,
         )
-        @views gaussian_terms[term, :, :] .= transpose(support_coefficients) * factor_support * support_coefficients
     end
 
     return (
         packet = _CartesianNestedShellPacket3D(
-            transpose(support_coefficients) * overlap_support * support_coefficients,
-            transpose(support_coefficients) * kinetic_support * support_coefficients,
-            transpose(support_coefficients) * position_x_support * support_coefficients,
-            transpose(support_coefficients) * position_y_support * support_coefficients,
-            transpose(support_coefficients) * position_z_support * support_coefficients,
-            transpose(support_coefficients) * x2_x_support * support_coefficients,
-            transpose(support_coefficients) * x2_y_support * support_coefficients,
-            transpose(support_coefficients) * x2_z_support * support_coefficients,
+            overlap,
+            kinetic,
+            position_x,
+            position_y,
+            position_z,
+            x2_x,
+            x2_y,
+            x2_z,
             pair_data.weights,
             gaussian_terms,
             pair_data.pair_terms,
