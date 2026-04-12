@@ -4,8 +4,8 @@ function build_ordinary_h2_payload(; bond_length::Float64 = 1.4)
     basis = bond_aligned_homonuclear_qw_basis(
         bond_length = bond_length,
         core_spacing = 0.5,
-        xmax_parallel = 6,
-        xmax_transverse = 4,
+        xmax_parallel = 8,
+        xmax_transverse = 5,
         bond_axis = :z,
     )
     supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
@@ -27,8 +27,8 @@ function build_nested_h2_payloads(; bond_length::Float64 = 1.4)
     basis = bond_aligned_homonuclear_qw_basis(
         bond_length = bond_length,
         core_spacing = 0.5,
-        xmax_parallel = 6,
-        xmax_transverse = 4,
+        xmax_parallel = 8,
+        xmax_transverse = 5,
         bond_axis = :z,
     )
     source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(basis)
@@ -74,6 +74,12 @@ nested_centers_path = joinpath(
     "plots",
     "h2_bond_aligned_R1p4_nested_hybrid_centers3d.dat",
 )
+nested_source_projection_path = joinpath(
+    @__DIR__,
+    "..",
+    "plots",
+    "h2_bond_aligned_R1p4_nested_source_xz_tol1e-5.dat",
+)
 nested_source_path = joinpath(
     @__DIR__,
     "..",
@@ -94,6 +100,14 @@ nested_slice = write_bond_aligned_diatomic_plane_projection(
     plane_axis = :y,
     plane_value = 0.0,
     plane_tol = DEBUG_TOL,
+)
+nested_source_slice = write_bond_aligned_diatomic_plane_projection(
+    nested_source_projection_path,
+    nested_payloads.source_payload;
+    plane_axis = :y,
+    plane_value = 0.0,
+    plane_tol = DEBUG_TOL,
+    include_box_outlines = true,
 )
 write_bond_aligned_diatomic_points3d(nested_centers_path, nested_payloads.fixed_payload)
 write_bond_aligned_diatomic_points3d(nested_source_path, nested_payloads.source_payload)
@@ -117,6 +131,8 @@ println("nested_projection_path=", nested_projection_path)
 println("nested_selected_debug=", nested_slice.selected_count, "/", nested_slice.total_count)
 println("nested_selected_strict=", strict_nested_slice.selected_count, "/", strict_nested_slice.total_count)
 println("nested_centers_path=", nested_centers_path)
+println("nested_source_projection_path=", nested_source_projection_path)
+println("nested_source_projection_selected_debug=", nested_source_slice.selected_count, "/", nested_source_slice.total_count)
 println("nested_source_path=", nested_source_path)
 println("nested_source_selected_debug=", source_debug_slice.selected_count, "/", source_debug_slice.total_count)
 println("plane_axis=:y plane_value=0.0 plane_tol=", DEBUG_TOL)

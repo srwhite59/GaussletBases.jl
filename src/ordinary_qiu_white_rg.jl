@@ -1350,6 +1350,37 @@ function _qwrg_record_timing!(
     return value
 end
 
+function _qwrg_print_basis_counts(
+    io::IO,
+    gausslet_count::Integer,
+    raw_to_final::AbstractMatrix{<:Real},
+)
+    return _qwrg_print_basis_counts(io, "gausslet_count", gausslet_count, raw_to_final)
+end
+
+function _qwrg_print_basis_counts(
+    io::IO,
+    carried_label::AbstractString,
+    carried_count::Integer,
+    raw_to_final::AbstractMatrix{<:Real},
+)
+    total_basis_dim = size(raw_to_final, 2)
+    residual_count = total_basis_dim - carried_count
+    println(
+        io,
+        "QW-RG basis counts  ",
+        carried_label,
+        "=",
+        carried_count,
+        "  residual_count=",
+        residual_count,
+        "  total_basis_dim=",
+        total_basis_dim,
+    )
+    flush(io)
+    return nothing
+end
+
 function _qwrg_residual_keep_tol(values::AbstractVector{<:Real})
     isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
     return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
@@ -4305,6 +4336,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     start_ns = time_ns()
     residual_data = _qwrg_residual_space(gausslet_overlap_3d, blocks.overlap_ga, blocks.overlap_aa)
     timing && _qwrg_record_timing!(timing_io, timings, "residual-space construction", start_ns)
+    _qwrg_print_basis_counts(timing_io, gausslet_count, residual_data.raw_to_final)
 
     start_ns = time_ns()
     gausslet_one_body = _qwrg_gausslet_one_body_matrix(gg_blocks, expansion; Z = Z)
@@ -4456,6 +4488,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
     residual_data = _qwrg_residual_space(fixed_block.overlap, overlap_fg, blocks.overlap_aa)
     timing && _qwrg_record_timing!(timing_io, timings, "nested residual-space construction", start_ns)
+    _qwrg_print_basis_counts(timing_io, "fixed_count", fixed_count, residual_data.raw_to_final)
 
     start_ns = time_ns()
     kinetic_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga)
@@ -4634,6 +4667,7 @@ function ordinary_cartesian_qiu_white_operators(
     ))
     residual_data = _qwrg_residual_space(gausslet_overlap_3d, overlap_ga, overlap_aa)
     timing && _qwrg_record_timing!(timing_io, timings, "residual-space construction", start_ns)
+    _qwrg_print_basis_counts(timing_io, gausslet_count, residual_data.raw_to_final)
 
     start_ns = time_ns()
     one_body_ga, one_body_aa = _qwrg_raw_one_body_blocks((
@@ -4898,6 +4932,7 @@ function ordinary_cartesian_qiu_white_operators(
     overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, overlap_parent_ga)
     residual_data = _qwrg_residual_space(fixed_block.overlap, overlap_fg, overlap_aa)
     timing && _qwrg_record_timing!(timing_io, timings, "nested residual-space construction", start_ns)
+    _qwrg_print_basis_counts(timing_io, "fixed_count", fixed_count, residual_data.raw_to_final)
 
     start_ns = time_ns()
     kinetic_parent_ga = _qwrg_raw_kinetic_cross_block((
