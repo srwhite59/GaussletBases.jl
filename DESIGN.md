@@ -343,6 +343,39 @@ contract_primitive_matrix(basis, Aμν)  == C' * Aμν * C
 
 ---
 
+## Internal numerical contract for orthonormal blocks
+
+This is an internal engineering rule, mainly for implementation work rather
+than user-facing documentation.
+
+When a construction step is intended to produce an orthonormal block, the
+working contract is:
+
+- construct the block to be orthonormal in the intended metric
+- validate that its overlap is `I +` small unavoidable Float64 noise
+- then treat the block as orthonormal
+
+In particular:
+
+- do **not** propagate or store a near-identity overlap matrix as meaningful
+  structure
+- do **not** build downstream code that keeps consulting `S` when the intended
+  contract is already orthonormality
+- use overlap matrices in this regime only for construction checks, assertions,
+  or an optional final cleanup step if the deviation is not small
+
+For internal blocks such as:
+
+- finalized PGDG / COMX-cleaned blocks
+- nested fixed blocks
+- other spaces explicitly declared orthonormal by construction
+
+the preferred downstream representation is simply the identity overlap, not a
+persisted `S = I + ε` object with numerical residue. Tiny Float64 deviations
+from identity are not to be treated as meaningful mathematics.
+
+---
+
 ## Quadrature
 
 ```julia
