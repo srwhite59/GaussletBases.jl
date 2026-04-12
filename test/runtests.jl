@@ -4204,6 +4204,55 @@ end
     @test abs(nested_shell_plus_core_check.orbital_energy - baseline_check.orbital_energy) < 1.0e-4
 end
 
+function _one_center_atomic_full_parent_contract_fixture(;
+    Z::Float64 = 2.0,
+    d::Float64 = 0.15,
+    count::Int = 19,
+    nside::Int = 7,
+    tail_spacing::Float64 = 10.0,
+)
+    key = Symbol(
+        :one_center_atomic_full_parent_contract_fixture,
+        round(Int, 1000 * Z),
+        round(Int, 1000 * d),
+        count,
+        nside,
+    )
+    return _cached_fixture(key, () -> begin
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        sequence = build_one_center_atomic_full_parent_shell_sequence(
+            basis;
+            exponents = expansion.exponents,
+            gausslet_backend = :numerical_reference,
+            refinement_levels = 0,
+            nside = nside,
+        )
+        audit = GaussletBases._nested_shell_sequence_contract_audit(sequence, (count, count, count))
+        (basis, sequence, audit)
+    end)
+end
+
+@testset "One-center atomic full-parent nested contract" begin
+    basis, sequence, audit = _one_center_atomic_full_parent_contract_fixture()
+    count = length(basis)
+
+    @test sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test sequence.working_box == (1:count, 1:count, 1:count)
+    @test audit.full_parent_working_box
+    @test audit.support_count == count^3
+    @test audit.expected_support_count == count^3
+    @test audit.missing_row_count == 0
+    @test audit.ownership_group_count_min == 1
+    @test audit.ownership_group_count_max == 1
+    @test audit.ownership_unowned_row_count == 0
+    @test audit.ownership_multi_owned_row_count == 0
+end
+
 @testset "Cartesian nested shell sequence fixed-block" begin
     (
         basis,

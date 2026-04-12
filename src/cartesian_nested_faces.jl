@@ -1866,6 +1866,54 @@ function _nested_assert_sequence_coverage(
     return _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, (n1d, n1d, n1d))
 end
 
+function _nested_shell_sequence_piece_ownership_audit(
+    sequence::_CartesianNestedShellSequence3D,
+)
+    range_groups = UnitRange{Int}[sequence.core_column_range]
+    append!(range_groups, sequence.layer_column_ranges)
+    group_counts = Int[]
+    coefficient_matrix = sequence.coefficient_matrix
+    for row in axes(coefficient_matrix, 1)
+        nzcols = findall(!iszero, @view coefficient_matrix[row, :])
+        touched_groups = 0
+        for range in range_groups
+            any(col -> col in range, nzcols) && (touched_groups += 1)
+        end
+        push!(group_counts, touched_groups)
+    end
+    return (
+        min_group_count = minimum(group_counts),
+        max_group_count = maximum(group_counts),
+        unowned_row_count = count(iszero, group_counts),
+        multi_owned_row_count = count(>(1), group_counts),
+    )
+end
+
+function _nested_shell_sequence_contract_audit(
+    sequence::_CartesianNestedShellSequence3D,
+    parent_dims::NTuple{3,Int},
+)
+    expected_box = (
+        1:parent_dims[1],
+        1:parent_dims[2],
+        1:parent_dims[3],
+    )
+    ownership = _nested_shell_sequence_piece_ownership_audit(sequence)
+    expected_support_count = prod(parent_dims)
+    support_count = length(sequence.support_indices)
+    return (
+        support_count = support_count,
+        expected_support_count = expected_support_count,
+        missing_row_count = expected_support_count - support_count,
+        working_box = sequence.working_box,
+        full_parent_working_box = sequence.working_box == expected_box,
+        ownership_group_count_min = ownership.min_group_count,
+        ownership_group_count_max = ownership.max_group_count,
+        ownership_unowned_row_count = ownership.unowned_row_count,
+        ownership_multi_owned_row_count = ownership.multi_owned_row_count,
+    )
+end
+
 function _nested_shrunk_interval(
     interval::UnitRange{Int},
     nlayers::Integer;
@@ -2954,6 +3002,112 @@ function _nested_complete_shell_sequence_for_box(
         current_box...,
         shell_layers,
     )
+end
+
+"""
+    build_one_center_atomic_full_parent_shell_sequence(
+        bundle::_MappedOrdinaryGausslet1DBundle;
+        nside,
+        retain_xy = (4, 3),
+        retain_xz = (4, 3),
+        retain_yz = (4, 3),
+        retain_x_edge = 3,
+        retain_y_edge = 3,
+        retain_z_edge = 3,
+    )
+
+Build the canonical one-center atomic nested shell sequence on the full parent
+cube of the supplied mapped 1D gausslet bundle.
+
+This helper is the supported atomic one-center backbone:
+
+- it always uses full parent coverage
+- it always uses `working_box = (1:n, 1:n, 1:n)`
+- it peels complete shells until the direct inner cube reaches `nside`
+
+It should be used in place of any older central-box atomic diagnostic fixture.
+"""
+function build_one_center_atomic_full_parent_shell_sequence(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    nside::Int,
+    retain_xy::Tuple{Int,Int} = (4, 3),
+    retain_xz::Tuple{Int,Int} = (4, 3),
+    retain_yz::Tuple{Int,Int} = (4, 3),
+    retain_x_edge::Int = 3,
+    retain_y_edge::Int = 3,
+    retain_z_edge::Int = 3,
+)
+    n = length(bundle.basis)
+    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    return _nested_complete_shell_sequence_for_box(
+        bundles,
+        (1:n, 1:n, 1:n);
+        nside = nside,
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
+end
+
+function build_one_center_atomic_full_parent_shell_sequence(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    kwargs...,
+)
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = exponents,
+        center = center,
+        backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    return build_one_center_atomic_full_parent_shell_sequence(bundle; kwargs...)
+end
+
+"""
+    one_center_atomic_full_parent_fixed_block(
+        bundle::_MappedOrdinaryGausslet1DBundle;
+        nside,
+        kwargs...,
+    )
+
+Build the canonical one-center atomic nested fixed block on the full parent
+cube of the supplied mapped 1D gausslet bundle.
+
+This is a thin convenience wrapper around
+[`build_one_center_atomic_full_parent_shell_sequence`](@ref) followed by
+`_nested_fixed_block(...)`.
+"""
+function one_center_atomic_full_parent_fixed_block(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    kwargs...,
+)
+    sequence = build_one_center_atomic_full_parent_shell_sequence(bundle; kwargs...)
+    return _nested_fixed_block(sequence, bundle)
+end
+
+function one_center_atomic_full_parent_fixed_block(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    kwargs...,
+)
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = exponents,
+        center = center,
+        backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    return one_center_atomic_full_parent_fixed_block(bundle; kwargs...)
 end
 
 function _nested_interval_physical_width(
