@@ -507,6 +507,18 @@ function _xgaussian_sample_matrix(xgaussians::Vector{XGaussian}, xgrid::Vector{F
     return matrix
 end
 
+function _radial_rmax_target_odd_count(spec, spacing::Float64)
+    reference_max = uofx(spec.mapping_value, spec.rmax)
+    reference_max > 0.0 || throw(ArgumentError("RadialBasisSpec requires rmax to map to a positive reference range"))
+    ratio = reference_max / spacing
+    if spec.rmax_count_policy == :ceil_reference
+        return max(1, ceil(Int, ratio))
+    elseif spec.rmax_count_policy == :legacy_strict_trim
+        return max(1, floor(Int, prevfloat(ratio)))
+    end
+    throw(ArgumentError("unsupported rmax_count_policy=$(spec.rmax_count_policy)"))
+end
+
 function _build_radial_coefficients(spec; grid_h::Float64)
     spacing = spec.reference_spacing
     ninj = length(spec.xgaussians)
@@ -516,9 +528,7 @@ function _build_radial_coefficients(spec; grid_h::Float64)
                 throw(ArgumentError("RadialBasisSpec count must exceed odd_even_kmax + length(xgaussians)"))
             spec.count - spec.odd_even_kmax - ninj
         else
-            reference_max = uofx(spec.mapping_value, spec.rmax)
-            reference_max > 0.0 || throw(ArgumentError("RadialBasisSpec requires rmax to map to a positive reference range"))
-            max(1, ceil(Int, reference_max / spacing))
+            _radial_rmax_target_odd_count(spec, spacing)
         end
 
     lseed = target_odd_count + spec.tails
@@ -832,6 +842,7 @@ struct RadialBasisSpec{M <: AbstractCoordinateMapping} <: AbstractBasisSpec
     tails::Int
     odd_even_kmax::Int
     xgaussians::Vector{XGaussian}
+    rmax_count_policy::Symbol
 
     function RadialBasisSpec(
         family_value::GaussletFamily,
@@ -842,6 +853,7 @@ struct RadialBasisSpec{M <: AbstractCoordinateMapping} <: AbstractBasisSpec
         tails::Int,
         odd_even_kmax::Int,
         xgaussians::AbstractVector{XGaussian},
+        rmax_count_policy::Symbol,
     ) where {M <: AbstractCoordinateMapping}
         ((rmax === nothing) == (count === nothing)) &&
             throw(ArgumentError("provide exactly one of rmax or count"))
@@ -849,10 +861,12 @@ struct RadialBasisSpec{M <: AbstractCoordinateMapping} <: AbstractBasisSpec
         spacing_value > 0.0 || throw(ArgumentError("RadialBasisSpec requires reference_spacing > 0"))
         tails >= 0 || throw(ArgumentError("RadialBasisSpec requires tails >= 0"))
         odd_even_kmax >= 0 || throw(ArgumentError("RadialBasisSpec requires odd_even_kmax >= 0"))
+        rmax_count_policy in (:ceil_reference, :legacy_strict_trim) ||
+            throw(ArgumentError("RadialBasisSpec requires rmax_count_policy to be :ceil_reference or :legacy_strict_trim"))
         rmax_value = rmax === nothing ? nothing : Float64(rmax)
         rmax_value === nothing || rmax_value > 0.0 || throw(ArgumentError("RadialBasisSpec requires rmax > 0"))
         count === nothing || count > 0 || throw(ArgumentError("RadialBasisSpec requires count > 0"))
-        new{M}(family_value, rmax_value, count, mapping_value, spacing_value, tails, odd_even_kmax, collect(xgaussians))
+        new{M}(family_value, rmax_value, count, mapping_value, spacing_value, tails, odd_even_kmax, collect(xgaussians), rmax_count_policy)
     end
 end
 
@@ -866,11 +880,12 @@ RadialBasisSpec(
     odd_even_kmax::Int = 6,
     xgaussian_count::Int = 2,
     xgaussians::Union{Nothing, AbstractVector{XGaussian}} = nothing,
+    rmax_count_policy::Symbol = :ceil_reference,
 ) = begin
     xgaussians !== nothing && xgaussian_count != 2 &&
         throw(ArgumentError("pass either explicit xgaussians or xgaussian_count, not both"))
     chosen_xgaussians = xgaussians === nothing ? recommended_xgaussians(xgaussian_count) : xgaussians
-    RadialBasisSpec(_as_family(family_value), rmax, count, mapping, reference_spacing, tails, odd_even_kmax, chosen_xgaussians)
+    RadialBasisSpec(_as_family(family_value), rmax, count, mapping, reference_spacing, tails, odd_even_kmax, chosen_xgaussians, rmax_count_policy)
 end
 
 """
@@ -1029,8 +1044,11 @@ function Base.show(io::IO, spec::RadialBasisSpec)
         spec.odd_even_kmax,
         ", xgaussians=",
         length(spec.xgaussians),
-        ")",
     )
+    if spec.rmax_count_policy != :ceil_reference
+        print(io, ", rmax_count_policy=", spec.rmax_count_policy)
+    end
+    print(io, ")")
 end
 
 function Base.show(io::IO, basis::UniformBasis)
