@@ -4505,35 +4505,19 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
                 fixed_block.coefficient_matrix,
                 blocks.overlap_ga,
             )
-            modern = diagnose_qwrg_residual_space(
-                fixed_block.overlap,
-                overlap_fg,
-                blocks.overlap_aa,
-                keep_policy = :relative_case_scale,
-            )
             near_null = diagnose_qwrg_residual_space(
                 fixed_block.overlap,
                 overlap_fg,
                 blocks.overlap_aa;
                 keep_policy = :near_null_only,
             )
-            modern_total_basis = size(
-                GaussletBases._qwrg_residual_space(
-                    fixed_block.overlap,
-                    overlap_fg,
-                    blocks.overlap_aa,
-                ).raw_to_final,
-                2,
+            near_null_data = GaussletBases._qwrg_residual_space(
+                fixed_block.overlap,
+                overlap_fg,
+                blocks.overlap_aa;
+                keep_policy = :near_null_only,
             )
-            near_null_total_basis = size(
-                GaussletBases._qwrg_residual_space(
-                    fixed_block.overlap,
-                    overlap_fg,
-                    blocks.overlap_aa;
-                    keep_policy = :near_null_only,
-                ).raw_to_final,
-                2,
-            )
+            near_null_total_basis = size(near_null_data.raw_to_final, 2)
             legacy_alias = diagnose_qwrg_residual_space(
                 fixed_block.overlap,
                 overlap_fg,
@@ -4543,11 +4527,74 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
             return (
                 fixed_gausslet_count = size(fixed_block.overlap, 1),
                 supplement_count = length(supplement3d.orbitals),
-                modern = modern,
-                modern_total_basis = modern_total_basis,
                 near_null = near_null,
+                near_null_data = near_null_data,
                 near_null_total_basis = near_null_total_basis,
                 legacy_alias = legacy_alias,
+            )
+        end
+    end)
+end
+
+function _one_center_atomic_ns9_legacy_profile_qw_fixture()
+    return _cached_fixture(:one_center_atomic_ns9_legacy_profile_qw_fixture, () -> begin
+        mktemp() do path, io
+            write(io, _ne_repo_v6z_sp_basis_text())
+            close(io)
+
+            basis = build_basis(MappedUniformBasisSpec(
+                :G10;
+                count = 29,
+                mapping = white_lindsey_atomic_mapping(Z = 10.0, d = 0.03, tail_spacing = 10.0),
+                reference_spacing = 1.0,
+            ))
+            expansion = coulomb_gaussian_expansion(doacc = false)
+            fixed_block = one_center_atomic_legacy_profile_fixed_block(
+                basis;
+                expansion = expansion,
+                working_box = 2:28,
+                nside = 9,
+            )
+            supplement = legacy_atomic_gaussian_supplement(
+                "Ne",
+                "repo-v6z-sp";
+                lmax = 1,
+                basisfile = path,
+            )
+            supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+            bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+                basis;
+                exponents = expansion.exponents,
+                center = 0.0,
+                backend = :numerical_reference,
+            )
+            blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(
+                bundle,
+                supplement3d,
+                expansion,
+            )
+            overlap_fg = GaussletBases._qwrg_contract_parent_ga_matrix(
+                fixed_block.coefficient_matrix,
+                blocks.overlap_ga,
+            )
+            residual_data = GaussletBases._qwrg_residual_space(
+                fixed_block.overlap,
+                overlap_fg,
+                blocks.overlap_aa;
+                keep_policy = :near_null_only,
+            )
+            operators = ordinary_cartesian_qiu_white_operators(
+                fixed_block,
+                supplement;
+                expansion = expansion,
+                Z = 10.0,
+                interaction_treatment = :ggt_nearest,
+                residual_keep_policy = :near_null_only,
+            )
+            return (
+                fixed_block = fixed_block,
+                residual_data = residual_data,
+                operators = operators,
             )
         end
     end)
@@ -4878,7 +4925,7 @@ end
     @test fixed_legacy_direct.pair_terms ≈ fixed_legacy_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
 end
 
-@testset "QW residual-space keep policy distinguishes near-null and relative-case-scale completion" begin
+@testset "QW residual-space keep policy is near-null-only and stabilized" begin
     # Literal residual-overlap spectrum observed on the anchored one-center
     # Ne legacy-profile case:
     # parent side = 29, working box = 2:28, nside = 7, supplement lmax = 1.
@@ -4912,13 +4959,13 @@ end
     gausslet_overlap = Matrix{Float64}(I, 1, 1)
     overlap_ga = zeros(Float64, 1, length(residual_overlap_eigenvalues))
     overlap_aa = Matrix(Diagonal(residual_overlap_eigenvalues))
-    diagnostics = diagnose_qwrg_residual_space(
+    near_null_diagnostics = diagnose_qwrg_residual_space(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
-        keep_policy = :relative_case_scale,
+        keep_policy = :near_null_only,
     )
-    near_null_diagnostics = diagnose_qwrg_residual_space(
+    near_null_data = GaussletBases._qwrg_residual_space(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
@@ -4931,17 +4978,6 @@ end
         keep_policy = :legacy_profile,
     )
 
-    @test diagnostics.keep_policy == :relative_case_scale
-    @test diagnostics.gaussian_count == 25
-    @test diagnostics.supplement_numerical_rank == 25
-    @test diagnostics.residual_numerical_rank == 25
-    @test diagnostics.kept_count == 8
-    @test diagnostics.discarded_count == 17
-    @test diagnostics.keep_tol ≈ 1.945893481e-4 atol = 1.0e-12 rtol = 1.0e-10
-    @test maximum(diagnostics.discarded_eigenvalues) > diagnostics.residual_null_rank_tol
-    @test maximum(diagnostics.discarded_eigenvalues) < diagnostics.keep_tol
-    @test minimum(diagnostics.kept_eigenvalues) > diagnostics.keep_tol
-
     @test near_null_diagnostics.keep_policy == :near_null_only
     @test near_null_diagnostics.gaussian_count == 25
     @test near_null_diagnostics.supplement_numerical_rank == 25
@@ -4949,9 +4985,14 @@ end
     @test near_null_diagnostics.kept_count == 25
     @test near_null_diagnostics.discarded_count == 0
     @test near_null_diagnostics.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+    @test near_null_diagnostics.kept_block_pre_stabilization_overlap_error < 1.0e-12
+    @test near_null_diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-12
+    @test norm(near_null_data.final_overlap - I, Inf) < 1.0e-10
     @test legacy_alias_diagnostics.keep_policy == :near_null_only
     @test legacy_alias_diagnostics.kept_count == near_null_diagnostics.kept_count
     @test legacy_alias_diagnostics.keep_tol == near_null_diagnostics.keep_tol
+    @test legacy_alias_diagnostics.kept_block_post_stabilization_overlap_error ==
+        near_null_diagnostics.kept_block_post_stabilization_overlap_error
 end
 
 @testset "One-center atomic legacy-profile residual completion contract" begin
@@ -4963,19 +5004,62 @@ end
         @test data.fixed_gausslet_count == 2523
         @test data.supplement_count == 25
 
-        @test data.modern.keep_policy == :relative_case_scale
-        @test data.modern.kept_count == 8
-        @test data.modern.discarded_count == 17
-        @test data.modern_total_basis == 2531
-
         @test data.near_null.keep_policy == :near_null_only
         @test data.near_null.residual_numerical_rank == 25
         @test data.near_null.kept_count == 25
         @test data.near_null.discarded_count == 0
         @test data.near_null.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+        @test data.near_null.kept_block_pre_stabilization_overlap_error > 0.0
+        @test data.near_null.kept_block_post_stabilization_overlap_error <
+            data.near_null.kept_block_pre_stabilization_overlap_error
+        @test data.near_null.kept_block_post_stabilization_overlap_error < 1.0e-8
+        @test norm(data.near_null_data.final_overlap - I, Inf) < 1.0e-8
         @test data.near_null_total_basis == 2548
         @test data.legacy_alias.keep_policy == :near_null_only
         @test data.legacy_alias.kept_count == data.near_null.kept_count
+    end
+end
+
+@testset "Atomic residual keep policy rejects relative_case_scale on public QW routes" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        source_basis_qw, _legacy_qw, _ordinary_l0, _ordinary_l0_check = _qiu_white_full_nearest_fixture()
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 1)
+        err = try
+            ordinary_cartesian_qiu_white_operators(
+                source_basis_qw,
+                supplement;
+                expansion = coulomb_gaussian_expansion(doacc = false),
+                Z = 2.0,
+                interaction_treatment = :ggt_nearest,
+                residual_keep_policy = :relative_case_scale,
+            )
+            nothing
+        catch caught
+            caught
+        end
+        @test err isa ArgumentError
+        @test occursin(":near_null_only", sprint(showerror, err))
+        @test occursin(":legacy_profile", sprint(showerror, err))
+    end
+end
+
+@testset "One-center atomic ns=9 legacy-profile residual stabilization closes center-extraction failure" begin
+    if !_RUN_SLOW_TESTS
+        @test true
+    else
+        data = _one_center_atomic_ns9_legacy_profile_qw_fixture()
+        @test data.residual_data.diagnostics.kept_count == 25
+        @test data.residual_data.diagnostics.keep_policy == :near_null_only
+        @test data.residual_data.diagnostics.kept_block_pre_stabilization_overlap_error > 1.0e-8
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-8
+        @test norm(data.residual_data.final_overlap - I, Inf) < 1.0e-8
+        @test data.operators.residual_count == 25
+        @test norm(data.operators.overlap - I, Inf) < 1.0e-8
+        check = GaussletBases.ordinary_cartesian_1s2_check(data.operators)
+        @test isfinite(check.orbital_energy)
+        @test check.overlap_error < 1.0e-8
     end
 end
 

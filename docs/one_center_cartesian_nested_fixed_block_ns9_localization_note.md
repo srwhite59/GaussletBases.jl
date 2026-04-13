@@ -196,33 +196,44 @@ The canonical atomic supplement keep rule is now:
 - `residual_keep_policy = :near_null_only`
 - keep if orthogonalized residual-overlap eigenvalue `> 1e-8`
 
-The older case-relative pruning heuristic remains available only as an
-explicit alternative:
-
-- `residual_keep_policy = :relative_case_scale`
-
 The old name:
 
 - `residual_keep_policy = :legacy_profile`
 
 remains accepted only as a compatibility alias for `:near_null_only`.
 
-On the same anchored Ne legacy-profile case:
+The retained residual block is now explicitly stabilized after selection:
 
-- modern/default route
-  - kept residual count `= 8`
-  - total basis count `= 2531`
-  - low one-body ladder
-    - `[-49.970620984631964, -12.497160696941414, -12.497160696940517, -12.497160696940185, -12.494604661347122, -5.551649973093433, -5.551649973093191, -5.551649973092907]`
-- explicit near-null route
-  - kept residual count `= 25`
-  - total basis count `= 2548`
-  - low one-body ladder
-    - `[-49.99990524677932, -12.499971049252997, -12.49997104925268, -12.499971049252615, -12.49997099214756, -5.555472605898918, -5.555472605898094, -5.5554726058980854]`
+- if `R` is the selected raw residual coefficient block, the repo forms
+  `Skeep = R' * Sraw * R`
+- then replaces `R` by
+  `R * inv(sqrt(Symmetric(Skeep)))`
+
+This keeps all selected near-null-surviving directions while making the
+retained residual block orthonormal again to numerical precision before:
+
+- `raw_to_final`
+- residual center extraction
+- residual width extraction
+- downstream one-body / interaction transforms
+
+That closes the later `ns = 9` nested atomic failure boundary: the problem was
+not another keep-policy bug, but the fact that the kept full-rank residual
+block was no longer orthonormal enough for downstream center extraction after
+selection.
+
+On the anchored Ne legacy-profile case:
+
+- kept residual count `= 25`
+- total basis count `= 2548`
+- low one-body ladder
+  - `[-49.99990524677932, -12.499971049252997, -12.49997104925268, -12.499971049252615, -12.49997099214756, -5.555472605898918, -5.555472605898094, -5.5554726058980854]`
 
 So the remaining one-center Ne basis-count gap was indeed due to aggressive
 residual truncation, not shell law, working-box choice, or raw supplement rank
-loss.
+loss. The later `ns = 9` atomic blocker was a residual-block orthonormality
+issue after selection, and is now addressed by explicit stabilization rather
+than reintroducing aggressive pruning.
 
 ## Structural Anchors
 

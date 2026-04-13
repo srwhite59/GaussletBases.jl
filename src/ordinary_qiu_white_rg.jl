@@ -106,6 +106,8 @@ struct QWRGResidualSpaceDiagnostics
     keep_tol::Float64
     kept_count::Int
     discarded_count::Int
+    kept_block_pre_stabilization_overlap_error::Float64
+    kept_block_post_stabilization_overlap_error::Float64
     supplement_overlap_eigenvalues::Vector{Float64}
     residual_overlap_eigenvalues::Vector{Float64}
     kept_indices::Vector{Int}
@@ -129,6 +131,10 @@ function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
         diagnostics.keep_policy,
         ", keep_tol=",
         diagnostics.keep_tol,
+        ", pre_stab_error=",
+        diagnostics.kept_block_pre_stabilization_overlap_error,
+        ", post_stab_error=",
+        diagnostics.kept_block_post_stabilization_overlap_error,
         ")",
     )
 end
@@ -1551,19 +1557,26 @@ function _qwrg_residual_null_rank_tol(values::AbstractVector{<:Real})
     return max(_QWRG_RESIDUAL_NULL_ABS_TOL, _QWRG_RESIDUAL_NULL_REL_TOL * max_value)
 end
 
-function _qwrg_residual_keep_policy(keep_policy::Symbol)
+function _qwrg_residual_keep_policy(
+    keep_policy::Symbol;
+    allow_relative_case_scale::Bool = true,
+)
     keep_policy == :legacy_profile && return :near_null_only
-    keep_policy in (:relative_case_scale, :near_null_only) && return keep_policy
+    keep_policy == :near_null_only && return keep_policy
+    keep_policy == :relative_case_scale && allow_relative_case_scale && return keep_policy
+    allowed = allow_relative_case_scale ?
+        ":near_null_only, :relative_case_scale, or the compatibility alias :legacy_profile" :
+        ":near_null_only or the compatibility alias :legacy_profile"
     throw(
         ArgumentError(
-            "QW residual keep policy must be :near_null_only, :relative_case_scale, or the compatibility alias :legacy_profile",
+            "QW residual keep policy must be $(allowed)",
         ),
     )
 end
 
 function _qwrg_residual_keep_tol(
     values::AbstractVector{<:Real};
-    keep_policy::Symbol = :relative_case_scale,
+    keep_policy::Symbol = :near_null_only,
 )
     keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
     if keep_policy_value == :relative_case_scale
@@ -1571,6 +1584,56 @@ function _qwrg_residual_keep_tol(
         return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
     end
     return _QWRG_RESIDUAL_KEEP_ABS_TOL
+end
+
+function _qwrg_atomic_residual_keep_policy(keep_policy::Symbol)
+    return _qwrg_residual_keep_policy(
+        keep_policy;
+        allow_relative_case_scale = false,
+    )
+end
+
+function _qwrg_stabilize_residual_coefficients(
+    raw_overlap::AbstractMatrix{<:Real},
+    residual_coefficients::AbstractMatrix{<:Real},
+)
+    nresidual = size(residual_coefficients, 2)
+    nresidual == 0 && return (
+        coefficients = Matrix{Float64}(residual_coefficients),
+        pre_overlap = Matrix{Float64}(I, 0, 0),
+        post_overlap = Matrix{Float64}(I, 0, 0),
+        pre_error = 0.0,
+        post_error = 0.0,
+    )
+    raw_overlap_value = Matrix{Float64}(raw_overlap)
+    residual_coefficients_value = Matrix{Float64}(residual_coefficients)
+    pre_overlap = Matrix{Float64}(transpose(residual_coefficients_value) * raw_overlap_value * residual_coefficients_value)
+    pre_overlap = Matrix{Float64}(0.5 .* (pre_overlap .+ transpose(pre_overlap)))
+    pre_error = norm(pre_overlap - Matrix{Float64}(I, nresidual, nresidual), Inf)
+    decomposition = eigen(Symmetric(pre_overlap))
+    stabilization_tol = _qwrg_residual_null_rank_tol(decomposition.values)
+    minimum(decomposition.values) > -stabilization_tol || throw(
+        ArgumentError(
+            "QW residual-space stabilization requires the kept residual overlap block to stay positive semidefinite",
+        ),
+    )
+    stabilized_values = max.(Float64.(decomposition.values), stabilization_tol)
+    inverse_sqrt = Matrix{Float64}(
+        decomposition.vectors *
+        Diagonal(1.0 ./ sqrt.(stabilized_values)) *
+        transpose(decomposition.vectors),
+    )
+    stabilized_coefficients = Matrix{Float64}(residual_coefficients_value * inverse_sqrt)
+    post_overlap = Matrix{Float64}(transpose(stabilized_coefficients) * raw_overlap_value * stabilized_coefficients)
+    post_overlap = Matrix{Float64}(0.5 .* (post_overlap .+ transpose(post_overlap)))
+    post_error = norm(post_overlap - Matrix{Float64}(I, nresidual, nresidual), Inf)
+    return (
+        coefficients = stabilized_coefficients,
+        pre_overlap = pre_overlap,
+        post_overlap = post_overlap,
+        pre_error = pre_error,
+        post_error = post_error,
+    )
 end
 
 function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
@@ -2896,7 +2959,7 @@ function _qwrg_residual_space_analysis(
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
     ;
-    keep_policy::Symbol = :relative_case_scale,
+    keep_policy::Symbol = :near_null_only,
 )
     keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
     gausslet_overlap_value = Matrix{Float64}(gausslet_overlap)
@@ -2931,6 +2994,13 @@ function _qwrg_residual_space_analysis(
     keep_tol = _qwrg_residual_keep_tol(residual_decomposition.values; keep_policy = keep_policy_value)
     keep = findall(>(keep_tol), residual_decomposition.values)
     discarded = setdiff(collect(1:length(residual_decomposition.values)), keep)
+    kept_residual_coefficients = isempty(keep) ? zeros(Float64, size(seed_projector, 1), 0) :
+        Matrix{Float64}(
+            seed_projector *
+            residual_decomposition.vectors[:, keep] *
+            Diagonal(1.0 ./ sqrt.(residual_decomposition.values[keep])),
+        )
+    stabilization = _qwrg_stabilize_residual_coefficients(raw_overlap, kept_residual_coefficients)
 
     diagnostics = QWRGResidualSpaceDiagnostics(
         ngausslet,
@@ -2947,6 +3017,8 @@ function _qwrg_residual_space_analysis(
         keep_tol,
         length(keep),
         ngaussian - length(keep),
+        stabilization.pre_error,
+        stabilization.post_error,
         Float64[supplement_decomposition.values...],
         Float64[residual_decomposition.values...],
         keep,
@@ -2960,6 +3032,8 @@ function _qwrg_residual_space_analysis(
         residual_overlap = residual_overlap,
         decomposition = residual_decomposition,
         keep = keep,
+        residual_coefficients_pre_stabilization = kept_residual_coefficients,
+        residual_coefficients = stabilization.coefficients,
         diagnostics = diagnostics,
     )
 end
@@ -2969,7 +3043,7 @@ function diagnose_qwrg_residual_space(
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
     ;
-    keep_policy::Symbol = :relative_case_scale,
+    keep_policy::Symbol = :near_null_only,
 )
     return _qwrg_residual_space_analysis(
         gausslet_overlap,
@@ -2984,7 +3058,7 @@ function _qwrg_residual_space(
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
     ;
-    keep_policy::Symbol = :relative_case_scale,
+    keep_policy::Symbol = :near_null_only,
 )
     analysis = _qwrg_residual_space_analysis(
         gausslet_overlap,
@@ -2997,21 +3071,21 @@ function _qwrg_residual_space(
     isempty(keep) && throw(
         ArgumentError("Qiu-White residual-Gaussian construction produced no nontrivial 3D residual directions"),
     )
-    residual_coefficients =
-        analysis.seed_projector *
-        analysis.decomposition.vectors[:, keep] *
-        Diagonal(1.0 ./ sqrt.(analysis.decomposition.values[keep]))
+    residual_coefficients = analysis.residual_coefficients
     gausslet_coefficients = vcat(
         Matrix{Float64}(I, ngausslet, ngausslet),
         zeros(Float64, analysis.diagnostics.gaussian_count, ngausslet),
     )
     raw_to_final = hcat(gausslet_coefficients, residual_coefficients)
     final_overlap = Matrix{Float64}(transpose(raw_to_final) * analysis.raw_overlap * raw_to_final)
+    final_overlap = Matrix{Float64}(0.5 .* (final_overlap .+ transpose(final_overlap)))
     return (
         raw_overlap = analysis.raw_overlap,
         raw_to_final = raw_to_final,
         residual_coefficients = residual_coefficients,
+        residual_coefficients_pre_stabilization = analysis.residual_coefficients_pre_stabilization,
         final_overlap = final_overlap,
+        diagnostics = analysis.diagnostics,
     )
 end
 
@@ -4893,11 +4967,12 @@ independent of supplement residual retention.
 supplement keep contract. It keeps orthogonalized residual directions with
 residual-overlap eigenvalue `> 1e-8`.
 
-`residual_keep_policy = :relative_case_scale` remains available as an explicit
-alternative pruning heuristic.
-
 `residual_keep_policy = :legacy_profile` remains accepted only as a
 compatibility alias for `:near_null_only`.
+
+After residual directions are selected, the retained residual block is
+explicitly stabilized back to overlap-orthonormality before any downstream
+center/width extraction or raw-to-final transforms are used.
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
@@ -4912,6 +4987,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend == :numerical_reference || throw(
         ArgumentError("ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
     )
+    residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
     return _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
         basis,
         gaussian_data;
@@ -4919,7 +4995,7 @@ function ordinary_cartesian_qiu_white_operators(
         Z = Z,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy,
+        residual_keep_policy = residual_keep_policy_value,
         timing = timing,
     )
 end
@@ -4960,11 +5036,12 @@ independent of supplement residual retention.
 supplement keep contract. It keeps orthogonalized residual directions with
 residual-overlap eigenvalue `> 1e-8`.
 
-`residual_keep_policy = :relative_case_scale` remains available as an explicit
-alternative pruning heuristic.
-
 `residual_keep_policy = :legacy_profile` remains accepted only as a
 compatibility alias for `:near_null_only`.
+
+After residual directions are selected, the retained residual block is
+explicitly stabilized back to overlap-orthonormality before any downstream
+center/width extraction or raw-to-final transforms are used.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,
@@ -4982,13 +5059,14 @@ function ordinary_cartesian_qiu_white_operators(
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),
     )
+    residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
     return _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
         fixed_block,
         gaussian_data;
         expansion = expansion,
         Z = Z,
         gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy,
+        residual_keep_policy = residual_keep_policy_value,
         timing = timing,
     )
 end
