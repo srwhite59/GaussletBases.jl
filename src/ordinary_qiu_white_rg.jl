@@ -1552,11 +1552,11 @@ function _qwrg_residual_null_rank_tol(values::AbstractVector{<:Real})
 end
 
 function _qwrg_residual_keep_policy(keep_policy::Symbol)
-    keep_policy in (:relative_case_scale, :legacy_profile) && return keep_policy
-    keep_policy == :near_null_only && return :legacy_profile
+    keep_policy == :legacy_profile && return :near_null_only
+    keep_policy in (:relative_case_scale, :near_null_only) && return keep_policy
     throw(
         ArgumentError(
-            "QW residual keep policy must be :relative_case_scale, :legacy_profile, or :near_null_only",
+            "QW residual keep policy must be :near_null_only, :relative_case_scale, or the compatibility alias :legacy_profile",
         ),
     )
 end
@@ -1570,7 +1570,7 @@ function _qwrg_residual_keep_tol(
         isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
         return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
     end
-    return _qwrg_residual_null_rank_tol(values)
+    return _QWRG_RESIDUAL_KEEP_ABS_TOL
 end
 
 function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
@@ -4840,7 +4840,7 @@ end
         Z = 2.0,
         interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
-        residual_keep_policy = :relative_case_scale,
+        residual_keep_policy = :near_null_only,
         timing = false,
     )
 
@@ -4872,9 +4872,18 @@ This path now uses the explicit atomic-centered 3D Cartesian shell route for
 all active atomic supplement content up to `lmax <= 2`, including pure `s`
 shells.
 
-`residual_keep_policy = :legacy_profile` switches the residual completion to a
-near-null-only keep rule for literal one-center atomic legacy-profile
-reproduction. The modern default remains `:relative_case_scale`.
+`nested_profile` selects the shell/working-box geometry contract. It is
+independent of supplement residual retention.
+
+`residual_keep_policy = :near_null_only` is now the canonical atomic
+supplement keep contract. It keeps orthogonalized residual directions with
+residual-overlap eigenvalue `> 1e-8`.
+
+`residual_keep_policy = :relative_case_scale` remains available as an explicit
+alternative pruning heuristic.
+
+`residual_keep_policy = :legacy_profile` remains accepted only as a
+compatibility alias for `:near_null_only`.
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
@@ -4883,7 +4892,7 @@ function ordinary_cartesian_qiu_white_operators(
     Z::Real = 2.0,
     interaction_treatment::Symbol = :mwg,
     gausslet_backend::Symbol = :numerical_reference,
-    residual_keep_policy::Symbol = :relative_case_scale,
+    residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
     )
     gausslet_backend == :numerical_reference || throw(
@@ -4909,7 +4918,7 @@ end
         Z = 2.0,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
-        residual_keep_policy = :relative_case_scale,
+        residual_keep_policy = :near_null_only,
         timing = false,
     )
 
@@ -4930,9 +4939,18 @@ It now uses the explicit atomic-centered 3D Cartesian shell route for all
 active atomic supplement content up to `lmax <= 2`, including pure `s`
 shells.
 
-`residual_keep_policy = :legacy_profile` keeps all numerically non-null
-residual supplement directions on the literal one-center atomic legacy-profile
-lane without changing the modern default behavior elsewhere.
+`nested_profile` selects the shell/working-box geometry contract. It is
+independent of supplement residual retention.
+
+`residual_keep_policy = :near_null_only` is now the canonical atomic
+supplement keep contract. It keeps orthogonalized residual directions with
+residual-overlap eigenvalue `> 1e-8`.
+
+`residual_keep_policy = :relative_case_scale` remains available as an explicit
+alternative pruning heuristic.
+
+`residual_keep_policy = :legacy_profile` remains accepted only as a
+compatibility alias for `:near_null_only`.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,
@@ -4941,7 +4959,7 @@ function ordinary_cartesian_qiu_white_operators(
     Z::Real = 2.0,
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
-    residual_keep_policy::Symbol = :relative_case_scale,
+    residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
 )
     gausslet_backend == :numerical_reference || throw(

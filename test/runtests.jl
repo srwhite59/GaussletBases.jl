@@ -4508,12 +4508,13 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
                 fixed_block.overlap,
                 overlap_fg,
                 blocks.overlap_aa,
+                keep_policy = :relative_case_scale,
             )
-            legacy = diagnose_qwrg_residual_space(
+            near_null = diagnose_qwrg_residual_space(
                 fixed_block.overlap,
                 overlap_fg,
                 blocks.overlap_aa;
-                keep_policy = :legacy_profile,
+                keep_policy = :near_null_only,
             )
             modern_total_basis = size(
                 GaussletBases._qwrg_residual_space(
@@ -4523,22 +4524,29 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
                 ).raw_to_final,
                 2,
             )
-            legacy_total_basis = size(
+            near_null_total_basis = size(
                 GaussletBases._qwrg_residual_space(
                     fixed_block.overlap,
                     overlap_fg,
                     blocks.overlap_aa;
-                    keep_policy = :legacy_profile,
+                    keep_policy = :near_null_only,
                 ).raw_to_final,
                 2,
+            )
+            legacy_alias = diagnose_qwrg_residual_space(
+                fixed_block.overlap,
+                overlap_fg,
+                blocks.overlap_aa;
+                keep_policy = :legacy_profile,
             )
             return (
                 fixed_gausslet_count = size(fixed_block.overlap, 1),
                 supplement_count = length(supplement3d.orbitals),
                 modern = modern,
                 modern_total_basis = modern_total_basis,
-                legacy = legacy,
-                legacy_total_basis = legacy_total_basis,
+                near_null = near_null,
+                near_null_total_basis = near_null_total_basis,
+                legacy_alias = legacy_alias,
             )
         end
     end)
@@ -4797,7 +4805,7 @@ end
     @test fixed_legacy_direct.pair_terms ≈ fixed_legacy_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
 end
 
-@testset "QW residual-space keep policy distinguishes modern and legacy-profile Ne completion" begin
+@testset "QW residual-space keep policy distinguishes near-null and relative-case-scale completion" begin
     # Literal residual-overlap spectrum observed on the anchored one-center
     # Ne legacy-profile case:
     # parent side = 29, working box = 2:28, nside = 7, supplement lmax = 1.
@@ -4831,8 +4839,19 @@ end
     gausslet_overlap = Matrix{Float64}(I, 1, 1)
     overlap_ga = zeros(Float64, 1, length(residual_overlap_eigenvalues))
     overlap_aa = Matrix(Diagonal(residual_overlap_eigenvalues))
-    diagnostics = diagnose_qwrg_residual_space(gausslet_overlap, overlap_ga, overlap_aa)
-    legacy_diagnostics = diagnose_qwrg_residual_space(
+    diagnostics = diagnose_qwrg_residual_space(
+        gausslet_overlap,
+        overlap_ga,
+        overlap_aa;
+        keep_policy = :relative_case_scale,
+    )
+    near_null_diagnostics = diagnose_qwrg_residual_space(
+        gausslet_overlap,
+        overlap_ga,
+        overlap_aa;
+        keep_policy = :near_null_only,
+    )
+    legacy_alias_diagnostics = diagnose_qwrg_residual_space(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
@@ -4850,14 +4869,16 @@ end
     @test maximum(diagnostics.discarded_eigenvalues) < diagnostics.keep_tol
     @test minimum(diagnostics.kept_eigenvalues) > diagnostics.keep_tol
 
-    @test legacy_diagnostics.keep_policy == :legacy_profile
-    @test legacy_diagnostics.gaussian_count == 25
-    @test legacy_diagnostics.supplement_numerical_rank == 25
-    @test legacy_diagnostics.residual_numerical_rank == 25
-    @test legacy_diagnostics.kept_count == 25
-    @test legacy_diagnostics.discarded_count == 0
-    @test legacy_diagnostics.keep_tol == legacy_diagnostics.residual_null_rank_tol
-    @test legacy_diagnostics.keep_tol ≈ 1.0e-12 atol = 0.0 rtol = 0.0
+    @test near_null_diagnostics.keep_policy == :near_null_only
+    @test near_null_diagnostics.gaussian_count == 25
+    @test near_null_diagnostics.supplement_numerical_rank == 25
+    @test near_null_diagnostics.residual_numerical_rank == 25
+    @test near_null_diagnostics.kept_count == 25
+    @test near_null_diagnostics.discarded_count == 0
+    @test near_null_diagnostics.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+    @test legacy_alias_diagnostics.keep_policy == :near_null_only
+    @test legacy_alias_diagnostics.kept_count == near_null_diagnostics.kept_count
+    @test legacy_alias_diagnostics.keep_tol == near_null_diagnostics.keep_tol
 end
 
 @testset "One-center atomic legacy-profile residual completion contract" begin
@@ -4874,12 +4895,14 @@ end
         @test data.modern.discarded_count == 17
         @test data.modern_total_basis == 2531
 
-        @test data.legacy.keep_policy == :legacy_profile
-        @test data.legacy.residual_numerical_rank == 25
-        @test data.legacy.kept_count == 25
-        @test data.legacy.discarded_count == 0
-        @test data.legacy.keep_tol == data.legacy.residual_null_rank_tol
-        @test data.legacy_total_basis == 2548
+        @test data.near_null.keep_policy == :near_null_only
+        @test data.near_null.residual_numerical_rank == 25
+        @test data.near_null.kept_count == 25
+        @test data.near_null.discarded_count == 0
+        @test data.near_null.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+        @test data.near_null_total_basis == 2548
+        @test data.legacy_alias.keep_policy == :near_null_only
+        @test data.legacy_alias.kept_count == data.near_null.kept_count
     end
 end
 

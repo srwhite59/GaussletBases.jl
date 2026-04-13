@@ -181,17 +181,31 @@ largest residual overlap eigenvalue.
 
 That diagnosis is now implemented directly in the repo.
 
-The atomic supplement path keeps the modern default rule as:
+The downstream naming has now been cleaned up:
+
+- `nested_profile = :legacy_profile`
+  controls the inner working-box geometry contract
+- `residual_keep_policy = :near_null_only`
+  controls supplement residual-direction retention
+
+Those are independent contracts and no longer share the same preferred public
+name.
+
+The canonical atomic supplement keep rule is now:
+
+- `residual_keep_policy = :near_null_only`
+- keep if orthogonalized residual-overlap eigenvalue `> 1e-8`
+
+The older case-relative pruning heuristic remains available only as an
+explicit alternative:
 
 - `residual_keep_policy = :relative_case_scale`
 
-and adds an explicit legacy-profile completion rule:
+The old name:
 
 - `residual_keep_policy = :legacy_profile`
-- alias: `:near_null_only`
 
-The legacy-profile rule keeps all numerically non-null residual directions
-instead of applying the old `10%`-of-max relative cutoff.
+remains accepted only as a compatibility alias for `:near_null_only`.
 
 On the same anchored Ne legacy-profile case:
 
@@ -200,7 +214,7 @@ On the same anchored Ne legacy-profile case:
   - total basis count `= 2531`
   - low one-body ladder
     - `[-49.970620984631964, -12.497160696941414, -12.497160696940517, -12.497160696940185, -12.494604661347122, -5.551649973093433, -5.551649973093191, -5.551649973092907]`
-- explicit legacy-profile route
+- explicit near-null route
   - kept residual count `= 25`
   - total basis count `= 2548`
   - low one-body ladder
