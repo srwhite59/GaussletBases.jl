@@ -5716,6 +5716,132 @@ end
     end
 end
 
+@testset "Ne cc-pV6Z atomic shell referee for lmax=0 and lmax=1" begin
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: Ne repo-v6z-sp\n" *
+            "Ne    S\n" *
+            "      9.024000e+05           5.510000e-06\n" *
+            "      1.351000e+05           4.282000e-05\n" *
+            "      3.075000e+04           2.251400e-04\n" *
+            "      8.710000e+03           9.501600e-04\n" *
+            "      2.842000e+03           3.447190e-03\n" *
+            "      1.026000e+03           1.112545e-02\n" *
+            "      4.001000e+02           3.220568e-02\n" *
+            "      1.659000e+02           8.259891e-02\n" *
+            "      7.221000e+01           1.799056e-01\n" *
+            "      3.266000e+01           3.060521e-01\n" *
+            "      1.522000e+01           3.401256e-01\n" *
+            "      7.149000e+00           1.761682e-01\n" *
+            "      2.957000e+00           2.101527e-02\n" *
+            "      1.335000e+00          -5.074500e-04\n" *
+            "      5.816000e-01           1.057850e-03\n" *
+            "      2.463000e-01          -5.988000e-05\n" *
+            "Ne    S\n" *
+            "      7.149000e+00           1.000000e+00\n" *
+            "Ne    S\n" *
+            "      2.957000e+00           1.000000e+00\n" *
+            "Ne    S\n" *
+            "      1.335000e+00           1.000000e+00\n" *
+            "Ne    S\n" *
+            "      9.024000e+05          -1.290000e-06\n" *
+            "      1.351000e+05          -1.005000e-05\n" *
+            "      3.075000e+04          -5.293000e-05\n" *
+            "      8.710000e+03          -2.231200e-04\n" *
+            "      2.842000e+03          -8.133800e-04\n" *
+            "      1.026000e+03          -2.632300e-03\n" *
+            "      4.001000e+02          -7.759100e-03\n" *
+            "      1.659000e+02          -2.045277e-02\n" *
+            "      7.221000e+01          -4.797505e-02\n" *
+            "      3.266000e+01          -9.340086e-02\n" *
+            "      1.522000e+01          -1.427721e-01\n" *
+            "      7.149000e+00          -1.022908e-01\n" *
+            "      2.957000e+00           1.587858e-01\n" *
+            "      1.335000e+00           4.494079e-01\n" *
+            "      5.816000e-01           4.334854e-01\n" *
+            "      2.463000e-01           1.215757e-01\n" *
+            "Ne    S\n" *
+            "      5.816000e-01           1.000000e+00\n" *
+            "Ne    S\n" *
+            "      2.463000e-01           1.000000e+00\n" *
+            "Ne    P\n" *
+            "      4.281000e+00           1.000000e+00\n" *
+            "Ne    P\n" *
+            "      1.915000e+00           1.000000e+00\n" *
+            "Ne    P\n" *
+            "      8.156000e+02           1.837600e-04\n" *
+            "      1.933000e+02           1.585090e-03\n" *
+            "      6.260000e+01           8.414640e-03\n" *
+            "      2.361000e+01           3.220033e-02\n" *
+            "      9.762000e+00           9.396390e-02\n" *
+            "      4.281000e+00           2.004808e-01\n" *
+            "      1.915000e+00           3.031137e-01\n" *
+            "      8.476000e-01           3.297578e-01\n" *
+            "      3.660000e-01           2.366743e-01\n" *
+            "      1.510000e-01           6.911689e-02\n" *
+            "Ne    P\n" *
+            "      8.476000e-01           1.000000e+00\n" *
+            "Ne    P\n" *
+            "      3.660000e-01           1.000000e+00\n" *
+            "Ne    P\n" *
+            "      1.510000e-01           1.000000e+00\n" *
+            "END\n",
+        )
+        close(io)
+
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 9,
+            mapping = fit_asinh_mapping_for_strength(s = 0.8, npoints = 9, xmax = 6.0),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            basis,
+            exponents = expansion.exponents,
+            center = 0.0,
+            backend = :numerical_reference,
+        )
+
+        for lmax in (0, 1)
+            supplement = legacy_atomic_gaussian_supplement("Ne", "repo-v6z-sp"; lmax = lmax, basisfile = path)
+            public_ops = ordinary_cartesian_qiu_white_operators(
+                basis,
+                supplement;
+                expansion = expansion,
+                Z = 10.0,
+                interaction_treatment = :ggt_nearest,
+            )
+            explicit_ops = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
+                basis,
+                supplement;
+                expansion = expansion,
+                Z = 10.0,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :numerical_reference,
+                timing = false,
+            )
+            supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+            blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(bundle, supplement3d, expansion)
+            shell_h1 = GaussletBases._qwrg_atomic_cartesian_one_body_aa(blocks, expansion; Z = 10.0)
+            shell_vals = eigen(Hermitian(shell_h1), Hermitian(blocks.overlap_aa)).values
+
+            @test norm(public_ops.overlap - explicit_ops.overlap, Inf) < 1.0e-12
+            @test norm(public_ops.one_body_hamiltonian - explicit_ops.one_body_hamiltonian, Inf) < 1.0e-12
+            @test abs(shell_vals[1] + 50.0) < 2.0e-3
+            @test abs(shell_vals[2] + 12.5) < 2.0e-3
+
+            if lmax == 0
+                @test abs(shell_vals[3] + (50.0 / 9.0)) < 2.0e-3
+            else
+                @test maximum(abs.(shell_vals[3:5] .+ 12.5)) < 2.0e-3
+                @test maximum(abs.(shell_vals[3:5] .- shell_vals[3])) < 1.0e-10
+                @test abs(shell_vals[6] + (50.0 / 9.0)) < 2.0e-3
+            end
+        end
+    end
+end
+
 @testset "Atomic lmax=2 supplement is explicit in QW routes but not yet molecular" begin
     mktemp() do path, io
         write(
