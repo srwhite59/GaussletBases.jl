@@ -133,6 +133,9 @@ export AbstractFunction1D,
        one_center_atomic_full_parent_fixed_block,
        build_one_center_atomic_legacy_profile_shell_sequence,
        one_center_atomic_legacy_profile_fixed_block,
+       NestedFixedBlockBuildTimingSummary,
+       TimedNestedFixedBlockBuild,
+       nested_fixed_block_timing_report,
        OneCenterAtomicNestedLayerStructure,
        OneCenterAtomicNestedStructureDiagnostics,
        one_center_atomic_nested_structure_diagnostics,
@@ -380,6 +383,7 @@ function build_one_center_atomic_full_parent_shell_sequence end
 function one_center_atomic_full_parent_fixed_block end
 function build_one_center_atomic_legacy_profile_shell_sequence end
 function one_center_atomic_legacy_profile_fixed_block end
+function nested_fixed_block_timing_report end
 function one_center_atomic_nested_structure_diagnostics end
 function one_center_atomic_nested_structure_report end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end

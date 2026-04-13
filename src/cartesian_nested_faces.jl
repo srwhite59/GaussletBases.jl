@@ -353,6 +353,19 @@ struct CartesianNestedSequenceContractAudit
     ownership_multi_owned_row_count::Int
 end
 
+struct NestedFixedBlockBuildTimingSummary
+    records::Vector{Pair{String,Float64}}
+end
+
+struct TimedNestedFixedBlockBuild{F}
+    fixed_block::F
+    timings::NestedFixedBlockBuildTimingSummary
+end
+
+mutable struct _NestedFixedBlockTimingCollector
+    records::Vector{Pair{String,Float64}}
+end
+
 """
     _CartesianNestedBondAlignedDiatomicSource3D
 
@@ -823,6 +836,29 @@ function Base.show(io::IO, source::_CartesianNestedAxisAlignedHomonuclearSquareL
     )
 end
 
+function Base.show(io::IO, timings::NestedFixedBlockBuildTimingSummary)
+    total = nested_fixed_block_timing_seconds(timings, "fixed_block.total")
+    print(
+        io,
+        "NestedFixedBlockBuildTimingSummary(ntimings=",
+        length(timings.records),
+        ", total=",
+        total,
+        "s)",
+    )
+end
+
+function Base.show(io::IO, timed::TimedNestedFixedBlockBuild)
+    print(
+        io,
+        "TimedNestedFixedBlockBuild(nfixed=",
+        size(timed.fixed_block.overlap, 1),
+        ", total=",
+        nested_fixed_block_timing_seconds(timed.timings, "fixed_block.total"),
+        "s)",
+    )
+end
+
 function Base.show(io::IO, trace::_CartesianNestedDoSideTrace1D)
     print(
         io,
@@ -861,6 +897,95 @@ function _nested_axis_lengths(bundles::_CartesianNestedAxisBundles3D)
         size(_nested_axis_pgdg(bundles, :y).overlap, 1),
         size(_nested_axis_pgdg(bundles, :z).overlap, 1),
     )
+end
+
+function _nested_elapsed_seconds(start_ns::UInt64)
+    return (time_ns() - start_ns) / 1.0e9
+end
+
+function _nested_timing_enabled(timing)
+    return timing === true || timing === :report
+end
+
+function _nested_new_timing_collector()
+    return _NestedFixedBlockTimingCollector(Pair{String,Float64}[])
+end
+
+function _nested_record_timing!(
+    collector::Union{Nothing,_NestedFixedBlockTimingCollector},
+    label::AbstractString,
+    start_ns::UInt64,
+)
+    isnothing(collector) && return nothing
+    push!(collector.records, String(label) => _nested_elapsed_seconds(start_ns))
+    return nothing
+end
+
+function _nested_timing_summary(
+    collector::Union{Nothing,_NestedFixedBlockTimingCollector},
+)
+    return NestedFixedBlockBuildTimingSummary(
+        isnothing(collector) ? Pair{String,Float64}[] : copy(collector.records),
+    )
+end
+
+function nested_fixed_block_timing_seconds(
+    timings::NestedFixedBlockBuildTimingSummary,
+    label::AbstractString,
+)
+    return sum(record.second for record in timings.records if record.first == label)
+end
+
+function nested_fixed_block_timing_report(
+    io::IO,
+    timings::NestedFixedBlockBuildTimingSummary,
+)
+    println(io, "Nested fixed-block timings")
+    labels = (
+        "fixed_block.total",
+        "fixed_block.parent_bundle",
+        "fixed_block.sequence_build",
+        "fixed_block.adapter",
+        "shell_layer.nonpacket",
+        "sequence_merge.nonpacket",
+        "packet.setup",
+        "packet.total",
+        "packet.base.overlap",
+        "packet.base.kinetic",
+        "packet.base.position_x",
+        "packet.base.position_y",
+        "packet.base.position_z",
+        "packet.base.x2_x",
+        "packet.base.x2_y",
+        "packet.base.x2_z",
+        "packet.gaussian_terms",
+        "packet.pair_terms",
+    )
+    for label in labels
+        seconds = nested_fixed_block_timing_seconds(timings, label)
+        seconds > 0.0 || continue
+        println(io, "  ", rpad(label, 28), " ", string(round(seconds; digits = 6)), " s")
+    end
+    return timings
+end
+
+function nested_fixed_block_timing_report(
+    timings::NestedFixedBlockBuildTimingSummary,
+)
+    return sprint(io -> nested_fixed_block_timing_report(io, timings))
+end
+
+function nested_fixed_block_timing_report(
+    io::IO,
+    timed::TimedNestedFixedBlockBuild,
+)
+    return nested_fixed_block_timing_report(io, timed.timings)
+end
+
+function nested_fixed_block_timing_report(
+    timed::TimedNestedFixedBlockBuild,
+)
+    return nested_fixed_block_timing_report(timed.timings)
 end
 
 function _nested_metric_norm(
@@ -2282,7 +2407,9 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    start_ns = time_ns()
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
     parent_weight_outer = pgdg.weights * transpose(pgdg.weights)
@@ -2315,6 +2442,8 @@ function _nested_weight_aware_pair_terms(
         _nested_symmetrize_matrix!(pair_term)
     end
 
+    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
+
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
@@ -2327,7 +2456,9 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    start_ns = time_ns()
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
@@ -2375,6 +2506,8 @@ function _nested_weight_aware_pair_terms(
         _nested_symmetrize_matrix!(pair_term)
     end
 
+    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
+
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
@@ -2396,6 +2529,7 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
+        nothing,
     )
 end
 
@@ -2414,6 +2548,7 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
+        nothing,
     )
 end
 
@@ -2439,7 +2574,10 @@ function _nested_shell_packet(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    total_start_ns = time_ns()
+    setup_start_ns = time_ns()
     support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
     support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
     nshell = size(coefficient_matrix, 2)
@@ -2455,6 +2593,9 @@ function _nested_shell_packet(
     x2_x = Matrix{Float64}(undef, nshell, nshell)
     x2_y = Matrix{Float64}(undef, nshell, nshell)
     x2_z = Matrix{Float64}(undef, nshell, nshell)
+    _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         overlap,
         support_workspace,
@@ -2466,6 +2607,9 @@ function _nested_shell_packet(
         pgdg.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_sum_of_support_products!(
         kinetic,
         support_workspace,
@@ -2479,6 +2623,9 @@ function _nested_shell_packet(
         );
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_x,
         support_workspace,
@@ -2490,6 +2637,9 @@ function _nested_shell_packet(
         pgdg.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_y,
         support_workspace,
@@ -2501,6 +2651,9 @@ function _nested_shell_packet(
         pgdg.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_z,
         support_workspace,
@@ -2512,6 +2665,9 @@ function _nested_shell_packet(
         pgdg.position;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_x,
         support_workspace,
@@ -2523,6 +2679,9 @@ function _nested_shell_packet(
         pgdg.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_y,
         support_workspace,
@@ -2534,6 +2693,9 @@ function _nested_shell_packet(
         pgdg.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_z,
         support_workspace,
@@ -2545,14 +2707,18 @@ function _nested_shell_packet(
         pgdg.x2;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+
     pair_data = _nested_weight_aware_pair_terms(
         pgdg,
         support_states,
         support_coefficients,
         support_workspace,
         contraction_scratch,
+        timing_collector,
     )
     gaussian_terms = zeros(Float64, nterms, nshell, nshell)
+    start_ns = time_ns()
     for term in 1:nterms
         _nested_contract_support_product!(
             @view(gaussian_terms[term, :, :]),
@@ -2566,6 +2732,8 @@ function _nested_shell_packet(
             beta = 0.0,
         )
     end
+    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+    _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
     return (
         packet = _CartesianNestedShellPacket3D(
@@ -2589,7 +2757,10 @@ function _nested_shell_packet(
     bundles::_CartesianNestedAxisBundles3D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    total_start_ns = time_ns()
+    setup_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
@@ -2612,6 +2783,9 @@ function _nested_shell_packet(
     x2_x = Matrix{Float64}(undef, nshell, nshell)
     x2_y = Matrix{Float64}(undef, nshell, nshell)
     x2_z = Matrix{Float64}(undef, nshell, nshell)
+    _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         overlap,
         support_workspace,
@@ -2623,6 +2797,9 @@ function _nested_shell_packet(
         pgdg_z.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_sum_of_support_products!(
         kinetic,
         support_workspace,
@@ -2636,6 +2813,9 @@ function _nested_shell_packet(
         );
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_x,
         support_workspace,
@@ -2647,6 +2827,9 @@ function _nested_shell_packet(
         pgdg_z.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_y,
         support_workspace,
@@ -2658,6 +2841,9 @@ function _nested_shell_packet(
         pgdg_z.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         position_z,
         support_workspace,
@@ -2669,6 +2855,9 @@ function _nested_shell_packet(
         pgdg_z.position;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_x,
         support_workspace,
@@ -2680,6 +2869,9 @@ function _nested_shell_packet(
         pgdg_z.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_y,
         support_workspace,
@@ -2691,6 +2883,9 @@ function _nested_shell_packet(
         pgdg_z.overlap;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+
+    start_ns = time_ns()
     _nested_contract_support_product!(
         x2_z,
         support_workspace,
@@ -2702,14 +2897,18 @@ function _nested_shell_packet(
         pgdg_z.x2;
         beta = 0.0,
     )
+    _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+
     pair_data = _nested_weight_aware_pair_terms(
         bundles,
         support_states,
         support_coefficients,
         support_workspace,
         contraction_scratch,
+        timing_collector,
     )
     gaussian_terms = zeros(Float64, nterms, nshell, nshell)
+    start_ns = time_ns()
     for term in 1:nterms
         _nested_contract_support_product!(
             @view(gaussian_terms[term, :, :]),
@@ -2723,6 +2922,8 @@ function _nested_shell_packet(
             beta = 0.0,
         )
     end
+    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+    _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
     return (
         packet = _CartesianNestedShellPacket3D(
@@ -2919,7 +3120,9 @@ function _nested_complete_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
 
     shell_faces = _nested_rectangular_shell(
@@ -2986,7 +3189,13 @@ function _nested_complete_rectangular_shell(
     end
 
     support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
-    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    _nested_record_timing!(timing_collector, "shell_layer.nonpacket", prepacket_start_ns)
+    shell_data = _nested_shell_packet(
+        pgdg,
+        coefficient_matrix,
+        support_indices,
+        timing_collector,
+    )
 
     return _CartesianNestedCompleteShell3D(
         shell_faces.faces,
@@ -3092,6 +3301,7 @@ function _nested_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -3102,6 +3312,7 @@ function _nested_shell_sequence(
         core_coefficients,
         shell_layers;
         enforce_coverage = enforce_coverage,
+        timing_collector = timing_collector,
     )
 end
 
@@ -3111,7 +3322,9 @@ function _nested_shell_sequence_from_core_block(
     core_coefficients::AbstractMatrix{<:Real},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
     support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
     working_box =
@@ -3121,7 +3334,13 @@ function _nested_shell_sequence_from_core_block(
     coefficient_blocks = Matrix{Float64}[Matrix{Float64}(core_coefficients)]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
     coefficient_matrix = hcat(coefficient_blocks...)
-    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
+    shell_data = _nested_shell_packet(
+        pgdg,
+        coefficient_matrix,
+        support_indices,
+        timing_collector,
+    )
 
     ncore = size(core_coefficients, 2)
     layer_column_ranges = UnitRange{Int}[]
@@ -3157,6 +3376,7 @@ function _nested_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
     side_x_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xy[1])
@@ -3186,7 +3406,12 @@ function _nested_rectangular_shell(
     end
 
     support_indices = _nested_shell_support_indices(faces)
-    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+    shell_data = _nested_shell_packet(
+        bundles,
+        coefficient_matrix,
+        support_indices,
+        timing_collector,
+    )
     return _CartesianNestedShell3D(
         faces,
         face_column_ranges,
@@ -3211,7 +3436,9 @@ function _nested_complete_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
     shell_faces = _nested_rectangular_shell(
         bundles,
@@ -3277,7 +3504,13 @@ function _nested_complete_rectangular_shell(
     end
 
     support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
-    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+    _nested_record_timing!(timing_collector, "shell_layer.nonpacket", prepacket_start_ns)
+    shell_data = _nested_shell_packet(
+        bundles,
+        coefficient_matrix,
+        support_indices,
+        timing_collector,
+    )
 
     return _CartesianNestedCompleteShell3D(
         shell_faces.faces,
@@ -3300,6 +3533,7 @@ function _nested_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
@@ -3310,6 +3544,7 @@ function _nested_shell_sequence(
         core_coefficients,
         shell_layers;
         enforce_coverage = enforce_coverage,
+        timing_collector = timing_collector,
     )
 end
 
@@ -3319,7 +3554,9 @@ function _nested_shell_sequence_from_core_block(
     core_coefficients::AbstractMatrix{<:Real},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
+    prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
     support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
     working_box =
@@ -3329,7 +3566,13 @@ function _nested_shell_sequence_from_core_block(
     coefficient_blocks = Matrix{Float64}[Matrix{Float64}(core_coefficients)]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
     coefficient_matrix = hcat(coefficient_blocks...)
-    shell_data = _nested_shell_packet(bundles, coefficient_matrix, support_indices)
+    _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
+    shell_data = _nested_shell_packet(
+        bundles,
+        coefficient_matrix,
+        support_indices,
+        timing_collector,
+    )
 
     ncore = size(core_coefficients, 2)
     layer_column_ranges = UnitRange{Int}[]
@@ -3379,6 +3622,7 @@ function _nested_complete_shell_sequence_for_box(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
         nside;
@@ -3408,6 +3652,7 @@ function _nested_complete_shell_sequence_for_box(
                 x_fixed = (first(current_box[1]), last(current_box[1])),
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
+                timing_collector = timing_collector,
             ),
         )
         current_box = inner_box
@@ -3416,6 +3661,7 @@ function _nested_complete_shell_sequence_for_box(
         bundles,
         current_box...,
         shell_layers,
+        timing_collector = timing_collector,
     )
 end
 
@@ -3532,6 +3778,7 @@ It should be used in place of any older central-box atomic diagnostic fixture.
 function build_one_center_atomic_full_parent_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
     nside::Int,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
     bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
@@ -3546,6 +3793,7 @@ function build_one_center_atomic_full_parent_shell_sequence(
         retain_x_edge = retention.retain_x_edge,
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
+        timing_collector = timing_collector,
     )
 end
 
@@ -3592,6 +3840,7 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
     working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
     nside::Int,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(n, working_box)
@@ -3607,6 +3856,7 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
         retain_x_edge = retention.retain_x_edge,
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
+        timing_collector = timing_collector,
     )
 end
 
@@ -3644,10 +3894,30 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_full_parent_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    timing::Union{Bool,Symbol} = false,
+    timing_io::IO = stdout,
     kwargs...,
 )
-    sequence = build_one_center_atomic_full_parent_shell_sequence(bundle; kwargs...)
-    return _nested_fixed_block(sequence, bundle)
+    (timing === false || _nested_timing_enabled(timing)) || throw(
+        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
+    )
+    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
+    total_start_ns = time_ns()
+    sequence_start_ns = time_ns()
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        bundle;
+        timing_collector = collector,
+        kwargs...,
+    )
+    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
+    adapter_start_ns = time_ns()
+    fixed_block = _nested_fixed_block(sequence, bundle)
+    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
+    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
+    isnothing(collector) && return fixed_block
+    timings = _nested_timing_summary(collector)
+    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
+    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 function one_center_atomic_full_parent_fixed_block(
@@ -3656,8 +3926,16 @@ function one_center_atomic_full_parent_fixed_block(
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
+    timing::Union{Bool,Symbol} = false,
+    timing_io::IO = stdout,
     kwargs...,
 )
+    (timing === false || _nested_timing_enabled(timing)) || throw(
+        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
+    )
+    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
+    total_start_ns = time_ns()
+    bundle_start_ns = time_ns()
     bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
         exponents = exponents,
@@ -3665,7 +3943,24 @@ function one_center_atomic_full_parent_fixed_block(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    return one_center_atomic_full_parent_fixed_block(bundle; kwargs...)
+    _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
+    if isnothing(collector)
+        return one_center_atomic_full_parent_fixed_block(bundle; timing = false, kwargs...)
+    end
+    sequence_start_ns = time_ns()
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        bundle;
+        timing_collector = collector,
+        kwargs...,
+    )
+    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
+    adapter_start_ns = time_ns()
+    fixed_block = _nested_fixed_block(sequence, bundle)
+    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
+    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
+    timings = _nested_timing_summary(collector)
+    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
+    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 """
@@ -3685,10 +3980,30 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_legacy_profile_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    timing::Union{Bool,Symbol} = false,
+    timing_io::IO = stdout,
     kwargs...,
 )
-    sequence = build_one_center_atomic_legacy_profile_shell_sequence(bundle; kwargs...)
-    return _nested_fixed_block(sequence, bundle)
+    (timing === false || _nested_timing_enabled(timing)) || throw(
+        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
+    )
+    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
+    total_start_ns = time_ns()
+    sequence_start_ns = time_ns()
+    sequence = build_one_center_atomic_legacy_profile_shell_sequence(
+        bundle;
+        timing_collector = collector,
+        kwargs...,
+    )
+    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
+    adapter_start_ns = time_ns()
+    fixed_block = _nested_fixed_block(sequence, bundle)
+    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
+    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
+    isnothing(collector) && return fixed_block
+    timings = _nested_timing_summary(collector)
+    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
+    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 function one_center_atomic_legacy_profile_fixed_block(
@@ -3697,8 +4012,16 @@ function one_center_atomic_legacy_profile_fixed_block(
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
+    timing::Union{Bool,Symbol} = false,
+    timing_io::IO = stdout,
     kwargs...,
 )
+    (timing === false || _nested_timing_enabled(timing)) || throw(
+        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
+    )
+    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
+    total_start_ns = time_ns()
+    bundle_start_ns = time_ns()
     bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
         exponents = exponents,
@@ -3706,7 +4029,24 @@ function one_center_atomic_legacy_profile_fixed_block(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    return one_center_atomic_legacy_profile_fixed_block(bundle; kwargs...)
+    _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
+    if isnothing(collector)
+        return one_center_atomic_legacy_profile_fixed_block(bundle; timing = false, kwargs...)
+    end
+    sequence_start_ns = time_ns()
+    sequence = build_one_center_atomic_legacy_profile_shell_sequence(
+        bundle;
+        timing_collector = collector,
+        kwargs...,
+    )
+    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
+    adapter_start_ns = time_ns()
+    fixed_block = _nested_fixed_block(sequence, bundle)
+    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
+    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
+    timings = _nested_timing_summary(collector)
+    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
+    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 function _one_center_atomic_nested_layer_structure(

@@ -4638,6 +4638,54 @@ end
     @test count_only_modern_ne.total_actual_gausslet_count == 2741
 end
 
+@testset "One-center atomic fixed-block timing surface" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+
+    timed_full = one_center_atomic_full_parent_fixed_block(
+        basis;
+        exponents = expansion.exponents,
+        nside = 5,
+        timing = true,
+    )
+    timed_legacy = one_center_atomic_legacy_profile_fixed_block(
+        basis;
+        exponents = expansion.exponents,
+        working_box = 2:12,
+        nside = 5,
+        timing = true,
+    )
+
+    @test timed_full isa GaussletBases.TimedNestedFixedBlockBuild
+    @test timed_legacy isa GaussletBases.TimedNestedFixedBlockBuild
+    @test timed_full.fixed_block.shell.working_box == (1:13, 1:13, 1:13)
+    @test timed_legacy.fixed_block.shell.working_box == (2:12, 2:12, 2:12)
+    @test norm(timed_full.fixed_block.overlap - I, Inf) < 1.0e-10
+    @test norm(timed_legacy.fixed_block.overlap - I, Inf) < 1.0e-10
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "fixed_block.total") > 0.0
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "fixed_block.sequence_build") > 0.0
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.total") > 0.0
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.gaussian_terms") > 0.0
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.pair_terms") > 0.0
+    @test GaussletBases.nested_fixed_block_timing_seconds(timed_legacy.timings, "packet.total") > 0.0
+
+    full_report = nested_fixed_block_timing_report(timed_full)
+    legacy_report = nested_fixed_block_timing_report(timed_legacy.timings)
+    @test occursin("fixed_block.total", full_report)
+    @test occursin("shell_layer.nonpacket", full_report)
+    @test occursin("sequence_merge.nonpacket", full_report)
+    @test occursin("packet.gaussian_terms", full_report)
+    @test occursin("packet.pair_terms", full_report)
+    @test occursin("packet.total", legacy_report)
+end
+
 @testset "QW residual-space keep policy distinguishes modern and legacy-profile Ne completion" begin
     # Literal residual-overlap spectrum observed on the anchored one-center
     # Ne legacy-profile case:
