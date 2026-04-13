@@ -4528,8 +4528,15 @@ function _qwrg_fixed_block_one_body_matrix(
     Z::Real,
 )
     hamiltonian = Matrix{Float64}(fixed_block.kinetic)
-    for term in eachindex(expansion.coefficients)
-        hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* @view(fixed_block.gaussian_terms[term, :, :])
+    if !isnothing(fixed_block.gaussian_sum)
+        hamiltonian .-= Float64(Z) .* fixed_block.gaussian_sum
+    else
+        isnothing(fixed_block.gaussian_terms) && throw(
+            ArgumentError("nested fixed-block QW one-body assembly requires either gaussian_sum or full gaussian_terms"),
+        )
+        for term in eachindex(expansion.coefficients)
+            hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* @view(fixed_block.gaussian_terms[term, :, :])
+        end
     end
     return Matrix{Float64}(0.5 .* (hamiltonian .+ transpose(hamiltonian)))
 end
@@ -4538,9 +4545,16 @@ function _qwrg_fixed_block_interaction_matrix(
     fixed_block::_NestedFixedBlock3D,
     expansion::CoulombGaussianExpansion,
 )
-    interaction = zeros(Float64, size(fixed_block.pair_terms, 2), size(fixed_block.pair_terms, 3))
-    for term in eachindex(expansion.coefficients)
-        interaction .+= expansion.coefficients[term] .* @view(fixed_block.pair_terms[term, :, :])
+    if !isnothing(fixed_block.pair_sum)
+        interaction = Matrix{Float64}(fixed_block.pair_sum)
+    else
+        isnothing(fixed_block.pair_terms) && throw(
+            ArgumentError("nested fixed-block QW interaction assembly requires either pair_sum or full pair_terms"),
+        )
+        interaction = zeros(Float64, size(fixed_block.pair_terms, 2), size(fixed_block.pair_terms, 3))
+        for term in eachindex(expansion.coefficients)
+            interaction .+= expansion.coefficients[term] .* @view(fixed_block.pair_terms[term, :, :])
+        end
     end
     return Matrix{Float64}(0.5 .* (interaction .+ transpose(interaction)))
 end

@@ -73,8 +73,11 @@ struct _CartesianNestedShellPacket3D
     x2_y::Matrix{Float64}
     x2_z::Matrix{Float64}
     weights::Vector{Float64}
-    gaussian_terms::Array{Float64,3}
-    pair_terms::Array{Float64,3}
+    gaussian_sum::Union{Nothing,Matrix{Float64}}
+    pair_sum::Union{Nothing,Matrix{Float64}}
+    gaussian_terms::Union{Nothing,Array{Float64,3}}
+    pair_terms::Union{Nothing,Array{Float64,3}}
+    term_storage::Symbol
 end
 
 """
@@ -276,8 +279,11 @@ struct _NestedFixedBlock3D{B,S}
     x2_y::Matrix{Float64}
     x2_z::Matrix{Float64}
     weights::Vector{Float64}
-    gaussian_terms::Array{Float64,3}
-    pair_terms::Array{Float64,3}
+    gaussian_sum::Union{Nothing,Matrix{Float64}}
+    pair_sum::Union{Nothing,Matrix{Float64}}
+    gaussian_terms::Union{Nothing,Array{Float64,3}}
+    pair_terms::Union{Nothing,Array{Float64,3}}
+    term_storage::Symbol
     fixed_centers::Matrix{Float64}
 end
 
@@ -2299,6 +2305,13 @@ function _nested_normalize_packet_kernel(packet_kernel::Symbol)
     return packet_kernel
 end
 
+function _nested_normalize_term_storage(term_storage::Symbol)
+    term_storage in (:full_debug, :compact_production) || throw(
+        ArgumentError("nested term storage must be :full_debug or :compact_production"),
+    )
+    return term_storage
+end
+
 function _nested_zero_small!(values::AbstractVector{Float64}; atol::Float64)
     @inbounds for index in eachindex(values)
         abs(values[index]) <= atol && (values[index] = 0.0)
@@ -2467,6 +2480,20 @@ function _nested_factorized_axis_base_tables(
     )
 end
 
+function _nested_weighted_term_sum(
+    term_tensors::AbstractArray{<:Real,3},
+    term_coefficients::AbstractVector{<:Real},
+)
+    size(term_tensors, 1) == length(term_coefficients) || throw(
+        DimensionMismatch("nested weighted term sum requires one coefficient per term slice"),
+    )
+    weighted_sum = zeros(Float64, size(term_tensors, 2), size(term_tensors, 3))
+    @inbounds for term in eachindex(term_coefficients)
+        weighted_sum .+= Float64(term_coefficients[term]) .* @view(term_tensors[term, :, :])
+    end
+    return Matrix{Float64}(0.5 .* (weighted_sum .+ transpose(weighted_sum)))
+end
+
 function _nested_factorized_normalized_pair_term_tables(
     raw_term_tables::Array{Float64,3},
     axis_weight_projections::AbstractVector{<:Real},
@@ -2524,6 +2551,47 @@ function _nested_fill_factorized_term_family!(
         end
     end
     return destination_terms
+end
+
+function _nested_fill_factorized_weighted_term_sum!(
+    destination::AbstractMatrix{<:Real},
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3};
+    include_basis_amplitudes::Bool,
+)
+    nterms = length(term_coefficients)
+    nbasis = length(factorized_basis.basis_triplets)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("nested factorized weighted term-sum fill requires square output sized to the retained fixed basis"),
+    )
+    nterms == size(operator_terms_x, 1) == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
+        ArgumentError("nested factorized weighted term-sum fill requires matching term counts"),
+    )
+    amplitudes = factorized_basis.basis_amplitudes
+    triplets = factorized_basis.basis_triplets
+    @inbounds for column in 1:nbasis
+        xj, yj, zj = triplets[column]
+        amplitude_j = include_basis_amplitudes ? amplitudes[column] : 1.0
+        for row in 1:column
+            xi, yi, zi = triplets[row]
+            scale = include_basis_amplitudes ? amplitudes[row] * amplitude_j : 1.0
+            value = 0.0
+            for term in 1:nterms
+                value +=
+                    Float64(term_coefficients[term]) *
+                    operator_terms_x[term, xi, xj] *
+                    operator_terms_y[term, yi, yj] *
+                    operator_terms_z[term, zi, zj]
+            end
+            value *= scale
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
 end
 
 function _nested_fill_factorized_product_matrix!(
@@ -2640,9 +2708,12 @@ function _nested_factorized_gaussian_terms(
     gaussian_terms_x::Array{Float64,3},
     gaussian_terms_y::Array{Float64,3},
     gaussian_terms_z::Array{Float64,3},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     axis_term_tables_x = _nested_factorized_axis_term_tables(
         gaussian_terms_x,
         factorized_basis.x_functions,
@@ -2656,17 +2727,39 @@ function _nested_factorized_gaussian_terms(
         factorized_basis.z_functions,
     )
     nbasis = length(factorized_basis.basis_triplets)
-    gaussian_terms = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
-    _nested_fill_factorized_term_family!(
-        gaussian_terms,
-        factorized_basis,
-        axis_term_tables_x,
-        axis_term_tables_y,
-        axis_term_tables_z;
-        include_basis_amplitudes = true,
-    )
+    gaussian_terms = nothing
+    gaussian_sum = nothing
+    if term_storage_value == :full_debug
+        gaussian_terms = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
+        _nested_fill_factorized_term_family!(
+            gaussian_terms,
+            factorized_basis,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = true,
+        )
+        !isnothing(term_coefficients) && (gaussian_sum = _nested_weighted_term_sum(gaussian_terms, term_coefficients))
+    else
+        isnothing(term_coefficients) && throw(
+            ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+        )
+        gaussian_sum = zeros(Float64, nbasis, nbasis)
+        _nested_fill_factorized_weighted_term_sum!(
+            gaussian_sum,
+            factorized_basis,
+            term_coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = true,
+        )
+    end
     _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-    return gaussian_terms
+    return (
+        gaussian_terms = gaussian_terms,
+        gaussian_sum = gaussian_sum,
+    )
 end
 
 function _nested_factorized_weight_aware_pair_terms(
@@ -2677,9 +2770,12 @@ function _nested_factorized_weight_aware_pair_terms(
     pair_terms_x::Array{Float64,3},
     pair_terms_y::Array{Float64,3},
     pair_terms_z::Array{Float64,3},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
     axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
     axis_weight_z = _nested_factorized_axis_weight_projections(factorized_basis.z_functions, weights_z)
@@ -2711,19 +2807,39 @@ function _nested_factorized_weight_aware_pair_terms(
         axis_weight_z,
     )
     nbasis = length(factorized_basis.basis_triplets)
-    pair_terms = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
-    _nested_fill_factorized_term_family!(
-        pair_terms,
-        factorized_basis,
-        axis_term_tables_x,
-        axis_term_tables_y,
-        axis_term_tables_z;
-        include_basis_amplitudes = false,
-    )
+    pair_terms = nothing
+    pair_sum = nothing
+    if term_storage_value == :full_debug
+        pair_terms = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
+        _nested_fill_factorized_term_family!(
+            pair_terms,
+            factorized_basis,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = false,
+        )
+        !isnothing(term_coefficients) && (pair_sum = _nested_weighted_term_sum(pair_terms, term_coefficients))
+    else
+        isnothing(term_coefficients) && throw(
+            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        )
+        pair_sum = zeros(Float64, nbasis, nbasis)
+        _nested_fill_factorized_weighted_term_sum!(
+            pair_sum,
+            factorized_basis,
+            term_coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = false,
+        )
+    end
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
     return (
         weights = basis_weights,
         pair_terms = pair_terms,
+        pair_sum = pair_sum,
     )
 end
 
@@ -3061,7 +3177,8 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
     nterms = size(pgdg.pair_factor_terms, 1)
@@ -3094,6 +3211,7 @@ function _nested_weight_aware_pair_terms(
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
+        pair_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(pair_terms, term_coefficients),
     )
 end
 
@@ -3104,7 +3222,8 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
     pgdg_x = _nested_axis_pgdg(bundles, :x)
@@ -3151,6 +3270,7 @@ function _nested_weight_aware_pair_terms(
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
+        pair_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(pair_terms, term_coefficients),
     )
 end
 
@@ -3158,6 +3278,7 @@ function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
     nfixed = size(support_coefficients, 2)
@@ -3172,6 +3293,7 @@ function _nested_weight_aware_pair_terms(
         support_workspace,
         contraction_scratch,
         nothing,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -3179,6 +3301,7 @@ function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
     nfixed = size(support_coefficients, 2)
@@ -3193,6 +3316,7 @@ function _nested_weight_aware_pair_terms(
         support_workspace,
         contraction_scratch,
         nothing,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -3220,10 +3344,13 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     total_start_ns = time_ns()
     setup_start_ns = time_ns()
     packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
     nshell = size(coefficient_matrix, 2)
     nsupport = length(support_states)
@@ -3500,7 +3627,9 @@ function _nested_shell_packet(
             pgdg.pair_factor_terms_raw,
             pgdg.pair_factor_terms_raw,
             pgdg.pair_factor_terms_raw,
-            timing_collector,
+            timing_collector;
+            term_storage = term_storage_value,
+            term_coefficients = term_coefficients,
         ) :
         _nested_weight_aware_pair_terms(
             pgdg,
@@ -3509,7 +3638,8 @@ function _nested_shell_packet(
             support_coefficients,
             support_workspace,
             contraction_scratch,
-            timing_collector,
+            timing_collector;
+            term_coefficients = term_coefficients,
         )
     gaussian_terms =
         packet_kernel == :factorized_direct ?
@@ -3518,7 +3648,9 @@ function _nested_shell_packet(
             pgdg.gaussian_factor_terms,
             pgdg.gaussian_factor_terms,
             pgdg.gaussian_factor_terms,
-            timing_collector,
+            timing_collector;
+            term_storage = term_storage_value,
+            term_coefficients = term_coefficients,
         ) :
         begin
             gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
@@ -3535,7 +3667,10 @@ function _nested_shell_packet(
                 true,
             )
             _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-            gaussian_terms_local
+            (
+                gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
+                gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
+            )
         end
     _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
@@ -3550,8 +3685,11 @@ function _nested_shell_packet(
             x2_y,
             x2_z,
             pair_data.weights,
-            gaussian_terms,
-            pair_data.pair_terms,
+            gaussian_terms.gaussian_sum,
+            pair_data.pair_sum,
+            gaussian_terms.gaussian_terms,
+            term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+            term_storage_value,
         ),
         support_states = support_states,
     )
@@ -3563,10 +3701,13 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     total_start_ns = time_ns()
     setup_start_ns = time_ns()
     packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     dims = _nested_axis_lengths(bundles)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
@@ -3867,7 +4008,9 @@ function _nested_shell_packet(
             pgdg_x.pair_factor_terms_raw,
             pgdg_y.pair_factor_terms_raw,
             pgdg_z.pair_factor_terms_raw,
-            timing_collector,
+            timing_collector;
+            term_storage = term_storage_value,
+            term_coefficients = term_coefficients,
         ) :
         _nested_weight_aware_pair_terms(
             bundles,
@@ -3876,7 +4019,8 @@ function _nested_shell_packet(
             support_coefficients,
             support_workspace,
             contraction_scratch,
-            timing_collector,
+            timing_collector;
+            term_coefficients = term_coefficients,
         )
     gaussian_terms =
         packet_kernel == :factorized_direct ?
@@ -3885,7 +4029,9 @@ function _nested_shell_packet(
             pgdg_x.gaussian_factor_terms,
             pgdg_y.gaussian_factor_terms,
             pgdg_z.gaussian_factor_terms,
-            timing_collector,
+            timing_collector;
+            term_storage = term_storage_value,
+            term_coefficients = term_coefficients,
         ) :
         begin
             gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
@@ -3902,7 +4048,10 @@ function _nested_shell_packet(
                 true,
             )
             _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-            gaussian_terms_local
+            (
+                gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
+                gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
+            )
         end
     _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
@@ -3917,8 +4066,11 @@ function _nested_shell_packet(
             x2_y,
             x2_z,
             pair_data.weights,
-            gaussian_terms,
-            pair_data.pair_terms,
+            gaussian_terms.gaussian_sum,
+            pair_data.pair_sum,
+            gaussian_terms.gaussian_terms,
+            term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+            term_storage_value,
         ),
         support_states = support_states,
     )
@@ -4035,6 +4187,8 @@ function _nested_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
     side_x_xy = _nested_doside_1d(pgdg, x_interval, retain_xy[1])
@@ -4069,6 +4223,8 @@ function _nested_rectangular_shell(
         coefficient_matrix,
         support_indices;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
     return _CartesianNestedShell3D(
         faces,
@@ -4109,6 +4265,8 @@ function _nested_complete_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
@@ -4125,6 +4283,8 @@ function _nested_complete_rectangular_shell(
         y_fixed = y_fixed,
         z_fixed = z_fixed,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     side_x_edge = _nested_doside_1d(pgdg, x_interval, retain_x_edge)
@@ -4185,6 +4345,8 @@ function _nested_complete_rectangular_shell(
         support_indices,
         timing_collector;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     return _CartesianNestedCompleteShell3D(
@@ -4235,8 +4397,11 @@ function _nested_fixed_block(
         packet.x2_y,
         packet.x2_z,
         packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
         packet.gaussian_terms,
         packet.pair_terms,
+        packet.term_storage,
         Matrix{Float64}(fixed_centers),
     )
 end
@@ -4249,6 +4414,8 @@ function _nested_shell_plus_core(
     z_interval::UnitRange{Int},
     ;
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -4263,6 +4430,8 @@ function _nested_shell_plus_core(
         coefficient_matrix,
         support_indices;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
     ncore = length(core_indices)
     shell_column_ranges = UnitRange{Int}[
@@ -4300,6 +4469,8 @@ function _nested_shell_sequence(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -4312,6 +4483,8 @@ function _nested_shell_sequence(
         enforce_coverage = enforce_coverage,
         timing_collector = timing_collector,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -4323,6 +4496,8 @@ function _nested_shell_sequence_from_core_block(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
@@ -4341,6 +4516,8 @@ function _nested_shell_sequence_from_core_block(
         support_indices,
         timing_collector;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     ncore = size(core_coefficients, 2)
@@ -4379,6 +4556,8 @@ function _nested_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
     side_x_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xy[1])
@@ -4414,6 +4593,8 @@ function _nested_rectangular_shell(
         support_indices,
         timing_collector;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
     return _CartesianNestedShell3D(
         faces,
@@ -4441,6 +4622,8 @@ function _nested_complete_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
@@ -4456,6 +4639,8 @@ function _nested_complete_rectangular_shell(
         y_fixed = y_fixed,
         z_fixed = z_fixed,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
@@ -4516,6 +4701,8 @@ function _nested_complete_rectangular_shell(
         support_indices,
         timing_collector;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     return _CartesianNestedCompleteShell3D(
@@ -4541,6 +4728,8 @@ function _nested_shell_sequence(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
@@ -4553,6 +4742,8 @@ function _nested_shell_sequence(
         enforce_coverage = enforce_coverage,
         timing_collector = timing_collector,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -4564,6 +4755,8 @@ function _nested_shell_sequence_from_core_block(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
@@ -4582,6 +4775,8 @@ function _nested_shell_sequence_from_core_block(
         support_indices,
         timing_collector;
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 
     ncore = size(core_coefficients, 2)
@@ -4634,6 +4829,8 @@ function _nested_complete_shell_sequence_for_box(
     retain_z_edge::Union{Nothing,Int} = nothing,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
         nside;
@@ -4665,6 +4862,8 @@ function _nested_complete_shell_sequence_for_box(
                 z_fixed = (first(current_box[3]), last(current_box[3])),
                 timing_collector = timing_collector,
                 packet_kernel = packet_kernel,
+                term_storage = term_storage,
+                term_coefficients = term_coefficients,
             ),
         )
         current_box = inner_box
@@ -4675,6 +4874,8 @@ function _nested_complete_shell_sequence_for_box(
         shell_layers,
         timing_collector = timing_collector,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -4739,6 +4940,40 @@ function _one_center_atomic_legacy_profile_working_box(
     return working_box
 end
 
+function _nested_same_term_exponents(
+    left::AbstractVector{<:Real},
+    right::AbstractVector{<:Real};
+    atol::Float64 = 1.0e-12,
+)
+    length(left) == length(right) || return false
+    isempty(left) && return true
+    return maximum(abs.(Float64.(left) .- Float64.(right))) <= atol
+end
+
+function _one_center_atomic_term_storage_resolution(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
+    retain_term_tensors::Bool = false,
+)
+    if retain_term_tensors
+        return (
+            term_storage = :full_debug,
+            term_coefficients = nothing,
+        )
+    end
+    isnothing(expansion) && return (
+        term_storage = :full_debug,
+        term_coefficients = nothing,
+    )
+    _nested_same_term_exponents(bundle.exponents, expansion.exponents) || throw(
+        ArgumentError("compact one-center atomic fixed-block storage requires bundle Gaussian exponents to match the supplied CoulombGaussianExpansion"),
+    )
+    return (
+        term_storage = :compact_production,
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients],
+    )
+end
+
 struct OneCenterAtomicNestedLayerStructure
     layer_index::Int
     face_retained_count::Int
@@ -4772,6 +5007,8 @@ function _build_one_center_atomic_shell_sequence(
     nside::Int,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :factorized_direct,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
     retention = _one_center_atomic_complete_shell_retention(nside)
@@ -4787,6 +5024,8 @@ function _build_one_center_atomic_shell_sequence(
         retain_z_edge = retention.retain_z_edge,
         timing_collector = timing_collector,
         packet_kernel = packet_kernel,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -4915,6 +5154,8 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_full_parent_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
+    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     kwargs...,
@@ -4924,10 +5165,19 @@ function one_center_atomic_full_parent_fixed_block(
     )
     collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
     total_start_ns = time_ns()
-    sequence_start_ns = time_ns()
-    sequence = build_one_center_atomic_full_parent_shell_sequence(
+    storage = _one_center_atomic_term_storage_resolution(
         bundle;
+        expansion = expansion,
+        retain_term_tensors = retain_term_tensors,
+    )
+    sequence_start_ns = time_ns()
+    n = length(bundle.basis)
+    sequence = _build_one_center_atomic_shell_sequence(
+        bundle,
+        (1:n, 1:n, 1:n);
         timing_collector = collector,
+        term_storage = storage.term_storage,
+        term_coefficients = storage.term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -4943,10 +5193,12 @@ end
 
 function one_center_atomic_full_parent_fixed_block(
     basis::MappedUniformBasis;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = Float64[],
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
+    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     kwargs...,
@@ -4959,19 +5211,34 @@ function one_center_atomic_full_parent_fixed_block(
     bundle_start_ns = time_ns()
     bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = exponents,
+        exponents = isempty(exponents) ? expansion.exponents : exponents,
         center = center,
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
     _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
     if isnothing(collector)
-        return one_center_atomic_full_parent_fixed_block(bundle; timing = false, kwargs...)
+        return one_center_atomic_full_parent_fixed_block(
+            bundle;
+            expansion = expansion,
+            retain_term_tensors = retain_term_tensors,
+            timing = false,
+            kwargs...,
+        )
     end
-    sequence_start_ns = time_ns()
-    sequence = build_one_center_atomic_full_parent_shell_sequence(
+    storage = _one_center_atomic_term_storage_resolution(
         bundle;
+        expansion = expansion,
+        retain_term_tensors = retain_term_tensors,
+    )
+    sequence_start_ns = time_ns()
+    n = length(bundle.basis)
+    sequence = _build_one_center_atomic_shell_sequence(
+        bundle,
+        (1:n, 1:n, 1:n);
         timing_collector = collector,
+        term_storage = storage.term_storage,
+        term_coefficients = storage.term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -5001,8 +5268,12 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_legacy_profile_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
+    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
+    working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
+    nside::Int,
     kwargs...,
 )
     (timing === false || _nested_timing_enabled(timing)) || throw(
@@ -5010,10 +5281,20 @@ function one_center_atomic_legacy_profile_fixed_block(
     )
     collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
     total_start_ns = time_ns()
-    sequence_start_ns = time_ns()
-    sequence = build_one_center_atomic_legacy_profile_shell_sequence(
+    storage = _one_center_atomic_term_storage_resolution(
         bundle;
+        expansion = expansion,
+        retain_term_tensors = retain_term_tensors,
+    )
+    sequence_start_ns = time_ns()
+    normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
+    sequence = _build_one_center_atomic_shell_sequence(
+        bundle,
+        normalized_working_box;
+        nside = nside,
         timing_collector = collector,
+        term_storage = storage.term_storage,
+        term_coefficients = storage.term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -5029,12 +5310,16 @@ end
 
 function one_center_atomic_legacy_profile_fixed_block(
     basis::MappedUniformBasis;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = Float64[],
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
+    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
+    working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
+    nside::Int,
     kwargs...,
 )
     (timing === false || _nested_timing_enabled(timing)) || throw(
@@ -5045,19 +5330,37 @@ function one_center_atomic_legacy_profile_fixed_block(
     bundle_start_ns = time_ns()
     bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = exponents,
+        exponents = isempty(exponents) ? expansion.exponents : exponents,
         center = center,
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
     _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
     if isnothing(collector)
-        return one_center_atomic_legacy_profile_fixed_block(bundle; timing = false, kwargs...)
+        return one_center_atomic_legacy_profile_fixed_block(
+            bundle;
+            expansion = expansion,
+            retain_term_tensors = retain_term_tensors,
+            timing = false,
+            working_box = working_box,
+            nside = nside,
+            kwargs...,
+        )
     end
-    sequence_start_ns = time_ns()
-    sequence = build_one_center_atomic_legacy_profile_shell_sequence(
+    storage = _one_center_atomic_term_storage_resolution(
         bundle;
+        expansion = expansion,
+        retain_term_tensors = retain_term_tensors,
+    )
+    sequence_start_ns = time_ns()
+    normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
+    sequence = _build_one_center_atomic_shell_sequence(
+        bundle,
+        normalized_working_box;
+        nside = nside,
         timing_collector = collector,
+        term_storage = storage.term_storage,
+        term_coefficients = storage.term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -7100,8 +7403,11 @@ function _nested_fixed_block(
         packet.x2_y,
         packet.x2_z,
         packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
         packet.gaussian_terms,
         packet.pair_terms,
+        packet.term_storage,
         Matrix{Float64}(fixed_centers),
     )
 end
@@ -7137,8 +7443,11 @@ function _nested_fixed_block(
         packet.x2_y,
         packet.x2_z,
         packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
         packet.gaussian_terms,
         packet.pair_terms,
+        packet.term_storage,
         Matrix{Float64}(fixed_centers),
     )
 end
@@ -7181,8 +7490,11 @@ function _nested_fixed_block(
         packet.x2_y,
         packet.x2_z,
         packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
         packet.gaussian_terms,
         packet.pair_terms,
+        packet.term_storage,
         Matrix{Float64}(fixed_centers),
     )
 end
@@ -7211,8 +7523,11 @@ function _nested_fixed_block(
         packet.x2_y,
         packet.x2_z,
         packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
         packet.gaussian_terms,
         packet.pair_terms,
+        packet.term_storage,
         Matrix{Float64}(fixed_centers),
     )
 end

@@ -4026,6 +4026,7 @@ end
         backend = :numerical_reference,
         refinement_levels = 0,
     )
+    pgdg = bundle.pgdg_intermediate
     interval = 2:(length(basis) - 1)
     shell = GaussletBases._nested_xy_shell_pair(
         bundle,
@@ -4696,6 +4697,14 @@ end
     @test timed_legacy isa GaussletBases.TimedNestedFixedBlockBuild
     @test timed_full.fixed_block.shell.working_box == (1:13, 1:13, 1:13)
     @test timed_legacy.fixed_block.shell.working_box == (2:12, 2:12, 2:12)
+    @test isnothing(timed_full.fixed_block.gaussian_terms)
+    @test isnothing(timed_full.fixed_block.pair_terms)
+    @test !isnothing(timed_full.fixed_block.gaussian_sum)
+    @test !isnothing(timed_full.fixed_block.pair_sum)
+    @test isnothing(timed_legacy.fixed_block.gaussian_terms)
+    @test isnothing(timed_legacy.fixed_block.pair_terms)
+    @test !isnothing(timed_legacy.fixed_block.gaussian_sum)
+    @test !isnothing(timed_legacy.fixed_block.pair_sum)
     @test norm(timed_full.fixed_block.overlap - I, Inf) < 1.0e-10
     @test norm(timed_legacy.fixed_block.overlap - I, Inf) < 1.0e-10
     @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "fixed_block.total") > 0.0
@@ -4713,6 +4722,70 @@ end
     @test occursin("packet.gaussian_terms", full_report)
     @test occursin("packet.pair_terms", full_report)
     @test occursin("packet.total", legacy_report)
+end
+
+@testset "One-center atomic compact fixed-block term storage" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+
+    compact_full = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    debug_full = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+        retain_term_tensors = true,
+    )
+    compact_legacy = one_center_atomic_legacy_profile_fixed_block(
+        basis;
+        expansion = expansion,
+        working_box = 2:12,
+        nside = 5,
+    )
+    debug_legacy = one_center_atomic_legacy_profile_fixed_block(
+        basis;
+        expansion = expansion,
+        working_box = 2:12,
+        nside = 5,
+        retain_term_tensors = true,
+    )
+
+    @test compact_full.term_storage == :compact_production
+    @test isnothing(compact_full.gaussian_terms)
+    @test isnothing(compact_full.pair_terms)
+    @test !isnothing(compact_full.gaussian_sum)
+    @test !isnothing(compact_full.pair_sum)
+    @test debug_full.term_storage == :full_debug
+    @test !isnothing(debug_full.gaussian_terms)
+    @test !isnothing(debug_full.pair_terms)
+
+    @test compact_legacy.term_storage == :compact_production
+    @test isnothing(compact_legacy.gaussian_terms)
+    @test isnothing(compact_legacy.pair_terms)
+    @test !isnothing(compact_legacy.gaussian_sum)
+    @test !isnothing(compact_legacy.pair_sum)
+    @test debug_legacy.term_storage == :full_debug
+    @test !isnothing(debug_legacy.gaussian_terms)
+    @test !isnothing(debug_legacy.pair_terms)
+
+    @test GaussletBases._qwrg_fixed_block_one_body_matrix(compact_full, expansion; Z = 2.0) ≈
+        GaussletBases._qwrg_fixed_block_one_body_matrix(debug_full, expansion; Z = 2.0) atol = 1.0e-10 rtol = 1.0e-10
+    @test GaussletBases._qwrg_fixed_block_interaction_matrix(compact_full, expansion) ≈
+        GaussletBases._qwrg_fixed_block_interaction_matrix(debug_full, expansion) atol = 1.0e-10 rtol = 1.0e-10
+    @test GaussletBases._qwrg_fixed_block_one_body_matrix(compact_legacy, expansion; Z = 2.0) ≈
+        GaussletBases._qwrg_fixed_block_one_body_matrix(debug_legacy, expansion; Z = 2.0) atol = 1.0e-10 rtol = 1.0e-10
+    @test GaussletBases._qwrg_fixed_block_interaction_matrix(compact_legacy, expansion) ≈
+        GaussletBases._qwrg_fixed_block_interaction_matrix(debug_legacy, expansion) atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "One-center atomic factorized direct packet kernel" begin
