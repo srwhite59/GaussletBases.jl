@@ -31,6 +31,12 @@ Current experimental nested-chain status:
 - the repo now exposes explicit odd-chain policy diagnostics rather than hiding
   the current no-split outcome behind one implicit heuristic
 - the repo is not yet claiming a settled odd-chain split/local-resolution rule
+- the supported default chain nested route now derives its complete-shell
+  retention contract directly from `nside`
+- the earlier compressed `(4,3)` / `3` retain default has been removed as the
+  canonical nested-source behavior
+- future user-controlled per-shell retention remains possible only as an
+  explicit internal/experimental override, not as the silent default contract
 
 Milestone E now also lands:
 

@@ -49,6 +49,12 @@ Milestone E now also lands:
   `min_in_plane_aspect_ratio` threshold
 - no claim that this is a settled or general-purpose square-lattice export
   standard
+- the supported default square-lattice nested route now derives its
+  complete-shell retention contract directly from `nside`
+- the earlier compressed `(4,3)` / `3` retain default has been removed as the
+  canonical planar nested-source behavior
+- any future user-controlled per-shell retention should stay explicit rather
+  than reappearing as a hidden default
 
 What is explicitly not claimed here:
 

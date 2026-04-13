@@ -325,6 +325,34 @@ struct _BondAlignedDiatomicSplitGeometry3D
     child_physical_widths::Vector{NTuple{3,Float64}}
 end
 
+struct CartesianNestedCompleteShellRetentionContract
+    nside::Int
+    retain_xy::NTuple{2,Int}
+    retain_xz::NTuple{2,Int}
+    retain_yz::NTuple{2,Int}
+    retain_x_edge::Int
+    retain_y_edge::Int
+    retain_z_edge::Int
+    face_retained_count::Int
+    edge_retained_count::Int
+    corner_retained_count::Int
+    shell_increment::Int
+    matches_nside_default::Bool
+end
+
+struct CartesianNestedSequenceContractAudit
+    parent_dims::NTuple{3,Int}
+    working_box::NTuple{3,UnitRange{Int}}
+    full_parent_working_box::Bool
+    support_count::Int
+    expected_support_count::Int
+    missing_row_count::Int
+    ownership_group_count_min::Int
+    ownership_group_count_max::Int
+    ownership_unowned_row_count::Int
+    ownership_multi_owned_row_count::Int
+end
+
 """
     _CartesianNestedBondAlignedDiatomicSource3D
 
@@ -342,6 +370,9 @@ The source keeps:
 struct _CartesianNestedBondAlignedDiatomicSource3D{B}
     basis::B
     axis_bundles::_CartesianNestedAxisBundles3D
+    nside::Int
+    child_shell_retention_contract::CartesianNestedCompleteShellRetentionContract
+    shared_shell_retention_contract::CartesianNestedCompleteShellRetentionContract
     geometry::_BondAlignedDiatomicSplitGeometry3D
     shared_shell_layers::Vector{_CartesianNestedCompleteShell3D}
     child_sequences::Vector{_CartesianNestedShellSequence3D}
@@ -406,6 +437,7 @@ geometry line.
 struct _CartesianNestedBondAlignedHomonuclearChainSource3D{B}
     basis::B
     axis_bundles::_CartesianNestedAxisBundles3D
+    shell_retention_contract::CartesianNestedCompleteShellRetentionContract
     root_geometry::_BondAlignedHomonuclearChainNodeGeometry3D
     leaf_sequences::Vector{_CartesianNestedShellSequence3D}
     sequence::_CartesianNestedShellSequence3D
@@ -475,6 +507,7 @@ planar geometry line.
 struct _CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D{B}
     basis::B
     axis_bundles::_CartesianNestedAxisBundles3D
+    shell_retention_contract::CartesianNestedCompleteShellRetentionContract
     root_geometry::_AxisAlignedHomonuclearSquareLatticeNodeGeometry3D
     leaf_sequences::Vector{_CartesianNestedShellSequence3D}
     sequence::_CartesianNestedShellSequence3D
@@ -688,6 +721,8 @@ function Base.show(io::IO, source::_CartesianNestedBondAlignedDiatomicSource3D)
         length(source.child_sequences),
         ", nfixed=",
         size(source.sequence.coefficient_matrix, 2),
+        ", nside=",
+        source.nside,
         ", midpoint_slab=",
         !isnothing(source.midpoint_slab_column_range),
         ", did_split=",
@@ -733,6 +768,8 @@ function Base.show(io::IO, source::_CartesianNestedBondAlignedHomonuclearChainSo
         length(source.leaf_sequences),
         ", nfixed=",
         size(source.sequence.coefficient_matrix, 2),
+        ", nside=",
+        source.shell_retention_contract.nside,
         ", did_split=",
         !isnothing(source.root_geometry.accepted_candidate_index),
         ")",
@@ -778,6 +815,8 @@ function Base.show(io::IO, source::_CartesianNestedAxisAlignedHomonuclearSquareL
         length(source.leaf_sequences),
         ", nfixed=",
         size(source.sequence.coefficient_matrix, 2),
+        ", nside=",
+        source.shell_retention_contract.nside,
         ", did_split=",
         !isnothing(source.root_geometry.accepted_candidate_index),
         ")",
@@ -1901,16 +1940,79 @@ function _nested_shell_sequence_contract_audit(
     ownership = _nested_shell_sequence_piece_ownership_audit(sequence)
     expected_support_count = prod(parent_dims)
     support_count = length(sequence.support_indices)
-    return (
-        support_count = support_count,
-        expected_support_count = expected_support_count,
-        missing_row_count = expected_support_count - support_count,
-        working_box = sequence.working_box,
-        full_parent_working_box = sequence.working_box == expected_box,
-        ownership_group_count_min = ownership.min_group_count,
-        ownership_group_count_max = ownership.max_group_count,
-        ownership_unowned_row_count = ownership.unowned_row_count,
-        ownership_multi_owned_row_count = ownership.multi_owned_row_count,
+    return CartesianNestedSequenceContractAudit(
+        parent_dims,
+        sequence.working_box,
+        sequence.working_box == expected_box,
+        support_count,
+        expected_support_count,
+        expected_support_count - support_count,
+        ownership.min_group_count,
+        ownership.max_group_count,
+        ownership.unowned_row_count,
+        ownership.multi_owned_row_count,
+    )
+end
+
+function _nested_complete_shell_retention_from_nside(nside::Int)
+    nside >= 3 || throw(ArgumentError("nested complete-shell retention requires nside >= 3"))
+    retained_side = nside - 2
+    return CartesianNestedCompleteShellRetentionContract(
+        nside,
+        (retained_side, retained_side),
+        (retained_side, retained_side),
+        (retained_side, retained_side),
+        retained_side,
+        retained_side,
+        retained_side,
+        6 * retained_side^2,
+        12 * retained_side,
+        8,
+        nside^3 - (nside - 2)^3,
+        true,
+    )
+end
+
+function _nested_resolve_complete_shell_retention(
+    nside::Int;
+    retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_x_edge::Union{Nothing,Int} = nothing,
+    retain_y_edge::Union{Nothing,Int} = nothing,
+    retain_z_edge::Union{Nothing,Int} = nothing,
+)
+    default_contract = _nested_complete_shell_retention_from_nside(nside)
+    actual_retain_xy = something(retain_xy, default_contract.retain_xy)
+    actual_retain_xz = something(retain_xz, default_contract.retain_xz)
+    actual_retain_yz = something(retain_yz, default_contract.retain_yz)
+    actual_retain_x_edge = something(retain_x_edge, default_contract.retain_x_edge)
+    actual_retain_y_edge = something(retain_y_edge, default_contract.retain_y_edge)
+    actual_retain_z_edge = something(retain_z_edge, default_contract.retain_z_edge)
+    face_retained_count =
+        2 * (actual_retain_xy[1] * actual_retain_xy[2] +
+             actual_retain_xz[1] * actual_retain_xz[2] +
+             actual_retain_yz[1] * actual_retain_yz[2])
+    edge_retained_count =
+        4 * (actual_retain_x_edge + actual_retain_y_edge + actual_retain_z_edge)
+    return CartesianNestedCompleteShellRetentionContract(
+        nside,
+        actual_retain_xy,
+        actual_retain_xz,
+        actual_retain_yz,
+        actual_retain_x_edge,
+        actual_retain_y_edge,
+        actual_retain_z_edge,
+        face_retained_count,
+        edge_retained_count,
+        8,
+        face_retained_count + edge_retained_count + 8,
+        actual_retain_xy == default_contract.retain_xy &&
+        actual_retain_xz == default_contract.retain_xz &&
+        actual_retain_yz == default_contract.retain_yz &&
+        actual_retain_x_edge == default_contract.retain_x_edge &&
+        actual_retain_y_edge == default_contract.retain_y_edge &&
+        actual_retain_z_edge == default_contract.retain_z_edge,
     )
 end
 
@@ -3271,14 +3373,22 @@ function _nested_complete_shell_sequence_for_box(
     bundles::_CartesianNestedAxisBundles3D,
     box::NTuple{3,UnitRange{Int}};
     nside::Int = 5,
-    retain_xy::Tuple{Int,Int} = (4, 3),
-    retain_xz::Tuple{Int,Int} = (4, 3),
-    retain_yz::Tuple{Int,Int} = (4, 3),
-    retain_x_edge::Int = 3,
-    retain_y_edge::Int = 3,
-    retain_z_edge::Int = 3,
+    retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_x_edge::Union{Nothing,Int} = nothing,
+    retain_y_edge::Union{Nothing,Int} = nothing,
+    retain_z_edge::Union{Nothing,Int} = nothing,
 )
-    nside >= 1 || throw(ArgumentError("diatomic child shell sequence requires nside >= 1"))
+    retention = _nested_resolve_complete_shell_retention(
+        nside;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
     current_box = box
     shell_layers = _CartesianNestedCompleteShell3D[]
     while minimum(length.(current_box)) > nside
@@ -3289,12 +3399,12 @@ function _nested_complete_shell_sequence_for_box(
             _nested_complete_rectangular_shell(
                 bundles,
                 inner_box...;
-                retain_xy = retain_xy,
-                retain_xz = retain_xz,
-                retain_yz = retain_yz,
-                retain_x_edge = retain_x_edge,
-                retain_y_edge = retain_y_edge,
-                retain_z_edge = retain_z_edge,
+                retain_xy = retention.retain_xy,
+                retain_xz = retention.retain_xz,
+                retain_yz = retention.retain_yz,
+                retain_x_edge = retention.retain_x_edge,
+                retain_y_edge = retention.retain_y_edge,
+                retain_z_edge = retention.retain_z_edge,
                 x_fixed = (first(current_box[1]), last(current_box[1])),
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
@@ -3309,26 +3419,25 @@ function _nested_complete_shell_sequence_for_box(
     )
 end
 
+function _nested_source_contract_audit(source::_CartesianNestedBondAlignedDiatomicSource3D)
+    return _nested_shell_sequence_contract_audit(source.sequence, _nested_axis_lengths(source.axis_bundles))
+end
+
+function _nested_source_contract_audit(source::_CartesianNestedBondAlignedHomonuclearChainSource3D)
+    return _nested_shell_sequence_contract_audit(source.sequence, _nested_axis_lengths(source.axis_bundles))
+end
+
+function _nested_source_contract_audit(source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D)
+    return _nested_shell_sequence_contract_audit(source.sequence, _nested_axis_lengths(source.axis_bundles))
+end
+
 function _one_center_atomic_shell_increment(nside::Int)
     nside >= 3 || throw(ArgumentError("one-center atomic shell contract requires nside >= 3"))
     return nside^3 - (nside - 2)^3
 end
 
 function _one_center_atomic_complete_shell_retention(nside::Int)
-    retained_side = nside - 2
-    retained_side >= 1 || throw(ArgumentError("one-center atomic shell contract requires nside >= 3"))
-    return (
-        retain_xy = (retained_side, retained_side),
-        retain_xz = (retained_side, retained_side),
-        retain_yz = (retained_side, retained_side),
-        retain_x_edge = retained_side,
-        retain_y_edge = retained_side,
-        retain_z_edge = retained_side,
-        face_retained_count = 6 * retained_side^2,
-        edge_retained_count = 12 * retained_side,
-        corner_retained_count = 8,
-        shell_increment = _one_center_atomic_shell_increment(nside),
-    )
+    return _nested_complete_shell_retention_from_nside(nside)
 end
 
 function _one_center_atomic_shell_layer_count(working_box_side_count::Int, nside::Int)
@@ -4027,13 +4136,31 @@ function _nested_bond_aligned_diatomic_source(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    retain_xy::Tuple{Int,Int} = (4, 3),
-    retain_xz::Tuple{Int,Int} = (4, 3),
-    retain_yz::Tuple{Int,Int} = (4, 3),
-    retain_x_edge::Int = 3,
-    retain_y_edge::Int = 3,
-    retain_z_edge::Int = 3,
+    retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_x_edge::Union{Nothing,Int} = nothing,
+    retain_y_edge::Union{Nothing,Int} = nothing,
+    retain_z_edge::Union{Nothing,Int} = nothing,
 )
+    child_retention = _nested_resolve_complete_shell_retention(
+        nside;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
+    shared_retention = _nested_resolve_complete_shell_retention(
+        nside;
+        retain_xy = shared_shell_retain_xy,
+        retain_xz = shared_shell_retain_xz,
+        retain_yz = shared_shell_retain_yz,
+        retain_x_edge = child_retention.retain_x_edge,
+        retain_y_edge = child_retention.retain_y_edge,
+        retain_z_edge = child_retention.retain_z_edge,
+    )
     dims = _nested_axis_lengths(bundles)
     parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
     shared_shell_layers = _CartesianNestedCompleteShell3D[]
@@ -4056,23 +4183,17 @@ function _nested_bond_aligned_diatomic_source(
             break
         end
         inner_box = _nested_inner_box(current_box)
-        shared_retain_xy =
-            isnothing(shared_shell_retain_xy) ? retain_xy : shared_shell_retain_xy
-        shared_retain_xz =
-            isnothing(shared_shell_retain_xz) ? retain_xz : shared_shell_retain_xz
-        shared_retain_yz =
-            isnothing(shared_shell_retain_yz) ? retain_yz : shared_shell_retain_yz
         push!(
             shared_shell_layers,
             _nested_complete_rectangular_shell(
                 bundles,
                 inner_box...;
-                retain_xy = shared_retain_xy,
-                retain_xz = shared_retain_xz,
-                retain_yz = shared_retain_yz,
-                retain_x_edge = retain_x_edge,
-                retain_y_edge = retain_y_edge,
-                retain_z_edge = retain_z_edge,
+                retain_xy = shared_retention.retain_xy,
+                retain_xz = shared_retention.retain_xz,
+                retain_yz = shared_retention.retain_yz,
+                retain_x_edge = shared_retention.retain_x_edge,
+                retain_y_edge = shared_retention.retain_y_edge,
+                retain_z_edge = shared_retention.retain_z_edge,
                 x_fixed = (first(current_box[1]), last(current_box[1])),
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
@@ -4105,12 +4226,12 @@ function _nested_bond_aligned_diatomic_source(
                     bundles,
                     child_box;
                     nside = nside,
-                    retain_xy = retain_xy,
-                    retain_xz = retain_xz,
-                    retain_yz = retain_yz,
-                    retain_x_edge = retain_x_edge,
-                    retain_y_edge = retain_y_edge,
-                    retain_z_edge = retain_z_edge,
+                    retain_xy = child_retention.retain_xy,
+                    retain_xz = child_retention.retain_xz,
+                    retain_yz = child_retention.retain_yz,
+                    retain_x_edge = child_retention.retain_x_edge,
+                    retain_y_edge = child_retention.retain_y_edge,
+                    retain_z_edge = child_retention.retain_z_edge,
                 ),
             )
         end
@@ -4149,12 +4270,12 @@ function _nested_bond_aligned_diatomic_source(
             bundles,
             current_box;
             nside = nside,
-            retain_xy = retain_xy,
-            retain_xz = retain_xz,
-            retain_yz = retain_yz,
-            retain_x_edge = retain_x_edge,
-            retain_y_edge = retain_y_edge,
-            retain_z_edge = retain_z_edge,
+            retain_xy = child_retention.retain_xy,
+            retain_xz = child_retention.retain_xz,
+            retain_yz = child_retention.retain_yz,
+            retain_x_edge = child_retention.retain_x_edge,
+            retain_y_edge = child_retention.retain_y_edge,
+            retain_z_edge = child_retention.retain_z_edge,
         )
         push!(child_sequences, shared_child)
         merged_sequence =
@@ -4171,6 +4292,9 @@ function _nested_bond_aligned_diatomic_source(
     return _CartesianNestedBondAlignedDiatomicSource3D(
         basis,
         bundles,
+        nside,
+        child_retention,
+        shared_retention,
         geometry,
         shared_shell_layers,
         child_sequences,
@@ -4746,13 +4870,22 @@ function _nested_bond_aligned_homonuclear_chain_source(
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     odd_chain_policy::Symbol = :strict_current,
     prefer_midpoint_tie_side::Symbol = :left,
-    retain_xy::Tuple{Int,Int} = (4, 3),
-    retain_xz::Tuple{Int,Int} = (4, 3),
-    retain_yz::Tuple{Int,Int} = (4, 3),
-    retain_x_edge::Int = 3,
-    retain_y_edge::Int = 3,
-    retain_z_edge::Int = 3,
+    retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_x_edge::Union{Nothing,Int} = nothing,
+    retain_y_edge::Union{Nothing,Int} = nothing,
+    retain_z_edge::Union{Nothing,Int} = nothing,
 )
+    retention = _nested_resolve_complete_shell_retention(
+        nside;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
     dims = _nested_axis_lengths(bundles)
     parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
     result = _nested_bond_aligned_homonuclear_chain_node(
@@ -4766,16 +4899,17 @@ function _nested_bond_aligned_homonuclear_chain_source(
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
         prefer_midpoint_tie_side = prefer_midpoint_tie_side,
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        retain_x_edge = retain_x_edge,
-        retain_y_edge = retain_y_edge,
-        retain_z_edge = retain_z_edge,
+        retain_xy = retention.retain_xy,
+        retain_xz = retention.retain_xz,
+        retain_yz = retention.retain_yz,
+        retain_x_edge = retention.retain_x_edge,
+        retain_y_edge = retention.retain_y_edge,
+        retain_z_edge = retention.retain_z_edge,
     )
     return _CartesianNestedBondAlignedHomonuclearChainSource3D(
         basis,
         bundles,
+        retention,
         result.geometry,
         result.leaf_sequences,
         result.sequence,
@@ -5345,13 +5479,22 @@ function _nested_axis_aligned_homonuclear_square_lattice_source(
     nside::Int = 5,
     min_in_plane_aspect_ratio::Float64 = 0.15,
     prefer_midpoint_tie_side::Symbol = :left,
-    retain_xy::Tuple{Int,Int} = (4, 3),
-    retain_xz::Tuple{Int,Int} = (4, 3),
-    retain_yz::Tuple{Int,Int} = (4, 3),
-    retain_x_edge::Int = 3,
-    retain_y_edge::Int = 3,
-    retain_z_edge::Int = 3,
+    retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    retain_x_edge::Union{Nothing,Int} = nothing,
+    retain_y_edge::Union{Nothing,Int} = nothing,
+    retain_z_edge::Union{Nothing,Int} = nothing,
 )
+    retention = _nested_resolve_complete_shell_retention(
+        nside;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
+    )
     dims = _nested_axis_lengths(bundles)
     parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
     result = _nested_axis_aligned_homonuclear_square_lattice_node(
@@ -5364,16 +5507,17 @@ function _nested_axis_aligned_homonuclear_square_lattice_source(
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
         prefer_midpoint_tie_side = prefer_midpoint_tie_side,
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        retain_x_edge = retain_x_edge,
-        retain_y_edge = retain_y_edge,
-        retain_z_edge = retain_z_edge,
+        retain_xy = retention.retain_xy,
+        retain_xz = retention.retain_xz,
+        retain_yz = retention.retain_yz,
+        retain_x_edge = retention.retain_x_edge,
+        retain_y_edge = retention.retain_y_edge,
+        retain_z_edge = retention.retain_z_edge,
     )
     return _CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D(
         basis,
         bundles,
+        retention,
         result.geometry,
         result.leaf_sequences,
         result.sequence,

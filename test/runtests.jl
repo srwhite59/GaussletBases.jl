@@ -5051,6 +5051,24 @@ end
 
     @test basis2 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
     @test basis3 isa AxisAlignedHomonuclearSquareLatticeQWBasis3D
+    @test diagnostics2.retention_contract.retain_xy == (3, 3)
+    @test diagnostics3.retention_contract.retain_xy == (3, 3)
+    @test diagnostics2.retention_contract.retain_x_edge == 3
+    @test diagnostics3.retention_contract.retain_x_edge == 3
+    @test diagnostics2.retention_contract.shell_increment == 98
+    @test diagnostics3.retention_contract.shell_increment == 98
+    @test diagnostics2.retention_contract.matches_nside_default
+    @test diagnostics3.retention_contract.matches_nside_default
+    @test diagnostics2.contract_audit.full_parent_working_box
+    @test diagnostics3.contract_audit.full_parent_working_box
+    @test diagnostics2.contract_audit.missing_row_count == 0
+    @test diagnostics3.contract_audit.missing_row_count == 0
+    @test diagnostics2.contract_audit.ownership_unowned_row_count == 0
+    @test diagnostics3.contract_audit.ownership_unowned_row_count == 0
+    @test diagnostics2.contract_audit.ownership_multi_owned_row_count == 0
+    @test diagnostics3.contract_audit.ownership_multi_owned_row_count == 0
+    @test diagnostics2.shared_shells_match_contract
+    @test diagnostics3.shared_shells_match_contract
     @test diagnostics2.leaf_count == 4
     @test diagnostics3.leaf_count == 9
     @test diagnostics2.root_node.did_split
@@ -5103,6 +5121,9 @@ end
         )
         @test written.leaf_count == diagnostics3.leaf_count
         report_text = read(report_path, String)
+        @test occursin("# retain_xy = (3, 3)", report_text)
+        @test occursin("# shell_increment = 98", report_text)
+        @test occursin("# ownership_multi_owned_row_count = 0", report_text)
         @test occursin("candidate[1].split_family = split_x_ternary", report_text)
         @test occursin("candidate[2].split_family = split_y_ternary", report_text)
         @test occursin("[node root_1]", report_text)
@@ -5116,7 +5137,7 @@ end
         _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 3, spacing = 1.2)
 
     for (basis, path, check, n, expected_dim) in (
-        (basis2, path2, check2, 2, 791),
+        (basis2, path2, check2, 2, 773),
         (basis3, path3, check3, 3, 703),
     )
         operators = path.operators
@@ -5275,6 +5296,33 @@ end
     @test basis3 isa BondAlignedHomonuclearChainQWBasis3D
     @test basis4 isa BondAlignedHomonuclearChainQWBasis3D
     @test basis5 isa BondAlignedHomonuclearChainQWBasis3D
+    @test diagnostics3.retention_contract.retain_xy == (3, 3)
+    @test diagnostics4.retention_contract.retain_xy == (3, 3)
+    @test diagnostics5.retention_contract.retain_xy == (3, 3)
+    @test diagnostics3.retention_contract.retain_x_edge == 3
+    @test diagnostics4.retention_contract.retain_x_edge == 3
+    @test diagnostics5.retention_contract.retain_x_edge == 3
+    @test diagnostics3.retention_contract.shell_increment == 98
+    @test diagnostics4.retention_contract.shell_increment == 98
+    @test diagnostics5.retention_contract.shell_increment == 98
+    @test diagnostics3.retention_contract.matches_nside_default
+    @test diagnostics4.retention_contract.matches_nside_default
+    @test diagnostics5.retention_contract.matches_nside_default
+    @test diagnostics3.contract_audit.full_parent_working_box
+    @test diagnostics4.contract_audit.full_parent_working_box
+    @test diagnostics5.contract_audit.full_parent_working_box
+    @test diagnostics3.contract_audit.missing_row_count == 0
+    @test diagnostics4.contract_audit.missing_row_count == 0
+    @test diagnostics5.contract_audit.missing_row_count == 0
+    @test diagnostics3.contract_audit.ownership_unowned_row_count == 0
+    @test diagnostics4.contract_audit.ownership_unowned_row_count == 0
+    @test diagnostics5.contract_audit.ownership_unowned_row_count == 0
+    @test diagnostics3.contract_audit.ownership_multi_owned_row_count == 0
+    @test diagnostics4.contract_audit.ownership_multi_owned_row_count == 0
+    @test diagnostics5.contract_audit.ownership_multi_owned_row_count == 0
+    @test diagnostics3.shared_shells_match_contract
+    @test diagnostics4.shared_shells_match_contract
+    @test diagnostics5.shared_shells_match_contract
     @test diagnostics3.leaf_count == 1
     @test diagnostics4.leaf_count == 2
     @test diagnostics5.leaf_count == 1
@@ -5366,10 +5414,89 @@ end
         report_text = read(report_path, String)
         @test written.leaf_count == diagnostics5r.leaf_count
         @test occursin("[node root]", report_text)
+        @test occursin("# retain_xy = (3, 3)", report_text)
+        @test occursin("# shell_increment = 98", report_text)
+        @test occursin("# ownership_multi_owned_row_count = 0", report_text)
         @test occursin("odd_chain_policy = central_ternary_relaxed", report_text)
         @test occursin("candidate[2].child_parallel_counts = [6, 3, 6]", report_text)
         @test occursin("candidate[2].accepted = true", report_text)
     end
+end
+
+@testset "Non-atomic nested routes default to nside-driven complete-shell retention" begin
+    diatomic_basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.0,
+        bond_axis = :z,
+    )
+    diatomic_diagnostics = bond_aligned_diatomic_nested_geometry_diagnostics(
+        diatomic_basis;
+        nside = 7,
+    )
+    @test diatomic_diagnostics.nside == 7
+    @test diatomic_diagnostics.child_shell_retention_contract.retain_xy == (5, 5)
+    @test diatomic_diagnostics.child_shell_retention_contract.retain_x_edge == 5
+    @test diatomic_diagnostics.child_shell_retention_contract.shell_increment == 218
+    @test diatomic_diagnostics.child_shell_retention_contract.matches_nside_default
+    @test diatomic_diagnostics.shared_shell_retention_contract.matches_nside_default
+    @test diatomic_diagnostics.contract_audit.support_count ==
+        diatomic_diagnostics.contract_audit.expected_support_count
+    @test diatomic_diagnostics.contract_audit.missing_row_count == 0
+    @test diatomic_diagnostics.contract_audit.ownership_unowned_row_count == 0
+    @test diatomic_diagnostics.contract_audit.ownership_multi_owned_row_count == 0
+
+    chain_basis = bond_aligned_homonuclear_chain_qw_basis(
+        natoms = 4,
+        spacing = 1.2,
+        core_spacing = 0.5,
+        xmax_parallel = 2.0,
+        xmax_transverse = 3.0,
+        chain_axis = :z,
+    )
+    chain_diagnostics = bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
+        chain_basis;
+        nside = 7,
+    )
+    @test chain_diagnostics.nside == 7
+    @test chain_diagnostics.retention_contract.retain_xy == (5, 5)
+    @test chain_diagnostics.retention_contract.retain_x_edge == 5
+    @test chain_diagnostics.retention_contract.shell_increment == 218
+    @test chain_diagnostics.retention_contract.matches_nside_default
+    @test chain_diagnostics.shared_shell_dimensions == [218]
+    @test chain_diagnostics.shared_shells_match_contract
+    @test chain_diagnostics.contract_audit.full_parent_working_box
+    @test chain_diagnostics.contract_audit.support_count ==
+        chain_diagnostics.contract_audit.expected_support_count
+    @test chain_diagnostics.contract_audit.missing_row_count == 0
+    @test chain_diagnostics.contract_audit.ownership_unowned_row_count == 0
+    @test chain_diagnostics.contract_audit.ownership_multi_owned_row_count == 0
+
+    square_basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+        n = 3,
+        spacing = 1.2,
+        core_spacing = 0.5,
+        xmax_in_plane = 3.0,
+        xmax_transverse = 3.0,
+    )
+    square_diagnostics = axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
+        square_basis;
+        nside = 7,
+    )
+    @test square_diagnostics.nside == 7
+    @test square_diagnostics.retention_contract.retain_xy == (5, 5)
+    @test square_diagnostics.retention_contract.retain_x_edge == 5
+    @test square_diagnostics.retention_contract.shell_increment == 218
+    @test square_diagnostics.retention_contract.matches_nside_default
+    @test square_diagnostics.shared_shell_dimensions == [218]
+    @test square_diagnostics.shared_shells_match_contract
+    @test square_diagnostics.contract_audit.full_parent_working_box
+    @test square_diagnostics.contract_audit.support_count ==
+        square_diagnostics.contract_audit.expected_support_count
+    @test square_diagnostics.contract_audit.missing_row_count == 0
+    @test square_diagnostics.contract_audit.ownership_unowned_row_count == 0
+    @test square_diagnostics.contract_audit.ownership_multi_owned_row_count == 0
 end
 
 @testset "Experimental bond-aligned homonuclear chain nested QW consumer path" begin

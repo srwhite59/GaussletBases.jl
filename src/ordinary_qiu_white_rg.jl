@@ -1020,10 +1020,29 @@ end
 function _square_lattice_nested_geometry_report_lines(
     source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
 )
+    retention = source.shell_retention_contract
+    audit = _nested_source_contract_audit(source)
     lines = String[
         "# GaussletBases axis-aligned homonuclear square-lattice nested geometry report",
         "# lattice_size = $(source.basis.lattice_size)",
         "# natoms = $(length(source.basis.nuclei))",
+        "# nside = $(retention.nside)",
+        "# retain_xy = $(retention.retain_xy)",
+        "# retain_xz = $(retention.retain_xz)",
+        "# retain_yz = $(retention.retain_yz)",
+        "# retain_x_edge = $(retention.retain_x_edge)",
+        "# retain_y_edge = $(retention.retain_y_edge)",
+        "# retain_z_edge = $(retention.retain_z_edge)",
+        "# shell_increment = $(retention.shell_increment)",
+        "# matches_nside_default = $(retention.matches_nside_default)",
+        "# full_parent_working_box = $(audit.full_parent_working_box)",
+        "# support_count = $(audit.support_count)",
+        "# expected_support_count = $(audit.expected_support_count)",
+        "# missing_row_count = $(audit.missing_row_count)",
+        "# ownership_group_count_min = $(audit.ownership_group_count_min)",
+        "# ownership_group_count_max = $(audit.ownership_group_count_max)",
+        "# ownership_unowned_row_count = $(audit.ownership_unowned_row_count)",
+        "# ownership_multi_owned_row_count = $(audit.ownership_multi_owned_row_count)",
         "# nleaf = $(length(source.leaf_sequences))",
         "# nfixed = $(size(source.sequence.coefficient_matrix, 2))",
     ]
@@ -1064,10 +1083,18 @@ end
 function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
     source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
 )
+    node_summaries = _nested_square_lattice_collect_node_summaries(source.root_geometry)
+    shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
     return (
         source = source,
         root_node = _nested_square_lattice_node_summary(source.root_geometry),
-        node_summaries = _nested_square_lattice_collect_node_summaries(source.root_geometry),
+        node_summaries = node_summaries,
+        nside = source.shell_retention_contract.nside,
+        retention_contract = source.shell_retention_contract,
+        shared_shell_dimensions = shared_shell_dimensions,
+        shared_shells_match_contract =
+            all(==(source.shell_retention_contract.shell_increment), shared_shell_dimensions),
+        contract_audit = _nested_source_contract_audit(source),
         leaf_count = length(source.leaf_sequences),
         fixed_dimension = size(source.sequence.coefficient_matrix, 2),
     )
@@ -1231,6 +1258,62 @@ function _bond_aligned_diatomic_nested_fixed_block(
     )
 end
 
+function _bond_aligned_diatomic_nested_geometry_diagnostics(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    contract_audit = _nested_source_contract_audit(source)
+    shared_shell_dimensions = Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
+    child_sequence_dimensions = Int[size(sequence.coefficient_matrix, 2) for sequence in source.child_sequences]
+    return (
+        source = source,
+        geometry = source.geometry,
+        nside = source.nside,
+        child_shell_retention_contract = source.child_shell_retention_contract,
+        shared_shell_retention_contract = source.shared_shell_retention_contract,
+        shared_shell_count = length(source.shared_shell_layers),
+        shared_shell_dimensions = shared_shell_dimensions,
+        shared_shells_match_contract =
+            all(==(source.shared_shell_retention_contract.shell_increment), shared_shell_dimensions),
+        child_sequence_count = length(source.child_sequences),
+        child_sequence_dimensions = child_sequence_dimensions,
+        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+        contract_audit = contract_audit,
+    )
+end
+
+function bond_aligned_diatomic_nested_geometry_diagnostics(
+    basis::BondAlignedDiatomicQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+)
+    source = _bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        shared_shell_retain_xy = shared_shell_retain_xy,
+        shared_shell_retain_xz = shared_shell_retain_xz,
+        shared_shell_retain_yz = shared_shell_retain_yz,
+    )
+    return _bond_aligned_diatomic_nested_geometry_diagnostics(source)
+end
+
+function _nested_geometry_shared_shell_dimensions(
+    node_summaries,
+)
+    dimensions = Int[]
+    for node in node_summaries
+        append!(dimensions, Int.(node.shared_shell_dimensions))
+    end
+    return dimensions
+end
+
 function _bond_aligned_homonuclear_chain_nested_fixed_source(
     basis::BondAlignedHomonuclearChainQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -1282,10 +1365,29 @@ end
 function _chain_nested_geometry_report_lines(
     source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
 )
+    retention = source.shell_retention_contract
+    audit = _nested_source_contract_audit(source)
     lines = String[
         "# GaussletBases bond-aligned homonuclear chain nested geometry report",
         "# chain_axis = $(source.basis.chain_axis)",
         "# natoms = $(length(source.basis.nuclei))",
+        "# nside = $(retention.nside)",
+        "# retain_xy = $(retention.retain_xy)",
+        "# retain_xz = $(retention.retain_xz)",
+        "# retain_yz = $(retention.retain_yz)",
+        "# retain_x_edge = $(retention.retain_x_edge)",
+        "# retain_y_edge = $(retention.retain_y_edge)",
+        "# retain_z_edge = $(retention.retain_z_edge)",
+        "# shell_increment = $(retention.shell_increment)",
+        "# matches_nside_default = $(retention.matches_nside_default)",
+        "# full_parent_working_box = $(audit.full_parent_working_box)",
+        "# support_count = $(audit.support_count)",
+        "# expected_support_count = $(audit.expected_support_count)",
+        "# missing_row_count = $(audit.missing_row_count)",
+        "# ownership_group_count_min = $(audit.ownership_group_count_min)",
+        "# ownership_group_count_max = $(audit.ownership_group_count_max)",
+        "# ownership_unowned_row_count = $(audit.ownership_unowned_row_count)",
+        "# ownership_multi_owned_row_count = $(audit.ownership_multi_owned_row_count)",
         "# nleaf = $(length(source.leaf_sequences))",
         "# nfixed = $(size(source.sequence.coefficient_matrix, 2))",
     ]
@@ -1326,10 +1428,18 @@ end
 function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
 )
+    node_summaries = _nested_chain_collect_node_summaries(source.root_geometry)
+    shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
     return (
         source = source,
         root_node = _nested_chain_node_summary(source.root_geometry),
-        node_summaries = _nested_chain_collect_node_summaries(source.root_geometry),
+        node_summaries = node_summaries,
+        nside = source.shell_retention_contract.nside,
+        retention_contract = source.shell_retention_contract,
+        shared_shell_dimensions = shared_shell_dimensions,
+        shared_shells_match_contract =
+            all(==(source.shell_retention_contract.shell_increment), shared_shell_dimensions),
+        contract_audit = _nested_source_contract_audit(source),
         leaf_count = length(source.leaf_sequences),
         fixed_dimension = size(source.sequence.coefficient_matrix, 2),
     )

@@ -7,6 +7,12 @@ This pass sits on the earlier face-only shell-sequence line. It is still a
 useful negative result about the first compression policy, but it should not be
 read as the later coverage-fixed complete-shell state.
 
+For the current supported non-atomic recursive nested routes, the old
+compressed complete-shell retain default `(4,3)` / `3` is no longer the
+canonical source-layer behavior. The default route now derives complete-shell
+retention directly from `nside`, and any future non-`nside` shell-resolution
+mode should remain explicit rather than hidden behind the default path.
+
 The shell-sequence interface by itself is structurally valid, but it is not yet
 a useful hierarchy if each added shell only grows the fixed block. The missing
 ingredient is an explicit rule for what direct/core content gets replaced once a
