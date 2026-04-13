@@ -4367,6 +4367,162 @@ function _one_center_atomic_legacy_profile_contract_fixture(;
     end)
 end
 
+function _ne_repo_v6z_sp_basis_text()
+    return "#BASIS SET: Ne repo-v6z-sp\n" *
+           "Ne    S\n" *
+           "      9.024000e+05           5.510000e-06\n" *
+           "      1.351000e+05           4.282000e-05\n" *
+           "      3.075000e+04           2.251400e-04\n" *
+           "      8.710000e+03           9.501600e-04\n" *
+           "      2.842000e+03           3.447190e-03\n" *
+           "      1.026000e+03           1.112545e-02\n" *
+           "      4.001000e+02           3.220568e-02\n" *
+           "      1.659000e+02           8.259891e-02\n" *
+           "      7.221000e+01           1.799056e-01\n" *
+           "      3.266000e+01           3.060521e-01\n" *
+           "      1.522000e+01           3.401256e-01\n" *
+           "      7.149000e+00           1.761682e-01\n" *
+           "      2.957000e+00           2.101527e-02\n" *
+           "      1.335000e+00          -5.074500e-04\n" *
+           "      5.816000e-01           1.057850e-03\n" *
+           "      2.463000e-01          -5.988000e-05\n" *
+           "Ne    S\n" *
+           "      7.149000e+00           1.000000e+00\n" *
+           "Ne    S\n" *
+           "      2.957000e+00           1.000000e+00\n" *
+           "Ne    S\n" *
+           "      1.335000e+00           1.000000e+00\n" *
+           "Ne    S\n" *
+           "      9.024000e+05          -1.290000e-06\n" *
+           "      1.351000e+05          -1.005000e-05\n" *
+           "      3.075000e+04          -5.293000e-05\n" *
+           "      8.710000e+03          -2.231200e-04\n" *
+           "      2.842000e+03          -8.133800e-04\n" *
+           "      1.026000e+03          -2.632300e-03\n" *
+           "      4.001000e+02          -7.759100e-03\n" *
+           "      1.659000e+02          -2.045277e-02\n" *
+           "      7.221000e+01          -4.797505e-02\n" *
+           "      3.266000e+01          -9.340086e-02\n" *
+           "      1.522000e+01          -1.427721e-01\n" *
+           "      7.149000e+00          -1.022908e-01\n" *
+           "      2.957000e+00           1.587858e-01\n" *
+           "      1.335000e+00           4.494079e-01\n" *
+           "      5.816000e-01           4.334854e-01\n" *
+           "      2.463000e-01           1.215757e-01\n" *
+           "Ne    S\n" *
+           "      5.816000e-01           1.000000e+00\n" *
+           "Ne    S\n" *
+           "      2.463000e-01           1.000000e+00\n" *
+           "Ne    P\n" *
+           "      4.281000e+00           1.000000e+00\n" *
+           "Ne    P\n" *
+           "      1.915000e+00           1.000000e+00\n" *
+           "Ne    P\n" *
+           "      8.156000e+02           1.837600e-04\n" *
+           "      1.933000e+02           1.585090e-03\n" *
+           "      6.260000e+01           8.414640e-03\n" *
+           "      2.361000e+01           3.220033e-02\n" *
+           "      9.762000e+00           9.396390e-02\n" *
+           "      4.281000e+00           2.004808e-01\n" *
+           "      1.915000e+00           3.031137e-01\n" *
+           "      8.476000e-01           3.297578e-01\n" *
+           "      3.660000e-01           2.366743e-01\n" *
+           "      1.510000e-01           6.911689e-02\n" *
+           "Ne    P\n" *
+           "      8.476000e-01           1.000000e+00\n" *
+           "Ne    P\n" *
+           "      3.660000e-01           1.000000e+00\n" *
+           "Ne    P\n" *
+           "      1.510000e-01           1.000000e+00\n" *
+           "END\n"
+end
+
+function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
+    return _cached_fixture(:one_center_atomic_legacy_profile_ne_residual_completion_fixture, () -> begin
+        overlap_only_expansion = CoulombGaussianExpansion(
+            [0.0],
+            [1.0];
+            del = 1.0,
+            s = 1.0,
+            c = 1.0,
+            maxu = 1.0,
+        )
+        mktemp() do path, io
+            write(io, _ne_repo_v6z_sp_basis_text())
+            close(io)
+
+            basis = build_basis(MappedUniformBasisSpec(:G10;
+                count = 29,
+                mapping = white_lindsey_atomic_mapping(Z = 10.0, d = 0.03, tail_spacing = 10.0),
+                reference_spacing = 1.0,
+            ))
+            bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+                basis;
+                exponents = overlap_only_expansion.exponents,
+                center = 0.0,
+                backend = :numerical_reference,
+            )
+            fixed_block = one_center_atomic_legacy_profile_fixed_block(
+                bundle;
+                working_box = 2:28,
+                nside = 7,
+            )
+            supplement = legacy_atomic_gaussian_supplement(
+                "Ne",
+                "repo-v6z-sp";
+                lmax = 1,
+                basisfile = path,
+            )
+            supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+            blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(
+                bundle,
+                supplement3d,
+                overlap_only_expansion,
+            )
+            overlap_fg = GaussletBases._qwrg_contract_parent_ga_matrix(
+                fixed_block.coefficient_matrix,
+                blocks.overlap_ga,
+            )
+            modern = diagnose_qwrg_residual_space(
+                fixed_block.overlap,
+                overlap_fg,
+                blocks.overlap_aa,
+            )
+            legacy = diagnose_qwrg_residual_space(
+                fixed_block.overlap,
+                overlap_fg,
+                blocks.overlap_aa;
+                keep_policy = :legacy_profile,
+            )
+            modern_total_basis = size(
+                GaussletBases._qwrg_residual_space(
+                    fixed_block.overlap,
+                    overlap_fg,
+                    blocks.overlap_aa,
+                ).raw_to_final,
+                2,
+            )
+            legacy_total_basis = size(
+                GaussletBases._qwrg_residual_space(
+                    fixed_block.overlap,
+                    overlap_fg,
+                    blocks.overlap_aa;
+                    keep_policy = :legacy_profile,
+                ).raw_to_final,
+                2,
+            )
+            return (
+                fixed_gausslet_count = size(fixed_block.overlap, 1),
+                supplement_count = length(supplement3d.orbitals),
+                modern = modern,
+                modern_total_basis = modern_total_basis,
+                legacy = legacy,
+                legacy_total_basis = legacy_total_basis,
+            )
+        end
+    end)
+end
+
 @testset "One-center atomic full-parent nested contract" begin
     basis, sequence, audit = _one_center_atomic_full_parent_contract_fixture()
     count = length(basis)
@@ -4436,14 +4592,27 @@ end
 
 @testset "One-center atomic legacy-profile nested contract" begin
     basis, sequence, diagnostics, ownership = _one_center_atomic_legacy_profile_contract_fixture()
+    range_groups = UnitRange{Int}[sequence.core_column_range]
+    append!(range_groups, sequence.layer_column_ranges)
+    support_group_counts = Int[]
+    for row in sequence.support_indices
+        nzcols = findall(!iszero, @view sequence.coefficient_matrix[row, :])
+        touched_groups = 0
+        for range in range_groups
+            any(col -> col in range, nzcols) && (touched_groups += 1)
+        end
+        push!(support_group_counts, touched_groups)
+    end
 
     @test sequence isa GaussletBases._CartesianNestedShellSequence3D
     @test sequence.working_box == (2:14, 2:14, 2:14)
     @test length(sequence.support_indices) == 13^3
-    @test ownership.min_group_count == 1
+    @test ownership.min_group_count == 0
     @test ownership.max_group_count == 1
-    @test ownership.unowned_row_count == 0
+    @test ownership.unowned_row_count == length(basis)^3 - 13^3
     @test ownership.multi_owned_row_count == 0
+    @test minimum(support_group_counts) == 1
+    @test maximum(support_group_counts) == 1
     @test diagnostics.parent_side_count == length(basis)
     @test diagnostics.working_box_side_count == 13
     @test diagnostics.nside == 5
@@ -4469,7 +4638,7 @@ end
     @test count_only_modern_ne.total_actual_gausslet_count == 2741
 end
 
-@testset "QW residual-space keep rule explains Ne legacy-profile 25->8 collapse" begin
+@testset "QW residual-space keep policy distinguishes modern and legacy-profile Ne completion" begin
     # Literal residual-overlap spectrum observed on the anchored one-center
     # Ne legacy-profile case:
     # parent side = 29, working box = 2:28, nside = 7, supplement lmax = 1.
@@ -4504,7 +4673,14 @@ end
     overlap_ga = zeros(Float64, 1, length(residual_overlap_eigenvalues))
     overlap_aa = Matrix(Diagonal(residual_overlap_eigenvalues))
     diagnostics = diagnose_qwrg_residual_space(gausslet_overlap, overlap_ga, overlap_aa)
+    legacy_diagnostics = diagnose_qwrg_residual_space(
+        gausslet_overlap,
+        overlap_ga,
+        overlap_aa;
+        keep_policy = :legacy_profile,
+    )
 
+    @test diagnostics.keep_policy == :relative_case_scale
     @test diagnostics.gaussian_count == 25
     @test diagnostics.supplement_numerical_rank == 25
     @test diagnostics.residual_numerical_rank == 25
@@ -4514,6 +4690,38 @@ end
     @test maximum(diagnostics.discarded_eigenvalues) > diagnostics.residual_null_rank_tol
     @test maximum(diagnostics.discarded_eigenvalues) < diagnostics.keep_tol
     @test minimum(diagnostics.kept_eigenvalues) > diagnostics.keep_tol
+
+    @test legacy_diagnostics.keep_policy == :legacy_profile
+    @test legacy_diagnostics.gaussian_count == 25
+    @test legacy_diagnostics.supplement_numerical_rank == 25
+    @test legacy_diagnostics.residual_numerical_rank == 25
+    @test legacy_diagnostics.kept_count == 25
+    @test legacy_diagnostics.discarded_count == 0
+    @test legacy_diagnostics.keep_tol == legacy_diagnostics.residual_null_rank_tol
+    @test legacy_diagnostics.keep_tol ≈ 1.0e-12 atol = 0.0 rtol = 0.0
+end
+
+@testset "One-center atomic legacy-profile residual completion contract" begin
+    if !_RUN_SLOW_TESTS
+        @test true
+    else
+        data = _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
+
+        @test data.fixed_gausslet_count == 2523
+        @test data.supplement_count == 25
+
+        @test data.modern.keep_policy == :relative_case_scale
+        @test data.modern.kept_count == 8
+        @test data.modern.discarded_count == 17
+        @test data.modern_total_basis == 2531
+
+        @test data.legacy.keep_policy == :legacy_profile
+        @test data.legacy.residual_numerical_rank == 25
+        @test data.legacy.kept_count == 25
+        @test data.legacy.discarded_count == 0
+        @test data.legacy.keep_tol == data.legacy.residual_null_rank_tol
+        @test data.legacy_total_basis == 2548
+    end
 end
 
 @testset "Cartesian nested shell sequence fixed-block" begin
@@ -5893,76 +6101,7 @@ end
 
 @testset "Ne cc-pV6Z atomic shell referee for lmax=0 and lmax=1" begin
     mktemp() do path, io
-        write(
-            io,
-            "#BASIS SET: Ne repo-v6z-sp\n" *
-            "Ne    S\n" *
-            "      9.024000e+05           5.510000e-06\n" *
-            "      1.351000e+05           4.282000e-05\n" *
-            "      3.075000e+04           2.251400e-04\n" *
-            "      8.710000e+03           9.501600e-04\n" *
-            "      2.842000e+03           3.447190e-03\n" *
-            "      1.026000e+03           1.112545e-02\n" *
-            "      4.001000e+02           3.220568e-02\n" *
-            "      1.659000e+02           8.259891e-02\n" *
-            "      7.221000e+01           1.799056e-01\n" *
-            "      3.266000e+01           3.060521e-01\n" *
-            "      1.522000e+01           3.401256e-01\n" *
-            "      7.149000e+00           1.761682e-01\n" *
-            "      2.957000e+00           2.101527e-02\n" *
-            "      1.335000e+00          -5.074500e-04\n" *
-            "      5.816000e-01           1.057850e-03\n" *
-            "      2.463000e-01          -5.988000e-05\n" *
-            "Ne    S\n" *
-            "      7.149000e+00           1.000000e+00\n" *
-            "Ne    S\n" *
-            "      2.957000e+00           1.000000e+00\n" *
-            "Ne    S\n" *
-            "      1.335000e+00           1.000000e+00\n" *
-            "Ne    S\n" *
-            "      9.024000e+05          -1.290000e-06\n" *
-            "      1.351000e+05          -1.005000e-05\n" *
-            "      3.075000e+04          -5.293000e-05\n" *
-            "      8.710000e+03          -2.231200e-04\n" *
-            "      2.842000e+03          -8.133800e-04\n" *
-            "      1.026000e+03          -2.632300e-03\n" *
-            "      4.001000e+02          -7.759100e-03\n" *
-            "      1.659000e+02          -2.045277e-02\n" *
-            "      7.221000e+01          -4.797505e-02\n" *
-            "      3.266000e+01          -9.340086e-02\n" *
-            "      1.522000e+01          -1.427721e-01\n" *
-            "      7.149000e+00          -1.022908e-01\n" *
-            "      2.957000e+00           1.587858e-01\n" *
-            "      1.335000e+00           4.494079e-01\n" *
-            "      5.816000e-01           4.334854e-01\n" *
-            "      2.463000e-01           1.215757e-01\n" *
-            "Ne    S\n" *
-            "      5.816000e-01           1.000000e+00\n" *
-            "Ne    S\n" *
-            "      2.463000e-01           1.000000e+00\n" *
-            "Ne    P\n" *
-            "      4.281000e+00           1.000000e+00\n" *
-            "Ne    P\n" *
-            "      1.915000e+00           1.000000e+00\n" *
-            "Ne    P\n" *
-            "      8.156000e+02           1.837600e-04\n" *
-            "      1.933000e+02           1.585090e-03\n" *
-            "      6.260000e+01           8.414640e-03\n" *
-            "      2.361000e+01           3.220033e-02\n" *
-            "      9.762000e+00           9.396390e-02\n" *
-            "      4.281000e+00           2.004808e-01\n" *
-            "      1.915000e+00           3.031137e-01\n" *
-            "      8.476000e-01           3.297578e-01\n" *
-            "      3.660000e-01           2.366743e-01\n" *
-            "      1.510000e-01           6.911689e-02\n" *
-            "Ne    P\n" *
-            "      8.476000e-01           1.000000e+00\n" *
-            "Ne    P\n" *
-            "      3.660000e-01           1.000000e+00\n" *
-            "Ne    P\n" *
-            "      1.510000e-01           1.000000e+00\n" *
-            "END\n",
-        )
+        write(io, _ne_repo_v6z_sp_basis_text())
         close(io)
 
         basis = build_basis(MappedUniformBasisSpec(:G10;

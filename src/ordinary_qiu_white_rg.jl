@@ -102,6 +102,7 @@ struct QWRGResidualSpaceDiagnostics
     supplement_numerical_rank::Int
     residual_null_rank_tol::Float64
     residual_numerical_rank::Int
+    keep_policy::Symbol
     keep_tol::Float64
     kept_count::Int
     discarded_count::Int
@@ -124,6 +125,8 @@ function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
         diagnostics.residual_numerical_rank,
         ", kept=",
         diagnostics.kept_count,
+        ", keep_policy=:",
+        diagnostics.keep_policy,
         ", keep_tol=",
         diagnostics.keep_tol,
         ")",
@@ -1432,15 +1435,32 @@ function _qwrg_print_basis_counts(
     return nothing
 end
 
-function _qwrg_residual_keep_tol(values::AbstractVector{<:Real})
-    isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
-    return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
-end
-
 function _qwrg_residual_null_rank_tol(values::AbstractVector{<:Real})
     isempty(values) && return _QWRG_RESIDUAL_NULL_ABS_TOL
     max_value = maximum(abs.(Float64.(values)))
     return max(_QWRG_RESIDUAL_NULL_ABS_TOL, _QWRG_RESIDUAL_NULL_REL_TOL * max_value)
+end
+
+function _qwrg_residual_keep_policy(keep_policy::Symbol)
+    keep_policy in (:relative_case_scale, :legacy_profile) && return keep_policy
+    keep_policy == :near_null_only && return :legacy_profile
+    throw(
+        ArgumentError(
+            "QW residual keep policy must be :relative_case_scale, :legacy_profile, or :near_null_only",
+        ),
+    )
+end
+
+function _qwrg_residual_keep_tol(
+    values::AbstractVector{<:Real};
+    keep_policy::Symbol = :relative_case_scale,
+)
+    keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
+    if keep_policy_value == :relative_case_scale
+        isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
+        return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
+    end
+    return _qwrg_residual_null_rank_tol(values)
 end
 
 function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
@@ -2765,7 +2785,10 @@ function _qwrg_residual_space_analysis(
     gausslet_overlap::AbstractMatrix{<:Real},
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
+    ;
+    keep_policy::Symbol = :relative_case_scale,
 )
+    keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
     gausslet_overlap_value = Matrix{Float64}(gausslet_overlap)
     overlap_error = norm(
         gausslet_overlap_value - Matrix{Float64}(I, size(gausslet_overlap_value, 1), size(gausslet_overlap_value, 2)),
@@ -2795,7 +2818,7 @@ function _qwrg_residual_space_analysis(
     supplement_numerical_rank = count(>(supplement_null_rank_tol), supplement_decomposition.values)
     residual_null_rank_tol = _qwrg_residual_null_rank_tol(residual_decomposition.values)
     residual_numerical_rank = count(>(residual_null_rank_tol), residual_decomposition.values)
-    keep_tol = _qwrg_residual_keep_tol(residual_decomposition.values)
+    keep_tol = _qwrg_residual_keep_tol(residual_decomposition.values; keep_policy = keep_policy_value)
     keep = findall(>(keep_tol), residual_decomposition.values)
     discarded = setdiff(collect(1:length(residual_decomposition.values)), keep)
 
@@ -2810,6 +2833,7 @@ function _qwrg_residual_space_analysis(
         supplement_numerical_rank,
         residual_null_rank_tol,
         residual_numerical_rank,
+        keep_policy_value,
         keep_tol,
         length(keep),
         ngaussian - length(keep),
@@ -2834,16 +2858,30 @@ function diagnose_qwrg_residual_space(
     gausslet_overlap::AbstractMatrix{<:Real},
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
+    ;
+    keep_policy::Symbol = :relative_case_scale,
 )
-    return _qwrg_residual_space_analysis(gausslet_overlap, overlap_ga, overlap_aa).diagnostics
+    return _qwrg_residual_space_analysis(
+        gausslet_overlap,
+        overlap_ga,
+        overlap_aa;
+        keep_policy = keep_policy,
+    ).diagnostics
 end
 
 function _qwrg_residual_space(
     gausslet_overlap::AbstractMatrix{<:Real},
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
+    ;
+    keep_policy::Symbol = :relative_case_scale,
 )
-    analysis = _qwrg_residual_space_analysis(gausslet_overlap, overlap_ga, overlap_aa)
+    analysis = _qwrg_residual_space_analysis(
+        gausslet_overlap,
+        overlap_ga,
+        overlap_aa;
+        keep_policy = keep_policy,
+    )
     ngausslet = analysis.diagnostics.gausslet_count
     keep = analysis.keep
     isempty(keep) && throw(
@@ -4404,6 +4442,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     Z::Real,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
+    residual_keep_policy::Symbol,
     timing::Bool,
 )
     timings = Pair{String,Float64}[]
@@ -4443,7 +4482,12 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "3D gausslet overlap assembly", start_ns)
 
     start_ns = time_ns()
-    residual_data = _qwrg_residual_space(gausslet_overlap_3d, blocks.overlap_ga, blocks.overlap_aa)
+    residual_data = _qwrg_residual_space(
+        gausslet_overlap_3d,
+        blocks.overlap_ga,
+        blocks.overlap_aa;
+        keep_policy = residual_keep_policy,
+    )
     timing && _qwrg_record_timing!(timing_io, timings, "residual-space construction", start_ns)
     _qwrg_print_basis_counts(timing_io, gausslet_count, residual_data.raw_to_final)
 
@@ -4566,6 +4610,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     expansion::CoulombGaussianExpansion,
     Z::Real,
     gausslet_backend::Symbol,
+    residual_keep_policy::Symbol,
     timing::Bool,
 )
     timings = Pair{String,Float64}[]
@@ -4595,7 +4640,12 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
 
     start_ns = time_ns()
     overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
-    residual_data = _qwrg_residual_space(fixed_block.overlap, overlap_fg, blocks.overlap_aa)
+    residual_data = _qwrg_residual_space(
+        fixed_block.overlap,
+        overlap_fg,
+        blocks.overlap_aa;
+        keep_policy = residual_keep_policy,
+    )
     timing && _qwrg_record_timing!(timing_io, timings, "nested residual-space construction", start_ns)
     _qwrg_print_basis_counts(timing_io, "fixed_count", fixed_count, residual_data.raw_to_final)
 
@@ -4680,6 +4730,7 @@ end
         Z = 2.0,
         interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
+        residual_keep_policy = :relative_case_scale,
         timing = false,
     )
 
@@ -4710,6 +4761,10 @@ claim that the ordinary branch is solver-ready.
 This path now uses the explicit atomic-centered 3D Cartesian shell route for
 all active atomic supplement content up to `lmax <= 2`, including pure `s`
 shells.
+
+`residual_keep_policy = :legacy_profile` switches the residual completion to a
+near-null-only keep rule for literal one-center atomic legacy-profile
+reproduction. The modern default remains `:relative_case_scale`.
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
@@ -4718,6 +4773,7 @@ function ordinary_cartesian_qiu_white_operators(
     Z::Real = 2.0,
     interaction_treatment::Symbol = :mwg,
     gausslet_backend::Symbol = :numerical_reference,
+    residual_keep_policy::Symbol = :relative_case_scale,
     timing::Bool = false,
     )
     gausslet_backend == :numerical_reference || throw(
@@ -4730,6 +4786,7 @@ function ordinary_cartesian_qiu_white_operators(
         Z = Z,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
         timing = timing,
     )
 end
@@ -4742,6 +4799,7 @@ end
         Z = 2.0,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
+        residual_keep_policy = :relative_case_scale,
         timing = false,
     )
 
@@ -4761,6 +4819,10 @@ This first adapter is intentionally narrow:
 It now uses the explicit atomic-centered 3D Cartesian shell route for all
 active atomic supplement content up to `lmax <= 2`, including pure `s`
 shells.
+
+`residual_keep_policy = :legacy_profile` keeps all numerically non-null
+residual supplement directions on the literal one-center atomic legacy-profile
+lane without changing the modern default behavior elsewhere.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,
@@ -4769,6 +4831,7 @@ function ordinary_cartesian_qiu_white_operators(
     Z::Real = 2.0,
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
+    residual_keep_policy::Symbol = :relative_case_scale,
     timing::Bool = false,
 )
     gausslet_backend == :numerical_reference || throw(
@@ -4783,6 +4846,7 @@ function ordinary_cartesian_qiu_white_operators(
         expansion = expansion,
         Z = Z,
         gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
         timing = timing,
     )
 end

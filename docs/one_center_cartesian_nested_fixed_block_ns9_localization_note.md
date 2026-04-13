@@ -121,15 +121,15 @@ the repo now reproduces the structural gausslet profile exactly:
 - legacy-profile gausslet count `= 2523`
 - raw supplement orbital count `= 25`
 
-But the current supplement merge path still does **not** reproduce the legacy
-final basis count:
+But the old default supplement merge path still did **not** reproduce the
+legacy final basis count:
 
 - expected legacy total basis count `= 2548`
-- current repo final merged basis count `= 2531`
+- previous default merged basis count `= 2531`
 
-So the shell contract and working-box contract are now aligned, and the
-remaining one-center Ne discrepancy has moved to the supplement merge /
-residual-space layer rather than the nested shell-retention layer.
+So the shell contract and working-box contract were aligned, and the remaining
+one-center Ne discrepancy had moved to the supplement merge / residual-space
+layer rather than the nested shell-retention layer.
 
 ## Legacy-Profile Ne Residual-Space Boundary
 
@@ -179,10 +179,36 @@ collapses to rank `8`. The current repo keeps only `8` because the present
 relative keep rule drops every residualized direction below `10%` of the
 largest residual overlap eigenvalue.
 
-That means the next fix target is not the one-center shell contract anymore.
-It is the legacy-profile supplement residual keep contract: either a weaker
-legacy-profile truncation rule or a no-drop legacy-profile supplement merge if
-legacy truly carried all `25` directions directly.
+That diagnosis is now implemented directly in the repo.
+
+The atomic supplement path keeps the modern default rule as:
+
+- `residual_keep_policy = :relative_case_scale`
+
+and adds an explicit legacy-profile completion rule:
+
+- `residual_keep_policy = :legacy_profile`
+- alias: `:near_null_only`
+
+The legacy-profile rule keeps all numerically non-null residual directions
+instead of applying the old `10%`-of-max relative cutoff.
+
+On the same anchored Ne legacy-profile case:
+
+- modern/default route
+  - kept residual count `= 8`
+  - total basis count `= 2531`
+  - low one-body ladder
+    - `[-49.970620984631964, -12.497160696941414, -12.497160696940517, -12.497160696940185, -12.494604661347122, -5.551649973093433, -5.551649973093191, -5.551649973092907]`
+- explicit legacy-profile route
+  - kept residual count `= 25`
+  - total basis count `= 2548`
+  - low one-body ladder
+    - `[-49.99990524677932, -12.499971049252997, -12.49997104925268, -12.499971049252615, -12.49997099214756, -5.555472605898918, -5.555472605898094, -5.5554726058980854]`
+
+So the remaining one-center Ne basis-count gap was indeed due to aggressive
+residual truncation, not shell law, working-box choice, or raw supplement rank
+loss.
 
 ## Structural Anchors
 
