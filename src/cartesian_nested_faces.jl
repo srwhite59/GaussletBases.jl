@@ -3309,16 +3309,72 @@ function _nested_complete_shell_sequence_for_box(
     )
 end
 
+function _one_center_atomic_shell_increment(nside::Int)
+    nside >= 3 || throw(ArgumentError("one-center atomic shell contract requires nside >= 3"))
+    return nside^3 - (nside - 2)^3
+end
+
+function _one_center_atomic_complete_shell_retention(nside::Int)
+    retained_side = nside - 2
+    retained_side >= 1 || throw(ArgumentError("one-center atomic shell contract requires nside >= 3"))
+    return (
+        retain_xy = (retained_side, retained_side),
+        retain_xz = (retained_side, retained_side),
+        retain_yz = (retained_side, retained_side),
+        retain_x_edge = retained_side,
+        retain_y_edge = retained_side,
+        retain_z_edge = retained_side,
+        face_retained_count = 6 * retained_side^2,
+        edge_retained_count = 12 * retained_side,
+        corner_retained_count = 8,
+        shell_increment = _one_center_atomic_shell_increment(nside),
+    )
+end
+
+function _one_center_atomic_shell_layer_count(working_box_side_count::Int, nside::Int)
+    working_box_side_count >= nside || throw(
+        ArgumentError("one-center atomic structure diagnostics require working_box_side_count >= nside"),
+    )
+    current_side = working_box_side_count
+    nlayers = 0
+    while current_side > nside
+        current_side -= 2
+        nlayers += 1
+    end
+    return nlayers, current_side
+end
+
+struct OneCenterAtomicNestedLayerStructure
+    layer_index::Int
+    face_retained_count::Int
+    edge_retained_count::Int
+    corner_retained_count::Int
+    retained_dimension::Int
+end
+
+struct OneCenterAtomicNestedStructureDiagnostics
+    parent_side_count::Int
+    working_box_side_count::Int
+    nside::Int
+    core_side_count::Int
+    shell_layer_count::Int
+    expected_shell_increment::Int
+    expected_face_retained_count::Int
+    expected_edge_retained_count::Int
+    expected_corner_retained_count::Int
+    layer_structures::Vector{OneCenterAtomicNestedLayerStructure}
+    total_face_retained_count::Int
+    total_edge_retained_count::Int
+    total_corner_retained_count::Int
+    total_expected_gausslet_count::Int
+    total_actual_gausslet_count::Int
+    layers_match_expected::Bool
+end
+
 """
     build_one_center_atomic_full_parent_shell_sequence(
         bundle::_MappedOrdinaryGausslet1DBundle;
         nside,
-        retain_xy = (4, 3),
-        retain_xz = (4, 3),
-        retain_yz = (4, 3),
-        retain_x_edge = 3,
-        retain_y_edge = 3,
-        retain_z_edge = 3,
     )
 
 Build the canonical one-center atomic nested shell sequence on the full parent
@@ -3329,31 +3385,31 @@ This helper is the supported atomic one-center backbone:
 - it always uses full parent coverage
 - it always uses `working_box = (1:n, 1:n, 1:n)`
 - it peels complete shells until the direct inner cube reaches `nside`
+- it uses the legacy/W&L complete-shell contract
+  - shell increment `= nside^3 - (nside - 2)^3`
+  - faces retain `(nside - 2) × (nside - 2)`
+  - edges retain `nside - 2`
+  - corners are carried directly
 
 It should be used in place of any older central-box atomic diagnostic fixture.
 """
 function build_one_center_atomic_full_parent_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
     nside::Int,
-    retain_xy::Tuple{Int,Int} = (4, 3),
-    retain_xz::Tuple{Int,Int} = (4, 3),
-    retain_yz::Tuple{Int,Int} = (4, 3),
-    retain_x_edge::Int = 3,
-    retain_y_edge::Int = 3,
-    retain_z_edge::Int = 3,
 )
     n = length(bundle.basis)
     bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    retention = _one_center_atomic_complete_shell_retention(nside)
     return _nested_complete_shell_sequence_for_box(
         bundles,
         (1:n, 1:n, 1:n);
         nside = nside,
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        retain_x_edge = retain_x_edge,
-        retain_y_edge = retain_y_edge,
-        retain_z_edge = retain_z_edge,
+        retain_xy = retention.retain_xy,
+        retain_xz = retention.retain_xz,
+        retain_yz = retention.retain_yz,
+        retain_x_edge = retention.retain_x_edge,
+        retain_y_edge = retention.retain_y_edge,
+        retain_z_edge = retention.retain_z_edge,
     )
 end
 
@@ -3413,6 +3469,181 @@ function one_center_atomic_full_parent_fixed_block(
         refinement_levels = refinement_levels,
     )
     return one_center_atomic_full_parent_fixed_block(bundle; kwargs...)
+end
+
+function _one_center_atomic_nested_layer_structure(
+    shell::_CartesianNestedCompleteShell3D,
+    layer_index::Int,
+)
+    face_retained_count = sum(length, shell.face_column_ranges)
+    edge_retained_count = sum(length, shell.edge_column_ranges)
+    corner_retained_count = sum(length, shell.corner_column_ranges)
+    return OneCenterAtomicNestedLayerStructure(
+        layer_index,
+        face_retained_count,
+        edge_retained_count,
+        corner_retained_count,
+        size(shell.coefficient_matrix, 2),
+    )
+end
+
+function one_center_atomic_nested_structure_diagnostics(
+    parent_side_count::Int;
+    nside::Int,
+    working_box_side_count::Int = parent_side_count,
+)
+    nlayers, core_side_count = _one_center_atomic_shell_layer_count(working_box_side_count, nside)
+    retention = _one_center_atomic_complete_shell_retention(nside)
+    layer_structures = OneCenterAtomicNestedLayerStructure[
+        OneCenterAtomicNestedLayerStructure(
+            layer,
+            retention.face_retained_count,
+            retention.edge_retained_count,
+            retention.corner_retained_count,
+            retention.shell_increment,
+        ) for layer in 1:nlayers
+    ]
+    total_face_retained_count = nlayers * retention.face_retained_count
+    total_edge_retained_count = nlayers * retention.edge_retained_count
+    total_corner_retained_count = nlayers * retention.corner_retained_count
+    total_expected = core_side_count^3 + nlayers * retention.shell_increment
+    return OneCenterAtomicNestedStructureDiagnostics(
+        parent_side_count,
+        working_box_side_count,
+        nside,
+        core_side_count,
+        nlayers,
+        retention.shell_increment,
+        retention.face_retained_count,
+        retention.edge_retained_count,
+        retention.corner_retained_count,
+        layer_structures,
+        total_face_retained_count,
+        total_edge_retained_count,
+        total_corner_retained_count,
+        total_expected,
+        total_expected,
+        true,
+    )
+end
+
+function one_center_atomic_nested_structure_diagnostics(
+    sequence::_CartesianNestedShellSequence3D;
+    parent_side_count::Int,
+    nside::Int,
+)
+    working_box_sides = Tuple(length.(sequence.working_box))
+    working_box_sides[1] == working_box_sides[2] == working_box_sides[3] || throw(
+        ArgumentError("one-center atomic structure diagnostics require a cubic working box"),
+    )
+    core_side_count = round(Int, cbrt(length(sequence.core_indices)))
+    layer_structures = OneCenterAtomicNestedLayerStructure[]
+    for (layer_index, shell) in enumerate(sequence.shell_layers)
+        shell isa _CartesianNestedCompleteShell3D || throw(
+            ArgumentError("one-center atomic structure diagnostics require complete shell layers"),
+        )
+        push!(layer_structures, _one_center_atomic_nested_layer_structure(shell, layer_index))
+    end
+    total_face_retained_count = sum(layer.face_retained_count for layer in layer_structures)
+    total_edge_retained_count = sum(layer.edge_retained_count for layer in layer_structures)
+    total_corner_retained_count = sum(layer.corner_retained_count for layer in layer_structures)
+    retention = _one_center_atomic_complete_shell_retention(nside)
+    total_expected = core_side_count^3 + length(layer_structures) * retention.shell_increment
+    return OneCenterAtomicNestedStructureDiagnostics(
+        parent_side_count,
+        working_box_sides[1],
+        nside,
+        core_side_count,
+        length(layer_structures),
+        retention.shell_increment,
+        retention.face_retained_count,
+        retention.edge_retained_count,
+        retention.corner_retained_count,
+        layer_structures,
+        total_face_retained_count,
+        total_edge_retained_count,
+        total_corner_retained_count,
+        total_expected,
+        size(sequence.coefficient_matrix, 2),
+        all(
+            layer.face_retained_count == retention.face_retained_count &&
+            layer.edge_retained_count == retention.edge_retained_count &&
+            layer.corner_retained_count == retention.corner_retained_count &&
+            layer.retained_dimension == retention.shell_increment
+            for layer in layer_structures
+        ),
+    )
+end
+
+function one_center_atomic_nested_structure_diagnostics(
+    fixed_block::_NestedFixedBlock3D;
+    nside::Int,
+)
+    parent_side_count = length(fixed_block.parent_basis)
+    return one_center_atomic_nested_structure_diagnostics(
+        fixed_block.shell;
+        parent_side_count = parent_side_count,
+        nside = nside,
+    )
+end
+
+function one_center_atomic_nested_structure_diagnostics(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    nside::Int,
+)
+    sequence = build_one_center_atomic_full_parent_shell_sequence(bundle; nside = nside)
+    return one_center_atomic_nested_structure_diagnostics(
+        sequence;
+        parent_side_count = length(bundle.basis),
+        nside = nside,
+    )
+end
+
+function one_center_atomic_nested_structure_diagnostics(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    nside::Int,
+)
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = exponents,
+        center = center,
+        backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    return one_center_atomic_nested_structure_diagnostics(bundle; nside = nside)
+end
+
+function one_center_atomic_nested_structure_report(
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+)
+    lines = String[
+        "parent_side_count = $(diagnostics.parent_side_count)",
+        "working_box_side_count = $(diagnostics.working_box_side_count)",
+        "nside = $(diagnostics.nside)",
+        "core_side_count = $(diagnostics.core_side_count)",
+        "shell_layers = $(diagnostics.shell_layer_count)",
+        "expected_shell_increment = $(diagnostics.expected_shell_increment)",
+        "expected_face_retained_count = $(diagnostics.expected_face_retained_count)",
+        "expected_edge_retained_count = $(diagnostics.expected_edge_retained_count)",
+        "expected_corner_retained_count = $(diagnostics.expected_corner_retained_count)",
+        "total_face_retained_count = $(diagnostics.total_face_retained_count)",
+        "total_edge_retained_count = $(diagnostics.total_edge_retained_count)",
+        "total_corner_retained_count = $(diagnostics.total_corner_retained_count)",
+        "total_expected_gausslet_count = $(diagnostics.total_expected_gausslet_count)",
+        "total_actual_gausslet_count = $(diagnostics.total_actual_gausslet_count)",
+        "layers_match_expected = $(diagnostics.layers_match_expected)",
+    ]
+    for layer in diagnostics.layer_structures
+        push!(lines, "layer_$(layer.layer_index)_faces = $(layer.face_retained_count)")
+        push!(lines, "layer_$(layer.layer_index)_edges = $(layer.edge_retained_count)")
+        push!(lines, "layer_$(layer.layer_index)_corners = $(layer.corner_retained_count)")
+        push!(lines, "layer_$(layer.layer_index)_retained_dimension = $(layer.retained_dimension)")
+    end
+    return join(lines, "\n")
 end
 
 function _nested_interval_physical_width(

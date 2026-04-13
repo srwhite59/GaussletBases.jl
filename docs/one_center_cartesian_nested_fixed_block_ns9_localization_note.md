@@ -1,175 +1,113 @@
-# One-Center Cartesian Nested Fixed-Block Atomic Contract Correction Note
+# One-Center Atomic Nested Shell Contract Note
 
-This note supersedes the earlier `ns7/ns9` one-center localization diagnosis.
+This note supersedes the earlier one-center `ns7/ns9` localization diagnosis
+and the earlier compressed-shell atomic default.
 
-The earlier pass used the wrong object for the atomic case:
+## Correct Atomic Contract
 
-- it built a central inferred working box
-- it did not cover the full parent lattice
-- it therefore diagnosed a contaminated fixed-block backbone
+For the one-center atomic Cartesian nested line, the intended legacy/W&L shell
+contract is:
 
-For the intended one-center atomic line, the correct contract is:
+- full parent coverage
+- `working_box = (1:n, 1:n, 1:n)`
+- complete shell layers peeled until the inner direct cube reaches `nside`
+- shell increment
+  - `ns^3 - (ns - 2)^3`
+- face retains
+  - `(ns - 2) × (ns - 2)` on all six faces
+- edge retains
+  - `ns - 2` on all twelve edges
+- corners
+  - direct carry-through on all eight corners
 
-- start from the original largest parent lattice
-- keep full parent coverage
-- use `working_box = (1:n, 1:n, 1:n)`
-- peel complete shells until the direct inner cube is about `ns^3`
-- transfer that final inner cube with the identity
+So for `ns = 7`, every complete shell layer must retain exactly:
 
-That full-parent shell-sequence route is the right backbone for the atomic
-anchor cases.
+- faces: `6 * 5^2 = 150`
+- edges: `12 * 5 = 60`
+- corners: `8`
+- total increment: `150 + 60 + 8 = 218`
 
-The repo now hardens that contract through the canonical helpers:
+This is the canonical one-center atomic shell contract now used by the repo.
+
+## What Was Wrong Before
+
+Two earlier ideas were wrong for the supported one-center atomic path:
+
+- a central inferred working-box diagnostic fixture
+- compressed atomic shell defaults like `(4,3)` / `3`
+
+The central-box fixture was the wrong atomic object because it did not preserve
+full parent coverage. The compressed atomic shell defaults were a mistaken
+reading of the legacy/W&L shell contract.
+
+The generic internal rectangular-shell builder still supports explicit retained
+counts for non-atomic uses, but that compressed contract is no longer the
+canonical or default supported behavior for:
 
 - `build_one_center_atomic_full_parent_shell_sequence(...)`
 - `one_center_atomic_full_parent_fixed_block(...)`
 
-## Scope
+## Canonical Repo-Native Path
 
-This corrected comparison stays on the same narrow atomic anchor pair:
+The supported one-center atomic helpers are now:
 
-- `ns7_family`, `Z = 2`, `rmax = 10`
-- `ns9_family`, `Z = 2`, `rmax = 10`
+- `build_one_center_atomic_full_parent_shell_sequence(...)`
+- `one_center_atomic_full_parent_fixed_block(...)`
 
-and keeps the intended narrow execution line:
+These helpers always build on the full parent cube and always use the
+legacy/W&L complete-shell retention counts for the chosen `nside`.
 
-- repo-local depot only
-- no helper include from the old heavy pass
-- no KrylovKit
-- no parent eigensolve
-- no `$HOME/.julia` fallback
-
-So this correction re-evaluates:
-
-- fixed-block dimension
-- coverage / ownership structure
-- low fixed one-body `H1`
-
-It does not recompute `1s` / `2p` capture in this pass, because that would
-reintroduce the parent eigensolve path the narrowed contract was meant to
-avoid.
-
-## Corrected Atomic Fixture
-
-The corrected one-center atomic fixture is:
-
-- `mapping = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = 10.0)`
-- resolve the parent mapped 1D count so `rmax = 10` is actually covered
-- build the mapped 1D gausslet bundle
-- wrap it into the 3-axis nested bundle
-- build the shell sequence on the full parent box
-  - `working_box = (1:n, 1:n, 1:n)`
-  - `nside = ns`
-- build the fixed block from that full-parent shell sequence
-
-For this correction pass, the reproducible helper is:
-
-- `tmp/work/diagnose_one_center_atomic_full_parent_contract.jl`
-
-That local helper now keeps the old central-box construction only as an
-explicitly named wrong comparison object:
+The old local central-box diagnostic helper is now explicitly quarantined as:
 
 - `wrong_central_box_atomic_fixture`
 
-and it should not be reused for one-center atomic contraction diagnosis.
+and should not be reused for one-center atomic contraction diagnosis.
 
-## Anchor Results
+## Repo-Native Structure Diagnostics
 
-### `ns7_family`
+The repo now exposes the atomic shell/core structure directly through:
 
-Old contaminated central-box fixture:
+- `one_center_atomic_nested_structure_diagnostics(...)`
+- `one_center_atomic_nested_structure_report(...)`
 
-- `count = 19`
-- `fixed_dim = 517`
-- `nshells = 4`
-- `direct_core_len = 5`
-- `support_count = 2197`
-- `expected_support_count = 6859`
-- `missing_row_count = 4662`
-- `working_box = (4:16, 4:16, 4:16)`
-- `full_parent_working_box = false`
-- `low_fixed_h1 = [-1.998074204, -0.470998929, -0.470998929, -0.470998929, -0.463481685]`
+That diagnostics path reports, at minimum:
 
-Corrected full-parent atomic contract:
+- parent side count
+- working-box side count
+- `nside`
+- core side count
+- number of shell layers
+- expected shell increment
+- expected and actual face / edge / corner retained counts
+- total expected gausslet count
+- total actual gausslet count
 
-- `count = 19`
-- `fixed_dim = 931`
-- `nshells = 6`
-- `direct_core_len = 7`
-- `support_count = 6859`
-- `expected_support_count = 6859`
-- `missing_row_count = 0`
-- `working_box = (1:19, 1:19, 1:19)`
-- `full_parent_working_box = true`
-- `ownership_group_count_min = 1`
-- `ownership_group_count_max = 1`
-- `low_fixed_h1 = [-1.998226506, -0.499382797, -0.490167263, -0.490167263, -0.490167263]`
+This makes basis-size discrepancies separable into:
 
-### `ns9_family`
+- shell contract
+- working-box choice
+- supplement choice
 
-Old contaminated central-box fixture:
+## Structural Anchors
 
-- `count = 25`
-- `fixed_dim = 517`
-- `nshells = 4`
-- `direct_core_len = 5`
-- `support_count = 2197`
-- `expected_support_count = 15625`
-- `missing_row_count = 13428`
-- `working_box = (7:19, 7:19, 7:19)`
-- `full_parent_working_box = false`
-- `low_fixed_h1 = [-1.982604385, 0.050419602, 0.050419602, 0.050419602, 0.525979157]`
+The structural contract is now pinned directly in repo tests:
 
-Corrected full-parent atomic contract:
+- `ns = 5`
+  - increment `= 5^3 - 3^3 = 98`
+- `ns = 7`
+  - increment `= 7^3 - 5^3 = 218`
+- `27^3` working box with `ns = 7`
+  - shell layers `= 10`
+  - total gausslet count `= 343 + 10 * 218 = 2523`
 
-- `count = 25`
-- `fixed_dim = 1513`
-- `nshells = 8`
-- `direct_core_len = 9`
-- `support_count = 15625`
-- `expected_support_count = 15625`
-- `missing_row_count = 0`
-- `working_box = (1:25, 1:25, 1:25)`
-- `full_parent_working_box = true`
-- `ownership_group_count_min = 1`
-- `ownership_group_count_max = 1`
-- `low_fixed_h1 = [-1.997931605, -0.499137420, -0.485603493, -0.485603493, -0.485603493]`
+The `27^3` count is intentionally a shell-structure statement, independent of
+any later supplement choice.
 
-## Diagnosis Boundary After Rebasing
+## Diagnosis Boundary After Hardening
 
-The earlier bug hunt was aimed at the wrong object.
+The earlier one-center `ns7/ns9` bug hunt was aimed at the wrong object because
+it used a central-box fixture. That diagnosis is superseded.
 
-The contaminated central-box fixture made `ns9` look catastrophically bad:
-
-- the likely triplet was already positive
-- most parent rows were not even covered
-
-That failure does not survive the contract correction.
-
-On the corrected full-parent atomic contract:
-
-- `ns7` stays sane
-- `ns9` also stays qualitatively sane
-- both anchor cases have full parent coverage
-- both anchor cases pass the one-piece row-ownership audit on the retained
-  support
-- the low fixed `H1` triplet is negative again for `ns9`
-
-So the earlier “shell-2-and-inward balance problem” diagnosis is superseded,
-not merely weakened. It was downstream of the wrong coverage fixture.
-
-## Conclusion
-
-The durable conclusion for the one-center atomic anchor pair is:
-
-- the corrected atomic contract is full parent coverage
-- the canonical repo-native path is now
-  `build_one_center_atomic_full_parent_shell_sequence(...)` /
-  `one_center_atomic_full_parent_fixed_block(...)`
-- the old central-box fixture should not be used for one-center atomic
-  localization diagnosis
-- on the corrected full-parent backbone, `ns9_family, Z = 2, rmax = 10` is no
-  longer exhibiting the earlier qualitative fixed-block failure
-
-If contraction-subspace debugging is revisited later, it should start from the
-full-parent atomic shell-sequence contract only.
+Future one-center atomic contraction work should use only the full-parent
+helpers above, together with the structure diagnostics, so the shell contract
+and working-box choice stay explicit.

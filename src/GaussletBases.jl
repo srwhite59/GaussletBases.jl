@@ -129,6 +129,10 @@ export AbstractFunction1D,
        axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics,
        build_one_center_atomic_full_parent_shell_sequence,
        one_center_atomic_full_parent_fixed_block,
+       OneCenterAtomicNestedLayerStructure,
+       OneCenterAtomicNestedStructureDiagnostics,
+       one_center_atomic_nested_structure_diagnostics,
+       one_center_atomic_nested_structure_report,
        experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
        experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators,
        experimental_homonuclear_chain_nested_dense_payload,
@@ -368,6 +372,8 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics end
 function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics end
 function build_one_center_atomic_full_parent_shell_sequence end
 function one_center_atomic_full_parent_fixed_block end
+function one_center_atomic_nested_structure_diagnostics end
+function one_center_atomic_nested_structure_report end
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
 function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators end
 function experimental_homonuclear_chain_nested_dense_payload end
