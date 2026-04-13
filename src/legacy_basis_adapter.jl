@@ -626,10 +626,11 @@ The basis-file lookup order is:
 3. vendored repo copy at `data/legacy/BasisSets`
 4. legacy fallback `~/BasisSets`
 
-For atomic ordinary-QW and nested-QW, non-`s` shells up to `lmax = 2` are now
-consumed through an explicit atomic-centered 3D Cartesian shell supplement
-route. The one-dimensional hybrid builder remains honestly `s`-only, and the
-separate two-center molecular shell route remains narrower for now.
+For atomic ordinary-QW and nested-QW, all shell content up to `lmax = 2`,
+including pure `s` shells, is now consumed through an explicit atomic-centered
+3D Cartesian shell supplement route. The one-dimensional hybrid builder remains
+honestly `s`-only, and the separate two-center molecular shell route remains
+narrower for now.
 """
 function legacy_atomic_gaussian_supplement(
     atom::AbstractString,

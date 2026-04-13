@@ -5554,12 +5554,13 @@ end
     end
 end
 
-@testset "Shared atomic supplement ordinary and nested QW consumers" begin
+@testset "Atomic lmax=0 supplement uses the explicit 3D shell route in QW consumers" begin
     if !_legacy_basisfile_available()
         @test true
     else
         source_basis, _legacy_old, baseline_ops, baseline_check = _qiu_white_full_nearest_fixture()
         supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        @test !GaussletBases._legacy_atomic_has_nonseparable_shells(supplement)
         ordinary_ops = ordinary_cartesian_qiu_white_operators(
             source_basis,
             supplement;
@@ -5567,7 +5568,17 @@ end
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
         )
+        explicit_ordinary = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
+            source_basis,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+            timing = false,
+        )
         ordinary_check = GaussletBases.ordinary_cartesian_1s2_check(ordinary_ops)
+        explicit_ordinary_check = GaussletBases.ordinary_cartesian_1s2_check(explicit_ordinary)
 
         (
             _source_basis_nested,
@@ -5591,16 +5602,33 @@ end
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
         )
+        explicit_nested = GaussletBases._ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            gausslet_backend = :numerical_reference,
+            timing = false,
+        )
         nested_check = GaussletBases.ordinary_cartesian_1s2_check(nested_ops)
+        explicit_nested_check = GaussletBases.ordinary_cartesian_1s2_check(explicit_nested)
 
         @test ordinary_ops.gaussian_data isa LegacyAtomicGaussianSupplement
         @test nested_ops.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test ordinary_ops.residual_count > 0
+        @test nested_ops.residual_count > 0
+        @test ordinary_check.overlap_error < 1.0e-8
+        @test nested_check.overlap_error < 1.0e-8
+        @test ordinary_check.orbital_energy ≈ explicit_ordinary_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
+        @test ordinary_check.vee_expectation ≈ explicit_ordinary_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
+        @test nested_check.orbital_energy ≈ explicit_nested_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
+        @test nested_check.vee_expectation ≈ explicit_nested_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
+        @test norm(ordinary_ops.overlap - explicit_ordinary.overlap, Inf) < 1.0e-12
+        @test norm(ordinary_ops.one_body_hamiltonian - explicit_ordinary.one_body_hamiltonian, Inf) < 1.0e-12
+        @test norm(nested_ops.overlap - explicit_nested.overlap, Inf) < 1.0e-12
+        @test norm(nested_ops.one_body_hamiltonian - explicit_nested.one_body_hamiltonian, Inf) < 1.0e-12
         @test ordinary_check.orbital_energy ≈ baseline_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
-        @test ordinary_check.vee_expectation ≈ baseline_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
         @test nested_check.orbital_energy ≈ nested_shell_plus_core_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
-        @test nested_check.vee_expectation ≈ nested_shell_plus_core_check.vee_expectation atol = 1.0e-12 rtol = 1.0e-12
-        @test norm(ordinary_ops.overlap - baseline_ops.overlap, Inf) < 1.0e-12
-        @test norm(nested_ops.overlap - nested_shell_plus_core.overlap, Inf) < 1.0e-12
     end
 end
 
@@ -5649,7 +5677,8 @@ end
         @test ordinary_l1_check.vee_expectation > 0.0
         @test abs(ordinary_l1_check.orbital_energy - ordinary_l0_check.orbital_energy) > 1.0e-6
         @test abs(ordinary_l1_check.vee_expectation - ordinary_l0_check.vee_expectation) > 1.0e-4
-        @test norm(ordinary_l1.one_body_hamiltonian - ordinary_l0.one_body_hamiltonian, Inf) > 1.0e-6
+        @test size(ordinary_l1.one_body_hamiltonian) != size(ordinary_l0.one_body_hamiltonian) ||
+              norm(ordinary_l1.one_body_hamiltonian - ordinary_l0.one_body_hamiltonian, Inf) > 1.0e-6
 
         (
             _source_basis_nested,

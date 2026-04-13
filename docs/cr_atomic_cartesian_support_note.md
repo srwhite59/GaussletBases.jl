@@ -50,10 +50,9 @@ surface.
 - `src/ordinary_qiu_white_rg.jl`
 - public entry point: `ordinary_cartesian_qiu_white_operators(...)`
 
-This is the scientifically relevant atomic Cartesian comparison path. It does
-not use the old centered separable supplement once non-`s` shells are present.
-Instead it lifts the atomic supplement into an explicit atomic-centered 3D
-Cartesian shell representation.
+This is the scientifically relevant atomic Cartesian comparison path. It now
+uses the explicit atomic-centered 3D Cartesian shell representation for all
+active atomic supplement content up to `lmax = 2`, including pure `s` shells.
 
 After the present pass, the atomic QW path now supports:
 
