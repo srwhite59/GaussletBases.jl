@@ -3344,6 +3344,33 @@ function _one_center_atomic_shell_layer_count(working_box_side_count::Int, nside
     return nlayers, current_side
 end
 
+function _one_center_atomic_legacy_profile_working_box(
+    parent_side_count::Int,
+    working_box::UnitRange{Int},
+)
+    return _one_center_atomic_legacy_profile_working_box(
+        parent_side_count,
+        (working_box, working_box, working_box),
+    )
+end
+
+function _one_center_atomic_legacy_profile_working_box(
+    parent_side_count::Int,
+    working_box::NTuple{3,UnitRange{Int}},
+)
+    expected_parent = 1:parent_side_count
+    for interval in working_box
+        interval == intersect(interval, expected_parent) || throw(
+            ArgumentError("one-center atomic legacy profile working box must lie inside 1:$parent_side_count"),
+        )
+    end
+    working_box_sides = Tuple(length.(working_box))
+    (working_box_sides[1] == working_box_sides[2] && working_box_sides[2] == working_box_sides[3]) || throw(
+        ArgumentError("one-center atomic legacy profile requires a cubic working box"),
+    )
+    return working_box
+end
+
 struct OneCenterAtomicNestedLayerStructure
     layer_index::Int
     face_retained_count::Int
@@ -3432,6 +3459,67 @@ function build_one_center_atomic_full_parent_shell_sequence(
 end
 
 """
+    build_one_center_atomic_legacy_profile_shell_sequence(
+        bundle::_MappedOrdinaryGausslet1DBundle;
+        working_box,
+        nside,
+    )
+
+Build the explicit legacy-profile one-center atomic nested shell sequence on a
+chosen inner working box of the supplied parent lattice.
+
+This helper is intentionally separate from the modern canonical full-parent
+path. It keeps the same exact complete-shell retention contract:
+
+- shell increment `= nside^3 - (nside - 2)^3`
+- faces retain `(nside - 2) × (nside - 2)`
+- edges retain `nside - 2`
+- corners are carried directly
+
+but applies it on the explicit inner working box supplied by the caller, for
+example `(2:28, 2:28, 2:28)` on a `29^3` parent lattice.
+"""
+function build_one_center_atomic_legacy_profile_shell_sequence(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
+    nside::Int,
+)
+    n = length(bundle.basis)
+    normalized_working_box = _one_center_atomic_legacy_profile_working_box(n, working_box)
+    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    retention = _one_center_atomic_complete_shell_retention(nside)
+    return _nested_complete_shell_sequence_for_box(
+        bundles,
+        normalized_working_box;
+        nside = nside,
+        retain_xy = retention.retain_xy,
+        retain_xz = retention.retain_xz,
+        retain_yz = retention.retain_yz,
+        retain_x_edge = retention.retain_x_edge,
+        retain_y_edge = retention.retain_y_edge,
+        retain_z_edge = retention.retain_z_edge,
+    )
+end
+
+function build_one_center_atomic_legacy_profile_shell_sequence(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    kwargs...,
+)
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = exponents,
+        center = center,
+        backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    return build_one_center_atomic_legacy_profile_shell_sequence(bundle; kwargs...)
+end
+
+"""
     one_center_atomic_full_parent_fixed_block(
         bundle::_MappedOrdinaryGausslet1DBundle;
         nside,
@@ -3469,6 +3557,47 @@ function one_center_atomic_full_parent_fixed_block(
         refinement_levels = refinement_levels,
     )
     return one_center_atomic_full_parent_fixed_block(bundle; kwargs...)
+end
+
+"""
+    one_center_atomic_legacy_profile_fixed_block(
+        bundle::_MappedOrdinaryGausslet1DBundle;
+        working_box,
+        nside,
+        kwargs...,
+    )
+
+Build the legacy-profile one-center atomic nested fixed block on an explicit
+inner working box of the supplied parent lattice.
+
+This is a thin convenience wrapper around
+[`build_one_center_atomic_legacy_profile_shell_sequence`](@ref) followed by
+`_nested_fixed_block(...)`.
+"""
+function one_center_atomic_legacy_profile_fixed_block(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    kwargs...,
+)
+    sequence = build_one_center_atomic_legacy_profile_shell_sequence(bundle; kwargs...)
+    return _nested_fixed_block(sequence, bundle)
+end
+
+function one_center_atomic_legacy_profile_fixed_block(
+    basis::MappedUniformBasis;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    kwargs...,
+)
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = exponents,
+        center = center,
+        backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    return one_center_atomic_legacy_profile_fixed_block(bundle; kwargs...)
 end
 
 function _one_center_atomic_nested_layer_structure(
@@ -3618,7 +3747,11 @@ function one_center_atomic_nested_structure_diagnostics(
 end
 
 function one_center_atomic_nested_structure_report(
-    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics;
+    supplement_orbital_count::Union{Nothing,Int} = nothing,
+    total_expected_basis_count::Union{Nothing,Int} = nothing,
+    total_actual_basis_count::Union{Nothing,Int} = nothing,
+    low_one_body_eigenvalues::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     lines = String[
         "parent_side_count = $(diagnostics.parent_side_count)",
@@ -3637,6 +3770,18 @@ function one_center_atomic_nested_structure_report(
         "total_actual_gausslet_count = $(diagnostics.total_actual_gausslet_count)",
         "layers_match_expected = $(diagnostics.layers_match_expected)",
     ]
+    if !isnothing(supplement_orbital_count)
+        push!(lines, "supplement_orbital_count = $(supplement_orbital_count)")
+    end
+    if !isnothing(total_expected_basis_count)
+        push!(lines, "total_expected_basis_count = $(total_expected_basis_count)")
+    end
+    if !isnothing(total_actual_basis_count)
+        push!(lines, "total_actual_basis_count = $(total_actual_basis_count)")
+    end
+    if !isnothing(low_one_body_eigenvalues)
+        push!(lines, "low_one_body_eigenvalues = $(repr(Float64[low_one_body_eigenvalues...]))")
+    end
     for layer in diagnostics.layer_structures
         push!(lines, "layer_$(layer.layer_index)_faces = $(layer.face_retained_count)")
         push!(lines, "layer_$(layer.layer_index)_edges = $(layer.edge_retained_count)")

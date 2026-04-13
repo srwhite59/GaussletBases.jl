@@ -4325,6 +4325,48 @@ function _one_center_atomic_full_parent_contract_fixture(;
     end)
 end
 
+function _one_center_atomic_legacy_profile_contract_fixture(;
+    Z::Float64 = 2.0,
+    d::Float64 = 0.2,
+    count::Int = 15,
+    nside::Int = 5,
+    working_box::UnitRange{Int} = 2:14,
+    tail_spacing::Float64 = 10.0,
+)
+    key = Symbol(
+        :one_center_atomic_legacy_profile_contract_fixture,
+        round(Int, 1000 * Z),
+        round(Int, 1000 * d),
+        count,
+        nside,
+        first(working_box),
+        last(working_box),
+    )
+    return _cached_fixture(key, () -> begin
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = count,
+            mapping = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = tail_spacing),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        sequence = build_one_center_atomic_legacy_profile_shell_sequence(
+            basis;
+            exponents = expansion.exponents,
+            gausslet_backend = :numerical_reference,
+            refinement_levels = 0,
+            working_box = working_box,
+            nside = nside,
+        )
+        diagnostics = one_center_atomic_nested_structure_diagnostics(
+            sequence;
+            parent_side_count = count,
+            nside = nside,
+        )
+        ownership = GaussletBases._nested_shell_sequence_piece_ownership_audit(sequence)
+        (basis, sequence, diagnostics, ownership)
+    end)
+end
+
 @testset "One-center atomic full-parent nested contract" begin
     basis, sequence, audit = _one_center_atomic_full_parent_contract_fixture()
     count = length(basis)
@@ -4390,6 +4432,41 @@ end
     @test count_only_29.shell_layer_count == 11
     @test count_only_29.expected_shell_increment == 218
     @test count_only_29.total_actual_gausslet_count == 343 + 11 * 218
+end
+
+@testset "One-center atomic legacy-profile nested contract" begin
+    basis, sequence, diagnostics, ownership = _one_center_atomic_legacy_profile_contract_fixture()
+
+    @test sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test sequence.working_box == (2:14, 2:14, 2:14)
+    @test length(sequence.support_indices) == 13^3
+    @test ownership.min_group_count == 1
+    @test ownership.max_group_count == 1
+    @test ownership.unowned_row_count == 0
+    @test ownership.multi_owned_row_count == 0
+    @test diagnostics.parent_side_count == length(basis)
+    @test diagnostics.working_box_side_count == 13
+    @test diagnostics.nside == 5
+    @test diagnostics.core_side_count == 5
+    @test diagnostics.shell_layer_count == 4
+    @test diagnostics.expected_shell_increment == 98
+    @test diagnostics.total_actual_gausslet_count == 5^3 + 4 * 98
+    @test diagnostics.layers_match_expected
+
+    count_only_legacy_ne = one_center_atomic_nested_structure_diagnostics(
+        29;
+        working_box_side_count = 27,
+        nside = 7,
+    )
+    count_only_modern_ne = one_center_atomic_nested_structure_diagnostics(29; nside = 7)
+    @test count_only_legacy_ne.parent_side_count == 29
+    @test count_only_legacy_ne.working_box_side_count == 27
+    @test count_only_legacy_ne.shell_layer_count == 10
+    @test count_only_legacy_ne.expected_shell_increment == 218
+    @test count_only_legacy_ne.total_actual_gausslet_count == 2523
+    @test count_only_modern_ne.working_box_side_count == 29
+    @test count_only_modern_ne.shell_layer_count == 11
+    @test count_only_modern_ne.total_actual_gausslet_count == 2741
 end
 
 @testset "Cartesian nested shell sequence fixed-block" begin
@@ -5856,6 +5933,7 @@ end
 
         for lmax in (0, 1)
             supplement = legacy_atomic_gaussian_supplement("Ne", "repo-v6z-sp"; lmax = lmax, basisfile = path)
+            supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
             public_ops = ordinary_cartesian_qiu_white_operators(
                 basis,
                 supplement;
@@ -5885,6 +5963,7 @@ end
             if lmax == 0
                 @test abs(shell_vals[3] + (50.0 / 9.0)) < 2.0e-3
             else
+                @test length(supplement3d.orbitals) == 25
                 @test maximum(abs.(shell_vals[3:5] .+ 12.5)) < 2.0e-3
                 @test maximum(abs.(shell_vals[3:5] .- shell_vals[3])) < 1.0e-10
                 @test abs(shell_vals[6] + (50.0 / 9.0)) < 2.0e-3

@@ -53,9 +53,21 @@ The supported one-center atomic helpers are now:
 
 - `build_one_center_atomic_full_parent_shell_sequence(...)`
 - `one_center_atomic_full_parent_fixed_block(...)`
+- `build_one_center_atomic_legacy_profile_shell_sequence(...)`
+- `one_center_atomic_legacy_profile_fixed_block(...)`
 
 These helpers always build on the full parent cube and always use the
 legacy/W&L complete-shell retention counts for the chosen `nside`.
+
+The contract split is now explicit:
+
+- modern canonical path
+  - full parent coverage
+  - `working_box = (1:n, 1:n, 1:n)`
+- legacy-profile reproduction path
+  - explicit inner working box such as `(2:28, 2:28, 2:28)` on a `29^3`
+    parent lattice
+  - same exact shell increment and face/edge/corner counts
 
 The old local central-box diagnostic helper is now explicitly quarantined as:
 
@@ -87,6 +99,37 @@ This makes basis-size discrepancies separable into:
 - shell contract
 - working-box choice
 - supplement choice
+
+That distinction is now repo-native for the common `ns = 7` comparison:
+
+- parent `29^3`, full-parent working box
+  - total gausslets `= 2741`
+- parent `29^3`, legacy-profile inner `27^3` working box
+  - total gausslets `= 2523`
+
+For the literal one-center Ne legacy-profile comparison point
+
+- `Z = 10`
+- `d = 0.03`
+- parent side count `= 29`
+- legacy-profile working box `= (2:28, 2:28, 2:28)`
+- `nside = 7`
+- supplement `= repo-v6z-sp`, `lmax = 1`
+
+the repo now reproduces the structural gausslet profile exactly:
+
+- legacy-profile gausslet count `= 2523`
+- raw supplement orbital count `= 25`
+
+But the current supplement merge path still does **not** reproduce the legacy
+final basis count:
+
+- expected legacy total basis count `= 2548`
+- current repo final merged basis count `= 2531`
+
+So the shell contract and working-box contract are now aligned, and the
+remaining one-center Ne discrepancy has moved to the supplement merge /
+residual-space layer rather than the nested shell-retention layer.
 
 ## Structural Anchors
 
