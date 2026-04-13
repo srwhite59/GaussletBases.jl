@@ -42,6 +42,7 @@ export AbstractFunction1D,
        MappedOrdinaryOneBody1D,
        CartesianProductOrbital3D,
        QiuWhiteHybridOrbital3D,
+       QWRGResidualSpaceDiagnostics,
        OrdinaryCartesianIDAOperators,
        QiuWhiteResidualGaussianOperators,
        ExperimentalBondAlignedHomonuclearChainNestedQWPath,
@@ -199,6 +200,7 @@ export AbstractFunction1D,
        ordinary_sho_spectrum,
        ordinary_cartesian_ida_operators,
        ordinary_cartesian_qiu_white_operators,
+       diagnose_qwrg_residual_space,
        ordinary_cartesian_vee_expectation,
        angular_benchmark_exact_hamv6_payload,
        atomic_hamv6_payload,
@@ -397,6 +399,7 @@ function ordinary_sho_hamiltonian end
 function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
 function ordinary_cartesian_qiu_white_operators end
+function diagnose_qwrg_residual_space end
 function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
 function angular_benchmark_exact_hamv6_payload end

@@ -4469,6 +4469,53 @@ end
     @test count_only_modern_ne.total_actual_gausslet_count == 2741
 end
 
+@testset "QW residual-space keep rule explains Ne legacy-profile 25->8 collapse" begin
+    # Literal residual-overlap spectrum observed on the anchored one-center
+    # Ne legacy-profile case:
+    # parent side = 29, working box = 2:28, nside = 7, supplement lmax = 1.
+    residual_overlap_eigenvalues = Float64[
+        6.486197469e-08,
+        3.165964397e-06,
+        3.165964398e-06,
+        3.165964398e-06,
+        5.681904400e-06,
+        1.681965647e-05,
+        3.337404514e-05,
+        5.805312472e-05,
+        5.805312472e-05,
+        5.805312472e-05,
+        7.256172691e-05,
+        1.406818079e-04,
+        1.406818079e-04,
+        1.406818079e-04,
+        1.927015773e-04,
+        1.927015773e-04,
+        1.927015773e-04,
+        1.995510583e-04,
+        4.261857498e-04,
+        4.261857498e-04,
+        4.261857498e-04,
+        5.359433116e-04,
+        1.945893481e-03,
+        1.945893481e-03,
+        1.945893481e-03,
+    ]
+    gausslet_overlap = Matrix{Float64}(I, 1, 1)
+    overlap_ga = zeros(Float64, 1, length(residual_overlap_eigenvalues))
+    overlap_aa = Matrix(Diagonal(residual_overlap_eigenvalues))
+    diagnostics = diagnose_qwrg_residual_space(gausslet_overlap, overlap_ga, overlap_aa)
+
+    @test diagnostics.gaussian_count == 25
+    @test diagnostics.supplement_numerical_rank == 25
+    @test diagnostics.residual_numerical_rank == 25
+    @test diagnostics.kept_count == 8
+    @test diagnostics.discarded_count == 17
+    @test diagnostics.keep_tol ≈ 1.945893481e-4 atol = 1.0e-12 rtol = 1.0e-10
+    @test maximum(diagnostics.discarded_eigenvalues) > diagnostics.residual_null_rank_tol
+    @test maximum(diagnostics.discarded_eigenvalues) < diagnostics.keep_tol
+    @test minimum(diagnostics.kept_eigenvalues) > diagnostics.keep_tol
+end
+
 @testset "Cartesian nested shell sequence fixed-block" begin
     (
         basis,

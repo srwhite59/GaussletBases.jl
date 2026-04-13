@@ -82,6 +82,55 @@ struct QiuWhiteResidualGaussianOperators{B,D}
 end
 
 """
+    QWRGResidualSpaceDiagnostics
+
+Focused overlap/rank diagnostics for the Qiu-White residual-space construction.
+
+This records the raw supplement-space overlap spectrum, the residualized
+supplement spectrum before the keep rule is applied, the diagnostic null-rank
+threshold, the actual keep threshold used by the current route, and the final
+kept/discarded counts.
+"""
+struct QWRGResidualSpaceDiagnostics
+    gausslet_count::Int
+    gaussian_count::Int
+    raw_overlap_dimension::Int
+    overlap_ga_size::Tuple{Int,Int}
+    overlap_aa_size::Tuple{Int,Int}
+    gausslet_overlap_error::Float64
+    supplement_null_rank_tol::Float64
+    supplement_numerical_rank::Int
+    residual_null_rank_tol::Float64
+    residual_numerical_rank::Int
+    keep_tol::Float64
+    kept_count::Int
+    discarded_count::Int
+    supplement_overlap_eigenvalues::Vector{Float64}
+    residual_overlap_eigenvalues::Vector{Float64}
+    kept_indices::Vector{Int}
+    discarded_indices::Vector{Int}
+    kept_eigenvalues::Vector{Float64}
+    discarded_eigenvalues::Vector{Float64}
+end
+
+function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
+    print(
+        io,
+        "QWRGResidualSpaceDiagnostics(ngausslet=",
+        diagnostics.gausslet_count,
+        ", ngaussian=",
+        diagnostics.gaussian_count,
+        ", residual_rank=",
+        diagnostics.residual_numerical_rank,
+        ", kept=",
+        diagnostics.kept_count,
+        ", keep_tol=",
+        diagnostics.keep_tol,
+        ")",
+    )
+end
+
+"""
     ExperimentalBondAlignedHomonuclearChainNestedQWPath
 
 First experimental nested fixed-block ordinary-QW chain consumer payload.
@@ -232,6 +281,8 @@ end
 
 const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
 const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
+const _QWRG_RESIDUAL_NULL_ABS_TOL = 1.0e-12
+const _QWRG_RESIDUAL_NULL_REL_TOL = 1.0e-12
 
 function _qwrg_axis_coordinate(
     point::NTuple{3,Float64},
@@ -1384,6 +1435,12 @@ end
 function _qwrg_residual_keep_tol(values::AbstractVector{<:Real})
     isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
     return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
+end
+
+function _qwrg_residual_null_rank_tol(values::AbstractVector{<:Real})
+    isempty(values) && return _QWRG_RESIDUAL_NULL_ABS_TOL
+    max_value = maximum(abs.(Float64.(values)))
+    return max(_QWRG_RESIDUAL_NULL_ABS_TOL, _QWRG_RESIDUAL_NULL_REL_TOL * max_value)
 end
 
 function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
@@ -2704,7 +2761,7 @@ end
 # bundle, so this fixed block should already be orthonormal to numerical
 # precision before the residual construction.
 # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
-function _qwrg_residual_space(
+function _qwrg_residual_space_analysis(
     gausslet_overlap::AbstractMatrix{<:Real},
     overlap_ga::AbstractMatrix{<:Real},
     overlap_aa::AbstractMatrix{<:Real},
@@ -2731,27 +2788,79 @@ function _qwrg_residual_space(
         Matrix{Float64}(I, ngaussian, ngaussian),
     )
     residual_overlap = Matrix{Float64}(transpose(seed_projector) * raw_overlap * seed_projector)
-    decomposition = eigen(Symmetric(residual_overlap))
-    # The retained residual directions should be physically meaningful compared
-    # with the case's own residual scale, while true near-null modes are
-    # dropped. A pure absolute cutoff was too brittle across count = 9/11/13.
-    keep_tol = _qwrg_residual_keep_tol(decomposition.values)
-    keep = findall(>(keep_tol), decomposition.values)
+    supplement_decomposition = eigen(Symmetric(Matrix{Float64}(overlap_aa)))
+    residual_decomposition = eigen(Symmetric(residual_overlap))
+
+    supplement_null_rank_tol = _qwrg_residual_null_rank_tol(supplement_decomposition.values)
+    supplement_numerical_rank = count(>(supplement_null_rank_tol), supplement_decomposition.values)
+    residual_null_rank_tol = _qwrg_residual_null_rank_tol(residual_decomposition.values)
+    residual_numerical_rank = count(>(residual_null_rank_tol), residual_decomposition.values)
+    keep_tol = _qwrg_residual_keep_tol(residual_decomposition.values)
+    keep = findall(>(keep_tol), residual_decomposition.values)
+    discarded = setdiff(collect(1:length(residual_decomposition.values)), keep)
+
+    diagnostics = QWRGResidualSpaceDiagnostics(
+        ngausslet,
+        ngaussian,
+        ngausslet + ngaussian,
+        size(overlap_ga),
+        size(overlap_aa),
+        overlap_error,
+        supplement_null_rank_tol,
+        supplement_numerical_rank,
+        residual_null_rank_tol,
+        residual_numerical_rank,
+        keep_tol,
+        length(keep),
+        ngaussian - length(keep),
+        Float64[supplement_decomposition.values...],
+        Float64[residual_decomposition.values...],
+        keep,
+        discarded,
+        Float64[residual_decomposition.values[index] for index in keep],
+        Float64[residual_decomposition.values[index] for index in discarded],
+    )
+    return (
+        raw_overlap = raw_overlap,
+        seed_projector = seed_projector,
+        residual_overlap = residual_overlap,
+        decomposition = residual_decomposition,
+        keep = keep,
+        diagnostics = diagnostics,
+    )
+end
+
+function diagnose_qwrg_residual_space(
+    gausslet_overlap::AbstractMatrix{<:Real},
+    overlap_ga::AbstractMatrix{<:Real},
+    overlap_aa::AbstractMatrix{<:Real},
+)
+    return _qwrg_residual_space_analysis(gausslet_overlap, overlap_ga, overlap_aa).diagnostics
+end
+
+function _qwrg_residual_space(
+    gausslet_overlap::AbstractMatrix{<:Real},
+    overlap_ga::AbstractMatrix{<:Real},
+    overlap_aa::AbstractMatrix{<:Real},
+)
+    analysis = _qwrg_residual_space_analysis(gausslet_overlap, overlap_ga, overlap_aa)
+    ngausslet = analysis.diagnostics.gausslet_count
+    keep = analysis.keep
     isempty(keep) && throw(
         ArgumentError("Qiu-White residual-Gaussian construction produced no nontrivial 3D residual directions"),
     )
     residual_coefficients =
-        seed_projector *
-        decomposition.vectors[:, keep] *
-        Diagonal(1.0 ./ sqrt.(decomposition.values[keep]))
+        analysis.seed_projector *
+        analysis.decomposition.vectors[:, keep] *
+        Diagonal(1.0 ./ sqrt.(analysis.decomposition.values[keep]))
     gausslet_coefficients = vcat(
         Matrix{Float64}(I, ngausslet, ngausslet),
-        zeros(Float64, ngaussian, ngausslet),
+        zeros(Float64, analysis.diagnostics.gaussian_count, ngausslet),
     )
     raw_to_final = hcat(gausslet_coefficients, residual_coefficients)
-    final_overlap = Matrix{Float64}(transpose(raw_to_final) * raw_overlap * raw_to_final)
+    final_overlap = Matrix{Float64}(transpose(raw_to_final) * analysis.raw_overlap * raw_to_final)
     return (
-        raw_overlap = raw_overlap,
+        raw_overlap = analysis.raw_overlap,
         raw_to_final = raw_to_final,
         residual_coefficients = residual_coefficients,
         final_overlap = final_overlap,

@@ -131,6 +131,59 @@ So the shell contract and working-box contract are now aligned, and the
 remaining one-center Ne discrepancy has moved to the supplement merge /
 residual-space layer rather than the nested shell-retention layer.
 
+## Legacy-Profile Ne Residual-Space Boundary
+
+The remaining `2548 - 2531 = 17` count gap is now localized to the residual
+supplement keep rule inside:
+
+- `_qwrg_residual_space(...)`
+
+For the anchored one-center Ne legacy-profile case:
+
+- parent side `= 29`
+- working box `= (2:28, 2:28, 2:28)`
+- `nside = 7`
+- supplement `repo-v6z-sp`, `lmax = 1`
+
+the supplement-side structure is:
+
+- raw supplement orbital count `= 25`
+- supplement overlap numerical rank `= 25`
+- residualized supplement overlap numerical rank before keep `= 25`
+
+So the reduction does **not** happen in the raw supplement loader or in the
+raw overlap assembly. It happens at the explicit residual keep stage:
+
+- `keep_tol = max(1e-8, 0.1 * maximum(residual_overlap_eigenvalues))`
+- anchored Ne value: `keep_tol = 1.9458934805275673e-4`
+
+On that case:
+
+- kept residual count `= 8`
+- discarded residual count `= 17`
+- maximum discarded residual eigenvalue
+  - `1.9270157729463577e-4`
+- minimum kept residual eigenvalue
+  - `1.9955105831311726e-4`
+
+The discarded directions are therefore not numerically null in the usual
+sense:
+
+- residual numerical-null threshold used for diagnosis
+  - `1e-12`
+- discarded directions above that null threshold
+  - `17 / 17`
+
+So the repo is not losing directions because the residualized supplement space
+collapses to rank `8`. The current repo keeps only `8` because the present
+relative keep rule drops every residualized direction below `10%` of the
+largest residual overlap eigenvalue.
+
+That means the next fix target is not the one-center shell contract anymore.
+It is the legacy-profile supplement residual keep contract: either a weaker
+legacy-profile truncation rule or a no-drop legacy-profile supplement merge if
+legacy truly carried all `25` directions directly.
+
 ## Structural Anchors
 
 The structural contract is now pinned directly in repo tests:
