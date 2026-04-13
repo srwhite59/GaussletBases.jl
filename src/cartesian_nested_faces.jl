@@ -382,6 +382,13 @@ struct _CartesianNestedFactorizedBasis3D
     reconstruction_max_error::Float64
 end
 
+struct _CartesianNestedFactorizedAxisBaseTables
+    overlap::Matrix{Float64}
+    kinetic::Matrix{Float64}
+    position::Matrix{Float64}
+    x2::Matrix{Float64}
+end
+
 """
     _CartesianNestedBondAlignedDiatomicSource3D
 
@@ -2428,6 +2435,38 @@ function _nested_factorized_axis_term_tables(
     return term_tables
 end
 
+function _nested_factorized_axis_matrix_table(
+    operator::AbstractMatrix{<:Real},
+    axis_functions::AbstractMatrix{<:Real},
+    left_scratch::AbstractMatrix{<:Real},
+)
+    nfunctions = size(axis_functions, 2)
+    size(left_scratch) == (nfunctions, size(axis_functions, 1)) || throw(
+        ArgumentError("nested factorized axis matrix tables require scratch sized to the intermediate-function count and parent-axis length"),
+    )
+    table = Matrix{Float64}(undef, nfunctions, nfunctions)
+    mul!(left_scratch, transpose(axis_functions), operator)
+    mul!(table, left_scratch, axis_functions)
+    return table
+end
+
+function _nested_factorized_axis_base_tables(
+    axis_functions::AbstractMatrix{<:Real},
+    overlap::AbstractMatrix{<:Real},
+    kinetic::AbstractMatrix{<:Real},
+    position::AbstractMatrix{<:Real},
+    x2::AbstractMatrix{<:Real},
+)
+    nfunctions = size(axis_functions, 2)
+    left_scratch = Matrix{Float64}(undef, nfunctions, size(axis_functions, 1))
+    return _CartesianNestedFactorizedAxisBaseTables(
+        _nested_factorized_axis_matrix_table(overlap, axis_functions, left_scratch),
+        _nested_factorized_axis_matrix_table(kinetic, axis_functions, left_scratch),
+        _nested_factorized_axis_matrix_table(position, axis_functions, left_scratch),
+        _nested_factorized_axis_matrix_table(x2, axis_functions, left_scratch),
+    )
+end
+
 function _nested_factorized_normalized_pair_term_tables(
     raw_term_tables::Array{Float64,3},
     axis_weight_projections::AbstractVector{<:Real},
@@ -2485,6 +2524,115 @@ function _nested_fill_factorized_term_family!(
         end
     end
     return destination_terms
+end
+
+function _nested_fill_factorized_product_matrix!(
+    destination::AbstractMatrix{<:Real},
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    include_basis_amplitudes::Bool = true,
+)
+    nbasis = length(factorized_basis.basis_triplets)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("nested factorized product fill requires square output sized to the retained fixed basis"),
+    )
+    amplitudes = factorized_basis.basis_amplitudes
+    triplets = factorized_basis.basis_triplets
+    @inbounds for column in 1:nbasis
+        xj, yj, zj = triplets[column]
+        amplitude_j = include_basis_amplitudes ? amplitudes[column] : 1.0
+        for row in 1:column
+            xi, yi, zi = triplets[row]
+            scale = include_basis_amplitudes ? amplitudes[row] * amplitude_j : 1.0
+            value =
+                scale *
+                operator_x[xi, xj] *
+                operator_y[yi, yj] *
+                operator_z[zi, zj]
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
+end
+
+function _nested_fill_factorized_sum_of_products!(
+    destination::AbstractMatrix{<:Real},
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    terms;
+    include_basis_amplitudes::Bool = true,
+)
+    nbasis = length(factorized_basis.basis_triplets)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("nested factorized sum-of-products fill requires square output sized to the retained fixed basis"),
+    )
+    amplitudes = factorized_basis.basis_amplitudes
+    triplets = factorized_basis.basis_triplets
+    @inbounds for column in 1:nbasis
+        xj, yj, zj = triplets[column]
+        amplitude_j = include_basis_amplitudes ? amplitudes[column] : 1.0
+        for row in 1:column
+            xi, yi, zi = triplets[row]
+            scale = include_basis_amplitudes ? amplitudes[row] * amplitude_j : 1.0
+            value = 0.0
+            for term in terms
+                value +=
+                    term[1][xi, xj] *
+                    term[2][yi, yj] *
+                    term[3][zi, zj]
+            end
+            value *= scale
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
+end
+
+function _nested_factorized_product_matrix(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_label::Union{Nothing,String} = nothing;
+    include_basis_amplitudes::Bool = true,
+)
+    start_ns = time_ns()
+    nbasis = length(factorized_basis.basis_triplets)
+    matrix = Matrix{Float64}(undef, nbasis, nbasis)
+    _nested_fill_factorized_product_matrix!(
+        matrix,
+        factorized_basis,
+        operator_x,
+        operator_y,
+        operator_z;
+        include_basis_amplitudes = include_basis_amplitudes,
+    )
+    !isnothing(timing_label) && _nested_record_timing!(timing_collector, timing_label, start_ns)
+    return matrix
+end
+
+function _nested_factorized_sum_of_products(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    terms,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_label::Union{Nothing,String} = nothing;
+    include_basis_amplitudes::Bool = true,
+)
+    start_ns = time_ns()
+    nbasis = length(factorized_basis.basis_triplets)
+    matrix = Matrix{Float64}(undef, nbasis, nbasis)
+    _nested_fill_factorized_sum_of_products!(
+        matrix,
+        factorized_basis,
+        terms;
+        include_basis_amplitudes = include_basis_amplitudes,
+    )
+    !isnothing(timing_label) && _nested_record_timing!(timing_collector, timing_label, start_ns)
+    return matrix
 end
 
 function _nested_factorized_gaussian_terms(
@@ -3077,11 +3225,12 @@ function _nested_shell_packet(
     setup_start_ns = time_ns()
     packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
     support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
-    support_axes = _nested_support_axes(support_states)
-    support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
     nshell = size(coefficient_matrix, 2)
     nsupport = length(support_states)
     nterms = size(pgdg.gaussian_factor_terms, 1)
+    support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
+    support_coefficients =
+        packet_kernel == :support_reference ? Matrix{Float64}(coefficient_matrix[support_indices, :]) : nothing
     factorized_basis =
         packet_kernel == :factorized_direct ?
         _nested_extract_factorized_basis(
@@ -3089,139 +3238,257 @@ function _nested_shell_packet(
             (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1)),
         ) :
         nothing
-    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
-    contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
-    overlap = Matrix{Float64}(undef, nshell, nshell)
-    kinetic = Matrix{Float64}(undef, nshell, nshell)
-    position_x = Matrix{Float64}(undef, nshell, nshell)
-    position_y = Matrix{Float64}(undef, nshell, nshell)
-    position_z = Matrix{Float64}(undef, nshell, nshell)
-    x2_x = Matrix{Float64}(undef, nshell, nshell)
-    x2_y = Matrix{Float64}(undef, nshell, nshell)
-    x2_z = Matrix{Float64}(undef, nshell, nshell)
+    factorized_base_tables =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_axis_base_tables(
+            factorized_basis.x_functions,
+            pgdg.overlap,
+            pgdg.kinetic,
+            pgdg.position,
+            pgdg.x2,
+        ) :
+        nothing
+    support_workspace =
+        packet_kernel == :support_reference ? Matrix{Float64}(undef, nsupport, nsupport) : Matrix{Float64}(undef, 0, 0)
+    contraction_scratch =
+        packet_kernel == :support_reference ? Matrix{Float64}(undef, nshell, nsupport) : Matrix{Float64}(undef, 0, 0)
     _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        overlap,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.overlap,
-        pgdg.overlap,
-        pgdg.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+    overlap =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            timing_collector,
+            "packet.base.overlap",
+        ) :
+        begin
+            overlap_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                overlap_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.overlap,
+                pgdg.overlap,
+                pgdg.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+            overlap_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_sum_of_support_products!(
-        kinetic,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        (
-            (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
-            (pgdg.overlap, pgdg.kinetic, pgdg.overlap),
-            (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
-        );
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+    kinetic =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_sum_of_products(
+            factorized_basis,
+            (
+                (factorized_base_tables.kinetic, factorized_base_tables.overlap, factorized_base_tables.overlap),
+                (factorized_base_tables.overlap, factorized_base_tables.kinetic, factorized_base_tables.overlap),
+                (factorized_base_tables.overlap, factorized_base_tables.overlap, factorized_base_tables.kinetic),
+            ),
+            timing_collector,
+            "packet.base.kinetic",
+        ) :
+        begin
+            kinetic_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_sum_of_support_products!(
+                kinetic_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                (
+                    (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
+                    (pgdg.overlap, pgdg.kinetic, pgdg.overlap),
+                    (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
+                );
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+            kinetic_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_x,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.position,
-        pgdg.overlap,
-        pgdg.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+    position_x =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.position,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            timing_collector,
+            "packet.base.position_x",
+        ) :
+        begin
+            position_x_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_x_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.position,
+                pgdg.overlap,
+                pgdg.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+            position_x_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_y,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.overlap,
-        pgdg.position,
-        pgdg.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+    position_y =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.overlap,
+            factorized_base_tables.position,
+            factorized_base_tables.overlap,
+            timing_collector,
+            "packet.base.position_y",
+        ) :
+        begin
+            position_y_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_y_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.overlap,
+                pgdg.position,
+                pgdg.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+            position_y_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_z,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.overlap,
-        pgdg.overlap,
-        pgdg.position;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+    position_z =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            factorized_base_tables.position,
+            timing_collector,
+            "packet.base.position_z",
+        ) :
+        begin
+            position_z_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_z_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.overlap,
+                pgdg.overlap,
+                pgdg.position;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+            position_z_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_x,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.x2,
-        pgdg.overlap,
-        pgdg.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+    x2_x =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.x2,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            timing_collector,
+            "packet.base.x2_x",
+        ) :
+        begin
+            x2_x_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_x_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.x2,
+                pgdg.overlap,
+                pgdg.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+            x2_x_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_y,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.overlap,
-        pgdg.x2,
-        pgdg.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+    x2_y =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.overlap,
+            factorized_base_tables.x2,
+            factorized_base_tables.overlap,
+            timing_collector,
+            "packet.base.x2_y",
+        ) :
+        begin
+            x2_y_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_y_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.overlap,
+                pgdg.x2,
+                pgdg.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+            x2_y_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_z,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg.overlap,
-        pgdg.overlap,
-        pgdg.x2;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+    x2_z =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables.overlap,
+            factorized_base_tables.overlap,
+            factorized_base_tables.x2,
+            timing_collector,
+            "packet.base.x2_z",
+        ) :
+        begin
+            x2_z_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_z_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.overlap,
+                pgdg.overlap,
+                pgdg.x2;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+            x2_z_local
+        end
 
     pair_data =
         packet_kernel == :factorized_direct ?
@@ -3305,151 +3572,290 @@ function _nested_shell_packet(
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
     support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
-    support_axes = _nested_support_axes(support_states)
-    support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
     nshell = size(coefficient_matrix, 2)
     nsupport = length(support_states)
     nterms = size(pgdg_x.gaussian_factor_terms, 1)
     nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
         ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
     )
+    support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
+    support_coefficients =
+        packet_kernel == :support_reference ? Matrix{Float64}(coefficient_matrix[support_indices, :]) : nothing
     factorized_basis =
         packet_kernel == :factorized_direct ?
         _nested_extract_factorized_basis(coefficient_matrix, dims) :
         nothing
-    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
-    contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
-    overlap = Matrix{Float64}(undef, nshell, nshell)
-    kinetic = Matrix{Float64}(undef, nshell, nshell)
-    position_x = Matrix{Float64}(undef, nshell, nshell)
-    position_y = Matrix{Float64}(undef, nshell, nshell)
-    position_z = Matrix{Float64}(undef, nshell, nshell)
-    x2_x = Matrix{Float64}(undef, nshell, nshell)
-    x2_y = Matrix{Float64}(undef, nshell, nshell)
-    x2_z = Matrix{Float64}(undef, nshell, nshell)
+    factorized_base_tables_x =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_axis_base_tables(
+            factorized_basis.x_functions,
+            pgdg_x.overlap,
+            pgdg_x.kinetic,
+            pgdg_x.position,
+            pgdg_x.x2,
+        ) :
+        nothing
+    factorized_base_tables_y =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_axis_base_tables(
+            factorized_basis.y_functions,
+            pgdg_y.overlap,
+            pgdg_y.kinetic,
+            pgdg_y.position,
+            pgdg_y.x2,
+        ) :
+        nothing
+    factorized_base_tables_z =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_axis_base_tables(
+            factorized_basis.z_functions,
+            pgdg_z.overlap,
+            pgdg_z.kinetic,
+            pgdg_z.position,
+            pgdg_z.x2,
+        ) :
+        nothing
+    support_workspace =
+        packet_kernel == :support_reference ? Matrix{Float64}(undef, nsupport, nsupport) : Matrix{Float64}(undef, 0, 0)
+    contraction_scratch =
+        packet_kernel == :support_reference ? Matrix{Float64}(undef, nshell, nsupport) : Matrix{Float64}(undef, 0, 0)
     _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        overlap,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+    overlap =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.overlap,
+            factorized_base_tables_y.overlap,
+            factorized_base_tables_z.overlap,
+            timing_collector,
+            "packet.base.overlap",
+        ) :
+        begin
+            overlap_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                overlap_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.overlap,
+                pgdg_y.overlap,
+                pgdg_z.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+            overlap_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_sum_of_support_products!(
-        kinetic,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        (
-            (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
-            (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
-            (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
-        );
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+    kinetic =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_sum_of_products(
+            factorized_basis,
+            (
+                (factorized_base_tables_x.kinetic, factorized_base_tables_y.overlap, factorized_base_tables_z.overlap),
+                (factorized_base_tables_x.overlap, factorized_base_tables_y.kinetic, factorized_base_tables_z.overlap),
+                (factorized_base_tables_x.overlap, factorized_base_tables_y.overlap, factorized_base_tables_z.kinetic),
+            ),
+            timing_collector,
+            "packet.base.kinetic",
+        ) :
+        begin
+            kinetic_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_sum_of_support_products!(
+                kinetic_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                (
+                    (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
+                    (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
+                    (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
+                );
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+            kinetic_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_x,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.position,
-        pgdg_y.overlap,
-        pgdg_z.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+    position_x =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.position,
+            factorized_base_tables_y.overlap,
+            factorized_base_tables_z.overlap,
+            timing_collector,
+            "packet.base.position_x",
+        ) :
+        begin
+            position_x_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_x_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.position,
+                pgdg_y.overlap,
+                pgdg_z.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+            position_x_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_y,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.overlap,
-        pgdg_y.position,
-        pgdg_z.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+    position_y =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.overlap,
+            factorized_base_tables_y.position,
+            factorized_base_tables_z.overlap,
+            timing_collector,
+            "packet.base.position_y",
+        ) :
+        begin
+            position_y_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_y_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.overlap,
+                pgdg_y.position,
+                pgdg_z.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+            position_y_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        position_z,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.position;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+    position_z =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.overlap,
+            factorized_base_tables_y.overlap,
+            factorized_base_tables_z.position,
+            timing_collector,
+            "packet.base.position_z",
+        ) :
+        begin
+            position_z_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                position_z_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.overlap,
+                pgdg_y.overlap,
+                pgdg_z.position;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+            position_z_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_x,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.x2,
-        pgdg_y.overlap,
-        pgdg_z.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+    x2_x =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.x2,
+            factorized_base_tables_y.overlap,
+            factorized_base_tables_z.overlap,
+            timing_collector,
+            "packet.base.x2_x",
+        ) :
+        begin
+            x2_x_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_x_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.x2,
+                pgdg_y.overlap,
+                pgdg_z.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+            x2_x_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_y,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.overlap,
-        pgdg_y.x2,
-        pgdg_z.overlap;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+    x2_y =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.overlap,
+            factorized_base_tables_y.x2,
+            factorized_base_tables_z.overlap,
+            timing_collector,
+            "packet.base.x2_y",
+        ) :
+        begin
+            x2_y_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_y_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.overlap,
+                pgdg_y.x2,
+                pgdg_z.overlap;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+            x2_y_local
+        end
 
-    start_ns = time_ns()
-    _nested_contract_support_product!(
-        x2_z,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        support_coefficients,
-        pgdg_x.overlap,
-        pgdg_y.overlap,
-        pgdg_z.x2;
-        beta = 0.0,
-        assume_symmetric = true,
-    )
-    _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+    x2_z =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_product_matrix(
+            factorized_basis,
+            factorized_base_tables_x.overlap,
+            factorized_base_tables_y.overlap,
+            factorized_base_tables_z.x2,
+            timing_collector,
+            "packet.base.x2_z",
+        ) :
+        begin
+            x2_z_local = Matrix{Float64}(undef, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_product!(
+                x2_z_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.overlap,
+                pgdg_y.overlap,
+                pgdg_z.x2;
+                beta = 0.0,
+                assume_symmetric = true,
+            )
+            _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+            x2_z_local
+        end
 
     pair_data =
         packet_kernel == :factorized_direct ?
