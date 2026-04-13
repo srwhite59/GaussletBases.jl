@@ -37,6 +37,7 @@ struct _MappedOrdinaryPGDGIntermediate1D{B,L,A,M}
     x2::Matrix{Float64}
     gaussian_factors::Vector{Matrix{Float64}}
     gaussian_factor_terms::Array{Float64,3}
+    pair_factor_terms_raw::Array{Float64,3}
     pair_factors::Vector{Matrix{Float64}}
     pair_factor_terms::Array{Float64,3}
     exponents::Vector{Float64}
@@ -550,6 +551,7 @@ function _mapped_ordinary_pgdg_intermediate_1d(
         x2,
         gaussian_factors,
         gaussian_factor_terms,
+        pair_factor_terms_raw,
         pair_factors,
         pair_factor_terms,
         exponents_value,

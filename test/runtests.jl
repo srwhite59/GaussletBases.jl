@@ -4059,8 +4059,29 @@ end
     @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
     @test size(packet.gaussian_terms) == (3, 18, 18)
     @test size(packet.pair_terms) == (3, 18, 18)
+    support_coefficients = Matrix{Float64}(shell.coefficient_matrix[shell.support_indices, :])
+    support_weights = GaussletBases._nested_support_weights(shell.support_states, pgdg.weights)
+    fixed_weights = vec(transpose(support_coefficients) * support_weights)
+    pair_term_1d_raw = @view(pgdg.pair_factor_terms_raw[1, :, :])
+    pair_support = GaussletBases._nested_support_product_matrix(
+        shell.support_states,
+        pair_term_1d_raw,
+        pair_term_1d_raw,
+        pair_term_1d_raw,
+    )
+    pair_reference = transpose(support_coefficients) * pair_support * support_coefficients
+    pair_reference ./= (fixed_weights * transpose(fixed_weights))
+    gaussian_support = GaussletBases._nested_support_product_matrix(
+        shell.support_states,
+        @view(pgdg.gaussian_factor_terms[1, :, :]),
+        @view(pgdg.gaussian_factor_terms[1, :, :]),
+        @view(pgdg.gaussian_factor_terms[1, :, :]),
+    )
+    gaussian_reference = transpose(support_coefficients) * gaussian_support * support_coefficients
     @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
     @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
+    @test packet.gaussian_terms[1, :, :] ≈ gaussian_reference atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.pair_terms[1, :, :] ≈ pair_reference atol = 1.0e-10 rtol = 1.0e-10
     @test low_z_mean < 0.0
     @test high_z_mean > 0.0
 end
@@ -4684,6 +4705,82 @@ end
     @test occursin("packet.gaussian_terms", full_report)
     @test occursin("packet.pair_terms", full_report)
     @test occursin("packet.total", legacy_report)
+end
+
+@testset "One-center atomic factorized direct packet kernel" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents,
+        backend = :numerical_reference,
+        refinement_levels = 0,
+    )
+
+    shell = GaussletBases._nested_rectangular_shell(
+        bundle,
+        2:12,
+        2:12,
+        2:12;
+        retain_xy = (4, 3),
+        retain_xz = (4, 3),
+        retain_yz = (4, 3),
+        packet_kernel = :factorized_direct,
+    )
+    factorized = GaussletBases._nested_extract_factorized_basis(
+        shell.coefficient_matrix,
+        (13, 13, 13),
+    )
+    reconstructed = GaussletBases._nested_reconstruct_factorized_coefficients(factorized)
+    @test factorized.reconstruction_max_error < 1.0e-10
+    @test reconstructed ≈ shell.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
+
+    full_reference = GaussletBases._build_one_center_atomic_shell_sequence(
+        bundle,
+        (1:13, 1:13, 1:13);
+        nside = 5,
+        packet_kernel = :support_reference,
+    )
+    full_direct = GaussletBases._build_one_center_atomic_shell_sequence(
+        bundle,
+        (1:13, 1:13, 1:13);
+        nside = 5,
+        packet_kernel = :factorized_direct,
+    )
+    legacy_reference = GaussletBases._build_one_center_atomic_shell_sequence(
+        bundle,
+        (2:12, 2:12, 2:12);
+        nside = 5,
+        packet_kernel = :support_reference,
+    )
+    legacy_direct = GaussletBases._build_one_center_atomic_shell_sequence(
+        bundle,
+        (2:12, 2:12, 2:12);
+        nside = 5,
+        packet_kernel = :factorized_direct,
+    )
+
+    fixed_full_reference = GaussletBases._nested_fixed_block(full_reference, bundle)
+    fixed_full_direct = GaussletBases._nested_fixed_block(full_direct, bundle)
+    fixed_legacy_reference = GaussletBases._nested_fixed_block(legacy_reference, bundle)
+    fixed_legacy_direct = GaussletBases._nested_fixed_block(legacy_direct, bundle)
+
+    @test fixed_full_direct.overlap ≈ fixed_full_reference.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_full_direct.weights ≈ fixed_full_reference.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_full_direct.gaussian_terms ≈ fixed_full_reference.gaussian_terms atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_full_direct.pair_terms ≈ fixed_full_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
+
+    @test fixed_legacy_direct.overlap ≈ fixed_legacy_reference.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_legacy_direct.weights ≈ fixed_legacy_reference.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_legacy_direct.gaussian_terms ≈ fixed_legacy_reference.gaussian_terms atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_legacy_direct.pair_terms ≈ fixed_legacy_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "QW residual-space keep policy distinguishes modern and legacy-profile Ne completion" begin

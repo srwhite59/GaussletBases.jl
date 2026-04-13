@@ -366,6 +366,22 @@ mutable struct _NestedFixedBlockTimingCollector
     records::Vector{Pair{String,Float64}}
 end
 
+struct _CartesianNestedSupportAxes3D
+    x::Vector{Int}
+    y::Vector{Int}
+    z::Vector{Int}
+end
+
+struct _CartesianNestedFactorizedBasis3D
+    dims::NTuple{3,Int}
+    x_functions::Matrix{Float64}
+    y_functions::Matrix{Float64}
+    z_functions::Matrix{Float64}
+    basis_triplets::Vector{NTuple{3,Int}}
+    basis_amplitudes::Vector{Float64}
+    reconstruction_max_error::Float64
+end
+
 """
     _CartesianNestedBondAlignedDiatomicSource3D
 
@@ -2254,6 +2270,315 @@ function _nested_support_product_matrix(
     )
 end
 
+function _nested_support_axes(
+    support_states::AbstractVector{<:NTuple{3,Int}},
+)
+    x = Vector{Int}(undef, length(support_states))
+    y = Vector{Int}(undef, length(support_states))
+    z = Vector{Int}(undef, length(support_states))
+    @inbounds for index in eachindex(support_states)
+        ix, iy, iz = support_states[index]
+        x[index] = ix
+        y[index] = iy
+        z[index] = iz
+    end
+    return _CartesianNestedSupportAxes3D(x, y, z)
+end
+
+function _nested_normalize_packet_kernel(packet_kernel::Symbol)
+    packet_kernel in (:support_reference, :factorized_direct) || throw(
+        ArgumentError("nested packet kernel must be :support_reference or :factorized_direct"),
+    )
+    return packet_kernel
+end
+
+function _nested_zero_small!(values::AbstractVector{Float64}; atol::Float64)
+    @inbounds for index in eachindex(values)
+        abs(values[index]) <= atol && (values[index] = 0.0)
+    end
+    return values
+end
+
+function _nested_find_or_push_axis_function!(
+    functions::Vector{Vector{Float64}},
+    candidate::Vector{Float64};
+    atol::Float64,
+)
+    for (index, existing) in enumerate(functions)
+        length(existing) == length(candidate) || continue
+        maximum(abs.(existing .- candidate)) <= atol && return index
+    end
+    push!(functions, candidate)
+    return length(functions)
+end
+
+function _nested_extract_factorized_basis(
+    coefficient_matrix::AbstractMatrix{<:Real},
+    dims::NTuple{3,Int};
+    atol::Float64 = 1.0e-12,
+)
+    nparent = prod(dims)
+    size(coefficient_matrix, 1) == nparent || throw(
+        ArgumentError("nested factorized-basis extraction requires parent rows matching the Cartesian box volume"),
+    )
+    nfixed = size(coefficient_matrix, 2)
+    x_functions = Vector{Vector{Float64}}()
+    y_functions = Vector{Vector{Float64}}()
+    z_functions = Vector{Vector{Float64}}()
+    basis_triplets = Vector{NTuple{3,Int}}(undef, nfixed)
+    basis_amplitudes = Vector{Float64}(undef, nfixed)
+    reconstruction_max_error = 0.0
+
+    for column in 1:nfixed
+        coefficients = @view coefficient_matrix[:, column]
+        anchor = findfirst(value -> abs(value) > atol, coefficients)
+        isnothing(anchor) && throw(
+            ArgumentError("nested factorized-basis extraction requires every retained fixed column to have at least one nonzero parent row"),
+        )
+        ix0, iy0, iz0 = _cartesian_unflat_index(anchor, dims)
+        amplitude = Float64(coefficients[anchor])
+        x_vector = Vector{Float64}(undef, dims[1])
+        y_vector = Vector{Float64}(undef, dims[2])
+        z_vector = Vector{Float64}(undef, dims[3])
+        @inbounds for ix in 1:dims[1]
+            x_vector[ix] = Float64(coefficients[_cartesian_flat_index(ix, iy0, iz0, dims)]) / amplitude
+        end
+        @inbounds for iy in 1:dims[2]
+            y_vector[iy] = Float64(coefficients[_cartesian_flat_index(ix0, iy, iz0, dims)]) / amplitude
+        end
+        @inbounds for iz in 1:dims[3]
+            z_vector[iz] = Float64(coefficients[_cartesian_flat_index(ix0, iy0, iz, dims)]) / amplitude
+        end
+        _nested_zero_small!(x_vector; atol = atol)
+        _nested_zero_small!(y_vector; atol = atol)
+        _nested_zero_small!(z_vector; atol = atol)
+
+        column_error = 0.0
+        @inbounds for iz in 1:dims[3], iy in 1:dims[2], ix in 1:dims[1]
+            flat = _cartesian_flat_index(ix, iy, iz, dims)
+            expected = amplitude * x_vector[ix] * y_vector[iy] * z_vector[iz]
+            column_error = max(column_error, abs(expected - Float64(coefficients[flat])))
+        end
+        reconstruction_max_error = max(reconstruction_max_error, column_error)
+        column_error <= 1.0e3 * atol || throw(
+            ArgumentError("nested factorized-basis extraction failed to reconstruct fixed column $column to roundoff (max error = $column_error)"),
+        )
+
+        x_index = _nested_find_or_push_axis_function!(x_functions, x_vector; atol = atol)
+        y_index = _nested_find_or_push_axis_function!(y_functions, y_vector; atol = atol)
+        z_index = _nested_find_or_push_axis_function!(z_functions, z_vector; atol = atol)
+        basis_triplets[column] = (x_index, y_index, z_index)
+        basis_amplitudes[column] = amplitude
+    end
+
+    return _CartesianNestedFactorizedBasis3D(
+        dims,
+        hcat(x_functions...),
+        hcat(y_functions...),
+        hcat(z_functions...),
+        basis_triplets,
+        basis_amplitudes,
+        reconstruction_max_error,
+    )
+end
+
+function _nested_reconstruct_factorized_coefficients(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+)
+    dims = factorized_basis.dims
+    nparent = prod(dims)
+    nfixed = length(factorized_basis.basis_triplets)
+    coefficients = zeros(Float64, nparent, nfixed)
+    for column in 1:nfixed
+        ix_function, iy_function, iz_function = factorized_basis.basis_triplets[column]
+        amplitude = factorized_basis.basis_amplitudes[column]
+        x_vector = @view factorized_basis.x_functions[:, ix_function]
+        y_vector = @view factorized_basis.y_functions[:, iy_function]
+        z_vector = @view factorized_basis.z_functions[:, iz_function]
+        @inbounds for iz in 1:dims[3], iy in 1:dims[2], ix in 1:dims[1]
+            coefficients[_cartesian_flat_index(ix, iy, iz, dims), column] =
+                amplitude * x_vector[ix] * y_vector[iy] * z_vector[iz]
+        end
+    end
+    return coefficients
+end
+
+function _nested_factorized_axis_weight_projections(
+    axis_functions::AbstractMatrix{<:Real},
+    weights::AbstractVector{<:Real},
+)
+    size(axis_functions, 1) == length(weights) || throw(
+        ArgumentError("nested factorized axis-weight projection requires one weight per parent-axis site"),
+    )
+    return vec(transpose(axis_functions) * weights)
+end
+
+function _nested_factorized_axis_term_tables(
+    operator_terms::Array{Float64,3},
+    axis_functions::AbstractMatrix{<:Real},
+)
+    nterms = size(operator_terms, 1)
+    nfunctions = size(axis_functions, 2)
+    left_scratch = Matrix{Float64}(undef, nfunctions, size(axis_functions, 1))
+    term_tables = Array{Float64,3}(undef, nterms, nfunctions, nfunctions)
+    for term in 1:nterms
+        mul!(left_scratch, transpose(axis_functions), @view(operator_terms[term, :, :]))
+        mul!(@view(term_tables[term, :, :]), left_scratch, axis_functions)
+    end
+    return term_tables
+end
+
+function _nested_factorized_normalized_pair_term_tables(
+    raw_term_tables::Array{Float64,3},
+    axis_weight_projections::AbstractVector{<:Real},
+)
+    nterms, nfunctions_left, nfunctions_right = size(raw_term_tables)
+    nfunctions_left == length(axis_weight_projections) == nfunctions_right || throw(
+        ArgumentError("nested factorized pair normalization requires one axis weight per unique intermediate function"),
+    )
+    normalized = similar(raw_term_tables)
+    @inbounds for j in 1:nfunctions_right, i in 1:nfunctions_left
+        scale = Float64(axis_weight_projections[i]) * Float64(axis_weight_projections[j])
+        abs(scale) > 1.0e-14 || throw(
+            ArgumentError("nested factorized pair normalization requires nonzero axis-weight projection pairs"),
+        )
+        for term in 1:nterms
+            normalized[term, i, j] = raw_term_tables[term, i, j] / scale
+        end
+    end
+    return normalized
+end
+
+function _nested_fill_factorized_term_family!(
+    destination_terms::Array{Float64,3},
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3};
+    include_basis_amplitudes::Bool,
+)
+    nterms = size(destination_terms, 1)
+    nbasis = length(factorized_basis.basis_triplets)
+    size(destination_terms, 2) == nbasis == size(destination_terms, 3) || throw(
+        ArgumentError("nested factorized term-family fill requires square output sized to the retained fixed basis"),
+    )
+    nterms == size(operator_terms_x, 1) == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
+        ArgumentError("nested factorized term-family fill requires matching term counts"),
+    )
+    amplitudes = factorized_basis.basis_amplitudes
+    triplets = factorized_basis.basis_triplets
+    @inbounds for column in 1:nbasis
+        xj, yj, zj = triplets[column]
+        amplitude_j = include_basis_amplitudes ? amplitudes[column] : 1.0
+        for row in 1:column
+            xi, yi, zi = triplets[row]
+            scale = include_basis_amplitudes ? amplitudes[row] * amplitude_j : 1.0
+            for term in 1:nterms
+                value =
+                    scale *
+                    operator_terms_x[term, xi, xj] *
+                    operator_terms_y[term, yi, yj] *
+                    operator_terms_z[term, zi, zj]
+                destination_terms[term, row, column] = value
+                destination_terms[term, column, row] = value
+            end
+        end
+    end
+    return destination_terms
+end
+
+function _nested_factorized_gaussian_terms(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    gaussian_terms_x::Array{Float64,3},
+    gaussian_terms_y::Array{Float64,3},
+    gaussian_terms_z::Array{Float64,3},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+)
+    start_ns = time_ns()
+    axis_term_tables_x = _nested_factorized_axis_term_tables(
+        gaussian_terms_x,
+        factorized_basis.x_functions,
+    )
+    axis_term_tables_y = _nested_factorized_axis_term_tables(
+        gaussian_terms_y,
+        factorized_basis.y_functions,
+    )
+    axis_term_tables_z = _nested_factorized_axis_term_tables(
+        gaussian_terms_z,
+        factorized_basis.z_functions,
+    )
+    nbasis = length(factorized_basis.basis_triplets)
+    gaussian_terms = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
+    _nested_fill_factorized_term_family!(
+        gaussian_terms,
+        factorized_basis,
+        axis_term_tables_x,
+        axis_term_tables_y,
+        axis_term_tables_z;
+        include_basis_amplitudes = true,
+    )
+    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+    return gaussian_terms
+end
+
+function _nested_factorized_weight_aware_pair_terms(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    weights_x::AbstractVector{<:Real},
+    weights_y::AbstractVector{<:Real},
+    weights_z::AbstractVector{<:Real},
+    pair_terms_x::Array{Float64,3},
+    pair_terms_y::Array{Float64,3},
+    pair_terms_z::Array{Float64,3},
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+)
+    start_ns = time_ns()
+    axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
+    axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
+    axis_weight_z = _nested_factorized_axis_weight_projections(factorized_basis.z_functions, weights_z)
+    basis_weights = Vector{Float64}(undef, length(factorized_basis.basis_triplets))
+    @inbounds for index in eachindex(factorized_basis.basis_triplets)
+        ix, iy, iz = factorized_basis.basis_triplets[index]
+        basis_weights[index] =
+            factorized_basis.basis_amplitudes[index] *
+            axis_weight_x[ix] *
+            axis_weight_y[iy] *
+            axis_weight_z[iz]
+    end
+    all(isfinite, basis_weights) || throw(
+        ArgumentError("nested factorized pair contraction requires finite retained fixed integral weights"),
+    )
+    minimum(basis_weights) > 0.0 || throw(
+        ArgumentError("nested factorized pair contraction requires positive retained fixed integral weights"),
+    )
+    axis_term_tables_x = _nested_factorized_normalized_pair_term_tables(
+        _nested_factorized_axis_term_tables(pair_terms_x, factorized_basis.x_functions),
+        axis_weight_x,
+    )
+    axis_term_tables_y = _nested_factorized_normalized_pair_term_tables(
+        _nested_factorized_axis_term_tables(pair_terms_y, factorized_basis.y_functions),
+        axis_weight_y,
+    )
+    axis_term_tables_z = _nested_factorized_normalized_pair_term_tables(
+        _nested_factorized_axis_term_tables(pair_terms_z, factorized_basis.z_functions),
+        axis_weight_z,
+    )
+    nbasis = length(factorized_basis.basis_triplets)
+    pair_terms = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
+    _nested_fill_factorized_term_family!(
+        pair_terms,
+        factorized_basis,
+        axis_term_tables_x,
+        axis_term_tables_y,
+        axis_term_tables_z;
+        include_basis_amplitudes = false,
+    )
+    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
+    return (
+        weights = basis_weights,
+        pair_terms = pair_terms,
+    )
+end
+
 function _nested_fill_support_product_matrix!(
     workspace::AbstractMatrix{<:Real},
     support_states::AbstractVector{<:NTuple{3,Int}},
@@ -2278,6 +2603,64 @@ function _nested_fill_support_product_matrix!(
     return workspace
 end
 
+function _nested_fill_support_product_matrix!(
+    workspace::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
+    nsupport = length(support_axes.x)
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    xstates = support_axes.x
+    ystates = support_axes.y
+    zstates = support_axes.z
+    @inbounds for row in 1:nsupport
+        ix = xstates[row]
+        iy = ystates[row]
+        iz = zstates[row]
+        for col in 1:nsupport
+            workspace[row, col] =
+                Float64(operator_x[ix, xstates[col]]) *
+                Float64(operator_y[iy, ystates[col]]) *
+                Float64(operator_z[iz, zstates[col]])
+        end
+    end
+    return workspace
+end
+
+function _nested_fill_symmetric_support_product_matrix!(
+    workspace::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
+    nsupport = length(support_axes.x)
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    xstates = support_axes.x
+    ystates = support_axes.y
+    zstates = support_axes.z
+    @inbounds for col in 1:nsupport
+        jx = xstates[col]
+        jy = ystates[col]
+        jz = zstates[col]
+        for row in 1:col
+            value =
+                Float64(operator_x[xstates[row], jx]) *
+                Float64(operator_y[ystates[row], jy]) *
+                Float64(operator_z[zstates[row], jz])
+            workspace[row, col] = value
+            workspace[col, row] = value
+        end
+    end
+    return workspace
+end
+
 function _nested_contract_support_product!(
     destination::AbstractMatrix{<:Real},
     workspace::AbstractMatrix{<:Real},
@@ -2289,6 +2672,7 @@ function _nested_contract_support_product!(
     operator_z::AbstractMatrix{<:Real};
     alpha::Float64 = 1.0,
     beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
 )
     nsupport = length(support_states)
     nfixed = size(support_coefficients, 2)
@@ -2301,13 +2685,69 @@ function _nested_contract_support_product!(
     size(contraction_scratch) == (nfixed, nsupport) || throw(
         ArgumentError("nested support contraction scratch must have size ($(nfixed), $(nsupport))"),
     )
-    _nested_fill_support_product_matrix!(
-        workspace,
-        support_states,
-        operator_x,
-        operator_y,
-        operator_z,
+    if assume_symmetric
+        _nested_fill_symmetric_support_product_matrix!(
+            workspace,
+            _nested_support_axes(support_states),
+            operator_x,
+            operator_y,
+            operator_z,
+        )
+    else
+        _nested_fill_support_product_matrix!(
+            workspace,
+            support_states,
+            operator_x,
+            operator_y,
+            operator_z,
+        )
+    end
+    mul!(contraction_scratch, transpose(support_coefficients), workspace)
+    mul!(destination, contraction_scratch, support_coefficients, alpha, beta)
+    return destination
+end
+
+function _nested_contract_support_product!(
+    destination::AbstractMatrix{<:Real},
+    workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    alpha::Float64 = 1.0,
+    beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
+)
+    nsupport = length(support_axes.x)
+    nfixed = size(support_coefficients, 2)
+    size(destination) == (nfixed, nfixed) || throw(
+        ArgumentError("nested support contraction destination must have size ($(nfixed), $(nfixed))"),
     )
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support contraction workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    size(contraction_scratch) == (nfixed, nsupport) || throw(
+        ArgumentError("nested support contraction scratch must have size ($(nfixed), $(nsupport))"),
+    )
+    if assume_symmetric
+        _nested_fill_symmetric_support_product_matrix!(
+            workspace,
+            support_axes,
+            operator_x,
+            operator_y,
+            operator_z,
+        )
+    else
+        _nested_fill_support_product_matrix!(
+            workspace,
+            support_axes,
+            operator_x,
+            operator_y,
+            operator_z,
+        )
+    end
     mul!(contraction_scratch, transpose(support_coefficients), workspace)
     mul!(destination, contraction_scratch, support_coefficients, alpha, beta)
     return destination
@@ -2321,6 +2761,7 @@ function _nested_contract_sum_of_support_products!(
     support_coefficients::AbstractMatrix{<:Real},
     terms;
     beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
 )
     isempty(terms) && return (iszero(beta) ? fill!(destination, 0.0) : rmul!(destination, beta))
     first_term = true
@@ -2336,10 +2777,74 @@ function _nested_contract_sum_of_support_products!(
             term[3];
             alpha = 1.0,
             beta = first_term ? beta : 1.0,
+            assume_symmetric = assume_symmetric,
         )
         first_term = false
     end
     return destination
+end
+
+function _nested_contract_sum_of_support_products!(
+    destination::AbstractMatrix{<:Real},
+    workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    terms;
+    beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
+)
+    isempty(terms) && return (iszero(beta) ? fill!(destination, 0.0) : rmul!(destination, beta))
+    first_term = true
+    for term in terms
+        _nested_contract_support_product!(
+            destination,
+            workspace,
+            contraction_scratch,
+            support_axes,
+            support_coefficients,
+            term[1],
+            term[2],
+            term[3];
+            alpha = 1.0,
+            beta = first_term ? beta : 1.0,
+            assume_symmetric = assume_symmetric,
+        )
+        first_term = false
+    end
+    return destination
+end
+
+function _nested_contract_support_term_family!(
+    destination_terms::Array{Float64,3},
+    workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+    assume_symmetric::Bool = false,
+)
+    nterms = size(destination_terms, 1)
+    nterms == size(operator_terms_x, 1) == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
+        ArgumentError("nested support term-family contraction requires matching term counts"),
+    )
+    for term in 1:nterms
+        _nested_contract_support_product!(
+            @view(destination_terms[term, :, :]),
+            workspace,
+            contraction_scratch,
+            support_axes,
+            support_coefficients,
+            @view(operator_terms_x[term, :, :]),
+            @view(operator_terms_y[term, :, :]),
+            @view(operator_terms_z[term, :, :]);
+            beta = 0.0,
+            assume_symmetric = assume_symmetric,
+        )
+    end
+    return destination_terms
 end
 
 function _nested_symmetrize_matrix!(matrix::AbstractMatrix{<:Real})
@@ -2404,6 +2909,7 @@ end
 function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
+    support_axes::_CartesianNestedSupportAxes3D,
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
@@ -2412,7 +2918,6 @@ function _nested_weight_aware_pair_terms(
     start_ns = time_ns()
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
-    parent_weight_outer = pgdg.weights * transpose(pgdg.weights)
     support_weights = _nested_support_weights(support_states, pgdg.weights)
     fixed_weights = vec(transpose(support_coefficients) * support_weights)
     all(isfinite, fixed_weights) || throw(
@@ -2421,26 +2926,20 @@ function _nested_weight_aware_pair_terms(
     minimum(fixed_weights) > 0.0 || throw(
         ArgumentError("nested fixed-block IDA transfer requires positive contracted integral weights"),
     )
-    fixed_weight_outer = fixed_weights * transpose(fixed_weights)
+    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
     pair_terms = zeros(Float64, nterms, nfixed, nfixed)
 
-    for term in 1:nterms
-        raw_1d = @view(pgdg.pair_factor_terms[term, :, :]) .* parent_weight_outer
-        pair_term = @view(pair_terms[term, :, :])
-        _nested_contract_support_product!(
-            pair_term,
-            support_workspace,
-            contraction_scratch,
-            support_states,
-            support_coefficients,
-            raw_1d,
-            raw_1d,
-            raw_1d;
-            beta = 0.0,
-        )
-        pair_term ./= fixed_weight_outer
-        _nested_symmetrize_matrix!(pair_term)
-    end
+    _nested_contract_support_term_family!(
+        pair_terms,
+        support_workspace,
+        contraction_scratch,
+        support_axes,
+        weighted_support_coefficients,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
+        true,
+    )
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
@@ -2453,6 +2952,7 @@ end
 function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
+    support_axes::_CartesianNestedSupportAxes3D,
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
@@ -2467,9 +2967,6 @@ function _nested_weight_aware_pair_terms(
         ArgumentError("mixed-axis nested IDA transfer requires the same Gaussian expansion term count on all axes"),
     )
     nfixed = size(support_coefficients, 2)
-    parent_weight_outer_x = pgdg_x.weights * transpose(pgdg_x.weights)
-    parent_weight_outer_y = pgdg_y.weights * transpose(pgdg_y.weights)
-    parent_weight_outer_z = pgdg_z.weights * transpose(pgdg_z.weights)
     support_weights = _nested_support_weights(
         support_states,
         pgdg_x.weights,
@@ -2483,28 +2980,23 @@ function _nested_weight_aware_pair_terms(
     minimum(fixed_weights) > 0.0 || throw(
         ArgumentError("mixed-axis nested fixed-block IDA transfer requires positive contracted integral weights"),
     )
-    fixed_weight_outer = fixed_weights * transpose(fixed_weights)
+    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
     pair_terms = zeros(Float64, nterms, nfixed, nfixed)
 
-    for term in 1:nterms
-        raw_x = @view(pgdg_x.pair_factor_terms[term, :, :]) .* parent_weight_outer_x
-        raw_y = @view(pgdg_y.pair_factor_terms[term, :, :]) .* parent_weight_outer_y
-        raw_z = @view(pgdg_z.pair_factor_terms[term, :, :]) .* parent_weight_outer_z
-        pair_term = @view(pair_terms[term, :, :])
-        _nested_contract_support_product!(
-            pair_term,
-            support_workspace,
-            contraction_scratch,
-            support_states,
-            support_coefficients,
-            raw_x,
-            raw_y,
-            raw_z;
-            beta = 0.0,
-        )
-        pair_term ./= fixed_weight_outer
-        _nested_symmetrize_matrix!(pair_term)
-    end
+    raw_pair_terms_x = pgdg_x.pair_factor_terms_raw
+    raw_pair_terms_y = pgdg_y.pair_factor_terms_raw
+    raw_pair_terms_z = pgdg_z.pair_factor_terms_raw
+    _nested_contract_support_term_family!(
+        pair_terms,
+        support_workspace,
+        contraction_scratch,
+        support_axes,
+        weighted_support_coefficients,
+        raw_pair_terms_x,
+        raw_pair_terms_y,
+        raw_pair_terms_z,
+        true,
+    )
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
@@ -2523,9 +3015,11 @@ function _nested_weight_aware_pair_terms(
     nfixed = size(support_coefficients, 2)
     support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
     contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    support_axes = _nested_support_axes(support_states)
     return _nested_weight_aware_pair_terms(
         pgdg,
         support_states,
+        support_axes,
         support_coefficients,
         support_workspace,
         contraction_scratch,
@@ -2542,9 +3036,11 @@ function _nested_weight_aware_pair_terms(
     nfixed = size(support_coefficients, 2)
     support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
     contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    support_axes = _nested_support_axes(support_states)
     return _nested_weight_aware_pair_terms(
         bundles,
         support_states,
+        support_axes,
         support_coefficients,
         support_workspace,
         contraction_scratch,
@@ -2574,15 +3070,25 @@ function _nested_shell_packet(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    packet_kernel::Symbol = :support_reference,
 )
     total_start_ns = time_ns()
     setup_start_ns = time_ns()
+    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
     support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
+    support_axes = _nested_support_axes(support_states)
     support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
     nshell = size(coefficient_matrix, 2)
     nsupport = length(support_states)
     nterms = size(pgdg.gaussian_factor_terms, 1)
+    factorized_basis =
+        packet_kernel == :factorized_direct ?
+        _nested_extract_factorized_basis(
+            coefficient_matrix,
+            (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1)),
+        ) :
+        nothing
     support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
     contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
     overlap = Matrix{Float64}(undef, nshell, nshell)
@@ -2600,12 +3106,13 @@ function _nested_shell_packet(
         overlap,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.overlap,
         pgdg.overlap,
         pgdg.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
 
@@ -2614,7 +3121,7 @@ function _nested_shell_packet(
         kinetic,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         (
             (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
@@ -2622,6 +3129,7 @@ function _nested_shell_packet(
             (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
         );
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
 
@@ -2630,12 +3138,13 @@ function _nested_shell_packet(
         position_x,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.position,
         pgdg.overlap,
         pgdg.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
 
@@ -2644,12 +3153,13 @@ function _nested_shell_packet(
         position_y,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.overlap,
         pgdg.position,
         pgdg.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
 
@@ -2658,12 +3168,13 @@ function _nested_shell_packet(
         position_z,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.overlap,
         pgdg.overlap,
         pgdg.position;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
 
@@ -2672,12 +3183,13 @@ function _nested_shell_packet(
         x2_x,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.x2,
         pgdg.overlap,
         pgdg.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
 
@@ -2686,12 +3198,13 @@ function _nested_shell_packet(
         x2_y,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.overlap,
         pgdg.x2,
         pgdg.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
 
@@ -2700,39 +3213,63 @@ function _nested_shell_packet(
         x2_z,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg.overlap,
         pgdg.overlap,
         pgdg.x2;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
 
-    pair_data = _nested_weight_aware_pair_terms(
-        pgdg,
-        support_states,
-        support_coefficients,
-        support_workspace,
-        contraction_scratch,
-        timing_collector,
-    )
-    gaussian_terms = zeros(Float64, nterms, nshell, nshell)
-    start_ns = time_ns()
-    for term in 1:nterms
-        _nested_contract_support_product!(
-            @view(gaussian_terms[term, :, :]),
+    pair_data =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_weight_aware_pair_terms(
+            factorized_basis,
+            pgdg.weights,
+            pgdg.weights,
+            pgdg.weights,
+            pgdg.pair_factor_terms_raw,
+            pgdg.pair_factor_terms_raw,
+            pgdg.pair_factor_terms_raw,
+            timing_collector,
+        ) :
+        _nested_weight_aware_pair_terms(
+            pgdg,
+            support_states,
+            support_axes,
+            support_coefficients,
             support_workspace,
             contraction_scratch,
-            support_states,
-            support_coefficients,
-            @view(pgdg.gaussian_factor_terms[term, :, :]),
-            @view(pgdg.gaussian_factor_terms[term, :, :]),
-            @view(pgdg.gaussian_factor_terms[term, :, :]);
-            beta = 0.0,
+            timing_collector,
         )
-    end
-    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+    gaussian_terms =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_gaussian_terms(
+            factorized_basis,
+            pgdg.gaussian_factor_terms,
+            pgdg.gaussian_factor_terms,
+            pgdg.gaussian_factor_terms,
+            timing_collector,
+        ) :
+        begin
+            gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_term_family!(
+                gaussian_terms_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg.gaussian_factor_terms,
+                pgdg.gaussian_factor_terms,
+                pgdg.gaussian_factor_terms,
+                true,
+            )
+            _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+            gaussian_terms_local
+        end
     _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
     return (
@@ -2757,15 +3294,18 @@ function _nested_shell_packet(
     bundles::_CartesianNestedAxisBundles3D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    packet_kernel::Symbol = :support_reference,
 )
     total_start_ns = time_ns()
     setup_start_ns = time_ns()
+    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
     dims = _nested_axis_lengths(bundles)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
     support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    support_axes = _nested_support_axes(support_states)
     support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
     nshell = size(coefficient_matrix, 2)
     nsupport = length(support_states)
@@ -2773,6 +3313,10 @@ function _nested_shell_packet(
     nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
         ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
     )
+    factorized_basis =
+        packet_kernel == :factorized_direct ?
+        _nested_extract_factorized_basis(coefficient_matrix, dims) :
+        nothing
     support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
     contraction_scratch = Matrix{Float64}(undef, nshell, nsupport)
     overlap = Matrix{Float64}(undef, nshell, nshell)
@@ -2790,12 +3334,13 @@ function _nested_shell_packet(
         overlap,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.overlap,
         pgdg_y.overlap,
         pgdg_z.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
 
@@ -2804,7 +3349,7 @@ function _nested_shell_packet(
         kinetic,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         (
             (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
@@ -2812,6 +3357,7 @@ function _nested_shell_packet(
             (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
         );
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
 
@@ -2820,12 +3366,13 @@ function _nested_shell_packet(
         position_x,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.position,
         pgdg_y.overlap,
         pgdg_z.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
 
@@ -2834,12 +3381,13 @@ function _nested_shell_packet(
         position_y,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.overlap,
         pgdg_y.position,
         pgdg_z.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
 
@@ -2848,12 +3396,13 @@ function _nested_shell_packet(
         position_z,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.overlap,
         pgdg_y.overlap,
         pgdg_z.position;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
 
@@ -2862,12 +3411,13 @@ function _nested_shell_packet(
         x2_x,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.x2,
         pgdg_y.overlap,
         pgdg_z.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
 
@@ -2876,12 +3426,13 @@ function _nested_shell_packet(
         x2_y,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.overlap,
         pgdg_y.x2,
         pgdg_z.overlap;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
 
@@ -2890,39 +3441,63 @@ function _nested_shell_packet(
         x2_z,
         support_workspace,
         contraction_scratch,
-        support_states,
+        support_axes,
         support_coefficients,
         pgdg_x.overlap,
         pgdg_y.overlap,
         pgdg_z.x2;
         beta = 0.0,
+        assume_symmetric = true,
     )
     _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
 
-    pair_data = _nested_weight_aware_pair_terms(
-        bundles,
-        support_states,
-        support_coefficients,
-        support_workspace,
-        contraction_scratch,
-        timing_collector,
-    )
-    gaussian_terms = zeros(Float64, nterms, nshell, nshell)
-    start_ns = time_ns()
-    for term in 1:nterms
-        _nested_contract_support_product!(
-            @view(gaussian_terms[term, :, :]),
+    pair_data =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_weight_aware_pair_terms(
+            factorized_basis,
+            pgdg_x.weights,
+            pgdg_y.weights,
+            pgdg_z.weights,
+            pgdg_x.pair_factor_terms_raw,
+            pgdg_y.pair_factor_terms_raw,
+            pgdg_z.pair_factor_terms_raw,
+            timing_collector,
+        ) :
+        _nested_weight_aware_pair_terms(
+            bundles,
+            support_states,
+            support_axes,
+            support_coefficients,
             support_workspace,
             contraction_scratch,
-            support_states,
-            support_coefficients,
-            @view(pgdg_x.gaussian_factor_terms[term, :, :]),
-            @view(pgdg_y.gaussian_factor_terms[term, :, :]),
-            @view(pgdg_z.gaussian_factor_terms[term, :, :]);
-            beta = 0.0,
+            timing_collector,
         )
-    end
-    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+    gaussian_terms =
+        packet_kernel == :factorized_direct ?
+        _nested_factorized_gaussian_terms(
+            factorized_basis,
+            pgdg_x.gaussian_factor_terms,
+            pgdg_y.gaussian_factor_terms,
+            pgdg_z.gaussian_factor_terms,
+            timing_collector,
+        ) :
+        begin
+            gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
+            start_ns = time_ns()
+            _nested_contract_support_term_family!(
+                gaussian_terms_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                support_coefficients,
+                pgdg_x.gaussian_factor_terms,
+                pgdg_y.gaussian_factor_terms,
+                pgdg_z.gaussian_factor_terms,
+                true,
+            )
+            _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+            gaussian_terms_local
+        end
     _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
     return (
@@ -3053,6 +3628,7 @@ function _nested_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
+    packet_kernel::Symbol = :support_reference,
 )
     n1d = size(pgdg.overlap, 1)
     side_x_xy = _nested_doside_1d(pgdg, x_interval, retain_xy[1])
@@ -3082,7 +3658,12 @@ function _nested_rectangular_shell(
     end
 
     support_indices = _nested_shell_support_indices(faces)
-    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    shell_data = _nested_shell_packet(
+        pgdg,
+        coefficient_matrix,
+        support_indices;
+        packet_kernel = packet_kernel,
+    )
     return _CartesianNestedShell3D(
         faces,
         face_column_ranges,
@@ -3121,6 +3702,7 @@ function _nested_complete_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
@@ -3136,6 +3718,7 @@ function _nested_complete_rectangular_shell(
         x_fixed = x_fixed,
         y_fixed = y_fixed,
         z_fixed = z_fixed,
+        packet_kernel = packet_kernel,
     )
 
     side_x_edge = _nested_doside_1d(pgdg, x_interval, retain_x_edge)
@@ -3194,7 +3777,8 @@ function _nested_complete_rectangular_shell(
         pgdg,
         coefficient_matrix,
         support_indices,
-        timing_collector,
+        timing_collector;
+        packet_kernel = packet_kernel,
     )
 
     return _CartesianNestedCompleteShell3D(
@@ -3257,6 +3841,8 @@ function _nested_shell_plus_core(
     x_interval::UnitRange{Int},
     y_interval::UnitRange{Int},
     z_interval::UnitRange{Int},
+    ;
+    packet_kernel::Symbol = :support_reference,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -3266,7 +3852,12 @@ function _nested_shell_plus_core(
     core_coefficients = _nested_direct_core_coefficients(core_indices, n1d^3)
     coefficient_matrix = hcat(core_coefficients, shell.coefficient_matrix)
     support_indices = sort(vcat(core_indices, shell.support_indices))
-    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    shell_data = _nested_shell_packet(
+        pgdg,
+        coefficient_matrix,
+        support_indices;
+        packet_kernel = packet_kernel,
+    )
     ncore = length(core_indices)
     shell_column_ranges = UnitRange{Int}[
         (ncore + first(range)):(ncore + last(range)) for range in shell.face_column_ranges
@@ -3302,6 +3893,7 @@ function _nested_shell_sequence(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -3313,6 +3905,7 @@ function _nested_shell_sequence(
         shell_layers;
         enforce_coverage = enforce_coverage,
         timing_collector = timing_collector,
+        packet_kernel = packet_kernel,
     )
 end
 
@@ -3323,6 +3916,7 @@ function _nested_shell_sequence_from_core_block(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
@@ -3339,7 +3933,8 @@ function _nested_shell_sequence_from_core_block(
         pgdg,
         coefficient_matrix,
         support_indices,
-        timing_collector,
+        timing_collector;
+        packet_kernel = packet_kernel,
     )
 
     ncore = size(core_coefficients, 2)
@@ -3377,6 +3972,7 @@ function _nested_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     dims = _nested_axis_lengths(bundles)
     side_x_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xy[1])
@@ -3410,7 +4006,8 @@ function _nested_rectangular_shell(
         bundles,
         coefficient_matrix,
         support_indices,
-        timing_collector,
+        timing_collector;
+        packet_kernel = packet_kernel,
     )
     return _CartesianNestedShell3D(
         faces,
@@ -3437,6 +4034,7 @@ function _nested_complete_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
@@ -3451,6 +4049,7 @@ function _nested_complete_rectangular_shell(
         x_fixed = x_fixed,
         y_fixed = y_fixed,
         z_fixed = z_fixed,
+        packet_kernel = packet_kernel,
     )
 
     side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
@@ -3509,7 +4108,8 @@ function _nested_complete_rectangular_shell(
         bundles,
         coefficient_matrix,
         support_indices,
-        timing_collector,
+        timing_collector;
+        packet_kernel = packet_kernel,
     )
 
     return _CartesianNestedCompleteShell3D(
@@ -3534,6 +4134,7 @@ function _nested_shell_sequence(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     dims = _nested_axis_lengths(bundles)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
@@ -3545,6 +4146,7 @@ function _nested_shell_sequence(
         shell_layers;
         enforce_coverage = enforce_coverage,
         timing_collector = timing_collector,
+        packet_kernel = packet_kernel,
     )
 end
 
@@ -3555,6 +4157,7 @@ function _nested_shell_sequence_from_core_block(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
@@ -3571,7 +4174,8 @@ function _nested_shell_sequence_from_core_block(
         bundles,
         coefficient_matrix,
         support_indices,
-        timing_collector,
+        timing_collector;
+        packet_kernel = packet_kernel,
     )
 
     ncore = size(core_coefficients, 2)
@@ -3623,6 +4227,7 @@ function _nested_complete_shell_sequence_for_box(
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     retention = _nested_resolve_complete_shell_retention(
         nside;
@@ -3653,6 +4258,7 @@ function _nested_complete_shell_sequence_for_box(
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
                 timing_collector = timing_collector,
+                packet_kernel = packet_kernel,
             ),
         )
         current_box = inner_box
@@ -3662,6 +4268,7 @@ function _nested_complete_shell_sequence_for_box(
         current_box...,
         shell_layers,
         timing_collector = timing_collector,
+        packet_kernel = packet_kernel,
     )
 end
 
@@ -3753,6 +4360,30 @@ struct OneCenterAtomicNestedStructureDiagnostics
     layers_match_expected::Bool
 end
 
+function _build_one_center_atomic_shell_sequence(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    working_box::NTuple{3,UnitRange{Int}};
+    nside::Int,
+    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+)
+    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    retention = _one_center_atomic_complete_shell_retention(nside)
+    return _nested_complete_shell_sequence_for_box(
+        bundles,
+        working_box;
+        nside = nside,
+        retain_xy = retention.retain_xy,
+        retain_xz = retention.retain_xz,
+        retain_yz = retention.retain_yz,
+        retain_x_edge = retention.retain_x_edge,
+        retain_y_edge = retention.retain_y_edge,
+        retain_z_edge = retention.retain_z_edge,
+        timing_collector = timing_collector,
+        packet_kernel = packet_kernel,
+    )
+end
+
 """
     build_one_center_atomic_full_parent_shell_sequence(
         bundle::_MappedOrdinaryGausslet1DBundle;
@@ -3781,18 +4412,10 @@ function build_one_center_atomic_full_parent_shell_sequence(
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
-    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
-    retention = _one_center_atomic_complete_shell_retention(nside)
-    return _nested_complete_shell_sequence_for_box(
-        bundles,
+    return _build_one_center_atomic_shell_sequence(
+        bundle,
         (1:n, 1:n, 1:n);
         nside = nside,
-        retain_xy = retention.retain_xy,
-        retain_xz = retention.retain_xz,
-        retain_yz = retention.retain_yz,
-        retain_x_edge = retention.retain_x_edge,
-        retain_y_edge = retention.retain_y_edge,
-        retain_z_edge = retention.retain_z_edge,
         timing_collector = timing_collector,
     )
 end
@@ -3844,18 +4467,10 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
 )
     n = length(bundle.basis)
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(n, working_box)
-    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
-    retention = _one_center_atomic_complete_shell_retention(nside)
-    return _nested_complete_shell_sequence_for_box(
-        bundles,
+    return _build_one_center_atomic_shell_sequence(
+        bundle,
         normalized_working_box;
         nside = nside,
-        retain_xy = retention.retain_xy,
-        retain_xz = retention.retain_xz,
-        retain_yz = retention.retain_yz,
-        retain_x_edge = retention.retain_x_edge,
-        retain_y_edge = retention.retain_y_edge,
-        retain_z_edge = retention.retain_z_edge,
         timing_collector = timing_collector,
     )
 end
