@@ -17,6 +17,7 @@ export AbstractFunction1D,
        BasisRepresentation1D,
        CartesianBasisMetadata3D,
        CartesianBasisRepresentation3D,
+       cross_overlap,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -341,6 +342,7 @@ function stencil_matrix end
 function build_basis end
 function basis_metadata end
 function basis_representation end
+function cross_overlap end
 function basis_partition end
 function hierarchical_partition end
 function build_leaf_pgdg end

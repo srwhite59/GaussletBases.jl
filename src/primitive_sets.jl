@@ -224,6 +224,28 @@ function basis_representation(
     )
 end
 
+function _basis_cross_overlap_1d(
+    left::BasisRepresentation1D,
+    right::BasisRepresentation1D,
+)
+    if isequal(left.metadata, right.metadata) && haskey(left.basis_matrices, :overlap)
+        return Matrix{Float64}(left.basis_matrices.overlap)
+    end
+
+    primitive_cross =
+        if isequal(left.primitive_set, right.primitive_set) && haskey(left.primitive_matrices, :overlap)
+            Matrix{Float64}(left.primitive_matrices.overlap)
+        else
+            _primitive_cross_overlap_matrix(
+                left.primitive_set,
+                right.primitive_set,
+                _select_primitive_cross_overlap_backend(left.primitive_set, right.primitive_set),
+            )
+        end
+
+    return Matrix{Float64}(transpose(left.coefficient_matrix) * primitive_cross * right.coefficient_matrix)
+end
+
 function _primitive_support_bounds(primitive::Gaussian)
     return _reference_bounds(primitive)
 end
@@ -277,6 +299,29 @@ function _primitive_matrix_start_h(set::PrimitiveSet1D)
     return min(minimum(scales) / 10.0, span / 600.0)
 end
 
+function _primitive_cross_bounds(
+    left::PrimitiveSet1D,
+    right::PrimitiveSet1D,
+)
+    left_lo, left_hi = _primitive_set_bounds(left)
+    right_lo, right_hi = _primitive_set_bounds(right)
+    return min(left_lo, right_lo), max(left_hi, right_hi)
+end
+
+function _primitive_cross_matrix_start_h(
+    left::PrimitiveSet1D,
+    right::PrimitiveSet1D,
+)
+    scales = vcat(
+        Float64[_primitive_length_scale(primitive) for primitive in primitives(left)],
+        Float64[_primitive_length_scale(primitive) for primitive in primitives(right)],
+    )
+    xlo, xhi = _primitive_cross_bounds(left, right)
+    span = xhi - xlo
+    span > 0.0 || throw(ArgumentError("primitive cross overlap requires positive support width"))
+    return min(minimum(scales) / 10.0, span / 600.0)
+end
+
 function _primitive_sample_matrix(
     set::PrimitiveSet1D,
     points::AbstractVector{Float64};
@@ -315,6 +360,32 @@ function _primitive_overlap_matrix(
         points, weights = _make_midpoint_grid(xlo, xhi, h_try)
         values = _primitive_sample_matrix(set, points)
         current = _symmetrize_primitive_matrix(transpose(values) * (weights .* values))
+        if previous !== nothing && norm(current - previous, Inf) <= _PRIMITIVE_MATRIX_TOL
+            return current
+        end
+        previous = current
+        h_try /= 2.0
+    end
+    return current
+end
+
+function _primitive_cross_overlap_matrix(
+    left::PrimitiveSet1D,
+    right::PrimitiveSet1D,
+    ::_NumericalPrimitiveMatrixBackend;
+    h = nothing,
+)
+    xlo, xhi = _primitive_cross_bounds(left, right)
+    h_try = h === nothing ? _primitive_cross_matrix_start_h(left, right) : Float64(h)
+    h_try > 0.0 || throw(ArgumentError("numerical primitive cross overlap requires h > 0"))
+
+    previous = nothing
+    current = nothing
+    for _ in 1:_PRIMITIVE_MATRIX_MAXITER
+        points, weights = _make_midpoint_grid(xlo, xhi, h_try)
+        left_values = _primitive_sample_matrix(left, points)
+        right_values = _primitive_sample_matrix(right, points)
+        current = Matrix{Float64}(transpose(left_values) * (weights .* right_values))
         if previous !== nothing && norm(current - previous, Inf) <= _PRIMITIVE_MATRIX_TOL
             return current
         end
@@ -408,6 +479,22 @@ function _primitive_overlap_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatr
     return matrix
 end
 
+function _primitive_cross_overlap_matrix(
+    left::PrimitiveSet1D,
+    right::PrimitiveSet1D,
+    ::_AnalyticPrimitiveMatrixBackend,
+)
+    matrix = zeros(Float64, length(left), length(right))
+    for a in 1:length(left)
+        pa = primitives(left)[a]
+        for b in 1:length(right)
+            pb = primitives(right)[b]
+            matrix[a, b] = _gaussian_overlap(pa, pb)
+        end
+    end
+    return matrix
+end
+
 function _primitive_position_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatrixBackend)
     matrix = zeros(Float64, length(set), length(set))
     for a in 1:length(set)
@@ -442,6 +529,16 @@ end
 
 function _select_primitive_matrix_backend(set::PrimitiveSet1D)
     return _supports_analytic_gaussian_backend(set) ?
+           _AnalyticPrimitiveMatrixBackend() :
+           _NumericalPrimitiveMatrixBackend()
+end
+
+function _select_primitive_cross_overlap_backend(
+    left::PrimitiveSet1D,
+    right::PrimitiveSet1D,
+)
+    return _supports_analytic_gaussian_backend(left) &&
+           _supports_analytic_gaussian_backend(right) ?
            _AnalyticPrimitiveMatrixBackend() :
            _NumericalPrimitiveMatrixBackend()
 end

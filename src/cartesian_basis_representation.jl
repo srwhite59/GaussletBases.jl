@@ -95,6 +95,165 @@ end
 
 basis_metadata(representation::CartesianBasisRepresentation3D) = representation.metadata
 
+function _cartesian_product_states(axis_counts::NTuple{3,Int})
+    nx, ny, nz = axis_counts
+    states = Vector{NTuple{3,Int}}(undef, nx * ny * nz)
+    index = 0
+    for ix in 1:nx, iy in 1:ny, iz in 1:nz
+        index += 1
+        states[index] = (ix, iy, iz)
+    end
+    return states
+end
+
+function _cartesian_product_cross_overlap(
+    left_states::AbstractVector{<:NTuple{3,Int}},
+    right_states::AbstractVector{<:NTuple{3,Int}},
+    overlap_x::AbstractMatrix{<:Real},
+    overlap_y::AbstractMatrix{<:Real},
+    overlap_z::AbstractMatrix{<:Real},
+)
+    matrix = zeros(Float64, length(left_states), length(right_states))
+    for (row, (ix_left, iy_left, iz_left)) in pairs(left_states)
+        for (column, (ix_right, iy_right, iz_right)) in pairs(right_states)
+            matrix[row, column] =
+                overlap_x[ix_left, ix_right] *
+                overlap_y[iy_left, iy_right] *
+                overlap_z[iz_left, iz_right]
+        end
+    end
+    return matrix
+end
+
+function _cartesian_same_parent_raw_identity(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    left.metadata.parent_kind == :cartesian_product_basis || return false
+    right.metadata.parent_kind == :cartesian_product_basis || return false
+    left.metadata.parent_axis_counts == right.metadata.parent_axis_counts || return false
+    isequal(left.metadata.axis_metadata, right.metadata.axis_metadata) || return false
+    isequal(left.parent_labels, right.parent_labels) || return false
+    isequal(left.parent_centers, right.parent_centers) || return false
+    return true
+end
+
+function _cartesian_supported_exact_parent_overlap(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    return left.metadata.parent_kind == :cartesian_product_basis &&
+           right.metadata.parent_kind == :cartesian_product_basis
+end
+
+function _cartesian_cross_overlap_error(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    if left.metadata.parent_kind == :cartesian_plus_supplement_raw ||
+       right.metadata.parent_kind == :cartesian_plus_supplement_raw
+        return ArgumentError(
+            "exact Cartesian cross overlap is not yet implemented for hybrid/QW residual representations because the current public representation does not yet carry explicit exact raw cartesian-supplement cross-overlap metadata",
+        )
+    end
+    return ArgumentError(
+        "exact Cartesian cross overlap is not yet implemented for parent kinds :$(left.metadata.parent_kind) and :$(right.metadata.parent_kind)",
+    )
+end
+
+function _cartesian_parent_state_basis(
+    representation::CartesianBasisRepresentation3D,
+)
+    if representation.contraction_kind == :dense &&
+       representation.support_indices !== nothing &&
+       representation.support_states !== nothing
+        return (
+            states = representation.support_states,
+            coefficients = Matrix{Float64}(representation.coefficient_matrix[representation.support_indices, :]),
+        )
+    elseif representation.contraction_kind == :dense
+        return (
+            states = _cartesian_product_states(representation.metadata.parent_axis_counts),
+            coefficients = Matrix{Float64}(representation.coefficient_matrix),
+        )
+    elseif representation.contraction_kind == :identity
+        return (
+            states = _cartesian_product_states(representation.metadata.parent_axis_counts),
+            coefficients = nothing,
+        )
+    end
+    throw(
+        ArgumentError(
+            "unsupported Cartesian representation contraction kind :$(representation.contraction_kind)",
+        ),
+    )
+end
+
+function _cartesian_parent_cross_overlap(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    overlap_x = _basis_cross_overlap_1d(left.axis_representations.x, right.axis_representations.x)
+    overlap_y = _basis_cross_overlap_1d(left.axis_representations.y, right.axis_representations.y)
+    overlap_z = _basis_cross_overlap_1d(left.axis_representations.z, right.axis_representations.z)
+
+    if left.contraction_kind == :identity && right.contraction_kind == :identity
+        return Matrix{Float64}(kron(overlap_x, kron(overlap_y, overlap_z)))
+    end
+
+    left_parent = _cartesian_parent_state_basis(left)
+    right_parent = _cartesian_parent_state_basis(right)
+    raw_cross = _cartesian_product_cross_overlap(
+        left_parent.states,
+        right_parent.states,
+        overlap_x,
+        overlap_y,
+        overlap_z,
+    )
+
+    if left_parent.coefficients !== nothing
+        raw_cross = Matrix{Float64}(transpose(left_parent.coefficients) * raw_cross)
+    end
+    if right_parent.coefficients !== nothing
+        raw_cross = Matrix{Float64}(raw_cross * right_parent.coefficients)
+    end
+    return raw_cross
+end
+
+"""
+    cross_overlap(left::CartesianBasisRepresentation3D, right::CartesianBasisRepresentation3D)
+
+Return the exact Cartesian basis cross-overlap matrix between `left` and
+`right`, with rows ordered by the left basis and columns ordered by the right
+basis.
+
+This first pass supports representations whose defining parent/raw space is an
+explicit Cartesian product basis. That covers:
+
+- direct-product Cartesian representations
+- nested fixed-block Cartesian representations
+- exact cross overlaps between those families
+
+The implementation is algebraic:
+
+- if both sides expose an explicit Cartesian product parent, build the parent
+  cross overlap from the stored 1D representation layers
+- then contract by the stored 3D coefficient matrices
+
+Hybrid/QW residual final bases are intentionally rejected for now. Their
+current public representation does not yet carry enough exact raw
+Cartesian-supplement cross-overlap metadata to make a fully honest exact path.
+"""
+function cross_overlap(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    _cartesian_supported_exact_parent_overlap(left, right) || throw(
+        _cartesian_cross_overlap_error(left, right),
+    )
+    return _cartesian_parent_cross_overlap(left, right)
+end
+
 function _cartesian_basis_labels(prefix::AbstractString, count::Int)
     return [string(prefix, index) for index in 1:count]
 end
