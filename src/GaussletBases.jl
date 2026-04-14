@@ -15,6 +15,8 @@ export AbstractFunction1D,
        PrimitiveSet1D,
        BasisMetadata1D,
        BasisRepresentation1D,
+       CartesianBasisMetadata3D,
+       CartesianBasisRepresentation3D,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -518,6 +520,7 @@ include("ordinary_sho.jl")
 include("ordinary_cartesian_ida.jl")
 include("cartesian_nested_faces.jl")
 include("ordinary_qiu_white_rg.jl")
+include("cartesian_basis_representation.jl")
 include("bond_aligned_diatomic_geometry.jl")
 include("bond_aligned_diatomic_geometry_export.jl")
 include("partitions.jl")

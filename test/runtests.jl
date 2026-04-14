@@ -4843,6 +4843,143 @@ end
         GaussletBases._qwrg_fixed_block_interaction_matrix(debug_legacy, expansion) atol = 1.0e-10 rtol = 1.0e-10
 end
 
+@testset "Cartesian basis representation for direct-product QW bases" begin
+    basis, _operators, _check = _bond_aligned_diatomic_qw_fixture()
+    representation = basis_representation(basis)
+    metadata = basis_metadata(representation)
+    chain_basis, _chain_ops, _chain_diagnostics = _bond_aligned_homonuclear_chain_qw_fixture()
+    square_basis, _square_ops, _square_diagnostics, _square_check =
+        _axis_aligned_homonuclear_square_lattice_qw_fixture()
+    chain_representation = basis_representation(chain_basis)
+    square_representation = basis_representation(square_basis)
+
+    @test representation isa CartesianBasisRepresentation3D
+    @test metadata.basis_kind == :direct_product
+    @test metadata.parent_kind == :cartesian_product_basis
+    @test metadata.parent_axis_counts == (length(basis.basis_x), length(basis.basis_y), length(basis.basis_z))
+    @test metadata.parent_dimension == prod(metadata.parent_axis_counts)
+    @test metadata.final_dimension == prod(metadata.parent_axis_counts)
+    @test metadata.axis_sharing == :shared_xy
+    @test metadata.route_metadata.basis_family == :bond_aligned_diatomic
+    @test metadata.route_metadata.bond_axis == basis.bond_axis
+    @test metadata.route_metadata.nuclei == basis.nuclei
+    @test representation.contraction_kind == :identity
+    @test isnothing(representation.coefficient_matrix)
+    @test isnothing(representation.support_indices)
+    @test isnothing(representation.support_states)
+    @test metadata.basis_labels == representation.parent_labels
+    @test metadata.basis_centers == representation.parent_centers
+    @test size(metadata.basis_centers, 1) == metadata.final_dimension
+    @test size(metadata.basis_centers, 2) == 3
+    @test chain_representation.metadata.basis_kind == :direct_product
+    @test chain_representation.metadata.route_metadata.basis_family ==
+        :bond_aligned_homonuclear_chain
+    @test square_representation.metadata.basis_kind == :direct_product
+    @test square_representation.metadata.route_metadata.basis_family ==
+        :axis_aligned_homonuclear_square_lattice
+end
+
+@testset "Cartesian basis representation for nested fixed blocks" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    fixed_block = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    representation = basis_representation(fixed_block)
+    metadata = basis_metadata(representation)
+
+    @test representation isa CartesianBasisRepresentation3D
+    @test metadata.basis_kind == :nested_fixed_block
+    @test metadata.parent_kind == :cartesian_product_basis
+    @test metadata.parent_axis_counts == (13, 13, 13)
+    @test metadata.parent_dimension == 13^3
+    @test metadata.final_dimension == size(fixed_block.coefficient_matrix, 2)
+    @test metadata.working_box == (1:13, 1:13, 1:13)
+    @test metadata.route_metadata.shell_kind == :shell_sequence
+    @test metadata.route_metadata.working_box_profile == :full_parent
+    @test metadata.route_metadata.nside == 5
+    @test metadata.route_metadata.support_count == length(fixed_block.support_indices)
+    @test size(representation.coefficient_matrix) == size(fixed_block.coefficient_matrix)
+    @test representation.support_indices == fixed_block.support_indices
+    @test length(representation.support_states) == length(fixed_block.support_indices)
+    @test size(metadata.basis_centers) == size(fixed_block.fixed_centers)
+
+    square_basis, _source, square_fixed_block, _diagnostics =
+        _axis_aligned_homonuclear_square_lattice_nested_fixture()
+    square_representation = basis_representation(square_fixed_block)
+    square_metadata = basis_metadata(square_representation)
+    @test square_metadata.basis_kind == :nested_fixed_block
+    @test square_metadata.parent_axis_counts == (
+        length(square_basis.basis_x),
+        length(square_basis.basis_y),
+        length(square_basis.basis_z),
+    )
+    @test square_metadata.parent_dimension == prod(square_metadata.parent_axis_counts)
+    @test square_metadata.final_dimension == size(square_fixed_block.coefficient_matrix, 2)
+    @test size(square_representation.coefficient_matrix) == size(square_fixed_block.coefficient_matrix)
+    @test square_metadata.working_box == square_fixed_block.shell.working_box
+    @test square_metadata.route_metadata.support_count == length(square_fixed_block.support_indices)
+end
+
+@testset "Cartesian basis representation for atomic QW residual bases" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    fixed_block = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block,
+        supplement;
+        expansion = expansion,
+        Z = 2.0,
+        interaction_treatment = :ggt_nearest,
+        residual_keep_policy = :near_null_only,
+    )
+    representation = basis_representation(operators)
+    metadata = basis_metadata(representation)
+
+    @test representation isa CartesianBasisRepresentation3D
+    @test metadata.basis_kind == :hybrid_residual
+    @test metadata.parent_kind == :cartesian_plus_supplement_raw
+    @test metadata.final_dimension == length(operators.orbital_data)
+    @test metadata.final_dimension == size(operators.raw_to_final, 2)
+    @test metadata.parent_dimension == size(operators.raw_to_final, 1)
+    @test metadata.route_metadata.gausslet_count == operators.gausslet_count
+    @test metadata.route_metadata.residual_count == operators.residual_count
+    @test metadata.route_metadata.supplement_kind == :atomic_cartesian_shell
+    @test metadata.route_metadata.supplement_lmax == supplement.lmax
+    @test size(representation.coefficient_matrix) == size(operators.raw_to_final)
+    @test length(representation.parent_labels) == size(operators.raw_to_final, 1)
+    @test size(representation.parent_centers, 1) == size(operators.raw_to_final, 1)
+    @test hasproperty(representation.parent_data, :cartesian_parent_representation)
+    @test representation.parent_data.cartesian_parent_representation.metadata.basis_kind ==
+        :nested_fixed_block
+    @test representation.parent_data.cartesian_parent_representation.metadata.final_dimension ==
+        operators.gausslet_count
+    @test hasproperty(representation.parent_data, :supplement_orbitals)
+    @test length(representation.parent_data.supplement_orbitals.labels) ==
+        size(operators.raw_to_final, 1) - operators.gausslet_count
+end
+
 @testset "One-center atomic factorized direct packet kernel" begin
     basis = build_basis(
         MappedUniformBasisSpec(
