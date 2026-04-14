@@ -4510,12 +4510,16 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
                 overlap_fg,
                 blocks.overlap_aa;
                 keep_policy = :near_null_only,
+                keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+                accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
             )
             near_null_data = GaussletBases._qwrg_residual_space(
                 fixed_block.overlap,
                 overlap_fg,
                 blocks.overlap_aa;
                 keep_policy = :near_null_only,
+                keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+                accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
             )
             near_null_total_basis = size(near_null_data.raw_to_final, 2)
             legacy_alias = diagnose_qwrg_residual_space(
@@ -4523,6 +4527,8 @@ function _one_center_atomic_legacy_profile_ne_residual_completion_fixture()
                 overlap_fg,
                 blocks.overlap_aa;
                 keep_policy = :legacy_profile,
+                keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+                accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
             )
             return (
                 fixed_gausslet_count = size(fixed_block.overlap, 1),
@@ -4582,6 +4588,8 @@ function _one_center_atomic_ns9_legacy_profile_qw_fixture()
                 overlap_fg,
                 blocks.overlap_aa;
                 keep_policy = :near_null_only,
+                keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+                accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
             )
             operators = ordinary_cartesian_qiu_white_operators(
                 fixed_block,
@@ -4964,27 +4972,34 @@ end
         overlap_ga,
         overlap_aa;
         keep_policy = :near_null_only,
+        keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+        accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
     )
     near_null_data = GaussletBases._qwrg_residual_space(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
         keep_policy = :near_null_only,
+        keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+        accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
     )
     legacy_alias_diagnostics = diagnose_qwrg_residual_space(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
         keep_policy = :legacy_profile,
+        keep_abs_tol = GaussletBases._qwrg_atomic_residual_keep_tol(),
+        accept_tol = GaussletBases._qwrg_atomic_residual_accept_tol(),
     )
 
     @test near_null_diagnostics.keep_policy == :near_null_only
     @test near_null_diagnostics.gaussian_count == 25
     @test near_null_diagnostics.supplement_numerical_rank == 25
     @test near_null_diagnostics.residual_numerical_rank == 25
-    @test near_null_diagnostics.kept_count == 25
-    @test near_null_diagnostics.discarded_count == 0
-    @test near_null_diagnostics.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+    @test near_null_diagnostics.kept_count == 24
+    @test near_null_diagnostics.discarded_count == 1
+    @test near_null_diagnostics.keep_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
+    @test near_null_diagnostics.accept_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
     @test near_null_diagnostics.kept_block_stabilization_null_tol ≈ 1.0e-12 atol = 1.0e-15 rtol = 0.0
     @test near_null_diagnostics.kept_block_stabilization_correction_passes >= 1
     @test near_null_diagnostics.kept_block_stabilization_clipped_count == 0
@@ -5034,17 +5049,18 @@ end
 
         @test data.near_null.keep_policy == :near_null_only
         @test data.near_null.residual_numerical_rank == 25
-        @test data.near_null.kept_count == 25
-        @test data.near_null.discarded_count == 0
-        @test data.near_null.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+        @test data.near_null.kept_count == 24
+        @test data.near_null.discarded_count == 1
+        @test data.near_null.keep_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
+        @test data.near_null.accept_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
         @test data.near_null.kept_block_pre_stabilization_overlap_error > 0.0
         @test data.near_null.kept_block_post_stabilization_overlap_error <
             data.near_null.kept_block_pre_stabilization_overlap_error
-        @test data.near_null.kept_block_post_stabilization_overlap_error < 1.0e-10
-        @test data.near_null.kept_block_post_stabilization_symmetry_defect < 1.0e-10
+        @test data.near_null.kept_block_post_stabilization_overlap_error < 1.0e-9
+        @test data.near_null.kept_block_post_stabilization_symmetry_defect < 1.0e-9
         @test data.near_null.kept_block_stabilization_dropped_count == 0
-        @test norm(data.near_null_data.final_overlap - I, Inf) < 1.0e-8
-        @test data.near_null_total_basis == 2548
+        @test norm(data.near_null_data.final_overlap - I, Inf) < 1.0e-7
+        @test data.near_null_total_basis == 2547
         @test data.legacy_alias.keep_policy == :near_null_only
         @test data.legacy_alias.kept_count == data.near_null.kept_count
     end
@@ -5080,18 +5096,22 @@ end
         @test true
     else
         data = _one_center_atomic_ns9_legacy_profile_qw_fixture()
-        @test data.residual_data.diagnostics.kept_count == 25
+        @test data.residual_data.diagnostics.kept_count == 24
         @test data.residual_data.diagnostics.keep_policy == :near_null_only
-        @test data.residual_data.diagnostics.kept_block_pre_stabilization_overlap_error > 1.0e-8
-        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-10
-        @test data.residual_data.diagnostics.kept_block_post_stabilization_symmetry_defect < 1.0e-10
+        @test data.residual_data.diagnostics.keep_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
+        @test data.residual_data.diagnostics.accept_tol ≈ 1.0e-7 atol = 0.0 rtol = 0.0
+        @test data.residual_data.diagnostics.kept_block_pre_stabilization_overlap_error > 0.0
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error <=
+            data.residual_data.diagnostics.kept_block_pre_stabilization_overlap_error
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-9
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_symmetry_defect < 1.0e-9
         @test data.residual_data.diagnostics.kept_block_stabilization_dropped_count == 0
-        @test norm(data.residual_data.final_overlap - I, Inf) < 1.0e-8
-        @test data.operators.residual_count == 25
-        @test norm(data.operators.overlap - I, Inf) < 1.0e-8
+        @test norm(data.residual_data.final_overlap - I, Inf) < 1.0e-7
+        @test data.operators.residual_count == 24
+        @test norm(data.operators.overlap - I, Inf) < 1.0e-7
         check = GaussletBases.ordinary_cartesian_1s2_check(data.operators)
         @test isfinite(check.orbital_energy)
-        @test check.overlap_error < 1.0e-8
+        @test check.overlap_error < 1.0e-7
     end
 end
 

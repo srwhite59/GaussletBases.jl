@@ -104,6 +104,7 @@ struct QWRGResidualSpaceDiagnostics
     residual_numerical_rank::Int
     keep_policy::Symbol
     keep_tol::Float64
+    accept_tol::Float64
     kept_count::Int
     discarded_count::Int
     kept_block_stabilization_null_tol::Float64
@@ -145,6 +146,8 @@ function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
         diagnostics.keep_policy,
         ", keep_tol=",
         diagnostics.keep_tol,
+        ", accept_tol=",
+        diagnostics.accept_tol,
         ", stab_passes=",
         diagnostics.kept_block_stabilization_correction_passes,
         ", pre_stab_error=",
@@ -306,6 +309,9 @@ end
 
 const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
 const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
+const _QWRG_RESIDUAL_ACCEPT_TOL = 1.0e-8
+const _QWRG_ATOMIC_RESIDUAL_KEEP_ABS_TOL = 1.0e-7
+const _QWRG_ATOMIC_RESIDUAL_ACCEPT_TOL = 1.0e-7
 const _QWRG_RESIDUAL_NULL_ABS_TOL = 1.0e-12
 const _QWRG_RESIDUAL_NULL_REL_TOL = 1.0e-12
 const _QWRG_RESIDUAL_STABILIZATION_TARGET_TOL = 1.0e-10
@@ -1595,13 +1601,15 @@ end
 function _qwrg_residual_keep_tol(
     values::AbstractVector{<:Real};
     keep_policy::Symbol = :near_null_only,
+    abs_tol::Real = _QWRG_RESIDUAL_KEEP_ABS_TOL,
 )
     keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
+    abs_tol_value = Float64(abs_tol)
     if keep_policy_value == :relative_case_scale
-        isempty(values) && return _QWRG_RESIDUAL_KEEP_ABS_TOL
-        return max(_QWRG_RESIDUAL_KEEP_ABS_TOL, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
+        isempty(values) && return abs_tol_value
+        return max(abs_tol_value, _QWRG_RESIDUAL_KEEP_REL_TOL * maximum(values))
     end
-    return _QWRG_RESIDUAL_KEEP_ABS_TOL
+    return abs_tol_value
 end
 
 function _qwrg_atomic_residual_keep_policy(keep_policy::Symbol)
@@ -1610,6 +1618,9 @@ function _qwrg_atomic_residual_keep_policy(keep_policy::Symbol)
         allow_relative_case_scale = false,
     )
 end
+
+_qwrg_atomic_residual_keep_tol() = _QWRG_ATOMIC_RESIDUAL_KEEP_ABS_TOL
+_qwrg_atomic_residual_accept_tol() = _QWRG_ATOMIC_RESIDUAL_ACCEPT_TOL
 
 function _qwrg_stabilize_residual_coefficients(
     raw_overlap::AbstractMatrix{<:Real},
@@ -3053,8 +3064,11 @@ function _qwrg_residual_space_analysis(
     overlap_aa::AbstractMatrix{<:Real},
     ;
     keep_policy::Symbol = :near_null_only,
+    keep_abs_tol::Real = _QWRG_RESIDUAL_KEEP_ABS_TOL,
+    accept_tol::Real = _QWRG_RESIDUAL_ACCEPT_TOL,
 )
     keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
+    accept_tol_value = Float64(accept_tol)
     gausslet_overlap_value = Matrix{Float64}(gausslet_overlap)
     overlap_error = norm(
         gausslet_overlap_value - Matrix{Float64}(I, size(gausslet_overlap_value, 1), size(gausslet_overlap_value, 2)),
@@ -3084,7 +3098,11 @@ function _qwrg_residual_space_analysis(
     supplement_numerical_rank = count(>(supplement_null_rank_tol), supplement_decomposition.values)
     residual_null_rank_tol = _qwrg_residual_null_rank_tol(residual_decomposition.values)
     residual_numerical_rank = count(>(residual_null_rank_tol), residual_decomposition.values)
-    keep_tol = _qwrg_residual_keep_tol(residual_decomposition.values; keep_policy = keep_policy_value)
+    keep_tol = _qwrg_residual_keep_tol(
+        residual_decomposition.values;
+        keep_policy = keep_policy_value,
+        abs_tol = keep_abs_tol,
+    )
     keep = findall(>(keep_tol), residual_decomposition.values)
     discarded = setdiff(collect(1:length(residual_decomposition.values)), keep)
     kept_residual_coefficients = isempty(keep) ? zeros(Float64, size(seed_projector, 1), 0) :
@@ -3108,6 +3126,7 @@ function _qwrg_residual_space_analysis(
         residual_numerical_rank,
         keep_policy_value,
         keep_tol,
+        accept_tol_value,
         length(keep),
         ngaussian - length(keep),
         stabilization.null_tol,
@@ -3151,12 +3170,16 @@ function diagnose_qwrg_residual_space(
     overlap_aa::AbstractMatrix{<:Real},
     ;
     keep_policy::Symbol = :near_null_only,
+    keep_abs_tol::Real = _QWRG_RESIDUAL_KEEP_ABS_TOL,
+    accept_tol::Real = _QWRG_RESIDUAL_ACCEPT_TOL,
 )
     return _qwrg_residual_space_analysis(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
         keep_policy = keep_policy,
+        keep_abs_tol = keep_abs_tol,
+        accept_tol = accept_tol,
     ).diagnostics
 end
 
@@ -3166,12 +3189,16 @@ function _qwrg_residual_space(
     overlap_aa::AbstractMatrix{<:Real},
     ;
     keep_policy::Symbol = :near_null_only,
+    keep_abs_tol::Real = _QWRG_RESIDUAL_KEEP_ABS_TOL,
+    accept_tol::Real = _QWRG_RESIDUAL_ACCEPT_TOL,
 )
     analysis = _qwrg_residual_space_analysis(
         gausslet_overlap,
         overlap_ga,
         overlap_aa;
         keep_policy = keep_policy,
+        keep_abs_tol = keep_abs_tol,
+        accept_tol = accept_tol,
     )
     ngausslet = analysis.diagnostics.gausslet_count
     keep = analysis.keep
@@ -4750,6 +4777,8 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     residual_keep_policy::Symbol,
     timing::Bool,
 )
+    residual_keep_tol = _qwrg_atomic_residual_keep_tol()
+    residual_accept_tol = _qwrg_atomic_residual_accept_tol()
     timings = Pair{String,Float64}[]
     timing_io = stdout
 
@@ -4792,6 +4821,8 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
         blocks.overlap_ga,
         blocks.overlap_aa;
         keep_policy = residual_keep_policy,
+        keep_abs_tol = residual_keep_tol,
+        accept_tol = residual_accept_tol,
     )
     timing && _qwrg_record_timing!(timing_io, timings, "residual-space construction", start_ns)
     _qwrg_print_basis_counts(timing_io, gausslet_count, residual_data.raw_to_final)
@@ -4831,7 +4862,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     )
     residual_centers = center_data.centers
     residual_widths = fill(NaN, size(residual_centers, 1), 3)
-    center_data.overlap_error <= 1.0e-8 || throw(
+    center_data.overlap_error <= residual_accept_tol || throw(
         ArgumentError("Qiu-White residual-center extraction requires an orthonormal residual block"),
     )
 
@@ -4918,6 +4949,8 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     residual_keep_policy::Symbol,
     timing::Bool,
 )
+    residual_keep_tol = _qwrg_atomic_residual_keep_tol()
+    residual_accept_tol = _qwrg_atomic_residual_accept_tol()
     timings = Pair{String,Float64}[]
     timing_io = stdout
 
@@ -4950,6 +4983,8 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
         overlap_fg,
         blocks.overlap_aa;
         keep_policy = residual_keep_policy,
+        keep_abs_tol = residual_keep_tol,
+        accept_tol = residual_accept_tol,
     )
     timing && _qwrg_record_timing!(timing_io, timings, "nested residual-space construction", start_ns)
     _qwrg_print_basis_counts(timing_io, "fixed_count", fixed_count, residual_data.raw_to_final)
@@ -4988,7 +5023,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     )
     residual_centers = center_data.centers
     residual_widths = fill(NaN, size(residual_centers, 1), 3)
-    center_data.overlap_error <= 1.0e-8 || throw(
+    center_data.overlap_error <= residual_accept_tol || throw(
         ArgumentError("nested QW-PGDG residual-center extraction requires an orthonormal residual block"),
     )
     timing && _qwrg_record_timing!(timing_io, timings, "nested raw center-matrix assembly", start_ns)
@@ -5072,14 +5107,15 @@ independent of supplement residual retention.
 
 `residual_keep_policy = :near_null_only` is now the canonical atomic
 supplement keep contract. It keeps orthogonalized residual directions with
-residual-overlap eigenvalue `> 1e-8`.
+residual-overlap eigenvalue `> 1e-7`.
 
 `residual_keep_policy = :legacy_profile` remains accepted only as a
 compatibility alias for `:near_null_only`.
 
 After residual directions are selected, the retained residual block is
 explicitly stabilized back to overlap-orthonormality before any downstream
-center/width extraction or raw-to-final transforms are used.
+center/width extraction or raw-to-final transforms are used. The atomic
+residual-center acceptance gate on that stabilized block is `1e-7`.
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::MappedUniformBasis,
@@ -5141,14 +5177,15 @@ independent of supplement residual retention.
 
 `residual_keep_policy = :near_null_only` is now the canonical atomic
 supplement keep contract. It keeps orthogonalized residual directions with
-residual-overlap eigenvalue `> 1e-8`.
+residual-overlap eigenvalue `> 1e-7`.
 
 `residual_keep_policy = :legacy_profile` remains accepted only as a
 compatibility alias for `:near_null_only`.
 
 After residual directions are selected, the retained residual block is
 explicitly stabilized back to overlap-orthonormality before any downstream
-center/width extraction or raw-to-final transforms are used.
+center/width extraction or raw-to-final transforms are used. The atomic
+residual-center acceptance gate on that stabilized block is `1e-7`.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D,

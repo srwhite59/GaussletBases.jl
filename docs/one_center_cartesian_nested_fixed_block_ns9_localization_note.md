@@ -194,13 +194,15 @@ name.
 The canonical atomic supplement keep rule is now:
 
 - `residual_keep_policy = :near_null_only`
-- keep if orthogonalized residual-overlap eigenvalue `> 1e-8`
+- keep if orthogonalized residual-overlap eigenvalue `> 1e-7`
 
 The old name:
 
 - `residual_keep_policy = :legacy_profile`
 
 remains accepted only as a compatibility alias for `:near_null_only`.
+
+The atomic residual-center acceptance gate is also now `1e-7`.
 
 The retained residual block is now explicitly stabilized after selection:
 
@@ -223,6 +225,11 @@ not another keep-policy bug, but the fact that the kept full-rank residual
 block was no longer orthonormal enough for downstream center extraction after
 selection.
 
+This is a pragmatic robustness choice for the public atomic lane. If `1e-7`
+still proves insufficient on future large cases, the next honest step is an
+inject-vs-replace split for marginal residual modes, not another round of
+threshold churn.
+
 On the larger real atomic anchor
 
 - `Cr`
@@ -231,36 +238,37 @@ On the larger real atomic anchor
 - `rmax = 20.0`
 - resolved parent side count `= 41`
 - fixed-block dimension `= 6905`
-- kept residual count `= 69`
+- kept residual count `= 68`
 
 the repo now shows:
 
-- pre-stabilization overlap error `= 2.3139911513663128e-08`
-- post-stabilization overlap error `= 4.9804003564031323e-09`
-- final residual-block overlap error `= 3.9364932229312446e-09`
-- pre-stabilization symmetry defect `= 2.5704899554633827e-08`
-- post-stabilization symmetry defect `= 6.5205458277106416e-09`
+- operator/final overlap error `= 4.602326585661617e-09`
+- low one-body ladder
+  - `[-287.997270019, -71.999529345, -71.999193373, -71.999193373, -71.999193373, -31.999274237, -31.996282772, -31.996282772, -31.996282772, -31.995185265]`
 - no negative kept modes
 - no near-null kept modes
-- no clipped modes
-- no dropped modes
+- no residual-center extraction failure
 
 So the remaining issue on that lane was purely residual-block orthonormality
 drift on a full-rank kept block, not another truncation-policy or hidden-rank
-problem.
+problem. The center-extraction path is seeing the same stabilized residual
+block that `_qwrg_residual_space(...)` produced; there is no later mismatch or
+moment-assembly-specific degradation on this real lane.
 
-On the anchored Ne legacy-profile case:
+On the anchored Ne legacy-profile case under the current pragmatic atomic
+contract:
 
-- kept residual count `= 25`
-- total basis count `= 2548`
-- low one-body ladder
-  - `[-49.99990524677932, -12.499971049252997, -12.49997104925268, -12.499971049252615, -12.49997099214756, -5.555472605898918, -5.555472605898094, -5.5554726058980854]`
+- kept residual count `= 24`
+- total basis count `= 2547`
 
-So the remaining one-center Ne basis-count gap was indeed due to aggressive
-residual truncation, not shell law, working-box choice, or raw supplement rank
-loss. The later `ns = 9` atomic blocker was a residual-block orthonormality
-issue after selection, and is now addressed by explicit stabilization rather
-than reintroducing aggressive pruning.
+So the old one-center Ne basis-count gap was indeed due to aggressive residual
+truncation, not shell law, working-box choice, or raw supplement rank loss.
+The current public atomic lane now makes a conservative `1e-7` robustness
+tradeoff instead: one anchored marginal direction is no longer kept, but the
+large public `ns = 9` route stops getting stuck at the residual-center
+boundary. If exact recovery of every marginal mode becomes necessary again, the
+next design step should be inject-vs-replace rather than another blind
+threshold adjustment.
 
 ## Structural Anchors
 
