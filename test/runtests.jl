@@ -5187,6 +5187,136 @@ end
     )
 end
 
+@testset "Cartesian basis bundle export" begin
+    square_basis, _square_source, square_fixed_block, _square_diagnostics =
+        _axis_aligned_homonuclear_square_lattice_nested_fixture()
+    square_basis_rep = basis_representation(square_basis)
+
+    square_bundle = cartesian_basis_bundle_payload(
+        square_basis;
+        meta = (example = "test_cartesian_basis_bundle_basis_only",),
+    )
+
+    @test square_bundle.basis["format"] == "cartesian_basis_bundle_v1"
+    @test square_bundle.basis["version"] == 1
+    @test square_bundle.basis["basis_kind"] == "direct_product"
+    @test square_bundle.basis["parent_kind"] == "cartesian_product_basis"
+    @test square_bundle.basis["contraction_kind"] == "identity"
+    @test size(square_bundle.basis["basis_centers"]) == size(square_basis_rep.metadata.basis_centers)
+    @test length(square_bundle.basis["final_integral_weights"]) == square_basis_rep.metadata.final_dimension
+    @test square_bundle.ham === nothing
+    @test !square_bundle.meta["has_ham"]
+    @test square_bundle.meta["example"] == "test_cartesian_basis_bundle_basis_only"
+
+    fixed_bundle = cartesian_basis_bundle_payload(square_fixed_block)
+    @test fixed_bundle.basis["basis_kind"] == "nested_fixed_block"
+    @test fixed_bundle.basis["support_indices_present"]
+    @test size(fixed_bundle.basis["support_states"], 2) == 3
+    @test fixed_bundle.basis["final_integral_weights"] ≈ square_fixed_block.weights atol = 1.0e-12 rtol = 1.0e-12
+    @test fixed_bundle.ham === nothing
+
+    diatomic_basis, diatomic_ops, _diatomic_check = _bond_aligned_diatomic_qw_fixture()
+    operator_bundle = cartesian_basis_bundle_payload(
+        diatomic_ops;
+        meta = (example = "test_cartesian_basis_bundle_with_ham",),
+    )
+
+    @test operator_bundle.basis["basis_kind"] == "direct_product"
+    @test operator_bundle.ham !== nothing
+    @test operator_bundle.ham["format"] == "cartesian_hamiltonian_bundle_v1"
+    @test operator_bundle.ham["model_kind"] == "ordinary_cartesian_qiu_white"
+    @test size(operator_bundle.ham["overlap"]) == size(diatomic_ops.overlap)
+    @test size(operator_bundle.ham["one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
+    @test size(operator_bundle.ham["interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
+    @test operator_bundle.ham["basis_integral_weights"] == operator_bundle.basis["final_integral_weights"]
+    @test operator_bundle.meta["has_ham"]
+
+    mktempdir() do dir
+        basis_only_path = joinpath(dir, "square_basis_only.jld2")
+        ops_path = joinpath(dir, "diatomic_ops_bundle.jld2")
+
+        @test write_cartesian_basis_bundle_jld2(
+            basis_only_path,
+            square_basis;
+            meta = (example = "test_cartesian_basis_bundle_basis_only",),
+        ) == basis_only_path
+        @test write_cartesian_basis_bundle_jld2(
+            ops_path,
+            diatomic_ops;
+            meta = (example = "test_cartesian_basis_bundle_with_ham",),
+        ) == ops_path
+
+        jldopen(basis_only_path, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "meta" in top_keys
+            @test !("ham" in top_keys)
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test Int(file["basis/version"]) == 1
+            @test String(file["basis/basis_kind"]) == "direct_product"
+            @test size(file["basis/basis_centers"]) == size(square_basis_rep.metadata.basis_centers)
+            @test size(file["basis/final_integral_weights"]) == (square_basis_rep.metadata.final_dimension,)
+            @test String(file["basis/axes/x/format"]) == "basis_representation_1d_v1"
+            @test String(file["meta/producer"]) ==
+                "GaussletBases.write_cartesian_basis_bundle_jld2"
+        end
+
+        jldopen(ops_path, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "ham" in top_keys
+            @test "meta" in top_keys
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "ordinary_cartesian_qiu_white"
+            @test size(file["ham/overlap"]) == size(diatomic_ops.overlap)
+            @test size(file["ham/one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
+            @test size(file["ham/interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
+            @test String(file["meta/manifest/contract/format"]) == "cartesian_basis_bundle_v1"
+            @test Bool(file["meta/has_ham"])
+        end
+    end
+
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    fixed_full = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+    hybrid_ops = ordinary_cartesian_qiu_white_operators(
+        fixed_full,
+        supplement;
+        expansion = expansion,
+        Z = 2.0,
+        interaction_treatment = :ggt_nearest,
+        residual_keep_policy = :near_null_only,
+    )
+    hybrid_bundle_error = try
+        cartesian_basis_bundle_payload(hybrid_ops)
+        nothing
+    catch error
+        error
+    end
+
+    @test hybrid_bundle_error isa ArgumentError
+    @test occursin(
+        "does not yet support hybrid/QW residual",
+        sprint(showerror, hybrid_bundle_error),
+    )
+end
+
 @testset "One-center atomic factorized direct packet kernel" begin
     basis = build_basis(
         MappedUniformBasisSpec(

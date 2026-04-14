@@ -23,6 +23,8 @@ export AbstractFunction1D,
        cross_overlap,
        basis_projector,
        transfer_orbitals,
+       cartesian_basis_bundle_payload,
+       write_cartesian_basis_bundle_jld2,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -350,6 +352,8 @@ function basis_representation end
 function cross_overlap end
 function basis_projector end
 function transfer_orbitals end
+function cartesian_basis_bundle_payload end
+function write_cartesian_basis_bundle_jld2 end
 function basis_partition end
 function hierarchical_partition end
 function build_leaf_pgdg end
@@ -556,5 +560,6 @@ include("fullida_dense_export.jl")
 include("angular_sequence_export.jl")
 include("experimental_chain_export.jl")
 include("sliced_ham_export.jl")
+include("cartesian_bundle_export.jl")
 
 end
