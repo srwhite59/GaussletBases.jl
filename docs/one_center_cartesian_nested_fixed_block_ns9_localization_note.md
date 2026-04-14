@@ -206,8 +206,9 @@ The retained residual block is now explicitly stabilized after selection:
 
 - if `R` is the selected raw residual coefficient block, the repo forms
   `Skeep = R' * Sraw * R`
-- then replaces `R` by
-  `R * inv(sqrt(Symmetric(Skeep)))`
+- it then applies an eigensystem-based PSD cleanup on `Symmetric(Skeep)`
+- and follows that with small Cholesky-polish passes on the retained block
+  until the residual overlap block is comfortably orthonormal again
 
 This keeps all selected near-null-surviving directions while making the
 retained residual block orthonormal again to numerical precision before:
@@ -221,6 +222,32 @@ That closes the later `ns = 9` nested atomic failure boundary: the problem was
 not another keep-policy bug, but the fact that the kept full-rank residual
 block was no longer orthonormal enough for downstream center extraction after
 selection.
+
+On the larger real atomic anchor
+
+- `Cr`
+- `cc-pV5Z`
+- `ns = 9`
+- `rmax = 20.0`
+- resolved parent side count `= 41`
+- fixed-block dimension `= 6905`
+- kept residual count `= 69`
+
+the repo now shows:
+
+- pre-stabilization overlap error `= 2.3139911513663128e-08`
+- post-stabilization overlap error `= 4.9804003564031323e-09`
+- final residual-block overlap error `= 3.9364932229312446e-09`
+- pre-stabilization symmetry defect `= 2.5704899554633827e-08`
+- post-stabilization symmetry defect `= 6.5205458277106416e-09`
+- no negative kept modes
+- no near-null kept modes
+- no clipped modes
+- no dropped modes
+
+So the remaining issue on that lane was purely residual-block orthonormality
+drift on a full-rank kept block, not another truncation-policy or hidden-rank
+problem.
 
 On the anchored Ne legacy-profile case:
 

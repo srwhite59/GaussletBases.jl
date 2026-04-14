@@ -106,8 +106,22 @@ struct QWRGResidualSpaceDiagnostics
     keep_tol::Float64
     kept_count::Int
     discarded_count::Int
+    kept_block_stabilization_null_tol::Float64
+    kept_block_stabilization_correction_passes::Int
+    kept_block_stabilization_clipped_count::Int
+    kept_block_stabilization_dropped_count::Int
     kept_block_pre_stabilization_overlap_error::Float64
     kept_block_post_stabilization_overlap_error::Float64
+    kept_block_pre_stabilization_symmetry_defect::Float64
+    kept_block_post_stabilization_symmetry_defect::Float64
+    kept_block_pre_stabilization_min_eigenvalue::Float64
+    kept_block_pre_stabilization_max_eigenvalue::Float64
+    kept_block_post_stabilization_min_eigenvalue::Float64
+    kept_block_post_stabilization_max_eigenvalue::Float64
+    kept_block_pre_stabilization_negative_count::Int
+    kept_block_post_stabilization_negative_count::Int
+    kept_block_pre_stabilization_near_null_count::Int
+    kept_block_post_stabilization_near_null_count::Int
     supplement_overlap_eigenvalues::Vector{Float64}
     residual_overlap_eigenvalues::Vector{Float64}
     kept_indices::Vector{Int}
@@ -131,6 +145,8 @@ function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
         diagnostics.keep_policy,
         ", keep_tol=",
         diagnostics.keep_tol,
+        ", stab_passes=",
+        diagnostics.kept_block_stabilization_correction_passes,
         ", pre_stab_error=",
         diagnostics.kept_block_pre_stabilization_overlap_error,
         ", post_stab_error=",
@@ -292,6 +308,8 @@ const _QWRG_RESIDUAL_KEEP_ABS_TOL = 1.0e-8
 const _QWRG_RESIDUAL_KEEP_REL_TOL = 1.0e-1
 const _QWRG_RESIDUAL_NULL_ABS_TOL = 1.0e-12
 const _QWRG_RESIDUAL_NULL_REL_TOL = 1.0e-12
+const _QWRG_RESIDUAL_STABILIZATION_TARGET_TOL = 1.0e-10
+const _QWRG_RESIDUAL_STABILIZATION_MAX_PASSES = 3
 
 function _qwrg_axis_coordinate(
     point::NTuple{3,Float64},
@@ -1597,6 +1615,31 @@ function _qwrg_stabilize_residual_coefficients(
     raw_overlap::AbstractMatrix{<:Real},
     residual_coefficients::AbstractMatrix{<:Real},
 )
+    function summarize_overlap_block(
+        overlap_block::AbstractMatrix{<:Real},
+        null_tol::Float64,
+    )
+        overlap_value = Matrix{Float64}(overlap_block)
+        overlap_sym = Matrix{Float64}(0.5 .* (overlap_value .+ transpose(overlap_value)))
+        decomposition = eigen(Symmetric(overlap_sym))
+        values = Float64[decomposition.values...]
+        return (
+            matrix = overlap_value,
+            symmetrized = overlap_sym,
+            vectors = Matrix{Float64}(decomposition.vectors),
+            values = values,
+            overlap_error = norm(
+                overlap_value - Matrix{Float64}(I, size(overlap_value, 1), size(overlap_value, 2)),
+                Inf,
+            ),
+            symmetry_defect = norm(overlap_value - transpose(overlap_value), Inf),
+            min_eigenvalue = isempty(values) ? 1.0 : minimum(values),
+            max_eigenvalue = isempty(values) ? 1.0 : maximum(values),
+            negative_count = count(<(-null_tol), values),
+            near_null_count = count(<=(null_tol), values),
+        )
+    end
+
     nresidual = size(residual_coefficients, 2)
     nresidual == 0 && return (
         coefficients = Matrix{Float64}(residual_coefficients),
@@ -1604,35 +1647,85 @@ function _qwrg_stabilize_residual_coefficients(
         post_overlap = Matrix{Float64}(I, 0, 0),
         pre_error = 0.0,
         post_error = 0.0,
+        pre_symmetry_defect = 0.0,
+        post_symmetry_defect = 0.0,
+        pre_min_eigenvalue = 1.0,
+        pre_max_eigenvalue = 1.0,
+        post_min_eigenvalue = 1.0,
+        post_max_eigenvalue = 1.0,
+        pre_negative_count = 0,
+        post_negative_count = 0,
+        pre_near_null_count = 0,
+        post_near_null_count = 0,
+        null_tol = _QWRG_RESIDUAL_NULL_ABS_TOL,
+        clipped_count = 0,
+        dropped_count = 0,
+        correction_passes = 0,
     )
     raw_overlap_value = Matrix{Float64}(raw_overlap)
-    residual_coefficients_value = Matrix{Float64}(residual_coefficients)
-    pre_overlap = Matrix{Float64}(transpose(residual_coefficients_value) * raw_overlap_value * residual_coefficients_value)
-    pre_overlap = Matrix{Float64}(0.5 .* (pre_overlap .+ transpose(pre_overlap)))
-    pre_error = norm(pre_overlap - Matrix{Float64}(I, nresidual, nresidual), Inf)
-    decomposition = eigen(Symmetric(pre_overlap))
-    stabilization_tol = _qwrg_residual_null_rank_tol(decomposition.values)
-    minimum(decomposition.values) > -stabilization_tol || throw(
+    stabilized_coefficients = Matrix{Float64}(residual_coefficients)
+
+    pre_overlap = Matrix{Float64}(transpose(stabilized_coefficients) * raw_overlap_value * stabilized_coefficients)
+    pre_overlap_sym = Matrix{Float64}(0.5 .* (pre_overlap .+ transpose(pre_overlap)))
+    null_tol = _qwrg_residual_null_rank_tol(eigvals(Symmetric(pre_overlap_sym)))
+    pre_summary = summarize_overlap_block(pre_overlap, null_tol)
+    clipped_count = count(<(null_tol), pre_summary.values)
+    pre_summary.negative_count == 0 || throw(
         ArgumentError(
             "QW residual-space stabilization requires the kept residual overlap block to stay positive semidefinite",
         ),
     )
-    stabilized_values = max.(Float64.(decomposition.values), stabilization_tol)
+
+    stabilized_values = max.(pre_summary.values, null_tol)
     inverse_sqrt = Matrix{Float64}(
-        decomposition.vectors *
+        pre_summary.vectors *
         Diagonal(1.0 ./ sqrt.(stabilized_values)) *
-        transpose(decomposition.vectors),
+        transpose(pre_summary.vectors),
     )
-    stabilized_coefficients = Matrix{Float64}(residual_coefficients_value * inverse_sqrt)
-    post_overlap = Matrix{Float64}(transpose(stabilized_coefficients) * raw_overlap_value * stabilized_coefficients)
-    post_overlap = Matrix{Float64}(0.5 .* (post_overlap .+ transpose(post_overlap)))
-    post_error = norm(post_overlap - Matrix{Float64}(I, nresidual, nresidual), Inf)
+    stabilized_coefficients = Matrix{Float64}(stabilized_coefficients * inverse_sqrt)
+    correction_passes = 1
+    current_overlap = Matrix{Float64}(transpose(stabilized_coefficients) * raw_overlap_value * stabilized_coefficients)
+    current_summary = summarize_overlap_block(current_overlap, null_tol)
+    current_summary.negative_count == 0 || throw(
+        ArgumentError(
+            "QW residual-space stabilization produced a numerically indefinite kept residual overlap block",
+        ),
+    )
+    while correction_passes < _QWRG_RESIDUAL_STABILIZATION_MAX_PASSES &&
+        (current_summary.overlap_error > _QWRG_RESIDUAL_STABILIZATION_TARGET_TOL ||
+         current_summary.symmetry_defect > _QWRG_RESIDUAL_STABILIZATION_TARGET_TOL)
+        cholesky_factor = cholesky(Symmetric(current_summary.symmetrized))
+        stabilized_coefficients = Matrix{Float64}(stabilized_coefficients / cholesky_factor.U)
+        correction_passes += 1
+        current_overlap = Matrix{Float64}(transpose(stabilized_coefficients) * raw_overlap_value * stabilized_coefficients)
+        current_summary = summarize_overlap_block(current_overlap, null_tol)
+        current_summary.negative_count == 0 || throw(
+            ArgumentError(
+                "QW residual-space stabilization produced a numerically indefinite kept residual overlap block",
+            ),
+        )
+    end
+
     return (
         coefficients = stabilized_coefficients,
-        pre_overlap = pre_overlap,
-        post_overlap = post_overlap,
-        pre_error = pre_error,
-        post_error = post_error,
+        pre_overlap = pre_summary.symmetrized,
+        post_overlap = current_summary.symmetrized,
+        pre_error = pre_summary.overlap_error,
+        post_error = current_summary.overlap_error,
+        pre_symmetry_defect = pre_summary.symmetry_defect,
+        post_symmetry_defect = current_summary.symmetry_defect,
+        pre_min_eigenvalue = pre_summary.min_eigenvalue,
+        pre_max_eigenvalue = pre_summary.max_eigenvalue,
+        post_min_eigenvalue = current_summary.min_eigenvalue,
+        post_max_eigenvalue = current_summary.max_eigenvalue,
+        pre_negative_count = pre_summary.negative_count,
+        post_negative_count = current_summary.negative_count,
+        pre_near_null_count = pre_summary.near_null_count,
+        post_near_null_count = current_summary.near_null_count,
+        null_tol = null_tol,
+        clipped_count = clipped_count,
+        dropped_count = 0,
+        correction_passes = correction_passes,
     )
 end
 
@@ -3017,8 +3110,22 @@ function _qwrg_residual_space_analysis(
         keep_tol,
         length(keep),
         ngaussian - length(keep),
+        stabilization.null_tol,
+        stabilization.correction_passes,
+        stabilization.clipped_count,
+        stabilization.dropped_count,
         stabilization.pre_error,
         stabilization.post_error,
+        stabilization.pre_symmetry_defect,
+        stabilization.post_symmetry_defect,
+        stabilization.pre_min_eigenvalue,
+        stabilization.pre_max_eigenvalue,
+        stabilization.post_min_eigenvalue,
+        stabilization.post_max_eigenvalue,
+        stabilization.pre_negative_count,
+        stabilization.post_negative_count,
+        stabilization.pre_near_null_count,
+        stabilization.post_near_null_count,
         Float64[supplement_decomposition.values...],
         Float64[residual_decomposition.values...],
         keep,

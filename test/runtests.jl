@@ -4985,14 +4985,42 @@ end
     @test near_null_diagnostics.kept_count == 25
     @test near_null_diagnostics.discarded_count == 0
     @test near_null_diagnostics.keep_tol ≈ 1.0e-8 atol = 0.0 rtol = 0.0
+    @test near_null_diagnostics.kept_block_stabilization_null_tol ≈ 1.0e-12 atol = 1.0e-15 rtol = 0.0
+    @test near_null_diagnostics.kept_block_stabilization_correction_passes >= 1
+    @test near_null_diagnostics.kept_block_stabilization_clipped_count == 0
+    @test near_null_diagnostics.kept_block_stabilization_dropped_count == 0
     @test near_null_diagnostics.kept_block_pre_stabilization_overlap_error < 1.0e-12
     @test near_null_diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-12
+    @test near_null_diagnostics.kept_block_pre_stabilization_symmetry_defect < 1.0e-12
+    @test near_null_diagnostics.kept_block_post_stabilization_symmetry_defect < 1.0e-12
+    @test near_null_diagnostics.kept_block_pre_stabilization_negative_count == 0
+    @test near_null_diagnostics.kept_block_post_stabilization_negative_count == 0
+    @test near_null_diagnostics.kept_block_pre_stabilization_near_null_count == 0
+    @test near_null_diagnostics.kept_block_post_stabilization_near_null_count == 0
     @test norm(near_null_data.final_overlap - I, Inf) < 1.0e-10
     @test legacy_alias_diagnostics.keep_policy == :near_null_only
     @test legacy_alias_diagnostics.kept_count == near_null_diagnostics.kept_count
     @test legacy_alias_diagnostics.keep_tol == near_null_diagnostics.keep_tol
     @test legacy_alias_diagnostics.kept_block_post_stabilization_overlap_error ==
         near_null_diagnostics.kept_block_post_stabilization_overlap_error
+
+    nsynthetic = 69
+    synthetic_raw_overlap = Matrix{Float64}(I, nsynthetic, nsynthetic)
+    synthetic_coefficients = Matrix{Float64}(I, nsynthetic, nsynthetic)
+    @inbounds for i in 1:nsynthetic, j in 1:nsynthetic
+        synthetic_coefficients[i, j] += 8.0e-9 * sin(Float64(i + 2 * j))
+    end
+    synthetic_stabilization = GaussletBases._qwrg_stabilize_residual_coefficients(
+        synthetic_raw_overlap,
+        synthetic_coefficients,
+    )
+    @test synthetic_stabilization.pre_error > 1.0e-8
+    @test synthetic_stabilization.post_error < 1.0e-10
+    @test synthetic_stabilization.post_symmetry_defect < 1.0e-12
+    @test synthetic_stabilization.pre_negative_count == 0
+    @test synthetic_stabilization.post_negative_count == 0
+    @test synthetic_stabilization.dropped_count == 0
+    @test synthetic_stabilization.correction_passes >= 1
 end
 
 @testset "One-center atomic legacy-profile residual completion contract" begin
@@ -5012,7 +5040,9 @@ end
         @test data.near_null.kept_block_pre_stabilization_overlap_error > 0.0
         @test data.near_null.kept_block_post_stabilization_overlap_error <
             data.near_null.kept_block_pre_stabilization_overlap_error
-        @test data.near_null.kept_block_post_stabilization_overlap_error < 1.0e-8
+        @test data.near_null.kept_block_post_stabilization_overlap_error < 1.0e-10
+        @test data.near_null.kept_block_post_stabilization_symmetry_defect < 1.0e-10
+        @test data.near_null.kept_block_stabilization_dropped_count == 0
         @test norm(data.near_null_data.final_overlap - I, Inf) < 1.0e-8
         @test data.near_null_total_basis == 2548
         @test data.legacy_alias.keep_policy == :near_null_only
@@ -5053,7 +5083,9 @@ end
         @test data.residual_data.diagnostics.kept_count == 25
         @test data.residual_data.diagnostics.keep_policy == :near_null_only
         @test data.residual_data.diagnostics.kept_block_pre_stabilization_overlap_error > 1.0e-8
-        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-8
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_overlap_error < 1.0e-10
+        @test data.residual_data.diagnostics.kept_block_post_stabilization_symmetry_defect < 1.0e-10
+        @test data.residual_data.diagnostics.kept_block_stabilization_dropped_count == 0
         @test norm(data.residual_data.final_overlap - I, Inf) < 1.0e-8
         @test data.operators.residual_count == 25
         @test norm(data.operators.overlap - I, Inf) < 1.0e-8
