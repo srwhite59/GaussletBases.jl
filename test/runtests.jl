@@ -5317,6 +5317,91 @@ end
     )
 end
 
+@testset "Cartesian basis bundle overlap and projector" begin
+    square_basis, _square_source, square_fixed_block, _square_diagnostics =
+        _axis_aligned_homonuclear_square_lattice_nested_fixture()
+    square_basis_rep = basis_representation(square_basis)
+    square_fixed_rep = basis_representation(square_fixed_block)
+
+    diatomic_basis14, diatomic_ops14, _diatomic_check14 =
+        _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
+    diatomic_basis20, _diatomic_ops20, _diatomic_check20 =
+        _bond_aligned_diatomic_qw_fixture(; bond_length = 2.0)
+    diatomic_rep14 = basis_representation(diatomic_basis14)
+    diatomic_rep20 = basis_representation(diatomic_basis20)
+
+    mktempdir() do dir
+        square_path = joinpath(dir, "square_basis.jld2")
+        square_fixed_path = joinpath(dir, "square_fixed.jld2")
+        diatomic14_path = joinpath(dir, "diatomic14.jld2")
+        diatomic20_path = joinpath(dir, "diatomic20.jld2")
+        diatomic_ops_path = joinpath(dir, "diatomic_ops.jld2")
+        unsupported_path = joinpath(dir, "unsupported_hybrid_like.jld2")
+
+        write_cartesian_basis_bundle_jld2(square_path, square_basis)
+        write_cartesian_basis_bundle_jld2(square_fixed_path, square_fixed_block)
+        write_cartesian_basis_bundle_jld2(diatomic14_path, diatomic_basis14)
+        write_cartesian_basis_bundle_jld2(diatomic20_path, diatomic_basis20)
+        write_cartesian_basis_bundle_jld2(diatomic_ops_path, diatomic_ops14)
+        unsupported_payload = cartesian_basis_bundle_payload(square_basis)
+        unsupported_payload.basis["parent_kind"] = "cartesian_plus_supplement_raw"
+        jldopen(unsupported_path, "w") do file
+            GaussletBases._write_prefixed_values!(file, "basis", unsupported_payload.basis)
+            GaussletBases._write_prefixed_values!(file, "meta", unsupported_payload.meta)
+        end
+
+        square_bundle = read_cartesian_basis_bundle(square_path)
+        square_fixed_bundle = read_cartesian_basis_bundle(square_fixed_path)
+        diatomic14_bundle = read_cartesian_basis_bundle(diatomic14_path)
+        diatomic20_bundle = read_cartesian_basis_bundle(diatomic20_path)
+        diatomic_ops_bundle = read_cartesian_basis_bundle(diatomic_ops_path)
+
+        @test square_bundle.path == abspath(square_path)
+        @test square_bundle.diagnostics.basis_kind == :direct_product
+        @test square_bundle.diagnostics.final_dimension == square_basis_rep.metadata.final_dimension
+        @test square_bundle.ham === nothing
+        @test diatomic_ops_bundle.ham !== nothing
+        @test diatomic_ops_bundle.ham["model_kind"] == "ordinary_cartesian_qiu_white"
+        @test diatomic_ops_bundle.diagnostics.has_ham
+
+        loaded_square_rep = load_cartesian_basis_representation(square_path)
+        @test loaded_square_rep.metadata.basis_kind == square_basis_rep.metadata.basis_kind
+        @test loaded_square_rep.metadata.final_dimension == square_basis_rep.metadata.final_dimension
+        @test loaded_square_rep.metadata.parent_kind == square_basis_rep.metadata.parent_kind
+
+        direct_self_disk = cross_overlap(square_bundle, square_bundle)
+        direct_cross_disk = cross_overlap(diatomic14_bundle, diatomic20_bundle)
+        nested_cross_disk = cross_overlap(square_path, square_fixed_path)
+
+        @test direct_self_disk ≈ cross_overlap(square_basis_rep, square_basis_rep) atol = 1.0e-10 rtol = 1.0e-10
+        @test direct_cross_disk ≈ cross_overlap(diatomic_rep14, diatomic_rep20) atol = 1.0e-10 rtol = 1.0e-10
+        @test nested_cross_disk ≈ cross_overlap(square_basis_rep, square_fixed_rep) atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_projector = basis_projector(square_fixed_path, square_path)
+        memory_projector = basis_projector(square_fixed_rep, square_basis_rep)
+        @test disk_projector.matrix ≈ memory_projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_projector.diagnostics.transfer_path == memory_projector.diagnostics.transfer_path
+
+        fixed_coefficients = cos.(Float64.(1:square_fixed_rep.metadata.final_dimension))
+        disk_transfer = transfer_orbitals(fixed_coefficients, square_fixed_path, square_path)
+        memory_transfer = transfer_orbitals(fixed_coefficients, square_fixed_rep, square_basis_rep)
+        @test disk_transfer.coefficients ≈ memory_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+
+        unsupported_error = try
+            cross_overlap(unsupported_path, square_path)
+            nothing
+        catch error
+            error
+        end
+        @test unsupported_error isa ArgumentError
+        @test occursin(
+            "does not yet support hybrid/QW residual Cartesian bundles on disk",
+            sprint(showerror, unsupported_error),
+        )
+    end
+end
+
 @testset "One-center atomic factorized direct packet kernel" begin
     basis = build_basis(
         MappedUniformBasisSpec(

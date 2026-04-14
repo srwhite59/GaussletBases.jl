@@ -17,6 +17,7 @@ export AbstractFunction1D,
        BasisRepresentation1D,
        CartesianBasisMetadata3D,
        CartesianBasisRepresentation3D,
+       CartesianBasisBundle3D,
        CartesianBasisTransferDiagnostics,
        CartesianBasisProjector3D,
        CartesianOrbitalTransferResult,
@@ -24,6 +25,8 @@ export AbstractFunction1D,
        basis_projector,
        transfer_orbitals,
        cartesian_basis_bundle_payload,
+       read_cartesian_basis_bundle,
+       load_cartesian_basis_representation,
        write_cartesian_basis_bundle_jld2,
        BasisBox1D,
        BasisPartition1D,
@@ -353,6 +356,8 @@ function cross_overlap end
 function basis_projector end
 function transfer_orbitals end
 function cartesian_basis_bundle_payload end
+function read_cartesian_basis_bundle end
+function load_cartesian_basis_representation end
 function write_cartesian_basis_bundle_jld2 end
 function basis_partition end
 function hierarchical_partition end
@@ -561,5 +566,6 @@ include("angular_sequence_export.jl")
 include("experimental_chain_export.jl")
 include("sliced_ham_export.jl")
 include("cartesian_bundle_export.jl")
+include("cartesian_bundle_io.jl")
 
 end
