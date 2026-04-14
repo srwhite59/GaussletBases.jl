@@ -254,6 +254,275 @@ function cross_overlap(
     return _cartesian_parent_cross_overlap(left, right)
 end
 
+"""
+    CartesianBasisTransferDiagnostics
+
+Small public diagnostic bundle for exact Cartesian basis-to-basis transfer on
+the supported pure Cartesian representation families.
+
+The diagnostics record:
+
+- the source and target basis dimensions
+- whether the exact transfer used the same-parent or general pure-Cartesian
+  path
+- the residual of the Galerkin normal equations defining the transfer matrix
+- symmetry defects of the source and target self-overlap matrices
+- optional source/target metric traces and transfer residuals when specific
+  orbital coefficients were transferred
+"""
+struct CartesianBasisTransferDiagnostics
+    source_dimension::Int
+    target_dimension::Int
+    transfer_path::Symbol
+    projector_residual_inf::Float64
+    source_self_overlap_error::Float64
+    target_self_overlap_error::Float64
+    source_metric_trace::Union{Nothing,Float64}
+    target_metric_trace::Union{Nothing,Float64}
+    transferred_residual_inf::Union{Nothing,Float64}
+end
+
+function Base.show(io::IO, diagnostics::CartesianBasisTransferDiagnostics)
+    print(
+        io,
+        "CartesianBasisTransferDiagnostics(source_dim=",
+        diagnostics.source_dimension,
+        ", target_dim=",
+        diagnostics.target_dimension,
+        ", path=:",
+        diagnostics.transfer_path,
+        ", projector_residual_inf=",
+        diagnostics.projector_residual_inf,
+        ")",
+    )
+end
+
+"""
+    CartesianBasisProjector3D
+
+Exact metric-consistent Cartesian basis transfer matrix together with light
+diagnostics describing how it was built.
+"""
+struct CartesianBasisProjector3D
+    matrix::Matrix{Float64}
+    diagnostics::CartesianBasisTransferDiagnostics
+end
+
+function Base.show(io::IO, projector::CartesianBasisProjector3D)
+    print(
+        io,
+        "CartesianBasisProjector3D(size=",
+        size(projector.matrix),
+        ", path=:",
+        projector.diagnostics.transfer_path,
+        ")",
+    )
+end
+
+"""
+    CartesianOrbitalTransferResult
+
+Returned by `transfer_orbitals(...)`. Bundles the transferred coefficients, the
+exact basis projector used, and transfer diagnostics.
+"""
+struct CartesianOrbitalTransferResult{CT <: Union{Vector{Float64},Matrix{Float64}}}
+    coefficients::CT
+    projector::CartesianBasisProjector3D
+    diagnostics::CartesianBasisTransferDiagnostics
+end
+
+function Base.show(io::IO, result::CartesianOrbitalTransferResult)
+    print(
+        io,
+        "CartesianOrbitalTransferResult(size=",
+        size(result.coefficients),
+        ", path=:",
+        result.diagnostics.transfer_path,
+        ")",
+    )
+end
+
+function _cartesian_transfer_path(
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+)
+    return _cartesian_same_parent_raw_identity(source, target) ?
+           :same_parent_metric_projection :
+           :pure_cartesian_metric_projection
+end
+
+function _cartesian_transfer_diagnostics(
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+    target_overlap::AbstractMatrix{<:Real},
+    target_source_overlap::AbstractMatrix{<:Real},
+    projector::AbstractMatrix{<:Real};
+    source_coefficients::Union{Nothing,AbstractVecOrMat{<:Real}} = nothing,
+    transferred_coefficients::Union{Nothing,AbstractVecOrMat{<:Real}} = nothing,
+)
+    source_overlap = cross_overlap(source, source)
+    source_dimension = source.metadata.final_dimension
+    target_dimension = target.metadata.final_dimension
+    transfer_path = _cartesian_transfer_path(source, target)
+    projector_residual_inf = norm(target_overlap * projector - target_source_overlap, Inf)
+    source_self_overlap_error = norm(source_overlap - transpose(source_overlap), Inf)
+    target_self_overlap_error = norm(target_overlap - transpose(target_overlap), Inf)
+
+    if source_coefficients === nothing || transferred_coefficients === nothing
+        return CartesianBasisTransferDiagnostics(
+            source_dimension,
+            target_dimension,
+            transfer_path,
+            projector_residual_inf,
+            source_self_overlap_error,
+            target_self_overlap_error,
+            nothing,
+            nothing,
+            nothing,
+        )
+    end
+
+    source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
+    transferred_coefficients_matrix = _cartesian_coefficients_matrix(transferred_coefficients)
+    source_metric =
+        Matrix{Float64}(transpose(source_coefficients_matrix) * source_overlap * source_coefficients_matrix)
+    target_metric =
+        Matrix{Float64}(transpose(transferred_coefficients_matrix) * target_overlap * transferred_coefficients_matrix)
+    transferred_residual_inf = norm(
+        target_overlap * transferred_coefficients_matrix -
+        target_source_overlap * source_coefficients_matrix,
+        Inf,
+    )
+
+    return CartesianBasisTransferDiagnostics(
+        source_dimension,
+        target_dimension,
+        transfer_path,
+        projector_residual_inf,
+        source_self_overlap_error,
+        target_self_overlap_error,
+        tr(source_metric),
+        tr(target_metric),
+        transferred_residual_inf,
+    )
+end
+
+function _cartesian_coefficients_matrix(source_coefficients::AbstractVector{<:Real})
+    return reshape(Float64[Float64(value) for value in source_coefficients], :, 1)
+end
+
+function _cartesian_coefficients_matrix(source_coefficients::AbstractMatrix{<:Real})
+    return Matrix{Float64}(source_coefficients)
+end
+
+"""
+    basis_projector(
+        source::CartesianBasisRepresentation3D,
+        target::CartesianBasisRepresentation3D,
+    )
+
+Return the exact metric-consistent basis-to-basis transfer operator from
+`source` into `target` for the currently supported pure Cartesian
+representations.
+
+If `SAA = <A|A>`, `SBB = <B|B>`, and `SBA = <B|A>`, the projector matrix is the
+Galerkin transfer
+
+`T_{B <- A} = SBB \\ SBA`
+
+so that target-space coefficients satisfy the normal equations
+
+`SBB * C_B = SBA * C_A`.
+
+This first pass supports the same pure Cartesian representation families as
+`cross_overlap(...)`. Hybrid/QW residual final bases remain intentionally
+unsupported here.
+"""
+function basis_projector(
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+)
+    target_overlap = cross_overlap(target, target)
+    target_source_overlap = cross_overlap(target, source)
+    factorization = cholesky(Symmetric(Matrix{Float64}(target_overlap)))
+    projector_matrix = Matrix{Float64}(factorization \ Matrix{Float64}(target_source_overlap))
+    diagnostics = _cartesian_transfer_diagnostics(
+        source,
+        target,
+        target_overlap,
+        target_source_overlap,
+        projector_matrix,
+    )
+    return CartesianBasisProjector3D(projector_matrix, diagnostics)
+end
+
+function _cartesian_transfer_coefficients(
+    source_coefficients::AbstractVector{<:Real},
+    projector::CartesianBasisProjector3D,
+)
+    source_dimension = size(projector.matrix, 2)
+    length(source_coefficients) == source_dimension || throw(
+        DimensionMismatch(
+            "source coefficient vector length $(length(source_coefficients)) does not match source basis dimension $source_dimension",
+        ),
+    )
+    return Vector{Float64}(projector.matrix * Vector{Float64}(source_coefficients))
+end
+
+function _cartesian_transfer_coefficients(
+    source_coefficients::AbstractMatrix{<:Real},
+    projector::CartesianBasisProjector3D,
+)
+    source_dimension = size(projector.matrix, 2)
+    size(source_coefficients, 1) == source_dimension || throw(
+        DimensionMismatch(
+            "source coefficient matrix row count $(size(source_coefficients, 1)) does not match source basis dimension $source_dimension",
+        ),
+    )
+    return Matrix{Float64}(projector.matrix * Matrix{Float64}(source_coefficients))
+end
+
+"""
+    transfer_orbitals(
+        source_coefficients::AbstractVecOrMat,
+        source::CartesianBasisRepresentation3D,
+        target::CartesianBasisRepresentation3D,
+    )
+
+Transfer orbital coefficients from `source` into `target` using the exact
+metric-consistent projector returned by `basis_projector(...)`.
+
+The returned coefficients satisfy the Galerkin normal equations
+
+`SBB * C_B = SBA * C_A`
+
+for the supported pure Cartesian representation families.
+"""
+function transfer_orbitals(
+    source_coefficients::AbstractVecOrMat{<:Real},
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+)
+    projector = basis_projector(source, target)
+    transferred_coefficients = _cartesian_transfer_coefficients(source_coefficients, projector)
+    target_overlap = cross_overlap(target, target)
+    target_source_overlap = cross_overlap(target, source)
+    diagnostics = _cartesian_transfer_diagnostics(
+        source,
+        target,
+        target_overlap,
+        target_source_overlap,
+        projector.matrix;
+        source_coefficients = source_coefficients,
+        transferred_coefficients = transferred_coefficients,
+    )
+    return CartesianOrbitalTransferResult(
+        transferred_coefficients,
+        projector,
+        diagnostics,
+    )
+end
+
 function _cartesian_basis_labels(prefix::AbstractString, count::Int)
     return [string(prefix, index) for index in 1:count]
 end
