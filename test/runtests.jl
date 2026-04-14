@@ -5224,7 +5224,7 @@ end
     @test operator_bundle.basis["basis_kind"] == "direct_product"
     @test operator_bundle.ham !== nothing
     @test operator_bundle.ham["format"] == "cartesian_hamiltonian_bundle_v1"
-    @test operator_bundle.ham["model_kind"] == "ordinary_cartesian_qiu_white"
+    @test operator_bundle.ham["model_kind"] == "ordinary_cartesian_operators"
     @test size(operator_bundle.ham["overlap"]) == size(diatomic_ops.overlap)
     @test size(operator_bundle.ham["one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
     @test size(operator_bundle.ham["interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
@@ -5271,7 +5271,7 @@ end
             @test "ham" in top_keys
             @test "meta" in top_keys
             @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
-            @test String(file["ham/model_kind"]) == "ordinary_cartesian_qiu_white"
+            @test String(file["ham/model_kind"]) == "ordinary_cartesian_operators"
             @test size(file["ham/overlap"]) == size(diatomic_ops.overlap)
             @test size(file["ham/one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
             @test size(file["ham/interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
@@ -5361,7 +5361,7 @@ end
         @test square_bundle.diagnostics.final_dimension == square_basis_rep.metadata.final_dimension
         @test square_bundle.ham === nothing
         @test diatomic_ops_bundle.ham !== nothing
-        @test diatomic_ops_bundle.ham["model_kind"] == "ordinary_cartesian_qiu_white"
+        @test diatomic_ops_bundle.ham["model_kind"] == "ordinary_cartesian_operators"
         @test diatomic_ops_bundle.diagnostics.has_ham
 
         loaded_square_rep = load_cartesian_basis_representation(square_path)
@@ -7461,6 +7461,58 @@ if _test_group_enabled(:diatomic)
     @test length(basis14.basis_x) == length(basis14.basis_y)
     @test length(basis14.basis_z) > length(basis14.basis_x)
     @test length(basis20.basis_z) >= length(basis14.basis_z)
+end
+
+@testset "Ordinary Cartesian naming surface distinguishes geometry from supplement" begin
+    @test OrdinaryCartesianOrbital3D === QiuWhiteHybridOrbital3D
+    @test OrdinaryCartesianOperators3D === QiuWhiteResidualGaussianOperators
+
+    (
+        direct_basis,
+        _direct_parent_ops,
+        _direct_parent_check,
+        direct_supplement,
+        direct_hybrid_ops,
+        _direct_hybrid_check,
+    ) = _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length = 1.4)
+
+    direct_via_clear_name = ordinary_cartesian_product_operators(
+        direct_basis,
+        direct_supplement;
+        nuclear_charges = [1.0, 1.0],
+        interaction_treatment = :ggt_nearest,
+    )
+
+    @test direct_via_clear_name isa OrdinaryCartesianOperators3D
+    @test direct_via_clear_name.overlap ≈ direct_hybrid_ops.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test direct_via_clear_name.one_body_hamiltonian ≈ direct_hybrid_ops.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test direct_via_clear_name.interaction_matrix ≈ direct_hybrid_ops.interaction_matrix atol = 1.0e-12 rtol = 1.0e-12
+    @test direct_via_clear_name.residual_count == direct_hybrid_ops.residual_count
+
+    (
+        _nested_basis,
+        _nested_parent_ops,
+        _nested_parent_check,
+        nested_expansion,
+        _nested_source,
+        nested_fixed_block,
+        nested_pure_ops,
+        _nested_pure_check,
+    ) = _bond_aligned_diatomic_nested_qw_fixture(; bond_length = 1.4)
+
+    nested_via_clear_name = nested_cartesian_operators(
+        nested_fixed_block;
+        nuclear_charges = [1.0, 1.0],
+        expansion = nested_expansion,
+        interaction_treatment = :ggt_nearest,
+    )
+
+    @test nested_via_clear_name isa OrdinaryCartesianOperators3D
+    @test nested_via_clear_name.gaussian_data === nothing
+    @test nested_via_clear_name.overlap ≈ nested_pure_ops.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test nested_via_clear_name.one_body_hamiltonian ≈ nested_pure_ops.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test nested_via_clear_name.interaction_matrix ≈ nested_pure_ops.interaction_matrix atol = 1.0e-12 rtol = 1.0e-12
+    @test nested_via_clear_name.residual_count == 0
 end
 
 @testset "Bond-aligned diatomic split geometry" begin

@@ -54,9 +54,11 @@ export AbstractFunction1D,
        BondAlignedDiatomicGeometryPlaneSlice3D,
        MappedOrdinaryOneBody1D,
        CartesianProductOrbital3D,
+       OrdinaryCartesianOrbital3D,
        QiuWhiteHybridOrbital3D,
        QWRGResidualSpaceDiagnostics,
        OrdinaryCartesianIDAOperators,
+       OrdinaryCartesianOperators3D,
        QiuWhiteResidualGaussianOperators,
        ExperimentalBondAlignedHomonuclearChainNestedQWPath,
        ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath,
@@ -216,7 +218,9 @@ export AbstractFunction1D,
        ordinary_sho_hamiltonian,
        ordinary_sho_spectrum,
        ordinary_cartesian_ida_operators,
+       ordinary_cartesian_product_operators,
        ordinary_cartesian_qiu_white_operators,
+       nested_cartesian_operators,
        diagnose_qwrg_residual_space,
        ordinary_cartesian_vee_expectation,
        angular_benchmark_exact_hamv6_payload,
@@ -424,10 +428,12 @@ function mapped_cartesian_hydrogen_energy end
 function ordinary_sho_hamiltonian end
 function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
+function ordinary_cartesian_product_operators end
 function ordinary_cartesian_qiu_white_operators end
 function diagnose_qwrg_residual_space end
 function ordinary_cartesian_1s2_check end
 function ordinary_cartesian_vee_expectation end
+function nested_cartesian_operators end
 function angular_benchmark_exact_hamv6_payload end
 function build_atomic_fixed_radial_angular_sequence end
 function atomic_fixed_radial_angular_level_dense_payload end

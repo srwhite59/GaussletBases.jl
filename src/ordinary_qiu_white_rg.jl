@@ -1,5 +1,5 @@
 """
-    QiuWhiteHybridOrbital3D
+    OrdinaryCartesianOrbital3D
 
 One orbital index in the paper-faithful Qiu-White residual-Gaussian reference
 path.
@@ -8,7 +8,7 @@ The object records whether the orbital is a Cartesian gausslet product orbital
 or a residual Gaussian together with the associated center and, for residual
 Gaussians, the matched widths used in the MWG diagnostics.
 """
-struct QiuWhiteHybridOrbital3D
+struct OrdinaryCartesianOrbital3D
     index::Int
     kind::Symbol
     label::String
@@ -20,10 +20,12 @@ struct QiuWhiteHybridOrbital3D
     wz::Float64
 end
 
-function Base.show(io::IO, orbital::QiuWhiteHybridOrbital3D)
+const QiuWhiteHybridOrbital3D = OrdinaryCartesianOrbital3D
+
+function Base.show(io::IO, orbital::OrdinaryCartesianOrbital3D)
     print(
         io,
-        "QiuWhiteHybridOrbital3D(index=",
+        "OrdinaryCartesianOrbital3D(index=",
         orbital.index,
         ", kind=:",
         orbital.kind,
@@ -53,18 +55,19 @@ function Base.show(io::IO, orbital::QiuWhiteHybridOrbital3D)
 end
 
 """
-    QiuWhiteResidualGaussianOperators
+    OrdinaryCartesianOperators3D
 
-Paper-faithful Qiu-White residual-Gaussian ordinary Cartesian reference
-Hamiltonian.
+Ordinary Cartesian operator payload for the current pure-Cartesian and
+hybrid-residual construction routes.
 
 This object keeps the final basis as the full 3D gausslet product basis plus
 orthonormalized 3D residual Gaussians. The one-body matrices are built exactly
-in the raw gausslet-plus-GTO space and transformed into the final basis, while
-the two-electron interaction stays in the same two-index integral-diagonal
-approximation (IDA) representation used for the gausslet channel.
+in the raw gausslet-plus-GTO space and transformed into the final basis when a
+residual supplement is present, while the two-electron interaction stays in the
+same two-index integral-diagonal approximation (IDA) representation used for
+the gausslet channel.
 """
-struct QiuWhiteResidualGaussianOperators{B,D}
+struct OrdinaryCartesianOperators3D{B,D}
     basis::B
     gaussian_data::D
     gausslet_backend::Symbol
@@ -73,13 +76,15 @@ struct QiuWhiteResidualGaussianOperators{B,D}
     overlap::Matrix{Float64}
     one_body_hamiltonian::Matrix{Float64}
     interaction_matrix::Matrix{Float64}
-    orbital_data::Vector{QiuWhiteHybridOrbital3D}
+    orbital_data::Vector{OrdinaryCartesianOrbital3D}
     gausslet_count::Int
     residual_count::Int
     raw_to_final::Matrix{Float64}
     residual_centers::Matrix{Float64}
     residual_widths::Matrix{Float64}
 end
+
+const QiuWhiteResidualGaussianOperators = OrdinaryCartesianOperators3D
 
 """
     QWRGResidualSpaceDiagnostics
@@ -1740,10 +1745,10 @@ function _qwrg_stabilize_residual_coefficients(
     )
 end
 
-function Base.show(io::IO, operators::QiuWhiteResidualGaussianOperators)
+function Base.show(io::IO, operators::OrdinaryCartesianOperators3D)
     print(
         io,
-        "QiuWhiteResidualGaussianOperators(gausslet_backend=:",
+        "OrdinaryCartesianOperators3D(gausslet_backend=:",
         operators.gausslet_backend,
         ", interaction=:",
         operators.interaction_treatment,
@@ -1785,10 +1790,10 @@ function Base.show(io::IO, path::ExperimentalAxisAlignedHomonuclearSquareLattice
     )
 end
 
-orbitals(operators::QiuWhiteResidualGaussianOperators) = operators.orbital_data
+orbitals(operators::OrdinaryCartesianOperators3D) = operators.orbital_data
 
 function ordinary_cartesian_vee_expectation(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
     orbital::AbstractVector;
     overlap_tol::Real = 1.0e-8,
 )
@@ -1808,7 +1813,7 @@ function ordinary_cartesian_vee_expectation(
 end
 
 function ordinary_cartesian_1s2_check(
-    operators::QiuWhiteResidualGaussianOperators;
+    operators::OrdinaryCartesianOperators3D;
     overlap_tol::Real = 1.0e-8,
 )
     decomposition = eigen(Hermitian(operators.one_body_hamiltonian))
@@ -3603,11 +3608,11 @@ function _qwrg_orbital_data(
     residual_centers::AbstractMatrix{<:Real},
     residual_widths::AbstractMatrix{<:Real},
 )
-    orbitals_out = QiuWhiteHybridOrbital3D[]
+    orbitals_out = OrdinaryCartesianOrbital3D[]
     for orbital in gausslet_orbitals
         push!(
             orbitals_out,
-            QiuWhiteHybridOrbital3D(
+            OrdinaryCartesianOrbital3D(
                 orbital.index,
                 :gausslet,
                 "g($(orbital.ix),$(orbital.iy),$(orbital.iz))",
@@ -3624,7 +3629,7 @@ function _qwrg_orbital_data(
     for index in axes(residual_centers, 1)
         push!(
             orbitals_out,
-            QiuWhiteHybridOrbital3D(
+            OrdinaryCartesianOrbital3D(
                 base_index + index,
                 :residual_gaussian,
                 "rg$index",
@@ -3650,11 +3655,11 @@ function _qwrg_orbital_data(
     size(fixed_centers, 2) == 3 || throw(
         ArgumentError("nested fixed-block orbital data requires an n×3 center matrix"),
     )
-    orbitals_out = QiuWhiteHybridOrbital3D[]
+    orbitals_out = OrdinaryCartesianOrbital3D[]
     for index in axes(fixed_centers, 1)
         push!(
             orbitals_out,
-            QiuWhiteHybridOrbital3D(
+            OrdinaryCartesianOrbital3D(
                 index,
                 fixed_kind,
                 string(fixed_label_prefix, index),
@@ -3671,7 +3676,7 @@ function _qwrg_orbital_data(
     for index in axes(residual_centers, 1)
         push!(
             orbitals_out,
-            QiuWhiteHybridOrbital3D(
+            OrdinaryCartesianOrbital3D(
                 base_index + index,
                 :residual_gaussian,
                 "rg$index",
@@ -4169,7 +4174,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
     zero_residual_centers = zeros(Float64, 0, 3)
     zero_residual_widths = zeros(Float64, 0, 3)
 
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         basis,
         nothing,
         gausslet_backend,
@@ -4432,7 +4437,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic RG interaction assembly", start_ns)
     timing && _qwrg_maybe_print_timings(timing_io, timings)
 
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         basis,
         gaussian_data,
         gausslet_backend,
@@ -4498,7 +4503,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
     fixed_count = size(fixed_block.overlap, 1)
     zero_residual_centers = zeros(Float64, 0, 3)
     zero_residual_widths = zeros(Float64, 0, 3)
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         fixed_block,
         nothing,
         gausslet_backend,
@@ -4689,7 +4694,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested RG interaction assembly", start_ns)
     timing && _qwrg_maybe_print_timings(timing_io, timings)
 
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         fixed_block,
         gaussian_data,
         gausslet_backend,
@@ -4774,7 +4779,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     Z::Real,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
-    residual_keep_policy::Symbol,
+    residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
     residual_keep_tol = _qwrg_atomic_residual_keep_tol()
@@ -4918,7 +4923,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "RG interaction assembly", start_ns)
     timing && _qwrg_maybe_print_timings(timing_io, timings)
 
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         basis,
         gaussian_data,
         gausslet_backend,
@@ -4946,7 +4951,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     expansion::CoulombGaussianExpansion,
     Z::Real,
     gausslet_backend::Symbol,
-    residual_keep_policy::Symbol,
+    residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
     residual_keep_tol = _qwrg_atomic_residual_keep_tol()
@@ -5038,7 +5043,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "nested RG interaction assembly", start_ns)
     timing && _qwrg_maybe_print_timings(timing_io, timings)
 
-    return QiuWhiteResidualGaussianOperators(
+    return OrdinaryCartesianOperators3D(
         fixed_block,
         gaussian_data,
         gausslet_backend,
@@ -5534,4 +5539,74 @@ function ordinary_cartesian_qiu_white_operators(
         gausslet_backend = gausslet_backend,
         timing = timing,
     )
+end
+
+"""
+    ordinary_cartesian_product_operators(...)
+
+Compatibility-preserving clearer name for the direct-product Cartesian routes
+within the ordinary Cartesian operator family. This includes both pure
+Cartesian product routes and direct-product residual-Gaussian hybrid routes.
+"""
+function ordinary_cartesian_product_operators(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D;
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(basis; kwargs...)
+end
+
+function ordinary_cartesian_product_operators(
+    basis::MappedUniformBasis,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(basis, gaussian_data; kwargs...)
+end
+
+function ordinary_cartesian_product_operators(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(basis, gaussian_data; kwargs...)
+end
+
+"""
+    nested_cartesian_operators(...)
+
+Compatibility-preserving clearer name for the nested fixed-block Cartesian
+routes within the ordinary Cartesian operator family. This includes both pure
+nested fixed-block routes and nested residual-Gaussian hybrid routes.
+"""
+function nested_cartesian_operators(
+    fixed_block::Union{
+        _NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+        _NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D},
+        _NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D},
+    };
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(fixed_block; kwargs...)
+end
+
+function nested_cartesian_operators(
+    fixed_block::_NestedFixedBlock3D,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(fixed_block, gaussian_data; kwargs...)
+end
+
+function nested_cartesian_operators(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    kwargs...,
+)
+    return ordinary_cartesian_qiu_white_operators(fixed_block, gaussian_data; kwargs...)
 end

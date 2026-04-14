@@ -31,13 +31,13 @@ function _cartesian_bundle_representation(operators::OrdinaryCartesianIDAOperato
 end
 
 function _cartesian_qw_bundle_is_pure(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
 )
     return operators.gaussian_data === nothing && operators.residual_count == 0
 end
 
 function _cartesian_bundle_representation(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
 )
     _cartesian_qw_bundle_is_pure(operators) || throw(
         ArgumentError(
@@ -173,7 +173,7 @@ function _cartesian_bundle_integral_weights(
 end
 
 function _cartesian_bundle_integral_weights(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
 )
     _cartesian_qw_bundle_is_pure(operators) || throw(
         ArgumentError(
@@ -296,7 +296,7 @@ function _cartesian_ham_values(
 end
 
 function _cartesian_ham_values(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
     representation::CartesianBasisRepresentation3D,
 )
     _cartesian_qw_bundle_is_pure(operators) || throw(
@@ -308,7 +308,7 @@ function _cartesian_ham_values(
         "format" => "cartesian_hamiltonian_bundle_v1",
         "version" => 1,
         "object_type" => string(nameof(typeof(operators))),
-        "model_kind" => "ordinary_cartesian_qiu_white",
+        "model_kind" => "ordinary_cartesian_operators",
         "interaction_model" => "density_density",
         "interaction_treatment" => String(operators.interaction_treatment),
         "gausslet_backend" => String(operators.gausslet_backend),

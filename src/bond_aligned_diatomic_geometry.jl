@@ -222,7 +222,7 @@ function _bond_aligned_ordinary_points(
 end
 
 function _bond_aligned_qw_points(
-    ops::QiuWhiteResidualGaussianOperators,
+    ops::OrdinaryCartesianOperators3D,
 )
     points = BondAlignedDiatomicGeometryPoint3D[]
     residual_group = 0
@@ -500,7 +500,7 @@ function bond_aligned_diatomic_geometry_payload(
 end
 
 function bond_aligned_diatomic_geometry_payload(
-    ops::QiuWhiteResidualGaussianOperators,
+    ops::OrdinaryCartesianOperators3D,
 )
     basis = ops.basis
     basis isa BondAlignedDiatomicQWBasis3D || throw(
@@ -605,7 +605,7 @@ function bond_aligned_diatomic_geometry_payload(
 end
 
 function bond_aligned_diatomic_geometry_payload(
-    ops::QiuWhiteResidualGaussianOperators,
+    ops::OrdinaryCartesianOperators3D,
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
     fixed_block = ops.basis

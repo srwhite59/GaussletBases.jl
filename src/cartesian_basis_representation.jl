@@ -533,7 +533,7 @@ function _cartesian_product_labels(
     return [string("g(", orbital.ix, ",", orbital.iy, ",", orbital.iz, ")") for orbital in orbitals]
 end
 
-function _cartesian_labels(orbitals::AbstractVector{<:QiuWhiteHybridOrbital3D})
+function _cartesian_labels(orbitals::AbstractVector{<:OrdinaryCartesianOrbital3D})
     return String[String(orbital.label) for orbital in orbitals]
 end
 
@@ -554,7 +554,7 @@ function _cartesian_center_matrix(
 end
 
 function _cartesian_center_matrix(
-    orbitals::AbstractVector{<:QiuWhiteHybridOrbital3D},
+    orbitals::AbstractVector{<:OrdinaryCartesianOrbital3D},
 )
     centers_out = Matrix{Float64}(undef, length(orbitals), 3)
     for (row, orbital) in pairs(orbitals)
@@ -939,7 +939,7 @@ function _cartesian_supplement_metadata(
 end
 
 function _qwrg_cartesian_parent_representation(
-    operators::QiuWhiteResidualGaussianOperators,
+    operators::OrdinaryCartesianOperators3D,
 )
     basis = operators.basis
     basis isa _NestedFixedBlock3D && return basis_representation(basis)
@@ -952,7 +952,7 @@ function _qwrg_cartesian_parent_representation(
     )
 end
 
-function basis_representation(operators::QiuWhiteResidualGaussianOperators)
+function basis_representation(operators::OrdinaryCartesianOperators3D)
     cartesian_parent = _qwrg_cartesian_parent_representation(operators)
     axis_representations = cartesian_parent.axis_representations
     axis_metadata = _cartesian_axis_metadata(axis_representations)
@@ -1011,4 +1011,4 @@ function basis_representation(operators::QiuWhiteResidualGaussianOperators)
     )
 end
 
-basis_metadata(operators::QiuWhiteResidualGaussianOperators) = basis_representation(operators).metadata
+basis_metadata(operators::OrdinaryCartesianOperators3D) = basis_representation(operators).metadata
