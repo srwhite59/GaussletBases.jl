@@ -101,6 +101,9 @@ function _cartesian_bundle_restore_value(value; strings_to_symbols::Bool = false
 end
 
 function _cartesian_bundle_tree_to_namedtuple(tree::Dict{Symbol,Any})
+    if length(tree) == 1 && get(tree, :is_nothing, false) === true
+        return nothing
+    end
     keys_sorted = sort!(collect(keys(tree)); by = string)
     values = map(keys_sorted) do key
         value = tree[key]
@@ -197,12 +200,28 @@ function _cartesian_bundle_axis_representation(
         primitive_layer,
         coefficient_matrix,
     )
+    primitive_matrices =
+        haskey(axis_values, "primitive_matrices/overlap") ?
+        (
+            overlap = Matrix{Float64}(
+                _cartesian_bundle_required_value(axis_values, "primitive_matrices/overlap"),
+            ),
+        ) :
+        NamedTuple()
+    basis_matrices =
+        haskey(axis_values, "basis_matrices/overlap") ?
+        (
+            overlap = Matrix{Float64}(
+                _cartesian_bundle_required_value(axis_values, "basis_matrices/overlap"),
+            ),
+        ) :
+        NamedTuple()
     return BasisRepresentation1D(
         metadata,
         primitive_layer,
         coefficient_matrix,
-        NamedTuple(),
-        NamedTuple(),
+        primitive_matrices,
+        basis_matrices,
     )
 end
 
@@ -277,6 +296,66 @@ function _cartesian_bundle_basis_representation(
         haskey(values, "coefficient_matrix") ?
         Matrix{Float64}(_cartesian_bundle_required_value(values, "coefficient_matrix")) :
         nothing
+    parent_data =
+        metadata.parent_kind == :cartesian_plus_supplement_raw ?
+        let
+            cartesian_parent_representation = _cartesian_bundle_basis_representation(
+                _cartesian_bundle_prefix_values(values, "parent/cartesian"),
+            )
+            supplement_representation = _cartesian_bundle_supplement_representation(
+                _cartesian_bundle_prefix_values(values, "parent/supplement"),
+            )
+            cartesian_supplement_overlap =
+                haskey(values, "parent/cartesian_supplement_overlap") ?
+                Matrix{Float64}(
+                    _cartesian_bundle_required_value(values, "parent/cartesian_supplement_overlap"),
+                ) :
+                nothing
+            supplement_overlap =
+                haskey(values, "parent/supplement_overlap") ?
+                Matrix{Float64}(
+                    _cartesian_bundle_required_value(values, "parent/supplement_overlap"),
+                ) :
+                nothing
+            cartesian_supplement_axis_tables =
+                haskey(values, "parent/cartesian_supplement_axis_tables/x") ?
+                (
+                    x = Matrix{Float64}(
+                        _cartesian_bundle_required_value(
+                            values,
+                            "parent/cartesian_supplement_axis_tables/x",
+                        ),
+                    ),
+                    y = Matrix{Float64}(
+                        _cartesian_bundle_required_value(
+                            values,
+                            "parent/cartesian_supplement_axis_tables/y",
+                        ),
+                    ),
+                    z = Matrix{Float64}(
+                        _cartesian_bundle_required_value(
+                            values,
+                            "parent/cartesian_supplement_axis_tables/z",
+                        ),
+                    ),
+                ) :
+                nothing
+            (
+                ;
+                cartesian_parent_representation = cartesian_parent_representation,
+                supplement_representation = supplement_representation,
+                hybrid_overlap_kind =
+                    haskey(values, "parent/hybrid_overlap_kind") ?
+                    Symbol(String(_cartesian_bundle_required_value(values, "parent/hybrid_overlap_kind"))) :
+                    :unspecified,
+                factorized_cartesian_parent_basis =
+                    _cartesian_factorized_parent_basis(cartesian_parent_representation),
+                cartesian_supplement_axis_tables = cartesian_supplement_axis_tables,
+                cartesian_supplement_overlap = cartesian_supplement_overlap,
+                supplement_overlap = supplement_overlap,
+            )
+        end :
+        (;)
     return CartesianBasisRepresentation3D(
         metadata,
         axis_representations,
@@ -286,7 +365,77 @@ function _cartesian_bundle_basis_representation(
         Matrix{Float64}(_cartesian_bundle_required_value(values, "parent_centers")),
         support_indices,
         _cartesian_bundle_support_states(values),
-        (;),
+        parent_data,
+    )
+end
+
+function _cartesian_bundle_supplement_representation(
+    values::AbstractDict{String},
+)
+    String(_cartesian_bundle_required_value(values, "format")) ==
+    "cartesian_gaussian_shell_supplement_v1" || throw(
+        ArgumentError(
+            "Cartesian basis bundle supplement format is unsupported; expected cartesian_gaussian_shell_supplement_v1",
+        ),
+    )
+    Int(_cartesian_bundle_required_value(values, "version")) == 1 || throw(
+        ArgumentError(
+            "Cartesian basis bundle supplement version is unsupported; expected version 1",
+        ),
+    )
+    metadata = _cartesian_bundle_namedtuple(
+        _cartesian_bundle_prefix_values(values, "metadata");
+        strings_to_symbols = true,
+    )
+    orbital_count = Int(_cartesian_bundle_required_value(values, "orbital_count"))
+    orbitals = CartesianGaussianShellOrbitalRepresentation3D[]
+    sizehint!(orbitals, orbital_count)
+    for index in 1:orbital_count
+        orbital_values = _cartesian_bundle_prefix_values(values, string("orbitals/", index))
+        push!(
+            orbitals,
+            CartesianGaussianShellOrbitalRepresentation3D(
+                String(_cartesian_bundle_required_value(orbital_values, "label")),
+                Tuple(
+                    Int.(
+                        Vector{Int}(
+                            _cartesian_bundle_required_value(
+                                orbital_values,
+                                "angular_powers",
+                            ),
+                        ),
+                    ),
+                ),
+                Tuple(
+                    Float64.(
+                        Vector{Float64}(
+                            _cartesian_bundle_required_value(orbital_values, "center"),
+                        ),
+                    ),
+                ),
+                Float64[
+                    Float64(value) for
+                    value in _cartesian_bundle_required_value(orbital_values, "exponents")
+                ],
+                Float64[
+                    Float64(value) for
+                    value in _cartesian_bundle_required_value(orbital_values, "coefficients")
+                ],
+                Symbol(
+                    String(
+                        _cartesian_bundle_required_value(
+                            orbital_values,
+                            "primitive_normalization",
+                        ),
+                    ),
+                ),
+            ),
+        )
+    end
+    return CartesianGaussianShellSupplementRepresentation3D(
+        Symbol(String(_cartesian_bundle_required_value(values, "supplement_kind"))),
+        orbitals,
+        metadata,
     )
 end
 
@@ -352,17 +501,12 @@ function _cartesian_require_exact_disk_bundle_support(
     bundle::CartesianBasisBundle3D,
     operation::AbstractString,
 )
-    bundle.basis.metadata.parent_kind == :cartesian_product_basis && return bundle
-    if bundle.basis.metadata.parent_kind == :cartesian_plus_supplement_raw
-        throw(
-            ArgumentError(
-                "$(operation) does not yet support hybrid/QW residual Cartesian bundles on disk because $(repr(bundle.path)) uses parent kind :cartesian_plus_supplement_raw and the current exact disk-level path only covers pure Cartesian bundle families",
-            ),
-        )
+    if _cartesian_supports_exact_hybrid_overlap(bundle.basis)
+        return bundle
     end
     throw(
         ArgumentError(
-            "$(operation) does not yet support Cartesian bundle $(repr(bundle.path)) with parent kind :$(bundle.basis.metadata.parent_kind)",
+            "$(operation) does not yet support Cartesian bundle $(repr(bundle.path)) because its basis subtree does not carry a supported exact raw-space identity for parent kind :$(bundle.basis.metadata.parent_kind)",
         ),
     )
 end
@@ -392,7 +536,10 @@ function basis_projector(
 )
     _cartesian_require_exact_disk_bundle_support(source, "disk-level Cartesian basis projector")
     _cartesian_require_exact_disk_bundle_support(target, "disk-level Cartesian basis projector")
-    return basis_projector(source.basis, target.basis)
+    return GaussletBases._cartesian_basis_projector_with_stage_timings(
+        source.basis,
+        target.basis,
+    ).projector
 end
 
 function basis_projector(
@@ -412,7 +559,8 @@ function transfer_orbitals(
 )
     _cartesian_require_exact_disk_bundle_support(source, "disk-level Cartesian orbital transfer")
     _cartesian_require_exact_disk_bundle_support(target, "disk-level Cartesian orbital transfer")
-    return transfer_orbitals(source_coefficients, source.basis, target.basis)
+    projector = basis_projector(source, target)
+    return transfer_orbitals(source_coefficients, projector)
 end
 
 function transfer_orbitals(

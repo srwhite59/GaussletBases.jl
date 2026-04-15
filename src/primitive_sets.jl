@@ -224,16 +224,50 @@ function basis_representation(
     )
 end
 
+function _structural_isequal(left, right)
+    typeof(left) === typeof(right) || return false
+    if left === nothing || left isa Number || left isa AbstractString || left isa Symbol || left isa Bool
+        return isequal(left, right)
+    elseif left isa AbstractArray
+        axes(left) == axes(right) || return false
+        for index in eachindex(left, right)
+            _structural_isequal(left[index], right[index]) || return false
+        end
+        return true
+    elseif left isa NamedTuple
+        keys(left) == keys(right) || return false
+        for key in keys(left)
+            _structural_isequal(getfield(left, key), getfield(right, key)) || return false
+        end
+        return true
+    elseif left isa Tuple
+        length(left) == length(right) || return false
+        for index in eachindex(left)
+            _structural_isequal(left[index], right[index]) || return false
+        end
+        return true
+    end
+
+    nfields = fieldcount(typeof(left))
+    nfields == 0 && return true
+    for field_index in 1:nfields
+        _structural_isequal(getfield(left, field_index), getfield(right, field_index)) ||
+            return false
+    end
+    return true
+end
+
 function _basis_cross_overlap_1d(
     left::BasisRepresentation1D,
     right::BasisRepresentation1D,
 )
-    if isequal(left.metadata, right.metadata) && haskey(left.basis_matrices, :overlap)
+    if _structural_isequal(left.metadata, right.metadata) && haskey(left.basis_matrices, :overlap)
         return Matrix{Float64}(left.basis_matrices.overlap)
     end
 
     primitive_cross =
-        if isequal(left.primitive_set, right.primitive_set) && haskey(left.primitive_matrices, :overlap)
+        if _structural_isequal(left.primitive_set, right.primitive_set) &&
+           haskey(left.primitive_matrices, :overlap)
             Matrix{Float64}(left.primitive_matrices.overlap)
         else
             _primitive_cross_overlap_matrix(

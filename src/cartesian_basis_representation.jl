@@ -95,6 +95,83 @@ end
 
 basis_metadata(representation::CartesianBasisRepresentation3D) = representation.metadata
 
+"""
+    CartesianGaussianShellOrbitalRepresentation3D
+
+Public basis-defining representation of one contracted 3D Cartesian Gaussian
+shell orbital used on the supplement side of the hybrid residual-Gaussian
+routes.
+
+The stored data is exact enough for overlap:
+
+- `label`
+- `angular_powers`
+- `center`
+- `exponents`
+- `coefficients`
+- `primitive_normalization`
+
+The current normalization contract is
+`:axiswise_normalized_cartesian_gaussian`, meaning each primitive uses the same
+axiswise normalized Cartesian-Gaussian prefactor already used in the live
+QW/nested residual construction.
+"""
+struct CartesianGaussianShellOrbitalRepresentation3D
+    label::String
+    angular_powers::NTuple{3,Int}
+    center::NTuple{3,Float64}
+    exponents::Vector{Float64}
+    coefficients::Vector{Float64}
+    primitive_normalization::Symbol
+end
+
+function Base.show(io::IO, orbital::CartesianGaussianShellOrbitalRepresentation3D)
+    print(
+        io,
+        "CartesianGaussianShellOrbitalRepresentation3D(label=",
+        repr(orbital.label),
+        ", l=(",
+        orbital.angular_powers[1],
+        ",",
+        orbital.angular_powers[2],
+        ",",
+        orbital.angular_powers[3],
+        "), nprimitive=",
+        length(orbital.exponents),
+        ")",
+    )
+end
+
+"""
+    CartesianGaussianShellSupplementRepresentation3D
+
+Public representation of the explicit supplement-orbital sector used in the
+hybrid residual-Gaussian Cartesian routes.
+
+It stores:
+
+- `supplement_kind`
+- explicit orbital representations
+- light source metadata such as basis name, `lmax`, and nuclei when that data
+  already exists on the legacy supplement object
+"""
+struct CartesianGaussianShellSupplementRepresentation3D{MT <: NamedTuple}
+    supplement_kind::Symbol
+    orbitals::Vector{CartesianGaussianShellOrbitalRepresentation3D}
+    metadata::MT
+end
+
+function Base.show(io::IO, supplement::CartesianGaussianShellSupplementRepresentation3D)
+    print(
+        io,
+        "CartesianGaussianShellSupplementRepresentation3D(kind=:",
+        supplement.supplement_kind,
+        ", norbitals=",
+        length(supplement.orbitals),
+        ")",
+    )
+end
+
 function _cartesian_product_states(axis_counts::NTuple{3,Int})
     nx, ny, nz = axis_counts
     states = Vector{NTuple{3,Int}}(undef, nx * ny * nz)
@@ -125,6 +202,409 @@ function _cartesian_product_cross_overlap(
     return matrix
 end
 
+function _cartesian_identity_factorized_basis(
+    axis_counts::NTuple{3,Int},
+)
+    nx, ny, nz = axis_counts
+    return _CartesianNestedFactorizedBasis3D(
+        axis_counts,
+        Matrix{Float64}(LinearAlgebra.I, nx, nx),
+        Matrix{Float64}(LinearAlgebra.I, ny, ny),
+        Matrix{Float64}(LinearAlgebra.I, nz, nz),
+        _cartesian_product_states(axis_counts),
+        ones(Float64, nx * ny * nz),
+        0.0,
+    )
+end
+
+function _cartesian_factorized_parent_basis(
+    representation::CartesianBasisRepresentation3D,
+)
+    representation.metadata.parent_kind == :cartesian_product_basis || throw(
+        ArgumentError(
+            "Cartesian factorized parent extraction requires a pure Cartesian-product parent space, got :$(representation.metadata.parent_kind)",
+        ),
+    )
+    if hasproperty(representation.parent_data, :factorized_cartesian_parent_basis)
+        cached = representation.parent_data.factorized_cartesian_parent_basis
+        cached isa _CartesianNestedFactorizedBasis3D && return cached
+    end
+    if representation.contraction_kind == :identity
+        return _cartesian_identity_factorized_basis(representation.metadata.parent_axis_counts)
+    elseif representation.contraction_kind == :dense
+        representation.coefficient_matrix === nothing && throw(
+            ArgumentError(
+                "Cartesian factorized parent extraction requires an explicit dense coefficient matrix",
+            ),
+        )
+        return _nested_extract_factorized_basis(
+            representation.coefficient_matrix,
+            representation.metadata.parent_axis_counts,
+        )
+    end
+    throw(
+        ArgumentError(
+            "Cartesian factorized parent extraction does not support contraction kind :$(representation.contraction_kind)",
+        ),
+    )
+end
+
+function _cartesian_factorized_axis_cross_table(
+    left_functions::AbstractMatrix{<:Real},
+    left_axis::BasisRepresentation1D,
+    right_functions::AbstractMatrix{<:Real},
+    right_axis::BasisRepresentation1D,
+)
+    basis_cross = _basis_cross_overlap_1d(left_axis, right_axis)
+    scratch = Matrix{Float64}(undef, size(left_functions, 2), size(basis_cross, 2))
+    table = Matrix{Float64}(undef, size(left_functions, 2), size(right_functions, 2))
+    mul!(scratch, transpose(left_functions), basis_cross)
+    mul!(table, scratch, right_functions)
+    return table
+end
+
+Base.@kwdef mutable struct _CartesianCrossOverlapStageTimer
+    factorized_parent_ns::Int = 0
+    axis_cross_table_ns::Int = 0
+    cartesian_cartesian_block_ns::Int = 0
+    cartesian_supplement_block_ns::Int = 0
+    supplement_supplement_block_ns::Int = 0
+    final_contraction_ns::Int = 0
+end
+
+function _cartesian_time_stage!(
+    f::F,
+    timer::_CartesianCrossOverlapStageTimer,
+    field::Symbol,
+) where {F}
+    start_ns = time_ns()
+    value = f()
+    elapsed_ns = Int(time_ns() - start_ns)
+    setfield!(timer, field, getfield(timer, field) + elapsed_ns)
+    return value
+end
+
+function _cartesian_cross_overlap_stage_timings(
+    timer::_CartesianCrossOverlapStageTimer,
+    axis_cross_tables = nothing,
+)
+    return (
+        factorized_parent_seconds = timer.factorized_parent_ns / 1.0e9,
+        axis_cross_table_seconds = timer.axis_cross_table_ns / 1.0e9,
+        axis_cross_tables = axis_cross_tables,
+        cartesian_cartesian_block_seconds = timer.cartesian_cartesian_block_ns / 1.0e9,
+        cartesian_supplement_block_seconds = timer.cartesian_supplement_block_ns / 1.0e9,
+        supplement_supplement_block_seconds = timer.supplement_supplement_block_ns / 1.0e9,
+        final_contraction_seconds = timer.final_contraction_ns / 1.0e9,
+        total_seconds =
+            (
+                timer.factorized_parent_ns +
+                timer.axis_cross_table_ns +
+                timer.cartesian_cartesian_block_ns +
+                timer.cartesian_supplement_block_ns +
+                timer.supplement_supplement_block_ns +
+                timer.final_contraction_ns
+            ) / 1.0e9,
+    )
+end
+
+function _cartesian_factorized_axis_cross_table_with_stage_timings(
+    left_functions::AbstractMatrix{<:Real},
+    left_axis::BasisRepresentation1D,
+    right_functions::AbstractMatrix{<:Real},
+    right_axis::BasisRepresentation1D,
+)
+    basis_cross_start_ns = time_ns()
+    basis_cross = _basis_cross_overlap_1d(left_axis, right_axis)
+    basis_cross_seconds = (time_ns() - basis_cross_start_ns) / 1.0e9
+
+    left_contract_start_ns = time_ns()
+    scratch = Matrix{Float64}(undef, size(left_functions, 2), size(basis_cross, 2))
+    mul!(scratch, transpose(left_functions), basis_cross)
+    left_contract_seconds = (time_ns() - left_contract_start_ns) / 1.0e9
+
+    right_contract_start_ns = time_ns()
+    table = Matrix{Float64}(undef, size(left_functions, 2), size(right_functions, 2))
+    mul!(table, scratch, right_functions)
+    right_contract_seconds = (time_ns() - right_contract_start_ns) / 1.0e9
+
+    return (
+        table = table,
+        timings = (
+            basis_cross_overlap_seconds = basis_cross_seconds,
+            left_dictionary_contraction_seconds = left_contract_seconds,
+            right_dictionary_contraction_seconds = right_contract_seconds,
+            reused_from = nothing,
+            total_seconds =
+                basis_cross_seconds + left_contract_seconds + right_contract_seconds,
+        ),
+    )
+end
+
+function _cartesian_same_axis_cross_table_work(
+    left_axis_a::BasisRepresentation1D,
+    left_functions_a::AbstractMatrix{<:Real},
+    right_axis_a::BasisRepresentation1D,
+    right_functions_a::AbstractMatrix{<:Real},
+    left_axis_b::BasisRepresentation1D,
+    left_functions_b::AbstractMatrix{<:Real},
+    right_axis_b::BasisRepresentation1D,
+    right_functions_b::AbstractMatrix{<:Real},
+)
+    return _structural_isequal(left_axis_a.metadata, left_axis_b.metadata) &&
+           _structural_isequal(right_axis_a.metadata, right_axis_b.metadata) &&
+           isequal(left_functions_a, left_functions_b) &&
+           isequal(right_functions_a, right_functions_b)
+end
+
+function _cartesian_factorized_axis_cross_tables(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+    left_factorized::_CartesianNestedFactorizedBasis3D,
+    right_factorized::_CartesianNestedFactorizedBasis3D,
+)
+    function _reused_axis_result(table, axis::Symbol)
+        return (
+            table = table,
+            timings = (
+                basis_cross_overlap_seconds = 0.0,
+                left_dictionary_contraction_seconds = 0.0,
+                right_dictionary_contraction_seconds = 0.0,
+                reused_from = axis,
+                total_seconds = 0.0,
+            ),
+        )
+    end
+
+    x = _cartesian_factorized_axis_cross_table_with_stage_timings(
+        left_factorized.x_functions,
+        left.axis_representations.x,
+        right_factorized.x_functions,
+        right.axis_representations.x,
+    )
+    y =
+        if _cartesian_same_axis_cross_table_work(
+            left.axis_representations.x,
+            left_factorized.x_functions,
+            right.axis_representations.x,
+            right_factorized.x_functions,
+            left.axis_representations.y,
+            left_factorized.y_functions,
+            right.axis_representations.y,
+            right_factorized.y_functions,
+        )
+            _reused_axis_result(x.table, :x)
+        else
+            _cartesian_factorized_axis_cross_table_with_stage_timings(
+                left_factorized.y_functions,
+                left.axis_representations.y,
+                right_factorized.y_functions,
+                right.axis_representations.y,
+            )
+        end
+    z =
+        if _cartesian_same_axis_cross_table_work(
+            left.axis_representations.x,
+            left_factorized.x_functions,
+            right.axis_representations.x,
+            right_factorized.x_functions,
+            left.axis_representations.z,
+            left_factorized.z_functions,
+            right.axis_representations.z,
+            right_factorized.z_functions,
+        )
+            _reused_axis_result(x.table, :x)
+        elseif _cartesian_same_axis_cross_table_work(
+            left.axis_representations.y,
+            left_factorized.y_functions,
+            right.axis_representations.y,
+            right_factorized.y_functions,
+            left.axis_representations.z,
+            left_factorized.z_functions,
+            right.axis_representations.z,
+            right_factorized.z_functions,
+        )
+            _reused_axis_result(y.table, :y)
+        else
+            _cartesian_factorized_axis_cross_table_with_stage_timings(
+                left_factorized.z_functions,
+                left.axis_representations.z,
+                right_factorized.z_functions,
+                right.axis_representations.z,
+            )
+        end
+    return (
+        tables = (x = x.table, y = y.table, z = z.table),
+        timings = (x = x.timings, y = y.timings, z = z.timings),
+    )
+end
+
+function _cartesian_factorized_basis_supplement_cross_from_axis_tables(
+    factorized::_CartesianNestedFactorizedBasis3D,
+    axis_tables::NamedTuple{(:x, :y, :z)},
+    norbitals::Int,
+)
+    matrix = zeros(Float64, length(factorized.basis_triplets), norbitals)
+    @inbounds for basis_index in eachindex(factorized.basis_triplets)
+        ix, iy, iz = factorized.basis_triplets[basis_index]
+        amplitude = factorized.basis_amplitudes[basis_index]
+        for orbital_index in 1:norbitals
+            matrix[basis_index, orbital_index] =
+                amplitude *
+                axis_tables.x[ix, orbital_index] *
+                axis_tables.y[iy, orbital_index] *
+                axis_tables.z[iz, orbital_index]
+        end
+    end
+    return matrix
+end
+
+function _cartesian_factorized_supplement_axis_tables(
+    basis::CartesianBasisRepresentation3D,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    candidates...,
+)
+    for candidate in candidates
+        candidate === nothing && continue
+        hasproperty(candidate, :cartesian_supplement_axis_tables) || continue
+        axis_tables = candidate.cartesian_supplement_axis_tables
+        axis_tables === nothing && continue
+        _cartesian_same_basis_identity(basis, candidate.cartesian_representation) || continue
+        _cartesian_same_supplement_raw_identity(
+            supplement,
+            candidate.supplement_representation,
+        ) || continue
+        return axis_tables
+    end
+    throw(
+        ArgumentError(
+            "exact atomic hybrid cartesian-supplement overlap requires stored factorized axis tables on a hybrid raw side with matching Cartesian parent and supplement raw identities",
+        ),
+    )
+end
+
+function _cartesian_factorized_contract_axis_x(
+    overlap_x::AbstractMatrix{<:Real},
+    tensor::Array{Float64,4},
+)
+    contracted = overlap_x * reshape(tensor, size(tensor, 1), :)
+    return reshape(
+        contracted,
+        size(overlap_x, 1),
+        size(tensor, 2),
+        size(tensor, 3),
+        size(tensor, 4),
+    )
+end
+
+function _cartesian_factorized_contract_axis_y(
+    overlap_y::AbstractMatrix{<:Real},
+    tensor::Array{Float64,4},
+)
+    permuted = PermutedDimsArray(tensor, (2, 1, 3, 4))
+    contracted = overlap_y * reshape(permuted, size(tensor, 2), :)
+    return permutedims(
+        reshape(
+            contracted,
+            size(overlap_y, 1),
+            size(tensor, 1),
+            size(tensor, 3),
+            size(tensor, 4),
+        ),
+        (2, 1, 3, 4),
+    )
+end
+
+function _cartesian_factorized_contract_axis_z(
+    overlap_z::AbstractMatrix{<:Real},
+    tensor::Array{Float64,4},
+)
+    permuted = PermutedDimsArray(tensor, (3, 1, 2, 4))
+    contracted = overlap_z * reshape(permuted, size(tensor, 3), :)
+    return permutedims(
+        reshape(
+            contracted,
+            size(overlap_z, 1),
+            size(tensor, 1),
+            size(tensor, 2),
+            size(tensor, 4),
+        ),
+        (2, 3, 1, 4),
+    )
+end
+
+function _cartesian_factorized_cartesian_cross_overlap(
+    left_factorized::_CartesianNestedFactorizedBasis3D,
+    right_factorized::_CartesianNestedFactorizedBasis3D,
+    axis_cross_tables::NamedTuple{(:x, :y, :z)};
+    block_columns::Int = 32,
+)
+    ncols = length(right_factorized.basis_triplets)
+    left_dimension = length(left_factorized.basis_triplets)
+    result = zeros(Float64, left_dimension, ncols)
+    right_triplets = right_factorized.basis_triplets
+    right_amplitudes = right_factorized.basis_amplitudes
+    left_triplets = left_factorized.basis_triplets
+    left_amplitudes = left_factorized.basis_amplitudes
+    nx_right = size(right_factorized.x_functions, 2)
+    ny_right = size(right_factorized.y_functions, 2)
+    nz_right = size(right_factorized.z_functions, 2)
+
+    for first_column in 1:block_columns:ncols
+        last_column = min(ncols, first_column + block_columns - 1)
+        block_range = first_column:last_column
+        block_size = length(block_range)
+        aggregated = zeros(Float64, nx_right, ny_right, nz_right, block_size)
+        @inbounds for (local_column, global_column) in enumerate(block_range)
+            ix, iy, iz = right_triplets[global_column]
+            aggregated[ix, iy, iz, local_column] = right_amplitudes[global_column]
+        end
+
+        aggregated = _cartesian_factorized_contract_axis_x(axis_cross_tables.x, aggregated)
+        aggregated = _cartesian_factorized_contract_axis_y(axis_cross_tables.y, aggregated)
+        aggregated = _cartesian_factorized_contract_axis_z(axis_cross_tables.z, aggregated)
+
+        @inbounds for basis_index in eachindex(left_triplets)
+            ix, iy, iz = left_triplets[basis_index]
+            amplitude = left_amplitudes[basis_index]
+            for (local_column, global_column) in enumerate(block_range)
+                result[basis_index, global_column] =
+                    amplitude * aggregated[ix, iy, iz, local_column]
+            end
+        end
+    end
+    return result
+end
+
+function _cartesian_factorized_basis_supplement_cross(
+    factorized::_CartesianNestedFactorizedBasis3D,
+    basis::CartesianBasisRepresentation3D,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    candidates...,
+)
+    isempty(supplement.orbitals) && return zeros(Float64, basis.metadata.final_dimension, 0)
+    axis_tables =
+        _cartesian_factorized_supplement_axis_tables(basis, supplement, candidates...)
+    return _cartesian_factorized_basis_supplement_cross_from_axis_tables(
+        factorized,
+        axis_tables,
+        length(supplement.orbitals),
+    )
+end
+
+function _cartesian_factorized_basis_supplement_cross(
+    basis::CartesianBasisRepresentation3D,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    candidates...,
+)
+    return _cartesian_factorized_basis_supplement_cross(
+        _cartesian_factorized_parent_basis(basis),
+        basis,
+        supplement,
+        candidates...,
+    )
+end
+
 function _cartesian_same_parent_raw_identity(
     left::CartesianBasisRepresentation3D,
     right::CartesianBasisRepresentation3D,
@@ -132,18 +612,58 @@ function _cartesian_same_parent_raw_identity(
     left.metadata.parent_kind == :cartesian_product_basis || return false
     right.metadata.parent_kind == :cartesian_product_basis || return false
     left.metadata.parent_axis_counts == right.metadata.parent_axis_counts || return false
-    isequal(left.metadata.axis_metadata, right.metadata.axis_metadata) || return false
+    left.metadata.parent_dimension == right.metadata.parent_dimension || return false
     isequal(left.parent_labels, right.parent_labels) || return false
     isequal(left.parent_centers, right.parent_centers) || return false
     return true
 end
 
-function _cartesian_supported_exact_parent_overlap(
+function _cartesian_same_basis_identity(
     left::CartesianBasisRepresentation3D,
     right::CartesianBasisRepresentation3D,
 )
-    return left.metadata.parent_kind == :cartesian_product_basis &&
-           right.metadata.parent_kind == :cartesian_product_basis
+    _cartesian_same_parent_raw_identity(left, right) || return false
+    left.metadata.basis_kind == right.metadata.basis_kind || return false
+    left.metadata.axis_sharing == right.metadata.axis_sharing || return false
+    left.metadata.final_dimension == right.metadata.final_dimension || return false
+    isequal(left.metadata.working_box, right.metadata.working_box) || return false
+    isequal(left.metadata.basis_labels, right.metadata.basis_labels) || return false
+    isequal(left.metadata.basis_centers, right.metadata.basis_centers) || return false
+    isequal(left.metadata.route_metadata, right.metadata.route_metadata) || return false
+    left.contraction_kind == right.contraction_kind || return false
+    isequal(left.coefficient_matrix, right.coefficient_matrix) || return false
+    isequal(left.support_indices, right.support_indices) || return false
+    isequal(left.support_states, right.support_states) || return false
+    return true
+end
+
+function _cartesian_supports_exact_hybrid_overlap(
+    representation::CartesianBasisRepresentation3D,
+)
+    if representation.metadata.parent_kind == :cartesian_product_basis
+        return true
+    elseif representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        hasproperty(representation.parent_data, :cartesian_parent_representation) || return false
+        hasproperty(representation.parent_data, :supplement_representation) || return false
+        hasproperty(representation.parent_data, :factorized_cartesian_parent_basis) || return false
+        hasproperty(representation.parent_data, :cartesian_supplement_axis_tables) || return false
+        parent_representation = representation.parent_data.cartesian_parent_representation
+        supplement_representation = representation.parent_data.supplement_representation
+        axis_tables = representation.parent_data.cartesian_supplement_axis_tables
+        parent_representation isa CartesianBasisRepresentation3D || return false
+        supplement_representation isa CartesianGaussianShellSupplementRepresentation3D || return false
+        parent_representation.metadata.parent_kind == :cartesian_product_basis || return false
+        supplement_representation.supplement_kind == :atomic_cartesian_shell || return false
+        hasproperty(axis_tables, :x) || return false
+        hasproperty(axis_tables, :y) || return false
+        hasproperty(axis_tables, :z) || return false
+        all(
+            orbital -> orbital.primitive_normalization == :axiswise_normalized_cartesian_gaussian,
+            supplement_representation.orbitals,
+        ) || return false
+        return true
+    end
+    return false
 end
 
 function _cartesian_cross_overlap_error(
@@ -153,7 +673,7 @@ function _cartesian_cross_overlap_error(
     if left.metadata.parent_kind == :cartesian_plus_supplement_raw ||
        right.metadata.parent_kind == :cartesian_plus_supplement_raw
         return ArgumentError(
-            "exact Cartesian cross overlap is not yet implemented for hybrid/QW residual representations because the current public representation does not yet carry explicit exact raw cartesian-supplement cross-overlap metadata",
+            "exact Cartesian cross overlap on hybrid residual-Gaussian representations is currently supported only for the atomic Cartesian-plus-supplement lane with explicit Cartesian parent and supplement orbital representations",
         )
     end
     return ArgumentError(
@@ -220,6 +740,340 @@ function _cartesian_parent_cross_overlap(
     return raw_cross
 end
 
+function _cartesian_basis_supplement_axis_cross(
+    basis::BasisRepresentation1D,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    axis::Symbol,
+)
+    isempty(supplement.orbitals) && return zeros(Float64, size(basis.coefficient_matrix, 2), 0)
+    basis_primitives = collect(primitives(primitive_set(basis)))
+    all(primitive -> primitive isa Gaussian, basis_primitives) || throw(
+        ArgumentError(
+            "exact hybrid cartesian-supplement overlap currently requires Gaussian 1D primitives on the Cartesian axis representation",
+        ),
+    )
+    primitive_cross = zeros(Float64, length(basis_primitives), length(supplement.orbitals))
+    for (column, orbital) in pairs(supplement.orbitals)
+        center_value =
+            axis == :x ? orbital.center[1] :
+            axis == :y ? orbital.center[2] :
+            axis == :z ? orbital.center[3] :
+            throw(ArgumentError("axis must be :x, :y, or :z"))
+        power =
+            axis == :x ? orbital.angular_powers[1] :
+            axis == :y ? orbital.angular_powers[2] :
+            axis == :z ? orbital.angular_powers[3] :
+            throw(ArgumentError("axis must be :x, :y, or :z"))
+        for (row, primitive) in pairs(basis_primitives)
+            alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
+            value = 0.0
+            for index in eachindex(orbital.exponents)
+                exponent = Float64(orbital.exponents[index])
+                coefficient = Float64(orbital.coefficients[index])
+                prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
+                value += coefficient * _qwrg_atomic_basic_integral(
+                    alpha_basis,
+                    primitive.center_value,
+                    0,
+                    1.0,
+                    exponent,
+                    center_value,
+                    power,
+                    prefactor,
+                )
+            end
+            primitive_cross[row, column] = value
+        end
+    end
+    return Matrix{Float64}(transpose(basis.coefficient_matrix) * primitive_cross)
+end
+
+function _cartesian_basis_supplement_cross(
+    basis::CartesianBasisRepresentation3D,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    isempty(supplement.orbitals) && return zeros(Float64, basis.metadata.final_dimension, 0)
+    overlap_x =
+        _cartesian_basis_supplement_axis_cross(basis.axis_representations.x, supplement, :x)
+    overlap_y =
+        _cartesian_basis_supplement_axis_cross(basis.axis_representations.y, supplement, :y)
+    overlap_z =
+        _cartesian_basis_supplement_axis_cross(basis.axis_representations.z, supplement, :z)
+    parent = _cartesian_parent_state_basis(basis)
+    raw_cross = zeros(Float64, length(parent.states), length(supplement.orbitals))
+    for (row, (ix, iy, iz)) in pairs(parent.states)
+        @inbounds for column in eachindex(supplement.orbitals)
+            raw_cross[row, column] =
+                overlap_x[ix, column] *
+                overlap_y[iy, column] *
+                overlap_z[iz, column]
+        end
+    end
+    if parent.coefficients !== nothing
+        return Matrix{Float64}(transpose(parent.coefficients) * raw_cross)
+    end
+    return raw_cross
+end
+
+function _cartesian_supplement_orbital_axis_overlap(
+    left::CartesianGaussianShellOrbitalRepresentation3D,
+    right::CartesianGaussianShellOrbitalRepresentation3D,
+    axis::Symbol,
+)
+    left.primitive_normalization == :axiswise_normalized_cartesian_gaussian || throw(
+        ArgumentError("unsupported left supplement primitive normalization :$(left.primitive_normalization)"),
+    )
+    right.primitive_normalization == :axiswise_normalized_cartesian_gaussian || throw(
+        ArgumentError("unsupported right supplement primitive normalization :$(right.primitive_normalization)"),
+    )
+    center_left =
+        axis == :x ? left.center[1] :
+        axis == :y ? left.center[2] :
+        axis == :z ? left.center[3] :
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    center_right =
+        axis == :x ? right.center[1] :
+        axis == :y ? right.center[2] :
+        right.center[3]
+    power_left =
+        axis == :x ? left.angular_powers[1] :
+        axis == :y ? left.angular_powers[2] :
+        left.angular_powers[3]
+    power_right =
+        axis == :x ? right.angular_powers[1] :
+        axis == :y ? right.angular_powers[2] :
+        right.angular_powers[3]
+    matrix = zeros(Float64, length(left.exponents), length(right.exponents))
+    for j in eachindex(right.exponents)
+        exponent_right = Float64(right.exponents[j])
+        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
+        for i in eachindex(left.exponents)
+            exponent_left = Float64(left.exponents[i])
+            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
+            matrix[i, j] = _qwrg_atomic_basic_integral(
+                exponent_left,
+                center_left,
+                power_left,
+                prefactor_left,
+                exponent_right,
+                center_right,
+                power_right,
+                prefactor_right,
+            )
+        end
+    end
+    return Float64(dot(left.coefficients, matrix * right.coefficients))
+end
+
+function _cartesian_supplement_cross_overlap(
+    left::CartesianGaussianShellSupplementRepresentation3D,
+    right::CartesianGaussianShellSupplementRepresentation3D,
+)
+    matrix = zeros(Float64, length(left.orbitals), length(right.orbitals))
+    for (row, left_orbital) in pairs(left.orbitals), (column, right_orbital) in pairs(right.orbitals)
+        matrix[row, column] =
+            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :x) *
+            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :y) *
+            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :z)
+    end
+    return matrix
+end
+
+function _cartesian_raw_components(
+    representation::CartesianBasisRepresentation3D,
+)
+    if representation.metadata.parent_kind == :cartesian_product_basis
+        nraw = representation.metadata.final_dimension
+        return (
+            cartesian_representation = representation,
+            supplement_representation = _cartesian_empty_supplement_representation(),
+            raw_to_final = Matrix{Float64}(I, nraw, nraw),
+            factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(representation),
+            cartesian_supplement_axis_tables = nothing,
+        )
+    elseif representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        _cartesian_supports_exact_hybrid_overlap(representation) || throw(
+            _cartesian_cross_overlap_error(representation, representation),
+        )
+        raw_to_final = representation.coefficient_matrix === nothing ?
+            throw(
+                ArgumentError(
+                    "hybrid Cartesian basis representation requires an explicit raw_to_final coefficient matrix",
+                ),
+            ) :
+            Matrix{Float64}(representation.coefficient_matrix)
+        return (
+            cartesian_representation = representation.parent_data.cartesian_parent_representation,
+            supplement_representation = representation.parent_data.supplement_representation,
+            raw_to_final = raw_to_final,
+            factorized_cartesian_parent_basis =
+                representation.parent_data.factorized_cartesian_parent_basis,
+            cartesian_supplement_axis_tables =
+                representation.parent_data.cartesian_supplement_axis_tables,
+        )
+    end
+    throw(_cartesian_cross_overlap_error(representation, representation))
+end
+
+function _cartesian_hybrid_cartesian_supplement_cross_dense_reference(
+    left_raw,
+    right_raw,
+)
+    isempty(right_raw.supplement_representation.orbitals) &&
+        return zeros(Float64, left_raw.cartesian_representation.metadata.final_dimension, 0)
+    try
+        return _cartesian_basis_supplement_cross(
+            left_raw.cartesian_representation,
+            right_raw.supplement_representation,
+        )
+    catch error
+        if error isa ArgumentError
+            return _cartesian_factorized_basis_supplement_cross(
+                left_raw.cartesian_representation,
+                right_raw.supplement_representation,
+                left_raw,
+                right_raw,
+            )
+        end
+        rethrow()
+    end
+end
+
+function _cartesian_mixed_raw_cross_overlap_dense_reference(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    left_raw = _cartesian_raw_components(left)
+    right_raw = _cartesian_raw_components(right)
+
+    cc = cross_overlap(
+        left_raw.cartesian_representation,
+        right_raw.cartesian_representation,
+    )
+    cg =
+        isempty(right_raw.supplement_representation.orbitals) ?
+        zeros(Float64, size(cc, 1), 0) :
+        _cartesian_hybrid_cartesian_supplement_cross_dense_reference(left_raw, right_raw)
+    gc =
+        isempty(left_raw.supplement_representation.orbitals) ?
+        zeros(Float64, 0, size(cc, 2)) :
+        transpose(_cartesian_hybrid_cartesian_supplement_cross_dense_reference(right_raw, left_raw))
+    gg =
+        isempty(left_raw.supplement_representation.orbitals) ||
+        isempty(right_raw.supplement_representation.orbitals) ?
+        zeros(
+            Float64,
+            length(left_raw.supplement_representation.orbitals),
+            length(right_raw.supplement_representation.orbitals),
+        ) :
+        _cartesian_supplement_cross_overlap(
+            left_raw.supplement_representation,
+            right_raw.supplement_representation,
+        )
+    raw_cross = [cc cg; gc gg]
+    return Matrix{Float64}(
+        transpose(left_raw.raw_to_final) * raw_cross * right_raw.raw_to_final,
+    )
+end
+
+function _cartesian_mixed_raw_cross_overlap_with_stage_timings(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    timer = _CartesianCrossOverlapStageTimer()
+    left_raw = nothing
+    right_raw = nothing
+    _cartesian_time_stage!(timer, :factorized_parent_ns) do
+        left_raw = _cartesian_raw_components(left)
+        right_raw = _cartesian_raw_components(right)
+        nothing
+    end
+
+    axis_cross_tables = _cartesian_time_stage!(timer, :axis_cross_table_ns) do
+        _cartesian_factorized_axis_cross_tables(
+            left_raw.cartesian_representation,
+            right_raw.cartesian_representation,
+            left_raw.factorized_cartesian_parent_basis,
+            right_raw.factorized_cartesian_parent_basis,
+        )
+    end
+
+    cc = _cartesian_time_stage!(timer, :cartesian_cartesian_block_ns) do
+        _cartesian_factorized_cartesian_cross_overlap(
+            left_raw.factorized_cartesian_parent_basis,
+            right_raw.factorized_cartesian_parent_basis,
+            axis_cross_tables.tables,
+        )
+    end
+
+    cg = _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
+        isempty(right_raw.supplement_representation.orbitals) ? zeros(Float64, size(cc, 1), 0) :
+        _cartesian_factorized_basis_supplement_cross(
+            left_raw.factorized_cartesian_parent_basis,
+            left_raw.cartesian_representation,
+            right_raw.supplement_representation,
+            left_raw,
+            right_raw,
+        )
+    end
+
+    gc = _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
+        isempty(left_raw.supplement_representation.orbitals) ? zeros(Float64, 0, size(cc, 2)) :
+        transpose(
+            _cartesian_factorized_basis_supplement_cross(
+                right_raw.factorized_cartesian_parent_basis,
+                right_raw.cartesian_representation,
+                left_raw.supplement_representation,
+                right_raw,
+                left_raw,
+            ),
+        )
+    end
+
+    gg = _cartesian_time_stage!(timer, :supplement_supplement_block_ns) do
+        isempty(left_raw.supplement_representation.orbitals) ||
+        isempty(right_raw.supplement_representation.orbitals) ?
+        zeros(
+            Float64,
+            length(left_raw.supplement_representation.orbitals),
+            length(right_raw.supplement_representation.orbitals),
+        ) :
+        _cartesian_supplement_cross_overlap(
+            left_raw.supplement_representation,
+            right_raw.supplement_representation,
+        )
+    end
+
+    matrix = _cartesian_time_stage!(timer, :final_contraction_ns) do
+        raw_cross = [cc cg; gc gg]
+        Matrix{Float64}(transpose(left_raw.raw_to_final) * raw_cross * right_raw.raw_to_final)
+    end
+
+    return (
+        matrix = matrix,
+        stage_timings = _cartesian_cross_overlap_stage_timings(timer, axis_cross_tables.timings),
+    )
+end
+
+function _cartesian_mixed_raw_cross_overlap(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    return _cartesian_mixed_raw_cross_overlap_with_stage_timings(left, right).matrix
+end
+
+function _cartesian_uses_exact_mixed_raw_cross_overlap(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+)
+    return (
+        left.metadata.parent_kind == :cartesian_plus_supplement_raw ||
+        right.metadata.parent_kind == :cartesian_plus_supplement_raw
+    ) &&
+           _cartesian_supports_exact_hybrid_overlap(left) &&
+           _cartesian_supports_exact_hybrid_overlap(right)
+end
+
 """
     cross_overlap(left::CartesianBasisRepresentation3D, right::CartesianBasisRepresentation3D)
 
@@ -227,48 +1081,56 @@ Return the exact Cartesian basis cross-overlap matrix between `left` and
 `right`, with rows ordered by the left basis and columns ordered by the right
 basis.
 
-This first pass supports representations whose defining parent/raw space is an
-explicit Cartesian product basis. That covers:
+This first pass supports two exact representation classes:
 
 - direct-product Cartesian representations
 - nested fixed-block Cartesian representations
-- exact cross overlaps between those families
+- hybrid residual-Gaussian final bases whose public representation includes the
+  explicit Cartesian parent representation and supplement-orbital
+  representation needed to build the exact mixed raw-space overlap
 
 The implementation is algebraic:
 
 - if both sides expose an explicit Cartesian product parent, build the parent
   cross overlap from the stored 1D representation layers
 - then contract by the stored 3D coefficient matrices
-
-Hybrid/QW residual final bases are intentionally rejected for now. Their
-current public representation does not yet carry enough exact raw
-Cartesian-supplement cross-overlap metadata to make a fully honest exact path.
+- if either side is hybrid residual-Gaussian, build the exact mixed raw-space
+  block from:
+  - Cartesian-Cartesian overlap on the public Cartesian parent representations
+  - Cartesian-supplement overlap against the public supplement-orbital
+    representation
+  - supplement-supplement overlap on the public supplement representation
+  - then contract by each side's `raw_to_final`
 """
 function cross_overlap(
     left::CartesianBasisRepresentation3D,
     right::CartesianBasisRepresentation3D,
 )
-    _cartesian_supported_exact_parent_overlap(left, right) || throw(
-        _cartesian_cross_overlap_error(left, right),
-    )
-    return _cartesian_parent_cross_overlap(left, right)
+    if left.metadata.parent_kind == :cartesian_product_basis &&
+       right.metadata.parent_kind == :cartesian_product_basis
+        return _cartesian_parent_cross_overlap(left, right)
+    elseif _cartesian_uses_exact_mixed_raw_cross_overlap(left, right)
+        return _cartesian_mixed_raw_cross_overlap(left, right)
+    end
+    throw(_cartesian_cross_overlap_error(left, right))
 end
 
 """
     CartesianBasisTransferDiagnostics
 
 Small public diagnostic bundle for exact Cartesian basis-to-basis transfer on
-the supported pure Cartesian representation families.
+the supported Cartesian representation families.
 
 The diagnostics record:
 
 - the source and target basis dimensions
-- whether the exact transfer used the same-parent or general pure-Cartesian
-  path
-- the residual of the Galerkin normal equations defining the transfer matrix
-- symmetry defects of the source and target self-overlap matrices
-- optional source/target metric traces and transfer residuals when specific
-  orbital coefficients were transferred
+- whether the exact transfer used the same-parent pure-Cartesian,
+  general pure-Cartesian, or hybrid mixed-raw path
+- the defect of the materialized transfer operator relative to the exact final
+  basis cross overlap used by the working transfer contract
+- optional self-overlap diagnostics when that data was explicitly constructed
+- optional source/target Euclidean norm traces and transfer residuals when
+  specific orbital coefficients were transferred
 """
 struct CartesianBasisTransferDiagnostics
     source_dimension::Int
@@ -323,7 +1185,8 @@ end
     CartesianOrbitalTransferResult
 
 Returned by `transfer_orbitals(...)`. Bundles the transferred coefficients, the
-exact basis projector used, and transfer diagnostics.
+exact basis projector used on the normal final-basis transfer path, and
+transfer diagnostics.
 """
 struct CartesianOrbitalTransferResult{CT <: Union{Vector{Float64},Matrix{Float64}}}
     coefficients::CT
@@ -338,6 +1201,8 @@ function Base.show(io::IO, result::CartesianOrbitalTransferResult)
         size(result.coefficients),
         ", path=:",
         result.diagnostics.transfer_path,
+        ", projector_size=",
+        size(result.projector.matrix),
         ")",
     )
 end
@@ -346,27 +1211,79 @@ function _cartesian_transfer_path(
     source::CartesianBasisRepresentation3D,
     target::CartesianBasisRepresentation3D,
 )
+    if source.metadata.parent_kind == :cartesian_plus_supplement_raw ||
+       target.metadata.parent_kind == :cartesian_plus_supplement_raw
+        return :hybrid_mixed_raw_cross_overlap_transfer
+    end
     return _cartesian_same_parent_raw_identity(source, target) ?
-           :same_parent_metric_projection :
-           :pure_cartesian_metric_projection
+           :same_parent_cross_overlap_transfer :
+           :pure_cartesian_cross_overlap_transfer
+end
+
+function _cartesian_columns_are_nearly_orthonormal(
+    coefficients::AbstractMatrix{<:Real};
+    atol::Float64 = 1.0e-8,
+)
+    size(coefficients, 2) > 1 || return false
+    gram = Matrix{Float64}(transpose(coefficients) * coefficients)
+    identity = Matrix{Float64}(LinearAlgebra.I, size(gram, 1), size(gram, 2))
+    return norm(gram - identity, Inf) <= atol
+end
+
+function _cartesian_euclidean_orthonormalize_columns(
+    coefficients::AbstractMatrix{<:Real},
+)
+    ncols = size(coefficients, 2)
+    factorization = qr(Matrix{Float64}(coefficients))
+    orthonormal = Matrix{Float64}(factorization.Q[:, 1:ncols])
+    rblock = Matrix{Float64}(factorization.R[1:ncols, 1:ncols])
+    for column in 1:ncols
+        if rblock[column, column] < 0.0
+            orthonormal[:, column] .*= -1.0
+        end
+    end
+    return orthonormal
+end
+
+function _cartesian_finalize_transferred_coefficients(
+    source_coefficients::AbstractVector{<:Real},
+    transferred_coefficients_matrix::AbstractMatrix{<:Real},
+)
+    return (
+        vec(Matrix{Float64}(transferred_coefficients_matrix)),
+        false,
+    )
+end
+
+function _cartesian_finalize_transferred_coefficients(
+    source_coefficients::AbstractMatrix{<:Real},
+    transferred_coefficients_matrix::AbstractMatrix{<:Real},
+)
+    source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
+    transferred_matrix = Matrix{Float64}(transferred_coefficients_matrix)
+    if _cartesian_columns_are_nearly_orthonormal(source_coefficients_matrix) &&
+       !_cartesian_columns_are_nearly_orthonormal(transferred_matrix)
+        return (
+            _cartesian_euclidean_orthonormalize_columns(transferred_matrix),
+            true,
+        )
+    end
+    return (transferred_matrix, false)
 end
 
 function _cartesian_transfer_diagnostics(
     source::CartesianBasisRepresentation3D,
     target::CartesianBasisRepresentation3D,
-    target_overlap::AbstractMatrix{<:Real},
     target_source_overlap::AbstractMatrix{<:Real},
     projector::AbstractMatrix{<:Real};
     source_coefficients::Union{Nothing,AbstractVecOrMat{<:Real}} = nothing,
     transferred_coefficients::Union{Nothing,AbstractVecOrMat{<:Real}} = nothing,
+    orthonormalized::Bool = false,
 )
-    source_overlap = cross_overlap(source, source)
     source_dimension = source.metadata.final_dimension
     target_dimension = target.metadata.final_dimension
     transfer_path = _cartesian_transfer_path(source, target)
-    projector_residual_inf = norm(target_overlap * projector - target_source_overlap, Inf)
-    source_self_overlap_error = norm(source_overlap - transpose(source_overlap), Inf)
-    target_self_overlap_error = norm(target_overlap - transpose(target_overlap), Inf)
+    projector_residual_inf = norm(projector - target_source_overlap, Inf)
 
     if source_coefficients === nothing || transferred_coefficients === nothing
         return CartesianBasisTransferDiagnostics(
@@ -374,8 +1291,8 @@ function _cartesian_transfer_diagnostics(
             target_dimension,
             transfer_path,
             projector_residual_inf,
-            source_self_overlap_error,
-            target_self_overlap_error,
+            NaN,
+            NaN,
             nothing,
             nothing,
             nothing,
@@ -385,22 +1302,22 @@ function _cartesian_transfer_diagnostics(
     source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
     transferred_coefficients_matrix = _cartesian_coefficients_matrix(transferred_coefficients)
     source_metric =
-        Matrix{Float64}(transpose(source_coefficients_matrix) * source_overlap * source_coefficients_matrix)
+        Matrix{Float64}(transpose(source_coefficients_matrix) * source_coefficients_matrix)
     target_metric =
-        Matrix{Float64}(transpose(transferred_coefficients_matrix) * target_overlap * transferred_coefficients_matrix)
-    transferred_residual_inf = norm(
-        target_overlap * transferred_coefficients_matrix -
-        target_source_overlap * source_coefficients_matrix,
-        Inf,
-    )
+        Matrix{Float64}(transpose(transferred_coefficients_matrix) * transferred_coefficients_matrix)
+    transferred_residual_inf =
+        orthonormalized ? NaN : norm(
+            transferred_coefficients_matrix - projector * source_coefficients_matrix,
+            Inf,
+        )
 
     return CartesianBasisTransferDiagnostics(
         source_dimension,
         target_dimension,
         transfer_path,
         projector_residual_inf,
-        source_self_overlap_error,
-        target_self_overlap_error,
+        NaN,
+        NaN,
         tr(source_metric),
         tr(target_metric),
         transferred_residual_inf,
@@ -415,6 +1332,26 @@ function _cartesian_coefficients_matrix(source_coefficients::AbstractMatrix{<:Re
     return Matrix{Float64}(source_coefficients)
 end
 
+function _cartesian_basis_projector_with_stage_timings(
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+)
+    overlap_result =
+        _cartesian_uses_exact_mixed_raw_cross_overlap(target, source) ?
+        _cartesian_mixed_raw_cross_overlap_with_stage_timings(target, source) :
+        (matrix = Matrix{Float64}(cross_overlap(target, source)), stage_timings = nothing)
+    diagnostics = _cartesian_transfer_diagnostics(
+        source,
+        target,
+        overlap_result.matrix,
+        overlap_result.matrix,
+    )
+    return (
+        projector = CartesianBasisProjector3D(overlap_result.matrix, diagnostics),
+        stage_timings = overlap_result.stage_timings,
+    )
+end
+
 """
     basis_projector(
         source::CartesianBasisRepresentation3D,
@@ -422,38 +1359,26 @@ end
     )
 
 Return the exact metric-consistent basis-to-basis transfer operator from
-`source` into `target` for the currently supported pure Cartesian
-representations.
+`source` into `target` for the currently supported Cartesian representations.
 
-If `SAA = <A|A>`, `SBB = <B|B>`, and `SBA = <B|A>`, the projector matrix is the
-Galerkin transfer
+For the final working-basis contract used in this repo, the transfer matrix is
+the exact final-basis cross overlap
 
-`T_{B <- A} = SBB \\ SBA`
+`T_{B <- A} = S_{BA} = <B|A>`.
 
-so that target-space coefficients satisfy the normal equations
+This first pass supports the same representation families as `cross_overlap(...)`,
+including hybrid residual-Gaussian final bases whose public representation
+exposes the exact mixed raw-space identity.
 
-`SBB * C_B = SBA * C_A`.
-
-This first pass supports the same pure Cartesian representation families as
-`cross_overlap(...)`. Hybrid/QW residual final bases remain intentionally
-unsupported here.
+Final-basis self-overlaps are construction/debug diagnostics only. Normal
+transfer on these orthonormal working bases uses only the exact cross overlap;
+raw/nonorthogonal generalized-overlap algebra remains outside this helper.
 """
 function basis_projector(
     source::CartesianBasisRepresentation3D,
     target::CartesianBasisRepresentation3D,
 )
-    target_overlap = cross_overlap(target, target)
-    target_source_overlap = cross_overlap(target, source)
-    factorization = cholesky(Symmetric(Matrix{Float64}(target_overlap)))
-    projector_matrix = Matrix{Float64}(factorization \ Matrix{Float64}(target_source_overlap))
-    diagnostics = _cartesian_transfer_diagnostics(
-        source,
-        target,
-        target_overlap,
-        target_source_overlap,
-        projector_matrix,
-    )
-    return CartesianBasisProjector3D(projector_matrix, diagnostics)
+    return _cartesian_basis_projector_with_stage_timings(source, target).projector
 end
 
 function _cartesian_transfer_coefficients(
@@ -482,6 +1407,40 @@ function _cartesian_transfer_coefficients(
     return Matrix{Float64}(projector.matrix * Matrix{Float64}(source_coefficients))
 end
 
+function transfer_orbitals(
+    source_coefficients::AbstractVecOrMat{<:Real},
+    projector::CartesianBasisProjector3D,
+)
+    transferred_coefficients_matrix = _cartesian_transfer_coefficients(source_coefficients, projector)
+    transferred_coefficients, orthonormalized =
+        _cartesian_finalize_transferred_coefficients(
+            source_coefficients,
+            _cartesian_coefficients_matrix(transferred_coefficients_matrix),
+        )
+    source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
+    transferred_coefficients_matrix = _cartesian_coefficients_matrix(transferred_coefficients)
+    diagnostics = CartesianBasisTransferDiagnostics(
+        projector.diagnostics.source_dimension,
+        projector.diagnostics.target_dimension,
+        projector.diagnostics.transfer_path,
+        projector.diagnostics.projector_residual_inf,
+        projector.diagnostics.source_self_overlap_error,
+        projector.diagnostics.target_self_overlap_error,
+        tr(transpose(source_coefficients_matrix) * source_coefficients_matrix),
+        tr(transpose(transferred_coefficients_matrix) * transferred_coefficients_matrix),
+        orthonormalized ? NaN : norm(
+            transferred_coefficients_matrix -
+            projector.matrix * source_coefficients_matrix,
+            Inf,
+        ),
+    )
+    return CartesianOrbitalTransferResult(
+        transferred_coefficients,
+        projector,
+        diagnostics,
+    )
+end
+
 """
     transfer_orbitals(
         source_coefficients::AbstractVecOrMat,
@@ -489,14 +1448,18 @@ end
         target::CartesianBasisRepresentation3D,
     )
 
-Transfer orbital coefficients from `source` into `target` using the exact
-metric-consistent projector returned by `basis_projector(...)`.
+Transfer orbital coefficients from `source` into `target` using the exact final
+basis cross overlap returned by `basis_projector(...)`.
 
-The returned coefficients satisfy the Galerkin normal equations
+For the final orthonormal working-basis contract used in this repo, the transfer
+formula is
 
-`SBB * C_B = SBA * C_A`
+`C_B = S_{BA} * C_A`.
 
-for the supported pure Cartesian representation families.
+Final-basis self-overlaps are diagnostic only and are not part of this normal
+transfer path. When the source columns already represent an orthonormal occupied
+block, the transferred target block may be Euclidean-orthonormalized as one
+final cleanup step.
 """
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
@@ -504,23 +1467,7 @@ function transfer_orbitals(
     target::CartesianBasisRepresentation3D,
 )
     projector = basis_projector(source, target)
-    transferred_coefficients = _cartesian_transfer_coefficients(source_coefficients, projector)
-    target_overlap = cross_overlap(target, target)
-    target_source_overlap = cross_overlap(target, source)
-    diagnostics = _cartesian_transfer_diagnostics(
-        source,
-        target,
-        target_overlap,
-        target_source_overlap,
-        projector.matrix;
-        source_coefficients = source_coefficients,
-        transferred_coefficients = transferred_coefficients,
-    )
-    return CartesianOrbitalTransferResult(
-        transferred_coefficients,
-        projector,
-        diagnostics,
-    )
+    return transfer_orbitals(source_coefficients, projector)
 end
 
 function _cartesian_basis_labels(prefix::AbstractString, count::Int)
@@ -876,6 +1823,43 @@ function _cartesian_empty_centers()
     return zeros(Float64, 0, 3)
 end
 
+function _cartesian_supplement_center_matrix(
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    isempty(supplement.orbitals) && return _cartesian_empty_centers()
+    matrix = Matrix{Float64}(undef, length(supplement.orbitals), 3)
+    for (row, orbital) in pairs(supplement.orbitals)
+        matrix[row, 1] = orbital.center[1]
+        matrix[row, 2] = orbital.center[2]
+        matrix[row, 3] = orbital.center[3]
+    end
+    return matrix
+end
+
+function _cartesian_supplement_max_width(
+    sources::AbstractVector{<:LegacyAtomicGaussianSupplement},
+)
+    widths = Float64[Float64(value) for value in (source.max_width for source in sources) if value !== nothing]
+    return isempty(widths) ? nothing : maximum(widths)
+end
+
+function _cartesian_supplement_orbital_representation(
+    orbital::_AtomicCartesianShellOrbital3D,
+)
+    return CartesianGaussianShellOrbitalRepresentation3D(
+        String(orbital.label),
+        (Int(orbital.lx), Int(orbital.ly), Int(orbital.lz)),
+        (
+            Float64(orbital.center[1]),
+            Float64(orbital.center[2]),
+            Float64(orbital.center[3]),
+        ),
+        Float64[Float64(value) for value in orbital.exponents],
+        Float64[Float64(value) for value in orbital.coefficients],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+end
+
 function _cartesian_supplement_kind(::Nothing)
     return :none
 end
@@ -910,15 +1894,81 @@ end
 
 function _cartesian_supplement_metadata(::Nothing)
     return (
-        labels = String[],
-        centers = _cartesian_empty_centers(),
-        angular_powers = NTuple{3,Int}[],
-        exponents = Vector{Vector{Float64}}(),
-        coefficients = Vector{Vector{Float64}}(),
+        source_kind = :none,
+        atom = nothing,
+        basis_name = nothing,
+        basisfile = nothing,
+        lmax = nothing,
+        nuclei = NTuple{3,Float64}[],
+        uncontracted = nothing,
+        max_width = nothing,
     )
 end
 
-function _cartesian_supplement_metadata(
+function _cartesian_supplement_metadata(data::LegacyAtomicGaussianSupplement)
+    return (
+        source_kind = :legacy_atomic_gaussian_supplement,
+        atom = String(data.atom),
+        basis_name = String(data.basis_name),
+        basisfile = String(data.basisfile),
+        lmax = data.lmax,
+        nuclei = NTuple{3,Float64}[(0.0, 0.0, 0.0)],
+        uncontracted = data.uncontracted,
+        max_width = data.max_width,
+    )
+end
+
+function _cartesian_supplement_metadata(data::LegacyBondAlignedDiatomicGaussianSupplement)
+    return (
+        source_kind = :legacy_bond_aligned_diatomic_gaussian_supplement,
+        atom = String(data.atomic_source.atom),
+        basis_name = String(data.atomic_source.basis_name),
+        basisfile = String(data.atomic_source.basisfile),
+        lmax = data.atomic_source.lmax,
+        nuclei = NTuple{3,Float64}[
+            (
+                Float64(nucleus[1]),
+                Float64(nucleus[2]),
+                Float64(nucleus[3]),
+            ) for nucleus in data.nuclei
+        ],
+        uncontracted = data.atomic_source.uncontracted,
+        max_width = data.atomic_source.max_width,
+    )
+end
+
+function _cartesian_supplement_metadata(data::LegacyBondAlignedHeteronuclearGaussianSupplement)
+    return (
+        source_kind = :legacy_bond_aligned_heteronuclear_gaussian_supplement,
+        atom = nothing,
+        basis_name = nothing,
+        basisfile = nothing,
+        lmax = maximum(source.lmax for source in data.atomic_sources),
+        nuclei = NTuple{3,Float64}[
+            (
+                Float64(nucleus[1]),
+                Float64(nucleus[2]),
+                Float64(nucleus[3]),
+            ) for nucleus in data.nuclei
+        ],
+        uncontracted = all(source.uncontracted for source in data.atomic_sources),
+        max_width = _cartesian_supplement_max_width(collect(data.atomic_sources)),
+    )
+end
+
+function _cartesian_empty_supplement_representation()
+    return CartesianGaussianShellSupplementRepresentation3D(
+        :none,
+        CartesianGaussianShellOrbitalRepresentation3D[],
+        _cartesian_supplement_metadata(nothing),
+    )
+end
+
+function _cartesian_supplement_representation(::Nothing)
+    return _cartesian_empty_supplement_representation()
+end
+
+function _cartesian_supplement_representation(
     data::Union{
         LegacyAtomicGaussianSupplement,
         LegacyBondAlignedDiatomicGaussianSupplement,
@@ -928,13 +1978,106 @@ function _cartesian_supplement_metadata(
     supplement3d =
         data isa LegacyAtomicGaussianSupplement ? _atomic_cartesian_shell_supplement_3d(data) :
         _bond_aligned_diatomic_cartesian_shell_supplement_3d(data)
-    orbitals = supplement3d.orbitals
+    orbitals = CartesianGaussianShellOrbitalRepresentation3D[
+        _cartesian_supplement_orbital_representation(orbital) for orbital in supplement3d.orbitals
+    ]
+    return CartesianGaussianShellSupplementRepresentation3D(
+        _cartesian_supplement_kind(data),
+        orbitals,
+        _cartesian_supplement_metadata(data),
+    )
+end
+
+function _cartesian_supplement_orbital_signature(
+    orbital::CartesianGaussianShellOrbitalRepresentation3D,
+)
     return (
-        labels = _cartesian_labels(orbitals),
-        centers = _cartesian_center_matrix(orbitals),
-        angular_powers = NTuple{3,Int}[(orbital.lx, orbital.ly, orbital.lz) for orbital in orbitals],
-        exponents = [Float64[orbital.exponents...] for orbital in orbitals],
-        coefficients = [Float64[orbital.coefficients...] for orbital in orbitals],
+        label = orbital.label,
+        angular_powers = orbital.angular_powers,
+        center = orbital.center,
+        exponents = Tuple(Float64[Float64(value) for value in orbital.exponents]),
+        coefficients = Tuple(Float64[Float64(value) for value in orbital.coefficients]),
+        primitive_normalization = orbital.primitive_normalization,
+    )
+end
+
+function _cartesian_same_supplement_raw_identity(
+    left::CartesianGaussianShellSupplementRepresentation3D,
+    right::CartesianGaussianShellSupplementRepresentation3D,
+)
+    left.supplement_kind == right.supplement_kind || return false
+    isequal(left.metadata, right.metadata) || return false
+    length(left.orbitals) == length(right.orbitals) || return false
+    for index in eachindex(left.orbitals)
+        _cartesian_supplement_orbital_signature(left.orbitals[index]) ==
+        _cartesian_supplement_orbital_signature(right.orbitals[index]) || return false
+    end
+    return true
+end
+
+function _cartesian_atomic_supplement_axis_tables(
+    operators::OrdinaryCartesianOperators3D,
+    cartesian_parent::CartesianBasisRepresentation3D,
+    factorized_cartesian_parent_basis::_CartesianNestedFactorizedBasis3D,
+)
+    operators.gaussian_data isa LegacyAtomicGaussianSupplement || throw(
+        ArgumentError(
+            "factorized atomic hybrid overlap sidecars currently require LegacyAtomicGaussianSupplement",
+        ),
+    )
+    parent_basis =
+        operators.basis isa _NestedFixedBlock3D ? operators.basis.parent_basis :
+        operators.basis
+    parent_basis isa MappedUniformBasis || throw(
+        ArgumentError(
+            "factorized atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
+        ),
+    )
+    gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
+        parent_basis;
+        exponents = operators.expansion.exponents,
+        center = 0.0,
+        backend = operators.gausslet_backend,
+    )
+    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
+    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError(
+            "factorized atomic hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the Cartesian parent side",
+        ),
+    )
+    supplement3d = _atomic_cartesian_shell_supplement_3d(operators.gaussian_data)
+    norbitals = length(supplement3d.orbitals)
+    x_table = zeros(Float64, size(factorized_cartesian_parent_basis.x_functions, 2), norbitals)
+    y_table = zeros(Float64, size(factorized_cartesian_parent_basis.y_functions, 2), norbitals)
+    z_table = zeros(Float64, size(factorized_cartesian_parent_basis.z_functions, 2), norbitals)
+    for (orbital_index, orbital) in pairs(supplement3d.orbitals)
+        x_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :x, operators.expansion)
+        y_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :y, operators.expansion)
+        z_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :z, operators.expansion)
+        coefficients = Vector{Float64}(orbital.coefficients)
+        x_table[:, orbital_index] .=
+            transpose(factorized_cartesian_parent_basis.x_functions) * (x_data.overlap * coefficients)
+        y_table[:, orbital_index] .=
+            transpose(factorized_cartesian_parent_basis.y_functions) * (y_data.overlap * coefficients)
+        z_table[:, orbital_index] .=
+            transpose(factorized_cartesian_parent_basis.z_functions) * (z_data.overlap * coefficients)
+    end
+    return (x = x_table, y = y_table, z = z_table)
+end
+
+function _cartesian_hybrid_overlap_sidecars(
+    operators::OrdinaryCartesianOperators3D,
+    cartesian_parent::CartesianBasisRepresentation3D,
+)
+    factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
+    return (
+        hybrid_overlap_kind = :factorized_atomic_mixed_raw,
+        factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
+        cartesian_supplement_axis_tables = _cartesian_atomic_supplement_axis_tables(
+            operators,
+            cartesian_parent,
+            factorized_cartesian_parent_basis,
+        ),
     )
 end
 
@@ -961,14 +2104,14 @@ function basis_representation(operators::OrdinaryCartesianOperators3D)
             "QW Cartesian basis representation requires the parent Cartesian representation to match gausslet_count",
         ),
     )
-    supplement_metadata = _cartesian_supplement_metadata(operators.gaussian_data)
+    supplement_representation = _cartesian_supplement_representation(operators.gaussian_data)
     parent_labels = vcat(
         cartesian_parent.metadata.basis_labels,
-        supplement_metadata.labels,
+        [orbital.label for orbital in supplement_representation.orbitals],
     )
     parent_centers = vcat(
         cartesian_parent.metadata.basis_centers,
-        supplement_metadata.centers,
+        _cartesian_supplement_center_matrix(supplement_representation),
     )
     size(operators.raw_to_final, 1) == length(parent_labels) || throw(
         ArgumentError(
@@ -991,10 +2134,11 @@ function basis_representation(operators::OrdinaryCartesianOperators3D)
         (
             gausslet_count = operators.gausslet_count,
             residual_count = operators.residual_count,
-            supplement_kind = _cartesian_supplement_kind(operators.gaussian_data),
-            supplement_lmax = _cartesian_supplement_lmax(operators.gaussian_data),
+            supplement_kind = supplement_representation.supplement_kind,
+            supplement_lmax = getfield(supplement_representation.metadata, :lmax),
         ),
     )
+    overlap_sidecars = _cartesian_hybrid_overlap_sidecars(operators, cartesian_parent)
     return CartesianBasisRepresentation3D(
         metadata,
         axis_representations,
@@ -1004,9 +2148,10 @@ function basis_representation(operators::OrdinaryCartesianOperators3D)
         parent_centers,
         nothing,
         nothing,
-        (
+        (;
             cartesian_parent_representation = cartesian_parent,
-            supplement_orbitals = supplement_metadata,
+            supplement_representation = supplement_representation,
+            overlap_sidecars...,
         ),
     )
 end

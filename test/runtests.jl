@@ -4930,32 +4930,281 @@ end
     @test square_metadata.route_metadata.support_count == length(square_fixed_block.support_indices)
 end
 
+function _atomic_hybrid_cartesian_representation_fixture()
+    return _cached_fixture(:atomic_hybrid_cartesian_representation_fixture, () -> begin
+        basis = build_basis(
+            MappedUniformBasisSpec(
+                :G10;
+                count = 13,
+                mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+                reference_spacing = 1.0,
+            ),
+        )
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        fixed_full = one_center_atomic_full_parent_fixed_block(
+            basis;
+            expansion = expansion,
+            nside = 5,
+        )
+        fixed_legacy = one_center_atomic_legacy_profile_fixed_block(
+            basis;
+            expansion = expansion,
+            working_box = 2:12,
+            nside = 5,
+        )
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 1)
+        full_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_full,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            residual_keep_policy = :near_null_only,
+        )
+        legacy_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_legacy,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            residual_keep_policy = :near_null_only,
+        )
+        (
+            basis = basis,
+            expansion = expansion,
+            fixed_full = fixed_full,
+            fixed_legacy = fixed_legacy,
+            fixed_full_rep = basis_representation(fixed_full),
+            fixed_legacy_rep = basis_representation(fixed_legacy),
+            supplement = supplement,
+            full_ops = full_ops,
+            legacy_ops = legacy_ops,
+            full_rep = basis_representation(full_ops),
+            legacy_rep = basis_representation(legacy_ops),
+        )
+    end)
+end
+
+function _metric_normalize_orbital(
+    coefficients::AbstractVector,
+    overlap::AbstractMatrix{<:Real},
+)
+    orbital = Float64[Float64(real(value)) for value in coefficients]
+    norm2 = Float64(real(dot(orbital, overlap * orbital)))
+    norm2 > 0.0 || throw(ArgumentError("orbital must have nonzero target-metric norm"))
+    return orbital ./ sqrt(norm2)
+end
+
+function _metric_orbital_overlap(
+    left::AbstractVector,
+    right::AbstractVector,
+    overlap::AbstractMatrix{<:Real},
+)
+    normalized_left = _metric_normalize_orbital(left, overlap)
+    normalized_right = _metric_normalize_orbital(right, overlap)
+    return Float64(real(dot(normalized_left, overlap * normalized_right)))
+end
+
+function _ordinary_cartesian_hybrid_orbital_observables(
+    operators::OrdinaryCartesianOperators3D,
+    orbital::AbstractVector;
+    overlap_tol::Real = 1.0e-7,
+)
+    overlap = Matrix{Float64}(operators.overlap)
+    normalized = _metric_normalize_orbital(orbital, overlap)
+    one_body = Float64(real(dot(normalized, operators.one_body_hamiltonian * normalized)))
+    vee = GaussletBases.ordinary_cartesian_vee_expectation(
+        operators,
+        normalized;
+        overlap_tol = overlap_tol,
+    )
+    return (
+        orbital = normalized,
+        metric_norm_error = abs(Float64(real(dot(normalized, overlap * normalized))) - 1.0),
+        one_body = one_body,
+        vee = vee,
+        total = 2.0 * one_body + vee,
+    )
+end
+
+function _atomic_direct_product_he_extent_change_contract_fixture(;
+    source_count::Int = 3,
+    target_count::Int = 5,
+)
+    key = Symbol(:atomic_direct_product_he_extent_change_contract, source_count, target_count)
+    return _cached_fixture(key, () -> begin
+        mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0)
+        source_basis = build_basis(
+            MappedUniformBasisSpec(
+                :G10;
+                count = source_count,
+                mapping = mapping,
+                reference_spacing = 1.0,
+            ),
+        )
+        target_basis = build_basis(
+            MappedUniformBasisSpec(
+                :G10;
+                count = target_count,
+                mapping = mapping,
+                reference_spacing = 1.0,
+            ),
+        )
+
+        source_rep = basis_representation(source_basis)
+        target_rep = basis_representation(target_basis)
+        offset = (target_count - source_count) ÷ 2
+        shared_slice = (offset + 1):(offset + source_count)
+
+        return (
+            source_count = source_count,
+            target_count = target_count,
+            shared_slice = shared_slice,
+            source_rep = source_rep,
+            target_rep = target_rep,
+            centers_subset =
+                source_rep.metadata.center_data == target_rep.metadata.center_data[shared_slice],
+            weights_subset =
+                source_rep.metadata.integral_weight_data ==
+                target_rep.metadata.integral_weight_data[shared_slice],
+            coefficient_core_match =
+                source_rep.coefficient_matrix ==
+                target_rep.coefficient_matrix[shared_slice, shared_slice],
+        )
+    end)
+end
+
+function _atomic_hybrid_he_same_parent_stress_fixture(;
+    parent_count::Int = 7,
+    source_working_box::UnitRange{Int} = 2:6,
+    supplement_lmax::Int = 1,
+)
+    key = Symbol(
+        :atomic_hybrid_he_same_parent_stress_fixture,
+        parent_count,
+        first(source_working_box),
+        last(source_working_box),
+        supplement_lmax,
+    )
+    return _cached_fixture(key, () -> begin
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0)
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = supplement_lmax)
+
+        parent_basis = build_basis(
+            MappedUniformBasisSpec(
+                :G10;
+                count = parent_count,
+                mapping = mapping,
+                reference_spacing = 1.0,
+            ),
+        )
+
+        source_fixed = one_center_atomic_legacy_profile_fixed_block(
+            parent_basis;
+            expansion = expansion,
+            working_box = source_working_box,
+            nside = 5,
+        )
+        target_fixed = one_center_atomic_full_parent_fixed_block(
+            parent_basis;
+            expansion = expansion,
+            nside = 5,
+        )
+
+        source_ops = ordinary_cartesian_qiu_white_operators(
+            source_fixed,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            residual_keep_policy = :near_null_only,
+        )
+        target_ops = ordinary_cartesian_qiu_white_operators(
+            target_fixed,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            residual_keep_policy = :near_null_only,
+        )
+
+        source_rep = basis_representation(source_ops)
+        target_rep = basis_representation(target_ops)
+        source_check = GaussletBases.ordinary_cartesian_1s2_check(
+            source_ops;
+            overlap_tol = 1.0e-7,
+        )
+        target_check = GaussletBases.ordinary_cartesian_1s2_check(
+            target_ops;
+            overlap_tol = 1.0e-7,
+        )
+        source_observables = _ordinary_cartesian_hybrid_orbital_observables(
+            source_ops,
+            source_check.orbital;
+            overlap_tol = 1.0e-7,
+        )
+        target_observables = _ordinary_cartesian_hybrid_orbital_observables(
+            target_ops,
+            target_check.orbital;
+            overlap_tol = 1.0e-7,
+        )
+
+        transfer = transfer_orbitals(source_observables.orbital, source_rep, target_rep)
+        transferred_observables = _ordinary_cartesian_hybrid_orbital_observables(
+            target_ops,
+            transfer.coefficients;
+            overlap_tol = 1.0e-7,
+        )
+        target_overlap = Matrix{Float64}(target_ops.overlap)
+        overlap_with_target = _metric_orbital_overlap(
+            transferred_observables.orbital,
+            target_observables.orbital,
+            target_overlap,
+        )
+        sign = overlap_with_target < 0.0 ? -1.0 : 1.0
+        aligned_transferred_observables = _ordinary_cartesian_hybrid_orbital_observables(
+            target_ops,
+            sign .* transferred_observables.orbital;
+            overlap_tol = 1.0e-7,
+        )
+        aligned_overlap_to_target = abs(
+            _metric_orbital_overlap(
+                aligned_transferred_observables.orbital,
+                target_observables.orbital,
+                target_overlap,
+            ),
+        )
+
+        return (
+            parent_basis = parent_basis,
+            source_fixed = source_fixed,
+            target_fixed = target_fixed,
+            supplement = supplement,
+            source_working_box = source_working_box,
+            target_working_box = target_fixed.working_box,
+            source_ops = source_ops,
+            target_ops = target_ops,
+            source_rep = source_rep,
+            target_rep = target_rep,
+            source_check = source_check,
+            target_check = target_check,
+            source_observables = source_observables,
+            target_observables = target_observables,
+            transfer = transfer,
+            transferred_observables = transferred_observables,
+            aligned_transferred_observables = aligned_transferred_observables,
+            aligned_overlap_to_target = aligned_overlap_to_target,
+        )
+    end)
+end
+
 @testset "Cartesian basis representation for atomic QW residual bases" begin
-    basis = build_basis(
-        MappedUniformBasisSpec(
-            :G10;
-            count = 13,
-            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
-            reference_spacing = 1.0,
-        ),
-    )
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    fixed_block = one_center_atomic_full_parent_fixed_block(
-        basis;
-        expansion = expansion,
-        nside = 5,
-    )
-    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-    operators = ordinary_cartesian_qiu_white_operators(
-        fixed_block,
-        supplement;
-        expansion = expansion,
-        Z = 2.0,
-        interaction_treatment = :ggt_nearest,
-        residual_keep_policy = :near_null_only,
-    )
-    representation = basis_representation(operators)
+    fixture = _atomic_hybrid_cartesian_representation_fixture()
+    operators = fixture.full_ops
+    representation = fixture.full_rep
     metadata = basis_metadata(representation)
+    supplement_representation = representation.parent_data.supplement_representation
 
     @test representation isa CartesianBasisRepresentation3D
     @test metadata.basis_kind == :hybrid_residual
@@ -4966,7 +5215,7 @@ end
     @test metadata.route_metadata.gausslet_count == operators.gausslet_count
     @test metadata.route_metadata.residual_count == operators.residual_count
     @test metadata.route_metadata.supplement_kind == :atomic_cartesian_shell
-    @test metadata.route_metadata.supplement_lmax == supplement.lmax
+    @test metadata.route_metadata.supplement_lmax == fixture.supplement.lmax
     @test size(representation.coefficient_matrix) == size(operators.raw_to_final)
     @test length(representation.parent_labels) == size(operators.raw_to_final, 1)
     @test size(representation.parent_centers, 1) == size(operators.raw_to_final, 1)
@@ -4975,9 +5224,23 @@ end
         :nested_fixed_block
     @test representation.parent_data.cartesian_parent_representation.metadata.final_dimension ==
         operators.gausslet_count
-    @test hasproperty(representation.parent_data, :supplement_orbitals)
-    @test length(representation.parent_data.supplement_orbitals.labels) ==
+    @test hasproperty(representation.parent_data, :supplement_representation)
+    @test hasproperty(representation.parent_data, :factorized_cartesian_parent_basis)
+    @test hasproperty(representation.parent_data, :cartesian_supplement_axis_tables)
+    @test supplement_representation isa CartesianGaussianShellSupplementRepresentation3D
+    @test supplement_representation.supplement_kind == :atomic_cartesian_shell
+    @test length(supplement_representation.orbitals) ==
         size(operators.raw_to_final, 1) - operators.gausslet_count
+    @test size(representation.parent_data.cartesian_supplement_axis_tables.x, 2) ==
+        length(supplement_representation.orbitals)
+    @test size(representation.parent_data.cartesian_supplement_axis_tables.y, 2) ==
+        length(supplement_representation.orbitals)
+    @test size(representation.parent_data.cartesian_supplement_axis_tables.z, 2) ==
+        length(supplement_representation.orbitals)
+    @test any(
+        orbital -> sum(orbital.angular_powers) > 0,
+        supplement_representation.orbitals,
+    )
 end
 
 @testset "Cartesian basis representation cross overlap" begin
@@ -5054,27 +5317,29 @@ end
     )
     @test square_cross ≈ square_cross_expected atol = 1.0e-10 rtol = 1.0e-10
 
-    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-    hybrid_ops = ordinary_cartesian_qiu_white_operators(
-        fixed_full,
-        supplement;
-        expansion = expansion,
-        Z = 2.0,
-        interaction_treatment = :ggt_nearest,
-        residual_keep_policy = :near_null_only,
+    hybrid_fixture = _atomic_hybrid_cartesian_representation_fixture()
+    hybrid_self = cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.full_rep)
+    hybrid_cross = cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.legacy_rep)
+    hybrid_cross_reverse = cross_overlap(hybrid_fixture.legacy_rep, hybrid_fixture.full_rep)
+    hybrid_parent_cross = cross_overlap(hybrid_fixture.fixed_full_rep, hybrid_fixture.full_rep)
+    hybrid_parent_cross_reverse = cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.fixed_full_rep)
+    hybrid_self_dense = GaussletBases._cartesian_mixed_raw_cross_overlap_dense_reference(
+        hybrid_fixture.full_rep,
+        hybrid_fixture.full_rep,
     )
-    hybrid_rep = basis_representation(hybrid_ops)
-    hybrid_error = try
-        cross_overlap(hybrid_rep, hybrid_rep)
-        nothing
-    catch error
-        error
-    end
-    @test hybrid_error isa ArgumentError
-    @test occursin(
-        "not yet implemented for hybrid/QW residual representations",
-        sprint(showerror, hybrid_error),
+
+    @test size(hybrid_self) == size(hybrid_fixture.full_ops.overlap)
+    @test hybrid_self ≈ hybrid_self_dense atol = 1.0e-10 rtol = 1.0e-10
+    @test size(hybrid_cross) == (
+        hybrid_fixture.full_rep.metadata.final_dimension,
+        hybrid_fixture.legacy_rep.metadata.final_dimension,
     )
+    @test hybrid_cross ≈ transpose(hybrid_cross_reverse) atol = 1.0e-10 rtol = 1.0e-10
+    @test size(hybrid_parent_cross) == (
+        hybrid_fixture.fixed_full_rep.metadata.final_dimension,
+        hybrid_fixture.full_rep.metadata.final_dimension,
+    )
+    @test hybrid_parent_cross ≈ transpose(hybrid_parent_cross_reverse) atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "Cartesian basis projector and orbital transfer" begin
@@ -5095,7 +5360,7 @@ end
         square_basis_rep.metadata.final_dimension,
     ) atol = 1.0e-10 rtol = 1.0e-10
     @test direct_self_transfer.coefficients ≈ direct_self_coefficients atol = 1.0e-10 rtol = 1.0e-10
-    @test direct_self_transfer.diagnostics.transfer_path == :same_parent_metric_projection
+    @test direct_self_transfer.diagnostics.transfer_path == :same_parent_cross_overlap_transfer
     @test direct_self_transfer.diagnostics.projector_residual_inf < 1.0e-10
     @test direct_self_transfer.diagnostics.transferred_residual_inf < 1.0e-10
     @test direct_self_transfer.diagnostics.source_metric_trace ≈ direct_self_transfer.diagnostics.target_metric_trace atol =
@@ -5145,46 +5410,65 @@ end
     transferred_legacy_to_full =
         transfer_orbitals(legacy_coefficients, fixed_legacy_rep, fixed_full_rep)
 
-    @test fixed_legacy.overlap * full_to_legacy.matrix ≈ cross_overlap(fixed_legacy_rep, fixed_full_rep) atol =
+    @test full_to_legacy.matrix ≈ cross_overlap(fixed_legacy_rep, fixed_full_rep) atol =
           1.0e-10 rtol = 1.0e-10
-    @test fixed_full.overlap * legacy_to_full.matrix ≈ cross_overlap(fixed_full_rep, fixed_legacy_rep) atol =
+    @test legacy_to_full.matrix ≈ cross_overlap(fixed_full_rep, fixed_legacy_rep) atol =
           1.0e-10 rtol = 1.0e-10
     @test transferred_full_to_legacy.diagnostics.transferred_residual_inf < 1.0e-10
     @test transferred_legacy_to_full.diagnostics.transferred_residual_inf < 1.0e-10
 
-    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-    hybrid_ops = ordinary_cartesian_qiu_white_operators(
-        fixed_full,
-        supplement;
-        expansion = expansion,
-        Z = 2.0,
-        interaction_treatment = :ggt_nearest,
-        residual_keep_policy = :near_null_only,
+    hybrid_fixture = _atomic_hybrid_cartesian_representation_fixture()
+    hybrid_self_projector = basis_projector(hybrid_fixture.full_rep, hybrid_fixture.full_rep)
+    hybrid_self_dense = GaussletBases._cartesian_mixed_raw_cross_overlap_dense_reference(
+        hybrid_fixture.full_rep,
+        hybrid_fixture.full_rep,
     )
-    hybrid_rep = basis_representation(hybrid_ops)
-    hybrid_projector_error = try
-        basis_projector(hybrid_rep, hybrid_rep)
-        nothing
-    catch error
-        error
-    end
-    hybrid_transfer_error = try
-        transfer_orbitals(ones(Float64, hybrid_rep.metadata.final_dimension), hybrid_rep, hybrid_rep)
-        nothing
-    catch error
-        error
-    end
+    hybrid_cross_dense = GaussletBases._cartesian_mixed_raw_cross_overlap_dense_reference(
+        hybrid_fixture.legacy_rep,
+        hybrid_fixture.full_rep,
+    )
+    hybrid_self_coefficients = reshape(
+        sin.(Float64.(1:(2 * hybrid_fixture.full_rep.metadata.final_dimension))),
+        :,
+        2,
+    )
+    hybrid_self_transfer = transfer_orbitals(
+        hybrid_self_coefficients,
+        hybrid_fixture.full_rep,
+        hybrid_fixture.full_rep,
+    )
+    hybrid_full_to_legacy = basis_projector(hybrid_fixture.full_rep, hybrid_fixture.legacy_rep)
+    hybrid_parent_to_full =
+        basis_projector(hybrid_fixture.fixed_full_rep, hybrid_fixture.full_rep)
+    hybrid_full_to_parent =
+        basis_projector(hybrid_fixture.full_rep, hybrid_fixture.fixed_full_rep)
+    hybrid_transfer_from_projector =
+        transfer_orbitals(hybrid_self_coefficients, hybrid_self_projector)
 
-    @test hybrid_projector_error isa ArgumentError
-    @test occursin(
-        "not yet implemented for hybrid/QW residual representations",
-        sprint(showerror, hybrid_projector_error),
-    )
-    @test hybrid_transfer_error isa ArgumentError
-    @test occursin(
-        "not yet implemented for hybrid/QW residual representations",
-        sprint(showerror, hybrid_transfer_error),
-    )
+    @test hybrid_self_projector.matrix ≈ Matrix{Float64}(
+        LinearAlgebra.I,
+        hybrid_fixture.full_rep.metadata.final_dimension,
+        hybrid_fixture.full_rep.metadata.final_dimension,
+    ) atol = 1.0e-10 rtol = 1.0e-10
+    @test cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.full_rep) ≈
+          hybrid_self_dense atol = 1.0e-10 rtol = 1.0e-10
+    @test cross_overlap(hybrid_fixture.legacy_rep, hybrid_fixture.full_rep) ≈
+          hybrid_cross_dense atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_full_to_legacy.matrix ≈ hybrid_cross_dense atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_self_transfer.coefficients ≈ hybrid_self_coefficients atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_self_transfer.projector !== nothing
+    @test hybrid_self_transfer.projector.matrix ≈ hybrid_self_projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_self_transfer.diagnostics.transfer_path == :hybrid_mixed_raw_cross_overlap_transfer
+    @test hybrid_self_transfer.diagnostics.projector_residual_inf < 1.0e-10
+    @test hybrid_self_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+    @test hybrid_transfer_from_projector.coefficients ≈ hybrid_self_coefficients atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_transfer_from_projector.projector === hybrid_self_projector
+    @test hybrid_full_to_legacy.matrix ≈
+          cross_overlap(hybrid_fixture.legacy_rep, hybrid_fixture.full_rep) atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_parent_to_full.matrix ≈
+          cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.fixed_full_rep) atol = 1.0e-10 rtol = 1.0e-10
+    @test hybrid_full_to_parent.matrix ≈
+          cross_overlap(hybrid_fixture.fixed_full_rep, hybrid_fixture.full_rep) atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "Cartesian basis bundle export" begin
@@ -5280,41 +5564,56 @@ end
         end
     end
 
-    basis = build_basis(
-        MappedUniformBasisSpec(
-            :G10;
-            count = 13,
-            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
-            reference_spacing = 1.0,
-        ),
+    hybrid_fixture = _atomic_hybrid_cartesian_representation_fixture()
+    hybrid_bundle = cartesian_basis_bundle_payload(
+        hybrid_fixture.full_ops;
+        meta = (example = "test_cartesian_hybrid_bundle",),
     )
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    fixed_full = one_center_atomic_full_parent_fixed_block(
-        basis;
-        expansion = expansion,
-        nside = 5,
-    )
-    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-    hybrid_ops = ordinary_cartesian_qiu_white_operators(
-        fixed_full,
-        supplement;
-        expansion = expansion,
-        Z = 2.0,
-        interaction_treatment = :ggt_nearest,
-        residual_keep_policy = :near_null_only,
-    )
-    hybrid_bundle_error = try
-        cartesian_basis_bundle_payload(hybrid_ops)
-        nothing
-    catch error
-        error
-    end
 
-    @test hybrid_bundle_error isa ArgumentError
-    @test occursin(
-        "does not yet support hybrid/QW residual",
-        sprint(showerror, hybrid_bundle_error),
-    )
+    @test hybrid_bundle.basis["basis_kind"] == "hybrid_residual"
+    @test hybrid_bundle.basis["parent_kind"] == "cartesian_plus_supplement_raw"
+    @test hybrid_bundle.basis["parent/format"] == "cartesian_plus_supplement_raw_v1"
+    @test hybrid_bundle.basis["parent/cartesian/format"] == "cartesian_basis_bundle_v1"
+    @test hybrid_bundle.basis["parent/supplement/format"] ==
+        "cartesian_gaussian_shell_supplement_v1"
+    @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/x")
+    @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/y")
+    @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/z")
+    @test hybrid_bundle.basis["parent/supplement/orbital_count"] ==
+        size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+    @test hybrid_bundle.ham !== nothing
+    @test hybrid_bundle.ham["model_kind"] == "ordinary_cartesian_operators"
+    @test size(hybrid_bundle.ham["overlap"]) == size(hybrid_fixture.full_ops.overlap)
+    @test hybrid_bundle.meta["example"] == "test_cartesian_hybrid_bundle"
+
+    mktempdir() do dir
+        hybrid_path = joinpath(dir, "atomic_hybrid_ops_bundle.jld2")
+
+        @test write_cartesian_basis_bundle_jld2(
+            hybrid_path,
+            hybrid_fixture.full_ops;
+            meta = (example = "test_cartesian_hybrid_bundle",),
+        ) == hybrid_path
+
+        jldopen(hybrid_path, "r") do file
+            @test String(file["basis/parent_kind"]) == "cartesian_plus_supplement_raw"
+            @test String(file["basis/parent/format"]) == "cartesian_plus_supplement_raw_v1"
+            @test String(file["basis/parent/cartesian/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/parent/supplement/format"]) ==
+                "cartesian_gaussian_shell_supplement_v1"
+            @test size(file["basis/parent/cartesian_supplement_axis_tables/x"], 2) ==
+                size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+            @test size(file["basis/parent/cartesian_supplement_axis_tables/y"], 2) ==
+                size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+            @test size(file["basis/parent/cartesian_supplement_axis_tables/z"], 2) ==
+                size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+            @test Int(file["basis/parent/supplement/orbital_count"]) ==
+                size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+            @test size(file["ham/overlap"]) == size(hybrid_fixture.full_ops.overlap)
+            @test size(file["ham/one_body_hamiltonian"]) ==
+                size(hybrid_fixture.full_ops.one_body_hamiltonian)
+        end
+    end
 end
 
 @testset "Cartesian basis bundle overlap and projector" begin
@@ -5336,25 +5635,26 @@ end
         diatomic14_path = joinpath(dir, "diatomic14.jld2")
         diatomic20_path = joinpath(dir, "diatomic20.jld2")
         diatomic_ops_path = joinpath(dir, "diatomic_ops.jld2")
-        unsupported_path = joinpath(dir, "unsupported_hybrid_like.jld2")
+        atomic_fixed_full_path = joinpath(dir, "atomic_fixed_full.jld2")
+        atomic_hybrid_full_path = joinpath(dir, "atomic_hybrid_full.jld2")
+        atomic_hybrid_legacy_path = joinpath(dir, "atomic_hybrid_legacy.jld2")
 
         write_cartesian_basis_bundle_jld2(square_path, square_basis)
         write_cartesian_basis_bundle_jld2(square_fixed_path, square_fixed_block)
         write_cartesian_basis_bundle_jld2(diatomic14_path, diatomic_basis14)
         write_cartesian_basis_bundle_jld2(diatomic20_path, diatomic_basis20)
         write_cartesian_basis_bundle_jld2(diatomic_ops_path, diatomic_ops14)
-        unsupported_payload = cartesian_basis_bundle_payload(square_basis)
-        unsupported_payload.basis["parent_kind"] = "cartesian_plus_supplement_raw"
-        jldopen(unsupported_path, "w") do file
-            GaussletBases._write_prefixed_values!(file, "basis", unsupported_payload.basis)
-            GaussletBases._write_prefixed_values!(file, "meta", unsupported_payload.meta)
-        end
+        hybrid_fixture = _atomic_hybrid_cartesian_representation_fixture()
+        write_cartesian_basis_bundle_jld2(atomic_fixed_full_path, hybrid_fixture.fixed_full)
+        write_cartesian_basis_bundle_jld2(atomic_hybrid_full_path, hybrid_fixture.full_ops)
+        write_cartesian_basis_bundle_jld2(atomic_hybrid_legacy_path, hybrid_fixture.legacy_ops)
 
         square_bundle = read_cartesian_basis_bundle(square_path)
         square_fixed_bundle = read_cartesian_basis_bundle(square_fixed_path)
         diatomic14_bundle = read_cartesian_basis_bundle(diatomic14_path)
         diatomic20_bundle = read_cartesian_basis_bundle(diatomic20_path)
         diatomic_ops_bundle = read_cartesian_basis_bundle(diatomic_ops_path)
+        atomic_hybrid_full_bundle = read_cartesian_basis_bundle(atomic_hybrid_full_path)
 
         @test square_bundle.path == abspath(square_path)
         @test square_bundle.diagnostics.basis_kind == :direct_product
@@ -5388,17 +5688,111 @@ end
         @test disk_transfer.coefficients ≈ memory_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
         @test disk_transfer.diagnostics.transferred_residual_inf < 1.0e-10
 
-        unsupported_error = try
-            cross_overlap(unsupported_path, square_path)
-            nothing
-        catch error
-            error
-        end
-        @test unsupported_error isa ArgumentError
-        @test occursin(
-            "does not yet support hybrid/QW residual Cartesian bundles on disk",
-            sprint(showerror, unsupported_error),
+        @test atomic_hybrid_full_bundle.diagnostics.parent_kind == :cartesian_plus_supplement_raw
+        @test atomic_hybrid_full_bundle.ham !== nothing
+        @test hasproperty(
+            atomic_hybrid_full_bundle.basis.parent_data,
+            :cartesian_supplement_axis_tables,
         )
+
+        disk_hybrid_self = cross_overlap(atomic_hybrid_full_path, atomic_hybrid_full_path)
+        memory_hybrid_self = cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.full_rep)
+        @test disk_hybrid_self ≈ memory_hybrid_self atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_hybrid_cross = cross_overlap(atomic_hybrid_full_path, atomic_hybrid_legacy_path)
+        memory_hybrid_cross = cross_overlap(hybrid_fixture.full_rep, hybrid_fixture.legacy_rep)
+        @test disk_hybrid_cross ≈ memory_hybrid_cross atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_hybrid_parent = cross_overlap(atomic_fixed_full_path, atomic_hybrid_full_path)
+        memory_hybrid_parent = cross_overlap(hybrid_fixture.fixed_full_rep, hybrid_fixture.full_rep)
+        @test disk_hybrid_parent ≈ memory_hybrid_parent atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_hybrid_projector =
+            basis_projector(atomic_hybrid_full_path, atomic_hybrid_legacy_path)
+        memory_hybrid_projector =
+            basis_projector(hybrid_fixture.full_rep, hybrid_fixture.legacy_rep)
+        @test disk_hybrid_projector.matrix ≈ memory_hybrid_projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_hybrid_projector.diagnostics.transfer_path ==
+            memory_hybrid_projector.diagnostics.transfer_path
+
+        hybrid_coefficients = cos.(Float64.(1:hybrid_fixture.full_rep.metadata.final_dimension))
+        disk_hybrid_transfer = transfer_orbitals(
+            hybrid_coefficients,
+            atomic_hybrid_full_path,
+            atomic_hybrid_legacy_path,
+        )
+        memory_hybrid_transfer = transfer_orbitals(
+            hybrid_coefficients,
+            hybrid_fixture.full_rep,
+            hybrid_fixture.legacy_rep,
+        )
+        @test disk_hybrid_transfer.coefficients ≈
+            memory_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_hybrid_transfer.projector !== nothing
+        @test memory_hybrid_transfer.projector !== nothing
+        @test disk_hybrid_transfer.projector.matrix ≈
+            memory_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+    end
+end
+
+@testset "Atomic direct-product He extent change is not an outer-only identity" begin
+    fixture = _atomic_direct_product_he_extent_change_contract_fixture()
+
+    @test fixture.source_count == 3
+    @test fixture.target_count == 5
+    @test fixture.shared_slice == 2:4
+    @test fixture.centers_subset
+    @test !fixture.weights_subset
+    @test !fixture.coefficient_core_match
+end
+
+@testset "Atomic hybrid He orbital transfer remains stable across same-parent different-final-contraction change" begin
+    fixture = _atomic_hybrid_he_same_parent_stress_fixture()
+
+    @test fixture.source_ops isa OrdinaryCartesianOperators3D
+    @test fixture.target_ops isa OrdinaryCartesianOperators3D
+    @test fixture.source_rep.metadata.parent_kind == :cartesian_plus_supplement_raw
+    @test fixture.target_rep.metadata.parent_kind == :cartesian_plus_supplement_raw
+    @test fixture.source_working_box == 2:6
+    @test fixture.target_working_box == (1:7, 1:7, 1:7)
+    @test length(fixture.source_ops.orbital_data) == 134
+    @test length(fixture.target_ops.orbital_data) == 232
+    @test fixture.transfer.diagnostics.transfer_path == :hybrid_mixed_raw_cross_overlap_transfer
+    @test fixture.transfer.diagnostics.transferred_residual_inf < 1.0e-10
+
+    @test fixture.source_observables.metric_norm_error < 1.0e-12
+    @test fixture.target_observables.metric_norm_error < 1.0e-12
+    @test fixture.aligned_transferred_observables.metric_norm_error < 1.0e-12
+
+    @test fixture.target_observables.total < fixture.source_observables.total
+    @test fixture.aligned_overlap_to_target > 0.999995
+    @test abs(
+        fixture.aligned_transferred_observables.one_body - fixture.target_observables.one_body,
+    ) < 1.0e-4
+    @test abs(
+        fixture.aligned_transferred_observables.vee - fixture.target_observables.vee,
+    ) < 2.0e-4
+    @test abs(
+        fixture.aligned_transferred_observables.total - fixture.target_observables.total,
+    ) < 5.0e-4
+
+    mktempdir() do dir
+        source_path = joinpath(dir, "he_source_hybrid.jld2")
+        target_path = joinpath(dir, "he_target_hybrid.jld2")
+
+        write_cartesian_basis_bundle_jld2(source_path, fixture.source_ops)
+        write_cartesian_basis_bundle_jld2(target_path, fixture.target_ops)
+
+        disk_transfer = transfer_orbitals(
+            fixture.source_observables.orbital,
+            source_path,
+            target_path,
+        )
+
+        @test disk_transfer.coefficients ≈ fixture.transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_transfer.diagnostics.transfer_path ==
+            fixture.transfer.diagnostics.transfer_path
     end
 end
 

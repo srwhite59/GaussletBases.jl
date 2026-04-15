@@ -1,12 +1,22 @@
 function _cartesian_bundle_supported_basis(
     representation::CartesianBasisRepresentation3D,
 )
-    representation.metadata.parent_kind == :cartesian_product_basis || throw(
+    if representation.metadata.parent_kind == :cartesian_product_basis
+        return representation
+    elseif _cartesian_supports_exact_hybrid_overlap(representation)
+        return representation
+    elseif representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        throw(
+            ArgumentError(
+                "cartesian basis bundle export requires explicit mixed raw-space identity for hybrid residual-Gaussian representations; this representation does not carry the exact Cartesian parent and supplement representation data needed for export",
+            ),
+        )
+    end
+    throw(
         ArgumentError(
-            "cartesian basis bundle export does not yet support hybrid/QW residual representations because this first bundle pass only covers pure Cartesian raw-space contracts",
+            "cartesian basis bundle export does not yet support parent kind :$(representation.metadata.parent_kind)",
         ),
     )
-    return representation
 end
 
 function _cartesian_bundle_representation(
@@ -39,12 +49,10 @@ end
 function _cartesian_bundle_representation(
     operators::OrdinaryCartesianOperators3D,
 )
-    _cartesian_qw_bundle_is_pure(operators) || throw(
-        ArgumentError(
-            "cartesian basis bundle export does not yet support hybrid/QW residual operators because the current first-pass bundle contract only covers pure Cartesian basis/raw-space families",
-        ),
-    )
-    return _cartesian_bundle_representation(operators.basis)
+    if _cartesian_qw_bundle_is_pure(operators)
+        return _cartesian_bundle_representation(operators.basis)
+    end
+    return _cartesian_bundle_supported_basis(basis_representation(operators))
 end
 
 function _cartesian_store_value!(
@@ -109,6 +117,12 @@ function _cartesian_store_axis_representation!(
     dest[string(prefix, "/primitive_set/primitives")] =
         AbstractPrimitiveFunction1D[primitive for primitive in primitives(primitive_layer)]
     dest[string(prefix, "/coefficient_matrix")] = Matrix{Float64}(representation.coefficient_matrix)
+    haskey(representation.primitive_matrices, :overlap) &&
+        (dest[string(prefix, "/primitive_matrices/overlap")] =
+            Matrix{Float64}(representation.primitive_matrices.overlap))
+    haskey(representation.basis_matrices, :overlap) &&
+        (dest[string(prefix, "/basis_matrices/overlap")] =
+            Matrix{Float64}(representation.basis_matrices.overlap))
     return dest
 end
 
@@ -121,20 +135,79 @@ function _cartesian_parent_integral_weights(
     return _mapped_cartesian_weights(weights_x, weights_y, weights_z)
 end
 
+function _cartesian_supplement_axis_integral(
+    orbital::CartesianGaussianShellOrbitalRepresentation3D,
+    axis::Symbol,
+)
+    axis_index = axis == :x ? 1 : axis == :y ? 2 : 3
+    power = orbital.angular_powers[axis_index]
+    value = 0.0
+    for (exponent, coefficient) in zip(orbital.exponents, orbital.coefficients)
+        prefactor = _qwrg_atomic_shell_prefactor(Float64(exponent), power)
+        value +=
+            Float64(coefficient) *
+            prefactor *
+            _qwrg_shifted_gaussian_moment(Float64(exponent), power)
+    end
+    return value
+end
+
+function _cartesian_supplement_orbital_integral(
+    orbital::CartesianGaussianShellOrbitalRepresentation3D,
+)
+    return _cartesian_supplement_axis_integral(orbital, :x) *
+           _cartesian_supplement_axis_integral(orbital, :y) *
+           _cartesian_supplement_axis_integral(orbital, :z)
+end
+
+function _cartesian_supplement_integral_weights(
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    return Float64[
+        _cartesian_supplement_orbital_integral(orbital) for orbital in supplement.orbitals
+    ]
+end
+
+function _cartesian_raw_integral_weights(
+    representation::CartesianBasisRepresentation3D,
+)
+    if representation.metadata.parent_kind == :cartesian_product_basis
+        return _cartesian_parent_integral_weights(representation)
+    elseif representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        _cartesian_bundle_supported_basis(representation)
+        cartesian_weights = _cartesian_representation_integral_weights(
+            representation.parent_data.cartesian_parent_representation,
+        )
+        supplement_weights = _cartesian_supplement_integral_weights(
+            representation.parent_data.supplement_representation,
+        )
+        return vcat(cartesian_weights, supplement_weights)
+    end
+    throw(
+        ArgumentError(
+            "cartesian basis bundle export does not yet support parent kind :$(representation.metadata.parent_kind)",
+        ),
+    )
+end
+
 function _cartesian_representation_integral_weights(
     representation::CartesianBasisRepresentation3D,
 )
     _cartesian_bundle_supported_basis(representation)
-    parent_weights = _cartesian_parent_integral_weights(representation)
+    parent_weights = _cartesian_raw_integral_weights(representation)
 
     if representation.contraction_kind == :identity
         return Vector{Float64}(parent_weights)
     elseif representation.contraction_kind == :dense
+        contraction =
+            representation.support_indices === nothing ?
+            representation.coefficient_matrix :
+            representation.coefficient_matrix[representation.support_indices, :]
         support_weights =
             representation.support_indices === nothing ?
             parent_weights :
             parent_weights[representation.support_indices]
-        return Vector{Float64}(transpose(representation.coefficient_matrix) * support_weights)
+        return Vector{Float64}(transpose(contraction) * support_weights)
     end
 
     throw(
@@ -175,12 +248,10 @@ end
 function _cartesian_bundle_integral_weights(
     operators::OrdinaryCartesianOperators3D,
 )
-    _cartesian_qw_bundle_is_pure(operators) || throw(
-        ArgumentError(
-            "cartesian basis bundle export does not yet support hybrid/QW residual operators because the current first-pass bundle contract only covers pure Cartesian basis/raw-space families",
-        ),
-    )
-    return _cartesian_bundle_integral_weights(operators.basis)
+    if _cartesian_qw_bundle_is_pure(operators)
+        return _cartesian_bundle_integral_weights(operators.basis)
+    end
+    return _cartesian_representation_integral_weights(basis_representation(operators))
 end
 
 function _cartesian_support_state_matrix(
@@ -244,7 +315,65 @@ function _cartesian_basis_values(
     _cartesian_store_axis_representation!(basis_values, "axes/y", representation.axis_representations.y)
     _cartesian_store_axis_representation!(basis_values, "axes/z", representation.axis_representations.z)
 
+    if representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        _cartesian_bundle_supported_basis(representation)
+        basis_values["parent/format"] = "cartesian_plus_supplement_raw_v1"
+        basis_values["parent/version"] = 1
+        hasproperty(representation.parent_data, :hybrid_overlap_kind) &&
+            (basis_values["parent/hybrid_overlap_kind"] =
+                String(representation.parent_data.hybrid_overlap_kind))
+        parent_cartesian_values = _cartesian_basis_values(
+            representation.parent_data.cartesian_parent_representation;
+            final_integral_weights = _cartesian_representation_integral_weights(
+                representation.parent_data.cartesian_parent_representation,
+            ),
+        )
+        for (key, value) in pairs(parent_cartesian_values)
+            basis_values[string("parent/cartesian/", key)] = value
+        end
+        _cartesian_store_supplement_representation!(
+            basis_values,
+            "parent/supplement",
+            representation.parent_data.supplement_representation,
+        )
+        hasproperty(representation.parent_data, :cartesian_supplement_axis_tables) &&
+            _cartesian_store_value!(
+                basis_values,
+                "parent/cartesian_supplement_axis_tables",
+                representation.parent_data.cartesian_supplement_axis_tables,
+            )
+        hasproperty(representation.parent_data, :cartesian_supplement_overlap) &&
+            (basis_values["parent/cartesian_supplement_overlap"] =
+                Matrix{Float64}(representation.parent_data.cartesian_supplement_overlap))
+        hasproperty(representation.parent_data, :supplement_overlap) &&
+            (basis_values["parent/supplement_overlap"] =
+                Matrix{Float64}(representation.parent_data.supplement_overlap))
+    end
+
     return basis_values
+end
+
+function _cartesian_store_supplement_representation!(
+    dest::Dict{String,Any},
+    prefix::AbstractString,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    dest[string(prefix, "/format")] = "cartesian_gaussian_shell_supplement_v1"
+    dest[string(prefix, "/version")] = 1
+    dest[string(prefix, "/supplement_kind")] = String(supplement.supplement_kind)
+    _cartesian_store_value!(dest, string(prefix, "/metadata"), supplement.metadata)
+    dest[string(prefix, "/orbital_count")] = length(supplement.orbitals)
+    for (index, orbital) in pairs(supplement.orbitals)
+        orbital_prefix = string(prefix, "/orbitals/", index)
+        dest[string(orbital_prefix, "/label")] = orbital.label
+        dest[string(orbital_prefix, "/angular_powers")] = Int[orbital.angular_powers...]
+        dest[string(orbital_prefix, "/center")] = Float64[orbital.center...]
+        dest[string(orbital_prefix, "/exponents")] = Float64[orbital.exponents...]
+        dest[string(orbital_prefix, "/coefficients")] = Float64[orbital.coefficients...]
+        dest[string(orbital_prefix, "/primitive_normalization")] =
+            String(orbital.primitive_normalization)
+    end
+    return dest
 end
 
 function _cartesian_ham_values(
@@ -299,11 +428,6 @@ function _cartesian_ham_values(
     operators::OrdinaryCartesianOperators3D,
     representation::CartesianBasisRepresentation3D,
 )
-    _cartesian_qw_bundle_is_pure(operators) || throw(
-        ArgumentError(
-            "cartesian basis bundle export does not yet support hybrid/QW residual operators because the current first-pass bundle contract only covers pure Cartesian basis/raw-space families",
-        ),
-    )
     return Dict{String,Any}(
         "format" => "cartesian_hamiltonian_bundle_v1",
         "version" => 1,
@@ -321,7 +445,7 @@ function _cartesian_ham_values(
         "interaction_matrix" => Matrix{Float64}(operators.interaction_matrix),
         "orbital_labels" => String[String(orbital.label) for orbital in orbitals(operators)],
         "basis_centers" => Matrix{Float64}(representation.metadata.basis_centers),
-        "basis_integral_weights" => _cartesian_bundle_integral_weights(operators),
+        "basis_integral_weights" => _cartesian_bundle_integral_weights(operators, representation),
         "expansion/exponents" => copy(operators.expansion.exponents),
         "expansion/coefficients" => copy(operators.expansion.coefficients),
         "residual_count" => operators.residual_count,
@@ -382,9 +506,9 @@ grouped JLD2 contract:
 - `ham/...` when present
 - `meta/...`
 
-This first pass supports the pure Cartesian representation families already
-covered by the public exact-overlap layer. Hybrid/QW residual final bases are
-rejected explicitly for now.
+This first pass supports the Cartesian representation families already covered
+by the public exact-overlap layer, including hybrid residual-Gaussian final
+bases whose public representation carries explicit mixed raw-space identity.
 """
 function cartesian_basis_bundle_payload(
     object;
