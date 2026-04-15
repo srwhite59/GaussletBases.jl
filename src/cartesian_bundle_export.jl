@@ -342,6 +342,12 @@ function _cartesian_basis_values(
                 "parent/cartesian_supplement_axis_tables",
                 representation.parent_data.cartesian_supplement_axis_tables,
             )
+        hasproperty(representation.parent_data, :exact_cartesian_supplement_overlap) &&
+            (basis_values["parent/exact_cartesian_supplement_overlap"] =
+                Matrix{Float64}(representation.parent_data.exact_cartesian_supplement_overlap))
+        hasproperty(representation.parent_data, :exact_supplement_overlap) &&
+            (basis_values["parent/exact_supplement_overlap"] =
+                Matrix{Float64}(representation.parent_data.exact_supplement_overlap))
         hasproperty(representation.parent_data, :cartesian_supplement_overlap) &&
             (basis_values["parent/cartesian_supplement_overlap"] =
                 Matrix{Float64}(representation.parent_data.cartesian_supplement_overlap))

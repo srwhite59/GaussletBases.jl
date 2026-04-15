@@ -305,13 +305,21 @@ function _cartesian_bundle_basis_representation(
             supplement_representation = _cartesian_bundle_supplement_representation(
                 _cartesian_bundle_prefix_values(values, "parent/supplement"),
             )
-            cartesian_supplement_overlap =
+            exact_cartesian_supplement_overlap =
+                haskey(values, "parent/exact_cartesian_supplement_overlap") ?
+                Matrix{Float64}(
+                    _cartesian_bundle_required_value(values, "parent/exact_cartesian_supplement_overlap"),
+                ) :
                 haskey(values, "parent/cartesian_supplement_overlap") ?
                 Matrix{Float64}(
                     _cartesian_bundle_required_value(values, "parent/cartesian_supplement_overlap"),
                 ) :
                 nothing
-            supplement_overlap =
+            exact_supplement_overlap =
+                haskey(values, "parent/exact_supplement_overlap") ?
+                Matrix{Float64}(
+                    _cartesian_bundle_required_value(values, "parent/exact_supplement_overlap"),
+                ) :
                 haskey(values, "parent/supplement_overlap") ?
                 Matrix{Float64}(
                     _cartesian_bundle_required_value(values, "parent/supplement_overlap"),
@@ -351,8 +359,10 @@ function _cartesian_bundle_basis_representation(
                 factorized_cartesian_parent_basis =
                     _cartesian_factorized_parent_basis(cartesian_parent_representation),
                 cartesian_supplement_axis_tables = cartesian_supplement_axis_tables,
-                cartesian_supplement_overlap = cartesian_supplement_overlap,
-                supplement_overlap = supplement_overlap,
+                exact_cartesian_supplement_overlap = exact_cartesian_supplement_overlap,
+                exact_supplement_overlap = exact_supplement_overlap,
+                cartesian_supplement_overlap = exact_cartesian_supplement_overlap,
+                supplement_overlap = exact_supplement_overlap,
             )
         end :
         (;)
