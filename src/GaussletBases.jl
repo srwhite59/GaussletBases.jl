@@ -23,6 +23,15 @@ export AbstractFunction1D,
        CartesianBasisTransferDiagnostics,
        CartesianBasisProjector3D,
        CartesianOrbitalTransferResult,
+       @timeg,
+       timing_enabled,
+       timing_live_enabled,
+       set_timing!,
+       set_timing_live!,
+       set_timing_thresholds!,
+       reset_timing_report!,
+       current_timing_report,
+       timing_report,
        cross_overlap,
        basis_projector,
        transfer_orbitals,
@@ -531,6 +540,7 @@ end
 include("mappings.jl")
 include("stencils.jl")
 include("functions.jl")
+include("timing.jl")
 include("internal/wavelet_filters.jl")
 include("families.jl")
 include("bases.jl")

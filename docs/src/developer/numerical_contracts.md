@@ -41,6 +41,12 @@ Use overlap matrices in this regime only for:
 - assertions
 - or one final cleanup step if the deviation from identity is not small enough
 
+For transfers between final orthonormal working bases:
+
+- use only the cross overlap between the two final bases
+- treat self-overlaps of those final bases as diagnostic-only
+- do not turn the final working path into a generalized-overlap formulation
+
 After that, the working representation should simply regard the block as having
 identity overlap.
 
