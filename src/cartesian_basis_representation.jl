@@ -1907,13 +1907,6 @@ function _cartesian_supplement_center_matrix(
     return matrix
 end
 
-function _cartesian_supplement_max_width(
-    sources::AbstractVector{<:LegacyAtomicGaussianSupplement},
-)
-    widths = Float64[Float64(value) for value in (source.max_width for source in sources) if value !== nothing]
-    return isempty(widths) ? nothing : maximum(widths)
-end
-
 function _cartesian_supplement_orbital_representation(
     orbital::_AtomicCartesianShellOrbital3D,
 )
@@ -2004,7 +1997,7 @@ function _cartesian_supplement_metadata(data::LegacyBondAlignedDiatomicGaussianS
             ) for nucleus in data.nuclei
         ],
         uncontracted = data.atomic_source.uncontracted,
-        max_width = data.atomic_source.max_width,
+        max_width = data.max_width,
     )
 end
 
@@ -2023,7 +2016,7 @@ function _cartesian_supplement_metadata(data::LegacyBondAlignedHeteronuclearGaus
             ) for nucleus in data.nuclei
         ],
         uncontracted = all(source.uncontracted for source in data.atomic_sources),
-        max_width = _cartesian_supplement_max_width(collect(data.atomic_sources)),
+        max_width = data.max_width,
     )
 end
 

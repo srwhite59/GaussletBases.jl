@@ -89,6 +89,7 @@ It is not yet a general arbitrary-molecule placement object.
 struct LegacyBondAlignedDiatomicGaussianSupplement
     atomic_source::LegacyAtomicGaussianSupplement
     nuclei::Vector{NTuple{3,Float64}}
+    max_width::Union{Nothing, Float64}
 end
 
 """
@@ -109,6 +110,7 @@ It is not yet a general arbitrary-molecule placement object.
 struct LegacyBondAlignedHeteronuclearGaussianSupplement
     atomic_sources::NTuple{2,LegacyAtomicGaussianSupplement}
     nuclei::Vector{NTuple{3,Float64}}
+    max_width::Union{Nothing, Float64}
 end
 
 function _legacy_atomic_has_nonseparable_shells(data::LegacyAtomicGaussianSupplement)
@@ -204,6 +206,7 @@ function _bond_aligned_diatomic_cartesian_shell_supplement_3d(
         _bond_aligned_two_center_cartesian_orbitals(
             (data.atomic_source, data.atomic_source),
             data.nuclei,
+            data.max_width,
         ),
     )
 end
@@ -213,13 +216,16 @@ function _bond_aligned_diatomic_cartesian_shell_supplement_3d(
 )
     return _BondAlignedDiatomicCartesianShellSupplement3D(
         data,
-        _bond_aligned_two_center_cartesian_orbitals(data.atomic_sources, data.nuclei),
+        _bond_aligned_two_center_cartesian_orbitals(data.atomic_sources, data.nuclei, data.max_width),
     )
 end
+
+_legacy_shell_max_width(shell::LegacyAtomicGaussianShell) = maximum(shell.widths)
 
 function _bond_aligned_two_center_cartesian_orbitals(
     atomic_sources::NTuple{2,LegacyAtomicGaussianSupplement},
     nuclei::AbstractVector{<:NTuple{3,<:Real}},
+    max_width::Union{Nothing, Real} = nothing,
 )
     any(source -> any(shell -> shell.l > 1, source.shells), atomic_sources) && throw(
         ArgumentError("bond-aligned diatomic Cartesian shell supplement currently supports only lmax <= 1"),
@@ -238,6 +244,12 @@ function _bond_aligned_two_center_cartesian_orbitals(
             Float64(nucleus_raw[3]),
         )
         for shell in source.shells
+            # The diatomic `max_width` knob is a supplement-orbital selection
+            # policy, not a primitive rewrite: keep or drop each shell-derived
+            # orbital family using the widest primitive in that shell.
+            if max_width !== nothing && _legacy_shell_max_width(shell) > Float64(max_width)
+                continue
+            end
             shell_entries = _atomic_cartesian_shell_labels(shell.l)
             contraction_columns = _legacy_atomic_shell_contraction_columns(
                 shell,
@@ -310,8 +322,8 @@ function Base.show(io::IO, data::LegacyBondAlignedDiatomicGaussianSupplement)
         ", uncontracted=",
         data.atomic_source.uncontracted,
     )
-    if data.atomic_source.max_width !== nothing
-        print(io, ", max_width=", data.atomic_source.max_width)
+    if data.max_width !== nothing
+        print(io, ", max_width=", data.max_width)
     end
     print(io, ")")
 end
@@ -341,8 +353,12 @@ function Base.show(io::IO, data::LegacyBondAlignedHeteronuclearGaussianSupplemen
         data.atomic_sources[1].uncontracted,
         ", ",
         data.atomic_sources[2].uncontracted,
-        "))",
+        ")",
     )
+    if data.max_width !== nothing
+        print(io, ", max_width=", data.max_width)
+    end
+    print(io, ")")
 end
 
 function _vendored_legacy_basisfile_path()
@@ -693,11 +709,12 @@ function legacy_bond_aligned_diatomic_gaussian_supplement(
         basisfile = basisfile,
         center = 0.0,
         uncontracted = uncontracted,
-        max_width = max_width,
+        max_width = nothing,
     )
     return LegacyBondAlignedDiatomicGaussianSupplement(
         atomic_source,
         [(Float64(center[1]), Float64(center[2]), Float64(center[3])) for center in nuclei],
+        max_width === nothing ? nothing : Float64(max_width),
     )
 end
 
@@ -742,7 +759,7 @@ function legacy_bond_aligned_heteronuclear_gaussian_supplement(
         basisfile = basisfile,
         center = 0.0,
         uncontracted = uncontracted,
-        max_width = max_width,
+        max_width = nothing,
     )
     source_b = legacy_atomic_gaussian_supplement(
         atom_b,
@@ -751,11 +768,12 @@ function legacy_bond_aligned_heteronuclear_gaussian_supplement(
         basisfile = basisfile,
         center = 0.0,
         uncontracted = uncontracted,
-        max_width = max_width,
+        max_width = nothing,
     )
     return LegacyBondAlignedHeteronuclearGaussianSupplement(
         (source_a, source_b),
         [(Float64(center[1]), Float64(center[2]), Float64(center[3])) for center in nuclei],
+        max_width === nothing ? nothing : Float64(max_width),
     )
 end
 
