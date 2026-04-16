@@ -1524,16 +1524,26 @@ function _cartesian_center_matrix(
     return centers_out
 end
 
+function _cartesian_axis_representation(basis::MappedUniformBasis)
+    # The mapped ordinary Cartesian lane should expose the post-proxy,
+    # post-cleanup working layer rather than the upstream distorted primitives.
+    return _mapped_ordinary_working_basis_representation(basis)
+end
+
+function _cartesian_axis_representation(basis)
+    return basis_representation(basis)
+end
+
 function _cartesian_axis_representations(basis::MappedUniformBasis)
-    representation = basis_representation(basis)
+    representation = _cartesian_axis_representation(basis)
     return (x = representation, y = representation, z = representation)
 end
 
 function _cartesian_axis_representations(basis::AbstractBondAlignedOrdinaryQWBasis3D)
     return (
-        x = basis_representation(basis.basis_x),
-        y = basis_representation(basis.basis_y),
-        z = basis_representation(basis.basis_z),
+        x = _cartesian_axis_representation(basis.basis_x),
+        y = _cartesian_axis_representation(basis.basis_y),
+        z = _cartesian_axis_representation(basis.basis_z),
     )
 end
 

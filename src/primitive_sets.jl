@@ -181,6 +181,60 @@ function _representation_operator_matrix(set::PrimitiveSet1D, operator_name::Sym
     throw(ArgumentError("unsupported basis representation operator :$operator_name"))
 end
 
+function _basis_representation_from_metadata(
+    metadata::BasisMetadata1D;
+    operators = (:overlap, :position, :kinetic),
+)
+    operator_names = Tuple(Symbol(operator_name) for operator_name in operators)
+    length(unique(operator_names)) == length(operator_names) ||
+        throw(ArgumentError("basis representation operator names must be unique"))
+
+    primitive_layer = metadata.primitive_set
+    coefficient_matrix = metadata.coefficient_matrix
+
+    primitive_matrix_values =
+        Tuple(_representation_operator_matrix(primitive_layer, operator_name) for operator_name in operator_names)
+    basis_matrix_values =
+        Tuple(
+            Matrix{Float64}(transpose(coefficient_matrix) * matrix * coefficient_matrix)
+            for matrix in primitive_matrix_values
+        )
+
+    return BasisRepresentation1D(
+        metadata,
+        primitive_layer,
+        coefficient_matrix,
+        NamedTuple{operator_names}(primitive_matrix_values),
+        NamedTuple{operator_names}(basis_matrix_values),
+    )
+end
+
+function _mapped_ordinary_working_basis_metadata(basis::MappedUniformBasis)
+    localized_layer = _mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(basis)).layer
+    localized_centers = Float64[Float64(value) for value in centers(localized_layer)]
+    return BasisMetadata1D(
+        :mapped_uniform,
+        _basis_family_name(basis),
+        mapping(basis),
+        localized_centers,
+        copy(localized_centers),
+        Float64[Float64(value) for value in integral_weights(localized_layer)],
+        _basis_label_vector(length(basis)),
+        primitive_set(localized_layer),
+        Matrix{Float64}(stencil_matrix(localized_layer)),
+    )
+end
+
+function _mapped_ordinary_working_basis_representation(
+    basis::MappedUniformBasis;
+    operators = (:overlap, :position, :kinetic),
+)
+    return _basis_representation_from_metadata(
+        _mapped_ordinary_working_basis_metadata(basis);
+        operators = operators,
+    )
+end
+
 """
     basis_representation(basis; operators = (:overlap, :position, :kinetic))
 
@@ -202,26 +256,7 @@ function basis_representation(
     basis::Union{UniformBasis, MappedUniformBasis, HalfLineBasis, RadialBasis};
     operators = (:overlap, :position, :kinetic),
 )
-    operator_names = Tuple(Symbol(operator_name) for operator_name in operators)
-    length(unique(operator_names)) == length(operator_names) ||
-        throw(ArgumentError("basis representation operator names must be unique"))
-
-    metadata = basis_metadata(basis)
-    primitive_layer = metadata.primitive_set
-    coefficient_matrix = metadata.coefficient_matrix
-
-    primitive_matrix_values =
-        Tuple(_representation_operator_matrix(primitive_layer, operator_name) for operator_name in operator_names)
-    basis_matrix_values =
-        Tuple(contract_primitive_matrix(basis, matrix) for matrix in primitive_matrix_values)
-
-    return BasisRepresentation1D(
-        metadata,
-        primitive_layer,
-        coefficient_matrix,
-        NamedTuple{operator_names}(primitive_matrix_values),
-        NamedTuple{operator_names}(basis_matrix_values),
-    )
+    return _basis_representation_from_metadata(basis_metadata(basis); operators = operators)
 end
 
 function _structural_isequal(left, right)
@@ -278,6 +313,18 @@ function _basis_cross_overlap_1d(
         end
 
     return Matrix{Float64}(transpose(left.coefficient_matrix) * primitive_cross * right.coefficient_matrix)
+end
+
+"""
+    cross_overlap(left::BasisRepresentation1D, right::BasisRepresentation1D)
+
+Build the exact 1D basis overlap between two explicit basis representations.
+"""
+function cross_overlap(
+    left::BasisRepresentation1D,
+    right::BasisRepresentation1D,
+)
+    return _basis_cross_overlap_1d(left, right)
 end
 
 function _primitive_support_bounds(primitive::Gaussian)
