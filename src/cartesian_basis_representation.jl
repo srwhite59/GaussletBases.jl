@@ -70,7 +70,7 @@ struct CartesianBasisRepresentation3D{
     metadata::MT
     axis_representations::AT
     contraction_kind::Symbol
-    coefficient_matrix::Union{Nothing,Matrix{Float64}}
+    coefficient_matrix::Union{Nothing,_CartesianCoefficientMap}
     parent_labels::Vector{String}
     parent_centers::Matrix{Float64}
     support_indices::Union{Nothing,Vector{Int}}
@@ -234,7 +234,7 @@ function _cartesian_factorized_parent_basis(
     elseif representation.contraction_kind == :dense
         representation.coefficient_matrix === nothing && throw(
             ArgumentError(
-                "Cartesian factorized parent extraction requires an explicit dense coefficient matrix",
+                "Cartesian factorized parent extraction requires an explicit coefficient matrix",
             ),
         )
         return _nested_extract_factorized_basis(
@@ -1875,7 +1875,7 @@ function basis_representation(fixed_block::_NestedFixedBlock3D)
         metadata,
         axis_representations,
         :dense,
-        Matrix{Float64}(fixed_block.coefficient_matrix),
+        _cartesian_coefficient_map_storage(fixed_block.coefficient_matrix),
         parent_labels,
         parent_centers,
         Vector{Int}(fixed_block.support_indices),

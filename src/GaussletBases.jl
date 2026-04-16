@@ -3,6 +3,7 @@ module GaussletBases
 using JLD2
 using LinearAlgebra
 using SHA
+using SparseArrays
 using SpecialFunctions
 using TOML
 

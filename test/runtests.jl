@@ -2,6 +2,7 @@ using Test
 using Logging
 using LinearAlgebra
 using JLD2
+using SparseArrays
 
 using GaussletBases
 
@@ -5000,6 +5001,71 @@ end
     @test square_metadata.route_metadata.support_count == length(square_fixed_block.support_indices)
 end
 
+function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixedBlock3D)
+    return GaussletBases._NestedFixedBlock3D(
+        fixed_block.parent_basis,
+        fixed_block.shell,
+        sparse(fixed_block.coefficient_matrix),
+        fixed_block.support_indices,
+        fixed_block.overlap,
+        fixed_block.kinetic,
+        fixed_block.position_x,
+        fixed_block.position_y,
+        fixed_block.position_z,
+        fixed_block.x2_x,
+        fixed_block.x2_y,
+        fixed_block.x2_z,
+        fixed_block.weights,
+        fixed_block.gaussian_sum,
+        fixed_block.pair_sum,
+        fixed_block.gaussian_terms,
+        fixed_block.pair_terms,
+        fixed_block.term_storage,
+        fixed_block.fixed_centers,
+    )
+end
+
+@testset "Nested coefficient maps support sparse storage" begin
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 13,
+            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ),
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    dense_fixed_block = one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    sparse_fixed_block = _with_sparse_nested_coefficients(dense_fixed_block)
+
+    dense_representation = basis_representation(dense_fixed_block)
+    sparse_representation = basis_representation(sparse_fixed_block)
+
+    @test sparse_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
+    @test sparse_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
+    @test Matrix(sparse_representation.coefficient_matrix) ≈
+        dense_representation.coefficient_matrix atol = 1.0e-12 rtol = 1.0e-12
+    @test cross_overlap(sparse_representation, sparse_representation) ≈
+        cross_overlap(dense_representation, dense_representation) atol = 1.0e-10 rtol = 1.0e-10
+
+    mktemp() do sparse_path, sparse_io
+        close(sparse_io)
+        sparse_matrix = sparse(dense_fixed_block.coefficient_matrix)
+        jldopen(sparse_path, "w") do file
+            file["matrix"] = sparse_matrix
+        end
+        restored = jldopen(sparse_path, "r") do file
+            file["matrix"]
+        end
+        @test restored isa SparseMatrixCSC{Float64,Int}
+        @test restored == sparse_matrix
+    end
+end
+
 function _atomic_hybrid_cartesian_representation_fixture()
     return _cached_fixture(:atomic_hybrid_cartesian_representation_fixture, () -> begin
         basis = build_basis(
@@ -5569,6 +5635,12 @@ end
     @test fixed_bundle.basis["final_integral_weights"] ≈ square_fixed_block.weights atol = 1.0e-12 rtol = 1.0e-12
     @test fixed_bundle.ham === nothing
 
+    sparse_square_fixed_rep = basis_representation(_with_sparse_nested_coefficients(square_fixed_block))
+    sparse_fixed_bundle = cartesian_basis_bundle_payload(sparse_square_fixed_rep)
+    @test sparse_fixed_bundle.basis["coefficient_matrix"] isa SparseMatrixCSC{Float64,Int}
+    @test Matrix(sparse_fixed_bundle.basis["coefficient_matrix"]) ≈
+        Matrix(square_fixed_block.coefficient_matrix) atol = 1.0e-12 rtol = 1.0e-12
+
     diatomic_basis, diatomic_ops, _diatomic_check = _bond_aligned_diatomic_qw_fixture()
     operator_bundle = cartesian_basis_bundle_payload(
         diatomic_ops;
@@ -5587,6 +5659,7 @@ end
 
     mktempdir() do dir
         basis_only_path = joinpath(dir, "square_basis_only.jld2")
+        sparse_fixed_path = joinpath(dir, "square_sparse_fixed.jld2")
         ops_path = joinpath(dir, "diatomic_ops_bundle.jld2")
 
         @test write_cartesian_basis_bundle_jld2(
@@ -5594,6 +5667,8 @@ end
             square_basis;
             meta = (example = "test_cartesian_basis_bundle_basis_only",),
         ) == basis_only_path
+        @test write_cartesian_basis_bundle_jld2(sparse_fixed_path, sparse_square_fixed_rep) ==
+            sparse_fixed_path
         @test write_cartesian_basis_bundle_jld2(
             ops_path,
             diatomic_ops;
@@ -5616,6 +5691,17 @@ end
             @test String(file["meta/producer"]) ==
                 "GaussletBases.write_cartesian_basis_bundle_jld2"
         end
+
+        jldopen(sparse_fixed_path, "r") do file
+            @test file["basis/coefficient_matrix"] isa SparseMatrixCSC{Float64,Int}
+        end
+
+        sparse_fixed_bundle_roundtrip = read_cartesian_basis_bundle(sparse_fixed_path)
+        @test sparse_fixed_bundle_roundtrip.basis.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
+        @test sparse_fixed_bundle_roundtrip.basis.coefficient_matrix ==
+            sparse_square_fixed_rep.coefficient_matrix
+        @test cross_overlap(sparse_fixed_bundle_roundtrip, sparse_fixed_bundle_roundtrip) ≈
+            cross_overlap(sparse_square_fixed_rep, sparse_square_fixed_rep) atol = 1.0e-10 rtol = 1.0e-10
 
         jldopen(ops_path, "r") do file
             top_keys = Set(

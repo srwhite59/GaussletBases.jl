@@ -294,7 +294,9 @@ function _cartesian_bundle_basis_representation(
         nothing
     coefficient_matrix =
         haskey(values, "coefficient_matrix") ?
-        Matrix{Float64}(_cartesian_bundle_required_value(values, "coefficient_matrix")) :
+        _cartesian_coefficient_map_storage(
+            _cartesian_bundle_required_value(values, "coefficient_matrix"),
+        ) :
         nothing
     parent_data =
         metadata.parent_kind == :cartesian_plus_supplement_raw ?

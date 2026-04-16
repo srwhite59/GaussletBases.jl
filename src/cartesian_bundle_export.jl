@@ -308,7 +308,8 @@ function _cartesian_basis_values(
     )
 
     representation.coefficient_matrix !== nothing &&
-        (basis_values["coefficient_matrix"] = Matrix{Float64}(representation.coefficient_matrix))
+        (basis_values["coefficient_matrix"] =
+            _cartesian_coefficient_map_storage(representation.coefficient_matrix))
 
     _cartesian_store_value!(basis_values, "metadata/route", representation.metadata.route_metadata)
     _cartesian_store_axis_representation!(basis_values, "axes/x", representation.axis_representations.x)

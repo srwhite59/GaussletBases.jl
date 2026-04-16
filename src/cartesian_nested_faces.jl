@@ -12,6 +12,27 @@ The object records the contracted side basis for one interval:
 - the same basis embedded back into the full 1D fixed line
 - the localized side centers and signed local weights
 """
+const _CartesianCoefficientMap =
+    Union{Matrix{Float64},SparseArrays.SparseMatrixCSC{Float64,Int}}
+
+function _cartesian_coefficient_map_storage(
+    value::AbstractMatrix{<:Real},
+)::_CartesianCoefficientMap
+    if value isa SparseArrays.SparseMatrixCSC{Float64,Int}
+        return copy(value)
+    elseif SparseArrays.issparse(value)
+        rows, cols, values = SparseArrays.findnz(value)
+        return SparseArrays.sparse(
+            Vector{Int}(rows),
+            Vector{Int}(cols),
+            Float64.(values),
+            size(value, 1),
+            size(value, 2),
+        )
+    end
+    return Matrix{Float64}(value)
+end
+
 struct _CartesianNestedDoSide1D
     interval::UnitRange{Int}
     retained_count::Int
@@ -20,7 +41,7 @@ struct _CartesianNestedDoSide1D
     local_weights::Vector{Float64}
     local_centers::Vector{Float64}
     local_coefficients::Matrix{Float64}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     localized_centers::Vector{Float64}
     localized_weights::Vector{Float64}
 end
@@ -40,7 +61,7 @@ struct _CartesianNestedXYFace3D
     z_index::Int
     side_x::_CartesianNestedDoSide1D
     side_y::_CartesianNestedDoSide1D
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
 end
 
@@ -122,7 +143,7 @@ struct _CartesianNestedFace3D
     fixed_index::Int
     side_first::_CartesianNestedDoSide1D
     side_second::_CartesianNestedDoSide1D
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
 end
 
@@ -140,7 +161,7 @@ current fixed block.
 struct _CartesianNestedShell3D <: _AbstractCartesianNestedShellLayer3D
     faces::Vector{_CartesianNestedFace3D}
     face_column_ranges::Vector{UnitRange{Int}}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
@@ -166,7 +187,7 @@ struct _CartesianNestedEdge3D
     fixed_sides::NTuple{2,Symbol}
     fixed_indices::NTuple{2,Int}
     side::_CartesianNestedDoSide1D
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
 end
 
@@ -181,7 +202,7 @@ The first pass keeps corners as direct retained pieces.
 struct _CartesianNestedCorner3D
     fixed_sides::NTuple{3,Symbol}
     fixed_indices::NTuple{3,Int}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
 end
 
@@ -200,7 +221,7 @@ struct _CartesianNestedCompleteShell3D <: _AbstractCartesianNestedShellLayer3D
     edge_column_ranges::Vector{UnitRange{Int}}
     corners::Vector{_CartesianNestedCorner3D}
     corner_column_ranges::Vector{UnitRange{Int}}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
@@ -221,7 +242,7 @@ struct _CartesianNestedShellPlusCore3D
     core_states::Vector{NTuple{3,Int}}
     core_column_range::UnitRange{Int}
     shell_column_ranges::Vector{UnitRange{Int}}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
@@ -244,7 +265,7 @@ struct _CartesianNestedShellSequence3D{S<:_AbstractCartesianNestedShellLayer3D}
     shell_layers::Vector{S}
     layer_column_ranges::Vector{UnitRange{Int}}
     working_box::NTuple{3,UnitRange{Int}}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
@@ -268,7 +289,7 @@ The object keeps:
 struct _NestedFixedBlock3D{B,S}
     parent_basis::B
     shell::S
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     overlap::Matrix{Float64}
     kinetic::Matrix{Float64}
