@@ -90,6 +90,50 @@ function _cartesian_store_value!(
     return dest
 end
 
+function _cartesian_write_value!(
+    file,
+    prefix::AbstractString,
+    value,
+)
+    if value === nothing
+        file[string(prefix, "/is_nothing")] = true
+    elseif value isa NamedTuple
+        for (key, child) in pairs(value)
+            _cartesian_write_value!(file, string(prefix, "/", key), child)
+        end
+    elseif value isa AbstractDict
+        for (key, child) in pairs(value)
+            _cartesian_write_value!(file, string(prefix, "/", key), child)
+        end
+    elseif value isa Symbol
+        file[prefix] = String(value)
+    elseif value isa UnitRange{<:Integer}
+        file[prefix] = Int[first(value), last(value)]
+    elseif value isa Tuple && all(item -> item isa Symbol, value)
+        file[prefix] = String[String(item) for item in value]
+    elseif value isa Tuple && all(item -> item isa Integer, value)
+        file[prefix] = Int[Int(item) for item in value]
+    elseif value isa AbstractArray{<:Symbol}
+        file[prefix] = String[String(item) for item in value]
+    else
+        file[prefix] = value
+    end
+    return nothing
+end
+
+function _cartesian_write_sparse_safe_matrix!(
+    file,
+    prefix::AbstractString,
+    value::AbstractMatrix{<:Real},
+)
+    if value isa Matrix{Float64} || value isa SparseArrays.SparseMatrixCSC{Float64,Int}
+        file[prefix] = value
+    else
+        file[prefix] = _cartesian_coefficient_map_storage(value)
+    end
+    return nothing
+end
+
 function _cartesian_store_axis_representation!(
     dest::Dict{String,Any},
     prefix::AbstractString,
@@ -124,6 +168,42 @@ function _cartesian_store_axis_representation!(
         (dest[string(prefix, "/basis_matrices/overlap")] =
             Matrix{Float64}(representation.basis_matrices.overlap))
     return dest
+end
+
+function _write_cartesian_axis_representation!(
+    file,
+    prefix::AbstractString,
+    representation::BasisRepresentation1D,
+)
+    metadata = representation.metadata
+    primitive_layer = representation.primitive_set
+
+    file[string(prefix, "/format")] = "basis_representation_1d_v1"
+    file[string(prefix, "/version")] = 1
+    file[string(prefix, "/metadata/basis_kind")] = String(metadata.basis_kind)
+    file[string(prefix, "/metadata/has_family_name")] = metadata.family_name !== nothing
+    metadata.family_name !== nothing &&
+        (file[string(prefix, "/metadata/family_name")] = String(metadata.family_name))
+    file[string(prefix, "/metadata/mapping_type")] = string(nameof(typeof(metadata.mapping_value)))
+    file[string(prefix, "/metadata/mapping_object")] = metadata.mapping_value
+    file[string(prefix, "/metadata/centers")] = metadata.center_data
+    file[string(prefix, "/metadata/reference_centers")] = metadata.reference_center_data
+    file[string(prefix, "/metadata/integral_weights")] = metadata.integral_weight_data
+    file[string(prefix, "/metadata/basis_labels")] = metadata.basis_labels
+    file[string(prefix, "/primitive_set/has_name")] = primitive_layer.name_value !== nothing
+    primitive_layer.name_value !== nothing &&
+        (file[string(prefix, "/primitive_set/name")] = String(primitive_layer.name_value))
+    file[string(prefix, "/primitive_set/labels")] = primitive_layer.label_data
+    file[string(prefix, "/primitive_set/primitives")] =
+        AbstractPrimitiveFunction1D[primitive for primitive in primitives(primitive_layer)]
+    file[string(prefix, "/coefficient_matrix")] = Matrix{Float64}(representation.coefficient_matrix)
+    haskey(representation.primitive_matrices, :overlap) &&
+        (file[string(prefix, "/primitive_matrices/overlap")] =
+            Matrix{Float64}(representation.primitive_matrices.overlap))
+    haskey(representation.basis_matrices, :overlap) &&
+        (file[string(prefix, "/basis_matrices/overlap")] =
+            Matrix{Float64}(representation.basis_matrices.overlap))
+    return nothing
 end
 
 function _cartesian_parent_integral_weights(
@@ -360,6 +440,92 @@ function _cartesian_basis_values(
     return basis_values
 end
 
+function _write_cartesian_basis_group!(
+    file,
+    prefix::AbstractString,
+    representation::CartesianBasisRepresentation3D;
+    final_integral_weights::AbstractVector{<:Real},
+)
+    file[string(prefix, "/format")] = "cartesian_basis_bundle_v1"
+    file[string(prefix, "/version")] = 1
+    file[string(prefix, "/basis_kind")] = String(representation.metadata.basis_kind)
+    file[string(prefix, "/parent_kind")] = String(representation.metadata.parent_kind)
+    file[string(prefix, "/axis_sharing")] = String(representation.metadata.axis_sharing)
+    file[string(prefix, "/parent_axis_counts")] = Int[representation.metadata.parent_axis_counts...]
+    file[string(prefix, "/parent_dimension")] = representation.metadata.parent_dimension
+    file[string(prefix, "/final_dimension")] = representation.metadata.final_dimension
+    file[string(prefix, "/working_box_present")] = representation.metadata.working_box !== nothing
+    file[string(prefix, "/working_box_bounds")] =
+        _cartesian_working_box_matrix(representation.metadata.working_box)
+    file[string(prefix, "/contraction_kind")] = String(representation.contraction_kind)
+    file[string(prefix, "/basis_labels")] = representation.metadata.basis_labels
+    file[string(prefix, "/basis_centers")] = representation.metadata.basis_centers
+    file[string(prefix, "/final_integral_weights")] =
+        Float64[Float64(value) for value in final_integral_weights]
+    file[string(prefix, "/parent_labels")] = representation.parent_labels
+    file[string(prefix, "/parent_centers")] = representation.parent_centers
+    file[string(prefix, "/support_indices_present")] = representation.support_indices !== nothing
+    file[string(prefix, "/support_indices")] =
+        representation.support_indices === nothing ? zeros(Int, 0) : Vector{Int}(representation.support_indices)
+    file[string(prefix, "/support_states_present")] = representation.support_states !== nothing
+    file[string(prefix, "/support_states")] = _cartesian_support_state_matrix(representation.support_states)
+
+    if representation.coefficient_matrix !== nothing
+        _cartesian_write_sparse_safe_matrix!(
+            file,
+            string(prefix, "/coefficient_matrix"),
+            representation.coefficient_matrix,
+        )
+    end
+
+    _cartesian_write_value!(file, string(prefix, "/metadata/route"), representation.metadata.route_metadata)
+    _write_cartesian_axis_representation!(file, string(prefix, "/axes/x"), representation.axis_representations.x)
+    _write_cartesian_axis_representation!(file, string(prefix, "/axes/y"), representation.axis_representations.y)
+    _write_cartesian_axis_representation!(file, string(prefix, "/axes/z"), representation.axis_representations.z)
+
+    if representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        _cartesian_bundle_supported_basis(representation)
+        file[string(prefix, "/parent/format")] = "cartesian_plus_supplement_raw_v1"
+        file[string(prefix, "/parent/version")] = 1
+        hasproperty(representation.parent_data, :hybrid_overlap_kind) &&
+            (file[string(prefix, "/parent/hybrid_overlap_kind")] =
+                String(representation.parent_data.hybrid_overlap_kind))
+        _write_cartesian_basis_group!(
+            file,
+            string(prefix, "/parent/cartesian"),
+            representation.parent_data.cartesian_parent_representation;
+            final_integral_weights = _cartesian_representation_integral_weights(
+                representation.parent_data.cartesian_parent_representation,
+            ),
+        )
+        _write_cartesian_supplement_representation!(
+            file,
+            string(prefix, "/parent/supplement"),
+            representation.parent_data.supplement_representation,
+        )
+        hasproperty(representation.parent_data, :cartesian_supplement_axis_tables) &&
+            _cartesian_write_value!(
+                file,
+                string(prefix, "/parent/cartesian_supplement_axis_tables"),
+                representation.parent_data.cartesian_supplement_axis_tables,
+            )
+        hasproperty(representation.parent_data, :exact_cartesian_supplement_overlap) &&
+            (file[string(prefix, "/parent/exact_cartesian_supplement_overlap")] =
+                representation.parent_data.exact_cartesian_supplement_overlap)
+        hasproperty(representation.parent_data, :exact_supplement_overlap) &&
+            (file[string(prefix, "/parent/exact_supplement_overlap")] =
+                representation.parent_data.exact_supplement_overlap)
+        hasproperty(representation.parent_data, :cartesian_supplement_overlap) &&
+            (file[string(prefix, "/parent/cartesian_supplement_overlap")] =
+                representation.parent_data.cartesian_supplement_overlap)
+        hasproperty(representation.parent_data, :supplement_overlap) &&
+            (file[string(prefix, "/parent/supplement_overlap")] =
+                representation.parent_data.supplement_overlap)
+    end
+
+    return nothing
+end
+
 function _cartesian_store_supplement_representation!(
     dest::Dict{String,Any},
     prefix::AbstractString,
@@ -381,6 +547,29 @@ function _cartesian_store_supplement_representation!(
             String(orbital.primitive_normalization)
     end
     return dest
+end
+
+function _write_cartesian_supplement_representation!(
+    file,
+    prefix::AbstractString,
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    file[string(prefix, "/format")] = "cartesian_gaussian_shell_supplement_v1"
+    file[string(prefix, "/version")] = 1
+    file[string(prefix, "/supplement_kind")] = String(supplement.supplement_kind)
+    _cartesian_write_value!(file, string(prefix, "/metadata"), supplement.metadata)
+    file[string(prefix, "/orbital_count")] = length(supplement.orbitals)
+    for (index, orbital) in pairs(supplement.orbitals)
+        orbital_prefix = string(prefix, "/orbitals/", index)
+        file[string(orbital_prefix, "/label")] = orbital.label
+        file[string(orbital_prefix, "/angular_powers")] = Int[orbital.angular_powers...]
+        file[string(orbital_prefix, "/center")] = Float64[orbital.center...]
+        file[string(orbital_prefix, "/exponents")] = Float64[orbital.exponents...]
+        file[string(orbital_prefix, "/coefficients")] = Float64[orbital.coefficients...]
+        file[string(orbital_prefix, "/primitive_normalization")] =
+            String(orbital.primitive_normalization)
+    end
+    return nothing
 end
 
 function _cartesian_ham_values(
@@ -494,6 +683,47 @@ function _cartesian_bundle_meta_values(
     return meta_values
 end
 
+function _write_cartesian_meta_group!(
+    file,
+    object,
+    representation::CartesianBasisRepresentation3D;
+    include_ham::Bool,
+    producer_entrypoint::AbstractString,
+    meta = nothing,
+)
+    for (key, value) in pairs(_normalize_meta_dict(meta))
+        _cartesian_write_value!(file, string("meta/", key), value)
+    end
+    _cartesian_write_value!(file, "meta/producer", producer_entrypoint)
+    _cartesian_write_value!(file, "meta/producer_type", string(nameof(typeof(object))))
+    _cartesian_write_value!(file, "meta/basis_kind", String(representation.metadata.basis_kind))
+    _cartesian_write_value!(file, "meta/parent_kind", String(representation.metadata.parent_kind))
+    _cartesian_write_value!(file, "meta/has_ham", include_ham)
+    _cartesian_write_value!(file, "meta/final_dimension", representation.metadata.final_dimension)
+    _cartesian_write_value!(file, "meta/parent_dimension", representation.metadata.parent_dimension)
+    _cartesian_write_value!(file, "meta/manifest/producer/package", "GaussletBases")
+    _cartesian_write_value!(file, "meta/manifest/producer/version", string(Base.pkgversion(@__MODULE__)))
+    _cartesian_write_value!(file, "meta/manifest/producer/entrypoint", producer_entrypoint)
+    _cartesian_write_value!(file, "meta/manifest/contract/format", "cartesian_basis_bundle_v1")
+    _cartesian_write_value!(file, "meta/manifest/contract/version", 1)
+    _cartesian_write_value!(file, "meta/manifest/contract/status", "public_first_pass")
+    _cartesian_write_value!(
+        file,
+        "meta/manifest/contract/scope",
+        "cartesian_basis_and_optional_hamiltonian_bundle",
+    )
+    _cartesian_write_value!(file, "meta/manifest/basis/kind", String(representation.metadata.basis_kind))
+    _cartesian_write_value!(file, "meta/manifest/basis/parent_kind", String(representation.metadata.parent_kind))
+    _cartesian_write_value!(file, "meta/manifest/basis/final_dimension", representation.metadata.final_dimension)
+    _cartesian_write_value!(
+        file,
+        "meta/manifest/basis/working_box_present",
+        representation.metadata.working_box !== nothing,
+    )
+    _cartesian_write_value!(file, "meta/manifest/ham/present", include_ham)
+    return nothing
+end
+
 """
     cartesian_basis_bundle_payload(object; include_ham = true, meta = nothing)
 
@@ -567,11 +797,25 @@ function write_cartesian_basis_bundle_jld2(
     include_ham::Bool = true,
     meta = nothing,
 )
-    data = cartesian_basis_bundle_payload(object; include_ham = include_ham, meta = meta)
+    representation = _cartesian_bundle_representation(object)
+    final_integral_weights = _cartesian_bundle_integral_weights(object, representation)
+    ham_values = include_ham ? _cartesian_ham_values(object, representation) : nothing
     jldopen(path, "w") do file
-        _write_prefixed_values!(file, "basis", data.basis)
-        data.ham !== nothing && _write_prefixed_values!(file, "ham", data.ham)
-        _write_prefixed_values!(file, "meta", data.meta)
+        _write_cartesian_basis_group!(
+            file,
+            "basis",
+            representation;
+            final_integral_weights = final_integral_weights,
+        )
+        ham_values !== nothing && _write_prefixed_values!(file, "ham", ham_values)
+        _write_cartesian_meta_group!(
+            file,
+            object,
+            representation;
+            include_ham = ham_values !== nothing,
+            producer_entrypoint = "GaussletBases.write_cartesian_basis_bundle_jld2",
+            meta = meta,
+        )
     end
     return path
 end

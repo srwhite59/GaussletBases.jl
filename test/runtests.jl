@@ -5683,6 +5683,11 @@ end
         diatomic_ops;
         meta = (example = "test_cartesian_basis_bundle_with_ham",),
     )
+    operator_basis_only_bundle = cartesian_basis_bundle_payload(
+        diatomic_ops;
+        include_ham = false,
+        meta = (example = "test_cartesian_basis_bundle_basis_only_from_ops",),
+    )
 
     @test operator_bundle.basis["basis_kind"] == "direct_product"
     @test operator_bundle.ham !== nothing
@@ -5698,6 +5703,7 @@ end
         basis_only_path = joinpath(dir, "square_basis_only.jld2")
         sparse_fixed_path = joinpath(dir, "square_sparse_fixed.jld2")
         ops_path = joinpath(dir, "diatomic_ops_bundle.jld2")
+        ops_basis_only_path = joinpath(dir, "diatomic_ops_basis_only_bundle.jld2")
 
         @test write_cartesian_basis_bundle_jld2(
             basis_only_path,
@@ -5711,6 +5717,12 @@ end
             diatomic_ops;
             meta = (example = "test_cartesian_basis_bundle_with_ham",),
         ) == ops_path
+        @test write_cartesian_basis_bundle_jld2(
+            ops_basis_only_path,
+            diatomic_ops;
+            include_ham = false,
+            meta = (example = "test_cartesian_basis_bundle_basis_only_from_ops",),
+        ) == ops_basis_only_path
 
         jldopen(basis_only_path, "r") do file
             top_keys = Set(
@@ -5730,7 +5742,13 @@ end
         end
 
         jldopen(sparse_fixed_path, "r") do file
+            basis_values = GaussletBases._cartesian_jld_group_values(file["basis"])
+            meta_values = GaussletBases._cartesian_jld_group_values(file["meta"])
             @test file["basis/coefficient_matrix"] isa SparseMatrixCSC{Float64,Int}
+            @test Set(keys(basis_values)) == Set(keys(sparse_fixed_bundle.basis))
+            @test Set(keys(meta_values)) == Set(keys(sparse_fixed_bundle.meta))
+            @test basis_values["final_integral_weights"] ≈
+                sparse_fixed_bundle.basis["final_integral_weights"] atol = 1.0e-12 rtol = 1.0e-12
         end
 
         sparse_fixed_bundle_roundtrip = read_cartesian_basis_bundle(sparse_fixed_path)
@@ -5755,6 +5773,26 @@ end
             @test String(file["meta/manifest/contract/format"]) == "cartesian_basis_bundle_v1"
             @test Bool(file["meta/has_ham"])
         end
+
+        jldopen(ops_basis_only_path, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            basis_values = GaussletBases._cartesian_jld_group_values(file["basis"])
+            meta_values = GaussletBases._cartesian_jld_group_values(file["meta"])
+            @test "basis" in top_keys
+            @test "meta" in top_keys
+            @test !("ham" in top_keys)
+            @test Set(keys(basis_values)) == Set(keys(operator_basis_only_bundle.basis))
+            @test Set(keys(meta_values)) == Set(keys(operator_basis_only_bundle.meta))
+            @test !Bool(file["meta/has_ham"])
+            @test String(file["meta/example"]) == "test_cartesian_basis_bundle_basis_only_from_ops"
+        end
+
+        ops_basis_only_bundle_roundtrip = read_cartesian_basis_bundle(ops_basis_only_path)
+        @test ops_basis_only_bundle_roundtrip.ham === nothing
+        @test cross_overlap(ops_basis_only_bundle_roundtrip, ops_basis_only_bundle_roundtrip) ≈
+            diatomic_ops.overlap atol = 1.0e-10 rtol = 1.0e-10
     end
 
     hybrid_fixture = _atomic_hybrid_cartesian_representation_fixture()
