@@ -82,9 +82,51 @@ struct OrdinaryCartesianOperators3D{B,D}
     raw_to_final::Matrix{Float64}
     residual_centers::Matrix{Float64}
     residual_widths::Matrix{Float64}
+    nuclear_charges::Union{Nothing,Vector{Float64}}
+    kinetic_one_body::Union{Nothing,Matrix{Float64}}
+    nuclear_one_body_by_center::Union{Nothing,Vector{Matrix{Float64}}}
+    nuclear_term_storage::Symbol
 end
 
 const QiuWhiteResidualGaussianOperators = OrdinaryCartesianOperators3D
+
+function OrdinaryCartesianOperators3D(
+    basis,
+    gaussian_data,
+    gausslet_backend,
+    interaction_treatment,
+    expansion,
+    overlap,
+    one_body_hamiltonian,
+    interaction_matrix,
+    orbital_data,
+    gausslet_count,
+    residual_count,
+    raw_to_final,
+    residual_centers,
+    residual_widths,
+)
+    return OrdinaryCartesianOperators3D(
+        basis,
+        gaussian_data,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+        orbital_data,
+        gausslet_count,
+        residual_count,
+        raw_to_final,
+        residual_centers,
+        residual_widths,
+        nothing,
+        nothing,
+        nothing,
+        :total_only,
+    )
+end
 
 """
     QWRGResidualSpaceDiagnostics
@@ -1756,7 +1798,92 @@ function Base.show(io::IO, operators::OrdinaryCartesianOperators3D)
         operators.gausslet_count,
         ", nresidual=",
         operators.residual_count,
+        ", nuclear_terms=:",
+        operators.nuclear_term_storage,
         ", reference=true)",
+    )
+end
+
+function _validate_nuclear_term_storage(storage::Symbol)
+    storage in (:auto, :total_only, :by_center) || throw(
+        ArgumentError(
+            "nuclear_term_storage must be :auto, :total_only, or :by_center",
+        ),
+    )
+    return storage
+end
+
+_resolved_nuclear_term_storage(storage::Symbol, ::BondAlignedDiatomicQWBasis3D) =
+    storage == :auto ? :by_center : storage
+_resolved_nuclear_term_storage(
+    storage::Symbol,
+    ::Union{BondAlignedHomonuclearChainQWBasis3D,AxisAlignedHomonuclearSquareLatticeQWBasis3D},
+) = storage == :auto ? :total_only : storage
+_resolved_nuclear_term_storage(
+    storage::Symbol,
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
+) = _resolved_nuclear_term_storage(storage, fixed_block.parent_basis)
+
+function _same_nuclear_charge_configuration(
+    left::Union{Nothing,AbstractVector{<:Real}},
+    right::Union{Nothing,AbstractVector{<:Real}};
+    tol::Real = 1.0e-12,
+)
+    (left === nothing || right === nothing) && return left === right
+    length(left) == length(right) || return false
+    for index in eachindex(left, right)
+        abs(Float64(left[index]) - Float64(right[index])) <= tol || return false
+    end
+    return true
+end
+
+function _assemble_one_body_hamiltonian(
+    kinetic_one_body::AbstractMatrix{<:Real},
+    nuclear_one_body_by_center::AbstractVector{<:AbstractMatrix{<:Real}},
+    nuclear_charges::AbstractVector{<:Real},
+)
+    length(nuclear_charges) == length(nuclear_one_body_by_center) || throw(
+        ArgumentError("one-body reassembly requires one nuclear charge per stored nuclear term"),
+    )
+    matrix = Matrix{Float64}(kinetic_one_body)
+    for (charge, nuclear_matrix) in zip(nuclear_charges, nuclear_one_body_by_center)
+        matrix .+= Float64(charge) .* nuclear_matrix
+    end
+    return Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
+end
+
+"""
+    assembled_one_body_hamiltonian(operators::OrdinaryCartesianOperators3D;
+                                   nuclear_charges = operators.nuclear_charges)
+
+Reassemble the final-basis one-body Hamiltonian from stored kinetic and
+per-center nuclear-attraction terms when available.
+
+If the operator payload does not retain per-center nuclear terms, the stored
+`one_body_hamiltonian` can only be returned for the original nuclear charges;
+requesting modified charges then throws an `ArgumentError`.
+"""
+function assembled_one_body_hamiltonian(
+    operators::OrdinaryCartesianOperators3D;
+    nuclear_charges = operators.nuclear_charges,
+)
+    if isnothing(operators.kinetic_one_body) || isnothing(operators.nuclear_one_body_by_center)
+        if nuclear_charges === operators.nuclear_charges ||
+           _same_nuclear_charge_configuration(nuclear_charges, operators.nuclear_charges)
+            return Matrix{Float64}(operators.one_body_hamiltonian)
+        end
+        throw(
+            ArgumentError(
+                "this operator payload does not retain per-center nuclear one-body terms; rebuild with nuclear_term_storage = :by_center",
+            ),
+        )
+    end
+    charges = isnothing(nuclear_charges) ? operators.nuclear_charges : nuclear_charges
+    isnothing(charges) && return Matrix{Float64}(operators.one_body_hamiltonian)
+    return _assemble_one_body_hamiltonian(
+        operators.kinetic_one_body,
+        operators.nuclear_one_body_by_center,
+        charges,
     )
 end
 
@@ -3742,18 +3869,11 @@ function _qwrg_diatomic_factor_term_cache(
     return cache
 end
 
-function _qwrg_diatomic_one_body_matrix(
-    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+function _qwrg_diatomic_kinetic_matrix(
     bundle_x::_MappedOrdinaryGausslet1DBundle,
     bundle_y::_MappedOrdinaryGausslet1DBundle,
     bundle_z::_MappedOrdinaryGausslet1DBundle,
-    expansion::CoulombGaussianExpansion,
-    nuclear_charges::AbstractVector{<:Real},
 )
-    length(nuclear_charges) == length(basis.nuclei) || throw(
-        ArgumentError("bond-aligned ordinary QW path requires one nuclear charge per nucleus"),
-    )
-
     overlap_x = bundle_x.pgdg_intermediate.overlap
     overlap_y = bundle_y.pgdg_intermediate.overlap
     overlap_z = bundle_z.pgdg_intermediate.overlap
@@ -3772,7 +3892,16 @@ function _qwrg_diatomic_one_body_matrix(
     matrix .+= scratch
     _qwrg_fill_product_matrix!(scratch, overlap_x, overlap_y, kinetic_z)
     matrix .+= scratch
+    return 0.5 .* (matrix .+ transpose(matrix))
+end
 
+function _qwrg_diatomic_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+)
     factor_x = _qwrg_diatomic_factor_term_cache(
         basis.basis_x,
         [nucleus[1] for nucleus in basis.nuclei],
@@ -3792,17 +3921,46 @@ function _qwrg_diatomic_one_body_matrix(
         bundle_z.backend,
     )
 
-    for (nucleus, charge_value_raw) in zip(basis.nuclei, nuclear_charges)
-        charge_value = Float64(charge_value_raw)
-        charge_value > 0.0 || throw(ArgumentError("bond-aligned ordinary QW path requires positive nuclear charges"))
-        matrix .+= _mapped_coulomb_expanded_symmetric_matrix(
-            -charge_value .* expansion.coefficients,
+    matrices = Matrix{Float64}[]
+    for nucleus in basis.nuclei
+        matrix = _mapped_coulomb_expanded_symmetric_matrix(
+            -expansion.coefficients,
             factor_x[nucleus[1]],
             factor_y[nucleus[2]],
             factor_z[nucleus[3]],
         )
+        push!(matrices, Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix))))
     end
-    return 0.5 .* (matrix .+ transpose(matrix))
+    return matrices
+end
+
+function _qwrg_diatomic_one_body_matrix(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    nuclear_charges::AbstractVector{<:Real},
+)
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("bond-aligned ordinary QW path requires one nuclear charge per nucleus"),
+    )
+    all(Float64(value) >= 0.0 for value in nuclear_charges) || throw(
+        ArgumentError("bond-aligned ordinary QW path requires nonnegative nuclear charges"),
+    )
+    kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
+    nuclear_one_body_by_center = _qwrg_diatomic_nuclear_one_body_by_center(
+        basis,
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+    )
+    return _assemble_one_body_hamiltonian(
+        kinetic_one_body,
+        nuclear_one_body_by_center,
+        nuclear_charges,
+    )
 end
 
 function _qwrg_same_nuclei(
@@ -3895,6 +4053,8 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     position_x_aa = zeros(Float64, norbital, norbital)
     position_y_aa = zeros(Float64, norbital, norbital)
     position_z_aa = zeros(Float64, norbital, norbital)
+    nuclear_ga_by_center = [zeros(Float64, ngausslet3d, norbital) for _ in basis.nuclei]
+    nuclear_aa_by_center = [zeros(Float64, norbital, norbital) for _ in basis.nuclei]
 
     cross_cache = Dict{Tuple{Int,Symbol},Any}()
     factor_cross_cache = Dict{Tuple{Int,Symbol,Int},Any}()
@@ -4009,8 +4169,11 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
                     view(y_factor[term], :, primitive),
                     view(z_factor[term], :, primitive),
                 )
-                one_body_ga[:, orbital_index] .-= charge_value * expansion.coefficients[term] .* coefficient .* scratch
+                nuclear_ga_by_center[nucleus_index][:, orbital_index] .-=
+                    expansion.coefficients[term] .* coefficient .* scratch
             end
+            one_body_ga[:, orbital_index] .+=
+                charge_value .* nuclear_ga_by_center[nucleus_index][:, orbital_index]
         end
     end
 
@@ -4087,8 +4250,9 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
             z_factor = get!(factor_aa_cache, (left_index, right_index, :z, nucleus_index)) do
                 _qwrg_atomic_axis_factor_aa_data(left, right, :z, expansion, nucleus[3])
             end
+            center_value = 0.0
             for term in eachindex(expansion.coefficients)
-                one_body_value -= charge_value * expansion.coefficients[term] * _qwrg_atomic_weighted_hadamard(
+                center_value -= expansion.coefficients[term] * _qwrg_atomic_weighted_hadamard(
                     left.coefficients,
                     x_factor[term],
                     y_factor[term],
@@ -4096,6 +4260,8 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
                     right.coefficients,
                 )
             end
+            nuclear_aa_by_center[nucleus_index][left_index, right_index] = center_value
+            one_body_value += charge_value * center_value
         end
         one_body_aa[left_index, right_index] = one_body_value
     end
@@ -4103,8 +4269,13 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     return (
         overlap_ga = overlap_ga,
         overlap_aa = Matrix{Float64}(0.5 .* (overlap_aa .+ transpose(overlap_aa))),
+        kinetic_ga = kinetic_ga,
+        kinetic_aa = Matrix{Float64}(0.5 .* (kinetic_aa .+ transpose(kinetic_aa))),
         one_body_ga = one_body_ga,
         one_body_aa = Matrix{Float64}(0.5 .* (one_body_aa .+ transpose(one_body_aa))),
+        nuclear_ga_by_center = nuclear_ga_by_center,
+        nuclear_aa_by_center =
+            [Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix))) for matrix in nuclear_aa_by_center],
         position_x_ga = position_x_ga,
         position_y_ga = position_y_ga,
         position_z_ga = position_z_ga,
@@ -4117,6 +4288,7 @@ end
 function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
     basis::AbstractBondAlignedOrdinaryQWBasis3D;
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4129,6 +4301,10 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
         ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
     )
     timing && println("QW-RG timing  note: bond-aligned ordinary path currently has no residual-Gaussian sector")
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        basis,
+    )
 
     bundle_x = _mapped_ordinary_gausslet_1d_bundle(
         basis.basis_x;
@@ -4150,14 +4326,32 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
     )
 
     overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
-    one_body_hamiltonian = _qwrg_diatomic_one_body_matrix(
-        basis,
-        bundle_x,
-        bundle_y,
-        bundle_z,
-        expansion,
-        nuclear_charges,
-    )
+    kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
+    nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        _qwrg_diatomic_nuclear_one_body_by_center(
+            basis,
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion,
+        ) :
+        nothing
+    one_body_hamiltonian =
+        isnothing(nuclear_one_body_by_center) ?
+        _qwrg_diatomic_one_body_matrix(
+            basis,
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion,
+            nuclear_charges,
+        ) :
+        _assemble_one_body_hamiltonian(
+            kinetic_one_body,
+            nuclear_one_body_by_center,
+            nuclear_charges,
+        )
     interaction_matrix = _qwrg_diatomic_interaction_matrix(
         bundle_x,
         bundle_y,
@@ -4193,6 +4387,10 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
         Matrix{Float64}(I, gausslet_count, gausslet_count),
         zero_residual_centers,
         zero_residual_widths,
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(kinetic_one_body) : nothing,
+        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
     )
 end
 
@@ -4220,6 +4418,7 @@ This first molecular pass is intentionally narrow:
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedDiatomicQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -4228,6 +4427,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
         basis;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4258,6 +4458,7 @@ This chain milestone is intentionally narrow:
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -4266,6 +4467,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
         basis;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4296,6 +4498,7 @@ This lattice milestone is intentionally narrow:
 function ordinary_cartesian_qiu_white_operators(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -4304,6 +4507,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
         basis;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4318,6 +4522,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4334,6 +4539,10 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     )
     _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
         ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
+    )
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        basis,
     )
 
     timings = Pair{String,Float64}[]
@@ -4384,20 +4593,56 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic residual-space construction", start_ns)
 
     start_ns = time_ns()
-    gausslet_one_body = _qwrg_diatomic_one_body_matrix(
-        basis,
+    gausslet_kinetic = _qwrg_diatomic_kinetic_matrix(
         bundles.bundle_x,
         bundles.bundle_y,
         bundles.bundle_z,
-        expansion,
-        nuclear_charges,
     )
-    _, final_one_body = _qwrg_one_body_matrices(
-        gausslet_one_body,
-        blocks.one_body_ga,
-        blocks.one_body_aa,
+    _, final_kinetic = _qwrg_one_body_matrices(
+        gausslet_kinetic,
+        blocks.kinetic_ga,
+        blocks.kinetic_aa,
         residual_data.raw_to_final,
     )
+    final_nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        [
+            _qwrg_one_body_matrices(
+                gausslet_nuclear,
+                blocks.nuclear_ga_by_center[index],
+                blocks.nuclear_aa_by_center[index],
+                residual_data.raw_to_final,
+            )[2] for (index, gausslet_nuclear) in pairs(
+                _qwrg_diatomic_nuclear_one_body_by_center(
+                    basis,
+                    bundles.bundle_x,
+                    bundles.bundle_y,
+                    bundles.bundle_z,
+                    expansion,
+                ),
+            )
+        ] :
+        nothing
+    final_one_body =
+        isnothing(final_nuclear_one_body_by_center) ?
+        _qwrg_one_body_matrices(
+            _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+                nuclear_charges,
+            ),
+            blocks.one_body_ga,
+            blocks.one_body_aa,
+            residual_data.raw_to_final,
+        )[2] :
+        _assemble_one_body_hamiltonian(
+            final_kinetic,
+            final_nuclear_one_body_by_center,
+            nuclear_charges,
+        )
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic raw one-body transform", start_ns)
 
     start_ns = time_ns()
@@ -4456,12 +4701,17 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
         Matrix{Float64}(residual_data.raw_to_final),
         Matrix{Float64}(residual_centers),
         Matrix{Float64}(residual_widths),
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(final_kinetic) : nothing,
+        resolved_nuclear_term_storage == :by_center ? final_nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
     )
 end
 
 function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
     fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4477,6 +4727,10 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
     timing && println("QW-RG timing  note: ", context_label, " currently has no residual-Gaussian sector")
 
     basis = fixed_block.parent_basis
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        fixed_block,
+    )
     length(nuclear_charges) == length(basis.nuclei) || throw(
         ArgumentError("$(context_label) requires one nuclear charge per nucleus"),
     )
@@ -4487,17 +4741,42 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
         gausslet_backend = gausslet_backend,
     )
 
-    parent_one_body = _qwrg_diatomic_one_body_matrix(
-        basis,
-        bundles.bundle_x,
-        bundles.bundle_y,
-        bundles.bundle_z,
-        expansion,
-        nuclear_charges,
-    )
     contraction = fixed_block.coefficient_matrix
-    one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
-    one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
+    kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
+    nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        [
+            _qwrg_contract_parent_symmetric_matrix(
+                contraction,
+                matrix,
+            ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+            )
+        ] :
+        nothing
+    one_body_hamiltonian =
+        isnothing(nuclear_one_body_by_center) ?
+        _qwrg_diatomic_one_body_matrix(
+            basis,
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            expansion,
+            nuclear_charges,
+        ) :
+        _assemble_one_body_hamiltonian(
+            kinetic_one_body,
+            nuclear_one_body_by_center,
+            nuclear_charges,
+        )
+    if isnothing(nuclear_one_body_by_center)
+        one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * one_body_hamiltonian * contraction)
+        one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
+    end
     interaction_matrix = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
 
     fixed_count = size(fixed_block.overlap, 1)
@@ -4524,12 +4803,17 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
         Matrix{Float64}(I, fixed_count, fixed_count),
         zero_residual_centers,
         zero_residual_widths,
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
+        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
     )
 end
 
 function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4538,6 +4822,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4549,6 +4834,7 @@ end
 function _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4557,6 +4843,7 @@ function _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4568,6 +4855,7 @@ end
 function _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
     fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
@@ -4576,6 +4864,7 @@ function _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
     return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -4591,6 +4880,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
     nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     gausslet_backend::Symbol,
     timing::Bool,
@@ -4605,6 +4895,10 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     )
     _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
         ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
+    )
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        fixed_block,
     )
 
     timings = Pair{String,Float64}[]
@@ -4643,23 +4937,62 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested residual-space construction", start_ns)
 
     start_ns = time_ns()
-    parent_one_body = _qwrg_diatomic_one_body_matrix(
-        basis,
-        bundles.bundle_x,
-        bundles.bundle_y,
-        bundles.bundle_z,
-        expansion,
-        nuclear_charges,
-    )
-    fixed_one_body = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
-    fixed_one_body = 0.5 .* (fixed_one_body .+ transpose(fixed_one_body))
-    one_body_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga)
-    _, final_one_body = _qwrg_one_body_matrices(
-        fixed_one_body,
-        one_body_fg,
-        blocks.one_body_aa,
+    fixed_kinetic = Matrix{Float64}(fixed_block.kinetic)
+    nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        let
+            parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+            )
+            [
+                _qwrg_one_body_matrices(
+                    _qwrg_contract_parent_symmetric_matrix(
+                        contraction,
+                        parent_nuclear[index],
+                    ),
+                    _qwrg_contract_parent_ga_matrix(contraction, blocks.nuclear_ga_by_center[index]),
+                    blocks.nuclear_aa_by_center[index],
+                    residual_data.raw_to_final,
+                )[2] for index in eachindex(parent_nuclear)
+            ]
+        end :
+        nothing
+    final_kinetic = _qwrg_one_body_matrices(
+        fixed_kinetic,
+        _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
+        blocks.kinetic_aa,
         residual_data.raw_to_final,
-    )
+    )[2]
+    final_one_body =
+        isnothing(nuclear_one_body_by_center) ?
+        let
+            parent_one_body = _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+                nuclear_charges,
+            )
+            fixed_one_body = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
+            fixed_one_body = 0.5 .* (fixed_one_body .+ transpose(fixed_one_body))
+            one_body_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga)
+            _qwrg_one_body_matrices(
+                fixed_one_body,
+                one_body_fg,
+                blocks.one_body_aa,
+                residual_data.raw_to_final,
+            )[2]
+        end :
+        _assemble_one_body_hamiltonian(
+            final_kinetic,
+            nuclear_one_body_by_center,
+            nuclear_charges,
+        )
     timing && _qwrg_record_timing!(timing_io, timings, "diatomic nested raw one-body assembly and transform", start_ns)
 
     start_ns = time_ns()
@@ -4715,6 +5048,10 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
         Matrix{Float64}(residual_data.raw_to_final),
         Matrix{Float64}(residual_centers),
         Matrix{Float64}(residual_widths),
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(final_kinetic) : nothing,
+        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
     )
 end
 
@@ -4726,6 +5063,14 @@ function _qwrg_contract_parent_ga_matrix(
         DimensionMismatch("nested fixed-block contraction requires parent fixed rows to match the parent raw fixed-Gaussian block"),
     )
     return Matrix{Float64}(transpose(contraction) * parent_ga)
+end
+
+function _qwrg_contract_parent_symmetric_matrix(
+    contraction::AbstractMatrix{<:Real},
+    parent_matrix::AbstractMatrix{<:Real},
+)
+    contracted = Matrix{Float64}(transpose(contraction) * parent_matrix * contraction)
+    return Matrix{Float64}(0.5 .* (contracted .+ transpose(contracted)))
 end
 
 function _qwrg_contract_parent_ga_terms(
@@ -5244,6 +5589,7 @@ and transferred packet cleanly before molecular Gaussian completion is added.
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5252,6 +5598,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5283,6 +5630,7 @@ This path is intentionally narrow:
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5291,6 +5639,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5322,6 +5671,7 @@ This path is intentionally narrow:
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5330,6 +5680,7 @@ function ordinary_cartesian_qiu_white_operators(
     return _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5361,6 +5712,7 @@ the conservative reference policy.
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5382,6 +5734,7 @@ function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
     operators = ordinary_cartesian_qiu_white_operators(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5420,6 +5773,7 @@ contract.
 function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5439,6 +5793,7 @@ function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operator
     operators = ordinary_cartesian_qiu_white_operators(
         fixed_block;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5483,6 +5838,7 @@ function ordinary_cartesian_qiu_white_operators(
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5492,6 +5848,7 @@ function ordinary_cartesian_qiu_white_operators(
         basis,
         gaussian_data;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
@@ -5523,6 +5880,7 @@ function ordinary_cartesian_qiu_white_operators(
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
     gausslet_backend::Symbol = :numerical_reference,
@@ -5535,6 +5893,7 @@ function ordinary_cartesian_qiu_white_operators(
         fixed_block,
         gaussian_data;
         nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
         gausslet_backend = gausslet_backend,
         timing = timing,

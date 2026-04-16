@@ -5763,6 +5763,10 @@ end
     @test size(operator_bundle.ham["overlap"]) == size(diatomic_ops.overlap)
     @test size(operator_bundle.ham["one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
     @test size(operator_bundle.ham["interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
+    @test operator_bundle.ham["nuclear_term_storage"] == "by_center"
+    @test operator_bundle.ham["default_nuclear_charges"] == [1.0, 1.0]
+    @test operator_bundle.ham["nuclear_one_body_by_center/count"] == 2
+    @test size(operator_bundle.ham["kinetic_one_body"]) == size(diatomic_ops.one_body_hamiltonian)
     @test operator_bundle.ham["basis_integral_weights"] == operator_bundle.basis["final_integral_weights"]
     @test operator_bundle.meta["has_ham"]
 
@@ -5839,6 +5843,9 @@ end
             @test size(file["ham/overlap"]) == size(diatomic_ops.overlap)
             @test size(file["ham/one_body_hamiltonian"]) == size(diatomic_ops.one_body_hamiltonian)
             @test size(file["ham/interaction_matrix"]) == size(diatomic_ops.interaction_matrix)
+            @test String(file["ham/nuclear_term_storage"]) == "by_center"
+            @test Int(file["ham/nuclear_one_body_by_center/count"]) == 2
+            @test size(file["ham/kinetic_one_body"]) == size(diatomic_ops.one_body_hamiltonian)
             @test String(file["meta/manifest/contract/format"]) == "cartesian_basis_bundle_v1"
             @test Bool(file["meta/has_ham"])
         end
@@ -6053,6 +6060,66 @@ end
         @test diatomic_ops_bundle.ham !== nothing
         @test diatomic_ops_bundle.ham["model_kind"] == "ordinary_cartesian_operators"
         @test diatomic_ops_bundle.diagnostics.has_ham
+
+        diatomic_atom_a_ops = ordinary_cartesian_qiu_white_operators(
+            diatomic_basis14;
+            nuclear_charges = [1.0, 0.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+        )
+        diatomic_atom_b_ops = ordinary_cartesian_qiu_white_operators(
+            diatomic_basis14;
+            nuclear_charges = [0.0, 1.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+        )
+        @test assembled_one_body_hamiltonian(diatomic_ops14) ≈
+              diatomic_ops14.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(diatomic_ops_bundle) ≈
+              diatomic_ops14.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(diatomic_ops14; nuclear_charges = [1.0, 0.0]) ≈
+              diatomic_atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(diatomic_ops_bundle; nuclear_charges = [1.0, 0.0]) ≈
+              diatomic_atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(diatomic_ops14; nuclear_charges = [0.0, 1.0]) ≈
+              diatomic_atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(diatomic_ops_bundle; nuclear_charges = [0.0, 1.0]) ≈
+              diatomic_atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+
+        hybrid_atom_a_ops = ordinary_cartesian_qiu_white_operators(
+            bond_aligned_hybrid_fixture.fixed_block,
+            bond_aligned_hybrid_fixture.supplement;
+            nuclear_charges = [1.0, 0.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+        )
+        hybrid_atom_b_ops = ordinary_cartesian_qiu_white_operators(
+            bond_aligned_hybrid_fixture.fixed_block,
+            bond_aligned_hybrid_fixture.supplement;
+            nuclear_charges = [0.0, 1.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+        )
+        @test assembled_one_body_hamiltonian(bond_aligned_hybrid_fixture.hybrid_ops) ≈
+              bond_aligned_hybrid_fixture.hybrid_ops.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(bond_aligned_hybrid_bundle) ≈
+              bond_aligned_hybrid_fixture.hybrid_ops.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(
+                  bond_aligned_hybrid_fixture.hybrid_ops;
+                  nuclear_charges = [1.0, 0.0],
+              ) ≈ hybrid_atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(
+                  bond_aligned_hybrid_bundle;
+                  nuclear_charges = [1.0, 0.0],
+              ) ≈ hybrid_atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(
+                  bond_aligned_hybrid_fixture.hybrid_ops;
+                  nuclear_charges = [0.0, 1.0],
+              ) ≈ hybrid_atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(
+                  bond_aligned_hybrid_bundle;
+                  nuclear_charges = [0.0, 1.0],
+              ) ≈ hybrid_atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
 
         loaded_square_rep = load_cartesian_basis_representation(square_path)
         @test loaded_square_rep.metadata.basis_kind == square_basis_rep.metadata.basis_kind
@@ -8425,6 +8492,58 @@ if _test_group_enabled(:diatomic)
     @test length(basis14.basis_x) == length(basis14.basis_y)
     @test length(basis14.basis_z) > length(basis14.basis_x)
     @test length(basis20.basis_z) >= length(basis14.basis_z)
+end
+
+@testset "Per-center nuclear one-body reassembly on diatomic routes" begin
+    basis, _operators, _check = _bond_aligned_diatomic_qw_fixture(; bond_length = 1.4)
+    full_ops = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :by_center,
+        interaction_treatment = :ggt_nearest,
+    )
+    atom_a_ops = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [1.0, 0.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+    )
+    atom_b_ops = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [0.0, 1.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+    )
+
+    @test full_ops.nuclear_term_storage == :by_center
+    @test full_ops.nuclear_charges == [1.0, 1.0]
+    @test !isnothing(full_ops.kinetic_one_body)
+    @test !isnothing(full_ops.nuclear_one_body_by_center)
+    @test length(full_ops.nuclear_one_body_by_center) == 2
+    @test assembled_one_body_hamiltonian(full_ops) ≈
+          full_ops.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test assembled_one_body_hamiltonian(full_ops; nuclear_charges = [1.0, 0.0]) ≈
+          atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+    @test assembled_one_body_hamiltonian(full_ops; nuclear_charges = [0.0, 1.0]) ≈
+          atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+end
+
+@testset "Nuclear term storage auto stays lightweight on longer-center routes" begin
+    basis, _operators, _diagnostics = _bond_aligned_homonuclear_chain_qw_fixture(; natoms = 3)
+    auto_ops = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_term_storage = :auto,
+        interaction_treatment = :ggt_nearest,
+    )
+
+    @test auto_ops.nuclear_term_storage == :total_only
+    @test isnothing(auto_ops.kinetic_one_body)
+    @test isnothing(auto_ops.nuclear_one_body_by_center)
+    @test_throws ArgumentError assembled_one_body_hamiltonian(
+        auto_ops;
+        nuclear_charges = [1.0, 0.0, 1.0],
+    )
 end
 
 @testset "Ordinary Cartesian naming surface distinguishes geometry from supplement" begin

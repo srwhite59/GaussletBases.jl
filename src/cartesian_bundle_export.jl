@@ -660,7 +660,7 @@ function _cartesian_ham_values(
     operators::OrdinaryCartesianOperators3D,
     representation::CartesianBasisRepresentation3D,
 )
-    return Dict{String,Any}(
+    values = Dict{String,Any}(
         "format" => "cartesian_hamiltonian_bundle_v1",
         "version" => 1,
         "object_type" => string(nameof(typeof(operators))),
@@ -682,6 +682,20 @@ function _cartesian_ham_values(
         "expansion/coefficients" => copy(operators.expansion.coefficients),
         "residual_count" => operators.residual_count,
     )
+    if !isnothing(operators.nuclear_charges)
+        values["default_nuclear_charges"] = copy(operators.nuclear_charges)
+        values["nuclear_term_storage"] = String(operators.nuclear_term_storage)
+    end
+    if !isnothing(operators.kinetic_one_body)
+        values["kinetic_one_body"] = Matrix{Float64}(operators.kinetic_one_body)
+    end
+    if !isnothing(operators.nuclear_one_body_by_center)
+        values["nuclear_one_body_by_center/count"] = length(operators.nuclear_one_body_by_center)
+        for (index, matrix) in pairs(operators.nuclear_one_body_by_center)
+            values["nuclear_one_body_by_center/$(index)"] = Matrix{Float64}(matrix)
+        end
+    end
+    return values
 end
 
 function _write_cartesian_ham_group!(
@@ -763,6 +777,23 @@ function _write_cartesian_ham_group!(
     _cartesian_write_float_vector!(file, "ham/expansion/exponents", operators.expansion.exponents)
     _cartesian_write_float_vector!(file, "ham/expansion/coefficients", operators.expansion.coefficients)
     file["ham/residual_count"] = operators.residual_count
+    if !isnothing(operators.nuclear_charges)
+        _cartesian_write_float_vector!(file, "ham/default_nuclear_charges", operators.nuclear_charges)
+        file["ham/nuclear_term_storage"] = String(operators.nuclear_term_storage)
+    end
+    if !isnothing(operators.kinetic_one_body)
+        _cartesian_write_dense_matrix!(file, "ham/kinetic_one_body", operators.kinetic_one_body)
+    end
+    if !isnothing(operators.nuclear_one_body_by_center)
+        file["ham/nuclear_one_body_by_center/count"] = length(operators.nuclear_one_body_by_center)
+        for (index, matrix) in pairs(operators.nuclear_one_body_by_center)
+            _cartesian_write_dense_matrix!(
+                file,
+                "ham/nuclear_one_body_by_center/$(index)",
+                matrix,
+            )
+        end
+    end
     return true
 end
 

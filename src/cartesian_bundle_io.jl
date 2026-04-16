@@ -40,6 +40,66 @@ end
 basis_representation(bundle::CartesianBasisBundle3D) = bundle.basis
 basis_metadata(bundle::CartesianBasisBundle3D) = bundle.basis.metadata
 
+function _cartesian_bundle_default_nuclear_charges(
+    ham::Union{Nothing,AbstractDict{String,Any}},
+)
+    isnothing(ham) && return nothing
+    haskey(ham, "default_nuclear_charges") || return nothing
+    return Float64[Float64(value) for value in ham["default_nuclear_charges"]]
+end
+
+function _cartesian_bundle_nuclear_one_body_by_center(
+    ham::AbstractDict{String,Any},
+)
+    haskey(ham, "nuclear_one_body_by_center/count") || return nothing
+    count = Int(ham["nuclear_one_body_by_center/count"])
+    return [Matrix{Float64}(ham["nuclear_one_body_by_center/$(index)"]) for index in 1:count]
+end
+
+"""
+    assembled_one_body_hamiltonian(bundle::CartesianBasisBundle3D;
+                                   nuclear_charges = default bundle charges)
+
+Reassemble a stored one-body Hamiltonian from the bundle's final-basis kinetic
+and per-center nuclear terms when those terms were retained.
+
+If the bundle does not carry per-center nuclear terms, the stored total
+`ham["one_body_hamiltonian"]` can only be returned for the original default
+nuclear charges.
+"""
+function assembled_one_body_hamiltonian(
+    bundle::CartesianBasisBundle3D;
+    nuclear_charges = _cartesian_bundle_default_nuclear_charges(bundle.ham),
+)
+    bundle.ham === nothing && throw(
+        ArgumentError("this Cartesian basis bundle does not carry a Hamiltonian payload"),
+    )
+    default_charges = _cartesian_bundle_default_nuclear_charges(bundle.ham)
+    kinetic_one_body =
+        haskey(bundle.ham, "kinetic_one_body") ?
+        Matrix{Float64}(bundle.ham["kinetic_one_body"]) :
+        nothing
+    nuclear_one_body_by_center = _cartesian_bundle_nuclear_one_body_by_center(bundle.ham)
+    if isnothing(kinetic_one_body) || isnothing(nuclear_one_body_by_center)
+        if nuclear_charges === default_charges ||
+           _same_nuclear_charge_configuration(nuclear_charges, default_charges)
+            return Matrix{Float64}(bundle.ham["one_body_hamiltonian"])
+        end
+        throw(
+            ArgumentError(
+                "this bundle does not retain per-center nuclear one-body terms; rebuild or export with nuclear_term_storage = :by_center",
+            ),
+        )
+    end
+    charges = isnothing(nuclear_charges) ? default_charges : nuclear_charges
+    isnothing(charges) && return Matrix{Float64}(bundle.ham["one_body_hamiltonian"])
+    return _assemble_one_body_hamiltonian(
+        kinetic_one_body,
+        nuclear_one_body_by_center,
+        charges,
+    )
+end
+
 function _cartesian_jld_key(raw_key)
     return raw_key isa AbstractVector ? join(string.(raw_key), "/") : string(raw_key)
 end
