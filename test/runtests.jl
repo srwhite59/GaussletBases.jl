@@ -4069,6 +4069,13 @@ end
         shell.support_indices,
     )
     @test support_coefficients isa SparseMatrixCSC{Float64,Int}
+    support_workspace, contraction_scratch = GaussletBases._nested_support_reference_workspaces(
+        support_coefficients,
+        length(shell.support_indices),
+        size(shell.coefficient_matrix, 2),
+    )
+    @test size(support_workspace) == (0, 0)
+    @test size(contraction_scratch) == (0, 0)
     support_weights = GaussletBases._nested_support_weights(shell.support_states, pgdg.weights)
     fixed_weights = vec(transpose(support_coefficients) * support_weights)
     weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
@@ -5060,12 +5067,19 @@ end
         direct_fixed_block.shell.coefficient_matrix,
         direct_fixed_block.shell.support_indices,
     )
+    support_workspace, contraction_scratch = GaussletBases._nested_support_reference_workspaces(
+        support_coefficients,
+        length(direct_fixed_block.shell.support_indices),
+        size(direct_fixed_block.shell.coefficient_matrix, 2),
+    )
 
     @test direct_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test direct_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test support_coefficients isa SparseMatrixCSC{Float64,Int}
+    @test size(support_workspace) == (0, 0)
+    @test size(contraction_scratch) == (0, 0)
     @test size(support_coefficients) == (
         length(direct_fixed_block.shell.support_indices),
         size(direct_fixed_block.shell.coefficient_matrix, 2),

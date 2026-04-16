@@ -100,6 +100,42 @@ function _nested_support_coefficient_slice(
     return Matrix{Float64}(coefficient_matrix[support_indices, :])
 end
 
+const _NESTED_SPARSE_SUPPORT_CHUNK_ROWS = 96
+
+function _nested_support_reference_chunk_row_count(
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    nsupport::Int,
+    _nfixed::Int,
+)
+    return min(nsupport, _NESTED_SPARSE_SUPPORT_CHUNK_ROWS)
+end
+
+function _nested_support_reference_chunk_row_count(
+    _support_coefficients::AbstractMatrix{<:Real},
+    nsupport::Int,
+    _nfixed::Int,
+)
+    return nsupport
+end
+
+function _nested_support_reference_workspaces(
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    nsupport::Int,
+    nfixed::Int,
+)
+    _nested_support_reference_chunk_row_count(support_coefficients, nsupport, nfixed)
+    return Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0)
+end
+
+function _nested_support_reference_workspaces(
+    support_coefficients::AbstractMatrix{<:Real},
+    nsupport::Int,
+    nfixed::Int,
+)
+    _nested_support_reference_chunk_row_count(support_coefficients, nsupport, nfixed)
+    return Matrix{Float64}(undef, nsupport, nsupport), Matrix{Float64}(undef, nfixed, nsupport)
+end
+
 struct _CartesianNestedDoSide1D
     interval::UnitRange{Int}
     retained_count::Int
@@ -3059,6 +3095,83 @@ function _nested_fill_symmetric_support_product_matrix!(
     return workspace
 end
 
+function _nested_fill_support_product_matrix_chunk!(
+    workspace::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    row_range::UnitRange{Int},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
+    nsupport = length(support_axes.x)
+    size(workspace) == (length(row_range), nsupport) || throw(
+        ArgumentError("nested support chunk workspace must have size ($(length(row_range)), $(nsupport))"),
+    )
+    xstates = support_axes.x
+    ystates = support_axes.y
+    zstates = support_axes.z
+    @inbounds for (local_row, row) in enumerate(row_range)
+        ix = xstates[row]
+        iy = ystates[row]
+        iz = zstates[row]
+        for col in 1:nsupport
+            workspace[local_row, col] =
+                Float64(operator_x[ix, xstates[col]]) *
+                Float64(operator_y[iy, ystates[col]]) *
+                Float64(operator_z[iz, zstates[col]])
+        end
+    end
+    return workspace
+end
+
+function _nested_contract_support_product_sparse!(
+    destination::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    alpha::Float64 = 1.0,
+    beta::Float64 = 0.0,
+)
+    nsupport = length(support_axes.x)
+    nfixed = size(support_coefficients, 2)
+    size(destination) == (nfixed, nfixed) || throw(
+        ArgumentError("nested support contraction destination must have size ($(nfixed), $(nfixed))"),
+    )
+    chunk_rows = _nested_support_reference_chunk_row_count(support_coefficients, nsupport, nfixed)
+    workspace_chunk = Matrix{Float64}(undef, chunk_rows, nsupport)
+    contraction_chunk = Matrix{Float64}(undef, chunk_rows, nfixed)
+    first_chunk = true
+    row_start = 1
+    while row_start <= nsupport
+        row_stop = min(nsupport, row_start + chunk_rows - 1)
+        row_range = row_start:row_stop
+        workspace_view = @view(workspace_chunk[1:length(row_range), :])
+        contraction_view = @view(contraction_chunk[1:length(row_range), :])
+        _nested_fill_support_product_matrix_chunk!(
+            workspace_view,
+            support_axes,
+            row_range,
+            operator_x,
+            operator_y,
+            operator_z,
+        )
+        mul!(contraction_view, workspace_view, support_coefficients)
+        support_coefficients_chunk = support_coefficients[row_range, :]
+        mul!(
+            destination,
+            transpose(support_coefficients_chunk),
+            contraction_view,
+            alpha,
+            first_chunk ? beta : 1.0,
+        )
+        first_chunk = false
+        row_start = row_stop + 1
+    end
+    return destination
+end
+
 function _nested_contract_support_product!(
     destination::AbstractMatrix{<:Real},
     workspace::AbstractMatrix{<:Real},
@@ -3107,6 +3220,32 @@ end
 
 function _nested_contract_support_product!(
     destination::AbstractMatrix{<:Real},
+    _workspace::AbstractMatrix{<:Real},
+    _contraction_scratch::AbstractMatrix{<:Real},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    alpha::Float64 = 1.0,
+    beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
+)
+    assume_symmetric
+    return _nested_contract_support_product_sparse!(
+        destination,
+        _nested_support_axes(support_states),
+        support_coefficients,
+        operator_x,
+        operator_y,
+        operator_z;
+        alpha = alpha,
+        beta = beta,
+    )
+end
+
+function _nested_contract_support_product!(
+    destination::AbstractMatrix{<:Real},
     workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     support_axes::_CartesianNestedSupportAxes3D,
@@ -3149,6 +3288,32 @@ function _nested_contract_support_product!(
     mul!(contraction_scratch, transpose(support_coefficients), workspace)
     mul!(destination, contraction_scratch, support_coefficients, alpha, beta)
     return destination
+end
+
+function _nested_contract_support_product!(
+    destination::AbstractMatrix{<:Real},
+    _workspace::AbstractMatrix{<:Real},
+    _contraction_scratch::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real};
+    alpha::Float64 = 1.0,
+    beta::Float64 = 0.0,
+    assume_symmetric::Bool = false,
+)
+    assume_symmetric
+    return _nested_contract_support_product_sparse!(
+        destination,
+        support_axes,
+        support_coefficients,
+        operator_x,
+        operator_y,
+        operator_z;
+        alpha = alpha,
+        beta = beta,
+    )
 end
 
 function _nested_contract_sum_of_support_products!(
@@ -3416,8 +3581,8 @@ function _nested_weight_aware_pair_terms(
 )
     nsupport = length(support_states)
     nfixed = size(support_coefficients, 2)
-    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
-    contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    support_workspace, contraction_scratch =
+        _nested_support_reference_workspaces(support_coefficients, nsupport, nfixed)
     support_axes = _nested_support_axes(support_states)
     return _nested_weight_aware_pair_terms(
         pgdg,
@@ -3439,8 +3604,8 @@ function _nested_weight_aware_pair_terms(
 )
     nsupport = length(support_states)
     nfixed = size(support_coefficients, 2)
-    support_workspace = Matrix{Float64}(undef, nsupport, nsupport)
-    contraction_scratch = Matrix{Float64}(undef, nfixed, nsupport)
+    support_workspace, contraction_scratch =
+        _nested_support_reference_workspaces(support_coefficients, nsupport, nfixed)
     support_axes = _nested_support_axes(support_states)
     return _nested_weight_aware_pair_terms(
         bundles,
@@ -3511,10 +3676,10 @@ function _nested_shell_packet(
             pgdg.x2,
         ) :
         nothing
-    support_workspace =
-        packet_kernel == :support_reference ? Matrix{Float64}(undef, nsupport, nsupport) : Matrix{Float64}(undef, 0, 0)
-    contraction_scratch =
-        packet_kernel == :support_reference ? Matrix{Float64}(undef, nshell, nsupport) : Matrix{Float64}(undef, 0, 0)
+    support_workspace, contraction_scratch =
+        packet_kernel == :support_reference ?
+        _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
+        (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
     _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
 
     overlap =
@@ -3894,10 +4059,10 @@ function _nested_shell_packet(
             pgdg_z.x2,
         ) :
         nothing
-    support_workspace =
-        packet_kernel == :support_reference ? Matrix{Float64}(undef, nsupport, nsupport) : Matrix{Float64}(undef, 0, 0)
-    contraction_scratch =
-        packet_kernel == :support_reference ? Matrix{Float64}(undef, nshell, nsupport) : Matrix{Float64}(undef, 0, 0)
+    support_workspace, contraction_scratch =
+        packet_kernel == :support_reference ?
+        _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
+        (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
     _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
 
     overlap =
