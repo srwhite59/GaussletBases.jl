@@ -5762,9 +5762,11 @@ end
             top_keys = Set(
                 key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
             )
+            ham_values = GaussletBases._cartesian_jld_group_values(file["ham"])
             @test "basis" in top_keys
             @test "ham" in top_keys
             @test "meta" in top_keys
+            @test Set(keys(ham_values)) == Set(keys(operator_bundle.ham))
             @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
             @test String(file["ham/model_kind"]) == "ordinary_cartesian_operators"
             @test size(file["ham/overlap"]) == size(diatomic_ops.overlap)

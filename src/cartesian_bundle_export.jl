@@ -134,6 +134,42 @@ function _cartesian_write_sparse_safe_matrix!(
     return nothing
 end
 
+function _cartesian_write_dense_matrix!(
+    file,
+    prefix::AbstractString,
+    value::Matrix{Float64},
+)
+    file[prefix] = value
+    return nothing
+end
+
+function _cartesian_write_dense_matrix!(
+    file,
+    prefix::AbstractString,
+    value::AbstractMatrix{<:Real},
+)
+    file[prefix] = Matrix{Float64}(value)
+    return nothing
+end
+
+function _cartesian_write_float_vector!(
+    file,
+    prefix::AbstractString,
+    value::Vector{Float64},
+)
+    file[prefix] = value
+    return nothing
+end
+
+function _cartesian_write_float_vector!(
+    file,
+    prefix::AbstractString,
+    value::AbstractVector{<:Real},
+)
+    file[prefix] = Float64[Float64(entry) for entry in value]
+    return nothing
+end
+
 function _cartesian_store_axis_representation!(
     dest::Dict{String,Any},
     prefix::AbstractString,
@@ -648,6 +684,88 @@ function _cartesian_ham_values(
     )
 end
 
+function _write_cartesian_ham_group!(
+    file,
+    ::CartesianBasisRepresentation3D,
+    representation::CartesianBasisRepresentation3D,
+)
+    _cartesian_bundle_supported_basis(representation)
+    return false
+end
+
+function _write_cartesian_ham_group!(
+    file,
+    basis::Union{
+        BondAlignedDiatomicQWBasis3D,
+        BondAlignedHomonuclearChainQWBasis3D,
+        AxisAlignedHomonuclearSquareLatticeQWBasis3D,
+        _NestedFixedBlock3D,
+    },
+    representation::CartesianBasisRepresentation3D,
+)
+    _cartesian_bundle_supported_basis(representation)
+    return false
+end
+
+function _write_cartesian_ham_group!(
+    file,
+    operators::OrdinaryCartesianIDAOperators,
+    representation::CartesianBasisRepresentation3D,
+)
+    file["ham/format"] = "cartesian_hamiltonian_bundle_v1"
+    file["ham/version"] = 1
+    file["ham/object_type"] = string(nameof(typeof(operators)))
+    file["ham/model_kind"] = "ordinary_cartesian_ida"
+    file["ham/interaction_model"] = "density_density"
+    file["ham/interaction_treatment"] = String(operators.interaction_treatment)
+    file["ham/backend"] = String(operators.backend)
+    file["ham/overlap_key"] = "overlap"
+    file["ham/onebody_key"] = "one_body_hamiltonian"
+    file["ham/interaction_key"] = "interaction_matrix"
+    file["ham/basis_integral_weights_key"] = "basis/final_integral_weights"
+    _cartesian_write_dense_matrix!(file, "ham/overlap", operators.overlap_3d)
+    _cartesian_write_dense_matrix!(file, "ham/one_body_hamiltonian", operators.one_body_hamiltonian)
+    _cartesian_write_dense_matrix!(file, "ham/interaction_matrix", operators.interaction_matrix)
+    file["ham/orbital_labels"] = String[String(orbital.label) for orbital in orbitals(operators)]
+    _cartesian_write_dense_matrix!(file, "ham/basis_centers", representation.metadata.basis_centers)
+    _cartesian_write_float_vector!(file, "ham/basis_integral_weights", operators.weight_3d)
+    _cartesian_write_float_vector!(file, "ham/expansion/exponents", operators.expansion.exponents)
+    _cartesian_write_float_vector!(file, "ham/expansion/coefficients", operators.expansion.coefficients)
+    return true
+end
+
+function _write_cartesian_ham_group!(
+    file,
+    operators::OrdinaryCartesianOperators3D,
+    representation::CartesianBasisRepresentation3D,
+)
+    file["ham/format"] = "cartesian_hamiltonian_bundle_v1"
+    file["ham/version"] = 1
+    file["ham/object_type"] = string(nameof(typeof(operators)))
+    file["ham/model_kind"] = "ordinary_cartesian_operators"
+    file["ham/interaction_model"] = "density_density"
+    file["ham/interaction_treatment"] = String(operators.interaction_treatment)
+    file["ham/gausslet_backend"] = String(operators.gausslet_backend)
+    file["ham/overlap_key"] = "overlap"
+    file["ham/onebody_key"] = "one_body_hamiltonian"
+    file["ham/interaction_key"] = "interaction_matrix"
+    file["ham/basis_integral_weights_key"] = "basis/final_integral_weights"
+    _cartesian_write_dense_matrix!(file, "ham/overlap", operators.overlap)
+    _cartesian_write_dense_matrix!(file, "ham/one_body_hamiltonian", operators.one_body_hamiltonian)
+    _cartesian_write_dense_matrix!(file, "ham/interaction_matrix", operators.interaction_matrix)
+    file["ham/orbital_labels"] = String[String(orbital.label) for orbital in orbitals(operators)]
+    _cartesian_write_dense_matrix!(file, "ham/basis_centers", representation.metadata.basis_centers)
+    _cartesian_write_float_vector!(
+        file,
+        "ham/basis_integral_weights",
+        _cartesian_bundle_integral_weights(operators, representation),
+    )
+    _cartesian_write_float_vector!(file, "ham/expansion/exponents", operators.expansion.exponents)
+    _cartesian_write_float_vector!(file, "ham/expansion/coefficients", operators.expansion.coefficients)
+    file["ham/residual_count"] = operators.residual_count
+    return true
+end
+
 function _cartesian_bundle_meta_values(
     object,
     representation::CartesianBasisRepresentation3D;
@@ -799,7 +917,6 @@ function write_cartesian_basis_bundle_jld2(
 )
     representation = _cartesian_bundle_representation(object)
     final_integral_weights = _cartesian_bundle_integral_weights(object, representation)
-    ham_values = include_ham ? _cartesian_ham_values(object, representation) : nothing
     jldopen(path, "w") do file
         _write_cartesian_basis_group!(
             file,
@@ -807,12 +924,12 @@ function write_cartesian_basis_bundle_jld2(
             representation;
             final_integral_weights = final_integral_weights,
         )
-        ham_values !== nothing && _write_prefixed_values!(file, "ham", ham_values)
+        ham_written = include_ham ? _write_cartesian_ham_group!(file, object, representation) : false
         _write_cartesian_meta_group!(
             file,
             object,
             representation;
-            include_ham = ham_values !== nothing,
+            include_ham = ham_written,
             producer_entrypoint = "GaussletBases.write_cartesian_basis_bundle_jld2",
             meta = meta,
         )
