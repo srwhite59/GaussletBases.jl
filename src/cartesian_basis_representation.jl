@@ -478,7 +478,7 @@ function _cartesian_factorized_supplement_axis_tables(
     end
     throw(
         ArgumentError(
-            "exact atomic hybrid cartesian-supplement overlap requires stored factorized axis tables on a hybrid raw side with matching Cartesian parent and supplement raw identities",
+            "exact hybrid cartesian-supplement overlap requires stored factorized axis tables on a hybrid raw side with matching Cartesian parent and supplement raw identities",
         ),
     )
 end
@@ -653,7 +653,11 @@ function _cartesian_supports_exact_hybrid_overlap(
         parent_representation isa CartesianBasisRepresentation3D || return false
         supplement_representation isa CartesianGaussianShellSupplementRepresentation3D || return false
         parent_representation.metadata.parent_kind == :cartesian_product_basis || return false
-        supplement_representation.supplement_kind == :atomic_cartesian_shell || return false
+        supplement_representation.supplement_kind in (
+            :atomic_cartesian_shell,
+            :bond_aligned_diatomic_cartesian_shell,
+            :bond_aligned_heteronuclear_cartesian_shell,
+        ) || return false
         hasproperty(axis_tables, :x) || return false
         hasproperty(axis_tables, :y) || return false
         hasproperty(axis_tables, :z) || return false
@@ -2082,45 +2086,58 @@ function _cartesian_same_supplement_raw_identity(
     return true
 end
 
-function _cartesian_atomic_supplement_axis_tables(
+function _cartesian_hybrid_parent_basis(
     operators::OrdinaryCartesianOperators3D,
-    cartesian_parent::CartesianBasisRepresentation3D,
-    factorized_cartesian_parent_basis::_CartesianNestedFactorizedBasis3D,
 )
-    operators.gaussian_data isa LegacyAtomicGaussianSupplement || throw(
-        ArgumentError(
-            "factorized atomic hybrid overlap sidecars currently require LegacyAtomicGaussianSupplement",
-        ),
-    )
-    parent_basis =
-        operators.basis isa _NestedFixedBlock3D ? operators.basis.parent_basis :
-        operators.basis
-    parent_basis isa MappedUniformBasis || throw(
-        ArgumentError(
-            "factorized atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
-        ),
-    )
+    return operators.basis isa _NestedFixedBlock3D ? operators.basis.parent_basis : operators.basis
+end
+
+function _cartesian_atomic_axis_bundles(
+    operators::OrdinaryCartesianOperators3D,
+    parent_basis::MappedUniformBasis,
+)
     gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
         parent_basis;
         exponents = operators.expansion.exponents,
         center = 0.0,
         backend = operators.gausslet_backend,
     )
-    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+    return (x = gausslet_bundle, y = gausslet_bundle, z = gausslet_bundle)
+end
+
+function _cartesian_hybrid_supplement_axis_tables(
+    operators::OrdinaryCartesianOperators3D,
+    factorized_cartesian_parent_basis::_CartesianNestedFactorizedBasis3D,
+    supplement3d,
+    axis_bundles::NamedTuple{(:x, :y, :z)},
+    route_label::AbstractString,
+)
+    proxy_x = axis_bundles.x.pgdg_intermediate.auxiliary_layer
+    proxy_y = axis_bundles.y.pgdg_intermediate.auxiliary_layer
+    proxy_z = axis_bundles.z.pgdg_intermediate.auxiliary_layer
+    proxy_x isa _MappedLegacyProxyLayer1D || throw(
         ArgumentError(
-            "factorized atomic hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the Cartesian parent side",
+            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the x axis",
         ),
     )
-    supplement3d = _atomic_cartesian_shell_supplement_3d(operators.gaussian_data)
+    proxy_y isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError(
+            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the y axis",
+        ),
+    )
+    proxy_z isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError(
+            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the z axis",
+        ),
+    )
     norbitals = length(supplement3d.orbitals)
     x_table = zeros(Float64, size(factorized_cartesian_parent_basis.x_functions, 2), norbitals)
     y_table = zeros(Float64, size(factorized_cartesian_parent_basis.y_functions, 2), norbitals)
     z_table = zeros(Float64, size(factorized_cartesian_parent_basis.z_functions, 2), norbitals)
     for (orbital_index, orbital) in pairs(supplement3d.orbitals)
-        x_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :x, operators.expansion)
-        y_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :y, operators.expansion)
-        z_data = _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :z, operators.expansion)
+        x_data = _qwrg_atomic_axis_cross_data(proxy_x, orbital, :x, operators.expansion)
+        y_data = _qwrg_atomic_axis_cross_data(proxy_y, orbital, :y, operators.expansion)
+        z_data = _qwrg_atomic_axis_cross_data(proxy_z, orbital, :z, operators.expansion)
         coefficients = Vector{Float64}(orbital.coefficients)
         x_table[:, orbital_index] .=
             transpose(factorized_cartesian_parent_basis.x_functions) * (x_data.overlap * coefficients)
@@ -2132,14 +2149,12 @@ function _cartesian_atomic_supplement_axis_tables(
     return (x = x_table, y = y_table, z = z_table)
 end
 
-function _cartesian_hybrid_overlap_sidecars(
+function _cartesian_atomic_hybrid_overlap_sidecars(
     operators::OrdinaryCartesianOperators3D,
     cartesian_parent::CartesianBasisRepresentation3D,
 )
     factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
-    parent_basis =
-        operators.basis isa _NestedFixedBlock3D ? operators.basis.parent_basis :
-        operators.basis
+    parent_basis = _cartesian_hybrid_parent_basis(operators)
     parent_basis isa MappedUniformBasis || throw(
         ArgumentError(
             "factorized atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
@@ -2164,14 +2179,85 @@ function _cartesian_hybrid_overlap_sidecars(
     return (
         hybrid_overlap_kind = :factorized_atomic_mixed_raw,
         factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
-        cartesian_supplement_axis_tables = _cartesian_atomic_supplement_axis_tables(
+        cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
             operators,
-            cartesian_parent,
             factorized_cartesian_parent_basis,
+            supplement3d,
+            _cartesian_atomic_axis_bundles(operators, parent_basis),
+            "atomic",
         ),
         exact_cartesian_supplement_overlap =
             Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
         exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
+    )
+end
+
+function _cartesian_diatomic_hybrid_overlap_sidecars(
+    operators::OrdinaryCartesianOperators3D,
+    cartesian_parent::CartesianBasisRepresentation3D,
+)
+    factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
+    parent_basis = _cartesian_hybrid_parent_basis(operators)
+    parent_basis isa BondAlignedDiatomicQWBasis3D || throw(
+        ArgumentError(
+            "factorized bond-aligned diatomic hybrid overlap sidecars currently require a BondAlignedDiatomicQWBasis3D or nested fixed block built from one",
+        ),
+    )
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        parent_basis,
+        operators.expansion;
+        gausslet_backend = operators.gausslet_backend,
+    )
+    supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(operators.gaussian_data)
+    # Exact overlap sidecars only consume overlap_ga and overlap_aa. The current
+    # diatomic raw-block helper also builds one-body data, so use a placeholder
+    # charge vector here and keep only the overlap blocks.
+    raw_blocks = _qwrg_diatomic_cartesian_shell_blocks_3d(
+        bundles,
+        supplement3d,
+        parent_basis,
+        operators.expansion,
+        ones(Float64, length(parent_basis.nuclei)),
+    )
+    parent_coefficients =
+        cartesian_parent.coefficient_matrix === nothing ?
+        Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
+        Matrix{Float64}(cartesian_parent.coefficient_matrix)
+    return (
+        hybrid_overlap_kind = :factorized_bond_aligned_diatomic_mixed_raw,
+        factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
+        cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
+            operators,
+            factorized_cartesian_parent_basis,
+            supplement3d,
+            (x = bundles.bundle_x, y = bundles.bundle_y, z = bundles.bundle_z),
+            "bond-aligned diatomic",
+        ),
+        exact_cartesian_supplement_overlap =
+            Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
+        exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
+    )
+end
+
+function _cartesian_hybrid_overlap_sidecars(
+    operators::OrdinaryCartesianOperators3D,
+    cartesian_parent::CartesianBasisRepresentation3D,
+)
+    if operators.gaussian_data isa LegacyAtomicGaussianSupplement
+        return _cartesian_atomic_hybrid_overlap_sidecars(operators, cartesian_parent)
+    end
+    parent_basis = _cartesian_hybrid_parent_basis(operators)
+    if parent_basis isa BondAlignedDiatomicQWBasis3D &&
+       operators.gaussian_data isa Union{
+           LegacyBondAlignedDiatomicGaussianSupplement,
+           LegacyBondAlignedHeteronuclearGaussianSupplement,
+       }
+        return _cartesian_diatomic_hybrid_overlap_sidecars(operators, cartesian_parent)
+    end
+    throw(
+        ArgumentError(
+            "factorized exact hybrid overlap sidecars currently support atomic and bond-aligned diatomic routes; got parent basis $(typeof(parent_basis)) with supplement $(typeof(operators.gaussian_data))",
+        ),
     )
 end
 

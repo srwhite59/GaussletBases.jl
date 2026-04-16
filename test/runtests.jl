@@ -1717,6 +1717,66 @@ function _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length::Float64 = 1.4)
     end)
 end
 
+function _bond_aligned_diatomic_nested_hybrid_bundle_fixture(;
+    atom::String = "H",
+    basis_name::String = "cc-pVTZ",
+    bond_length::Float64 = 1.4,
+    core_spacing::Float64 = 0.5,
+    xmax_parallel::Float64 = 8.0,
+    xmax_transverse::Float64 = 5.0,
+    bond_axis::Symbol = :z,
+    nuclear_charge::Float64 = 1.0,
+    nside::Int = 5,
+    supplement_lmax::Int = 1,
+)
+    key = Symbol(
+        :bond_aligned_diatomic_nested_hybrid_bundle_fixture,
+        atom,
+        basis_name,
+        round(Int, 1000 * bond_length),
+        round(Int, 1000 * core_spacing),
+        round(Int, 1000 * xmax_parallel),
+        round(Int, 1000 * xmax_transverse),
+        bond_axis,
+        round(Int, 1000 * nuclear_charge),
+        nside,
+        supplement_lmax,
+    )
+    return _cached_fixture(key, () -> begin
+        basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = bond_length,
+            core_spacing = core_spacing,
+            xmax_parallel = xmax_parallel,
+            xmax_transverse = xmax_transverse,
+            bond_axis = bond_axis,
+            nuclear_charge = nuclear_charge,
+        )
+        source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(basis; nside = nside)
+        fixed_block = GaussletBases._nested_fixed_block(source)
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            atom,
+            basis_name,
+            basis.nuclei;
+            lmax = supplement_lmax,
+        )
+        hybrid_ops = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = fill(nuclear_charge, length(basis.nuclei)),
+            interaction_treatment = :ggt_nearest,
+        )
+        return (
+            basis = basis,
+            source = source,
+            fixed_block = fixed_block,
+            fixed_rep = basis_representation(fixed_block),
+            supplement = supplement,
+            hybrid_ops = hybrid_ops,
+            hybrid_rep = basis_representation(hybrid_ops),
+        )
+    end)
+end
+
 function _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length::Float64 = 1.45)
     key = Symbol(:bond_aligned_heteronuclear_hybrid_qw_fixture, round(Int, 1000 * bond_length))
     return _cached_fixture(key, () -> begin
@@ -5855,6 +5915,52 @@ end
                 size(hybrid_fixture.full_ops.one_body_hamiltonian)
         end
     end
+
+    bond_aligned_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_bundle_fixture()
+    bond_aligned_hybrid_bundle = cartesian_basis_bundle_payload(
+        bond_aligned_hybrid_fixture.hybrid_ops;
+        meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle",),
+    )
+
+    @test bond_aligned_hybrid_bundle.basis["basis_kind"] == "hybrid_residual"
+    @test bond_aligned_hybrid_bundle.basis["parent_kind"] == "cartesian_plus_supplement_raw"
+    @test bond_aligned_hybrid_bundle.basis["parent/format"] == "cartesian_plus_supplement_raw_v1"
+    @test bond_aligned_hybrid_bundle.basis["parent/supplement/format"] ==
+        "cartesian_gaussian_shell_supplement_v1"
+    @test haskey(bond_aligned_hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/x")
+    @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_cartesian_supplement_overlap")
+    @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_supplement_overlap")
+
+    mktempdir() do dir
+        hybrid_path = joinpath(dir, "bond_aligned_diatomic_hybrid_ops_bundle.jld2")
+
+        @test write_cartesian_basis_bundle_jld2(
+            hybrid_path,
+            bond_aligned_hybrid_fixture.hybrid_ops;
+            meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle",),
+        ) == hybrid_path
+
+        jldopen(hybrid_path, "r") do file
+            @test String(file["basis/parent_kind"]) == "cartesian_plus_supplement_raw"
+            @test String(file["basis/parent/format"]) == "cartesian_plus_supplement_raw_v1"
+            @test String(file["basis/parent/supplement/format"]) ==
+                "cartesian_gaussian_shell_supplement_v1"
+            @test Int(file["basis/parent/supplement/orbital_count"]) ==
+                size(bond_aligned_hybrid_fixture.hybrid_ops.raw_to_final, 1) -
+                bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count
+            @test size(file["basis/parent/exact_cartesian_supplement_overlap"]) ==
+                (bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count,
+                 size(bond_aligned_hybrid_fixture.hybrid_ops.raw_to_final, 1) -
+                 bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count)
+            @test size(file["basis/parent/exact_supplement_overlap"]) ==
+                (size(bond_aligned_hybrid_fixture.hybrid_ops.raw_to_final, 1) -
+                 bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count,
+                 size(bond_aligned_hybrid_fixture.hybrid_ops.raw_to_final, 1) -
+                 bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count)
+            @test String(file["meta/example"]) ==
+                "test_cartesian_bond_aligned_diatomic_hybrid_bundle"
+        end
+    end
 end
 
 @testset "Cartesian basis bundle overlap and projector" begin
@@ -5869,6 +5975,7 @@ end
         _bond_aligned_diatomic_qw_fixture(; bond_length = 2.0)
     diatomic_rep14 = basis_representation(diatomic_basis14)
     diatomic_rep20 = basis_representation(diatomic_basis20)
+    bond_aligned_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_bundle_fixture()
 
     mktempdir() do dir
         square_path = joinpath(dir, "square_basis.jld2")
@@ -5879,6 +5986,8 @@ end
         atomic_fixed_full_path = joinpath(dir, "atomic_fixed_full.jld2")
         atomic_hybrid_full_path = joinpath(dir, "atomic_hybrid_full.jld2")
         atomic_hybrid_legacy_path = joinpath(dir, "atomic_hybrid_legacy.jld2")
+        bond_aligned_hybrid_fixed_path = joinpath(dir, "bond_aligned_hybrid_fixed.jld2")
+        bond_aligned_hybrid_path = joinpath(dir, "bond_aligned_hybrid_ops.jld2")
 
         write_cartesian_basis_bundle_jld2(square_path, square_basis)
         write_cartesian_basis_bundle_jld2(square_fixed_path, square_fixed_block)
@@ -5889,6 +5998,14 @@ end
         write_cartesian_basis_bundle_jld2(atomic_fixed_full_path, hybrid_fixture.fixed_full)
         write_cartesian_basis_bundle_jld2(atomic_hybrid_full_path, hybrid_fixture.full_ops)
         write_cartesian_basis_bundle_jld2(atomic_hybrid_legacy_path, hybrid_fixture.legacy_ops)
+        write_cartesian_basis_bundle_jld2(
+            bond_aligned_hybrid_fixed_path,
+            bond_aligned_hybrid_fixture.fixed_block,
+        )
+        write_cartesian_basis_bundle_jld2(
+            bond_aligned_hybrid_path,
+            bond_aligned_hybrid_fixture.hybrid_ops,
+        )
 
         square_bundle = read_cartesian_basis_bundle(square_path)
         square_fixed_bundle = read_cartesian_basis_bundle(square_fixed_path)
@@ -5896,6 +6013,7 @@ end
         diatomic20_bundle = read_cartesian_basis_bundle(diatomic20_path)
         diatomic_ops_bundle = read_cartesian_basis_bundle(diatomic_ops_path)
         atomic_hybrid_full_bundle = read_cartesian_basis_bundle(atomic_hybrid_full_path)
+        bond_aligned_hybrid_bundle = read_cartesian_basis_bundle(bond_aligned_hybrid_path)
 
         @test square_bundle.path == abspath(square_path)
         @test square_bundle.diagnostics.basis_kind == :direct_product
@@ -5933,6 +6051,12 @@ end
         @test atomic_hybrid_full_bundle.ham !== nothing
         @test hasproperty(
             atomic_hybrid_full_bundle.basis.parent_data,
+            :cartesian_supplement_axis_tables,
+        )
+        @test bond_aligned_hybrid_bundle.diagnostics.parent_kind == :cartesian_plus_supplement_raw
+        @test bond_aligned_hybrid_bundle.ham !== nothing
+        @test hasproperty(
+            bond_aligned_hybrid_bundle.basis.parent_data,
             :cartesian_supplement_axis_tables,
         )
 
@@ -5974,6 +6098,56 @@ end
         @test disk_hybrid_transfer.projector.matrix ≈
             memory_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+
+        disk_bond_aligned_hybrid_self =
+            cross_overlap(bond_aligned_hybrid_path, bond_aligned_hybrid_path)
+        memory_bond_aligned_hybrid_self =
+            cross_overlap(
+                bond_aligned_hybrid_fixture.hybrid_rep,
+                bond_aligned_hybrid_fixture.hybrid_rep,
+            )
+        @test disk_bond_aligned_hybrid_self ≈
+            memory_bond_aligned_hybrid_self atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_bond_aligned_hybrid_cross =
+            cross_overlap(bond_aligned_hybrid_fixed_path, bond_aligned_hybrid_path)
+        memory_bond_aligned_hybrid_cross =
+            cross_overlap(
+                bond_aligned_hybrid_fixture.fixed_rep,
+                bond_aligned_hybrid_fixture.hybrid_rep,
+            )
+        @test disk_bond_aligned_hybrid_cross ≈
+            memory_bond_aligned_hybrid_cross atol = 1.0e-10 rtol = 1.0e-10
+
+        disk_bond_aligned_hybrid_projector =
+            basis_projector(bond_aligned_hybrid_fixed_path, bond_aligned_hybrid_path)
+        memory_bond_aligned_hybrid_projector =
+            basis_projector(
+                bond_aligned_hybrid_fixture.fixed_rep,
+                bond_aligned_hybrid_fixture.hybrid_rep,
+            )
+        @test disk_bond_aligned_hybrid_projector.matrix ≈
+            memory_bond_aligned_hybrid_projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_bond_aligned_hybrid_projector.diagnostics.transfer_path ==
+            memory_bond_aligned_hybrid_projector.diagnostics.transfer_path
+
+        bond_aligned_coefficients =
+            cos.(Float64.(1:bond_aligned_hybrid_fixture.fixed_rep.metadata.final_dimension))
+        disk_bond_aligned_hybrid_transfer = transfer_orbitals(
+            bond_aligned_coefficients,
+            bond_aligned_hybrid_fixed_path,
+            bond_aligned_hybrid_path,
+        )
+        memory_bond_aligned_hybrid_transfer = transfer_orbitals(
+            bond_aligned_coefficients,
+            bond_aligned_hybrid_fixture.fixed_rep,
+            bond_aligned_hybrid_fixture.hybrid_rep,
+        )
+        @test disk_bond_aligned_hybrid_transfer.coefficients ≈
+            memory_bond_aligned_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_bond_aligned_hybrid_transfer.projector.matrix ≈
+            memory_bond_aligned_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_bond_aligned_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
     end
 end
 
