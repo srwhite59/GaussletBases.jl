@@ -5579,6 +5579,8 @@ end
     @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/x")
     @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/y")
     @test haskey(hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/z")
+    @test haskey(hybrid_bundle.basis, "parent/exact_cartesian_supplement_overlap")
+    @test haskey(hybrid_bundle.basis, "parent/exact_supplement_overlap")
     @test hybrid_bundle.basis["parent/supplement/orbital_count"] ==
         size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
     @test hybrid_bundle.ham !== nothing
@@ -5607,6 +5609,12 @@ end
                 size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
             @test size(file["basis/parent/cartesian_supplement_axis_tables/z"], 2) ==
                 size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
+            @test size(file["basis/parent/exact_cartesian_supplement_overlap"]) ==
+                (hybrid_fixture.full_ops.gausslet_count,
+                 size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count)
+            @test size(file["basis/parent/exact_supplement_overlap"]) ==
+                (size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count,
+                 size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count)
             @test Int(file["basis/parent/supplement/orbital_count"]) ==
                 size(hybrid_fixture.full_ops.raw_to_final, 1) - hybrid_fixture.full_ops.gausslet_count
             @test size(file["ham/overlap"]) == size(hybrid_fixture.full_ops.overlap)
@@ -5765,6 +5773,14 @@ end
     @test fixture.target_observables.metric_norm_error < 1.0e-12
     @test fixture.aligned_transferred_observables.metric_norm_error < 1.0e-12
 
+    source_self_overlap = cross_overlap(fixture.source_rep, fixture.source_rep)
+    target_self_overlap = cross_overlap(fixture.target_rep, fixture.target_rep)
+    cross_overlap_source_target = cross_overlap(fixture.source_rep, fixture.target_rep)
+    @test source_self_overlap ≈ fixture.source_ops.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test target_self_overlap ≈ fixture.target_ops.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test maximum(abs, cross_overlap_source_target) <= 1.0 + 1.0e-10
+    @test maximum(svdvals(cross_overlap_source_target)) <= 1.0 + 1.0e-10
+
     @test fixture.target_observables.total < fixture.source_observables.total
     @test fixture.aligned_overlap_to_target > 0.999995
     @test abs(
@@ -5784,6 +5800,24 @@ end
         write_cartesian_basis_bundle_jld2(source_path, fixture.source_ops)
         write_cartesian_basis_bundle_jld2(target_path, fixture.target_ops)
 
+        source_bundle = read_cartesian_basis_bundle(source_path)
+        target_bundle = read_cartesian_basis_bundle(target_path)
+        @test hasproperty(source_bundle.basis.parent_data, :exact_cartesian_supplement_overlap)
+        @test hasproperty(source_bundle.basis.parent_data, :exact_supplement_overlap)
+        @test hasproperty(target_bundle.basis.parent_data, :exact_cartesian_supplement_overlap)
+        @test hasproperty(target_bundle.basis.parent_data, :exact_supplement_overlap)
+
+        disk_source_self = cross_overlap(source_path, source_path)
+        disk_target_self = cross_overlap(target_path, target_path)
+        disk_cross = cross_overlap(source_path, target_path)
+        @test disk_source_self ≈ fixture.source_ops.overlap atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_target_self ≈ fixture.target_ops.overlap atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_source_self ≈ source_self_overlap atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_target_self ≈ target_self_overlap atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_cross ≈ cross_overlap_source_target atol = 1.0e-10 rtol = 1.0e-10
+        @test maximum(abs, disk_cross) <= 1.0 + 1.0e-10
+        @test maximum(svdvals(disk_cross)) <= 1.0 + 1.0e-10
+
         disk_transfer = transfer_orbitals(
             fixture.source_observables.orbital,
             source_path,
@@ -5794,6 +5828,50 @@ end
         @test disk_transfer.diagnostics.transfer_path ==
             fixture.transfer.diagnostics.transfer_path
     end
+end
+
+@testset "Mapped ordinary Cartesian 1D working representation uses localized Gaussian contract" begin
+    mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0)
+    basis_a = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 5,
+            mapping = mapping,
+            reference_spacing = 1.0,
+        ),
+    )
+    basis_b = build_basis(
+        MappedUniformBasisSpec(
+            :G10;
+            count = 7,
+            mapping = mapping,
+            reference_spacing = 1.0,
+        ),
+    )
+
+    rep_a = GaussletBases._mapped_ordinary_working_basis_representation(basis_a)
+    rep_b = GaussletBases._mapped_ordinary_working_basis_representation(basis_b)
+    S_AA = cross_overlap(rep_a, rep_a)
+    S_BB = cross_overlap(rep_b, rep_b)
+    S_AB = cross_overlap(rep_a, rep_b)
+    I_A = Matrix{Float64}(I, size(S_AA, 1), size(S_AA, 2))
+    I_B = Matrix{Float64}(I, size(S_BB, 1), size(S_BB, 2))
+
+    @test all(primitive -> primitive isa Gaussian, primitives(primitive_set(rep_a)))
+    @test all(primitive -> primitive isa Gaussian, primitives(primitive_set(rep_b)))
+    @test norm(S_AA - I_A, Inf) < 1.0e-12
+    @test norm(S_BB - I_B, Inf) < 1.0e-12
+    @test maximum(svdvals(S_AB)) <= 1.0 + 1.0e-10
+
+    fixture = _atomic_hybrid_he_same_parent_stress_fixture()
+    @test all(
+        primitive -> primitive isa Gaussian,
+        primitives(primitive_set(fixture.source_rep.axis_representations.x)),
+    )
+    @test all(
+        primitive -> primitive isa Gaussian,
+        primitives(primitive_set(fixture.target_rep.axis_representations.x)),
+    )
 end
 
 @testset "One-center atomic factorized direct packet kernel" begin

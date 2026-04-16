@@ -910,9 +910,46 @@ function _cartesian_raw_components(
                 representation.parent_data.factorized_cartesian_parent_basis,
             cartesian_supplement_axis_tables =
                 representation.parent_data.cartesian_supplement_axis_tables,
+            exact_cartesian_supplement_overlap =
+                hasproperty(representation.parent_data, :exact_cartesian_supplement_overlap) ?
+                representation.parent_data.exact_cartesian_supplement_overlap : nothing,
+            exact_supplement_overlap =
+                hasproperty(representation.parent_data, :exact_supplement_overlap) ?
+                representation.parent_data.exact_supplement_overlap : nothing,
         )
     end
     throw(_cartesian_cross_overlap_error(representation, representation))
+end
+
+function _cartesian_exact_cartesian_supplement_cross(
+    left_raw,
+    right_raw,
+)
+    hasproperty(left_raw, :exact_cartesian_supplement_overlap) || return nothing
+    exact_cross = left_raw.exact_cartesian_supplement_overlap
+    exact_cross === nothing && return nothing
+    _cartesian_same_supplement_raw_identity(
+        left_raw.supplement_representation,
+        right_raw.supplement_representation,
+    ) || return nothing
+    return Matrix{Float64}(exact_cross)
+end
+
+function _cartesian_exact_supplement_cross_overlap(
+    left_raw,
+    right_raw,
+)
+    hasproperty(left_raw, :exact_supplement_overlap) || return nothing
+    hasproperty(right_raw, :exact_supplement_overlap) || return nothing
+    left_exact = left_raw.exact_supplement_overlap
+    right_exact = right_raw.exact_supplement_overlap
+    left_exact === nothing && return nothing
+    right_exact === nothing && return nothing
+    _cartesian_same_supplement_raw_identity(
+        left_raw.supplement_representation,
+        right_raw.supplement_representation,
+    ) || return nothing
+    return Matrix{Float64}(0.5 .* (Matrix{Float64}(left_exact) .+ Matrix{Float64}(right_exact)))
 end
 
 function _cartesian_hybrid_cartesian_supplement_cross_dense_reference(
@@ -921,6 +958,8 @@ function _cartesian_hybrid_cartesian_supplement_cross_dense_reference(
 )
     isempty(right_raw.supplement_representation.orbitals) &&
         return zeros(Float64, left_raw.cartesian_representation.metadata.final_dimension, 0)
+    exact_cross = _cartesian_exact_cartesian_supplement_cross(left_raw, right_raw)
+    exact_cross !== nothing && return exact_cross
     try
         return _cartesian_basis_supplement_cross(
             left_raw.cartesian_representation,
@@ -965,11 +1004,15 @@ function _cartesian_mixed_raw_cross_overlap_dense_reference(
             Float64,
             length(left_raw.supplement_representation.orbitals),
             length(right_raw.supplement_representation.orbitals),
-        ) :
-        _cartesian_supplement_cross_overlap(
-            left_raw.supplement_representation,
-            right_raw.supplement_representation,
-        )
+        ) : begin
+            exact_gg = _cartesian_exact_supplement_cross_overlap(left_raw, right_raw)
+            exact_gg === nothing ?
+            _cartesian_supplement_cross_overlap(
+                left_raw.supplement_representation,
+                right_raw.supplement_representation,
+            ) :
+            exact_gg
+        end
     raw_cross = [cc cg; gc gg]
     return Matrix{Float64}(
         transpose(left_raw.raw_to_final) * raw_cross * right_raw.raw_to_final,
@@ -1008,26 +1051,36 @@ function _cartesian_mixed_raw_cross_overlap_with_stage_timings(
 
     cg = _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
         isempty(right_raw.supplement_representation.orbitals) ? zeros(Float64, size(cc, 1), 0) :
-        _cartesian_factorized_basis_supplement_cross(
-            left_raw.factorized_cartesian_parent_basis,
-            left_raw.cartesian_representation,
-            right_raw.supplement_representation,
-            left_raw,
-            right_raw,
-        )
+        begin
+            exact_cross = _cartesian_exact_cartesian_supplement_cross(left_raw, right_raw)
+            exact_cross === nothing ?
+            _cartesian_factorized_basis_supplement_cross(
+                left_raw.factorized_cartesian_parent_basis,
+                left_raw.cartesian_representation,
+                right_raw.supplement_representation,
+                left_raw,
+                right_raw,
+            ) :
+            exact_cross
+        end
     end
 
     gc = _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
         isempty(left_raw.supplement_representation.orbitals) ? zeros(Float64, 0, size(cc, 2)) :
-        transpose(
-            _cartesian_factorized_basis_supplement_cross(
-                right_raw.factorized_cartesian_parent_basis,
-                right_raw.cartesian_representation,
-                left_raw.supplement_representation,
-                right_raw,
-                left_raw,
-            ),
-        )
+        begin
+            exact_cross = _cartesian_exact_cartesian_supplement_cross(right_raw, left_raw)
+            exact_cross === nothing ?
+            transpose(
+                _cartesian_factorized_basis_supplement_cross(
+                    right_raw.factorized_cartesian_parent_basis,
+                    right_raw.cartesian_representation,
+                    left_raw.supplement_representation,
+                    right_raw,
+                    left_raw,
+                ),
+            ) :
+            transpose(exact_cross)
+        end
     end
 
     gg = _cartesian_time_stage!(timer, :supplement_supplement_block_ns) do
@@ -1037,11 +1090,15 @@ function _cartesian_mixed_raw_cross_overlap_with_stage_timings(
             Float64,
             length(left_raw.supplement_representation.orbitals),
             length(right_raw.supplement_representation.orbitals),
-        ) :
-        _cartesian_supplement_cross_overlap(
-            left_raw.supplement_representation,
-            right_raw.supplement_representation,
-        )
+        ) : begin
+            exact_gg = _cartesian_exact_supplement_cross_overlap(left_raw, right_raw)
+            exact_gg === nothing ?
+            _cartesian_supplement_cross_overlap(
+                left_raw.supplement_representation,
+                right_raw.supplement_representation,
+            ) :
+            exact_gg
+        end
     end
 
     matrix = _cartesian_time_stage!(timer, :final_contraction_ns) do
@@ -2080,6 +2137,30 @@ function _cartesian_hybrid_overlap_sidecars(
     cartesian_parent::CartesianBasisRepresentation3D,
 )
     factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
+    parent_basis =
+        operators.basis isa _NestedFixedBlock3D ? operators.basis.parent_basis :
+        operators.basis
+    parent_basis isa MappedUniformBasis || throw(
+        ArgumentError(
+            "factorized atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
+        ),
+    )
+    gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
+        parent_basis;
+        exponents = operators.expansion.exponents,
+        center = 0.0,
+        backend = operators.gausslet_backend,
+    )
+    supplement3d = _atomic_cartesian_shell_supplement_3d(operators.gaussian_data)
+    raw_blocks = _qwrg_atomic_cartesian_blocks_3d(
+        gausslet_bundle,
+        supplement3d,
+        operators.expansion,
+    )
+    parent_coefficients =
+        cartesian_parent.coefficient_matrix === nothing ?
+        Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
+        Matrix{Float64}(cartesian_parent.coefficient_matrix)
     return (
         hybrid_overlap_kind = :factorized_atomic_mixed_raw,
         factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
@@ -2088,6 +2169,9 @@ function _cartesian_hybrid_overlap_sidecars(
             cartesian_parent,
             factorized_cartesian_parent_basis,
         ),
+        exact_cartesian_supplement_overlap =
+            Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
+        exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
     )
 end
 
