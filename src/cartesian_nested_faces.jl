@@ -33,6 +33,59 @@ function _cartesian_coefficient_map_storage(
     return Matrix{Float64}(value)
 end
 
+function _nested_sparse_coefficient_map(
+    row_indices::AbstractVector{<:Integer},
+    col_indices::AbstractVector{<:Integer},
+    values::AbstractVector{<:Real},
+    nrows::Integer,
+    ncols::Integer,
+)::_CartesianCoefficientMap
+    isempty(values) && return SparseArrays.spzeros(Float64, Int(nrows), Int(ncols))
+    return SparseArrays.sparse(
+        Int.(row_indices),
+        Int.(col_indices),
+        Float64.(values),
+        Int(nrows),
+        Int(ncols),
+    )
+end
+
+function _nested_hcat_coefficient_maps(
+    blocks::AbstractVector{<:AbstractMatrix{<:Real}},
+)::_CartesianCoefficientMap
+    isempty(blocks) && return zeros(Float64, 0, 0)
+    nrows = size(first(blocks), 1)
+    all(size(block, 1) == nrows for block in blocks) || throw(
+        ArgumentError("nested coefficient-map concatenation requires a common parent row count"),
+    )
+    if all(block -> !SparseArrays.issparse(block), blocks)
+        return Matrix{Float64}(hcat(blocks...))
+    end
+
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    total_columns = 0
+    for block in blocks
+        if SparseArrays.issparse(block)
+            rows, cols, nzvals = SparseArrays.findnz(block)
+            append!(row_indices, Int.(rows))
+            append!(col_indices, Int.(cols) .+ total_columns)
+            append!(values, Float64.(nzvals))
+        else
+            for col in axes(block, 2), row in axes(block, 1)
+                value = Float64(block[row, col])
+                iszero(value) && continue
+                push!(row_indices, row)
+                push!(col_indices, col + total_columns)
+                push!(values, value)
+            end
+        end
+        total_columns += size(block, 2)
+    end
+    return _nested_sparse_coefficient_map(row_indices, col_indices, values, nrows, total_columns)
+end
+
 struct _CartesianNestedDoSide1D
     interval::UnitRange{Int}
     retained_count::Int
@@ -117,7 +170,7 @@ face-product primitives. It carries:
 """
 struct _CartesianNestedXYShell3D
     faces::NTuple{2,_CartesianNestedXYFace3D}
-    coefficient_matrix::Matrix{Float64}
+    coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
@@ -1546,9 +1599,23 @@ function _embed_local_side_coefficients(
     interval::UnitRange{Int},
     n1d::Int,
 )
-    full_coefficients = zeros(Float64, n1d, size(local_coefficients, 2))
-    full_coefficients[interval, :] .= Matrix{Float64}(local_coefficients)
-    return full_coefficients
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    for col in axes(local_coefficients, 2), (local_row, full_row) in enumerate(interval)
+        value = Float64(local_coefficients[local_row, col])
+        iszero(value) && continue
+        push!(row_indices, full_row)
+        push!(col_indices, col)
+        push!(values, value)
+    end
+    return _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        n1d,
+        size(local_coefficients, 2),
+    )
 end
 
 # Alg Nested-Face step 3: Build a local 1D doside contraction on one interval,
@@ -1667,20 +1734,25 @@ function _nested_xy_face_product(
     1 <= z_index <= n1d || throw(ArgumentError("nested x-y face requires a fixed z index inside the finalized Cartesian line"))
     nx = size(side_x.coefficient_matrix, 2)
     ny = size(side_y.coefficient_matrix, 2)
-    coefficients = zeros(Float64, n1d^3, nx * ny)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
     column = 0
     for ix_side in 1:nx, iy_side in 1:ny
         column += 1
-        for ix in side_x.interval
-            xvalue = side_x.coefficient_matrix[ix, ix_side]
+        for (ix_local, ix) in enumerate(side_x.interval)
+            xvalue = Float64(side_x.local_coefficients[ix_local, ix_side])
             iszero(xvalue) && continue
-            for iy in side_y.interval
-                yvalue = side_y.coefficient_matrix[iy, iy_side]
+            for (iy_local, iy) in enumerate(side_y.interval)
+                yvalue = Float64(side_y.local_coefficients[iy_local, iy_side])
                 iszero(yvalue) && continue
-                coefficients[_cartesian_flat_index(ix, iy, z_index, n1d), column] = xvalue * yvalue
+                push!(row_indices, _cartesian_flat_index(ix, iy, z_index, n1d))
+                push!(col_indices, column)
+                push!(values, xvalue * yvalue)
             end
         end
     end
+    coefficients = _nested_sparse_coefficient_map(row_indices, col_indices, values, n1d^3, nx * ny)
     support_indices = _nested_xy_face_support_indices(side_x.interval, side_y.interval, z_index, n1d)
     return _CartesianNestedXYFace3D(
         z_index,
@@ -1828,18 +1900,29 @@ function _nested_edge_product(
     1 <= fixed_indices[2] <= limits[2] || throw(
         ArgumentError("nested edge requires the second fixed index inside the finalized Cartesian line"),
     )
-    coefficient_matrix = zeros(Float64, prod(dims), size(side.coefficient_matrix, 2))
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
     for col in 1:size(side.coefficient_matrix, 2)
-        for free_index in side.interval
-            value = side.coefficient_matrix[free_index, col]
+        for (local_index, free_index) in enumerate(side.interval)
+            value = Float64(side.local_coefficients[local_index, col])
             iszero(value) && continue
             flat =
                 free_axis == :x ? _cartesian_flat_index(free_index, fixed_indices[1], fixed_indices[2], dims) :
                 free_axis == :y ? _cartesian_flat_index(fixed_indices[1], free_index, fixed_indices[2], dims) :
                 _cartesian_flat_index(fixed_indices[1], fixed_indices[2], free_index, dims)
-            coefficient_matrix[flat, col] = value
+            push!(row_indices, flat)
+            push!(col_indices, col)
+            push!(values, value)
         end
     end
+    coefficient_matrix = _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        prod(dims),
+        size(side.coefficient_matrix, 2),
+    )
     fixed_axes =
         free_axis == :x ? (:y, :z) :
         free_axis == :y ? (:x, :z) :
@@ -1872,8 +1955,7 @@ function _nested_corner_piece(
     dims::NTuple{3,Int},
 )
     flat = _cartesian_flat_index(fixed_indices[1], fixed_indices[2], fixed_indices[3], dims)
-    coefficient_matrix = zeros(Float64, prod(dims), 1)
-    coefficient_matrix[flat, 1] = 1.0
+    coefficient_matrix = _nested_sparse_coefficient_map([flat], [1], [1.0], prod(dims), 1)
     return _CartesianNestedCorner3D(
         fixed_sides,
         fixed_indices,
@@ -1916,11 +1998,13 @@ function _nested_direct_core_coefficients(
     support_indices::AbstractVector{Int},
     nparent::Int,
 )
-    coefficients = zeros(Float64, nparent, length(support_indices))
-    for (column, index) in enumerate(support_indices)
-        coefficients[index, column] = 1.0
-    end
-    return coefficients
+    return _nested_sparse_coefficient_map(
+        Int.(support_indices),
+        collect(1:length(support_indices)),
+        ones(Float64, length(support_indices)),
+        nparent,
+        length(support_indices),
+    )
 end
 
 function _nested_product_coefficients(
@@ -1931,28 +2015,32 @@ function _nested_product_coefficients(
 )
     nparent = prod(dims)
     ncols = size(x_side.coefficient_matrix, 2) * size(y_side.coefficient_matrix, 2) * size(z_side.coefficient_matrix, 2)
-    coefficients = zeros(Float64, nparent, ncols)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
     column = 0
     for ixcol in 1:size(x_side.coefficient_matrix, 2),
         iycol in 1:size(y_side.coefficient_matrix, 2),
         izcol in 1:size(z_side.coefficient_matrix, 2)
         column += 1
-        for ix in x_side.interval
-            vx = x_side.coefficient_matrix[ix, ixcol]
+        for (ix_local, ix) in enumerate(x_side.interval)
+            vx = Float64(x_side.local_coefficients[ix_local, ixcol])
             iszero(vx) && continue
-            for iy in y_side.interval
-                vy = y_side.coefficient_matrix[iy, iycol]
+            for (iy_local, iy) in enumerate(y_side.interval)
+                vy = Float64(y_side.local_coefficients[iy_local, iycol])
                 iszero(vy) && continue
-                for iz in z_side.interval
-                    vz = z_side.coefficient_matrix[iz, izcol]
+                for (iz_local, iz) in enumerate(z_side.interval)
+                    vz = Float64(z_side.local_coefficients[iz_local, izcol])
                     iszero(vz) && continue
                     flat = _cartesian_flat_index(ix, iy, iz, dims)
-                    coefficients[flat, column] = vx * vy * vz
+                    push!(row_indices, flat)
+                    push!(col_indices, column)
+                    push!(values, vx * vy * vz)
                 end
             end
         end
     end
-    return coefficients
+    return _nested_sparse_coefficient_map(row_indices, col_indices, values, nparent, ncols)
 end
 
 function _nested_product_coefficients(
@@ -2236,24 +2324,35 @@ function _nested_face_product(
     _, fixed_axis = _nested_face_axes(face_kind)
     nfirst = size(side_first.coefficient_matrix, 2)
     nsecond = size(side_second.coefficient_matrix, 2)
-    coefficients = zeros(Float64, prod(dims), nfirst * nsecond)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
     column = 0
     for ifirst in 1:nfirst, isecond in 1:nsecond
         column += 1
-        for index_first in side_first.interval
-            value_first = side_first.coefficient_matrix[index_first, ifirst]
+        for (local_first, index_first) in enumerate(side_first.interval)
+            value_first = Float64(side_first.local_coefficients[local_first, ifirst])
             iszero(value_first) && continue
-            for index_second in side_second.interval
-                value_second = side_second.coefficient_matrix[index_second, isecond]
+            for (local_second, index_second) in enumerate(side_second.interval)
+                value_second = Float64(side_second.local_coefficients[local_second, isecond])
                 iszero(value_second) && continue
                 flat_index =
                     face_kind == :xy ? _cartesian_flat_index(index_first, index_second, fixed_index, dims) :
                     face_kind == :xz ? _cartesian_flat_index(index_first, fixed_index, index_second, dims) :
                     _cartesian_flat_index(fixed_index, index_first, index_second, dims)
-                coefficients[flat_index, column] = value_first * value_second
+                push!(row_indices, flat_index)
+                push!(col_indices, column)
+                push!(values, value_first * value_second)
             end
         end
     end
+    coefficients = _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        prod(dims),
+        nfirst * nsecond,
+    )
     support_indices = _nested_face_support_indices(
         face_kind,
         side_first.interval,
@@ -4126,7 +4225,7 @@ function _nested_xy_shell_pair(
         retain_y = retain_y,
     )
     faces = (face_low, face_high)
-    coefficient_matrix = hcat(face_low.coefficient_matrix, face_high.coefficient_matrix)
+    coefficient_matrix = _nested_hcat_coefficient_maps([face_low.coefficient_matrix, face_high.coefficient_matrix])
     support_indices = _nested_shell_support_indices(faces)
     shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
     return _CartesianNestedXYShell3D(
@@ -4228,8 +4327,8 @@ function _nested_rectangular_shell(
         _nested_face_product(:yz, :high, side_y_yz, side_z_yz, x_fixed[2], n1d),
     ]
 
-    coefficient_blocks = [face.coefficient_matrix for face in faces]
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in faces]
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
     face_column_ranges = UnitRange{Int}[]
     column_start = 1
     for face in faces
@@ -4338,10 +4437,10 @@ function _nested_complete_rectangular_shell(
         _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), n1d),
     ]
 
-    coefficient_blocks = Matrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
+    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
     append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
     append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
 
     face_column_ranges = shell_faces.face_column_ranges
     edge_column_ranges = UnitRange{Int}[]
@@ -4444,7 +4543,7 @@ function _nested_shell_plus_core(
         ArgumentError("nested shell-plus-core construction requires the direct core block to stay disjoint from the shell-face supports"),
     )
     core_coefficients = _nested_direct_core_coefficients(core_indices, n1d^3)
-    coefficient_matrix = hcat(core_coefficients, shell.coefficient_matrix)
+    coefficient_matrix = _nested_hcat_coefficient_maps([core_coefficients, shell.coefficient_matrix])
     support_indices = sort(vcat(core_indices, shell.support_indices))
     shell_data = _nested_shell_packet(
         pgdg,
@@ -4527,9 +4626,9 @@ function _nested_shell_sequence_from_core_block(
         enforce_coverage ?
         _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, n1d) :
         _nested_sequence_working_box(core_indices, shell_layers, n1d)
-    coefficient_blocks = Matrix{Float64}[Matrix{Float64}(core_coefficients)]
+    coefficient_blocks = AbstractMatrix{Float64}[core_coefficients]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
     _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
     shell_data = _nested_shell_packet(
         pgdg,
@@ -4597,8 +4696,8 @@ function _nested_rectangular_shell(
         _nested_face_product(:yz, :high, side_y_yz, side_z_yz, x_fixed[2], dims),
     ]
 
-    coefficient_blocks = [face.coefficient_matrix for face in faces]
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in faces]
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
     face_column_ranges = UnitRange{Int}[]
     column_start = 1
     for face in faces
@@ -4694,10 +4793,10 @@ function _nested_complete_rectangular_shell(
         _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), dims),
     ]
 
-    coefficient_blocks = Matrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
+    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
     append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
     append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
 
     face_column_ranges = shell_faces.face_column_ranges
     edge_column_ranges = UnitRange{Int}[]
@@ -4786,9 +4885,9 @@ function _nested_shell_sequence_from_core_block(
         enforce_coverage ?
         _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, dims) :
         _nested_sequence_working_box(core_indices, shell_layers, dims)
-    coefficient_blocks = Matrix{Float64}[Matrix{Float64}(core_coefficients)]
+    coefficient_blocks = AbstractMatrix{Float64}[core_coefficients]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = hcat(coefficient_blocks...)
+    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
     _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
     shell_data = _nested_shell_packet(
         bundles,
@@ -5706,11 +5805,13 @@ function _nested_direct_box_coefficients(
     dims::NTuple{3,Int},
     support_indices::AbstractVector{Int},
 )
-    coefficients = zeros(Float64, prod(dims), length(support_indices))
-    for (column, index) in pairs(support_indices)
-        coefficients[index, column] = 1.0
-    end
-    return coefficients
+    return _nested_sparse_coefficient_map(
+        Int.(support_indices),
+        collect(1:length(support_indices)),
+        ones(Float64, length(support_indices)),
+        prod(dims),
+        length(support_indices),
+    )
 end
 
 function _nested_direct_box_coefficients(
@@ -5921,7 +6022,7 @@ function _nested_bond_aligned_diatomic_source(
             )
         end
         core_support_blocks = Vector{Vector{Int}}()
-        core_coefficient_blocks = Matrix{Float64}[]
+        core_coefficient_blocks = AbstractMatrix{Float64}[]
         push!(core_support_blocks, child_sequences[1].support_indices)
         push!(core_coefficient_blocks, child_sequences[1].coefficient_matrix)
         if !isnothing(geometry.shared_midpoint_box)
@@ -5932,7 +6033,7 @@ function _nested_bond_aligned_diatomic_source(
         push!(core_support_blocks, child_sequences[2].support_indices)
         push!(core_coefficient_blocks, child_sequences[2].coefficient_matrix)
         child_support = vcat(core_support_blocks...)
-        child_coefficients = hcat(core_coefficient_blocks...)
+        child_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
         merged_sequence = _nested_shell_sequence_from_core_block(
             bundles,
             child_support,
@@ -6507,7 +6608,9 @@ function _nested_bond_aligned_homonuclear_chain_node(
         append!(child_leaf_sequences, result.leaf_sequences)
     end
     core_support = reduce(vcat, [result.sequence.support_indices for result in child_results])
-    core_coefficients = reduce(hcat, [result.sequence.coefficient_matrix for result in child_results])
+    core_coefficients = _nested_hcat_coefficient_maps(
+        [result.sequence.coefficient_matrix for result in child_results],
+    )
     merged_sequence =
         isempty(shared_shell_layers) ? _nested_shell_sequence_from_core_block(
             bundles,
@@ -7117,7 +7220,9 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
         append!(child_leaf_sequences, result.leaf_sequences)
     end
     core_support = reduce(vcat, [result.sequence.support_indices for result in child_results])
-    core_coefficients = reduce(hcat, [result.sequence.coefficient_matrix for result in child_results])
+    core_coefficients = _nested_hcat_coefficient_maps(
+        [result.sequence.coefficient_matrix for result in child_results],
+    )
     merged_sequence =
         isempty(shared_shell_layers) ? _nested_shell_sequence_from_core_block(
             bundles,

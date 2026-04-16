@@ -3968,6 +3968,7 @@ if _test_group_enabled(:nested)
 
     @test s > 0.0
     @test side isa GaussletBases._CartesianNestedDoSide1D
+    @test side.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test side.interval == interval
     @test side.retained_count == 3
     @test size(side.local_coefficients) == (length(interval), 3)
@@ -4000,6 +4001,7 @@ if _test_group_enabled(:nested)
     face_cross = GaussletBases._nested_xy_face_cross_overlap(face_lo, face_hi, pgdg.overlap)
 
     @test face_lo isa GaussletBases._CartesianNestedXYFace3D
+    @test face_lo.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test size(face_lo.coefficient_matrix) == (length(basis)^3, 9)
     @test length(face_lo.support_indices) == length(interval)^2
     @test isempty(intersect(face_lo.support_indices, face_hi.support_indices))
@@ -4045,6 +4047,7 @@ end
 
     @test s > 0.0
     @test shell isa GaussletBases._CartesianNestedXYShell3D
+    @test shell.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test size(shell.coefficient_matrix) == (length(basis)^3, 2 * nface)
     @test nface == 9
     @test length(shell.support_indices) == 2 * length(interval)^2
@@ -4211,6 +4214,7 @@ end
 
     @test s > 0.0
     @test shell isa GaussletBases._CartesianNestedShell3D
+    @test shell.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test length(shell.faces) == 6
     @test length(shell.face_column_ranges) == 6
     @test size(shell.coefficient_matrix) == (length(basis)^3, 54)
@@ -4262,6 +4266,7 @@ end
     ) = _nested_qiu_white_nearest_fixture()
 
     @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test fixed_block.parent_basis === basis
     @test fixed_block.shell === shell
     @test size(fixed_block.coefficient_matrix) == size(shell.coefficient_matrix)
@@ -4622,6 +4627,7 @@ end
     count_only_5 = one_center_atomic_nested_structure_diagnostics(15; nside = 5)
 
     @test sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test sequence.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sequence.working_box == (1:count, 1:count, 1:count)
     @test audit.full_parent_working_box
     @test audit.support_count == count^3
@@ -4691,6 +4697,7 @@ end
     end
 
     @test sequence isa GaussletBases._CartesianNestedShellSequence3D
+    @test sequence.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sequence.working_box == (2:14, 2:14, 2:14)
     @test length(sequence.support_indices) == 13^3
     @test ownership.min_group_count == 0
@@ -5035,26 +5042,28 @@ end
         ),
     )
     expansion = coulomb_gaussian_expansion(doacc = false)
-    dense_fixed_block = one_center_atomic_full_parent_fixed_block(
+    direct_fixed_block = one_center_atomic_full_parent_fixed_block(
         basis;
         expansion = expansion,
         nside = 5,
     )
-    sparse_fixed_block = _with_sparse_nested_coefficients(dense_fixed_block)
+    sparse_fixed_block = _with_sparse_nested_coefficients(direct_fixed_block)
 
-    dense_representation = basis_representation(dense_fixed_block)
+    direct_representation = basis_representation(direct_fixed_block)
     sparse_representation = basis_representation(sparse_fixed_block)
 
+    @test direct_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
+    @test direct_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test Matrix(sparse_representation.coefficient_matrix) ≈
-        dense_representation.coefficient_matrix atol = 1.0e-12 rtol = 1.0e-12
+        Matrix(direct_representation.coefficient_matrix) atol = 1.0e-12 rtol = 1.0e-12
     @test cross_overlap(sparse_representation, sparse_representation) ≈
-        cross_overlap(dense_representation, dense_representation) atol = 1.0e-10 rtol = 1.0e-10
+        cross_overlap(direct_representation, direct_representation) atol = 1.0e-10 rtol = 1.0e-10
 
     mktemp() do sparse_path, sparse_io
         close(sparse_io)
-        sparse_matrix = sparse(dense_fixed_block.coefficient_matrix)
+        sparse_matrix = sparse(direct_fixed_block.coefficient_matrix)
         jldopen(sparse_path, "w") do file
             file["matrix"] = sparse_matrix
         end
