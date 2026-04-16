@@ -4064,9 +4064,15 @@ end
     @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
     @test size(packet.gaussian_terms) == (3, 18, 18)
     @test size(packet.pair_terms) == (3, 18, 18)
-    support_coefficients = Matrix{Float64}(shell.coefficient_matrix[shell.support_indices, :])
+    support_coefficients = GaussletBases._nested_support_coefficient_slice(
+        shell.coefficient_matrix,
+        shell.support_indices,
+    )
+    @test support_coefficients isa SparseMatrixCSC{Float64,Int}
     support_weights = GaussletBases._nested_support_weights(shell.support_states, pgdg.weights)
     fixed_weights = vec(transpose(support_coefficients) * support_weights)
+    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
+    @test weighted_support_coefficients isa SparseMatrixCSC{Float64,Int}
     pair_term_1d_raw = @view(pgdg.pair_factor_terms_raw[1, :, :])
     pair_support = GaussletBases._nested_support_product_matrix(
         shell.support_states,
@@ -4074,8 +4080,7 @@ end
         pair_term_1d_raw,
         pair_term_1d_raw,
     )
-    pair_reference = transpose(support_coefficients) * pair_support * support_coefficients
-    pair_reference ./= (fixed_weights * transpose(fixed_weights))
+    pair_reference = transpose(weighted_support_coefficients) * pair_support * weighted_support_coefficients
     gaussian_support = GaussletBases._nested_support_product_matrix(
         shell.support_states,
         @view(pgdg.gaussian_factor_terms[1, :, :]),
@@ -5051,11 +5056,20 @@ end
 
     direct_representation = basis_representation(direct_fixed_block)
     sparse_representation = basis_representation(sparse_fixed_block)
+    support_coefficients = GaussletBases._nested_support_coefficient_slice(
+        direct_fixed_block.shell.coefficient_matrix,
+        direct_fixed_block.shell.support_indices,
+    )
 
     @test direct_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test direct_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_fixed_block.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
     @test sparse_representation.coefficient_matrix isa SparseMatrixCSC{Float64,Int}
+    @test support_coefficients isa SparseMatrixCSC{Float64,Int}
+    @test size(support_coefficients) == (
+        length(direct_fixed_block.shell.support_indices),
+        size(direct_fixed_block.shell.coefficient_matrix, 2),
+    )
     @test Matrix(sparse_representation.coefficient_matrix) ≈
         Matrix(direct_representation.coefficient_matrix) atol = 1.0e-12 rtol = 1.0e-12
     @test cross_overlap(sparse_representation, sparse_representation) ≈

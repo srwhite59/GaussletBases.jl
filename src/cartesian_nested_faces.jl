@@ -86,6 +86,20 @@ function _nested_hcat_coefficient_maps(
     return _nested_sparse_coefficient_map(row_indices, col_indices, values, nrows, total_columns)
 end
 
+function _nested_support_coefficient_slice(
+    coefficient_matrix::_CartesianCoefficientMap,
+    support_indices::AbstractVector{Int},
+)
+    return coefficient_matrix[support_indices, :]
+end
+
+function _nested_support_coefficient_slice(
+    coefficient_matrix::AbstractMatrix{<:Real},
+    support_indices::AbstractVector{Int},
+)::_CartesianCoefficientMap
+    return Matrix{Float64}(coefficient_matrix[support_indices, :])
+end
+
 struct _CartesianNestedDoSide1D
     interval::UnitRange{Int}
     retained_count::Int
@@ -3477,7 +3491,9 @@ function _nested_shell_packet(
     nterms = size(pgdg.gaussian_factor_terms, 1)
     support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
     support_coefficients =
-        packet_kernel == :support_reference ? Matrix{Float64}(coefficient_matrix[support_indices, :]) : nothing
+        packet_kernel == :support_reference ?
+        _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
+        nothing
     factorized_basis =
         packet_kernel == :factorized_direct ?
         _nested_extract_factorized_basis(
@@ -3841,7 +3857,9 @@ function _nested_shell_packet(
     )
     support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
     support_coefficients =
-        packet_kernel == :support_reference ? Matrix{Float64}(coefficient_matrix[support_indices, :]) : nothing
+        packet_kernel == :support_reference ?
+        _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
+        nothing
     factorized_basis =
         packet_kernel == :factorized_direct ?
         _nested_extract_factorized_basis(coefficient_matrix, dims) :
