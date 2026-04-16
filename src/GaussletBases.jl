@@ -542,6 +542,15 @@ include("mappings.jl")
 include("stencils.jl")
 include("functions.jl")
 include("timing.jl")
+using .TimeG: @timeg,
+             timing_enabled,
+             timing_live_enabled,
+             set_timing!,
+             set_timing_live!,
+             set_timing_thresholds!,
+             reset_timing_report!,
+             current_timing_report,
+             timing_report
 include("internal/wavelet_filters.jl")
 include("families.jl")
 include("bases.jl")

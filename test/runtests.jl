@@ -1728,6 +1728,7 @@ function _bond_aligned_diatomic_nested_hybrid_bundle_fixture(;
     nuclear_charge::Float64 = 1.0,
     nside::Int = 5,
     supplement_lmax::Int = 1,
+    max_width::Union{Nothing,Float64} = nothing,
 )
     key = Symbol(
         :bond_aligned_diatomic_nested_hybrid_bundle_fixture,
@@ -1741,6 +1742,7 @@ function _bond_aligned_diatomic_nested_hybrid_bundle_fixture(;
         round(Int, 1000 * nuclear_charge),
         nside,
         supplement_lmax,
+        isnothing(max_width) ? :none : round(Int, 1000 * max_width),
     )
     return _cached_fixture(key, () -> begin
         basis = bond_aligned_homonuclear_qw_basis(
@@ -1758,6 +1760,7 @@ function _bond_aligned_diatomic_nested_hybrid_bundle_fixture(;
             basis_name,
             basis.nuclei;
             lmax = supplement_lmax,
+            max_width = max_width,
         )
         hybrid_ops = ordinary_cartesian_qiu_white_operators(
             fixed_block,
@@ -4860,8 +4863,11 @@ end
 end
 
 @testset "Global timing macro surface" begin
-    old_config = GaussletBases._TIMING_CONFIG[]
+    old_config = GaussletBases.TimeG._TIMING_CONFIG[]
     try
+        @test timing_enabled() == GaussletBases.TimeG.timing_enabled()
+        @test timing_live_enabled() == GaussletBases.TimeG.timing_live_enabled()
+
         reset_timing_report!()
         set_timing!(true)
         set_timing_live!(false)
@@ -4875,6 +4881,7 @@ end
         end
 
         report = current_timing_report()
+        @test report isa GaussletBases.TimeG.TimingReport
         @test length(report.roots) == 1
         root = only(report.roots)
         @test root.label == "outer"
@@ -4924,7 +4931,7 @@ end
         disabled_report = current_timing_report()
         @test isempty(disabled_report.roots)
     finally
-        GaussletBases._TIMING_CONFIG[] = old_config
+        GaussletBases.TimeG._TIMING_CONFIG[] = old_config
         reset_timing_report!()
     end
 end
@@ -5917,9 +5924,15 @@ end
     end
 
     bond_aligned_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_bundle_fixture()
+    bond_aligned_hybrid_trimmed_fixture =
+        _bond_aligned_diatomic_nested_hybrid_bundle_fixture(; max_width = 1.0)
     bond_aligned_hybrid_bundle = cartesian_basis_bundle_payload(
         bond_aligned_hybrid_fixture.hybrid_ops;
         meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle",),
+    )
+    bond_aligned_hybrid_trimmed_bundle = cartesian_basis_bundle_payload(
+        bond_aligned_hybrid_trimmed_fixture.hybrid_ops;
+        meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle_trimmed",),
     )
 
     @test bond_aligned_hybrid_bundle.basis["basis_kind"] == "hybrid_residual"
@@ -5930,15 +5943,25 @@ end
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/x")
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_cartesian_supplement_overlap")
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_supplement_overlap")
+    @test bond_aligned_hybrid_trimmed_bundle.basis["parent/supplement/metadata/max_width"] == 1.0
+    @test Int(bond_aligned_hybrid_trimmed_bundle.basis["parent/supplement/orbital_count"]) <
+        Int(bond_aligned_hybrid_bundle.basis["parent/supplement/orbital_count"])
 
     mktempdir() do dir
         hybrid_path = joinpath(dir, "bond_aligned_diatomic_hybrid_ops_bundle.jld2")
+        hybrid_trimmed_path =
+            joinpath(dir, "bond_aligned_diatomic_hybrid_ops_bundle_trimmed.jld2")
 
         @test write_cartesian_basis_bundle_jld2(
             hybrid_path,
             bond_aligned_hybrid_fixture.hybrid_ops;
             meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle",),
         ) == hybrid_path
+        @test write_cartesian_basis_bundle_jld2(
+            hybrid_trimmed_path,
+            bond_aligned_hybrid_trimmed_fixture.hybrid_ops;
+            meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle_trimmed",),
+        ) == hybrid_trimmed_path
 
         jldopen(hybrid_path, "r") do file
             @test String(file["basis/parent_kind"]) == "cartesian_plus_supplement_raw"
@@ -5959,6 +5982,14 @@ end
                  bond_aligned_hybrid_fixture.hybrid_ops.gausslet_count)
             @test String(file["meta/example"]) ==
                 "test_cartesian_bond_aligned_diatomic_hybrid_bundle"
+        end
+
+        jldopen(hybrid_trimmed_path, "r") do file
+            @test Float64(file["basis/parent/supplement/metadata/max_width"]) == 1.0
+            @test Int(file["basis/parent/supplement/orbital_count"]) <
+                Int(bond_aligned_hybrid_bundle.basis["parent/supplement/orbital_count"])
+            @test String(file["meta/example"]) ==
+                "test_cartesian_bond_aligned_diatomic_hybrid_bundle_trimmed"
         end
     end
 end
@@ -7854,6 +7885,60 @@ end
         @test size(vtz_uncontracted.contraction_matrix) == (6, 6)
         @test vtz_uncontracted.contraction_matrix ≈ Matrix{Float64}(I, 6, 6) atol = 0.0 rtol = 0.0
         @test length(vtz_uncontracted.gaussians) == 6
+    end
+end
+
+@testset "Legacy bond-aligned diatomic Gaussian supplement width cutoff" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        nuclei = [(-0.7, 0.0, 0.0), (0.7, 0.0, 0.0)]
+        full = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            nuclei;
+            lmax = 1,
+        )
+        trimmed = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            nuclei;
+            lmax = 1,
+            max_width = 1.0,
+        )
+        hetero_full = legacy_bond_aligned_heteronuclear_gaussian_supplement(
+            "He",
+            "cc-pVTZ",
+            "H",
+            "cc-pVTZ",
+            nuclei;
+            lmax = 1,
+        )
+        hetero_trimmed = legacy_bond_aligned_heteronuclear_gaussian_supplement(
+            "He",
+            "cc-pVTZ",
+            "H",
+            "cc-pVTZ",
+            nuclei;
+            lmax = 1,
+            max_width = 1.0,
+        )
+        full_cart = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(full)
+        trimmed_cart = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(trimmed)
+        hetero_full_cart =
+            GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(hetero_full)
+        hetero_trimmed_cart =
+            GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(hetero_trimmed)
+
+        @test full.max_width === nothing
+        @test trimmed.max_width == 1.0
+        @test hetero_full.max_width === nothing
+        @test hetero_trimmed.max_width == 1.0
+        @test full.atomic_source.max_width === nothing
+        @test trimmed.atomic_source.max_width === nothing
+        @test length(full_cart.orbitals) == 18
+        @test length(trimmed_cart.orbitals) == 8
+        @test length(hetero_trimmed_cart.orbitals) < length(hetero_full_cart.orbitals)
     end
 end
 

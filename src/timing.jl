@@ -1,3 +1,63 @@
+"""
+    TimeG
+
+Internal timing utilities for lightweight scope-level instrumentation inside
+`GaussletBases`.
+
+`TimeG` is for:
+- hierarchical wall-clock timing of selected code regions
+- low-friction live timing during development
+- capturing compact timing trees for later rendering
+
+`TimeG` is not for:
+- full statistical profiling
+- allocation or memory attribution
+- persistent benchmarking infrastructure
+
+Main public entry points:
+- `@timeg`
+- `timing_enabled`, `timing_live_enabled`
+- `set_timing!`, `set_timing_live!`, `set_timing_thresholds!`
+- `reset_timing_report!`, `current_timing_report`, `timing_report`
+
+Example:
+```julia
+julia> using GaussletBases
+
+julia> reset_timing_report!(); set_timing!(true); set_timing_live!(false);
+
+julia> @timeg "demo" begin
+           sleep(0.01)
+       end
+
+julia> println(timing_report())
+GaussletBases timing report
+demo: elapsed=...
+```
+"""
+module TimeG
+
+export @timeg,
+       timing_enabled,
+       timing_live_enabled,
+       set_timing!,
+       set_timing_live!,
+       set_timing_thresholds!,
+       reset_timing_report!,
+       current_timing_report,
+       timing_report
+
+"""
+    TimingConfig
+
+Internal global timing configuration shared by `@timeg`.
+
+Fields:
+- `enabled`: whether timed scopes are recorded at all
+- `live_print`: whether completed scopes are printed immediately
+- `expand_threshold_seconds`: minimum elapsed time for recursive report expansion
+- `drop_threshold_seconds`: minimum elapsed time shown in reports or live output
+"""
 struct TimingConfig
     enabled::Bool
     live_print::Bool
@@ -5,6 +65,19 @@ struct TimingConfig
     drop_threshold_seconds::Float64
 end
 
+"""
+    TimingNode
+
+One node in a timing report tree.
+
+This is the public-facing report record returned through `TimingReport.roots`.
+Its fields are stable for inspection:
+- `label`: scope label passed to `@timeg`
+- `elapsed_seconds`: total wall-clock time for the scope
+- `self_seconds`: elapsed time excluding recorded children
+- `call_count`: merged call count in rendered reports
+- `children`: nested timing nodes
+"""
 mutable struct TimingNode
     label::String
     elapsed_seconds::Float64
@@ -13,6 +86,12 @@ mutable struct TimingNode
     children::Vector{TimingNode}
 end
 
+"""
+    _TimingFrame
+
+Internal active-scope frame held on the task-local timing stack while a timed
+scope is executing.
+"""
 mutable struct _TimingFrame
     label::String
     start_ns::UInt64
@@ -20,6 +99,26 @@ mutable struct _TimingFrame
     child_elapsed_seconds::Float64
 end
 
+"""
+    _TimingState
+
+Internal task-local timing state.
+
+Each Julia task gets an independent timing stack and root-node collection so
+timed scopes do not leak across unrelated task execution.
+"""
+mutable struct _TimingState
+    stack::Vector{_TimingFrame}
+    roots::Vector{TimingNode}
+end
+
+"""
+    TimingReport
+
+Immutable snapshot of the current task's collected timing tree.
+
+`roots` contains top-level `TimingNode`s in execution order.
+"""
 struct TimingReport
     roots::Vector{TimingNode}
 end
@@ -28,24 +127,38 @@ function Base.show(io::IO, report::TimingReport)
     print(io, "TimingReport(nroots=", length(report.roots), ")")
 end
 
+# Internal process-global timing configuration.
 const _TIMING_CONFIG = Ref(TimingConfig(true, true, 10.0, 0.1))
 
 function _timing_state()
     storage = task_local_storage()
     if !haskey(storage, :gaussletbases_timing_state)
-        state = (
-            stack = _TimingFrame[],
-            roots = TimingNode[],
-        )
+        state = _TimingState(_TimingFrame[], TimingNode[])
         task_local_storage(:gaussletbases_timing_state, state)
         return state
     end
     return storage[:gaussletbases_timing_state]
 end
 
+"""
+    timing_enabled() -> Bool
+
+Return whether `@timeg` currently records timed scopes.
+"""
 timing_enabled() = _TIMING_CONFIG[].enabled
+
+"""
+    timing_live_enabled() -> Bool
+
+Return whether completed timed scopes are printed immediately as they finish.
+"""
 timing_live_enabled() = _TIMING_CONFIG[].live_print
 
+"""
+    set_timing!(enabled::Bool) -> Bool
+
+Enable or disable `@timeg` collection globally for the current process.
+"""
 function set_timing!(enabled::Bool)
     config = _TIMING_CONFIG[]
     _TIMING_CONFIG[] = TimingConfig(
@@ -57,6 +170,11 @@ function set_timing!(enabled::Bool)
     return enabled
 end
 
+"""
+    set_timing_live!(enabled::Bool) -> Bool
+
+Enable or disable live printing for completed timed scopes.
+"""
 function set_timing_live!(enabled::Bool)
     config = _TIMING_CONFIG[]
     _TIMING_CONFIG[] = TimingConfig(
@@ -68,7 +186,19 @@ function set_timing_live!(enabled::Bool)
     return enabled
 end
 
-function set_timing_thresholds!(; expand::Real = _TIMING_CONFIG[].expand_threshold_seconds, drop::Real = _TIMING_CONFIG[].drop_threshold_seconds)
+"""
+    set_timing_thresholds!(; expand = ..., drop = ...) -> TimingConfig
+
+Set the elapsed-time thresholds used by `timing_report` and live printing.
+
+- `expand`: minimum elapsed time required before child nodes are recursively
+  shown in the rendered report
+- `drop`: minimum elapsed time required for a node to appear at all
+"""
+function set_timing_thresholds!(;
+    expand::Real = _TIMING_CONFIG[].expand_threshold_seconds,
+    drop::Real = _TIMING_CONFIG[].drop_threshold_seconds,
+)
     expand_value = Float64(expand)
     drop_value = Float64(drop)
     expand_value >= 0.0 || throw(ArgumentError("timing expand threshold must be nonnegative"))
@@ -82,6 +212,11 @@ function set_timing_thresholds!(; expand::Real = _TIMING_CONFIG[].expand_thresho
     return _TIMING_CONFIG[]
 end
 
+"""
+    reset_timing_report!()
+
+Clear the current task's accumulated timing tree and active timing stack.
+"""
 function reset_timing_report!()
     state = _timing_state()
     empty!(state.stack)
@@ -89,6 +224,14 @@ function reset_timing_report!()
     return nothing
 end
 
+"""
+    current_timing_report() -> TimingReport
+
+Return a snapshot of the current task's recorded timing tree.
+
+This requires all timed scopes to be closed; otherwise an `ArgumentError` is
+thrown.
+"""
 function current_timing_report()
     state = _timing_state()
     isempty(state.stack) || throw(
@@ -142,8 +285,18 @@ function _time_scope(f, label)
     end
 end
 
+"""
+    @timeg label expr
+
+Evaluate `expr` while recording a named timing scope.
+
+When timing is disabled, `expr` is evaluated directly with no report entry.
+When timing is enabled, the scope is added to the current task's timing tree
+and may also be printed immediately if live timing is enabled.
+"""
 macro timeg(label, expr)
-    return esc(:(GaussletBases._time_scope(() -> $(expr), $(label))))
+    time_scope = GlobalRef(@__MODULE__, :_time_scope)
+    return esc(:($time_scope(() -> $(expr), $(label))))
 end
 
 function _timing_merge_nodes(nodes::AbstractVector{TimingNode})
@@ -192,6 +345,13 @@ function _timing_report_lines!(
     return lines
 end
 
+"""
+    timing_report(io::IO, report::TimingReport = current_timing_report())
+    timing_report(report::TimingReport = current_timing_report()) -> String
+
+Render a human-readable timing report for the current task or a supplied
+`TimingReport`.
+"""
 function timing_report(io::IO, report::TimingReport = current_timing_report())
     config = _TIMING_CONFIG[]
     println(io, "GaussletBases timing report")
@@ -205,4 +365,6 @@ end
 
 function timing_report(report::TimingReport = current_timing_report())
     return sprint(io -> timing_report(io, report))
+end
+
 end
