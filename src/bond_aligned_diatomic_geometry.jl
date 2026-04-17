@@ -402,6 +402,29 @@ function _bond_aligned_nested_box_outlines(
     return outlines
 end
 
+function _bond_aligned_support_states_for_export(
+    support_indices::AbstractVector{Int},
+    dims::NTuple{3,Int},
+)
+    return [_cartesian_unflat_index(index, dims) for index in support_indices]
+end
+
+function _bond_aligned_support_states_for_export(
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    _support_indices::AbstractVector{Int},
+    _dims::NTuple{3,Int},
+)
+    return support_states
+end
+
+function _bond_aligned_support_states_for_export(
+    support_states::Nothing,
+    support_indices::AbstractVector{Int},
+    dims::NTuple{3,Int},
+)
+    return _bond_aligned_support_states_for_export(support_indices, dims)
+end
+
 function _bond_aligned_source_region_points(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
@@ -413,7 +436,12 @@ function _bond_aligned_source_region_points(
     points = BondAlignedDiatomicGeometryPoint3D[]
 
     for (layer_index, layer) in pairs(source.shared_shell_layers)
-        for (local_index, state) in pairs(layer.support_states)
+        layer_states = _bond_aligned_support_states_for_export(
+            layer.support_states,
+            layer.support_indices,
+            dims,
+        )
+        for (local_index, state) in pairs(layer_states)
             push!(
                 points,
                 BondAlignedDiatomicGeometryPoint3D(
@@ -440,7 +468,12 @@ function _bond_aligned_source_region_points(
         else
             "shared_child_region"
         end
-        for (local_index, state) in pairs(child.support_states)
+        child_states = _bond_aligned_support_states_for_export(
+            child.support_states,
+            child.support_indices,
+            dims,
+        )
+        for (local_index, state) in pairs(child_states)
             push!(
                 points,
                 BondAlignedDiatomicGeometryPoint3D(

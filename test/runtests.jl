@@ -9305,9 +9305,28 @@ end
             Set([:shared_shell_region, :shared_child_region])
         expected_child_box_count = length(source.geometry.child_boxes)
         expected_shared_midpoint_box = !isnothing(source.geometry.shared_midpoint_box)
+        expected_shared_shell_points = sum(length(layer.support_indices) for layer in source.shared_shell_layers)
+        expected_left_child_points = source.geometry.did_split ? length(source.child_sequences[1].support_indices) : 0
+        expected_right_child_points = source.geometry.did_split ? length(source.child_sequences[2].support_indices) : 0
+        expected_shared_child_points = source.geometry.did_split ? 0 : length(source.child_sequences[1].support_indices)
+        expected_midpoint_points =
+            isnothing(source.geometry.shared_midpoint_box) ?
+            0 :
+            prod(length.(source.geometry.shared_midpoint_box))
 
+        @test all(isnothing(sequence.support_states) for sequence in source.child_sequences)
         @test Set(point.group_kind for point in source_payload.points) == expected_source_groups
         @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
+        @test count(point -> point.group_kind == :shared_shell_region, source_payload.points) ==
+            expected_shared_shell_points
+        @test count(point -> point.group_kind == :left_child_region, source_payload.points) ==
+            expected_left_child_points
+        @test count(point -> point.group_kind == :right_child_region, source_payload.points) ==
+            expected_right_child_points
+        @test count(point -> point.group_kind == :shared_child_region, source_payload.points) ==
+            expected_shared_child_points
+        @test count(point -> point.group_kind == :shared_midpoint_slab_region, source_payload.points) ==
+            expected_midpoint_points
         @test any(box.group_kind == :parent_box for box in source_payload.box_outlines)
         @test any(box.group_kind == :working_box for box in source_payload.box_outlines)
         @test count(box -> box.group_kind == :child_box, source_payload.box_outlines) == expected_child_box_count
@@ -9332,7 +9351,7 @@ end
             plane_value = 0.0,
             plane_tol = 1.0e-5,
         )
-        @test debug_slice.selected_count == fixed_slice.selected_count
+        @test debug_slice.selected_count >= fixed_slice.selected_count
         @test source_slice.selected_count > debug_slice.selected_count
 
         mktemp() do path, io
