@@ -9400,25 +9400,35 @@ end
         trace -> trace.symmetric_about_zero && !trace.contains_near_zero_center,
         traces,
     )
+    expected_context_suffixes = Set([
+        "face_xy/tangential_x",
+        "face_xy/tangential_y",
+        "face_xz/tangential_x",
+        "face_xz/tangential_z",
+        "face_yz/tangential_y",
+        "face_yz/tangential_z",
+        "edge_x/free_axis_x",
+        "edge_y/free_axis_y",
+        "edge_z/free_axis_z",
+    ])
 
-    @test length(traces) == 9
+    @test length(traces) == 9 * length(source.shared_shell_layers)
     @test all(trace.group_kind == :shared_shell for trace in traces)
-    @test all(trace.layer_index == 1 for trace in traces)
+    @test Set(trace.layer_index for trace in traces) ==
+        Set(1:length(source.shared_shell_layers))
     @test all(trace.symmetric_about_zero for trace in traces)
     @test isempty(lost_center)
-    retained_three = filter(trace -> trace.retained_count == 3, traces)
-    @test Set(trace.context_label for trace in retained_three) == Set([
-        "shared_shell/layer_1/face_xy/tangential_x",
-        "shared_shell/layer_1/face_xy/tangential_y",
-        "shared_shell/layer_1/face_xz/tangential_x",
-        "shared_shell/layer_1/face_xz/tangential_z",
-        "shared_shell/layer_1/face_yz/tangential_y",
-        "shared_shell/layer_1/face_yz/tangential_z",
-        "shared_shell/layer_1/edge_x/free_axis_x",
-        "shared_shell/layer_1/edge_y/free_axis_y",
-        "shared_shell/layer_1/edge_z/free_axis_z",
-    ])
     @test all(trace.contains_near_zero_center for trace in traces)
+    for layer_index in 1:length(source.shared_shell_layers)
+        layer_traces = filter(trace -> trace.layer_index == layer_index, traces)
+        @test length(layer_traces) == 9
+        @test Set(
+            replace(
+                trace.context_label,
+                "shared_shell/layer_$(layer_index)/" => "",
+            ) for trace in layer_traces
+        ) == expected_context_suffixes
+    end
 
     mktemp() do path, io
         close(io)
@@ -9430,11 +9440,24 @@ end
         )
         text = read(path, String)
         @test length(written) == length(traces)
-        @test occursin("# trace_count = 9", text)
-        @test occursin("# note left_child has no local side contractions; it remains a direct core block", text)
-        @test occursin("# note right_child has no local side contractions; it remains a direct core block", text)
+        @test occursin("# trace_count = $(length(traces))", text)
+        @test occursin(
+            "# note shared_child has no local side contractions; it remains a direct core block",
+            text,
+        )
+        @test !occursin(
+            "# note left_child has no local side contractions; it remains a direct core block",
+            text,
+        )
+        @test !occursin(
+            "# note right_child has no local side contractions; it remains a direct core block",
+            text,
+        )
         @test occursin("context_label = shared_shell/layer_1/face_xy/tangential_x", text)
-        @test occursin("context_label = shared_shell/layer_1/edge_z/free_axis_z", text)
+        @test occursin(
+            "context_label = shared_shell/layer_$(length(source.shared_shell_layers))/edge_z/free_axis_z",
+            text,
+        )
         @test occursin("parent_centers = [", text)
         @test occursin("localized_centers = [", text)
         @test occursin("contains_near_zero_center = true", text)
