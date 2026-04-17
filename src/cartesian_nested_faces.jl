@@ -50,6 +50,39 @@ function _nested_sparse_coefficient_map(
     )
 end
 
+function _nested_hcat_sparse_csc_maps(
+    blocks::AbstractVector,
+)::_CartesianCoefficientMap
+    isempty(blocks) && return SparseArrays.spzeros(Float64, 0, 0)
+    nrows = size(first(blocks), 1)
+    all(size(block, 1) == nrows for block in blocks) || throw(
+        ArgumentError("nested sparse coefficient-map concatenation requires a common parent row count"),
+    )
+    total_columns = sum(size(block, 2) for block in blocks)
+    total_nnz = sum(SparseArrays.nnz(block) for block in blocks)
+    colptr = Vector{Int}(undef, total_columns + 1)
+    rowvals = Vector{Int}(undef, total_nnz)
+    nzvals = Vector{Float64}(undef, total_nnz)
+    colptr[1] = 1
+    column_offset = 0
+    nz_offset = 0
+    for block in blocks
+        block = block::SparseArrays.SparseMatrixCSC{Float64,Int}
+        block_nnz = SparseArrays.nnz(block)
+        if block_nnz > 0
+            copyto!(rowvals, nz_offset + 1, SparseArrays.rowvals(block), 1, block_nnz)
+            copyto!(nzvals, nz_offset + 1, SparseArrays.nonzeros(block), 1, block_nnz)
+        end
+        block_colptr = SparseArrays.getcolptr(block)
+        for column in 1:size(block, 2)
+            colptr[column_offset + column + 1] = nz_offset + block_colptr[column + 1]
+        end
+        column_offset += size(block, 2)
+        nz_offset += block_nnz
+    end
+    return SparseArrays.SparseMatrixCSC{Float64,Int}(nrows, total_columns, colptr, rowvals, nzvals)
+end
+
 function _nested_hcat_coefficient_maps(
     blocks::AbstractVector{<:AbstractMatrix{<:Real}},
 )::_CartesianCoefficientMap
@@ -60,6 +93,9 @@ function _nested_hcat_coefficient_maps(
     )
     if all(block -> !SparseArrays.issparse(block), blocks)
         return Matrix{Float64}(hcat(blocks...))
+    end
+    if all(block -> block isa SparseArrays.SparseMatrixCSC{Float64,Int}, blocks)
+        return _nested_hcat_sparse_csc_maps(blocks)
     end
 
     row_indices = Int[]
@@ -370,8 +406,8 @@ struct _CartesianNestedShellSequence3D{S<:_AbstractCartesianNestedShellLayer3D}
     working_box::NTuple{3,UnitRange{Int}}
     coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
-    support_states::Vector{NTuple{3,Int}}
-    packet::_CartesianNestedShellPacket3D
+    support_states::Union{Nothing,Vector{NTuple{3,Int}}}
+    packet::Union{Nothing,_CartesianNestedShellPacket3D}
 end
 
 """
@@ -3647,354 +3683,382 @@ function _nested_shell_packet(
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    total_start_ns = time_ns()
-    setup_start_ns = time_ns()
-    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
-    term_storage_value = _nested_normalize_term_storage(term_storage)
-    support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
-    nshell = size(coefficient_matrix, 2)
-    nsupport = length(support_states)
-    nterms = size(pgdg.gaussian_factor_terms, 1)
-    support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
-    support_coefficients =
-        packet_kernel == :support_reference ?
-        _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
-        nothing
-    factorized_basis =
-        packet_kernel == :factorized_direct ?
-        _nested_extract_factorized_basis(
-            coefficient_matrix,
-            (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1)),
-        ) :
-        nothing
-    factorized_base_tables =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_axis_base_tables(
-            factorized_basis.x_functions,
-            pgdg.overlap,
-            pgdg.kinetic,
-            pgdg.position,
-            pgdg.x2,
-        ) :
-        nothing
-    support_workspace, contraction_scratch =
-        packet_kernel == :support_reference ?
-        _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
-        (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
-    _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
-
-    overlap =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            timing_collector,
-            "packet.base.overlap",
-        ) :
-        begin
-            overlap_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                overlap_local,
-                support_workspace,
-                contraction_scratch,
+    return @timeg "diatomic.packet.total" begin
+        total_start_ns = time_ns()
+        packet_kernel, term_storage_value, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
+            setup_start_ns = time_ns()
+            packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+            term_storage_value = _nested_normalize_term_storage(term_storage)
+            support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
+            nshell = size(coefficient_matrix, 2)
+            nsupport = length(support_states)
+            nterms = size(pgdg.gaussian_factor_terms, 1)
+            support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
+            support_coefficients =
+                packet_kernel == :support_reference ?
+                _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
+                nothing
+            factorized_basis =
+                packet_kernel == :factorized_direct ?
+                _nested_extract_factorized_basis(
+                    coefficient_matrix,
+                    (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1)),
+                ) :
+                nothing
+            factorized_base_tables =
+                packet_kernel == :factorized_direct ?
+                _nested_factorized_axis_base_tables(
+                    factorized_basis.x_functions,
+                    pgdg.overlap,
+                    pgdg.kinetic,
+                    pgdg.position,
+                    pgdg.x2,
+                ) :
+                nothing
+            support_workspace, contraction_scratch =
+                packet_kernel == :support_reference ?
+                _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
+                (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
+            _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
+            (
+                packet_kernel,
+                term_storage_value,
+                support_states,
+                nshell,
+                nsupport,
+                nterms,
                 support_axes,
                 support_coefficients,
-                pgdg.overlap,
-                pgdg.overlap,
-                pgdg.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
+                factorized_basis,
+                factorized_base_tables,
+                support_workspace,
+                contraction_scratch,
             )
-            _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
-            overlap_local
         end
 
-    kinetic =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_sum_of_products(
-            factorized_basis,
-            (
-                (factorized_base_tables.kinetic, factorized_base_tables.overlap, factorized_base_tables.overlap),
-                (factorized_base_tables.overlap, factorized_base_tables.kinetic, factorized_base_tables.overlap),
-                (factorized_base_tables.overlap, factorized_base_tables.overlap, factorized_base_tables.kinetic),
-            ),
-            timing_collector,
-            "packet.base.kinetic",
-        ) :
-        begin
-            kinetic_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_sum_of_support_products!(
-                kinetic_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
+        overlap = @timeg "diatomic.packet.base.overlap" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                timing_collector,
+                "packet.base.overlap",
+            ) :
+            begin
+                overlap_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    overlap_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.overlap,
+                    pgdg.overlap,
+                    pgdg.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+                overlap_local
+            end
+        end
+
+        kinetic = @timeg "diatomic.packet.base.kinetic" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_sum_of_products(
+                factorized_basis,
                 (
-                    (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
-                    (pgdg.overlap, pgdg.kinetic, pgdg.overlap),
-                    (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
-                );
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
-            kinetic_local
+                    (factorized_base_tables.kinetic, factorized_base_tables.overlap, factorized_base_tables.overlap),
+                    (factorized_base_tables.overlap, factorized_base_tables.kinetic, factorized_base_tables.overlap),
+                    (factorized_base_tables.overlap, factorized_base_tables.overlap, factorized_base_tables.kinetic),
+                ),
+                timing_collector,
+                "packet.base.kinetic",
+            ) :
+            begin
+                kinetic_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_sum_of_support_products!(
+                    kinetic_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    (
+                        (pgdg.kinetic, pgdg.overlap, pgdg.overlap),
+                        (pgdg.overlap, pgdg.kinetic, pgdg.overlap),
+                        (pgdg.overlap, pgdg.overlap, pgdg.kinetic),
+                    );
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+                kinetic_local
+            end
         end
 
-    position_x =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.position,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            timing_collector,
-            "packet.base.position_x",
-        ) :
-        begin
-            position_x_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_x_local,
-                support_workspace,
-                contraction_scratch,
+        position_x = @timeg "diatomic.packet.base.position_x" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.position,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                timing_collector,
+                "packet.base.position_x",
+            ) :
+            begin
+                position_x_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_x_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.position,
+                    pgdg.overlap,
+                    pgdg.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+                position_x_local
+            end
+        end
+
+        position_y = @timeg "diatomic.packet.base.position_y" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.overlap,
+                factorized_base_tables.position,
+                factorized_base_tables.overlap,
+                timing_collector,
+                "packet.base.position_y",
+            ) :
+            begin
+                position_y_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_y_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.overlap,
+                    pgdg.position,
+                    pgdg.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+                position_y_local
+            end
+        end
+
+        position_z = @timeg "diatomic.packet.base.position_z" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                factorized_base_tables.position,
+                timing_collector,
+                "packet.base.position_z",
+            ) :
+            begin
+                position_z_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_z_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.overlap,
+                    pgdg.overlap,
+                    pgdg.position;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+                position_z_local
+            end
+        end
+
+        x2_x = @timeg "diatomic.packet.base.x2_x" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.x2,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                timing_collector,
+                "packet.base.x2_x",
+            ) :
+            begin
+                x2_x_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_x_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.x2,
+                    pgdg.overlap,
+                    pgdg.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+                x2_x_local
+            end
+        end
+
+        x2_y = @timeg "diatomic.packet.base.x2_y" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.overlap,
+                factorized_base_tables.x2,
+                factorized_base_tables.overlap,
+                timing_collector,
+                "packet.base.x2_y",
+            ) :
+            begin
+                x2_y_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_y_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.overlap,
+                    pgdg.x2,
+                    pgdg.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+                x2_y_local
+            end
+        end
+
+        x2_z = @timeg "diatomic.packet.base.x2_z" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables.overlap,
+                factorized_base_tables.overlap,
+                factorized_base_tables.x2,
+                timing_collector,
+                "packet.base.x2_z",
+            ) :
+            begin
+                x2_z_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_z_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.overlap,
+                    pgdg.overlap,
+                    pgdg.x2;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+                x2_z_local
+            end
+        end
+
+        pair_data = @timeg "diatomic.packet.pair_terms" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_weight_aware_pair_terms(
+                factorized_basis,
+                pgdg.weights,
+                pgdg.weights,
+                pgdg.weights,
+                pgdg.pair_factor_terms_raw,
+                pgdg.pair_factor_terms_raw,
+                pgdg.pair_factor_terms_raw,
+                timing_collector;
+                term_storage = term_storage_value,
+                term_coefficients = term_coefficients,
+            ) :
+            _nested_weight_aware_pair_terms(
+                pgdg,
+                support_states,
                 support_axes,
                 support_coefficients,
-                pgdg.position,
-                pgdg.overlap,
-                pgdg.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
-            position_x_local
-        end
-
-    position_y =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.overlap,
-            factorized_base_tables.position,
-            factorized_base_tables.overlap,
-            timing_collector,
-            "packet.base.position_y",
-        ) :
-        begin
-            position_y_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_y_local,
                 support_workspace,
                 contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.overlap,
-                pgdg.position,
-                pgdg.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
+                timing_collector;
+                term_coefficients = term_coefficients,
             )
-            _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
-            position_y_local
         end
-
-    position_z =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            factorized_base_tables.position,
-            timing_collector,
-            "packet.base.position_z",
-        ) :
-        begin
-            position_z_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_z_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.overlap,
-                pgdg.overlap,
-                pgdg.position;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
-            position_z_local
+        gaussian_terms = @timeg "diatomic.packet.gaussian_terms" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_gaussian_terms(
+                factorized_basis,
+                pgdg.gaussian_factor_terms,
+                pgdg.gaussian_factor_terms,
+                pgdg.gaussian_factor_terms,
+                timing_collector;
+                term_storage = term_storage_value,
+                term_coefficients = term_coefficients,
+            ) :
+            begin
+                gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_term_family!(
+                    gaussian_terms_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg.gaussian_factor_terms,
+                    pgdg.gaussian_factor_terms,
+                    pgdg.gaussian_factor_terms,
+                    true,
+                )
+                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                (
+                    gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
+                    gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
+                )
+            end
         end
+        _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
-    x2_x =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.x2,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            timing_collector,
-            "packet.base.x2_x",
-        ) :
-        begin
-            x2_x_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_x_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.x2,
-                pgdg.overlap,
-                pgdg.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
-            x2_x_local
-        end
-
-    x2_y =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.overlap,
-            factorized_base_tables.x2,
-            factorized_base_tables.overlap,
-            timing_collector,
-            "packet.base.x2_y",
-        ) :
-        begin
-            x2_y_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_y_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.overlap,
-                pgdg.x2,
-                pgdg.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
-            x2_y_local
-        end
-
-    x2_z =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables.overlap,
-            factorized_base_tables.overlap,
-            factorized_base_tables.x2,
-            timing_collector,
-            "packet.base.x2_z",
-        ) :
-        begin
-            x2_z_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_z_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.overlap,
-                pgdg.overlap,
-                pgdg.x2;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
-            x2_z_local
-        end
-
-    pair_data =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_weight_aware_pair_terms(
-            factorized_basis,
-            pgdg.weights,
-            pgdg.weights,
-            pgdg.weights,
-            pgdg.pair_factor_terms_raw,
-            pgdg.pair_factor_terms_raw,
-            pgdg.pair_factor_terms_raw,
-            timing_collector;
-            term_storage = term_storage_value,
-            term_coefficients = term_coefficients,
-        ) :
-        _nested_weight_aware_pair_terms(
-            pgdg,
-            support_states,
-            support_axes,
-            support_coefficients,
-            support_workspace,
-            contraction_scratch,
-            timing_collector;
-            term_coefficients = term_coefficients,
+        (
+            packet = _CartesianNestedShellPacket3D(
+                overlap,
+                kinetic,
+                position_x,
+                position_y,
+                position_z,
+                x2_x,
+                x2_y,
+                x2_z,
+                pair_data.weights,
+                gaussian_terms.gaussian_sum,
+                pair_data.pair_sum,
+                gaussian_terms.gaussian_terms,
+                term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+                term_storage_value,
+            ),
+            support_states = support_states,
         )
-    gaussian_terms =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_gaussian_terms(
-            factorized_basis,
-            pgdg.gaussian_factor_terms,
-            pgdg.gaussian_factor_terms,
-            pgdg.gaussian_factor_terms,
-            timing_collector;
-            term_storage = term_storage_value,
-            term_coefficients = term_coefficients,
-        ) :
-        begin
-            gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_term_family!(
-                gaussian_terms_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg.gaussian_factor_terms,
-                pgdg.gaussian_factor_terms,
-                pgdg.gaussian_factor_terms,
-                true,
-            )
-            _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-            (
-                gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
-                gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
-            )
-        end
-    _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
-
-    return (
-        packet = _CartesianNestedShellPacket3D(
-            overlap,
-            kinetic,
-            position_x,
-            position_y,
-            position_z,
-            x2_x,
-            x2_y,
-            x2_z,
-            pair_data.weights,
-            gaussian_terms.gaussian_sum,
-            pair_data.pair_sum,
-            gaussian_terms.gaussian_terms,
-            term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
-            term_storage_value,
-        ),
-        support_states = support_states,
-    )
+    end
 end
 
 function _nested_shell_packet(
@@ -4006,378 +4070,411 @@ function _nested_shell_packet(
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    total_start_ns = time_ns()
-    setup_start_ns = time_ns()
-    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
-    term_storage_value = _nested_normalize_term_storage(term_storage)
-    dims = _nested_axis_lengths(bundles)
-    pgdg_x = _nested_axis_pgdg(bundles, :x)
-    pgdg_y = _nested_axis_pgdg(bundles, :y)
-    pgdg_z = _nested_axis_pgdg(bundles, :z)
-    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
-    nshell = size(coefficient_matrix, 2)
-    nsupport = length(support_states)
-    nterms = size(pgdg_x.gaussian_factor_terms, 1)
-    nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
-        ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
-    )
-    support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
-    support_coefficients =
-        packet_kernel == :support_reference ?
-        _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
-        nothing
-    factorized_basis =
-        packet_kernel == :factorized_direct ?
-        _nested_extract_factorized_basis(coefficient_matrix, dims) :
-        nothing
-    factorized_base_tables_x =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_axis_base_tables(
-            factorized_basis.x_functions,
-            pgdg_x.overlap,
-            pgdg_x.kinetic,
-            pgdg_x.position,
-            pgdg_x.x2,
-        ) :
-        nothing
-    factorized_base_tables_y =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_axis_base_tables(
-            factorized_basis.y_functions,
-            pgdg_y.overlap,
-            pgdg_y.kinetic,
-            pgdg_y.position,
-            pgdg_y.x2,
-        ) :
-        nothing
-    factorized_base_tables_z =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_axis_base_tables(
-            factorized_basis.z_functions,
-            pgdg_z.overlap,
-            pgdg_z.kinetic,
-            pgdg_z.position,
-            pgdg_z.x2,
-        ) :
-        nothing
-    support_workspace, contraction_scratch =
-        packet_kernel == :support_reference ?
-        _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
-        (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
-    _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
-
-    overlap =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.overlap,
-            factorized_base_tables_y.overlap,
-            factorized_base_tables_z.overlap,
-            timing_collector,
-            "packet.base.overlap",
-        ) :
-        begin
-            overlap_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                overlap_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.overlap,
-                pgdg_y.overlap,
-                pgdg_z.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
+    return @timeg "diatomic.packet.total" begin
+        total_start_ns = time_ns()
+        packet_kernel, term_storage_value, pgdg_x, pgdg_y, pgdg_z, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables_x, factorized_base_tables_y, factorized_base_tables_z, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
+            setup_start_ns = time_ns()
+            packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+            term_storage_value = _nested_normalize_term_storage(term_storage)
+            dims = _nested_axis_lengths(bundles)
+            pgdg_x = _nested_axis_pgdg(bundles, :x)
+            pgdg_y = _nested_axis_pgdg(bundles, :y)
+            pgdg_z = _nested_axis_pgdg(bundles, :z)
+            support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+            nshell = size(coefficient_matrix, 2)
+            nsupport = length(support_states)
+            nterms = size(pgdg_x.gaussian_factor_terms, 1)
+            nterms == size(pgdg_y.gaussian_factor_terms, 1) == size(pgdg_z.gaussian_factor_terms, 1) || throw(
+                ArgumentError("mixed-axis nested shell packets require the same Gaussian expansion term count on all axes"),
             )
-            _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
-            overlap_local
-        end
-
-    kinetic =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_sum_of_products(
-            factorized_basis,
+            support_axes = packet_kernel == :support_reference ? _nested_support_axes(support_states) : nothing
+            support_coefficients =
+                packet_kernel == :support_reference ?
+                _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
+                nothing
+            factorized_basis =
+                packet_kernel == :factorized_direct ?
+                _nested_extract_factorized_basis(coefficient_matrix, dims) :
+                nothing
+            factorized_base_tables_x =
+                packet_kernel == :factorized_direct ?
+                _nested_factorized_axis_base_tables(
+                    factorized_basis.x_functions,
+                    pgdg_x.overlap,
+                    pgdg_x.kinetic,
+                    pgdg_x.position,
+                    pgdg_x.x2,
+                ) :
+                nothing
+            factorized_base_tables_y =
+                packet_kernel == :factorized_direct ?
+                _nested_factorized_axis_base_tables(
+                    factorized_basis.y_functions,
+                    pgdg_y.overlap,
+                    pgdg_y.kinetic,
+                    pgdg_y.position,
+                    pgdg_y.x2,
+                ) :
+                nothing
+            factorized_base_tables_z =
+                packet_kernel == :factorized_direct ?
+                _nested_factorized_axis_base_tables(
+                    factorized_basis.z_functions,
+                    pgdg_z.overlap,
+                    pgdg_z.kinetic,
+                    pgdg_z.position,
+                    pgdg_z.x2,
+                ) :
+                nothing
+            support_workspace, contraction_scratch =
+                packet_kernel == :support_reference ?
+                _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
+                (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
+            _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
             (
-                (factorized_base_tables_x.kinetic, factorized_base_tables_y.overlap, factorized_base_tables_z.overlap),
-                (factorized_base_tables_x.overlap, factorized_base_tables_y.kinetic, factorized_base_tables_z.overlap),
-                (factorized_base_tables_x.overlap, factorized_base_tables_y.overlap, factorized_base_tables_z.kinetic),
-            ),
-            timing_collector,
-            "packet.base.kinetic",
-        ) :
-        begin
-            kinetic_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_sum_of_support_products!(
-                kinetic_local,
-                support_workspace,
-                contraction_scratch,
+                packet_kernel,
+                term_storage_value,
+                pgdg_x,
+                pgdg_y,
+                pgdg_z,
+                support_states,
+                nshell,
+                nsupport,
+                nterms,
                 support_axes,
                 support_coefficients,
+                factorized_basis,
+                factorized_base_tables_x,
+                factorized_base_tables_y,
+                factorized_base_tables_z,
+                support_workspace,
+                contraction_scratch,
+            )
+        end
+
+        overlap = @timeg "diatomic.packet.base.overlap" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.overlap,
+                factorized_base_tables_y.overlap,
+                factorized_base_tables_z.overlap,
+                timing_collector,
+                "packet.base.overlap",
+            ) :
+            begin
+                overlap_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    overlap_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.overlap,
+                    pgdg_y.overlap,
+                    pgdg_z.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
+                overlap_local
+            end
+        end
+
+        kinetic = @timeg "diatomic.packet.base.kinetic" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_sum_of_products(
+                factorized_basis,
                 (
-                    (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
-                    (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
-                    (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
-                );
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
-            kinetic_local
+                    (factorized_base_tables_x.kinetic, factorized_base_tables_y.overlap, factorized_base_tables_z.overlap),
+                    (factorized_base_tables_x.overlap, factorized_base_tables_y.kinetic, factorized_base_tables_z.overlap),
+                    (factorized_base_tables_x.overlap, factorized_base_tables_y.overlap, factorized_base_tables_z.kinetic),
+                ),
+                timing_collector,
+                "packet.base.kinetic",
+            ) :
+            begin
+                kinetic_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_sum_of_support_products!(
+                    kinetic_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    (
+                        (pgdg_x.kinetic, pgdg_y.overlap, pgdg_z.overlap),
+                        (pgdg_x.overlap, pgdg_y.kinetic, pgdg_z.overlap),
+                        (pgdg_x.overlap, pgdg_y.overlap, pgdg_z.kinetic),
+                    );
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
+                kinetic_local
+            end
         end
 
-    position_x =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.position,
-            factorized_base_tables_y.overlap,
-            factorized_base_tables_z.overlap,
-            timing_collector,
-            "packet.base.position_x",
-        ) :
-        begin
-            position_x_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_x_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.position,
-                pgdg_y.overlap,
-                pgdg_z.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
-            position_x_local
+        position_x = @timeg "diatomic.packet.base.position_x" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.position,
+                factorized_base_tables_y.overlap,
+                factorized_base_tables_z.overlap,
+                timing_collector,
+                "packet.base.position_x",
+            ) :
+            begin
+                position_x_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_x_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.position,
+                    pgdg_y.overlap,
+                    pgdg_z.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
+                position_x_local
+            end
         end
 
-    position_y =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.overlap,
-            factorized_base_tables_y.position,
-            factorized_base_tables_z.overlap,
-            timing_collector,
-            "packet.base.position_y",
-        ) :
-        begin
-            position_y_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_y_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.overlap,
-                pgdg_y.position,
-                pgdg_z.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
-            position_y_local
+        position_y = @timeg "diatomic.packet.base.position_y" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.overlap,
+                factorized_base_tables_y.position,
+                factorized_base_tables_z.overlap,
+                timing_collector,
+                "packet.base.position_y",
+            ) :
+            begin
+                position_y_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_y_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.overlap,
+                    pgdg_y.position,
+                    pgdg_z.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
+                position_y_local
+            end
         end
 
-    position_z =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.overlap,
-            factorized_base_tables_y.overlap,
-            factorized_base_tables_z.position,
-            timing_collector,
-            "packet.base.position_z",
-        ) :
-        begin
-            position_z_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                position_z_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.overlap,
-                pgdg_y.overlap,
-                pgdg_z.position;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
-            position_z_local
+        position_z = @timeg "diatomic.packet.base.position_z" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.overlap,
+                factorized_base_tables_y.overlap,
+                factorized_base_tables_z.position,
+                timing_collector,
+                "packet.base.position_z",
+            ) :
+            begin
+                position_z_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    position_z_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.overlap,
+                    pgdg_y.overlap,
+                    pgdg_z.position;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
+                position_z_local
+            end
         end
 
-    x2_x =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.x2,
-            factorized_base_tables_y.overlap,
-            factorized_base_tables_z.overlap,
-            timing_collector,
-            "packet.base.x2_x",
-        ) :
-        begin
-            x2_x_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_x_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.x2,
-                pgdg_y.overlap,
-                pgdg_z.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
-            x2_x_local
+        x2_x = @timeg "diatomic.packet.base.x2_x" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.x2,
+                factorized_base_tables_y.overlap,
+                factorized_base_tables_z.overlap,
+                timing_collector,
+                "packet.base.x2_x",
+            ) :
+            begin
+                x2_x_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_x_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.x2,
+                    pgdg_y.overlap,
+                    pgdg_z.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
+                x2_x_local
+            end
         end
 
-    x2_y =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.overlap,
-            factorized_base_tables_y.x2,
-            factorized_base_tables_z.overlap,
-            timing_collector,
-            "packet.base.x2_y",
-        ) :
-        begin
-            x2_y_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_y_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.overlap,
-                pgdg_y.x2,
-                pgdg_z.overlap;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
-            x2_y_local
+        x2_y = @timeg "diatomic.packet.base.x2_y" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.overlap,
+                factorized_base_tables_y.x2,
+                factorized_base_tables_z.overlap,
+                timing_collector,
+                "packet.base.x2_y",
+            ) :
+            begin
+                x2_y_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_y_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.overlap,
+                    pgdg_y.x2,
+                    pgdg_z.overlap;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
+                x2_y_local
+            end
         end
 
-    x2_z =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_product_matrix(
-            factorized_basis,
-            factorized_base_tables_x.overlap,
-            factorized_base_tables_y.overlap,
-            factorized_base_tables_z.x2,
-            timing_collector,
-            "packet.base.x2_z",
-        ) :
-        begin
-            x2_z_local = Matrix{Float64}(undef, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_product!(
-                x2_z_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                support_coefficients,
-                pgdg_x.overlap,
-                pgdg_y.overlap,
-                pgdg_z.x2;
-                beta = 0.0,
-                assume_symmetric = true,
-            )
-            _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
-            x2_z_local
+        x2_z = @timeg "diatomic.packet.base.x2_z" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_product_matrix(
+                factorized_basis,
+                factorized_base_tables_x.overlap,
+                factorized_base_tables_y.overlap,
+                factorized_base_tables_z.x2,
+                timing_collector,
+                "packet.base.x2_z",
+            ) :
+            begin
+                x2_z_local = Matrix{Float64}(undef, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_product!(
+                    x2_z_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.overlap,
+                    pgdg_y.overlap,
+                    pgdg_z.x2;
+                    beta = 0.0,
+                    assume_symmetric = true,
+                )
+                _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
+                x2_z_local
+            end
         end
 
-    pair_data =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_weight_aware_pair_terms(
-            factorized_basis,
-            pgdg_x.weights,
-            pgdg_y.weights,
-            pgdg_z.weights,
-            pgdg_x.pair_factor_terms_raw,
-            pgdg_y.pair_factor_terms_raw,
-            pgdg_z.pair_factor_terms_raw,
-            timing_collector;
-            term_storage = term_storage_value,
-            term_coefficients = term_coefficients,
-        ) :
-        _nested_weight_aware_pair_terms(
-            bundles,
-            support_states,
-            support_axes,
-            support_coefficients,
-            support_workspace,
-            contraction_scratch,
-            timing_collector;
-            term_coefficients = term_coefficients,
-        )
-    gaussian_terms =
-        packet_kernel == :factorized_direct ?
-        _nested_factorized_gaussian_terms(
-            factorized_basis,
-            pgdg_x.gaussian_factor_terms,
-            pgdg_y.gaussian_factor_terms,
-            pgdg_z.gaussian_factor_terms,
-            timing_collector;
-            term_storage = term_storage_value,
-            term_coefficients = term_coefficients,
-        ) :
-        begin
-            gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
-            start_ns = time_ns()
-            _nested_contract_support_term_family!(
-                gaussian_terms_local,
-                support_workspace,
-                contraction_scratch,
+        pair_data = @timeg "diatomic.packet.pair_terms" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_weight_aware_pair_terms(
+                factorized_basis,
+                pgdg_x.weights,
+                pgdg_y.weights,
+                pgdg_z.weights,
+                pgdg_x.pair_factor_terms_raw,
+                pgdg_y.pair_factor_terms_raw,
+                pgdg_z.pair_factor_terms_raw,
+                timing_collector;
+                term_storage = term_storage_value,
+                term_coefficients = term_coefficients,
+            ) :
+            _nested_weight_aware_pair_terms(
+                bundles,
+                support_states,
                 support_axes,
                 support_coefficients,
+                support_workspace,
+                contraction_scratch,
+                timing_collector;
+                term_coefficients = term_coefficients,
+            )
+        end
+        gaussian_terms = @timeg "diatomic.packet.gaussian_terms" begin
+            packet_kernel == :factorized_direct ?
+            _nested_factorized_gaussian_terms(
+                factorized_basis,
                 pgdg_x.gaussian_factor_terms,
                 pgdg_y.gaussian_factor_terms,
                 pgdg_z.gaussian_factor_terms,
-                true,
-            )
-            _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-            (
-                gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
-                gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
-            )
+                timing_collector;
+                term_storage = term_storage_value,
+                term_coefficients = term_coefficients,
+            ) :
+            begin
+                gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
+                start_ns = time_ns()
+                _nested_contract_support_term_family!(
+                    gaussian_terms_local,
+                    support_workspace,
+                    contraction_scratch,
+                    support_axes,
+                    support_coefficients,
+                    pgdg_x.gaussian_factor_terms,
+                    pgdg_y.gaussian_factor_terms,
+                    pgdg_z.gaussian_factor_terms,
+                    true,
+                )
+                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                (
+                    gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
+                    gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
+                )
+            end
         end
-    _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
+        _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
-    return (
-        packet = _CartesianNestedShellPacket3D(
-            overlap,
-            kinetic,
-            position_x,
-            position_y,
-            position_z,
-            x2_x,
-            x2_y,
-            x2_z,
-            pair_data.weights,
-            gaussian_terms.gaussian_sum,
-            pair_data.pair_sum,
-            gaussian_terms.gaussian_terms,
-            term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
-            term_storage_value,
-        ),
-        support_states = support_states,
-    )
+        (
+            packet = _CartesianNestedShellPacket3D(
+                overlap,
+                kinetic,
+                position_x,
+                position_y,
+                position_z,
+                x2_x,
+                x2_y,
+                x2_z,
+                pair_data.weights,
+                gaussian_terms.gaussian_sum,
+                pair_data.pair_sum,
+                gaussian_terms.gaussian_terms,
+                term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+                term_storage_value,
+            ),
+            support_states = support_states,
+        )
+    end
 end
 
 # Alg Nested-Face steps 8-9: Assemble one first shell-level fixed space from an
@@ -4775,6 +4872,7 @@ function _nested_shell_sequence(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    build_packet::Bool = true,
 )
     n1d = size(pgdg.overlap, 1)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, n1d)
@@ -4789,6 +4887,7 @@ function _nested_shell_sequence(
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
+        build_packet = build_packet,
     )
 end
 
@@ -4802,6 +4901,7 @@ function _nested_shell_sequence_from_core_block(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    build_packet::Bool = true,
 )
     prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
@@ -4810,19 +4910,27 @@ function _nested_shell_sequence_from_core_block(
         enforce_coverage ?
         _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, n1d) :
         _nested_sequence_working_box(core_indices, shell_layers, n1d)
-    coefficient_blocks = AbstractMatrix{Float64}[core_coefficients]
+    coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
+    coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
+        _nested_hcat_coefficient_maps(coefficient_blocks)
+    end
     _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
-    shell_data = _nested_shell_packet(
-        pgdg,
-        coefficient_matrix,
-        support_indices,
-        timing_collector;
-        packet_kernel = packet_kernel,
-        term_storage = term_storage,
-        term_coefficients = term_coefficients,
-    )
+    shell_data = if build_packet
+        @timeg "diatomic.sequence.packet" begin
+            _nested_shell_packet(
+                pgdg,
+                coefficient_matrix,
+                support_indices,
+                timing_collector;
+                packet_kernel = packet_kernel,
+                term_storage = term_storage,
+                term_coefficients = term_coefficients,
+            )
+        end
+    else
+        nothing
+    end
 
     ncore = size(core_coefficients, 2)
     layer_column_ranges = UnitRange{Int}[]
@@ -4842,8 +4950,8 @@ function _nested_shell_sequence_from_core_block(
         working_box,
         coefficient_matrix,
         support_indices,
-        shell_data.support_states,
-        shell_data.packet,
+        isnothing(shell_data) ? nothing : shell_data.support_states,
+        isnothing(shell_data) ? nothing : shell_data.packet,
     )
 end
 
@@ -5034,6 +5142,7 @@ function _nested_shell_sequence(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    build_packet::Bool = true,
 )
     dims = _nested_axis_lengths(bundles)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
@@ -5048,6 +5157,7 @@ function _nested_shell_sequence(
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
+        build_packet = build_packet,
     )
 end
 
@@ -5061,6 +5171,7 @@ function _nested_shell_sequence_from_core_block(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    build_packet::Bool = true,
 )
     prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
@@ -5069,19 +5180,27 @@ function _nested_shell_sequence_from_core_block(
         enforce_coverage ?
         _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, dims) :
         _nested_sequence_working_box(core_indices, shell_layers, dims)
-    coefficient_blocks = AbstractMatrix{Float64}[core_coefficients]
+    coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
     append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
+    coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
+        _nested_hcat_coefficient_maps(coefficient_blocks)
+    end
     _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
-    shell_data = _nested_shell_packet(
-        bundles,
-        coefficient_matrix,
-        support_indices,
-        timing_collector;
-        packet_kernel = packet_kernel,
-        term_storage = term_storage,
-        term_coefficients = term_coefficients,
-    )
+    shell_data = if build_packet
+        @timeg "diatomic.sequence.packet" begin
+            _nested_shell_packet(
+                bundles,
+                coefficient_matrix,
+                support_indices,
+                timing_collector;
+                packet_kernel = packet_kernel,
+                term_storage = term_storage,
+                term_coefficients = term_coefficients,
+            )
+        end
+    else
+        nothing
+    end
 
     ncore = size(core_coefficients, 2)
     layer_column_ranges = UnitRange{Int}[]
@@ -5101,8 +5220,8 @@ function _nested_shell_sequence_from_core_block(
         working_box,
         coefficient_matrix,
         support_indices,
-        shell_data.support_states,
-        shell_data.packet,
+        isnothing(shell_data) ? nothing : shell_data.support_states,
+        isnothing(shell_data) ? nothing : shell_data.packet,
     )
 end
 
@@ -6260,34 +6379,36 @@ function _nested_diatomic_reference_band(
     nside::Int,
     reference_fudge_factor::Float64,
 )
-    reference_fudge_factor > 0.0 || throw(
-        ArgumentError("diatomic ideal-reference tolerance expansion requires reference_fudge_factor > 0"),
-    )
-    reference_retain = min(nside, minimum(length.(box)))
-    reference_bounds = _nested_diatomic_reference_bounds(bundles, box)
-    axis_stats = Pair{Symbol,NamedTuple}[]
-    for axis in (:x, :y, :z)
-        bounds = axis == :x ? reference_bounds[1] : axis == :y ? reference_bounds[2] : reference_bounds[3]
-        points = _nested_diatomic_uniform_line_points(bounds[1], bounds[2], reference_retain)
-        stats = _nested_diatomic_aggregate_line_theta_stats(
-            points,
-            axis,
-            _nested_diatomic_reference_fixed_coord_pairs(reference_bounds, axis),
-            basis,
+    return @timeg "diatomic.source.reference_band" begin
+        reference_fudge_factor > 0.0 || throw(
+            ArgumentError("diatomic ideal-reference tolerance expansion requires reference_fudge_factor > 0"),
         )
-        push!(axis_stats, axis => stats)
+        reference_retain = min(nside, minimum(length.(box)))
+        reference_bounds = _nested_diatomic_reference_bounds(bundles, box)
+        axis_stats = Pair{Symbol,NamedTuple}[]
+        for axis in (:x, :y, :z)
+            bounds = axis == :x ? reference_bounds[1] : axis == :y ? reference_bounds[2] : reference_bounds[3]
+            points = _nested_diatomic_uniform_line_points(bounds[1], bounds[2], reference_retain)
+            stats = _nested_diatomic_aggregate_line_theta_stats(
+                points,
+                axis,
+                _nested_diatomic_reference_fixed_coord_pairs(reference_bounds, axis),
+                basis,
+            )
+            push!(axis_stats, axis => stats)
+        end
+        ideal_theta_min = minimum(last(pair).theta_min for pair in axis_stats)
+        ideal_theta_max = maximum(last(pair).theta_max for pair in axis_stats)
+        (
+            reference_bounds = reference_bounds,
+            reference_retain = reference_retain,
+            ideal_theta_min = ideal_theta_min,
+            ideal_theta_max = ideal_theta_max,
+            theta_min = ideal_theta_min / reference_fudge_factor,
+            theta_max = ideal_theta_max * reference_fudge_factor,
+            reference_fudge_factor = reference_fudge_factor,
+        )
     end
-    ideal_theta_min = minimum(last(pair).theta_min for pair in axis_stats)
-    ideal_theta_max = maximum(last(pair).theta_max for pair in axis_stats)
-    return (
-        reference_bounds = reference_bounds,
-        reference_retain = reference_retain,
-        ideal_theta_min = ideal_theta_min,
-        ideal_theta_max = ideal_theta_max,
-        theta_min = ideal_theta_min / reference_fudge_factor,
-        theta_max = ideal_theta_max * reference_fudge_factor,
-        reference_fudge_factor = reference_fudge_factor,
-    )
 end
 
 function _nested_diatomic_choose_candidate_from_stats(
@@ -6400,52 +6521,60 @@ function _nested_diatomic_adaptive_shell_retention(
     nside::Int,
     reference_fudge_factor::Float64,
 )
-    reference = _nested_diatomic_reference_band(
-        basis,
-        bundles,
-        boundary_box;
-        nside = nside,
-        reference_fudge_factor = reference_fudge_factor,
-    )
-    chosen_x = _nested_diatomic_choose_shell_axis_retain_count(
-        basis,
-        bundles,
-        :x,
-        inner_box[1],
-        boundary_box,
-        reference;
-        minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :x),
-    )
-    chosen_y = _nested_diatomic_choose_shell_axis_retain_count(
-        basis,
-        bundles,
-        :y,
-        inner_box[2],
-        boundary_box,
-        reference;
-        minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :y),
-    )
-    chosen_z = _nested_diatomic_choose_shell_axis_retain_count(
-        basis,
-        bundles,
-        :z,
-        inner_box[3],
-        boundary_box,
-        reference;
-        minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :z),
-    )
-    return (
-        reference = reference,
-        chosen_x = chosen_x,
-        chosen_y = chosen_y,
-        chosen_z = chosen_z,
-        retain_xy = (chosen_x.retain, chosen_y.retain),
-        retain_xz = (chosen_x.retain, chosen_z.retain),
-        retain_yz = (chosen_y.retain, chosen_z.retain),
-        retain_x_edge = chosen_x.retain,
-        retain_y_edge = chosen_y.retain,
-        retain_z_edge = chosen_z.retain,
-    )
+    return @timeg "diatomic.source.adaptive_shell_retention" begin
+        reference = _nested_diatomic_reference_band(
+            basis,
+            bundles,
+            boundary_box;
+            nside = nside,
+            reference_fudge_factor = reference_fudge_factor,
+        )
+        chosen_x = @timeg "diatomic.source.axis_choice.x" begin
+            _nested_diatomic_choose_shell_axis_retain_count(
+                basis,
+                bundles,
+                :x,
+                inner_box[1],
+                boundary_box,
+                reference;
+                minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :x),
+            )
+        end
+        chosen_y = @timeg "diatomic.source.axis_choice.y" begin
+            _nested_diatomic_choose_shell_axis_retain_count(
+                basis,
+                bundles,
+                :y,
+                inner_box[2],
+                boundary_box,
+                reference;
+                minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :y),
+            )
+        end
+        chosen_z = @timeg "diatomic.source.axis_choice.z" begin
+            _nested_diatomic_choose_shell_axis_retain_count(
+                basis,
+                bundles,
+                :z,
+                inner_box[3],
+                boundary_box,
+                reference;
+                minimum_retained = _nested_diatomic_axis_minimum_retain(retention, :z),
+            )
+        end
+        (
+            reference = reference,
+            chosen_x = chosen_x,
+            chosen_y = chosen_y,
+            chosen_z = chosen_z,
+            retain_xy = (chosen_x.retain, chosen_y.retain),
+            retain_xz = (chosen_x.retain, chosen_z.retain),
+            retain_yz = (chosen_y.retain, chosen_z.retain),
+            retain_x_edge = chosen_x.retain,
+            retain_y_edge = chosen_y.retain,
+            retain_z_edge = chosen_z.retain,
+        )
+    end
 end
 
 function _nested_diatomic_core_protected_radii(
@@ -6575,99 +6704,113 @@ function _nested_bond_aligned_diatomic_nonuniform_core_block(
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
 )
-    reference = _nested_diatomic_reference_band(
-        basis,
-        bundles,
-        box;
-        nside = nside,
-        reference_fudge_factor = reference_fudge_factor,
-    )
-    protected_radii = _nested_diatomic_core_protected_radii(
-        basis,
-        bundles,
-        box,
-        bond_axis,
-        core_near_nucleus_protect_rows,
-    )
-    dims = _nested_axis_lengths(bundles)
-    coefficient_blocks = _CartesianCoefficientMap[]
-    if bond_axis == :x
-        for iy in box[2], iz in box[3]
-            fixed_indices = (iy, iz)
-            choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
+    return @timeg "diatomic.source.nonuniform_core_block" begin
+        reference = _nested_diatomic_reference_band(
+            basis,
+            bundles,
+            box;
+            nside = nside,
+            reference_fudge_factor = reference_fudge_factor,
+        )
+        protected_radii = @timeg "diatomic.source.nonuniform_core.protected_rows" begin
+            _nested_diatomic_core_protected_radii(
                 basis,
                 bundles,
+                box,
                 bond_axis,
-                box[1],
-                fixed_indices,
-                reference;
-                minimum_retained = max(nside, minimum_parallel_retain),
-            )
-            radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
-            if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
-                choice = _nested_diatomic_force_choice_direct(choice, length(box[1]))
-            end
-            side = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), box[1], choice.retain)
-            push!(
-                coefficient_blocks,
-                _nested_edge_product(:x, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
+                core_near_nucleus_protect_rows,
             )
         end
-    elseif bond_axis == :y
-        for ix in box[1], iz in box[3]
-            fixed_indices = (ix, iz)
-            choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
-                basis,
-                bundles,
-                bond_axis,
-                box[2],
-                fixed_indices,
-                reference;
-                minimum_retained = max(nside, minimum_parallel_retain),
-            )
-            radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
-            if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
-                choice = _nested_diatomic_force_choice_direct(choice, length(box[2]))
+        dims = _nested_axis_lengths(bundles)
+        coefficient_blocks = _CartesianCoefficientMap[]
+        if bond_axis == :x
+            @timeg "diatomic.source.nonuniform_core.line_emit.x" begin
+                for iy in box[2], iz in box[3]
+                    fixed_indices = (iy, iz)
+                    choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
+                        basis,
+                        bundles,
+                        bond_axis,
+                        box[1],
+                        fixed_indices,
+                        reference;
+                        minimum_retained = max(nside, minimum_parallel_retain),
+                    )
+                    radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
+                    if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
+                        choice = _nested_diatomic_force_choice_direct(choice, length(box[1]))
+                    end
+                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), box[1], choice.retain)
+                    push!(
+                        coefficient_blocks,
+                        _nested_edge_product(:x, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
+                    )
+                end
             end
-            side = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), box[2], choice.retain)
-            push!(
-                coefficient_blocks,
-                _nested_edge_product(:y, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
+        elseif bond_axis == :y
+            @timeg "diatomic.source.nonuniform_core.line_emit.y" begin
+                for ix in box[1], iz in box[3]
+                    fixed_indices = (ix, iz)
+                    choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
+                        basis,
+                        bundles,
+                        bond_axis,
+                        box[2],
+                        fixed_indices,
+                        reference;
+                        minimum_retained = max(nside, minimum_parallel_retain),
+                    )
+                    radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
+                    if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
+                        choice = _nested_diatomic_force_choice_direct(choice, length(box[2]))
+                    end
+                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), box[2], choice.retain)
+                    push!(
+                        coefficient_blocks,
+                        _nested_edge_product(:y, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
+                    )
+                end
+            end
+        elseif bond_axis == :z
+            @timeg "diatomic.source.nonuniform_core.line_emit.z" begin
+                for ix in box[1], iy in box[2]
+                    fixed_indices = (ix, iy)
+                    choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
+                        basis,
+                        bundles,
+                        bond_axis,
+                        box[3],
+                        fixed_indices,
+                        reference;
+                        minimum_retained = max(nside, minimum_parallel_retain),
+                    )
+                    radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
+                    if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
+                        choice = _nested_diatomic_force_choice_direct(choice, length(box[3]))
+                    end
+                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), box[3], choice.retain)
+                    push!(
+                        coefficient_blocks,
+                        _nested_edge_product(:z, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
+                    )
+                end
+            end
+        else
+            throw(
+                ArgumentError(
+                    "diatomic nonuniform core construction requires bond_axis = :x, :y, or :z",
+                ),
             )
         end
-    elseif bond_axis == :z
-        for ix in box[1], iy in box[2]
-            fixed_indices = (ix, iy)
-            choice = _nested_diatomic_choose_fixed_parallel_line_retain_count(
-                basis,
-                bundles,
-                bond_axis,
-                box[3],
-                fixed_indices,
-                reference;
-                minimum_retained = max(nside, minimum_parallel_retain),
-            )
-            radius = _nested_diatomic_core_fixed_pair_radius(basis, bundles, bond_axis, fixed_indices)
-            if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
-                choice = _nested_diatomic_force_choice_direct(choice, length(box[3]))
-            end
-            side = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), box[3], choice.retain)
-            push!(
-                coefficient_blocks,
-                _nested_edge_product(:z, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
-            )
-        end
-    else
-        throw(
-            ArgumentError(
-                "diatomic nonuniform core construction requires bond_axis = :x, :y, or :z",
+        (
+            support_indices = _nested_box_support_indices(box..., dims),
+            coefficient_matrix = (
+                @timeg "diatomic.source.nonuniform_core.coefficient_merge" begin
+                    _nested_hcat_coefficient_maps(coefficient_blocks)
+                end
             ),
         )
     end
-    return (
-        support_indices = _nested_box_support_indices(box..., dims),
-        coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks),
-    )
 end
 
 function _nested_bond_aligned_diatomic_sequence_for_box(
@@ -6679,55 +6822,65 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
     nside::Int,
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
+    build_packet::Bool = true,
 )
-    current_box = box
-    shell_layers = _CartesianNestedCompleteShell3D[]
-    while minimum(length.(current_box)) > nside
-        _nested_can_shrink_box(current_box) || break
-        inner_box = _nested_inner_box(current_box)
-        adaptive_retention = _nested_diatomic_adaptive_shell_retention(
-            basis,
-            bundles,
-            current_box,
-            inner_box,
-            retention;
-            nside = nside,
-            reference_fudge_factor = reference_fudge_factor,
-        )
-        push!(
-            shell_layers,
-            _nested_complete_rectangular_shell(
+    return @timeg "diatomic.source.child_sequence" begin
+        current_box = box
+        shell_layers = _CartesianNestedCompleteShell3D[]
+        @timeg "diatomic.source.child_sequence.shell_construction" begin
+            while minimum(length.(current_box)) > nside
+                _nested_can_shrink_box(current_box) || break
+                inner_box = _nested_inner_box(current_box)
+                adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+                    basis,
+                    bundles,
+                    current_box,
+                    inner_box,
+                    retention;
+                    nside = nside,
+                    reference_fudge_factor = reference_fudge_factor,
+                )
+                push!(
+                    shell_layers,
+                    _nested_complete_rectangular_shell(
+                        bundles,
+                        inner_box...;
+                        retain_xy = adaptive_retention.retain_xy,
+                        retain_xz = adaptive_retention.retain_xz,
+                        retain_yz = adaptive_retention.retain_yz,
+                        retain_x_edge = adaptive_retention.retain_x_edge,
+                        retain_y_edge = adaptive_retention.retain_y_edge,
+                        retain_z_edge = adaptive_retention.retain_z_edge,
+                        x_fixed = (first(current_box[1]), last(current_box[1])),
+                        y_fixed = (first(current_box[2]), last(current_box[2])),
+                        z_fixed = (first(current_box[3]), last(current_box[3])),
+                    ),
+                )
+                current_box = inner_box
+            end
+        end
+        core_block = @timeg "diatomic.source.child_sequence.core_block" begin
+            _nested_bond_aligned_diatomic_nonuniform_core_block(
+                basis,
                 bundles,
-                inner_box...;
-                retain_xy = adaptive_retention.retain_xy,
-                retain_xz = adaptive_retention.retain_xz,
-                retain_yz = adaptive_retention.retain_yz,
-                retain_x_edge = adaptive_retention.retain_x_edge,
-                retain_y_edge = adaptive_retention.retain_y_edge,
-                retain_z_edge = adaptive_retention.retain_z_edge,
-                x_fixed = (first(current_box[1]), last(current_box[1])),
-                y_fixed = (first(current_box[2]), last(current_box[2])),
-                z_fixed = (first(current_box[3]), last(current_box[3])),
-            ),
-        )
-        current_box = inner_box
+                current_box;
+                bond_axis = bond_axis,
+                nside = nside,
+                minimum_parallel_retain = _nested_diatomic_axis_minimum_retain(retention, bond_axis),
+                reference_fudge_factor = reference_fudge_factor,
+                core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
+            )
+        end
+        @timeg "diatomic.source.child_sequence.sequence_merge" begin
+            _nested_shell_sequence_from_core_block(
+                bundles,
+                core_block.support_indices,
+                core_block.coefficient_matrix,
+                shell_layers,
+                build_packet = build_packet,
+            )
+        end
     end
-    core_block = _nested_bond_aligned_diatomic_nonuniform_core_block(
-        basis,
-        bundles,
-        current_box;
-        bond_axis = bond_axis,
-        nside = nside,
-        minimum_parallel_retain = _nested_diatomic_axis_minimum_retain(retention, bond_axis),
-        reference_fudge_factor = reference_fudge_factor,
-        core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
-    )
-    return _nested_shell_sequence_from_core_block(
-        bundles,
-        core_block.support_indices,
-        core_block.coefficient_matrix,
-        shell_layers,
-    )
 end
 
 # Alg Nested-Diatomic step 5 and 6: Choose the bond-axis split plane at the
@@ -6746,66 +6899,68 @@ function _nested_bond_aligned_diatomic_split_geometry(
     use_midpoint_slab::Bool = true,
     prefer_midpoint_tie_side::Symbol = :left,
 )
-    axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
-    axis != 0 || throw(ArgumentError("diatomic split geometry requires bond_axis = :x, :y, or :z"))
-    min_unsplit_parallel_to_transverse_ratio_for_split > 0.0 || throw(
-        ArgumentError(
-            "diatomic split-eligibility guard requires min_unsplit_parallel_to_transverse_ratio_for_split > 0",
-        ),
-    )
-    parallel_interval = working_box[axis]
-    parallel_centers = _nested_axis_pgdg(bundles, bond_axis).centers
-    working_widths = _nested_box_physical_widths(bundles, working_box)
-    parallel_width = working_widths[axis]
-    short_side_width = minimum(
-        working_widths[index] for index in 1:3 if index != axis
-    )
-    use_slab = use_midpoint_slab && isodd(length(parallel_interval))
-    split_index = use_slab ?
-        _nested_diatomic_midpoint_row_index(parallel_centers, parallel_interval, midpoint) :
-        _nested_diatomic_split_plane_index(
-            parallel_centers,
-            parallel_interval,
-            midpoint;
-            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+    return @timeg "diatomic.source.split_geometry" begin
+        axis = bond_axis == :x ? 1 : bond_axis == :y ? 2 : bond_axis == :z ? 3 : 0
+        axis != 0 || throw(ArgumentError("diatomic split geometry requires bond_axis = :x, :y, or :z"))
+        min_unsplit_parallel_to_transverse_ratio_for_split > 0.0 || throw(
+            ArgumentError(
+                "diatomic split-eligibility guard requires min_unsplit_parallel_to_transverse_ratio_for_split > 0",
+            ),
         )
-    left_box, midpoint_slab_box, right_box = if use_slab
-        _nested_diatomic_midpoint_slab_split(working_box, bond_axis, split_index)
-    else
-        left_box, right_box = _nested_diatomic_child_boxes(working_box, bond_axis, split_index)
-        (left_box, nothing, right_box)
-    end
-    child_boxes = [left_box, right_box]
-    count_eligible =
-        length(parallel_interval) > 2 * nside &&
-        minimum(length(box[axis]) for box in child_boxes) >= nside
-    unsplit_aspect_eligible =
-        parallel_width > 0.0 &&
-        short_side_width > 0.0 &&
-        parallel_width > min_unsplit_parallel_to_transverse_ratio_for_split * short_side_width
-    shape_eligible =
-        count_eligible &&
-        _nested_diatomic_children_are_roughly_cubic(
-            bundles,
+        parallel_interval = working_box[axis]
+        parallel_centers = _nested_axis_pgdg(bundles, bond_axis).centers
+        working_widths = _nested_box_physical_widths(bundles, working_box)
+        parallel_width = working_widths[axis]
+        short_side_width = minimum(
+            working_widths[index] for index in 1:3 if index != axis
+        )
+        use_slab = use_midpoint_slab && isodd(length(parallel_interval))
+        split_index = use_slab ?
+            _nested_diatomic_midpoint_row_index(parallel_centers, parallel_interval, midpoint) :
+            _nested_diatomic_split_plane_index(
+                parallel_centers,
+                parallel_interval,
+                midpoint;
+                prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+            )
+        left_box, midpoint_slab_box, right_box = if use_slab
+            _nested_diatomic_midpoint_slab_split(working_box, bond_axis, split_index)
+        else
+            left_box, right_box = _nested_diatomic_child_boxes(working_box, bond_axis, split_index)
+            (left_box, nothing, right_box)
+        end
+        child_boxes = [left_box, right_box]
+        count_eligible =
+            length(parallel_interval) > 2 * nside &&
+            minimum(length(box[axis]) for box in child_boxes) >= nside
+        unsplit_aspect_eligible =
+            parallel_width > 0.0 &&
+            short_side_width > 0.0 &&
+            parallel_width > min_unsplit_parallel_to_transverse_ratio_for_split * short_side_width
+        shape_eligible =
+            count_eligible &&
+            _nested_diatomic_children_are_roughly_cubic(
+                bundles,
+                child_boxes,
+                bond_axis;
+                min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            )
+        did_split = count_eligible && unsplit_aspect_eligible && shape_eligible
+        _BondAlignedDiatomicSplitGeometry3D(
+            parent_box,
+            working_box,
+            bond_axis,
+            Float64(midpoint),
+            split_index,
+            count_eligible,
+            unsplit_aspect_eligible,
+            shape_eligible,
+            did_split,
+            did_split ? midpoint_slab_box : nothing,
             child_boxes,
-            bond_axis;
-            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            [_nested_box_physical_widths(bundles, box) for box in child_boxes],
         )
-    did_split = count_eligible && unsplit_aspect_eligible && shape_eligible
-    return _BondAlignedDiatomicSplitGeometry3D(
-        parent_box,
-        working_box,
-        bond_axis,
-        Float64(midpoint),
-        split_index,
-        count_eligible,
-        unsplit_aspect_eligible,
-        shape_eligible,
-        did_split,
-        did_split ? midpoint_slab_box : nothing,
-        child_boxes,
-        [_nested_box_physical_widths(bundles, box) for box in child_boxes],
-    )
+    end
 end
 
 function _nested_bond_aligned_diatomic_source(
@@ -6830,178 +6985,197 @@ function _nested_bond_aligned_diatomic_source(
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
 )
-    child_retention = _nested_resolve_complete_shell_retention(
-        nside;
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        retain_x_edge = retain_x_edge,
-        retain_y_edge = retain_y_edge,
-        retain_z_edge = retain_z_edge,
-    )
-    shared_retention = _nested_resolve_complete_shell_retention(
-        nside;
-        retain_xy = shared_shell_retain_xy,
-        retain_xz = shared_shell_retain_xz,
-        retain_yz = shared_shell_retain_yz,
-        retain_x_edge = child_retention.retain_x_edge,
-        retain_y_edge = child_retention.retain_y_edge,
-        retain_z_edge = child_retention.retain_z_edge,
-    )
-    protect_rows = _nested_diatomic_resolve_core_near_nucleus_protect_rows(
-        core_near_nucleus_protect_rows,
-        nside,
-    )
-    dims = _nested_axis_lengths(bundles)
-    parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
-    shared_shell_layers = _CartesianNestedCompleteShell3D[]
-    current_box = parent_box
-    geometry = _nested_bond_aligned_diatomic_split_geometry(
-        bundles,
-        parent_box,
-        current_box;
-        bond_axis = bond_axis,
-        midpoint = midpoint,
-        nside = nside,
-        min_unsplit_parallel_to_transverse_ratio_for_split = min_unsplit_parallel_to_transverse_ratio_for_split,
-        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
-        use_midpoint_slab = use_midpoint_slab,
-        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
-    )
-
-    while true
-        parallel_length = length(current_box[bond_axis == :x ? 1 : bond_axis == :y ? 2 : 3])
-        if parallel_length <= 2 * nside || minimum(length.(current_box)) <= nside || !_nested_can_shrink_box(current_box)
-            break
-        end
-        inner_box = _nested_inner_box(current_box)
-        adaptive_retention = _nested_diatomic_adaptive_shell_retention(
-            basis,
-            bundles,
-            current_box,
-            inner_box,
-            shared_retention;
-            nside = nside,
-            reference_fudge_factor = reference_fudge_factor,
+    return @timeg "diatomic.source.total" begin
+        child_retention = _nested_resolve_complete_shell_retention(
+            nside;
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            retain_x_edge = retain_x_edge,
+            retain_y_edge = retain_y_edge,
+            retain_z_edge = retain_z_edge,
         )
-        push!(
-            shared_shell_layers,
-            _nested_complete_rectangular_shell(
+        shared_retention = _nested_resolve_complete_shell_retention(
+            nside;
+            retain_xy = shared_shell_retain_xy,
+            retain_xz = shared_shell_retain_xz,
+            retain_yz = shared_shell_retain_yz,
+            retain_x_edge = child_retention.retain_x_edge,
+            retain_y_edge = child_retention.retain_y_edge,
+            retain_z_edge = child_retention.retain_z_edge,
+        )
+        protect_rows = _nested_diatomic_resolve_core_near_nucleus_protect_rows(
+            core_near_nucleus_protect_rows,
+            nside,
+        )
+        dims = _nested_axis_lengths(bundles)
+        parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
+        shared_shell_layers = _CartesianNestedCompleteShell3D[]
+        current_box = parent_box
+        geometry = @timeg "diatomic.source.split_geometry.initial" begin
+            _nested_bond_aligned_diatomic_split_geometry(
                 bundles,
-                inner_box...;
-                retain_xy = adaptive_retention.retain_xy,
-                retain_xz = adaptive_retention.retain_xz,
-                retain_yz = adaptive_retention.retain_yz,
-                retain_x_edge = adaptive_retention.retain_x_edge,
-                retain_y_edge = adaptive_retention.retain_y_edge,
-                retain_z_edge = adaptive_retention.retain_z_edge,
-                x_fixed = (first(current_box[1]), last(current_box[1])),
-                y_fixed = (first(current_box[2]), last(current_box[2])),
-                z_fixed = (first(current_box[3]), last(current_box[3])),
-            ),
-        )
-        current_box = inner_box
-        geometry = _nested_bond_aligned_diatomic_split_geometry(
-            bundles,
-            parent_box,
-            current_box;
-            bond_axis = bond_axis,
-            midpoint = midpoint,
-            nside = nside,
-            min_unsplit_parallel_to_transverse_ratio_for_split = min_unsplit_parallel_to_transverse_ratio_for_split,
-            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
-            use_midpoint_slab = use_midpoint_slab,
-            prefer_midpoint_tie_side = prefer_midpoint_tie_side,
-        )
-        geometry.did_split && break
-    end
+                parent_box,
+                current_box;
+                bond_axis = bond_axis,
+                midpoint = midpoint,
+                nside = nside,
+                min_unsplit_parallel_to_transverse_ratio_for_split =
+                    min_unsplit_parallel_to_transverse_ratio_for_split,
+                min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                use_midpoint_slab = use_midpoint_slab,
+                prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+            )
+        end
 
-    child_sequences = _CartesianNestedShellSequence3D[]
-    child_column_ranges = UnitRange{Int}[]
-    midpoint_slab_column_range = nothing
-    merged_sequence = nothing
-    if geometry.did_split
-        for child_box in geometry.child_boxes
-            push!(
-                child_sequences,
+        @timeg "diatomic.source.shared_shell_construction" begin
+            while true
+                parallel_length = length(current_box[bond_axis == :x ? 1 : bond_axis == :y ? 2 : 3])
+                if parallel_length <= 2 * nside || minimum(length.(current_box)) <= nside || !_nested_can_shrink_box(current_box)
+                    break
+                end
+                inner_box = _nested_inner_box(current_box)
+                adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+                    basis,
+                    bundles,
+                    current_box,
+                    inner_box,
+                    shared_retention;
+                    nside = nside,
+                    reference_fudge_factor = reference_fudge_factor,
+                )
+                push!(
+                    shared_shell_layers,
+                    _nested_complete_rectangular_shell(
+                        bundles,
+                        inner_box...;
+                        retain_xy = adaptive_retention.retain_xy,
+                        retain_xz = adaptive_retention.retain_xz,
+                        retain_yz = adaptive_retention.retain_yz,
+                        retain_x_edge = adaptive_retention.retain_x_edge,
+                        retain_y_edge = adaptive_retention.retain_y_edge,
+                        retain_z_edge = adaptive_retention.retain_z_edge,
+                        x_fixed = (first(current_box[1]), last(current_box[1])),
+                        y_fixed = (first(current_box[2]), last(current_box[2])),
+                        z_fixed = (first(current_box[3]), last(current_box[3])),
+                    ),
+                )
+                current_box = inner_box
+                geometry = @timeg "diatomic.source.split_geometry.rescan" begin
+                    _nested_bond_aligned_diatomic_split_geometry(
+                        bundles,
+                        parent_box,
+                        current_box;
+                        bond_axis = bond_axis,
+                        midpoint = midpoint,
+                        nside = nside,
+                        min_unsplit_parallel_to_transverse_ratio_for_split =
+                            min_unsplit_parallel_to_transverse_ratio_for_split,
+                        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                        use_midpoint_slab = use_midpoint_slab,
+                        prefer_midpoint_tie_side = prefer_midpoint_tie_side,
+                    )
+                end
+                geometry.did_split && break
+            end
+        end
+
+        child_sequences = _CartesianNestedShellSequence3D[]
+        child_column_ranges = UnitRange{Int}[]
+        midpoint_slab_column_range = nothing
+        merged_sequence = nothing
+        if geometry.did_split
+            @timeg "diatomic.source.child_sequence_builds" begin
+                for child_box in geometry.child_boxes
+                    push!(
+                        child_sequences,
+                        _nested_bond_aligned_diatomic_sequence_for_box(
+                            basis,
+                            bundles,
+                            child_box,
+                            child_retention;
+                            bond_axis = bond_axis,
+                            nside = nside,
+                            reference_fudge_factor = reference_fudge_factor,
+                            core_near_nucleus_protect_rows = protect_rows,
+                            build_packet = false,
+                        ),
+                    )
+                end
+            end
+            merged_sequence = @timeg "diatomic.source.final_sequence_merge" begin
+                core_support_blocks = Vector{Vector{Int}}()
+                core_coefficient_blocks = AbstractMatrix{Float64}[]
+                push!(core_support_blocks, child_sequences[1].support_indices)
+                push!(core_coefficient_blocks, child_sequences[1].coefficient_matrix)
+                if !isnothing(geometry.shared_midpoint_box)
+                    slab_data = _nested_direct_box_coefficients(bundles, geometry.shared_midpoint_box)
+                    push!(core_support_blocks, slab_data.support_indices)
+                    push!(core_coefficient_blocks, slab_data.coefficient_matrix)
+                end
+                push!(core_support_blocks, child_sequences[2].support_indices)
+                push!(core_coefficient_blocks, child_sequences[2].coefficient_matrix)
+                child_support = vcat(core_support_blocks...)
+                child_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
+                _nested_shell_sequence_from_core_block(
+                    bundles,
+                    child_support,
+                    child_coefficients,
+                    shared_shell_layers,
+                )
+            end
+            column_start = first(merged_sequence.core_column_range)
+            left_columns = size(child_sequences[1].coefficient_matrix, 2)
+            push!(child_column_ranges, column_start:(column_start + left_columns - 1))
+            column_start = last(child_column_ranges[end]) + 1
+            if !isnothing(geometry.shared_midpoint_box)
+                slab_columns = prod(length.(geometry.shared_midpoint_box))
+                midpoint_slab_column_range = column_start:(column_start + slab_columns - 1)
+                column_start = last(midpoint_slab_column_range) + 1
+            end
+            right_columns = size(child_sequences[2].coefficient_matrix, 2)
+            push!(child_column_ranges, column_start:(column_start + right_columns - 1))
+        else
+            shared_child = @timeg "diatomic.source.child_sequence_builds" begin
                 _nested_bond_aligned_diatomic_sequence_for_box(
                     basis,
                     bundles,
-                    child_box,
+                    current_box,
                     child_retention;
                     bond_axis = bond_axis,
                     nside = nside,
                     reference_fudge_factor = reference_fudge_factor,
                     core_near_nucleus_protect_rows = protect_rows,
-                ),
-            )
+                    build_packet = false,
+                )
+            end
+            push!(child_sequences, shared_child)
+            merged_sequence = @timeg "diatomic.source.final_sequence_merge" begin
+                isempty(shared_shell_layers) ? shared_child :
+                _nested_shell_sequence_from_core_block(
+                    bundles,
+                    shared_child.support_indices,
+                    shared_child.coefficient_matrix,
+                    shared_shell_layers,
+                )
+            end
+            push!(child_column_ranges, merged_sequence.core_column_range)
         end
-        core_support_blocks = Vector{Vector{Int}}()
-        core_coefficient_blocks = AbstractMatrix{Float64}[]
-        push!(core_support_blocks, child_sequences[1].support_indices)
-        push!(core_coefficient_blocks, child_sequences[1].coefficient_matrix)
-        if !isnothing(geometry.shared_midpoint_box)
-            slab_data = _nested_direct_box_coefficients(bundles, geometry.shared_midpoint_box)
-            push!(core_support_blocks, slab_data.support_indices)
-            push!(core_coefficient_blocks, slab_data.coefficient_matrix)
-        end
-        push!(core_support_blocks, child_sequences[2].support_indices)
-        push!(core_coefficient_blocks, child_sequences[2].coefficient_matrix)
-        child_support = vcat(core_support_blocks...)
-        child_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
-        merged_sequence = _nested_shell_sequence_from_core_block(
-            bundles,
-            child_support,
-            child_coefficients,
-            shared_shell_layers,
-        )
-        column_start = first(merged_sequence.core_column_range)
-        left_columns = size(child_sequences[1].coefficient_matrix, 2)
-        push!(child_column_ranges, column_start:(column_start + left_columns - 1))
-        column_start = last(child_column_ranges[end]) + 1
-        if !isnothing(geometry.shared_midpoint_box)
-            slab_columns = prod(length.(geometry.shared_midpoint_box))
-            midpoint_slab_column_range = column_start:(column_start + slab_columns - 1)
-            column_start = last(midpoint_slab_column_range) + 1
-        end
-        right_columns = size(child_sequences[2].coefficient_matrix, 2)
-        push!(child_column_ranges, column_start:(column_start + right_columns - 1))
-    else
-        shared_child = _nested_bond_aligned_diatomic_sequence_for_box(
+
+        _CartesianNestedBondAlignedDiatomicSource3D(
             basis,
             bundles,
-            current_box,
-            child_retention;
-            bond_axis = bond_axis,
-            nside = nside,
-            reference_fudge_factor = reference_fudge_factor,
-            core_near_nucleus_protect_rows = protect_rows,
+            nside,
+            child_retention,
+            shared_retention,
+            geometry,
+            shared_shell_layers,
+            child_sequences,
+            child_column_ranges,
+            midpoint_slab_column_range,
+            merged_sequence,
         )
-        push!(child_sequences, shared_child)
-        merged_sequence =
-            isempty(shared_shell_layers) ? shared_child :
-            _nested_shell_sequence_from_core_block(
-                bundles,
-                shared_child.support_indices,
-                shared_child.coefficient_matrix,
-                shared_shell_layers,
-            )
-        push!(child_column_ranges, merged_sequence.core_column_range)
     end
-
-    return _CartesianNestedBondAlignedDiatomicSource3D(
-        basis,
-        bundles,
-        nside,
-        child_retention,
-        shared_retention,
-        geometry,
-        shared_shell_layers,
-        child_sequences,
-        child_column_ranges,
-        midpoint_slab_column_range,
-        merged_sequence,
-    )
 end
 
 function _nested_axis_index(axis::Symbol)
@@ -8510,6 +8684,9 @@ function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
     parent_basis::MappedUniformBasis,
 )
+    isnothing(shell.packet) && throw(
+        ArgumentError("nested fixed-block construction requires a shell sequence with an assembled packet"),
+    )
     packet = shell.packet
     fixed_centers = hcat(
         diag(packet.position_x),
@@ -8543,6 +8720,9 @@ function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
     parent_basis,
 )
+    isnothing(shell.packet) && throw(
+        ArgumentError("nested fixed-block construction requires a shell sequence with an assembled packet"),
+    )
     packet = shell.packet
     fixed_centers = hcat(
         diag(packet.position_x),
@@ -8580,7 +8760,9 @@ function _nested_fixed_block(
 end
 
 function _nested_fixed_block(source::_CartesianNestedBondAlignedDiatomicSource3D)
-    return _nested_fixed_block(source.sequence, source.basis)
+    return @timeg "diatomic.fixed_block.contraction" begin
+        _nested_fixed_block(source.sequence, source.basis)
+    end
 end
 
 function _nested_fixed_block(source::_CartesianNestedBondAlignedHomonuclearChainSource3D)
