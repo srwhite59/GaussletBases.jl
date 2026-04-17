@@ -2,129 +2,153 @@
 
 ## Pseudocode
 
-1. Restrict the first molecular nesting policy to one distinguished-axis
-   geometry family.
-   The first supported family is:
-   - bond-aligned diatomics
-   - linear chains aligned with the same distinguished axis
-   Arbitrary non-linear geometries are deliberately deferred.
-   References:
-   - `QiuWhite_source.tex`
-   - `GaussletModules/Boxes.jl`
+1. Restrict this policy to the landed bond-aligned homonuclear diatomic nested
+   source builder.
+   The geometry family is:
+   - one distinguished bond axis
+   - two equivalent transverse axes
+   - one shared mapped Cartesian parent box before any split
 
-2. Choose one Cartesian axis as the molecular axis and align the atoms to it.
-   For the first pass, treat the bond or chain axis as the distinguished
-   direction. The two transverse directions stay equivalent and are handled by
-   the existing rectangular shell language.
-   Historical support:
-   - the paper uses coordinate-slicing on a rectangular grid
-   - for linear chains, only the mapping parameters along the chain direction
-     need special adjustment
-   Reference: `QiuWhite_source.tex`
+   This page does not define the final policy for arbitrary molecules, and it
+   does not replace the separate chain or lattice policies.
 
-3. Start from one large shared rectangular parent box around all atoms.
-   Before any split, the molecular fixed line is one shared box on the parent
-   Cartesian grid. Shrink that box shell-by-shell at large radius using the
-   same local shell language already established for the atomic case.
-   Primitive shell language:
+2. Start from one shared working box and peel outer shells first.
+   The source builder still uses the established rectangular-shell language on
+   the parent mapped grid:
+   - shrink the working box shell-by-shell at large radius
+   - build shell layers directly from the real mapped basis lines
+   - defer any bond-axis split until the current unsplit box is genuinely
+     elongated
+
+   Reference:
    [Cartesian nested face construction](cartesian_nested_face_construction.md)
 
-4. Delay splitting until the parent box remains long enough along the
-   distinguished axis to support two honest child boxes.
-   The first split policy is:
-   - split only along the distinguished bond/chain axis
-   - require more than `2 * nside` raw sites along that long direction
-   - require the split to leave each child with enough raw sites to continue as
-     an atomic-style box rather than a thin sliver
-   This is the first implementation-level meaning of:
-   `N_parallel > 2 * nside`.
-   Historical support:
-   - `Boxes.jl` only splits when the long direction is sufficiently larger than
-     the transverse directions and large enough relative to `doside`
+3. Decide whether splitting is even allowed from the unsplit box shape.
+   The landed split policy uses a dedicated unsplit-box aspect guard:
 
-5. Choose split planes by nearest physical midpoint in mapped-grid index
-   space, and treat the homonuclear midpoint slab as a symmetry special case.
-   For a diatomic there is one midpoint. For a chain, order the atoms along the
-   distinguished axis and use the physical midpoint between each neighboring
-   pair. The split plane should stay attached to the actual mapped grid rather
-   than to a continuous idealized coordinate.
-   The first heteronuclear rule is deliberately narrow:
+   - `min_unsplit_parallel_to_transverse_ratio_for_split = 3.0`
+
+   Let `W_parallel` be the physical width of the current working box along the
+   bond axis, and `W_short` the shorter of the two transverse physical widths.
+   Splitting is not considered unless:
+
+   - `W_parallel > 3.0 * W_short`
+
+   This is a separate gate from the child anti-sliver test below. It answers:
+   “is the unsplit box elongated enough that a split is worth considering at
+   all?”
+
+4. Keep the existing child anti-sliver guard as a second, separate test.
+   After a candidate split plane is chosen, the resulting child boxes must
+   still be roughly cubic in physical extent. The landed child guard remains:
+
+   - `min_parallel_to_transverse_ratio = 0.4`
+
+   For each child, the bond-axis physical width must satisfy:
+
+   - `W_child_parallel >= 0.4 * max(W_child_x, W_child_y)`
+
+   This guard answers a different question from step 3:
+   “if a split is attempted, do the resulting children remain honest 3D boxes
+   instead of slivers?”
+
+5. Choose the split plane on the real mapped bond axis.
+   When the split guards are satisfied:
+
    - split only along the distinguished bond axis
-   - choose the split index as the parent-grid index nearest the physical
-     midpoint between the two nuclei
-   - do not reserve a shared midpoint slab by default
-   - if the discrete midpoint choice is tied, assign the extra row to the
-     tighter/heavier side rather than inventing a heteronuclear slab rule
-   The first explicit homonuclear correction is narrower and symmetry-driven:
-   - for a bond-aligned homonuclear diatomic whose bond-axis working interval
-     has odd length, reserve the midpoint index as a shared `nx × ny × 1` slab
-   - split the remaining bond-axis rows into equal left/right child boxes
-   - treat the midpoint slab as a direct shared region between the two child
-     subtrees rather than assigning it to either child
-   So the midpoint slab is a homonuclear symmetry special case, not the
-   default diatomic rule.
-   Historical support:
-   - `Boxes.jl` computes physical midpoints between neighboring atoms and picks
-     the nearest grid index
+   - choose the split index from the actual mapped bond-axis line
+   - use the nearest physical midpoint index
 
-6. Require child boxes to be roughly cubic in physical extent.
-   A permitted split must not create long thin slivers. After mapping the index
-   box to physical coordinates:
-   - the bond-axis physical width of each child should stay comparable to the
-     transverse physical widths
-   - if the split would make the child much narrower than the transverse box,
-     do not split yet and continue shell shrinkage on the shared parent box
-   Historical support:
-   - `Boxes.jl` rejects narrow splits and adds extra bars when needed to keep
-     shells more square
+   For the bond-aligned homonuclear route, an odd bond-axis working interval
+   may reserve the midpoint row as a shared slab:
 
-7. Keep shell resolution roughly matched across directions.
-   The current fixed retain tuples are only provisional. The guiding policy is:
-   - local side contractions should aim to preserve roughly matched physical
-     spacing across shell directions
-   - if a fixed global retain tuple visibly violates that constant-resolution
-     idea, it should be treated as provisional rather than as the intended
-     long-term rule
-   The current landed homonuclear correction is intentionally narrower than a
-   full adaptive rule:
-   - at the 1D `doside` / `COMX` boundary, if the local interval is symmetric
-     about zero and the provisional retained count is even, reduce it by one
-     so the localized side space keeps an odd center-bearing pattern
-   - this is a structural symmetry correction at the actual contraction
-     boundary, not yet a general adaptive retain-count formula
-   - this structural `doside` correction does not by itself settle the broader
-     heteronuclear or chain box policy
-   This page does not yet freeze an adaptive local-side-count formula. That
-   should wait for explicit 1D `doside` / `COMX` diagnostics.
-   Endcap slabs are also still deferred by default for the first
-   heteronuclear start.
+   - `nx × ny × 1`
+   - shared between the left and right child subtrees
 
-8. After the split, treat each child as an atomic-style subtree.
-   Once the shared parent box has split:
-   - each child box inherits the same shell language as the atomic route
-   - each child shrinks shell-by-shell independently
-   - each child remains defined on original parent-space rows assigned to that
-     box region, not by re-coarsening already-renormalized functions
-   If a homonuclear midpoint slab is present, it stays as a direct shared
-   region between the child subtrees rather than belonging to either one.
-   Landed atomic route:
-   [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
+   This midpoint slab is a homonuclear symmetry special case. It is not the
+   general rule that decides whether splitting happens.
 
-9. Extend to linear chains by repeated midpoint splitting on the same axis.
-   The immediate extension beyond a diatomic is:
-   - one shared parent box for the full chain
-   - repeated midpoint splits only along the distinguished chain axis
-   - atomic-style shell subtrees on the resulting children
-   This keeps the policy inside one geometry family:
-   one distinguished axis plus rectangular shells.
+6. Build an ideal cube-style angular reference from the short-side scale.
+   The landed retain-count policy no longer treats the distorted current box as
+   its own standard. Instead it constructs an ideal local reference:
 
-10. Stop before arbitrary non-linear molecular box policies.
-   The first diatomic/chain page does not settle:
-   - bent geometries
-   - multiple distinguished axes
-   - general Voronoi-like or adaptive 3D cell policies
-   Those require a different geometry language and should not be smuggled into
-   this first implementation.
+   - take the shortest physical side of the current box
+   - build an ideal cube from that scale
+   - evaluate a target angular band on that ideal cube
+   - widen the acceptable band by:
+     - `reference_fudge_factor = 1.2`
+
+   This reference provides the comparison target for bond-axis retain-count
+   decisions on both shells and the inner core.
+
+7. Choose shell bond-axis retain counts adaptively against that angular band.
+   The outer shell stage is still the ordinary complete-shell stage, but the
+   bond-axis retain count is no longer hard-wired to one fixed long-side
+   contraction.
+
+   For each shell segment on the long direction:
+
+   - generate candidate retained counts
+   - compare each candidate against the ideal-reference angular band
+   - choose the smallest acceptable retained count
+   - if the direct parent line is already too coarse, treat the case as
+     parent-limited rather than blaming the contraction
+
+   So the landed shell policy is:
+   - ordinary shell language on the outside
+   - adaptive bond-axis retain count on the long direction
+   - no fixed “always keep the long side at count X” rule
+
+8. Use a nonuniform inner-core policy when the remaining core is still
+   elongated.
+   The important landed change is inside the unsplit core:
+
+   - do not force one uniform retained count for the whole inner block
+   - treat the bond-axis contraction nonuniformly across transverse rows
+   - evaluate each row against the same ideal-reference angular band
+
+   In other words, the core is trimmed row-by-row in the transverse plane
+   rather than assigning one global bond-axis retain count to the whole inner
+   region.
+
+9. Protect near-nucleus rows from inner-core trimming.
+   The landed auto protection rule is:
+
+   - `protect_rows = div(nside, 2) - 1`
+
+   Examples:
+   - `ns = 5 -> 1`
+   - `ns = 7 -> 2`
+   - `ns = 9 -> 3`
+
+   This protection applies only to the nonuniform inner-core trimming policy.
+   Rows near the nuclear axis are forced direct there instead of being trimmed.
+
+10. Build the source from the real basis, not a sandbox surrogate.
+    The real implementation uses:
+    - the actual mapped basis lines carried by the repo basis object
+    - the actual QW / L&W `d = core_spacing` used to build that basis
+
+    The algorithm should therefore be read as a policy on the real mapped
+    basis, not as a rule on an idealized uniform grid.
+
+## Code Pointers
+
+- Split-eligibility geometry:
+  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_split_geometry](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6737)
+- Ideal-reference angular band:
+  - [src/cartesian_nested_faces.jl:_nested_diatomic_reference_band](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6256)
+- Adaptive shell retain-count choice:
+  - [src/cartesian_nested_faces.jl:_nested_diatomic_adaptive_shell_retention](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6492)
+- Nonuniform inner-core construction:
+  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_nonuniform_core_block](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6568)
+  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_sequence_for_box](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6673)
+- Auto near-nucleus protection:
+  - [src/cartesian_nested_faces.jl:_nested_diatomic_resolve_core_near_nucleus_protect_rows](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6035)
+- Real diatomic source entry point:
+  - [src/ordinary_qiu_white_rg.jl:_bond_aligned_diatomic_nested_fixed_source](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl:1275)
+- Real diagnostics entry point:
+  - [src/ordinary_qiu_white_rg.jl:bond_aligned_diatomic_nested_geometry_diagnostics](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl:1374)
 
 ## References
 
@@ -140,88 +164,63 @@
 
 ## What This Frames
 
-This page records the intended first box policy for molecular Cartesian
-nesting:
+This page now describes the landed real-repo box policy for the bond-aligned
+homonuclear diatomic nested source builder:
 
-- one large shared rectangular box around a bond-aligned diatomic or linear
-  chain
-- shell shrinkage at large radius before any split
-- midpoint-based splits only along the distinguished molecular axis, with the
-  shared midpoint slab reserved only for odd-length homonuclear working
-  intervals
-- child boxes that then continue as atomic-style shell subtrees
-
-It is a geometry-policy page, not an implementation page.
-
-## Historical Support vs Modernized Policy
-
-What is historically supported by the paper/provenance:
-
-- molecular coordinate-slicing still lives on a distorted rectangular grid
-- linear chains are a special one-axis family
-- the legacy `Boxes.jl` logic shrinks boxes shell-by-shell and uses midpoint
-  splits on the long direction with anti-sliver safeguards
-- the paper-era driver family clearly targeted diatomics and linear chains
-
-What is a modernized repo policy choice:
-
-- start with bond-aligned diatomics only
-- extend next to heteronuclear diatomics and linear chains on the same
-  distinguished axis
-- make the split rule explicit as nearest-physical-midpoint index selection
-  plus a homonuclear-only midpoint-slab correction
-- require `N_parallel > 2 * nside` before splitting
-- require child boxes to stay roughly cubic in physical extent
-- record constant-resolution shell matching as a policy guideline, with one
-  landed narrow odd-on-symmetric `doside` correction but without yet fixing
-  the general adaptive formula
-- keep endcap slabs deferred by default for the first heteronuclear pass
-- defer arbitrary non-linear geometries until a different policy is written
-
-## Current Recommendation
-
-This policy is now precise enough for the first heteronuclear implementation
-pass if the code stays within the intended scope:
-
-- one distinguished molecular axis
 - one shared parent box first
-- midpoint splits only along that axis
-- explicit shared midpoint slab for odd-length homonuclear working intervals
-- atomic-style shell language reused after the split
+- shell shrinkage before splitting
+- a two-guard split rule
+- adaptive shell retain counts against an ideal cube-style angular reference
+- nonuniform inner-core trimming on the bond axis
+- near-nucleus row protection during that inner-core trimming
 
-The first narrow heteronuclear implementation now follows this target shape:
+It is still a geometry-policy page. It does not redefine supplement selection,
+residual orthogonalization, overlap assembly, or bundle storage.
 
-- bond-aligned ordinary-QW `HeH+` first
-- heteronuclear nested fixed-block `HeH+` second
-- the same split-eligibility and anti-sliver checks already used on the
-  homonuclear line
-- nearest-physical-midpoint split placement without a default heteronuclear
-  midpoint slab
-- endcap slabs still deferred by default
-- the existing visualization/debug path used to check the first heteronuclear
-  geometry before broader promotion:
-  ordinary and nested representative `xz` views, plus 3D center/source
-  inspection through the same regenerate-first workflow already used on `H2`
+## Real Implementation Notes
 
-It should not yet target arbitrary molecules or a final adaptive local-side
-formula.
+The real repo path is close to the 2D sandbox policy that motivated this
+rewrite, but it is not identical. The important recorded correction is:
 
-## Implementation Notes
+- in the real path, `ns = 5`, `R = 1.0` remains unsplit
 
-Recommended code-comment style while this narrow heteronuclear line remains in
-checkpoint scope:
+So the public algorithm page should not simply copy the sandbox split table.
+The real source builder must remain the referee.
 
-```julia
-# Alg Nested-Diatomic step 5: For an odd-length homonuclear working interval,
-# reserve the midpoint row as a shared slab and split the remaining bond-axis
-# rows into equal left/right child boxes.
-# See docs/src/algorithms/cartesian_nested_diatomic_box_policy.md.
-```
+The representative real He2 scan used the spacing rule:
 
-Guidelines:
+- `d = 1.2 / (Z * (ns - 3))`
 
-- keep this page focused on box-policy decisions
-- keep atomic shell details on the atomic nonrecursive page
-- keep residual-Gaussian completion on the QW residual-Gaussian page
-- do not extend this page to arbitrary non-linear geometries until that policy
-  is genuinely settled
+For He:
+- `ns = 5 -> d = 0.3`
+- `ns = 7 -> d = 0.15`
+- `ns = 9 -> d = 0.10`
+
+Qualitatively, the landed real path gives:
+- `ns = 5`: split at `R = 0.8, 1.4, 2.0, 4.0, 6.0`, but unsplit at `R = 1.0`
+- `ns = 7`: unsplit only at `R = 0.8`
+- `ns = 9`: unsplit only at `R = 0.8`
+
+That is close to the sandbox trend, but the real code path is the one that
+should be documented.
+
+## Current Recommendation and Support Boundary
+
+The landed support boundary is:
+
+- the updated source geometry policy is active on the real bond-aligned
+  homonuclear diatomic nested source path
+- the same helper machinery now also affects some diatomic split diagnostics
+  shared with heteronuclear fixtures
+- this page does not claim that chain, lattice, or arbitrary molecular routes
+  already use the same full policy
+
+So the current public recommendation is:
+
+- use this page as the algorithm reference for the bond-aligned homonuclear
+  diatomic source builder
+- treat heteronuclear, chain, and broader molecular routes as separate support
+  boundaries unless their pages are updated explicitly
+
+This keeps the documentation aligned with the landed code rather than
+overclaiming unlanded generalizations.
