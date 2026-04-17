@@ -1316,6 +1316,15 @@ function _bond_aligned_diatomic_nested_fixed_source(
 end
 
 function _bond_aligned_diatomic_nested_fixed_block(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return (
+        source = source,
+        fixed_block = _nested_fixed_block(source),
+    )
+end
+
+function _bond_aligned_diatomic_nested_fixed_block(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     gausslet_backend::Symbol = :numerical_reference,
@@ -1342,10 +1351,7 @@ function _bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
     )
-    return (
-        source = source,
-        fixed_block = _nested_fixed_block(source),
-    )
+    return _bond_aligned_diatomic_nested_fixed_block(source)
 end
 
 function _bond_aligned_diatomic_nested_geometry_diagnostics(
@@ -1369,6 +1375,12 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
         fixed_dimension = size(source.sequence.coefficient_matrix, 2),
         contract_audit = contract_audit,
     )
+end
+
+function bond_aligned_diatomic_nested_geometry_diagnostics(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _bond_aligned_diatomic_nested_geometry_diagnostics(source)
 end
 
 function bond_aligned_diatomic_nested_geometry_diagnostics(

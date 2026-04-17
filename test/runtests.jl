@@ -7426,6 +7426,85 @@ end
     @test square_diagnostics.contract_audit.ownership_multi_owned_row_count == 0
 end
 
+@testset "Bond-aligned diatomic nested source reuse path" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.0,
+        bond_axis = :z,
+    )
+
+    diagnostics_via_basis = bond_aligned_diatomic_nested_geometry_diagnostics(
+        basis;
+        nside = 5,
+    )
+    source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        nside = 5,
+    )
+    diagnostics_via_source = bond_aligned_diatomic_nested_geometry_diagnostics(source)
+    fixed_via_basis = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        nside = 5,
+    )
+    fixed_via_source = GaussletBases._bond_aligned_diatomic_nested_fixed_block(source)
+
+    @test diagnostics_via_source.nside == diagnostics_via_basis.nside
+    @test diagnostics_via_source.geometry.did_split == diagnostics_via_basis.geometry.did_split
+    @test diagnostics_via_source.geometry.count_eligible ==
+        diagnostics_via_basis.geometry.count_eligible
+    @test diagnostics_via_source.geometry.unsplit_aspect_eligible ==
+        diagnostics_via_basis.geometry.unsplit_aspect_eligible
+    @test diagnostics_via_source.geometry.shape_eligible ==
+        diagnostics_via_basis.geometry.shape_eligible
+    @test diagnostics_via_source.geometry.split_index ==
+        diagnostics_via_basis.geometry.split_index
+    @test diagnostics_via_source.geometry.working_box ==
+        diagnostics_via_basis.geometry.working_box
+    @test diagnostics_via_source.geometry.shared_midpoint_box ==
+        diagnostics_via_basis.geometry.shared_midpoint_box
+    @test diagnostics_via_source.geometry.child_boxes ==
+        diagnostics_via_basis.geometry.child_boxes
+    @test maximum(
+        abs,
+        reduce(vcat, (
+            collect(widths_source .- widths_basis) for
+            (widths_source, widths_basis) in zip(
+                diagnostics_via_source.geometry.child_physical_widths,
+                diagnostics_via_basis.geometry.child_physical_widths,
+            )
+        );
+        init = Float64[]),
+    ) < 1.0e-12
+    @test diagnostics_via_source.child_shell_retention_contract ==
+        diagnostics_via_basis.child_shell_retention_contract
+    @test diagnostics_via_source.shared_shell_retention_contract ==
+        diagnostics_via_basis.shared_shell_retention_contract
+    @test diagnostics_via_source.shared_shell_dimensions ==
+        diagnostics_via_basis.shared_shell_dimensions
+    @test diagnostics_via_source.child_sequence_dimensions ==
+        diagnostics_via_basis.child_sequence_dimensions
+    @test diagnostics_via_source.fixed_dimension == diagnostics_via_basis.fixed_dimension
+    @test diagnostics_via_source.contract_audit.support_count ==
+        diagnostics_via_basis.contract_audit.support_count
+    @test diagnostics_via_source.contract_audit.expected_support_count ==
+        diagnostics_via_basis.contract_audit.expected_support_count
+    @test diagnostics_via_source.contract_audit.missing_row_count ==
+        diagnostics_via_basis.contract_audit.missing_row_count
+
+    @test fixed_via_source.source === source
+    @test norm(fixed_via_source.fixed_block.overlap - fixed_via_basis.fixed_block.overlap, Inf) <
+        1.0e-12
+    @test norm(
+        fixed_via_source.fixed_block.coefficient_matrix -
+        fixed_via_basis.fixed_block.coefficient_matrix,
+        Inf,
+    ) < 1.0e-12
+    @test fixed_via_source.fixed_block.support_indices == fixed_via_basis.fixed_block.support_indices
+    @test fixed_via_source.fixed_block.working_box == fixed_via_basis.fixed_block.working_box
+end
+
 @testset "Experimental bond-aligned homonuclear chain nested QW consumer path" begin
     basis3, path3, check3 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 3, spacing = 1.2)
     basis4, path4, check4 = _bond_aligned_homonuclear_chain_nested_qw_fixture(; natoms = 4, spacing = 1.2)
