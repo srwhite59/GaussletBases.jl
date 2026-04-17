@@ -7492,6 +7492,11 @@ end
         diagnostics_via_basis.contract_audit.expected_support_count
     @test diagnostics_via_source.contract_audit.missing_row_count ==
         diagnostics_via_basis.contract_audit.missing_row_count
+    @test source.sequence.packet.term_storage == :compact_production
+    @test isnothing(source.sequence.packet.gaussian_terms)
+    @test isnothing(source.sequence.packet.pair_terms)
+    @test !isnothing(source.sequence.packet.gaussian_sum)
+    @test !isnothing(source.sequence.packet.pair_sum)
     @test all(isnothing(sequence.support_states) for sequence in source.child_sequences)
     @test all(isnothing(sequence.packet) for sequence in source.child_sequences)
     @test !isnothing(source.sequence.support_states)
@@ -8865,6 +8870,12 @@ end
     @test size(fixed_block.coefficient_matrix, 1) ==
         length(basis.basis_x) * length(basis.basis_y) * length(basis.basis_z)
     @test size(fixed_block.coefficient_matrix, 2) < size(fixed_block.coefficient_matrix, 1)
+    @test source.sequence.packet.term_storage == :compact_production
+    @test fixed_block.term_storage == :compact_production
+    @test isnothing(fixed_block.gaussian_terms)
+    @test isnothing(fixed_block.pair_terms)
+    @test !isnothing(fixed_block.gaussian_sum)
+    @test !isnothing(fixed_block.pair_sum)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
     @test all(isfinite, fixed_block.weights)
     @test minimum(fixed_block.weights) > 0.0
@@ -8882,8 +8893,8 @@ end
         _operators,
         _check,
         expansion,
-        _source,
-        _fixed_block,
+        default_source,
+        default_fixed_block,
         _parent_modes,
         _parent_ground,
         _projected,
@@ -8908,6 +8919,13 @@ end
     debug_fixed_block = debug_nested.fixed_block
     compact_fixed_block = compact_nested.fixed_block
 
+    @test default_source.sequence.packet.term_storage == :compact_production
+    @test default_fixed_block.term_storage == :compact_production
+    @test isnothing(default_fixed_block.gaussian_terms)
+    @test isnothing(default_fixed_block.pair_terms)
+    @test !isnothing(default_fixed_block.gaussian_sum)
+    @test !isnothing(default_fixed_block.pair_sum)
+
     @test debug_fixed_block.term_storage == :full_debug
     @test !isnothing(debug_fixed_block.gaussian_terms)
     @test !isnothing(debug_fixed_block.pair_terms)
@@ -8923,6 +8941,10 @@ end
     @test debug_nested.source.sequence.packet.term_storage == :full_debug
     @test compact_nested.source.sequence.packet.term_storage == :compact_production
 
+    @test norm(default_fixed_block.overlap - compact_fixed_block.overlap, Inf) < 1.0e-12
+    @test norm(default_fixed_block.coefficient_matrix - compact_fixed_block.coefficient_matrix, Inf) < 1.0e-12
+    @test norm(default_fixed_block.gaussian_sum - compact_fixed_block.gaussian_sum, Inf) < 1.0e-12
+    @test norm(default_fixed_block.pair_sum - compact_fixed_block.pair_sum, Inf) < 1.0e-12
     @test norm(compact_fixed_block.overlap - debug_fixed_block.overlap, Inf) < 1.0e-12
     @test norm(compact_fixed_block.coefficient_matrix - debug_fixed_block.coefficient_matrix, Inf) < 1.0e-12
     @test norm(compact_fixed_block.gaussian_sum - debug_fixed_block.gaussian_sum, Inf) < 1.0e-10

@@ -1272,6 +1272,22 @@ function _qwrg_bond_aligned_axis_bundles(
     return _CartesianNestedAxisBundles3D(bundle_x, bundle_y, bundle_z)
 end
 
+function _resolved_diatomic_term_storage_and_coefficients(
+    expansion::CoulombGaussianExpansion,
+    term_storage::Symbol,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}},
+)
+    term_storage_value = _nested_normalize_term_storage(term_storage)
+    resolved_term_coefficients = if isnothing(term_coefficients)
+        term_storage_value == :compact_production ? expansion.coefficients : nothing
+    elseif term_coefficients isa Vector{Float64}
+        term_coefficients
+    else
+        Float64[Float64(value) for value in term_coefficients]
+    end
+    return term_storage_value, resolved_term_coefficients
+end
+
 function _bond_aligned_diatomic_nested_fixed_source(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -1284,13 +1300,19 @@ function _bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.fixed_source.total" begin
         gausslet_backend == :numerical_reference || throw(
             ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
         )
+        term_storage_value, resolved_term_coefficients =
+            _resolved_diatomic_term_storage_and_coefficients(
+                expansion,
+                term_storage,
+                term_coefficients,
+            )
         midpoint =
             sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
             length(basis.nuclei)
@@ -1320,8 +1342,8 @@ function _bond_aligned_diatomic_nested_fixed_source(
                 shared_shell_retain_xy = shared_shell_retain_xy,
                 shared_shell_retain_xz = shared_shell_retain_xz,
                 shared_shell_retain_yz = shared_shell_retain_yz,
-                term_storage = term_storage,
-                term_coefficients = term_coefficients,
+                term_storage = term_storage_value,
+                term_coefficients = resolved_term_coefficients,
             )
         end
     end
@@ -1348,7 +1370,7 @@ function _bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     source = _bond_aligned_diatomic_nested_fixed_source(
