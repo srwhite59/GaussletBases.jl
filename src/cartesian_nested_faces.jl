@@ -7235,14 +7235,12 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
     nside::Int,
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
     return @timeg "diatomic.source.child_sequence" begin
-        term_storage_value = _nested_normalize_term_storage(term_storage)
-        term_storage_value == :compact_production && isnothing(term_coefficients) && throw(
-            ArgumentError("compact diatomic child-sequence assembly requires explicit term coefficients"),
+        isnothing(term_coefficients) && throw(
+            ArgumentError("diatomic child-sequence assembly requires explicit term coefficients"),
         )
         current_box = box
         shell_layers = _CartesianNestedCompleteShell3D[]
@@ -7273,7 +7271,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
-                        term_storage = term_storage_value,
+                        term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                     ),
                 )
@@ -7298,7 +7296,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                 core_block.support_indices,
                 core_block.coefficient_matrix,
                 shell_layers,
-                term_storage = term_storage_value,
+                term_storage = :compact_production,
                 term_coefficients = term_coefficients,
                 build_packet = build_packet,
             )
@@ -7407,13 +7405,11 @@ function _nested_bond_aligned_diatomic_source(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.source.total" begin
-        term_storage_value = _nested_normalize_term_storage(term_storage)
-        term_storage_value == :compact_production && isnothing(term_coefficients) && throw(
-            ArgumentError("compact diatomic source assembly requires explicit term coefficients"),
+        isnothing(term_coefficients) && throw(
+            ArgumentError("diatomic source assembly requires explicit term coefficients"),
         )
         child_retention = _nested_resolve_complete_shell_retention(
             nside;
@@ -7487,7 +7483,7 @@ function _nested_bond_aligned_diatomic_source(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
-                        term_storage = term_storage_value,
+                        term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                     ),
                 )
@@ -7526,15 +7522,14 @@ function _nested_bond_aligned_diatomic_source(
                             child_box,
                             child_retention;
                             bond_axis = bond_axis,
-                        nside = nside,
-                        reference_fudge_factor = reference_fudge_factor,
-                        core_near_nucleus_protect_rows = protect_rows,
-                        term_storage = term_storage_value,
-                        term_coefficients = term_coefficients,
-                        build_packet = false,
-                    ),
-                )
-            end
+                            nside = nside,
+                            reference_fudge_factor = reference_fudge_factor,
+                            core_near_nucleus_protect_rows = protect_rows,
+                            term_coefficients = term_coefficients,
+                            build_packet = false,
+                        ),
+                    )
+                end
             end
             merged_sequence = @timeg "diatomic.source.final_sequence_merge" begin
                 core_support_blocks = Vector{Vector{Int}}()
@@ -7555,7 +7550,7 @@ function _nested_bond_aligned_diatomic_source(
                     child_support,
                     child_coefficients,
                     shared_shell_layers,
-                    term_storage = term_storage_value,
+                    term_storage = :compact_production,
                     term_coefficients = term_coefficients,
                 )
             end
@@ -7581,7 +7576,6 @@ function _nested_bond_aligned_diatomic_source(
                     nside = nside,
                     reference_fudge_factor = reference_fudge_factor,
                     core_near_nucleus_protect_rows = protect_rows,
-                    term_storage = term_storage_value,
                     term_coefficients = term_coefficients,
                     build_packet = false,
                 )
@@ -7594,7 +7588,7 @@ function _nested_bond_aligned_diatomic_source(
                     shared_child.support_indices,
                     shared_child.coefficient_matrix,
                     shared_shell_layers,
-                    term_storage = term_storage_value,
+                    term_storage = :compact_production,
                     term_coefficients = term_coefficients,
                 )
             end
