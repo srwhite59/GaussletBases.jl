@@ -7492,6 +7492,10 @@ end
         diagnostics_via_basis.contract_audit.expected_support_count
     @test diagnostics_via_source.contract_audit.missing_row_count ==
         diagnostics_via_basis.contract_audit.missing_row_count
+    @test all(isnothing(sequence.support_states) for sequence in source.child_sequences)
+    @test all(isnothing(sequence.packet) for sequence in source.child_sequences)
+    @test !isnothing(source.sequence.support_states)
+    @test !isnothing(source.sequence.packet)
 
     @test fixed_via_source.source === source
     @test norm(fixed_via_source.fixed_block.overlap - fixed_via_basis.fixed_block.overlap, Inf) <
@@ -8870,6 +8874,66 @@ end
     @test abs(projected_energy - parent_modes.values[1]) < 0.03
     @test 0.7 < projected_vee < 0.8
     @test abs(projected_vee - check.vee_expectation) < 5.0e-4
+end
+
+@testset "Bond-aligned diatomic compact nested fixed-block term storage" begin
+    (
+        basis,
+        _operators,
+        _check,
+        expansion,
+        _source,
+        _fixed_block,
+        _parent_modes,
+        _parent_ground,
+        _projected,
+        _projected_vee,
+        _capture,
+        _projected_energy,
+    ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
+
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
+    debug_nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        expansion = expansion,
+        term_storage = :full_debug,
+        term_coefficients = term_coefficients,
+    )
+    compact_nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        expansion = expansion,
+        term_storage = :compact_production,
+        term_coefficients = term_coefficients,
+    )
+    debug_fixed_block = debug_nested.fixed_block
+    compact_fixed_block = compact_nested.fixed_block
+
+    @test debug_fixed_block.term_storage == :full_debug
+    @test !isnothing(debug_fixed_block.gaussian_terms)
+    @test !isnothing(debug_fixed_block.pair_terms)
+    @test !isnothing(debug_fixed_block.gaussian_sum)
+    @test !isnothing(debug_fixed_block.pair_sum)
+
+    @test compact_fixed_block.term_storage == :compact_production
+    @test isnothing(compact_fixed_block.gaussian_terms)
+    @test isnothing(compact_fixed_block.pair_terms)
+    @test !isnothing(compact_fixed_block.gaussian_sum)
+    @test !isnothing(compact_fixed_block.pair_sum)
+
+    @test debug_nested.source.sequence.packet.term_storage == :full_debug
+    @test compact_nested.source.sequence.packet.term_storage == :compact_production
+
+    @test norm(compact_fixed_block.overlap - debug_fixed_block.overlap, Inf) < 1.0e-12
+    @test norm(compact_fixed_block.coefficient_matrix - debug_fixed_block.coefficient_matrix, Inf) < 1.0e-12
+    @test norm(compact_fixed_block.gaussian_sum - debug_fixed_block.gaussian_sum, Inf) < 1.0e-10
+    @test norm(compact_fixed_block.pair_sum - debug_fixed_block.pair_sum, Inf) < 1.0e-10
+
+    @test GaussletBases._qwrg_fixed_block_one_body_matrix(compact_fixed_block, expansion; Z = 1.0) ≈
+        GaussletBases._qwrg_fixed_block_one_body_matrix(debug_fixed_block, expansion; Z = 1.0) atol =
+        1.0e-10 rtol = 1.0e-10
+    @test GaussletBases._qwrg_fixed_block_interaction_matrix(compact_fixed_block, expansion) ≈
+        GaussletBases._qwrg_fixed_block_interaction_matrix(debug_fixed_block, expansion) atol =
+        1.0e-10 rtol = 1.0e-10
 end
 
 @testset "Bond-aligned diatomic nested QW consumer path" begin

@@ -2921,46 +2921,62 @@ function _nested_factorized_gaussian_terms(
 )
     start_ns = time_ns()
     term_storage_value = _nested_normalize_term_storage(term_storage)
-    axis_term_tables_x = _nested_factorized_axis_term_tables(
-        gaussian_terms_x,
-        factorized_basis.x_functions,
-    )
-    axis_term_tables_y = _nested_factorized_axis_term_tables(
-        gaussian_terms_y,
-        factorized_basis.y_functions,
-    )
-    axis_term_tables_z = _nested_factorized_axis_term_tables(
-        gaussian_terms_z,
-        factorized_basis.z_functions,
-    )
-    nbasis = length(factorized_basis.basis_triplets)
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z, nbasis = @timeg "diatomic.packet.gaussian_terms.setup" begin
+        axis_term_tables_x = _nested_factorized_axis_term_tables(
+            gaussian_terms_x,
+            factorized_basis.x_functions,
+        )
+        axis_term_tables_y = _nested_factorized_axis_term_tables(
+            gaussian_terms_y,
+            factorized_basis.y_functions,
+        )
+        axis_term_tables_z = _nested_factorized_axis_term_tables(
+            gaussian_terms_z,
+            factorized_basis.z_functions,
+        )
+        nbasis = length(factorized_basis.basis_triplets)
+        (
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z,
+            nbasis,
+        )
+    end
     gaussian_terms = nothing
     gaussian_sum = nothing
     if term_storage_value == :full_debug
-        gaussian_terms = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
-        _nested_fill_factorized_term_family!(
-            gaussian_terms,
-            factorized_basis,
-            axis_term_tables_x,
-            axis_term_tables_y,
-            axis_term_tables_z;
-            include_basis_amplitudes = true,
-        )
-        !isnothing(term_coefficients) && (gaussian_sum = _nested_weighted_term_sum(gaussian_terms, term_coefficients))
+        gaussian_terms = @timeg "diatomic.packet.gaussian_terms.contract" begin
+            gaussian_terms_local = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
+            _nested_fill_factorized_term_family!(
+                gaussian_terms_local,
+                factorized_basis,
+                axis_term_tables_x,
+                axis_term_tables_y,
+                axis_term_tables_z;
+                include_basis_amplitudes = true,
+            )
+            gaussian_terms_local
+        end
+        !isnothing(term_coefficients) && (gaussian_sum = @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
+            _nested_weighted_term_sum(gaussian_terms, term_coefficients)
+        end)
     else
         isnothing(term_coefficients) && throw(
             ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
         )
-        gaussian_sum = zeros(Float64, nbasis, nbasis)
-        _nested_fill_factorized_weighted_term_sum!(
-            gaussian_sum,
-            factorized_basis,
-            term_coefficients,
-            axis_term_tables_x,
-            axis_term_tables_y,
-            axis_term_tables_z;
-            include_basis_amplitudes = true,
-        )
+        gaussian_sum = @timeg "diatomic.packet.gaussian_terms.contract" begin
+            gaussian_sum_local = zeros(Float64, nbasis, nbasis)
+            _nested_fill_factorized_weighted_term_sum!(
+                gaussian_sum_local,
+                factorized_basis,
+                term_coefficients,
+                axis_term_tables_x,
+                axis_term_tables_y,
+                axis_term_tables_z;
+                include_basis_amplitudes = true,
+            )
+            gaussian_sum_local
+        end
     end
     _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
     return (
@@ -2983,64 +2999,87 @@ function _nested_factorized_weight_aware_pair_terms(
 )
     start_ns = time_ns()
     term_storage_value = _nested_normalize_term_storage(term_storage)
-    axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
-    axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
-    axis_weight_z = _nested_factorized_axis_weight_projections(factorized_basis.z_functions, weights_z)
-    basis_weights = Vector{Float64}(undef, length(factorized_basis.basis_triplets))
-    @inbounds for index in eachindex(factorized_basis.basis_triplets)
-        ix, iy, iz = factorized_basis.basis_triplets[index]
-        basis_weights[index] =
-            factorized_basis.basis_amplitudes[index] *
-            axis_weight_x[ix] *
-            axis_weight_y[iy] *
-            axis_weight_z[iz]
+    axis_weight_x, axis_weight_y, axis_weight_z, basis_weights = @timeg "diatomic.packet.pair_terms.weights" begin
+        axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
+        axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
+        axis_weight_z = _nested_factorized_axis_weight_projections(factorized_basis.z_functions, weights_z)
+        basis_weights = Vector{Float64}(undef, length(factorized_basis.basis_triplets))
+        @inbounds for index in eachindex(factorized_basis.basis_triplets)
+            ix, iy, iz = factorized_basis.basis_triplets[index]
+            basis_weights[index] =
+                factorized_basis.basis_amplitudes[index] *
+                axis_weight_x[ix] *
+                axis_weight_y[iy] *
+                axis_weight_z[iz]
+        end
+        all(isfinite, basis_weights) || throw(
+            ArgumentError("nested factorized pair contraction requires finite retained fixed integral weights"),
+        )
+        minimum(basis_weights) > 0.0 || throw(
+            ArgumentError("nested factorized pair contraction requires positive retained fixed integral weights"),
+        )
+        (
+            axis_weight_x,
+            axis_weight_y,
+            axis_weight_z,
+            basis_weights,
+        )
     end
-    all(isfinite, basis_weights) || throw(
-        ArgumentError("nested factorized pair contraction requires finite retained fixed integral weights"),
-    )
-    minimum(basis_weights) > 0.0 || throw(
-        ArgumentError("nested factorized pair contraction requires positive retained fixed integral weights"),
-    )
-    axis_term_tables_x = _nested_factorized_normalized_pair_term_tables(
-        _nested_factorized_axis_term_tables(pair_terms_x, factorized_basis.x_functions),
-        axis_weight_x,
-    )
-    axis_term_tables_y = _nested_factorized_normalized_pair_term_tables(
-        _nested_factorized_axis_term_tables(pair_terms_y, factorized_basis.y_functions),
-        axis_weight_y,
-    )
-    axis_term_tables_z = _nested_factorized_normalized_pair_term_tables(
-        _nested_factorized_axis_term_tables(pair_terms_z, factorized_basis.z_functions),
-        axis_weight_z,
-    )
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg "diatomic.packet.pair_terms.coefficients" begin
+        axis_term_tables_x = _nested_factorized_normalized_pair_term_tables(
+            _nested_factorized_axis_term_tables(pair_terms_x, factorized_basis.x_functions),
+            axis_weight_x,
+        )
+        axis_term_tables_y = _nested_factorized_normalized_pair_term_tables(
+            _nested_factorized_axis_term_tables(pair_terms_y, factorized_basis.y_functions),
+            axis_weight_y,
+        )
+        axis_term_tables_z = _nested_factorized_normalized_pair_term_tables(
+            _nested_factorized_axis_term_tables(pair_terms_z, factorized_basis.z_functions),
+            axis_weight_z,
+        )
+        (
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z,
+        )
+    end
     nbasis = length(factorized_basis.basis_triplets)
     pair_terms = nothing
     pair_sum = nothing
     if term_storage_value == :full_debug
-        pair_terms = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
-        _nested_fill_factorized_term_family!(
-            pair_terms,
-            factorized_basis,
-            axis_term_tables_x,
-            axis_term_tables_y,
-            axis_term_tables_z;
-            include_basis_amplitudes = false,
-        )
-        !isnothing(term_coefficients) && (pair_sum = _nested_weighted_term_sum(pair_terms, term_coefficients))
+        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
+            pair_terms_local = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
+            _nested_fill_factorized_term_family!(
+                pair_terms_local,
+                factorized_basis,
+                axis_term_tables_x,
+                axis_term_tables_y,
+                axis_term_tables_z;
+                include_basis_amplitudes = false,
+            )
+            pair_terms_local
+        end
+        !isnothing(term_coefficients) && (pair_sum = @timeg "diatomic.packet.pair_terms.weighted_sum" begin
+            _nested_weighted_term_sum(pair_terms, term_coefficients)
+        end)
     else
         isnothing(term_coefficients) && throw(
             ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
         )
-        pair_sum = zeros(Float64, nbasis, nbasis)
-        _nested_fill_factorized_weighted_term_sum!(
-            pair_sum,
-            factorized_basis,
-            term_coefficients,
-            axis_term_tables_x,
-            axis_term_tables_y,
-            axis_term_tables_z;
-            include_basis_amplitudes = false,
-        )
+        pair_sum = @timeg "diatomic.packet.pair_terms.contract" begin
+            pair_sum_local = zeros(Float64, nbasis, nbasis)
+            _nested_fill_factorized_weighted_term_sum!(
+                pair_sum_local,
+                factorized_basis,
+                term_coefficients,
+                axis_term_tables_x,
+                axis_term_tables_y,
+                axis_term_tables_z;
+                include_basis_amplitudes = false,
+            )
+            pair_sum_local
+        end
     end
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
     return (
@@ -3097,6 +3136,71 @@ function _nested_fill_support_product_matrix!(
                 Float64(operator_x[ix, xstates[col]]) *
                 Float64(operator_y[iy, ystates[col]]) *
                 Float64(operator_z[iz, zstates[col]])
+        end
+    end
+    return workspace
+end
+
+function _nested_fill_support_weighted_term_sum_matrix!(
+    workspace::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3};
+    assume_symmetric::Bool = false,
+)
+    nsupport = length(support_axes.x)
+    size(workspace) == (nsupport, nsupport) || throw(
+        ArgumentError("nested support weighted term-sum workspace must have size ($(nsupport), $(nsupport))"),
+    )
+    nterms = size(operator_terms_x, 1)
+    nterms == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
+        ArgumentError("nested support weighted term sum requires matching term counts"),
+    )
+    length(term_coefficients) == nterms || throw(
+        DimensionMismatch("nested support weighted term sum requires one coefficient per term slice"),
+    )
+    xstates = support_axes.x
+    ystates = support_axes.y
+    zstates = support_axes.z
+    if assume_symmetric
+        @inbounds for col in 1:nsupport
+            jx = xstates[col]
+            jy = ystates[col]
+            jz = zstates[col]
+            for row in 1:col
+                ix = xstates[row]
+                iy = ystates[row]
+                iz = zstates[row]
+                value = 0.0
+                for term in 1:nterms
+                    value +=
+                        Float64(term_coefficients[term]) *
+                        Float64(operator_terms_x[term, ix, jx]) *
+                        Float64(operator_terms_y[term, iy, jy]) *
+                        Float64(operator_terms_z[term, iz, jz])
+                end
+                workspace[row, col] = value
+                workspace[col, row] = value
+            end
+        end
+    else
+        @inbounds for row in 1:nsupport
+            ix = xstates[row]
+            iy = ystates[row]
+            iz = zstates[row]
+            for col in 1:nsupport
+                value = 0.0
+                for term in 1:nterms
+                    value +=
+                        Float64(term_coefficients[term]) *
+                        Float64(operator_terms_x[term, ix, xstates[col]]) *
+                        Float64(operator_terms_y[term, iy, ystates[col]]) *
+                        Float64(operator_terms_z[term, iz, zstates[col]])
+                end
+                workspace[row, col] = value
+            end
         end
     end
     return workspace
@@ -3159,6 +3263,186 @@ function _nested_fill_support_product_matrix_chunk!(
         end
     end
     return workspace
+end
+
+function _nested_fill_support_weighted_term_sum_matrix_chunk!(
+    workspace::AbstractMatrix{<:Real},
+    support_axes::_CartesianNestedSupportAxes3D,
+    row_range::UnitRange{Int},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    nsupport = length(support_axes.x)
+    size(workspace) == (length(row_range), nsupport) || throw(
+        ArgumentError("nested support weighted term-sum chunk workspace must have size ($(length(row_range)), $(nsupport))"),
+    )
+    nterms = size(operator_terms_x, 1)
+    nterms == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
+        ArgumentError("nested support weighted term sum requires matching term counts"),
+    )
+    length(term_coefficients) == nterms || throw(
+        DimensionMismatch("nested support weighted term sum requires one coefficient per term slice"),
+    )
+    xstates = support_axes.x
+    ystates = support_axes.y
+    zstates = support_axes.z
+    @inbounds for (local_row, row) in enumerate(row_range)
+        ix = xstates[row]
+        iy = ystates[row]
+        iz = zstates[row]
+        for col in 1:nsupport
+            value = 0.0
+            for term in 1:nterms
+                value +=
+                    Float64(term_coefficients[term]) *
+                    Float64(operator_terms_x[term, ix, xstates[col]]) *
+                    Float64(operator_terms_y[term, iy, ystates[col]]) *
+                    Float64(operator_terms_z[term, iz, zstates[col]])
+            end
+            workspace[local_row, col] = value
+        end
+    end
+    return workspace
+end
+
+function _nested_support_reference_weighted_term_sum(
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    support_workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+    sum_fill_label::AbstractString,
+    project_label::AbstractString;
+    assume_symmetric::Bool = false,
+)
+    nfixed = size(support_coefficients, 2)
+    destination = Matrix{Float64}(undef, nfixed, nfixed)
+    @timeg sum_fill_label begin
+        _nested_fill_support_weighted_term_sum_matrix!(
+            support_workspace,
+            support_axes,
+            term_coefficients,
+            operator_terms_x,
+            operator_terms_y,
+            operator_terms_z;
+            assume_symmetric = assume_symmetric,
+        )
+    end
+    @timeg project_label begin
+        mul!(contraction_scratch, transpose(support_coefficients), support_workspace)
+        mul!(destination, contraction_scratch, support_coefficients, 1.0, 0.0)
+    end
+    return destination
+end
+
+function _nested_support_reference_weighted_term_sum(
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::SparseArrays.SparseMatrixCSC{Float64,Int},
+    _support_workspace::AbstractMatrix{<:Real},
+    _contraction_scratch::AbstractMatrix{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+    sum_fill_label::AbstractString,
+    project_label::AbstractString;
+    assume_symmetric::Bool = false,
+)
+    assume_symmetric
+    nsupport = length(support_axes.x)
+    nfixed = size(support_coefficients, 2)
+    destination = Matrix{Float64}(undef, nfixed, nfixed)
+    chunk_rows = _nested_support_reference_chunk_row_count(support_coefficients, nsupport, nfixed)
+    workspace_chunk = Matrix{Float64}(undef, chunk_rows, nsupport)
+    contraction_chunk = Matrix{Float64}(undef, chunk_rows, nfixed)
+    first_chunk = true
+    row_start = 1
+    while row_start <= nsupport
+        row_stop = min(nsupport, row_start + chunk_rows - 1)
+        row_range = row_start:row_stop
+        workspace_view = @view(workspace_chunk[1:length(row_range), :])
+        contraction_view = @view(contraction_chunk[1:length(row_range), :])
+        @timeg sum_fill_label begin
+            _nested_fill_support_weighted_term_sum_matrix_chunk!(
+                workspace_view,
+                support_axes,
+                row_range,
+                term_coefficients,
+                operator_terms_x,
+                operator_terms_y,
+                operator_terms_z,
+            )
+        end
+        @timeg project_label begin
+            mul!(contraction_view, workspace_view, support_coefficients)
+            support_coefficients_chunk = support_coefficients[row_range, :]
+            mul!(
+                destination,
+                transpose(support_coefficients_chunk),
+                contraction_view,
+                1.0,
+                first_chunk ? 0.0 : 1.0,
+            )
+        end
+        first_chunk = false
+        row_start = row_stop + 1
+    end
+    return destination
+end
+
+function _nested_support_reference_gaussian_sum(
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    support_workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    return _nested_support_reference_weighted_term_sum(
+        support_axes,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        operator_terms_x,
+        operator_terms_y,
+        operator_terms_z,
+        "diatomic.packet.gaussian_terms.sum_fill",
+        "diatomic.packet.gaussian_terms.project";
+        assume_symmetric = true,
+    )
+end
+
+function _nested_support_reference_pair_sum(
+    support_axes::_CartesianNestedSupportAxes3D,
+    support_coefficients::AbstractMatrix{<:Real},
+    support_workspace::AbstractMatrix{<:Real},
+    contraction_scratch::AbstractMatrix{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    return _nested_support_reference_weighted_term_sum(
+        support_axes,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        operator_terms_x,
+        operator_terms_y,
+        operator_terms_z,
+        "diatomic.packet.pair_terms.sum_fill",
+        "diatomic.packet.pair_terms.project";
+        assume_symmetric = true,
+    )
 end
 
 function _nested_contract_support_product_sparse!(
@@ -3514,40 +3798,70 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
-    support_weights = _nested_support_weights(support_states, pgdg.weights)
-    fixed_weights = vec(transpose(support_coefficients) * support_weights)
-    all(isfinite, fixed_weights) || throw(
-        ArgumentError("nested fixed-block IDA transfer requires finite contracted integral weights"),
-    )
-    minimum(fixed_weights) > 0.0 || throw(
-        ArgumentError("nested fixed-block IDA transfer requires positive contracted integral weights"),
-    )
-    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
-    pair_terms = zeros(Float64, nterms, nfixed, nfixed)
-
-    _nested_contract_support_term_family!(
-        pair_terms,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        weighted_support_coefficients,
-        pgdg.pair_factor_terms_raw,
-        pgdg.pair_factor_terms_raw,
-        pgdg.pair_factor_terms_raw,
-        true,
-    )
+    fixed_weights = @timeg "diatomic.packet.pair_terms.weights" begin
+        support_weights = _nested_support_weights(support_states, pgdg.weights)
+        fixed_weights_local = vec(transpose(support_coefficients) * support_weights)
+        all(isfinite, fixed_weights_local) || throw(
+            ArgumentError("nested fixed-block IDA transfer requires finite contracted integral weights"),
+        )
+        minimum(fixed_weights_local) > 0.0 || throw(
+            ArgumentError("nested fixed-block IDA transfer requires positive contracted integral weights"),
+        )
+        fixed_weights_local
+    end
+    weighted_support_coefficients = @timeg "diatomic.packet.pair_terms.coefficients" begin
+        support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
+    end
+    pair_terms = nothing
+    pair_sum = nothing
+    if term_storage_value == :full_debug
+        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
+            pair_terms_local = zeros(Float64, nterms, nfixed, nfixed)
+            _nested_contract_support_term_family!(
+                pair_terms_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                weighted_support_coefficients,
+                pgdg.pair_factor_terms_raw,
+                pgdg.pair_factor_terms_raw,
+                pgdg.pair_factor_terms_raw,
+                true,
+            )
+            pair_terms_local
+        end
+        pair_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.pair_terms.weighted_sum" begin
+            _nested_weighted_term_sum(pair_terms, term_coefficients)
+        end
+    else
+        isnothing(term_coefficients) && throw(
+            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        )
+        pair_sum = _nested_support_reference_pair_sum(
+            support_axes,
+            weighted_support_coefficients,
+            support_workspace,
+            contraction_scratch,
+            term_coefficients,
+            pgdg.pair_factor_terms_raw,
+            pgdg.pair_factor_terms_raw,
+            pgdg.pair_factor_terms_raw,
+        )
+    end
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
-        pair_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(pair_terms, term_coefficients),
+        pair_sum = pair_sum,
     )
 end
 
@@ -3559,9 +3873,11 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
+    term_storage_value = _nested_normalize_term_storage(term_storage)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
@@ -3570,43 +3886,72 @@ function _nested_weight_aware_pair_terms(
         ArgumentError("mixed-axis nested IDA transfer requires the same Gaussian expansion term count on all axes"),
     )
     nfixed = size(support_coefficients, 2)
-    support_weights = _nested_support_weights(
-        support_states,
-        pgdg_x.weights,
-        pgdg_y.weights,
-        pgdg_z.weights,
-    )
-    fixed_weights = vec(transpose(support_coefficients) * support_weights)
-    all(isfinite, fixed_weights) || throw(
-        ArgumentError("mixed-axis nested fixed-block IDA transfer requires finite contracted integral weights"),
-    )
-    minimum(fixed_weights) > 0.0 || throw(
-        ArgumentError("mixed-axis nested fixed-block IDA transfer requires positive contracted integral weights"),
-    )
-    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
-    pair_terms = zeros(Float64, nterms, nfixed, nfixed)
+    fixed_weights = @timeg "diatomic.packet.pair_terms.weights" begin
+        support_weights = _nested_support_weights(
+            support_states,
+            pgdg_x.weights,
+            pgdg_y.weights,
+            pgdg_z.weights,
+        )
+        fixed_weights_local = vec(transpose(support_coefficients) * support_weights)
+        all(isfinite, fixed_weights_local) || throw(
+            ArgumentError("mixed-axis nested fixed-block IDA transfer requires finite contracted integral weights"),
+        )
+        minimum(fixed_weights_local) > 0.0 || throw(
+            ArgumentError("mixed-axis nested fixed-block IDA transfer requires positive contracted integral weights"),
+        )
+        fixed_weights_local
+    end
+    weighted_support_coefficients = @timeg "diatomic.packet.pair_terms.coefficients" begin
+        support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
+    end
 
     raw_pair_terms_x = pgdg_x.pair_factor_terms_raw
     raw_pair_terms_y = pgdg_y.pair_factor_terms_raw
     raw_pair_terms_z = pgdg_z.pair_factor_terms_raw
-    _nested_contract_support_term_family!(
-        pair_terms,
-        support_workspace,
-        contraction_scratch,
-        support_axes,
-        weighted_support_coefficients,
-        raw_pair_terms_x,
-        raw_pair_terms_y,
-        raw_pair_terms_z,
-        true,
-    )
+    pair_terms = nothing
+    pair_sum = nothing
+    if term_storage_value == :full_debug
+        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
+            pair_terms_local = zeros(Float64, nterms, nfixed, nfixed)
+            _nested_contract_support_term_family!(
+                pair_terms_local,
+                support_workspace,
+                contraction_scratch,
+                support_axes,
+                weighted_support_coefficients,
+                raw_pair_terms_x,
+                raw_pair_terms_y,
+                raw_pair_terms_z,
+                true,
+            )
+            pair_terms_local
+        end
+        pair_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.pair_terms.weighted_sum" begin
+            _nested_weighted_term_sum(pair_terms, term_coefficients)
+        end
+    else
+        isnothing(term_coefficients) && throw(
+            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        )
+        pair_sum = _nested_support_reference_pair_sum(
+            support_axes,
+            weighted_support_coefficients,
+            support_workspace,
+            contraction_scratch,
+            term_coefficients,
+            raw_pair_terms_x,
+            raw_pair_terms_y,
+            raw_pair_terms_z,
+        )
+    end
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
     return (
         weights = fixed_weights,
         pair_terms = pair_terms,
-        pair_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(pair_terms, term_coefficients),
+        pair_sum = pair_sum,
     )
 end
 
@@ -3614,6 +3959,7 @@ function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -3629,6 +3975,7 @@ function _nested_weight_aware_pair_terms(
         support_workspace,
         contraction_scratch,
         nothing,
+        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
 end
@@ -3637,6 +3984,7 @@ function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -3652,6 +4000,7 @@ function _nested_weight_aware_pair_terms(
         support_workspace,
         contraction_scratch,
         nothing,
+        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
 end
@@ -4002,6 +4351,7 @@ function _nested_shell_packet(
                 support_workspace,
                 contraction_scratch,
                 timing_collector;
+                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
         end
@@ -4016,25 +4366,56 @@ function _nested_shell_packet(
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
-            begin
-                gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
-                start_ns = time_ns()
-                _nested_contract_support_term_family!(
-                    gaussian_terms_local,
-                    support_workspace,
-                    contraction_scratch,
-                    support_axes,
-                    support_coefficients,
-                    pgdg.gaussian_factor_terms,
-                    pgdg.gaussian_factor_terms,
-                    pgdg.gaussian_factor_terms,
-                    true,
-                )
-                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                (
-                    gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
-                    gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
-                )
+            if term_storage_value == :full_debug
+                begin
+                    gaussian_terms_local = @timeg "diatomic.packet.gaussian_terms.setup" begin
+                        zeros(Float64, nterms, nshell, nshell)
+                    end
+                    start_ns = time_ns()
+                    @timeg "diatomic.packet.gaussian_terms.contract" begin
+                        _nested_contract_support_term_family!(
+                            gaussian_terms_local,
+                            support_workspace,
+                            contraction_scratch,
+                            support_axes,
+                            support_coefficients,
+                            pgdg.gaussian_factor_terms,
+                            pgdg.gaussian_factor_terms,
+                            pgdg.gaussian_factor_terms,
+                            true,
+                        )
+                    end
+                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                    gaussian_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
+                        _nested_weighted_term_sum(gaussian_terms_local, term_coefficients)
+                    end
+                    (
+                        gaussian_terms = gaussian_terms_local,
+                        gaussian_sum = gaussian_sum,
+                    )
+                end
+            else
+                begin
+                    isnothing(term_coefficients) && throw(
+                        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                    )
+                    start_ns = time_ns()
+                    gaussian_sum = _nested_support_reference_gaussian_sum(
+                        support_axes,
+                        support_coefficients,
+                        support_workspace,
+                        contraction_scratch,
+                        term_coefficients,
+                        pgdg.gaussian_factor_terms,
+                        pgdg.gaussian_factor_terms,
+                        pgdg.gaussian_factor_terms,
+                    )
+                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                    (
+                        gaussian_terms = nothing,
+                        gaussian_sum = gaussian_sum,
+                    )
+                end
             end
         end
         _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
@@ -4418,6 +4799,7 @@ function _nested_shell_packet(
                 support_workspace,
                 contraction_scratch,
                 timing_collector;
+                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
         end
@@ -4432,25 +4814,56 @@ function _nested_shell_packet(
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
-            begin
-                gaussian_terms_local = zeros(Float64, nterms, nshell, nshell)
-                start_ns = time_ns()
-                _nested_contract_support_term_family!(
-                    gaussian_terms_local,
-                    support_workspace,
-                    contraction_scratch,
-                    support_axes,
-                    support_coefficients,
-                    pgdg_x.gaussian_factor_terms,
-                    pgdg_y.gaussian_factor_terms,
-                    pgdg_z.gaussian_factor_terms,
-                    true,
-                )
-                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                (
-                    gaussian_terms = term_storage_value == :full_debug ? gaussian_terms_local : nothing,
-                    gaussian_sum = isnothing(term_coefficients) ? nothing : _nested_weighted_term_sum(gaussian_terms_local, term_coefficients),
-                )
+            if term_storage_value == :full_debug
+                begin
+                    gaussian_terms_local = @timeg "diatomic.packet.gaussian_terms.setup" begin
+                        zeros(Float64, nterms, nshell, nshell)
+                    end
+                    start_ns = time_ns()
+                    @timeg "diatomic.packet.gaussian_terms.contract" begin
+                        _nested_contract_support_term_family!(
+                            gaussian_terms_local,
+                            support_workspace,
+                            contraction_scratch,
+                            support_axes,
+                            support_coefficients,
+                            pgdg_x.gaussian_factor_terms,
+                            pgdg_y.gaussian_factor_terms,
+                            pgdg_z.gaussian_factor_terms,
+                            true,
+                        )
+                    end
+                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                    gaussian_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
+                        _nested_weighted_term_sum(gaussian_terms_local, term_coefficients)
+                    end
+                    (
+                        gaussian_terms = gaussian_terms_local,
+                        gaussian_sum = gaussian_sum,
+                    )
+                end
+            else
+                begin
+                    isnothing(term_coefficients) && throw(
+                        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                    )
+                    start_ns = time_ns()
+                    gaussian_sum = _nested_support_reference_gaussian_sum(
+                        support_axes,
+                        support_coefficients,
+                        support_workspace,
+                        contraction_scratch,
+                        term_coefficients,
+                        pgdg_x.gaussian_factor_terms,
+                        pgdg_y.gaussian_factor_terms,
+                        pgdg_z.gaussian_factor_terms,
+                    )
+                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                    (
+                        gaussian_terms = nothing,
+                        gaussian_sum = gaussian_sum,
+                    )
+                end
             end
         end
         _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
@@ -6822,6 +7235,8 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
     nside::Int,
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
     return @timeg "diatomic.source.child_sequence" begin
@@ -6854,6 +7269,8 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
+                        term_storage = term_storage,
+                        term_coefficients = term_coefficients,
                     ),
                 )
                 current_box = inner_box
@@ -6877,6 +7294,8 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                 core_block.support_indices,
                 core_block.coefficient_matrix,
                 shell_layers,
+                term_storage = term_storage,
+                term_coefficients = term_coefficients,
                 build_packet = build_packet,
             )
         end
@@ -6984,6 +7403,8 @@ function _nested_bond_aligned_diatomic_source(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.source.total" begin
         child_retention = _nested_resolve_complete_shell_retention(
@@ -7058,6 +7479,8 @@ function _nested_bond_aligned_diatomic_source(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
+                        term_storage = term_storage,
+                        term_coefficients = term_coefficients,
                     ),
                 )
                 current_box = inner_box
@@ -7095,17 +7518,19 @@ function _nested_bond_aligned_diatomic_source(
                             child_box,
                             child_retention;
                             bond_axis = bond_axis,
-                            nside = nside,
-                            reference_fudge_factor = reference_fudge_factor,
-                            core_near_nucleus_protect_rows = protect_rows,
-                            build_packet = false,
-                        ),
-                    )
-                end
+                        nside = nside,
+                        reference_fudge_factor = reference_fudge_factor,
+                        core_near_nucleus_protect_rows = protect_rows,
+                        term_storage = term_storage,
+                        term_coefficients = term_coefficients,
+                        build_packet = false,
+                    ),
+                )
+            end
             end
             merged_sequence = @timeg "diatomic.source.final_sequence_merge" begin
                 core_support_blocks = Vector{Vector{Int}}()
-                core_coefficient_blocks = AbstractMatrix{Float64}[]
+                core_coefficient_blocks = _CartesianCoefficientMap[]
                 push!(core_support_blocks, child_sequences[1].support_indices)
                 push!(core_coefficient_blocks, child_sequences[1].coefficient_matrix)
                 if !isnothing(geometry.shared_midpoint_box)
@@ -7122,6 +7547,8 @@ function _nested_bond_aligned_diatomic_source(
                     child_support,
                     child_coefficients,
                     shared_shell_layers,
+                    term_storage = term_storage,
+                    term_coefficients = term_coefficients,
                 )
             end
             column_start = first(merged_sequence.core_column_range)
@@ -7146,6 +7573,8 @@ function _nested_bond_aligned_diatomic_source(
                     nside = nside,
                     reference_fudge_factor = reference_fudge_factor,
                     core_near_nucleus_protect_rows = protect_rows,
+                    term_storage = term_storage,
+                    term_coefficients = term_coefficients,
                     build_packet = false,
                 )
             end
@@ -7157,6 +7586,8 @@ function _nested_bond_aligned_diatomic_source(
                     shared_child.support_indices,
                     shared_child.coefficient_matrix,
                     shared_shell_layers,
+                    term_storage = term_storage,
+                    term_coefficients = term_coefficients,
                 )
             end
             push!(child_column_ranges, merged_sequence.core_column_range)

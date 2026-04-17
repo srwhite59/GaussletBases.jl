@@ -1284,35 +1284,47 @@ function _bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
-    )
-    midpoint =
-        sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) / length(basis.nuclei)
-    bundles = _qwrg_bond_aligned_axis_bundles(
-        basis,
-        expansion;
-        gausslet_backend = gausslet_backend,
-    )
-    use_midpoint_slab = _qwrg_bond_aligned_uses_midpoint_slab(basis)
-    preferred_split_side = _qwrg_bond_aligned_preferred_split_side(basis)
-    return _nested_bond_aligned_diatomic_source(
-        basis,
-        bundles;
-        bond_axis = basis.bond_axis,
-        midpoint = midpoint,
-        nside = nside,
-        min_unsplit_parallel_to_transverse_ratio_for_split = min_unsplit_parallel_to_transverse_ratio_for_split,
-        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
-        reference_fudge_factor = reference_fudge_factor,
-        core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
-        use_midpoint_slab = use_midpoint_slab,
-        prefer_midpoint_tie_side = preferred_split_side,
-        shared_shell_retain_xy = shared_shell_retain_xy,
-        shared_shell_retain_xz = shared_shell_retain_xz,
-        shared_shell_retain_yz = shared_shell_retain_yz,
-    )
+    return @timeg "diatomic.fixed_source.total" begin
+        gausslet_backend == :numerical_reference || throw(
+            ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+        )
+        midpoint =
+            sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
+            length(basis.nuclei)
+        bundles = @timeg "diatomic.fixed_source.axis_bundles" begin
+            _qwrg_bond_aligned_axis_bundles(
+                basis,
+                expansion;
+                gausslet_backend = gausslet_backend,
+            )
+        end
+        use_midpoint_slab = _qwrg_bond_aligned_uses_midpoint_slab(basis)
+        preferred_split_side = _qwrg_bond_aligned_preferred_split_side(basis)
+        @timeg "diatomic.fixed_source.source_assembly" begin
+            _nested_bond_aligned_diatomic_source(
+                basis,
+                bundles;
+                bond_axis = basis.bond_axis,
+                midpoint = midpoint,
+                nside = nside,
+                min_unsplit_parallel_to_transverse_ratio_for_split =
+                    min_unsplit_parallel_to_transverse_ratio_for_split,
+                min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+                reference_fudge_factor = reference_fudge_factor,
+                core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
+                use_midpoint_slab = use_midpoint_slab,
+                prefer_midpoint_tie_side = preferred_split_side,
+                shared_shell_retain_xy = shared_shell_retain_xy,
+                shared_shell_retain_xz = shared_shell_retain_xz,
+                shared_shell_retain_yz = shared_shell_retain_yz,
+                term_storage = term_storage,
+                term_coefficients = term_coefficients,
+            )
+        end
+    end
 end
 
 function _bond_aligned_diatomic_nested_fixed_block(
@@ -1336,6 +1348,8 @@ function _bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    term_storage::Symbol = :full_debug,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     source = _bond_aligned_diatomic_nested_fixed_source(
         basis;
@@ -1350,6 +1364,8 @@ function _bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_xy = shared_shell_retain_xy,
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
+        term_storage = term_storage,
+        term_coefficients = term_coefficients,
     )
     return _bond_aligned_diatomic_nested_fixed_block(source)
 end
@@ -1357,24 +1373,28 @@ end
 function _bond_aligned_diatomic_nested_geometry_diagnostics(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
-    contract_audit = _nested_source_contract_audit(source)
-    shared_shell_dimensions = Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
-    child_sequence_dimensions = Int[size(sequence.coefficient_matrix, 2) for sequence in source.child_sequences]
-    return (
-        source = source,
-        geometry = source.geometry,
-        nside = source.nside,
-        child_shell_retention_contract = source.child_shell_retention_contract,
-        shared_shell_retention_contract = source.shared_shell_retention_contract,
-        shared_shell_count = length(source.shared_shell_layers),
-        shared_shell_dimensions = shared_shell_dimensions,
-        shared_shells_match_contract =
-            all(==(source.shared_shell_retention_contract.shell_increment), shared_shell_dimensions),
-        child_sequence_count = length(source.child_sequences),
-        child_sequence_dimensions = child_sequence_dimensions,
-        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
-        contract_audit = contract_audit,
-    )
+    return @timeg "diatomic.geometry_diagnostics" begin
+        contract_audit = _nested_source_contract_audit(source)
+        shared_shell_dimensions = Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
+        child_sequence_dimensions = Int[
+            size(sequence.coefficient_matrix, 2) for sequence in source.child_sequences
+        ]
+        (
+            source = source,
+            geometry = source.geometry,
+            nside = source.nside,
+            child_shell_retention_contract = source.child_shell_retention_contract,
+            shared_shell_retention_contract = source.shared_shell_retention_contract,
+            shared_shell_count = length(source.shared_shell_layers),
+            shared_shell_dimensions = shared_shell_dimensions,
+            shared_shells_match_contract =
+                all(==(source.shared_shell_retention_contract.shell_increment), shared_shell_dimensions),
+            child_sequence_count = length(source.child_sequences),
+            child_sequence_dimensions = child_sequence_dimensions,
+            fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+            contract_audit = contract_audit,
+        )
+    end
 end
 
 function bond_aligned_diatomic_nested_geometry_diagnostics(
