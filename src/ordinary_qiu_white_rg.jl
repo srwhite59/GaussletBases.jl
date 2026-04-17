@@ -1066,11 +1066,13 @@ function _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
         expansion;
         gausslet_backend = gausslet_backend,
     )
+    term_coefficients = _resolved_nested_term_coefficients(expansion, nothing)
     return _nested_axis_aligned_homonuclear_square_lattice_source(
         basis,
         bundles;
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -1272,7 +1274,7 @@ function _qwrg_bond_aligned_axis_bundles(
     return _CartesianNestedAxisBundles3D(bundle_x, bundle_y, bundle_z)
 end
 
-function _resolved_diatomic_term_coefficients(
+function _resolved_nested_term_coefficients(
     expansion::CoulombGaussianExpansion,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}},
 )
@@ -1304,7 +1306,7 @@ function _bond_aligned_diatomic_nested_fixed_source(
             ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
         )
         resolved_term_coefficients =
-            _resolved_diatomic_term_coefficients(expansion, term_coefficients)
+            _resolved_nested_term_coefficients(expansion, term_coefficients)
         midpoint =
             sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
             length(basis.nuclei)
@@ -1470,6 +1472,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
         expansion;
         gausslet_backend = gausslet_backend,
     )
+    term_coefficients = _resolved_nested_term_coefficients(expansion, nothing)
     return _nested_bond_aligned_homonuclear_chain_source(
         basis,
         bundles;
@@ -1477,6 +1480,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -5149,16 +5153,10 @@ function _qwrg_fixed_block_one_body_matrix(
     Z::Real,
 )
     hamiltonian = Matrix{Float64}(fixed_block.kinetic)
-    if !isnothing(fixed_block.gaussian_sum)
-        hamiltonian .-= Float64(Z) .* fixed_block.gaussian_sum
-    else
-        isnothing(fixed_block.gaussian_terms) && throw(
-            ArgumentError("nested fixed-block QW one-body assembly requires either gaussian_sum or full gaussian_terms"),
-        )
-        for term in eachindex(expansion.coefficients)
-            hamiltonian .-= Float64(Z) * expansion.coefficients[term] .* @view(fixed_block.gaussian_terms[term, :, :])
-        end
-    end
+    isnothing(fixed_block.gaussian_sum) && throw(
+        ArgumentError("nested fixed-block QW one-body assembly requires gaussian_sum"),
+    )
+    hamiltonian .-= Float64(Z) .* fixed_block.gaussian_sum
     return Matrix{Float64}(0.5 .* (hamiltonian .+ transpose(hamiltonian)))
 end
 
@@ -5166,17 +5164,10 @@ function _qwrg_fixed_block_interaction_matrix(
     fixed_block::_NestedFixedBlock3D,
     expansion::CoulombGaussianExpansion,
 )
-    if !isnothing(fixed_block.pair_sum)
-        interaction = Matrix{Float64}(fixed_block.pair_sum)
-    else
-        isnothing(fixed_block.pair_terms) && throw(
-            ArgumentError("nested fixed-block QW interaction assembly requires either pair_sum or full pair_terms"),
-        )
-        interaction = zeros(Float64, size(fixed_block.pair_terms, 2), size(fixed_block.pair_terms, 3))
-        for term in eachindex(expansion.coefficients)
-            interaction .+= expansion.coefficients[term] .* @view(fixed_block.pair_terms[term, :, :])
-        end
-    end
+    isnothing(fixed_block.pair_sum) && throw(
+        ArgumentError("nested fixed-block QW interaction assembly requires pair_sum"),
+    )
+    interaction = Matrix{Float64}(fixed_block.pair_sum)
     return Matrix{Float64}(0.5 .* (interaction .+ transpose(interaction)))
 end
 

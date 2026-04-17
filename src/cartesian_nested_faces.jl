@@ -2513,8 +2513,8 @@ function _nested_normalize_packet_kernel(packet_kernel::Symbol)
 end
 
 function _nested_normalize_term_storage(term_storage::Symbol)
-    term_storage in (:full_debug, :compact_production) || throw(
-        ArgumentError("nested term storage must be :full_debug or :compact_production"),
+    term_storage == :compact_production || throw(
+        ArgumentError("nested term storage must be :compact_production"),
     )
     return term_storage
 end
@@ -2687,20 +2687,6 @@ function _nested_factorized_axis_base_tables(
     )
 end
 
-function _nested_weighted_term_sum(
-    term_tensors::AbstractArray{<:Real,3},
-    term_coefficients::AbstractVector{<:Real},
-)
-    size(term_tensors, 1) == length(term_coefficients) || throw(
-        DimensionMismatch("nested weighted term sum requires one coefficient per term slice"),
-    )
-    weighted_sum = zeros(Float64, size(term_tensors, 2), size(term_tensors, 3))
-    @inbounds for term in eachindex(term_coefficients)
-        weighted_sum .+= Float64(term_coefficients[term]) .* @view(term_tensors[term, :, :])
-    end
-    return Matrix{Float64}(0.5 .* (weighted_sum .+ transpose(weighted_sum)))
-end
-
 function _nested_factorized_normalized_pair_term_tables(
     raw_term_tables::Array{Float64,3},
     axis_weight_projections::AbstractVector{<:Real},
@@ -2720,44 +2706,6 @@ function _nested_factorized_normalized_pair_term_tables(
         end
     end
     return normalized
-end
-
-function _nested_fill_factorized_term_family!(
-    destination_terms::Array{Float64,3},
-    factorized_basis::_CartesianNestedFactorizedBasis3D,
-    operator_terms_x::Array{Float64,3},
-    operator_terms_y::Array{Float64,3},
-    operator_terms_z::Array{Float64,3};
-    include_basis_amplitudes::Bool,
-)
-    nterms = size(destination_terms, 1)
-    nbasis = length(factorized_basis.basis_triplets)
-    size(destination_terms, 2) == nbasis == size(destination_terms, 3) || throw(
-        ArgumentError("nested factorized term-family fill requires square output sized to the retained fixed basis"),
-    )
-    nterms == size(operator_terms_x, 1) == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
-        ArgumentError("nested factorized term-family fill requires matching term counts"),
-    )
-    amplitudes = factorized_basis.basis_amplitudes
-    triplets = factorized_basis.basis_triplets
-    @inbounds for column in 1:nbasis
-        xj, yj, zj = triplets[column]
-        amplitude_j = include_basis_amplitudes ? amplitudes[column] : 1.0
-        for row in 1:column
-            xi, yi, zi = triplets[row]
-            scale = include_basis_amplitudes ? amplitudes[row] * amplitude_j : 1.0
-            for term in 1:nterms
-                value =
-                    scale *
-                    operator_terms_x[term, xi, xj] *
-                    operator_terms_y[term, yi, yj] *
-                    operator_terms_z[term, zi, zj]
-                destination_terms[term, row, column] = value
-                destination_terms[term, column, row] = value
-            end
-        end
-    end
-    return destination_terms
 end
 
 function _nested_fill_factorized_weighted_term_sum!(
@@ -2916,11 +2864,11 @@ function _nested_factorized_gaussian_terms(
     gaussian_terms_y::Array{Float64,3},
     gaussian_terms_z::Array{Float64,3},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
-    term_storage_value = _nested_normalize_term_storage(term_storage)
+    _nested_normalize_term_storage(term_storage)
     axis_term_tables_x, axis_term_tables_y, axis_term_tables_z, nbasis = @timeg "diatomic.packet.gaussian_terms.setup" begin
         axis_term_tables_x = _nested_factorized_axis_term_tables(
             gaussian_terms_x,
@@ -2942,45 +2890,25 @@ function _nested_factorized_gaussian_terms(
             nbasis,
         )
     end
-    gaussian_terms = nothing
-    gaussian_sum = nothing
-    if term_storage_value == :full_debug
-        gaussian_terms = @timeg "diatomic.packet.gaussian_terms.contract" begin
-            gaussian_terms_local = zeros(Float64, size(gaussian_terms_x, 1), nbasis, nbasis)
-            _nested_fill_factorized_term_family!(
-                gaussian_terms_local,
-                factorized_basis,
-                axis_term_tables_x,
-                axis_term_tables_y,
-                axis_term_tables_z;
-                include_basis_amplitudes = true,
-            )
-            gaussian_terms_local
-        end
-        !isnothing(term_coefficients) && (gaussian_sum = @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
-            _nested_weighted_term_sum(gaussian_terms, term_coefficients)
-        end)
-    else
-        isnothing(term_coefficients) && throw(
-            ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+    isnothing(term_coefficients) && throw(
+        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+    )
+    gaussian_sum = @timeg "diatomic.packet.gaussian_terms.contract" begin
+        gaussian_sum_local = zeros(Float64, nbasis, nbasis)
+        _nested_fill_factorized_weighted_term_sum!(
+            gaussian_sum_local,
+            factorized_basis,
+            term_coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = true,
         )
-        gaussian_sum = @timeg "diatomic.packet.gaussian_terms.contract" begin
-            gaussian_sum_local = zeros(Float64, nbasis, nbasis)
-            _nested_fill_factorized_weighted_term_sum!(
-                gaussian_sum_local,
-                factorized_basis,
-                term_coefficients,
-                axis_term_tables_x,
-                axis_term_tables_y,
-                axis_term_tables_z;
-                include_basis_amplitudes = true,
-            )
-            gaussian_sum_local
-        end
+        gaussian_sum_local
     end
     _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
     return (
-        gaussian_terms = gaussian_terms,
+        gaussian_terms = nothing,
         gaussian_sum = gaussian_sum,
     )
 end
@@ -2994,11 +2922,11 @@ function _nested_factorized_weight_aware_pair_terms(
     pair_terms_y::Array{Float64,3},
     pair_terms_z::Array{Float64,3},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
-    term_storage_value = _nested_normalize_term_storage(term_storage)
+    _nested_normalize_term_storage(term_storage)
     axis_weight_x, axis_weight_y, axis_weight_z, basis_weights = @timeg "diatomic.packet.pair_terms.weights" begin
         axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
         axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
@@ -3045,46 +2973,26 @@ function _nested_factorized_weight_aware_pair_terms(
         )
     end
     nbasis = length(factorized_basis.basis_triplets)
-    pair_terms = nothing
-    pair_sum = nothing
-    if term_storage_value == :full_debug
-        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
-            pair_terms_local = zeros(Float64, size(pair_terms_x, 1), nbasis, nbasis)
-            _nested_fill_factorized_term_family!(
-                pair_terms_local,
-                factorized_basis,
-                axis_term_tables_x,
-                axis_term_tables_y,
-                axis_term_tables_z;
-                include_basis_amplitudes = false,
-            )
-            pair_terms_local
-        end
-        !isnothing(term_coefficients) && (pair_sum = @timeg "diatomic.packet.pair_terms.weighted_sum" begin
-            _nested_weighted_term_sum(pair_terms, term_coefficients)
-        end)
-    else
-        isnothing(term_coefficients) && throw(
-            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+    isnothing(term_coefficients) && throw(
+        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+    )
+    pair_sum = @timeg "diatomic.packet.pair_terms.contract" begin
+        pair_sum_local = zeros(Float64, nbasis, nbasis)
+        _nested_fill_factorized_weighted_term_sum!(
+            pair_sum_local,
+            factorized_basis,
+            term_coefficients,
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z;
+            include_basis_amplitudes = false,
         )
-        pair_sum = @timeg "diatomic.packet.pair_terms.contract" begin
-            pair_sum_local = zeros(Float64, nbasis, nbasis)
-            _nested_fill_factorized_weighted_term_sum!(
-                pair_sum_local,
-                factorized_basis,
-                term_coefficients,
-                axis_term_tables_x,
-                axis_term_tables_y,
-                axis_term_tables_z;
-                include_basis_amplitudes = false,
-            )
-            pair_sum_local
-        end
+        pair_sum_local
     end
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
     return (
         weights = basis_weights,
-        pair_terms = pair_terms,
+        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3699,38 +3607,6 @@ function _nested_contract_sum_of_support_products!(
     return destination
 end
 
-function _nested_contract_support_term_family!(
-    destination_terms::Array{Float64,3},
-    workspace::AbstractMatrix{<:Real},
-    contraction_scratch::AbstractMatrix{<:Real},
-    support_axes::_CartesianNestedSupportAxes3D,
-    support_coefficients::AbstractMatrix{<:Real},
-    operator_terms_x::Array{Float64,3},
-    operator_terms_y::Array{Float64,3},
-    operator_terms_z::Array{Float64,3},
-    assume_symmetric::Bool = false,
-)
-    nterms = size(destination_terms, 1)
-    nterms == size(operator_terms_x, 1) == size(operator_terms_y, 1) == size(operator_terms_z, 1) || throw(
-        ArgumentError("nested support term-family contraction requires matching term counts"),
-    )
-    for term in 1:nterms
-        _nested_contract_support_product!(
-            @view(destination_terms[term, :, :]),
-            workspace,
-            contraction_scratch,
-            support_axes,
-            support_coefficients,
-            @view(operator_terms_x[term, :, :]),
-            @view(operator_terms_y[term, :, :]),
-            @view(operator_terms_z[term, :, :]);
-            beta = 0.0,
-            assume_symmetric = assume_symmetric,
-        )
-    end
-    return destination_terms
-end
-
 function _nested_symmetrize_matrix!(matrix::AbstractMatrix{<:Real})
     size(matrix, 1) == size(matrix, 2) || throw(
         ArgumentError("nested symmetrization requires a square matrix"),
@@ -3798,11 +3674,11 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
-    term_storage_value = _nested_normalize_term_storage(term_storage)
+    _nested_normalize_term_storage(term_storage)
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
     fixed_weights = @timeg "diatomic.packet.pair_terms.weights" begin
@@ -3819,48 +3695,25 @@ function _nested_weight_aware_pair_terms(
     weighted_support_coefficients = @timeg "diatomic.packet.pair_terms.coefficients" begin
         support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
     end
-    pair_terms = nothing
-    pair_sum = nothing
-    if term_storage_value == :full_debug
-        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
-            pair_terms_local = zeros(Float64, nterms, nfixed, nfixed)
-            _nested_contract_support_term_family!(
-                pair_terms_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                weighted_support_coefficients,
-                pgdg.pair_factor_terms_raw,
-                pgdg.pair_factor_terms_raw,
-                pgdg.pair_factor_terms_raw,
-                true,
-            )
-            pair_terms_local
-        end
-        pair_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.pair_terms.weighted_sum" begin
-            _nested_weighted_term_sum(pair_terms, term_coefficients)
-        end
-    else
-        isnothing(term_coefficients) && throw(
-            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
-        )
-        pair_sum = _nested_support_reference_pair_sum(
-            support_axes,
-            weighted_support_coefficients,
-            support_workspace,
-            contraction_scratch,
-            term_coefficients,
-            pgdg.pair_factor_terms_raw,
-            pgdg.pair_factor_terms_raw,
-            pgdg.pair_factor_terms_raw,
-        )
-    end
+    isnothing(term_coefficients) && throw(
+        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+    )
+    pair_sum = _nested_support_reference_pair_sum(
+        support_axes,
+        weighted_support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
+    )
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
     return (
         weights = fixed_weights,
-        pair_terms = pair_terms,
+        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3873,11 +3726,11 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     start_ns = time_ns()
-    term_storage_value = _nested_normalize_term_storage(term_storage)
+    _nested_normalize_term_storage(term_storage)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
@@ -3909,48 +3762,25 @@ function _nested_weight_aware_pair_terms(
     raw_pair_terms_x = pgdg_x.pair_factor_terms_raw
     raw_pair_terms_y = pgdg_y.pair_factor_terms_raw
     raw_pair_terms_z = pgdg_z.pair_factor_terms_raw
-    pair_terms = nothing
-    pair_sum = nothing
-    if term_storage_value == :full_debug
-        pair_terms = @timeg "diatomic.packet.pair_terms.contract" begin
-            pair_terms_local = zeros(Float64, nterms, nfixed, nfixed)
-            _nested_contract_support_term_family!(
-                pair_terms_local,
-                support_workspace,
-                contraction_scratch,
-                support_axes,
-                weighted_support_coefficients,
-                raw_pair_terms_x,
-                raw_pair_terms_y,
-                raw_pair_terms_z,
-                true,
-            )
-            pair_terms_local
-        end
-        pair_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.pair_terms.weighted_sum" begin
-            _nested_weighted_term_sum(pair_terms, term_coefficients)
-        end
-    else
-        isnothing(term_coefficients) && throw(
-            ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
-        )
-        pair_sum = _nested_support_reference_pair_sum(
-            support_axes,
-            weighted_support_coefficients,
-            support_workspace,
-            contraction_scratch,
-            term_coefficients,
-            raw_pair_terms_x,
-            raw_pair_terms_y,
-            raw_pair_terms_z,
-        )
-    end
+    isnothing(term_coefficients) && throw(
+        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+    )
+    pair_sum = _nested_support_reference_pair_sum(
+        support_axes,
+        weighted_support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        raw_pair_terms_x,
+        raw_pair_terms_y,
+        raw_pair_terms_z,
+    )
 
     _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
 
     return (
         weights = fixed_weights,
-        pair_terms = pair_terms,
+        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3959,7 +3789,7 @@ function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -3984,7 +3814,7 @@ function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -4029,7 +3859,7 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.packet.total" begin
@@ -4366,56 +4196,26 @@ function _nested_shell_packet(
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
-            if term_storage_value == :full_debug
-                begin
-                    gaussian_terms_local = @timeg "diatomic.packet.gaussian_terms.setup" begin
-                        zeros(Float64, nterms, nshell, nshell)
-                    end
-                    start_ns = time_ns()
-                    @timeg "diatomic.packet.gaussian_terms.contract" begin
-                        _nested_contract_support_term_family!(
-                            gaussian_terms_local,
-                            support_workspace,
-                            contraction_scratch,
-                            support_axes,
-                            support_coefficients,
-                            pgdg.gaussian_factor_terms,
-                            pgdg.gaussian_factor_terms,
-                            pgdg.gaussian_factor_terms,
-                            true,
-                        )
-                    end
-                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                    gaussian_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
-                        _nested_weighted_term_sum(gaussian_terms_local, term_coefficients)
-                    end
-                    (
-                        gaussian_terms = gaussian_terms_local,
-                        gaussian_sum = gaussian_sum,
-                    )
-                end
-            else
-                begin
-                    isnothing(term_coefficients) && throw(
-                        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
-                    )
-                    start_ns = time_ns()
-                    gaussian_sum = _nested_support_reference_gaussian_sum(
-                        support_axes,
-                        support_coefficients,
-                        support_workspace,
-                        contraction_scratch,
-                        term_coefficients,
-                        pgdg.gaussian_factor_terms,
-                        pgdg.gaussian_factor_terms,
-                        pgdg.gaussian_factor_terms,
-                    )
-                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                    (
-                        gaussian_terms = nothing,
-                        gaussian_sum = gaussian_sum,
-                    )
-                end
+            begin
+                isnothing(term_coefficients) && throw(
+                    ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                )
+                start_ns = time_ns()
+                gaussian_sum = _nested_support_reference_gaussian_sum(
+                    support_axes,
+                    support_coefficients,
+                    support_workspace,
+                    contraction_scratch,
+                    term_coefficients,
+                    pgdg.gaussian_factor_terms,
+                    pgdg.gaussian_factor_terms,
+                    pgdg.gaussian_factor_terms,
+                )
+                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                (
+                    gaussian_terms = nothing,
+                    gaussian_sum = gaussian_sum,
+                )
             end
         end
         _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
@@ -4434,7 +4234,7 @@ function _nested_shell_packet(
                 gaussian_terms.gaussian_sum,
                 pair_data.pair_sum,
                 gaussian_terms.gaussian_terms,
-                term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+                pair_data.pair_terms,
                 term_storage_value,
             ),
             support_states = support_states,
@@ -4448,7 +4248,7 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.packet.total" begin
@@ -4814,56 +4614,26 @@ function _nested_shell_packet(
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
-            if term_storage_value == :full_debug
-                begin
-                    gaussian_terms_local = @timeg "diatomic.packet.gaussian_terms.setup" begin
-                        zeros(Float64, nterms, nshell, nshell)
-                    end
-                    start_ns = time_ns()
-                    @timeg "diatomic.packet.gaussian_terms.contract" begin
-                        _nested_contract_support_term_family!(
-                            gaussian_terms_local,
-                            support_workspace,
-                            contraction_scratch,
-                            support_axes,
-                            support_coefficients,
-                            pgdg_x.gaussian_factor_terms,
-                            pgdg_y.gaussian_factor_terms,
-                            pgdg_z.gaussian_factor_terms,
-                            true,
-                        )
-                    end
-                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                    gaussian_sum = isnothing(term_coefficients) ? nothing : @timeg "diatomic.packet.gaussian_terms.weighted_sum" begin
-                        _nested_weighted_term_sum(gaussian_terms_local, term_coefficients)
-                    end
-                    (
-                        gaussian_terms = gaussian_terms_local,
-                        gaussian_sum = gaussian_sum,
-                    )
-                end
-            else
-                begin
-                    isnothing(term_coefficients) && throw(
-                        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
-                    )
-                    start_ns = time_ns()
-                    gaussian_sum = _nested_support_reference_gaussian_sum(
-                        support_axes,
-                        support_coefficients,
-                        support_workspace,
-                        contraction_scratch,
-                        term_coefficients,
-                        pgdg_x.gaussian_factor_terms,
-                        pgdg_y.gaussian_factor_terms,
-                        pgdg_z.gaussian_factor_terms,
-                    )
-                    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
-                    (
-                        gaussian_terms = nothing,
-                        gaussian_sum = gaussian_sum,
-                    )
-                end
+            begin
+                isnothing(term_coefficients) && throw(
+                    ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                )
+                start_ns = time_ns()
+                gaussian_sum = _nested_support_reference_gaussian_sum(
+                    support_axes,
+                    support_coefficients,
+                    support_workspace,
+                    contraction_scratch,
+                    term_coefficients,
+                    pgdg_x.gaussian_factor_terms,
+                    pgdg_y.gaussian_factor_terms,
+                    pgdg_z.gaussian_factor_terms,
+                )
+                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
+                (
+                    gaussian_terms = nothing,
+                    gaussian_sum = gaussian_sum,
+                )
             end
         end
         _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
@@ -4882,7 +4652,7 @@ function _nested_shell_packet(
                 gaussian_terms.gaussian_sum,
                 pair_data.pair_sum,
                 gaussian_terms.gaussian_terms,
-                term_storage_value == :full_debug ? pair_data.pair_terms : nothing,
+                pair_data.pair_terms,
                 term_storage_value,
             ),
             support_states = support_states,
@@ -4900,6 +4670,7 @@ function _nested_xy_shell_pair(
     y_interval::UnitRange{Int};
     retain_x::Int,
     retain_y::Int,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
     face_low = _nested_xy_face_product(
@@ -4921,7 +4692,12 @@ function _nested_xy_shell_pair(
     faces = (face_low, face_high)
     coefficient_matrix = _nested_hcat_coefficient_maps([face_low.coefficient_matrix, face_high.coefficient_matrix])
     support_indices = _nested_shell_support_indices(faces)
-    shell_data = _nested_shell_packet(pgdg, coefficient_matrix, support_indices)
+    shell_data = _nested_shell_packet(
+        pgdg,
+        coefficient_matrix,
+        support_indices;
+        term_coefficients = term_coefficients,
+    )
     return _CartesianNestedXYShell3D(
         faces,
         coefficient_matrix,
@@ -4937,6 +4713,7 @@ function _nested_xy_shell_pair(
     y_interval::UnitRange{Int};
     retain_x::Int,
     retain_y::Int,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return _nested_xy_shell_pair(
         bundle.pgdg_intermediate,
@@ -4944,6 +4721,7 @@ function _nested_xy_shell_pair(
         y_interval;
         retain_x = retain_x,
         retain_y = retain_y,
+        term_coefficients = term_coefficients,
     )
 end
 
@@ -5001,7 +4779,7 @@ function _nested_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
@@ -5079,7 +4857,7 @@ function _nested_complete_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
@@ -5228,7 +5006,7 @@ function _nested_shell_plus_core(
     z_interval::UnitRange{Int},
     ;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
@@ -5270,8 +5048,10 @@ function _nested_shell_plus_core(
     x_interval::UnitRange{Int},
     y_interval::UnitRange{Int},
     z_interval::UnitRange{Int},
+    ;
+    kwargs...,
 )
-    return _nested_shell_plus_core(bundle.pgdg_intermediate, shell, x_interval, y_interval, z_interval)
+    return _nested_shell_plus_core(bundle.pgdg_intermediate, shell, x_interval, y_interval, z_interval; kwargs...)
 end
 
 function _nested_shell_sequence(
@@ -5283,7 +5063,7 @@ function _nested_shell_sequence(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -5312,7 +5092,7 @@ function _nested_shell_sequence_from_core_block(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -5381,7 +5161,7 @@ function _nested_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
@@ -5447,7 +5227,7 @@ function _nested_complete_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     prepacket_start_ns = time_ns()
@@ -5553,7 +5333,7 @@ function _nested_shell_sequence(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -5582,7 +5362,7 @@ function _nested_shell_sequence_from_core_block(
     enforce_coverage::Bool = true,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -5665,7 +5445,7 @@ function _nested_complete_shell_sequence_for_box(
     retain_z_edge::Union{Nothing,Int} = nothing,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :full_debug,
+    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
@@ -5786,28 +5566,14 @@ function _nested_same_term_exponents(
     return maximum(abs.(Float64.(left) .- Float64.(right))) <= atol
 end
 
-function _one_center_atomic_term_storage_resolution(
-    bundle::_MappedOrdinaryGausslet1DBundle;
-    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
-    retain_term_tensors::Bool = false,
+function _one_center_atomic_term_coefficients(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
 )
-    if retain_term_tensors
-        return (
-            term_storage = :full_debug,
-            term_coefficients = nothing,
-        )
-    end
-    isnothing(expansion) && return (
-        term_storage = :full_debug,
-        term_coefficients = nothing,
-    )
     _nested_same_term_exponents(bundle.exponents, expansion.exponents) || throw(
         ArgumentError("compact one-center atomic fixed-block storage requires bundle Gaussian exponents to match the supplied CoulombGaussianExpansion"),
     )
-    return (
-        term_storage = :compact_production,
-        term_coefficients = Float64[Float64(value) for value in expansion.coefficients],
-    )
+    return Float64[Float64(value) for value in expansion.coefficients]
 end
 
 struct OneCenterAtomicNestedLayerStructure
@@ -5843,7 +5609,6 @@ function _build_one_center_atomic_shell_sequence(
     nside::Int,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :factorized_direct,
-    term_storage::Symbol = :full_debug,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
@@ -5860,7 +5625,7 @@ function _build_one_center_atomic_shell_sequence(
         retain_z_edge = retention.retain_z_edge,
         timing_collector = timing_collector,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
+        term_storage = :compact_production,
         term_coefficients = term_coefficients,
     )
 end
@@ -5889,21 +5654,25 @@ It should be used in place of any older central-box atomic diagnostic fixture.
 """
 function build_one_center_atomic_full_parent_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     nside::Int,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     return _build_one_center_atomic_shell_sequence(
         bundle,
         (1:n, 1:n, 1:n);
         nside = nside,
         timing_collector = timing_collector,
+        term_coefficients = term_coefficients,
     )
 end
 
 function build_one_center_atomic_full_parent_shell_sequence(
     basis::MappedUniformBasis;
-    exponents::AbstractVector{<:Real} = Float64[],
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
@@ -5916,7 +5685,11 @@ function build_one_center_atomic_full_parent_shell_sequence(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    return build_one_center_atomic_full_parent_shell_sequence(bundle; kwargs...)
+    return build_one_center_atomic_full_parent_shell_sequence(
+        bundle;
+        expansion = expansion,
+        kwargs...,
+    )
 end
 
 """
@@ -5942,23 +5715,27 @@ example `(2:28, 2:28, 2:28)` on a `29^3` parent lattice.
 """
 function build_one_center_atomic_legacy_profile_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
     nside::Int,
     timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(n, working_box)
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     return _build_one_center_atomic_shell_sequence(
         bundle,
         normalized_working_box;
         nside = nside,
         timing_collector = timing_collector,
+        term_coefficients = term_coefficients,
     )
 end
 
 function build_one_center_atomic_legacy_profile_shell_sequence(
     basis::MappedUniformBasis;
-    exponents::AbstractVector{<:Real} = Float64[],
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
@@ -5971,7 +5748,11 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    return build_one_center_atomic_legacy_profile_shell_sequence(bundle; kwargs...)
+    return build_one_center_atomic_legacy_profile_shell_sequence(
+        bundle;
+        expansion = expansion,
+        kwargs...,
+    )
 end
 
 """
@@ -5990,8 +5771,7 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_full_parent_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
-    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
-    retain_term_tensors::Bool = false,
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     kwargs...,
@@ -6001,19 +5781,14 @@ function one_center_atomic_full_parent_fixed_block(
     )
     collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
     total_start_ns = time_ns()
-    storage = _one_center_atomic_term_storage_resolution(
-        bundle;
-        expansion = expansion,
-        retain_term_tensors = retain_term_tensors,
-    )
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     sequence_start_ns = time_ns()
     n = length(bundle.basis)
     sequence = _build_one_center_atomic_shell_sequence(
         bundle,
         (1:n, 1:n, 1:n);
         timing_collector = collector,
-        term_storage = storage.term_storage,
-        term_coefficients = storage.term_coefficients,
+        term_coefficients = term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -6030,11 +5805,10 @@ end
 function one_center_atomic_full_parent_fixed_block(
     basis::MappedUniformBasis;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
-    exponents::AbstractVector{<:Real} = Float64[],
+    exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
-    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     kwargs...,
@@ -6057,24 +5831,18 @@ function one_center_atomic_full_parent_fixed_block(
         return one_center_atomic_full_parent_fixed_block(
             bundle;
             expansion = expansion,
-            retain_term_tensors = retain_term_tensors,
             timing = false,
             kwargs...,
         )
     end
-    storage = _one_center_atomic_term_storage_resolution(
-        bundle;
-        expansion = expansion,
-        retain_term_tensors = retain_term_tensors,
-    )
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     sequence_start_ns = time_ns()
     n = length(bundle.basis)
     sequence = _build_one_center_atomic_shell_sequence(
         bundle,
         (1:n, 1:n, 1:n);
         timing_collector = collector,
-        term_storage = storage.term_storage,
-        term_coefficients = storage.term_coefficients,
+        term_coefficients = term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -6104,8 +5872,7 @@ This is a thin convenience wrapper around
 """
 function one_center_atomic_legacy_profile_fixed_block(
     bundle::_MappedOrdinaryGausslet1DBundle;
-    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
-    retain_term_tensors::Bool = false,
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
@@ -6117,11 +5884,7 @@ function one_center_atomic_legacy_profile_fixed_block(
     )
     collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
     total_start_ns = time_ns()
-    storage = _one_center_atomic_term_storage_resolution(
-        bundle;
-        expansion = expansion,
-        retain_term_tensors = retain_term_tensors,
-    )
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     sequence_start_ns = time_ns()
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
     sequence = _build_one_center_atomic_shell_sequence(
@@ -6129,8 +5892,7 @@ function one_center_atomic_legacy_profile_fixed_block(
         normalized_working_box;
         nside = nside,
         timing_collector = collector,
-        term_storage = storage.term_storage,
-        term_coefficients = storage.term_coefficients,
+        term_coefficients = term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -6147,11 +5909,10 @@ end
 function one_center_atomic_legacy_profile_fixed_block(
     basis::MappedUniformBasis;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
-    exponents::AbstractVector{<:Real} = Float64[],
+    exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
-    retain_term_tensors::Bool = false,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
     working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
@@ -6176,18 +5937,13 @@ function one_center_atomic_legacy_profile_fixed_block(
         return one_center_atomic_legacy_profile_fixed_block(
             bundle;
             expansion = expansion,
-            retain_term_tensors = retain_term_tensors,
             timing = false,
             working_box = working_box,
             nside = nside,
             kwargs...,
         )
     end
-    storage = _one_center_atomic_term_storage_resolution(
-        bundle;
-        expansion = expansion,
-        retain_term_tensors = retain_term_tensors,
-    )
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
     sequence_start_ns = time_ns()
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
     sequence = _build_one_center_atomic_shell_sequence(
@@ -6195,8 +5951,7 @@ function one_center_atomic_legacy_profile_fixed_block(
         normalized_working_box;
         nside = nside,
         timing_collector = collector,
-        term_storage = storage.term_storage,
-        term_coefficients = storage.term_coefficients,
+        term_coefficients = term_coefficients,
         kwargs...,
     )
     _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
@@ -6327,9 +6082,14 @@ end
 
 function one_center_atomic_nested_structure_diagnostics(
     bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     nside::Int,
 )
-    sequence = build_one_center_atomic_full_parent_shell_sequence(bundle; nside = nside)
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        bundle;
+        expansion = expansion,
+        nside = nside,
+    )
     return one_center_atomic_nested_structure_diagnostics(
         sequence;
         parent_side_count = length(bundle.basis),
@@ -6339,7 +6099,8 @@ end
 
 function one_center_atomic_nested_structure_diagnostics(
     basis::MappedUniformBasis;
-    exponents::AbstractVector{<:Real} = Float64[],
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
@@ -6352,7 +6113,11 @@ function one_center_atomic_nested_structure_diagnostics(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    return one_center_atomic_nested_structure_diagnostics(bundle; nside = nside)
+    return one_center_atomic_nested_structure_diagnostics(
+        bundle;
+        expansion = expansion,
+        nside = nside,
+    )
 end
 
 function one_center_atomic_nested_structure_report(
@@ -8004,6 +7769,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
     retain_x_edge::Int = 3,
     retain_y_edge::Int = 3,
     retain_z_edge::Int = 3,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     current_box = parent_box
     shared_shell_layers = _CartesianNestedCompleteShell3D[]
@@ -8038,6 +7804,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             x_fixed = (first(current_box[1]), last(current_box[1])),
             y_fixed = (first(current_box[2]), last(current_box[2])),
             z_fixed = (first(current_box[3]), last(current_box[3])),
+            term_coefficients = term_coefficients,
         )
         push!(shared_shell_layers, shell)
         push!(shared_shell_dimensions, size(shell.coefficient_matrix, 2))
@@ -8068,6 +7835,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             retain_x_edge = retain_x_edge,
             retain_y_edge = retain_y_edge,
             retain_z_edge = retain_z_edge,
+            term_coefficients = term_coefficients,
         )
         merged_sequence =
             isempty(shared_shell_layers) ? leaf_sequence :
@@ -8076,6 +7844,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
                 leaf_sequence.support_indices,
                 leaf_sequence.coefficient_matrix,
                 shared_shell_layers,
+                term_coefficients = term_coefficients,
             )
         node = _BondAlignedHomonuclearChainNodeGeometry3D(
             String(node_label),
@@ -8121,6 +7890,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             retain_x_edge = retain_x_edge,
             retain_y_edge = retain_y_edge,
             retain_z_edge = retain_z_edge,
+            term_coefficients = term_coefficients,
         ) for index in eachindex(candidate.child_boxes)
     ]
     child_nodes = [result.geometry for result in child_results]
@@ -8139,12 +7909,14 @@ function _nested_bond_aligned_homonuclear_chain_node(
             core_coefficients,
             _AbstractCartesianNestedShellLayer3D[];
             enforce_coverage = false,
+            term_coefficients = term_coefficients,
         ) :
         _nested_shell_sequence_from_core_block(
             bundles,
             core_support,
             core_coefficients,
             shared_shell_layers,
+            term_coefficients = term_coefficients,
         )
     node = _BondAlignedHomonuclearChainNodeGeometry3D(
         String(node_label),
@@ -8185,6 +7957,7 @@ function _nested_bond_aligned_homonuclear_chain_source(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
         nside;
@@ -8214,6 +7987,7 @@ function _nested_bond_aligned_homonuclear_chain_source(
         retain_x_edge = retention.retain_x_edge,
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
+        term_coefficients = term_coefficients,
     )
     return _CartesianNestedBondAlignedHomonuclearChainSource3D(
         basis,
@@ -8607,6 +8381,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
     retain_x_edge::Int = 3,
     retain_y_edge::Int = 3,
     retain_z_edge::Int = 3,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     current_box = parent_box
     shared_shell_layers = _CartesianNestedCompleteShell3D[]
@@ -8646,6 +8421,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
             x_fixed = (first(current_box[1]), last(current_box[1])),
             y_fixed = (first(current_box[2]), last(current_box[2])),
             z_fixed = (first(current_box[3]), last(current_box[3])),
+            term_coefficients = term_coefficients,
         )
         push!(shared_shell_layers, shell)
         push!(shared_shell_dimensions, size(shell.coefficient_matrix, 2))
@@ -8680,6 +8456,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
             retain_x_edge = retain_x_edge,
             retain_y_edge = retain_y_edge,
             retain_z_edge = retain_z_edge,
+            term_coefficients = term_coefficients,
         )
         merged_sequence =
             isempty(shared_shell_layers) ? leaf_sequence :
@@ -8688,6 +8465,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
                 leaf_sequence.support_indices,
                 leaf_sequence.coefficient_matrix,
                 shared_shell_layers,
+                term_coefficients = term_coefficients,
             )
         node = _AxisAlignedHomonuclearSquareLatticeNodeGeometry3D(
             String(node_label),
@@ -8733,6 +8511,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
             retain_x_edge = retain_x_edge,
             retain_y_edge = retain_y_edge,
             retain_z_edge = retain_z_edge,
+            term_coefficients = term_coefficients,
         ) for index in eachindex(candidate.child_boxes)
     ]
     child_nodes = [result.geometry for result in child_results]
@@ -8751,12 +8530,14 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
             core_coefficients,
             _AbstractCartesianNestedShellLayer3D[];
             enforce_coverage = false,
+            term_coefficients = term_coefficients,
         ) :
         _nested_shell_sequence_from_core_block(
             bundles,
             core_support,
             core_coefficients,
             shared_shell_layers,
+            term_coefficients = term_coefficients,
         )
     node = _AxisAlignedHomonuclearSquareLatticeNodeGeometry3D(
         String(node_label),
@@ -8796,6 +8577,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_source(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
         nside;
@@ -8824,6 +8606,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_source(
         retain_x_edge = retention.retain_x_edge,
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
+        term_coefficients = term_coefficients,
     )
     return _CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D(
         basis,
@@ -8850,6 +8633,7 @@ function _nested_hierarchical_core_refinement(
     retain_x_edge::Int = 2,
     retain_y_edge::Int = 2,
     retain_z_edge::Int = 2,
+    kwargs...,
 )
     length(x_interval) >= 5 || throw(
         ArgumentError("hierarchical core refinement requires an x interval of length at least 5"),
@@ -8878,6 +8662,7 @@ function _nested_hierarchical_core_refinement(
         x_fixed = (first(x_interval), last(x_interval)),
         y_fixed = (first(y_interval), last(y_interval)),
         z_fixed = (first(z_interval), last(z_interval)),
+        kwargs...,
     )
     return _nested_shell_sequence(
         pgdg,
@@ -8885,6 +8670,7 @@ function _nested_hierarchical_core_refinement(
         inner_y,
         inner_z,
         [inner_shell],
+        kwargs...,
     )
 end
 
@@ -8924,6 +8710,7 @@ function _nested_shell_sequence_with_hierarchical_core_refinement(
         refined_core.support_indices,
         refined_core.coefficient_matrix,
         shell_layers,
+        kwargs...,
     )
     return (
         refined_core = refined_core,
@@ -8956,6 +8743,7 @@ function _nested_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
+    kwargs...,
 )
     return _nested_shell_sequence(
         bundle.pgdg_intermediate,
@@ -8964,6 +8752,7 @@ function _nested_shell_sequence(
         z_interval,
         shell_layers;
         enforce_coverage = enforce_coverage,
+        kwargs...,
     )
 end
 
@@ -8978,6 +8767,7 @@ function _nested_nside_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     nside::Int = 5,
+    kwargs...,
 )
     shrunk_x, shrunk_y, shrunk_z = _nested_shrunk_box(
         x_interval,
@@ -9005,6 +8795,7 @@ function _nested_nside_shell_sequence(
         core_data.coefficient_matrix,
         shell_layers;
         enforce_coverage = false,
+        kwargs...,
     )
 end
 
@@ -9015,6 +8806,7 @@ function _nested_nside_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     nside::Int = 5,
+    kwargs...,
 )
     return _nested_nside_shell_sequence(
         bundle.pgdg_intermediate,
@@ -9023,6 +8815,7 @@ function _nested_nside_shell_sequence(
         z_interval,
         shell_layers;
         nside = nside,
+        kwargs...,
     )
 end
 

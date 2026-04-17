@@ -1074,6 +1074,7 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
         bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
             source_basis;
             exponents = expansion.exponents,
@@ -1089,6 +1090,7 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
             retain_xy = (4, 3),
             retain_xz = (4, 3),
             retain_yz = (4, 3),
+            term_coefficients = term_coefficients,
         )
         fixed_block = GaussletBases._nested_fixed_block(shell, bundle)
         shell_plus_core = GaussletBases._nested_shell_plus_core(
@@ -1097,6 +1099,7 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
             interval,
             interval,
             interval,
+            term_coefficients = term_coefficients,
         )
         fixed_block_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
         legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
@@ -1156,6 +1159,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
         bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
             source_basis;
             exponents = expansion.exponents,
@@ -1174,6 +1178,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             x_fixed = (3, 15),
             y_fixed = (3, 15),
             z_fixed = (3, 15),
+            term_coefficients = term_coefficients,
         )
         shell_plus_core = GaussletBases._nested_shell_plus_core(
             bundle,
@@ -1181,6 +1186,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             core_interval,
             core_interval,
             core_interval,
+            term_coefficients = term_coefficients,
         )
         fixed_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
         outer_interval = 3:15
@@ -1195,6 +1201,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             x_fixed = (2, 16),
             y_fixed = (2, 16),
             z_fixed = (2, 16),
+            term_coefficients = term_coefficients,
         )
         shell_sequence = GaussletBases._nested_shell_sequence(
             bundle,
@@ -1203,6 +1210,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             core_interval,
             [shell1, shell2];
             enforce_coverage = false,
+            term_coefficients = term_coefficients,
         )
         fixed_sequence = GaussletBases._nested_fixed_block(shell_sequence, bundle)
         legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
@@ -1265,6 +1273,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
         bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
             source_basis;
             exponents = expansion.exponents,
@@ -1283,6 +1292,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             x_fixed = (3, 15),
             y_fixed = (3, 15),
             z_fixed = (3, 15),
+            term_coefficients = term_coefficients,
         )
         middle_interval = 5:13
         shell2 = GaussletBases._nested_rectangular_shell(
@@ -1296,6 +1306,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             x_fixed = (4, 14),
             y_fixed = (4, 14),
             z_fixed = (4, 14),
+            term_coefficients = term_coefficients,
         )
         inner_shell_interval = 6:12
         shell3 = GaussletBases._nested_rectangular_shell(
@@ -1309,6 +1320,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             x_fixed = (5, 13),
             y_fixed = (5, 13),
             z_fixed = (5, 13),
+            term_coefficients = term_coefficients,
         )
         inner_direct_interval = 7:11
         grow_sequence = GaussletBases._nested_shell_sequence(
@@ -1318,6 +1330,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             inner_direct_interval,
             [shell1, shell2, shell3];
             enforce_coverage = false,
+            term_coefficients = term_coefficients,
         )
         shrinking_sequence = GaussletBases._nested_nside_shell_sequence(
             bundle,
@@ -1326,6 +1339,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             core_interval,
             [shell1, shell2, shell3];
             nside = nside,
+            term_coefficients = term_coefficients,
         )
         fixed_grow = GaussletBases._nested_fixed_block(grow_sequence, bundle)
         fixed_shrink = GaussletBases._nested_fixed_block(shrinking_sequence, bundle)
@@ -2062,6 +2076,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
         bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
             source_basis;
             exponents = expansion.exponents,
@@ -2082,6 +2097,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval1) - 1, last(interval1) + 1),
             y_fixed = (first(interval1) - 1, last(interval1) + 1),
             z_fixed = (first(interval1) - 1, last(interval1) + 1),
+            term_coefficients = term_coefficients,
         )
         shell2_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -2094,6 +2110,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval2) - 1, last(interval2) + 1),
             y_fixed = (first(interval2) - 1, last(interval2) + 1),
             z_fixed = (first(interval2) - 1, last(interval2) + 1),
+            term_coefficients = term_coefficients,
         )
         shell3_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -2106,6 +2123,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval3) - 1, last(interval3) + 1),
             y_fixed = (first(interval3) - 1, last(interval3) + 1),
             z_fixed = (first(interval3) - 1, last(interval3) + 1),
+            term_coefficients = term_coefficients,
         )
         shell4_face = GaussletBases._nested_rectangular_shell(
             bundle,
@@ -2118,6 +2136,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval4) - 1, last(interval4) + 1),
             y_fixed = (first(interval4) - 1, last(interval4) + 1),
             z_fixed = (first(interval4) - 1, last(interval4) + 1),
+            term_coefficients = term_coefficients,
         )
 
         shell1_complete = GaussletBases._nested_complete_rectangular_shell(
@@ -2134,6 +2153,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval1) - 1, last(interval1) + 1),
             y_fixed = (first(interval1) - 1, last(interval1) + 1),
             z_fixed = (first(interval1) - 1, last(interval1) + 1),
+            term_coefficients = term_coefficients,
         )
         shell2_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -2149,6 +2169,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval2) - 1, last(interval2) + 1),
             y_fixed = (first(interval2) - 1, last(interval2) + 1),
             z_fixed = (first(interval2) - 1, last(interval2) + 1),
+            term_coefficients = term_coefficients,
         )
         shell3_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -2164,6 +2185,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval3) - 1, last(interval3) + 1),
             y_fixed = (first(interval3) - 1, last(interval3) + 1),
             z_fixed = (first(interval3) - 1, last(interval3) + 1),
+            term_coefficients = term_coefficients,
         )
         shell4_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
@@ -2179,6 +2201,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             x_fixed = (first(interval4) - 1, last(interval4) + 1),
             y_fixed = (first(interval4) - 1, last(interval4) + 1),
             z_fixed = (first(interval4) - 1, last(interval4) + 1),
+            term_coefficients = term_coefficients,
         )
 
         shell_plus_core = GaussletBases._nested_shell_plus_core(
@@ -2187,6 +2210,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             interval1,
             interval1,
             interval1,
+            term_coefficients = term_coefficients,
         )
         face_sequence = GaussletBases._nested_shell_sequence(
             bundle,
@@ -2195,6 +2219,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             core5,
             [shell1_face, shell2_face, shell3_face, shell4_face];
             enforce_coverage = false,
+            term_coefficients = term_coefficients,
         )
         complete_sequence = GaussletBases._nested_shell_sequence(
             bundle,
@@ -2202,6 +2227,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             core5,
             core5,
             [shell1_complete, shell2_complete, shell3_complete, shell4_complete],
+            term_coefficients = term_coefficients,
         )
 
         fixed_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
@@ -2322,6 +2348,7 @@ function _nested_qiu_white_hierarchical_core_fixture(; basis_name::String = "cc-
         )
 
         expansion = coulomb_gaussian_expansion(doacc = false)
+        term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
         refined_data = GaussletBases._nested_shell_sequence_with_hierarchical_core_refinement(
             bundle,
             core5,
@@ -2334,6 +2361,7 @@ function _nested_qiu_white_hierarchical_core_fixture(; basis_name::String = "cc-
             retain_x_edge = 2,
             retain_y_edge = 2,
             retain_z_edge = 2,
+            term_coefficients = term_coefficients,
         )
         fixed_refined_sequence = GaussletBases._nested_fixed_block(refined_data.sequence, bundle)
         refined_sequence_ops = ordinary_cartesian_qiu_white_operators(
@@ -4093,6 +4121,7 @@ end
         refinement_levels = 0,
     )
     pgdg = bundle.pgdg_intermediate
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
     interval = 2:(length(basis) - 1)
     shell = GaussletBases._nested_xy_shell_pair(
         bundle,
@@ -4100,6 +4129,7 @@ end
         interval;
         retain_x = 4,
         retain_y = 3,
+        term_coefficients = term_coefficients,
     )
     packet = shell.packet
     face_low, face_high = shell.faces
@@ -4125,8 +4155,10 @@ end
     @test packet.x2_x ≈ transpose(packet.x2_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_y ≈ transpose(packet.x2_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test size(packet.gaussian_terms) == (3, 18, 18)
-    @test size(packet.pair_terms) == (3, 18, 18)
+    @test isnothing(packet.gaussian_terms)
+    @test isnothing(packet.pair_terms)
+    @test !isnothing(packet.gaussian_sum)
+    @test !isnothing(packet.pair_sum)
     support_coefficients = GaussletBases._nested_support_coefficient_slice(
         shell.coefficient_matrix,
         shell.support_indices,
@@ -4143,25 +4175,29 @@ end
     fixed_weights = vec(transpose(support_coefficients) * support_weights)
     weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
     @test weighted_support_coefficients isa SparseMatrixCSC{Float64,Int}
-    pair_term_1d_raw = @view(pgdg.pair_factor_terms_raw[1, :, :])
-    pair_support = GaussletBases._nested_support_product_matrix(
-        shell.support_states,
-        pair_term_1d_raw,
-        pair_term_1d_raw,
-        pair_term_1d_raw,
+    support_axes = GaussletBases._nested_support_axes(shell.support_states)
+    gaussian_reference = GaussletBases._nested_support_reference_gaussian_sum(
+        support_axes,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        pgdg.gaussian_factor_terms,
+        pgdg.gaussian_factor_terms,
+        pgdg.gaussian_factor_terms,
     )
-    pair_reference = transpose(weighted_support_coefficients) * pair_support * weighted_support_coefficients
-    gaussian_support = GaussletBases._nested_support_product_matrix(
-        shell.support_states,
-        @view(pgdg.gaussian_factor_terms[1, :, :]),
-        @view(pgdg.gaussian_factor_terms[1, :, :]),
-        @view(pgdg.gaussian_factor_terms[1, :, :]),
+    pair_reference = GaussletBases._nested_support_reference_pair_sum(
+        support_axes,
+        weighted_support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
+        pgdg.pair_factor_terms_raw,
     )
-    gaussian_reference = transpose(support_coefficients) * gaussian_support * support_coefficients
-    @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
-    @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
-    @test packet.gaussian_terms[1, :, :] ≈ gaussian_reference atol = 1.0e-10 rtol = 1.0e-10
-    @test packet.pair_terms[1, :, :] ≈ pair_reference atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.gaussian_sum ≈ gaussian_reference atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.pair_sum ≈ pair_reference atol = 1.0e-10 rtol = 1.0e-10
     @test low_z_mean < 0.0
     @test high_z_mean > 0.0
 end
@@ -4180,6 +4216,7 @@ end
         refinement_levels = 0,
     )
     pgdg = bundle.pgdg_intermediate
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
     interval = 2:(length(basis) - 1)
     shell = GaussletBases._nested_rectangular_shell(
         bundle,
@@ -4189,6 +4226,7 @@ end
         retain_xy = (4, 3),
         retain_xz = (4, 3),
         retain_yz = (4, 3),
+        term_coefficients = term_coefficients,
     )
     support_states = shell.support_states
     support_coefficients = Matrix{Float64}(shell.coefficient_matrix[shell.support_indices, :])
@@ -4275,6 +4313,7 @@ end
         refinement_levels = 0,
     )
     interval = 2:(length(basis) - 1)
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
     shell = GaussletBases._nested_rectangular_shell(
         bundle,
         interval,
@@ -4283,6 +4322,7 @@ end
         retain_xy = (4, 3),
         retain_xz = (4, 3),
         retain_yz = (4, 3),
+        term_coefficients = term_coefficients,
     )
     packet = shell.packet
     direct_overlap = transpose(shell.coefficient_matrix) * shell.coefficient_matrix
@@ -4305,10 +4345,45 @@ end
     @test packet.position_x ≈ transpose(packet.position_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_y ≈ transpose(packet.position_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_z ≈ transpose(packet.position_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test size(packet.gaussian_terms) == (3, 54, 54)
-    @test size(packet.pair_terms) == (3, 54, 54)
-    @test maximum(abs.(packet.gaussian_terms[1, :, :] .- transpose(packet.gaussian_terms[1, :, :]))) < 1.0e-10
-    @test maximum(abs.(packet.pair_terms[1, :, :] .- transpose(packet.pair_terms[1, :, :]))) < 1.0e-10
+    @test isnothing(packet.gaussian_terms)
+    @test isnothing(packet.pair_terms)
+    @test !isnothing(packet.gaussian_sum)
+    @test !isnothing(packet.pair_sum)
+    support_coefficients = GaussletBases._nested_support_coefficient_slice(
+        shell.coefficient_matrix,
+        shell.support_indices,
+    )
+    support_workspace, contraction_scratch = GaussletBases._nested_support_reference_workspaces(
+        support_coefficients,
+        length(shell.support_indices),
+        size(shell.coefficient_matrix, 2),
+    )
+    support_axes = GaussletBases._nested_support_axes(shell.support_states)
+    support_weights = GaussletBases._nested_support_weights(shell.support_states, bundle.pgdg_intermediate.weights)
+    fixed_weights = vec(transpose(support_coefficients) * support_weights)
+    weighted_support_coefficients = support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
+    gaussian_reference = GaussletBases._nested_support_reference_gaussian_sum(
+        support_axes,
+        support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        bundle.pgdg_intermediate.gaussian_factor_terms,
+        bundle.pgdg_intermediate.gaussian_factor_terms,
+        bundle.pgdg_intermediate.gaussian_factor_terms,
+    )
+    pair_reference = GaussletBases._nested_support_reference_pair_sum(
+        support_axes,
+        weighted_support_coefficients,
+        support_workspace,
+        contraction_scratch,
+        term_coefficients,
+        bundle.pgdg_intermediate.pair_factor_terms_raw,
+        bundle.pgdg_intermediate.pair_factor_terms_raw,
+        bundle.pgdg_intermediate.pair_factor_terms_raw,
+    )
+    @test packet.gaussian_sum ≈ gaussian_reference atol = 1.0e-10 rtol = 1.0e-10
+    @test packet.pair_sum ≈ pair_reference atol = 1.0e-10 rtol = 1.0e-10
 
     for (face, columns) in zip(shell.faces, shell.face_column_ranges)
         mean_value =
@@ -4351,8 +4426,10 @@ end
     @test length(fixed_block.support_indices) == length(shell.support_indices)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
     @test fixed_block.overlap ≈ shell.packet.overlap atol = 0.0 rtol = 0.0
-    @test maximum(abs.(fixed_block.gaussian_terms[1, :, :] .- shell.packet.gaussian_terms[1, :, :])) == 0.0
-    @test maximum(abs.(fixed_block.pair_terms[1, :, :] .- shell.packet.pair_terms[1, :, :])) == 0.0
+    @test isnothing(fixed_block.gaussian_terms)
+    @test isnothing(fixed_block.pair_terms)
+    @test fixed_block.gaussian_sum ≈ shell.packet.gaussian_sum atol = 0.0 rtol = 0.0
+    @test fixed_block.pair_sum ≈ shell.packet.pair_sum atol = 0.0 rtol = 0.0
 
     @test baseline.interaction_treatment == :ggt_nearest
     @test nested.interaction_treatment == :ggt_nearest
@@ -4952,24 +5029,11 @@ end
         expansion = expansion,
         nside = 5,
     )
-    debug_full = one_center_atomic_full_parent_fixed_block(
-        basis;
-        expansion = expansion,
-        nside = 5,
-        retain_term_tensors = true,
-    )
     compact_legacy = one_center_atomic_legacy_profile_fixed_block(
         basis;
         expansion = expansion,
         working_box = 2:12,
         nside = 5,
-    )
-    debug_legacy = one_center_atomic_legacy_profile_fixed_block(
-        basis;
-        expansion = expansion,
-        working_box = 2:12,
-        nside = 5,
-        retain_term_tensors = true,
     )
 
     @test compact_full.term_storage == :compact_production
@@ -4977,27 +5041,26 @@ end
     @test isnothing(compact_full.pair_terms)
     @test !isnothing(compact_full.gaussian_sum)
     @test !isnothing(compact_full.pair_sum)
-    @test debug_full.term_storage == :full_debug
-    @test !isnothing(debug_full.gaussian_terms)
-    @test !isnothing(debug_full.pair_terms)
 
     @test compact_legacy.term_storage == :compact_production
     @test isnothing(compact_legacy.gaussian_terms)
     @test isnothing(compact_legacy.pair_terms)
     @test !isnothing(compact_legacy.gaussian_sum)
     @test !isnothing(compact_legacy.pair_sum)
-    @test debug_legacy.term_storage == :full_debug
-    @test !isnothing(debug_legacy.gaussian_terms)
-    @test !isnothing(debug_legacy.pair_terms)
 
-    @test GaussletBases._qwrg_fixed_block_one_body_matrix(compact_full, expansion; Z = 2.0) ≈
-        GaussletBases._qwrg_fixed_block_one_body_matrix(debug_full, expansion; Z = 2.0) atol = 1.0e-10 rtol = 1.0e-10
-    @test GaussletBases._qwrg_fixed_block_interaction_matrix(compact_full, expansion) ≈
-        GaussletBases._qwrg_fixed_block_interaction_matrix(debug_full, expansion) atol = 1.0e-10 rtol = 1.0e-10
-    @test GaussletBases._qwrg_fixed_block_one_body_matrix(compact_legacy, expansion; Z = 2.0) ≈
-        GaussletBases._qwrg_fixed_block_one_body_matrix(debug_legacy, expansion; Z = 2.0) atol = 1.0e-10 rtol = 1.0e-10
-    @test GaussletBases._qwrg_fixed_block_interaction_matrix(compact_legacy, expansion) ≈
-        GaussletBases._qwrg_fixed_block_interaction_matrix(debug_legacy, expansion) atol = 1.0e-10 rtol = 1.0e-10
+    @test_throws MethodError one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion = expansion,
+        nside = 5,
+        retain_term_tensors = true,
+    )
+    @test_throws MethodError one_center_atomic_legacy_profile_fixed_block(
+        basis;
+        expansion = expansion,
+        working_box = 2:12,
+        nside = 5,
+        retain_term_tensors = true,
+    )
 end
 
 @testset "Cartesian basis representation for direct-product QW bases" begin
@@ -6389,6 +6452,7 @@ end
         ),
     )
     expansion = coulomb_gaussian_expansion(doacc = false)
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
         exponents = expansion.exponents,
@@ -6405,6 +6469,7 @@ end
         retain_xz = (4, 3),
         retain_yz = (4, 3),
         packet_kernel = :factorized_direct,
+        term_coefficients = term_coefficients,
     )
     factorized = GaussletBases._nested_extract_factorized_basis(
         shell.coefficient_matrix,
@@ -6419,24 +6484,28 @@ end
         (1:13, 1:13, 1:13);
         nside = 5,
         packet_kernel = :support_reference,
+        term_coefficients = term_coefficients,
     )
     full_direct = GaussletBases._build_one_center_atomic_shell_sequence(
         bundle,
         (1:13, 1:13, 1:13);
         nside = 5,
         packet_kernel = :factorized_direct,
+        term_coefficients = term_coefficients,
     )
     legacy_reference = GaussletBases._build_one_center_atomic_shell_sequence(
         bundle,
         (2:12, 2:12, 2:12);
         nside = 5,
         packet_kernel = :support_reference,
+        term_coefficients = term_coefficients,
     )
     legacy_direct = GaussletBases._build_one_center_atomic_shell_sequence(
         bundle,
         (2:12, 2:12, 2:12);
         nside = 5,
         packet_kernel = :factorized_direct,
+        term_coefficients = term_coefficients,
     )
 
     fixed_full_reference = GaussletBases._nested_fixed_block(full_reference, bundle)
@@ -6453,8 +6522,12 @@ end
     @test fixed_full_direct.x2_y ≈ fixed_full_reference.x2_y atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.x2_z ≈ fixed_full_reference.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.weights ≈ fixed_full_reference.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test fixed_full_direct.gaussian_terms ≈ fixed_full_reference.gaussian_terms atol = 1.0e-10 rtol = 1.0e-10
-    @test fixed_full_direct.pair_terms ≈ fixed_full_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
+    @test isnothing(fixed_full_direct.gaussian_terms)
+    @test isnothing(fixed_full_direct.pair_terms)
+    @test isnothing(fixed_full_reference.gaussian_terms)
+    @test isnothing(fixed_full_reference.pair_terms)
+    @test fixed_full_direct.gaussian_sum ≈ fixed_full_reference.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_full_direct.pair_sum ≈ fixed_full_reference.pair_sum atol = 1.0e-10 rtol = 1.0e-10
 
     @test fixed_legacy_direct.overlap ≈ fixed_legacy_reference.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.kinetic ≈ fixed_legacy_reference.kinetic atol = 1.0e-10 rtol = 1.0e-10
@@ -6465,8 +6538,12 @@ end
     @test fixed_legacy_direct.x2_y ≈ fixed_legacy_reference.x2_y atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.x2_z ≈ fixed_legacy_reference.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.weights ≈ fixed_legacy_reference.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test fixed_legacy_direct.gaussian_terms ≈ fixed_legacy_reference.gaussian_terms atol = 1.0e-10 rtol = 1.0e-10
-    @test fixed_legacy_direct.pair_terms ≈ fixed_legacy_reference.pair_terms atol = 1.0e-10 rtol = 1.0e-10
+    @test isnothing(fixed_legacy_direct.gaussian_terms)
+    @test isnothing(fixed_legacy_direct.pair_terms)
+    @test isnothing(fixed_legacy_reference.gaussian_terms)
+    @test isnothing(fixed_legacy_reference.pair_terms)
+    @test fixed_legacy_direct.gaussian_sum ≈ fixed_legacy_reference.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
+    @test fixed_legacy_direct.pair_sum ≈ fixed_legacy_reference.pair_sum atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "QW residual-space keep policy is near-null-only and stabilized" begin
@@ -6867,6 +6944,7 @@ end
         GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_complete_sequence, expansion),
         projected_complete,
     )
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     @test abs(projected_shell_plus_core_vee - parent_ground_vee) < 1.0e-4
     @test abs(projected_complete_vee - parent_ground_vee) < 5.0e-4
     @test_throws ArgumentError GaussletBases._nested_shell_sequence(
@@ -6875,6 +6953,7 @@ end
         core5,
         core5,
         [shell1_face, shell2_face, shell3_face, shell4_face],
+        term_coefficients = term_coefficients,
     )
     @test_throws ArgumentError GaussletBases._nested_shell_sequence(
         bundle,
@@ -6882,6 +6961,7 @@ end
         core5,
         core5,
         [shell1_complete, shell2_complete, shell3_complete],
+        term_coefficients = term_coefficients,
     )
 end
 
