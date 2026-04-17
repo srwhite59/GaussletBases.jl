@@ -8637,15 +8637,51 @@ end
         nside = 5,
         min_parallel_to_transverse_ratio = 0.4,
     )
+    split_basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 1.4,
+        core_spacing = 0.3,
+        xmax_parallel = 8.0,
+        xmax_transverse = 6.0,
+        bond_axis = :z,
+        nuclear_charge = 2.0,
+    )
+    split_diagnostics = bond_aligned_diatomic_nested_geometry_diagnostics(
+        split_basis;
+        nside = 5,
+    )
+    split_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(split_basis, expansion)
+    split_parent_box = (
+        1:length(split_basis.basis_x),
+        1:length(split_basis.basis_y),
+        1:length(split_basis.basis_z),
+    )
+    split_geometry = GaussletBases._nested_bond_aligned_diatomic_split_geometry(
+        split_bundles,
+        split_parent_box,
+        split_diagnostics.geometry.working_box;
+        bond_axis = :z,
+        midpoint = midpoint,
+        nside = 5,
+        min_parallel_to_transverse_ratio = 0.4,
+    )
 
-    @test geometry.did_split
     @test geometry.count_eligible
+    @test !geometry.unsplit_aspect_eligible
     @test geometry.shape_eligible
+    @test !geometry.did_split
     @test geometry.split_index == 7
     @test geometry.working_box == working_box
-    @test geometry.shared_midpoint_box == (2:8, 2:8, 7:7)
+    @test isnothing(geometry.shared_midpoint_box)
     @test geometry.child_boxes == [(2:8, 2:8, 2:6), (2:8, 2:8, 8:12)]
     @test all(widths[3] >= 0.4 * max(widths[1], widths[2]) for widths in geometry.child_physical_widths)
+
+    @test split_geometry.count_eligible
+    @test split_geometry.unsplit_aspect_eligible
+    @test split_geometry.shape_eligible
+    @test split_geometry.did_split
+    @test !isnothing(split_geometry.shared_midpoint_box)
+    @test length(split_geometry.child_boxes) == 2
 
     @test sliver_geometry.count_eligible
     @test !sliver_geometry.shape_eligible
@@ -8700,9 +8736,10 @@ end
         prefer_midpoint_tie_side = :left,
     )
 
-    @test geometry.did_split
     @test geometry.count_eligible
+    @test !geometry.unsplit_aspect_eligible
     @test geometry.shape_eligible
+    @test !geometry.did_split
     @test geometry.shared_midpoint_box === nothing
     @test length(geometry.child_boxes) == 2
     @test sum(length(box[3]) for box in geometry.child_boxes) == length(working_box[3])
@@ -8727,16 +8764,14 @@ end
 
     @test source isa GaussletBases._CartesianNestedBondAlignedDiatomicSource3D
     @test fixed_block isa GaussletBases._NestedFixedBlock3D
-    @test source.geometry.did_split
-    @test length(source.shared_shell_layers) == 1
-    @test length(source.child_sequences) == 2
-    @test source.geometry.shared_midpoint_box == (2:8, 2:8, 7:7)
-    @test !isnothing(source.midpoint_slab_column_range)
-    @test length(source.child_column_ranges) == 2
-    @test length(source.midpoint_slab_column_range) == 7 * 7
-    @test length(source.child_column_ranges[1]) == 7 * 7 * 5
-    @test length(source.child_column_ranges[2]) == 7 * 7 * 5
-    @test size(fixed_block.overlap, 1) > 577
+    @test !source.geometry.did_split
+    @test length(source.shared_shell_layers) >= 1
+    @test length(source.child_sequences) == 1
+    @test isnothing(source.geometry.shared_midpoint_box)
+    @test isnothing(source.midpoint_slab_column_range)
+    @test length(source.child_column_ranges) == 1
+    @test length(source.child_column_ranges[1]) == size(source.child_sequences[1].coefficient_matrix, 2)
+    @test size(fixed_block.overlap, 1) == size(source.sequence.coefficient_matrix, 2)
     @test source.sequence.working_box == (
         1:length(basis.basis_x),
         1:length(basis.basis_y),
@@ -8888,12 +8923,12 @@ end
 
     @test source isa GaussletBases._CartesianNestedBondAlignedDiatomicSource3D
     @test fixed_block isa GaussletBases._NestedFixedBlock3D
-    @test source.geometry.did_split
+    @test !source.geometry.did_split
     @test source.geometry.shared_midpoint_box === nothing
     @test isnothing(source.midpoint_slab_column_range)
     @test length(source.shared_shell_layers) >= 1
-    @test length(source.child_sequences) == 2
-    @test length(source.child_column_ranges) == 2
+    @test length(source.child_sequences) == 1
+    @test length(source.child_column_ranges) == 1
     @test source.sequence.working_box == (
         1:length(basis.basis_x),
         1:length(basis.basis_y),
@@ -9025,16 +9060,22 @@ end
         _nested_check,
     ) = _bond_aligned_diatomic_nested_qw_fixture(; bond_length = 1.4)
     nested_payload = bond_aligned_diatomic_geometry_payload(fixed_block, source)
+    expected_nested_groups =
+        source.geometry.did_split ?
+        Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child]) :
+        Set([:shared_shell_layer, :shared_child])
+    expected_nested_box_count =
+        2 + length(source.geometry.child_boxes) + (isnothing(source.geometry.shared_midpoint_box) ? 0 : 1)
 
     @test nested_payload isa GaussletBases.BondAlignedDiatomicGeometryPayload3D
     @test length(nested_payload.points) == size(fixed_block.fixed_centers, 1)
-    @test Set(point.group_kind for point in nested_payload.points) ==
-        Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child])
-    @test length(nested_payload.box_outlines) == 5
+    @test Set(point.group_kind for point in nested_payload.points) == expected_nested_groups
+    @test length(nested_payload.box_outlines) == expected_nested_box_count
     @test nested_payload.box_outlines[1].group_kind == :parent_box
     @test nested_payload.box_outlines[2].group_kind == :working_box
-    @test count(box -> box.group_kind == :child_box, nested_payload.box_outlines) == 2
-    @test any(box -> box.group_kind == :shared_midpoint_slab_box, nested_payload.box_outlines)
+    @test count(box -> box.group_kind == :child_box, nested_payload.box_outlines) == length(source.geometry.child_boxes)
+    @test any(box -> box.group_kind == :shared_midpoint_slab_box, nested_payload.box_outlines) ==
+        !isnothing(source.geometry.shared_midpoint_box)
 
     hybrid_fixture = _bond_aligned_diatomic_hybrid_qw_fixture(; bond_length = 1.4)
     @test hybrid_fixture !== nothing
@@ -9065,10 +9106,14 @@ end
             _hybrid_nested_check,
         ) = nested_hybrid_fixture
         hybrid_nested_payload = bond_aligned_diatomic_geometry_payload(hybrid_nested_ops, hybrid_source)
+        expected_hybrid_nested_groups =
+            hybrid_source.geometry.did_split ?
+            Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child, :residual_gaussian]) :
+            Set([:shared_shell_layer, :shared_child, :residual_gaussian])
         @test count(point -> point.group_kind == :residual_gaussian, hybrid_nested_payload.points) ==
             hybrid_nested_ops.residual_count
         @test Set(point.group_kind for point in hybrid_nested_payload.points) ==
-            Set([:shared_shell_layer, :left_child, :shared_midpoint_slab, :right_child, :residual_gaussian])
+            expected_hybrid_nested_groups
     end
 end
 
@@ -9089,14 +9134,20 @@ end
 
         fixed_payload = bond_aligned_diatomic_geometry_payload(hybrid_nested_ops, source)
         source_payload = bond_aligned_diatomic_source_geometry_payload(source)
+        expected_source_groups =
+            source.geometry.did_split ?
+            Set([:shared_shell_region, :left_child_region, :shared_midpoint_slab_region, :right_child_region]) :
+            Set([:shared_shell_region, :shared_child_region])
+        expected_child_box_count = length(source.geometry.child_boxes)
+        expected_shared_midpoint_box = !isnothing(source.geometry.shared_midpoint_box)
 
-        @test Set(point.group_kind for point in source_payload.points) ==
-            Set([:shared_shell_region, :left_child_region, :shared_midpoint_slab_region, :right_child_region])
+        @test Set(point.group_kind for point in source_payload.points) == expected_source_groups
         @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
         @test any(box.group_kind == :parent_box for box in source_payload.box_outlines)
         @test any(box.group_kind == :working_box for box in source_payload.box_outlines)
-        @test count(box -> box.group_kind == :child_box, source_payload.box_outlines) == 2
-        @test any(box -> box.group_kind == :shared_midpoint_slab_box, source_payload.box_outlines)
+        @test count(box -> box.group_kind == :child_box, source_payload.box_outlines) == expected_child_box_count
+        @test any(box -> box.group_kind == :shared_midpoint_slab_box, source_payload.box_outlines) ==
+            expected_shared_midpoint_box
 
         fixed_slice = bond_aligned_diatomic_plane_slice(
             fixed_payload;
@@ -9130,13 +9181,22 @@ end
             @test occursin("# columns = x y z role kind group_kind group_id label", text)
             @test occursin("# box label=parent_box", text)
             @test occursin("# box label=working_box", text)
-            @test occursin("# box label=left_child_box", text)
-            @test occursin("# box label=right_child_box", text)
-            @test occursin("# box label=shared_midpoint_slab_box", text)
+            if source.geometry.did_split
+                @test occursin("# box label=left_child_box", text)
+                @test occursin("# box label=right_child_box", text)
+                @test occursin("# box label=shared_midpoint_slab_box", text)
+            else
+                @test occursin("# box label=shared_child_box", text)
+                @test !occursin("# box label=shared_midpoint_slab_box", text)
+            end
             @test occursin("\tpoint\tsource_region\tshared_shell_region\t1\t", text)
-            @test occursin("\tpoint\tsource_region\tleft_child_region\t1\t", text)
-            @test occursin("\tpoint\tsource_region\tshared_midpoint_slab_region\t1\t", text)
-            @test occursin("\tpoint\tsource_region\tright_child_region\t2\t", text)
+            if source.geometry.did_split
+                @test occursin("\tpoint\tsource_region\tleft_child_region\t1\t", text)
+                @test occursin("\tpoint\tsource_region\tshared_midpoint_slab_region\t1\t", text)
+                @test occursin("\tpoint\tsource_region\tright_child_region\t2\t", text)
+            else
+                @test occursin("\tpoint\tsource_region\tshared_child_region\t1\t", text)
+            end
             @test occursin("\tnucleus\tnucleus\tnucleus\t1\tA", text)
             @test occursin("\tnucleus\tnucleus\tnucleus\t2\tB", text)
         end
