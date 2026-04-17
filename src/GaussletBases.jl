@@ -151,6 +151,8 @@ export AbstractFunction1D,
        bond_aligned_homonuclear_chain_qw_basis,
        axis_aligned_homonuclear_square_lattice_qw_basis,
        bond_aligned_heteronuclear_qw_basis,
+       bond_aligned_diatomic_nested_fixed_source,
+       bond_aligned_diatomic_nested_fixed_block,
        bond_aligned_diatomic_nested_geometry_diagnostics,
        bond_aligned_homonuclear_chain_geometry_diagnostics,
        axis_aligned_homonuclear_square_lattice_geometry_diagnostics,
@@ -410,6 +412,8 @@ function coulomb_gaussian_expansion end
 function mapped_pgdg_prototype end
 function mapped_pgdg_localized end
 function hybrid_mapped_ordinary_basis end
+function bond_aligned_diatomic_nested_fixed_source end
+function bond_aligned_diatomic_nested_fixed_block end
 function bond_aligned_diatomic_nested_geometry_diagnostics end
 function bond_aligned_homonuclear_chain_geometry_diagnostics end
 function axis_aligned_homonuclear_square_lattice_qw_basis end

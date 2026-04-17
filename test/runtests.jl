@@ -1632,7 +1632,7 @@ function _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length::Float6
     return _cached_fixture(key, () -> begin
         basis, operators, check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
         expansion = coulomb_gaussian_expansion(doacc = false)
-        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        nested = bond_aligned_diatomic_nested_fixed_block(
             basis;
             expansion = expansion,
         )
@@ -1767,7 +1767,7 @@ function _bond_aligned_diatomic_nested_hybrid_bundle_fixture(;
             bond_axis = bond_axis,
             nuclear_charge = nuclear_charge,
         )
-        source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(basis; nside = nside)
+        source = bond_aligned_diatomic_nested_fixed_source(basis; nside = nside)
         fixed_block = GaussletBases._nested_fixed_block(source)
         supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
             atom,
@@ -1848,7 +1848,7 @@ function _bond_aligned_heteronuclear_nested_fixed_block_fixture(; bond_length::F
             ordinary_check,
         ) = _bond_aligned_heteronuclear_hybrid_qw_fixture(; bond_length = bond_length)
         expansion = coulomb_gaussian_expansion(doacc = false)
-        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        nested = bond_aligned_diatomic_nested_fixed_block(
             basis;
             expansion = expansion,
         )
@@ -1993,7 +1993,7 @@ function _bond_aligned_diatomic_nested_hybrid_qw_shared_shell_experiment_fixture
     return _cached_fixture(key, () -> begin
         basis, parent_ops, parent_check = _bond_aligned_diatomic_qw_fixture(; bond_length = bond_length)
         expansion = coulomb_gaussian_expansion(doacc = false)
-        nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+        nested = bond_aligned_diatomic_nested_fixed_block(
             basis;
             expansion = expansion,
             shared_shell_retain_xy = shared_shell_retain_xy,
@@ -7519,16 +7519,23 @@ end
         basis;
         nside = 5,
     )
-    source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(
+    source = bond_aligned_diatomic_nested_fixed_source(
         basis;
         nside = 5,
     )
     diagnostics_via_source = bond_aligned_diatomic_nested_geometry_diagnostics(source)
-    fixed_via_basis = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+    fixed_via_basis = bond_aligned_diatomic_nested_fixed_block(
         basis;
         nside = 5,
     )
-    fixed_via_source = GaussletBases._bond_aligned_diatomic_nested_fixed_block(source)
+    fixed_via_source = bond_aligned_diatomic_nested_fixed_block(source)
+    source_payload = bond_aligned_diatomic_source_geometry_payload(source)
+    source_slice = bond_aligned_diatomic_plane_slice(
+        source_payload;
+        plane_axis = :y,
+        plane_value = 0.0,
+        plane_tol = 1.0e-5,
+    )
 
     @test diagnostics_via_source.nside == diagnostics_via_basis.nside
     @test diagnostics_via_source.geometry.did_split == diagnostics_via_basis.geometry.did_split
@@ -7572,6 +7579,9 @@ end
         diagnostics_via_basis.contract_audit.expected_support_count
     @test diagnostics_via_source.contract_audit.missing_row_count ==
         diagnostics_via_basis.contract_audit.missing_row_count
+    @test source_payload.bond_axis == basis.bond_axis
+    @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
+    @test source_slice.selected_count > 0
     @test source.sequence.packet.term_storage == :compact_production
     @test isnothing(source.sequence.packet.gaussian_terms)
     @test isnothing(source.sequence.packet.pair_terms)
@@ -8984,7 +8994,7 @@ end
     ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
 
     term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
-    explicit_nested = GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+    explicit_nested = bond_aligned_diatomic_nested_fixed_block(
         basis;
         expansion = expansion,
         term_coefficients = term_coefficients,
@@ -9018,12 +9028,12 @@ end
         GaussletBases._qwrg_fixed_block_interaction_matrix(explicit_fixed_block, expansion) atol =
         1.0e-10 rtol = 1.0e-10
 
-    @test_throws MethodError GaussletBases._bond_aligned_diatomic_nested_fixed_source(
+    @test_throws MethodError bond_aligned_diatomic_nested_fixed_source(
         basis;
         expansion = expansion,
         term_storage = :full_debug,
     )
-    @test_throws MethodError GaussletBases._bond_aligned_diatomic_nested_fixed_block(
+    @test_throws MethodError bond_aligned_diatomic_nested_fixed_block(
         basis;
         expansion = expansion,
         term_storage = :full_debug,
@@ -9722,7 +9732,7 @@ end
         xmax_transverse = 5,
         bond_axis = :z,
     )
-    source = GaussletBases._bond_aligned_diatomic_nested_fixed_source(basis)
+    source = bond_aligned_diatomic_nested_fixed_source(basis)
     traces = GaussletBases._bond_aligned_diatomic_doside_traces(source)
     trace_map = Dict(trace.context_label => trace for trace in traces)
 

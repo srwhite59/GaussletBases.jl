@@ -1287,7 +1287,7 @@ function _resolved_nested_term_coefficients(
     end
 end
 
-function _bond_aligned_diatomic_nested_fixed_source(
+function bond_aligned_diatomic_nested_fixed_source(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     gausslet_backend::Symbol = :numerical_reference,
@@ -1342,7 +1342,14 @@ function _bond_aligned_diatomic_nested_fixed_source(
     end
 end
 
-function _bond_aligned_diatomic_nested_fixed_block(
+function _bond_aligned_diatomic_nested_fixed_source(
+    basis::BondAlignedDiatomicQWBasis3D;
+    kwargs...,
+)
+    return bond_aligned_diatomic_nested_fixed_source(basis; kwargs...)
+end
+
+function bond_aligned_diatomic_nested_fixed_block(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
     return (
@@ -1352,6 +1359,12 @@ function _bond_aligned_diatomic_nested_fixed_block(
 end
 
 function _bond_aligned_diatomic_nested_fixed_block(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return bond_aligned_diatomic_nested_fixed_block(source)
+end
+
+function bond_aligned_diatomic_nested_fixed_block(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     gausslet_backend::Symbol = :numerical_reference,
@@ -1365,7 +1378,7 @@ function _bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    source = _bond_aligned_diatomic_nested_fixed_source(
+    source = bond_aligned_diatomic_nested_fixed_source(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -1380,7 +1393,14 @@ function _bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_yz = shared_shell_retain_yz,
         term_coefficients = term_coefficients,
     )
-    return _bond_aligned_diatomic_nested_fixed_block(source)
+    return bond_aligned_diatomic_nested_fixed_block(source)
+end
+
+function _bond_aligned_diatomic_nested_fixed_block(
+    basis::BondAlignedDiatomicQWBasis3D;
+    kwargs...,
+)
+    return bond_aligned_diatomic_nested_fixed_block(basis; kwargs...)
 end
 
 function _bond_aligned_diatomic_nested_geometry_diagnostics(
@@ -1429,7 +1449,7 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
 )
-    source = _bond_aligned_diatomic_nested_fixed_source(
+    source = bond_aligned_diatomic_nested_fixed_source(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
