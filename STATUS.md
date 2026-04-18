@@ -1,133 +1,143 @@
 # Current Status
 
-Gausslets are localized, orthonormal basis functions built from short linear
-combinations of Gaussians. Their main attraction is that they combine
-systematic grid-like completeness, variable resolution, and explicit Gaussian
-primitive structure with moment properties that support two-index or diagonal
-approximations for the Coulomb interaction.
+This file is the short current **capability / trust matrix** for the repo.
 
-That combination is the scientific center of gravity for this repository. The
-status story below is therefore not only about package layers; it is about
-which current workflows best realize the gausslet goal of compact one-body and
-two-electron Hamiltonian structure.
+It is not a changelog and it is not a roadmap. The question here is simply:
 
-GaussletBases now has three clear layers in the public story:
+- what is mature enough to trust
+- what is real but still experimental
+- what is legacy or quarantined
 
-1. a mature radial / atomic workflow
-2. a real but newer ordinary / Cartesian workflow
-3. a separate advanced/research line for contraction, hierarchy, and
-   prototype PGDG-related work
+## Mature
 
-## Most mature public-facing workflow: radial and atomic calculations
+### Radial / atomic line
 
-The most mature use of the package today is atom-centered radial work.
+Trust this as the primary onboarding path.
 
-This includes:
+Current mature surface includes:
 
 - ordinary 1D, half-line, and radial gausslet bases
-- explicit radial quadrature, separate from the basis
-- radial diagnostics
-- radial overlap, kinetic, nuclear, and centrifugal matrices
-- a first explicit one-electron `(l,m)` atomic layer built on those radial matrices
-- the current two-index IDA-style radial multipole matrices
-- `RadialAtomicOperators`
+- explicit radial quadrature and diagnostics
+- radial one-body operators
+- explicit atomic `(l,m)` channels
+- static atomic IDA ingredients
+- direct / exchange / Fock helpers
+- minimal UHF kernel
+- dense and sliced atomic export for the current density-density model
 
-For a new user, this is the clearest place to begin.
+Primary docs:
 
-## Mature extension of that workflow: the atomic angular line
+- `README.md`
+- `docs/src/explanations/current_atomic_branch.md`
+- `docs/src/manual/index.md`
 
-The package now also has a first explicit atomic angular layer built from channels labeled by `(l,m)`.
+### Exact Cartesian overlap / projector / transfer primitives
 
-This is still a narrow one-electron path, but it is an important step because it makes the hydrogen problem look like an actual radial-plus-angular atomic basis rather than only a radial test problem.
+Trust this as a real current workflow primitive, not as a side note.
 
-The present objects there are:
+Current mature surface includes:
 
-- `YlmChannel`
-- `YlmChannelSet`
-- `AtomicOneBodyOperators`
+- `cross_overlap`
+- `basis_projector`
+- `transfer_orbitals`
 
-This is the right layer to add before the later interacting atomic path.
+These exact Cartesian transfer contracts are now part of the real current repo
+story and support both validation and workflow handoff across current Cartesian
+representation families.
 
-## Mature extension of that workflow: static interacting atomic ingredients
+## Real but experimental
 
-The package now also has a narrow static interacting atomic layer built in the current IDA style.
+### Ordinary / Cartesian mapped and Qiu-White routes
 
-This layer bundles:
+This is a real current workflow surface, but newer and less settled than the
+radial line.
 
-- the one-body atomic blocks
-- the radial multipole tables
-- the angular Gaunt and M-summed kernel data
-- explicit orbital indexing
+Current supported surface includes:
 
-It is an assembly layer only. It does not yet solve the many-electron problem.
+- mapped ordinary Cartesian basis construction
+- exact overlap / projector / transfer primitives
+- current Qiu-White residual-Gaussian route
+- current supplement and compact packet contracts
 
-## Mature extension of that workflow: minimal atomic mean-field
+Primary docs:
 
-The repository now also has the first small Hartree/Fock-style layer built on
-top of the current atomic IDA ingredients.
+- `docs/src/explanations/current_ordinary_branch.md`
+- `docs/src/algorithms/qiu_white_residual_gaussian_route.md`
 
-That line now includes:
+### One-center nested Cartesian path
 
-- the direct/Hartree term
-- the exchange term
-- the algebraic Fock-style combination
-- a minimal UHF fixed-point kernel
+This is real code, not a sketch.
 
-This is already enough to run small He-like mean-field tests in the present
-atomic IDA model.
+Current supported surface includes:
 
-But it should not be overdescribed. This is **not** yet a broad general HF
-workflow. It is a narrow current-model mean-field layer built on:
+- one-center shell-sequence construction
+- one-center fixed-block construction
+- nested Cartesian operator consumers
+- compact-only packet construction on the production path
 
-- the radial basis
-- the `(l,m)` atomic channel layer
-- the current static IDA ingredients
+This line is still evolving scientifically, especially around frozen-core and
+exactification questions, but it is no longer accurate to describe it as absent
+or purely aspirational.
 
-## Newer public-facing workflow: ordinary Cartesian
+### Bond-aligned diatomic workflow
 
-The package now also has a real newer ordinary Cartesian line built around:
+This is also real code, not a placeholder.
 
-- Coulomb-expansion-first one-body construction
-- mapped and hybrid ordinary bases
-- an explicit split between validation and experimental PGDG-style backends
-- the friendlier hybrid/core-supported regime as the practical target
+Current supported surface includes:
 
-This line is still newer and less settled than the radial/atomic workflow, but
-it is no longer just a hidden side note.
+- bond-aligned diatomic nested fixed-source construction
+- supported one-build source reuse
+- source-level geometry diagnostics
+- source geometry payloads and plane slices
+- bond-aligned diatomic Qiu-White workflow support
+- current diatomic geometry policy and diagnostics
 
-## Advanced research line: primitive layers and contraction
+This line is still experimental in the scientific sense, especially around
+policy and workflow maturation, but it is a real current repo surface.
 
-The package also has a real one-dimensional structure for studying:
+### Experimental chain / square-lattice nested producers
 
-- primitive Gaussian layers
-- contraction from primitives to basis functions
-- basis representations
-- partitions and simple hierarchy
-- a globally mapped common layer plus local contraction
+These routes exist and can be used for producer-side experiments, but they are
+not yet settled as broad public workflows.
 
-This line is already useful for method development, but it is not yet as settled or beginner-friendly as the radial path.
+### Angular research track
 
-## Prototype line inside the advanced research layer
+The angular line is real and has:
 
-`LeafLocalPGDG1D` and its augmentation should still be viewed as useful prototypes.
+- shell-local injected basis construction
+- shell-to-atom assembly
+- one-electron, HF-style, and small-ED benchmark paths
+- direct in-memory HFDMRG payload handshake
 
-They are scientifically helpful because they show that hierarchy-driven local generation can work cleanly. But they are not yet the clearest public conceptual path for the package.
+But it should still be read as experimental/manuscript-facing rather than as a
+stable general user workflow.
 
-The more canonical current research direction is:
+## Legacy / quarantined
 
-- one global mapped primitive layer
-- local contraction inside boxes or shells of that shared layer
+### Old 1D COMX-cleaned hybrid ordinary route
 
-## What is not in the package yet
+This should be treated as legacy/internal code for surrogate comparisons and
+historical regression checks.
 
-The current repository does not yet provide:
+It is **not** the supported current ordinary / Cartesian workflow.
 
-- exact non-diagonal electron-electron operators
-- a broad general HF/RHF/UHF workflow beyond the present minimal atomic IDA kernel
-- a larger interacting atomic workflow beyond the present tiny exact and minimal UHF layers
-- full nested 2D or 3D workflows
+### Flat supporting-note history in `docs/`
+
+The broader flat `docs/*.md` note tree remains useful as supporting or
+historical material, but it is not the primary current authority for repo
+status. Use the root docs and rendered `docs/src/*` pages first.
+
+## Not yet broad or stable
+
+The following are still outside the current mature/public workflow contract:
+
+- broad exact four-index electron-electron workflows
+- a broad stabilized molecular HF / post-HF workflow
+- a broad stabilized molecule-scale nested workflow beyond the current
+  one-center and bond-aligned diatomic surfaces
 - named chemistry basis-set libraries
-- larger solver layers such as DMRG or related workflows
-- Python / Fortran interop layers
+- large solver layers such as DMRG as a native repo workflow
+- Python / Fortran interoperability layers
 
-That is intentional. The package is still clarifying its scientific structure before it grows into those directions.
+Those absences are now narrower than the old root docs implied, but they are
+still real.

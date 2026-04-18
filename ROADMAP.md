@@ -1,121 +1,118 @@
 # Roadmap
 
-This roadmap is meant as a short scientific guide to the next questions for GaussletBases.
+This roadmap is a short note about the **current pressure points** in the repo.
 
-It is not a schedule. It is a statement of which directions now look most valuable, especially if the package is meant to become useful to a slice of the electronic-structure community rather than only as an internal research notebook.
+It is not a schedule. It is the answer to:
 
-## Where the package now stands
+- what matters most next, given the current code shape
 
-Three directions are now real in the code:
+## Current center of gravity
 
-1. a mature radial / atomic workflow
-2. a real but newer ordinary / Cartesian workflow
-3. a separate advanced research line for contraction, hierarchy, and related
-   PGDG-oriented method work
+The repo is no longer mainly an early radial-only or 1D-only project. The live
+pressure is now spread across four connected fronts:
 
-Those directions are all scientifically interesting, but they are not equally
-mature or equally valuable to outside users. The first public path is still the
-radial/atomic line, the second public path is the ordinary/cartesian line, and
-the contraction/hierarchy line remains the more research-facing track.
+1. radial / atomic workflows that are already mature enough to support real use
+2. exact Cartesian overlap / projector / transfer as workflow primitives
+3. one-center nested Cartesian and bond-aligned diatomic workflow support
+4. frozen-core, exactification, and larger-Z carryover questions
 
-## Highest-value next additions for outside users
+## Highest-value next work
 
-If the package is meant to become useful to method developers in atomic and related electronic-structure work, the next highest-value additions are likely these.
+### 1. Keep overlap / projector / transfer as first-class workflow primitives
 
-### 1. An exact non-diagonal radial electron-electron layer
+The exact Cartesian transfer surface is now real enough that it should be
+treated as infrastructure, not as an isolated diagnostic.
 
-The current package has the two-index IDA-style radial multipole matrices.
+The main pressure here is:
 
-A natural next scientific step is the exact non-diagonal radial electron-electron object. That would make it possible to study more carefully where the present radial approximation is strong, where it is weak, and what the true cost/accuracy tradeoffs look like.
+- keep `cross_overlap`, `basis_projector`, and `transfer_orbitals` stable
+- keep bundle/sidecar/export contracts aligned with those transfer primitives
+- use them as the normal basis-to-basis handoff language for current Cartesian
+  workflows
 
-### 2. The first actual He / IDA-style solve on top of the present static atomic ingredients
+### 2. Deepen the one-center Cartesian line
 
-The package now has:
+The one-center nested Cartesian route is now real, compact-only on production
+paths, and worth treating as a genuine workflow surface.
 
-- the explicit one-electron angular `(l,m)` layer
-- the first static interacting IDA ingredients
+The main next questions are:
 
-The next atomic question is how to turn those explicit ingredients into a first useful interacting atomic calculation:
+- frozen-core and exactification contracts
+- larger-Z carryover
+- stable diagnostics/reporting around nested fixed blocks
+- clearer workflow boundaries between compact production paths and archived
+  reference logic
 
-- radial one-body operators
-- explicit `(l,m)` channels
-- radial multipole data
-- later Gaunt or related angular-coupling factors
+### 3. Mature the bond-aligned diatomic workflow
 
-That is the natural path toward helium and related atom-centered work.
+The diatomic route is also now real code with supported source reuse,
+diagnostics, geometry payloads, and Qiu-White consumers.
 
-### 3. Export and interoperability helpers
+The main next questions are:
 
-Once the radial and atomic pieces are clearer, export helpers become much more valuable.
+- counterpoise / ghost-basis driver support
+- larger-Z diatomic carryover
+- continued geometry-policy maturation and diagnostics
+- supported artifact/reporting patterns for real workflow use
 
-The likely first targets are simple, explicit formats that another code can consume without needing to reimplement the basis construction.
+### 4. Carry compact-only cleanup into broader workflow contracts
 
-## Important research questions inside the contraction line
+The repo has now done substantial compact-only cleanup on nested production
+paths. The next value is not more optional debug branching; it is keeping the
+mainline small and stable.
 
-The contraction/hierarchy line remains scientifically important, but it is currently more of a research track than a public-facing track.
+That means:
 
-The main questions there are:
+- keeping compact summed packet contracts as the production default
+- resisting reintroduction of broad slow debug-era branches
+- continuing to simplify public production seams where old compatibility no
+  longer has a real user
 
-### 1. What should define the first genuinely useful local retained space?
+### 5. Keep larger-Z / chromium-facing work connected to the mainline
 
-The immediate next question is still:
+The repo now has enough one-center and diatomic infrastructure that larger-Z
+and chromium-facing experiments should reuse the same:
 
-- what local contraction criterion should be used inside a box or shell?
+- transfer primitives
+- compact nested packet contracts
+- one-build source/fixed-block patterns
+- frozen-core / exactification language
 
-The present simple retained spaces are good enough to demonstrate the architecture, but not yet enough to settle the scientific choice.
+This is more valuable than opening entirely separate workflow dialects.
 
-### 2. How should leaf contraction grow into parent-shell contraction?
+## Important but secondary work
 
-The present corrected path is leaf-only.
+### Radial / atomic exactification and export
 
-If that line continues, the next structural extension is likely:
+The mature radial/atomic line remains important, but the roadmap should no
+longer read as if it is the only active frontier.
 
-- parent-shell contraction on top of the existing leaf structure
+The next meaningful radial/atomic work is still:
 
-### 3. When should geometry-aware grouping enter?
+- exactification of interaction structure
+- better solver-facing export contracts
+- narrower, cleaner atomic workflow documentation
 
-Eventually, one-dimensional interval boxes will no longer be enough.
+### Experimental chain / square-lattice promotion
 
-The question is when it becomes scientifically worthwhile to move from:
+These routes should only be promoted further once the same compact, transfer,
+and workflow-contract questions are answered cleanly there too.
 
-- simple 1D locality and hierarchy
+For now they should remain explicitly experimental.
 
-to:
+### Angular research
 
-- atom- or geometry-aware grouping
+The angular line remains scientifically important, but it should continue to be
+advanced as an experimental research track rather than competing for the main
+public workflow story.
 
-## What the roadmap is not promising yet
+## Not the current roadmap center
 
-This roadmap is not a commitment to:
+This roadmap is **not** centered on:
 
-- a complete solver workflow
-- immediate molecule-scale infrastructure
-- a permanent exchange format
-- a fully settled nested or PGDG public surface
-- immediate Python/Fortran bindings
+- reviving the old 1D COMX-cleaned hybrid route
+- treating flat note-history files as the main authority
+- building a broad solver package before the current workflow primitives settle
+- pretending the repo is still only a radial or 1D project
 
-Those are possible later directions, but they are not the present center of gravity.
-
-## Practical interpretation
-
-If the goal is:
-
-### Better public usefulness soon
-
-then the package should prioritize:
-
-1. exact radial electron-electron structure
-2. the first interacting He / IDA-style atomic calculation on top of the present static ingredients
-3. export/interoperability
-
-If the goal is:
-
-### Deeper basis/contraction research first
-
-then the package should prioritize:
-
-1. better local retained spaces
-2. parent-shell contraction
-3. geometry-aware grouping
-
-Right now, the code contains seeds of both futures. The next major choice is which one should lead the public story.
+Those older framings no longer match the live code.

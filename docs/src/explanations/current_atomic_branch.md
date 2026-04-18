@@ -24,11 +24,6 @@ The present atomic story is:
 5. a minimal UHF kernel
 6. dense and sliced Hamiltonian export for the current density-density model
 
-Scientifically, this branch adapts gausslets to atomic coordinates while
-keeping the present electron-electron structure in a compact IDA form rather
-than a four-index Coulomb tensor. The one-body side remains variational within
-the basis, while the compression story is centered on the interaction.
-
 This is already a coherent small atomic line. It is not yet a broad general
 atomic HF framework.
 
@@ -46,36 +41,32 @@ That page is the right place to read the current boundary:
   are now present in the repo
 - the angular line already has one-electron, HF-style, and small-ED benchmark
   paths plus a direct in-memory HFDMRG payload handshake
-- the same experimental line also has a native fixed-radial
-  increasing-`N_sph` sequence producer for external continuation studies
+- the same experimental line also has a native fixed-radial increasing-`N_sph`
+  sequence producer for external continuation studies
 - the exact common low-`l` reference already fits the current HamIO / HamV6
   consumer language cleanly, but the full mixed basis does not yet
-- Hooke is deferred for a later dedicated workflow line
-- the angular line should still be read as experimental, not as a mature
-  public atomic workflow branch
 
 ## Start here
 
-Within the manual, the best entry path is:
+Within the rendered docs, the best entry path is:
 
 - [First radial workflow](../tutorials/first_radial_workflow.md)
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 - [Example guide](../howto/example_guide.md)
+- [Atomic and ordinary workflows reference](../reference/atomic_and_ordinary.md)
 
-## Notes that are not yet migrated into the first site
+## Documentation authority for this branch
 
-The following current-workflow atomic notes still live in the flat `docs/`
-tree and are not yet part of the user-facing manual surface:
+For the current atomic story, use these pages in this order:
 
-- `atomic_ylm_layer.md`
-- `atomic_ida_layer.md`
-- `atomic_ida_uhf.md`
-- `hamiltonian_export_fullida_dense.md`
-- `hamiltonian_export_sliced_blocks.md`
+- this page for branch status and scope
+- [Manual](../manual/index.md) for workflow reading order
+- [Reference](../reference/index.md) for exported API surface
+- [Developer Notes](../developer/index.md) for lower-priority architecture and
+  supporting material
 
-The supporting-note chain for the atomic line also still lives in the flat
-tree for now. It should be treated as developer/supporting material rather
-than as the main package manual.
+Older flat `docs/*.md` notes remain available as supporting history, but they
+should not override this page as the current atomic branch summary.
 
 ## Current interpretation
 
@@ -92,8 +83,3 @@ The wording discipline for the atomic line remains:
   atomic branch page
 
 That is the present atomic scope the library can stand behind.
-
-If you want the lower-priority architecture and supporting-note context after
-that, continue with:
-
-- [Developer Notes](../developer/index.md)

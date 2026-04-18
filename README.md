@@ -22,15 +22,16 @@ constructing the quadrature grids that go with them, and forming the current
 one-body and integral-diagonal approximation (IDA)-style operators on top of
 them.
 
-Today the package can already do four scientifically useful things:
+Today the package has four real current surfaces:
 
 - a mature **radial / atomic workflow**
-- a real but newer **ordinary Cartesian mapped/hybrid workflow**
-- an experimental **angular research track** with shell-local injected basis
-  construction, shell-to-atom assembly, one-electron / HF-style / small-ED
-  benchmarks, and a direct in-memory HFDMRG payload handshake
-- a separate **advanced research line** for contraction, hierarchy, and
-  prototype PGDG-related work
+- a real **ordinary Cartesian workflow** with exact basis-to-basis Cartesian
+  `cross_overlap`, `basis_projector`, and `transfer_orbitals` primitives
+- a real **nested Cartesian / diatomic workflow surface** with one-center
+  atomic fixed-block routes, bond-aligned diatomic nested source/fixed-block
+  construction, geometry diagnostics, and geometry payload export
+- an experimental **angular and advanced research track** for injected angular
+  bases, contraction, hierarchy, and prototype PGDG-related work
 
 If you are new, start with the radial path. It is also the most recent
 published line in the repo: the radial gausslet paper is now posted on arXiv,
@@ -57,8 +58,8 @@ GaussletBases is most useful today for people who want to:
 
 It is **not** yet a complete electronic-structure workflow package. It is a
 basis, quadrature, and operator package, with a mature radial/atomic line, a
-newer ordinary/cartesian line, an experimental angular benchmark line, and a
-separate advanced line for contraction and hierarchy in 1D.
+real newer ordinary/cartesian line, a real nested Cartesian/diatomic surface,
+and narrower experimental solver-facing or hierarchy-facing research tracks.
 
 ## Installation
 
@@ -221,6 +222,25 @@ The main entry pages are:
 The narrower notes remain in the repository, but they should be read as
 supporting notes after the current branch pages are clear.
 
+## Top-level repo docs
+
+At the repository root, the current documentation authority is now split
+deliberately:
+
+- `README.md`: onboarding and first trustworthy repo overview
+- `DESIGN.md`: stable repo-wide design/contracts note and doc-authority map
+- `STATUS.md`: current capability / trust matrix
+- `ROADMAP.md`: strategic next-pressure note, not a schedule
+
+For branch-specific current status, use:
+
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
+
+For path-specific construction details, use the rendered
+[Algorithms](https://srwhite59.github.io/GaussletBases.jl/dev/algorithms/)
+pages rather than older flat note-history files.
+
 ## Current scope and limits
 
 What is already useful today:
@@ -230,22 +250,30 @@ What is already useful today:
   current `(l,m)` atomic layer, static He / IDA-style interacting ingredients,
   direct / exchange / Fock helpers, a minimal UHF kernel, and dense/sliced
   export for the current density-density model
-- the experimental ordinary Cartesian mapped/hybrid one-body route in the
-  friendlier regime
+- exact Cartesian basis-to-basis cross overlap, projector, and transfer on the
+  current working representation families
+- one-center nested Cartesian shell-sequence, fixed-block, and QW consumer
+  routes
+- bond-aligned diatomic nested fixed-source / fixed-block / diagnostics /
+  geometry payload support, plus the current bond-aligned diatomic QW workflow
+- the newer ordinary Cartesian mapped/hybrid and Qiu-White residual-Gaussian
+  routes in their supported regimes
+- the experimental homonuclear chain / square-lattice nested producer routes
 - the experimental angular research track: shell-local injected angular basis
   construction, shell-to-atom assembly, one-electron benchmark, HF-style
   benchmark, small-ED benchmark, and a direct in-memory HFDMRG payload path
 - explicit quadrature and diagnostics
 - primitive-layer matrix construction and contraction
-- the first 1D partition/hierarchy/contraction experiments
+- the current contraction / hierarchy research line
 
 What is not yet here:
 
-- exact non-diagonal electron-electron operators
+- broad exact four-index electron-electron workflows
 - a broad stabilized angular atomic workflow beyond the current experimental
   benchmark ladder and direct HF payload handoff
 - a broad general HF workflow beyond the present minimal atomic IDA UHF kernel
-- 2D or 3D nested workflows
+- a broad stabilized molecule-scale nested workflow beyond the current
+  one-center and bond-aligned diatomic surfaces
 - named Gaussian chemistry basis libraries
 - true many-body DMRG or related workflow layers
 - Python and Fortran interoperability layers
