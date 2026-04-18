@@ -62,6 +62,13 @@ The wording discipline for the ordinary line remains:
 - on that PGDG lane, distorted 1D primitives are replaced by plain Gaussian
   proxies before matrix assembly and numerical primitive quadrature is outside
   the intended production contract
+- the public mapped ordinary backbone is the PGDG-capable surface today:
+  `mapped_ordinary_one_body_operators` and the mapped Cartesian IDA path may
+  use `:pgdg_experimental` or `:pgdg_localized_experimental`
+- current public Qiu-White and nested Qiu-White routes remain
+  `gausslet_backend = :numerical_reference` unless a route is explicitly
+  documented otherwise; that includes the current diatomic and experimental
+  chain/square nested QW routes
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path

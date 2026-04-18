@@ -509,8 +509,9 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "bond-aligned ordinary_cartesian_qiu_white_operators",
+        gausslet_backend,
     )
     interaction_treatment in (:ggt_nearest, :mwg) || throw(
         ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
@@ -744,8 +745,9 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned diatomic molecular QW path currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "bond-aligned diatomic molecular QW path",
+        gausslet_backend,
     )
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("bond-aligned diatomic molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
@@ -930,9 +932,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
     timing::Bool,
     context_label::AbstractString,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("$(context_label) currently supports only gausslet_backend = :numerical_reference"),
-    )
+    _require_reference_only_gausslet_backend(context_label, gausslet_backend)
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("$(context_label) currently supports only interaction_treatment = :ggt_nearest"),
     )
@@ -1097,8 +1097,9 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned diatomic nested molecular QW path currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "bond-aligned diatomic nested molecular QW path",
+        gausslet_backend,
     )
 
     basis = fixed_block.parent_basis
@@ -1612,8 +1613,9 @@ function ordinary_cartesian_qiu_white_operators(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
     )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "ordinary_cartesian_qiu_white_operators",
+        gausslet_backend,
     )
     residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
     return _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
@@ -1682,8 +1684,9 @@ function ordinary_cartesian_qiu_white_operators(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "nested ordinary_cartesian_qiu_white_operators",
+        gausslet_backend,
     )
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),

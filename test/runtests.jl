@@ -7995,6 +7995,108 @@ end
           norm(mild_localized.kinetic - kinetic_reference_localized, Inf)
 end
 
+@testset "Public ordinary and nested backend contract" begin
+    function _reference_only_backend_error(route_builder)
+        err = try
+            route_builder()
+            nothing
+        catch err
+            err
+        end
+        @test err isa ArgumentError
+        text = sprint(showerror, err)
+        @test occursin("numerical-reference-only route", text)
+        @test occursin("PGDG production-contract support is not yet implemented here", text)
+        return text
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    mapped_basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
+        reference_spacing = 1.0,
+    ))
+    diatomic_basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    chain_basis = bond_aligned_homonuclear_chain_qw_basis(
+        natoms = 3,
+        spacing = 1.2,
+        core_spacing = 0.5,
+        xmax_parallel = 2.0,
+        xmax_transverse = 2.0,
+        chain_axis = :z,
+    )
+    square_basis = axis_aligned_homonuclear_square_lattice_qw_basis(
+        n = 2,
+        spacing = 1.4,
+        core_spacing = 0.5,
+        xmax_in_plane = 2.0,
+        xmax_transverse = 2.0,
+    )
+
+    @test mapped_ordinary_one_body_operators(
+        mapped_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_experimental,
+    ).backend == :pgdg_experimental
+    @test mapped_ordinary_one_body_operators(
+        mapped_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_localized_experimental,
+    ).backend == :pgdg_localized_experimental
+
+    diatomic_qw_text = _reference_only_backend_error(() ->
+        ordinary_cartesian_qiu_white_operators(
+            diatomic_basis;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_experimental,
+        )
+    )
+    @test occursin("bond-aligned ordinary_cartesian_qiu_white_operators", diatomic_qw_text)
+
+    diatomic_nested_source_text = _reference_only_backend_error(() ->
+        bond_aligned_diatomic_nested_fixed_source(
+            diatomic_basis;
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+    )
+    @test occursin("bond-aligned diatomic nested fixed source", diatomic_nested_source_text)
+
+    diatomic_nested_fixed_text = _reference_only_backend_error(() ->
+        bond_aligned_diatomic_nested_fixed_block(
+            diatomic_basis;
+            expansion = expansion,
+            gausslet_backend = :pgdg_experimental,
+        )
+    )
+    @test occursin("bond-aligned diatomic nested fixed source", diatomic_nested_fixed_text)
+
+    chain_text = _reference_only_backend_error(() ->
+        experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
+            chain_basis;
+            nuclear_charges = fill(1.0, length(chain_basis.nuclei)),
+            gausslet_backend = :pgdg_experimental,
+        )
+    )
+    @test occursin("bond-aligned homonuclear chain nested fixed source", chain_text)
+
+    square_text = _reference_only_backend_error(() ->
+        experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
+            square_basis;
+            nuclear_charges = fill(1.0, length(square_basis.nuclei)),
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+    )
+    @test occursin("axis-aligned homonuclear square-lattice nested fixed source", square_text)
+end
+
 @testset "Ordinary Cartesian IDA operators" begin
     mild_basis, mild_expansion, mild_analytic = _quick_ordinary_cartesian_ida_fixture(
         backend = :pgdg_experimental,

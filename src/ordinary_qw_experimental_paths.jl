@@ -42,8 +42,9 @@ function _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
     nside::Int = 5,
     min_in_plane_aspect_ratio::Float64 = 0.15,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("axis-aligned homonuclear square-lattice nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "axis-aligned homonuclear square-lattice nested fixed source",
+        gausslet_backend,
     )
     bundles = _qwrg_bond_aligned_axis_bundles(
         basis,
@@ -216,8 +217,9 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     odd_chain_policy::Symbol = :strict_current,
 )
-    gausslet_backend == :numerical_reference || throw(
-        ArgumentError("bond-aligned homonuclear chain nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+    _require_reference_only_gausslet_backend(
+        "bond-aligned homonuclear chain nested fixed source",
+        gausslet_backend,
     )
     bundles = _qwrg_bond_aligned_axis_bundles(
         basis,

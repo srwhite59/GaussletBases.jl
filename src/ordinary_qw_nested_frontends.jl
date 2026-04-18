@@ -58,6 +58,18 @@ function _qwrg_bond_aligned_axis_bundles(
     return _CartesianNestedAxisBundles3D(bundle_x, bundle_y, bundle_z)
 end
 
+function _require_reference_only_gausslet_backend(
+    route_label::AbstractString,
+    gausslet_backend::Symbol,
+)
+    gausslet_backend == :numerical_reference || throw(
+        ArgumentError(
+            "$(route_label) is currently a numerical-reference-only route; PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    return gausslet_backend
+end
+
 function _resolved_nested_term_coefficients(
     expansion::CoulombGaussianExpansion,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}},
@@ -86,8 +98,9 @@ function bond_aligned_diatomic_nested_fixed_source(
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.fixed_source.total" begin
-        gausslet_backend == :numerical_reference || throw(
-            ArgumentError("bond-aligned diatomic nested fixed source currently supports only gausslet_backend = :numerical_reference"),
+        _require_reference_only_gausslet_backend(
+            "bond-aligned diatomic nested fixed source",
+            gausslet_backend,
         )
         resolved_term_coefficients =
             _resolved_nested_term_coefficients(expansion, term_coefficients)
