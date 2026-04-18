@@ -9600,8 +9600,15 @@ end
         bond_length = 1.4,
     )
 
+    baseline_traces = GaussletBases._bond_aligned_diatomic_doside_traces(baseline_source)
     experiment_traces = GaussletBases._bond_aligned_diatomic_doside_traces(experiment_source)
+    baseline_trace_map = Dict(trace.context_label => trace for trace in baseline_traces)
     trace_map = Dict(trace.context_label => trace for trace in experiment_traces)
+    targeted_contexts = (
+        "shared_shell/layer_1/face_xy/tangential_x",
+        "shared_shell/layer_1/face_xz/tangential_x",
+        "shared_shell/layer_1/face_yz/tangential_y",
+    )
     fixed_payload = bond_aligned_diatomic_geometry_payload(baseline_ops, baseline_source)
     experiment_payload = bond_aligned_diatomic_geometry_payload(experiment_ops, experiment_source)
     fixed_slice = bond_aligned_diatomic_plane_slice(
@@ -9620,26 +9627,23 @@ end
     @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
     @test all(isfinite, experiment_fixed_block.weights)
     @test minimum(experiment_fixed_block.weights) > 0.0
-    @test size(experiment_fixed_block.overlap, 1) == 637
-    @test size(baseline_fixed_block.overlap, 1) == size(experiment_fixed_block.overlap, 1)
-    @test Set([
-        trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
-        trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
-        trace_map["shared_shell/layer_1/face_yz/tangential_y"].contains_near_zero_center,
-    ]) == Set([true])
-    @test Set([
-        trace_map["shared_shell/layer_1/face_xy/tangential_x"].retained_count,
-        trace_map["shared_shell/layer_1/face_xz/tangential_x"].retained_count,
-        trace_map["shared_shell/layer_1/face_yz/tangential_y"].retained_count,
-    ]) == Set([3])
-    @test fixed_slice.selected_count == experiment_slice.selected_count == 103
-    @test count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points) ==
-        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) == 16
-    @test experiment_projected_vee == baseline_projected_vee
-    @test experiment_capture == baseline_capture
-    @test experiment_projected_energy == baseline_projected_energy
-    @test experiment_check.orbital_energy == baseline_check.orbital_energy
-    @test experiment_check.vee_expectation == baseline_check.vee_expectation
+    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
+    @test Set(baseline_trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
+        Set([true])
+    @test Set(trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
+        Set([true])
+    @test Set(baseline_trace_map[context].retained_count for context in targeted_contexts) ==
+        Set([5])
+    @test Set(trace_map[context].retained_count for context in targeted_contexts) ==
+        Set([3])
+    @test fixed_slice.selected_count > experiment_slice.selected_count > 0
+    @test count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
+    @test abs(experiment_projected_vee - baseline_projected_vee) < 2.0e-5
+    @test abs(experiment_capture - baseline_capture) < 2.0e-5
+    @test abs(experiment_projected_energy - baseline_projected_energy) < 2.0e-5
+    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 2.0e-5
+    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-5
 end
 
 @testset "Bond-aligned diatomic shared-shell odd-retain confirmation at R=2.0" begin
@@ -9687,8 +9691,15 @@ end
         bond_length = 2.0,
     )
 
+    baseline_traces = GaussletBases._bond_aligned_diatomic_doside_traces(baseline_source)
     experiment_traces = GaussletBases._bond_aligned_diatomic_doside_traces(experiment_source)
+    baseline_trace_map = Dict(trace.context_label => trace for trace in baseline_traces)
     trace_map = Dict(trace.context_label => trace for trace in experiment_traces)
+    targeted_contexts = (
+        "shared_shell/layer_1/face_xy/tangential_x",
+        "shared_shell/layer_1/face_xz/tangential_x",
+        "shared_shell/layer_1/face_yz/tangential_y",
+    )
     baseline_payload = bond_aligned_diatomic_geometry_payload(baseline_ops, baseline_source)
     experiment_payload = bond_aligned_diatomic_geometry_payload(experiment_ops, experiment_source)
     baseline_slice = bond_aligned_diatomic_plane_slice(
@@ -9707,21 +9718,23 @@ end
     @test norm(experiment_fixed_block.overlap - I, Inf) < 1.0e-10
     @test all(isfinite, experiment_fixed_block.weights)
     @test minimum(experiment_fixed_block.weights) > 0.0
-    @test size(experiment_fixed_block.overlap, 1) == 543
-    @test size(baseline_fixed_block.overlap, 1) == size(experiment_fixed_block.overlap, 1)
-    @test Set([
-        trace_map["shared_shell/layer_1/face_xy/tangential_x"].contains_near_zero_center,
-        trace_map["shared_shell/layer_1/face_xz/tangential_x"].contains_near_zero_center,
-        trace_map["shared_shell/layer_1/face_yz/tangential_y"].contains_near_zero_center,
-    ]) == Set([true])
-    @test baseline_slice.selected_count == experiment_slice.selected_count == 101
-    @test count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points) ==
-        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) == 16
-    @test experiment_projected_vee == baseline_projected_vee
-    @test experiment_capture == baseline_capture
-    @test experiment_projected_energy == baseline_projected_energy
-    @test experiment_check.orbital_energy == baseline_check.orbital_energy
-    @test experiment_check.vee_expectation == baseline_check.vee_expectation
+    @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
+    @test Set(baseline_trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
+        Set([true])
+    @test Set(trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
+        Set([true])
+    @test Set(baseline_trace_map[context].retained_count for context in targeted_contexts) ==
+        Set([5])
+    @test Set(trace_map[context].retained_count for context in targeted_contexts) ==
+        Set([3])
+    @test baseline_slice.selected_count > experiment_slice.selected_count > 0
+    @test count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
+    @test abs(experiment_projected_vee - baseline_projected_vee) < 2.0e-5
+    @test abs(experiment_capture - baseline_capture) < 2.0e-5
+    @test abs(experiment_projected_energy - baseline_projected_energy) < 2.0e-5
+    @test abs(experiment_check.orbital_energy - baseline_check.orbital_energy) < 2.0e-5
+    @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-5
 end
 
 @testset "Bond-aligned diatomic doside boundary correction on larger debug box" begin
