@@ -135,20 +135,20 @@
 ## Code Pointers
 
 - Split-eligibility geometry:
-  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_split_geometry](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6737)
+  - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_split_geometry`
 - Ideal-reference angular band:
-  - [src/cartesian_nested_faces.jl:_nested_diatomic_reference_band](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6256)
+  - `src/cartesian_nested_diatomic.jl:_nested_diatomic_reference_band`
 - Adaptive shell retain-count choice:
-  - [src/cartesian_nested_faces.jl:_nested_diatomic_adaptive_shell_retention](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6492)
+  - `src/cartesian_nested_diatomic.jl:_nested_diatomic_adaptive_shell_retention`
 - Nonuniform inner-core construction:
-  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_nonuniform_core_block](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6568)
-  - [src/cartesian_nested_faces.jl:_nested_bond_aligned_diatomic_sequence_for_box](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6673)
+  - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_nonuniform_core_block`
+  - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_sequence_for_box`
 - Auto near-nucleus protection:
-  - [src/cartesian_nested_faces.jl:_nested_diatomic_resolve_core_near_nucleus_protect_rows](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_nested_faces.jl:6035)
+  - `src/cartesian_nested_diatomic.jl:_nested_diatomic_resolve_core_near_nucleus_protect_rows`
 - Real diatomic source entry point:
-  - [src/ordinary_qiu_white_rg.jl:_bond_aligned_diatomic_nested_fixed_source](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl:1275)
+  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
 - Real diagnostics entry point:
-  - [src/ordinary_qiu_white_rg.jl:bond_aligned_diatomic_nested_geometry_diagnostics](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl:1374)
+  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_geometry_diagnostics`
 
 ## References
 
