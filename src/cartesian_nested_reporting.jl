@@ -397,7 +397,7 @@ function _nested_sequence_doside_traces(
 end
 
 function _bond_aligned_diatomic_doside_traces(
-    source::_CartesianNestedBondAlignedDiatomicSource3D;
+    source;
     symmetry_tol::Float64 = 1.0e-8,
     zero_tol::Float64 = 1.0e-8,
 )
@@ -455,9 +455,7 @@ function _nested_trace_vector_string(values::AbstractVector{<:Real})
     return "[" * join((string(Float64(value)) for value in values), ", ") * "]"
 end
 
-function _bond_aligned_diatomic_doside_trace_notes(
-    source::_CartesianNestedBondAlignedDiatomicSource3D,
-)
+function _bond_aligned_diatomic_doside_trace_notes(source)
     notes = String[]
     isempty(source.shared_shell_layers) && push!(
         notes,
@@ -483,7 +481,7 @@ end
 
 function _write_bond_aligned_diatomic_doside_trace(
     path::AbstractString,
-    source::_CartesianNestedBondAlignedDiatomicSource3D;
+    source;
     symmetry_tol::Float64 = 1.0e-8,
     zero_tol::Float64 = 1.0e-8,
 )
