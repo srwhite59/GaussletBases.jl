@@ -126,13 +126,6 @@ function bond_aligned_diatomic_nested_fixed_source(
     end
 end
 
-function _bond_aligned_diatomic_nested_fixed_source(
-    basis::BondAlignedDiatomicQWBasis3D;
-    kwargs...,
-)
-    return bond_aligned_diatomic_nested_fixed_source(basis; kwargs...)
-end
-
 function bond_aligned_diatomic_nested_fixed_block(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
@@ -140,12 +133,6 @@ function bond_aligned_diatomic_nested_fixed_block(
         source = source,
         fixed_block = _nested_fixed_block(source),
     )
-end
-
-function _bond_aligned_diatomic_nested_fixed_block(
-    source::_CartesianNestedBondAlignedDiatomicSource3D,
-)
-    return bond_aligned_diatomic_nested_fixed_block(source)
 end
 
 function bond_aligned_diatomic_nested_fixed_block(
@@ -178,13 +165,6 @@ function bond_aligned_diatomic_nested_fixed_block(
         term_coefficients = term_coefficients,
     )
     return bond_aligned_diatomic_nested_fixed_block(source)
-end
-
-function _bond_aligned_diatomic_nested_fixed_block(
-    basis::BondAlignedDiatomicQWBasis3D;
-    kwargs...,
-)
-    return bond_aligned_diatomic_nested_fixed_block(basis; kwargs...)
 end
 
 function _bond_aligned_diatomic_nested_geometry_diagnostics(
