@@ -65,10 +65,12 @@ The wording discipline for the ordinary line remains:
 - the public mapped ordinary backbone is the PGDG-capable surface today:
   `mapped_ordinary_one_body_operators` and the mapped Cartesian IDA path may
   use `:pgdg_experimental` or `:pgdg_localized_experimental`
-- current public Qiu-White and nested Qiu-White routes remain
+- the pure bond-aligned ordinary direct-product Qiu-White route is now also
+  PGDG-capable on `gausslet_backend = :pgdg_localized_experimental`
+- current nested and supplement-bearing Qiu-White routes remain
   `gausslet_backend = :numerical_reference` unless a route is explicitly
-  documented otherwise; that includes the current diatomic and experimental
-  chain/square nested QW routes
+  documented otherwise; that includes the current diatomic nested route and
+  the experimental chain/square nested QW routes
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path

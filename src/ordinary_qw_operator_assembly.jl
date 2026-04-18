@@ -67,6 +67,17 @@ function _validate_nuclear_term_storage(storage::Symbol)
     return storage
 end
 
+function _require_bond_aligned_ordinary_direct_product_backend(
+    gausslet_backend::Symbol,
+)
+    gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
+        ArgumentError(
+            "bond-aligned ordinary_cartesian_qiu_white_operators currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    return gausslet_backend
+end
+
 _resolved_nuclear_term_storage(storage::Symbol, ::BondAlignedDiatomicQWBasis3D) =
     storage == :auto ? :by_center : storage
 _resolved_nuclear_term_storage(
@@ -509,10 +520,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _require_reference_only_gausslet_backend(
-        "bond-aligned ordinary_cartesian_qiu_white_operators",
-        gausslet_backend,
-    )
+    _require_bond_aligned_ordinary_direct_product_backend(gausslet_backend)
     interaction_treatment in (:ggt_nearest, :mwg) || throw(
         ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
     )
@@ -631,6 +639,7 @@ This first molecular pass is intentionally narrow:
 - no molecular Gaussian supplement yet
 - the final basis is the distorted 3D gausslet product basis itself, so the
   residual-Gaussian sector is empty
+- this pure direct-product route accepts `gausslet_backend = :pgdg_localized_experimental`
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedDiatomicQWBasis3D;
@@ -671,6 +680,7 @@ This chain milestone is intentionally narrow:
 - ordinary QW product basis only
 - no nested chain splitting
 - no molecular-shell supplement route
+- this pure direct-product route accepts `gausslet_backend = :pgdg_localized_experimental`
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
@@ -711,6 +721,7 @@ This lattice milestone is intentionally narrow:
 - ordinary QW product basis only
 - no nested planar splitting
 - no molecular-shell supplement route
+- this pure direct-product route accepts `gausslet_backend = :pgdg_localized_experimental`
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;

@@ -8010,6 +8010,43 @@ end
         return text
     end
 
+    function _check_direct_product_backend_pair(
+        basis,
+        nuclear_charges::AbstractVector{<:Real},
+    )
+        reference = ordinary_cartesian_qiu_white_operators(
+            basis;
+            nuclear_charges = nuclear_charges,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        localized = ordinary_cartesian_qiu_white_operators(
+            basis;
+            nuclear_charges = nuclear_charges,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        reference_check = GaussletBases.ordinary_cartesian_1s2_check(reference)
+        localized_check = GaussletBases.ordinary_cartesian_1s2_check(localized)
+
+        @test reference.gausslet_backend == :numerical_reference
+        @test localized.gausslet_backend == :pgdg_localized_experimental
+        @test reference.gaussian_data === nothing
+        @test localized.gaussian_data === nothing
+        @test reference.residual_count == 0
+        @test localized.residual_count == 0
+        @test norm(reference.overlap - I, Inf) < 1.0e-8
+        @test norm(localized.overlap - I, Inf) < 1.0e-8
+        @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test norm(localized.overlap - reference.overlap, Inf) < 0.05
+        @test norm(localized.one_body_hamiltonian - reference.one_body_hamiltonian, Inf) < 0.35
+        @test norm(localized.interaction_matrix - reference.interaction_matrix, Inf) < 0.3
+        @test abs(localized_check.orbital_energy - reference_check.orbital_energy) < 0.05
+        @test abs(localized_check.vee_expectation - reference_check.vee_expectation) < 0.05
+        return reference, localized, reference_check, localized_check
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     mapped_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
@@ -8050,7 +8087,30 @@ end
         backend = :pgdg_localized_experimental,
     ).backend == :pgdg_localized_experimental
 
-    diatomic_qw_text = _reference_only_backend_error(() ->
+    diatomic_reference, diatomic_localized, diatomic_reference_check, diatomic_localized_check =
+        _check_direct_product_backend_pair(diatomic_basis, [1.0, 1.0])
+    chain_reference, chain_localized, chain_reference_check, chain_localized_check =
+        _check_direct_product_backend_pair(
+            chain_basis,
+            fill(1.0, length(chain_basis.nuclei)),
+        )
+    square_reference, square_localized, square_reference_check, square_localized_check =
+        _check_direct_product_backend_pair(
+            square_basis,
+            fill(1.0, length(square_basis.nuclei)),
+        )
+
+    @test diatomic_localized.gausslet_count == diatomic_reference.gausslet_count
+    @test chain_localized.gausslet_count == chain_reference.gausslet_count
+    @test square_localized.gausslet_count == square_reference.gausslet_count
+    @test isfinite(diatomic_localized_check.orbital_energy)
+    @test isfinite(chain_localized_check.orbital_energy)
+    @test isfinite(square_localized_check.orbital_energy)
+    @test isfinite(diatomic_localized_check.vee_expectation)
+    @test isfinite(chain_localized_check.vee_expectation)
+    @test isfinite(square_localized_check.vee_expectation)
+
+    direct_product_error_text = _reference_only_backend_error(() ->
         ordinary_cartesian_qiu_white_operators(
             diatomic_basis;
             nuclear_charges = [1.0, 1.0],
@@ -8058,7 +8118,8 @@ end
             gausslet_backend = :pgdg_experimental,
         )
     )
-    @test occursin("bond-aligned ordinary_cartesian_qiu_white_operators", diatomic_qw_text)
+    @test occursin("bond-aligned ordinary_cartesian_qiu_white_operators", direct_product_error_text)
+    @test occursin(":pgdg_localized_experimental", direct_product_error_text)
 
     diatomic_nested_source_text = _reference_only_backend_error(() ->
         bond_aligned_diatomic_nested_fixed_source(
@@ -8095,6 +8156,23 @@ end
         )
     )
     @test occursin("axis-aligned homonuclear square-lattice nested fixed source", square_text)
+
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        supplement_text = _reference_only_backend_error(() ->
+            ordinary_cartesian_qiu_white_operators(
+                mapped_basis,
+                supplement;
+                expansion = expansion,
+                Z = 2.0,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_localized_experimental,
+            )
+        )
+        @test occursin("ordinary_cartesian_qiu_white_operators", supplement_text)
+    end
 end
 
 @testset "Ordinary Cartesian IDA operators" begin
