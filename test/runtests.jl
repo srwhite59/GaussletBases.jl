@@ -7996,7 +7996,7 @@ end
 end
 
 @testset "Public ordinary and nested backend contract" begin
-    function _reference_only_backend_error(route_builder)
+    function _argument_error_text(route_builder)
         err = try
             route_builder()
             nothing
@@ -8004,7 +8004,11 @@ end
             err
         end
         @test err isa ArgumentError
-        text = sprint(showerror, err)
+        return sprint(showerror, err)
+    end
+
+    function _reference_only_backend_error(route_builder)
+        text = _argument_error_text(route_builder)
         @test occursin("numerical-reference-only route", text)
         @test occursin("PGDG production-contract support is not yet implemented here", text)
         return text
@@ -8047,6 +8051,48 @@ end
         return reference, localized, reference_check, localized_check
     end
 
+    function _check_nested_fixed_block_backend_pair(
+        fixed_block,
+        nuclear_charges::AbstractVector{<:Real},
+        expansion::CoulombGaussianExpansion,
+    )
+        @test basis_representation(fixed_block).metadata.parent_kind == :cartesian_product_basis
+
+        reference = ordinary_cartesian_qiu_white_operators(
+            fixed_block;
+            nuclear_charges = nuclear_charges,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        localized = ordinary_cartesian_qiu_white_operators(
+            fixed_block;
+            nuclear_charges = nuclear_charges,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        reference_check = GaussletBases.ordinary_cartesian_1s2_check(reference)
+        localized_check = GaussletBases.ordinary_cartesian_1s2_check(localized)
+
+        @test reference.gausslet_backend == :numerical_reference
+        @test localized.gausslet_backend == :pgdg_localized_experimental
+        @test reference.gaussian_data === nothing
+        @test localized.gaussian_data === nothing
+        @test reference.residual_count == 0
+        @test localized.residual_count == 0
+        @test norm(reference.overlap - I, Inf) < 1.0e-8
+        @test norm(localized.overlap - I, Inf) < 1.0e-8
+        @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test norm(localized.overlap - reference.overlap, Inf) < 0.05
+        @test norm(localized.one_body_hamiltonian - reference.one_body_hamiltonian, Inf) < 0.4
+        @test norm(localized.interaction_matrix - reference.interaction_matrix, Inf) < 0.35
+        @test abs(localized_check.orbital_energy - reference_check.orbital_energy) < 0.06
+        @test abs(localized_check.vee_expectation - reference_check.vee_expectation) < 0.06
+        return reference, localized, reference_check, localized_check
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     mapped_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
@@ -8075,6 +8121,35 @@ end
         xmax_in_plane = 2.0,
         xmax_transverse = 2.0,
     )
+    (
+        _nested_diatomic_basis,
+        _nested_parent_ops,
+        _nested_parent_check,
+        nested_expansion,
+        _nested_source,
+        nested_fixed_block,
+        _parent_modes,
+        _parent_ground,
+        _projected,
+        _projected_vee,
+        _capture,
+        _projected_energy,
+    ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
+    (
+        chain_nested_basis,
+        _chain_nested_source,
+        chain_nested_fixed_block,
+        _chain_nested_diagnostics,
+    ) = _bond_aligned_homonuclear_chain_nested_fixture(;
+        natoms = 3,
+        odd_chain_policy = :central_ternary_relaxed,
+    )
+    (
+        square_nested_basis,
+        _square_nested_source,
+        square_nested_fixed_block,
+        _square_nested_diagnostics,
+    ) = _axis_aligned_homonuclear_square_lattice_nested_fixture(; n = 2)
 
     @test mapped_ordinary_one_body_operators(
         mapped_basis;
@@ -8110,7 +8185,42 @@ end
     @test isfinite(chain_localized_check.vee_expectation)
     @test isfinite(square_localized_check.vee_expectation)
 
-    direct_product_error_text = _reference_only_backend_error(() ->
+    nested_diatomic_reference,
+    nested_diatomic_localized,
+    nested_diatomic_reference_check,
+    nested_diatomic_localized_check = _check_nested_fixed_block_backend_pair(
+        nested_fixed_block,
+        [1.0, 1.0],
+        nested_expansion,
+    )
+    nested_chain_reference,
+    nested_chain_localized,
+    nested_chain_reference_check,
+    nested_chain_localized_check = _check_nested_fixed_block_backend_pair(
+        chain_nested_fixed_block,
+        fill(1.0, length(chain_nested_basis.nuclei)),
+        expansion,
+    )
+    nested_square_reference,
+    nested_square_localized,
+    nested_square_reference_check,
+    nested_square_localized_check = _check_nested_fixed_block_backend_pair(
+        square_nested_fixed_block,
+        fill(1.0, length(square_nested_basis.nuclei)),
+        expansion,
+    )
+
+    @test nested_diatomic_localized.gausslet_count == nested_diatomic_reference.gausslet_count
+    @test nested_chain_localized.gausslet_count == nested_chain_reference.gausslet_count
+    @test nested_square_localized.gausslet_count == nested_square_reference.gausslet_count
+    @test isfinite(nested_diatomic_localized_check.orbital_energy)
+    @test isfinite(nested_chain_localized_check.orbital_energy)
+    @test isfinite(nested_square_localized_check.orbital_energy)
+    @test isfinite(nested_diatomic_localized_check.vee_expectation)
+    @test isfinite(nested_chain_localized_check.vee_expectation)
+    @test isfinite(nested_square_localized_check.vee_expectation)
+
+    direct_product_error_text = _argument_error_text(() ->
         ordinary_cartesian_qiu_white_operators(
             diatomic_basis;
             nuclear_charges = [1.0, 1.0],
@@ -8120,6 +8230,19 @@ end
     )
     @test occursin("bond-aligned ordinary_cartesian_qiu_white_operators", direct_product_error_text)
     @test occursin(":pgdg_localized_experimental", direct_product_error_text)
+
+    nested_fixed_block_error_text = _argument_error_text(() ->
+        ordinary_cartesian_qiu_white_operators(
+            nested_fixed_block;
+            nuclear_charges = [1.0, 1.0],
+            expansion = nested_expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_experimental,
+        )
+    )
+    @test occursin("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators", nested_fixed_block_error_text)
+    @test occursin(":pgdg_localized_experimental", nested_fixed_block_error_text)
+    @test occursin("pure Cartesian-parent nested fixed blocks", nested_fixed_block_error_text)
 
     diatomic_nested_source_text = _reference_only_backend_error(() ->
         bond_aligned_diatomic_nested_fixed_source(

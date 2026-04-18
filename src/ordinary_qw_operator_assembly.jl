@@ -78,6 +78,27 @@ function _require_bond_aligned_ordinary_direct_product_backend(
     return gausslet_backend
 end
 
+function _require_pure_nested_fixed_block_backend(
+    fixed_block::_NestedFixedBlock3D,
+    gausslet_backend::Symbol,
+    context_label::AbstractString,
+)
+    gausslet_backend == :numerical_reference && return gausslet_backend
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError(
+            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on pure Cartesian-parent nested fixed blocks; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    representation = basis_representation(fixed_block)
+    parent_kind = representation.metadata.parent_kind
+    parent_kind == :cartesian_product_basis || throw(
+        ArgumentError(
+            "$(context_label) currently supports gausslet_backend = :pgdg_localized_experimental only for nested fixed blocks with parent_kind = :cartesian_product_basis; supplement-bearing or transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
+        ),
+    )
+    return gausslet_backend
+end
+
 _resolved_nuclear_term_storage(storage::Symbol, ::BondAlignedDiatomicQWBasis3D) =
     storage == :auto ? :by_center : storage
 _resolved_nuclear_term_storage(
@@ -943,7 +964,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
     timing::Bool,
     context_label::AbstractString,
 )
-    _require_reference_only_gausslet_backend(context_label, gausslet_backend)
+    _require_pure_nested_fixed_block_backend(fixed_block, gausslet_backend, context_label)
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("$(context_label) currently supports only interaction_treatment = :ggt_nearest"),
     )
@@ -1731,6 +1752,9 @@ This is intentionally narrower than the atomic hybrid route:
 - it consumes the already-assembled bond-aligned diatomic `_NestedFixedBlock3D`
 - it keeps the residual-Gaussian sector empty
 - it supports only `interaction_treatment = :ggt_nearest`
+- this pure prebuilt nested fixed-block route accepts
+  `gausslet_backend = :pgdg_localized_experimental` when the nested
+  representation remains a pure Cartesian parent space
 
 The point of this first pass is to validate the diatomic fixed-block geometry
 and transferred packet cleanly before molecular Gaussian completion is added.
@@ -1775,6 +1799,9 @@ This path is intentionally narrow:
 - no supplement route
 - no residual-Gaussian sector
 - no claim that the odd-chain split policy is settled globally
+- this pure prebuilt nested fixed-block route accepts
+  `gausslet_backend = :pgdg_localized_experimental` when the nested
+  representation remains a pure Cartesian parent space
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
@@ -1816,6 +1843,9 @@ This path is intentionally narrow:
 - no supplement route
 - no residual-Gaussian sector
 - no claim that the planar split policy is settled globally
+- this pure prebuilt nested fixed-block route accepts
+  `gausslet_backend = :pgdg_localized_experimental` when the nested
+  representation remains a pure Cartesian parent space
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
