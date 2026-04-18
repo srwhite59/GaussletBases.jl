@@ -18,6 +18,7 @@ This section is where to go when you want:
 ## Main developer-facing pages
 
 - [Architecture and current direction](architecture.md)
+- [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
 - [Numerical contracts](numerical_contracts.md)
 - [Supporting note map](supporting_notes.md)
 
