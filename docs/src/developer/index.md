@@ -20,6 +20,7 @@ This section is where to go when you want:
 - [Architecture and current direction](architecture.md)
 - [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
 - [Post-decomposition efficiency resume plan](post_decomposition_efficiency_resume_plan.md)
+- [PGDG Cartesian efficiency contract](pgdg_cartesian_efficiency_contract.md)
 - [Numerical contracts](numerical_contracts.md)
 - [Supporting note map](supporting_notes.md)
 

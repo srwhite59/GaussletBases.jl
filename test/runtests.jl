@@ -4000,6 +4000,18 @@ end
         backend = :numerical_reference,
         refinement_levels = 0,
     )
+    experimental_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_experimental,
+        refinement_levels = 0,
+    )
+    localized_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_localized_experimental,
+        refinement_levels = 0,
+    )
 
     @test intermediate isa GaussletBases._MappedOrdinaryPGDGIntermediate1D
     @test intermediate.refinement_levels == 0
@@ -4022,11 +4034,32 @@ end
     @test maximum(abs.(intermediate.pair_factor_terms[1, :, :] .- transpose(intermediate.pair_factor_terms[1, :, :]))) < 1.0e-10
     @test bundle.pgdg_intermediate.refinement_levels == 0
     @test bundle.pgdg_intermediate.gaussian_factor_terms ≈ intermediate.gaussian_factor_terms atol = 0.0 rtol = 0.0
+    @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(bundle.pgdg_intermediate.base_layer))
+    @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(bundle.pgdg_intermediate.auxiliary_layer))
+    for candidate in (experimental_bundle, localized_bundle)
+        @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(candidate.layer))
+        @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(candidate.pgdg_intermediate.base_layer))
+        @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(candidate.pgdg_intermediate.auxiliary_layer))
+    end
     @test_throws ArgumentError GaussletBases._mapped_ordinary_pgdg_intermediate_1d(
         basis;
         exponents = expansion.exponents[1:3],
         backend = :numerical_reference,
         refinement_levels = 1,
+    )
+    @test_throws ArgumentError GaussletBases._mapped_ordinary_pgdg_intermediate_1d(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_experimental,
+        working_layer = basis,
+        refinement_levels = 0,
+    )
+    @test_throws ArgumentError GaussletBases._mapped_ordinary_pgdg_intermediate_1d(
+        basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_localized_experimental,
+        working_layer = basis,
+        refinement_levels = 0,
     )
 end
 

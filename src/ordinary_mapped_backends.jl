@@ -155,9 +155,19 @@ function _mapped_ordinary_backend_layer(
     if backend == :numerical_reference
         return basis
     elseif backend == :pgdg_experimental
-        return mapped_pgdg_logfit_prototype(basis)
+        layer = mapped_pgdg_logfit_prototype(basis)
+        _require_analytic_primitive_backend(
+            primitive_set(layer),
+            "mapped ordinary backend :pgdg_experimental",
+        )
+        return layer
     elseif backend == :pgdg_localized_experimental
-        return mapped_pgdg_localized(mapped_pgdg_derivativefit_prototype(basis))
+        layer = mapped_pgdg_localized(mapped_pgdg_derivativefit_prototype(basis))
+        _require_analytic_primitive_backend(
+            primitive_set(layer),
+            "mapped ordinary backend :pgdg_localized_experimental",
+        )
+        return layer
     else
         throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
     end
@@ -171,8 +181,16 @@ function _mapped_ordinary_pgdg_base_layer(
     if backend == :numerical_reference
         return _mapped_legacy_proxy_layer(basis)
     elseif backend == :pgdg_experimental
+        _require_analytic_primitive_backend(
+            primitive_set(working_layer),
+            "mapped ordinary PGDG intermediate :pgdg_experimental",
+        )
         return working_layer
     elseif backend == :pgdg_localized_experimental
+        _require_analytic_primitive_backend(
+            primitive_set(working_layer),
+            "mapped ordinary PGDG intermediate :pgdg_localized_experimental",
+        )
         return working_layer
     else
         throw(ArgumentError("mapped ordinary PGDG intermediate requires a supported backend"))

@@ -59,6 +59,9 @@ The wording discipline for the ordinary line remains:
 
 - `:numerical_reference` is the validation route
 - the PGDG-style analytic route is good enough on the mapped ordinary backbone
+- on that PGDG lane, distorted 1D primitives are replaced by plain Gaussian
+  proxies before matrix assembly and numerical primitive quadrature is outside
+  the intended production contract
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path

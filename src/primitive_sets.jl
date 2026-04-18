@@ -608,6 +608,18 @@ function _supports_analytic_gaussian_backend(set::PrimitiveSet1D)
     return all(primitive -> primitive isa Gaussian, primitives(set))
 end
 
+function _require_analytic_primitive_backend(
+    set::PrimitiveSet1D,
+    context_label::AbstractString,
+)
+    _supports_analytic_gaussian_backend(set) || throw(
+        ArgumentError(
+            "$(context_label) requires a plain-Gaussian primitive layer; numerical primitive quadrature fallback is outside the PGDG production contract",
+        ),
+    )
+    return _AnalyticPrimitiveMatrixBackend()
+end
+
 function _select_primitive_matrix_backend(set::PrimitiveSet1D)
     return _supports_analytic_gaussian_backend(set) ?
            _AnalyticPrimitiveMatrixBackend() :
