@@ -98,7 +98,6 @@ function _build_one_center_atomic_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle,
     working_box::NTuple{3,UnitRange{Int}};
     nside::Int,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
@@ -114,7 +113,6 @@ function _build_one_center_atomic_shell_sequence(
         retain_x_edge = retention.retain_x_edge,
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
-        timing_collector = timing_collector,
         packet_kernel = packet_kernel,
         term_storage = :compact_production,
         term_coefficients = term_coefficients,
@@ -147,7 +145,6 @@ function build_one_center_atomic_full_parent_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     nside::Int,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
     term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
@@ -155,7 +152,6 @@ function build_one_center_atomic_full_parent_shell_sequence(
         bundle,
         (1:n, 1:n, 1:n);
         nside = nside,
-        timing_collector = timing_collector,
         term_coefficients = term_coefficients,
     )
 end
@@ -209,7 +205,6 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     working_box::Union{UnitRange{Int},NTuple{3,UnitRange{Int}}},
     nside::Int,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
 )
     n = length(bundle.basis)
     normalized_working_box = _one_center_atomic_legacy_profile_working_box(n, working_box)
@@ -218,7 +213,6 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
         bundle,
         normalized_working_box;
         nside = nside,
-        timing_collector = timing_collector,
         term_coefficients = term_coefficients,
     )
 end
@@ -267,30 +261,21 @@ function one_center_atomic_full_parent_fixed_block(
     timing_io::IO = stdout,
     kwargs...,
 )
-    (timing === false || _nested_timing_enabled(timing)) || throw(
-        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
-    )
-    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
-    total_start_ns = time_ns()
-    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
-    sequence_start_ns = time_ns()
-    n = length(bundle.basis)
-    sequence = _build_one_center_atomic_shell_sequence(
-        bundle,
-        (1:n, 1:n, 1:n);
-        timing_collector = collector,
-        term_coefficients = term_coefficients,
-        kwargs...,
-    )
-    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
-    adapter_start_ns = time_ns()
-    fixed_block = _nested_fixed_block(sequence, bundle)
-    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
-    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
-    isnothing(collector) && return fixed_block
-    timings = _nested_timing_summary(collector)
-    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
-    return TimedNestedFixedBlockBuild(fixed_block, timings)
+    return _nested_capture_timeg_report(timing, timing_io) do
+        term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+        sequence = @timeg "fixed_block.sequence_build" begin
+            n = length(bundle.basis)
+            _build_one_center_atomic_shell_sequence(
+                bundle,
+                (1:n, 1:n, 1:n);
+                term_coefficients = term_coefficients,
+                kwargs...,
+            )
+        end
+        return @timeg "fixed_block.adapter" begin
+            _nested_fixed_block(sequence, bundle)
+        end
+    end
 end
 
 function one_center_atomic_full_parent_fixed_block(
@@ -304,46 +289,30 @@ function one_center_atomic_full_parent_fixed_block(
     timing_io::IO = stdout,
     kwargs...,
 )
-    (timing === false || _nested_timing_enabled(timing)) || throw(
-        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
-    )
-    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
-    total_start_ns = time_ns()
-    bundle_start_ns = time_ns()
-    bundle = _mapped_ordinary_gausslet_1d_bundle(
-        basis;
-        exponents = isempty(exponents) ? expansion.exponents : exponents,
-        center = center,
-        backend = gausslet_backend,
-        refinement_levels = refinement_levels,
-    )
-    _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
-    if isnothing(collector)
-        return one_center_atomic_full_parent_fixed_block(
-            bundle;
-            expansion = expansion,
-            timing = false,
-            kwargs...,
-        )
+    return _nested_capture_timeg_report(timing, timing_io) do
+        bundle = @timeg "fixed_block.parent_bundle" begin
+            _mapped_ordinary_gausslet_1d_bundle(
+                basis;
+                exponents = isempty(exponents) ? expansion.exponents : exponents,
+                center = center,
+                backend = gausslet_backend,
+                refinement_levels = refinement_levels,
+            )
+        end
+        term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+        sequence = @timeg "fixed_block.sequence_build" begin
+            n = length(bundle.basis)
+            _build_one_center_atomic_shell_sequence(
+                bundle,
+                (1:n, 1:n, 1:n);
+                term_coefficients = term_coefficients,
+                kwargs...,
+            )
+        end
+        return @timeg "fixed_block.adapter" begin
+            _nested_fixed_block(sequence, bundle)
+        end
     end
-    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
-    sequence_start_ns = time_ns()
-    n = length(bundle.basis)
-    sequence = _build_one_center_atomic_shell_sequence(
-        bundle,
-        (1:n, 1:n, 1:n);
-        timing_collector = collector,
-        term_coefficients = term_coefficients,
-        kwargs...,
-    )
-    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
-    adapter_start_ns = time_ns()
-    fixed_block = _nested_fixed_block(sequence, bundle)
-    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
-    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
-    timings = _nested_timing_summary(collector)
-    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
-    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 """
@@ -370,31 +339,23 @@ function one_center_atomic_legacy_profile_fixed_block(
     nside::Int,
     kwargs...,
 )
-    (timing === false || _nested_timing_enabled(timing)) || throw(
-        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
-    )
-    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
-    total_start_ns = time_ns()
-    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
-    sequence_start_ns = time_ns()
-    normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
-    sequence = _build_one_center_atomic_shell_sequence(
-        bundle,
-        normalized_working_box;
-        nside = nside,
-        timing_collector = collector,
-        term_coefficients = term_coefficients,
-        kwargs...,
-    )
-    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
-    adapter_start_ns = time_ns()
-    fixed_block = _nested_fixed_block(sequence, bundle)
-    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
-    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
-    isnothing(collector) && return fixed_block
-    timings = _nested_timing_summary(collector)
-    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
-    return TimedNestedFixedBlockBuild(fixed_block, timings)
+    return _nested_capture_timeg_report(timing, timing_io) do
+        term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+        normalized_working_box =
+            _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
+        sequence = @timeg "fixed_block.sequence_build" begin
+            _build_one_center_atomic_shell_sequence(
+                bundle,
+                normalized_working_box;
+                nside = nside,
+                term_coefficients = term_coefficients,
+                kwargs...,
+            )
+        end
+        return @timeg "fixed_block.adapter" begin
+            _nested_fixed_block(sequence, bundle)
+        end
+    end
 end
 
 function one_center_atomic_legacy_profile_fixed_block(
@@ -410,49 +371,32 @@ function one_center_atomic_legacy_profile_fixed_block(
     nside::Int,
     kwargs...,
 )
-    (timing === false || _nested_timing_enabled(timing)) || throw(
-        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
-    )
-    collector = _nested_timing_enabled(timing) ? _nested_new_timing_collector() : nothing
-    total_start_ns = time_ns()
-    bundle_start_ns = time_ns()
-    bundle = _mapped_ordinary_gausslet_1d_bundle(
-        basis;
-        exponents = isempty(exponents) ? expansion.exponents : exponents,
-        center = center,
-        backend = gausslet_backend,
-        refinement_levels = refinement_levels,
-    )
-    _nested_record_timing!(collector, "fixed_block.parent_bundle", bundle_start_ns)
-    if isnothing(collector)
-        return one_center_atomic_legacy_profile_fixed_block(
-            bundle;
-            expansion = expansion,
-            timing = false,
-            working_box = working_box,
-            nside = nside,
-            kwargs...,
-        )
+    return _nested_capture_timeg_report(timing, timing_io) do
+        bundle = @timeg "fixed_block.parent_bundle" begin
+            _mapped_ordinary_gausslet_1d_bundle(
+                basis;
+                exponents = isempty(exponents) ? expansion.exponents : exponents,
+                center = center,
+                backend = gausslet_backend,
+                refinement_levels = refinement_levels,
+            )
+        end
+        term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+        normalized_working_box =
+            _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
+        sequence = @timeg "fixed_block.sequence_build" begin
+            _build_one_center_atomic_shell_sequence(
+                bundle,
+                normalized_working_box;
+                nside = nside,
+                term_coefficients = term_coefficients,
+                kwargs...,
+            )
+        end
+        return @timeg "fixed_block.adapter" begin
+            _nested_fixed_block(sequence, bundle)
+        end
     end
-    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
-    sequence_start_ns = time_ns()
-    normalized_working_box = _one_center_atomic_legacy_profile_working_box(length(bundle.basis), working_box)
-    sequence = _build_one_center_atomic_shell_sequence(
-        bundle,
-        normalized_working_box;
-        nside = nside,
-        timing_collector = collector,
-        term_coefficients = term_coefficients,
-        kwargs...,
-    )
-    _nested_record_timing!(collector, "fixed_block.sequence_build", sequence_start_ns)
-    adapter_start_ns = time_ns()
-    fixed_block = _nested_fixed_block(sequence, bundle)
-    _nested_record_timing!(collector, "fixed_block.adapter", adapter_start_ns)
-    _nested_record_timing!(collector, "fixed_block.total", total_start_ns)
-    timings = _nested_timing_summary(collector)
-    timing === :report && nested_fixed_block_timing_report(timing_io, timings)
-    return TimedNestedFixedBlockBuild(fixed_block, timings)
 end
 
 function _one_center_atomic_nested_layer_structure(

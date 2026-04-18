@@ -491,17 +491,9 @@ struct CartesianNestedSequenceContractAudit
     ownership_multi_owned_row_count::Int
 end
 
-struct NestedFixedBlockBuildTimingSummary
-    records::Vector{Pair{String,Float64}}
-end
-
 struct TimedNestedFixedBlockBuild{F}
     fixed_block::F
-    timings::NestedFixedBlockBuildTimingSummary
-end
-
-mutable struct _NestedFixedBlockTimingCollector
-    records::Vector{Pair{String,Float64}}
+    timings::TimeG.TimingReport
 end
 
 struct _CartesianNestedSupportAxes3D
@@ -1971,11 +1963,8 @@ function _nested_factorized_product_matrix(
     operator_x::AbstractMatrix{<:Real},
     operator_y::AbstractMatrix{<:Real},
     operator_z::AbstractMatrix{<:Real},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
-    timing_label::Union{Nothing,String} = nothing;
     include_basis_amplitudes::Bool = true,
 )
-    start_ns = time_ns()
     nbasis = length(factorized_basis.basis_triplets)
     matrix = Matrix{Float64}(undef, nbasis, nbasis)
     _nested_fill_factorized_product_matrix!(
@@ -1986,18 +1975,14 @@ function _nested_factorized_product_matrix(
         operator_z;
         include_basis_amplitudes = include_basis_amplitudes,
     )
-    !isnothing(timing_label) && _nested_record_timing!(timing_collector, timing_label, start_ns)
     return matrix
 end
 
 function _nested_factorized_sum_of_products(
     factorized_basis::_CartesianNestedFactorizedBasis3D,
     terms,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
-    timing_label::Union{Nothing,String} = nothing;
     include_basis_amplitudes::Bool = true,
 )
-    start_ns = time_ns()
     nbasis = length(factorized_basis.basis_triplets)
     matrix = Matrix{Float64}(undef, nbasis, nbasis)
     _nested_fill_factorized_sum_of_products!(
@@ -2006,7 +1991,6 @@ function _nested_factorized_sum_of_products(
         terms;
         include_basis_amplitudes = include_basis_amplitudes,
     )
-    !isnothing(timing_label) && _nested_record_timing!(timing_collector, timing_label, start_ns)
     return matrix
 end
 
@@ -2015,11 +1999,10 @@ function _nested_factorized_gaussian_terms(
     gaussian_terms_x::Array{Float64,3},
     gaussian_terms_y::Array{Float64,3},
     gaussian_terms_z::Array{Float64,3},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    start_ns = time_ns()
     _nested_normalize_term_storage(term_storage)
     axis_term_tables_x, axis_term_tables_y, axis_term_tables_z, nbasis = @timeg "diatomic.packet.gaussian_terms.setup" begin
         axis_term_tables_x = _nested_factorized_axis_term_tables(
@@ -2058,7 +2041,6 @@ function _nested_factorized_gaussian_terms(
         )
         gaussian_sum_local
     end
-    _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
     return (
         gaussian_terms = nothing,
         gaussian_sum = gaussian_sum,
@@ -2073,11 +2055,10 @@ function _nested_factorized_weight_aware_pair_terms(
     pair_terms_x::Array{Float64,3},
     pair_terms_y::Array{Float64,3},
     pair_terms_z::Array{Float64,3},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    start_ns = time_ns()
     _nested_normalize_term_storage(term_storage)
     axis_weight_x, axis_weight_y, axis_weight_z, basis_weights = @timeg "diatomic.packet.pair_terms.weights" begin
         axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
@@ -2141,7 +2122,6 @@ function _nested_factorized_weight_aware_pair_terms(
         )
         pair_sum_local
     end
-    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
     return (
         weights = basis_weights,
         pair_terms = nothing,
@@ -2825,11 +2805,10 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    start_ns = time_ns()
     _nested_normalize_term_storage(term_storage)
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
@@ -2861,8 +2840,6 @@ function _nested_weight_aware_pair_terms(
         pgdg.pair_factor_terms_raw,
     )
 
-    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
-
     return (
         weights = fixed_weights,
         pair_terms = nothing,
@@ -2877,11 +2854,10 @@ function _nested_weight_aware_pair_terms(
     support_coefficients::AbstractMatrix{<:Real},
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    start_ns = time_ns()
     _nested_normalize_term_storage(term_storage)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
@@ -2928,8 +2904,6 @@ function _nested_weight_aware_pair_terms(
         raw_pair_terms_z,
     )
 
-    _nested_record_timing!(timing_collector, "packet.pair_terms", start_ns)
-
     return (
         weights = fixed_weights,
         pair_terms = nothing,
@@ -2941,6 +2915,7 @@ function _nested_weight_aware_pair_terms(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
@@ -2956,7 +2931,6 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
-        nothing,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
@@ -2966,6 +2940,7 @@ function _nested_weight_aware_pair_terms(
     bundles::_CartesianNestedAxisBundles3D,
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
+    ;
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
@@ -2981,7 +2956,6 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
-        nothing,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
@@ -3009,15 +2983,13 @@ function _nested_shell_packet(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.packet.total" begin
-        total_start_ns = time_ns()
         packet_kernel, term_storage_value, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
-            setup_start_ns = time_ns()
             packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
             term_storage_value = _nested_normalize_term_storage(term_storage)
             support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
@@ -3050,7 +3022,6 @@ function _nested_shell_packet(
                 packet_kernel == :support_reference ?
                 _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
                 (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
-            _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
             (
                 packet_kernel,
                 term_storage_value,
@@ -3074,12 +3045,9 @@ function _nested_shell_packet(
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
-                timing_collector,
-                "packet.base.overlap",
             ) :
             begin
                 overlap_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     overlap_local,
                     support_workspace,
@@ -3092,7 +3060,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
                 overlap_local
             end
         end
@@ -3106,12 +3073,9 @@ function _nested_shell_packet(
                     (factorized_base_tables.overlap, factorized_base_tables.kinetic, factorized_base_tables.overlap),
                     (factorized_base_tables.overlap, factorized_base_tables.overlap, factorized_base_tables.kinetic),
                 ),
-                timing_collector,
-                "packet.base.kinetic",
             ) :
             begin
                 kinetic_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_sum_of_support_products!(
                     kinetic_local,
                     support_workspace,
@@ -3126,7 +3090,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
                 kinetic_local
             end
         end
@@ -3138,12 +3101,9 @@ function _nested_shell_packet(
                 factorized_base_tables.position,
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
-                timing_collector,
-                "packet.base.position_x",
             ) :
             begin
                 position_x_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_x_local,
                     support_workspace,
@@ -3156,7 +3116,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
                 position_x_local
             end
         end
@@ -3168,12 +3127,9 @@ function _nested_shell_packet(
                 factorized_base_tables.overlap,
                 factorized_base_tables.position,
                 factorized_base_tables.overlap,
-                timing_collector,
-                "packet.base.position_y",
             ) :
             begin
                 position_y_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_y_local,
                     support_workspace,
@@ -3186,7 +3142,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
                 position_y_local
             end
         end
@@ -3198,12 +3153,9 @@ function _nested_shell_packet(
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
                 factorized_base_tables.position,
-                timing_collector,
-                "packet.base.position_z",
             ) :
             begin
                 position_z_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_z_local,
                     support_workspace,
@@ -3216,7 +3168,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
                 position_z_local
             end
         end
@@ -3228,12 +3179,9 @@ function _nested_shell_packet(
                 factorized_base_tables.x2,
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
-                timing_collector,
-                "packet.base.x2_x",
             ) :
             begin
                 x2_x_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_x_local,
                     support_workspace,
@@ -3246,7 +3194,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
                 x2_x_local
             end
         end
@@ -3258,12 +3205,9 @@ function _nested_shell_packet(
                 factorized_base_tables.overlap,
                 factorized_base_tables.x2,
                 factorized_base_tables.overlap,
-                timing_collector,
-                "packet.base.x2_y",
             ) :
             begin
                 x2_y_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_y_local,
                     support_workspace,
@@ -3276,7 +3220,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
                 x2_y_local
             end
         end
@@ -3288,12 +3231,9 @@ function _nested_shell_packet(
                 factorized_base_tables.overlap,
                 factorized_base_tables.overlap,
                 factorized_base_tables.x2,
-                timing_collector,
-                "packet.base.x2_z",
             ) :
             begin
                 x2_z_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_z_local,
                     support_workspace,
@@ -3306,7 +3246,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
                 x2_z_local
             end
         end
@@ -3321,7 +3260,6 @@ function _nested_shell_packet(
                 pgdg.pair_factor_terms_raw,
                 pgdg.pair_factor_terms_raw,
                 pgdg.pair_factor_terms_raw,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
@@ -3332,7 +3270,6 @@ function _nested_shell_packet(
                 support_coefficients,
                 support_workspace,
                 contraction_scratch,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
@@ -3344,7 +3281,6 @@ function _nested_shell_packet(
                 pgdg.gaussian_factor_terms,
                 pgdg.gaussian_factor_terms,
                 pgdg.gaussian_factor_terms,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
@@ -3352,7 +3288,6 @@ function _nested_shell_packet(
                 isnothing(term_coefficients) && throw(
                     ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
                 )
-                start_ns = time_ns()
                 gaussian_sum = _nested_support_reference_gaussian_sum(
                     support_axes,
                     support_coefficients,
@@ -3363,14 +3298,12 @@ function _nested_shell_packet(
                     pgdg.gaussian_factor_terms,
                     pgdg.gaussian_factor_terms,
                 )
-                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
                 (
                     gaussian_terms = nothing,
                     gaussian_sum = gaussian_sum,
                 )
             end
         end
-        _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
         (
             packet = _CartesianNestedShellPacket3D(
@@ -3398,15 +3331,13 @@ function _nested_shell_packet(
     bundles::_CartesianNestedAxisBundles3D,
     coefficient_matrix::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing;
+    ;
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     return @timeg "diatomic.packet.total" begin
-        total_start_ns = time_ns()
         packet_kernel, term_storage_value, pgdg_x, pgdg_y, pgdg_z, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables_x, factorized_base_tables_y, factorized_base_tables_z, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
-            setup_start_ns = time_ns()
             packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
             term_storage_value = _nested_normalize_term_storage(term_storage)
             dims = _nested_axis_lengths(bundles)
@@ -3463,7 +3394,6 @@ function _nested_shell_packet(
                 packet_kernel == :support_reference ?
                 _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
                 (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
-            _nested_record_timing!(timing_collector, "packet.setup", setup_start_ns)
             (
                 packet_kernel,
                 term_storage_value,
@@ -3492,12 +3422,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.overlap,
                 factorized_base_tables_y.overlap,
                 factorized_base_tables_z.overlap,
-                timing_collector,
-                "packet.base.overlap",
             ) :
             begin
                 overlap_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     overlap_local,
                     support_workspace,
@@ -3510,7 +3437,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.overlap", start_ns)
                 overlap_local
             end
         end
@@ -3524,12 +3450,9 @@ function _nested_shell_packet(
                     (factorized_base_tables_x.overlap, factorized_base_tables_y.kinetic, factorized_base_tables_z.overlap),
                     (factorized_base_tables_x.overlap, factorized_base_tables_y.overlap, factorized_base_tables_z.kinetic),
                 ),
-                timing_collector,
-                "packet.base.kinetic",
             ) :
             begin
                 kinetic_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_sum_of_support_products!(
                     kinetic_local,
                     support_workspace,
@@ -3544,7 +3467,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.kinetic", start_ns)
                 kinetic_local
             end
         end
@@ -3556,12 +3478,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.position,
                 factorized_base_tables_y.overlap,
                 factorized_base_tables_z.overlap,
-                timing_collector,
-                "packet.base.position_x",
             ) :
             begin
                 position_x_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_x_local,
                     support_workspace,
@@ -3574,7 +3493,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_x", start_ns)
                 position_x_local
             end
         end
@@ -3586,12 +3504,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.overlap,
                 factorized_base_tables_y.position,
                 factorized_base_tables_z.overlap,
-                timing_collector,
-                "packet.base.position_y",
             ) :
             begin
                 position_y_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_y_local,
                     support_workspace,
@@ -3604,7 +3519,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_y", start_ns)
                 position_y_local
             end
         end
@@ -3616,12 +3530,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.overlap,
                 factorized_base_tables_y.overlap,
                 factorized_base_tables_z.position,
-                timing_collector,
-                "packet.base.position_z",
             ) :
             begin
                 position_z_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     position_z_local,
                     support_workspace,
@@ -3634,7 +3545,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.position_z", start_ns)
                 position_z_local
             end
         end
@@ -3646,12 +3556,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.x2,
                 factorized_base_tables_y.overlap,
                 factorized_base_tables_z.overlap,
-                timing_collector,
-                "packet.base.x2_x",
             ) :
             begin
                 x2_x_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_x_local,
                     support_workspace,
@@ -3664,7 +3571,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_x", start_ns)
                 x2_x_local
             end
         end
@@ -3676,12 +3582,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.overlap,
                 factorized_base_tables_y.x2,
                 factorized_base_tables_z.overlap,
-                timing_collector,
-                "packet.base.x2_y",
             ) :
             begin
                 x2_y_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_y_local,
                     support_workspace,
@@ -3694,7 +3597,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_y", start_ns)
                 x2_y_local
             end
         end
@@ -3706,12 +3608,9 @@ function _nested_shell_packet(
                 factorized_base_tables_x.overlap,
                 factorized_base_tables_y.overlap,
                 factorized_base_tables_z.x2,
-                timing_collector,
-                "packet.base.x2_z",
             ) :
             begin
                 x2_z_local = Matrix{Float64}(undef, nshell, nshell)
-                start_ns = time_ns()
                 _nested_contract_support_product!(
                     x2_z_local,
                     support_workspace,
@@ -3724,7 +3623,6 @@ function _nested_shell_packet(
                     beta = 0.0,
                     assume_symmetric = true,
                 )
-                _nested_record_timing!(timing_collector, "packet.base.x2_z", start_ns)
                 x2_z_local
             end
         end
@@ -3739,7 +3637,6 @@ function _nested_shell_packet(
                 pgdg_x.pair_factor_terms_raw,
                 pgdg_y.pair_factor_terms_raw,
                 pgdg_z.pair_factor_terms_raw,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
@@ -3750,7 +3647,6 @@ function _nested_shell_packet(
                 support_coefficients,
                 support_workspace,
                 contraction_scratch,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
@@ -3762,7 +3658,6 @@ function _nested_shell_packet(
                 pgdg_x.gaussian_factor_terms,
                 pgdg_y.gaussian_factor_terms,
                 pgdg_z.gaussian_factor_terms,
-                timing_collector;
                 term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
@@ -3770,7 +3665,6 @@ function _nested_shell_packet(
                 isnothing(term_coefficients) && throw(
                     ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
                 )
-                start_ns = time_ns()
                 gaussian_sum = _nested_support_reference_gaussian_sum(
                     support_axes,
                     support_coefficients,
@@ -3781,14 +3675,12 @@ function _nested_shell_packet(
                     pgdg_y.gaussian_factor_terms,
                     pgdg_z.gaussian_factor_terms,
                 )
-                _nested_record_timing!(timing_collector, "packet.gaussian_terms", start_ns)
                 (
                     gaussian_terms = nothing,
                     gaussian_sum = gaussian_sum,
                 )
             end
         end
-        _nested_record_timing!(timing_collector, "packet.total", total_start_ns)
 
         (
             packet = _CartesianNestedShellPacket3D(
@@ -4007,87 +3899,94 @@ function _nested_complete_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
+    shell_faces, edges, corners, coefficient_matrix, face_column_ranges, edge_column_ranges, corner_column_ranges, support_indices = @timeg "shell_layer.nonpacket" begin
+        shell_faces = _nested_rectangular_shell(
+            pgdg,
+            x_interval,
+            y_interval,
+            z_interval;
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            x_fixed = x_fixed,
+            y_fixed = y_fixed,
+            z_fixed = z_fixed,
+            packet_kernel = packet_kernel,
+            term_storage = term_storage,
+            term_coefficients = term_coefficients,
+        )
 
-    shell_faces = _nested_rectangular_shell(
-        pgdg,
-        x_interval,
-        y_interval,
-        z_interval;
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        x_fixed = x_fixed,
-        y_fixed = y_fixed,
-        z_fixed = z_fixed,
-        packet_kernel = packet_kernel,
-        term_storage = term_storage,
-        term_coefficients = term_coefficients,
-    )
+        side_x_edge = _nested_doside_1d(pgdg, x_interval, retain_x_edge)
+        side_y_edge = _nested_doside_1d(pgdg, y_interval, retain_y_edge)
+        side_z_edge = _nested_doside_1d(pgdg, z_interval, retain_z_edge)
 
-    side_x_edge = _nested_doside_1d(pgdg, x_interval, retain_x_edge)
-    side_y_edge = _nested_doside_1d(pgdg, y_interval, retain_y_edge)
-    side_z_edge = _nested_doside_1d(pgdg, z_interval, retain_z_edge)
+        edges = _CartesianNestedEdge3D[
+            _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), n1d),
+            _nested_edge_product(:x, (:low, :high), side_x_edge, (y_fixed[1], z_fixed[2]), n1d),
+            _nested_edge_product(:x, (:high, :low), side_x_edge, (y_fixed[2], z_fixed[1]), n1d),
+            _nested_edge_product(:x, (:high, :high), side_x_edge, (y_fixed[2], z_fixed[2]), n1d),
+            _nested_edge_product(:y, (:low, :low), side_y_edge, (x_fixed[1], z_fixed[1]), n1d),
+            _nested_edge_product(:y, (:low, :high), side_y_edge, (x_fixed[1], z_fixed[2]), n1d),
+            _nested_edge_product(:y, (:high, :low), side_y_edge, (x_fixed[2], z_fixed[1]), n1d),
+            _nested_edge_product(:y, (:high, :high), side_y_edge, (x_fixed[2], z_fixed[2]), n1d),
+            _nested_edge_product(:z, (:low, :low), side_z_edge, (x_fixed[1], y_fixed[1]), n1d),
+            _nested_edge_product(:z, (:low, :high), side_z_edge, (x_fixed[1], y_fixed[2]), n1d),
+            _nested_edge_product(:z, (:high, :low), side_z_edge, (x_fixed[2], y_fixed[1]), n1d),
+            _nested_edge_product(:z, (:high, :high), side_z_edge, (x_fixed[2], y_fixed[2]), n1d),
+        ]
 
-    edges = _CartesianNestedEdge3D[
-        _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), n1d),
-        _nested_edge_product(:x, (:low, :high), side_x_edge, (y_fixed[1], z_fixed[2]), n1d),
-        _nested_edge_product(:x, (:high, :low), side_x_edge, (y_fixed[2], z_fixed[1]), n1d),
-        _nested_edge_product(:x, (:high, :high), side_x_edge, (y_fixed[2], z_fixed[2]), n1d),
-        _nested_edge_product(:y, (:low, :low), side_y_edge, (x_fixed[1], z_fixed[1]), n1d),
-        _nested_edge_product(:y, (:low, :high), side_y_edge, (x_fixed[1], z_fixed[2]), n1d),
-        _nested_edge_product(:y, (:high, :low), side_y_edge, (x_fixed[2], z_fixed[1]), n1d),
-        _nested_edge_product(:y, (:high, :high), side_y_edge, (x_fixed[2], z_fixed[2]), n1d),
-        _nested_edge_product(:z, (:low, :low), side_z_edge, (x_fixed[1], y_fixed[1]), n1d),
-        _nested_edge_product(:z, (:low, :high), side_z_edge, (x_fixed[1], y_fixed[2]), n1d),
-        _nested_edge_product(:z, (:high, :low), side_z_edge, (x_fixed[2], y_fixed[1]), n1d),
-        _nested_edge_product(:z, (:high, :high), side_z_edge, (x_fixed[2], y_fixed[2]), n1d),
-    ]
+        corners = _CartesianNestedCorner3D[
+            _nested_corner_piece((:low, :low, :low), (x_fixed[1], y_fixed[1], z_fixed[1]), n1d),
+            _nested_corner_piece((:low, :low, :high), (x_fixed[1], y_fixed[1], z_fixed[2]), n1d),
+            _nested_corner_piece((:low, :high, :low), (x_fixed[1], y_fixed[2], z_fixed[1]), n1d),
+            _nested_corner_piece((:low, :high, :high), (x_fixed[1], y_fixed[2], z_fixed[2]), n1d),
+            _nested_corner_piece((:high, :low, :low), (x_fixed[2], y_fixed[1], z_fixed[1]), n1d),
+            _nested_corner_piece((:high, :low, :high), (x_fixed[2], y_fixed[1], z_fixed[2]), n1d),
+            _nested_corner_piece((:high, :high, :low), (x_fixed[2], y_fixed[2], z_fixed[1]), n1d),
+            _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), n1d),
+        ]
 
-    corners = _CartesianNestedCorner3D[
-        _nested_corner_piece((:low, :low, :low), (x_fixed[1], y_fixed[1], z_fixed[1]), n1d),
-        _nested_corner_piece((:low, :low, :high), (x_fixed[1], y_fixed[1], z_fixed[2]), n1d),
-        _nested_corner_piece((:low, :high, :low), (x_fixed[1], y_fixed[2], z_fixed[1]), n1d),
-        _nested_corner_piece((:low, :high, :high), (x_fixed[1], y_fixed[2], z_fixed[2]), n1d),
-        _nested_corner_piece((:high, :low, :low), (x_fixed[2], y_fixed[1], z_fixed[1]), n1d),
-        _nested_corner_piece((:high, :low, :high), (x_fixed[2], y_fixed[1], z_fixed[2]), n1d),
-        _nested_corner_piece((:high, :high, :low), (x_fixed[2], y_fixed[2], z_fixed[1]), n1d),
-        _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), n1d),
-    ]
+        coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
+        append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
+        append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
+        coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
 
-    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
-    append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
-    append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
-    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
+        face_column_ranges = shell_faces.face_column_ranges
+        edge_column_ranges = UnitRange{Int}[]
+        column_start = size(shell_faces.coefficient_matrix, 2) + 1
+        for edge in edges
+            ncols = size(edge.coefficient_matrix, 2)
+            push!(edge_column_ranges, column_start:(column_start + ncols - 1))
+            column_start += ncols
+        end
+        corner_column_ranges = UnitRange{Int}[]
+        for corner in corners
+            ncols = size(corner.coefficient_matrix, 2)
+            push!(corner_column_ranges, column_start:(column_start + ncols - 1))
+            column_start += ncols
+        end
 
-    face_column_ranges = shell_faces.face_column_ranges
-    edge_column_ranges = UnitRange{Int}[]
-    column_start = size(shell_faces.coefficient_matrix, 2) + 1
-    for edge in edges
-        ncols = size(edge.coefficient_matrix, 2)
-        push!(edge_column_ranges, column_start:(column_start + ncols - 1))
-        column_start += ncols
+        support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
+        (
+            shell_faces,
+            edges,
+            corners,
+            coefficient_matrix,
+            face_column_ranges,
+            edge_column_ranges,
+            corner_column_ranges,
+            support_indices,
+        )
     end
-    corner_column_ranges = UnitRange{Int}[]
-    for corner in corners
-        ncols = size(corner.coefficient_matrix, 2)
-        push!(corner_column_ranges, column_start:(column_start + ncols - 1))
-        column_start += ncols
-    end
-
-    support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
-    _nested_record_timing!(timing_collector, "shell_layer.nonpacket", prepacket_start_ns)
     shell_data = _nested_shell_packet(
         pgdg,
         coefficient_matrix,
         support_indices,
-        timing_collector;
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
@@ -4213,7 +4112,6 @@ function _nested_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -4228,7 +4126,6 @@ function _nested_shell_sequence(
         core_coefficients,
         shell_layers;
         enforce_coverage = enforce_coverage,
-        timing_collector = timing_collector,
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
@@ -4242,32 +4139,31 @@ function _nested_shell_sequence_from_core_block(
     core_coefficients::AbstractMatrix{<:Real},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
-    prepacket_start_ns = time_ns()
     n1d = size(pgdg.overlap, 1)
-    support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
-    working_box =
-        enforce_coverage ?
-        _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, n1d) :
-        _nested_sequence_working_box(core_indices, shell_layers, n1d)
-    coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
-    append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
-        _nested_hcat_coefficient_maps(coefficient_blocks)
+    support_indices, working_box, coefficient_matrix = @timeg "sequence_merge.nonpacket" begin
+        support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
+        working_box =
+            enforce_coverage ?
+            _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, n1d) :
+            _nested_sequence_working_box(core_indices, shell_layers, n1d)
+        coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
+        append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
+        coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
+            _nested_hcat_coefficient_maps(coefficient_blocks)
+        end
+        (support_indices, working_box, coefficient_matrix)
     end
-    _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
     shell_data = if build_packet
         @timeg "diatomic.sequence.packet" begin
             _nested_shell_packet(
                 pgdg,
                 coefficient_matrix,
                 support_indices,
-                timing_collector;
                 packet_kernel = packet_kernel,
                 term_storage = term_storage,
                 term_coefficients = term_coefficients,
@@ -4311,7 +4207,6 @@ function _nested_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -4348,7 +4243,6 @@ function _nested_rectangular_shell(
         bundles,
         coefficient_matrix,
         support_indices,
-        timing_collector;
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
@@ -4377,86 +4271,94 @@ function _nested_complete_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
-    shell_faces = _nested_rectangular_shell(
-        bundles,
-        x_interval,
-        y_interval,
-        z_interval;
-        retain_xy = retain_xy,
-        retain_xz = retain_xz,
-        retain_yz = retain_yz,
-        x_fixed = x_fixed,
-        y_fixed = y_fixed,
-        z_fixed = z_fixed,
-        packet_kernel = packet_kernel,
-        term_storage = term_storage,
-        term_coefficients = term_coefficients,
-    )
+    shell_faces, edges, corners, coefficient_matrix, face_column_ranges, edge_column_ranges, corner_column_ranges, support_indices = @timeg "shell_layer.nonpacket" begin
+        shell_faces = _nested_rectangular_shell(
+            bundles,
+            x_interval,
+            y_interval,
+            z_interval;
+            retain_xy = retain_xy,
+            retain_xz = retain_xz,
+            retain_yz = retain_yz,
+            x_fixed = x_fixed,
+            y_fixed = y_fixed,
+            z_fixed = z_fixed,
+            packet_kernel = packet_kernel,
+            term_storage = term_storage,
+            term_coefficients = term_coefficients,
+        )
 
-    side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
-    side_y_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_y_edge)
-    side_z_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_z_edge)
+        side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
+        side_y_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_y_edge)
+        side_z_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_z_edge)
 
-    edges = _CartesianNestedEdge3D[
-        _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), dims),
-        _nested_edge_product(:x, (:low, :high), side_x_edge, (y_fixed[1], z_fixed[2]), dims),
-        _nested_edge_product(:x, (:high, :low), side_x_edge, (y_fixed[2], z_fixed[1]), dims),
-        _nested_edge_product(:x, (:high, :high), side_x_edge, (y_fixed[2], z_fixed[2]), dims),
-        _nested_edge_product(:y, (:low, :low), side_y_edge, (x_fixed[1], z_fixed[1]), dims),
-        _nested_edge_product(:y, (:low, :high), side_y_edge, (x_fixed[1], z_fixed[2]), dims),
-        _nested_edge_product(:y, (:high, :low), side_y_edge, (x_fixed[2], z_fixed[1]), dims),
-        _nested_edge_product(:y, (:high, :high), side_y_edge, (x_fixed[2], z_fixed[2]), dims),
-        _nested_edge_product(:z, (:low, :low), side_z_edge, (x_fixed[1], y_fixed[1]), dims),
-        _nested_edge_product(:z, (:low, :high), side_z_edge, (x_fixed[1], y_fixed[2]), dims),
-        _nested_edge_product(:z, (:high, :low), side_z_edge, (x_fixed[2], y_fixed[1]), dims),
-        _nested_edge_product(:z, (:high, :high), side_z_edge, (x_fixed[2], y_fixed[2]), dims),
-    ]
+        edges = _CartesianNestedEdge3D[
+            _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), dims),
+            _nested_edge_product(:x, (:low, :high), side_x_edge, (y_fixed[1], z_fixed[2]), dims),
+            _nested_edge_product(:x, (:high, :low), side_x_edge, (y_fixed[2], z_fixed[1]), dims),
+            _nested_edge_product(:x, (:high, :high), side_x_edge, (y_fixed[2], z_fixed[2]), dims),
+            _nested_edge_product(:y, (:low, :low), side_y_edge, (x_fixed[1], z_fixed[1]), dims),
+            _nested_edge_product(:y, (:low, :high), side_y_edge, (x_fixed[1], z_fixed[2]), dims),
+            _nested_edge_product(:y, (:high, :low), side_y_edge, (x_fixed[2], z_fixed[1]), dims),
+            _nested_edge_product(:y, (:high, :high), side_y_edge, (x_fixed[2], z_fixed[2]), dims),
+            _nested_edge_product(:z, (:low, :low), side_z_edge, (x_fixed[1], y_fixed[1]), dims),
+            _nested_edge_product(:z, (:low, :high), side_z_edge, (x_fixed[1], y_fixed[2]), dims),
+            _nested_edge_product(:z, (:high, :low), side_z_edge, (x_fixed[2], y_fixed[1]), dims),
+            _nested_edge_product(:z, (:high, :high), side_z_edge, (x_fixed[2], y_fixed[2]), dims),
+        ]
 
-    corners = _CartesianNestedCorner3D[
-        _nested_corner_piece((:low, :low, :low), (x_fixed[1], y_fixed[1], z_fixed[1]), dims),
-        _nested_corner_piece((:low, :low, :high), (x_fixed[1], y_fixed[1], z_fixed[2]), dims),
-        _nested_corner_piece((:low, :high, :low), (x_fixed[1], y_fixed[2], z_fixed[1]), dims),
-        _nested_corner_piece((:low, :high, :high), (x_fixed[1], y_fixed[2], z_fixed[2]), dims),
-        _nested_corner_piece((:high, :low, :low), (x_fixed[2], y_fixed[1], z_fixed[1]), dims),
-        _nested_corner_piece((:high, :low, :high), (x_fixed[2], y_fixed[1], z_fixed[2]), dims),
-        _nested_corner_piece((:high, :high, :low), (x_fixed[2], y_fixed[2], z_fixed[1]), dims),
-        _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), dims),
-    ]
+        corners = _CartesianNestedCorner3D[
+            _nested_corner_piece((:low, :low, :low), (x_fixed[1], y_fixed[1], z_fixed[1]), dims),
+            _nested_corner_piece((:low, :low, :high), (x_fixed[1], y_fixed[1], z_fixed[2]), dims),
+            _nested_corner_piece((:low, :high, :low), (x_fixed[1], y_fixed[2], z_fixed[1]), dims),
+            _nested_corner_piece((:low, :high, :high), (x_fixed[1], y_fixed[2], z_fixed[2]), dims),
+            _nested_corner_piece((:high, :low, :low), (x_fixed[2], y_fixed[1], z_fixed[1]), dims),
+            _nested_corner_piece((:high, :low, :high), (x_fixed[2], y_fixed[1], z_fixed[2]), dims),
+            _nested_corner_piece((:high, :high, :low), (x_fixed[2], y_fixed[2], z_fixed[1]), dims),
+            _nested_corner_piece((:high, :high, :high), (x_fixed[2], y_fixed[2], z_fixed[2]), dims),
+        ]
 
-    coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
-    append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
-    append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
-    coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
+        coefficient_blocks = AbstractMatrix{Float64}[face.coefficient_matrix for face in shell_faces.faces]
+        append!(coefficient_blocks, [edge.coefficient_matrix for edge in edges])
+        append!(coefficient_blocks, [corner.coefficient_matrix for corner in corners])
+        coefficient_matrix = _nested_hcat_coefficient_maps(coefficient_blocks)
 
-    face_column_ranges = shell_faces.face_column_ranges
-    edge_column_ranges = UnitRange{Int}[]
-    column_start = size(shell_faces.coefficient_matrix, 2) + 1
-    for edge in edges
-        ncols = size(edge.coefficient_matrix, 2)
-        push!(edge_column_ranges, column_start:(column_start + ncols - 1))
-        column_start += ncols
+        face_column_ranges = shell_faces.face_column_ranges
+        edge_column_ranges = UnitRange{Int}[]
+        column_start = size(shell_faces.coefficient_matrix, 2) + 1
+        for edge in edges
+            ncols = size(edge.coefficient_matrix, 2)
+            push!(edge_column_ranges, column_start:(column_start + ncols - 1))
+            column_start += ncols
+        end
+        corner_column_ranges = UnitRange{Int}[]
+        for corner in corners
+            ncols = size(corner.coefficient_matrix, 2)
+            push!(corner_column_ranges, column_start:(column_start + ncols - 1))
+            column_start += ncols
+        end
+
+        support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
+        (
+            shell_faces,
+            edges,
+            corners,
+            coefficient_matrix,
+            face_column_ranges,
+            edge_column_ranges,
+            corner_column_ranges,
+            support_indices,
+        )
     end
-    corner_column_ranges = UnitRange{Int}[]
-    for corner in corners
-        ncols = size(corner.coefficient_matrix, 2)
-        push!(corner_column_ranges, column_start:(column_start + ncols - 1))
-        column_start += ncols
-    end
-
-    support_indices = _nested_complete_shell_support_indices(shell_faces.faces, edges, corners)
-    _nested_record_timing!(timing_collector, "shell_layer.nonpacket", prepacket_start_ns)
     shell_data = _nested_shell_packet(
         bundles,
         coefficient_matrix,
         support_indices,
-        timing_collector;
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
@@ -4483,7 +4385,6 @@ function _nested_shell_sequence(
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -4498,7 +4399,6 @@ function _nested_shell_sequence(
         core_coefficients,
         shell_layers;
         enforce_coverage = enforce_coverage,
-        timing_collector = timing_collector,
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
@@ -4512,32 +4412,31 @@ function _nested_shell_sequence_from_core_block(
     core_coefficients::AbstractMatrix{<:Real},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
-    prepacket_start_ns = time_ns()
     dims = _nested_axis_lengths(bundles)
-    support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
-    working_box =
-        enforce_coverage ?
-        _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, dims) :
-        _nested_sequence_working_box(core_indices, shell_layers, dims)
-    coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
-    append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
-    coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
-        _nested_hcat_coefficient_maps(coefficient_blocks)
+    support_indices, working_box, coefficient_matrix = @timeg "sequence_merge.nonpacket" begin
+        support_indices = _nested_sequence_support_indices(core_indices, shell_layers)
+        working_box =
+            enforce_coverage ?
+            _nested_assert_sequence_coverage(core_indices, shell_layers, support_indices, dims) :
+            _nested_sequence_working_box(core_indices, shell_layers, dims)
+        coefficient_blocks = _CartesianCoefficientMap[core_coefficients]
+        append!(coefficient_blocks, [shell.coefficient_matrix for shell in shell_layers])
+        coefficient_matrix = @timeg "diatomic.sequence.coefficient_concat" begin
+            _nested_hcat_coefficient_maps(coefficient_blocks)
+        end
+        (support_indices, working_box, coefficient_matrix)
     end
-    _nested_record_timing!(timing_collector, "sequence_merge.nonpacket", prepacket_start_ns)
     shell_data = if build_packet
         @timeg "diatomic.sequence.packet" begin
             _nested_shell_packet(
                 bundles,
                 coefficient_matrix,
                 support_indices,
-                timing_collector;
                 packet_kernel = packet_kernel,
                 term_storage = term_storage,
                 term_coefficients = term_coefficients,
@@ -4595,7 +4494,6 @@ function _nested_complete_shell_sequence_for_box(
     retain_x_edge::Union{Nothing,Int} = nothing,
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
-    timing_collector::Union{Nothing,_NestedFixedBlockTimingCollector} = nothing,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -4628,7 +4526,6 @@ function _nested_complete_shell_sequence_for_box(
                 x_fixed = (first(current_box[1]), last(current_box[1])),
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
-                timing_collector = timing_collector,
                 packet_kernel = packet_kernel,
                 term_storage = term_storage,
                 term_coefficients = term_coefficients,
@@ -4640,7 +4537,6 @@ function _nested_complete_shell_sequence_for_box(
         bundles,
         current_box...,
         shell_layers,
-        timing_collector = timing_collector,
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,

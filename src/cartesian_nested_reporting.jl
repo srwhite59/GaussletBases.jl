@@ -1,98 +1,79 @@
-function Base.show(io::IO, timings::NestedFixedBlockBuildTimingSummary)
-    total = nested_fixed_block_timing_seconds(timings, "fixed_block.total")
-    print(
-        io,
-        "NestedFixedBlockBuildTimingSummary(ntimings=",
-        length(timings.records),
-        ", total=",
-        total,
-        "s)",
-    )
-end
-
 function Base.show(io::IO, timed::TimedNestedFixedBlockBuild)
     print(
         io,
         "TimedNestedFixedBlockBuild(nfixed=",
         size(timed.fixed_block.overlap, 1),
         ", total=",
-        nested_fixed_block_timing_seconds(timed.timings, "fixed_block.total"),
+        _nested_timeg_report_seconds(timed.timings, "fixed_block.total"),
         "s)",
     )
 end
 
-function _nested_elapsed_seconds(start_ns::UInt64)
-    return (time_ns() - start_ns) / 1.0e9
+function _nested_timeg_report_seconds(
+    report::TimeG.TimingReport,
+    label::AbstractString,
+)
+    return sum(_nested_timeg_report_seconds(node, label) for node in report.roots)
 end
 
-function _nested_timing_enabled(timing)
+function _nested_timeg_report_seconds(
+    node::TimeG.TimingNode,
+    label::AbstractString,
+)
+    total = node.label == label ? node.elapsed_seconds : 0.0
+    total += sum(_nested_timeg_report_seconds(child, label) for child in node.children)
+    return total
+end
+
+function _nested_timing_requested(timing)
     return timing === true || timing === :report
 end
 
-function _nested_new_timing_collector()
-    return _NestedFixedBlockTimingCollector(Pair{String,Float64}[])
-end
-
-function _nested_record_timing!(
-    collector::Union{Nothing,_NestedFixedBlockTimingCollector},
-    label::AbstractString,
-    start_ns::UInt64,
+function _nested_capture_timeg_report(
+    build,
+    timing::Union{Bool,Symbol},
+    timing_io::IO,
 )
-    isnothing(collector) && return nothing
-    push!(collector.records, String(label) => _nested_elapsed_seconds(start_ns))
-    return nothing
-end
-
-function _nested_timing_summary(
-    collector::Union{Nothing,_NestedFixedBlockTimingCollector},
-)
-    return NestedFixedBlockBuildTimingSummary(
-        isnothing(collector) ? Pair{String,Float64}[] : copy(collector.records),
+    timing === false && return build()
+    _nested_timing_requested(timing) || throw(
+        ArgumentError("one-center atomic fixed-block timing must be false, true, or :report"),
     )
-end
-
-function nested_fixed_block_timing_seconds(
-    timings::NestedFixedBlockBuildTimingSummary,
-    label::AbstractString,
-)
-    return sum(record.second for record in timings.records if record.first == label)
+    old_config = TimeG._TIMING_CONFIG[]
+    state = TimeG._timing_state()
+    parent = isempty(state.stack) ? nothing : state.stack[end]
+    root_count = length(state.roots)
+    child_count = isnothing(parent) ? 0 : length(parent.children)
+    try
+        set_timing!(true)
+        set_timing_live!(false)
+        set_timing_thresholds!(expand = 0.0, drop = 0.0)
+        fixed_block = @timeg "fixed_block.total" begin
+            build()
+        end
+        node = isnothing(parent) ? state.roots[root_count + 1] : parent.children[child_count + 1]
+        timings = TimeG.TimingReport(TimeG.TimingNode[deepcopy(node)])
+        timing === :report && nested_fixed_block_timing_report(timing_io, timings)
+        return TimedNestedFixedBlockBuild(fixed_block, timings)
+    finally
+        TimeG._TIMING_CONFIG[] = old_config
+    end
 end
 
 function nested_fixed_block_timing_report(
     io::IO,
-    timings::NestedFixedBlockBuildTimingSummary,
+    timings::TimeG.TimingReport,
 )
-    println(io, "Nested fixed-block timings")
-    labels = (
-        "fixed_block.total",
-        "fixed_block.parent_bundle",
-        "fixed_block.sequence_build",
-        "fixed_block.adapter",
-        "shell_layer.nonpacket",
-        "sequence_merge.nonpacket",
-        "packet.setup",
-        "packet.total",
-        "packet.base.overlap",
-        "packet.base.kinetic",
-        "packet.base.position_x",
-        "packet.base.position_y",
-        "packet.base.position_z",
-        "packet.base.x2_x",
-        "packet.base.x2_y",
-        "packet.base.x2_z",
-        "packet.gaussian_terms",
-        "packet.pair_terms",
-    )
-    for label in labels
-        seconds = nested_fixed_block_timing_seconds(timings, label)
-        seconds > 0.0 || continue
-        println(io, "  ", rpad(label, 28), " ", string(round(seconds; digits = 6)), " s")
+    old_config = TimeG._TIMING_CONFIG[]
+    try
+        set_timing_thresholds!(expand = 0.0, drop = 0.0)
+        return timing_report(io, timings)
+    finally
+        TimeG._TIMING_CONFIG[] = old_config
     end
-    return timings
 end
 
 function nested_fixed_block_timing_report(
-    timings::NestedFixedBlockBuildTimingSummary,
+    timings::TimeG.TimingReport,
 )
     return sprint(io -> nested_fixed_block_timing_report(io, timings))
 end

@@ -4884,6 +4884,16 @@ end
 end
 
 @testset "One-center atomic fixed-block timing surface" begin
+    function _timing_labels(report::GaussletBases.TimeG.TimingReport)
+        labels = String[]
+        function _visit(node)
+            push!(labels, node.label)
+            foreach(_visit, node.children)
+        end
+        foreach(_visit, report.roots)
+        return labels
+    end
+
     basis = build_basis(
         MappedUniformBasisSpec(
             :G10;
@@ -4910,6 +4920,8 @@ end
 
     @test timed_full isa GaussletBases.TimedNestedFixedBlockBuild
     @test timed_legacy isa GaussletBases.TimedNestedFixedBlockBuild
+    @test timed_full.timings isa GaussletBases.TimeG.TimingReport
+    @test timed_legacy.timings isa GaussletBases.TimeG.TimingReport
     @test timed_full.fixed_block.shell.working_box == (1:13, 1:13, 1:13)
     @test timed_legacy.fixed_block.shell.working_box == (2:12, 2:12, 2:12)
     @test isnothing(timed_full.fixed_block.gaussian_terms)
@@ -4922,21 +4934,25 @@ end
     @test !isnothing(timed_legacy.fixed_block.pair_sum)
     @test norm(timed_full.fixed_block.overlap - I, Inf) < 1.0e-10
     @test norm(timed_legacy.fixed_block.overlap - I, Inf) < 1.0e-10
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "fixed_block.total") > 0.0
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "fixed_block.sequence_build") > 0.0
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.total") > 0.0
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.gaussian_terms") > 0.0
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_full.timings, "packet.pair_terms") > 0.0
-    @test GaussletBases.nested_fixed_block_timing_seconds(timed_legacy.timings, "packet.total") > 0.0
+    full_labels = _timing_labels(timed_full.timings)
+    legacy_labels = _timing_labels(timed_legacy.timings)
+    @test "fixed_block.total" in full_labels
+    @test "fixed_block.parent_bundle" in full_labels
+    @test "fixed_block.sequence_build" in full_labels
+    @test "fixed_block.adapter" in full_labels
+    @test "diatomic.packet.total" in full_labels
+    @test "diatomic.packet.gaussian_terms" in full_labels
+    @test "diatomic.packet.pair_terms" in full_labels
+    @test "diatomic.packet.total" in legacy_labels
 
     full_report = nested_fixed_block_timing_report(timed_full)
     legacy_report = nested_fixed_block_timing_report(timed_legacy.timings)
     @test occursin("fixed_block.total", full_report)
     @test occursin("shell_layer.nonpacket", full_report)
     @test occursin("sequence_merge.nonpacket", full_report)
-    @test occursin("packet.gaussian_terms", full_report)
-    @test occursin("packet.pair_terms", full_report)
-    @test occursin("packet.total", legacy_report)
+    @test occursin("diatomic.packet.gaussian_terms", full_report)
+    @test occursin("diatomic.packet.pair_terms", full_report)
+    @test occursin("diatomic.packet.total", legacy_report)
 end
 
 @testset "Global timing macro surface" begin
