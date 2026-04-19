@@ -8578,6 +8578,85 @@ end
     end
 end
 
+@testset "Diatomic molecular one-body timing labels" begin
+    function _capture_stdout_text(f::Function)
+        path, io = mktemp()
+        close(io)
+        try
+            open(path, "w") do stream
+                redirect_stdout(stream) do
+                    f()
+                end
+            end
+            return read(path, String)
+        finally
+            rm(path; force = true)
+        end
+    end
+
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        (
+            basis,
+            _operators,
+            _check,
+            expansion,
+            _source,
+            fixed_block,
+            _parent_modes,
+            _parent_ground,
+            _projected,
+            _projected_vee,
+            _capture,
+            _projected_energy,
+        ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
+
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+
+        direct_output = _capture_stdout_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                basis,
+                supplement;
+                nuclear_charges = [1.0, 1.0],
+                nuclear_term_storage = :by_center,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_localized_experimental,
+                timing = true,
+            ),
+        )
+        @test occursin("qwrg.diatomic_shell.one_body.carried", direct_output)
+        @test occursin("qwrg.diatomic_shell.one_body.coupling", direct_output)
+        @test occursin("qwrg.diatomic_shell.one_body.supplement", direct_output)
+        @test occursin("qwrg.diatomic_shell.one_body.final_mix", direct_output)
+        @test occursin("qwrg.diatomic_shell.one_body.by_center_final_mix", direct_output)
+
+        nested_output = _capture_stdout_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                fixed_block,
+                supplement;
+                nuclear_charges = [1.0, 1.0],
+                nuclear_term_storage = :by_center,
+                expansion = expansion,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_localized_experimental,
+                timing = true,
+            ),
+        )
+        @test occursin("qwrg.nested_diatomic_shell.one_body.carried", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.coupling", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.supplement", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.final_mix", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.by_center_final_mix", nested_output)
+    end
+end
+
 @testset "Ordinary Cartesian IDA operators" begin
     mild_basis, mild_expansion, mild_analytic = _quick_ordinary_cartesian_ida_fixture(
         backend = :pgdg_experimental,

@@ -10,17 +10,19 @@ function _qwrg_capture_timeg_report(
 
     old_config = TimeG._TIMING_CONFIG[]
     state = TimeG._timing_state()
-    old_children = length(state.root.children)
+    parent = isempty(state.stack) ? nothing : state.stack[end]
+    root_count = length(state.roots)
+    child_count = isnothing(parent) ? 0 : length(parent.children)
     try
         set_timing!(true)
         set_timing_live!(false)
         set_timing_thresholds!(expand = 0.0, drop = 0.0)
         result = @timeg label build()
-        new_children = state.root.children[(old_children + 1):end]
-        length(new_children) == 1 || throw(
+        node = isnothing(parent) ? state.roots[root_count + 1] : parent.children[child_count + 1]
+        isnothing(node) && throw(
             ArgumentError("QW TimeG capture expected exactly one root timing node"),
         )
-        timing_report(timing_io, TimeG.TimingReport(TimeG.TimingNode[deepcopy(only(new_children))]))
+        timing_report(timing_io, TimeG.TimingReport(TimeG.TimingNode[deepcopy(node)]))
         return result
     finally
         TimeG._TIMING_CONFIG[] = old_config
@@ -339,14 +341,14 @@ function _qwrg_structured_final_one_body_matrices(
     return nothing, 0.5 .* (final_one_body .+ transpose(final_one_body))
 end
 
-function _qwrg_one_body_matrices(
-    gausslet_one_body::AbstractMatrix{<:Real},
+function _qwrg_final_one_body_matrix_from_blocks(
+    carried_one_body::AbstractMatrix{<:Real},
     one_body_ga::AbstractMatrix{<:Real},
     one_body_aa::AbstractMatrix{<:Real},
     raw_to_final::AbstractMatrix{<:Real},
 )
     structured = _qwrg_structured_final_one_body_matrices(
-        gausslet_one_body,
+        carried_one_body,
         one_body_ga,
         one_body_aa,
         raw_to_final,
@@ -354,11 +356,25 @@ function _qwrg_one_body_matrices(
     !isnothing(structured) && return structured
 
     raw_one_body = [
-        Matrix{Float64}(gausslet_one_body) Matrix{Float64}(one_body_ga)
+        Matrix{Float64}(carried_one_body) Matrix{Float64}(one_body_ga)
         Matrix{Float64}(transpose(one_body_ga)) Matrix{Float64}(one_body_aa)
     ]
     final_one_body = Matrix{Float64}(transpose(raw_to_final) * raw_one_body * raw_to_final)
     return raw_one_body, 0.5 .* (final_one_body .+ transpose(final_one_body))
+end
+
+function _qwrg_one_body_matrices(
+    gausslet_one_body::AbstractMatrix{<:Real},
+    one_body_ga::AbstractMatrix{<:Real},
+    one_body_aa::AbstractMatrix{<:Real},
+    raw_to_final::AbstractMatrix{<:Real},
+)
+    return _qwrg_final_one_body_matrix_from_blocks(
+        gausslet_one_body,
+        one_body_ga,
+        one_body_aa,
+        raw_to_final,
+    )
 end
 
 function _qwrg_final_nuclear_one_body_by_center(
@@ -1018,61 +1034,46 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
         end
 
         final_kinetic, final_nuclear_one_body_by_center, final_one_body = @timeg "qwrg.diatomic_shell.one_body" begin
-            gausslet_kinetic = _qwrg_diatomic_kinetic_matrix(
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
-            )
-            _, final_kinetic_local = _qwrg_one_body_matrices(
-                gausslet_kinetic,
-                blocks.kinetic_ga,
-                blocks.kinetic_aa,
-                residual_data.raw_to_final,
-            )
-            direct_contracted_nuclear =
-                gausslet_backend == :pgdg_localized_experimental ?
-                _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                    basis,
-                    _qwrg_full_cartesian_product_factorized_basis(
-                        (
-                            size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                            size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                            size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
-                        ),
-                    ),
+            use_by_center_final_mix =
+                gausslet_backend == :pgdg_localized_experimental ||
+                resolved_nuclear_term_storage == :by_center
+
+            carried_blocks = @timeg "qwrg.diatomic_shell.one_body.carried" begin
+                gausslet_kinetic = _qwrg_diatomic_kinetic_matrix(
                     bundles.bundle_x,
                     bundles.bundle_y,
                     bundles.bundle_z,
-                    expansion,
-                ) :
-                nothing
-            assembled_nuclear_one_body_by_center_local =
-                !isnothing(direct_contracted_nuclear) ?
-                _qwrg_final_nuclear_one_body_by_center(
-                    direct_contracted_nuclear,
-                    blocks.nuclear_ga_by_center,
-                    blocks.nuclear_aa_by_center,
-                    residual_data.raw_to_final,
-                ) :
-                (
-                    resolved_nuclear_term_storage == :by_center ?
-                    _qwrg_final_nuclear_one_body_by_center(
+                )
+                carried_nuclear_one_body_by_center =
+                    gausslet_backend == :pgdg_localized_experimental ?
+                    _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                        basis,
+                        _qwrg_full_cartesian_product_factorized_basis(
+                            (
+                                size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                                size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                                size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                            ),
+                        ),
+                        bundles.bundle_x,
+                        bundles.bundle_y,
+                        bundles.bundle_z,
+                        expansion,
+                    ) :
+                    (
+                        resolved_nuclear_term_storage == :by_center ?
                         _qwrg_diatomic_nuclear_one_body_by_center(
                             basis,
                             bundles.bundle_x,
                             bundles.bundle_y,
                             bundles.bundle_z,
                             expansion,
-                        ),
-                        blocks.nuclear_ga_by_center,
-                        blocks.nuclear_aa_by_center,
-                        residual_data.raw_to_final,
-                    ) :
-                    nothing
-                )
-            final_one_body_local =
-                isnothing(assembled_nuclear_one_body_by_center_local) ?
-                _qwrg_one_body_matrices(
+                        ) :
+                        nothing
+                    )
+                carried_one_body =
+                    use_by_center_final_mix ?
+                    nothing :
                     _qwrg_diatomic_one_body_matrix(
                         basis,
                         bundles.bundle_x,
@@ -1080,16 +1081,89 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
                         bundles.bundle_z,
                         expansion,
                         nuclear_charges,
-                    ),
-                    blocks.one_body_ga,
-                    blocks.one_body_aa,
+                    )
+                (
+                    kinetic = gausslet_kinetic,
+                    nuclear_by_center = carried_nuclear_one_body_by_center,
+                    one_body = carried_one_body,
+                )
+            end
+
+            coupling_blocks = @timeg "qwrg.diatomic_shell.one_body.coupling" begin
+                (
+                    kinetic = Matrix{Float64}(blocks.kinetic_ga),
+                    nuclear_by_center =
+                        use_by_center_final_mix ?
+                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_ga_by_center] :
+                        nothing,
+                    one_body =
+                        use_by_center_final_mix ?
+                        nothing :
+                        Matrix{Float64}(blocks.one_body_ga),
+                )
+            end
+
+            supplement_blocks = @timeg "qwrg.diatomic_shell.one_body.supplement" begin
+                (
+                    kinetic = Matrix{Float64}(blocks.kinetic_aa),
+                    nuclear_by_center =
+                        use_by_center_final_mix ?
+                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_aa_by_center] :
+                        nothing,
+                    one_body =
+                        use_by_center_final_mix ?
+                        nothing :
+                        Matrix{Float64}(blocks.one_body_aa),
+                )
+            end
+
+            final_kinetic_local = if use_by_center_final_mix
+                @timeg "qwrg.diatomic_shell.one_body.final_mix" begin
+                    _qwrg_final_one_body_matrix_from_blocks(
+                        carried_blocks.kinetic,
+                        coupling_blocks.kinetic,
+                        supplement_blocks.kinetic,
+                        residual_data.raw_to_final,
+                    )[2]
+                end
+            else
+                _qwrg_final_one_body_matrix_from_blocks(
+                    carried_blocks.kinetic,
+                    coupling_blocks.kinetic,
+                    supplement_blocks.kinetic,
                     residual_data.raw_to_final,
-                )[2] :
+                )[2]
+            end
+
+            assembled_nuclear_one_body_by_center_local = if use_by_center_final_mix
+                @timeg "qwrg.diatomic_shell.one_body.by_center_final_mix" begin
+                    _qwrg_final_nuclear_one_body_by_center(
+                        carried_blocks.nuclear_by_center,
+                        coupling_blocks.nuclear_by_center,
+                        supplement_blocks.nuclear_by_center,
+                        residual_data.raw_to_final,
+                    )
+                end
+            else
+                nothing
+            end
+
+            final_one_body_local = if isnothing(assembled_nuclear_one_body_by_center_local)
+                @timeg "qwrg.diatomic_shell.one_body.final_mix" begin
+                    _qwrg_final_one_body_matrix_from_blocks(
+                        carried_blocks.one_body,
+                        coupling_blocks.one_body,
+                        supplement_blocks.one_body,
+                        residual_data.raw_to_final,
+                    )[2]
+                end
+            else
                 _assemble_one_body_hamiltonian(
                     final_kinetic_local,
                     assembled_nuclear_one_body_by_center_local,
                     nuclear_charges,
                 )
+            end
             final_nuclear_one_body_by_center_local =
                 resolved_nuclear_term_storage == :by_center ?
                 assembled_nuclear_one_body_by_center_local :
@@ -1418,93 +1492,148 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
         end
 
         final_kinetic, nuclear_one_body_by_center, final_one_body = @timeg "qwrg.nested_diatomic_shell.one_body" begin
-            fixed_kinetic = Matrix{Float64}(fixed_block.kinetic)
-            final_kinetic_local = _qwrg_one_body_matrices(
-                fixed_kinetic,
-                _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
-                blocks.kinetic_aa,
-                residual_data.raw_to_final,
-            )[2]
-            contracted_nuclear_ga_by_center = [
-                _qwrg_contract_parent_ga_matrix(contraction, matrix) for
-                matrix in blocks.nuclear_ga_by_center
-            ]
-            direct_contracted_nuclear =
-                gausslet_backend == :pgdg_localized_experimental ?
-                _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                    basis,
-                    _nested_extract_factorized_basis(
-                        contraction,
-                        (
-                            size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                            size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                            size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+            use_by_center_final_mix =
+                gausslet_backend == :pgdg_localized_experimental ||
+                resolved_nuclear_term_storage == :by_center
+
+            carried_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.carried" begin
+                fixed_kinetic = Matrix{Float64}(fixed_block.kinetic)
+                fixed_nuclear_one_body_by_center =
+                    gausslet_backend == :pgdg_localized_experimental ?
+                    _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                        basis,
+                        _nested_extract_factorized_basis(
+                            contraction,
+                            (
+                                size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                                size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                                size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                            ),
                         ),
-                    ),
-                    bundles.bundle_x,
-                    bundles.bundle_y,
-                    bundles.bundle_z,
-                    expansion,
-                ) :
-                nothing
-            assembled_nuclear_one_body_by_center_local =
-                !isnothing(direct_contracted_nuclear) ?
-                _qwrg_final_nuclear_one_body_by_center(
-                    direct_contracted_nuclear,
-                    contracted_nuclear_ga_by_center,
-                    blocks.nuclear_aa_by_center,
-                    residual_data.raw_to_final,
-                ) :
-                (
-                    resolved_nuclear_term_storage == :by_center ?
-                    let
-                        parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
-                            basis,
-                            bundles.bundle_x,
-                            bundles.bundle_y,
-                            bundles.bundle_z,
-                            expansion,
-                        )
-                        _qwrg_final_nuclear_one_body_by_center(
+                        bundles.bundle_x,
+                        bundles.bundle_y,
+                        bundles.bundle_z,
+                        expansion,
+                    ) :
+                    (
+                        resolved_nuclear_term_storage == :by_center ?
+                        let
+                            parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
+                                basis,
+                                bundles.bundle_x,
+                                bundles.bundle_y,
+                                bundles.bundle_z,
+                                expansion,
+                            )
                             [
                                 _qwrg_contract_parent_symmetric_matrix(
                                     contraction,
                                     matrix,
                                 ) for matrix in parent_nuclear
-                            ],
-                            contracted_nuclear_ga_by_center,
-                            blocks.nuclear_aa_by_center,
-                            residual_data.raw_to_final,
-                        )
-                    end :
-                    nothing
-                )
-            final_one_body_local =
-                isnothing(assembled_nuclear_one_body_by_center_local) ?
-                let
-                    parent_one_body = _qwrg_diatomic_one_body_matrix(
-                        basis,
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                        nuclear_charges,
+                            ]
+                        end :
+                        nothing
                     )
-                    fixed_one_body = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
-                    fixed_one_body = 0.5 .* (fixed_one_body .+ transpose(fixed_one_body))
-                    one_body_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga)
-                    _qwrg_one_body_matrices(
-                        fixed_one_body,
-                        one_body_fg,
-                        blocks.one_body_aa,
+                fixed_one_body =
+                    use_by_center_final_mix ?
+                    nothing :
+                    let
+                        parent_one_body = _qwrg_diatomic_one_body_matrix(
+                            basis,
+                            bundles.bundle_x,
+                            bundles.bundle_y,
+                            bundles.bundle_z,
+                            expansion,
+                            nuclear_charges,
+                        )
+                        matrix = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
+                        0.5 .* (matrix .+ transpose(matrix))
+                    end
+                (
+                    kinetic = fixed_kinetic,
+                    nuclear_by_center = fixed_nuclear_one_body_by_center,
+                    one_body = fixed_one_body,
+                )
+            end
+
+            coupling_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.coupling" begin
+                (
+                    kinetic = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
+                    nuclear_by_center =
+                        use_by_center_final_mix ?
+                        [
+                            _qwrg_contract_parent_ga_matrix(contraction, matrix) for
+                            matrix in blocks.nuclear_ga_by_center
+                        ] :
+                        nothing,
+                    one_body =
+                        use_by_center_final_mix ?
+                        nothing :
+                        _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga),
+                )
+            end
+
+            supplement_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.supplement" begin
+                (
+                    kinetic = Matrix{Float64}(blocks.kinetic_aa),
+                    nuclear_by_center =
+                        use_by_center_final_mix ?
+                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_aa_by_center] :
+                        nothing,
+                    one_body =
+                        use_by_center_final_mix ?
+                        nothing :
+                        Matrix{Float64}(blocks.one_body_aa),
+                )
+            end
+
+            final_kinetic_local = if use_by_center_final_mix
+                @timeg "qwrg.nested_diatomic_shell.one_body.final_mix" begin
+                    _qwrg_final_one_body_matrix_from_blocks(
+                        carried_blocks.kinetic,
+                        coupling_blocks.kinetic,
+                        supplement_blocks.kinetic,
                         residual_data.raw_to_final,
                     )[2]
-                end :
+                end
+            else
+                _qwrg_final_one_body_matrix_from_blocks(
+                    carried_blocks.kinetic,
+                    coupling_blocks.kinetic,
+                    supplement_blocks.kinetic,
+                    residual_data.raw_to_final,
+                )[2]
+            end
+
+            assembled_nuclear_one_body_by_center_local = if use_by_center_final_mix
+                @timeg "qwrg.nested_diatomic_shell.one_body.by_center_final_mix" begin
+                    _qwrg_final_nuclear_one_body_by_center(
+                        carried_blocks.nuclear_by_center,
+                        coupling_blocks.nuclear_by_center,
+                        supplement_blocks.nuclear_by_center,
+                        residual_data.raw_to_final,
+                    )
+                end
+            else
+                nothing
+            end
+
+            final_one_body_local = if isnothing(assembled_nuclear_one_body_by_center_local)
+                @timeg "qwrg.nested_diatomic_shell.one_body.final_mix" begin
+                    _qwrg_final_one_body_matrix_from_blocks(
+                        carried_blocks.one_body,
+                        coupling_blocks.one_body,
+                        supplement_blocks.one_body,
+                        residual_data.raw_to_final,
+                    )[2]
+                end
+            else
                 _assemble_one_body_hamiltonian(
                     final_kinetic_local,
                     assembled_nuclear_one_body_by_center_local,
                     nuclear_charges,
                 )
+            end
             nuclear_one_body_by_center_local =
                 resolved_nuclear_term_storage == :by_center ?
                 assembled_nuclear_one_body_by_center_local :
