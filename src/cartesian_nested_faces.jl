@@ -1888,6 +1888,18 @@ function _nested_factorized_parent_basis(fixed_block::_NestedFixedBlock3D)
     return factorized_basis
 end
 
+function _nested_eager_factorized_basis_cache(
+    parent_basis,
+    coefficient_matrix::AbstractMatrix{<:Real},
+)
+    return _nested_factorized_basis_cache(
+        _nested_extract_factorized_basis(
+            coefficient_matrix,
+            _nested_parent_axis_counts(parent_basis),
+        ),
+    )
+end
+
 function _nested_reconstruct_factorized_coefficients(
     factorized_basis::_CartesianNestedFactorizedBasis3D,
 )
@@ -4181,7 +4193,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
-        _nested_factorized_basis_cache(),
+        _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
 end
 
@@ -4995,7 +5007,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
-        _nested_factorized_basis_cache(),
+        _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
 end
 
@@ -5036,7 +5048,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
-        _nested_factorized_basis_cache(),
+        _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
 end
 
@@ -5087,7 +5099,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
-        _nested_factorized_basis_cache(),
+        _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
 end
 
@@ -5124,7 +5136,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
-        _nested_factorized_basis_cache(),
+        _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
 end
 
