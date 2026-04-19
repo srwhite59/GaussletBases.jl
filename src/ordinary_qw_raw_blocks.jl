@@ -1401,22 +1401,37 @@ function _qwrg_fill_direct_contracted_nuclear_matrix!(
     size(destination) == (nbasis, nbasis) || throw(
         ArgumentError("direct contracted nuclear fill requires square output sized to the retained fixed basis"),
     )
+    x_terms = vec(operator_terms_x)
+    y_terms = vec(operator_terms_y)
+    z_terms = vec(operator_terms_z)
+    x_row_stride = stride(operator_terms_x, 2)
+    y_row_stride = stride(operator_terms_y, 2)
+    z_row_stride = stride(operator_terms_z, 2)
+    x_column_stride = stride(operator_terms_x, 3)
+    y_column_stride = stride(operator_terms_y, 3)
+    z_column_stride = stride(operator_terms_z, 3)
     @inbounds for column in 1:nbasis
         xj = x_indices[column]
         yj = y_indices[column]
         zj = z_indices[column]
         amplitude_j = amplitudes[column]
+        x_column_offset = (xj - 1) * x_column_stride
+        y_column_offset = (yj - 1) * y_column_stride
+        z_column_offset = (zj - 1) * z_column_stride
         for row in 1:column
             xi = x_indices[row]
             yi = y_indices[row]
             zi = z_indices[row]
+            x_offset = (xi - 1) * x_row_stride + x_column_offset
+            y_offset = (yi - 1) * y_row_stride + y_column_offset
+            z_offset = (zi - 1) * z_row_stride + z_column_offset
             value = 0.0
             @simd for term in 1:nterms
                 value +=
                     term_coefficients[term] *
-                    operator_terms_x[term, xi, xj] *
-                    operator_terms_y[term, yi, yj] *
-                    operator_terms_z[term, zi, zj]
+                    x_terms[x_offset + term] *
+                    y_terms[y_offset + term] *
+                    z_terms[z_offset + term]
             end
             value *= amplitudes[row] * amplitude_j
             destination[row, column] = value
