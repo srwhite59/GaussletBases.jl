@@ -1308,6 +1308,112 @@ function _qwrg_diatomic_factor_term_cache(
     return cache
 end
 
+function _qwrg_full_cartesian_product_factorized_basis(dims::NTuple{3,Int})
+    nx, ny, nz = dims
+    x_functions = Matrix{Float64}(I, nx, nx)
+    y_functions = Matrix{Float64}(I, ny, ny)
+    z_functions = Matrix{Float64}(I, nz, nz)
+    basis_triplets = NTuple{3,Int}[]
+    sizehint!(basis_triplets, nx * ny * nz)
+    for ix in 1:nx, iy in 1:ny, iz in 1:nz
+        push!(basis_triplets, (ix, iy, iz))
+    end
+    return _CartesianNestedFactorizedBasis3D(
+        dims,
+        x_functions,
+        y_functions,
+        z_functions,
+        basis_triplets,
+        ones(Float64, length(basis_triplets)),
+        0.0,
+    )
+end
+
+function _qwrg_contracted_nuclear_axis_term_table_cache(
+    axis_functions::AbstractMatrix{<:Real},
+    basis::MappedUniformBasis,
+    centers_1d::AbstractVector{<:Real},
+    expansion::CoulombGaussianExpansion,
+    gausslet_backend::Symbol,
+)
+    raw_factor_terms = _qwrg_diatomic_factor_term_cache(
+        basis,
+        centers_1d,
+        expansion,
+        gausslet_backend,
+    )
+    term_tables = Dict{Float64,Array{Float64,3}}()
+    for (center_value, factor_terms) in pairs(raw_factor_terms)
+        term_tables[center_value] = _nested_factorized_axis_term_tables(
+            factor_terms,
+            Matrix{Float64}(axis_functions),
+        )
+    end
+    return term_tables
+end
+
+function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+)
+    factorized_basis.dims == (
+        size(bundle_x.pgdg_intermediate.overlap, 1),
+        size(bundle_y.pgdg_intermediate.overlap, 1),
+        size(bundle_z.pgdg_intermediate.overlap, 1),
+    ) || throw(
+        ArgumentError("direct contracted molecular nuclear assembly requires factorized-basis dimensions to match the parent Cartesian product basis"),
+    )
+
+    term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
+    nbasis = length(factorized_basis.basis_triplets)
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg "qwrg.nuclear.direct_contracted.setup" begin
+        axis_term_tables_x = _qwrg_contracted_nuclear_axis_term_table_cache(
+            factorized_basis.x_functions,
+            basis.basis_x,
+            [nucleus[1] for nucleus in basis.nuclei],
+            expansion,
+            bundle_x.backend,
+        )
+        axis_term_tables_y = _qwrg_contracted_nuclear_axis_term_table_cache(
+            factorized_basis.y_functions,
+            basis.basis_y,
+            [nucleus[2] for nucleus in basis.nuclei],
+            expansion,
+            bundle_y.backend,
+        )
+        axis_term_tables_z = _qwrg_contracted_nuclear_axis_term_table_cache(
+            factorized_basis.z_functions,
+            basis.basis_z,
+            [nucleus[3] for nucleus in basis.nuclei],
+            expansion,
+            bundle_z.backend,
+        )
+        (axis_term_tables_x, axis_term_tables_y, axis_term_tables_z)
+    end
+
+    return @timeg "qwrg.nuclear.direct_contracted.contract" begin
+        matrices = Vector{Matrix{Float64}}(undef, length(basis.nuclei))
+        for (nucleus_index, nucleus) in pairs(basis.nuclei)
+            matrix = zeros(Float64, nbasis, nbasis)
+            _nested_fill_factorized_weighted_term_sum!(
+                matrix,
+                factorized_basis,
+                term_coefficients,
+                axis_term_tables_x[nucleus[1]],
+                axis_term_tables_y[nucleus[2]],
+                axis_term_tables_z[nucleus[3]];
+                include_basis_amplitudes = true,
+            )
+            matrices[nucleus_index] = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
+        end
+        matrices
+    end
+end
+
 function _qwrg_diatomic_kinetic_matrix(
     bundle_x::_MappedOrdinaryGausslet1DBundle,
     bundle_y::_MappedOrdinaryGausslet1DBundle,

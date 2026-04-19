@@ -572,30 +572,57 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
 
         overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
         kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
-        nuclear_one_body_by_center =
-            resolved_nuclear_term_storage == :by_center ?
-            _qwrg_diatomic_nuclear_one_body_by_center(
+        direct_contracted_nuclear =
+            gausslet_backend == :pgdg_localized_experimental ?
+            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                 basis,
+                _qwrg_full_cartesian_product_factorized_basis((
+                    size(bundle_x.pgdg_intermediate.overlap, 1),
+                    size(bundle_y.pgdg_intermediate.overlap, 1),
+                    size(bundle_z.pgdg_intermediate.overlap, 1),
+                )),
                 bundle_x,
                 bundle_y,
                 bundle_z,
                 expansion,
             ) :
             nothing
-        one_body_hamiltonian =
-            isnothing(nuclear_one_body_by_center) ?
-            _qwrg_diatomic_one_body_matrix(
-                basis,
-                bundle_x,
-                bundle_y,
-                bundle_z,
-                expansion,
-                nuclear_charges,
+        nuclear_one_body_by_center =
+            resolved_nuclear_term_storage == :by_center ?
+            (
+                isnothing(direct_contracted_nuclear) ?
+                _qwrg_diatomic_nuclear_one_body_by_center(
+                    basis,
+                    bundle_x,
+                    bundle_y,
+                    bundle_z,
+                    expansion,
+                ) :
+                direct_contracted_nuclear
             ) :
+            nothing
+        one_body_hamiltonian =
+            !isnothing(direct_contracted_nuclear) ?
             _assemble_one_body_hamiltonian(
                 kinetic_one_body,
-                nuclear_one_body_by_center,
+                direct_contracted_nuclear,
                 nuclear_charges,
+            ) :
+            (
+                isnothing(nuclear_one_body_by_center) ?
+                _qwrg_diatomic_one_body_matrix(
+                    basis,
+                    bundle_x,
+                    bundle_y,
+                    bundle_z,
+                    expansion,
+                    nuclear_charges,
+                ) :
+                _assemble_one_body_hamiltonian(
+                    kinetic_one_body,
+                    nuclear_one_body_by_center,
+                    nuclear_charges,
+                )
             )
         interaction_matrix = _qwrg_diatomic_interaction_matrix(
             bundle_x,
@@ -986,37 +1013,67 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
 
         contraction = fixed_block.coefficient_matrix
         kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
+        direct_contracted_nuclear =
+            gausslet_backend == :pgdg_localized_experimental ?
+            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                basis,
+                _nested_extract_factorized_basis(
+                    contraction,
+                    (
+                        size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                        size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                        size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                    ),
+                ),
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+            ) :
+            nothing
         nuclear_one_body_by_center =
             resolved_nuclear_term_storage == :by_center ?
-            [
-                _qwrg_contract_parent_symmetric_matrix(
-                    contraction,
-                    matrix,
-                ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
+            (
+                isnothing(direct_contracted_nuclear) ?
+                [
+                    _qwrg_contract_parent_symmetric_matrix(
+                        contraction,
+                        matrix,
+                    ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
+                        basis,
+                        bundles.bundle_x,
+                        bundles.bundle_y,
+                        bundles.bundle_z,
+                        expansion,
+                    )
+                ] :
+                direct_contracted_nuclear
+            ) :
+            nothing
+        one_body_hamiltonian =
+            !isnothing(direct_contracted_nuclear) ?
+            _assemble_one_body_hamiltonian(
+                kinetic_one_body,
+                direct_contracted_nuclear,
+                nuclear_charges,
+            ) :
+            (
+                isnothing(nuclear_one_body_by_center) ?
+                _qwrg_diatomic_one_body_matrix(
                     basis,
                     bundles.bundle_x,
                     bundles.bundle_y,
                     bundles.bundle_z,
                     expansion,
+                    nuclear_charges,
+                ) :
+                _assemble_one_body_hamiltonian(
+                    kinetic_one_body,
+                    nuclear_one_body_by_center,
+                    nuclear_charges,
                 )
-            ] :
-            nothing
-        one_body_hamiltonian =
-            isnothing(nuclear_one_body_by_center) ?
-            _qwrg_diatomic_one_body_matrix(
-                basis,
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
-                expansion,
-                nuclear_charges,
-            ) :
-            _assemble_one_body_hamiltonian(
-                kinetic_one_body,
-                nuclear_one_body_by_center,
-                nuclear_charges,
             )
-        if isnothing(nuclear_one_body_by_center)
+        if isnothing(nuclear_one_body_by_center) && isnothing(direct_contracted_nuclear)
             one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * one_body_hamiltonian * contraction)
             one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
         end

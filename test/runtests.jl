@@ -9056,6 +9056,92 @@ end
           atom_a_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
     @test assembled_one_body_hamiltonian(full_ops; nuclear_charges = [0.0, 1.0]) ≈
           atom_b_ops.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+
+    full_ops_localized = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :by_center,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+    atom_a_ops_localized = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [1.0, 0.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+    atom_b_ops_localized = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [0.0, 1.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+
+    @test full_ops_localized.gausslet_backend == :pgdg_localized_experimental
+    @test full_ops_localized.nuclear_term_storage == :by_center
+    @test !isnothing(full_ops_localized.kinetic_one_body)
+    @test !isnothing(full_ops_localized.nuclear_one_body_by_center)
+    @test length(full_ops_localized.nuclear_one_body_by_center) == 2
+    @test assembled_one_body_hamiltonian(full_ops_localized) ≈
+          full_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test assembled_one_body_hamiltonian(full_ops_localized; nuclear_charges = [1.0, 0.0]) ≈
+          atom_a_ops_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+    @test assembled_one_body_hamiltonian(full_ops_localized; nuclear_charges = [0.0, 1.0]) ≈
+          atom_b_ops_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+
+    (
+        _nested_basis,
+        _nested_parent_ops,
+        _nested_parent_check,
+        expansion,
+        _nested_source,
+        fixed_block,
+        _parent_modes,
+        _parent_ground,
+        _projected,
+        _projected_vee,
+        _capture,
+        _projected_energy,
+    ) = _bond_aligned_diatomic_nested_fixed_block_fixture(; bond_length = 1.4)
+
+    full_nested_ops_localized = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :by_center,
+        expansion = expansion,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+    atom_a_nested_ops_localized = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = [1.0, 0.0],
+        nuclear_term_storage = :total_only,
+        expansion = expansion,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+    atom_b_nested_ops_localized = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = [0.0, 1.0],
+        nuclear_term_storage = :total_only,
+        expansion = expansion,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+
+    @test full_nested_ops_localized.gausslet_backend == :pgdg_localized_experimental
+    @test full_nested_ops_localized.nuclear_term_storage == :by_center
+    @test !isnothing(full_nested_ops_localized.kinetic_one_body)
+    @test !isnothing(full_nested_ops_localized.nuclear_one_body_by_center)
+    @test length(full_nested_ops_localized.nuclear_one_body_by_center) == 2
+    @test assembled_one_body_hamiltonian(full_nested_ops_localized) ≈
+          full_nested_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test assembled_one_body_hamiltonian(full_nested_ops_localized; nuclear_charges = [1.0, 0.0]) ≈
+          atom_a_nested_ops_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+    @test assembled_one_body_hamiltonian(full_nested_ops_localized; nuclear_charges = [0.0, 1.0]) ≈
+          atom_b_nested_ops_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
 end
 
 @testset "Nuclear term storage auto stays lightweight on longer-center routes" begin

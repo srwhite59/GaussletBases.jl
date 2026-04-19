@@ -36,6 +36,11 @@ On the PGDG production line:
 6. final bases are formed by direct sums of parent blocks followed by one final
    mixing contraction
 
+On PGDG-capable pure molecular routes, per-center nuclear one-body terms are
+therefore contracted directly into the exposed parent/final space; avoidable
+dense parent 3D nuclear matrix materialization is outside the intended
+contract.
+
 In the shorthand used during planning:
 
 - `P1dF -> CP1dF -> CPB -> PPB -> FB`

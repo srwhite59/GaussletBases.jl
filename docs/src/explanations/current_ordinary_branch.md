@@ -70,6 +70,9 @@ The wording discipline for the ordinary line remains:
 - the pure prebuilt nested fixed-block ordinary/Qiu-White operator route is
   also PGDG-capable on `gausslet_backend = :pgdg_localized_experimental` when
   the nested fixed block still represents a pure Cartesian parent space
+- on those widened pure PGDG-capable routes, molecular nuclear one-body terms
+  are intended to contract directly into the exposed parent/final space rather
+  than first materializing avoidable dense parent 3D nuclear matrices
 - current nested source-building front doors and supplement-bearing
   Qiu-White routes remain `gausslet_backend = :numerical_reference` unless a
   route is explicitly documented otherwise; that includes the current
