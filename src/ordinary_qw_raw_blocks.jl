@@ -849,6 +849,22 @@ function _qwrg_left_contract_cross_matrix(
     return Matrix{Float64}(transpose(coefficient_matrix) * primitive_cross)
 end
 
+function _qwrg_diatomic_supplement_proxy_layer(
+    axis_basis::MappedUniformBasis,
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    axis::Symbol,
+)
+    if bundle.backend == :pgdg_localized_experimental
+        return _mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(axis_basis)).layer
+    end
+
+    proxy_layer = bundle.pgdg_intermediate.auxiliary_layer
+    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the $(axis) axis"),
+    )
+    return proxy_layer
+end
+
 function _qwrg_right_contract_cross_matrix(
     primitive_cross::AbstractMatrix{<:Real},
     contraction_matrix::AbstractMatrix{<:Real},
@@ -1537,18 +1553,9 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
         ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the basis nuclei"),
     )
 
-    proxy_x = bundles.bundle_x.pgdg_intermediate.auxiliary_layer
-    proxy_y = bundles.bundle_y.pgdg_intermediate.auxiliary_layer
-    proxy_z = bundles.bundle_z.pgdg_intermediate.auxiliary_layer
-    proxy_x isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the x axis"),
-    )
-    proxy_y isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the y axis"),
-    )
-    proxy_z isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement currently requires the base refinement_levels = 0 PGDG proxy line on the z axis"),
-    )
+    proxy_x = _qwrg_diatomic_supplement_proxy_layer(basis.basis_x, bundles.bundle_x, :x)
+    proxy_y = _qwrg_diatomic_supplement_proxy_layer(basis.basis_y, bundles.bundle_y, :y)
+    proxy_z = _qwrg_diatomic_supplement_proxy_layer(basis.basis_z, bundles.bundle_z, :z)
 
     n1x = size(bundles.bundle_x.pgdg_intermediate.overlap, 1)
     n1y = size(bundles.bundle_y.pgdg_intermediate.overlap, 1)

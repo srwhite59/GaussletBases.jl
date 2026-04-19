@@ -70,14 +70,20 @@ The wording discipline for the ordinary line remains:
 - the pure prebuilt nested fixed-block ordinary/Qiu-White operator route is
   also PGDG-capable on `gausslet_backend = :pgdg_localized_experimental` when
   the nested fixed block still represents a pure Cartesian parent space
+- the bond-aligned diatomic molecular supplement direct-product and prebuilt
+  nested fixed-block Qiu-White routes are now also PGDG-capable on
+  `gausslet_backend = :pgdg_localized_experimental`
 - on those widened pure PGDG-capable routes, molecular nuclear one-body terms
   are intended to contract directly into the exposed parent/final space rather
   than first materializing avoidable dense parent 3D nuclear matrices
-- current nested source-building front doors and supplement-bearing
+- on the widened diatomic molecular supplement route, only the carried GG/fixed
+  nuclear one-body backbone is widened; GA/AA supplement blocks and
+  residual-Gaussian closure remain on the existing formulation
+- current nested source-building front doors and other supplement-bearing
   Qiu-White routes remain `gausslet_backend = :numerical_reference` unless a
   route is explicitly documented otherwise; that includes the current
-  diatomic nested source builder and the experimental chain/square nested QW
-  source wrappers
+  diatomic nested source builder, the atomic supplement routes, and the
+  experimental chain/square nested QW source wrappers
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path

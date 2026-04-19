@@ -68,6 +68,9 @@ residual-Gaussian routes:
 - the final `raw_to_final` map is the final mixing contraction
 
 But the downstream residual interaction closures remain outside this contract.
+The bond-aligned diatomic molecular supplement route may still reuse that same
+direct-contracted GG/fixed nuclear backbone, but its GA/AA supplement blocks
+and residual-space closure remain outside this contract.
 
 That separation is intentional. It lets the repo unify basis and raw-matrix
 construction without pretending that all later approximate interaction models

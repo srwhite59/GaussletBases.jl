@@ -8093,6 +8093,149 @@ end
         return reference, localized, reference_check, localized_check
     end
 
+    function _check_diatomic_molecular_backend_pair(
+        basis,
+        supplement,
+        nuclear_charges::AbstractVector{<:Real},
+    )
+        reference = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = nuclear_charges,
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        localized = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = nuclear_charges,
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        atom_a_localized = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [1.0, 0.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        atom_b_localized = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [0.0, 1.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        reference_check = GaussletBases.ordinary_cartesian_1s2_check(reference)
+        localized_check = GaussletBases.ordinary_cartesian_1s2_check(localized)
+
+        @test reference.gausslet_backend == :numerical_reference
+        @test localized.gausslet_backend == :pgdg_localized_experimental
+        @test reference.gaussian_data === supplement
+        @test localized.gaussian_data === supplement
+        @test reference.residual_count > 0
+        @test localized.residual_count == reference.residual_count
+        @test reference.nuclear_term_storage == :by_center
+        @test localized.nuclear_term_storage == :by_center
+        @test !isnothing(localized.kinetic_one_body)
+        @test !isnothing(localized.nuclear_one_body_by_center)
+        @test length(localized.nuclear_one_body_by_center) == length(nuclear_charges)
+        @test norm(reference.overlap - I, Inf) < 1.0e-8
+        @test norm(localized.overlap - I, Inf) < 1.0e-8
+        @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(localized) ≈
+              localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(localized; nuclear_charges = [1.0, 0.0]) ≈
+              atom_a_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(localized; nuclear_charges = [0.0, 1.0]) ≈
+              atom_b_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test norm(localized.overlap - reference.overlap, Inf) < 0.05
+        @test norm(localized.interaction_matrix - reference.interaction_matrix, Inf) < 0.35
+        @test abs(localized_check.orbital_energy - reference_check.orbital_energy) < 0.02
+        @test abs(localized_check.vee_expectation - reference_check.vee_expectation) < 0.02
+        return reference, localized, reference_check, localized_check
+    end
+
+    function _check_nested_diatomic_molecular_backend_pair(
+        fixed_block,
+        supplement,
+        nuclear_charges::AbstractVector{<:Real},
+        expansion::CoulombGaussianExpansion,
+    )
+        @test basis_representation(fixed_block).metadata.parent_kind == :cartesian_product_basis
+
+        reference = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = nuclear_charges,
+            nuclear_term_storage = :by_center,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        localized = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = nuclear_charges,
+            nuclear_term_storage = :by_center,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        atom_a_localized = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 0.0],
+            nuclear_term_storage = :total_only,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        atom_b_localized = ordinary_cartesian_qiu_white_operators(
+            fixed_block,
+            supplement;
+            nuclear_charges = [0.0, 1.0],
+            nuclear_term_storage = :total_only,
+            expansion = expansion,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        reference_check = GaussletBases.ordinary_cartesian_1s2_check(reference)
+        localized_check = GaussletBases.ordinary_cartesian_1s2_check(localized)
+
+        @test reference.gausslet_backend == :numerical_reference
+        @test localized.gausslet_backend == :pgdg_localized_experimental
+        @test reference.gaussian_data === supplement
+        @test localized.gaussian_data === supplement
+        @test reference.residual_count > 0
+        @test localized.residual_count == reference.residual_count
+        @test reference.nuclear_term_storage == :by_center
+        @test localized.nuclear_term_storage == :by_center
+        @test !isnothing(localized.kinetic_one_body)
+        @test !isnothing(localized.nuclear_one_body_by_center)
+        @test length(localized.nuclear_one_body_by_center) == length(nuclear_charges)
+        @test norm(reference.overlap - I, Inf) < 1.0e-8
+        @test norm(localized.overlap - I, Inf) < 1.0e-8
+        @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(localized) ≈
+              localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+        @test assembled_one_body_hamiltonian(localized; nuclear_charges = [1.0, 0.0]) ≈
+              atom_a_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test assembled_one_body_hamiltonian(localized; nuclear_charges = [0.0, 1.0]) ≈
+              atom_b_localized.one_body_hamiltonian atol = 1.0e-10 rtol = 1.0e-10
+        @test norm(localized.overlap - reference.overlap, Inf) < 0.05
+        @test norm(localized.interaction_matrix - reference.interaction_matrix, Inf) < 0.35
+        @test abs(localized_check.orbital_energy - reference_check.orbital_energy) < 0.02
+        @test abs(localized_check.vee_expectation - reference_check.vee_expectation) < 0.02
+        return reference, localized, reference_check, localized_check
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     mapped_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
@@ -8219,6 +8362,72 @@ end
     @test isfinite(nested_diatomic_localized_check.vee_expectation)
     @test isfinite(nested_chain_localized_check.vee_expectation)
     @test isfinite(nested_square_localized_check.vee_expectation)
+
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        hybrid_basis = diatomic_basis
+        hybrid_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            hybrid_basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        hybrid_fixed_block = nested_fixed_block
+
+        hybrid_reference, hybrid_localized, hybrid_reference_check, hybrid_localized_check =
+            _check_diatomic_molecular_backend_pair(
+                hybrid_basis,
+                hybrid_supplement,
+                [1.0, 1.0],
+            )
+        hybrid_nested_reference,
+        hybrid_nested_localized,
+        hybrid_nested_reference_check,
+        hybrid_nested_localized_check = _check_nested_diatomic_molecular_backend_pair(
+            hybrid_fixed_block,
+            hybrid_supplement,
+            [1.0, 1.0],
+            nested_expansion,
+        )
+
+        @test hybrid_localized.gausslet_backend == :pgdg_localized_experimental
+        @test hybrid_localized.gaussian_data === hybrid_supplement
+        @test hybrid_nested_localized.gausslet_backend == :pgdg_localized_experimental
+        @test hybrid_nested_localized.gaussian_data === hybrid_supplement
+        @test hybrid_localized.residual_count == hybrid_reference.residual_count
+        @test hybrid_nested_localized.residual_count == hybrid_nested_reference.residual_count
+        @test isfinite(hybrid_localized_check.orbital_energy)
+        @test isfinite(hybrid_localized_check.vee_expectation)
+        @test isfinite(hybrid_nested_localized_check.orbital_energy)
+        @test isfinite(hybrid_nested_localized_check.vee_expectation)
+
+        hybrid_direct_error_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                hybrid_basis,
+                hybrid_supplement;
+                nuclear_charges = [1.0, 1.0],
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_experimental,
+            )
+        )
+        @test occursin("bond-aligned diatomic molecular QW path", hybrid_direct_error_text)
+        @test occursin(":pgdg_localized_experimental", hybrid_direct_error_text)
+
+        hybrid_nested_error_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                hybrid_fixed_block,
+                hybrid_supplement;
+                nuclear_charges = [1.0, 1.0],
+                expansion = nested_expansion,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_experimental,
+            )
+        )
+        @test occursin("bond-aligned diatomic nested molecular QW path", hybrid_nested_error_text)
+        @test occursin(":pgdg_localized_experimental", hybrid_nested_error_text)
+    end
 
     direct_product_error_text = _argument_error_text(() ->
         ordinary_cartesian_qiu_white_operators(

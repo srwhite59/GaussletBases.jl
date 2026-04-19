@@ -99,6 +99,39 @@ function _require_pure_nested_fixed_block_backend(
     return gausslet_backend
 end
 
+function _require_bond_aligned_diatomic_molecular_backend(
+    gausslet_backend::Symbol,
+    context_label::AbstractString,
+)
+    gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
+        ArgumentError(
+            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    return gausslet_backend
+end
+
+function _require_bond_aligned_diatomic_nested_molecular_backend(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gausslet_backend::Symbol,
+    context_label::AbstractString,
+)
+    gausslet_backend == :numerical_reference && return gausslet_backend
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError(
+            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    representation = basis_representation(fixed_block)
+    parent_kind = representation.metadata.parent_kind
+    parent_kind == :cartesian_product_basis || throw(
+        ArgumentError(
+            "$(context_label) currently supports gausslet_backend = :pgdg_localized_experimental only when the carried nested fixed block still has parent_kind = :cartesian_product_basis; transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
+        ),
+    )
+    return gausslet_backend
+end
+
 _resolved_nuclear_term_storage(storage::Symbol, ::BondAlignedDiatomicQWBasis3D) =
     storage == :auto ? :by_center : storage
 _resolved_nuclear_term_storage(
@@ -223,6 +256,28 @@ function _qwrg_one_body_matrices(
     ]
     final_one_body = Matrix{Float64}(transpose(raw_to_final) * raw_one_body * raw_to_final)
     return raw_one_body, 0.5 .* (final_one_body .+ transpose(final_one_body))
+end
+
+function _qwrg_final_nuclear_one_body_by_center(
+    carried_nuclear_one_body_by_center::AbstractVector{<:AbstractMatrix{<:Real}},
+    nuclear_ga_by_center::AbstractVector{<:AbstractMatrix{<:Real}},
+    nuclear_aa_by_center::AbstractVector{<:AbstractMatrix{<:Real}},
+    raw_to_final::AbstractMatrix{<:Real},
+)
+    length(carried_nuclear_one_body_by_center) == length(nuclear_ga_by_center) || throw(
+        ArgumentError("final nuclear one-body assembly requires one GA block per center"),
+    )
+    length(carried_nuclear_one_body_by_center) == length(nuclear_aa_by_center) || throw(
+        ArgumentError("final nuclear one-body assembly requires one AA block per center"),
+    )
+    return [
+        _qwrg_one_body_matrices(
+            carried_nuclear_one_body_by_center[index],
+            nuclear_ga_by_center[index],
+            nuclear_aa_by_center[index],
+            raw_to_final,
+        )[2] for index in eachindex(carried_nuclear_one_body_by_center)
+    ]
 end
 
 function _qwrg_nearest_indices(
@@ -804,9 +859,9 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _require_reference_only_gausslet_backend(
-        "bond-aligned diatomic molecular QW path",
+    _require_bond_aligned_diatomic_molecular_backend(
         gausslet_backend,
+        "bond-aligned diatomic molecular QW path",
     )
     interaction_treatment == :ggt_nearest || throw(
         ArgumentError("bond-aligned diatomic molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
@@ -871,15 +926,34 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
                 blocks.kinetic_aa,
                 residual_data.raw_to_final,
             )
-            final_nuclear_one_body_by_center_local =
-                resolved_nuclear_term_storage == :by_center ?
-                [
-                    _qwrg_one_body_matrices(
-                        gausslet_nuclear,
-                        blocks.nuclear_ga_by_center[index],
-                        blocks.nuclear_aa_by_center[index],
-                        residual_data.raw_to_final,
-                    )[2] for (index, gausslet_nuclear) in pairs(
+            direct_contracted_nuclear =
+                gausslet_backend == :pgdg_localized_experimental ?
+                _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                    basis,
+                    _qwrg_full_cartesian_product_factorized_basis(
+                        (
+                            size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                            size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                            size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                        ),
+                    ),
+                    bundles.bundle_x,
+                    bundles.bundle_y,
+                    bundles.bundle_z,
+                    expansion,
+                ) :
+                nothing
+            assembled_nuclear_one_body_by_center_local =
+                !isnothing(direct_contracted_nuclear) ?
+                _qwrg_final_nuclear_one_body_by_center(
+                    direct_contracted_nuclear,
+                    blocks.nuclear_ga_by_center,
+                    blocks.nuclear_aa_by_center,
+                    residual_data.raw_to_final,
+                ) :
+                (
+                    resolved_nuclear_term_storage == :by_center ?
+                    _qwrg_final_nuclear_one_body_by_center(
                         _qwrg_diatomic_nuclear_one_body_by_center(
                             basis,
                             bundles.bundle_x,
@@ -887,11 +961,14 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
                             bundles.bundle_z,
                             expansion,
                         ),
-                    )
-                ] :
-                nothing
+                        blocks.nuclear_ga_by_center,
+                        blocks.nuclear_aa_by_center,
+                        residual_data.raw_to_final,
+                    ) :
+                    nothing
+                )
             final_one_body_local =
-                isnothing(final_nuclear_one_body_by_center_local) ?
+                isnothing(assembled_nuclear_one_body_by_center_local) ?
                 _qwrg_one_body_matrices(
                     _qwrg_diatomic_one_body_matrix(
                         basis,
@@ -907,9 +984,13 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
                 )[2] :
                 _assemble_one_body_hamiltonian(
                     final_kinetic_local,
-                    final_nuclear_one_body_by_center_local,
+                    assembled_nuclear_one_body_by_center_local,
                     nuclear_charges,
                 )
+            final_nuclear_one_body_by_center_local =
+                resolved_nuclear_term_storage == :by_center ?
+                assembled_nuclear_one_body_by_center_local :
+                nothing
             (
                 final_kinetic_local,
                 final_nuclear_one_body_by_center_local,
@@ -1186,9 +1267,10 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _require_reference_only_gausslet_backend(
-        "bond-aligned diatomic nested molecular QW path",
+    _require_bond_aligned_diatomic_nested_molecular_backend(
+        fixed_block,
         gausslet_backend,
+        "bond-aligned diatomic nested molecular QW path",
     )
 
     basis = fixed_block.parent_basis
@@ -1234,37 +1316,68 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
 
         final_kinetic, nuclear_one_body_by_center, final_one_body = @timeg "qwrg.nested_diatomic_shell.one_body" begin
             fixed_kinetic = Matrix{Float64}(fixed_block.kinetic)
-            nuclear_one_body_by_center_local =
-                resolved_nuclear_term_storage == :by_center ?
-                let
-                    parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
-                        basis,
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                    )
-                    [
-                        _qwrg_one_body_matrices(
-                            _qwrg_contract_parent_symmetric_matrix(
-                                contraction,
-                                parent_nuclear[index],
-                            ),
-                            _qwrg_contract_parent_ga_matrix(contraction, blocks.nuclear_ga_by_center[index]),
-                            blocks.nuclear_aa_by_center[index],
-                            residual_data.raw_to_final,
-                        )[2] for index in eachindex(parent_nuclear)
-                    ]
-                end :
-                nothing
             final_kinetic_local = _qwrg_one_body_matrices(
                 fixed_kinetic,
                 _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
                 blocks.kinetic_aa,
                 residual_data.raw_to_final,
             )[2]
+            contracted_nuclear_ga_by_center = [
+                _qwrg_contract_parent_ga_matrix(contraction, matrix) for
+                matrix in blocks.nuclear_ga_by_center
+            ]
+            direct_contracted_nuclear =
+                gausslet_backend == :pgdg_localized_experimental ?
+                _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                    basis,
+                    _nested_extract_factorized_basis(
+                        contraction,
+                        (
+                            size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                            size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                            size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                        ),
+                    ),
+                    bundles.bundle_x,
+                    bundles.bundle_y,
+                    bundles.bundle_z,
+                    expansion,
+                ) :
+                nothing
+            assembled_nuclear_one_body_by_center_local =
+                !isnothing(direct_contracted_nuclear) ?
+                _qwrg_final_nuclear_one_body_by_center(
+                    direct_contracted_nuclear,
+                    contracted_nuclear_ga_by_center,
+                    blocks.nuclear_aa_by_center,
+                    residual_data.raw_to_final,
+                ) :
+                (
+                    resolved_nuclear_term_storage == :by_center ?
+                    let
+                        parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
+                            basis,
+                            bundles.bundle_x,
+                            bundles.bundle_y,
+                            bundles.bundle_z,
+                            expansion,
+                        )
+                        _qwrg_final_nuclear_one_body_by_center(
+                            [
+                                _qwrg_contract_parent_symmetric_matrix(
+                                    contraction,
+                                    matrix,
+                                ) for matrix in parent_nuclear
+                            ],
+                            contracted_nuclear_ga_by_center,
+                            blocks.nuclear_aa_by_center,
+                            residual_data.raw_to_final,
+                        )
+                    end :
+                    nothing
+                )
             final_one_body_local =
-                isnothing(nuclear_one_body_by_center_local) ?
+                isnothing(assembled_nuclear_one_body_by_center_local) ?
                 let
                     parent_one_body = _qwrg_diatomic_one_body_matrix(
                         basis,
@@ -1286,9 +1399,13 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
                 end :
                 _assemble_one_body_hamiltonian(
                     final_kinetic_local,
-                    nuclear_one_body_by_center_local,
+                    assembled_nuclear_one_body_by_center_local,
                     nuclear_charges,
                 )
+            nuclear_one_body_by_center_local =
+                resolved_nuclear_term_storage == :by_center ?
+                assembled_nuclear_one_body_by_center_local :
+                nothing
             (final_kinetic_local, nuclear_one_body_by_center_local, final_one_body_local)
         end
 
@@ -1945,6 +2062,9 @@ This first molecular supplement pass is intentionally narrow:
 - one explicit two-center molecular shell supplement built from a named atomic
   basis
 - only `interaction_treatment = :ggt_nearest`
+- this direct-product molecular supplement route now accepts
+  `gausslet_backend = :pgdg_localized_experimental` on the carried GG
+  one-body backbone only; GA/AA supplement closure remains unchanged
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedDiatomicQWBasis3D,
@@ -1987,6 +2107,12 @@ end
 
 Build the first bond-aligned diatomic nested fixed-block QW route with a true
 molecular supplement and residual-Gaussian completion.
+
+This nested molecular supplement route now accepts
+`gausslet_backend = :pgdg_localized_experimental` only when the carried nested
+fixed block still represents a pure Cartesian parent space; the widened scope
+is the fixed-space GG one-body backbone, while GA/AA supplement closure
+remains unchanged.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
