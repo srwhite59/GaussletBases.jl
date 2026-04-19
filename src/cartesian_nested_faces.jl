@@ -445,6 +445,17 @@ struct _NestedFixedBlock3D{B,S}
     pair_terms::Union{Nothing,Array{Float64,3}}
     term_storage::Symbol
     fixed_centers::Matrix{Float64}
+    factorized_cartesian_parent_basis::Base.RefValue{Any}
+end
+
+function _nested_factorized_basis_cache()
+    return Base.RefValue{Any}(nothing)
+end
+
+function _nested_factorized_basis_cache(
+    factorized_basis,
+)
+    return Base.RefValue{Any}(factorized_basis)
 end
 
 """
@@ -1841,6 +1852,40 @@ function _nested_extract_factorized_basis(
         basis_amplitudes,
         reconstruction_max_error,
     )
+end
+
+function _nested_parent_axis_counts(parent_basis)
+    if parent_basis isa MappedUniformBasis
+        n = length(parent_basis)
+        return (n, n, n)
+    elseif hasproperty(parent_basis, :basis_x) &&
+           hasproperty(parent_basis, :basis_y) &&
+           hasproperty(parent_basis, :basis_z)
+        return (
+            length(parent_basis.basis_x),
+            length(parent_basis.basis_y),
+            length(parent_basis.basis_z),
+        )
+    end
+    throw(
+        ArgumentError(
+            "nested factorized parent extraction requires a parent basis with Cartesian axis counts",
+        ),
+    )
+end
+
+function _nested_factorized_parent_basis(fixed_block::_NestedFixedBlock3D)
+    cached = fixed_block.factorized_cartesian_parent_basis[]
+    cached isa _CartesianNestedFactorizedBasis3D && return cached
+    isnothing(cached) || throw(
+        ArgumentError("nested fixed block carried a non-factorized factorized-basis sidecar"),
+    )
+    factorized_basis = _nested_extract_factorized_basis(
+        fixed_block.coefficient_matrix,
+        _nested_parent_axis_counts(fixed_block.parent_basis),
+    )
+    fixed_block.factorized_cartesian_parent_basis[] = factorized_basis
+    return factorized_basis
 end
 
 function _nested_reconstruct_factorized_coefficients(
@@ -4136,6 +4181,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
+        _nested_factorized_basis_cache(),
     )
 end
 
@@ -4949,6 +4995,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
+        _nested_factorized_basis_cache(),
     )
 end
 
@@ -4989,6 +5036,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
+        _nested_factorized_basis_cache(),
     )
 end
 
@@ -5039,6 +5087,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
+        _nested_factorized_basis_cache(),
     )
 end
 
@@ -5075,6 +5124,7 @@ function _nested_fixed_block(
         packet.pair_terms,
         packet.term_storage,
         Matrix{Float64}(fixed_centers),
+        _nested_factorized_basis_cache(),
     )
 end
 

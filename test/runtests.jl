@@ -5220,6 +5220,9 @@ function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixe
         fixed_block.pair_terms,
         fixed_block.term_storage,
         fixed_block.fixed_centers,
+        GaussletBases._nested_factorized_basis_cache(
+            fixed_block.factorized_cartesian_parent_basis[],
+        ),
     )
 end
 
@@ -6599,6 +6602,20 @@ end
     fixed_full_direct = GaussletBases._nested_fixed_block(full_direct, bundle)
     fixed_legacy_reference = GaussletBases._nested_fixed_block(legacy_reference, bundle)
     fixed_legacy_direct = GaussletBases._nested_fixed_block(legacy_direct, bundle)
+
+    @test isnothing(fixed_legacy_reference.factorized_cartesian_parent_basis[])
+    carried_legacy = GaussletBases._nested_factorized_parent_basis(fixed_legacy_reference)
+    extracted_legacy = GaussletBases._nested_extract_factorized_basis(
+        fixed_legacy_reference.coefficient_matrix,
+        (length(basis), length(basis), length(basis)),
+    )
+    @test fixed_legacy_reference.factorized_cartesian_parent_basis[] === carried_legacy
+    @test GaussletBases._nested_factorized_parent_basis(fixed_legacy_reference) === carried_legacy
+    @test carried_legacy.basis_triplets == extracted_legacy.basis_triplets
+    @test carried_legacy.basis_amplitudes ≈
+          extracted_legacy.basis_amplitudes atol = 1.0e-12 rtol = 1.0e-12
+    @test GaussletBases._nested_reconstruct_factorized_coefficients(carried_legacy) ≈
+          fixed_legacy_reference.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
 
     @test fixed_full_direct.overlap ≈ fixed_full_reference.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.kinetic ≈ fixed_full_reference.kinetic atol = 1.0e-10 rtol = 1.0e-10
@@ -8675,7 +8692,8 @@ end
         @test occursin("qwrg.diatomic_shell.one_body.final_mix", direct_output)
         @test occursin("qwrg.diatomic_shell.one_body.by_center_final_mix", direct_output)
 
-        nested_output = _capture_stdout_text(() ->
+        nested_output = _capture_stdout_text(() -> begin
+            fixed_block.factorized_cartesian_parent_basis[] = nothing
             ordinary_cartesian_qiu_white_operators(
                 fixed_block,
                 supplement;
@@ -8685,8 +8703,8 @@ end
                 interaction_treatment = :ggt_nearest,
                 gausslet_backend = :pgdg_localized_experimental,
                 timing = true,
-            ),
-        )
+            )
+        end)
         @test occursin("qwrg.nested_diatomic_shell.one_body.carried", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.carried.kinetic", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.carried.factorized_basis", nested_output)
@@ -8696,6 +8714,11 @@ end
         @test occursin("qwrg.nested_diatomic_shell.one_body.supplement", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.final_mix", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.by_center_final_mix", nested_output)
+        @test !isnothing(fixed_block.factorized_cartesian_parent_basis[])
+        nested_representation = basis_representation(fixed_block)
+        @test hasproperty(nested_representation.parent_data, :factorized_cartesian_parent_basis)
+        @test nested_representation.parent_data.factorized_cartesian_parent_basis ===
+              fixed_block.factorized_cartesian_parent_basis[]
     end
 end
 

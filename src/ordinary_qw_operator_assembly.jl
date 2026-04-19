@@ -1275,14 +1275,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block
             gausslet_backend == :pgdg_localized_experimental ?
             _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                 basis,
-                _nested_extract_factorized_basis(
-                    contraction,
-                    (
-                        size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                        size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                        size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
-                    ),
-                ),
+                _nested_factorized_parent_basis(fixed_block),
                 bundles.bundle_x,
                 bundles.bundle_y,
                 bundles.bundle_z,
@@ -1504,14 +1497,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
                     gausslet_backend == :pgdg_localized_experimental ?
                     let
                         factorized_basis = @timeg "qwrg.nested_diatomic_shell.one_body.carried.factorized_basis" begin
-                            _nested_extract_factorized_basis(
-                                contraction,
-                                (
-                                    size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                                    size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                                    size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
-                                ),
-                            )
+                            _nested_factorized_parent_basis(fixed_block)
                         end
                         _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                             basis,

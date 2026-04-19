@@ -1875,6 +1875,13 @@ function basis_representation(fixed_block::_NestedFixedBlock3D)
         Matrix{Float64}(fixed_block.fixed_centers),
         _cartesian_fixed_block_route_metadata(fixed_block, axis_counts),
     )
+    parent_data =
+        isnothing(fixed_block.factorized_cartesian_parent_basis[]) ?
+        (;) :
+        (;
+            factorized_cartesian_parent_basis =
+                fixed_block.factorized_cartesian_parent_basis[],
+        )
     return CartesianBasisRepresentation3D(
         metadata,
         axis_representations,
@@ -1884,7 +1891,7 @@ function basis_representation(fixed_block::_NestedFixedBlock3D)
         parent_centers,
         Vector{Int}(fixed_block.support_indices),
         support_states,
-        (;),
+        parent_data,
     )
 end
 
