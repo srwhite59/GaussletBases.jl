@@ -8650,6 +8650,10 @@ end
             ),
         )
         @test occursin("qwrg.nested_diatomic_shell.one_body.carried", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.carried.kinetic", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.carried.factorized_basis", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.carried.nuclear_setup", nested_output)
+        @test occursin("qwrg.nested_diatomic_shell.one_body.carried.nuclear_contract", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.coupling", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.supplement", nested_output)
         @test occursin("qwrg.nested_diatomic_shell.one_body.final_mix", nested_output)

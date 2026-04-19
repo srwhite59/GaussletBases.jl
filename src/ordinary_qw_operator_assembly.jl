@@ -1497,24 +1497,33 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
                 resolved_nuclear_term_storage == :by_center
 
             carried_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.carried" begin
-                fixed_kinetic = Matrix{Float64}(fixed_block.kinetic)
+                fixed_kinetic = @timeg "qwrg.nested_diatomic_shell.one_body.carried.kinetic" begin
+                    Matrix{Float64}(fixed_block.kinetic)
+                end
                 fixed_nuclear_one_body_by_center =
                     gausslet_backend == :pgdg_localized_experimental ?
-                    _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                        basis,
-                        _nested_extract_factorized_basis(
-                            contraction,
-                            (
-                                size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                                size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                                size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
-                            ),
-                        ),
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                    ) :
+                    let
+                        factorized_basis = @timeg "qwrg.nested_diatomic_shell.one_body.carried.factorized_basis" begin
+                            _nested_extract_factorized_basis(
+                                contraction,
+                                (
+                                    size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                                    size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                                    size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                                ),
+                            )
+                        end
+                        _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                            basis,
+                            factorized_basis,
+                            bundles.bundle_x,
+                            bundles.bundle_y,
+                            bundles.bundle_z,
+                            expansion;
+                            timing_setup_label = "qwrg.nested_diatomic_shell.one_body.carried.nuclear_setup",
+                            timing_contract_label = "qwrg.nested_diatomic_shell.one_body.carried.nuclear_contract",
+                        )
+                    end :
                     (
                         resolved_nuclear_term_storage == :by_center ?
                         let
@@ -1537,7 +1546,7 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
                 fixed_one_body =
                     use_by_center_final_mix ?
                     nothing :
-                    let
+                    @timeg "qwrg.nested_diatomic_shell.one_body.carried.reassembly" begin
                         parent_one_body = _qwrg_diatomic_one_body_matrix(
                             basis,
                             bundles.bundle_x,

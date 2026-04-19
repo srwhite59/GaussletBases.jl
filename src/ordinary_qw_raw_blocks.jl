@@ -1375,6 +1375,9 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     bundle_y::_MappedOrdinaryGausslet1DBundle,
     bundle_z::_MappedOrdinaryGausslet1DBundle,
     expansion::CoulombGaussianExpansion,
+    ;
+    timing_setup_label::AbstractString = "qwrg.nuclear.direct_contracted.setup",
+    timing_contract_label::AbstractString = "qwrg.nuclear.direct_contracted.contract",
 )
     factorized_basis.dims == (
         size(bundle_x.pgdg_intermediate.overlap, 1),
@@ -1386,7 +1389,7 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
 
     term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
     nbasis = length(factorized_basis.basis_triplets)
-    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg "qwrg.nuclear.direct_contracted.setup" begin
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg timing_setup_label begin
         axis_term_tables_x = _qwrg_contracted_nuclear_axis_term_table_cache(
             factorized_basis.x_functions,
             basis.basis_x,
@@ -1411,7 +1414,7 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
         (axis_term_tables_x, axis_term_tables_y, axis_term_tables_z)
     end
 
-    return @timeg "qwrg.nuclear.direct_contracted.contract" begin
+    return @timeg timing_contract_label begin
         matrices = Vector{Matrix{Float64}}(undef, length(basis.nuclei))
         for (nucleus_index, nucleus) in pairs(basis.nuclei)
             matrix = zeros(Float64, nbasis, nbasis)
