@@ -1368,6 +1368,64 @@ function _qwrg_contracted_nuclear_axis_term_table_cache(
     return term_tables
 end
 
+function _qwrg_factorized_basis_axis_indices(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+)
+    triplets = factorized_basis.basis_triplets
+    nbasis = length(triplets)
+    x_indices = Vector{Int}(undef, nbasis)
+    y_indices = Vector{Int}(undef, nbasis)
+    z_indices = Vector{Int}(undef, nbasis)
+    @inbounds for basis_index in 1:nbasis
+        ix, iy, iz = triplets[basis_index]
+        x_indices[basis_index] = ix
+        y_indices[basis_index] = iy
+        z_indices[basis_index] = iz
+    end
+    return x_indices, y_indices, z_indices
+end
+
+function _qwrg_fill_direct_contracted_nuclear_matrix!(
+    destination::Matrix{Float64},
+    x_indices::Vector{Int},
+    y_indices::Vector{Int},
+    z_indices::Vector{Int},
+    amplitudes::Vector{Float64},
+    term_coefficients::Vector{Float64},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    nbasis = length(x_indices)
+    nterms = length(term_coefficients)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("direct contracted nuclear fill requires square output sized to the retained fixed basis"),
+    )
+    @inbounds for column in 1:nbasis
+        xj = x_indices[column]
+        yj = y_indices[column]
+        zj = z_indices[column]
+        amplitude_j = amplitudes[column]
+        for row in 1:column
+            xi = x_indices[row]
+            yi = y_indices[row]
+            zi = z_indices[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    term_coefficients[term] *
+                    operator_terms_x[term, xi, xj] *
+                    operator_terms_y[term, yi, yj] *
+                    operator_terms_z[term, zi, zj]
+            end
+            value *= amplitudes[row] * amplitude_j
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
+end
+
 function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     basis::AbstractBondAlignedOrdinaryQWBasis3D,
     factorized_basis::_CartesianNestedFactorizedBasis3D,
@@ -1415,19 +1473,23 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     end
 
     return @timeg timing_contract_label begin
+        x_indices, y_indices, z_indices = _qwrg_factorized_basis_axis_indices(factorized_basis)
+        amplitudes = factorized_basis.basis_amplitudes
         matrices = Vector{Matrix{Float64}}(undef, length(basis.nuclei))
         for (nucleus_index, nucleus) in pairs(basis.nuclei)
-            matrix = zeros(Float64, nbasis, nbasis)
-            _nested_fill_factorized_weighted_term_sum!(
+            matrix = Matrix{Float64}(undef, nbasis, nbasis)
+            _qwrg_fill_direct_contracted_nuclear_matrix!(
                 matrix,
-                factorized_basis,
+                x_indices,
+                y_indices,
+                z_indices,
+                amplitudes,
                 term_coefficients,
                 axis_term_tables_x[nucleus[1]],
                 axis_term_tables_y[nucleus[2]],
-                axis_term_tables_z[nucleus[3]];
-                include_basis_amplitudes = true,
+                axis_term_tables_z[nucleus[3]],
             )
-            matrices[nucleus_index] = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
+            matrices[nucleus_index] = matrix
         end
         matrices
     end
