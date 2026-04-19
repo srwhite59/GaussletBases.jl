@@ -6528,6 +6528,44 @@ end
     @test factorized.reconstruction_max_error < 1.0e-10
     @test reconstructed ≈ shell.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
 
+    dims = (3, 2, 2)
+    x1 = [1.0, 0.5, 0.0]
+    x2 = [1.0, -0.25, 0.2]
+    y1 = [1.0, 0.0]
+    y2 = [1.0, 0.3]
+    z1 = [1.0, -0.4]
+    z2 = [1.0, 0.25]
+    amplitudes = [2.0, -1.5, 0.75]
+    factorable = zeros(Float64, prod(dims), 3)
+    factors = ((x1, y1, z1), (x1, y2, z1), (x2, y1, z2))
+    for column in 1:3
+        xvec, yvec, zvec = factors[column]
+        amplitude = amplitudes[column]
+        for ix in 1:dims[1], iy in 1:dims[2], iz in 1:dims[3]
+            factorable[GaussletBases._cartesian_flat_index(ix, iy, iz, dims), column] =
+                amplitude * xvec[ix] * yvec[iy] * zvec[iz]
+        end
+    end
+    hand_factorized = GaussletBases._nested_extract_factorized_basis(factorable, dims)
+    @test hand_factorized.reconstruction_max_error < 1.0e-12
+    @test hand_factorized.basis_triplets == [(1, 1, 1), (1, 2, 1), (2, 1, 2)]
+    @test hand_factorized.basis_amplitudes ≈ amplitudes atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.x_functions[:, 1] ≈ x1 atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.x_functions[:, 2] ≈ x2 atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.y_functions[:, 1] ≈ y1 atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.y_functions[:, 2] ≈ y2 atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.z_functions[:, 1] ≈ z1 atol = 1.0e-12 rtol = 1.0e-12
+    @test hand_factorized.z_functions[:, 2] ≈ z2 atol = 1.0e-12 rtol = 1.0e-12
+    @test GaussletBases._nested_reconstruct_factorized_coefficients(hand_factorized) ≈
+          factorable atol = 1.0e-12 rtol = 1.0e-12
+
+    broken_factorable = copy(factorable)
+    broken_factorable[GaussletBases._cartesian_flat_index(2, 2, 2, dims), 2] += 1.0e-4
+    @test_throws ArgumentError GaussletBases._nested_extract_factorized_basis(
+        broken_factorable,
+        dims,
+    )
+
     full_reference = GaussletBases._build_one_center_atomic_shell_sequence(
         bundle,
         (1:13, 1:13, 1:13);

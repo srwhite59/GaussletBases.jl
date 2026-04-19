@@ -1670,17 +1670,83 @@ function _nested_zero_small!(values::AbstractVector{Float64}; atol::Float64)
     return values
 end
 
-function _nested_find_or_push_axis_function!(
-    functions::Vector{Vector{Float64}},
-    candidate::Vector{Float64};
+function _nested_axis_functions_match(
+    existing::AbstractVector{Float64},
+    candidate::AbstractVector{Float64};
     atol::Float64,
 )
-    for (index, existing) in enumerate(functions)
-        length(existing) == length(candidate) || continue
-        maximum(abs.(existing .- candidate)) <= atol && return index
+    length(existing) == length(candidate) || return false
+    @inbounds for index in eachindex(existing)
+        abs(existing[index] - candidate[index]) <= atol || return false
     end
-    push!(functions, candidate)
-    return length(functions)
+    return true
+end
+
+function _nested_axis_function_lookup_key(
+    candidate::AbstractVector{Float64};
+    atol::Float64,
+)
+    signature_scale = max(16.0 * atol, eps(Float64))
+    first_nonzero = 0
+    last_nonzero = 0
+    nonzero_count = 0
+    l1_norm = 0.0
+    l2_norm = 0.0
+    quarter_index = max(1, Int(cld(length(candidate), 4)))
+    middle_index = max(1, Int(cld(length(candidate), 2)))
+    three_quarter_index = max(1, Int(cld(3 * length(candidate), 4)))
+    quarter_value = candidate[quarter_index]
+    middle_value = candidate[middle_index]
+    three_quarter_value = candidate[three_quarter_index]
+    end_value = candidate[end]
+    @inbounds for index in eachindex(candidate)
+        value = candidate[index]
+        if value != 0.0
+            nonzero_count += 1
+            first_nonzero == 0 && (first_nonzero = index)
+            last_nonzero = index
+        end
+        l1_norm += abs(value)
+        l2_norm += value * value
+    end
+    return hash(
+        (
+            length(candidate),
+            first_nonzero,
+            last_nonzero,
+            nonzero_count,
+            round(quarter_value / signature_scale),
+            round(middle_value / signature_scale),
+            round(three_quarter_value / signature_scale),
+            round(end_value / signature_scale),
+            round(l1_norm / signature_scale),
+            round(l2_norm / signature_scale),
+        ),
+        zero(UInt),
+    )
+end
+
+function _nested_find_or_push_axis_function!(
+    functions::Vector{Vector{Float64}},
+    lookup::Dict{UInt,Vector{Int}},
+    candidate::AbstractVector{Float64};
+    atol::Float64,
+)
+    key = _nested_axis_function_lookup_key(candidate; atol = atol)
+    candidate_indices = get(lookup, key, Int[])
+    for index in candidate_indices
+        existing = functions[index]
+        _nested_axis_functions_match(existing, candidate; atol = atol) && return index
+    end
+    for (index, existing) in enumerate(functions)
+        _nested_axis_functions_match(existing, candidate; atol = atol) || continue
+        push!(get!(lookup, key, Int[]), index)
+        return index
+    end
+    push!(functions, Vector{Float64}(candidate))
+    index = length(functions)
+    push!(get!(lookup, key, Int[]), index)
+    return index
 end
 
 function _nested_extract_factorized_basis(
@@ -1692,52 +1758,76 @@ function _nested_extract_factorized_basis(
     size(coefficient_matrix, 1) == nparent || throw(
         ArgumentError("nested factorized-basis extraction requires parent rows matching the Cartesian box volume"),
     )
+    nx, ny, nz = dims
+    yz_plane = ny * nz
     nfixed = size(coefficient_matrix, 2)
     x_functions = Vector{Vector{Float64}}()
     y_functions = Vector{Vector{Float64}}()
     z_functions = Vector{Vector{Float64}}()
+    sizehint!(x_functions, nfixed)
+    sizehint!(y_functions, nfixed)
+    sizehint!(z_functions, nfixed)
+    x_lookup = Dict{UInt,Vector{Int}}()
+    y_lookup = Dict{UInt,Vector{Int}}()
+    z_lookup = Dict{UInt,Vector{Int}}()
     basis_triplets = Vector{NTuple{3,Int}}(undef, nfixed)
     basis_amplitudes = Vector{Float64}(undef, nfixed)
     reconstruction_max_error = 0.0
+    x_vector = Vector{Float64}(undef, nx)
+    y_vector = Vector{Float64}(undef, ny)
+    z_vector = Vector{Float64}(undef, nz)
 
     for column in 1:nfixed
         coefficients = @view coefficient_matrix[:, column]
-        anchor = findfirst(value -> abs(value) > atol, coefficients)
-        isnothing(anchor) && throw(
+        anchor = 0
+        @inbounds for index in 1:nparent
+            abs(Float64(coefficients[index])) > atol || continue
+            anchor = index
+            break
+        end
+        anchor == 0 && throw(
             ArgumentError("nested factorized-basis extraction requires every retained fixed column to have at least one nonzero parent row"),
         )
         ix0, iy0, iz0 = _cartesian_unflat_index(anchor, dims)
         amplitude = Float64(coefficients[anchor])
-        x_vector = Vector{Float64}(undef, dims[1])
-        y_vector = Vector{Float64}(undef, dims[2])
-        z_vector = Vector{Float64}(undef, dims[3])
-        @inbounds for ix in 1:dims[1]
-            x_vector[ix] = Float64(coefficients[_cartesian_flat_index(ix, iy0, iz0, dims)]) / amplitude
+        amplitude_inv = inv(amplitude)
+        x_offset = (iy0 - 1) * nz + iz0
+        @inbounds for ix in 1:nx
+            x_vector[ix] = Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
         end
-        @inbounds for iy in 1:dims[2]
-            y_vector[iy] = Float64(coefficients[_cartesian_flat_index(ix0, iy, iz0, dims)]) / amplitude
+        y_offset = (ix0 - 1) * yz_plane + iz0
+        @inbounds for iy in 1:ny
+            y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
         end
-        @inbounds for iz in 1:dims[3]
-            z_vector[iz] = Float64(coefficients[_cartesian_flat_index(ix0, iy0, iz, dims)]) / amplitude
+        z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
+        @inbounds for iz in 1:nz
+            z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
         end
         _nested_zero_small!(x_vector; atol = atol)
         _nested_zero_small!(y_vector; atol = atol)
         _nested_zero_small!(z_vector; atol = atol)
 
         column_error = 0.0
-        @inbounds for iz in 1:dims[3], iy in 1:dims[2], ix in 1:dims[1]
-            flat = _cartesian_flat_index(ix, iy, iz, dims)
-            expected = amplitude * x_vector[ix] * y_vector[iy] * z_vector[iz]
-            column_error = max(column_error, abs(expected - Float64(coefficients[flat])))
+        @inbounds for ix in 1:nx
+            x_scale = amplitude * x_vector[ix]
+            x_base = (ix - 1) * yz_plane
+            for iy in 1:ny
+                xy_scale = x_scale * y_vector[iy]
+                yz_base = x_base + (iy - 1) * nz
+                for iz in 1:nz
+                    error = abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
+                    column_error = max(column_error, error)
+                end
+            end
         end
         reconstruction_max_error = max(reconstruction_max_error, column_error)
         column_error <= 1.0e3 * atol || throw(
             ArgumentError("nested factorized-basis extraction failed to reconstruct fixed column $column to roundoff (max error = $column_error)"),
         )
 
-        x_index = _nested_find_or_push_axis_function!(x_functions, x_vector; atol = atol)
-        y_index = _nested_find_or_push_axis_function!(y_functions, y_vector; atol = atol)
-        z_index = _nested_find_or_push_axis_function!(z_functions, z_vector; atol = atol)
+        x_index = _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
+        y_index = _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
+        z_index = _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
         basis_triplets[column] = (x_index, y_index, z_index)
         basis_amplitudes[column] = amplitude
     end
