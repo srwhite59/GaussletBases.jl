@@ -244,12 +244,115 @@ function ordinary_cartesian_1s2_check(
     )
 end
 
+function _qwrg_carried_plus_residual_split(
+    raw_to_final::AbstractMatrix{<:Real},
+    carried_count::Integer,
+    added_count::Integer;
+    structure_tol::Real = 1.0e-12,
+)
+    size(raw_to_final, 1) == carried_count + added_count || return nothing
+    size(raw_to_final, 2) >= carried_count || return nothing
+
+    carried_block = Matrix{Float64}(raw_to_final[:, 1:carried_count])
+    carried_identity = Matrix{Float64}(I, carried_count, carried_count)
+    isapprox(
+        carried_block[1:carried_count, :],
+        carried_identity;
+        atol = structure_tol,
+        rtol = 0.0,
+    ) || return nothing
+    if added_count > 0 &&
+       maximum(abs.(carried_block[(carried_count + 1):end, :])) > structure_tol
+        return nothing
+    end
+
+    return (
+        residual_carried_coefficients = Matrix{Float64}(raw_to_final[1:carried_count, (carried_count + 1):end]),
+        residual_added_coefficients = Matrix{Float64}(raw_to_final[(carried_count + 1):end, (carried_count + 1):end]),
+    )
+end
+
+function _qwrg_structured_final_one_body_matrices(
+    carried_one_body::AbstractMatrix{<:Real},
+    one_body_ga::AbstractMatrix{<:Real},
+    one_body_aa::AbstractMatrix{<:Real},
+    raw_to_final::AbstractMatrix{<:Real};
+    structure_tol::Real = 1.0e-12,
+)
+    carried_count = size(carried_one_body, 1)
+    size(carried_one_body, 2) == carried_count || throw(
+        ArgumentError("structured final one-body mix requires a square carried block"),
+    )
+    size(one_body_ga, 1) == carried_count || throw(
+        ArgumentError("structured final one-body mix requires a GA block with carried-row count"),
+    )
+
+    added_count = size(one_body_ga, 2)
+    size(one_body_aa, 1) == added_count || throw(
+        ArgumentError("structured final one-body mix requires a square added-added block"),
+    )
+    size(one_body_aa, 2) == added_count || throw(
+        ArgumentError("structured final one-body mix requires a square added-added block"),
+    )
+
+    split = _qwrg_carried_plus_residual_split(
+        raw_to_final,
+        carried_count,
+        added_count;
+        structure_tol = structure_tol,
+    )
+    isnothing(split) && return nothing
+
+    carried = Matrix{Float64}(carried_one_body)
+    residual_count = size(raw_to_final, 2) - carried_count
+    residual_count >= 0 || throw(
+        ArgumentError("structured final one-body mix requires final dimension >= carried dimension"),
+    )
+    if residual_count == 0
+        return nothing, 0.5 .* (carried .+ transpose(carried))
+    end
+
+    coupling = Matrix{Float64}(one_body_ga)
+    added = Matrix{Float64}(one_body_aa)
+    residual_carried_coefficients = split.residual_carried_coefficients
+    residual_added_coefficients = split.residual_added_coefficients
+
+    carried_residual =
+        carried * residual_carried_coefficients +
+        coupling * residual_added_coefficients
+    residual_carried =
+        transpose(residual_carried_coefficients) * carried +
+        transpose(residual_added_coefficients) * transpose(coupling)
+    residual_residual =
+        transpose(residual_carried_coefficients) * carried_residual +
+        transpose(residual_added_coefficients) *
+        (
+            transpose(coupling) * residual_carried_coefficients +
+            added * residual_added_coefficients
+        )
+
+    final_one_body = Matrix{Float64}(undef, size(raw_to_final, 2), size(raw_to_final, 2))
+    final_one_body[1:carried_count, 1:carried_count] = carried
+    final_one_body[1:carried_count, (carried_count + 1):end] = carried_residual
+    final_one_body[(carried_count + 1):end, 1:carried_count] = residual_carried
+    final_one_body[(carried_count + 1):end, (carried_count + 1):end] = residual_residual
+    return nothing, 0.5 .* (final_one_body .+ transpose(final_one_body))
+end
+
 function _qwrg_one_body_matrices(
     gausslet_one_body::AbstractMatrix{<:Real},
     one_body_ga::AbstractMatrix{<:Real},
     one_body_aa::AbstractMatrix{<:Real},
     raw_to_final::AbstractMatrix{<:Real},
 )
+    structured = _qwrg_structured_final_one_body_matrices(
+        gausslet_one_body,
+        one_body_ga,
+        one_body_aa,
+        raw_to_final,
+    )
+    !isnothing(structured) && return structured
+
     raw_one_body = [
         Matrix{Float64}(gausslet_one_body) Matrix{Float64}(one_body_ga)
         Matrix{Float64}(transpose(one_body_ga)) Matrix{Float64}(one_body_aa)

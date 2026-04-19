@@ -79,6 +79,9 @@ The wording discipline for the ordinary line remains:
 - on the widened diatomic molecular supplement route, only the carried GG/fixed
   nuclear one-body backbone is widened; GA/AA supplement blocks and
   residual-Gaussian closure remain on the existing formulation
+- on that same diatomic molecular supplement route, the final one-body mix is
+  now intended to use the carried-plus-residual `raw_to_final` structure
+  directly rather than a generic dense final-space congruence
 - current nested source-building front doors and other supplement-bearing
   Qiu-White routes remain `gausslet_backend = :numerical_reference` unless a
   route is explicitly documented otherwise; that includes the current

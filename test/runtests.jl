@@ -8014,6 +8014,73 @@ end
         return text
     end
 
+    @testset "Structured final one-body mix matches dense congruence" begin
+        carried_one_body = [
+            1.1 0.2
+            0.3 1.7
+        ]
+        one_body_ga = [
+            -0.4 0.6
+            0.5 -0.2
+        ]
+        one_body_aa = [
+            0.9 -0.1
+            0.25 1.3
+        ]
+        raw_to_final = [
+            1.0 0.0 0.2 -0.1
+            0.0 1.0 0.05 0.3
+            0.0 0.0 0.7 0.1
+            0.0 0.0 -0.2 0.6
+        ]
+        raw_one_body = [
+            carried_one_body one_body_ga
+            transpose(one_body_ga) one_body_aa
+        ]
+        dense_final = Matrix{Float64}(transpose(raw_to_final) * raw_one_body * raw_to_final)
+        dense_final = 0.5 .* (dense_final .+ transpose(dense_final))
+
+        structured_raw, structured_final = GaussletBases._qwrg_structured_final_one_body_matrices(
+            carried_one_body,
+            one_body_ga,
+            one_body_aa,
+            raw_to_final,
+        )
+        @test isnothing(structured_raw)
+        @test structured_final ≈ dense_final atol = 1.0e-12 rtol = 1.0e-12
+
+        mixed_raw, mixed_final = GaussletBases._qwrg_one_body_matrices(
+            carried_one_body,
+            one_body_ga,
+            one_body_aa,
+            raw_to_final,
+        )
+        @test isnothing(mixed_raw)
+        @test mixed_final ≈ dense_final atol = 1.0e-12 rtol = 1.0e-12
+
+        broken_raw_to_final = copy(raw_to_final)
+        broken_raw_to_final[3, 1] = 1.0e-3
+        @test isnothing(
+            GaussletBases._qwrg_structured_final_one_body_matrices(
+                carried_one_body,
+                one_body_ga,
+                one_body_aa,
+                broken_raw_to_final,
+            ),
+        )
+
+        fallback_raw, fallback_final = GaussletBases._qwrg_one_body_matrices(
+            carried_one_body,
+            one_body_ga,
+            one_body_aa,
+            broken_raw_to_final,
+        )
+        fallback_dense_final = Matrix{Float64}(transpose(broken_raw_to_final) * raw_one_body * broken_raw_to_final)
+        fallback_dense_final = 0.5 .* (fallback_dense_final .+ transpose(fallback_dense_final))
+        @test !isnothing(fallback_raw)
+        @test fallback_final ≈ fallback_dense_final atol = 1.0e-12 rtol = 1.0e-12
+    end
+
     function _check_direct_product_backend_pair(
         basis,
         nuclear_charges::AbstractVector{<:Real},
@@ -8139,6 +8206,8 @@ end
         @test localized.gaussian_data === supplement
         @test reference.residual_count > 0
         @test localized.residual_count == reference.residual_count
+        @test size(localized.one_body_hamiltonian, 1) == localized.gausslet_count + localized.residual_count
+        @test size(localized.one_body_hamiltonian) == size(reference.one_body_hamiltonian)
         @test reference.nuclear_term_storage == :by_center
         @test localized.nuclear_term_storage == :by_center
         @test !isnothing(localized.kinetic_one_body)
@@ -8214,6 +8283,8 @@ end
         @test localized.gaussian_data === supplement
         @test reference.residual_count > 0
         @test localized.residual_count == reference.residual_count
+        @test size(localized.one_body_hamiltonian, 1) == localized.gausslet_count + localized.residual_count
+        @test size(localized.one_body_hamiltonian) == size(reference.one_body_hamiltonian)
         @test reference.nuclear_term_storage == :by_center
         @test localized.nuclear_term_storage == :by_center
         @test !isnothing(localized.kinetic_one_body)

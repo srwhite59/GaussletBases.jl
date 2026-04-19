@@ -40,6 +40,9 @@ On PGDG-capable pure molecular routes, per-center nuclear one-body terms are
 therefore contracted directly into the exposed parent/final space; avoidable
 dense parent 3D nuclear matrix materialization is outside the intended
 contract.
+On carried-plus-residual molecular supplement routes, the final one-body mix
+should likewise exploit the carried identity block instead of treating the
+`raw_to_final` map as an arbitrary dense congruence.
 
 In the shorthand used during planning:
 
