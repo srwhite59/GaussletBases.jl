@@ -1368,6 +1368,147 @@ function _qwrg_contracted_nuclear_axis_term_table_cache(
     return term_tables
 end
 
+function _qwrg_factorized_basis_axis_indices(
+    factorized_basis::_CartesianNestedFactorizedBasis3D,
+)
+    nbasis = length(factorized_basis.basis_triplets)
+    x_indices = Vector{Int}(undef, nbasis)
+    y_indices = Vector{Int}(undef, nbasis)
+    z_indices = Vector{Int}(undef, nbasis)
+    @inbounds for basis_index in 1:nbasis
+        ix, iy, iz = factorized_basis.basis_triplets[basis_index]
+        x_indices[basis_index] = ix
+        y_indices[basis_index] = iy
+        z_indices[basis_index] = iz
+    end
+    return x_indices, y_indices, z_indices
+end
+
+function _qwrg_axis_centers_invariant(
+    centers_1d::AbstractVector{<:Real};
+    atol::Float64 = 1.0e-12,
+)
+    isempty(centers_1d) && return true
+    reference = Float64(centers_1d[1])
+    @inbounds for index in 2:length(centers_1d)
+        abs(Float64(centers_1d[index]) - reference) <= atol || return false
+    end
+    return true
+end
+
+function _qwrg_fill_direct_contracted_nuclear_matrix!(
+    destination::AbstractMatrix{<:Real},
+    x_indices::AbstractVector{Int},
+    y_indices::AbstractVector{Int},
+    z_indices::AbstractVector{Int},
+    amplitudes::AbstractVector{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    nbasis = length(x_indices)
+    nterms = length(term_coefficients)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("direct contracted nuclear fill requires square output sized to the retained fixed basis"),
+    )
+    @inbounds for column in 1:nbasis
+        xj = x_indices[column]
+        yj = y_indices[column]
+        zj = z_indices[column]
+        amplitude_j = Float64(amplitudes[column])
+        for row in 1:column
+            xi = x_indices[row]
+            yi = y_indices[row]
+            zi = z_indices[row]
+            scale = Float64(amplitudes[row]) * amplitude_j
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    Float64(term_coefficients[term]) *
+                    operator_terms_x[term, xi, xj] *
+                    operator_terms_y[term, yi, yj] *
+                    operator_terms_z[term, zi, zj]
+            end
+            value *= scale
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
+end
+
+function _qwrg_factorized_invariant_axis_term_products(
+    left_indices::AbstractVector{Int},
+    right_indices::AbstractVector{Int},
+    amplitudes::AbstractVector{<:Real},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_left::Array{Float64,3},
+    operator_terms_right::Array{Float64,3},
+)
+    nbasis = length(left_indices)
+    length(right_indices) == nbasis || throw(
+        ArgumentError("factorized invariant axis products require matched basis index lengths"),
+    )
+    nterms = length(term_coefficients)
+    size(operator_terms_left, 1) == nterms == size(operator_terms_right, 1) || throw(
+        ArgumentError("factorized invariant axis products require matching term counts"),
+    )
+    products = Array{Float64}(undef, nterms, nbasis, nbasis)
+    @inbounds for column in 1:nbasis
+        left_column = left_indices[column]
+        right_column = right_indices[column]
+        amplitude_j = Float64(amplitudes[column])
+        for row in 1:column
+            left_row = left_indices[row]
+            right_row = right_indices[row]
+            scale = Float64(amplitudes[row]) * amplitude_j
+            for term in 1:nterms
+                value =
+                    Float64(term_coefficients[term]) *
+                    scale *
+                    operator_terms_left[term, left_row, left_column] *
+                    operator_terms_right[term, right_row, right_column]
+                products[term, row, column] = value
+                products[term, column, row] = value
+            end
+        end
+    end
+    return products
+end
+
+function _qwrg_fill_direct_contracted_nuclear_matrix_from_invariant_terms!(
+    destination::AbstractMatrix{<:Real},
+    varying_indices::AbstractVector{Int},
+    invariant_terms::Array{Float64,3},
+    varying_terms::Array{Float64,3},
+)
+    nbasis = length(varying_indices)
+    nterms = size(invariant_terms, 1)
+    size(destination) == (nbasis, nbasis) || throw(
+        ArgumentError("direct contracted nuclear fill requires square output sized to the retained fixed basis"),
+    )
+    size(invariant_terms, 2) == nbasis == size(invariant_terms, 3) || throw(
+        ArgumentError("direct contracted invariant terms require one retained-fixed block per basis pair"),
+    )
+    size(varying_terms, 1) == nterms || throw(
+        ArgumentError("direct contracted invariant fill requires matching term counts"),
+    )
+    @inbounds for column in 1:nbasis
+        varying_column = varying_indices[column]
+        for row in 1:column
+            varying_row = varying_indices[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value += invariant_terms[term, row, column] * varying_terms[term, varying_row, varying_column]
+            end
+            destination[row, column] = value
+            destination[column, row] = value
+        end
+    end
+    return destination
+end
+
 function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     basis::AbstractBondAlignedOrdinaryQWBasis3D,
     factorized_basis::_CartesianNestedFactorizedBasis3D,
@@ -1389,45 +1530,125 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
 
     term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
     nbasis = length(factorized_basis.basis_triplets)
-    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg timing_setup_label begin
+    x_indices, y_indices, z_indices = _qwrg_factorized_basis_axis_indices(factorized_basis)
+    amplitudes = factorized_basis.basis_amplitudes
+    centers_x = Float64[Float64(nucleus[1]) for nucleus in basis.nuclei]
+    centers_y = Float64[Float64(nucleus[2]) for nucleus in basis.nuclei]
+    centers_z = Float64[Float64(nucleus[3]) for nucleus in basis.nuclei]
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z, x_terms_by_nucleus, y_terms_by_nucleus, z_terms_by_nucleus = @timeg timing_setup_label begin
         axis_term_tables_x = _qwrg_contracted_nuclear_axis_term_table_cache(
             factorized_basis.x_functions,
             basis.basis_x,
-            [nucleus[1] for nucleus in basis.nuclei],
+            centers_x,
             expansion,
             bundle_x.backend,
         )
         axis_term_tables_y = _qwrg_contracted_nuclear_axis_term_table_cache(
             factorized_basis.y_functions,
             basis.basis_y,
-            [nucleus[2] for nucleus in basis.nuclei],
+            centers_y,
             expansion,
             bundle_y.backend,
         )
         axis_term_tables_z = _qwrg_contracted_nuclear_axis_term_table_cache(
             factorized_basis.z_functions,
             basis.basis_z,
-            [nucleus[3] for nucleus in basis.nuclei],
+            centers_z,
             expansion,
             bundle_z.backend,
         )
-        (axis_term_tables_x, axis_term_tables_y, axis_term_tables_z)
+        x_terms_by_nucleus = Array{Float64,3}[axis_term_tables_x[center_value] for center_value in centers_x]
+        y_terms_by_nucleus = Array{Float64,3}[axis_term_tables_y[center_value] for center_value in centers_y]
+        z_terms_by_nucleus = Array{Float64,3}[axis_term_tables_z[center_value] for center_value in centers_z]
+        (
+            axis_term_tables_x,
+            axis_term_tables_y,
+            axis_term_tables_z,
+            x_terms_by_nucleus,
+            y_terms_by_nucleus,
+            z_terms_by_nucleus,
+        )
     end
 
     return @timeg timing_contract_label begin
         matrices = Vector{Matrix{Float64}}(undef, length(basis.nuclei))
-        for (nucleus_index, nucleus) in pairs(basis.nuclei)
-            matrix = zeros(Float64, nbasis, nbasis)
-            _nested_fill_factorized_weighted_term_sum!(
-                matrix,
-                factorized_basis,
+        x_invariant = _qwrg_axis_centers_invariant(centers_x)
+        y_invariant = _qwrg_axis_centers_invariant(centers_y)
+        z_invariant = _qwrg_axis_centers_invariant(centers_z)
+
+        if x_invariant && y_invariant
+            invariant_terms = _qwrg_factorized_invariant_axis_term_products(
+                x_indices,
+                y_indices,
+                amplitudes,
                 term_coefficients,
-                axis_term_tables_x[nucleus[1]],
-                axis_term_tables_y[nucleus[2]],
-                axis_term_tables_z[nucleus[3]];
-                include_basis_amplitudes = true,
+                x_terms_by_nucleus[1],
+                y_terms_by_nucleus[1],
             )
-            matrices[nucleus_index] = Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
+            for nucleus_index in eachindex(basis.nuclei)
+                matrix = Matrix{Float64}(undef, nbasis, nbasis)
+                _qwrg_fill_direct_contracted_nuclear_matrix_from_invariant_terms!(
+                    matrix,
+                    z_indices,
+                    invariant_terms,
+                    z_terms_by_nucleus[nucleus_index],
+                )
+                matrices[nucleus_index] = matrix
+            end
+        elseif x_invariant && z_invariant
+            invariant_terms = _qwrg_factorized_invariant_axis_term_products(
+                x_indices,
+                z_indices,
+                amplitudes,
+                term_coefficients,
+                x_terms_by_nucleus[1],
+                z_terms_by_nucleus[1],
+            )
+            for nucleus_index in eachindex(basis.nuclei)
+                matrix = Matrix{Float64}(undef, nbasis, nbasis)
+                _qwrg_fill_direct_contracted_nuclear_matrix_from_invariant_terms!(
+                    matrix,
+                    y_indices,
+                    invariant_terms,
+                    y_terms_by_nucleus[nucleus_index],
+                )
+                matrices[nucleus_index] = matrix
+            end
+        elseif y_invariant && z_invariant
+            invariant_terms = _qwrg_factorized_invariant_axis_term_products(
+                y_indices,
+                z_indices,
+                amplitudes,
+                term_coefficients,
+                y_terms_by_nucleus[1],
+                z_terms_by_nucleus[1],
+            )
+            for nucleus_index in eachindex(basis.nuclei)
+                matrix = Matrix{Float64}(undef, nbasis, nbasis)
+                _qwrg_fill_direct_contracted_nuclear_matrix_from_invariant_terms!(
+                    matrix,
+                    x_indices,
+                    invariant_terms,
+                    x_terms_by_nucleus[nucleus_index],
+                )
+                matrices[nucleus_index] = matrix
+            end
+        else
+            for nucleus_index in eachindex(basis.nuclei)
+                matrix = Matrix{Float64}(undef, nbasis, nbasis)
+                _qwrg_fill_direct_contracted_nuclear_matrix!(
+                    matrix,
+                    x_indices,
+                    y_indices,
+                    z_indices,
+                    amplitudes,
+                    term_coefficients,
+                    x_terms_by_nucleus[nucleus_index],
+                    y_terms_by_nucleus[nucleus_index],
+                    z_terms_by_nucleus[nucleus_index],
+                )
+                matrices[nucleus_index] = matrix
+            end
         end
         matrices
     end

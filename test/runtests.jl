@@ -9584,6 +9584,40 @@ end
     @test !isnothing(full_nested_ops_localized.kinetic_one_body)
     @test !isnothing(full_nested_ops_localized.nuclear_one_body_by_center)
     @test length(full_nested_ops_localized.nuclear_one_body_by_center) == 2
+    localized_nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
+        fixed_block.parent_basis,
+        expansion;
+        gausslet_backend = :pgdg_localized_experimental,
+    )
+    localized_nested_factorized_basis =
+        GaussletBases._nested_factorized_parent_basis(fixed_block)
+    direct_contracted_nested_nuclear =
+        GaussletBases._qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+            fixed_block.parent_basis,
+            localized_nested_factorized_basis,
+            localized_nested_bundles.bundle_x,
+            localized_nested_bundles.bundle_y,
+            localized_nested_bundles.bundle_z,
+            expansion,
+        )
+    reference_nested_parent_nuclear = GaussletBases._qwrg_diatomic_nuclear_one_body_by_center(
+        fixed_block.parent_basis,
+        localized_nested_bundles.bundle_x,
+        localized_nested_bundles.bundle_y,
+        localized_nested_bundles.bundle_z,
+        expansion,
+    )
+    reference_nested_contracted_nuclear = [
+        GaussletBases._qwrg_contract_parent_symmetric_matrix(
+            fixed_block.coefficient_matrix,
+            matrix,
+        ) for matrix in reference_nested_parent_nuclear
+    ]
+    @test length(direct_contracted_nested_nuclear) == length(reference_nested_contracted_nuclear)
+    for nucleus_index in eachindex(direct_contracted_nested_nuclear, reference_nested_contracted_nuclear)
+        @test direct_contracted_nested_nuclear[nucleus_index] ≈
+              reference_nested_contracted_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+    end
     @test assembled_one_body_hamiltonian(full_nested_ops_localized) ≈
           full_nested_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
     @test assembled_one_body_hamiltonian(full_nested_ops_localized; nuclear_charges = [1.0, 0.0]) ≈
