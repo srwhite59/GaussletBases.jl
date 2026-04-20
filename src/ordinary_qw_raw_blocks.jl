@@ -1345,27 +1345,49 @@ function _qwrg_full_cartesian_product_factorized_basis(dims::NTuple{3,Int})
     )
 end
 
-function _qwrg_contracted_nuclear_axis_term_table_cache(
+function _qwrg_contracted_nuclear_axis_term_tables(
     axis_functions::AbstractMatrix{<:Real},
     basis::MappedUniformBasis,
     centers_1d::AbstractVector{<:Real},
     expansion::CoulombGaussianExpansion,
     gausslet_backend::Symbol,
 )
-    raw_factor_terms = _qwrg_diatomic_factor_term_cache(
-        basis,
-        centers_1d,
-        expansion,
-        gausslet_backend,
-    )
-    term_tables = Dict{Float64,Array{Float64,3}}()
-    for (center_value, factor_terms) in pairs(raw_factor_terms)
-        term_tables[center_value] = _nested_factorized_axis_term_tables(
-            factor_terms,
-            Matrix{Float64}(axis_functions),
-        )
+    axis_matrix = Matrix{Float64}(axis_functions)
+    center_values = Float64[Float64(value) for value in centers_1d]
+    term_table_cache = Dict{Float64,Array{Float64,3}}()
+    ordered_term_tables = Vector{Array{Float64,3}}(undef, length(center_values))
+    @inbounds for center_index in eachindex(center_values)
+        center_value = center_values[center_index]
+        ordered_term_tables[center_index] = get!(term_table_cache, center_value) do
+            bundle = _mapped_ordinary_gausslet_1d_bundle(
+                basis;
+                exponents = expansion.exponents,
+                center = center_value,
+                backend = gausslet_backend,
+            )
+            _nested_factorized_axis_term_tables(
+                bundle.pgdg_intermediate.gaussian_factor_terms,
+                axis_matrix,
+            )
+        end
     end
-    return term_tables
+    return ordered_term_tables
+end
+
+function _qwrg_bond_aligned_nuclear_centers_by_axis(
+    nuclei::AbstractVector{<:NTuple{3,<:Real}},
+)
+    nnuclei = length(nuclei)
+    centers_x = Vector{Float64}(undef, nnuclei)
+    centers_y = Vector{Float64}(undef, nnuclei)
+    centers_z = Vector{Float64}(undef, nnuclei)
+    @inbounds for nucleus_index in eachindex(nuclei)
+        nucleus = nuclei[nucleus_index]
+        centers_x[nucleus_index] = Float64(nucleus[1])
+        centers_y[nucleus_index] = Float64(nucleus[2])
+        centers_z[nucleus_index] = Float64(nucleus[3])
+    end
+    return centers_x, centers_y, centers_z
 end
 
 function _qwrg_factorized_basis_axis_indices(
@@ -1461,26 +1483,29 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     )
 
     term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
+    nuclei = basis.nuclei
+    nnuclei = length(nuclei)
     nbasis = length(factorized_basis.basis_triplets)
+    centers_x, centers_y, centers_z = _qwrg_bond_aligned_nuclear_centers_by_axis(nuclei)
     axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg timing_setup_label begin
-        axis_term_tables_x = _qwrg_contracted_nuclear_axis_term_table_cache(
+        axis_term_tables_x = _qwrg_contracted_nuclear_axis_term_tables(
             factorized_basis.x_functions,
             basis.basis_x,
-            [nucleus[1] for nucleus in basis.nuclei],
+            centers_x,
             expansion,
             bundle_x.backend,
         )
-        axis_term_tables_y = _qwrg_contracted_nuclear_axis_term_table_cache(
+        axis_term_tables_y = _qwrg_contracted_nuclear_axis_term_tables(
             factorized_basis.y_functions,
             basis.basis_y,
-            [nucleus[2] for nucleus in basis.nuclei],
+            centers_y,
             expansion,
             bundle_y.backend,
         )
-        axis_term_tables_z = _qwrg_contracted_nuclear_axis_term_table_cache(
+        axis_term_tables_z = _qwrg_contracted_nuclear_axis_term_tables(
             factorized_basis.z_functions,
             basis.basis_z,
-            [nucleus[3] for nucleus in basis.nuclei],
+            centers_z,
             expansion,
             bundle_z.backend,
         )
@@ -1490,8 +1515,8 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     return @timeg timing_contract_label begin
         x_indices, y_indices, z_indices = _qwrg_factorized_basis_axis_indices(factorized_basis)
         amplitudes = factorized_basis.basis_amplitudes
-        matrices = Vector{Matrix{Float64}}(undef, length(basis.nuclei))
-        for (nucleus_index, nucleus) in pairs(basis.nuclei)
+        matrices = Vector{Matrix{Float64}}(undef, nnuclei)
+        for nucleus_index in 1:nnuclei
             matrix = Matrix{Float64}(undef, nbasis, nbasis)
             _qwrg_fill_direct_contracted_nuclear_matrix!(
                 matrix,
@@ -1500,9 +1525,9 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                 z_indices,
                 amplitudes,
                 term_coefficients,
-                axis_term_tables_x[nucleus[1]],
-                axis_term_tables_y[nucleus[2]],
-                axis_term_tables_z[nucleus[3]],
+                axis_term_tables_x[nucleus_index],
+                axis_term_tables_y[nucleus_index],
+                axis_term_tables_z[nucleus_index],
             )
             matrices[nucleus_index] = matrix
         end
