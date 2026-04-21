@@ -39,20 +39,35 @@ The current repo split is too wide above that layer. The same broad operator
 pipeline is expressed repeatedly through family-specific public routes and
 route-specific capability checks.
 
+Since this note was first written, the operator-side unification has moved
+materially forward. The main remaining duplication pressure is no longer the
+pure/supplement operator builders themselves. It has shifted upward to the
+source-backed nested front-door layer and to the lack of one clear cross-family
+nested-source contract.
+
+The current repo direction should therefore be understood as two related
+unification lines:
+
+- unify operator orchestration through normalized internal build contexts
+- unify source-backed nested front doors and diagnostics through a shared
+  nested-source contract
+
 ## Target architecture
 
 The target architecture is:
 
 1. geometry/source construction
-2. normalized Cartesian build contract
-3. generic raw/operator pipeline
-4. generic final-space mixing layer
+2. normalized nested-source contract
+3. normalized Cartesian operator-build contract
+4. generic raw/operator pipeline
+5. generic final-space mixing layer
 
 The intended direction is:
 
 - geometry-policy files own geometry decisions and source diagnostics
-- a normalized internal Cartesian build contract owns orchestration-facing
-  metadata
+- a normalized internal nested-source contract owns source/fixed-block/
+  diagnostics-facing metadata
+- a normalized internal Cartesian build contract owns operator-facing metadata
 - a generic operator builder consumes that contract
 - a generic final-space mixer handles residual closure and carried-plus-
   residual finalization
@@ -60,7 +75,80 @@ The intended direction is:
 This is the clean modern equivalent of legacy `atoms -> gethams` for the
 repo.
 
-## Proposed normalized source/build contract
+## Proposed shared nested-source contract
+
+Introduce one internal nested-source contract for the source-backed Cartesian
+line.
+
+Suggested semantic name:
+
+- `CartesianNestedSourceContract3D`
+
+This should be a common internal interface by convention, not a giant
+science-erasing tagged union.
+
+The current bond-aligned diatomic source contract is the strongest glass-box
+version of this idea in the repo. That should not remain diatomic-only. It
+should become the model for the general source-backed nested contract.
+
+### Common required data
+
+- `basis_family`
+  - examples: `:atomic`, `:bond_aligned_diatomic`,
+    `:bond_aligned_homonuclear_chain`,
+    `:axis_aligned_homonuclear_square_lattice`
+- `geometry_policy`
+  - examples: `:one_center_complete_shell`, `:bond_aligned_split`,
+    `:chain_recursive_split`, `:square_planar_split`
+- `parent_basis`
+  - canonical parent basis object
+- `sequence`
+  - canonical nested shell/child sequence backing the fixed block
+- `fixed_dimension`
+  - final fixed-space dimension implied by the source
+- `contract_audit`
+  - explicit support/ownership/coverage audit surface
+- `shell_provenance`
+  - glass-box shell origin metadata
+  - examples: `source_box`, `next_inner_box`, `source_point_count`,
+    `retained_fixed_count`
+- `source_metadata`
+  - route-specific sidecars needed for reporting/export
+
+### Split-geometry extension
+
+Diatomic, chain, and square should additionally expose a common split-geometry
+extension where it is real:
+
+- `shared_shell_dimensions`
+- `leaf_count` or equivalent subtree count
+- `node_summaries`
+- `topology diagnostics`
+
+The common contract should support these as a genuine extension, not by
+pretending all families have the same topology.
+
+### Atomic as a smaller subset
+
+Atomic should converge to the same nested-source contract only at the smaller
+common subset:
+
+- sequence
+- fixed dimension
+- contract audit
+- shell provenance
+
+It should not be forced into a fake recursive split-tree abstraction just to
+match diatomic or chain.
+
+### Design constraints
+
+- This contract should be internal.
+- It should not own geometry-specific split logic.
+- It should not become the operator-build contract.
+- It should support glass-box diagnostics and export, not hide them.
+
+## Proposed normalized operator-build contract
 
 Introduce one internal build-context/source object for the Cartesian line.
 
@@ -199,6 +287,8 @@ It should not absorb the operator-build pipeline itself.
 
 ### Phase 1: introduce the normalized internal build contract
 
+Status: done
+
 Scope:
 
 - create the internal Cartesian build-context/source abstraction
@@ -217,6 +307,8 @@ Outcome:
 
 ### Phase 2: collapse repeated backend gating onto capability metadata
 
+Status: done
+
 Scope:
 
 - move route-capability decisions onto the normalized build contract
@@ -229,6 +321,8 @@ Outcome:
 - clearer separation between geometry decisions and backend support decisions
 
 ### Phase 3: unify pure-route operator assembly
+
+Status: done
 
 Scope:
 
@@ -244,6 +338,8 @@ Outcome:
 
 ### Phase 4: unify supplement-bearing molecular routes
 
+Status: done
+
 Scope:
 
 - direct-product diatomic supplement route
@@ -257,6 +353,8 @@ Unification target:
 
 ### Phase 5: unify supplement-bearing atomic routes where real algebra matches
 
+Status: done
+
 Scope:
 
 - atomic direct-product supplement route
@@ -267,7 +365,44 @@ Important constraint:
 - do not force atomic and molecular supplement logic into a false generic layer
   before the residual/final-space algebra is genuinely common
 
-### Phase 6: optional broader public API cleanup
+### Phase 6: unify source-backed nested front-door routes
+
+Status: in progress
+
+Scope:
+
+- public bond-aligned diatomic nested source / fixed-block / diagnostics front
+  doors
+- experimental bond-aligned chain nested wrappers
+- experimental axis-aligned square-lattice nested wrappers
+
+Unification target:
+
+- common reference-only backend validation
+- common axis-bundle preparation
+- common nested term-coefficient resolution
+- common source -> diagnostics/fixed-block packaging
+- route differences expressed through source contract metadata rather than
+  wrapper-local orchestration
+
+### Phase 7: converge nested-source contracts across split geometries
+
+Scope:
+
+- diatomic source-backed contract
+- chain source-backed contract
+- square source-backed contract
+- atomic on the smaller common subset
+
+Unification target:
+
+- one clear internal nested-source contract for source-level diagnostics,
+  shell provenance, and source-backed fixed-block construction
+- diatomic contract generalized where genuinely reusable
+- chain and square brought onto the same glass-box shell/audit surface
+- atomic converged only at the subset that is real
+
+### Phase 8: optional broader public API cleanup
 
 Only after the internal build contract is real and stable:
 
@@ -276,38 +411,46 @@ Only after the internal build contract is real and stable:
   meaningful
 - prefer thin family-specific wrappers over family-specific operator logic
 
-## First bounded implementation chunk
+## Progress so far
 
-The first bounded chunk should be:
+As of 2026-04-21:
 
-- introduce the internal normalized Cartesian build contract
-- route the already-shared bond-aligned pure routes through it
-- leave supplement-bearing and atomic routes unchanged
+- the normalized operator-build contract is real
+- operator-side orchestration is unified for:
+  - pure bond-aligned direct-product routes
+  - pure bond-aligned nested fixed-block routes
+  - bond-aligned diatomic supplement direct-product routes
+  - bond-aligned diatomic supplement nested fixed-block routes
+  - atomic supplement direct-product routes
+  - atomic supplement nested fixed-block routes
+- the main remaining duplication pressure has moved upward to the source-backed
+  nested front-door layer
+- the next contract question is no longer “can the operator seam be unified?”
+- it is “what common source-backed nested contract should diatomic, chain, and
+  square share, with atomic on the smaller subset?”
 
-Concretely, this means:
+## Current bounded chunk
 
-- normalize:
-  - `BondAlignedDiatomicQWBasis3D`
-  - `BondAlignedHomonuclearChainQWBasis3D`
-  - `AxisAlignedHomonuclearSquareLatticeQWBasis3D`
-  - `_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D}`
-- build through:
-  - one generic pure direct-product builder
-  - one generic pure nested fixed-block builder
-- move backend-capability checks for those routes onto contract metadata
+The current bounded chunk should be:
 
-Why this chunk first:
+- unify the source-backed nested front-door layer above the operator seam
+- keep geometry-policy files separate
+- use that work to establish the shared nested-source contract direction
 
-- it cuts real orchestration duplication immediately
-- it stays away from the most science-sensitive supplement/residual closure
-- it validates the new architecture on routes that already share most of their
-  algebra
+Why this chunk now:
+
+- the operator-side unification is already far enough along
+- the current duplication is concentrated in source/fixed-block/diagnostics
+  wrappers
+- it advances the source-contract side of the architecture without forcing
+  false geometry unification
 
 ## Main risks
 
 - overloading the normalized contract with too much science-specific data
 - confusing representation metadata with build policy
 - collapsing atomic and molecular supplement logic too early
+- collapsing atomic and split-geometry source contracts too early
 - turning capability metadata into aspirational claims rather than current
   truth
 - hiding geometry diagnostics behind a falsely generic layer
@@ -323,13 +466,15 @@ This reorganization effort does not mean:
 
 ## Current status
 
-As of 2026-04-20:
+As of 2026-04-21:
 
 - kernel-level decomposition is in good shape
 - geometry-policy separation is mostly right
-- orchestration duplication above that layer remains the main structural bloat
-- the first implementation target is the pure bond-aligned ordinary route
-  family
+- operator-side orchestration duplication has been reduced substantially
+- source-backed nested front-door duplication above that layer is now the main
+  structural bloat
+- the next structural target is the shared nested-source contract across
+  diatomic/chain/square, with atomic on the smaller common subset
 
 ## Update rule
 
