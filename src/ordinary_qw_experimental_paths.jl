@@ -193,6 +193,12 @@ function _square_lattice_nested_geometry_report_lines(
         push!(lines, "min_in_plane_aspect_ratio = $(node.min_in_plane_aspect_ratio)")
         push!(lines, "shared_shell_count = $(node.shared_shell_count)")
         push!(lines, "shared_shell_dimensions = $(node.shared_shell_dimensions)")
+        for (index, provenance) in pairs(node.shared_shell_provenance)
+            push!(lines, "shared_shell[$index].source_box = $(provenance.source_box)")
+            push!(lines, "shared_shell[$index].next_inner_box = $(provenance.next_inner_box)")
+            push!(lines, "shared_shell[$index].source_point_count = $(provenance.source_point_count)")
+            push!(lines, "shared_shell[$index].retained_fixed_count = $(provenance.retained_fixed_count)")
+        end
         push!(lines, "accepted_candidate_index = $(node.accepted_candidate_index)")
         push!(lines, "local_resolution_warning = $(node.local_resolution_warning)")
         push!(lines, "child_count = $(node.child_count)")
@@ -223,6 +229,7 @@ function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
 )
     node_summaries = _nested_square_lattice_collect_node_summaries(source.root_geometry)
     shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
+    shared_shell_provenance = _nested_geometry_shared_shell_provenance(node_summaries)
     return (
         source = source,
         root_node = _nested_square_lattice_node_summary(source.root_geometry),
@@ -230,8 +237,12 @@ function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
         nside = source.shell_retention_contract.nside,
         retention_contract = source.shell_retention_contract,
         shared_shell_dimensions = shared_shell_dimensions,
+        shared_shell_provenance = shared_shell_provenance,
         shared_shells_match_contract =
-            all(==(source.shell_retention_contract.shell_increment), shared_shell_dimensions),
+            all(
+                shell -> shell.retained_fixed_count == source.shell_retention_contract.shell_increment,
+                shared_shell_provenance,
+            ),
         contract_audit = _nested_source_contract_audit(source),
         leaf_count = length(source.leaf_sequences),
         fixed_dimension = size(source.sequence.coefficient_matrix, 2),
@@ -287,6 +298,16 @@ function _nested_geometry_shared_shell_dimensions(
         append!(dimensions, Int.(node.shared_shell_dimensions))
     end
     return dimensions
+end
+
+function _nested_geometry_shared_shell_provenance(
+    node_summaries,
+)
+    provenance = _CartesianNestedShellLayerProvenance3D[]
+    for node in node_summaries
+        append!(provenance, node.shared_shell_provenance)
+    end
+    return provenance
 end
 
 function _bond_aligned_homonuclear_chain_nested_fixed_source(
@@ -369,6 +390,12 @@ function _chain_nested_geometry_report_lines(
         push!(lines, "odd_policy.center_parallel_to_transverse_ratio_min = $(node.odd_chain_policy_thresholds.center_parallel_to_transverse_ratio_min)")
         push!(lines, "shared_shell_count = $(node.shared_shell_count)")
         push!(lines, "shared_shell_dimensions = $(node.shared_shell_dimensions)")
+        for (index, provenance) in pairs(node.shared_shell_provenance)
+            push!(lines, "shared_shell[$index].source_box = $(provenance.source_box)")
+            push!(lines, "shared_shell[$index].next_inner_box = $(provenance.next_inner_box)")
+            push!(lines, "shared_shell[$index].source_point_count = $(provenance.source_point_count)")
+            push!(lines, "shared_shell[$index].retained_fixed_count = $(provenance.retained_fixed_count)")
+        end
         push!(lines, "accepted_candidate_index = $(node.accepted_candidate_index)")
         push!(lines, "local_resolution_warning = $(node.local_resolution_warning)")
         push!(lines, "child_count = $(node.child_count)")
@@ -395,6 +422,7 @@ function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
 )
     node_summaries = _nested_chain_collect_node_summaries(source.root_geometry)
     shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
+    shared_shell_provenance = _nested_geometry_shared_shell_provenance(node_summaries)
     return (
         source = source,
         root_node = _nested_chain_node_summary(source.root_geometry),
@@ -402,8 +430,12 @@ function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
         nside = source.shell_retention_contract.nside,
         retention_contract = source.shell_retention_contract,
         shared_shell_dimensions = shared_shell_dimensions,
+        shared_shell_provenance = shared_shell_provenance,
         shared_shells_match_contract =
-            all(==(source.shell_retention_contract.shell_increment), shared_shell_dimensions),
+            all(
+                shell -> shell.retained_fixed_count == source.shell_retention_contract.shell_increment,
+                shared_shell_provenance,
+            ),
         contract_audit = _nested_source_contract_audit(source),
         leaf_count = length(source.leaf_sequences),
         fixed_dimension = size(source.sequence.coefficient_matrix, 2),

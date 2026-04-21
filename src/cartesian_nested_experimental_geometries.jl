@@ -38,6 +38,7 @@ struct _BondAlignedHomonuclearChainNodeGeometry3D
     chain_coordinates::Vector{Float64}
     shared_shell_count::Int
     shared_shell_dimensions::Vector{Int}
+    shared_shell_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
     candidate_splits::Vector{_BondAlignedHomonuclearChainSplitCandidate3D}
     accepted_candidate_index::Union{Nothing,Int}
     local_resolution_warning::Bool
@@ -108,6 +109,7 @@ struct _AxisAlignedHomonuclearSquareLatticeNodeGeometry3D
     y_coordinates::Vector{Float64}
     shared_shell_count::Int
     shared_shell_dimensions::Vector{Int}
+    shared_shell_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
     candidate_splits::Vector{_AxisAlignedHomonuclearSquareLatticeSplitCandidate3D}
     accepted_candidate_index::Union{Nothing,Int}
     local_resolution_warning::Bool
@@ -582,6 +584,7 @@ function _nested_chain_node_summary(
         chain_coordinates = node.chain_coordinates,
         shared_shell_count = node.shared_shell_count,
         shared_shell_dimensions = node.shared_shell_dimensions,
+        shared_shell_provenance = node.shared_shell_provenance,
         accepted_candidate_index = node.accepted_candidate_index,
         did_split = !isnothing(node.accepted_candidate_index),
         local_resolution_warning = node.local_resolution_warning,
@@ -623,6 +626,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
     current_box = parent_box
     shared_shell_layers = _CartesianNestedCompleteShell3D[]
     shared_shell_dimensions = Int[]
+    shared_shell_provenance = _CartesianNestedShellLayerProvenance3D[]
     local_coordinates = basis.chain_coordinates[nucleus_range]
 
     while true
@@ -657,6 +661,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
         )
         push!(shared_shell_layers, shell)
         push!(shared_shell_dimensions, size(shell.coefficient_matrix, 2))
+        push!(shared_shell_provenance, shell.provenance)
         current_box = inner_box
     end
 
@@ -707,6 +712,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
             collect(local_coordinates),
             length(shared_shell_layers),
             shared_shell_dimensions,
+            shared_shell_provenance,
             candidates,
             nothing,
             !isempty(candidates),
@@ -779,6 +785,7 @@ function _nested_bond_aligned_homonuclear_chain_node(
         collect(local_coordinates),
         length(shared_shell_layers),
         shared_shell_dimensions,
+        shared_shell_provenance,
         candidates,
         accepted_candidate,
         false,
@@ -1195,6 +1202,7 @@ function _nested_square_lattice_node_summary(
         y_coordinates = node.y_coordinates,
         shared_shell_count = node.shared_shell_count,
         shared_shell_dimensions = node.shared_shell_dimensions,
+        shared_shell_provenance = node.shared_shell_provenance,
         accepted_candidate_index = node.accepted_candidate_index,
         did_split = !isnothing(node.accepted_candidate_index),
         local_resolution_warning = node.local_resolution_warning,
@@ -1235,6 +1243,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
     current_box = parent_box
     shared_shell_layers = _CartesianNestedCompleteShell3D[]
     shared_shell_dimensions = Int[]
+    shared_shell_provenance = _CartesianNestedShellLayerProvenance3D[]
     local_x_coordinates = basis.x_coordinates[x_coordinate_range]
     local_y_coordinates = basis.y_coordinates[y_coordinate_range]
 
@@ -1274,6 +1283,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
         )
         push!(shared_shell_layers, shell)
         push!(shared_shell_dimensions, size(shell.coefficient_matrix, 2))
+        push!(shared_shell_provenance, shell.provenance)
         current_box = inner_box
     end
 
@@ -1329,6 +1339,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
             collect(local_y_coordinates),
             length(shared_shell_layers),
             shared_shell_dimensions,
+            shared_shell_provenance,
             candidates,
             nothing,
             !isempty(candidates),
@@ -1401,6 +1412,7 @@ function _nested_axis_aligned_homonuclear_square_lattice_node(
         collect(local_y_coordinates),
         length(shared_shell_layers),
         shared_shell_dimensions,
+        shared_shell_provenance,
         candidates,
         accepted_candidate,
         false,

@@ -7225,6 +7225,20 @@ end
     @test diagnostics3.contract_audit.ownership_multi_owned_row_count == 0
     @test diagnostics2.shared_shells_match_contract
     @test diagnostics3.shared_shells_match_contract
+    @test Int[shell.retained_fixed_count for shell in diagnostics2.shared_shell_provenance] ==
+          diagnostics2.shared_shell_dimensions
+    @test Int[shell.retained_fixed_count for shell in diagnostics3.shared_shell_provenance] ==
+          diagnostics3.shared_shell_dimensions
+    @test all(
+        shell.source_point_count ==
+        prod(length.(shell.source_box)) - prod(length.(shell.next_inner_box)) for
+        shell in diagnostics2.shared_shell_provenance
+    )
+    @test all(
+        shell.source_point_count ==
+        prod(length.(shell.source_box)) - prod(length.(shell.next_inner_box)) for
+        shell in diagnostics3.shared_shell_provenance
+    )
     @test diagnostics2.leaf_count == 4
     @test diagnostics3.leaf_count == 9
     @test diagnostics2.root_node.did_split
@@ -7280,6 +7294,10 @@ end
         @test occursin("# retain_xy = (3, 3)", report_text)
         @test occursin("# shell_increment = 98", report_text)
         @test occursin("# ownership_multi_owned_row_count = 0", report_text)
+        @test occursin("shared_shell[1].source_box =", report_text)
+        @test occursin("shared_shell[1].next_inner_box =", report_text)
+        @test occursin("shared_shell[1].source_point_count =", report_text)
+        @test occursin("shared_shell[1].retained_fixed_count =", report_text)
         @test occursin("candidate[1].split_family = split_x_ternary", report_text)
         @test occursin("candidate[2].split_family = split_y_ternary", report_text)
         @test occursin("[node root_1]", report_text)
@@ -7327,6 +7345,8 @@ end
         @test isfinite(check.orbital_energy)
         @test isfinite(check.vee_expectation)
         @test length(basis.nuclei) == n * n
+        @test Int[shell.retained_fixed_count for shell in diagnostics.shared_shell_provenance] ==
+              diagnostics.shared_shell_dimensions
     end
 
     @test path2.diagnostics.root_node.did_split
@@ -7492,6 +7512,17 @@ end
     @test diagnostics3.shared_shells_match_contract
     @test diagnostics4.shared_shells_match_contract
     @test diagnostics5.shared_shells_match_contract
+    @test Int[shell.retained_fixed_count for shell in diagnostics3.shared_shell_provenance] ==
+          diagnostics3.shared_shell_dimensions
+    @test Int[shell.retained_fixed_count for shell in diagnostics4.shared_shell_provenance] ==
+          diagnostics4.shared_shell_dimensions
+    @test Int[shell.retained_fixed_count for shell in diagnostics5.shared_shell_provenance] ==
+          diagnostics5.shared_shell_dimensions
+    @test all(
+        shell.source_point_count ==
+        prod(length.(shell.source_box)) - prod(length.(shell.next_inner_box)) for
+        shell in diagnostics4.shared_shell_provenance
+    )
     @test diagnostics3.leaf_count == 1
     @test diagnostics4.leaf_count == 2
     @test diagnostics5.leaf_count == 1
@@ -7586,6 +7617,10 @@ end
         @test occursin("# retain_xy = (3, 3)", report_text)
         @test occursin("# shell_increment = 98", report_text)
         @test occursin("# ownership_multi_owned_row_count = 0", report_text)
+        @test occursin("shared_shell[1].source_box =", report_text)
+        @test occursin("shared_shell[1].next_inner_box =", report_text)
+        @test occursin("shared_shell[1].source_point_count =", report_text)
+        @test occursin("shared_shell[1].retained_fixed_count =", report_text)
         @test occursin("odd_chain_policy = central_ternary_relaxed", report_text)
         @test occursin("candidate[2].child_parallel_counts = [6, 3, 6]", report_text)
         @test occursin("candidate[2].accepted = true", report_text)
@@ -7634,6 +7669,8 @@ end
     @test chain_diagnostics.retention_contract.shell_increment == 218
     @test chain_diagnostics.retention_contract.matches_nside_default
     @test chain_diagnostics.shared_shell_dimensions == [218]
+    @test length(chain_diagnostics.shared_shell_provenance) == 1
+    @test chain_diagnostics.shared_shell_provenance[1].retained_fixed_count == 218
     @test chain_diagnostics.shared_shells_match_contract
     @test chain_diagnostics.contract_audit.full_parent_working_box
     @test chain_diagnostics.contract_audit.support_count ==
@@ -7659,6 +7696,8 @@ end
     @test square_diagnostics.retention_contract.shell_increment == 218
     @test square_diagnostics.retention_contract.matches_nside_default
     @test square_diagnostics.shared_shell_dimensions == [218]
+    @test length(square_diagnostics.shared_shell_provenance) == 1
+    @test square_diagnostics.shared_shell_provenance[1].retained_fixed_count == 218
     @test square_diagnostics.shared_shells_match_contract
     @test square_diagnostics.contract_audit.full_parent_working_box
     @test square_diagnostics.contract_audit.support_count ==
@@ -7825,6 +7864,8 @@ end
         @test isfinite(check.orbital_energy)
         @test isfinite(check.vee_expectation)
         @test length(basis.nuclei) == natoms
+        @test Int[shell.retained_fixed_count for shell in diagnostics.shared_shell_provenance] ==
+              diagnostics.shared_shell_dimensions
     end
 
     @test path3.diagnostics.root_node.did_split

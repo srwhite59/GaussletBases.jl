@@ -69,6 +69,11 @@ geometry source assembly and path packaging. That seam now covers:
 - experimental bond-aligned homonuclear chain nested wrappers
 - experimental axis-aligned homonuclear square-lattice nested wrappers
 
+Across those source-backed nested lines, the common glass-box subset is now:
+`fixed_dimension`, `contract_audit`, `shared_shell_dimensions`,
+`shared_shell_provenance`, and `leaf_count`, while family-specific topology and
+split-policy diagnostics remain separate.
+
 Experimental supplement-bearing routes still keep their separate orchestration
 paths on purpose.
 
