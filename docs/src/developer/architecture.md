@@ -49,6 +49,16 @@ ordinary gausslets. Its current interpretation is:
 - mild and hybrid regimes as the practical target
 - numerical validation route plus experimental PGDG-style analytic backend
 
+Within that branch, the pure bond-aligned routes now normalize through one
+internal Cartesian build context before backend gating and operator assembly.
+That seam currently covers only:
+
+- pure bond-aligned direct-product ordinary/QW routes
+- pure prebuilt nested fixed-block bond-aligned routes
+
+Supplement-bearing and residual-bearing routes still keep their separate
+orchestration paths on purpose.
+
 ## Primitive, contraction, and hierarchy work
 
 The package also has an advanced structural line built around:

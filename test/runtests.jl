@@ -8478,6 +8478,43 @@ end
         backend = :pgdg_localized_experimental,
     ).backend == :pgdg_localized_experimental
 
+    @testset "Pure bond-aligned normalized build context" begin
+        diatomic_context = GaussletBases._normalized_pure_bond_aligned_build_context(diatomic_basis)
+        chain_context = GaussletBases._normalized_pure_bond_aligned_build_context(chain_basis)
+        square_context = GaussletBases._normalized_pure_bond_aligned_build_context(square_basis)
+        nested_diatomic_context = GaussletBases._normalized_pure_bond_aligned_build_context(nested_fixed_block)
+        nested_chain_context = GaussletBases._normalized_pure_bond_aligned_build_context(chain_nested_fixed_block)
+        nested_square_context = GaussletBases._normalized_pure_bond_aligned_build_context(square_nested_fixed_block)
+
+        @test diatomic_context.basis_family == :bond_aligned_diatomic
+        @test chain_context.basis_family == :bond_aligned_homonuclear_chain
+        @test square_context.basis_family == :axis_aligned_homonuclear_square_lattice
+        @test diatomic_context.carried_space_kind == :direct_product
+        @test chain_context.carried_space_kind == :direct_product
+        @test square_context.carried_space_kind == :direct_product
+        @test diatomic_context.parent_basis === diatomic_basis
+        @test diatomic_context.carried === diatomic_basis
+        @test diatomic_context.contraction === nothing
+        @test diatomic_context.default_nuclear_charges == [1.0, 1.0]
+        @test diatomic_context.route_metadata.basis_family == :bond_aligned_diatomic
+        @test diatomic_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
+        @test diatomic_context.capabilities.timing_label == "qwrg.bond_aligned_ordinary.total"
+
+        @test nested_diatomic_context.basis_family == :bond_aligned_diatomic
+        @test nested_chain_context.basis_family == :bond_aligned_homonuclear_chain
+        @test nested_square_context.basis_family == :axis_aligned_homonuclear_square_lattice
+        @test nested_diatomic_context.carried_space_kind == :nested_fixed_block
+        @test nested_chain_context.carried_space_kind == :nested_fixed_block
+        @test nested_square_context.carried_space_kind == :nested_fixed_block
+        @test nested_diatomic_context.parent_basis === nested_fixed_block.parent_basis
+        @test nested_diatomic_context.carried === nested_fixed_block
+        @test nested_diatomic_context.contraction === nested_fixed_block.coefficient_matrix
+        @test nested_diatomic_context.parent_route_metadata.basis_family == :bond_aligned_diatomic
+        @test nested_diatomic_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test nested_diatomic_context.capabilities.localized_parent_kind == :cartesian_product_basis
+        @test nested_diatomic_context.capabilities.timing_label == "qwrg.bond_aligned_nested_fixed.total"
+    end
+
     diatomic_reference, diatomic_localized, diatomic_reference_check, diatomic_localized_check =
         _check_direct_product_backend_pair(diatomic_basis, [1.0, 1.0])
     chain_reference, chain_localized, chain_reference_check, chain_localized_check =

@@ -69,36 +69,131 @@ function _validate_nuclear_term_storage(storage::Symbol)
     return storage
 end
 
-function _require_bond_aligned_ordinary_direct_product_backend(
+struct _QWRGPureBondAlignedBuildContext{
+    PB,
+    C,
+    CR,
+    PR,
+    RM,
+    PM,
+    CM,
+}
+    basis_family::Symbol
+    carried_space_kind::Symbol
+    parent_basis::PB
+    carried::C
+    carried_representation::CR
+    parent_representation::PR
+    nuclei::Vector{NTuple{3,Float64}}
+    default_nuclear_charges::Vector{Float64}
+    contraction::Union{Nothing,_CartesianCoefficientMap}
+    route_metadata::RM
+    parent_route_metadata::PM
+    capabilities::CM
+end
+
+function _pure_bond_aligned_nested_route_label(
+    basis_family::Symbol,
+)
+    basis_family == :bond_aligned_diatomic &&
+        return "bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators"
+    basis_family == :bond_aligned_homonuclear_chain &&
+        return "experimental bond-aligned homonuclear chain nested ordinary_cartesian_qiu_white_operators"
+    basis_family == :axis_aligned_homonuclear_square_lattice &&
+        return "experimental axis-aligned homonuclear square-lattice nested ordinary_cartesian_qiu_white_operators"
+    throw(ArgumentError("unsupported pure bond-aligned basis_family = :$(basis_family)"))
+end
+
+function _normalized_pure_bond_aligned_build_context(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+)
+    metadata = _cartesian_pure_bond_aligned_build_metadata(basis)
+    return _QWRGPureBondAlignedBuildContext(
+        metadata.basis_family,
+        metadata.carried_metadata.basis_kind,
+        basis,
+        basis,
+        metadata.carried_representation,
+        metadata.parent_representation,
+        NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in basis.nuclei],
+        Float64[1.0 for _ in basis.nuclei],
+        nothing,
+        metadata.carried_route_metadata,
+        metadata.parent_route_metadata,
+        (
+            route_label = "bond-aligned ordinary_cartesian_qiu_white_operators",
+            allowed_interaction_treatments = (:ggt_nearest, :mwg),
+            localized_parent_kind = nothing,
+            timing_label = "qwrg.bond_aligned_ordinary.total",
+        ),
+    )
+end
+
+function _normalized_pure_bond_aligned_build_context(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
+)
+    metadata = _cartesian_pure_bond_aligned_build_metadata(fixed_block)
+    parent_basis = fixed_block.parent_basis
+    return _QWRGPureBondAlignedBuildContext(
+        metadata.basis_family,
+        metadata.carried_metadata.basis_kind,
+        parent_basis,
+        fixed_block,
+        metadata.carried_representation,
+        metadata.parent_representation,
+        NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in parent_basis.nuclei],
+        Float64[1.0 for _ in parent_basis.nuclei],
+        fixed_block.coefficient_matrix,
+        metadata.carried_route_metadata,
+        metadata.parent_route_metadata,
+        (
+            route_label = _pure_bond_aligned_nested_route_label(metadata.basis_family),
+            allowed_interaction_treatments = (:ggt_nearest,),
+            localized_parent_kind = :cartesian_product_basis,
+            timing_label = "qwrg.bond_aligned_nested_fixed.total",
+        ),
+    )
+end
+
+function _validate_pure_bond_aligned_backend(
+    context::_QWRGPureBondAlignedBuildContext,
     gausslet_backend::Symbol,
 )
-    gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
+    if context.carried_space_kind == :direct_product
+        gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
+            ArgumentError(
+                "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+            ),
+        )
+        return gausslet_backend
+    end
+
+    gausslet_backend == :numerical_reference && return gausslet_backend
+    gausslet_backend == :pgdg_localized_experimental || throw(
         ArgumentError(
-            "bond-aligned ordinary_cartesian_qiu_white_operators currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+            "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on pure Cartesian-parent nested fixed blocks; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+        ),
+    )
+    parent_kind = context.carried_representation.metadata.parent_kind
+    parent_kind == context.capabilities.localized_parent_kind || throw(
+        ArgumentError(
+            "$(context.capabilities.route_label) currently supports gausslet_backend = :pgdg_localized_experimental only for nested fixed blocks with parent_kind = :$(context.capabilities.localized_parent_kind); supplement-bearing or transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
         ),
     )
     return gausslet_backend
 end
 
-function _require_pure_nested_fixed_block_backend(
-    fixed_block::_NestedFixedBlock3D,
-    gausslet_backend::Symbol,
-    context_label::AbstractString,
+function _validate_pure_bond_aligned_interaction_treatment(
+    context::_QWRGPureBondAlignedBuildContext,
+    interaction_treatment::Symbol,
 )
-    gausslet_backend == :numerical_reference && return gausslet_backend
-    gausslet_backend == :pgdg_localized_experimental || throw(
+    interaction_treatment in context.capabilities.allowed_interaction_treatments || throw(
         ArgumentError(
-            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on pure Cartesian-parent nested fixed blocks; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+            "$(context.capabilities.route_label) requires interaction_treatment = " *
+            join((string(":", value) for value in context.capabilities.allowed_interaction_treatments), " or "),
         ),
     )
-    representation = basis_representation(fixed_block)
-    parent_kind = representation.metadata.parent_kind
-    parent_kind == :cartesian_product_basis || throw(
-        ArgumentError(
-            "$(context_label) currently supports gausslet_backend = :pgdg_localized_experimental only for nested fixed blocks with parent_kind = :cartesian_product_basis; supplement-bearing or transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
-        ),
-    )
-    return gausslet_backend
+    return interaction_treatment
 end
 
 function _require_bond_aligned_diatomic_molecular_backend(
@@ -706,139 +801,133 @@ function _qwrg_diatomic_one_body_matrix(
     )
 end
 
-function _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
-    basis::AbstractBondAlignedOrdinaryQWBasis3D;
+function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
+    context::_QWRGPureBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
-    timing::Bool,
 )
-    _require_bond_aligned_ordinary_direct_product_backend(gausslet_backend)
-    interaction_treatment in (:ggt_nearest, :mwg) || throw(
-        ArgumentError("bond-aligned ordinary_cartesian_qiu_white_operators requires interaction_treatment = :ggt_nearest or :mwg"),
+    basis = context.parent_basis
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        basis,
     )
-    return _qwrg_capture_timeg_report("qwrg.bond_aligned_ordinary.total", timing) do
-        resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
-            _validate_nuclear_term_storage(nuclear_term_storage),
+
+    bundle_x = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_x;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_y = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_y;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+    bundle_z = _mapped_ordinary_gausslet_1d_bundle(
+        basis.basis_z;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
+    )
+
+    overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
+    kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
+    direct_contracted_nuclear =
+        gausslet_backend == :pgdg_localized_experimental ?
+        _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
             basis,
-        )
-
-        bundle_x = _mapped_ordinary_gausslet_1d_bundle(
-            basis.basis_x;
-            exponents = expansion.exponents,
-            center = 0.0,
-            backend = gausslet_backend,
-        )
-        bundle_y = _mapped_ordinary_gausslet_1d_bundle(
-            basis.basis_y;
-            exponents = expansion.exponents,
-            center = 0.0,
-            backend = gausslet_backend,
-        )
-        bundle_z = _mapped_ordinary_gausslet_1d_bundle(
-            basis.basis_z;
-            exponents = expansion.exponents,
-            center = 0.0,
-            backend = gausslet_backend,
-        )
-
-        overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
-        kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
-        direct_contracted_nuclear =
-            gausslet_backend == :pgdg_localized_experimental ?
-            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+            _qwrg_full_cartesian_product_factorized_basis((
+                size(bundle_x.pgdg_intermediate.overlap, 1),
+                size(bundle_y.pgdg_intermediate.overlap, 1),
+                size(bundle_z.pgdg_intermediate.overlap, 1),
+            )),
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion,
+        ) :
+        nothing
+    nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        (
+            isnothing(direct_contracted_nuclear) ?
+            _qwrg_diatomic_nuclear_one_body_by_center(
                 basis,
-                _qwrg_full_cartesian_product_factorized_basis((
-                    size(bundle_x.pgdg_intermediate.overlap, 1),
-                    size(bundle_y.pgdg_intermediate.overlap, 1),
-                    size(bundle_z.pgdg_intermediate.overlap, 1),
-                )),
                 bundle_x,
                 bundle_y,
                 bundle_z,
                 expansion,
             ) :
-            nothing
-        nuclear_one_body_by_center =
-            resolved_nuclear_term_storage == :by_center ?
-            (
-                isnothing(direct_contracted_nuclear) ?
-                _qwrg_diatomic_nuclear_one_body_by_center(
-                    basis,
-                    bundle_x,
-                    bundle_y,
-                    bundle_z,
-                    expansion,
-                ) :
-                direct_contracted_nuclear
-            ) :
-            nothing
-        one_body_hamiltonian =
-            !isnothing(direct_contracted_nuclear) ?
-            _assemble_one_body_hamiltonian(
-                kinetic_one_body,
-                direct_contracted_nuclear,
+            direct_contracted_nuclear
+        ) :
+        nothing
+    one_body_hamiltonian =
+        !isnothing(direct_contracted_nuclear) ?
+        _assemble_one_body_hamiltonian(
+            kinetic_one_body,
+            direct_contracted_nuclear,
+            nuclear_charges,
+        ) :
+        (
+            isnothing(nuclear_one_body_by_center) ?
+            _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundle_x,
+                bundle_y,
+                bundle_z,
+                expansion,
                 nuclear_charges,
             ) :
-            (
-                isnothing(nuclear_one_body_by_center) ?
-                _qwrg_diatomic_one_body_matrix(
-                    basis,
-                    bundle_x,
-                    bundle_y,
-                    bundle_z,
-                    expansion,
-                    nuclear_charges,
-                ) :
-                _assemble_one_body_hamiltonian(
-                    kinetic_one_body,
-                    nuclear_one_body_by_center,
-                    nuclear_charges,
-                )
+            _assemble_one_body_hamiltonian(
+                kinetic_one_body,
+                nuclear_one_body_by_center,
+                nuclear_charges,
             )
-        interaction_matrix = _qwrg_diatomic_interaction_matrix(
-            bundle_x,
-            bundle_y,
-            bundle_z,
-            expansion,
         )
+    interaction_matrix = _qwrg_diatomic_interaction_matrix(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+    )
 
-        gausslet_orbitals = _mapped_cartesian_orbitals(
-            centers(basis.basis_x),
-            centers(basis.basis_y),
-            centers(basis.basis_z),
-        )
-        gausslet_count = length(gausslet_orbitals)
-        zero_residual_centers = zeros(Float64, 0, 3)
-        zero_residual_widths = zeros(Float64, 0, 3)
+    gausslet_orbitals = _mapped_cartesian_orbitals(
+        centers(basis.basis_x),
+        centers(basis.basis_y),
+        centers(basis.basis_z),
+    )
+    gausslet_count = length(gausslet_orbitals)
+    zero_residual_centers = zeros(Float64, 0, 3)
+    zero_residual_widths = zeros(Float64, 0, 3)
 
-        return OrdinaryCartesianOperators3D(
-            basis,
-            nothing,
-            gausslet_backend,
-            interaction_treatment,
-            expansion,
-            overlap,
-            one_body_hamiltonian,
-            interaction_matrix,
-            _qwrg_orbital_data(
-                gausslet_orbitals,
-                zero_residual_centers,
-                zero_residual_widths,
-            ),
-            gausslet_count,
-            0,
-            Matrix{Float64}(I, gausslet_count, gausslet_count),
+    return OrdinaryCartesianOperators3D(
+        basis,
+        nothing,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+        _qwrg_orbital_data(
+            gausslet_orbitals,
             zero_residual_centers,
             zero_residual_widths,
-            Float64[Float64(value) for value in nuclear_charges],
-            resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(kinetic_one_body) : nothing,
-            resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
-            resolved_nuclear_term_storage,
-        )
-    end
+        ),
+        gausslet_count,
+        0,
+        Matrix{Float64}(I, gausslet_count, gausslet_count),
+        zero_residual_centers,
+        zero_residual_widths,
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(kinetic_one_body) : nothing,
+        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
+    )
 end
 
 """
@@ -872,8 +961,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
-        basis;
+    context = _normalized_pure_bond_aligned_build_context(basis)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -913,8 +1003,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
-        basis;
+    context = _normalized_pure_bond_aligned_build_context(basis)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -954,8 +1045,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_ordinary(
-        basis;
+    context = _normalized_pure_bond_aligned_build_context(basis)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -1239,190 +1331,158 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     end
 end
 
-function _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
-    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D};
+function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
+    context::_QWRGPureBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
     interaction_treatment::Symbol,
     gausslet_backend::Symbol,
-    timing::Bool,
-    context_label::AbstractString,
 )
-    _require_pure_nested_fixed_block_backend(fixed_block, gausslet_backend, context_label)
-    interaction_treatment == :ggt_nearest || throw(
-        ArgumentError("$(context_label) currently supports only interaction_treatment = :ggt_nearest"),
+    fixed_block = context.carried
+    basis = context.parent_basis
+    contraction = something(context.contraction)
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        fixed_block,
     )
-    return _qwrg_capture_timeg_report("qwrg.bond_aligned_nested_fixed.total", timing) do
-        basis = fixed_block.parent_basis
-        resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
-            _validate_nuclear_term_storage(nuclear_term_storage),
-            fixed_block,
-        )
-        length(nuclear_charges) == length(basis.nuclei) || throw(
-            ArgumentError("$(context_label) requires one nuclear charge per nucleus"),
-        )
+    length(nuclear_charges) == length(basis.nuclei) || throw(
+        ArgumentError("$(context.capabilities.route_label) requires one nuclear charge per nucleus"),
+    )
 
-        bundles = _qwrg_bond_aligned_axis_bundles(
+    bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion;
+        gausslet_backend = gausslet_backend,
+    )
+
+    kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
+    direct_contracted_nuclear =
+        gausslet_backend == :pgdg_localized_experimental ?
+        _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
             basis,
-            expansion;
-            gausslet_backend = gausslet_backend,
-        )
-
-        contraction = fixed_block.coefficient_matrix
-        kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
-        direct_contracted_nuclear =
-            gausslet_backend == :pgdg_localized_experimental ?
-            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                basis,
-                _nested_factorized_parent_basis(fixed_block),
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
-                expansion,
-            ) :
-            nothing
-        nuclear_one_body_by_center =
-            resolved_nuclear_term_storage == :by_center ?
-            (
-                isnothing(direct_contracted_nuclear) ?
-                [
-                    _qwrg_contract_parent_symmetric_matrix(
-                        contraction,
-                        matrix,
-                    ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
-                        basis,
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                    )
-                ] :
-                direct_contracted_nuclear
-            ) :
-            nothing
-        one_body_hamiltonian =
-            !isnothing(direct_contracted_nuclear) ?
-            _assemble_one_body_hamiltonian(
-                kinetic_one_body,
-                direct_contracted_nuclear,
-                nuclear_charges,
-            ) :
-            (
-                isnothing(nuclear_one_body_by_center) ?
-                _qwrg_diatomic_one_body_matrix(
+            _nested_factorized_parent_basis(fixed_block),
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            expansion,
+        ) :
+        nothing
+    nuclear_one_body_by_center =
+        resolved_nuclear_term_storage == :by_center ?
+        (
+            isnothing(direct_contracted_nuclear) ?
+            [
+                _qwrg_contract_parent_symmetric_matrix(
+                    contraction,
+                    matrix,
+                ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
                     basis,
                     bundles.bundle_x,
                     bundles.bundle_y,
                     bundles.bundle_z,
                     expansion,
-                    nuclear_charges,
-                ) :
-                _assemble_one_body_hamiltonian(
-                    kinetic_one_body,
-                    nuclear_one_body_by_center,
-                    nuclear_charges,
                 )
+            ] :
+            direct_contracted_nuclear
+        ) :
+        nothing
+    one_body_hamiltonian =
+        !isnothing(direct_contracted_nuclear) ?
+        _assemble_one_body_hamiltonian(
+            kinetic_one_body,
+            direct_contracted_nuclear,
+            nuclear_charges,
+        ) :
+        (
+            isnothing(nuclear_one_body_by_center) ?
+            _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+                nuclear_charges,
+            ) :
+            _assemble_one_body_hamiltonian(
+                kinetic_one_body,
+                nuclear_one_body_by_center,
+                nuclear_charges,
             )
-        if isnothing(nuclear_one_body_by_center) && isnothing(direct_contracted_nuclear)
-            one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * one_body_hamiltonian * contraction)
-            one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
-        end
-        interaction_matrix = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+        )
+    if isnothing(nuclear_one_body_by_center) && isnothing(direct_contracted_nuclear)
+        one_body_hamiltonian = Matrix{Float64}(transpose(contraction) * one_body_hamiltonian * contraction)
+        one_body_hamiltonian = 0.5 .* (one_body_hamiltonian .+ transpose(one_body_hamiltonian))
+    end
+    interaction_matrix = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
 
-        fixed_count = size(fixed_block.overlap, 1)
-        zero_residual_centers = zeros(Float64, 0, 3)
-        zero_residual_widths = zeros(Float64, 0, 3)
-        return OrdinaryCartesianOperators3D(
-            fixed_block,
-            nothing,
-            gausslet_backend,
-            interaction_treatment,
-            expansion,
-            Matrix{Float64}(fixed_block.overlap),
-            one_body_hamiltonian,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_orbital_data(
-                fixed_block.fixed_centers,
-                zero_residual_centers,
-                zero_residual_widths;
-                fixed_kind = :nested_fixed,
-                fixed_label_prefix = "nf",
-            ),
-            fixed_count,
-            0,
-            Matrix{Float64}(I, fixed_count, fixed_count),
+    fixed_count = size(fixed_block.overlap, 1)
+    zero_residual_centers = zeros(Float64, 0, 3)
+    zero_residual_widths = zeros(Float64, 0, 3)
+    return OrdinaryCartesianOperators3D(
+        fixed_block,
+        nothing,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        Matrix{Float64}(fixed_block.overlap),
+        one_body_hamiltonian,
+        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+        _qwrg_orbital_data(
+            fixed_block.fixed_centers,
             zero_residual_centers,
-            zero_residual_widths,
-            Float64[Float64(value) for value in nuclear_charges],
-            resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
-            resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
-            resolved_nuclear_term_storage,
+            zero_residual_widths;
+            fixed_kind = :nested_fixed,
+            fixed_label_prefix = "nf",
+        ),
+        fixed_count,
+        0,
+        Matrix{Float64}(I, fixed_count, fixed_count),
+        zero_residual_centers,
+        zero_residual_widths,
+        Float64[Float64(value) for value in nuclear_charges],
+        resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
+        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        resolved_nuclear_term_storage,
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+    context::_QWRGPureBondAlignedBuildContext;
+    nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    _validate_pure_bond_aligned_backend(context, gausslet_backend)
+    _validate_pure_bond_aligned_interaction_treatment(context, interaction_treatment)
+    return _qwrg_capture_timeg_report(context.capabilities.timing_label, timing) do
+        context.carried_space_kind == :direct_product &&
+            return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
+                context;
+                nuclear_charges = nuclear_charges,
+                nuclear_term_storage = nuclear_term_storage,
+                expansion = expansion,
+                interaction_treatment = interaction_treatment,
+                gausslet_backend = gausslet_backend,
+            )
+        context.carried_space_kind == :nested_fixed_block &&
+            return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
+                context;
+                nuclear_charges = nuclear_charges,
+                nuclear_term_storage = nuclear_term_storage,
+                expansion = expansion,
+                interaction_treatment = interaction_treatment,
+                gausslet_backend = gausslet_backend,
+            )
+        throw(
+            ArgumentError(
+                "pure bond-aligned ordinary_cartesian_qiu_white_operators does not support carried_space_kind = :$(context.carried_space_kind)",
+            ),
         )
     end
-end
-
-function _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
-    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real},
-    nuclear_term_storage::Symbol,
-    expansion::CoulombGaussianExpansion,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    timing::Bool,
-)
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
-        fixed_block;
-        nuclear_charges = nuclear_charges,
-        nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        timing = timing,
-        context_label = "bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators",
-    )
-end
-
-function _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
-    fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real},
-    nuclear_term_storage::Symbol,
-    expansion::CoulombGaussianExpansion,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    timing::Bool,
-)
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
-        fixed_block;
-        nuclear_charges = nuclear_charges,
-        nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        timing = timing,
-        context_label = "experimental bond-aligned homonuclear chain nested ordinary_cartesian_qiu_white_operators",
-    )
-end
-
-function _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
-    fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real},
-    nuclear_term_storage::Symbol,
-    expansion::CoulombGaussianExpansion,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    timing::Bool,
-)
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_nested_fixed_block(
-        fixed_block;
-        nuclear_charges = nuclear_charges,
-        nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        timing = timing,
-        context_label = "experimental axis-aligned homonuclear square-lattice nested ordinary_cartesian_qiu_white_operators",
-    )
 end
 
 function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
@@ -2169,8 +2229,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_diatomic_fixed_block(
-        fixed_block;
+    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -2213,8 +2274,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_homonuclear_chain_fixed_block(
-        fixed_block;
+    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -2257,8 +2319,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_square_lattice_fixed_block(
-        fixed_block;
+    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
