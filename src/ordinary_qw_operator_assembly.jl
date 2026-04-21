@@ -69,11 +69,12 @@ function _validate_nuclear_term_storage(storage::Symbol)
     return storage
 end
 
-struct _QWRGPureBondAlignedBuildContext{
+struct _QWRGBondAlignedBuildContext{
     PB,
     C,
     CR,
     PR,
+    GD,
     RM,
     PM,
     CM,
@@ -87,10 +88,13 @@ struct _QWRGPureBondAlignedBuildContext{
     nuclei::Vector{NTuple{3,Float64}}
     default_nuclear_charges::Vector{Float64}
     contraction::Union{Nothing,_CartesianCoefficientMap}
+    gaussian_data::GD
     route_metadata::RM
     parent_route_metadata::PM
     capabilities::CM
 end
+
+const _QWRGPureBondAlignedBuildContext = _QWRGBondAlignedBuildContext
 
 function _pure_bond_aligned_nested_route_label(
     basis_family::Symbol,
@@ -104,11 +108,11 @@ function _pure_bond_aligned_nested_route_label(
     throw(ArgumentError("unsupported pure bond-aligned basis_family = :$(basis_family)"))
 end
 
-function _normalized_pure_bond_aligned_build_context(
+function _normalized_bond_aligned_build_context(
     basis::AbstractBondAlignedOrdinaryQWBasis3D,
 )
-    metadata = _cartesian_pure_bond_aligned_build_metadata(basis)
-    return _QWRGPureBondAlignedBuildContext(
+    metadata = _cartesian_bond_aligned_build_metadata(basis)
+    return _QWRGBondAlignedBuildContext(
         metadata.basis_family,
         metadata.carried_metadata.basis_kind,
         basis,
@@ -117,6 +121,7 @@ function _normalized_pure_bond_aligned_build_context(
         metadata.parent_representation,
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in basis.nuclei],
         Float64[1.0 for _ in basis.nuclei],
+        nothing,
         nothing,
         metadata.carried_route_metadata,
         metadata.parent_route_metadata,
@@ -129,12 +134,12 @@ function _normalized_pure_bond_aligned_build_context(
     )
 end
 
-function _normalized_pure_bond_aligned_build_context(
+function _normalized_bond_aligned_build_context(
     fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
 )
-    metadata = _cartesian_pure_bond_aligned_build_metadata(fixed_block)
+    metadata = _cartesian_bond_aligned_build_metadata(fixed_block)
     parent_basis = fixed_block.parent_basis
-    return _QWRGPureBondAlignedBuildContext(
+    return _QWRGBondAlignedBuildContext(
         metadata.basis_family,
         metadata.carried_metadata.basis_kind,
         parent_basis,
@@ -144,6 +149,7 @@ function _normalized_pure_bond_aligned_build_context(
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in parent_basis.nuclei],
         Float64[1.0 for _ in parent_basis.nuclei],
         fixed_block.coefficient_matrix,
+        nothing,
         metadata.carried_route_metadata,
         metadata.parent_route_metadata,
         (
@@ -155,8 +161,87 @@ function _normalized_pure_bond_aligned_build_context(
     )
 end
 
+function _normalized_pure_bond_aligned_build_context(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+)
+    return _normalized_bond_aligned_build_context(basis)
+end
+
+function _normalized_pure_bond_aligned_build_context(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
+)
+    return _normalized_bond_aligned_build_context(fixed_block)
+end
+
+function _normalized_bond_aligned_build_context(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    },
+)
+    metadata = _cartesian_bond_aligned_build_metadata(basis)
+    return _QWRGBondAlignedBuildContext(
+        metadata.basis_family,
+        metadata.carried_metadata.basis_kind,
+        basis,
+        basis,
+        metadata.carried_representation,
+        metadata.parent_representation,
+        NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in basis.nuclei],
+        Float64[1.0 for _ in basis.nuclei],
+        nothing,
+        gaussian_data,
+        metadata.carried_route_metadata,
+        metadata.parent_route_metadata,
+        (
+            route_label = "bond-aligned diatomic molecular QW path",
+            allowed_interaction_treatments = (:ggt_nearest,),
+            localized_parent_kind = nothing,
+            timing_label = "qwrg.diatomic_shell.total",
+            timing_prefix = "qwrg.diatomic_shell",
+            bundles_label = "qwrg.diatomic_shell.shared_bundles",
+            residual_center_label = "bond-aligned diatomic residual-center extraction",
+        ),
+    )
+end
+
+function _normalized_bond_aligned_build_context(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    },
+)
+    metadata = _cartesian_bond_aligned_build_metadata(fixed_block)
+    parent_basis = fixed_block.parent_basis
+    return _QWRGBondAlignedBuildContext(
+        metadata.basis_family,
+        metadata.carried_metadata.basis_kind,
+        parent_basis,
+        fixed_block,
+        metadata.carried_representation,
+        metadata.parent_representation,
+        NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in parent_basis.nuclei],
+        Float64[1.0 for _ in parent_basis.nuclei],
+        fixed_block.coefficient_matrix,
+        gaussian_data,
+        metadata.carried_route_metadata,
+        metadata.parent_route_metadata,
+        (
+            route_label = "bond-aligned diatomic nested molecular QW path",
+            allowed_interaction_treatments = (:ggt_nearest,),
+            localized_parent_kind = :cartesian_product_basis,
+            timing_label = "qwrg.nested_diatomic_shell.total",
+            timing_prefix = "qwrg.nested_diatomic_shell",
+            bundles_label = "qwrg.nested_diatomic_shell.parent_bundles",
+            residual_center_label = "bond-aligned diatomic nested residual-center extraction",
+        ),
+    )
+end
+
 function _validate_pure_bond_aligned_backend(
-    context::_QWRGPureBondAlignedBuildContext,
+    context::_QWRGBondAlignedBuildContext,
     gausslet_backend::Symbol,
 )
     if context.carried_space_kind == :direct_product
@@ -183,8 +268,8 @@ function _validate_pure_bond_aligned_backend(
     return gausslet_backend
 end
 
-function _validate_pure_bond_aligned_interaction_treatment(
-    context::_QWRGPureBondAlignedBuildContext,
+function _validate_bond_aligned_interaction_treatment(
+    context::_QWRGBondAlignedBuildContext,
     interaction_treatment::Symbol,
 )
     interaction_treatment in context.capabilities.allowed_interaction_treatments || throw(
@@ -196,37 +281,48 @@ function _validate_pure_bond_aligned_interaction_treatment(
     return interaction_treatment
 end
 
-function _require_bond_aligned_diatomic_molecular_backend(
+function _validate_pure_bond_aligned_interaction_treatment(
+    context::_QWRGBondAlignedBuildContext,
+    interaction_treatment::Symbol,
+)
+    return _validate_bond_aligned_interaction_treatment(context, interaction_treatment)
+end
+
+function _validate_bond_aligned_molecular_backend(
+    context::_QWRGBondAlignedBuildContext,
     gausslet_backend::Symbol,
-    context_label::AbstractString,
 )
     gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
         ArgumentError(
-            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+            "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
         ),
     )
+    if context.carried_space_kind == :nested_fixed_block &&
+       gausslet_backend == :pgdg_localized_experimental
+        parent_kind = context.carried_representation.metadata.parent_kind
+        parent_kind == context.capabilities.localized_parent_kind || throw(
+            ArgumentError(
+                "$(context.capabilities.route_label) currently supports gausslet_backend = :pgdg_localized_experimental only when the carried nested fixed block still has parent_kind = :$(context.capabilities.localized_parent_kind); transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
+            ),
+        )
+    end
     return gausslet_backend
 end
 
-function _require_bond_aligned_diatomic_nested_molecular_backend(
-    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
-    gausslet_backend::Symbol,
-    context_label::AbstractString,
+function _validate_bond_aligned_molecular_inputs(
+    context::_QWRGBondAlignedBuildContext,
+    nuclear_charges::AbstractVector{<:Real},
 )
-    gausslet_backend == :numerical_reference && return gausslet_backend
-    gausslet_backend == :pgdg_localized_experimental || throw(
+    length(nuclear_charges) == length(context.nuclei) || throw(
         ArgumentError(
-            "$(context_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
+            "$(context.capabilities.route_label) requires one nuclear charge per nucleus",
         ),
     )
-    representation = basis_representation(fixed_block)
-    parent_kind = representation.metadata.parent_kind
-    parent_kind == :cartesian_product_basis || throw(
-        ArgumentError(
-            "$(context_label) currently supports gausslet_backend = :pgdg_localized_experimental only when the carried nested fixed block still has parent_kind = :cartesian_product_basis; transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
-        ),
+    gaussian_data = something(context.gaussian_data)
+    _qwrg_same_nuclei(gaussian_data.nuclei, context.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
     )
-    return gausslet_backend
+    return nuclear_charges
 end
 
 _resolved_nuclear_term_storage(storage::Symbol, ::BondAlignedDiatomicQWBasis3D) =
@@ -1057,12 +1153,361 @@ function ordinary_cartesian_qiu_white_operators(
     )
 end
 
-function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
-    basis::BondAlignedDiatomicQWBasis3D,
-    gaussian_data::Union{
-        LegacyBondAlignedDiatomicGaussianSupplement,
-        LegacyBondAlignedHeteronuclearGaussianSupplement,
-    };
+function _qwrg_bond_aligned_molecular_carried_data(
+    context::_QWRGBondAlignedBuildContext,
+    bundles,
+)
+    if context.carried_space_kind == :direct_product
+        basis = context.parent_basis
+        orbitals = _mapped_cartesian_orbitals(
+            centers(basis.basis_x),
+            centers(basis.basis_y),
+            centers(basis.basis_z),
+        )
+        return (
+            count = length(orbitals),
+            orbitals = orbitals,
+            overlap = _qwrg_diatomic_overlap_matrix(
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+            ),
+        )
+    end
+
+    fixed_block = context.carried
+    return (
+        count = size(fixed_block.overlap, 1),
+        fixed_centers = fixed_block.fixed_centers,
+        overlap = fixed_block.overlap,
+    )
+end
+
+function _qwrg_bond_aligned_molecular_residual_space(
+    context::_QWRGBondAlignedBuildContext,
+    carried_data,
+    blocks,
+)
+    if context.carried_space_kind == :direct_product
+        return _qwrg_residual_space(
+            carried_data.overlap,
+            blocks.overlap_ga,
+            blocks.overlap_aa,
+        )
+    end
+
+    contraction = something(context.contraction)
+    overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
+    return _qwrg_residual_space(
+        carried_data.overlap,
+        overlap_fg,
+        blocks.overlap_aa,
+    )
+end
+
+function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
+    context::_QWRGBondAlignedBuildContext,
+    bundles,
+    expansion::CoulombGaussianExpansion,
+    nuclear_charges::AbstractVector{<:Real},
+    resolved_nuclear_term_storage::Symbol,
+    gausslet_backend::Symbol,
+    use_by_center_final_mix::Bool,
+)
+    basis = context.parent_basis
+    if context.carried_space_kind == :direct_product
+        gausslet_kinetic = _qwrg_diatomic_kinetic_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+        )
+        carried_nuclear_one_body_by_center =
+            gausslet_backend == :pgdg_localized_experimental ?
+            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                basis,
+                _qwrg_full_cartesian_product_factorized_basis(
+                    (
+                        size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
+                        size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
+                        size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+                    ),
+                ),
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+            ) :
+            (
+                resolved_nuclear_term_storage == :by_center ?
+                _qwrg_diatomic_nuclear_one_body_by_center(
+                    basis,
+                    bundles.bundle_x,
+                    bundles.bundle_y,
+                    bundles.bundle_z,
+                    expansion,
+                ) :
+                nothing
+            )
+        carried_one_body =
+            use_by_center_final_mix ?
+            nothing :
+            _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+                nuclear_charges,
+            )
+        return (
+            kinetic = gausslet_kinetic,
+            nuclear_by_center = carried_nuclear_one_body_by_center,
+            one_body = carried_one_body,
+        )
+    end
+
+    fixed_block = context.carried
+    contraction = something(context.contraction)
+    timing_prefix = context.capabilities.timing_prefix
+    fixed_kinetic = @timeg "$(timing_prefix).one_body.carried.kinetic" begin
+        Matrix{Float64}(fixed_block.kinetic)
+    end
+    fixed_nuclear_one_body_by_center =
+        gausslet_backend == :pgdg_localized_experimental ?
+        let
+            factorized_basis = @timeg "$(timing_prefix).one_body.carried.factorized_basis" begin
+                _nested_factorized_parent_basis(fixed_block)
+            end
+            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                basis,
+                factorized_basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion;
+                timing_setup_label = "$(timing_prefix).one_body.carried.nuclear_setup",
+                timing_contract_label = "$(timing_prefix).one_body.carried.nuclear_contract",
+            )
+        end :
+        (
+            resolved_nuclear_term_storage == :by_center ?
+            let
+                parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
+                    basis,
+                    bundles.bundle_x,
+                    bundles.bundle_y,
+                    bundles.bundle_z,
+                    expansion,
+                )
+                [
+                    _qwrg_contract_parent_symmetric_matrix(
+                        contraction,
+                        matrix,
+                    ) for matrix in parent_nuclear
+                ]
+            end :
+            nothing
+        )
+    fixed_one_body =
+        use_by_center_final_mix ?
+        nothing :
+        @timeg "$(timing_prefix).one_body.carried.reassembly" begin
+            parent_one_body = _qwrg_diatomic_one_body_matrix(
+                basis,
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                expansion,
+                nuclear_charges,
+            )
+            matrix = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
+            0.5 .* (matrix .+ transpose(matrix))
+        end
+    return (
+        kinetic = fixed_kinetic,
+        nuclear_by_center = fixed_nuclear_one_body_by_center,
+        one_body = fixed_one_body,
+    )
+end
+
+function _qwrg_bond_aligned_molecular_coupling_one_body_blocks(
+    context::_QWRGBondAlignedBuildContext,
+    blocks,
+    use_by_center_final_mix::Bool,
+)
+    if context.carried_space_kind == :direct_product
+        return (
+            kinetic = Matrix{Float64}(blocks.kinetic_ga),
+            nuclear_by_center =
+                use_by_center_final_mix ?
+                [Matrix{Float64}(matrix) for matrix in blocks.nuclear_ga_by_center] :
+                nothing,
+            one_body =
+                use_by_center_final_mix ?
+                nothing :
+                Matrix{Float64}(blocks.one_body_ga),
+        )
+    end
+
+    contraction = something(context.contraction)
+    return (
+        kinetic = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
+        nuclear_by_center =
+            use_by_center_final_mix ?
+            [
+                _qwrg_contract_parent_ga_matrix(contraction, matrix) for
+                matrix in blocks.nuclear_ga_by_center
+            ] :
+            nothing,
+        one_body =
+            use_by_center_final_mix ?
+            nothing :
+            _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga),
+    )
+end
+
+function _qwrg_bond_aligned_molecular_supplement_one_body_blocks(
+    blocks,
+    use_by_center_final_mix::Bool,
+)
+    return (
+        kinetic = Matrix{Float64}(blocks.kinetic_aa),
+        nuclear_by_center =
+            use_by_center_final_mix ?
+            [Matrix{Float64}(matrix) for matrix in blocks.nuclear_aa_by_center] :
+            nothing,
+        one_body =
+            use_by_center_final_mix ?
+            nothing :
+            Matrix{Float64}(blocks.one_body_aa),
+    )
+end
+
+function _qwrg_bond_aligned_molecular_residual_centers(
+    context::_QWRGBondAlignedBuildContext,
+    carried_data,
+    bundles,
+    blocks,
+    residual_data,
+)
+    if context.carried_space_kind == :direct_product
+        x_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :x,
+        )
+        y_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :y,
+        )
+        z_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :z,
+        )
+    else
+        fixed_block = context.carried
+        contraction = something(context.contraction)
+        x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
+        y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
+        z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
+        x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
+        y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
+        z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
+        center_data = _qwrg_residual_center_data(
+            residual_data.raw_overlap,
+            x_raw,
+            y_raw,
+            z_raw,
+            residual_data.raw_to_final,
+            carried_data.count,
+        )
+        residual_centers = center_data.centers
+        residual_widths = fill(NaN, size(residual_centers, 1), 3)
+        center_data.overlap_error <= 1.0e-8 || throw(
+            ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
+        )
+        return residual_centers, residual_widths
+    end
+
+    x_raw = [x_carried blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
+    y_raw = [y_carried blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
+    z_raw = [z_carried blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        residual_data.raw_to_final,
+        carried_data.count,
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= 1.0e-8 || throw(
+        ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
+    )
+    return residual_centers, residual_widths
+end
+
+function _qwrg_bond_aligned_molecular_interaction_matrix(
+    context::_QWRGBondAlignedBuildContext,
+    carried_data,
+    bundles,
+    residual_centers::AbstractMatrix{<:Real},
+    expansion::CoulombGaussianExpansion,
+)
+    if context.carried_space_kind == :direct_product
+        gausslet_interaction = _qwrg_diatomic_interaction_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            expansion,
+        )
+        return _qwrg_interaction_matrix_nearest(
+            gausslet_interaction,
+            carried_data.orbitals,
+            residual_centers,
+        )
+    end
+
+    fixed_block = context.carried
+    fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    return _qwrg_interaction_matrix_nearest(
+        fixed_interaction,
+        carried_data.fixed_centers,
+        residual_centers,
+    )
+end
+
+function _qwrg_bond_aligned_molecular_operator_orbitals(
+    context::_QWRGBondAlignedBuildContext,
+    carried_data,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    if context.carried_space_kind == :direct_product
+        return _qwrg_orbital_data(
+            carried_data.orbitals,
+            residual_centers,
+            residual_widths,
+        )
+    end
+
+    return _qwrg_orbital_data(
+        carried_data.fixed_centers,
+        residual_centers,
+        residual_widths;
+        fixed_kind = :nested_fixed,
+        fixed_label_prefix = "nf",
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
+    context::_QWRGBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -1070,26 +1515,20 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _require_bond_aligned_diatomic_molecular_backend(
-        gausslet_backend,
-        "bond-aligned diatomic molecular QW path",
+    _validate_bond_aligned_molecular_backend(context, gausslet_backend)
+    _validate_bond_aligned_interaction_treatment(context, interaction_treatment)
+    _validate_bond_aligned_molecular_inputs(context, nuclear_charges)
+    gaussian_data = something(context.gaussian_data)
+    basis = context.parent_basis
+    carried = context.carried
+    timing_prefix = context.capabilities.timing_prefix
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        carried,
     )
-    interaction_treatment == :ggt_nearest || throw(
-        ArgumentError("bond-aligned diatomic molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
-    )
-    length(nuclear_charges) == length(basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic molecular QW path requires one nuclear charge per nucleus"),
-    )
-    _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
-    )
-    return _qwrg_capture_timeg_report("qwrg.diatomic_shell.total", timing) do
-        resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
-            _validate_nuclear_term_storage(nuclear_term_storage),
-            basis,
-        )
 
-        bundles = @timeg "qwrg.diatomic_shell.shared_bundles" begin
+    return _qwrg_capture_timeg_report(context.capabilities.timing_label, timing) do
+        bundles = @timeg context.capabilities.bundles_label begin
             _qwrg_bond_aligned_axis_bundles(
                 basis,
                 expansion;
@@ -1098,8 +1537,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
         end
 
         supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(gaussian_data)
-
-        blocks = @timeg "qwrg.diatomic_shell.raw_blocks" begin
+        blocks = @timeg "$(timing_prefix).raw_blocks" begin
             _qwrg_diatomic_cartesian_shell_blocks_3d(
                 bundles,
                 supplement3d,
@@ -1109,108 +1547,49 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
             )
         end
 
-        gausslet_orbitals = _mapped_cartesian_orbitals(
-            centers(basis.basis_x),
-            centers(basis.basis_y),
-            centers(basis.basis_z),
-        )
-        gausslet_count = length(gausslet_orbitals)
-
-        residual_data = @timeg "qwrg.diatomic_shell.residual_space" begin
-            gausslet_overlap_3d = _qwrg_diatomic_overlap_matrix(
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
+        carried_data = _qwrg_bond_aligned_molecular_carried_data(context, bundles)
+        residual_data = @timeg "$(timing_prefix).residual_space" begin
+            _qwrg_bond_aligned_molecular_residual_space(
+                context,
+                carried_data,
+                blocks,
             )
-            _qwrg_residual_space(gausslet_overlap_3d, blocks.overlap_ga, blocks.overlap_aa)
         end
 
-        final_kinetic, final_nuclear_one_body_by_center, final_one_body = @timeg "qwrg.diatomic_shell.one_body" begin
+        final_kinetic, final_nuclear_one_body_by_center, final_one_body = @timeg "$(timing_prefix).one_body" begin
             use_by_center_final_mix =
                 gausslet_backend == :pgdg_localized_experimental ||
                 resolved_nuclear_term_storage == :by_center
 
-            carried_blocks = @timeg "qwrg.diatomic_shell.one_body.carried" begin
-                gausslet_kinetic = _qwrg_diatomic_kinetic_matrix(
-                    bundles.bundle_x,
-                    bundles.bundle_y,
-                    bundles.bundle_z,
-                )
-                carried_nuclear_one_body_by_center =
-                    gausslet_backend == :pgdg_localized_experimental ?
-                    _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                        basis,
-                        _qwrg_full_cartesian_product_factorized_basis(
-                            (
-                                size(bundles.bundle_x.pgdg_intermediate.overlap, 1),
-                                size(bundles.bundle_y.pgdg_intermediate.overlap, 1),
-                                size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
-                            ),
-                        ),
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                    ) :
-                    (
-                        resolved_nuclear_term_storage == :by_center ?
-                        _qwrg_diatomic_nuclear_one_body_by_center(
-                            basis,
-                            bundles.bundle_x,
-                            bundles.bundle_y,
-                            bundles.bundle_z,
-                            expansion,
-                        ) :
-                        nothing
-                    )
-                carried_one_body =
-                    use_by_center_final_mix ?
-                    nothing :
-                    _qwrg_diatomic_one_body_matrix(
-                        basis,
-                        bundles.bundle_x,
-                        bundles.bundle_y,
-                        bundles.bundle_z,
-                        expansion,
-                        nuclear_charges,
-                    )
-                (
-                    kinetic = gausslet_kinetic,
-                    nuclear_by_center = carried_nuclear_one_body_by_center,
-                    one_body = carried_one_body,
+            carried_blocks = @timeg "$(timing_prefix).one_body.carried" begin
+                _qwrg_bond_aligned_molecular_carried_one_body_blocks(
+                    context,
+                    bundles,
+                    expansion,
+                    nuclear_charges,
+                    resolved_nuclear_term_storage,
+                    gausslet_backend,
+                    use_by_center_final_mix,
                 )
             end
 
-            coupling_blocks = @timeg "qwrg.diatomic_shell.one_body.coupling" begin
-                (
-                    kinetic = Matrix{Float64}(blocks.kinetic_ga),
-                    nuclear_by_center =
-                        use_by_center_final_mix ?
-                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_ga_by_center] :
-                        nothing,
-                    one_body =
-                        use_by_center_final_mix ?
-                        nothing :
-                        Matrix{Float64}(blocks.one_body_ga),
+            coupling_blocks = @timeg "$(timing_prefix).one_body.coupling" begin
+                _qwrg_bond_aligned_molecular_coupling_one_body_blocks(
+                    context,
+                    blocks,
+                    use_by_center_final_mix,
                 )
             end
 
-            supplement_blocks = @timeg "qwrg.diatomic_shell.one_body.supplement" begin
-                (
-                    kinetic = Matrix{Float64}(blocks.kinetic_aa),
-                    nuclear_by_center =
-                        use_by_center_final_mix ?
-                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_aa_by_center] :
-                        nothing,
-                    one_body =
-                        use_by_center_final_mix ?
-                        nothing :
-                        Matrix{Float64}(blocks.one_body_aa),
+            supplement_blocks = @timeg "$(timing_prefix).one_body.supplement" begin
+                _qwrg_bond_aligned_molecular_supplement_one_body_blocks(
+                    blocks,
+                    use_by_center_final_mix,
                 )
             end
 
             final_kinetic_local = if use_by_center_final_mix
-                @timeg "qwrg.diatomic_shell.one_body.final_mix" begin
+                @timeg "$(timing_prefix).one_body.final_mix" begin
                     _qwrg_final_one_body_matrix_from_blocks(
                         carried_blocks.kinetic,
                         coupling_blocks.kinetic,
@@ -1228,7 +1607,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
             end
 
             assembled_nuclear_one_body_by_center_local = if use_by_center_final_mix
-                @timeg "qwrg.diatomic_shell.one_body.by_center_final_mix" begin
+                @timeg "$(timing_prefix).one_body.by_center_final_mix" begin
                     _qwrg_final_nuclear_one_body_by_center(
                         carried_blocks.nuclear_by_center,
                         coupling_blocks.nuclear_by_center,
@@ -1241,7 +1620,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
             end
 
             final_one_body_local = if isnothing(assembled_nuclear_one_body_by_center_local)
-                @timeg "qwrg.diatomic_shell.one_body.final_mix" begin
+                @timeg "$(timing_prefix).one_body.final_mix" begin
                     _qwrg_final_one_body_matrix_from_blocks(
                         carried_blocks.one_body,
                         coupling_blocks.one_body,
@@ -1256,6 +1635,7 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
                     nuclear_charges,
                 )
             end
+
             final_nuclear_one_body_by_center_local =
                 resolved_nuclear_term_storage == :by_center ?
                 assembled_nuclear_one_body_by_center_local :
@@ -1267,58 +1647,42 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
             )
         end
 
-        residual_centers, residual_widths = @timeg "qwrg.diatomic_shell.centers" begin
-            x_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :x)
-            y_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :y)
-            z_gg = _qwrg_diatomic_gausslet_axis_matrix(bundles.bundle_x, bundles.bundle_y, bundles.bundle_z, :z)
-            x_raw = [x_gg blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
-            y_raw = [y_gg blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
-            z_raw = [z_gg blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
-            center_data = _qwrg_residual_center_data(
-                residual_data.raw_overlap,
-                x_raw,
-                y_raw,
-                z_raw,
-                residual_data.raw_to_final,
-                gausslet_count,
+        residual_centers, residual_widths = @timeg "$(timing_prefix).centers" begin
+            _qwrg_bond_aligned_molecular_residual_centers(
+                context,
+                carried_data,
+                bundles,
+                blocks,
+                residual_data,
             )
-            residual_centers_local = center_data.centers
-            residual_widths_local = fill(NaN, size(residual_centers_local, 1), 3)
-            center_data.overlap_error <= 1.0e-8 || throw(
-                ArgumentError("bond-aligned diatomic residual-center extraction requires an orthonormal residual block"),
-            )
-            (residual_centers_local, residual_widths_local)
         end
 
-        interaction_matrix = @timeg "qwrg.diatomic_shell.interaction" begin
-            gausslet_interaction = _qwrg_diatomic_interaction_matrix(
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
-                expansion,
-            )
-            _qwrg_interaction_matrix_nearest(
-                gausslet_interaction,
-                gausslet_orbitals,
+        interaction_matrix = @timeg "$(timing_prefix).interaction" begin
+            _qwrg_bond_aligned_molecular_interaction_matrix(
+                context,
+                carried_data,
+                bundles,
                 residual_centers,
+                expansion,
             )
         end
 
         return OrdinaryCartesianOperators3D(
-            basis,
+            carried,
             gaussian_data,
             gausslet_backend,
-            :ggt_nearest,
+            interaction_treatment,
             expansion,
             Matrix{Float64}(residual_data.final_overlap),
             final_one_body,
             Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_orbital_data(
-                gausslet_orbitals,
+            _qwrg_bond_aligned_molecular_operator_orbitals(
+                context,
+                carried_data,
                 residual_centers,
                 residual_widths,
             ),
-            gausslet_count,
+            carried_data.count,
             size(residual_centers, 1),
             Matrix{Float64}(residual_data.raw_to_final),
             Matrix{Float64}(residual_centers),
@@ -1329,6 +1693,31 @@ function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
             resolved_nuclear_term_storage,
         )
     end
+end
+
+function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol,
+    expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    timing::Bool,
+)
+    context = _normalized_bond_aligned_build_context(basis, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
+        context;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
+    )
 end
 
 function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
@@ -1494,267 +1883,20 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _require_bond_aligned_diatomic_nested_molecular_backend(
-        fixed_block,
-        gausslet_backend,
-        "bond-aligned diatomic nested molecular QW path",
+    context = _normalized_bond_aligned_build_context(fixed_block, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
+        context;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        expansion = expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        timing = timing,
     )
-
-    basis = fixed_block.parent_basis
-    length(nuclear_charges) == length(basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic nested molecular QW path requires one nuclear charge per nucleus"),
-    )
-    _qwrg_same_nuclei(gaussian_data.nuclei, basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei"),
-    )
-    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
-        _validate_nuclear_term_storage(nuclear_term_storage),
-        fixed_block,
-    )
-
-    return _qwrg_capture_timeg_report("qwrg.nested_diatomic_shell.total", timing) do
-        bundles = @timeg "qwrg.nested_diatomic_shell.parent_bundles" begin
-            _qwrg_bond_aligned_axis_bundles(
-                basis,
-                expansion;
-                gausslet_backend = gausslet_backend,
-            )
-        end
-
-        supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(gaussian_data)
-
-        blocks = @timeg "qwrg.nested_diatomic_shell.raw_blocks" begin
-            _qwrg_diatomic_cartesian_shell_blocks_3d(
-                bundles,
-                supplement3d,
-                basis,
-                expansion,
-                nuclear_charges,
-            )
-        end
-
-        contraction = fixed_block.coefficient_matrix
-        fixed_count = size(fixed_block.overlap, 1)
-
-        residual_data = @timeg "qwrg.nested_diatomic_shell.residual_space" begin
-            overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
-            _qwrg_residual_space(fixed_block.overlap, overlap_fg, blocks.overlap_aa)
-        end
-
-        final_kinetic, nuclear_one_body_by_center, final_one_body = @timeg "qwrg.nested_diatomic_shell.one_body" begin
-            use_by_center_final_mix =
-                gausslet_backend == :pgdg_localized_experimental ||
-                resolved_nuclear_term_storage == :by_center
-
-            carried_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.carried" begin
-                fixed_kinetic = @timeg "qwrg.nested_diatomic_shell.one_body.carried.kinetic" begin
-                    Matrix{Float64}(fixed_block.kinetic)
-                end
-                fixed_nuclear_one_body_by_center =
-                    gausslet_backend == :pgdg_localized_experimental ?
-                    let
-                        factorized_basis = @timeg "qwrg.nested_diatomic_shell.one_body.carried.factorized_basis" begin
-                            _nested_factorized_parent_basis(fixed_block)
-                        end
-                        _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                            basis,
-                            factorized_basis,
-                            bundles.bundle_x,
-                            bundles.bundle_y,
-                            bundles.bundle_z,
-                            expansion;
-                            timing_setup_label = "qwrg.nested_diatomic_shell.one_body.carried.nuclear_setup",
-                            timing_contract_label = "qwrg.nested_diatomic_shell.one_body.carried.nuclear_contract",
-                        )
-                    end :
-                    (
-                        resolved_nuclear_term_storage == :by_center ?
-                        let
-                            parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
-                                basis,
-                                bundles.bundle_x,
-                                bundles.bundle_y,
-                                bundles.bundle_z,
-                                expansion,
-                            )
-                            [
-                                _qwrg_contract_parent_symmetric_matrix(
-                                    contraction,
-                                    matrix,
-                                ) for matrix in parent_nuclear
-                            ]
-                        end :
-                        nothing
-                    )
-                fixed_one_body =
-                    use_by_center_final_mix ?
-                    nothing :
-                    @timeg "qwrg.nested_diatomic_shell.one_body.carried.reassembly" begin
-                        parent_one_body = _qwrg_diatomic_one_body_matrix(
-                            basis,
-                            bundles.bundle_x,
-                            bundles.bundle_y,
-                            bundles.bundle_z,
-                            expansion,
-                            nuclear_charges,
-                        )
-                        matrix = Matrix{Float64}(transpose(contraction) * parent_one_body * contraction)
-                        0.5 .* (matrix .+ transpose(matrix))
-                    end
-                (
-                    kinetic = fixed_kinetic,
-                    nuclear_by_center = fixed_nuclear_one_body_by_center,
-                    one_body = fixed_one_body,
-                )
-            end
-
-            coupling_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.coupling" begin
-                (
-                    kinetic = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga),
-                    nuclear_by_center =
-                        use_by_center_final_mix ?
-                        [
-                            _qwrg_contract_parent_ga_matrix(contraction, matrix) for
-                            matrix in blocks.nuclear_ga_by_center
-                        ] :
-                        nothing,
-                    one_body =
-                        use_by_center_final_mix ?
-                        nothing :
-                        _qwrg_contract_parent_ga_matrix(contraction, blocks.one_body_ga),
-                )
-            end
-
-            supplement_blocks = @timeg "qwrg.nested_diatomic_shell.one_body.supplement" begin
-                (
-                    kinetic = Matrix{Float64}(blocks.kinetic_aa),
-                    nuclear_by_center =
-                        use_by_center_final_mix ?
-                        [Matrix{Float64}(matrix) for matrix in blocks.nuclear_aa_by_center] :
-                        nothing,
-                    one_body =
-                        use_by_center_final_mix ?
-                        nothing :
-                        Matrix{Float64}(blocks.one_body_aa),
-                )
-            end
-
-            final_kinetic_local = if use_by_center_final_mix
-                @timeg "qwrg.nested_diatomic_shell.one_body.final_mix" begin
-                    _qwrg_final_one_body_matrix_from_blocks(
-                        carried_blocks.kinetic,
-                        coupling_blocks.kinetic,
-                        supplement_blocks.kinetic,
-                        residual_data.raw_to_final,
-                    )[2]
-                end
-            else
-                _qwrg_final_one_body_matrix_from_blocks(
-                    carried_blocks.kinetic,
-                    coupling_blocks.kinetic,
-                    supplement_blocks.kinetic,
-                    residual_data.raw_to_final,
-                )[2]
-            end
-
-            assembled_nuclear_one_body_by_center_local = if use_by_center_final_mix
-                @timeg "qwrg.nested_diatomic_shell.one_body.by_center_final_mix" begin
-                    _qwrg_final_nuclear_one_body_by_center(
-                        carried_blocks.nuclear_by_center,
-                        coupling_blocks.nuclear_by_center,
-                        supplement_blocks.nuclear_by_center,
-                        residual_data.raw_to_final,
-                    )
-                end
-            else
-                nothing
-            end
-
-            final_one_body_local = if isnothing(assembled_nuclear_one_body_by_center_local)
-                @timeg "qwrg.nested_diatomic_shell.one_body.final_mix" begin
-                    _qwrg_final_one_body_matrix_from_blocks(
-                        carried_blocks.one_body,
-                        coupling_blocks.one_body,
-                        supplement_blocks.one_body,
-                        residual_data.raw_to_final,
-                    )[2]
-                end
-            else
-                _assemble_one_body_hamiltonian(
-                    final_kinetic_local,
-                    assembled_nuclear_one_body_by_center_local,
-                    nuclear_charges,
-                )
-            end
-            nuclear_one_body_by_center_local =
-                resolved_nuclear_term_storage == :by_center ?
-                assembled_nuclear_one_body_by_center_local :
-                nothing
-            (final_kinetic_local, nuclear_one_body_by_center_local, final_one_body_local)
-        end
-
-        residual_centers, residual_widths = @timeg "qwrg.nested_diatomic_shell.centers" begin
-            x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
-            y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
-            z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
-            x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
-            y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
-            z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
-            center_data = _qwrg_residual_center_data(
-                residual_data.raw_overlap,
-                x_raw,
-                y_raw,
-                z_raw,
-                residual_data.raw_to_final,
-                fixed_count,
-            )
-            residual_centers_local = center_data.centers
-            residual_widths_local = fill(NaN, size(residual_centers_local, 1), 3)
-            center_data.overlap_error <= 1.0e-8 || throw(
-                ArgumentError("bond-aligned diatomic nested residual-center extraction requires an orthonormal residual block"),
-            )
-            (residual_centers_local, residual_widths_local)
-        end
-
-        interaction_matrix = @timeg "qwrg.nested_diatomic_shell.interaction" begin
-            fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
-            _qwrg_interaction_matrix_nearest(
-                fixed_interaction,
-                fixed_block.fixed_centers,
-                residual_centers,
-            )
-        end
-
-        return OrdinaryCartesianOperators3D(
-            fixed_block,
-            gaussian_data,
-            gausslet_backend,
-            :ggt_nearest,
-            expansion,
-            Matrix{Float64}(residual_data.final_overlap),
-            final_one_body,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_orbital_data(
-                fixed_block.fixed_centers,
-                residual_centers,
-                residual_widths;
-                fixed_kind = :nested_fixed,
-                fixed_label_prefix = "nf",
-            ),
-            fixed_count,
-            size(residual_centers, 1),
-            Matrix{Float64}(residual_data.raw_to_final),
-            Matrix{Float64}(residual_centers),
-            Matrix{Float64}(residual_widths),
-            Float64[Float64(value) for value in nuclear_charges],
-            resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(final_kinetic) : nothing,
-            resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
-            resolved_nuclear_term_storage,
-        )
-    end
 end
 
 function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
@@ -2417,15 +2559,13 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    interaction_treatment == :ggt_nearest || throw(
-        ArgumentError("bond-aligned diatomic nested molecular QW path currently supports only interaction_treatment = :ggt_nearest"),
-    )
     return _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
         fixed_block,
         gaussian_data;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
+        interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
         timing = timing,
     )

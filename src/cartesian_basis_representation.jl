@@ -1768,7 +1768,7 @@ end
 
 basis_metadata(basis::AbstractBondAlignedOrdinaryQWBasis3D) = basis_representation(basis).metadata
 
-function _cartesian_pure_bond_aligned_build_metadata(
+function _cartesian_bond_aligned_build_metadata(
     basis::AbstractBondAlignedOrdinaryQWBasis3D,
 )
     representation = basis_representation(basis)
@@ -1782,6 +1782,12 @@ function _cartesian_pure_bond_aligned_build_metadata(
         parent_route_metadata = route_metadata,
         basis_family = route_metadata.basis_family,
     )
+end
+
+function _cartesian_pure_bond_aligned_build_metadata(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+)
+    return _cartesian_bond_aligned_build_metadata(basis)
 end
 
 function _cartesian_parent_axis_representations(parent_basis)
@@ -1913,7 +1919,7 @@ end
 
 basis_metadata(fixed_block::_NestedFixedBlock3D) = basis_representation(fixed_block).metadata
 
-function _cartesian_pure_bond_aligned_build_metadata(
+function _cartesian_bond_aligned_build_metadata(
     fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
 )
     carried_representation = basis_representation(fixed_block)
@@ -1927,6 +1933,12 @@ function _cartesian_pure_bond_aligned_build_metadata(
         parent_route_metadata = parent_representation.metadata.route_metadata,
         basis_family = parent_representation.metadata.route_metadata.basis_family,
     )
+end
+
+function _cartesian_pure_bond_aligned_build_metadata(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
+)
+    return _cartesian_bond_aligned_build_metadata(fixed_block)
 end
 
 function _cartesian_empty_centers()

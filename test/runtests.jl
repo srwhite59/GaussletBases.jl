@@ -8585,6 +8585,33 @@ end
             max_width = 1.0,
         )
         hybrid_fixed_block = nested_fixed_block
+        hybrid_direct_context = GaussletBases._normalized_bond_aligned_build_context(
+            hybrid_basis,
+            hybrid_supplement,
+        )
+        hybrid_nested_context = GaussletBases._normalized_bond_aligned_build_context(
+            hybrid_fixed_block,
+            hybrid_supplement,
+        )
+
+        @test hybrid_direct_context.basis_family == :bond_aligned_diatomic
+        @test hybrid_direct_context.carried_space_kind == :direct_product
+        @test hybrid_direct_context.parent_basis === hybrid_basis
+        @test hybrid_direct_context.carried === hybrid_basis
+        @test hybrid_direct_context.gaussian_data === hybrid_supplement
+        @test hybrid_direct_context.contraction === nothing
+        @test hybrid_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_direct_context.capabilities.timing_label == "qwrg.diatomic_shell.total"
+
+        @test hybrid_nested_context.basis_family == :bond_aligned_diatomic
+        @test hybrid_nested_context.carried_space_kind == :nested_fixed_block
+        @test hybrid_nested_context.parent_basis === hybrid_fixed_block.parent_basis
+        @test hybrid_nested_context.carried === hybrid_fixed_block
+        @test hybrid_nested_context.gaussian_data === hybrid_supplement
+        @test hybrid_nested_context.contraction === hybrid_fixed_block.coefficient_matrix
+        @test hybrid_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_nested_context.capabilities.localized_parent_kind == :cartesian_product_basis
+        @test hybrid_nested_context.capabilities.timing_label == "qwrg.nested_diatomic_shell.total"
 
         hybrid_reference, hybrid_localized, hybrid_reference_check, hybrid_localized_check =
             _check_diatomic_molecular_backend_pair(
@@ -8608,6 +8635,10 @@ end
         @test hybrid_nested_localized.gaussian_data === hybrid_supplement
         @test hybrid_localized.residual_count == hybrid_reference.residual_count
         @test hybrid_nested_localized.residual_count == hybrid_nested_reference.residual_count
+        @test size(hybrid_localized.raw_to_final, 2) ==
+              hybrid_localized.gausslet_count + hybrid_localized.residual_count
+        @test size(hybrid_nested_localized.raw_to_final, 2) ==
+              hybrid_nested_localized.gausslet_count + hybrid_nested_localized.residual_count
         @test isfinite(hybrid_localized_check.orbital_energy)
         @test isfinite(hybrid_localized_check.vee_expectation)
         @test isfinite(hybrid_nested_localized_check.orbital_energy)

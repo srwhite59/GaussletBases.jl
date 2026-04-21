@@ -51,12 +51,14 @@ ordinary gausslets. Its current interpretation is:
 
 Within that branch, the pure bond-aligned routes now normalize through one
 internal Cartesian build context before backend gating and operator assembly.
-That seam currently covers only:
+That seam now covers:
 
 - pure bond-aligned direct-product ordinary/QW routes
 - pure prebuilt nested fixed-block bond-aligned routes
+- bond-aligned diatomic molecular supplement direct-product routes
+- bond-aligned diatomic molecular supplement nested fixed-block routes
 
-Supplement-bearing and residual-bearing routes still keep their separate
+Atomic and experimental supplement-bearing routes still keep their separate
 orchestration paths on purpose.
 
 ## Primitive, contraction, and hierarchy work
