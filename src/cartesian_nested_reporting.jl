@@ -438,6 +438,18 @@ end
 
 function _bond_aligned_diatomic_doside_trace_notes(source)
     notes = String[]
+    for (layer_index, layer) in pairs(source.shared_shell_layers)
+        push!(
+            notes,
+            string(
+                "# shared_shell layer=", layer_index,
+                " source_box=", _nested_box_dimension_string(layer.provenance.source_box),
+                " source_points=", layer.provenance.source_point_count,
+                " retained_fixed_count=", layer.provenance.retained_fixed_count,
+                " next_inner_box=", _nested_box_dimension_string(layer.provenance.next_inner_box),
+            ),
+        )
+    end
     isempty(source.shared_shell_layers) && push!(
         notes,
         "# note shared_shell has no local side contractions",

@@ -186,6 +186,7 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
     return @timeg "diatomic.geometry_diagnostics" begin
         contract_audit = _nested_source_contract_audit(source)
         shared_shell_dimensions = Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
+        shared_shell_provenance = [shell.provenance for shell in source.shared_shell_layers]
         child_sequence_dimensions = Int[
             size(sequence.coefficient_matrix, 2) for sequence in source.child_sequences
         ]
@@ -197,6 +198,7 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
             shared_shell_retention_contract = source.shared_shell_retention_contract,
             shared_shell_count = length(source.shared_shell_layers),
             shared_shell_dimensions = shared_shell_dimensions,
+            shared_shell_provenance = shared_shell_provenance,
             shared_shells_match_contract =
                 all(==(source.shared_shell_retention_contract.shell_increment), shared_shell_dimensions),
             child_sequence_count = length(source.child_sequences),

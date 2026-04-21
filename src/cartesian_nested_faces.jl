@@ -346,6 +346,34 @@ struct _CartesianNestedCorner3D
 end
 
 """
+    _CartesianNestedShellLayerProvenance3D
+
+Glass-box provenance for one complete shell layer.
+
+`source_box` is the outer box being peeled, while `next_inner_box` is the
+remaining inner box after that shell is removed. `source_point_count` records
+the annulus point count peeled by the shell, not the full outer-box volume.
+"""
+struct _CartesianNestedShellLayerProvenance3D
+    source_box::NTuple{3,UnitRange{Int}}
+    next_inner_box::NTuple{3,UnitRange{Int}}
+    source_point_count::Int
+    retained_fixed_count::Int
+end
+
+function Base.:(==)(
+    left::_CartesianNestedShellLayerProvenance3D,
+    right::_CartesianNestedShellLayerProvenance3D,
+)
+    return (
+        left.source_box == right.source_box &&
+        left.next_inner_box == right.next_inner_box &&
+        left.source_point_count == right.source_point_count &&
+        left.retained_fixed_count == right.retained_fixed_count
+    )
+end
+
+"""
     _CartesianNestedCompleteShell3D
 
 First complete nonrecursive shell-layer object.
@@ -364,6 +392,7 @@ struct _CartesianNestedCompleteShell3D <: _AbstractCartesianNestedShellLayer3D
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
     packet::_CartesianNestedShellPacket3D
+    provenance::_CartesianNestedShellLayerProvenance3D
 end
 
 """
@@ -456,6 +485,42 @@ function _nested_factorized_basis_cache(
     factorized_basis,
 )
     return Base.RefValue{Any}(factorized_basis)
+end
+
+function _nested_box_point_count(
+    box::NTuple{3,UnitRange{Int}},
+)
+    return length(box[1]) * length(box[2]) * length(box[3])
+end
+
+function _nested_box_dimension_string(
+    box::NTuple{3,UnitRange{Int}},
+)
+    return string(length(box[1]), "x", length(box[2]), "x", length(box[3]))
+end
+
+function _nested_complete_shell_provenance(
+    x_interval::UnitRange{Int},
+    y_interval::UnitRange{Int},
+    z_interval::UnitRange{Int},
+    x_fixed::Tuple{Int,Int},
+    y_fixed::Tuple{Int,Int},
+    z_fixed::Tuple{Int,Int},
+    retained_fixed_count::Integer,
+)
+    source_box = (
+        x_fixed[1]:x_fixed[2],
+        y_fixed[1]:y_fixed[2],
+        z_fixed[1]:z_fixed[2],
+    )
+    next_inner_box = (x_interval, y_interval, z_interval)
+    source_point_count = _nested_box_point_count(source_box) - _nested_box_point_count(next_inner_box)
+    return _CartesianNestedShellLayerProvenance3D(
+        source_box,
+        next_inner_box,
+        source_point_count,
+        Int(retained_fixed_count),
+    )
 end
 
 """
@@ -622,8 +687,14 @@ function Base.show(io::IO, shell::_CartesianNestedCompleteShell3D)
         length(shell.edges),
         ", ncorners=",
         length(shell.corners),
-        ", nshell=",
-        size(shell.coefficient_matrix, 2),
+        ", source_box=",
+        _nested_box_dimension_string(shell.provenance.source_box),
+        ", source_points=",
+        shell.provenance.source_point_count,
+        ", retained_fixed_count=",
+        shell.provenance.retained_fixed_count,
+        ", next_inner_box=",
+        _nested_box_dimension_string(shell.provenance.next_inner_box),
         ")",
     )
 end
@@ -4138,6 +4209,15 @@ function _nested_complete_rectangular_shell(
         term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
+    provenance = _nested_complete_shell_provenance(
+        x_interval,
+        y_interval,
+        z_interval,
+        x_fixed,
+        y_fixed,
+        z_fixed,
+        size(coefficient_matrix, 2),
+    )
 
     return _CartesianNestedCompleteShell3D(
         shell_faces.faces,
@@ -4150,6 +4230,7 @@ function _nested_complete_rectangular_shell(
         support_indices,
         shell_data.support_states,
         shell_data.packet,
+        provenance,
     )
 end
 
@@ -4511,6 +4592,15 @@ function _nested_complete_rectangular_shell(
         term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
+    provenance = _nested_complete_shell_provenance(
+        x_interval,
+        y_interval,
+        z_interval,
+        x_fixed,
+        y_fixed,
+        z_fixed,
+        size(coefficient_matrix, 2),
+    )
 
     return _CartesianNestedCompleteShell3D(
         shell_faces.faces,
@@ -4523,6 +4613,7 @@ function _nested_complete_rectangular_shell(
         support_indices,
         shell_data.support_states,
         shell_data.packet,
+        provenance,
     )
 end
 

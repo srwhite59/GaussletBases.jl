@@ -7015,6 +7015,38 @@ end
     @test length(shell2_complete.support_indices) == 11^3 - 9^3
     @test length(shell3_complete.support_indices) == 9^3 - 7^3
     @test length(shell4_complete.support_indices) == 7^3 - 5^3
+    @test shell1_complete.provenance.source_box == (
+        (first(interval1) - 1):(last(interval1) + 1),
+        (first(interval1) - 1):(last(interval1) + 1),
+        (first(interval1) - 1):(last(interval1) + 1),
+    )
+    @test shell1_complete.provenance.next_inner_box == (interval1, interval1, interval1)
+    @test shell1_complete.provenance.source_point_count == 13^3 - 11^3
+    @test shell1_complete.provenance.retained_fixed_count == size(shell1_complete.coefficient_matrix, 2)
+    @test shell2_complete.provenance.source_box == (
+        (first(interval2) - 1):(last(interval2) + 1),
+        (first(interval2) - 1):(last(interval2) + 1),
+        (first(interval2) - 1):(last(interval2) + 1),
+    )
+    @test shell2_complete.provenance.next_inner_box == (interval2, interval2, interval2)
+    @test shell2_complete.provenance.source_point_count == 11^3 - 9^3
+    @test shell2_complete.provenance.retained_fixed_count == size(shell2_complete.coefficient_matrix, 2)
+    @test shell3_complete.provenance.source_box == (
+        (first(interval3) - 1):(last(interval3) + 1),
+        (first(interval3) - 1):(last(interval3) + 1),
+        (first(interval3) - 1):(last(interval3) + 1),
+    )
+    @test shell3_complete.provenance.next_inner_box == (interval3, interval3, interval3)
+    @test shell3_complete.provenance.source_point_count == 9^3 - 7^3
+    @test shell3_complete.provenance.retained_fixed_count == size(shell3_complete.coefficient_matrix, 2)
+    @test shell4_complete.provenance.source_box == (
+        (first(interval4) - 1):(last(interval4) + 1),
+        (first(interval4) - 1):(last(interval4) + 1),
+        (first(interval4) - 1):(last(interval4) + 1),
+    )
+    @test shell4_complete.provenance.next_inner_box == (interval4, interval4, interval4)
+    @test shell4_complete.provenance.source_point_count == 7^3 - 5^3
+    @test shell4_complete.provenance.retained_fixed_count == size(shell4_complete.coefficient_matrix, 2)
     @test sum(length(face.support_indices) for face in shell1_complete.faces) == 6 * 11^2
     @test sum(length(edge.support_indices) for edge in shell1_complete.edges) == 12 * 11
     @test sum(length(corner.support_indices) for corner in shell1_complete.corners) == 8
@@ -7687,6 +7719,8 @@ end
         diagnostics_via_basis.shared_shell_retention_contract
     @test diagnostics_via_source.shared_shell_dimensions ==
         diagnostics_via_basis.shared_shell_dimensions
+    @test diagnostics_via_source.shared_shell_provenance ==
+        diagnostics_via_basis.shared_shell_provenance
     @test diagnostics_via_source.child_sequence_dimensions ==
         diagnostics_via_basis.child_sequence_dimensions
     @test diagnostics_via_source.fixed_dimension == diagnostics_via_basis.fixed_dimension
@@ -10238,6 +10272,10 @@ end
     @test length(nested_payload.points) == size(fixed_block.fixed_centers, 1)
     @test Set(point.group_kind for point in nested_payload.points) == expected_nested_groups
     @test length(nested_payload.box_outlines) == expected_nested_box_count
+    @test length(nested_payload.shell_provenance) == length(source.shared_shell_layers)
+    @test nested_payload.shell_provenance[1].source_box == source.shared_shell_layers[1].provenance.source_box
+    @test nested_payload.shell_provenance[1].next_inner_box ==
+        source.shared_shell_layers[1].provenance.next_inner_box
     @test nested_payload.box_outlines[1].group_kind == :parent_box
     @test nested_payload.box_outlines[2].group_kind == :working_box
     @test count(box -> box.group_kind == :child_box, nested_payload.box_outlines) == length(source.geometry.child_boxes)
@@ -10315,10 +10353,31 @@ end
             isnothing(source.geometry.shared_midpoint_box) ?
             0 :
             prod(length.(source.geometry.shared_midpoint_box))
+        first_shell = source.shared_shell_layers[1].provenance
+        first_payload_shell = source_payload.shell_provenance[1]
+        first_shell_source_dims = string(
+            length(first_shell.source_box[1]), "x",
+            length(first_shell.source_box[2]), "x",
+            length(first_shell.source_box[3]),
+        )
+        first_shell_next_inner_dims = string(
+            length(first_shell.next_inner_box[1]), "x",
+            length(first_shell.next_inner_box[2]), "x",
+            length(first_shell.next_inner_box[3]),
+        )
 
         @test all(isnothing(sequence.support_states) for sequence in source.child_sequences)
         @test Set(point.group_kind for point in source_payload.points) == expected_source_groups
         @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
+        @test length(source_payload.shell_provenance) == length(source.shared_shell_layers)
+        @test first_shell.source_box == source.geometry.parent_box
+        @test first_shell.source_point_count ==
+            prod(length.(first_shell.source_box)) - prod(length.(first_shell.next_inner_box))
+        @test first_shell.retained_fixed_count == length(source.sequence.layer_column_ranges[1])
+        @test first_payload_shell.source_box == first_shell.source_box
+        @test first_payload_shell.next_inner_box == first_shell.next_inner_box
+        @test first_payload_shell.source_point_count == first_shell.source_point_count
+        @test first_payload_shell.retained_fixed_count == first_shell.retained_fixed_count
         @test count(point -> point.group_kind == :shared_shell_region, source_payload.points) ==
             expected_shared_shell_points
         @test count(point -> point.group_kind == :left_child_region, source_payload.points) ==
@@ -10355,6 +10414,7 @@ end
         )
         @test debug_slice.selected_count >= fixed_slice.selected_count
         @test source_slice.selected_count > debug_slice.selected_count
+        @test source_slice.shell_provenance == source_payload.shell_provenance
 
         mktemp() do path, io
             close(io)
@@ -10365,6 +10425,11 @@ end
             @test occursin("# point_count = $(length(source_payload.points))", text)
             @test occursin("# nucleus_count = 2", text)
             @test occursin("# columns = x y z role kind group_kind group_id label", text)
+            @test occursin("# shell label=shared_shell_1", text)
+            @test occursin("source_box=$(first_shell_source_dims)", text)
+            @test occursin("source_points=$(first_shell.source_point_count)", text)
+            @test occursin("retained_fixed_count=$(first_shell.retained_fixed_count)", text)
+            @test occursin("next_inner_box=$(first_shell_next_inner_dims)", text)
             @test occursin("# box label=parent_box", text)
             @test occursin("# box label=working_box", text)
             if source.geometry.did_split
@@ -10385,6 +10450,22 @@ end
             end
             @test occursin("\tnucleus\tnucleus\tnucleus\t1\tA", text)
             @test occursin("\tnucleus\tnucleus\tnucleus\t2\tB", text)
+        end
+
+        mktemp() do path, io
+            close(io)
+            slice = write_bond_aligned_diatomic_plane_projection(
+                path,
+                source_payload;
+                plane_axis = :y,
+                plane_value = 0.0,
+                plane_tol = 1.0e-5,
+            )
+            text = read(path, String)
+            @test slice.selected_count == source_slice.selected_count
+            @test occursin("# shell label=shared_shell_1", text)
+            @test occursin("source_box=$(first_shell_source_dims)", text)
+            @test occursin("next_inner_box=$(first_shell_next_inner_dims)", text)
         end
     end
 end
@@ -10451,6 +10532,10 @@ end
         text = read(path, String)
         @test length(written) == length(traces)
         @test occursin("# trace_count = $(length(traces))", text)
+        @test occursin("# shared_shell layer=1 source_box=", text)
+        @test occursin(" source_points=", text)
+        @test occursin(" retained_fixed_count=", text)
+        @test occursin(" next_inner_box=", text)
         @test occursin(
             "# note shared_child has no local side contractions; it remains a direct core block",
             text,

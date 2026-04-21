@@ -50,6 +50,41 @@ struct BondAlignedDiatomicGeometryBox3D
 end
 
 """
+    BondAlignedDiatomicGeometryShellProvenance3D
+
+Explicit provenance for one shared nested shell layer in the bond-aligned
+diatomic geometry/export surface.
+
+`source_box` is the outer box being peeled for that shell, while
+`next_inner_box` is the remaining inner box after peeling it. `source_point_count`
+records the shell annulus point count, not the full outer-box volume.
+"""
+struct BondAlignedDiatomicGeometryShellProvenance3D
+    label::String
+    group_kind::Symbol
+    group_id::Int
+    source_box::NTuple{3,UnitRange{Int}}
+    next_inner_box::NTuple{3,UnitRange{Int}}
+    source_point_count::Int
+    retained_fixed_count::Int
+end
+
+function Base.:(==)(
+    left::BondAlignedDiatomicGeometryShellProvenance3D,
+    right::BondAlignedDiatomicGeometryShellProvenance3D,
+)
+    return (
+        left.label == right.label &&
+        left.group_kind == right.group_kind &&
+        left.group_id == right.group_id &&
+        left.source_box == right.source_box &&
+        left.next_inner_box == right.next_inner_box &&
+        left.source_point_count == right.source_point_count &&
+        left.retained_fixed_count == right.retained_fixed_count
+    )
+end
+
+"""
     BondAlignedDiatomicGeometryPayload3D
 
 Backend-free geometry payload for the landed bond-aligned diatomic line.
@@ -59,6 +94,7 @@ struct BondAlignedDiatomicGeometryPayload3D
     nuclei::Vector{BondAlignedDiatomicGeometryNucleus3D}
     bond_axis::Symbol
     box_outlines::Vector{BondAlignedDiatomicGeometryBox3D}
+    shell_provenance::Vector{BondAlignedDiatomicGeometryShellProvenance3D}
 end
 
 """
@@ -72,6 +108,7 @@ struct BondAlignedDiatomicGeometryPlaneSlice3D
     nuclei::Vector{BondAlignedDiatomicGeometryNucleus3D}
     bond_axis::Symbol
     box_outlines::Vector{BondAlignedDiatomicGeometryBox3D}
+    shell_provenance::Vector{BondAlignedDiatomicGeometryShellProvenance3D}
     plane_axis::Symbol
     plane_value::Float64
     plane_tol::Float64
@@ -90,6 +127,8 @@ function Base.show(io::IO, payload::BondAlignedDiatomicGeometryPayload3D)
         payload.bond_axis,
         ", nboxes=",
         length(payload.box_outlines),
+        ", nshells=",
+        length(payload.shell_provenance),
         ")",
     )
 end
@@ -107,6 +146,8 @@ function Base.show(io::IO, slice::BondAlignedDiatomicGeometryPlaneSlice3D)
         slice.selected_count,
         "/",
         slice.total_count,
+        ", nshells=",
+        length(slice.shell_provenance),
         ")",
     )
 end
@@ -402,6 +443,22 @@ function _bond_aligned_nested_box_outlines(
     return outlines
 end
 
+function _bond_aligned_nested_shell_provenance(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return [
+        BondAlignedDiatomicGeometryShellProvenance3D(
+            "shared_shell_$(layer_index)",
+            :shared_shell_layer,
+            Int(layer_index),
+            layer.provenance.source_box,
+            layer.provenance.next_inner_box,
+            layer.provenance.source_point_count,
+            layer.provenance.retained_fixed_count,
+        ) for (layer_index, layer) in pairs(source.shared_shell_layers)
+    ]
+end
+
 function _bond_aligned_support_states_for_export(
     support_indices::AbstractVector{Int},
     dims::NTuple{3,Int},
@@ -529,6 +586,7 @@ function bond_aligned_diatomic_geometry_payload(
                 1,
             ),
         ],
+        BondAlignedDiatomicGeometryShellProvenance3D[],
     )
 end
 
@@ -552,6 +610,7 @@ function bond_aligned_diatomic_geometry_payload(
                 1,
             ),
         ],
+        BondAlignedDiatomicGeometryShellProvenance3D[],
     )
 end
 
@@ -568,6 +627,7 @@ function bond_aligned_diatomic_geometry_payload(
         _bond_aligned_geometry_nuclei(source.basis.nuclei),
         source.basis.bond_axis,
         _bond_aligned_nested_box_outlines(source),
+        _bond_aligned_nested_shell_provenance(source),
     )
 end
 
@@ -589,6 +649,7 @@ function bond_aligned_diatomic_source_geometry_payload(
         _bond_aligned_geometry_nuclei(source.basis.nuclei),
         source.basis.bond_axis,
         _bond_aligned_nested_box_outlines(source),
+        _bond_aligned_nested_shell_provenance(source),
     )
 end
 
@@ -619,6 +680,7 @@ function bond_aligned_diatomic_geometry_payload(
                 1,
             ),
         ],
+        BondAlignedDiatomicGeometryShellProvenance3D[],
     )
 end
 
@@ -634,6 +696,7 @@ function bond_aligned_diatomic_geometry_payload(
         _bond_aligned_geometry_nuclei(source.basis.nuclei),
         source.basis.bond_axis,
         _bond_aligned_nested_box_outlines(source),
+        _bond_aligned_nested_shell_provenance(source),
     )
 end
 
@@ -669,6 +732,7 @@ function bond_aligned_diatomic_geometry_payload(
         _bond_aligned_geometry_nuclei(source.basis.nuclei),
         source.basis.bond_axis,
         _bond_aligned_nested_box_outlines(source),
+        _bond_aligned_nested_shell_provenance(source),
     )
 end
 
@@ -710,6 +774,7 @@ function bond_aligned_diatomic_plane_slice(
         selected_nuclei,
         payload.bond_axis,
         payload.box_outlines,
+        payload.shell_provenance,
         axis,
         plane_value_float,
         tol_value,

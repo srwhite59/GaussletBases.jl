@@ -88,6 +88,20 @@ function _bond_aligned_box_metadata_line(
     )
 end
 
+function _bond_aligned_shell_provenance_metadata_line(
+    shell::BondAlignedDiatomicGeometryShellProvenance3D,
+)
+    return string(
+        "# shell label=", shell.label,
+        " group_kind=", shell.group_kind,
+        " group_id=", shell.group_id,
+        " source_box=", _nested_box_dimension_string(shell.source_box),
+        " source_points=", shell.source_point_count,
+        " retained_fixed_count=", shell.retained_fixed_count,
+        " next_inner_box=", _nested_box_dimension_string(shell.next_inner_box),
+    )
+end
+
 function _bond_aligned_points3d_lines(
     payload::BondAlignedDiatomicGeometryPayload3D;
     include_box_metadata::Bool = true,
@@ -99,6 +113,10 @@ function _bond_aligned_points3d_lines(
         "# nucleus_count = $(length(payload.nuclei))",
         "# columns = x y z role kind group_kind group_id label",
     ]
+
+    for shell in payload.shell_provenance
+        push!(lines, _bond_aligned_shell_provenance_metadata_line(shell))
+    end
 
     if include_box_metadata
         for box in payload.box_outlines
@@ -153,6 +171,10 @@ function _bond_aligned_plane_projection_lines(
         "# projection_axes = $(axis1) $(axis2)",
         "# columns = $(axis1) $(axis2)",
     ]
+
+    for shell in slice.shell_provenance
+        push!(lines, _bond_aligned_shell_provenance_metadata_line(shell))
+    end
 
     dataset_index = 0
     for key in _bond_aligned_group_keys(slice.points)
