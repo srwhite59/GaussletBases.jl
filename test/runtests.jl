@@ -7349,6 +7349,19 @@ end
     @test path3.diagnostics.root_node.candidate_summaries[1].child_in_plane_aspect_ratios[2] >=
         path3.min_in_plane_aspect_ratio
     @test !path3.diagnostics.root_node.local_resolution_warning
+
+    square_context = GaussletBases._normalized_nested_source_frontend_context(
+        basis3;
+        nside = 5,
+        min_in_plane_aspect_ratio = 0.15,
+    )
+    square_source = GaussletBases._nested_source_frontend_source(square_context)
+    square_fixed = GaussletBases._nested_source_fixed_block(square_source)
+    square_diagnostics = GaussletBases._nested_source_geometry_diagnostics(square_source)
+    @test size(square_fixed.fixed_block.overlap, 1) == path3.diagnostics.fixed_dimension
+    @test square_diagnostics.fixed_dimension == path3.diagnostics.fixed_dimension
+    @test square_diagnostics.root_node.accepted_candidate_index ==
+          path3.diagnostics.root_node.accepted_candidate_index
 end
 
 @testset "Experimental homonuclear square-lattice nested dense export" begin
@@ -7673,11 +7686,18 @@ end
         nside = 5,
     )
     diagnostics_via_source = bond_aligned_diatomic_nested_geometry_diagnostics(source)
+    context = GaussletBases._normalized_nested_source_frontend_context(
+        basis;
+        nside = 5,
+    )
+    source_via_context = GaussletBases._nested_source_frontend_source(context)
+    diagnostics_via_context = GaussletBases._nested_source_geometry_diagnostics(source_via_context)
     fixed_via_basis = bond_aligned_diatomic_nested_fixed_block(
         basis;
         nside = 5,
     )
     fixed_via_source = bond_aligned_diatomic_nested_fixed_block(source)
+    fixed_via_context = GaussletBases._nested_source_fixed_block(source_via_context)
     source_payload = bond_aligned_diatomic_source_geometry_payload(source)
     source_slice = bond_aligned_diatomic_plane_slice(
         source_payload;
@@ -7721,6 +7741,9 @@ end
         diagnostics_via_basis.shared_shell_dimensions
     @test diagnostics_via_source.shared_shell_provenance ==
         diagnostics_via_basis.shared_shell_provenance
+    @test diagnostics_via_context.fixed_dimension == diagnostics_via_source.fixed_dimension
+    @test diagnostics_via_context.child_sequence_dimensions ==
+          diagnostics_via_source.child_sequence_dimensions
     @test diagnostics_via_source.child_sequence_dimensions ==
         diagnostics_via_basis.child_sequence_dimensions
     @test diagnostics_via_source.fixed_dimension == diagnostics_via_basis.fixed_dimension
@@ -7752,6 +7775,15 @@ end
         Inf,
     ) < 1.0e-12
     @test fixed_via_source.fixed_block.support_indices == fixed_via_basis.fixed_block.support_indices
+    @test norm(
+        source_via_context.sequence.coefficient_matrix - source.sequence.coefficient_matrix,
+        Inf,
+    ) < 1.0e-12
+    @test norm(
+        fixed_via_context.fixed_block.coefficient_matrix -
+        fixed_via_source.fixed_block.coefficient_matrix,
+        Inf,
+    ) < 1.0e-12
     @test fixed_via_source.fixed_block.working_box == fixed_via_basis.fixed_block.working_box
 end
 
@@ -7811,6 +7843,19 @@ end
     @test path5.diagnostics.root_node.child_count == 3
     @test path5.diagnostics.root_node.candidate_summaries[2].child_parallel_counts == [6, 3, 6]
     @test path5.diagnostics.root_node.candidate_summaries[2].child_parallel_to_transverse_ratios[2] > 0.35
+
+    chain_context = GaussletBases._normalized_nested_source_frontend_context(
+        basis5;
+        nside = 5,
+        odd_chain_policy = :central_ternary_relaxed,
+    )
+    chain_source = GaussletBases._nested_source_frontend_source(chain_context)
+    chain_fixed = GaussletBases._nested_source_fixed_block(chain_source)
+    chain_diagnostics = GaussletBases._nested_source_geometry_diagnostics(chain_source)
+    @test size(chain_fixed.fixed_block.overlap, 1) == path5.diagnostics.fixed_dimension
+    @test chain_diagnostics.fixed_dimension == path5.diagnostics.fixed_dimension
+    @test chain_diagnostics.root_node.accepted_candidate_index ==
+          path5.diagnostics.root_node.accepted_candidate_index
 end
 
 @testset "Experimental homonuclear chain nested dense export" begin
@@ -8729,6 +8774,36 @@ end
         )
     )
     @test occursin("axis-aligned homonuclear square-lattice nested fixed source", square_text)
+
+    diatomic_nested_context = GaussletBases._normalized_nested_source_frontend_context(
+        diatomic_basis;
+        expansion = expansion,
+        nside = 5,
+    )
+    chain_nested_context = GaussletBases._normalized_nested_source_frontend_context(
+        chain_basis;
+        expansion = expansion,
+        nside = 5,
+        odd_chain_policy = :central_ternary_relaxed,
+    )
+    square_nested_context = GaussletBases._normalized_nested_source_frontend_context(
+        square_basis;
+        expansion = expansion,
+        nside = 5,
+        min_in_plane_aspect_ratio = 0.15,
+    )
+    @test diatomic_nested_context.capabilities.route_label ==
+          "bond-aligned diatomic nested fixed source"
+    @test diatomic_nested_context.capabilities.total_timing_label == "diatomic.fixed_source.total"
+    @test diatomic_nested_context.build_options.nside == 5
+    @test chain_nested_context.capabilities.route_label ==
+          "bond-aligned homonuclear chain nested fixed source"
+    @test chain_nested_context.build_options.odd_chain_policy == :central_ternary_relaxed
+    @test isnothing(chain_nested_context.capabilities.total_timing_label)
+    @test square_nested_context.capabilities.route_label ==
+          "axis-aligned homonuclear square-lattice nested fixed source"
+    @test square_nested_context.build_options.min_in_plane_aspect_ratio == 0.15
+    @test isnothing(square_nested_context.capabilities.total_timing_label)
 
     if !_legacy_basisfile_available()
         @test true

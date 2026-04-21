@@ -35,6 +35,92 @@ struct ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath{B,S,F,O,D}
     min_in_plane_aspect_ratio::Float64
 end
 
+function _normalized_nested_source_frontend_context(
+    basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_in_plane_aspect_ratio::Float64 = 0.15,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+)
+    return _QWRGNestedSourceFrontendContext(
+        basis,
+        expansion,
+        gausslet_backend,
+        (
+            nside = nside,
+            min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
+            term_coefficients = term_coefficients,
+        ),
+        (
+            route_label = "axis-aligned homonuclear square-lattice nested fixed source",
+            total_timing_label = nothing,
+            axis_bundles_timing_label = nothing,
+            source_assembly_timing_label = nothing,
+        ),
+    )
+end
+
+function _normalized_nested_source_frontend_context(
+    basis::BondAlignedHomonuclearChainQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    odd_chain_policy::Symbol = :strict_current,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+)
+    return _QWRGNestedSourceFrontendContext(
+        basis,
+        expansion,
+        gausslet_backend,
+        (
+            nside = nside,
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            odd_chain_policy = odd_chain_policy,
+            term_coefficients = term_coefficients,
+        ),
+        (
+            route_label = "bond-aligned homonuclear chain nested fixed source",
+            total_timing_label = nothing,
+            axis_bundles_timing_label = nothing,
+            source_assembly_timing_label = nothing,
+        ),
+    )
+end
+
+function _nested_source_from_frontend_context(
+    context::_QWRGNestedSourceFrontendContext{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D},
+    bundles::_CartesianNestedAxisBundles3D,
+    term_coefficients::AbstractVector{Float64},
+)
+    options = context.build_options
+    return _nested_axis_aligned_homonuclear_square_lattice_source(
+        context.basis,
+        bundles;
+        nside = options.nside,
+        min_in_plane_aspect_ratio = options.min_in_plane_aspect_ratio,
+        term_coefficients = term_coefficients,
+    )
+end
+
+function _nested_source_from_frontend_context(
+    context::_QWRGNestedSourceFrontendContext{<:BondAlignedHomonuclearChainQWBasis3D},
+    bundles::_CartesianNestedAxisBundles3D,
+    term_coefficients::AbstractVector{Float64},
+)
+    options = context.build_options
+    return _nested_bond_aligned_homonuclear_chain_source(
+        context.basis,
+        bundles;
+        chain_axis = context.basis.chain_axis,
+        nside = options.nside,
+        min_parallel_to_transverse_ratio = options.min_parallel_to_transverse_ratio,
+        odd_chain_policy = options.odd_chain_policy,
+        term_coefficients = term_coefficients,
+    )
+end
+
 function _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -42,23 +128,14 @@ function _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
     nside::Int = 5,
     min_in_plane_aspect_ratio::Float64 = 0.15,
 )
-    _require_reference_only_gausslet_backend(
-        "axis-aligned homonuclear square-lattice nested fixed source",
-        gausslet_backend,
-    )
-    bundles = _qwrg_bond_aligned_axis_bundles(
-        basis,
-        expansion;
+    context = _normalized_nested_source_frontend_context(
+        basis;
+        expansion = expansion,
         gausslet_backend = gausslet_backend,
-    )
-    term_coefficients = _resolved_nested_term_coefficients(expansion, nothing)
-    return _nested_axis_aligned_homonuclear_square_lattice_source(
-        basis,
-        bundles;
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
-        term_coefficients = term_coefficients,
     )
+    return _nested_source_frontend_source(context)
 end
 
 function _axis_aligned_homonuclear_square_lattice_nested_fixed_block(
@@ -68,17 +145,14 @@ function _axis_aligned_homonuclear_square_lattice_nested_fixed_block(
     nside::Int = 5,
     min_in_plane_aspect_ratio::Float64 = 0.15,
 )
-    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
     )
-    return (
-        source = source,
-        fixed_block = _nested_fixed_block(source),
-    )
+    return _nested_source_frontend_fixed_block(context)
 end
 
 function _square_lattice_nested_geometry_report_lines(
@@ -164,6 +238,12 @@ function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
     )
 end
 
+function _nested_source_geometry_diagnostics(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    return _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(source)
+end
+
 function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -171,14 +251,14 @@ function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
     nside::Int = 5,
     min_in_plane_aspect_ratio::Float64 = 0.15,
 )
-    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
     )
-    return _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(source)
+    return _nested_source_frontend_geometry_diagnostics(context)
 end
 
 function write_axis_aligned_homonuclear_square_lattice_nested_geometry_report(
@@ -217,25 +297,15 @@ function _bond_aligned_homonuclear_chain_nested_fixed_source(
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     odd_chain_policy::Symbol = :strict_current,
 )
-    _require_reference_only_gausslet_backend(
-        "bond-aligned homonuclear chain nested fixed source",
-        gausslet_backend,
-    )
-    bundles = _qwrg_bond_aligned_axis_bundles(
-        basis,
-        expansion;
+    context = _normalized_nested_source_frontend_context(
+        basis;
+        expansion = expansion,
         gausslet_backend = gausslet_backend,
-    )
-    term_coefficients = _resolved_nested_term_coefficients(expansion, nothing)
-    return _nested_bond_aligned_homonuclear_chain_source(
-        basis,
-        bundles;
-        chain_axis = basis.chain_axis,
         nside = nside,
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
-        term_coefficients = term_coefficients,
     )
+    return _nested_source_frontend_source(context)
 end
 
 function _bond_aligned_homonuclear_chain_nested_fixed_block(
@@ -246,7 +316,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_block(
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     odd_chain_policy::Symbol = :strict_current,
 )
-    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -254,10 +324,7 @@ function _bond_aligned_homonuclear_chain_nested_fixed_block(
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
     )
-    return (
-        source = source,
-        fixed_block = _nested_fixed_block(source),
-    )
+    return _nested_source_frontend_fixed_block(context)
 end
 
 function _chain_nested_geometry_report_lines(
@@ -343,6 +410,12 @@ function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     )
 end
 
+function _nested_source_geometry_diagnostics(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    return _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(source)
+end
+
 function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     basis::BondAlignedHomonuclearChainQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -351,7 +424,7 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     odd_chain_policy::Symbol = :strict_current,
 )
-    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -359,7 +432,7 @@ function bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
     )
-    return _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(source)
+    return _nested_source_frontend_geometry_diagnostics(context)
 end
 
 function write_bond_aligned_homonuclear_chain_nested_geometry_report(
@@ -410,6 +483,74 @@ function Base.show(io::IO, path::ExperimentalAxisAlignedHomonuclearSquareLattice
     )
 end
 
+function _experimental_nested_source_backed_path(
+    context::_QWRGNestedSourceFrontendContext;
+    nuclear_charges::AbstractVector{<:Real},
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :ggt_nearest,
+    timing::Bool = false,
+)
+    source_fixed = _nested_source_frontend_fixed_block(context)
+    source = source_fixed.source
+    fixed_block = source_fixed.fixed_block
+    diagnostics = _nested_source_geometry_diagnostics(source)
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        expansion = context.expansion,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = context.gausslet_backend,
+        timing = timing,
+    )
+    return _experimental_nested_source_backed_path(
+        context,
+        source,
+        fixed_block,
+        operators,
+        diagnostics,
+        nuclear_charges,
+    )
+end
+
+function _experimental_nested_source_backed_path(
+    context::_QWRGNestedSourceFrontendContext{<:BondAlignedHomonuclearChainQWBasis3D},
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+    fixed_block::_NestedFixedBlock3D,
+    operators,
+    diagnostics,
+    nuclear_charges::AbstractVector{<:Real},
+)
+    return ExperimentalBondAlignedHomonuclearChainNestedQWPath(
+        context.basis,
+        source,
+        fixed_block,
+        operators,
+        diagnostics,
+        Float64[Float64(value) for value in nuclear_charges],
+        context.build_options.odd_chain_policy,
+    )
+end
+
+function _experimental_nested_source_backed_path(
+    context::_QWRGNestedSourceFrontendContext{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D},
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+    fixed_block::_NestedFixedBlock3D,
+    operators,
+    diagnostics,
+    nuclear_charges::AbstractVector{<:Real},
+)
+    return ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath(
+        context.basis,
+        source,
+        fixed_block,
+        operators,
+        diagnostics,
+        Float64[Float64(value) for value in nuclear_charges],
+        context.build_options.min_in_plane_aspect_ratio,
+    )
+end
+
 """
     experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         basis::BondAlignedHomonuclearChainQWBasis3D;
@@ -443,7 +584,7 @@ function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
     odd_chain_policy::Symbol = :central_ternary_relaxed,
     timing::Bool = false,
 )
-    source = _bond_aligned_homonuclear_chain_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -451,25 +592,12 @@ function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
         odd_chain_policy = odd_chain_policy,
     )
-    diagnostics = _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(source)
-    fixed_block = _nested_fixed_block(source)
-    operators = ordinary_cartesian_qiu_white_operators(
-        fixed_block;
+    return _experimental_nested_source_backed_path(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
         interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
         timing = timing,
-    )
-    return ExperimentalBondAlignedHomonuclearChainNestedQWPath(
-        basis,
-        source,
-        fixed_block,
-        operators,
-        diagnostics,
-        Float64[Float64(value) for value in nuclear_charges],
-        odd_chain_policy,
     )
 end
 
@@ -503,31 +631,18 @@ function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operator
     min_in_plane_aspect_ratio::Float64 = 0.15,
     timing::Bool = false,
 )
-    source = _axis_aligned_homonuclear_square_lattice_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
         nside = nside,
         min_in_plane_aspect_ratio = min_in_plane_aspect_ratio,
     )
-    diagnostics = _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(source)
-    fixed_block = _nested_fixed_block(source)
-    operators = ordinary_cartesian_qiu_white_operators(
-        fixed_block;
+    return _experimental_nested_source_backed_path(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
         interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
         timing = timing,
-    )
-    return ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath(
-        basis,
-        source,
-        fixed_block,
-        operators,
-        diagnostics,
-        Float64[Float64(value) for value in nuclear_charges],
-        min_in_plane_aspect_ratio,
     )
 end

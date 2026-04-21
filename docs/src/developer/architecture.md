@@ -60,6 +60,15 @@ That seam now covers:
 - atomic supplement direct-product routes
 - atomic supplement nested fixed-block routes
 
+Above that operator-side seam, the source-backed nested front-door layer now
+normalizes through one internal nested-source context before route-specific
+geometry source assembly and path packaging. That seam now covers:
+
+- public bond-aligned diatomic nested source / fixed-block / diagnostics front
+  doors
+- experimental bond-aligned homonuclear chain nested wrappers
+- experimental axis-aligned homonuclear square-lattice nested wrappers
+
 Experimental supplement-bearing routes still keep their separate orchestration
 paths on purpose.
 

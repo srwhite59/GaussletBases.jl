@@ -83,6 +83,144 @@ function _resolved_nested_term_coefficients(
     end
 end
 
+struct _QWRGNestedSourceFrontendContext{B,O,C}
+    basis::B
+    expansion::CoulombGaussianExpansion
+    gausslet_backend::Symbol
+    build_options::O
+    capabilities::C
+end
+
+_qwrg_optional_timeg(label::Nothing, builder::F) where {F<:Function} = builder()
+
+function _qwrg_optional_timeg(label::AbstractString, builder::F) where {F<:Function}
+    return @timeg label begin
+        builder()
+    end
+end
+
+_qwrg_optional_timeg(builder::F, label::Nothing) where {F<:Function} = builder()
+
+function _qwrg_optional_timeg(builder::F, label::AbstractString) where {F<:Function}
+    return @timeg label begin
+        builder()
+    end
+end
+
+function _normalized_nested_source_frontend_context(
+    basis::BondAlignedDiatomicQWBasis3D;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    nside::Int = 5,
+    min_unsplit_parallel_to_transverse_ratio_for_split::Float64 = 3.0,
+    min_parallel_to_transverse_ratio::Float64 = 0.4,
+    reference_fudge_factor::Float64 = 1.2,
+    core_near_nucleus_protect_rows::Union{Symbol,Integer} = :auto,
+    shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+)
+    midpoint =
+        sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
+        length(basis.nuclei)
+    return _QWRGNestedSourceFrontendContext(
+        basis,
+        expansion,
+        gausslet_backend,
+        (
+            nside = nside,
+            midpoint = midpoint,
+            min_unsplit_parallel_to_transverse_ratio_for_split =
+                min_unsplit_parallel_to_transverse_ratio_for_split,
+            min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+            reference_fudge_factor = reference_fudge_factor,
+            core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
+            use_midpoint_slab = _qwrg_bond_aligned_uses_midpoint_slab(basis),
+            preferred_split_side = _qwrg_bond_aligned_preferred_split_side(basis),
+            shared_shell_retain_xy = shared_shell_retain_xy,
+            shared_shell_retain_xz = shared_shell_retain_xz,
+            shared_shell_retain_yz = shared_shell_retain_yz,
+            term_coefficients = term_coefficients,
+        ),
+        (
+            route_label = "bond-aligned diatomic nested fixed source",
+            total_timing_label = "diatomic.fixed_source.total",
+            axis_bundles_timing_label = "diatomic.fixed_source.axis_bundles",
+            source_assembly_timing_label = "diatomic.fixed_source.source_assembly",
+        ),
+    )
+end
+
+function _nested_source_from_frontend_context(
+    context::_QWRGNestedSourceFrontendContext{<:BondAlignedDiatomicQWBasis3D},
+    bundles::_CartesianNestedAxisBundles3D,
+    term_coefficients::AbstractVector{Float64},
+)
+    basis = context.basis
+    options = context.build_options
+    return _nested_bond_aligned_diatomic_source(
+        basis,
+        bundles;
+        bond_axis = basis.bond_axis,
+        midpoint = options.midpoint,
+        nside = options.nside,
+        min_unsplit_parallel_to_transverse_ratio_for_split =
+            options.min_unsplit_parallel_to_transverse_ratio_for_split,
+        min_parallel_to_transverse_ratio = options.min_parallel_to_transverse_ratio,
+        reference_fudge_factor = options.reference_fudge_factor,
+        core_near_nucleus_protect_rows = options.core_near_nucleus_protect_rows,
+        use_midpoint_slab = options.use_midpoint_slab,
+        prefer_midpoint_tie_side = options.preferred_split_side,
+        shared_shell_retain_xy = options.shared_shell_retain_xy,
+        shared_shell_retain_xz = options.shared_shell_retain_xz,
+        shared_shell_retain_yz = options.shared_shell_retain_yz,
+        term_coefficients = term_coefficients,
+    )
+end
+
+function _nested_source_frontend_source(context::_QWRGNestedSourceFrontendContext)
+    return _qwrg_optional_timeg(context.capabilities.total_timing_label) do
+        _require_reference_only_gausslet_backend(
+            context.capabilities.route_label,
+            context.gausslet_backend,
+        )
+        bundles = _qwrg_optional_timeg(context.capabilities.axis_bundles_timing_label) do
+            _qwrg_bond_aligned_axis_bundles(
+                context.basis,
+                context.expansion;
+                gausslet_backend = context.gausslet_backend,
+            )
+        end
+        resolved_term_coefficients = _resolved_nested_term_coefficients(
+            context.expansion,
+            context.build_options.term_coefficients,
+        )
+        _qwrg_optional_timeg(context.capabilities.source_assembly_timing_label) do
+            _nested_source_from_frontend_context(
+                context,
+                bundles,
+                resolved_term_coefficients,
+            )
+        end
+    end
+end
+
+function _nested_source_fixed_block(
+    source,
+)
+    return (
+        source = source,
+        fixed_block = _nested_fixed_block(source),
+    )
+end
+
+function _nested_source_frontend_fixed_block(
+    context::_QWRGNestedSourceFrontendContext,
+)
+    return _nested_source_fixed_block(_nested_source_frontend_source(context))
+end
+
 function bond_aligned_diatomic_nested_fixed_source(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -97,55 +235,28 @@ function bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    return @timeg "diatomic.fixed_source.total" begin
-        _require_reference_only_gausslet_backend(
-            "bond-aligned diatomic nested fixed source",
-            gausslet_backend,
-        )
-        resolved_term_coefficients =
-            _resolved_nested_term_coefficients(expansion, term_coefficients)
-        midpoint =
-            sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
-            length(basis.nuclei)
-        bundles = @timeg "diatomic.fixed_source.axis_bundles" begin
-            _qwrg_bond_aligned_axis_bundles(
-                basis,
-                expansion;
-                gausslet_backend = gausslet_backend,
-            )
-        end
-        use_midpoint_slab = _qwrg_bond_aligned_uses_midpoint_slab(basis)
-        preferred_split_side = _qwrg_bond_aligned_preferred_split_side(basis)
-        @timeg "diatomic.fixed_source.source_assembly" begin
-            _nested_bond_aligned_diatomic_source(
-                basis,
-                bundles;
-                bond_axis = basis.bond_axis,
-                midpoint = midpoint,
-                nside = nside,
-                min_unsplit_parallel_to_transverse_ratio_for_split =
-                    min_unsplit_parallel_to_transverse_ratio_for_split,
-                min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
-                reference_fudge_factor = reference_fudge_factor,
-                core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
-                use_midpoint_slab = use_midpoint_slab,
-                prefer_midpoint_tie_side = preferred_split_side,
-                shared_shell_retain_xy = shared_shell_retain_xy,
-                shared_shell_retain_xz = shared_shell_retain_xz,
-                shared_shell_retain_yz = shared_shell_retain_yz,
-                term_coefficients = resolved_term_coefficients,
-            )
-        end
-    end
+    context = _normalized_nested_source_frontend_context(
+        basis;
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        nside = nside,
+        min_unsplit_parallel_to_transverse_ratio_for_split =
+            min_unsplit_parallel_to_transverse_ratio_for_split,
+        min_parallel_to_transverse_ratio = min_parallel_to_transverse_ratio,
+        reference_fudge_factor = reference_fudge_factor,
+        core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
+        shared_shell_retain_xy = shared_shell_retain_xy,
+        shared_shell_retain_xz = shared_shell_retain_xz,
+        shared_shell_retain_yz = shared_shell_retain_yz,
+        term_coefficients = term_coefficients,
+    )
+    return _nested_source_frontend_source(context)
 end
 
 function bond_aligned_diatomic_nested_fixed_block(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
-    return (
-        source = source,
-        fixed_block = _nested_fixed_block(source),
-    )
+    return _nested_source_fixed_block(source)
 end
 
 function bond_aligned_diatomic_nested_fixed_block(
@@ -162,7 +273,7 @@ function bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    source = bond_aligned_diatomic_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -177,7 +288,7 @@ function bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_yz = shared_shell_retain_yz,
         term_coefficients = term_coefficients,
     )
-    return bond_aligned_diatomic_nested_fixed_block(source)
+    return _nested_source_frontend_fixed_block(context)
 end
 
 function _bond_aligned_diatomic_nested_geometry_diagnostics(
@@ -209,10 +320,22 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
     end
 end
 
-function bond_aligned_diatomic_nested_geometry_diagnostics(
+function _nested_source_geometry_diagnostics(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
     return _bond_aligned_diatomic_nested_geometry_diagnostics(source)
+end
+
+function _nested_source_frontend_geometry_diagnostics(
+    context::_QWRGNestedSourceFrontendContext,
+)
+    return _nested_source_geometry_diagnostics(_nested_source_frontend_source(context))
+end
+
+function bond_aligned_diatomic_nested_geometry_diagnostics(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _nested_source_geometry_diagnostics(source)
 end
 
 function bond_aligned_diatomic_nested_geometry_diagnostics(
@@ -228,7 +351,7 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
 )
-    source = bond_aligned_diatomic_nested_fixed_source(
+    context = _normalized_nested_source_frontend_context(
         basis;
         expansion = expansion,
         gausslet_backend = gausslet_backend,
@@ -242,5 +365,5 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
     )
-    return _bond_aligned_diatomic_nested_geometry_diagnostics(source)
+    return _nested_source_frontend_geometry_diagnostics(context)
 end
