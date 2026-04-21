@@ -7347,6 +7347,12 @@ end
         @test length(basis.nuclei) == n * n
         @test Int[shell.retained_fixed_count for shell in diagnostics.shared_shell_provenance] ==
               diagnostics.shared_shell_dimensions
+        common_contract = GaussletBases._nested_source_common_contract(path.source)
+        @test common_contract.fixed_dimension == diagnostics.fixed_dimension
+        @test common_contract.contract_audit == diagnostics.contract_audit
+        @test common_contract.shared_shell_dimensions == diagnostics.shared_shell_dimensions
+        @test common_contract.shared_shell_provenance == diagnostics.shared_shell_provenance
+        @test common_contract.leaf_count == diagnostics.leaf_count
     end
 
     @test path2.diagnostics.root_node.did_split
@@ -7378,10 +7384,13 @@ end
     square_source = GaussletBases._nested_source_frontend_source(square_context)
     square_fixed = GaussletBases._nested_source_fixed_block(square_source)
     square_diagnostics = GaussletBases._nested_source_geometry_diagnostics(square_source)
+    square_common_contract = GaussletBases._nested_source_common_contract(square_source)
     @test size(square_fixed.fixed_block.overlap, 1) == path3.diagnostics.fixed_dimension
     @test square_diagnostics.fixed_dimension == path3.diagnostics.fixed_dimension
     @test square_diagnostics.root_node.accepted_candidate_index ==
           path3.diagnostics.root_node.accepted_candidate_index
+    @test square_common_contract.fixed_dimension == path3.diagnostics.fixed_dimension
+    @test square_common_contract.leaf_count == path3.diagnostics.leaf_count
 end
 
 @testset "Experimental homonuclear square-lattice nested dense export" begin
@@ -7730,6 +7739,8 @@ end
         nside = 5,
     )
     source_via_context = GaussletBases._nested_source_frontend_source(context)
+    common_contract = GaussletBases._nested_source_common_contract(source)
+    common_contract_via_context = GaussletBases._nested_source_common_contract(source_via_context)
     diagnostics_via_context = GaussletBases._nested_source_geometry_diagnostics(source_via_context)
     fixed_via_basis = bond_aligned_diatomic_nested_fixed_block(
         basis;
@@ -7780,6 +7791,18 @@ end
         diagnostics_via_basis.shared_shell_dimensions
     @test diagnostics_via_source.shared_shell_provenance ==
         diagnostics_via_basis.shared_shell_provenance
+    @test common_contract.fixed_dimension == diagnostics_via_source.fixed_dimension
+    @test common_contract.contract_audit == diagnostics_via_source.contract_audit
+    @test common_contract.shared_shell_dimensions == diagnostics_via_source.shared_shell_dimensions
+    @test common_contract.shared_shell_provenance == diagnostics_via_source.shared_shell_provenance
+    @test common_contract.leaf_count == diagnostics_via_source.child_sequence_count
+    @test common_contract_via_context.fixed_dimension == common_contract.fixed_dimension
+    @test common_contract_via_context.contract_audit == common_contract.contract_audit
+    @test common_contract_via_context.shared_shell_dimensions ==
+          common_contract.shared_shell_dimensions
+    @test common_contract_via_context.shared_shell_provenance ==
+          common_contract.shared_shell_provenance
+    @test common_contract_via_context.leaf_count == common_contract.leaf_count
     @test diagnostics_via_context.fixed_dimension == diagnostics_via_source.fixed_dimension
     @test diagnostics_via_context.child_sequence_dimensions ==
           diagnostics_via_source.child_sequence_dimensions
@@ -7866,6 +7889,12 @@ end
         @test length(basis.nuclei) == natoms
         @test Int[shell.retained_fixed_count for shell in diagnostics.shared_shell_provenance] ==
               diagnostics.shared_shell_dimensions
+        common_contract = GaussletBases._nested_source_common_contract(path.source)
+        @test common_contract.fixed_dimension == diagnostics.fixed_dimension
+        @test common_contract.contract_audit == diagnostics.contract_audit
+        @test common_contract.shared_shell_dimensions == diagnostics.shared_shell_dimensions
+        @test common_contract.shared_shell_provenance == diagnostics.shared_shell_provenance
+        @test common_contract.leaf_count == diagnostics.leaf_count
     end
 
     @test path3.diagnostics.root_node.did_split
@@ -7893,10 +7922,13 @@ end
     chain_source = GaussletBases._nested_source_frontend_source(chain_context)
     chain_fixed = GaussletBases._nested_source_fixed_block(chain_source)
     chain_diagnostics = GaussletBases._nested_source_geometry_diagnostics(chain_source)
+    chain_common_contract = GaussletBases._nested_source_common_contract(chain_source)
     @test size(chain_fixed.fixed_block.overlap, 1) == path5.diagnostics.fixed_dimension
     @test chain_diagnostics.fixed_dimension == path5.diagnostics.fixed_dimension
     @test chain_diagnostics.root_node.accepted_candidate_index ==
           path5.diagnostics.root_node.accepted_candidate_index
+    @test chain_common_contract.fixed_dimension == path5.diagnostics.fixed_dimension
+    @test chain_common_contract.leaf_count == path5.diagnostics.leaf_count
 end
 
 @testset "Experimental homonuclear chain nested dense export" begin

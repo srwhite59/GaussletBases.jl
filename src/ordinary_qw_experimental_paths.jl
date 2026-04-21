@@ -228,24 +228,23 @@ function _axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics(
     source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
 )
     node_summaries = _nested_square_lattice_collect_node_summaries(source.root_geometry)
-    shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
-    shared_shell_provenance = _nested_geometry_shared_shell_provenance(node_summaries)
+    common_contract = _nested_source_common_contract(source)
     return (
         source = source,
         root_node = _nested_square_lattice_node_summary(source.root_geometry),
         node_summaries = node_summaries,
         nside = source.shell_retention_contract.nside,
         retention_contract = source.shell_retention_contract,
-        shared_shell_dimensions = shared_shell_dimensions,
-        shared_shell_provenance = shared_shell_provenance,
+        shared_shell_dimensions = common_contract.shared_shell_dimensions,
+        shared_shell_provenance = common_contract.shared_shell_provenance,
         shared_shells_match_contract =
             all(
                 shell -> shell.retained_fixed_count == source.shell_retention_contract.shell_increment,
-                shared_shell_provenance,
+                common_contract.shared_shell_provenance,
             ),
-        contract_audit = _nested_source_contract_audit(source),
-        leaf_count = length(source.leaf_sequences),
-        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+        contract_audit = common_contract.contract_audit,
+        leaf_count = common_contract.leaf_count,
+        fixed_dimension = common_contract.fixed_dimension,
     )
 end
 
@@ -308,6 +307,50 @@ function _nested_geometry_shared_shell_provenance(
         append!(provenance, node.shared_shell_provenance)
     end
     return provenance
+end
+
+function _nested_source_leaf_count(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    return length(source.leaf_sequences)
+end
+
+function _nested_source_shared_shell_dimensions(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    return _nested_geometry_shared_shell_dimensions(
+        _nested_square_lattice_collect_node_summaries(source.root_geometry),
+    )
+end
+
+function _nested_source_shared_shell_provenance(
+    source::_CartesianNestedAxisAlignedHomonuclearSquareLatticeSource3D,
+)
+    return _nested_geometry_shared_shell_provenance(
+        _nested_square_lattice_collect_node_summaries(source.root_geometry),
+    )
+end
+
+function _nested_source_leaf_count(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    return length(source.leaf_sequences)
+end
+
+function _nested_source_shared_shell_dimensions(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    return _nested_geometry_shared_shell_dimensions(
+        _nested_chain_collect_node_summaries(source.root_geometry),
+    )
+end
+
+function _nested_source_shared_shell_provenance(
+    source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
+)
+    return _nested_geometry_shared_shell_provenance(
+        _nested_chain_collect_node_summaries(source.root_geometry),
+    )
 end
 
 function _bond_aligned_homonuclear_chain_nested_fixed_source(
@@ -421,24 +464,23 @@ function _bond_aligned_homonuclear_chain_nested_geometry_diagnostics(
     source::_CartesianNestedBondAlignedHomonuclearChainSource3D,
 )
     node_summaries = _nested_chain_collect_node_summaries(source.root_geometry)
-    shared_shell_dimensions = _nested_geometry_shared_shell_dimensions(node_summaries)
-    shared_shell_provenance = _nested_geometry_shared_shell_provenance(node_summaries)
+    common_contract = _nested_source_common_contract(source)
     return (
         source = source,
         root_node = _nested_chain_node_summary(source.root_geometry),
         node_summaries = node_summaries,
         nside = source.shell_retention_contract.nside,
         retention_contract = source.shell_retention_contract,
-        shared_shell_dimensions = shared_shell_dimensions,
-        shared_shell_provenance = shared_shell_provenance,
+        shared_shell_dimensions = common_contract.shared_shell_dimensions,
+        shared_shell_provenance = common_contract.shared_shell_provenance,
         shared_shells_match_contract =
             all(
                 shell -> shell.retained_fixed_count == source.shell_retention_contract.shell_increment,
-                shared_shell_provenance,
+                common_contract.shared_shell_provenance,
             ),
-        contract_audit = _nested_source_contract_audit(source),
-        leaf_count = length(source.leaf_sequences),
-        fixed_dimension = size(source.sequence.coefficient_matrix, 2),
+        contract_audit = common_contract.contract_audit,
+        leaf_count = common_contract.leaf_count,
+        fixed_dimension = common_contract.fixed_dimension,
     )
 end
 
@@ -525,7 +567,33 @@ function _experimental_nested_source_backed_path(
     source_fixed = _nested_source_frontend_fixed_block(context)
     source = source_fixed.source
     fixed_block = source_fixed.fixed_block
+    common_contract = _nested_source_common_contract(source)
+    size(fixed_block.overlap, 1) == common_contract.fixed_dimension || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper received fixed block inconsistent with the common nested-source contract",
+        ),
+    )
     diagnostics = _nested_source_geometry_diagnostics(source)
+    diagnostics.fixed_dimension == common_contract.fixed_dimension || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper diagnostics drifted from the common nested-source contract on fixed_dimension",
+        ),
+    )
+    diagnostics.shared_shell_dimensions == common_contract.shared_shell_dimensions || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper diagnostics drifted from the common nested-source contract on shared_shell_dimensions",
+        ),
+    )
+    diagnostics.shared_shell_provenance == common_contract.shared_shell_provenance || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper diagnostics drifted from the common nested-source contract on shared_shell_provenance",
+        ),
+    )
+    diagnostics.leaf_count == common_contract.leaf_count || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper diagnostics drifted from the common nested-source contract on leaf_count",
+        ),
+    )
     operators = ordinary_cartesian_qiu_white_operators(
         fixed_block;
         nuclear_charges = nuclear_charges,

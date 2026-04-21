@@ -221,6 +221,52 @@ function _nested_source_frontend_fixed_block(
     return _nested_source_fixed_block(_nested_source_frontend_source(context))
 end
 
+struct _CartesianNestedSourceGlassBoxContract{A}
+    fixed_dimension::Int
+    contract_audit::A
+    shared_shell_dimensions::Vector{Int}
+    shared_shell_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
+    leaf_count::Int
+end
+
+function _nested_source_leaf_count end
+
+function _nested_source_shared_shell_dimensions end
+
+function _nested_source_shared_shell_provenance end
+
+_nested_source_fixed_dimension(source) = size(source.sequence.coefficient_matrix, 2)
+
+function _nested_source_common_contract(source)
+    return _CartesianNestedSourceGlassBoxContract(
+        _nested_source_fixed_dimension(source),
+        _nested_source_contract_audit(source),
+        _nested_source_shared_shell_dimensions(source),
+        _nested_source_shared_shell_provenance(source),
+        _nested_source_leaf_count(source),
+    )
+end
+
+function _nested_source_leaf_count(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return length(source.child_sequences)
+end
+
+function _nested_source_shared_shell_dimensions(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
+end
+
+function _nested_source_shared_shell_provenance(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _CartesianNestedShellLayerProvenance3D[
+        shell.provenance for shell in source.shared_shell_layers
+    ]
+end
+
 function bond_aligned_diatomic_nested_fixed_source(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -295,9 +341,7 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
     return @timeg "diatomic.geometry_diagnostics" begin
-        contract_audit = _nested_source_contract_audit(source)
-        shared_shell_dimensions = Int[size(shell.coefficient_matrix, 2) for shell in source.shared_shell_layers]
-        shared_shell_provenance = [shell.provenance for shell in source.shared_shell_layers]
+        common_contract = _nested_source_common_contract(source)
         child_sequence_dimensions = Int[
             size(sequence.coefficient_matrix, 2) for sequence in source.child_sequences
         ]
@@ -308,14 +352,17 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
             child_shell_retention_contract = source.child_shell_retention_contract,
             shared_shell_retention_contract = source.shared_shell_retention_contract,
             shared_shell_count = length(source.shared_shell_layers),
-            shared_shell_dimensions = shared_shell_dimensions,
-            shared_shell_provenance = shared_shell_provenance,
+            shared_shell_dimensions = common_contract.shared_shell_dimensions,
+            shared_shell_provenance = common_contract.shared_shell_provenance,
             shared_shells_match_contract =
-                all(==(source.shared_shell_retention_contract.shell_increment), shared_shell_dimensions),
-            child_sequence_count = length(source.child_sequences),
+                all(
+                    ==(source.shared_shell_retention_contract.shell_increment),
+                    common_contract.shared_shell_dimensions,
+                ),
+            child_sequence_count = common_contract.leaf_count,
             child_sequence_dimensions = child_sequence_dimensions,
-            fixed_dimension = size(source.sequence.coefficient_matrix, 2),
-            contract_audit = contract_audit,
+            fixed_dimension = common_contract.fixed_dimension,
+            contract_audit = common_contract.contract_audit,
         )
     end
 end

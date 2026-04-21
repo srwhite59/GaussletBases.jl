@@ -72,7 +72,9 @@ geometry source assembly and path packaging. That seam now covers:
 Across those source-backed nested lines, the common glass-box subset is now:
 `fixed_dimension`, `contract_audit`, `shared_shell_dimensions`,
 `shared_shell_provenance`, and `leaf_count`, while family-specific topology and
-split-policy diagnostics remain separate.
+split-policy diagnostics remain separate. The normalized front-door layer now
+routes that shared subset through one small internal nested-source contract
+helper instead of rebuilding it ad hoc per family.
 
 Experimental supplement-bearing routes still keep their separate orchestration
 paths on purpose.
