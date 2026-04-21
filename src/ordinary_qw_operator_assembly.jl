@@ -336,6 +336,93 @@ _resolved_nuclear_term_storage(
     fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
 ) = _resolved_nuclear_term_storage(storage, fixed_block.parent_basis)
 
+struct _QWRGAtomicBuildContext{PB,C,GD,CM}
+    carried_space_kind::Symbol
+    parent_basis::PB
+    carried::C
+    gaussian_data::GD
+    contraction::Union{Nothing,_CartesianCoefficientMap}
+    capabilities::CM
+end
+
+function _normalized_atomic_build_context(
+    basis::MappedUniformBasis,
+    gaussian_data::LegacyAtomicGaussianSupplement,
+)
+    return _QWRGAtomicBuildContext(
+        :direct_product,
+        basis,
+        basis,
+        gaussian_data,
+        nothing,
+        (
+            route_label = "ordinary_cartesian_qiu_white_operators",
+            allowed_interaction_treatments = (:ggt_nearest, :mwg),
+            timing_label = "qwrg.atomic_shell.total",
+            bundle_label = "qwrg.atomic_shell.shared_bundle",
+            raw_blocks_label = "qwrg.atomic_shell.raw_blocks",
+            residual_space_label = "qwrg.atomic_shell.residual_space",
+            one_body_label = "qwrg.atomic_shell.one_body",
+            centers_label = "qwrg.atomic_shell.centers",
+            interaction_label = "qwrg.atomic_shell.interaction",
+            carried_count_label = "gausslet_count",
+            residual_center_label = "Qiu-White residual-center extraction",
+        ),
+    )
+end
+
+function _normalized_atomic_build_context(
+    fixed_block::_NestedFixedBlock3D,
+    gaussian_data::LegacyAtomicGaussianSupplement,
+)
+    return _QWRGAtomicBuildContext(
+        :nested_fixed_block,
+        fixed_block.parent_basis,
+        fixed_block,
+        gaussian_data,
+        fixed_block.coefficient_matrix,
+        (
+            route_label = "nested ordinary_cartesian_qiu_white_operators",
+            allowed_interaction_treatments = (:ggt_nearest,),
+            timing_label = "qwrg.nested_atomic_shell.total",
+            bundle_label = "qwrg.nested_atomic_shell.parent_bundle",
+            raw_blocks_label = "qwrg.nested_atomic_shell.raw_blocks",
+            residual_space_label = "qwrg.nested_atomic_shell.residual_space",
+            one_body_label = "qwrg.nested_atomic_shell.one_body",
+            centers_label = "qwrg.nested_atomic_shell.centers",
+            interaction_label = "qwrg.nested_atomic_shell.interaction",
+            carried_count_label = "fixed_count",
+            residual_center_label = "nested QW-PGDG residual-center extraction",
+        ),
+    )
+end
+
+function _validate_atomic_backend(
+    context::_QWRGAtomicBuildContext,
+    gausslet_backend::Symbol,
+)
+    return _require_reference_only_gausslet_backend(
+        context.capabilities.route_label,
+        gausslet_backend,
+    )
+end
+
+function _validate_atomic_interaction_treatment(
+    context::_QWRGAtomicBuildContext,
+    interaction_treatment::Symbol,
+)
+    interaction_treatment in context.capabilities.allowed_interaction_treatments &&
+        return interaction_treatment
+    if context.carried_space_kind == :direct_product
+        throw(ArgumentError("Qiu-White interaction_treatment must be :ggt_nearest or :mwg"))
+    end
+    throw(
+        ArgumentError(
+            "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
+        ),
+    )
+end
+
 function _same_nuclear_charge_configuration(
     left::Union{Nothing,AbstractVector{<:Real}},
     right::Union{Nothing,AbstractVector{<:Real}};
@@ -1899,6 +1986,368 @@ function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
     )
 end
 
+function _qwrg_atomic_carried_data(
+    context::_QWRGAtomicBuildContext,
+    gausslet_bundle,
+)
+    if context.carried_space_kind == :direct_product
+        gg_blocks = _qwrg_gausslet_1d_blocks(gausslet_bundle)
+        orbitals = _mapped_cartesian_orbitals(gausslet_bundle.pgdg_intermediate.centers)
+        count = length(orbitals)
+        overlap = zeros(Float64, count, count)
+        _qwrg_fill_product_matrix!(
+            overlap,
+            gg_blocks.overlap_gg,
+            gg_blocks.overlap_gg,
+            gg_blocks.overlap_gg,
+        )
+        return (
+            count = count,
+            orbitals = orbitals,
+            overlap = overlap,
+            gg_blocks = gg_blocks,
+        )
+    end
+
+    fixed_block = context.carried
+    return (
+        count = size(fixed_block.overlap, 1),
+        fixed_centers = fixed_block.fixed_centers,
+        overlap = fixed_block.overlap,
+    )
+end
+
+function _qwrg_atomic_residual_space(
+    context::_QWRGAtomicBuildContext,
+    carried_data,
+    blocks,
+    residual_keep_policy::Symbol,
+    residual_keep_tol::Float64,
+    residual_accept_tol::Float64,
+)
+    if context.carried_space_kind == :direct_product
+        return _qwrg_residual_space(
+            carried_data.overlap,
+            blocks.overlap_ga,
+            blocks.overlap_aa;
+            keep_policy = residual_keep_policy,
+            keep_abs_tol = residual_keep_tol,
+            accept_tol = residual_accept_tol,
+        )
+    end
+
+    contraction = something(context.contraction)
+    overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
+    return _qwrg_residual_space(
+        carried_data.overlap,
+        overlap_fg,
+        blocks.overlap_aa;
+        keep_policy = residual_keep_policy,
+        keep_abs_tol = residual_keep_tol,
+        accept_tol = residual_accept_tol,
+    )
+end
+
+function _qwrg_atomic_final_one_body(
+    context::_QWRGAtomicBuildContext,
+    carried_data,
+    gausslet_bundle,
+    blocks,
+    expansion::CoulombGaussianExpansion,
+    Z::Real,
+    raw_to_final::AbstractMatrix{<:Real},
+)
+    one_body_aa = _qwrg_atomic_cartesian_one_body_aa(blocks, expansion; Z = Z)
+    if context.carried_space_kind == :direct_product
+        gg_blocks = carried_data.gg_blocks
+        gausslet_one_body = _qwrg_gausslet_one_body_matrix(gg_blocks, expansion; Z = Z)
+        one_body_ga = Matrix{Float64}(blocks.kinetic_ga)
+        for term in eachindex(expansion.coefficients)
+            one_body_ga .-= Float64(Z) * expansion.coefficients[term] .* blocks.factor_ga[term]
+        end
+        return _qwrg_one_body_matrices(
+            gausslet_one_body,
+            one_body_ga,
+            one_body_aa,
+            raw_to_final,
+        )[2]
+    end
+
+    fixed_block = context.carried
+    contraction = something(context.contraction)
+    kinetic_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga)
+    factor_fg = _qwrg_contract_parent_ga_terms(contraction, blocks.factor_ga)
+    one_body_fg = Matrix{Float64}(kinetic_fg)
+    for term in eachindex(expansion.coefficients)
+        one_body_fg .-= Float64(Z) * expansion.coefficients[term] .* factor_fg[term]
+    end
+    fixed_one_body = _qwrg_fixed_block_one_body_matrix(fixed_block, expansion; Z = Z)
+    return _qwrg_one_body_matrices(
+        fixed_one_body,
+        one_body_fg,
+        one_body_aa,
+        raw_to_final,
+    )[2]
+end
+
+function _qwrg_atomic_residual_centers_and_widths(
+    context::_QWRGAtomicBuildContext,
+    carried_data,
+    gausslet_bundle,
+    blocks,
+    residual_data,
+    residual_accept_tol::Float64,
+    interaction_treatment::Symbol,
+)
+    if context.carried_space_kind == :direct_product
+        gg_blocks = carried_data.gg_blocks
+        x_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :x)
+        y_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :y)
+        z_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :z)
+        x_raw = [x_gg blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
+        y_raw = [y_gg blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
+        z_raw = [z_gg blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
+        center_data = _qwrg_residual_center_data(
+            residual_data.raw_overlap,
+            x_raw,
+            y_raw,
+            z_raw,
+            residual_data.raw_to_final,
+            carried_data.count,
+        )
+        residual_centers = center_data.centers
+        residual_widths = fill(NaN, size(residual_centers, 1), 3)
+        center_data.overlap_error <= residual_accept_tol || throw(
+            ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
+        )
+
+        if interaction_treatment == :mwg
+            gg_x2 = (
+                overlap_gg = gg_blocks.overlap_gg,
+                position_gg = gg_blocks.position_gg,
+                x2_gg = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis)),
+            )
+            x2_x_gg = _qwrg_gausslet_axis_matrix(gg_x2, :x; squared = true)
+            x2_y_gg = _qwrg_gausslet_axis_matrix(gg_x2, :y; squared = true)
+            x2_z_gg = _qwrg_gausslet_axis_matrix(gg_x2, :z; squared = true)
+            x2_raw = [x2_x_gg blocks.x2_x_ga; transpose(blocks.x2_x_ga) blocks.x2_x_aa]
+            y2_raw = [x2_y_gg blocks.x2_y_ga; transpose(blocks.x2_y_ga) blocks.x2_y_aa]
+            z2_raw = [x2_z_gg blocks.x2_z_ga; transpose(blocks.x2_z_ga) blocks.x2_z_aa]
+            moment_data = _qwrg_residual_moment_data(
+                residual_data.raw_overlap,
+                x_raw,
+                x2_raw,
+                y2_raw,
+                z2_raw,
+                center_data,
+            )
+            residual_centers = moment_data.centers
+            residual_widths = moment_data.widths
+        end
+        return residual_centers, residual_widths
+    end
+
+    fixed_block = context.carried
+    contraction = something(context.contraction)
+    x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
+    y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
+    z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
+    x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
+    y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
+    z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        x_raw,
+        y_raw,
+        z_raw,
+        residual_data.raw_to_final,
+        carried_data.count,
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= residual_accept_tol || throw(
+        ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
+    )
+    return residual_centers, residual_widths
+end
+
+function _qwrg_atomic_interaction_matrix(
+    context::_QWRGAtomicBuildContext,
+    carried_data,
+    gausslet_bundle,
+    expansion::CoulombGaussianExpansion,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+    interaction_treatment::Symbol,
+)
+    if context.carried_space_kind == :direct_product
+        gausslet_interaction = _qwrg_gausslet_interaction_matrix(
+            carried_data.gg_blocks,
+            expansion,
+        )
+        if interaction_treatment == :ggt_nearest
+            return _qwrg_interaction_matrix_nearest(
+                gausslet_interaction,
+                carried_data.orbitals,
+                residual_centers,
+            )
+        end
+        return _qwrg_interaction_matrix_mwg(
+            gausslet_bundle,
+            gausslet_interaction,
+            expansion,
+            residual_centers,
+            residual_widths,
+        )
+    end
+
+    fixed_block = context.carried
+    fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    return _qwrg_interaction_matrix_nearest(
+        fixed_interaction,
+        fixed_block.fixed_centers,
+        residual_centers,
+    )
+end
+
+function _qwrg_atomic_operator_orbitals(
+    context::_QWRGAtomicBuildContext,
+    carried_data,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    if context.carried_space_kind == :direct_product
+        return _qwrg_orbital_data(
+            carried_data.orbitals,
+            residual_centers,
+            residual_widths,
+        )
+    end
+
+    fixed_block = context.carried
+    return _qwrg_orbital_data(
+        fixed_block.fixed_centers,
+        residual_centers,
+        residual_widths;
+        fixed_kind = :nested_fixed,
+        fixed_label_prefix = "nf",
+    )
+end
+
+function _ordinary_cartesian_qiu_white_operators_atomic(
+    context::_QWRGAtomicBuildContext;
+    expansion::CoulombGaussianExpansion,
+    Z::Real,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    residual_keep_policy::Symbol = :near_null_only,
+    timing::Bool,
+)
+    _validate_atomic_backend(context, gausslet_backend)
+    _validate_atomic_interaction_treatment(context, interaction_treatment)
+    residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
+    residual_keep_tol = _qwrg_atomic_residual_keep_tol()
+    residual_accept_tol = _qwrg_atomic_residual_accept_tol()
+    parent_basis = context.parent_basis
+    carried = context.carried
+
+    return _qwrg_capture_timeg_report(context.capabilities.timing_label, timing) do
+        gausslet_bundle = @timeg context.capabilities.bundle_label begin
+            _mapped_ordinary_gausslet_1d_bundle(
+                parent_basis;
+                exponents = expansion.exponents,
+                center = 0.0,
+                backend = gausslet_backend,
+            )
+        end
+
+        supplement3d = _atomic_cartesian_shell_supplement_3d(context.gaussian_data)
+        blocks = @timeg context.capabilities.raw_blocks_label begin
+            _qwrg_atomic_cartesian_blocks_3d(
+                gausslet_bundle,
+                supplement3d,
+                expansion,
+            )
+        end
+
+        carried_data = _qwrg_atomic_carried_data(context, gausslet_bundle)
+        residual_data = @timeg context.capabilities.residual_space_label begin
+            _qwrg_atomic_residual_space(
+                context,
+                carried_data,
+                blocks,
+                residual_keep_policy_value,
+                residual_keep_tol,
+                residual_accept_tol,
+            )
+        end
+        timing && _qwrg_print_basis_counts(
+            stdout,
+            context.capabilities.carried_count_label,
+            carried_data.count,
+            residual_data.raw_to_final,
+        )
+
+        final_one_body = @timeg context.capabilities.one_body_label begin
+            _qwrg_atomic_final_one_body(
+                context,
+                carried_data,
+                gausslet_bundle,
+                blocks,
+                expansion,
+                Z,
+                residual_data.raw_to_final,
+            )
+        end
+
+        residual_centers, residual_widths = @timeg context.capabilities.centers_label begin
+            _qwrg_atomic_residual_centers_and_widths(
+                context,
+                carried_data,
+                gausslet_bundle,
+                blocks,
+                residual_data,
+                residual_accept_tol,
+                interaction_treatment,
+            )
+        end
+
+        interaction_matrix = @timeg context.capabilities.interaction_label begin
+            _qwrg_atomic_interaction_matrix(
+                context,
+                carried_data,
+                gausslet_bundle,
+                expansion,
+                residual_centers,
+                residual_widths,
+                interaction_treatment,
+            )
+        end
+
+        return OrdinaryCartesianOperators3D(
+            carried,
+            context.gaussian_data,
+            gausslet_backend,
+            interaction_treatment,
+            expansion,
+            Matrix{Float64}(residual_data.final_overlap),
+            final_one_body,
+            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
+            _qwrg_atomic_operator_orbitals(
+                context,
+                carried_data,
+                residual_centers,
+                residual_widths,
+            ),
+            carried_data.count,
+            size(residual_centers, 1),
+            Matrix{Float64}(residual_data.raw_to_final),
+            Matrix{Float64}(residual_centers),
+            Matrix{Float64}(residual_widths),
+        )
+    end
+end
+
 function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     basis::MappedUniformBasis,
     gaussian_data::LegacyAtomicGaussianSupplement;
@@ -1909,157 +2358,16 @@ function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
-    residual_keep_tol = _qwrg_atomic_residual_keep_tol()
-    residual_accept_tol = _qwrg_atomic_residual_accept_tol()
-    return _qwrg_capture_timeg_report("qwrg.atomic_shell.total", timing) do
-        gausslet_bundle = @timeg "qwrg.atomic_shell.shared_bundle" begin
-            _mapped_ordinary_gausslet_1d_bundle(
-                basis,
-                exponents = expansion.exponents,
-                center = 0.0,
-                backend = gausslet_backend,
-            )
-        end
-
-        supplement3d = _atomic_cartesian_shell_supplement_3d(gaussian_data)
-        gg_blocks = _qwrg_gausslet_1d_blocks(gausslet_bundle)
-
-        blocks = @timeg "qwrg.atomic_shell.raw_blocks" begin
-            _qwrg_atomic_cartesian_blocks_3d(
-                gausslet_bundle,
-                supplement3d,
-                expansion,
-            )
-        end
-
-        gausslet_orbitals = _mapped_cartesian_orbitals(gausslet_bundle.pgdg_intermediate.centers)
-        gausslet_count = length(gausslet_orbitals)
-
-        residual_data = @timeg "qwrg.atomic_shell.residual_space" begin
-            gausslet_overlap_3d = zeros(Float64, gausslet_count, gausslet_count)
-            _qwrg_fill_product_matrix!(
-                gausslet_overlap_3d,
-                gg_blocks.overlap_gg,
-                gg_blocks.overlap_gg,
-                gg_blocks.overlap_gg,
-            )
-            _qwrg_residual_space(
-                gausslet_overlap_3d,
-                blocks.overlap_ga,
-                blocks.overlap_aa;
-                keep_policy = residual_keep_policy,
-                keep_abs_tol = residual_keep_tol,
-                accept_tol = residual_accept_tol,
-            )
-        end
-        timing && _qwrg_print_basis_counts(stdout, gausslet_count, residual_data.raw_to_final)
-
-        final_one_body = @timeg "qwrg.atomic_shell.one_body" begin
-            gausslet_one_body = _qwrg_gausslet_one_body_matrix(gg_blocks, expansion; Z = Z)
-            one_body_ga = Matrix{Float64}(blocks.kinetic_ga)
-            for term in eachindex(expansion.coefficients)
-                one_body_ga .-= Float64(Z) * expansion.coefficients[term] .* blocks.factor_ga[term]
-            end
-            one_body_aa = _qwrg_atomic_cartesian_one_body_aa(blocks, expansion; Z = Z)
-            _qwrg_one_body_matrices(
-                gausslet_one_body,
-                one_body_ga,
-                one_body_aa,
-                residual_data.raw_to_final,
-            )[2]
-        end
-
-        residual_centers, residual_widths = @timeg "qwrg.atomic_shell.centers" begin
-            x_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :x)
-            y_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :y)
-            z_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :z)
-            x_raw = [x_gg blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
-            y_raw = [y_gg blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
-            z_raw = [z_gg blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
-            center_data = _qwrg_residual_center_data(
-                residual_data.raw_overlap,
-                x_raw,
-                y_raw,
-                z_raw,
-                residual_data.raw_to_final,
-                gausslet_count,
-            )
-            residual_centers_local = center_data.centers
-            residual_widths_local = fill(NaN, size(residual_centers_local, 1), 3)
-            center_data.overlap_error <= residual_accept_tol || throw(
-                ArgumentError("Qiu-White residual-center extraction requires an orthonormal residual block"),
-            )
-
-            if interaction_treatment == :mwg
-                gg_x2 = (
-                    overlap_gg = gg_blocks.overlap_gg,
-                    position_gg = gg_blocks.position_gg,
-                    x2_gg = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis)),
-                )
-                x2_x_gg = _qwrg_gausslet_axis_matrix(gg_x2, :x; squared = true)
-                x2_y_gg = _qwrg_gausslet_axis_matrix(gg_x2, :y; squared = true)
-                x2_z_gg = _qwrg_gausslet_axis_matrix(gg_x2, :z; squared = true)
-                x2_raw = [x2_x_gg blocks.x2_x_ga; transpose(blocks.x2_x_ga) blocks.x2_x_aa]
-                y2_raw = [x2_y_gg blocks.x2_y_ga; transpose(blocks.x2_y_ga) blocks.x2_y_aa]
-                z2_raw = [x2_z_gg blocks.x2_z_ga; transpose(blocks.x2_z_ga) blocks.x2_z_aa]
-                moment_data = _qwrg_residual_moment_data(
-                    residual_data.raw_overlap,
-                    x_raw,
-                    x2_raw,
-                    y_raw,
-                    y2_raw,
-                    z_raw,
-                    z2_raw,
-                    center_data,
-                )
-                residual_centers_local = moment_data.centers
-                residual_widths_local = moment_data.widths
-            end
-            (residual_centers_local, residual_widths_local)
-        end
-
-        interaction_matrix = @timeg "qwrg.atomic_shell.interaction" begin
-            gausslet_interaction = _qwrg_gausslet_interaction_matrix(gg_blocks, expansion)
-            if interaction_treatment == :ggt_nearest
-                _qwrg_interaction_matrix_nearest(
-                    gausslet_interaction,
-                    gausslet_orbitals,
-                    residual_centers,
-                )
-            elseif interaction_treatment == :mwg
-                _qwrg_interaction_matrix_mwg(
-                    gausslet_bundle,
-                    gausslet_interaction,
-                    expansion,
-                    residual_centers,
-                    residual_widths,
-                )
-            else
-                throw(ArgumentError("Qiu-White interaction_treatment must be :ggt_nearest or :mwg"))
-            end
-        end
-
-        return OrdinaryCartesianOperators3D(
-            basis,
-            gaussian_data,
-            gausslet_backend,
-            interaction_treatment,
-            expansion,
-            Matrix{Float64}(residual_data.final_overlap),
-            final_one_body,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_orbital_data(
-                gausslet_orbitals,
-                residual_centers,
-                residual_widths,
-            ),
-            gausslet_count,
-            size(residual_centers, 1),
-            Matrix{Float64}(residual_data.raw_to_final),
-            Matrix{Float64}(residual_centers),
-            Matrix{Float64}(residual_widths),
-        )
-    end
+    context = _normalized_atomic_build_context(basis, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_atomic(
+        context;
+        expansion = expansion,
+        Z = Z,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
+        timing = timing,
+    )
 end
 
 function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
@@ -2067,120 +2375,21 @@ function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
     gaussian_data::LegacyAtomicGaussianSupplement;
     expansion::CoulombGaussianExpansion,
     Z::Real,
+    interaction_treatment::Symbol,
     gausslet_backend::Symbol,
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
-    residual_keep_tol = _qwrg_atomic_residual_keep_tol()
-    residual_accept_tol = _qwrg_atomic_residual_accept_tol()
-    return _qwrg_capture_timeg_report("qwrg.nested_atomic_shell.total", timing) do
-        gausslet_bundle = @timeg "qwrg.nested_atomic_shell.parent_bundle" begin
-            _mapped_ordinary_gausslet_1d_bundle(
-                fixed_block.parent_basis;
-                exponents = expansion.exponents,
-                center = 0.0,
-                backend = gausslet_backend,
-            )
-        end
-
-        supplement3d = _atomic_cartesian_shell_supplement_3d(gaussian_data)
-
-        blocks = @timeg "qwrg.nested_atomic_shell.raw_blocks" begin
-            _qwrg_atomic_cartesian_blocks_3d(
-                gausslet_bundle,
-                supplement3d,
-                expansion,
-            )
-        end
-
-        contraction = fixed_block.coefficient_matrix
-        fixed_count = size(fixed_block.overlap, 1)
-
-        residual_data = @timeg "qwrg.nested_atomic_shell.residual_space" begin
-            overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
-            _qwrg_residual_space(
-                fixed_block.overlap,
-                overlap_fg,
-                blocks.overlap_aa;
-                keep_policy = residual_keep_policy,
-                keep_abs_tol = residual_keep_tol,
-                accept_tol = residual_accept_tol,
-            )
-        end
-        timing && _qwrg_print_basis_counts(stdout, "fixed_count", fixed_count, residual_data.raw_to_final)
-
-        final_one_body = @timeg "qwrg.nested_atomic_shell.one_body" begin
-            kinetic_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.kinetic_ga)
-            factor_fg = _qwrg_contract_parent_ga_terms(contraction, blocks.factor_ga)
-            one_body_fg = Matrix{Float64}(kinetic_fg)
-            for term in eachindex(expansion.coefficients)
-                one_body_fg .-= Float64(Z) * expansion.coefficients[term] .* factor_fg[term]
-            end
-            one_body_aa = _qwrg_atomic_cartesian_one_body_aa(blocks, expansion; Z = Z)
-            fixed_one_body = _qwrg_fixed_block_one_body_matrix(fixed_block, expansion; Z = Z)
-            _qwrg_one_body_matrices(
-                fixed_one_body,
-                one_body_fg,
-                one_body_aa,
-                residual_data.raw_to_final,
-            )[2]
-        end
-
-        residual_centers, residual_widths = @timeg "qwrg.nested_atomic_shell.centers" begin
-            x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
-            y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
-            z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
-            x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
-            y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
-            z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
-            center_data = _qwrg_residual_center_data(
-                residual_data.raw_overlap,
-                x_raw,
-                y_raw,
-                z_raw,
-                residual_data.raw_to_final,
-                fixed_count,
-            )
-            residual_centers_local = center_data.centers
-            residual_widths_local = fill(NaN, size(residual_centers_local, 1), 3)
-            center_data.overlap_error <= residual_accept_tol || throw(
-                ArgumentError("nested QW-PGDG residual-center extraction requires an orthonormal residual block"),
-            )
-            (residual_centers_local, residual_widths_local)
-        end
-
-        interaction_matrix = @timeg "qwrg.nested_atomic_shell.interaction" begin
-            fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
-            _qwrg_interaction_matrix_nearest(
-                fixed_interaction,
-                fixed_block.fixed_centers,
-                residual_centers,
-            )
-        end
-
-        return OrdinaryCartesianOperators3D(
-            fixed_block,
-            gaussian_data,
-            gausslet_backend,
-            :ggt_nearest,
-            expansion,
-            Matrix{Float64}(residual_data.final_overlap),
-            final_one_body,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_orbital_data(
-                fixed_block.fixed_centers,
-                residual_centers,
-                residual_widths;
-                fixed_kind = :nested_fixed,
-                fixed_label_prefix = "nf",
-            ),
-            fixed_count,
-            size(residual_centers, 1),
-            Matrix{Float64}(residual_data.raw_to_final),
-            Matrix{Float64}(residual_centers),
-            Matrix{Float64}(residual_widths),
-        )
-    end
+    context = _normalized_atomic_build_context(fixed_block, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_atomic(
+        context;
+        expansion = expansion,
+        Z = Z,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
+        timing = timing,
+    )
 end
 
 """
@@ -2248,19 +2457,14 @@ function ordinary_cartesian_qiu_white_operators(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
     )
-    _require_reference_only_gausslet_backend(
-        "ordinary_cartesian_qiu_white_operators",
-        gausslet_backend,
-    )
-    residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
-    return _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
-        basis,
-        gaussian_data;
+    context = _normalized_atomic_build_context(basis, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_atomic(
+        context;
         expansion = expansion,
         Z = Z,
         interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy_value,
+        residual_keep_policy = residual_keep_policy,
         timing = timing,
     )
 end
@@ -2319,21 +2523,14 @@ function ordinary_cartesian_qiu_white_operators(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
 )
-    _require_reference_only_gausslet_backend(
-        "nested ordinary_cartesian_qiu_white_operators",
-        gausslet_backend,
-    )
-    interaction_treatment == :ggt_nearest || throw(
-        ArgumentError("nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest"),
-    )
-    residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
-    return _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
-        fixed_block,
-        gaussian_data;
+    context = _normalized_atomic_build_context(fixed_block, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_atomic(
+        context;
         expansion = expansion,
         Z = Z,
+        interaction_treatment = interaction_treatment,
         gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy_value,
+        residual_keep_policy = residual_keep_policy,
         timing = timing,
     )
 end

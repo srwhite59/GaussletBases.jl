@@ -57,9 +57,11 @@ That seam now covers:
 - pure prebuilt nested fixed-block bond-aligned routes
 - bond-aligned diatomic molecular supplement direct-product routes
 - bond-aligned diatomic molecular supplement nested fixed-block routes
+- atomic supplement direct-product routes
+- atomic supplement nested fixed-block routes
 
-Atomic and experimental supplement-bearing routes still keep their separate
-orchestration paths on purpose.
+Experimental supplement-bearing routes still keep their separate orchestration
+paths on purpose.
 
 ## Primitive, contraction, and hierarchy work
 

@@ -8734,6 +8734,43 @@ end
         @test true
     else
         supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+        (
+            _source_basis_nested,
+            _bundle_nested,
+            _shell_nested,
+            _fixed_block_nested,
+            _shell_plus_core_nested,
+            fixed_block_shell_plus_core,
+            _legacy_nested,
+            _baseline_nested,
+            _nested_shell_only,
+            _nested_shell_plus_core,
+            _baseline_nested_check,
+            _nested_shell_only_check,
+            _nested_shell_plus_core_check,
+        ) = _nested_qiu_white_nearest_fixture()
+        atomic_direct_context = GaussletBases._normalized_atomic_build_context(
+            mapped_basis,
+            supplement,
+        )
+        atomic_nested_context = GaussletBases._normalized_atomic_build_context(
+            fixed_block_shell_plus_core,
+            supplement,
+        )
+        @test atomic_direct_context.carried_space_kind == :direct_product
+        @test atomic_direct_context.parent_basis === mapped_basis
+        @test atomic_direct_context.carried === mapped_basis
+        @test atomic_direct_context.gaussian_data === supplement
+        @test atomic_direct_context.contraction === nothing
+        @test atomic_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
+        @test atomic_direct_context.capabilities.timing_label == "qwrg.atomic_shell.total"
+        @test atomic_nested_context.carried_space_kind == :nested_fixed_block
+        @test atomic_nested_context.parent_basis === fixed_block_shell_plus_core.parent_basis
+        @test atomic_nested_context.carried === fixed_block_shell_plus_core
+        @test atomic_nested_context.gaussian_data === supplement
+        @test atomic_nested_context.contraction === fixed_block_shell_plus_core.coefficient_matrix
+        @test atomic_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test atomic_nested_context.capabilities.timing_label == "qwrg.nested_atomic_shell.total"
         supplement_text = _reference_only_backend_error(() ->
             ordinary_cartesian_qiu_white_operators(
                 mapped_basis,
@@ -8745,6 +8782,30 @@ end
             )
         )
         @test occursin("ordinary_cartesian_qiu_white_operators", supplement_text)
+        nested_supplement_text = _reference_only_backend_error(() ->
+            ordinary_cartesian_qiu_white_operators(
+                fixed_block_shell_plus_core,
+                supplement;
+                expansion = expansion,
+                Z = 2.0,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :pgdg_localized_experimental,
+            )
+        )
+        @test occursin("nested ordinary_cartesian_qiu_white_operators", nested_supplement_text)
+        nested_atomic_mwg_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                fixed_block_shell_plus_core,
+                supplement;
+                expansion = expansion,
+                Z = 2.0,
+                interaction_treatment = :mwg,
+            )
+        )
+        @test occursin(
+            "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
+            nested_atomic_mwg_text,
+        )
     end
 end
 
@@ -9178,6 +9239,7 @@ end
             supplement;
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
+            interaction_treatment = :ggt_nearest,
             gausslet_backend = :numerical_reference,
             timing = false,
         )
@@ -9188,6 +9250,12 @@ end
         @test nested_ops.gaussian_data isa LegacyAtomicGaussianSupplement
         @test ordinary_ops.residual_count > 0
         @test nested_ops.residual_count > 0
+        @test size(ordinary_ops.raw_to_final, 2) ==
+              ordinary_ops.gausslet_count + ordinary_ops.residual_count
+        @test size(nested_ops.raw_to_final, 2) ==
+              nested_ops.gausslet_count + nested_ops.residual_count
+        @test norm(ordinary_ops.overlap - I, Inf) < 1.0e-8
+        @test norm(nested_ops.overlap - I, Inf) < 1.0e-8
         @test ordinary_check.overlap_error < 1.0e-8
         @test nested_check.overlap_error < 1.0e-8
         @test ordinary_check.orbital_energy ≈ explicit_ordinary_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
