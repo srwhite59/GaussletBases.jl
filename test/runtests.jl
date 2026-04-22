@@ -8643,13 +8643,13 @@ end
         backend = :pgdg_localized_experimental,
     ).backend == :pgdg_localized_experimental
 
-    @testset "Pure bond-aligned normalized build context" begin
-        diatomic_context = GaussletBases._normalized_pure_bond_aligned_build_context(diatomic_basis)
-        chain_context = GaussletBases._normalized_pure_bond_aligned_build_context(chain_basis)
-        square_context = GaussletBases._normalized_pure_bond_aligned_build_context(square_basis)
-        nested_diatomic_context = GaussletBases._normalized_pure_bond_aligned_build_context(nested_fixed_block)
-        nested_chain_context = GaussletBases._normalized_pure_bond_aligned_build_context(chain_nested_fixed_block)
-        nested_square_context = GaussletBases._normalized_pure_bond_aligned_build_context(square_nested_fixed_block)
+    @testset "Bond-aligned normalized build context" begin
+        diatomic_context = GaussletBases._normalized_bond_aligned_build_context(diatomic_basis)
+        chain_context = GaussletBases._normalized_bond_aligned_build_context(chain_basis)
+        square_context = GaussletBases._normalized_bond_aligned_build_context(square_basis)
+        nested_diatomic_context = GaussletBases._normalized_bond_aligned_build_context(nested_fixed_block)
+        nested_chain_context = GaussletBases._normalized_bond_aligned_build_context(chain_nested_fixed_block)
+        nested_square_context = GaussletBases._normalized_bond_aligned_build_context(square_nested_fixed_block)
 
         @test diatomic_context.basis_family == :bond_aligned_diatomic
         @test chain_context.basis_family == :bond_aligned_homonuclear_chain
@@ -9395,9 +9395,12 @@ end
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
         )
-        explicit_ordinary = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
+        explicit_ordinary_context = GaussletBases._normalized_atomic_build_context(
             source_basis,
-            supplement;
+            supplement,
+        )
+        explicit_ordinary = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic(
+            explicit_ordinary_context;
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
@@ -9429,9 +9432,12 @@ end
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
         )
-        explicit_nested = GaussletBases._ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
+        explicit_nested_context = GaussletBases._normalized_atomic_build_context(
             fixed_block_shell_plus_core,
-            supplement;
+            supplement,
+        )
+        explicit_nested = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic(
+            explicit_nested_context;
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
@@ -9578,9 +9584,12 @@ end
                 Z = 10.0,
                 interaction_treatment = :ggt_nearest,
             )
-            explicit_ops = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
+            explicit_context = GaussletBases._normalized_atomic_build_context(
                 basis,
-                supplement;
+                supplement,
+            )
+            explicit_ops = GaussletBases._ordinary_cartesian_qiu_white_operators_atomic(
+                explicit_context;
                 expansion = expansion,
                 Z = 10.0,
                 interaction_treatment = :ggt_nearest,

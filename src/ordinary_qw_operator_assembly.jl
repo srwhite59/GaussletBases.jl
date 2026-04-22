@@ -94,8 +94,6 @@ struct _QWRGBondAlignedBuildContext{
     capabilities::CM
 end
 
-const _QWRGPureBondAlignedBuildContext = _QWRGBondAlignedBuildContext
-
 function _pure_bond_aligned_nested_route_label(
     basis_family::Symbol,
 )
@@ -159,18 +157,6 @@ function _normalized_bond_aligned_build_context(
             timing_label = "qwrg.bond_aligned_nested_fixed.total",
         ),
     )
-end
-
-function _normalized_pure_bond_aligned_build_context(
-    basis::AbstractBondAlignedOrdinaryQWBasis3D,
-)
-    return _normalized_bond_aligned_build_context(basis)
-end
-
-function _normalized_pure_bond_aligned_build_context(
-    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
-)
-    return _normalized_bond_aligned_build_context(fixed_block)
 end
 
 function _normalized_bond_aligned_build_context(
@@ -985,7 +971,7 @@ function _qwrg_diatomic_one_body_matrix(
 end
 
 function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
-    context::_QWRGPureBondAlignedBuildContext;
+    context::_QWRGBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -1144,7 +1130,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(basis)
+    context = _normalized_bond_aligned_build_context(basis)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -1186,7 +1172,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(basis)
+    context = _normalized_bond_aligned_build_context(basis)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -1228,7 +1214,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(basis)
+    context = _normalized_bond_aligned_build_context(basis)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -1782,33 +1768,8 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
     end
 end
 
-function _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
-    basis::BondAlignedDiatomicQWBasis3D,
-    gaussian_data::Union{
-        LegacyBondAlignedDiatomicGaussianSupplement,
-        LegacyBondAlignedHeteronuclearGaussianSupplement,
-    };
-    nuclear_charges::AbstractVector{<:Real},
-    nuclear_term_storage::Symbol,
-    expansion::CoulombGaussianExpansion,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    timing::Bool,
-)
-    context = _normalized_bond_aligned_build_context(basis, gaussian_data)
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
-        context;
-        nuclear_charges = nuclear_charges,
-        nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        timing = timing,
-    )
-end
-
 function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
-    context::_QWRGPureBondAlignedBuildContext;
+    context::_QWRGBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -1924,7 +1885,7 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
 end
 
 function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
-    context::_QWRGPureBondAlignedBuildContext;
+    context::_QWRGBondAlignedBuildContext;
     nuclear_charges::AbstractVector{<:Real},
     nuclear_term_storage::Symbol,
     expansion::CoulombGaussianExpansion,
@@ -1959,31 +1920,6 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
             ),
         )
     end
-end
-
-function _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
-    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
-    gaussian_data::Union{
-        LegacyBondAlignedDiatomicGaussianSupplement,
-        LegacyBondAlignedHeteronuclearGaussianSupplement,
-    };
-    nuclear_charges::AbstractVector{<:Real},
-    nuclear_term_storage::Symbol,
-    expansion::CoulombGaussianExpansion,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    timing::Bool,
-)
-    context = _normalized_bond_aligned_build_context(fixed_block, gaussian_data)
-    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
-        context;
-        nuclear_charges = nuclear_charges,
-        nuclear_term_storage = nuclear_term_storage,
-        expansion = expansion,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        timing = timing,
-    )
 end
 
 function _qwrg_atomic_carried_data(
@@ -2348,50 +2284,6 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
     end
 end
 
-function _ordinary_cartesian_qiu_white_operators_atomic_shell_3d(
-    basis::MappedUniformBasis,
-    gaussian_data::LegacyAtomicGaussianSupplement;
-    expansion::CoulombGaussianExpansion,
-    Z::Real,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    residual_keep_policy::Symbol = :near_null_only,
-    timing::Bool,
-)
-    context = _normalized_atomic_build_context(basis, gaussian_data)
-    return _ordinary_cartesian_qiu_white_operators_atomic(
-        context;
-        expansion = expansion,
-        Z = Z,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy,
-        timing = timing,
-    )
-end
-
-function _ordinary_cartesian_qiu_white_operators_nested_atomic_shell_3d(
-    fixed_block::_NestedFixedBlock3D,
-    gaussian_data::LegacyAtomicGaussianSupplement;
-    expansion::CoulombGaussianExpansion,
-    Z::Real,
-    interaction_treatment::Symbol,
-    gausslet_backend::Symbol,
-    residual_keep_policy::Symbol = :near_null_only,
-    timing::Bool,
-)
-    context = _normalized_atomic_build_context(fixed_block, gaussian_data)
-    return _ordinary_cartesian_qiu_white_operators_atomic(
-        context;
-        expansion = expansion,
-        Z = Z,
-        interaction_treatment = interaction_treatment,
-        gausslet_backend = gausslet_backend,
-        residual_keep_policy = residual_keep_policy,
-        timing = timing,
-    )
-end
-
 """
     ordinary_cartesian_qiu_white_operators(
         basis::MappedUniformBasis,
@@ -2568,7 +2460,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    context = _normalized_bond_aligned_build_context(fixed_block)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -2613,7 +2505,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    context = _normalized_bond_aligned_build_context(fixed_block)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -2658,7 +2550,7 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    context = _normalized_pure_bond_aligned_build_context(fixed_block)
+    context = _normalized_bond_aligned_build_context(fixed_block)
     return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
         context;
         nuclear_charges = nuclear_charges,
@@ -2708,9 +2600,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_diatomic_shell_3d(
-        basis,
-        gaussian_data;
+    context = _normalized_bond_aligned_build_context(basis, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,
@@ -2756,9 +2648,9 @@ function ordinary_cartesian_qiu_white_operators(
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
-    return _ordinary_cartesian_qiu_white_operators_nested_diatomic_shell_3d(
-        fixed_block,
-        gaussian_data;
+    context = _normalized_bond_aligned_build_context(fixed_block, gaussian_data)
+    return _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
+        context;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
         expansion = expansion,

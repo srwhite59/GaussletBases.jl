@@ -1784,12 +1784,6 @@ function _cartesian_bond_aligned_build_metadata(
     )
 end
 
-function _cartesian_pure_bond_aligned_build_metadata(
-    basis::AbstractBondAlignedOrdinaryQWBasis3D,
-)
-    return _cartesian_bond_aligned_build_metadata(basis)
-end
-
 function _cartesian_parent_axis_representations(parent_basis)
     parent_basis isa MappedUniformBasis && return _cartesian_axis_representations(parent_basis)
     parent_basis isa AbstractBondAlignedOrdinaryQWBasis3D &&
@@ -1933,12 +1927,6 @@ function _cartesian_bond_aligned_build_metadata(
         parent_route_metadata = parent_representation.metadata.route_metadata,
         basis_family = parent_representation.metadata.route_metadata.basis_family,
     )
-end
-
-function _cartesian_pure_bond_aligned_build_metadata(
-    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D},
-)
-    return _cartesian_bond_aligned_build_metadata(fixed_block)
 end
 
 function _cartesian_empty_centers()
