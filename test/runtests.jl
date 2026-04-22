@@ -8663,6 +8663,8 @@ end
         @test diatomic_context.default_nuclear_charges == [1.0, 1.0]
         @test diatomic_context.route_metadata.basis_family == :bond_aligned_diatomic
         @test diatomic_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
+        @test diatomic_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference, :pgdg_localized_experimental)
         @test diatomic_context.capabilities.timing_label == "qwrg.bond_aligned_ordinary.total"
 
         @test nested_diatomic_context.basis_family == :bond_aligned_diatomic
@@ -8676,6 +8678,8 @@ end
         @test nested_diatomic_context.contraction === nested_fixed_block.coefficient_matrix
         @test nested_diatomic_context.parent_route_metadata.basis_family == :bond_aligned_diatomic
         @test nested_diatomic_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test nested_diatomic_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference, :pgdg_localized_experimental)
         @test nested_diatomic_context.capabilities.localized_parent_kind == :cartesian_product_basis
         @test nested_diatomic_context.capabilities.timing_label == "qwrg.bond_aligned_nested_fixed.total"
     end
@@ -8766,6 +8770,8 @@ end
         @test hybrid_direct_context.gaussian_data === hybrid_supplement
         @test hybrid_direct_context.contraction === nothing
         @test hybrid_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_direct_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference, :pgdg_localized_experimental)
         @test hybrid_direct_context.capabilities.timing_label == "qwrg.diatomic_shell.total"
 
         @test hybrid_nested_context.basis_family == :bond_aligned_diatomic
@@ -8775,6 +8781,8 @@ end
         @test hybrid_nested_context.gaussian_data === hybrid_supplement
         @test hybrid_nested_context.contraction === hybrid_fixed_block.coefficient_matrix
         @test hybrid_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_nested_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference, :pgdg_localized_experimental)
         @test hybrid_nested_context.capabilities.localized_parent_kind == :cartesian_product_basis
         @test hybrid_nested_context.capabilities.timing_label == "qwrg.nested_diatomic_shell.total"
 
@@ -8833,6 +8841,91 @@ end
         )
         @test occursin("bond-aligned diatomic nested molecular QW path", hybrid_nested_error_text)
         @test occursin(":pgdg_localized_experimental", hybrid_nested_error_text)
+
+        mismatched_nuclei = [
+            (hybrid_basis.nuclei[1][1] - 0.1, hybrid_basis.nuclei[1][2], hybrid_basis.nuclei[1][3]),
+            (hybrid_basis.nuclei[2][1] + 0.1, hybrid_basis.nuclei[2][2], hybrid_basis.nuclei[2][3]),
+        ]
+        mismatched_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            mismatched_nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        mismatched_nuclei_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                hybrid_basis,
+                mismatched_supplement;
+                nuclear_charges = [1.0, 1.0],
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :numerical_reference,
+            )
+        )
+        @test occursin(
+            "bond-aligned diatomic molecular supplement nuclei must match the bond-aligned basis nuclei",
+            mismatched_nuclei_text,
+        )
+
+        function _with_parent_kind(
+            context::typeof(hybrid_nested_context),
+            parent_kind::Symbol,
+        )
+            representation = context.carried_representation
+            metadata = representation.metadata
+            shifted_metadata = GaussletBases.CartesianBasisMetadata3D(
+                metadata.basis_kind,
+                metadata.axis_sharing,
+                metadata.axis_metadata,
+                parent_kind,
+                metadata.parent_axis_counts,
+                metadata.parent_dimension,
+                metadata.final_dimension,
+                metadata.working_box,
+                metadata.basis_labels,
+                metadata.basis_centers,
+                metadata.route_metadata,
+            )
+            shifted_representation = GaussletBases.CartesianBasisRepresentation3D(
+                shifted_metadata,
+                representation.axis_representations,
+                representation.contraction_kind,
+                representation.coefficient_matrix,
+                representation.parent_labels,
+                representation.parent_centers,
+                representation.support_indices,
+                representation.support_states,
+                representation.parent_data,
+            )
+            return typeof(context)(
+                context.basis_family,
+                context.carried_space_kind,
+                context.parent_basis,
+                context.carried,
+                shifted_representation,
+                context.parent_representation,
+                context.nuclei,
+                context.default_nuclear_charges,
+                context.contraction,
+                context.gaussian_data,
+                context.route_metadata,
+                context.parent_route_metadata,
+                context.capabilities,
+            )
+        end
+
+        transformed_parent_kind_text = _argument_error_text(() ->
+            GaussletBases._validate_operator_route_backend(
+                _with_parent_kind(hybrid_nested_context, :cartesian_plus_supplement_raw),
+                :pgdg_localized_experimental,
+            )
+        )
+        @test occursin("bond-aligned diatomic nested molecular QW path", transformed_parent_kind_text)
+        @test occursin("parent_kind = :cartesian_product_basis", transformed_parent_kind_text)
+        @test occursin(
+            "transformed parent spaces remain numerical-reference-only",
+            transformed_parent_kind_text,
+        )
     end
 
     direct_product_error_text = _argument_error_text(() ->
@@ -8846,6 +8939,20 @@ end
     @test occursin("bond-aligned ordinary_cartesian_qiu_white_operators", direct_product_error_text)
     @test occursin(":pgdg_localized_experimental", direct_product_error_text)
 
+    direct_product_interaction_text = _argument_error_text(() ->
+        ordinary_cartesian_qiu_white_operators(
+            diatomic_basis;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :bogus,
+            gausslet_backend = :numerical_reference,
+        )
+    )
+    @test occursin(
+        "bond-aligned ordinary_cartesian_qiu_white_operators",
+        direct_product_interaction_text,
+    )
+    @test occursin(":ggt_nearest or :mwg", direct_product_interaction_text)
+
     nested_fixed_block_error_text = _argument_error_text(() ->
         ordinary_cartesian_qiu_white_operators(
             nested_fixed_block;
@@ -8858,6 +8965,21 @@ end
     @test occursin("bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators", nested_fixed_block_error_text)
     @test occursin(":pgdg_localized_experimental", nested_fixed_block_error_text)
     @test occursin("pure Cartesian-parent nested fixed blocks", nested_fixed_block_error_text)
+
+    nested_fixed_block_interaction_text = _argument_error_text(() ->
+        ordinary_cartesian_qiu_white_operators(
+            nested_fixed_block;
+            nuclear_charges = [1.0, 1.0],
+            expansion = nested_expansion,
+            interaction_treatment = :mwg,
+            gausslet_backend = :numerical_reference,
+        )
+    )
+    @test occursin(
+        "bond-aligned diatomic nested ordinary_cartesian_qiu_white_operators",
+        nested_fixed_block_interaction_text,
+    )
+    @test occursin(":ggt_nearest", nested_fixed_block_interaction_text)
 
     diatomic_nested_source_text = _reference_only_backend_error(() ->
         bond_aligned_diatomic_nested_fixed_source(
@@ -8957,6 +9079,8 @@ end
         @test atomic_direct_context.carried === mapped_basis
         @test atomic_direct_context.gaussian_data === supplement
         @test atomic_direct_context.contraction === nothing
+        @test atomic_direct_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference,)
         @test atomic_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
         @test atomic_direct_context.capabilities.timing_label == "qwrg.atomic_shell.total"
         @test atomic_nested_context.carried_space_kind == :nested_fixed_block
@@ -8964,6 +9088,8 @@ end
         @test atomic_nested_context.carried === fixed_block_shell_plus_core
         @test atomic_nested_context.gaussian_data === supplement
         @test atomic_nested_context.contraction === fixed_block_shell_plus_core.coefficient_matrix
+        @test atomic_nested_context.capabilities.allowed_gausslet_backends ==
+              (:numerical_reference,)
         @test atomic_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
         @test atomic_nested_context.capabilities.timing_label == "qwrg.nested_atomic_shell.total"
         supplement_text = _reference_only_backend_error(() ->
@@ -8977,6 +9103,19 @@ end
             )
         )
         @test occursin("ordinary_cartesian_qiu_white_operators", supplement_text)
+        direct_atomic_bad_interaction_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                mapped_basis,
+                supplement;
+                expansion = expansion,
+                Z = 2.0,
+                interaction_treatment = :bogus,
+            )
+        )
+        @test occursin(
+            "Qiu-White interaction_treatment must be :ggt_nearest or :mwg",
+            direct_atomic_bad_interaction_text,
+        )
         nested_supplement_text = _reference_only_backend_error(() ->
             ordinary_cartesian_qiu_white_operators(
                 fixed_block_shell_plus_core,

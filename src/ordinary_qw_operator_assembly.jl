@@ -125,8 +125,13 @@ function _normalized_bond_aligned_build_context(
         metadata.parent_route_metadata,
         (
             route_label = "bond-aligned ordinary_cartesian_qiu_white_operators",
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
+            backend_support_scope = nothing,
             allowed_interaction_treatments = (:ggt_nearest, :mwg),
             localized_parent_kind = nothing,
+            localized_parent_kind_backend = nothing,
+            localized_parent_kind_requirement = nothing,
+            interaction_treatment_error_message = nothing,
             timing_label = "qwrg.bond_aligned_ordinary.total",
         ),
     )
@@ -152,8 +157,14 @@ function _normalized_bond_aligned_build_context(
         metadata.parent_route_metadata,
         (
             route_label = _pure_bond_aligned_nested_route_label(metadata.basis_family),
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
+            backend_support_scope = " on pure Cartesian-parent nested fixed blocks",
             allowed_interaction_treatments = (:ggt_nearest,),
             localized_parent_kind = :cartesian_product_basis,
+            localized_parent_kind_backend = :pgdg_localized_experimental,
+            localized_parent_kind_requirement =
+                "only for nested fixed blocks with parent_kind = {parent_kind}; supplement-bearing or transformed parent spaces remain numerical-reference-only",
+            interaction_treatment_error_message = nothing,
             timing_label = "qwrg.bond_aligned_nested_fixed.total",
         ),
     )
@@ -182,8 +193,13 @@ function _normalized_bond_aligned_build_context(
         metadata.parent_route_metadata,
         (
             route_label = "bond-aligned diatomic molecular QW path",
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
+            backend_support_scope = " on the direct-contracted molecular one-body backbone",
             allowed_interaction_treatments = (:ggt_nearest,),
             localized_parent_kind = nothing,
+            localized_parent_kind_backend = nothing,
+            localized_parent_kind_requirement = nothing,
+            interaction_treatment_error_message = nothing,
             timing_label = "qwrg.diatomic_shell.total",
             timing_prefix = "qwrg.diatomic_shell",
             bundles_label = "qwrg.diatomic_shell.shared_bundles",
@@ -216,8 +232,14 @@ function _normalized_bond_aligned_build_context(
         metadata.parent_route_metadata,
         (
             route_label = "bond-aligned diatomic nested molecular QW path",
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
+            backend_support_scope = " on the direct-contracted molecular one-body backbone",
             allowed_interaction_treatments = (:ggt_nearest,),
             localized_parent_kind = :cartesian_product_basis,
+            localized_parent_kind_backend = :pgdg_localized_experimental,
+            localized_parent_kind_requirement =
+                "only when the carried nested fixed block still has parent_kind = {parent_kind}; transformed parent spaces remain numerical-reference-only",
+            interaction_treatment_error_message = nothing,
             timing_label = "qwrg.nested_diatomic_shell.total",
             timing_prefix = "qwrg.nested_diatomic_shell",
             bundles_label = "qwrg.nested_diatomic_shell.parent_bundles",
@@ -226,73 +248,95 @@ function _normalized_bond_aligned_build_context(
     )
 end
 
-function _validate_pure_bond_aligned_backend(
-    context::_QWRGBondAlignedBuildContext,
-    gausslet_backend::Symbol,
-)
-    if context.carried_space_kind == :direct_product
-        gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
-            ArgumentError(
-                "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
-            ),
-        )
-        return gausslet_backend
+_qwrg_capability_value(capabilities, name::Symbol, default = nothing) =
+    hasproperty(capabilities, name) ? getproperty(capabilities, name) : default
+
+function _qwrg_supported_symbol_list(symbols::Tuple{Vararg{Symbol}})
+    return join((string(":", value) for value in symbols), " or ")
+end
+
+function _qwrg_backend_validation_error(capabilities, gausslet_backend::Symbol)
+    route_label = capabilities.route_label
+    allowed_gausslet_backends = _qwrg_capability_value(
+        capabilities,
+        :allowed_gausslet_backends,
+        (:numerical_reference,),
+    )
+    if allowed_gausslet_backends == (:numerical_reference,)
+        return "$(route_label) is currently a numerical-reference-only route; PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))"
     end
-
-    gausslet_backend == :numerical_reference && return gausslet_backend
-    gausslet_backend == :pgdg_localized_experimental || throw(
-        ArgumentError(
-            "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on pure Cartesian-parent nested fixed blocks; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
-        ),
+    backend_support_scope = something(
+        _qwrg_capability_value(capabilities, :backend_support_scope, nothing),
+        "",
     )
-    parent_kind = context.carried_representation.metadata.parent_kind
-    parent_kind == context.capabilities.localized_parent_kind || throw(
-        ArgumentError(
-            "$(context.capabilities.route_label) currently supports gausslet_backend = :pgdg_localized_experimental only for nested fixed blocks with parent_kind = :$(context.capabilities.localized_parent_kind); supplement-bearing or transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
-        ),
-    )
-    return gausslet_backend
+    return "$(route_label) currently supports gausslet_backend = $(_qwrg_supported_symbol_list(allowed_gausslet_backends))$(backend_support_scope); broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))"
 end
 
-function _validate_bond_aligned_interaction_treatment(
-    context::_QWRGBondAlignedBuildContext,
-    interaction_treatment::Symbol,
-)
-    interaction_treatment in context.capabilities.allowed_interaction_treatments || throw(
+function _validate_operator_route_backend(context, gausslet_backend::Symbol)
+    allowed_gausslet_backends = _qwrg_capability_value(
+        context.capabilities,
+        :allowed_gausslet_backends,
+        (:numerical_reference,),
+    )
+    gausslet_backend in allowed_gausslet_backends || throw(
         ArgumentError(
-            "$(context.capabilities.route_label) requires interaction_treatment = " *
-            join((string(":", value) for value in context.capabilities.allowed_interaction_treatments), " or "),
+            _qwrg_backend_validation_error(context.capabilities, gausslet_backend),
         ),
     )
-    return interaction_treatment
-end
 
-function _validate_pure_bond_aligned_interaction_treatment(
-    context::_QWRGBondAlignedBuildContext,
-    interaction_treatment::Symbol,
-)
-    return _validate_bond_aligned_interaction_treatment(context, interaction_treatment)
-end
-
-function _validate_bond_aligned_molecular_backend(
-    context::_QWRGBondAlignedBuildContext,
-    gausslet_backend::Symbol,
-)
-    gausslet_backend in (:numerical_reference, :pgdg_localized_experimental) || throw(
-        ArgumentError(
-            "$(context.capabilities.route_label) currently supports gausslet_backend = :numerical_reference or :pgdg_localized_experimental on the direct-contracted molecular one-body backbone; broader PGDG production-contract support is not yet implemented here (got gausslet_backend = :$(gausslet_backend))",
-        ),
+    localized_parent_kind = _qwrg_capability_value(
+        context.capabilities,
+        :localized_parent_kind,
+        nothing,
     )
-    if context.carried_space_kind == :nested_fixed_block &&
-       gausslet_backend == :pgdg_localized_experimental
+    localized_parent_kind_backend = _qwrg_capability_value(
+        context.capabilities,
+        :localized_parent_kind_backend,
+        nothing,
+    )
+    if !isnothing(localized_parent_kind) &&
+       !isnothing(localized_parent_kind_backend) &&
+       gausslet_backend == localized_parent_kind_backend
         parent_kind = context.carried_representation.metadata.parent_kind
-        parent_kind == context.capabilities.localized_parent_kind || throw(
+        parent_kind == localized_parent_kind || throw(
             ArgumentError(
-                "$(context.capabilities.route_label) currently supports gausslet_backend = :pgdg_localized_experimental only when the carried nested fixed block still has parent_kind = :$(context.capabilities.localized_parent_kind); transformed parent spaces remain numerical-reference-only (got parent_kind = :$(parent_kind))",
+                "$(context.capabilities.route_label) currently supports gausslet_backend = :$(localized_parent_kind_backend) " *
+                replace(
+                    something(
+                        _qwrg_capability_value(
+                            context.capabilities,
+                            :localized_parent_kind_requirement,
+                            nothing,
+                        ),
+                        "only when the carried nested fixed block still has parent_kind = {parent_kind}",
+                    ),
+                    "{parent_kind}" => ":" * string(localized_parent_kind),
+                ) *
+                " (got parent_kind = :$(parent_kind))",
             ),
         )
     end
     return gausslet_backend
+end
+
+function _validate_operator_route_interaction_treatment(
+    context,
+    interaction_treatment::Symbol,
+)
+    allowed_interaction_treatments = context.capabilities.allowed_interaction_treatments
+    interaction_treatment in allowed_interaction_treatments && return interaction_treatment
+    throw(
+        ArgumentError(
+            something(
+                _qwrg_capability_value(
+                    context.capabilities,
+                    :interaction_treatment_error_message,
+                    nothing,
+                ),
+                "$(context.capabilities.route_label) requires interaction_treatment = $(_qwrg_supported_symbol_list(allowed_interaction_treatments))",
+            ),
+        ),
+    )
 end
 
 function _validate_bond_aligned_molecular_inputs(
@@ -343,7 +387,10 @@ function _normalized_atomic_build_context(
         nothing,
         (
             route_label = "ordinary_cartesian_qiu_white_operators",
+            allowed_gausslet_backends = (:numerical_reference,),
             allowed_interaction_treatments = (:ggt_nearest, :mwg),
+            interaction_treatment_error_message =
+                "Qiu-White interaction_treatment must be :ggt_nearest or :mwg",
             timing_label = "qwrg.atomic_shell.total",
             bundle_label = "qwrg.atomic_shell.shared_bundle",
             raw_blocks_label = "qwrg.atomic_shell.raw_blocks",
@@ -369,7 +416,10 @@ function _normalized_atomic_build_context(
         fixed_block.coefficient_matrix,
         (
             route_label = "nested ordinary_cartesian_qiu_white_operators",
+            allowed_gausslet_backends = (:numerical_reference,),
             allowed_interaction_treatments = (:ggt_nearest,),
+            interaction_treatment_error_message =
+                "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
             timing_label = "qwrg.nested_atomic_shell.total",
             bundle_label = "qwrg.nested_atomic_shell.parent_bundle",
             raw_blocks_label = "qwrg.nested_atomic_shell.raw_blocks",
@@ -379,32 +429,6 @@ function _normalized_atomic_build_context(
             interaction_label = "qwrg.nested_atomic_shell.interaction",
             carried_count_label = "fixed_count",
             residual_center_label = "nested QW-PGDG residual-center extraction",
-        ),
-    )
-end
-
-function _validate_atomic_backend(
-    context::_QWRGAtomicBuildContext,
-    gausslet_backend::Symbol,
-)
-    return _require_reference_only_gausslet_backend(
-        context.capabilities.route_label,
-        gausslet_backend,
-    )
-end
-
-function _validate_atomic_interaction_treatment(
-    context::_QWRGAtomicBuildContext,
-    interaction_treatment::Symbol,
-)
-    interaction_treatment in context.capabilities.allowed_interaction_treatments &&
-        return interaction_treatment
-    if context.carried_space_kind == :direct_product
-        throw(ArgumentError("Qiu-White interaction_treatment must be :ggt_nearest or :mwg"))
-    end
-    throw(
-        ArgumentError(
-            "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
         ),
     )
 end
@@ -1588,8 +1612,8 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _validate_bond_aligned_molecular_backend(context, gausslet_backend)
-    _validate_bond_aligned_interaction_treatment(context, interaction_treatment)
+    _validate_operator_route_backend(context, gausslet_backend)
+    _validate_operator_route_interaction_treatment(context, interaction_treatment)
     _validate_bond_aligned_molecular_inputs(context, nuclear_charges)
     gaussian_data = something(context.gaussian_data)
     basis = context.parent_basis
@@ -1893,8 +1917,8 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned(
     gausslet_backend::Symbol,
     timing::Bool,
 )
-    _validate_pure_bond_aligned_backend(context, gausslet_backend)
-    _validate_pure_bond_aligned_interaction_treatment(context, interaction_treatment)
+    _validate_operator_route_backend(context, gausslet_backend)
+    _validate_operator_route_interaction_treatment(context, interaction_treatment)
     return _qwrg_capture_timeg_report(context.capabilities.timing_label, timing) do
         context.carried_space_kind == :direct_product &&
             return _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
@@ -2179,8 +2203,8 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
-    _validate_atomic_backend(context, gausslet_backend)
-    _validate_atomic_interaction_treatment(context, interaction_treatment)
+    _validate_operator_route_backend(context, gausslet_backend)
+    _validate_operator_route_interaction_treatment(context, interaction_treatment)
     residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
     residual_keep_tol = _qwrg_atomic_residual_keep_tol()
     residual_accept_tol = _qwrg_atomic_residual_accept_tol()
