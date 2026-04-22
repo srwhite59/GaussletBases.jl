@@ -1,531 +1,433 @@
 @testset "Documentation consistency" begin
-    design = read(joinpath(_PROJECT_ROOT, "DESIGN.md"), String)
-    readme = read(joinpath(_PROJECT_ROOT, "README.md"), String)
-    atomic_setup = read(joinpath(_PROJECT_ROOT, "docs", "recommended_atomic_setup.md"), String)
-    radial_workflow = read(joinpath(_PROJECT_ROOT, "docs", "first_radial_workflow.md"), String)
-    docs_index = read(joinpath(_PROJECT_ROOT, "docs", "index.md"), String)
-    docs_structure_plan = read(joinpath(_PROJECT_ROOT, "docs", "documentation_structure_plan.md"), String)
-    docs_consolidation_note = read(joinpath(_PROJECT_ROOT, "docs", "documentation_consolidation_note.md"), String)
-    documenter_transition_plan = read(joinpath(_PROJECT_ROOT, "docs", "documenter_transition_plan.md"), String)
-    api_reference_plan = read(joinpath(_PROJECT_ROOT, "docs", "api_reference_first_pass.md"), String)
-    docs_hardening_plan = read(joinpath(_PROJECT_ROOT, "docs", "documentation_hardening_plan.md"), String)
-    docs_presentation_plan = read(joinpath(_PROJECT_ROOT, "docs", "documentation_presentation_plan.md"), String)
-    docs_navigation_note = read(joinpath(_PROJECT_ROOT, "docs", "documentation_navigation_feel_note.md"), String)
-    docs_deployment_note = read(joinpath(_PROJECT_ROOT, "docs", "documentation_deployment_note.md"), String)
-    docs_public_polish_note = read(joinpath(_PROJECT_ROOT, "docs", "public_polish_note.md"), String)
-    docs_public_story_note = read(joinpath(_PROJECT_ROOT, "docs", "public_story_status_note.md"), String)
-    onboarding_plan = read(joinpath(_PROJECT_ROOT, "docs", "onboarding_frontdoor_plan.md"), String)
-    docs_project = read(joinpath(_PROJECT_ROOT, "docs", "Project.toml"), String)
-    docs_make = read(joinpath(_PROJECT_ROOT, "docs", "make.jl"), String)
-    docs_workflow = read(joinpath(_PROJECT_ROOT, ".github", "workflows", "docs.yml"), String)
-    docs_site_index = read(joinpath(_PROJECT_ROOT, "docs", "src", "index.md"), String)
-    docs_site_manual = read(joinpath(_PROJECT_ROOT, "docs", "src", "manual", "index.md"), String)
-    docs_site_examples_index = read(joinpath(_PROJECT_ROOT, "docs", "src", "examples", "index.md"), String)
-    docs_site_radial = read(joinpath(_PROJECT_ROOT, "docs", "src", "tutorials", "first_radial_workflow.md"), String)
-    docs_site_atomic = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "current_atomic_branch.md"), String)
-    docs_site_angular_track = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "angular_research_track.md"), String)
-    docs_site_ordinary = read(joinpath(_PROJECT_ROOT, "docs", "src", "explanations", "current_ordinary_branch.md"), String)
-    docs_site_examples = read(joinpath(_PROJECT_ROOT, "docs", "src", "howto", "example_guide.md"), String)
-    docs_site_developer = read(joinpath(_PROJECT_ROOT, "docs", "src", "developer", "index.md"), String)
-    docs_site_developer_notes = read(joinpath(_PROJECT_ROOT, "docs", "src", "developer", "supporting_notes.md"), String)
-    docs_site_reference_index = read(joinpath(_PROJECT_ROOT, "docs", "src", "reference", "index.md"), String)
-    docs_site_reference_bases = read(joinpath(_PROJECT_ROOT, "docs", "src", "reference", "bases_and_mappings.md"), String)
-    docs_site_reference_ops = read(joinpath(_PROJECT_ROOT, "docs", "src", "reference", "operators_and_diagnostics.md"), String)
-    docs_site_reference_atomic = read(joinpath(_PROJECT_ROOT, "docs", "src", "reference", "atomic_and_ordinary.md"), String)
-    docs_site_reference_export = read(joinpath(_PROJECT_ROOT, "docs", "src", "reference", "export.md"), String)
-    current_atomic_branch = read(joinpath(_PROJECT_ROOT, "docs", "current_atomic_branch.md"), String)
-    current_ordinary_branch = read(joinpath(_PROJECT_ROOT, "docs", "current_ordinary_branch.md"), String)
-    atomic_mean_field_supporting = read(joinpath(_PROJECT_ROOT, "docs", "atomic_mean_field_supporting_notes.md"), String)
-    ordinary_pgdg_supporting = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_supporting_notes.md"), String)
-    architecture = read(joinpath(_PROJECT_ROOT, "docs", "architecture.md"), String)
-    primitive_layer_note = read(joinpath(_PROJECT_ROOT, "docs", "intermediate_primitive_layer.md"), String)
-    radial_primitive_note = read(joinpath(_PROJECT_ROOT, "docs", "radial_primitive_operator_layer.md"), String)
-    ordinary_coulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_coulomb_expansion_path.md"), String)
-    mapped_ordinary_note = read(joinpath(_PROJECT_ROOT, "docs", "mapped_ordinary_basis.md"), String)
-    short_gaucoulomb_note = read(joinpath(_PROJECT_ROOT, "docs", "short_gaucoulomb_backend.md"), String)
-    ordinary_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_decision.md"), String)
-    ordinary_pgdg_comx_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_comx.md"), String)
-    ordinary_pgdg_refinement_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_proxy_refinement.md"), String)
-    ordinary_pgdg_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_backend_pivot.md"), String)
-    atomic_ylm_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ylm_layer.md"), String)
-    atomic_ida_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_layer.md"), String)
-    atomic_two_electron_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_two_electron.md"), String)
-    atomic_direct_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_direct.md"), String)
-    atomic_exchange_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_exchange.md"), String)
-    atomic_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_fock.md"), String)
-    atomic_spin_fock_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_spin_fock.md"), String)
-    atomic_uhf_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_ida_uhf.md"), String)
-    atomic_export_note = read(joinpath(_PROJECT_ROOT, "docs", "hamiltonian_export_fullida_dense.md"), String)
-    atomic_sliced_export_note = read(joinpath(_PROJECT_ROOT, "docs", "hamiltonian_export_sliced_blocks.md"), String)
-    atomic_export_smoke_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_export_consumer_smoke.md"), String)
-    atomic_export_active_note = read(joinpath(_PROJECT_ROOT, "docs", "atomic_export_active_space_validation.md"), String)
-    gaunt_backend_note = read(joinpath(_PROJECT_ROOT, "docs", "gaunt_backend_note.md"), String)
-    example_guide = read(joinpath(_PROJECT_ROOT, "docs", "example_guide.md"), String)
-    ordinary_one_body_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_one_body_fidelity.md"), String)
-    ordinary_hybrid_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_regime.md"), String)
-    ordinary_sho_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_sho_spectral_test.md"), String)
-    ordinary_vee_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_cartesian_vee_validation.md"), String)
-    ordinary_hybrid_vee_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_cartesian_hybrid_vee_validation.md"), String)
-    ordinary_hybrid_consolidation_note = read(joinpath(_PROJECT_ROOT, "docs", "ordinary_pgdg_hybrid_consolidation.md"), String)
-    global_map_note = read(joinpath(_PROJECT_ROOT, "docs", "global_map_local_contraction.md"), String)
-    leaf_pgdg_note = read(joinpath(_PROJECT_ROOT, "docs", "leaf_pgdg_1d.md"), String)
-    global_contraction_note = read(joinpath(_PROJECT_ROOT, "docs", "global_mapped_leaf_contraction_1d.md"), String)
-    terminology = read(joinpath(_PROJECT_ROOT, "docs", "terminology.md"), String)
-    roadmap = read(joinpath(_PROJECT_ROOT, "ROADMAP.md"), String)
-    status = read(joinpath(_PROJECT_ROOT, "STATUS.md"), String)
+    read_doc(parts...) = read(joinpath(_PROJECT_ROOT, parts...), String)
+    contains_all(text, phrases...) = all(phrase -> occursin(phrase, text), phrases)
+    contains_all_lower(text, phrases...) = begin
+        lowered = lowercase(text)
+        all(phrase -> occursin(lowercase(phrase), lowered), phrases)
+    end
 
-    @test !occursin("primitive_kinetic_matrix", design)
-    @test !occursin("CombinedMapping", design)
-    @test !occursin("ScaledMapping", design)
-    @test !occursin("NoDiagonalApproximation", design)
-    @test occursin("Gausslets are localized, orthogonal basis functions constructed from short", readme)
-    @test occursin("They were developed to combine several properties", readme)
-    @test occursin("mature **radial / atomic workflow**", readme)
-    @test occursin("A first useful calculation", readme)
-    @test occursin("Best first path through the repository", readme)
-    @test occursin("examples/04_hydrogen_ground_state.jl", readme)
-    @test occursin("examples/15_atomic_hydrogen_ylm.jl", readme)
-    @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/", readme)
-    @test occursin("https://img.shields.io/badge/docs-dev-blue.svg", readme)
-    @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/manual/", readme)
-    @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/reference/", readme)
-    @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/developer/", readme)
-    @test occursin("## Acknowledgments", readme)
-    @test occursin("OpenAI Codex-style interactive", readme)
-    @test occursin("author-driven", readme)
-    @test occursin("AsinhMapping(c = c, s = s)", readme)
-    @test occursin("ordinary Julia keyword arguments", readme)
-    @test occursin("Lowest hydrogen energy", readme)
-    @test occursin("diag = basis_diagnostics(rb)", readme)
-    @test occursin("ops = atomic_operators(rb, grid; Z = Z, lmax = 2)", readme)
-    @test !occursin("reference_spacing = 1.0", readme)
-    @test !occursin("tails = 6", readme)
-    @test !occursin("odd_even_kmax = 6", readme)
-    @test !occursin("xgaussians = XGaussian[]", readme)
-    @test occursin("Pkg.add(url = \"https://github.com/srwhite59/GaussletBases.jl\")", readme)
-    @test occursin("s = 0.2", atomic_setup)
-    @test occursin("odd_even_kmax = 6", atomic_setup)
-    @test occursin("accuracy = :veryhigh", atomic_setup)
-    @test occursin("examples/04_hydrogen_ground_state.jl", radial_workflow)
-    @test occursin("Quickstart", radial_workflow)
-    @test occursin("quadrature_rmax = 30.0", radial_workflow)
-    @test occursin("ordinary Julia keyword arguments", radial_workflow)
-    @test occursin("recommended_atomic_setup.md", radial_workflow)
-    @test occursin("xgaussians", radial_workflow)
-    @test occursin("example_guide.md", radial_workflow)
-    @test occursin("if you are new", lowercase(docs_index))
-    @test occursin("if you want radial atoms", lowercase(docs_index))
-    @test occursin("if you want the ordinary cartesian branch", lowercase(docs_index))
-    @test occursin("if you want advanced primitive and hierarchy work", lowercase(docs_index))
-    @test occursin("if you want research and development notes", lowercase(docs_index))
-    @test occursin("https://srwhite59.github.io/GaussletBases.jl/dev/", docs_index)
-    @test occursin("atomic_mean_field_supporting_notes.md", docs_index)
-    @test occursin("ordinary_pgdg_supporting_notes.md", docs_index)
-    @test occursin("onboarding docs", lowercase(docs_structure_plan))
-    @test occursin("current workflow docs", lowercase(docs_structure_plan))
-    @test occursin("supporting notes", lowercase(docs_structure_plan))
-    @test occursin("what duplication still remains", lowercase(docs_consolidation_note))
-    @test occursin("atomic mean-field chain", lowercase(docs_consolidation_note))
-    @test occursin("ordinary pgdg development chain", lowercase(docs_consolidation_note))
-    @test occursin("documenter-based structure", lowercase(documenter_transition_plan))
-    @test occursin("tutorials / getting started", lowercase(documenter_transition_plan))
-    @test occursin("api reference from docstrings", lowercase(documenter_transition_plan))
-    @test occursin("incremental", lowercase(documenter_transition_plan))
-    @test occursin("curated api reference", lowercase(api_reference_plan))
-    @test occursin("@docs", api_reference_plan)
-    @test occursin("@autodocs", api_reference_plan)
-    @test occursin("docstrings should answer questions", lowercase(api_reference_plan))
-    @test occursin("docs build run automatically in ci", lowercase(docs_hardening_plan))
-    @test occursin("small doctest slice", lowercase(docs_hardening_plan))
-    @test occursin("checkdocs", lowercase(docs_hardening_plan))
-    @test occursin("curated `@docs` pages", lowercase(docs_hardening_plan))
-    @test occursin("user-facing julia package docs site", lowercase(docs_presentation_plan))
-    @test occursin("home", lowercase(docs_presentation_plan))
-    @test occursin("manual", lowercase(docs_presentation_plan))
-    @test occursin("reference", lowercase(docs_presentation_plan))
-    @test occursin("developer notes", lowercase(docs_presentation_plan))
-    @test occursin("navigation feel", lowercase(docs_navigation_note))
-    @test occursin("primary user documents", lowercase(docs_navigation_note))
-    @test occursin("krylovkit", lowercase(docs_navigation_note))
-    @test occursin("delivery surface", lowercase(docs_deployment_note))
-    @test occursin("deploydocs", docs_deployment_note)
-    @test occursin("github pages", lowercase(docs_deployment_note))
-    @test occursin("public-facing polish pass", lowercase(docs_public_polish_note))
-    @test occursin("examples more visible", lowercase(docs_public_polish_note))
-    @test occursin("codex-style interactive coding assistance", lowercase(docs_public_polish_note))
-    @test occursin("public opening of the", lowercase(docs_public_story_note))
-    @test occursin("real second workflow", lowercase(docs_public_story_note))
-    @test occursin("generalized eigensolve", lowercase(docs_public_story_note))
-    @test occursin("front door", lowercase(onboarding_plan))
-    @test occursin("what belongs in the readme", lowercase(onboarding_plan))
-    @test occursin("what belongs in the radial quickstart", lowercase(onboarding_plan))
-    @test occursin("what belongs only in the deeper setup note", lowercase(onboarding_plan))
-    @test isdir(joinpath(_PROJECT_ROOT, "docs", "src"))
-    @test occursin("Documenter", docs_project)
-    @test occursin("makedocs", docs_make)
-    @test occursin("doctest = true", docs_make)
-    @test occursin("checkdocs = :none", docs_make)
-    @test occursin("deploydocs(", docs_make)
-    @test occursin("prettyurls = DOCS_CI", docs_make)
-    @test occursin("canonical = DOCS_CI ?", docs_make)
-    @test occursin("devbranch = \"main\"", docs_make)
-    @test occursin("\"Manual\"", docs_make)
-    @test occursin("\"Examples\"", docs_make)
-    @test occursin("\"Reference\"", docs_make)
-    @test occursin("\"Developer Notes\"", docs_make)
-    @test occursin("hide(\"First radial workflow\"", docs_make)
-    @test occursin("hide(\"Angular research track\"", docs_make)
-    @test occursin("hide(\"Bases and mappings\"", docs_make)
-    @test occursin("name: Docs", docs_workflow)
-    @test occursin("julia --project=docs docs/make.jl", docs_workflow)
-    @test occursin("Pkg.develop(PackageSpec(path=pwd()))", docs_workflow)
-    @test occursin("contents: write", docs_workflow)
-    @test occursin("GITHUB_TOKEN", docs_workflow)
-    @test occursin("Start here", docs_site_index)
-    @test occursin("Build the docs locally", docs_site_index)
-    @test occursin("Primary documents", docs_site_index)
-    @test occursin("Manual", docs_site_index)
-    @test occursin("Examples", docs_site_index)
-    @test occursin("Reference", docs_site_index)
-    @test occursin("Developer Notes", docs_site_index)
-    @test occursin("Manual, Algorithms, Examples, and Reference", docs_site_index)
-    @test occursin("user-facing manual", lowercase(docs_site_manual))
-    @test occursin("Who this manual is for", docs_site_manual)
-    @test occursin("Recommended reading order", docs_site_manual)
-    @test occursin("If you want more depth later", docs_site_manual)
-    @test occursin("Developer Notes section is where", docs_site_manual)
-    @test occursin("This page is the visible examples entry point", docs_site_examples_index)
-    @test occursin("Start with these", docs_site_examples_index)
-    @test occursin("Then choose a branch", docs_site_examples_index)
-    @test occursin("Full curated guide", docs_site_examples_index)
-    @test occursin("Bases and mappings", docs_site_radial)
-    @test occursin("Operators and diagnostics", docs_site_radial)
-    @test occursin("AsinhMapping(c = c, s = s)", docs_site_radial)
-    @test occursin("Lowest hydrogen energy", docs_site_radial)
-    @test occursin("current user-facing status read", lowercase(docs_site_atomic))
-    @test occursin("density-density / IDA", docs_site_atomic)
-    @test occursin("solver-facing export", lowercase(docs_site_atomic))
-    @test occursin("developer/supporting material", lowercase(docs_site_atomic))
-    @test occursin("current user-facing status read", lowercase(docs_site_ordinary))
-    @test occursin("pgdg-style analytic route", lowercase(docs_site_ordinary))
-    @test occursin("stress tests", lowercase(docs_site_ordinary))
-    @test occursin("Core starting sequence", docs_site_examples)
-    @test occursin("Ordinary Cartesian sequence", docs_site_examples)
-    @test occursin("Developer Notes", docs_site_examples)
-    @test occursin("lower-priority development, architecture, and history", lowercase(docs_site_developer))
-    @test occursin("supporting note map", lowercase(docs_site_developer))
-    @test occursin("flat", lowercase(docs_site_developer_notes))
-    @test occursin("`docs/` tree", docs_site_developer_notes)
-    @test occursin("jldoctest", docs_site_reference_bases)
-    @test occursin("jldoctest", docs_site_reference_ops)
-    @test occursin("jldoctest", docs_site_reference_atomic)
-    @test occursin("First radial workflow", docs_site_reference_bases)
-    @test occursin("Current atomic branch", docs_site_reference_atomic)
-    @test occursin("Angular research track", docs_site_manual)
-    @test occursin("active research track", lowercase(docs_site_angular_track))
-    @test occursin("hooke remains important", lowercase(docs_site_angular_track))
-    @test occursin("hf", lowercase(docs_site_angular_track))
-    @test occursin("small ed", lowercase(docs_site_angular_track))
-    @test occursin("hamio / hfdmrg-facing hf bridge", lowercase(docs_site_angular_track))
-    @test occursin("sphere_point_set_orders", docs_site_angular_track)
-    @test occursin("sphere_point_set(order)", docs_site_angular_track)
-    @test occursin("curated_sphere_point_set", docs_site_angular_track)
-    @test occursin("fibonacci_sphere_point_set", docs_site_angular_track)
-    @test occursin("optimize_sphere_point_set", docs_site_angular_track)
-    @test occursin("full vendored optimized", lowercase(docs_site_angular_track))
-    @test occursin("sphere-point collection", lowercase(docs_site_angular_track))
-    @test occursin("curated fixture subset", lowercase(docs_site_angular_track))
-    @test occursin("explicit optional paths", lowercase(docs_site_angular_track))
-    @test occursin("build_shell_local_injected_angular_basis", docs_site_angular_track)
-    @test occursin("build_atomic_shell_local_angular_assembly", docs_site_angular_track)
-    @test occursin("shell-to-atom angular assembly", lowercase(docs_site_angular_track))
-    @test occursin("build_atomic_injected_angular_one_body_benchmark", docs_site_angular_track)
-    @test occursin("one-electron angular benchmark", lowercase(docs_site_angular_track))
-    @test occursin("build_atomic_injected_angular_hf_style_benchmark", docs_site_angular_track)
-    @test occursin("hf-style benchmark", lowercase(docs_site_angular_track))
-    @test occursin("build_atomic_injected_angular_hfdmrg_payload", docs_site_angular_track)
-    @test occursin("build_atomic_injected_angular_hfdmrg_hf_adapter", docs_site_angular_track)
-    @test occursin("build_atomic_injected_angular_hfdmrg_hf_seeds", docs_site_angular_track)
-    @test occursin("run_atomic_injected_angular_hfdmrg_hf", docs_site_angular_track)
-    @test occursin("in-memory hfdmrg-facing hf adapter", lowercase(docs_site_angular_track))
-    @test occursin("primary stable handshake", lowercase(docs_site_angular_track))
-    @test occursin("open-shell", lowercase(docs_site_angular_track))
-    @test occursin("partially", lowercase(docs_site_angular_track))
-    @test occursin("external paper-side drivers", lowercase(docs_site_angular_track))
-    @test !occursin("tmp/work/angular_hfdmrg_payload_direct_scan.jl", docs_site_angular_track)
-    @test occursin("build_atomic_injected_angular_small_ed_benchmark", docs_site_angular_track)
-    @test occursin("small-ed benchmark", lowercase(docs_site_angular_track))
-    @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_angular_track)
-    @test occursin("exact common low-`l` reference", docs_site_angular_track)
-    @test occursin("Angular research track", docs_site_atomic)
-    @test occursin("shell-local injected angular basis construction and shell-to-atom assembly", lowercase(docs_site_atomic))
-    @test occursin("experimental", lowercase(docs_site_atomic))
-    @test !occursin("generalized eigen", lowercase(readme))
-    @test !occursin("generalized eigen", lowercase(docs_site_index))
-    @test !occursin("generalized eigen", lowercase(docs_site_manual))
-    @test !occursin("generalized eigen", lowercase(docs_site_examples_index))
-    @test occursin("first curated api-reference slice", lowercase(docs_site_reference_index))
-    @test occursin("UniformBasisSpec", docs_site_reference_bases)
-    @test occursin("AsinhMapping", docs_site_reference_bases)
-    @test occursin("basis_diagnostics", docs_site_reference_ops)
-    @test occursin("atomic_ida_operators", docs_site_reference_atomic)
-    @test occursin("mapped_cartesian_hydrogen_energy", docs_site_reference_atomic)
-    @test occursin("atomic_ida_density_interaction_matrix", docs_site_reference_export)
-    @test occursin("atomic_hamv6_payload", docs_site_reference_export)
-    @test occursin("angular_benchmark_exact_hamv6_payload", docs_site_reference_export)
-    @test occursin("write_fullida_dense_jld2", docs_site_reference_export)
-    @test occursin("write_atomic_hamv6_jld2", docs_site_reference_export)
-    @test occursin("write_angular_benchmark_exact_hamv6_jld2", docs_site_reference_export)
-    @test occursin("write_sliced_ham_jld2", docs_site_reference_export)
-    @test occursin("build_atomic_injected_angular_hfdmrg_payload", docs_site_reference_export)
-    @test occursin("HFDMRG.solve_hfdmrg", docs_site_reference_export)
-    @test occursin("integral-diagonal approximation (IDA)", readme)
-    @test occursin("integral-diagonal approximation (IDA)", docs_site_index)
-    @test occursin("ordinary gausslets are the broad foundation", lowercase(architecture))
-    @test occursin("radial gausslets are the current mature public-facing workflow", lowercase(architecture))
-    @test occursin("first minimal atomic mean-field line", lowercase(architecture))
-    @test occursin("it provides a small uhf kernel for the current atomic ida approximation", lowercase(architecture))
-    @test occursin("global mapped layer plus local contraction", lowercase(architecture))
-    @test occursin("where to navigate next", lowercase(architecture))
-    @test occursin("docs/index.md", architecture)
-    @test occursin("docs/current_atomic_branch.md", architecture)
-    @test occursin("docs/current_ordinary_branch.md", architecture)
-    @test occursin("PrimitiveSet1D", primitive_layer_note)
-    @test occursin("BasisRepresentation1D", primitive_layer_note)
-    @test occursin("HierarchicalBasisPartition1D", primitive_layer_note)
-    @test occursin("GlobalMappedPrimitiveLayer1D", primitive_layer_note)
-    @test occursin("LeafBoxContractionLayer1D", primitive_layer_note)
-    @test occursin("LeafLocalPGDG1D", primitive_layer_note)
-    @test occursin("the basis is not a black box", primitive_layer_note)
-    @test occursin("one global mapped primitive layer", primitive_layer_note)
-    @test occursin("primitive_set(rb)", radial_primitive_note)
-    @test occursin("not to derive analytic formulas", lowercase(radial_primitive_note))
-    @test occursin("prepares the way for ylm", lowercase(radial_primitive_note))
-    @test occursin("coulomb expansion first", lowercase(ordinary_coulomb_note))
-    @test occursin("shortgaucoulomb.jl", lowercase(ordinary_coulomb_note))
-    @test occursin("3d grid", lowercase(ordinary_coulomb_note))
-    @test occursin("mapped-`u` grid", ordinary_coulomb_note)
-    @test occursin("MappedUniformBasisSpec", mapped_ordinary_note)
-    @test occursin("fit_asinh_mapping_for_extent", mapped_ordinary_note)
-    @test occursin("a general 3d tensor-product basis framework", lowercase(mapped_ordinary_note))
-    @test occursin("current working asinh hydrogen study", lowercase(mapped_ordinary_note))
-    @test occursin("not as a claim that", lowercase(mapped_ordinary_note))
-    @test occursin("`asinhmapping` or the present coupled `c,s` tuning", lowercase(mapped_ordinary_note))
-    @test occursin("source-of-truth", lowercase(short_gaucoulomb_note))
-    @test occursin("almost verbatim", lowercase(short_gaucoulomb_note))
-    @test occursin("coulombgaussianexpansion", lowercase(short_gaucoulomb_note))
-    @test occursin("gaussian_factor_matrix", short_gaucoulomb_note)
-    @test occursin("115", ordinary_pgdg_note)
-    @test occursin("135", ordinary_pgdg_note)
-    @test occursin("takeshi/yanai", lowercase(ordinary_pgdg_note))
-    @test occursin("primitive/contraction-level analytic prototype", lowercase(ordinary_pgdg_note))
-    @test occursin("comx/localization", lowercase(ordinary_pgdg_note))
-    @test occursin("experimental", lowercase(ordinary_pgdg_comx_note))
-    @test occursin("position-localization", lowercase(ordinary_pgdg_comx_note))
-    @test occursin("post-comx analytic path", lowercase(ordinary_pgdg_comx_note))
-    @test occursin("white–lindsey", lowercase(ordinary_pgdg_refinement_note))
-    @test occursin("nearly identical span", lowercase(ordinary_pgdg_refinement_note))
-    @test occursin("weighted log-quadratic gaussian fit", lowercase(ordinary_pgdg_refinement_note))
-    @test occursin("hydrogen energy only as an end-to-end check", lowercase(ordinary_pgdg_refinement_note))
-    @test occursin("numerical_reference", ordinary_pgdg_backend_note)
-    @test occursin("pgdg_experimental", ordinary_pgdg_backend_note)
-    @test occursin("mild-to-moderate distortion regime", lowercase(ordinary_pgdg_backend_note))
-    @test occursin("validation route", lowercase(ordinary_pgdg_backend_note))
-    @test occursin("YlmChannel", atomic_ylm_note)
-    @test occursin("AtomicOneBodyOperators", atomic_ylm_note)
-    @test occursin("hydrogen", lowercase(atomic_ylm_note))
-    @test occursin("He / IDA", atomic_ylm_note)
-    @test occursin("AtomicIDAOperators", atomic_ida_note)
-    @test occursin("radial multipole", lowercase(atomic_ida_note))
-    @test occursin("not solve the many-electron problem", lowercase(atomic_ida_note))
-    @test occursin("channel-major", lowercase(atomic_ida_note))
-    @test occursin("1 up, 1 down", atomic_two_electron_note)
-    @test occursin("AtomicIDAOperators", atomic_two_electron_note)
-    @test occursin("orthonormal", lowercase(atomic_two_electron_note))
-    @test occursin("h \\otimes I + I \\otimes h", atomic_two_electron_note)
-    @test occursin("ordinary Hermitian eigenproblem", atomic_two_electron_note)
-    @test occursin("density-density", lowercase(atomic_two_electron_note))
-    @test occursin("first genuinely interacting calculation", lowercase(atomic_two_electron_note))
-    @test occursin("spatial one-particle density matrix", lowercase(atomic_direct_note))
-    @test occursin("direct/hartree", lowercase(atomic_direct_note))
-    @test occursin("radial-diagonal", lowercase(atomic_direct_note))
-    @test occursin("dense `angular_kernel`", atomic_direct_note)
-    @test occursin("exchange", lowercase(atomic_direct_note))
-    @test occursin("exchange means", lowercase(atomic_exchange_note))
-    @test occursin("radial-pair", lowercase(atomic_exchange_note))
-    @test occursin("four-index coulomb contraction", lowercase(atomic_exchange_note))
-    @test occursin("f = h + j - k", lowercase(atomic_exchange_note))
-    @test occursin("f = h + j - k", lowercase(atomic_fock_note))
-    @test occursin("not a full scf framework", lowercase(atomic_fock_note))
-    @test occursin("choose occupations", lowercase(atomic_fock_note))
-    @test occursin("uhf-style", lowercase(atomic_spin_fock_note))
-    @test occursin("density_alpha", lowercase(atomic_spin_fock_note))
-    @test occursin("density_beta", lowercase(atomic_spin_fock_note))
-    @test occursin("uses the total density", lowercase(atomic_spin_fock_note))
-    @test occursin("exchange term uses only the same-spin density", lowercase(atomic_spin_fock_note))
-    @test occursin("spinless-model helper", lowercase(atomic_spin_fock_note))
-    @test occursin("minimal uhf layer", lowercase(atomic_uhf_note))
-    @test occursin("density_alpha", lowercase(atomic_uhf_note))
-    @test occursin("density_beta", lowercase(atomic_uhf_note))
-    @test occursin("orbital occupations", lowercase(atomic_uhf_note))
-    @test occursin("uhf total energy", lowercase(atomic_uhf_note))
-    @test occursin("fixed-point iteration", lowercase(atomic_uhf_note))
-    @test occursin("fullida_dense_v1", atomic_export_note)
-    @test occursin("dense bridge producer", lowercase(atomic_export_note))
-    @test occursin("density-density", lowercase(atomic_export_note))
-    @test occursin("two-index ida", lowercase(atomic_export_note))
-    @test occursin("atomicidaoperators", lowercase(atomic_export_note))
-    @test occursin("dense export came first", lowercase(atomic_sliced_export_note))
-    @test occursin("layout/*", atomic_sliced_export_note)
-    @test occursin("basis/*", atomic_sliced_export_note)
-    @test occursin("ordering/*", atomic_sliced_export_note)
-    @test occursin("onebody/*", atomic_sliced_export_note)
-    @test occursin("twobody/*", atomic_sliced_export_note)
-    @test occursin("pair-diagonal", lowercase(atomic_sliced_export_note))
-    @test occursin("not a full four-index coulomb tensor", lowercase(atomic_sliced_export_note))
-    @test occursin("two atomic export layers", lowercase(atomic_export_smoke_note))
-    @test occursin("read_ham(...; validate=true)", atomic_export_smoke_note)
-    @test occursin("compatible as written", lowercase(atomic_export_smoke_note))
-    @test occursin("ordinary export", lowercase(atomic_export_smoke_note))
-    @test occursin("schema compatibility is now established", lowercase(atomic_export_active_note))
-    @test occursin("activespaceops.dense_h1", lowercase(atomic_export_active_note))
-    @test occursin("build_dense_vblocks", lowercase(atomic_export_active_note))
-    @test occursin("dense_h1", atomic_export_active_note)
-    @test occursin("interaction_model = \"density_density_ida\"", atomic_export_active_note)
-    @test occursin("defer ordinary export", lowercase(atomic_export_active_note))
-    @test occursin("GauntTables", gaunt_backend_note)
-    @test occursin("public atomic story should remain the same", lowercase(gaunt_backend_note))
-    @test occursin("src/atomic_ida.jl", gaunt_backend_note)
-    @test occursin("13_global_leaf_contraction.jl", example_guide)
-    @test occursin("Core starting sequence", example_guide)
-    @test occursin("Radial and atomic sequence", example_guide)
-    @test occursin("Ordinary Cartesian sequence", example_guide)
-    @test occursin("Primitive-layer and contraction sequence", example_guide)
-    @test occursin("Hierarchy and current corrected direction", example_guide)
-    @test occursin("Prototype side branch", example_guide)
-    @test occursin("15_atomic_hydrogen_ylm.jl", example_guide)
-    @test occursin("23_cartesian_hydrogen_coulomb_expansion.jl", example_guide)
-    @test occursin("24_mapped_cartesian_hydrogen.jl", example_guide)
-    @test occursin("25_mapped_cartesian_hydrogen_backends.jl", example_guide)
-    @test occursin("33_ordinary_cartesian_1s2_vee.jl", example_guide)
-    @test occursin("38_qiu_white_reference_vee.jl", example_guide)
-    @test occursin("26_ordinary_cartesian_ida.jl", example_guide)
-    @test occursin("27_ordinary_cartesian_ida_localized_backends.jl", example_guide)
-    @test occursin("28_ordinary_one_body_fidelity.jl", example_guide)
-    @test occursin("29_hybrid_mapped_cartesian_hydrogen.jl", example_guide)
-    @test occursin("30_ordinary_sho_spectra.jl", example_guide)
-    @test occursin("legacy/internal experimental regressions", lowercase(example_guide))
-    @test occursin("16_atomic_ida_ingredients.jl", example_guide)
-    @test occursin("19_atomic_ida_direct.jl", example_guide)
-    @test occursin("20_atomic_ida_exchange.jl", example_guide)
-    @test occursin("21_atomic_ida_fock.jl", example_guide)
-    @test occursin("22_atomic_ida_uhf.jl", example_guide)
-    @test occursin("31_atomic_fullida_dense_export.jl", example_guide)
-    @test occursin("32_atomic_sliced_export.jl", example_guide)
-    @test occursin("17_atomic_ida_two_electron.jl", example_guide)
-    @test occursin("18_atomic_ida_two_electron_lanczos.jl", example_guide)
-    @test occursin("docs/index.md", example_guide)
-    @test occursin("docs/current_atomic_branch.md", example_guide)
-    @test occursin("docs/current_ordinary_branch.md", example_guide)
-    @test occursin("localized pgdg route", lowercase(ordinary_one_body_note))
-    @test occursin("remaining issue is `H1`", ordinary_one_body_note)
-    @test occursin("kinetic", lowercase(ordinary_one_body_note))
-    @test occursin("aligned-kinetic route", ordinary_one_body_note)
-    @test occursin("make the ordinary cartesian `vee` layer explicit", lowercase(ordinary_vee_note))
-    @test occursin("doubly occupied noninteracting `1s` state", ordinary_vee_note)
-    @test occursin("(5 / 8) z", lowercase(ordinary_vee_note))
-    @test occursin("1.25 eh", lowercase(ordinary_vee_note))
-    @test occursin("friendlier hybrid/core-supported regime", lowercase(ordinary_hybrid_vee_note))
-    @test occursin("backbone-core gaussian contributions", lowercase(ordinary_hybrid_vee_note))
-    @test occursin("there is **not yet** a separate residual-gaussian transfer", lowercase(replace(ordinary_hybrid_vee_note, "‑" => "-")))
-    @test occursin("1.25 eh", lowercase(ordinary_hybrid_vee_note))
-    @test occursin("radial branch should stay numerical", lowercase(ordinary_hybrid_note))
-    @test occursin("white-lindsey", lowercase(replace(ordinary_hybrid_note, "–" => "-")))
-    @test occursin("core gaussian", lowercase(ordinary_hybrid_note))
-    @test occursin("stress-test regime", lowercase(ordinary_hybrid_note))
-    @test occursin("low-energy sho", lowercase(ordinary_sho_note))
-    @test occursin("low-momentum / low-order smooth completeness", lowercase(ordinary_sho_note))
-    @test occursin("nearly identical span/subspace", lowercase(ordinary_sho_note))
-    @test occursin("friendlier hybrid/core-supported regime", lowercase(ordinary_sho_note))
-    @test occursin("ordinary pgdg backend is good enough", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("legacy `basissets` file", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("readbasis.jl", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("puregaussiangausslet.jl", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("old/basisgen.jl", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("mapping heuristics should be read as provisional", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("radial branch should stay numerical", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("cc-pvdz", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("cc-pvtznc", lowercase(ordinary_hybrid_consolidation_note))
-    @test occursin("prototype", example_guide)
-    @test occursin("supporting notes", lowercase(example_guide))
-    @test occursin("what the atomic branch is today", lowercase(current_atomic_branch))
-    @test occursin("atomic_ylm_layer.md", current_atomic_branch)
-    @test occursin("atomic_ida_layer.md", current_atomic_branch)
-    @test occursin("atomic_ida_uhf.md", current_atomic_branch)
-    @test occursin("hamiltonian_export_fullida_dense.md", current_atomic_branch)
-    @test occursin("hamiltonian_export_sliced_blocks.md", current_atomic_branch)
-    @test occursin("atomic_export_consumer_smoke.md", current_atomic_branch)
-    @test occursin("atomic_export_active_space_validation.md", current_atomic_branch)
-    @test occursin("31_atomic_fullida_dense_export.jl", current_atomic_branch)
-    @test occursin("32_atomic_sliced_export.jl", current_atomic_branch)
-    @test occursin("supporting notes for the atomic line", lowercase(current_atomic_branch))
-    @test occursin("atomic_mean_field_supporting_notes.md", current_atomic_branch)
-    @test occursin("broad general atomic hf workflow", lowercase(current_atomic_branch))
-    @test occursin("what the ordinary branch is today", lowercase(current_ordinary_branch))
-    @test occursin("ordinary_cartesian_vee_validation.md", current_ordinary_branch)
-    @test occursin("ordinary_cartesian_hybrid_vee_validation.md", current_ordinary_branch)
-    @test occursin("ordinary_pgdg_hybrid_regime.md", current_ordinary_branch)
-    @test occursin("ordinary_sho_spectral_test.md", current_ordinary_branch)
-    @test occursin("ordinary_pgdg_hybrid_consolidation.md", current_ordinary_branch)
-    @test occursin("supporting notes for the ordinary line", lowercase(current_ordinary_branch))
-    @test occursin("ordinary_pgdg_supporting_notes.md", current_ordinary_branch)
-    @test occursin("legacy/internal supporting notes", lowercase(current_ordinary_branch))
-    @test occursin("asinhmapping is the current working map", lowercase(replace(current_ordinary_branch, "`" => "")))
-    @test occursin("fixed `a = 1/(2Z)` with `s` solved from `count` and `xmax`", current_ordinary_branch)
-    @test occursin("real second workflow", lowercase(current_ordinary_branch))
-    @test occursin("recommended supporting-note order", lowercase(atomic_mean_field_supporting))
-    @test occursin("atomic_ida_direct.md", atomic_mean_field_supporting)
-    @test occursin("atomic_ida_spin_fock.md", atomic_mean_field_supporting)
-    @test occursin("mergeable later", lowercase(atomic_mean_field_supporting))
-    @test occursin("recommended supporting-note order", lowercase(ordinary_pgdg_supporting))
-    @test occursin("ordinary_pgdg_decision.md", ordinary_pgdg_supporting)
-    @test occursin("ordinary_pgdg_backend_pivot.md", ordinary_pgdg_supporting)
-    @test occursin("asinhmapping", lowercase(ordinary_pgdg_supporting))
-    @test startswith(atomic_direct_note, "> **Status:** supporting note.")
-    @test startswith(atomic_exchange_note, "> **Status:** supporting note.")
-    @test startswith(atomic_fock_note, "> **Status:** supporting note.")
-    @test startswith(atomic_spin_fock_note, "> **Status:** supporting note.")
-    @test startswith(ordinary_pgdg_note, "> **Status:** supporting development note.")
-    @test startswith(ordinary_pgdg_comx_note, "> **Status:** supporting development note.")
-    @test startswith(ordinary_pgdg_refinement_note, "> **Status:** supporting development note.")
-    @test startswith(ordinary_pgdg_backend_note, "> **Status:** supporting development note.")
-    @test startswith(global_map_note, "> **Note for new users:**")
-    @test startswith(global_contraction_note, "> **Note for new users:**")
-    @test startswith(leaf_pgdg_note, "> **Note for new users:**")
-    @test occursin("LeafLocalPGDG1D", leaf_pgdg_note)
-    @test occursin("1D only", leaf_pgdg_note)
-    @test occursin("hierarchy-driven local basis generation", leaf_pgdg_note)
-    @test occursin("no historical nested-driver port", leaf_pgdg_note)
-    @test occursin("LeafGaussianSpec1D", leaf_pgdg_note)
-    @test occursin("augment_leaf_pgdg", leaf_pgdg_note)
-    @test occursin("GlobalMappedPrimitiveLayer1D", global_contraction_note)
-    @test occursin("LeafBoxContractionLayer1D", global_contraction_note)
-    @test occursin("one common basis over the whole region", global_contraction_note)
-    @test occursin("the uncontracted global mapped basis is usable directly", lowercase(global_contraction_note))
-    @test occursin("the basis is not the quadrature grid", terminology)
-    @test occursin("Primitive set", terminology)
-    @test occursin("contract_primitive_matrix", terminology)
-    @test occursin("An exact non-diagonal radial electron-electron layer", roadmap)
-    @test occursin("The first actual He / IDA-style solve", roadmap)
-    @test occursin("geometry-aware grouping", roadmap)
-    @test occursin("three directions are now real in the code", lowercase(roadmap))
-    @test occursin("real but newer ordinary / cartesian workflow", lowercase(roadmap))
-    @test !occursin("Gausslets.jl", readme)
-    @test occursin("three clear layers in the public story", lowercase(status))
-    @test occursin("mature extension of that workflow: the atomic angular line", lowercase(status))
-    @test occursin("mature extension of that workflow: minimal atomic mean-field", lowercase(status))
-    @test occursin("newer public-facing workflow: ordinary cartesian", lowercase(status))
-    @test occursin("a broad general hf/rhf/uhf workflow", lowercase(status))
-    @test occursin("prototype line inside the advanced research layer", lowercase(status))
-    @test occursin("one global mapped primitive layer", status)
+    design = read_doc("DESIGN.md")
+    readme = read_doc("README.md")
+    status = read_doc("STATUS.md")
+    roadmap = read_doc("ROADMAP.md")
+
+    docs_architecture = read_doc("docs", "architecture.md")
+    current_atomic_branch = read_doc("docs", "current_atomic_branch.md")
+    current_ordinary_branch = read_doc("docs", "current_ordinary_branch.md")
+    atomic_mean_field_supporting = read_doc("docs", "atomic_mean_field_supporting_notes.md")
+    ordinary_pgdg_supporting = read_doc("docs", "ordinary_pgdg_supporting_notes.md")
+    atomic_direct_note = read_doc("docs", "atomic_ida_direct.md")
+    ordinary_pgdg_note = read_doc("docs", "ordinary_pgdg_decision.md")
+    global_map_note = read_doc("docs", "global_map_local_contraction.md")
+    leaf_pgdg_note = read_doc("docs", "leaf_pgdg_1d.md")
+
+    docs_project = read_doc("docs", "Project.toml")
+    docs_make = read_doc("docs", "make.jl")
+    docs_workflow = read_doc(".github", "workflows", "docs.yml")
+
+    docs_site_index = read_doc("docs", "src", "index.md")
+    docs_site_manual = read_doc("docs", "src", "manual", "index.md")
+    docs_site_examples = read_doc("docs", "src", "howto", "example_guide.md")
+    docs_site_reference_index = read_doc("docs", "src", "reference", "index.md")
+    docs_site_reference_bases = read_doc("docs", "src", "reference", "bases_and_mappings.md")
+    docs_site_reference_ops = read_doc("docs", "src", "reference", "operators_and_diagnostics.md")
+    docs_site_reference_atomic = read_doc("docs", "src", "reference", "atomic_and_ordinary.md")
+    docs_site_reference_export = read_doc("docs", "src", "reference", "export.md")
+    docs_site_developer = read_doc("docs", "src", "developer", "index.md")
+    docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
+    docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
+    docs_site_atomic = read_doc("docs", "src", "explanations", "current_atomic_branch.md")
+    docs_site_ordinary = read_doc("docs", "src", "explanations", "current_ordinary_branch.md")
+    docs_site_angular_track = read_doc("docs", "src", "explanations", "angular_research_track.md")
+
+    @testset "Root Docs Authority And Story" begin
+        @test contains_all(
+            readme,
+            "# GaussletBases.jl",
+            "mature **radial / atomic workflow**",
+            "experimental **angular and advanced research track**",
+            "integral-diagonal approximation (IDA)",
+            "## Best first path through the repository",
+            "## Documentation map",
+            "https://srwhite59.github.io/GaussletBases.jl/dev/manual/",
+            "https://srwhite59.github.io/GaussletBases.jl/dev/reference/",
+            "https://srwhite59.github.io/GaussletBases.jl/dev/developer/",
+        )
+        @test contains_all_lower(
+            readme,
+            "ordinary cartesian workflow",
+            "bond-aligned diatomic nested fixed-source / fixed-block",
+            "geometry payload support",
+        )
+        @test !occursin("Gausslets.jl", readme)
+
+        @test contains_all(
+            status,
+            "# Current Status",
+            "## Mature",
+            "## Real but experimental",
+            "## Legacy / quarantined",
+            "### Radial / atomic line",
+            "### Bond-aligned diatomic workflow",
+            "### Angular research track",
+            "### Flat supporting-note history in `docs/`",
+        )
+        @test contains_all_lower(
+            status,
+            "exact cartesian overlap / projector / transfer primitives",
+            "supported one-build source reuse",
+            "experimental chain / square-lattice nested producers",
+            "old 1d comx-cleaned hybrid ordinary route",
+        )
+
+        @test contains_all(
+            roadmap,
+            "# Roadmap",
+            "## Current center of gravity",
+            "## Highest-value next work",
+            "### 2. Deepen the one-center Cartesian line",
+            "### 3. Mature the bond-aligned diatomic workflow",
+        )
+        @test contains_all_lower(
+            roadmap,
+            "one-center nested cartesian and bond-aligned diatomic workflow support",
+            "supported source reuse",
+            "compact-only cleanup",
+            "experimental chain / square-lattice promotion",
+        )
+
+        @test contains_all(
+            docs_architecture,
+            "# Architecture",
+            "This flat `docs/` file is no longer the current authority.",
+            "`docs/src/developer/architecture.md`",
+            "`docs/src/explanations/current_atomic_branch.md`",
+            "`docs/src/explanations/current_ordinary_branch.md`",
+        )
+
+        @test contains_all(
+            current_atomic_branch,
+            "# Current Atomic Branch",
+            "This flat `docs/` file is no longer the current authority.",
+            "`docs/src/explanations/current_atomic_branch.md`",
+            "`docs/src/developer/architecture.md`",
+            "`docs/src/reference/index.md`",
+        )
+
+        @test contains_all(
+            current_ordinary_branch,
+            "# Current Ordinary Branch",
+            "This flat `docs/` file is no longer the current authority.",
+            "`docs/src/explanations/current_ordinary_branch.md`",
+            "`docs/src/developer/architecture.md`",
+            "`docs/src/reference/index.md`",
+        )
+
+        @test !occursin("primitive_kinetic_matrix", design)
+        @test !occursin("CombinedMapping", design)
+        @test !occursin("ScaledMapping", design)
+        @test !occursin("NoDiagonalApproximation", design)
+    end
+
+    @testset "Rendered Docs Navigation And Authority" begin
+        @test contains_all(
+            docs_site_index,
+            "# GaussletBases.jl",
+            "## Start here",
+            "## Primary documents",
+            "## Manual first, Reference second",
+            "## Current scope",
+            "[Manual](manual/index.md)",
+            "[Algorithms](algorithms/index.md)",
+            "[Examples](examples/index.md)",
+            "[Reference](reference/index.md)",
+            "[Developer Notes](developer/index.md)",
+        )
+        @test contains_all_lower(
+            docs_site_index,
+            "mature radial / atomic workflow",
+            "ordinary cartesian mapped/hybrid workflow",
+            "advanced/research line",
+        )
+
+        @test contains_all(
+            docs_site_manual,
+            "# Manual",
+            "## Recommended reading order",
+            "## Branch-specific paths",
+            "## If you want more depth later",
+            "[Current atomic branch](../explanations/current_atomic_branch.md)",
+            "[Current ordinary branch](../explanations/current_ordinary_branch.md)",
+            "[Angular research track](../explanations/angular_research_track.md)",
+            "[Developer Notes](../developer/index.md)",
+        )
+        @test contains_all_lower(
+            docs_site_manual,
+            "main user-facing manual",
+            "recommended starting point",
+            "ordinary cartesian branch",
+        )
+
+        @test contains_all(
+            docs_site_examples,
+            "# Example guide",
+            "## Core starting sequence",
+            "## Radial and atomic sequence",
+            "## Ordinary Cartesian sequence",
+            "## Primitive and hierarchy sequence",
+            "[Current atomic branch](../explanations/current_atomic_branch.md)",
+            "[Current ordinary branch](../explanations/current_ordinary_branch.md)",
+            "[Developer Notes](../developer/index.md)",
+            "38_qiu_white_reference_vee.jl",
+        )
+        @test contains_all_lower(
+            docs_site_examples,
+            "legacy/internal experimental regressions",
+            "producer-side only",
+            "explicitly experimental",
+        )
+
+        @test contains_all(
+            docs_site_reference_index,
+            "# Reference overview",
+            "[Bases and mappings](bases_and_mappings.md)",
+            "[Operators and diagnostics](operators_and_diagnostics.md)",
+            "[Atomic and ordinary workflows](atomic_and_ordinary.md)",
+            "[Export layer](export.md)",
+            "[Manual](../manual/index.md)",
+        )
+        @test contains_all_lower(
+            docs_site_reference_index,
+            "first curated api-reference slice",
+            "workflow and interpretation",
+            "api questions",
+        )
+
+        @test contains_all(
+            docs_site_developer,
+            "# Developer Notes",
+            "## Main developer-facing pages",
+            "[Architecture and current direction](architecture.md)",
+            "[PGDG Cartesian efficiency contract](pgdg_cartesian_efficiency_contract.md)",
+            "[Numerical contracts](numerical_contracts.md)",
+            "[Supporting note map](supporting_notes.md)",
+        )
+        @test contains_all_lower(
+            docs_site_developer,
+            "lower-priority development",
+            "package-shape and architecture view",
+            "supporting note chains behind the current branch interpretations",
+        )
+
+        @test contains_all(
+            docs_site_developer_notes,
+            "# Supporting note map",
+            "## Current grouped supporting-note entry points",
+            "docs/atomic_mean_field_supporting_notes.md",
+            "docs/ordinary_pgdg_supporting_notes.md",
+            "docs/documenter_transition_plan.md",
+            "[Manual](../manual/index.md)",
+            "[Reference](../reference/index.md)",
+        )
+        @test contains_all_lower(
+            docs_site_developer_notes,
+            "supporting material rather than as the main user manual",
+            "recommended reading order",
+            "scientific development record",
+        )
+
+        @test contains_all(
+            docs_site_architecture,
+            "# Architecture and current direction",
+            "## Broad foundation",
+            "## Mature public-facing path",
+            "## Atomic line",
+            "## Ordinary line",
+            "## Current bottom line",
+        )
+        @test contains_all_lower(
+            docs_site_architecture,
+            "ordinary gausslets are the broad foundation",
+            "radial gausslets are the mature current workflow",
+            "primitive layers and contraction are the structural bridge to later work",
+        )
+    end
+
+    @testset "Current Branch Contracts" begin
+        @test contains_all(
+            docs_site_atomic,
+            "# Current atomic branch",
+            "## What the atomic branch is today",
+            "## Angular research track",
+            "## Documentation authority for this branch",
+            "[Developer Notes](../developer/index.md)",
+            "[Angular research track](angular_research_track.md)",
+        )
+        @test contains_all_lower(
+            docs_site_atomic,
+            "shortest current user-facing status read",
+            "density-density / ida",
+            "solver-facing export is already supported",
+            "supporting history",
+        )
+        @test occursin("HFDMRG", docs_site_atomic)
+
+        @test contains_all(
+            docs_site_ordinary,
+            "# Current ordinary branch",
+            "## What the ordinary branch is today",
+            "## Documentation authority for this branch",
+            "[Reference](../reference/index.md)",
+            "[Algorithms](../algorithms/index.md)",
+            "[Developer Notes](../developer/index.md)",
+        )
+        @test contains_all(
+            docs_site_ordinary,
+            ":numerical_reference",
+            ":pgdg_localized_experimental",
+            "AsinhMapping",
+        )
+        @test contains_all_lower(
+            docs_site_ordinary,
+            "pgdg-style analytic route is good enough on the mapped ordinary backbone",
+            "bond-aligned diatomic molecular supplement direct-product and prebuilt",
+            "nested fixed-block qiu-white routes are now also pgdg-capable",
+            "nested source-building front doors",
+            "experimental chain/square nested qw source wrappers",
+        )
+
+        @test contains_all(
+            docs_site_angular_track,
+            "# Angular Research Track",
+            "HFDMRG",
+            "sphere_point_set_orders",
+            "build_atomic_injected_angular_hfdmrg_payload",
+            "build_atomic_injected_angular_small_ed_benchmark",
+            "write_angular_benchmark_exact_hamv6_jld2",
+        )
+        @test contains_all_lower(
+            docs_site_angular_track,
+            "manuscript-facing and experimental",
+            "shell-local experimental construction",
+            "exact common low",
+            "not a frozen public api",
+        )
+    end
+
+    @testset "Docs Build And Reference Surfaces" begin
+        @test occursin("Documenter", docs_project)
+
+        @test contains_all(
+            docs_make,
+            "makedocs",
+            "doctest = true",
+            "checkdocs = :none",
+            "deploydocs(",
+            "prettyurls = DOCS_CI",
+            "\"Manual\"",
+            "\"Examples\"",
+            "\"Reference\"",
+            "\"Developer Notes\"",
+        )
+
+        @test contains_all(
+            docs_workflow,
+            "name: Docs",
+            "julia --project=docs docs/make.jl",
+            "Pkg.develop(PackageSpec(path=pwd()))",
+            "GITHUB_TOKEN",
+        )
+
+        @test contains_all(
+            docs_site_reference_bases,
+            "jldoctest",
+            "UniformBasisSpec",
+            "MappedUniformBasisSpec",
+            "white_lindsey_atomic_mapping",
+            "CombinedInvsqrtMapping",
+        )
+
+        @test contains_all(
+            docs_site_reference_ops,
+            "jldoctest",
+            "basis_diagnostics",
+            "radial_quadrature",
+            "kinetic_matrix",
+            "atomic_operators",
+        )
+
+        @test contains_all(
+            docs_site_reference_atomic,
+            "jldoctest",
+            "AtomicIDAOperators",
+            "mapped_ordinary_one_body_operators",
+            "ordinary_cartesian_qiu_white_operators",
+            "ordinary_cartesian_vee_expectation",
+        )
+
+        @test contains_all(
+            docs_site_reference_export,
+            "atomic_ida_density_interaction_matrix",
+            "fullida_dense_payload",
+            "sliced_ham_payload",
+            "atomic_hamv6_payload",
+            "angular_benchmark_exact_hamv6_payload",
+            "experimental_homonuclear_chain_nested_dense_payload",
+        )
+        @test contains_all_lower(
+            docs_site_reference_export,
+            "producer-side only",
+            "hfdmrg.solve_hfdmrg(...)",
+            "experimental rather than a settled public standard",
+        )
+    end
+
+    @testset "Representative Supporting Note Markers" begin
+        @test contains_all_lower(
+            atomic_mean_field_supporting,
+            "recommended supporting-note order",
+            "atomic_ida_direct.md",
+            "atomic_ida_spin_fock.md",
+        )
+        @test contains_all_lower(
+            ordinary_pgdg_supporting,
+            "recommended supporting-note order",
+            "ordinary_pgdg_decision.md",
+            "ordinary_pgdg_backend_pivot.md",
+            "asinhmapping",
+        )
+
+        @test startswith(atomic_direct_note, "> **Status:** supporting note.")
+        @test contains_all_lower(
+            atomic_direct_note,
+            "direct/hartree",
+            "radial-diagonal",
+            "dense `angular_kernel`",
+        )
+
+        @test startswith(ordinary_pgdg_note, "> **Status:** supporting development note.")
+        @test contains_all_lower(
+            ordinary_pgdg_note,
+            "primitive/contraction-level analytic prototype",
+            "comx/localization",
+            "135",
+            "115",
+        )
+
+        @test startswith(global_map_note, "> **Note for new users:**")
+        @test contains_all(
+            global_map_note,
+            "GlobalMappedPrimitiveLayer1D",
+            "global map + local shell or box contraction",
+        )
+
+        @test startswith(leaf_pgdg_note, "> **Note for new users:**")
+        @test contains_all(
+            leaf_pgdg_note,
+            "LeafLocalPGDG1D",
+            "hierarchy-driven local basis generation",
+            "no historical nested-driver port",
+            "augment_leaf_pgdg",
+        )
+    end
 end
