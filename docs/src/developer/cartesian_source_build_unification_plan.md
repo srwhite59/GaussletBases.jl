@@ -52,6 +52,14 @@ unification lines:
 - unify source-backed nested front doors and diagnostics through a shared
   nested-source contract
 
+That consolidation line is now deemed successfully accomplished for the
+current repo phase. Further work in this area is now optional follow-through:
+
+- public/front-door simplification if it becomes worth the churn
+- selective post-unification cleanup when new dead residue appears
+- test-suite semantic cleanup and trimming now that the runner split has given
+  the new architecture clearer ownership in the regression surface
+
 ## Target architecture
 
 The target architecture is:
@@ -367,7 +375,7 @@ Important constraint:
 
 ### Phase 6: unify source-backed nested front-door routes
 
-Status: in progress
+Status: done
 
 Scope:
 
@@ -387,6 +395,8 @@ Unification target:
 
 ### Phase 7: converge nested-source contracts across split geometries
 
+Status: done
+
 Scope:
 
 - diatomic source-backed contract
@@ -404,6 +414,8 @@ Unification target:
 
 ### Phase 8: optional broader public API cleanup
 
+Status: deferred / optional
+
 Only after the internal build contract is real and stable:
 
 - reduce public overload redundancy
@@ -413,7 +425,7 @@ Only after the internal build contract is real and stable:
 
 ## Progress so far
 
-As of 2026-04-21:
+As of 2026-04-22:
 
 - the normalized operator-build contract is real
 - operator-side orchestration is unified for:
@@ -423,27 +435,30 @@ As of 2026-04-21:
   - bond-aligned diatomic supplement nested fixed-block routes
   - atomic supplement direct-product routes
   - atomic supplement nested fixed-block routes
-- the main remaining duplication pressure has moved upward to the source-backed
-  nested front-door layer
-- the next contract question is no longer “can the operator seam be unified?”
-- it is “what common source-backed nested contract should diatomic, chain, and
-  square share, with atomic on the smaller subset?”
+- source-backed nested front-door orchestration is unified for:
+  - public bond-aligned diatomic nested source / fixed-block / diagnostics
+    routes
+  - experimental bond-aligned homonuclear chain nested wrappers
+  - experimental axis-aligned homonuclear square-lattice nested wrappers
+- the shared nested-source glass-box contract is real for:
+  - diatomic
+  - chain
+  - square
+  - atomic on the smaller honest subset
+- immediate post-unification compatibility residue has been removed
+- duplicated route-validator scaffolding has been consolidated onto
+  capability-driven helpers
+- the internal consolidation plan is therefore effectively complete for now
 
 ## Current bounded chunk
 
-The current bounded chunk should be:
+There is no active required bounded chunk on this consolidation line.
 
-- unify the source-backed nested front-door layer above the operator seam
-- keep geometry-policy files separate
-- use that work to establish the shared nested-source contract direction
+The next work should be treated as a separate follow-on line:
 
-Why this chunk now:
-
-- the operator-side unification is already far enough along
-- the current duplication is concentrated in source/fixed-block/diagnostics
-  wrappers
-- it advances the source-contract side of the architecture without forcing
-  false geometry unification
+- test-suite reorganization and trimming
+- optional public/front-door cleanup
+- occasional cleanup passes when newly-dead scaffolding becomes obvious
 
 ## Main risks
 
@@ -466,15 +481,15 @@ This reorganization effort does not mean:
 
 ## Current status
 
-As of 2026-04-21:
+As of 2026-04-22:
 
 - kernel-level decomposition is in good shape
 - geometry-policy separation is mostly right
 - operator-side orchestration duplication has been reduced substantially
-- source-backed nested front-door duplication above that layer is now the main
-  structural bloat
-- the next structural target is the shared nested-source contract across
-  diatomic/chain/square, with atomic on the smaller common subset
+- source-backed nested front-door duplication has also been reduced
+- the shared nested-source contract now exists on the intended honest subset
+- the main remaining structural cleanup opportunity has moved to the test
+  surface and to optional public-surface simplification
 
 ## Update rule
 

@@ -20,6 +20,7 @@ This section is where to go when you want:
 - [Architecture and current direction](architecture.md)
 - [Cartesian source/build unification plan](cartesian_source_build_unification_plan.md)
 - [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
+- [Test suite reorganization plan](test_suite_reorganization_plan.md)
 - [Post-decomposition efficiency resume plan](post_decomposition_efficiency_resume_plan.md)
 - [PGDG Cartesian efficiency contract](pgdg_cartesian_efficiency_contract.md)
 - [Numerical contracts](numerical_contracts.md)
