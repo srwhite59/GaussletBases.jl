@@ -74,7 +74,10 @@ Across those source-backed nested lines, the common glass-box subset is now:
 `shared_shell_provenance`, and `leaf_count`, while family-specific topology and
 split-policy diagnostics remain separate. The normalized front-door layer now
 routes that shared subset through one small internal nested-source contract
-helper instead of rebuilding it ad hoc per family.
+helper instead of rebuilding it ad hoc per family. The same internal glass-box
+layer now also covers one-center atomic on the smaller honest subset:
+`fixed_dimension`, atomic structure audit, `layer_dimensions`, and
+`layer_provenance`, while split-only topology fields stay split-route-only.
 
 Experimental supplement-bearing routes still keep their separate orchestration
 paths on purpose.

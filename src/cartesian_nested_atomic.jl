@@ -73,6 +73,7 @@ struct OneCenterAtomicNestedLayerStructure
     edge_retained_count::Int
     corner_retained_count::Int
     retained_dimension::Int
+    provenance::_CartesianNestedShellLayerProvenance3D
 end
 
 struct OneCenterAtomicNestedStructureDiagnostics
@@ -412,6 +413,27 @@ function _one_center_atomic_nested_layer_structure(
         edge_retained_count,
         corner_retained_count,
         size(shell.coefficient_matrix, 2),
+        shell.provenance,
+    )
+end
+
+function _one_center_atomic_layer_provenance(
+    working_box::NTuple{3,UnitRange{Int}},
+    layer_index::Int,
+    retained_dimension::Int,
+)
+    offset = layer_index - 1
+    source_box = ntuple(3) do axis
+        (first(working_box[axis]) + offset):(last(working_box[axis]) - offset)
+    end
+    next_inner_box = ntuple(3) do axis
+        (first(source_box[axis]) + 1):(last(source_box[axis]) - 1)
+    end
+    return _CartesianNestedShellLayerProvenance3D(
+        source_box,
+        next_inner_box,
+        prod(length.(source_box)) - prod(length.(next_inner_box)),
+        retained_dimension,
     )
 end
 
@@ -422,6 +444,7 @@ function one_center_atomic_nested_structure_diagnostics(
 )
     nlayers, core_side_count = _one_center_atomic_shell_layer_count(working_box_side_count, nside)
     retention = _one_center_atomic_complete_shell_retention(nside)
+    canonical_working_box = ntuple(_ -> 1:working_box_side_count, 3)
     layer_structures = OneCenterAtomicNestedLayerStructure[
         OneCenterAtomicNestedLayerStructure(
             layer,
@@ -429,6 +452,11 @@ function one_center_atomic_nested_structure_diagnostics(
             retention.edge_retained_count,
             retention.corner_retained_count,
             retention.shell_increment,
+            _one_center_atomic_layer_provenance(
+                canonical_working_box,
+                layer,
+                retention.shell_increment,
+            ),
         ) for layer in 1:nlayers
     ]
     total_face_retained_count = nlayers * retention.face_retained_count
@@ -562,6 +590,7 @@ function one_center_atomic_nested_structure_report(
     total_actual_basis_count::Union{Nothing,Int} = nothing,
     low_one_body_eigenvalues::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
+    common_contract = _nested_glass_box_contract(diagnostics)
     lines = String[
         "parent_side_count = $(diagnostics.parent_side_count)",
         "working_box_side_count = $(diagnostics.working_box_side_count)",
@@ -576,7 +605,7 @@ function one_center_atomic_nested_structure_report(
         "total_edge_retained_count = $(diagnostics.total_edge_retained_count)",
         "total_corner_retained_count = $(diagnostics.total_corner_retained_count)",
         "total_expected_gausslet_count = $(diagnostics.total_expected_gausslet_count)",
-        "total_actual_gausslet_count = $(diagnostics.total_actual_gausslet_count)",
+        "total_actual_gausslet_count = $(common_contract.fixed_dimension)",
         "layers_match_expected = $(diagnostics.layers_match_expected)",
     ]
     if !isnothing(supplement_orbital_count)
@@ -591,11 +620,23 @@ function one_center_atomic_nested_structure_report(
     if !isnothing(low_one_body_eigenvalues)
         push!(lines, "low_one_body_eigenvalues = $(repr(Float64[low_one_body_eigenvalues...]))")
     end
-    for layer in diagnostics.layer_structures
+    for (index, layer) in enumerate(diagnostics.layer_structures)
         push!(lines, "layer_$(layer.layer_index)_faces = $(layer.face_retained_count)")
         push!(lines, "layer_$(layer.layer_index)_edges = $(layer.edge_retained_count)")
         push!(lines, "layer_$(layer.layer_index)_corners = $(layer.corner_retained_count)")
-        push!(lines, "layer_$(layer.layer_index)_retained_dimension = $(layer.retained_dimension)")
+        push!(
+            lines,
+            "layer_$(layer.layer_index)_retained_dimension = $(common_contract.layer_dimensions[index])",
+        )
+        push!(lines, "layer_$(layer.layer_index)_source_box = $(layer.provenance.source_box)")
+        push!(
+            lines,
+            "layer_$(layer.layer_index)_next_inner_box = $(layer.provenance.next_inner_box)",
+        )
+        push!(
+            lines,
+            "layer_$(layer.layer_index)_source_point_count = $(layer.provenance.source_point_count)",
+        )
     end
     return join(lines, "\n")
 end

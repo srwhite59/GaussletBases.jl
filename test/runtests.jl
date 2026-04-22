@@ -4807,6 +4807,7 @@ end
         parent_side_count = count,
         nside = 7,
     )
+    common_contract = GaussletBases._nested_glass_box_contract(diagnostics)
     count_only_27 = one_center_atomic_nested_structure_diagnostics(27; nside = 7)
     count_only_29 = one_center_atomic_nested_structure_diagnostics(29; nside = 7)
     count_only_5 = one_center_atomic_nested_structure_diagnostics(15; nside = 5)
@@ -4845,9 +4846,27 @@ end
     @test all(layer.edge_retained_count == 60 for layer in diagnostics.layer_structures)
     @test all(layer.corner_retained_count == 8 for layer in diagnostics.layer_structures)
     @test all(layer.retained_dimension == 218 for layer in diagnostics.layer_structures)
+    @test common_contract.fixed_dimension == diagnostics.total_actual_gausslet_count
+    @test common_contract.contract_audit === diagnostics
+    @test common_contract.layer_dimensions ==
+          Int[layer.retained_dimension for layer in diagnostics.layer_structures]
+    @test common_contract.layer_provenance ==
+          GaussletBases._CartesianNestedShellLayerProvenance3D[
+              shell.provenance for shell in sequence.shell_layers
+          ]
+    @test common_contract.leaf_count === nothing
+    @test common_contract.layer_provenance[1].source_box == sequence.working_box
+    @test common_contract.layer_provenance[1].source_point_count == 19^3 - 17^3
+    @test common_contract.layer_provenance[end].next_inner_box == ((7:13), (7:13), (7:13))
+    report_text = one_center_atomic_nested_structure_report(diagnostics)
+    @test occursin("layer_1_source_box = ", report_text)
+    @test occursin("layer_1_next_inner_box = ", report_text)
+    @test occursin("layer_1_source_point_count = ", report_text)
+    @test !occursin("leaf_count", report_text)
 
     @test count_only_5.expected_shell_increment == 5^3 - 3^3
     @test count_only_5.expected_shell_increment == 98
+    @test count_only_5.layer_structures[1].provenance.source_point_count == 15^3 - 13^3
 
     @test count_only_27.parent_side_count == 27
     @test count_only_27.working_box_side_count == 27
@@ -4869,6 +4888,7 @@ end
 
 @testset "One-center atomic legacy-profile nested contract" begin
     basis, sequence, diagnostics, ownership = _one_center_atomic_legacy_profile_contract_fixture()
+    common_contract = GaussletBases._nested_glass_box_contract(diagnostics)
     range_groups = UnitRange{Int}[sequence.core_column_range]
     append!(range_groups, sequence.layer_column_ranges)
     support_group_counts = Int[]
@@ -4899,6 +4919,16 @@ end
     @test diagnostics.expected_shell_increment == 98
     @test diagnostics.total_actual_gausslet_count == 5^3 + 4 * 98
     @test diagnostics.layers_match_expected
+    @test common_contract.fixed_dimension == diagnostics.total_actual_gausslet_count
+    @test common_contract.contract_audit === diagnostics
+    @test common_contract.layer_dimensions == [98, 98, 98, 98]
+    @test common_contract.layer_provenance ==
+          GaussletBases._CartesianNestedShellLayerProvenance3D[
+              shell.provenance for shell in sequence.shell_layers
+          ]
+    @test common_contract.leaf_count === nothing
+    @test common_contract.layer_provenance[1].source_box == ((2:14), (2:14), (2:14))
+    @test common_contract.layer_provenance[end].next_inner_box == ((6:10), (6:10), (6:10))
 
     count_only_legacy_ne = one_center_atomic_nested_structure_diagnostics(
         29;
@@ -5096,6 +5126,17 @@ end
     @test isnothing(compact_legacy.pair_terms)
     @test !isnothing(compact_legacy.gaussian_sum)
     @test !isnothing(compact_legacy.pair_sum)
+
+    full_contract = GaussletBases._nested_glass_box_contract(
+        one_center_atomic_nested_structure_diagnostics(compact_full; nside = 5),
+    )
+    legacy_contract = GaussletBases._nested_glass_box_contract(
+        one_center_atomic_nested_structure_diagnostics(compact_legacy; nside = 5),
+    )
+    @test full_contract.fixed_dimension == size(compact_full.overlap, 1)
+    @test legacy_contract.fixed_dimension == size(compact_legacy.overlap, 1)
+    @test full_contract.leaf_count === nothing
+    @test legacy_contract.leaf_count === nothing
 
     @test_throws MethodError one_center_atomic_full_parent_fixed_block(
         basis;
@@ -7791,11 +7832,17 @@ end
         diagnostics_via_basis.shared_shell_dimensions
     @test diagnostics_via_source.shared_shell_provenance ==
         diagnostics_via_basis.shared_shell_provenance
+    generic_contract = GaussletBases._nested_glass_box_contract(source)
     @test common_contract.fixed_dimension == diagnostics_via_source.fixed_dimension
     @test common_contract.contract_audit == diagnostics_via_source.contract_audit
     @test common_contract.shared_shell_dimensions == diagnostics_via_source.shared_shell_dimensions
     @test common_contract.shared_shell_provenance == diagnostics_via_source.shared_shell_provenance
     @test common_contract.leaf_count == diagnostics_via_source.child_sequence_count
+    @test generic_contract.fixed_dimension == common_contract.fixed_dimension
+    @test generic_contract.contract_audit == common_contract.contract_audit
+    @test generic_contract.layer_dimensions == common_contract.shared_shell_dimensions
+    @test generic_contract.layer_provenance == common_contract.shared_shell_provenance
+    @test generic_contract.leaf_count == common_contract.leaf_count
     @test common_contract_via_context.fixed_dimension == common_contract.fixed_dimension
     @test common_contract_via_context.contract_audit == common_contract.contract_audit
     @test common_contract_via_context.shared_shell_dimensions ==

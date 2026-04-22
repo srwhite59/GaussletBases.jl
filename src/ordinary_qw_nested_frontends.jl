@@ -229,21 +229,63 @@ struct _CartesianNestedSourceGlassBoxContract{A}
     leaf_count::Int
 end
 
+struct _CartesianNestedGlassBoxContract{A}
+    fixed_dimension::Int
+    contract_audit::A
+    layer_dimensions::Vector{Int}
+    layer_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
+    leaf_count::Union{Nothing,Int}
+end
+
+function _nested_glass_box_contract_audit end
+
+function _nested_glass_box_layer_dimensions end
+
+function _nested_glass_box_layer_provenance end
+
+_nested_glass_box_fixed_dimension(subject) = size(subject.sequence.coefficient_matrix, 2)
+
+function _nested_glass_box_leaf_count(source)
+    return _nested_source_leaf_count(source)
+end
+
+function _nested_glass_box_contract(subject)
+    return _CartesianNestedGlassBoxContract(
+        _nested_glass_box_fixed_dimension(subject),
+        _nested_glass_box_contract_audit(subject),
+        _nested_glass_box_layer_dimensions(subject),
+        _nested_glass_box_layer_provenance(subject),
+        _nested_glass_box_leaf_count(subject),
+    )
+end
+
 function _nested_source_leaf_count end
 
 function _nested_source_shared_shell_dimensions end
 
 function _nested_source_shared_shell_provenance end
 
-_nested_source_fixed_dimension(source) = size(source.sequence.coefficient_matrix, 2)
+_nested_source_fixed_dimension(source) = _nested_glass_box_fixed_dimension(source)
+
+_nested_glass_box_contract_audit(source) = _nested_source_contract_audit(source)
+
+_nested_glass_box_layer_dimensions(source) = _nested_source_shared_shell_dimensions(source)
+
+_nested_glass_box_layer_provenance(source) = _nested_source_shared_shell_provenance(source)
 
 function _nested_source_common_contract(source)
+    common_contract = _nested_glass_box_contract(source)
+    isnothing(common_contract.leaf_count) && throw(
+        ArgumentError(
+            "split nested source contract requires a meaningful leaf_count on the source-backed route",
+        ),
+    )
     return _CartesianNestedSourceGlassBoxContract(
-        _nested_source_fixed_dimension(source),
-        _nested_source_contract_audit(source),
-        _nested_source_shared_shell_dimensions(source),
-        _nested_source_shared_shell_provenance(source),
-        _nested_source_leaf_count(source),
+        common_contract.fixed_dimension,
+        common_contract.contract_audit,
+        common_contract.layer_dimensions,
+        common_contract.layer_provenance,
+        something(common_contract.leaf_count),
     )
 end
 
@@ -265,6 +307,62 @@ function _nested_source_shared_shell_provenance(
     return _CartesianNestedShellLayerProvenance3D[
         shell.provenance for shell in source.shared_shell_layers
     ]
+end
+
+function _nested_glass_box_contract_audit(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _nested_source_contract_audit(source)
+end
+
+function _nested_glass_box_layer_dimensions(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _nested_source_shared_shell_dimensions(source)
+end
+
+function _nested_glass_box_layer_provenance(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _nested_source_shared_shell_provenance(source)
+end
+
+function _nested_glass_box_leaf_count(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    return _nested_source_leaf_count(source)
+end
+
+function _nested_glass_box_fixed_dimension(
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+)
+    return diagnostics.total_actual_gausslet_count
+end
+
+function _nested_glass_box_contract_audit(
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+)
+    return diagnostics
+end
+
+function _nested_glass_box_layer_dimensions(
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+)
+    return Int[layer.retained_dimension for layer in diagnostics.layer_structures]
+end
+
+function _nested_glass_box_layer_provenance(
+    diagnostics::OneCenterAtomicNestedStructureDiagnostics,
+)
+    return _CartesianNestedShellLayerProvenance3D[
+        layer.provenance for layer in diagnostics.layer_structures
+    ]
+end
+
+function _nested_glass_box_leaf_count(
+    ::OneCenterAtomicNestedStructureDiagnostics,
+)
+    return nothing
 end
 
 function bond_aligned_diatomic_nested_fixed_source(
