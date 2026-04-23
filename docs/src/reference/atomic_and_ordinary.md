@@ -62,6 +62,8 @@ OrdinaryCartesianOperators3D
 ordinary_cartesian_product_operators
 nested_cartesian_operators
 ordinary_cartesian_qiu_white_operators
+gto_overlap_matrix
+gto_occupancy_matrix
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```

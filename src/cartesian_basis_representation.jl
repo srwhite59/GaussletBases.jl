@@ -94,6 +94,7 @@ function Base.show(io::IO, representation::CartesianBasisRepresentation3D)
 end
 
 basis_metadata(representation::CartesianBasisRepresentation3D) = representation.metadata
+basis_representation(representation::CartesianBasisRepresentation3D) = representation
 
 """
     CartesianGaussianShellOrbitalRepresentation3D
@@ -171,6 +172,9 @@ function Base.show(io::IO, supplement::CartesianGaussianShellSupplementRepresent
         ")",
     )
 end
+
+basis_representation(supplement::CartesianGaussianShellSupplementRepresentation3D) = supplement
+basis_metadata(supplement::CartesianGaussianShellSupplementRepresentation3D) = supplement.metadata
 
 function _cartesian_product_states(axis_counts::NTuple{3,Int})
     nx, ny, nz = axis_counts
@@ -1176,6 +1180,235 @@ function cross_overlap(
     throw(_cartesian_cross_overlap_error(left, right))
 end
 
+function _gto_working_representation(working)
+    representation =
+        working isa CartesianBasisRepresentation3D ? working :
+        working isa MappedUniformBasis ? _cartesian_direct_product_representation(working) :
+        basis_representation(working)
+    representation isa CartesianBasisRepresentation3D || throw(
+        ArgumentError(
+            "gto_overlap_matrix requires a Cartesian working-basis representation; got $(typeof(representation)) from $(typeof(working))",
+        ),
+    )
+    (
+        representation.metadata.parent_kind == :cartesian_product_basis ||
+        _cartesian_supports_exact_hybrid_overlap(representation)
+    ) || throw(
+        ArgumentError(
+            "gto_overlap_matrix supports explicit Cartesian product, nested fixed-block, and exact hybrid residual-Gaussian Cartesian working bases; got parent_kind :$(representation.metadata.parent_kind)",
+        ),
+    )
+    return representation
+end
+
+function _gto_probe_representation(probes)
+    representation =
+        probes isa CartesianGaussianShellSupplementRepresentation3D ? probes :
+        basis_representation(probes)
+    representation isa CartesianGaussianShellSupplementRepresentation3D || throw(
+        ArgumentError(
+            "gto_overlap_matrix requires a legacy Gaussian probe family or CartesianGaussianShellSupplementRepresentation3D; got $(typeof(representation)) from $(typeof(probes))",
+        ),
+    )
+    return representation
+end
+
+function _gto_block_indices(
+    final_dimension::Int,
+    block_indices::Nothing,
+)
+    return nothing
+end
+
+function _gto_block_indices(
+    final_dimension::Int,
+    block_indices::AbstractVector{<:Integer},
+)
+    indices = Int[index for index in block_indices]
+    all(index -> 1 <= index <= final_dimension, indices) || throw(
+        BoundsError(1:final_dimension, indices),
+    )
+    return indices
+end
+
+function _gto_block_indices(final_dimension::Int, block_indices)
+    throw(
+        ArgumentError(
+            "block_indices must be nothing or an explicit vector of basis indices; got $(typeof(block_indices))",
+        ),
+    )
+end
+
+function _gto_weight_vector(weights::Symbol, norbitals::Int)
+    weights == :uniform && return ones(Float64, norbitals)
+    weights == :shell_equalized && throw(
+        ArgumentError(
+            "gto_occupancy_matrix weights = :shell_equalized is not implemented yet; pass :uniform or an explicit weight vector",
+        ),
+    )
+    throw(
+        ArgumentError(
+            "unsupported gto_occupancy_matrix weights :$(weights); supported first-pass modes are :uniform and explicit vectors",
+        ),
+    )
+end
+
+function _gto_weight_vector(weights::AbstractVector{<:Real}, norbitals::Int)
+    length(weights) == norbitals || throw(
+        DimensionMismatch(
+            "explicit GTO weights length $(length(weights)) does not match probe dimension $(norbitals)",
+        ),
+    )
+    values = Float64[Float64(weight) for weight in weights]
+    all(isfinite, values) || throw(ArgumentError("explicit GTO weights must be finite"))
+    return values
+end
+
+function _gto_weight_vector(weights, norbitals::Int)
+    throw(
+        ArgumentError(
+            "gto_occupancy_matrix weights must be :uniform or an explicit real vector; got $(typeof(weights))",
+        ),
+    )
+end
+
+function _cartesian_exact_cartesian_probe_cross(
+    raw,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    hasproperty(raw, :exact_cartesian_supplement_overlap) || return nothing
+    exact_cross = raw.exact_cartesian_supplement_overlap
+    exact_cross === nothing && return nothing
+    _cartesian_same_supplement_raw_identity(raw.supplement_representation, probes) || return nothing
+    return Matrix{Float64}(exact_cross)
+end
+
+function _cartesian_exact_supplement_probe_cross(
+    raw,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    hasproperty(raw, :exact_supplement_overlap) || return nothing
+    exact_cross = raw.exact_supplement_overlap
+    exact_cross === nothing && return nothing
+    _cartesian_same_supplement_raw_identity(raw.supplement_representation, probes) || return nothing
+    return Matrix{Float64}(exact_cross)
+end
+
+function _cartesian_cartesian_probe_overlap(
+    raw,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    isempty(probes.orbitals) &&
+        return zeros(Float64, raw.cartesian_representation.metadata.final_dimension, 0)
+    exact_cross = _cartesian_exact_cartesian_probe_cross(raw, probes)
+    exact_cross !== nothing && return exact_cross
+    try
+        return _cartesian_basis_supplement_cross(raw.cartesian_representation, probes)
+    catch error
+        if error isa ArgumentError
+            return _cartesian_factorized_basis_supplement_cross(
+                raw.factorized_cartesian_parent_basis,
+                raw.cartesian_representation,
+                probes,
+                raw,
+            )
+        end
+        rethrow()
+    end
+end
+
+function _cartesian_supplement_probe_overlap(
+    raw,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    isempty(raw.supplement_representation.orbitals) &&
+        return zeros(Float64, 0, length(probes.orbitals))
+    exact_cross = _cartesian_exact_supplement_probe_cross(raw, probes)
+    exact_cross !== nothing && return exact_cross
+    return _cartesian_supplement_cross_overlap(raw.supplement_representation, probes)
+end
+
+function _gto_overlap_matrix(
+    working::CartesianBasisRepresentation3D,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    raw = _cartesian_raw_components(working)
+    cg = _cartesian_cartesian_probe_overlap(raw, probes)
+    gg = _cartesian_supplement_probe_overlap(raw, probes)
+    raw_overlap = [cg; gg]
+    return Matrix{Float64}(transpose(raw.raw_to_final) * raw_overlap)
+end
+
+"""
+    gto_overlap_matrix(working, probes; block_indices = nothing)
+
+Return the exact overlap matrix `S_BG = <B|G>` between a supported Cartesian
+working basis `B` and a legacy Gaussian probe family `G`.
+
+`working` may be a `CartesianBasisRepresentation3D`, a supported public
+Cartesian basis object such as a bond-aligned ordinary basis or nested fixed
+block, a `MappedUniformBasis` interpreted as its 3D Cartesian direct product, or
+an `OrdinaryCartesianOperators3D` whose public representation carries the exact
+hybrid Cartesian/supplement sidecars. `probes` may be a legacy Gaussian
+supplement or a `CartesianGaussianShellSupplementRepresentation3D`.
+
+When `block_indices` is supplied, only those working-basis rows are returned.
+Block policy is intentionally external: this helper does not choose octants,
+shells, DG regions, or any other geometry partition.
+"""
+function gto_overlap_matrix(working, probes; block_indices = nothing)
+    working_representation = _gto_working_representation(working)
+    probe_representation = _gto_probe_representation(probes)
+    overlap = _gto_overlap_matrix(working_representation, probe_representation)
+    indices = _gto_block_indices(working_representation.metadata.final_dimension, block_indices)
+    indices === nothing && return overlap
+    return Matrix{Float64}(overlap[indices, :])
+end
+
+function gto_overlap_matrix(
+    working,
+    probes,
+    block_indices::AbstractVector{<:Integer},
+)
+    return gto_overlap_matrix(working, probes; block_indices = block_indices)
+end
+
+"""
+    gto_occupancy_matrix(working, probes; weights = :uniform, block_indices = nothing)
+
+Build a density-like GTO importance operator for basis-design work:
+
+`M_I = S_{I,G} W S_{G,I}`
+
+where `S_{I,G}` is the exact block-restricted overlap from
+`gto_overlap_matrix(...)`. The result is an RDM-like design/occupancy matrix,
+not a physical one-particle density matrix and not an SCF object.
+
+First-pass weighting supports `weights = :uniform` and explicit real weight
+vectors with one entry per probe orbital. `weights = :shell_equalized` is a
+reserved future option and is intentionally not implemented yet.
+"""
+function gto_occupancy_matrix(working, probes; weights = :uniform, block_indices = nothing)
+    overlap = gto_overlap_matrix(working, probes; block_indices = block_indices)
+    weight_vector = _gto_weight_vector(weights, size(overlap, 2))
+    weighted_overlap = overlap .* reshape(weight_vector, 1, :)
+    return Matrix{Float64}(weighted_overlap * transpose(overlap))
+end
+
+function gto_occupancy_matrix(
+    working,
+    probes,
+    block_indices::AbstractVector{<:Integer};
+    weights = :uniform,
+)
+    return gto_occupancy_matrix(
+        working,
+        probes;
+        weights = weights,
+        block_indices = block_indices,
+    )
+end
+
 """
     CartesianBasisTransferDiagnostics
 
@@ -2089,6 +2322,26 @@ function _cartesian_supplement_representation(
         orbitals,
         _cartesian_supplement_metadata(data),
     )
+end
+
+function basis_representation(
+    data::Union{
+        LegacyAtomicGaussianSupplement,
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    },
+)
+    return _cartesian_supplement_representation(data)
+end
+
+function basis_metadata(
+    data::Union{
+        LegacyAtomicGaussianSupplement,
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    },
+)
+    return basis_representation(data).metadata
 end
 
 function _cartesian_supplement_orbital_signature(

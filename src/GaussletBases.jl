@@ -34,6 +34,8 @@ export AbstractFunction1D,
        current_timing_report,
        timing_report,
        cross_overlap,
+       gto_overlap_matrix,
+       gto_occupancy_matrix,
        basis_projector,
        transfer_orbitals,
        cartesian_basis_bundle_payload,
@@ -371,6 +373,8 @@ function build_basis end
 function basis_metadata end
 function basis_representation end
 function cross_overlap end
+function gto_overlap_matrix end
+function gto_occupancy_matrix end
 function basis_projector end
 function transfer_orbitals end
 function cartesian_basis_bundle_payload end

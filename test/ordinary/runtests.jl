@@ -2324,6 +2324,144 @@ end
     end
 end
 
+@testset "Public GTO overlap and occupancy matrix helpers" begin
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: He repo-sp\n" *
+            "He    S\n" *
+            "      1.0000000              1.0000000\n" *
+            "He    P\n" *
+            "      0.8000000              1.0000000\n" *
+            "END\n" *
+            "#BASIS SET: H repo-sp\n" *
+            "H    S\n" *
+            "      1.1000000              1.0000000\n" *
+            "H    P\n" *
+            "      0.7000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 4.0),
+            reference_spacing = 1.0,
+        ))
+        supplement = legacy_atomic_gaussian_supplement(
+            "He",
+            "repo-sp";
+            lmax = 1,
+            basisfile = path,
+        )
+        probe_representation = basis_representation(supplement)
+        working_representation = GaussletBases._cartesian_direct_product_representation(basis)
+        overlap = gto_overlap_matrix(basis, supplement)
+        reference_overlap = GaussletBases._cartesian_basis_supplement_cross(
+            working_representation,
+            probe_representation,
+        )
+
+        @test probe_representation isa CartesianGaussianShellSupplementRepresentation3D
+        @test basis_representation(probe_representation) === probe_representation
+        @test basis_metadata(probe_representation) == probe_representation.metadata
+        @test size(overlap) == (length(basis)^3, length(probe_representation.orbitals))
+        @test norm(overlap - reference_overlap, Inf) < 1.0e-12
+        @test gto_overlap_matrix(working_representation, probe_representation) ≈ overlap atol = 1.0e-12 rtol = 1.0e-12
+
+        block_indices = [1, 7, size(overlap, 1)]
+        block_overlap = gto_overlap_matrix(basis, supplement; block_indices = block_indices)
+        @test block_overlap == overlap[block_indices, :]
+        @test gto_overlap_matrix(basis, supplement, block_indices) == block_overlap
+
+        uniform_occupancy = gto_occupancy_matrix(basis, supplement)
+        @test uniform_occupancy ≈ overlap * transpose(overlap) atol = 1.0e-12 rtol = 1.0e-12
+        @test uniform_occupancy ≈ transpose(uniform_occupancy) atol = 1.0e-12 rtol = 1.0e-12
+
+        weights = collect(range(0.25, 1.25; length = size(overlap, 2)))
+        weighted_block_occupancy = gto_occupancy_matrix(
+            basis,
+            supplement;
+            weights = weights,
+            block_indices = block_indices,
+        )
+        expected_weighted_block =
+            (block_overlap .* reshape(weights, 1, :)) * transpose(block_overlap)
+        @test weighted_block_occupancy ≈ expected_weighted_block atol = 1.0e-12 rtol = 1.0e-12
+        @test gto_occupancy_matrix(basis, supplement, block_indices; weights = weights) ≈
+              expected_weighted_block atol = 1.0e-12 rtol = 1.0e-12
+
+        shell_equalized_error = try
+            gto_occupancy_matrix(basis, supplement; weights = :shell_equalized)
+            nothing
+        catch err
+            err
+        end
+        @test shell_equalized_error isa ArgumentError
+        @test occursin("not implemented yet", sprint(showerror, shell_equalized_error))
+
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        s_supplement = legacy_atomic_gaussian_supplement(
+            "He",
+            "repo-sp";
+            lmax = 0,
+            basisfile = path,
+        )
+        ordinary_ops = ordinary_cartesian_qiu_white_operators(
+            basis,
+            s_supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        hybrid_representation = basis_representation(ordinary_ops)
+        hybrid_raw = GaussletBases._cartesian_raw_components(hybrid_representation)
+        hybrid_overlap = gto_overlap_matrix(ordinary_ops, s_supplement)
+        hybrid_reference = transpose(hybrid_raw.raw_to_final) * [
+            hybrid_raw.exact_cartesian_supplement_overlap
+            hybrid_raw.exact_supplement_overlap
+        ]
+        @test size(hybrid_overlap, 1) == ordinary_ops.gausslet_count + ordinary_ops.residual_count
+        @test norm(hybrid_overlap - hybrid_reference, Inf) < 1.0e-12
+
+        nuclei = [(0.0, 0.0, -0.7), (0.0, 0.0, 0.7)]
+        diatomic_basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = 1.4,
+            core_spacing = 0.7,
+            xmax_parallel = 2.5,
+            xmax_transverse = 2.0,
+            bond_axis = :z,
+        )
+        diatomic_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "repo-sp",
+            nuclei;
+            lmax = 1,
+            basisfile = path,
+        )
+        diatomic_probe = basis_representation(diatomic_supplement)
+        diatomic_overlap = gto_overlap_matrix(diatomic_basis, diatomic_supplement)
+        diatomic_reference = GaussletBases._cartesian_basis_supplement_cross(
+            basis_representation(diatomic_basis),
+            diatomic_probe,
+        )
+        @test diatomic_probe isa CartesianGaussianShellSupplementRepresentation3D
+        @test norm(diatomic_overlap - diatomic_reference, Inf) < 1.0e-12
+
+        heteronuclear_supplement = legacy_bond_aligned_heteronuclear_gaussian_supplement(
+            "He",
+            "repo-sp",
+            "H",
+            "repo-sp",
+            nuclei;
+            lmax = 0,
+            basisfile = path,
+        )
+        @test basis_representation(heteronuclear_supplement) isa
+              CartesianGaussianShellSupplementRepresentation3D
+    end
+end
+
 @testset "Vendored legacy BasisSets lookup and overrides" begin
     vendored = GaussletBases._vendored_legacy_basisfile_path()
     @test isfile(vendored)
