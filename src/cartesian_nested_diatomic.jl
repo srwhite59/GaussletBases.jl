@@ -219,18 +219,7 @@ function _nested_diatomic_candidate_counts(
         ArgumentError("diatomic adaptive retain-count generation requires a positive line length"),
     )
     lower = min(length_value, max(1, minimum_retained))
-    start =
-        isodd(lower) ? lower :
-        lower == length_value ? lower :
-        lower + 1
-    candidates = Int[]
-    for count in start:2:length_value
-        push!(candidates, count)
-    end
-    isempty(candidates) && push!(candidates, length_value)
-    length_value in candidates || push!(candidates, length_value)
-    sort!(unique!(candidates))
-    return candidates
+    return collect(lower:length_value)
 end
 
 function _nested_diatomic_line_points_for_interval(
@@ -238,12 +227,18 @@ function _nested_diatomic_line_points_for_interval(
     axis::Symbol,
     interval::UnitRange{Int};
     retained_count::Int,
+    enforce_symmetric_odd::Bool = false,
 )
     centers_axis = _nested_axis_pgdg(bundles, axis).centers
     if retained_count >= length(interval)
         return Float64[Float64(centers_axis[index]) for index in interval]
     end
-    side = _nested_doside_1d(_nested_axis_pgdg(bundles, axis), interval, retained_count)
+    side = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, axis),
+        interval,
+        retained_count;
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
     return Float64[Float64(value) for value in side.localized_centers]
 end
 
@@ -773,7 +768,12 @@ function _nested_bond_aligned_diatomic_nonuniform_core_block(
                     if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
                         choice = _nested_diatomic_force_choice_direct(choice, length(box[1]))
                     end
-                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), box[1], choice.retain)
+                    side = _nested_doside_1d(
+                        _nested_axis_pgdg(bundles, :x),
+                        box[1],
+                        choice.retain;
+                        enforce_symmetric_odd = false,
+                    )
                     push!(
                         coefficient_blocks,
                         _nested_edge_product(:x, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
@@ -797,7 +797,12 @@ function _nested_bond_aligned_diatomic_nonuniform_core_block(
                     if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
                         choice = _nested_diatomic_force_choice_direct(choice, length(box[2]))
                     end
-                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), box[2], choice.retain)
+                    side = _nested_doside_1d(
+                        _nested_axis_pgdg(bundles, :y),
+                        box[2],
+                        choice.retain;
+                        enforce_symmetric_odd = false,
+                    )
                     push!(
                         coefficient_blocks,
                         _nested_edge_product(:y, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
@@ -821,7 +826,12 @@ function _nested_bond_aligned_diatomic_nonuniform_core_block(
                     if any(level -> isapprox(radius, level; atol = 1.0e-10, rtol = 0.0), protected_radii)
                         choice = _nested_diatomic_force_choice_direct(choice, length(box[3]))
                     end
-                    side = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), box[3], choice.retain)
+                    side = _nested_doside_1d(
+                        _nested_axis_pgdg(bundles, :z),
+                        box[3],
+                        choice.retain;
+                        enforce_symmetric_odd = false,
+                    )
                     push!(
                         coefficient_blocks,
                         _nested_edge_product(:z, (:interior, :interior), side, fixed_indices, dims).coefficient_matrix,
@@ -891,6 +901,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
+                        enforce_symmetric_odd = false,
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                     ),
@@ -1103,6 +1114,7 @@ function _nested_bond_aligned_diatomic_source(
                         x_fixed = (first(current_box[1]), last(current_box[1])),
                         y_fixed = (first(current_box[2]), last(current_box[2])),
                         z_fixed = (first(current_box[3]), last(current_box[3])),
+                        enforce_symmetric_odd = false,
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                     ),

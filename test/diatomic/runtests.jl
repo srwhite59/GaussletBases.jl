@@ -342,6 +342,42 @@ end
     @test !short_geometry.did_split
 end
 
+@testset "Bond-aligned diatomic adaptive retained counts are parity-neutral" begin
+    @test GaussletBases._nested_diatomic_candidate_counts(11, 4) == collect(4:11)
+    @test GaussletBases._nested_diatomic_candidate_counts(11, 5) == collect(5:11)
+
+    symmetric_centers = [-2.0, -1.0, 0.0, 1.0, 2.0]
+    @test GaussletBases._nested_doside_retained_count(symmetric_centers, 4) == 3
+    @test GaussletBases._nested_doside_retained_count(
+        symmetric_centers,
+        4;
+        enforce_symmetric_odd = false,
+    ) == 4
+
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 2.0,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.0,
+        bond_axis = :z,
+    )
+    source_nside5 = bond_aligned_diatomic_nested_fixed_source(basis; nside = 5)
+    source_nside6 = bond_aligned_diatomic_nested_fixed_source(basis; nside = 6)
+    counts_nside5 = sort!(
+        unique(trace.retained_count for trace in GaussletBases._bond_aligned_diatomic_doside_traces(source_nside5)),
+    )
+    counts_nside6 = sort!(
+        unique(trace.retained_count for trace in GaussletBases._bond_aligned_diatomic_doside_traces(source_nside6)),
+    )
+
+    @test any(iseven, counts_nside5)
+    @test any(isodd, counts_nside5)
+    @test any(iseven, counts_nside6)
+    @test any(isodd, counts_nside6)
+    @test 4 in counts_nside5
+    @test 4 in counts_nside6
+end
+
 @testset "Bond-aligned heteronuclear split geometry" begin
     centers_axis = collect(-5.0:1.0:5.0)
     @test GaussletBases._nested_diatomic_split_plane_index(
@@ -1075,11 +1111,11 @@ end
         @test occursin("parent_centers = [", text)
         @test occursin("localized_centers = [", text)
         @test occursin("contains_near_zero_center = true", text)
-        @test occursin("even_retained_count = false", text)
+        @test occursin("even_retained_count =", text)
     end
 end
 
-@testset "Bond-aligned diatomic shared-shell odd-retain experiment" begin
+@testset "Bond-aligned diatomic shared-shell parity experiment at R=1.4" begin
     (
         _basis,
         _parent_ops,
@@ -1153,16 +1189,17 @@ end
     @test minimum(experiment_fixed_block.weights) > 0.0
     @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
     @test Set(baseline_trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
-        Set([true])
+        Set([false])
     @test Set(trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
         Set([true])
     @test Set(baseline_trace_map[context].retained_count for context in targeted_contexts) ==
-        Set([5])
+        Set([4])
     @test Set(trace_map[context].retained_count for context in targeted_contexts) ==
         Set([3])
-    @test fixed_slice.selected_count > experiment_slice.selected_count > 0
-    @test count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points) >
-        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
+    @test experiment_slice.selected_count > fixed_slice.selected_count > 0
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, fixed_slice.points)
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
     @test abs(experiment_projected_vee - baseline_projected_vee) < 2.0e-5
     @test abs(experiment_capture - baseline_capture) < 2.0e-5
     @test abs(experiment_projected_energy - baseline_projected_energy) < 2.0e-5
@@ -1170,7 +1207,7 @@ end
     @test abs(experiment_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-5
 end
 
-@testset "Bond-aligned diatomic shared-shell odd-retain confirmation at R=2.0" begin
+@testset "Bond-aligned diatomic shared-shell parity experiment at R=2.0" begin
     (
         _basis,
         _parent_ops,
@@ -1244,16 +1281,17 @@ end
     @test minimum(experiment_fixed_block.weights) > 0.0
     @test size(experiment_fixed_block.overlap, 1) < size(baseline_fixed_block.overlap, 1)
     @test Set(baseline_trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
-        Set([true])
+        Set([false])
     @test Set(trace_map[context].contains_near_zero_center for context in targeted_contexts) ==
         Set([true])
     @test Set(baseline_trace_map[context].retained_count for context in targeted_contexts) ==
-        Set([5])
+        Set([4])
     @test Set(trace_map[context].retained_count for context in targeted_contexts) ==
         Set([3])
-    @test baseline_slice.selected_count > experiment_slice.selected_count > 0
-    @test count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points) >
-        count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
+    @test experiment_slice.selected_count > baseline_slice.selected_count > 0
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) >
+        count(point -> point.group_kind == :shared_shell_layer, baseline_slice.points)
+    @test count(point -> point.group_kind == :shared_shell_layer, experiment_slice.points) > 0
     @test abs(experiment_projected_vee - baseline_projected_vee) < 2.0e-5
     @test abs(experiment_capture - baseline_capture) < 2.0e-5
     @test abs(experiment_projected_energy - baseline_projected_energy) < 2.0e-5
@@ -1271,17 +1309,33 @@ end
     )
     source = bond_aligned_diatomic_nested_fixed_source(basis)
     traces = GaussletBases._bond_aligned_diatomic_doside_traces(source)
-    trace_map = Dict(trace.context_label => trace for trace in traces)
 
     @test length(traces) == 27
     symmetric_traces = filter(trace -> trace.symmetric_about_zero, traces)
     @test !isempty(symmetric_traces)
-    @test all(trace -> trace.retained_count == 3, symmetric_traces)
-    @test all(trace -> trace.contains_near_zero_center, symmetric_traces)
-    @test trace_map["left_child/layer_1/face_xy/tangential_x"].contains_near_zero_center
-    @test trace_map["left_child/layer_1/face_yz/tangential_y"].contains_near_zero_center
-    @test trace_map["right_child/layer_1/face_xy/tangential_x"].contains_near_zero_center
-    @test trace_map["right_child/layer_1/face_yz/tangential_y"].contains_near_zero_center
+    @test any(trace -> iseven(trace.retained_count), symmetric_traces)
+    @test any(trace -> isodd(trace.retained_count), symmetric_traces)
+    @test any(trace -> trace.contains_near_zero_center, symmetric_traces)
+    @test any(trace -> !trace.contains_near_zero_center, symmetric_traces)
+    layer_1_shared_shell_traces = filter(
+        trace -> startswith(trace.context_label, "shared_shell/layer_1/"),
+        symmetric_traces,
+    )
+    @test Set(trace.context_label for trace in layer_1_shared_shell_traces if trace.contains_near_zero_center) ==
+        Set([
+            "shared_shell/layer_1/edge_x/free_axis_x",
+            "shared_shell/layer_1/edge_y/free_axis_y",
+            "shared_shell/layer_1/face_xy/tangential_x",
+            "shared_shell/layer_1/face_xy/tangential_y",
+            "shared_shell/layer_1/face_xz/tangential_x",
+            "shared_shell/layer_1/face_yz/tangential_y",
+        ])
+    @test Set(trace.context_label for trace in layer_1_shared_shell_traces if !trace.contains_near_zero_center) ==
+        Set([
+            "shared_shell/layer_1/edge_z/free_axis_z",
+            "shared_shell/layer_1/face_xz/tangential_z",
+            "shared_shell/layer_1/face_yz/tangential_z",
+        ])
 
     fixed_block = GaussletBases._nested_fixed_block(source)
     supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
@@ -1303,12 +1357,18 @@ end
         plane_value = 0.0,
         plane_tol = 1.0e-5,
     )
+    group_counts = Dict{Symbol,Int}()
+    for point in slice.points
+        group_counts[point.group_kind] = get(group_counts, point.group_kind, 0) + 1
+    end
 
-    @test slice.selected_count == 121
-    @test count(point -> point.group_kind == :left_child, slice.points) == 44
-    @test count(point -> point.group_kind == :shared_midpoint_slab, slice.points) == 9
-    @test count(point -> point.group_kind == :right_child, slice.points) == 44
-    @test count(point -> point.group_kind == :shared_shell_layer, slice.points) == 16
+    @test slice.selected_count == 119
+    @test get(group_counts, :shared_child, 0) == 43
+    @test get(group_counts, :shared_shell_layer, 0) == 58
+    @test get(group_counts, :residual_gaussian, 0) == 18
+    @test get(group_counts, :left_child, 0) == 0
+    @test get(group_counts, :shared_midpoint_slab, 0) == 0
+    @test get(group_counts, :right_child, 0) == 0
 end
 
 @testset "Bond-aligned diatomic plane projection export" begin
@@ -1387,9 +1447,7 @@ end
             )
             text = read(path, String)
             @test slice.selected_count <= slice.total_count
-            @test occursin("role=point group_kind=left_child group_id=1", text)
-            @test occursin("role=point group_kind=shared_midpoint_slab group_id=1", text)
-            @test occursin("role=point group_kind=right_child group_id=2", text)
+            @test occursin("role=point group_kind=shared_child group_id=1", text)
             @test occursin("role=point group_kind=shared_shell_layer group_id=1", text)
             selected_residual_count = count(
                 point -> point.group_kind == :residual_gaussian,
@@ -1397,22 +1455,16 @@ end
             )
             @test sum(occursin("role=point group_kind=residual_gaussian", line) for line in split(text, '\n')) ==
                 selected_residual_count
-            left_pos = findfirst("role=point group_kind=left_child", text)
-            slab_pos = findfirst("role=point group_kind=shared_midpoint_slab", text)
-            right_pos = findfirst("role=point group_kind=right_child", text)
+            shared_child_pos = findfirst("role=point group_kind=shared_child", text)
             shared_pos = findfirst("role=point group_kind=shared_shell_layer", text)
             residual_pos = findfirst("role=point group_kind=residual_gaussian", text)
             nucleus_pos = findfirst("role=nucleus group_kind=nucleus", text)
-            @test left_pos !== nothing
-            @test slab_pos !== nothing
-            @test right_pos !== nothing
+            @test shared_child_pos !== nothing
             @test shared_pos !== nothing
             @test residual_pos !== nothing
             @test nucleus_pos !== nothing
-            @test left_pos < slab_pos < right_pos < shared_pos < residual_pos < nucleus_pos
-            @test count(==('@'), text) == 4 + selected_residual_count + 2
+            @test shared_child_pos < shared_pos < residual_pos < nucleus_pos
+            @test count(==('@'), text) == 3 + selected_residual_count + 2
         end
     end
-end
-
 end

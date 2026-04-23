@@ -896,12 +896,17 @@ end
 function _nested_doside_retained_count(
     local_centers::AbstractVector{<:Real},
     provisional_retained_count::Int,
+    ;
+    enforce_symmetric_odd::Bool = true,
 )
     provisional_retained_count >= 1 || throw(
         ArgumentError("nested doside retained local count must be at least 1"),
     )
     symmetric_about_zero, _ = _nested_is_symmetric_about_zero(local_centers)
-    if symmetric_about_zero && iseven(provisional_retained_count) && provisional_retained_count > 1
+    if enforce_symmetric_odd &&
+       symmetric_about_zero &&
+       iseven(provisional_retained_count) &&
+       provisional_retained_count > 1
         return provisional_retained_count - 1
     end
     return provisional_retained_count
@@ -938,9 +943,15 @@ function _nested_doside_1d(
     pgdg::_MappedOrdinaryPGDGIntermediate1D,
     interval::UnitRange{Int},
     retained_count::Int,
+    ;
+    enforce_symmetric_odd::Bool = true,
 )
     interval_data = _nested_interval_data(pgdg, interval)
-    retained_count = _nested_doside_retained_count(interval_data.centers, retained_count)
+    retained_count = _nested_doside_retained_count(
+        interval_data.centers,
+        retained_count;
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
     raw_basis = _nested_retained_span(
         interval_data.weights,
         interval_data.centers,
@@ -973,8 +984,15 @@ function _nested_doside_1d(
     bundle::_MappedOrdinaryGausslet1DBundle,
     interval::UnitRange{Int},
     retained_count::Int,
+    ;
+    enforce_symmetric_odd::Bool = true,
 )
-    return _nested_doside_1d(bundle.pgdg_intermediate, interval, retained_count)
+    return _nested_doside_1d(
+        bundle.pgdg_intermediate,
+        interval,
+        retained_count;
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
 end
 
 function _cartesian_flat_index(
@@ -4436,17 +4454,48 @@ function _nested_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+    enforce_symmetric_odd::Bool = true,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     dims = _nested_axis_lengths(bundles)
-    side_x_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xy[1])
-    side_y_xy = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_xy[2])
-    side_x_xz = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_xz[1])
-    side_z_xz = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_xz[2])
-    side_y_yz = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_yz[1])
-    side_z_yz = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_yz[2])
+    side_x_xy = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :x),
+        x_interval,
+        retain_xy[1];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    side_y_xy = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :y),
+        y_interval,
+        retain_xy[2];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    side_x_xz = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :x),
+        x_interval,
+        retain_xz[1];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    side_z_xz = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :z),
+        z_interval,
+        retain_xz[2];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    side_y_yz = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :y),
+        y_interval,
+        retain_yz[1];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    side_z_yz = _nested_doside_1d(
+        _nested_axis_pgdg(bundles, :z),
+        z_interval,
+        retain_yz[2];
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
 
     faces = _CartesianNestedFace3D[
         _nested_face_product(:xy, :low, side_x_xy, side_y_xy, z_fixed[1], dims),
@@ -4500,6 +4549,7 @@ function _nested_complete_rectangular_shell(
     x_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[1]),
     y_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[2]),
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
+    enforce_symmetric_odd::Bool = true,
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -4517,14 +4567,30 @@ function _nested_complete_rectangular_shell(
             x_fixed = x_fixed,
             y_fixed = y_fixed,
             z_fixed = z_fixed,
+            enforce_symmetric_odd = enforce_symmetric_odd,
             packet_kernel = packet_kernel,
             term_storage = term_storage,
             term_coefficients = term_coefficients,
         )
 
-        side_x_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :x), x_interval, retain_x_edge)
-        side_y_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :y), y_interval, retain_y_edge)
-        side_z_edge = _nested_doside_1d(_nested_axis_pgdg(bundles, :z), z_interval, retain_z_edge)
+        side_x_edge = _nested_doside_1d(
+            _nested_axis_pgdg(bundles, :x),
+            x_interval,
+            retain_x_edge;
+            enforce_symmetric_odd = enforce_symmetric_odd,
+        )
+        side_y_edge = _nested_doside_1d(
+            _nested_axis_pgdg(bundles, :y),
+            y_interval,
+            retain_y_edge;
+            enforce_symmetric_odd = enforce_symmetric_odd,
+        )
+        side_z_edge = _nested_doside_1d(
+            _nested_axis_pgdg(bundles, :z),
+            z_interval,
+            retain_z_edge;
+            enforce_symmetric_odd = enforce_symmetric_odd,
+        )
 
         edges = _CartesianNestedEdge3D[
             _nested_edge_product(:x, (:low, :low), side_x_edge, (y_fixed[1], z_fixed[1]), dims),
