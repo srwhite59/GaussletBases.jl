@@ -74,29 +74,44 @@
 
    - take the shortest physical side of the current box
    - build an ideal cube from that scale
-   - evaluate a target angular band on that ideal cube
-   - widen the acceptable band by:
-     - `reference_fudge_factor = 1.2`
+   - evaluate the ideal angular limits on that cube
 
-   This reference provides the comparison target for bond-axis retain-count
-   decisions on both shells and the inner core.
+   For the unsplit shared-shell path, the landed producer contract is now:
 
-7. Choose shell bond-axis retain counts adaptively against that angular band.
+   - scale both ideal angular limits symmetrically by
+     `shared_shell_angular_resolution_scale`
+   - default `shared_shell_angular_resolution_scale = 1.4`
+   - do not use the old “divide lower / multiply upper” band-expansion
+     semantics for this shared-shell calibration role
+
+   The intent of this shared-shell calibration is:
+
+   - on the outer shared shell, the short square should satisfy
+     `ns_localxy = ns`
+   - on inward shared shells, the short square should stay pinned while the
+     bond-axis resolution can grow inward
+
+   The older `reference_fudge_factor = 1.2` story still exists, but it now
+   belongs to the child-sequence / nonuniform-core path rather than to the
+   unsplit shared-shell calibration path.
+
+7. Choose shared-shell retain counts adaptively against that angular reference.
    The outer shell stage is still the ordinary complete-shell stage, but the
-   bond-axis retain count is no longer hard-wired to one fixed long-side
+   long-axis retain count is no longer hard-wired to one fixed long-side
    contraction.
 
-   For each shell segment on the long direction:
+   For each shared shell:
 
    - generate candidate retained counts
-   - compare each candidate against the ideal-reference angular band
+   - compare each candidate against the scaled ideal angular limits
    - choose the smallest acceptable retained count
    - if the direct parent line is already too coarse, treat the case as
      parent-limited rather than blaming the contraction
 
    So the landed shell policy is:
    - ordinary shell language on the outside
-   - adaptive bond-axis retain count on the long direction
+   - adaptive long-axis retain count on the bond direction
+   - short-side counts pinned by the shared-shell angular-resolution target
    - no fixed “always keep the long side at count X” rule
 
 8. Use a nonuniform inner-core policy when the remaining core is still
@@ -105,7 +120,8 @@
 
    - do not force one uniform retained count for the whole inner block
    - treat the bond-axis contraction nonuniformly across transverse rows
-   - evaluate each row against the same ideal-reference angular band
+   - evaluate each row against its own child/core ideal-reference band
+   - keep `reference_fudge_factor` on this child/core path
 
    In other words, the core is trimmed row-by-row in the transverse plane
    rather than assigning one global bond-axis retain count to the whole inner
@@ -136,7 +152,9 @@
 
 - Split-eligibility geometry:
   - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_split_geometry`
-- Ideal-reference angular band:
+- Shared-shell angular reference:
+  - `src/cartesian_nested_diatomic.jl:_nested_diatomic_shared_shell_reference_band`
+- Child/core ideal-reference band:
   - `src/cartesian_nested_diatomic.jl:_nested_diatomic_reference_band`
 - Adaptive shell retain-count choice:
   - `src/cartesian_nested_diatomic.jl:_nested_diatomic_adaptive_shell_retention`
@@ -170,7 +188,8 @@ homonuclear diatomic nested source builder:
 - one shared parent box first
 - shell shrinkage before splitting
 - a two-guard split rule
-- adaptive shell retain counts against an ideal cube-style angular reference
+- adaptive shared-shell retain counts against a scaled ideal cube-style angular
+  reference
 - nonuniform inner-core trimming on the bond axis
 - near-nucleus row protection during that inner-core trimming
 
