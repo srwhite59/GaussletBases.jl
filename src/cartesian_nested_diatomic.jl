@@ -439,6 +439,41 @@ function _nested_diatomic_reference_band(
     end
 end
 
+function _nested_diatomic_shared_shell_reference_band(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    box::NTuple{3,UnitRange{Int}};
+    nside::Int,
+    angular_resolution_scale::Float64,
+)
+    # Shared-shell calibration now uses one symmetric angular-resolution scale
+    # on the ideal reference limits instead of the old lower/upper band
+    # expansion semantics used on the child/core path.
+    return @timeg "diatomic.source.reference_band" begin
+        angular_resolution_scale > 0.0 || throw(
+            ArgumentError(
+                "diatomic shared-shell angular-resolution scaling requires angular_resolution_scale > 0",
+            ),
+        )
+        reference = _nested_diatomic_reference_band(
+            basis,
+            bundles,
+            box;
+            nside = nside,
+            reference_fudge_factor = 1.0,
+        )
+        (
+            reference_bounds = reference.reference_bounds,
+            reference_retain = reference.reference_retain,
+            ideal_theta_min = reference.ideal_theta_min,
+            ideal_theta_max = reference.ideal_theta_max,
+            theta_min = angular_resolution_scale * reference.ideal_theta_min,
+            theta_max = angular_resolution_scale * reference.ideal_theta_max,
+            angular_resolution_scale = angular_resolution_scale,
+        )
+    end
+end
+
 function _nested_diatomic_choose_candidate_from_stats(
     length_value::Int,
     candidate_stats::AbstractVector,
@@ -547,16 +582,33 @@ function _nested_diatomic_adaptive_shell_retention(
     inner_box::NTuple{3,UnitRange{Int}},
     retention::CartesianNestedCompleteShellRetentionContract;
     nside::Int,
-    reference_fudge_factor::Float64,
+    reference_fudge_factor::Union{Nothing,Float64} = nothing,
+    shared_shell_angular_resolution_scale::Union{Nothing,Float64} = nothing,
 )
     return @timeg "diatomic.source.adaptive_shell_retention" begin
-        reference = _nested_diatomic_reference_band(
-            basis,
-            bundles,
-            boundary_box;
-            nside = nside,
-            reference_fudge_factor = reference_fudge_factor,
-        )
+        if isnothing(reference_fudge_factor) == isnothing(shared_shell_angular_resolution_scale)
+            throw(
+                ArgumentError(
+                    "diatomic adaptive shell retention requires exactly one of reference_fudge_factor or shared_shell_angular_resolution_scale",
+                ),
+            )
+        end
+        reference =
+            isnothing(shared_shell_angular_resolution_scale) ?
+            _nested_diatomic_reference_band(
+                basis,
+                bundles,
+                boundary_box;
+                nside = nside,
+                reference_fudge_factor = something(reference_fudge_factor),
+            ) :
+            _nested_diatomic_shared_shell_reference_band(
+                basis,
+                bundles,
+                boundary_box;
+                nside = nside,
+                angular_resolution_scale = something(shared_shell_angular_resolution_scale),
+            )
         chosen_x = @timeg "diatomic.source.axis_choice.x" begin
             _nested_diatomic_choose_shell_axis_retain_count(
                 basis,
@@ -1024,6 +1076,7 @@ function _nested_bond_aligned_diatomic_source(
     min_unsplit_parallel_to_transverse_ratio_for_split::Float64 = 3.0,
     min_parallel_to_transverse_ratio::Float64 = 0.4,
     reference_fudge_factor::Float64 = 1.2,
+    shared_shell_angular_resolution_scale::Float64 = 1.4,
     core_near_nucleus_protect_rows::Union{Symbol,Integer} = :auto,
     use_midpoint_slab::Bool = true,
     prefer_midpoint_tie_side::Symbol = :left,
@@ -1098,7 +1151,7 @@ function _nested_bond_aligned_diatomic_source(
                     inner_box,
                     shared_retention;
                     nside = nside,
-                    reference_fudge_factor = reference_fudge_factor,
+                    shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
                 )
                 push!(
                     shared_shell_layers,

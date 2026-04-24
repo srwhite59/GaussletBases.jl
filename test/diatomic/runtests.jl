@@ -342,6 +342,123 @@ end
     @test !short_geometry.did_split
 end
 
+function _bond_aligned_diatomic_shared_shell_policy_basis(nside::Int)
+    return bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 4.0,
+        core_spacing = 1.2 / (4.0 * (nside - 3)),
+        xmax_parallel = 20.0,
+        xmax_transverse = 20.0,
+        bond_axis = :z,
+        nuclear_charge = 4.0,
+        reference_spacing = 1.0,
+        tail_spacing = 10.0,
+    )
+end
+
+function _bond_aligned_diatomic_shared_shell_ns_local_counts(
+    nside::Int;
+    angular_resolution_scale::Float64 = 1.4,
+    max_layers::Union{Nothing,Int} = nothing,
+)
+    basis = _bond_aligned_diatomic_shared_shell_policy_basis(nside)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    dims = GaussletBases._nested_axis_lengths(bundles)
+    current_box = (1:dims[1], 1:dims[2], 1:dims[3])
+    retention = GaussletBases._nested_resolve_complete_shell_retention(nside)
+    counts = NTuple{3,Int}[]
+    while minimum(length.(current_box)) > nside && GaussletBases._nested_can_shrink_box(current_box)
+        inner_box = GaussletBases._nested_inner_box(current_box)
+        adaptive = GaussletBases._nested_diatomic_adaptive_shell_retention(
+            basis,
+            bundles,
+            current_box,
+            inner_box,
+            retention;
+            nside = nside,
+            shared_shell_angular_resolution_scale = angular_resolution_scale,
+        )
+        push!(
+            counts,
+            (
+                adaptive.chosen_x.retain + 2,
+                adaptive.chosen_y.retain + 2,
+                adaptive.chosen_z.retain + 2,
+            ),
+        )
+        current_box = inner_box
+        if !isnothing(max_layers) && length(counts) >= max_layers
+            break
+        end
+    end
+    return counts
+end
+
+@testset "Bond-aligned diatomic shared-shell angular policy defaults to scaled reference" begin
+    basis6 = _bond_aligned_diatomic_shared_shell_policy_basis(6)
+    expansion6 = coulomb_gaussian_expansion(doacc = false)
+    bundles6 = GaussletBases._qwrg_bond_aligned_axis_bundles(basis6, expansion6)
+    dims6 = GaussletBases._nested_axis_lengths(bundles6)
+    parent_box6 = (1:dims6[1], 1:dims6[2], 1:dims6[3])
+
+    reference6 = GaussletBases._nested_diatomic_reference_band(
+        basis6,
+        bundles6,
+        parent_box6;
+        nside = 6,
+        reference_fudge_factor = 1.0,
+    )
+    scaled_reference6 = GaussletBases._nested_diatomic_shared_shell_reference_band(
+        basis6,
+        bundles6,
+        parent_box6;
+        nside = 6,
+        angular_resolution_scale = 1.4,
+    )
+
+    @test scaled_reference6.theta_min ≈ 1.4 * reference6.ideal_theta_min atol = 1.0e-12 rtol = 1.0e-12
+    @test scaled_reference6.theta_max ≈ 1.4 * reference6.ideal_theta_max atol = 1.0e-12 rtol = 1.0e-12
+    @test scaled_reference6.reference_bounds == reference6.reference_bounds
+    @test scaled_reference6.reference_retain == reference6.reference_retain
+
+    for nside in 5:8
+        @test only(
+            _bond_aligned_diatomic_shared_shell_ns_local_counts(
+                nside;
+                angular_resolution_scale = 1.4,
+                max_layers = 1,
+            ),
+        ) == (nside, nside, nside)
+    end
+
+    @test only(
+        _bond_aligned_diatomic_shared_shell_ns_local_counts(
+            6;
+            angular_resolution_scale = 1.0,
+            max_layers = 1,
+        ),
+    ) == (8, 8, 8)
+    @test only(
+        _bond_aligned_diatomic_shared_shell_ns_local_counts(
+            6;
+            angular_resolution_scale = 1.2,
+            max_layers = 1,
+        ),
+    ) == (7, 7, 7)
+
+    nside6_counts = _bond_aligned_diatomic_shared_shell_ns_local_counts(
+        6;
+        angular_resolution_scale = 1.4,
+        max_layers = 6,
+    )
+    @test length(nside6_counts) >= 2
+    @test nside6_counts[1] == (6, 6, 6)
+    @test all(count[1] == 6 && count[2] == 6 for count in nside6_counts)
+    @test issorted([count[3] for count in nside6_counts])
+    @test any(count[3] > 6 for count in nside6_counts[2:end])
+end
+
 @testset "Bond-aligned diatomic adaptive retained counts are parity-neutral" begin
     @test GaussletBases._nested_diatomic_candidate_counts(11, 4) == collect(4:11)
     @test GaussletBases._nested_diatomic_candidate_counts(11, 5) == collect(5:11)
@@ -355,10 +472,10 @@ end
     ) == 4
 
     basis = bond_aligned_homonuclear_qw_basis(
-        bond_length = 2.0,
+        bond_length = 1.4,
         core_spacing = 0.5,
-        xmax_parallel = 4.0,
-        xmax_transverse = 3.0,
+        xmax_parallel = 8.0,
+        xmax_transverse = 5.0,
         bond_axis = :z,
     )
     source_nside5 = bond_aligned_diatomic_nested_fixed_source(basis; nside = 5)
@@ -1063,8 +1180,15 @@ end
     @test Set(trace.layer_index for trace in traces) ==
         Set(1:length(source.shared_shell_layers))
     @test all(trace.symmetric_about_zero for trace in traces)
-    @test isempty(lost_center)
-    @test all(trace.contains_near_zero_center for trace in traces)
+    @test !isempty(lost_center)
+    @test all(trace.axis == :z for trace in lost_center)
+    @test all(
+        occursin("/face_xz/tangential_z", trace.context_label) ||
+        occursin("/face_yz/tangential_z", trace.context_label) ||
+        occursin("/edge_z/free_axis_z", trace.context_label) for trace in lost_center
+    )
+    @test any(trace.contains_near_zero_center for trace in traces)
+    @test all(trace.contains_near_zero_center for trace in traces if trace.axis != :z)
     for layer_index in 1:length(source.shared_shell_layers)
         layer_traces = filter(trace -> trace.layer_index == layer_index, traces)
         @test length(layer_traces) == 9
@@ -1321,21 +1445,7 @@ end
         trace -> startswith(trace.context_label, "shared_shell/layer_1/"),
         symmetric_traces,
     )
-    @test Set(trace.context_label for trace in layer_1_shared_shell_traces if trace.contains_near_zero_center) ==
-        Set([
-            "shared_shell/layer_1/edge_x/free_axis_x",
-            "shared_shell/layer_1/edge_y/free_axis_y",
-            "shared_shell/layer_1/face_xy/tangential_x",
-            "shared_shell/layer_1/face_xy/tangential_y",
-            "shared_shell/layer_1/face_xz/tangential_x",
-            "shared_shell/layer_1/face_yz/tangential_y",
-        ])
-    @test Set(trace.context_label for trace in layer_1_shared_shell_traces if !trace.contains_near_zero_center) ==
-        Set([
-            "shared_shell/layer_1/edge_z/free_axis_z",
-            "shared_shell/layer_1/face_xz/tangential_z",
-            "shared_shell/layer_1/face_yz/tangential_z",
-        ])
+    @test all(trace.contains_near_zero_center for trace in layer_1_shared_shell_traces)
 
     fixed_block = GaussletBases._nested_fixed_block(source)
     supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
@@ -1362,9 +1472,9 @@ end
         group_counts[point.group_kind] = get(group_counts, point.group_kind, 0) + 1
     end
 
-    @test slice.selected_count == 119
+    @test slice.selected_count == 113
     @test get(group_counts, :shared_child, 0) == 43
-    @test get(group_counts, :shared_shell_layer, 0) == 58
+    @test get(group_counts, :shared_shell_layer, 0) == 52
     @test get(group_counts, :residual_gaussian, 0) == 18
     @test get(group_counts, :left_child, 0) == 0
     @test get(group_counts, :shared_midpoint_slab, 0) == 0
