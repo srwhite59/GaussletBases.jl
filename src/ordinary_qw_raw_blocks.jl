@@ -466,6 +466,70 @@ function _qwrg_atomic_axis_aa_data(
     )
 end
 
+function _qwrg_atomic_axis_aa_one_body_data(
+    left::_AtomicCartesianShellOrbital3D,
+    right::_AtomicCartesianShellOrbital3D,
+    axis::Symbol,
+    expansion::CoulombGaussianExpansion,
+)
+    center_left = axis == :x ? left.center[1] : axis == :y ? left.center[2] : left.center[3]
+    center_right = axis == :x ? right.center[1] : axis == :y ? right.center[2] : right.center[3]
+    power_left = _qwrg_atomic_orbital_axis_power(left, axis)
+    power_right = _qwrg_atomic_orbital_axis_power(right, axis)
+    nleft = length(left.exponents)
+    nright = length(right.exponents)
+
+    overlap = zeros(Float64, nleft, nright)
+    kinetic = zeros(Float64, nleft, nright)
+    position = zeros(Float64, nleft, nright)
+
+    for j in 1:nright
+        exponent_right = Float64(right.exponents[j])
+        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
+        for i in 1:nleft
+            exponent_left = Float64(left.exponents[i])
+            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
+            overlap[i, j] = _qwrg_atomic_basic_integral(
+                exponent_left,
+                center_left,
+                power_left,
+                prefactor_left,
+                exponent_right,
+                center_right,
+                power_right,
+                prefactor_right,
+            )
+            kinetic[i, j] = _qwrg_atomic_kinetic_integral(
+                exponent_left,
+                center_left,
+                power_left,
+                prefactor_left,
+                exponent_right,
+                center_right,
+                power_right,
+                prefactor_right,
+            )
+            position[i, j] = _qwrg_atomic_basic_integral(
+                exponent_left,
+                center_left,
+                power_left,
+                prefactor_left,
+                exponent_right,
+                center_right,
+                power_right,
+                prefactor_right;
+                xpower = 1,
+            )
+        end
+    end
+
+    return (
+        overlap = overlap,
+        kinetic = kinetic,
+        position = position,
+    )
+end
+
 function _qwrg_atomic_axis_factor_cross_data(
     proxy_layer::_MappedLegacyProxyLayer1D,
     orbital::_AtomicCartesianShellOrbital3D,
@@ -1704,13 +1768,13 @@ function _qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
 
     for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
         x_data = get!(aa_cache, (left_index, right_index, :x)) do
-            _qwrg_atomic_axis_aa_data(left, right, :x, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :x, expansion)
         end
         y_data = get!(aa_cache, (left_index, right_index, :y)) do
-            _qwrg_atomic_axis_aa_data(left, right, :y, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :y, expansion)
         end
         z_data = get!(aa_cache, (left_index, right_index, :z)) do
-            _qwrg_atomic_axis_aa_data(left, right, :z, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :z, expansion)
         end
         overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
             left.coefficients,
@@ -1883,13 +1947,13 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
 
     for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
         x_data = get!(aa_cache, (left_index, right_index, :x)) do
-            _qwrg_atomic_axis_aa_data(left, right, :x, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :x, expansion)
         end
         y_data = get!(aa_cache, (left_index, right_index, :y)) do
-            _qwrg_atomic_axis_aa_data(left, right, :y, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :y, expansion)
         end
         z_data = get!(aa_cache, (left_index, right_index, :z)) do
-            _qwrg_atomic_axis_aa_data(left, right, :z, expansion)
+            _qwrg_atomic_axis_aa_one_body_data(left, right, :z, expansion)
         end
         overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
             left.coefficients,
