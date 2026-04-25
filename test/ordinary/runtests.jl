@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
+
 @testset "Bond-aligned homonuclear chain ordinary QW reference path" begin
     basis2, operators2, diagnostics2 = _bond_aligned_homonuclear_chain_qw_fixture(; natoms = 2, spacing = 1.4)
     basis3, operators3, diagnostics3 = _bond_aligned_homonuclear_chain_qw_fixture(; natoms = 3, spacing = 1.2)
