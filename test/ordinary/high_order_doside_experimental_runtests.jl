@@ -148,3 +148,106 @@ end
     @test norm(union_data.projected_overlap - I, Inf) < 1.0e-8
     @test abs(stack_data.ground_energy - union_data.ground_energy) < 1.0e-8
 end
+
+@testset "Experimental high-order doside He singlet action symmetry and Hermiticity" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_identity_basis(7)
+    stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        backend = :numerical_reference,
+        sides = [5, 7],
+    )
+    problem = GaussletBases._experimental_high_order_he_singlet_problem(
+        stack;
+        expansion = expansion,
+        Z = 2.0,
+    )
+    n = size(problem.projected_hamiltonian, 1)
+    seed_a = reshape(collect(1.0:(n * n)), n, n)
+    seed_b = reshape(collect((n * n + 1.0):(2n * n)), n, n)
+    A = GaussletBases._symmetrize_ida_matrix(seed_a)
+    B = GaussletBases._symmetrize_ida_matrix(seed_b)
+    A ./= norm(A)
+    B ./= norm(B)
+
+    HA = GaussletBases._experimental_high_order_he_singlet_action(problem, A)
+    HB = GaussletBases._experimental_high_order_he_singlet_action(problem, B)
+
+    @test norm(HA - transpose(HA), Inf) < 1.0e-10
+    @test norm(HB - transpose(HB), Inf) < 1.0e-10
+    @test all(isfinite, HA)
+    @test all(isfinite, HB)
+    @test abs(
+        GaussletBases._experimental_high_order_frobenius_dot(A, HB) -
+        GaussletBases._experimental_high_order_frobenius_dot(HA, B)
+    ) < 1.0e-8
+end
+
+@testset "Experimental high-order doside He singlet ladder" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    energies = Float64[]
+
+    for sides in ([5], [5, 7], [5, 7, 9], [5, 7, 9, 11])
+        basis = _experimental_high_order_identity_basis(maximum(sides))
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            sides = sides,
+        )
+        data = GaussletBases._experimental_high_order_doside_he_singlet_data(
+            stack;
+            expansion = expansion,
+            Z = 2.0,
+            krylovdim = 32,
+            maxiter = 32,
+            tol = 1.0e-8,
+        )
+        @test isfinite(data.ground_energy)
+        @test isfinite(data.residual)
+        @test data.residual < 1.0e-5
+        @test all(isfinite, data.ground_matrix)
+        @test norm(data.ground_matrix - transpose(data.ground_matrix), Inf) < 1.0e-10
+        push!(energies, data.ground_energy)
+    end
+
+    @test all(diff(energies) .<= 1.0e-5)
+end
+
+@testset "Experimental high-order doside He singlet matches orthonormalized full-union reference" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_identity_basis(11)
+    axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :numerical_reference,
+    )
+    stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        backend = :numerical_reference,
+        sides = [5, 7, 9, 11],
+    )
+    union_coefficients = GaussletBases._experimental_high_order_orthonormalized_full_block_union_coefficients(
+        axis_data,
+        [5, 7, 9, 11];
+        doside = 5,
+    )
+    stack_data = GaussletBases._experimental_high_order_doside_he_singlet_data(
+        stack;
+        expansion = expansion,
+        Z = 2.0,
+        krylovdim = 32,
+        maxiter = 32,
+        tol = 1.0e-8,
+    )
+    union_data = GaussletBases._experimental_high_order_doside_he_singlet_data(
+        basis,
+        union_coefficients;
+        backend = :numerical_reference,
+        expansion = expansion,
+        Z = 2.0,
+        krylovdim = 32,
+        maxiter = 32,
+        tol = 1.0e-8,
+    )
+
+    @test abs(stack_data.ground_energy - union_data.ground_energy) < 1.0e-6
+end
