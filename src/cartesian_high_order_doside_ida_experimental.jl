@@ -23,13 +23,14 @@ struct _ExperimentalHighOrderHeSingletProblem3D{P}
     parent_interaction::Matrix{Float64}
 end
 
-struct _ExperimentalHighOrderHeSingletData3D{P}
+struct _ExperimentalHighOrderHeSingletData3D{P,D}
     problem::P
     ground_matrix::Matrix{Float64}
     ground_energy::Float64
     residual::Float64
     iterations::Int
     converged::Bool
+    diagnostics::D
 end
 
 function Base.getproperty(data::_ExperimentalHighOrderHePlusData3D, name::Symbol)
@@ -58,14 +59,14 @@ end
 
 function Base.getproperty(data::_ExperimentalHighOrderHeSingletData3D, name::Symbol)
     if name === :problem || name === :ground_matrix || name === :ground_energy ||
-       name === :residual || name === :iterations || name === :converged
+       name === :residual || name === :iterations || name === :converged || name === :diagnostics
         return getfield(data, name)
     end
     return getproperty(getfield(data, :problem), name)
 end
 
 function Base.propertynames(data::_ExperimentalHighOrderHeSingletData3D, private::Bool = false)
-    names = (:problem, :ground_matrix, :ground_energy, :residual, :iterations, :converged)
+    names = (:problem, :ground_matrix, :ground_energy, :residual, :iterations, :converged, :diagnostics)
     return (names..., propertynames(getfield(data, :problem), private)...)
 end
 
@@ -252,6 +253,57 @@ function _experimental_high_order_frobenius_norm(matrix::AbstractMatrix{<:Real})
     return sqrt(max(_experimental_high_order_frobenius_dot(matrix, matrix), 0.0))
 end
 
+function _experimental_high_order_he_shell_participation(
+    ground_matrix::AbstractMatrix{<:Real},
+    block_labels::AbstractVector{<:Symbol},
+    block_column_ranges::AbstractVector{<:UnitRange{Int}},
+)
+    size(ground_matrix, 1) == size(ground_matrix, 2) || throw(
+        ArgumentError("He shell participation requires a square ground-state matrix"),
+    )
+    length(block_labels) == length(block_column_ranges) || throw(
+        ArgumentError("He shell participation requires matching block labels and column ranges"),
+    )
+    density = _symmetrize_ida_matrix(2.0 .* Matrix{Float64}(ground_matrix * transpose(ground_matrix)))
+    trace_value = Float64(sum(density[index, index] for index in axes(density, 1)))
+    trace_value > 0.0 || throw(ArgumentError("He shell participation requires a nonzero one-particle density"))
+
+    occupation_fractions = Float64[]
+    peak_orbital_fractions = Float64[]
+    for column_range in block_column_ranges
+        block_trace = Float64(sum(density[index, index] for index in column_range))
+        push!(occupation_fractions, max(block_trace / trace_value, 0.0))
+        push!(
+            peak_orbital_fractions,
+            maximum(Float64[density[index, index] / trace_value for index in column_range]),
+        )
+    end
+
+    outer_fractions = occupation_fractions[2:end]
+    outer_peak_fractions = peak_orbital_fractions[2:end]
+    return (
+        block_labels = Symbol[block_labels...],
+        occupation_fractions = occupation_fractions,
+        peak_orbital_fractions = peak_orbital_fractions,
+        total_core_fraction = first(occupation_fractions),
+        total_outer_shell_fraction = isempty(outer_fractions) ? 0.0 : sum(outer_fractions),
+        outermost_shell_fraction = isempty(outer_fractions) ? 0.0 : last(outer_fractions),
+        largest_outer_shell_fraction = isempty(outer_fractions) ? 0.0 : maximum(outer_fractions),
+        largest_outer_orbital_fraction = isempty(outer_peak_fractions) ? 0.0 : maximum(outer_peak_fractions),
+    )
+end
+
+function _experimental_high_order_he_shell_participation(
+    stack::ExperimentalHighOrderDosideStack3D,
+    ground_matrix::AbstractMatrix{<:Real},
+)
+    return _experimental_high_order_he_shell_participation(
+        ground_matrix,
+        stack.block_labels,
+        stack.block_column_ranges,
+    )
+end
+
 function _experimental_high_order_he_singlet_action(
     problem::_ExperimentalHighOrderHeSingletProblem3D,
     coefficients::AbstractMatrix{<:Real},
@@ -382,6 +434,17 @@ function _experimental_high_order_doside_he_singlet_data(
         maxiter = maxiter,
         tol = tol,
     )
+    diagnostics = (
+        projected_overlap_spectrum = _experimental_high_order_positive_spectrum(
+            problem.projected_overlap;
+            tol = 1.0e-10,
+        ),
+        shell_participation = _experimental_high_order_he_shell_participation(
+            result.matrix,
+            Symbol[:all],
+            UnitRange{Int}[1:size(result.matrix, 1)],
+        ),
+    )
     return _ExperimentalHighOrderHeSingletData3D(
         problem,
         result.matrix,
@@ -389,6 +452,7 @@ function _experimental_high_order_doside_he_singlet_data(
         result.residual,
         result.iterations,
         result.converged,
+        diagnostics,
     )
 end
 
@@ -400,15 +464,32 @@ function _experimental_high_order_doside_he_singlet_data(
     maxiter::Int = 32,
     tol::Real = 1.0e-8,
 )
-    return _experimental_high_order_doside_he_singlet_data(
-        stack.parent_basis,
-        stack.coefficient_matrix;
-        backend = stack.backend,
+    problem = _experimental_high_order_he_singlet_problem(
+        stack;
         expansion = expansion,
         Z = Z,
+    )
+    result = _experimental_high_order_he_singlet_lanczos(
+        problem;
         krylovdim = krylovdim,
         maxiter = maxiter,
         tol = tol,
+    )
+    diagnostics = (
+        projected_overlap_spectrum = _experimental_high_order_positive_spectrum(
+            problem.projected_overlap;
+            tol = 1.0e-10,
+        ),
+        shell_participation = _experimental_high_order_he_shell_participation(stack, result.matrix),
+    )
+    return _ExperimentalHighOrderHeSingletData3D(
+        problem,
+        result.matrix,
+        result.value,
+        result.residual,
+        result.iterations,
+        result.converged,
+        diagnostics,
     )
 end
 

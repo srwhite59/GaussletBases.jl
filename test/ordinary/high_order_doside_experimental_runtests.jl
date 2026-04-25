@@ -1,9 +1,43 @@
-function _experimental_high_order_identity_basis(count::Int)
+function _experimental_high_order_identity_basis(
+    count::Int;
+    reference_spacing::Real = 1.0,
+)
     return build_basis(MappedUniformBasisSpec(:G10;
         count = count,
         mapping = IdentityMapping(),
-        reference_spacing = 1.0,
+        reference_spacing = Float64(reference_spacing),
     ))
+end
+
+function _experimental_high_order_he_singlet_case(
+    sides::AbstractVector{<:Integer};
+    parent_side::Int = maximum(sides),
+    backend::Symbol = :numerical_reference,
+    reference_spacing::Real = 1.0,
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    Z::Real = 2.0,
+    krylovdim::Int = 32,
+    maxiter::Int = 32,
+    tol::Real = 1.0e-8,
+)
+    basis = _experimental_high_order_identity_basis(
+        parent_side;
+        reference_spacing = reference_spacing,
+    )
+    stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        backend = backend,
+        sides = sides,
+    )
+    data = GaussletBases._experimental_high_order_doside_he_singlet_data(
+        stack;
+        expansion = expansion,
+        Z = Z,
+        krylovdim = krylovdim,
+        maxiter = maxiter,
+        tol = tol,
+    )
+    return (basis = basis, stack = stack, data = data)
 end
 
 @testset "Experimental high-order doside stack core dimensions" begin
@@ -250,4 +284,98 @@ end
     )
 
     @test abs(stack_data.ground_energy - union_data.ground_energy) < 1.0e-6
+end
+
+@testset "Experimental high-order doside He singlet spacing sensitivity and conditioning" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    ladder = ([5], [5, 7], [5, 7, 9], [5, 7, 9, 11])
+
+    for spacing in (0.9, 1.0, 1.1)
+        energies = Float64[]
+        for sides in ladder
+            case = _experimental_high_order_he_singlet_case(
+                sides;
+                reference_spacing = spacing,
+                expansion = expansion,
+            )
+            stack = case.stack
+            data = case.data
+
+            @test isfinite(data.ground_energy)
+            @test isfinite(data.residual)
+            @test stack.diagnostics.overlap_error < 1.0e-8
+            @test stack.diagnostics.overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+            @test stack.diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+            @test stack.diagnostics.overlap_spectrum.condition_number < 1.0 + 1.0e-8
+            @test data.diagnostics.projected_overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+            @test data.diagnostics.projected_overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+            @test data.diagnostics.projected_overlap_spectrum.condition_number < 1.0 + 1.0e-8
+            @test all(spectrum -> spectrum.kept_rank == 98, stack.diagnostics.shell_cleanup_spectra)
+            @test all(spectrum -> spectrum.minimum_eigenvalue > 1.0e-3, stack.diagnostics.shell_cleanup_spectra)
+            push!(energies, data.ground_energy)
+        end
+
+        @test all(diff(energies) .<= 1.0e-5)
+    end
+end
+
+@testset "Experimental high-order doside He singlet parent-box sensitivity" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    energies = Float64[]
+
+    for parent_side in (11, 13)
+        case = _experimental_high_order_he_singlet_case(
+            [5, 7, 9, 11];
+            parent_side = parent_side,
+            expansion = expansion,
+        )
+        stack = case.stack
+        data = case.data
+
+        @test stack.parent_side == parent_side
+        @test stack.parent_side == length(case.basis)
+        @test stack.diagnostics.parent_padding == parent_side - 11
+        @test stack.diagnostics.overlap_error < 1.0e-8
+        @test stack.diagnostics.overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+        @test stack.diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+        @test isfinite(data.ground_energy)
+        push!(energies, data.ground_energy)
+    end
+
+    @test abs(energies[2] - energies[1]) < 1.0e-8
+end
+
+@testset "Experimental high-order doside He singlet shell participation diagnostics" begin
+    case = _experimental_high_order_he_singlet_case([5, 7, 9, 11])
+    stack = case.stack
+    data = case.data
+    participation = data.diagnostics.shell_participation
+
+    @test participation.block_labels == stack.block_labels
+    @test length(participation.occupation_fractions) == length(stack.block_column_ranges)
+    @test length(participation.peak_orbital_fractions) == length(stack.block_column_ranges)
+    @test all(value -> isfinite(value) && value >= -1.0e-12, participation.occupation_fractions)
+    @test all(value -> isfinite(value) && value >= -1.0e-12, participation.peak_orbital_fractions)
+    @test abs(sum(participation.occupation_fractions) - 1.0) < 1.0e-10
+    @test participation.total_core_fraction > 0.95
+    @test participation.total_outer_shell_fraction > 0.0
+    @test participation.total_outer_shell_fraction < 0.05
+    @test participation.largest_outer_shell_fraction < 0.05
+    @test participation.largest_outer_orbital_fraction < 0.01
+end
+
+@testset "Experimental high-order doside He singlet PGDG smoke" begin
+    case = _experimental_high_order_he_singlet_case(
+        [5, 7];
+        backend = :pgdg_localized_experimental,
+        krylovdim = 16,
+        maxiter = 16,
+        tol = 1.0e-6,
+    )
+    data = case.data
+
+    @test isfinite(data.ground_energy)
+    @test isfinite(data.residual)
+    @test all(isfinite, data.ground_matrix)
+    @test norm(data.ground_matrix - transpose(data.ground_matrix), Inf) < 1.0e-8
 end

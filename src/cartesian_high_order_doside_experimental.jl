@@ -81,8 +81,8 @@ function _experimental_high_order_validate_request(
     all(side_values[index + 1] == side_values[index] + 2 for index in 1:(length(side_values) - 1)) || throw(
         ArgumentError("experimental high-order doside side ladders must increase by 2"),
     )
-    maximum(side_values) == n1d || throw(
-        ArgumentError("experimental high-order doside stack currently requires maximum(sides) == length(parent_basis)"),
+    maximum(side_values) <= n1d || throw(
+        ArgumentError("experimental high-order doside stack currently requires maximum(sides) <= length(parent_basis)"),
     )
     return side_values
 end
@@ -372,6 +372,44 @@ function _experimental_high_order_overlap_error(
     return norm(gram - I, Inf)
 end
 
+function _experimental_high_order_positive_spectrum(
+    matrix::AbstractMatrix{<:Real};
+    tol::Real = 1.0e-10,
+)
+    size(matrix, 1) == size(matrix, 2) || throw(ArgumentError("positive-spectrum helper requires a square matrix"))
+    tol_value = Float64(tol)
+    tol_value > 0.0 || throw(ArgumentError("positive-spectrum helper requires tol > 0"))
+    values = Float64[
+        Float64(real(value)) for value in eigvals(Symmetric(_symmetrize_ida_matrix(Matrix{Float64}(matrix))))
+    ]
+    kept = Float64[value for value in values if value > tol_value]
+    if isempty(kept)
+        return (
+            minimum_eigenvalue = 0.0,
+            maximum_eigenvalue = 0.0,
+            condition_number = Inf,
+            kept_rank = 0,
+            dropped_rank = length(values),
+        )
+    end
+    return (
+        minimum_eigenvalue = minimum(kept),
+        maximum_eigenvalue = maximum(kept),
+        condition_number = maximum(kept) / minimum(kept),
+        kept_rank = length(kept),
+        dropped_rank = length(values) - length(kept),
+    )
+end
+
+function _experimental_high_order_metric_spectrum(
+    coefficients::AbstractMatrix{<:Real},
+    overlap::AbstractMatrix{<:Real};
+    tol::Real = 1.0e-10,
+)
+    gram = Matrix{Float64}(transpose(coefficients) * overlap * coefficients)
+    return _experimental_high_order_positive_spectrum(gram; tol = tol)
+end
+
 function _experimental_high_order_full_block_union_coefficients(
     axis_data::_ExperimentalHighOrderAxisData1D,
     sides::AbstractVector{<:Integer};
@@ -403,6 +441,7 @@ function _experimental_high_order_doside_stack_3d(
     block_column_ranges = UnitRange{Int}[1:size(accumulated, 2)]
     block_labels = Symbol[Symbol("side$(first(side_values))_full")]
     shell_layers = _ExperimentalHighOrderTensorShell3D[]
+    shell_cleanup_spectra = NamedTuple[]
     next_column = size(accumulated, 2) + 1
 
     for side in side_values[2:end]
@@ -411,6 +450,11 @@ function _experimental_high_order_doside_stack_3d(
             shell.shell_coefficients,
             accumulated,
             parent_overlap,
+        )
+        shell_spectrum = _experimental_high_order_metric_spectrum(
+            shell_residual,
+            parent_overlap;
+            tol = 1.0e-10,
         )
         shell_clean = _experimental_high_order_lowdin_cleanup(
             shell_residual,
@@ -432,18 +476,34 @@ function _experimental_high_order_doside_stack_3d(
                 shell_range,
             ),
         )
+        push!(
+            shell_cleanup_spectra,
+            (
+                side = side,
+                raw_dimension = size(shell_residual, 2),
+                kept_rank = shell_spectrum.kept_rank,
+                dropped_rank = shell_spectrum.dropped_rank,
+                minimum_eigenvalue = shell_spectrum.minimum_eigenvalue,
+                maximum_eigenvalue = shell_spectrum.maximum_eigenvalue,
+                condition_number = shell_spectrum.condition_number,
+            ),
+        )
         accumulated = Matrix{Float64}(hcat(accumulated, shell_clean))
         push!(block_column_ranges, shell_range)
         push!(block_labels, Symbol("side$(side)_shell"))
     end
 
     contracted_weights = vec(transpose(parent_weights) * accumulated)
+    overlap_spectrum = _experimental_high_order_metric_spectrum(accumulated, parent_overlap; tol = 1.0e-10)
     diagnostics = (
         parent_dimension = size(parent_overlap, 1),
         stack_dimension = size(accumulated, 2),
+        parent_padding = length(basis) - maximum(side_values),
         shell_dimensions = Int[length(shell.shell_labels) for shell in shell_layers],
         shell_kind_counts = [shell.shell_kind_counts for shell in shell_layers],
         overlap_error = _experimental_high_order_overlap_error(accumulated, parent_overlap),
+        overlap_spectrum = overlap_spectrum,
+        shell_cleanup_spectra = shell_cleanup_spectra,
         contracted_weights_finite = all(isfinite, contracted_weights),
     )
 
