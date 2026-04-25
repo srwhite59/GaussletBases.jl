@@ -2029,6 +2029,29 @@ end
     bond_aligned_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_bundle_fixture()
     bond_aligned_hybrid_trimmed_fixture =
         _bond_aligned_diatomic_nested_hybrid_bundle_fixture(; max_width = 1.0)
+    bond_aligned_hybrid_supplement3d =
+        GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(
+            bond_aligned_hybrid_fixture.supplement,
+        )
+    bond_aligned_hybrid_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
+        bond_aligned_hybrid_fixture.basis,
+        bond_aligned_hybrid_fixture.hybrid_ops.expansion;
+        gausslet_backend = bond_aligned_hybrid_fixture.hybrid_ops.gausslet_backend,
+    )
+    bond_aligned_hybrid_overlap_blocks =
+        GaussletBases._qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
+            bond_aligned_hybrid_bundles,
+            bond_aligned_hybrid_supplement3d,
+            bond_aligned_hybrid_fixture.basis,
+            bond_aligned_hybrid_fixture.hybrid_ops.expansion,
+        )
+    bond_aligned_hybrid_full_blocks = GaussletBases._qwrg_diatomic_cartesian_shell_blocks_3d(
+        bond_aligned_hybrid_bundles,
+        bond_aligned_hybrid_supplement3d,
+        bond_aligned_hybrid_fixture.basis,
+        bond_aligned_hybrid_fixture.hybrid_ops.expansion,
+        bond_aligned_hybrid_fixture.hybrid_ops.nuclear_charges,
+    )
     bond_aligned_hybrid_bundle = cartesian_basis_bundle_payload(
         bond_aligned_hybrid_fixture.hybrid_ops;
         meta = (example = "test_cartesian_bond_aligned_diatomic_hybrid_bundle",),
@@ -2046,6 +2069,10 @@ end
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/cartesian_supplement_axis_tables/x")
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_cartesian_supplement_overlap")
     @test haskey(bond_aligned_hybrid_bundle.basis, "parent/exact_supplement_overlap")
+    @test bond_aligned_hybrid_overlap_blocks.overlap_ga ≈
+        bond_aligned_hybrid_full_blocks.overlap_ga atol = 1.0e-12 rtol = 1.0e-12
+    @test bond_aligned_hybrid_overlap_blocks.overlap_aa ≈
+        bond_aligned_hybrid_full_blocks.overlap_aa atol = 1.0e-12 rtol = 1.0e-12
     @test bond_aligned_hybrid_trimmed_bundle.basis["parent/supplement/metadata/max_width"] == 1.0
     @test Int(bond_aligned_hybrid_trimmed_bundle.basis["parent/supplement/orbital_count"]) <
         Int(bond_aligned_hybrid_bundle.basis["parent/supplement/orbital_count"])

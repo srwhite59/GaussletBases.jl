@@ -1644,6 +1644,89 @@ function _qwrg_diatomic_gausslet_axis_matrix(
     return matrix
 end
 
+function _qwrg_diatomic_cartesian_shell_context(
+    bundles::_CartesianNestedAxisBundles3D,
+    supplement::_BondAlignedDiatomicCartesianShellSupplement3D,
+    basis::BondAlignedDiatomicQWBasis3D,
+)
+    _qwrg_same_nuclei(supplement.source.nuclei, basis.nuclei) || throw(
+        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the basis nuclei"),
+    )
+
+    return (
+        proxy_x = _qwrg_diatomic_supplement_proxy_layer(basis.basis_x, bundles.bundle_x, :x),
+        proxy_y = _qwrg_diatomic_supplement_proxy_layer(basis.basis_y, bundles.bundle_y, :y),
+        proxy_z = _qwrg_diatomic_supplement_proxy_layer(basis.basis_z, bundles.bundle_z, :z),
+        ngausslet3d =
+            size(bundles.bundle_x.pgdg_intermediate.overlap, 1) *
+            size(bundles.bundle_y.pgdg_intermediate.overlap, 1) *
+            size(bundles.bundle_z.pgdg_intermediate.overlap, 1),
+        norbital = length(supplement.orbitals),
+    )
+end
+
+function _qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
+    bundles::_CartesianNestedAxisBundles3D,
+    supplement::_BondAlignedDiatomicCartesianShellSupplement3D,
+    basis::BondAlignedDiatomicQWBasis3D,
+    expansion::CoulombGaussianExpansion,
+)
+    context = _qwrg_diatomic_cartesian_shell_context(bundles, supplement, basis)
+    overlap_ga = zeros(Float64, context.ngausslet3d, context.norbital)
+    overlap_aa = zeros(Float64, context.norbital, context.norbital)
+
+    cross_cache = Dict{Tuple{Int,Symbol},Any}()
+    aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
+    scratch = zeros(Float64, context.ngausslet3d)
+
+    for (orbital_index, orbital) in pairs(supplement.orbitals)
+        x_data = get!(cross_cache, (orbital_index, :x)) do
+            _qwrg_atomic_axis_cross_data(context.proxy_x, orbital, :x, expansion)
+        end
+        y_data = get!(cross_cache, (orbital_index, :y)) do
+            _qwrg_atomic_axis_cross_data(context.proxy_y, orbital, :y, expansion)
+        end
+        z_data = get!(cross_cache, (orbital_index, :z)) do
+            _qwrg_atomic_axis_cross_data(context.proxy_z, orbital, :z, expansion)
+        end
+
+        for primitive in eachindex(orbital.coefficients)
+            coefficient = Float64(orbital.coefficients[primitive])
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            overlap_ga[:, orbital_index] .+= coefficient .* scratch
+        end
+    end
+
+    for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
+        x_data = get!(aa_cache, (left_index, right_index, :x)) do
+            _qwrg_atomic_axis_aa_data(left, right, :x, expansion)
+        end
+        y_data = get!(aa_cache, (left_index, right_index, :y)) do
+            _qwrg_atomic_axis_aa_data(left, right, :y, expansion)
+        end
+        z_data = get!(aa_cache, (left_index, right_index, :z)) do
+            _qwrg_atomic_axis_aa_data(left, right, :z, expansion)
+        end
+        overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.overlap,
+            z_data.overlap,
+            right.coefficients,
+        )
+    end
+
+    return (
+        overlap_ga = overlap_ga,
+        overlap_aa = Matrix{Float64}(0.5 .* (overlap_aa .+ transpose(overlap_aa))),
+    )
+end
+
 function _qwrg_diatomic_cartesian_shell_blocks_3d(
     bundles::_CartesianNestedAxisBundles3D,
     supplement::_BondAlignedDiatomicCartesianShellSupplement3D,
@@ -1654,19 +1737,12 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     length(nuclear_charges) == length(basis.nuclei) || throw(
         ArgumentError("bond-aligned diatomic molecular supplement route requires one nuclear charge per nucleus"),
     )
-    _qwrg_same_nuclei(supplement.source.nuclei, basis.nuclei) || throw(
-        ArgumentError("bond-aligned diatomic molecular supplement nuclei must match the basis nuclei"),
-    )
-
-    proxy_x = _qwrg_diatomic_supplement_proxy_layer(basis.basis_x, bundles.bundle_x, :x)
-    proxy_y = _qwrg_diatomic_supplement_proxy_layer(basis.basis_y, bundles.bundle_y, :y)
-    proxy_z = _qwrg_diatomic_supplement_proxy_layer(basis.basis_z, bundles.bundle_z, :z)
-
-    n1x = size(bundles.bundle_x.pgdg_intermediate.overlap, 1)
-    n1y = size(bundles.bundle_y.pgdg_intermediate.overlap, 1)
-    n1z = size(bundles.bundle_z.pgdg_intermediate.overlap, 1)
-    ngausslet3d = n1x * n1y * n1z
-    norbital = length(supplement.orbitals)
+    context = _qwrg_diatomic_cartesian_shell_context(bundles, supplement, basis)
+    proxy_x = context.proxy_x
+    proxy_y = context.proxy_y
+    proxy_z = context.proxy_z
+    ngausslet3d = context.ngausslet3d
+    norbital = context.norbital
 
     overlap_ga = zeros(Float64, ngausslet3d, norbital)
     kinetic_ga = zeros(Float64, ngausslet3d, norbital)

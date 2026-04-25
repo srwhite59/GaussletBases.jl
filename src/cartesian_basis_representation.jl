@@ -2494,15 +2494,11 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
         gausslet_backend = operators.gausslet_backend,
     )
     supplement3d = _bond_aligned_diatomic_cartesian_shell_supplement_3d(operators.gaussian_data)
-    # Exact overlap sidecars only consume overlap_ga and overlap_aa. The current
-    # diatomic raw-block helper also builds one-body data, so use a placeholder
-    # charge vector here and keep only the overlap blocks.
-    raw_blocks = _qwrg_diatomic_cartesian_shell_blocks_3d(
+    overlap_blocks = _qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
         bundles,
         supplement3d,
         parent_basis,
         operators.expansion,
-        ones(Float64, length(parent_basis.nuclei)),
     )
     parent_coefficients =
         cartesian_parent.coefficient_matrix === nothing ?
@@ -2519,8 +2515,8 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
             "bond-aligned diatomic",
         ),
         exact_cartesian_supplement_overlap =
-            Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
-        exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
+            Matrix{Float64}(transpose(parent_coefficients) * overlap_blocks.overlap_ga),
+        exact_supplement_overlap = Matrix{Float64}(overlap_blocks.overlap_aa),
     )
 end
 
