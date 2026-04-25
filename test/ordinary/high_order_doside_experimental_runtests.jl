@@ -364,6 +364,44 @@ end
     @test participation.largest_outer_orbital_fraction < 0.01
 end
 
+@testset "Experimental high-order doside He singlet moment-risk audit" begin
+    case = _experimental_high_order_he_singlet_case([5, 7, 9, 11])
+    stack = case.stack
+    data = case.data
+    moment_risk = stack.diagnostics.moment_risk
+    audit = data.diagnostics.moment_risk_audit
+    participation = data.diagnostics.shell_participation
+
+    @test length(moment_risk.column_diagnostics) == size(stack.coefficient_matrix, 2)
+    @test moment_risk.outer_column_count == 3 * 98
+    @test moment_risk.worst_outer !== nothing
+    @test length(moment_risk.top_outer) == 10
+    @test all(diagnostic -> isfinite(diagnostic.center_drift), moment_risk.column_diagnostics)
+    @test all(diagnostic -> isfinite(diagnostic.max_normalized_mu3), moment_risk.column_diagnostics)
+    @test all(diagnostic -> isfinite(diagnostic.max_normalized_mu4), moment_risk.column_diagnostics)
+    @test moment_risk.worst_outer.risk_score == max(
+        moment_risk.worst_outer.max_normalized_mu3,
+        moment_risk.worst_outer.max_normalized_mu4,
+    )
+
+    @test audit !== nothing
+    @test audit.outer_column_count == moment_risk.outer_column_count
+    @test audit.worst_outer_direction !== nothing
+    @test audit.worst_outer_direction.block_label != :side5_full
+    @test isfinite(audit.worst_outer_direction.risk_score)
+    @test isfinite(audit.worst_outer_direction.state_weight)
+    @test length(audit.top_k_weights) == 3
+    @test audit.top_k_weights[1].k == 1
+    @test audit.top_k_weights[2].k == 5
+    @test audit.top_k_weights[3].k == 10
+    @test audit.top_k_weights[1].total_state_weight < 1.0e-4
+    @test audit.top_k_weights[2].total_state_weight < 5.0e-3
+    @test audit.top_k_weights[3].total_state_weight < 0.75 * participation.total_outer_shell_fraction
+    @test length(audit.shell_block_weights) == length(stack.block_labels)
+    @test audit.shell_block_weights[1].block_label == :side5_full
+    @test abs(sum(weight.total_state_weight for weight in audit.shell_block_weights) - 1.0) < 1.0e-10
+end
+
 @testset "Experimental high-order doside He singlet PGDG smoke" begin
     case = _experimental_high_order_he_singlet_case(
         [5, 7];

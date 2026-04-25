@@ -319,6 +319,17 @@ function _experimental_high_order_parent_weights_3d(
     return _mapped_cartesian_weights(axis_data.weights)
 end
 
+function _experimental_high_order_parent_coordinates_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+)
+    orbitals = _mapped_cartesian_orbitals(axis_data.centers)
+    return (
+        x = Float64[orbital.x for orbital in orbitals],
+        y = Float64[orbital.y for orbital in orbitals],
+        z = Float64[orbital.z for orbital in orbitals],
+    )
+end
+
 function _experimental_high_order_sign_fix_columns!(
     coefficients::Matrix{Float64},
     sign_vector::AbstractVector{<:Real},
@@ -410,6 +421,207 @@ function _experimental_high_order_metric_spectrum(
     return _experimental_high_order_positive_spectrum(gram; tol = tol)
 end
 
+function _experimental_high_order_axis_moment_summary(
+    center::Float64,
+    coordinates::AbstractVector{<:Real},
+    signed_weights::AbstractVector{<:Real},
+    absolute_weights::AbstractVector{<:Real},
+    absolute_mass::Real,
+)
+    m1_signed = 0.0
+    m2_signed = 0.0
+    m3_signed = 0.0
+    m4_signed = 0.0
+    m1_absolute = 0.0
+    m2_absolute = 0.0
+    m3_absolute = 0.0
+    m4_absolute = 0.0
+    for index in eachindex(coordinates)
+        dx = Float64(coordinates[index]) - center
+        dx2 = dx * dx
+        dx3 = dx2 * dx
+        dx4 = dx2 * dx2
+        signed_weight = Float64(signed_weights[index])
+        absolute_weight = Float64(absolute_weights[index])
+        adx = abs(dx)
+        m1_signed += signed_weight * dx
+        m2_signed += signed_weight * dx2
+        m3_signed += signed_weight * dx3
+        m4_signed += signed_weight * dx4
+        m1_absolute += absolute_weight * adx
+        m2_absolute += absolute_weight * dx2
+        m3_absolute += absolute_weight * adx * dx2
+        m4_absolute += absolute_weight * dx4
+    end
+    norm_value = Float64(absolute_mass)
+    sigma = sqrt(max(m2_absolute / norm_value, eps(Float64)))
+    normalized_mu3 = abs(m3_signed / norm_value) / sigma^3
+    normalized_mu4 = abs(m4_absolute / norm_value) / sigma^4
+    return (
+        sigma = sigma,
+        signed = (
+            degree1 = m1_signed / norm_value,
+            degree2 = m2_signed / norm_value,
+            degree3 = m3_signed / norm_value,
+            degree4 = m4_signed / norm_value,
+        ),
+        absolute = (
+            degree1 = m1_absolute / norm_value,
+            degree2 = m2_absolute / norm_value,
+            degree3 = m3_absolute / norm_value,
+            degree4 = m4_absolute / norm_value,
+        ),
+        normalized = (
+            mu3 = normalized_mu3,
+            mu4 = normalized_mu4,
+        ),
+    )
+end
+
+function _experimental_high_order_column_moment_diagnostic(
+    column::AbstractVector{<:Real},
+    parent_weights::AbstractVector{<:Real},
+    parent_coordinates::NamedTuple;
+    column_index::Int,
+    block_index::Int,
+    block_label::Symbol,
+)
+    length(column) == length(parent_weights) || throw(
+        DimensionMismatch("column moment diagnostic requires parent weights that match the column length"),
+    )
+    length(parent_coordinates.x) == length(parent_weights) ||
+        throw(DimensionMismatch("parent x coordinates must match the parent weight length"))
+    length(parent_coordinates.y) == length(parent_weights) ||
+        throw(DimensionMismatch("parent y coordinates must match the parent weight length"))
+    length(parent_coordinates.z) == length(parent_weights) ||
+        throw(DimensionMismatch("parent z coordinates must match the parent weight length"))
+
+    signed_weights = Float64[Float64(parent_weights[index]) * Float64(column[index]) for index in eachindex(column)]
+    absolute_weights = abs.(signed_weights)
+    absolute_mass = sum(absolute_weights)
+    absolute_mass > 0.0 || throw(ArgumentError("column moment diagnostic requires nonzero absolute parent weight"))
+
+    center_x = dot(absolute_weights, parent_coordinates.x) / absolute_mass
+    center_y = dot(absolute_weights, parent_coordinates.y) / absolute_mass
+    center_z = dot(absolute_weights, parent_coordinates.z) / absolute_mass
+
+    x_moments = _experimental_high_order_axis_moment_summary(
+        center_x,
+        parent_coordinates.x,
+        signed_weights,
+        absolute_weights,
+        absolute_mass,
+    )
+    y_moments = _experimental_high_order_axis_moment_summary(
+        center_y,
+        parent_coordinates.y,
+        signed_weights,
+        absolute_weights,
+        absolute_mass,
+    )
+    z_moments = _experimental_high_order_axis_moment_summary(
+        center_z,
+        parent_coordinates.z,
+        signed_weights,
+        absolute_weights,
+        absolute_mass,
+    )
+
+    center_drift = sqrt(center_x^2 + center_y^2 + center_z^2)
+    max_normalized_mu3 = maximum(
+        (x_moments.normalized.mu3, y_moments.normalized.mu3, z_moments.normalized.mu3),
+    )
+    max_normalized_mu4 = maximum(
+        (x_moments.normalized.mu4, y_moments.normalized.mu4, z_moments.normalized.mu4),
+    )
+    return (
+        column_index = column_index,
+        block_index = block_index,
+        block_label = block_label,
+        is_outer_shell = block_index > 1,
+        center = (x = center_x, y = center_y, z = center_z),
+        center_drift = center_drift,
+        signed_centered_moments = (
+            x = x_moments.signed,
+            y = y_moments.signed,
+            z = z_moments.signed,
+        ),
+        absolute_centered_moments = (
+            x = x_moments.absolute,
+            y = y_moments.absolute,
+            z = z_moments.absolute,
+        ),
+        sigma = (
+            x = x_moments.sigma,
+            y = y_moments.sigma,
+            z = z_moments.sigma,
+        ),
+        normalized_moment_ratios = (
+            mu3 = (
+                x = x_moments.normalized.mu3,
+                y = y_moments.normalized.mu3,
+                z = z_moments.normalized.mu3,
+            ),
+            mu4 = (
+                x = x_moments.normalized.mu4,
+                y = y_moments.normalized.mu4,
+                z = z_moments.normalized.mu4,
+            ),
+        ),
+        max_normalized_mu3 = max_normalized_mu3,
+        max_normalized_mu4 = max_normalized_mu4,
+        risk_score = max(max_normalized_mu3, max_normalized_mu4),
+    )
+end
+
+function _experimental_high_order_stack_moment_risk(
+    coefficients::AbstractMatrix{<:Real},
+    parent_weights::AbstractVector{<:Real},
+    parent_coordinates::NamedTuple,
+    block_labels::AbstractVector{<:Symbol},
+    block_column_ranges::AbstractVector{<:UnitRange{Int}},
+)
+    block_index_by_column = zeros(Int, size(coefficients, 2))
+    block_label_by_column = fill(Symbol(""), size(coefficients, 2))
+    for (block_index, column_range) in enumerate(block_column_ranges)
+        for column in column_range
+            block_index_by_column[column] = block_index
+            block_label_by_column[column] = block_labels[block_index]
+        end
+    end
+
+    column_diagnostics = NamedTuple[]
+    for column in axes(coefficients, 2)
+        push!(
+            column_diagnostics,
+            _experimental_high_order_column_moment_diagnostic(
+                view(coefficients, :, column),
+                parent_weights,
+                parent_coordinates;
+                column_index = column,
+                block_index = block_index_by_column[column],
+                block_label = block_label_by_column[column],
+            ),
+        )
+    end
+
+    outer_diagnostics = NamedTuple[
+        diagnostic for diagnostic in column_diagnostics if diagnostic.is_outer_shell
+    ]
+    sorted_outer = sort(
+        outer_diagnostics;
+        by = diagnostic -> (-diagnostic.risk_score, -diagnostic.max_normalized_mu4, -diagnostic.max_normalized_mu3, diagnostic.column_index),
+    )
+    top_outer = first(sorted_outer, min(10, length(sorted_outer)))
+    worst_outer = isempty(sorted_outer) ? nothing : first(sorted_outer)
+    return (
+        column_diagnostics = column_diagnostics,
+        outer_column_count = length(sorted_outer),
+        worst_outer = worst_outer,
+        top_outer = top_outer,
+    )
+end
+
 function _experimental_high_order_full_block_union_coefficients(
     axis_data::_ExperimentalHighOrderAxisData1D,
     sides::AbstractVector{<:Integer};
@@ -433,6 +645,7 @@ function _experimental_high_order_doside_stack_3d(
     axis_data = _experimental_high_order_axis_data_1d(basis; backend = backend)
     parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data)
     parent_weights = _experimental_high_order_parent_weights_3d(axis_data)
+    parent_coordinates = _experimental_high_order_parent_coordinates_3d(axis_data)
 
     first_block = _experimental_high_order_tensor_shell_3d(axis_data, first(side_values); doside = doside)
     accumulated = Matrix{Float64}(first_block.full_block_coefficients)
@@ -495,6 +708,13 @@ function _experimental_high_order_doside_stack_3d(
 
     contracted_weights = vec(transpose(parent_weights) * accumulated)
     overlap_spectrum = _experimental_high_order_metric_spectrum(accumulated, parent_overlap; tol = 1.0e-10)
+    moment_risk = _experimental_high_order_stack_moment_risk(
+        accumulated,
+        parent_weights,
+        parent_coordinates,
+        block_labels,
+        block_column_ranges,
+    )
     diagnostics = (
         parent_dimension = size(parent_overlap, 1),
         stack_dimension = size(accumulated, 2),
@@ -504,6 +724,7 @@ function _experimental_high_order_doside_stack_3d(
         overlap_error = _experimental_high_order_overlap_error(accumulated, parent_overlap),
         overlap_spectrum = overlap_spectrum,
         shell_cleanup_spectra = shell_cleanup_spectra,
+        moment_risk = moment_risk,
         contracted_weights_finite = all(isfinite, contracted_weights),
     )
 

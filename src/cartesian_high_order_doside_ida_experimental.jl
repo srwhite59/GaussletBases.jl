@@ -253,6 +253,22 @@ function _experimental_high_order_frobenius_norm(matrix::AbstractMatrix{<:Real})
     return sqrt(max(_experimental_high_order_frobenius_dot(matrix, matrix), 0.0))
 end
 
+function _experimental_high_order_he_column_participation(
+    ground_matrix::AbstractMatrix{<:Real},
+)
+    size(ground_matrix, 1) == size(ground_matrix, 2) || throw(
+        ArgumentError("He column participation requires a square ground-state matrix"),
+    )
+    density = _symmetrize_ida_matrix(2.0 .* Matrix{Float64}(ground_matrix * transpose(ground_matrix)))
+    trace_value = Float64(sum(density[index, index] for index in axes(density, 1)))
+    trace_value > 0.0 || throw(ArgumentError("He column participation requires a nonzero one-particle density"))
+    return (
+        density = density,
+        trace_value = trace_value,
+        column_fractions = Float64[density[index, index] / trace_value for index in axes(density, 1)],
+    )
+end
+
 function _experimental_high_order_he_shell_participation(
     ground_matrix::AbstractMatrix{<:Real},
     block_labels::AbstractVector{<:Symbol},
@@ -264,9 +280,9 @@ function _experimental_high_order_he_shell_participation(
     length(block_labels) == length(block_column_ranges) || throw(
         ArgumentError("He shell participation requires matching block labels and column ranges"),
     )
-    density = _symmetrize_ida_matrix(2.0 .* Matrix{Float64}(ground_matrix * transpose(ground_matrix)))
-    trace_value = Float64(sum(density[index, index] for index in axes(density, 1)))
-    trace_value > 0.0 || throw(ArgumentError("He shell participation requires a nonzero one-particle density"))
+    column_participation = _experimental_high_order_he_column_participation(ground_matrix)
+    density = column_participation.density
+    trace_value = column_participation.trace_value
 
     occupation_fractions = Float64[]
     peak_orbital_fractions = Float64[]
@@ -301,6 +317,52 @@ function _experimental_high_order_he_shell_participation(
         ground_matrix,
         stack.block_labels,
         stack.block_column_ranges,
+    )
+end
+
+function _experimental_high_order_he_moment_risk_audit(
+    stack::ExperimentalHighOrderDosideStack3D,
+    ground_matrix::AbstractMatrix{<:Real};
+    top_ks::AbstractVector{<:Integer} = [1, 5, 10],
+)
+    column_participation = _experimental_high_order_he_column_participation(ground_matrix)
+    column_fractions = column_participation.column_fractions
+    column_diagnostics = stack.diagnostics.moment_risk.column_diagnostics
+    outer_ranked = sort(
+        NamedTuple[
+            merge(
+                diagnostic,
+                (
+                    state_weight = column_fractions[diagnostic.column_index],
+                ),
+            ) for diagnostic in column_diagnostics if diagnostic.is_outer_shell
+        ];
+        by = diagnostic -> (-diagnostic.risk_score, -diagnostic.max_normalized_mu4, -diagnostic.max_normalized_mu3, diagnostic.column_index),
+    )
+    worst_outer_direction = isempty(outer_ranked) ? nothing : first(outer_ranked)
+    top_k_weights = NamedTuple[]
+    for k in top_ks
+        k >= 1 || throw(ArgumentError("He moment-risk audit requires positive top-k sizes"))
+        push!(
+            top_k_weights,
+            (
+                k = Int(k),
+                total_state_weight = isempty(outer_ranked) ? 0.0 : sum(diagnostic.state_weight for diagnostic in first(outer_ranked, min(Int(k), length(outer_ranked)))),
+            ),
+        )
+    end
+    shell_block_weights = NamedTuple[
+        (
+            block_label = stack.block_labels[block_index],
+            total_state_weight = sum(column_fractions[index] for index in column_range),
+        ) for (block_index, column_range) in enumerate(stack.block_column_ranges)
+    ]
+    return (
+        outer_column_count = length(outer_ranked),
+        worst_outer_direction = worst_outer_direction,
+        top_k_weights = top_k_weights,
+        shell_block_weights = shell_block_weights,
+        top_ranked_outer_directions = first(outer_ranked, min(10, length(outer_ranked))),
     )
 end
 
@@ -444,6 +506,7 @@ function _experimental_high_order_doside_he_singlet_data(
             Symbol[:all],
             UnitRange{Int}[1:size(result.matrix, 1)],
         ),
+        moment_risk_audit = nothing,
     )
     return _ExperimentalHighOrderHeSingletData3D(
         problem,
@@ -481,6 +544,7 @@ function _experimental_high_order_doside_he_singlet_data(
             tol = 1.0e-10,
         ),
         shell_participation = _experimental_high_order_he_shell_participation(stack, result.matrix),
+        moment_risk_audit = _experimental_high_order_he_moment_risk_audit(stack, result.matrix),
     )
     return _ExperimentalHighOrderHeSingletData3D(
         problem,
