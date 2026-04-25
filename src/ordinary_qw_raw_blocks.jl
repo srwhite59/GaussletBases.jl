@@ -1827,7 +1827,6 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     cross_cache = Dict{Tuple{Int,Symbol},Any}()
     factor_cross_cache = Dict{Tuple{Int,Symbol,Int},Any}()
     aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
-    factor_aa_cache = Dict{Tuple{Int,Int,Symbol,Int},Any}()
     scratch = zeros(Float64, ngausslet3d)
 
     # Alg QW-RG step 3: build the added 3D molecular Gaussian orbitals as one
@@ -2007,16 +2006,20 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
         )
 
         one_body_value = kinetic_aa[left_index, right_index]
+        factor_aa_local = Dict{Tuple{Symbol,Float64},Any}()
         for (nucleus_index, nucleus) in pairs(basis.nuclei)
             charge_value = Float64(nuclear_charges[nucleus_index])
-            x_factor = get!(factor_aa_cache, (left_index, right_index, :x, nucleus_index)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :x, expansion, nucleus[1])
+            x_center = Float64(nucleus[1])
+            x_factor = get!(factor_aa_local, (:x, x_center)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :x, expansion, x_center)
             end
-            y_factor = get!(factor_aa_cache, (left_index, right_index, :y, nucleus_index)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :y, expansion, nucleus[2])
+            y_center = Float64(nucleus[2])
+            y_factor = get!(factor_aa_local, (:y, y_center)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :y, expansion, y_center)
             end
-            z_factor = get!(factor_aa_cache, (left_index, right_index, :z, nucleus_index)) do
-                _qwrg_atomic_axis_factor_aa_data(left, right, :z, expansion, nucleus[3])
+            z_center = Float64(nucleus[3])
+            z_factor = get!(factor_aa_local, (:z, z_center)) do
+                _qwrg_atomic_axis_factor_aa_data(left, right, :z, expansion, z_center)
             end
             center_value = 0.0
             for term in eachindex(expansion.coefficients)
