@@ -88,3 +88,63 @@ end
     @test count(>(1.0e-8), svdvals(union_metric)) == 419
     @test norm(residual_metric, Inf) < 1.0e-8
 end
+
+@testset "Experimental high-order doside projected overlap and He+ ladder" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    energies = Float64[]
+
+    for sides in ([5], [5, 7], [5, 7, 9], [5, 7, 9, 11])
+        basis = _experimental_high_order_identity_basis(maximum(sides))
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            sides = sides,
+        )
+        data = GaussletBases._experimental_high_order_doside_heplus_data(
+            stack;
+            expansion = expansion,
+            Z = 2.0,
+        )
+        @test norm(data.projected_overlap - I, Inf) < 1.0e-8
+        @test data.overlap_error < 1.0e-8
+        @test isfinite(data.ground_energy)
+        @test all(isfinite, data.orbital_energies)
+        push!(energies, data.ground_energy)
+    end
+
+    @test all(diff(energies) .<= 1.0e-8)
+end
+
+@testset "Experimental high-order doside He+ matches orthonormalized full-union reference" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_identity_basis(11)
+    axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :numerical_reference,
+    )
+    stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        backend = :numerical_reference,
+        sides = [5, 7, 9, 11],
+    )
+    union_coefficients = GaussletBases._experimental_high_order_orthonormalized_full_block_union_coefficients(
+        axis_data,
+        [5, 7, 9, 11];
+        doside = 5,
+    )
+    stack_data = GaussletBases._experimental_high_order_doside_heplus_data(
+        stack;
+        expansion = expansion,
+        Z = 2.0,
+    )
+    union_data = GaussletBases._experimental_high_order_doside_heplus_data(
+        basis,
+        union_coefficients;
+        backend = :numerical_reference,
+        expansion = expansion,
+        Z = 2.0,
+    )
+
+    @test norm(union_data.projected_overlap - I, Inf) < 1.0e-8
+    @test abs(stack_data.ground_energy - union_data.ground_energy) < 1.0e-8
+end
