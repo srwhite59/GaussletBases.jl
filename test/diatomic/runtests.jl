@@ -674,6 +674,52 @@ end
     )
 end
 
+@testset "Bond-aligned diatomic packet-kernel parity" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.0,
+        bond_axis = :z,
+    )
+
+    reference = bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        nside = 5,
+        packet_kernel = :support_reference,
+    )
+    direct = bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        nside = 5,
+        packet_kernel = :factorized_direct,
+    )
+
+    reference_source = reference.source
+    direct_source = direct.source
+    reference_block = reference.fixed_block
+    direct_block = direct.fixed_block
+    atol = 1.0e-10
+    rtol = 1.0e-10
+
+    @test size(direct_block.coefficient_matrix, 2) == size(reference_block.coefficient_matrix, 2)
+    @test direct_source.sequence.support_indices == reference_source.sequence.support_indices
+    @test direct_source.sequence.coefficient_matrix ≈
+          reference_source.sequence.coefficient_matrix atol = atol rtol = rtol
+    @test direct_block.coefficient_matrix ≈
+          reference_block.coefficient_matrix atol = atol rtol = rtol
+
+    @test direct_block.overlap ≈ reference_block.overlap atol = atol rtol = rtol
+    @test direct_block.kinetic ≈ reference_block.kinetic atol = atol rtol = rtol
+    @test direct_block.position_x ≈ reference_block.position_x atol = atol rtol = rtol
+    @test direct_block.position_y ≈ reference_block.position_y atol = atol rtol = rtol
+    @test direct_block.position_z ≈ reference_block.position_z atol = atol rtol = rtol
+    @test direct_block.x2_x ≈ reference_block.x2_x atol = atol rtol = rtol
+    @test direct_block.x2_y ≈ reference_block.x2_y atol = atol rtol = rtol
+    @test direct_block.x2_z ≈ reference_block.x2_z atol = atol rtol = rtol
+    @test direct_block.gaussian_sum ≈ reference_block.gaussian_sum atol = atol rtol = rtol
+    @test direct_block.pair_sum ≈ reference_block.pair_sum atol = atol rtol = rtol
+end
+
 @testset "Bond-aligned diatomic nested QW consumer path" begin
     (
         _basis,
