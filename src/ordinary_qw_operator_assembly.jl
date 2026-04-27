@@ -468,6 +468,11 @@ end
 Reassemble the final-basis one-body Hamiltonian from stored kinetic and
 per-center nuclear-attraction terms when available.
 
+This reassembly uses the kinetic matrix carried by the operator payload itself.
+For nested fixed-block routes, that kinetic follows the fixed-block packet
+contract and should not be assumed to equal a later contraction of some
+separate parent-space ordinary one-body path.
+
 If the operator payload does not retain per-center nuclear terms, the stored
 `one_body_hamiltonian` can only be returned for the original nuclear charges;
 requesting modified charges then throws an `ArgumentError`.
@@ -1030,7 +1035,7 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
     overlap = _qwrg_diatomic_overlap_matrix(bundle_x, bundle_y, bundle_z)
     kinetic_one_body = _qwrg_diatomic_kinetic_matrix(bundle_x, bundle_y, bundle_z)
     direct_contracted_nuclear =
-        gausslet_backend == :pgdg_localized_experimental ?
+        resolved_nuclear_term_storage == :by_center ?
         _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
             basis,
             _qwrg_full_cartesian_product_factorized_basis((
@@ -1046,17 +1051,7 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
         nothing
     nuclear_one_body_by_center =
         resolved_nuclear_term_storage == :by_center ?
-        (
-            isnothing(direct_contracted_nuclear) ?
-            _qwrg_diatomic_nuclear_one_body_by_center(
-                basis,
-                bundle_x,
-                bundle_y,
-                bundle_z,
-                expansion,
-            ) :
-            direct_contracted_nuclear
-        ) :
+        direct_contracted_nuclear :
         nothing
     one_body_hamiltonian =
         !isnothing(direct_contracted_nuclear) ?
@@ -1319,7 +1314,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
             bundles.bundle_z,
         )
         carried_nuclear_one_body_by_center =
-            gausslet_backend == :pgdg_localized_experimental ?
+            resolved_nuclear_term_storage == :by_center ?
             _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                 basis,
                 _qwrg_full_cartesian_product_factorized_basis(
@@ -1334,17 +1329,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
                 bundles.bundle_z,
                 expansion,
             ) :
-            (
-                resolved_nuclear_term_storage == :by_center ?
-                _qwrg_diatomic_nuclear_one_body_by_center(
-                    basis,
-                    bundles.bundle_x,
-                    bundles.bundle_y,
-                    bundles.bundle_z,
-                    expansion,
-                ) :
-                nothing
-            )
+            nothing
         carried_one_body =
             use_by_center_final_mix ?
             nothing :
@@ -1370,7 +1355,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
         Matrix{Float64}(fixed_block.kinetic)
     end
     fixed_nuclear_one_body_by_center =
-        gausslet_backend == :pgdg_localized_experimental ?
+        resolved_nuclear_term_storage == :by_center ?
         let
             factorized_basis = @timeg "$(timing_prefix).one_body.carried.factorized_basis" begin
                 _nested_factorized_parent_basis(fixed_block)
@@ -1386,25 +1371,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
                 timing_contract_label = "$(timing_prefix).one_body.carried.nuclear_contract",
             )
         end :
-        (
-            resolved_nuclear_term_storage == :by_center ?
-            let
-                parent_nuclear = _qwrg_diatomic_nuclear_one_body_by_center(
-                    basis,
-                    bundles.bundle_x,
-                    bundles.bundle_y,
-                    bundles.bundle_z,
-                    expansion,
-                )
-                [
-                    _qwrg_contract_parent_symmetric_matrix(
-                        contraction,
-                        matrix,
-                    ) for matrix in parent_nuclear
-                ]
-            end :
-            nothing
-        )
+        nothing
     fixed_one_body =
         use_by_center_final_mix ?
         nothing :
@@ -1817,9 +1784,12 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
         gausslet_backend = gausslet_backend,
     )
 
+    # Nested fixed blocks carry packet-level kinetic directly. This path should
+    # not reinterpret that payload as a late contraction of a separate parent
+    # ordinary one-body build.
     kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
     direct_contracted_nuclear =
-        gausslet_backend == :pgdg_localized_experimental ?
+        resolved_nuclear_term_storage == :by_center ?
         _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
             basis,
             _nested_factorized_parent_basis(fixed_block),
@@ -1831,22 +1801,7 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
         nothing
     nuclear_one_body_by_center =
         resolved_nuclear_term_storage == :by_center ?
-        (
-            isnothing(direct_contracted_nuclear) ?
-            [
-                _qwrg_contract_parent_symmetric_matrix(
-                    contraction,
-                    matrix,
-                ) for matrix in _qwrg_diatomic_nuclear_one_body_by_center(
-                    basis,
-                    bundles.bundle_x,
-                    bundles.bundle_y,
-                    bundles.bundle_z,
-                    expansion,
-                )
-            ] :
-            direct_contracted_nuclear
-        ) :
+        direct_contracted_nuclear :
         nothing
     one_body_hamiltonian =
         !isnothing(direct_contracted_nuclear) ?

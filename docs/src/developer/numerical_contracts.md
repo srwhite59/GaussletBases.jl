@@ -51,3 +51,43 @@ After that, the working representation should simply regard the block as having
 identity overlap.
 
 This is a coding and design policy, not a user-facing scientific statement.
+
+## Nested fixed-block kinetic
+
+`_NestedFixedBlock3D.kinetic` follows the nested packet contract.
+
+That means:
+
+- it is the kinetic matrix carried by the assembled nested packet
+- it is the kinetic payload that downstream nested operator routes should use
+- it is not automatically interchangeable with "contract the ordinary parent
+  kinetic later and call that the same thing"
+
+For current nested diatomic routes, this distinction is real. A nested
+fixed-block kinetic can differ measurably from a later contraction of a
+separately assembled ordinary parent one-body path even when both live on the
+same final basis dimension.
+
+## One-body reassembly
+
+`assembled_one_body_hamiltonian(...)` reassembles from the operator payload that
+was actually stored:
+
+- stored `kinetic_one_body`
+- stored `nuclear_one_body_by_center`
+- requested `nuclear_charges`
+
+So the meaningful contract is:
+
+- compare reassembled one-body matrices against other operators built from the
+  same stored kinetic contract
+
+Do not use `assembled_one_body_hamiltonian(...)` to assert equality between two
+routes that already disagree about what the kinetic payload is supposed to be.
+
+In particular, for nested fixed-block routes:
+
+- a by-center payload should be compared against another by-center payload on
+  the same nested kinetic contract
+- not against a separate total-only route that rebuilds one-body terms through a
+  different parent-space contraction path

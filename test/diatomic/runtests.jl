@@ -115,10 +115,14 @@ end
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
     )
+    # Keep this comparison on the same nested by-center kinetic contract.
+    # The nested fixed-block kinetic payload is packet-level data and is not the
+    # same contract as rebuilding a total-only one-body matrix through a
+    # separate parent-space contraction path.
     atom_a_nested_ops_localized = ordinary_cartesian_qiu_white_operators(
         fixed_block;
         nuclear_charges = [1.0, 0.0],
-        nuclear_term_storage = :total_only,
+        nuclear_term_storage = :by_center,
         expansion = expansion,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
@@ -126,7 +130,7 @@ end
     atom_b_nested_ops_localized = ordinary_cartesian_qiu_white_operators(
         fixed_block;
         nuclear_charges = [0.0, 1.0],
-        nuclear_term_storage = :total_only,
+        nuclear_term_storage = :by_center,
         expansion = expansion,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
@@ -137,39 +141,43 @@ end
     @test !isnothing(full_nested_ops_localized.kinetic_one_body)
     @test !isnothing(full_nested_ops_localized.nuclear_one_body_by_center)
     @test length(full_nested_ops_localized.nuclear_one_body_by_center) == 2
-    localized_nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
-        fixed_block.parent_basis,
-        expansion;
-        gausslet_backend = :pgdg_localized_experimental,
-    )
-    localized_nested_factorized_basis =
-        GaussletBases._nested_factorized_parent_basis(fixed_block)
-    direct_contracted_nested_nuclear =
-        GaussletBases._qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+    nested_factorized_basis = GaussletBases._nested_factorized_parent_basis(fixed_block)
+    for backend in (:numerical_reference, :pgdg_localized_experimental)
+        nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
             fixed_block.parent_basis,
-            localized_nested_factorized_basis,
-            localized_nested_bundles.bundle_x,
-            localized_nested_bundles.bundle_y,
-            localized_nested_bundles.bundle_z,
+            expansion;
+            gausslet_backend = backend,
+        )
+        direct_contracted_nested_nuclear =
+            GaussletBases._qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+                fixed_block.parent_basis,
+                nested_factorized_basis,
+                nested_bundles.bundle_x,
+                nested_bundles.bundle_y,
+                nested_bundles.bundle_z,
+                expansion,
+            )
+        reference_nested_parent_nuclear = GaussletBases._qwrg_diatomic_nuclear_one_body_by_center(
+            fixed_block.parent_basis,
+            nested_bundles.bundle_x,
+            nested_bundles.bundle_y,
+            nested_bundles.bundle_z,
             expansion,
         )
-    reference_nested_parent_nuclear = GaussletBases._qwrg_diatomic_nuclear_one_body_by_center(
-        fixed_block.parent_basis,
-        localized_nested_bundles.bundle_x,
-        localized_nested_bundles.bundle_y,
-        localized_nested_bundles.bundle_z,
-        expansion,
-    )
-    reference_nested_contracted_nuclear = [
-        GaussletBases._qwrg_contract_parent_symmetric_matrix(
-            fixed_block.coefficient_matrix,
-            matrix,
-        ) for matrix in reference_nested_parent_nuclear
-    ]
-    @test length(direct_contracted_nested_nuclear) == length(reference_nested_contracted_nuclear)
-    for nucleus_index in eachindex(direct_contracted_nested_nuclear, reference_nested_contracted_nuclear)
-        @test direct_contracted_nested_nuclear[nucleus_index] ≈
-              reference_nested_contracted_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+        reference_nested_contracted_nuclear = [
+            GaussletBases._qwrg_contract_parent_symmetric_matrix(
+                fixed_block.coefficient_matrix,
+                matrix,
+            ) for matrix in reference_nested_parent_nuclear
+        ]
+        @test length(direct_contracted_nested_nuclear) == length(reference_nested_contracted_nuclear)
+        for nucleus_index in eachindex(
+            direct_contracted_nested_nuclear,
+            reference_nested_contracted_nuclear,
+        )
+            @test direct_contracted_nested_nuclear[nucleus_index] ≈
+                  reference_nested_contracted_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+        end
     end
     @test assembled_one_body_hamiltonian(full_nested_ops_localized) ≈
           full_nested_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12

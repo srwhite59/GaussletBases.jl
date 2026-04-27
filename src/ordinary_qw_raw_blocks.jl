@@ -1659,7 +1659,7 @@ function _qwrg_diatomic_nuclear_one_body_by_center(
             factor_y[nucleus[2]],
             factor_z[nucleus[3]],
         )
-        push!(matrices, Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix))))
+        push!(matrices, matrix)
     end
     return matrices
 end
