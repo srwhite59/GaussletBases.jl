@@ -1853,6 +1853,7 @@ function _nested_extract_factorized_basis(
     coefficient_matrix::AbstractMatrix{<:Real},
     dims::NTuple{3,Int};
     atol::Float64 = 1.0e-12,
+    timing_prefix::Union{Nothing,String} = nothing,
 )
     nparent = prod(dims)
     size(coefficient_matrix, 1) == nparent || throw(
@@ -1876,14 +1877,32 @@ function _nested_extract_factorized_basis(
     x_vector = Vector{Float64}(undef, nx)
     y_vector = Vector{Float64}(undef, ny)
     z_vector = Vector{Float64}(undef, nz)
+    anchor_search_label =
+        isnothing(timing_prefix) ? nothing : string(timing_prefix, ".anchor_search")
+    axis_vector_extraction_label =
+        isnothing(timing_prefix) ? nothing : string(timing_prefix, ".axis_vector_extraction")
+    reconstruction_check_label =
+        isnothing(timing_prefix) ? nothing : string(timing_prefix, ".reconstruction_check")
+    axis_function_dedup_label =
+        isnothing(timing_prefix) ? nothing : string(timing_prefix, ".axis_function_dedup")
 
     for column in 1:nfixed
         coefficients = @view coefficient_matrix[:, column]
         anchor = 0
-        @inbounds for index in 1:nparent
-            abs(Float64(coefficients[index])) > atol || continue
-            anchor = index
-            break
+        if isnothing(anchor_search_label)
+            @inbounds for index in 1:nparent
+                abs(Float64(coefficients[index])) > atol || continue
+                anchor = index
+                break
+            end
+        else
+            @timeg anchor_search_label begin
+                @inbounds for index in 1:nparent
+                    abs(Float64(coefficients[index])) > atol || continue
+                    anchor = index
+                    break
+                end
+            end
         end
         anchor == 0 && throw(
             ArgumentError("nested factorized-basis extraction requires every retained fixed column to have at least one nonzero parent row"),
@@ -1891,32 +1910,71 @@ function _nested_extract_factorized_basis(
         ix0, iy0, iz0 = _cartesian_unflat_index(anchor, dims)
         amplitude = Float64(coefficients[anchor])
         amplitude_inv = inv(amplitude)
-        x_offset = (iy0 - 1) * nz + iz0
-        @inbounds for ix in 1:nx
-            x_vector[ix] = Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
+        if isnothing(axis_vector_extraction_label)
+            x_offset = (iy0 - 1) * nz + iz0
+            @inbounds for ix in 1:nx
+                x_vector[ix] = Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
+            end
+            y_offset = (ix0 - 1) * yz_plane + iz0
+            @inbounds for iy in 1:ny
+                y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
+            end
+            z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
+            @inbounds for iz in 1:nz
+                z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
+            end
+            _nested_zero_small!(x_vector; atol = atol)
+            _nested_zero_small!(y_vector; atol = atol)
+            _nested_zero_small!(z_vector; atol = atol)
+        else
+            @timeg axis_vector_extraction_label begin
+                x_offset = (iy0 - 1) * nz + iz0
+                @inbounds for ix in 1:nx
+                    x_vector[ix] =
+                        Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
+                end
+                y_offset = (ix0 - 1) * yz_plane + iz0
+                @inbounds for iy in 1:ny
+                    y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
+                end
+                z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
+                @inbounds for iz in 1:nz
+                    z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
+                end
+                _nested_zero_small!(x_vector; atol = atol)
+                _nested_zero_small!(y_vector; atol = atol)
+                _nested_zero_small!(z_vector; atol = atol)
+            end
         end
-        y_offset = (ix0 - 1) * yz_plane + iz0
-        @inbounds for iy in 1:ny
-            y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
-        end
-        z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
-        @inbounds for iz in 1:nz
-            z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
-        end
-        _nested_zero_small!(x_vector; atol = atol)
-        _nested_zero_small!(y_vector; atol = atol)
-        _nested_zero_small!(z_vector; atol = atol)
 
         column_error = 0.0
-        @inbounds for ix in 1:nx
-            x_scale = amplitude * x_vector[ix]
-            x_base = (ix - 1) * yz_plane
-            for iy in 1:ny
-                xy_scale = x_scale * y_vector[iy]
-                yz_base = x_base + (iy - 1) * nz
-                for iz in 1:nz
-                    error = abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
-                    column_error = max(column_error, error)
+        if isnothing(reconstruction_check_label)
+            @inbounds for ix in 1:nx
+                x_scale = amplitude * x_vector[ix]
+                x_base = (ix - 1) * yz_plane
+                for iy in 1:ny
+                    xy_scale = x_scale * y_vector[iy]
+                    yz_base = x_base + (iy - 1) * nz
+                    for iz in 1:nz
+                        error = abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
+                        column_error = max(column_error, error)
+                    end
+                end
+            end
+        else
+            @timeg reconstruction_check_label begin
+                @inbounds for ix in 1:nx
+                    x_scale = amplitude * x_vector[ix]
+                    x_base = (ix - 1) * yz_plane
+                    for iy in 1:ny
+                        xy_scale = x_scale * y_vector[iy]
+                        yz_base = x_base + (iy - 1) * nz
+                        for iz in 1:nz
+                            error =
+                                abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
+                            column_error = max(column_error, error)
+                        end
+                    end
                 end
             end
         end
@@ -1925,9 +1983,23 @@ function _nested_extract_factorized_basis(
             ArgumentError("nested factorized-basis extraction failed to reconstruct fixed column $column to roundoff (max error = $column_error)"),
         )
 
-        x_index = _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
-        y_index = _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
-        z_index = _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
+        x_index = 0
+        y_index = 0
+        z_index = 0
+        if isnothing(axis_function_dedup_label)
+            x_index = _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
+            y_index = _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
+            z_index = _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
+        else
+            @timeg axis_function_dedup_label begin
+                x_index =
+                    _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
+                y_index =
+                    _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
+                z_index =
+                    _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
+            end
+        end
         basis_triplets[column] = (x_index, y_index, z_index)
         basis_amplitudes[column] = amplitude
     end
@@ -3237,13 +3309,17 @@ function _nested_shell_packet(
                 packet_kernel == :support_reference ?
                 _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
                 nothing
-            factorized_basis =
-                packet_kernel == :factorized_direct ?
-                _nested_extract_factorized_basis(
-                    coefficient_matrix,
-                    (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1)),
-                ) :
+            factorized_basis = if packet_kernel == :factorized_direct
+                @timeg "diatomic.packet.setup.factorized_basis" begin
+                    _nested_extract_factorized_basis(
+                        coefficient_matrix,
+                        (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1));
+                        timing_prefix = "diatomic.packet.setup.factorized_basis",
+                    )
+                end
+            else
                 nothing
+            end
             factorized_base_tables =
                 packet_kernel == :factorized_direct ?
                 _nested_factorized_axis_base_tables(
@@ -3594,7 +3670,11 @@ function _nested_shell_packet(
                 nothing
             factorized_basis = if packet_kernel == :factorized_direct
                 @timeg "diatomic.packet.setup.factorized_basis" begin
-                    _nested_extract_factorized_basis(coefficient_matrix, dims)
+                    _nested_extract_factorized_basis(
+                        coefficient_matrix,
+                        dims;
+                        timing_prefix = "diatomic.packet.setup.factorized_basis",
+                    )
                 end
             else
                 nothing

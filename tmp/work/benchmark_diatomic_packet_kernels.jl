@@ -25,6 +25,10 @@ const SELECTED_TIMING_LABELS = [
     "diatomic.packet.total",
     "diatomic.packet.setup",
     "diatomic.packet.setup.factorized_basis",
+    "diatomic.packet.setup.factorized_basis.anchor_search",
+    "diatomic.packet.setup.factorized_basis.axis_vector_extraction",
+    "diatomic.packet.setup.factorized_basis.reconstruction_check",
+    "diatomic.packet.setup.factorized_basis.axis_function_dedup",
     "diatomic.packet.setup.base_tables.x",
     "diatomic.packet.setup.base_tables.y",
     "diatomic.packet.setup.base_tables.z",
@@ -129,6 +133,17 @@ function _format_ranges(ranges)
     return string("[", join((_format_range(range) for range in ranges), ", "), "]")
 end
 
+function _factorized_basis_summary(fixed_block)
+    factorized_basis = GaussletBases._nested_factorized_parent_basis(fixed_block)
+    return (
+        retained_fixed_count = length(factorized_basis.basis_triplets),
+        unique_x_axis_function_count = size(factorized_basis.x_functions, 2),
+        unique_y_axis_function_count = size(factorized_basis.y_functions, 2),
+        unique_z_axis_function_count = size(factorized_basis.z_functions, 2),
+        reconstruction_max_error = factorized_basis.reconstruction_max_error,
+    )
+end
+
 function _run_kernel(
     basis,
     expansion::CoulombGaussianExpansion,
@@ -206,6 +221,12 @@ function _print_run_summary(run)
     println("packet_kernel=", run.route == :default ? "default" : String(run.route))
     @printf("wall_s=%.9f\n", run.wall_seconds)
     println("fixed_dimension=", size(fixed_block.coefficient_matrix, 2))
+    factorized_summary = _factorized_basis_summary(fixed_block)
+    println("retained_fixed_count=", factorized_summary.retained_fixed_count)
+    println("unique_x_axis_function_count=", factorized_summary.unique_x_axis_function_count)
+    println("unique_y_axis_function_count=", factorized_summary.unique_y_axis_function_count)
+    println("unique_z_axis_function_count=", factorized_summary.unique_z_axis_function_count)
+    @printf("factorized_reconstruction_max_error=%.9e\n", factorized_summary.reconstruction_max_error)
     println("source_support_count=", length(source.sequence.support_indices))
     println("source_working_box=", source.sequence.working_box)
     println("did_split=", source.geometry.did_split)
