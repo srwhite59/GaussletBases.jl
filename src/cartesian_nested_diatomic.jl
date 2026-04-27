@@ -918,6 +918,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :support_reference,
     build_packet::Bool = true,
 )
     return @timeg "diatomic.source.child_sequence" begin
@@ -956,6 +957,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                         enforce_symmetric_odd = false,
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
+                        packet_kernel = packet_kernel,
                     ),
                 )
                 current_box = inner_box
@@ -981,6 +983,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                 shell_layers,
                 term_storage = :compact_production,
                 term_coefficients = term_coefficients,
+                packet_kernel = packet_kernel,
                 build_packet = build_packet,
             )
         end
@@ -1090,6 +1093,7 @@ function _nested_bond_aligned_diatomic_source(
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     return @timeg "diatomic.source.total" begin
         isnothing(term_coefficients) && throw(
@@ -1170,6 +1174,7 @@ function _nested_bond_aligned_diatomic_source(
                         enforce_symmetric_odd = false,
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
+                        packet_kernel = packet_kernel,
                     ),
                 )
                 current_box = inner_box
@@ -1211,6 +1216,7 @@ function _nested_bond_aligned_diatomic_source(
                             reference_fudge_factor = reference_fudge_factor,
                             core_near_nucleus_protect_rows = protect_rows,
                             term_coefficients = term_coefficients,
+                            packet_kernel = packet_kernel,
                             build_packet = false,
                         ),
                     )
@@ -1237,6 +1243,7 @@ function _nested_bond_aligned_diatomic_source(
                     shared_shell_layers,
                     term_storage = :compact_production,
                     term_coefficients = term_coefficients,
+                    packet_kernel = packet_kernel,
                 )
             end
             column_start = first(merged_sequence.core_column_range)
@@ -1262,6 +1269,7 @@ function _nested_bond_aligned_diatomic_source(
                     reference_fudge_factor = reference_fudge_factor,
                     core_near_nucleus_protect_rows = protect_rows,
                     term_coefficients = term_coefficients,
+                    packet_kernel = packet_kernel,
                     build_packet = false,
                 )
             end
@@ -1275,6 +1283,7 @@ function _nested_bond_aligned_diatomic_source(
                     shared_shell_layers,
                     term_storage = :compact_production,
                     term_coefficients = term_coefficients,
+                    packet_kernel = packet_kernel,
                 )
             end
             push!(child_column_ranges, merged_sequence.core_column_range)

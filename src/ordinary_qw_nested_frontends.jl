@@ -120,6 +120,7 @@ function _normalized_nested_source_frontend_context(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    packet_kernel::Symbol = :support_reference,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     midpoint =
@@ -143,6 +144,7 @@ function _normalized_nested_source_frontend_context(
             shared_shell_retain_xy = shared_shell_retain_xy,
             shared_shell_retain_xz = shared_shell_retain_xz,
             shared_shell_retain_yz = shared_shell_retain_yz,
+            packet_kernel = _nested_normalize_packet_kernel(packet_kernel),
             term_coefficients = term_coefficients,
         ),
         (
@@ -178,6 +180,7 @@ function _nested_source_from_frontend_context(
         shared_shell_retain_xy = options.shared_shell_retain_xy,
         shared_shell_retain_xz = options.shared_shell_retain_xz,
         shared_shell_retain_yz = options.shared_shell_retain_yz,
+        packet_kernel = options.packet_kernel,
         term_coefficients = term_coefficients,
     )
 end
@@ -381,6 +384,7 @@ function bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    packet_kernel::Symbol = :support_reference,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     context = _normalized_nested_source_frontend_context(
@@ -397,6 +401,7 @@ function bond_aligned_diatomic_nested_fixed_source(
         shared_shell_retain_xy = shared_shell_retain_xy,
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
+        packet_kernel = packet_kernel,
         term_coefficients = term_coefficients,
     )
     return _nested_source_frontend_source(context)
@@ -421,6 +426,7 @@ function bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    packet_kernel::Symbol = :support_reference,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     context = _normalized_nested_source_frontend_context(
@@ -437,6 +443,7 @@ function bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_xy = shared_shell_retain_xy,
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
+        packet_kernel = packet_kernel,
         term_coefficients = term_coefficients,
     )
     return _nested_source_frontend_fixed_block(context)
@@ -503,6 +510,7 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
+    packet_kernel::Symbol = :support_reference,
 )
     context = _normalized_nested_source_frontend_context(
         basis;
@@ -518,6 +526,7 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
         shared_shell_retain_xy = shared_shell_retain_xy,
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
+        packet_kernel = packet_kernel,
     )
     return _nested_source_frontend_geometry_diagnostics(context)
 end
