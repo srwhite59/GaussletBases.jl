@@ -123,9 +123,11 @@ end
 function _run_kernel(
     basis,
     expansion::CoulombGaussianExpansion,
-    packet_kernel::Symbol;
+    route::Symbol;
     nside::Int,
 )
+    route in (:default, :support_reference, :factorized_direct) ||
+        throw(ArgumentError("packet-kernel benchmark route must be :default, :support_reference, or :factorized_direct"))
     GC.gc()
     reset_timing_report!()
     set_timing!(true)
@@ -134,18 +136,26 @@ function _run_kernel(
 
     result = nothing
     wall_seconds = @elapsed begin
-        result = bond_aligned_diatomic_nested_fixed_block(
-            basis;
-            expansion = expansion,
-            nside = nside,
-            packet_kernel = packet_kernel,
-        )
+        if route == :default
+            result = bond_aligned_diatomic_nested_fixed_block(
+                basis;
+                expansion = expansion,
+                nside = nside,
+            )
+        else
+            result = bond_aligned_diatomic_nested_fixed_block(
+                basis;
+                expansion = expansion,
+                nside = nside,
+                packet_kernel = route,
+            )
+        end
     end
     report = current_timing_report()
     set_timing!(false)
 
     return (
-        packet_kernel = packet_kernel,
+        route = route,
         wall_seconds = wall_seconds,
         result = result,
         report = report,
@@ -156,17 +166,25 @@ end
 function _warmup_kernel(
     basis,
     expansion::CoulombGaussianExpansion,
-    packet_kernel::Symbol;
+    route::Symbol;
     nside::Int,
 )
     set_timing!(false)
     set_timing_live!(false)
-    bond_aligned_diatomic_nested_fixed_block(
-        basis;
-        expansion = expansion,
-        nside = nside,
-        packet_kernel = packet_kernel,
-    )
+    if route == :default
+        bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion = expansion,
+            nside = nside,
+        )
+    else
+        bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion = expansion,
+            nside = nside,
+            packet_kernel = route,
+        )
+    end
     GC.gc()
     return nothing
 end
@@ -175,7 +193,8 @@ function _print_run_summary(run)
     source = run.result.source
     fixed_block = run.result.fixed_block
     println("run_begin")
-    println("packet_kernel=", run.packet_kernel)
+    println("route=", run.route)
+    println("packet_kernel=", run.route == :default ? "default" : String(run.route))
     @printf("wall_s=%.9f\n", run.wall_seconds)
     println("fixed_dimension=", size(fixed_block.coefficient_matrix, 2))
     println("source_support_count=", length(source.sequence.support_indices))
@@ -205,6 +224,23 @@ function _print_run_summary(run)
     return nothing
 end
 
+function _print_residuals(left_label::AbstractString, left, right_label::AbstractString, right)
+    println("comparison_begin")
+    println("left=", left_label)
+    println("right=", right_label)
+    println("fixed_dimension_match=", size(left.coefficient_matrix, 2) == size(right.coefficient_matrix, 2))
+    @printf(
+        "coefficient_matrix_inf_residual=%.9e\n",
+        norm(left.coefficient_matrix - right.coefficient_matrix, Inf),
+    )
+    @printf("overlap_inf_residual=%.9e\n", norm(left.overlap - right.overlap, Inf))
+    @printf("kinetic_inf_residual=%.9e\n", norm(left.kinetic - right.kinetic, Inf))
+    @printf("gaussian_sum_inf_residual=%.9e\n", norm(left.gaussian_sum - right.gaussian_sum, Inf))
+    @printf("pair_sum_inf_residual=%.9e\n", norm(left.pair_sum - right.pair_sum, Inf))
+    println("comparison_end")
+    return nothing
+end
+
 function main(args::Vector{String})
     values = _parse_args(args)
 
@@ -215,11 +251,11 @@ function main(args::Vector{String})
         ),
     )
     warmup = _parse_bool(get(values, "warmup", "true"))
-    nside = parse(Int, get(values, "nside", "5"))
+    nside = parse(Int, get(values, "nside", "6"))
     bond_length = parse(Float64, get(values, "bond_length", "1.4"))
     core_spacing = parse(Float64, get(values, "core_spacing", "0.5"))
-    xmax_parallel = parse(Float64, get(values, "xmax_parallel", "14.0"))
-    xmax_transverse = parse(Float64, get(values, "xmax_transverse", "3.0"))
+    xmax_parallel = parse(Float64, get(values, "xmax_parallel", "18.0"))
+    xmax_transverse = parse(Float64, get(values, "xmax_transverse", "4.0"))
     bond_axis = Symbol(get(values, "bond_axis", "z"))
 
     expansion = coulomb_gaussian_expansion(doacc = false)
@@ -244,31 +280,23 @@ function main(args::Vector{String})
     println("term_count=", length(expansion.coefficients))
     println("case_end")
 
-    kernels = (:support_reference, :factorized_direct)
+    routes = (:default, :support_reference, :factorized_direct)
     if warmup
-        for kernel in kernels
-            _warmup_kernel(basis, expansion, kernel; nside = nside)
+        for route in routes
+            _warmup_kernel(basis, expansion, route; nside = nside)
         end
     end
 
-    runs = [_run_kernel(basis, expansion, kernel; nside = nside) for kernel in kernels]
+    runs = [_run_kernel(basis, expansion, route; nside = nside) for route in routes]
     for run in runs
         _print_run_summary(run)
     end
 
-    support = runs[1].result.fixed_block
-    direct = runs[2].result.fixed_block
-    println("comparison_begin")
-    println("fixed_dimension_match=", size(support.coefficient_matrix, 2) == size(direct.coefficient_matrix, 2))
-    @printf(
-        "coefficient_matrix_inf_residual=%.9e\n",
-        norm(support.coefficient_matrix - direct.coefficient_matrix, Inf),
-    )
-    @printf("overlap_inf_residual=%.9e\n", norm(support.overlap - direct.overlap, Inf))
-    @printf("kinetic_inf_residual=%.9e\n", norm(support.kinetic - direct.kinetic, Inf))
-    @printf("gaussian_sum_inf_residual=%.9e\n", norm(support.gaussian_sum - direct.gaussian_sum, Inf))
-    @printf("pair_sum_inf_residual=%.9e\n", norm(support.pair_sum - direct.pair_sum, Inf))
-    println("comparison_end")
+    default_block = runs[1].result.fixed_block
+    support_block = runs[2].result.fixed_block
+    direct_block = runs[3].result.fixed_block
+    _print_residuals("default", default_block, "factorized_direct", direct_block)
+    _print_residuals("support_reference", support_block, "factorized_direct", direct_block)
 
     return nothing
 end
