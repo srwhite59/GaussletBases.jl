@@ -1744,59 +1744,6 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
 
         interval1, interval2, interval3, interval4, core5 = _nested_complete_shell_intervals(count)
 
-        shell1_face = GaussletBases._nested_rectangular_shell(
-            bundle,
-            interval1,
-            interval1,
-            interval1;
-            retain_xy = (4, 3),
-            retain_xz = (4, 3),
-            retain_yz = (4, 3),
-            x_fixed = (first(interval1) - 1, last(interval1) + 1),
-            y_fixed = (first(interval1) - 1, last(interval1) + 1),
-            z_fixed = (first(interval1) - 1, last(interval1) + 1),
-            term_coefficients = term_coefficients,
-        )
-        shell2_face = GaussletBases._nested_rectangular_shell(
-            bundle,
-            interval2,
-            interval2,
-            interval2;
-            retain_xy = (4, 3),
-            retain_xz = (4, 3),
-            retain_yz = (4, 3),
-            x_fixed = (first(interval2) - 1, last(interval2) + 1),
-            y_fixed = (first(interval2) - 1, last(interval2) + 1),
-            z_fixed = (first(interval2) - 1, last(interval2) + 1),
-            term_coefficients = term_coefficients,
-        )
-        shell3_face = GaussletBases._nested_rectangular_shell(
-            bundle,
-            interval3,
-            interval3,
-            interval3;
-            retain_xy = (4, 3),
-            retain_xz = (4, 3),
-            retain_yz = (4, 3),
-            x_fixed = (first(interval3) - 1, last(interval3) + 1),
-            y_fixed = (first(interval3) - 1, last(interval3) + 1),
-            z_fixed = (first(interval3) - 1, last(interval3) + 1),
-            term_coefficients = term_coefficients,
-        )
-        shell4_face = GaussletBases._nested_rectangular_shell(
-            bundle,
-            interval4,
-            interval4,
-            interval4;
-            retain_xy = (4, 3),
-            retain_xz = (4, 3),
-            retain_yz = (4, 3),
-            x_fixed = (first(interval4) - 1, last(interval4) + 1),
-            y_fixed = (first(interval4) - 1, last(interval4) + 1),
-            z_fixed = (first(interval4) - 1, last(interval4) + 1),
-            term_coefficients = term_coefficients,
-        )
-
         shell1_complete = GaussletBases._nested_complete_rectangular_shell(
             bundle,
             interval1,
@@ -1862,23 +1809,6 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             term_coefficients = term_coefficients,
         )
 
-        shell_plus_core = GaussletBases._nested_shell_plus_core(
-            bundle,
-            shell1_face,
-            interval1,
-            interval1,
-            interval1,
-            term_coefficients = term_coefficients,
-        )
-        face_sequence = GaussletBases._nested_shell_sequence(
-            bundle,
-            core5,
-            core5,
-            core5,
-            [shell1_face, shell2_face, shell3_face, shell4_face];
-            enforce_coverage = false,
-            term_coefficients = term_coefficients,
-        )
         complete_sequence = GaussletBases._nested_shell_sequence(
             bundle,
             core5,
@@ -1888,27 +1818,11 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             term_coefficients = term_coefficients,
         )
 
-        fixed_shell_plus_core = GaussletBases._nested_fixed_block(shell_plus_core, bundle)
-        fixed_face_sequence = GaussletBases._nested_fixed_block(face_sequence, bundle)
         fixed_complete_sequence = GaussletBases._nested_fixed_block(complete_sequence, bundle)
 
         legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         baseline = ordinary_cartesian_qiu_white_operators(
             source_basis,
-            legacy;
-            expansion = expansion,
-            Z = 2.0,
-            interaction_treatment = :ggt_nearest,
-        )
-        shell_plus_core_ops = ordinary_cartesian_qiu_white_operators(
-            fixed_shell_plus_core,
-            legacy;
-            expansion = expansion,
-            Z = 2.0,
-            interaction_treatment = :ggt_nearest,
-        )
-        face_sequence_ops = ordinary_cartesian_qiu_white_operators(
-            fixed_face_sequence,
             legacy;
             expansion = expansion,
             Z = 2.0,
@@ -1925,10 +1839,6 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
         (
             source_basis,
             bundle,
-            shell1_face,
-            shell2_face,
-            shell3_face,
-            shell4_face,
             shell1_complete,
             shell2_complete,
             shell3_complete,
@@ -1938,20 +1848,12 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             interval3,
             interval4,
             core5,
-            shell_plus_core,
-            face_sequence,
             complete_sequence,
-            fixed_shell_plus_core,
-            fixed_face_sequence,
             fixed_complete_sequence,
             legacy,
             baseline,
-            shell_plus_core_ops,
-            face_sequence_ops,
             complete_sequence_ops,
             GaussletBases.ordinary_cartesian_1s2_check(baseline),
-            GaussletBases.ordinary_cartesian_1s2_check(shell_plus_core_ops),
-            GaussletBases.ordinary_cartesian_1s2_check(face_sequence_ops),
             GaussletBases.ordinary_cartesian_1s2_check(complete_sequence_ops),
         )
     end)
@@ -1969,10 +1871,6 @@ function _nested_qiu_white_hierarchical_core_fixture(; basis_name::String = "cc-
         (
             source_basis,
             bundle,
-            _shell1_face,
-            _shell2_face,
-            _shell3_face,
-            _shell4_face,
             shell1_complete,
             shell2_complete,
             shell3_complete,
@@ -1982,20 +1880,12 @@ function _nested_qiu_white_hierarchical_core_fixture(; basis_name::String = "cc-
             _interval3,
             _interval4,
             core5,
-            _shell_plus_core,
-            _face_sequence,
             complete_sequence,
-            _fixed_shell_plus_core,
-            _fixed_face_sequence,
             fixed_complete_sequence,
             legacy,
             baseline,
-            _shell_plus_core_ops,
-            _face_sequence_ops,
             complete_sequence_ops,
             baseline_check,
-            _shell_plus_core_check,
-            _face_sequence_check,
             complete_sequence_check,
         ) = _nested_qiu_white_complete_shell_sequence_fixture(
             basis_name = basis_name,

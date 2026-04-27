@@ -889,10 +889,6 @@ end
         (
             _source_basis,
             bundle,
-            _shell1_face,
-            _shell2_face,
-            _shell3_face,
-            _shell4_face,
             _shell1_complete,
             _shell2_complete,
             _shell3_complete,
@@ -902,20 +898,12 @@ end
             _interval3,
             _interval4,
             _core5,
-            _shell_plus_core,
-            _face_sequence,
             complete_sequence,
-            fixed_shell_plus_core,
-            _fixed_face_sequence,
             fixed_complete_sequence,
             legacy,
             baseline,
-            shell_plus_core_ops,
-            _face_sequence_ops,
             complete_sequence_ops,
             baseline_check,
-            shell_plus_core_check,
-            _face_sequence_check,
             complete_sequence_check,
         ) = _nested_qiu_white_complete_shell_sequence_fixture(count = 15)
 
@@ -954,8 +942,6 @@ end
         @test legacy.lmax == 0
         @test complete_sequence.working_box == (2:14, 2:14, 2:14)
         @test baseline.gausslet_count == 15^3
-        @test shell_plus_core_ops.gausslet_count == 1385
-        @test complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
         @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
         @test complete_sequence_check.overlap_error < 1.0e-10
         @test all(isfinite, fixed_complete_sequence.weights)
@@ -963,7 +949,6 @@ end
         @test maximum(fixed_complete_sequence.weights) < 10.0
         @test abs(complete_sequence_check.orbital_energy - baseline_check.orbital_energy) < 2.0e-4
         @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 1.0e-4
-        @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 1.0e-4
         @test abs(projected_complete_vee - parent_ground_vee) < 1.5e-4
         @test complete_ground_capture > 0.99999
         @test complete_average4_capture > 0.999

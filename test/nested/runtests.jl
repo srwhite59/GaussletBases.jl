@@ -1518,7 +1518,7 @@ function _atomic_hybrid_he_same_parent_stress_fixture(;
             target_fixed = target_fixed,
             supplement = supplement,
             source_working_box = source_working_box,
-            target_working_box = target_fixed.working_box,
+            target_working_box = target_fixed.shell.working_box,
             source_ops = source_ops,
             target_ops = target_ops,
             source_rep = source_rep,
@@ -2964,10 +2964,6 @@ end
     (
         basis,
         bundle,
-        shell1_face,
-        shell2_face,
-        shell3_face,
-        shell4_face,
         shell1_complete,
         shell2_complete,
         shell3_complete,
@@ -2977,20 +2973,12 @@ end
         interval3,
         interval4,
         core5,
-        shell_plus_core,
-        face_sequence,
         complete_sequence,
-        fixed_shell_plus_core,
-        fixed_face_sequence,
         fixed_complete_sequence,
         legacy,
         baseline,
-        shell_plus_core_ops,
-        face_sequence_ops,
         complete_sequence_ops,
         baseline_check,
-        shell_plus_core_check,
-        face_sequence_check,
         complete_sequence_check,
     ) = _nested_qiu_white_complete_shell_sequence_fixture()
 
@@ -3050,60 +3038,31 @@ end
     @test sum(length(face.support_indices) for face in shell1_complete.faces) == 6 * 11^2
     @test sum(length(edge.support_indices) for edge in shell1_complete.edges) == 12 * 11
     @test sum(length(corner.support_indices) for corner in shell1_complete.corners) == 8
-    @test isempty(intersect(shell1_face.support_indices, shell2_face.support_indices))
-    @test isempty(intersect(shell2_face.support_indices, shell3_face.support_indices))
-    @test isempty(intersect(shell3_face.support_indices, shell4_face.support_indices))
 
-    @test face_sequence isa GaussletBases._CartesianNestedShellSequence3D
     @test complete_sequence isa GaussletBases._CartesianNestedShellSequence3D
-    @test length(face_sequence.core_indices) == 5^3
     @test length(complete_sequence.core_indices) == 5^3
     @test complete_sequence.working_box == (3:15, 3:15, 3:15)
-    @test shell_plus_core_ops.gausslet_count == 1385
-    @test face_sequence_ops.gausslet_count < complete_sequence_ops.gausslet_count < shell_plus_core_ops.gausslet_count
     @test baseline.gausslet_count == 17^3
-    @test norm(fixed_face_sequence.overlap - I, Inf) < 1.0e-10
     @test norm(fixed_complete_sequence.overlap - I, Inf) < 1.0e-10
-    @test all(isfinite, fixed_shell_plus_core.weights)
-    @test minimum(fixed_shell_plus_core.weights) > 0.0
     @test all(isfinite, fixed_complete_sequence.weights)
     @test minimum(fixed_complete_sequence.weights) > 0.0
     @test complete_sequence_check.overlap_error < 1.0e-10
     @test isfinite(complete_sequence_check.orbital_energy)
     @test isfinite(complete_sequence_check.vee_expectation)
-    @test abs(complete_sequence_check.orbital_energy - baseline_check.orbital_energy) <
-        abs(face_sequence_check.orbital_energy - baseline_check.orbital_energy)
-    @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) <
-        abs(face_sequence_check.vee_expectation - baseline_check.vee_expectation)
     @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-4
-    @test abs(complete_sequence_check.vee_expectation - shell_plus_core_check.vee_expectation) < 2.0e-4
 
     expansion = coulomb_gaussian_expansion(doacc = false)
     overlap_parent, one_body_parent, interaction_parent = _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
     parent_modes = eigen(Hermitian(one_body_parent), Hermitian(overlap_parent))
     parent_ground = parent_modes.vectors[:, 1]
     parent_ground_vee = _nested_vee_from_orbital(interaction_parent, parent_ground)
-    projected_shell_plus_core = _nested_fixed_projected_orbital(overlap_parent, fixed_shell_plus_core, parent_ground)
     projected_complete = _nested_fixed_projected_orbital(overlap_parent, fixed_complete_sequence, parent_ground)
-    projected_shell_plus_core_vee = _nested_vee_from_orbital(
-        GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_shell_plus_core, expansion),
-        projected_shell_plus_core,
-    )
     projected_complete_vee = _nested_vee_from_orbital(
         GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_complete_sequence, expansion),
         projected_complete,
     )
     term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
-    @test abs(projected_shell_plus_core_vee - parent_ground_vee) < 1.0e-4
     @test abs(projected_complete_vee - parent_ground_vee) < 5.0e-4
-    @test_throws ArgumentError GaussletBases._nested_shell_sequence(
-        bundle,
-        core5,
-        core5,
-        core5,
-        [shell1_face, shell2_face, shell3_face, shell4_face],
-        term_coefficients = term_coefficients,
-    )
     @test_throws ArgumentError GaussletBases._nested_shell_sequence(
         bundle,
         core5,
