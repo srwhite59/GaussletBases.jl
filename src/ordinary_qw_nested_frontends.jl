@@ -120,7 +120,7 @@ function _normalized_nested_source_frontend_context(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     midpoint =
@@ -384,7 +384,7 @@ function bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     context = _normalized_nested_source_frontend_context(
@@ -426,7 +426,7 @@ function bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     context = _normalized_nested_source_frontend_context(
@@ -510,7 +510,7 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
     shared_shell_retain_xy::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
 )
     context = _normalized_nested_source_frontend_context(
         basis;

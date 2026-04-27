@@ -720,6 +720,47 @@ end
     @test direct_block.pair_sum ≈ reference_block.pair_sum atol = atol rtol = rtol
 end
 
+@testset "Bond-aligned diatomic packet-kernel default" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.5,
+        xmax_parallel = 4.0,
+        xmax_transverse = 3.0,
+        bond_axis = :z,
+    )
+
+    default_context = GaussletBases._normalized_nested_source_frontend_context(
+        basis;
+        nside = 5,
+    )
+    @test default_context.build_options.packet_kernel == :factorized_direct
+
+    default_source = bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        nside = 5,
+    )
+    direct_source = bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        nside = 5,
+        packet_kernel = :factorized_direct,
+    )
+    support_source = bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        nside = 5,
+        packet_kernel = :support_reference,
+    )
+
+    @test size(default_source.sequence.coefficient_matrix, 2) ==
+          size(direct_source.sequence.coefficient_matrix, 2)
+    @test default_source.sequence.support_indices == direct_source.sequence.support_indices
+    @test default_source.sequence.coefficient_matrix ≈
+          direct_source.sequence.coefficient_matrix atol = 1.0e-12 rtol = 1.0e-12
+
+    @test !isnothing(support_source.sequence.packet)
+    @test size(support_source.sequence.coefficient_matrix, 2) ==
+          size(default_source.sequence.coefficient_matrix, 2)
+end
+
 @testset "Bond-aligned diatomic nested QW consumer path" begin
     (
         _basis,

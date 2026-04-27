@@ -918,7 +918,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
     reference_fudge_factor::Float64,
     core_near_nucleus_protect_rows::Int,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
     build_packet::Bool = true,
 )
     return @timeg "diatomic.source.child_sequence" begin
@@ -1093,7 +1093,7 @@ function _nested_bond_aligned_diatomic_source(
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
-    packet_kernel::Symbol = :support_reference,
+    packet_kernel::Symbol = :factorized_direct,
 )
     return @timeg "diatomic.source.total" begin
         isnothing(term_coefficients) && throw(
