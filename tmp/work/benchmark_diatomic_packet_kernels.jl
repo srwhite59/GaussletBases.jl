@@ -24,6 +24,10 @@ const SELECTED_TIMING_LABELS = [
     "diatomic.sequence.packet",
     "diatomic.packet.total",
     "diatomic.packet.setup",
+    "diatomic.packet.setup.factorized_basis",
+    "diatomic.packet.setup.base_tables.x",
+    "diatomic.packet.setup.base_tables.y",
+    "diatomic.packet.setup.base_tables.z",
     "diatomic.packet.base.overlap",
     "diatomic.packet.base.kinetic",
     "diatomic.packet.base.position_x",
@@ -33,7 +37,12 @@ const SELECTED_TIMING_LABELS = [
     "diatomic.packet.base.x2_y",
     "diatomic.packet.base.x2_z",
     "diatomic.packet.pair_terms",
+    "diatomic.packet.pair_terms.weights",
+    "diatomic.packet.pair_terms.coefficients",
+    "diatomic.packet.pair_terms.contract",
     "diatomic.packet.gaussian_terms",
+    "diatomic.packet.gaussian_terms.setup",
+    "diatomic.packet.gaussian_terms.contract",
     "diatomic.fixed_block.contraction",
 ]
 

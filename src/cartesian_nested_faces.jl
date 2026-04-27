@@ -3592,40 +3592,52 @@ function _nested_shell_packet(
                 packet_kernel == :support_reference ?
                 _nested_support_coefficient_slice(coefficient_matrix, support_indices) :
                 nothing
-            factorized_basis =
-                packet_kernel == :factorized_direct ?
-                _nested_extract_factorized_basis(coefficient_matrix, dims) :
+            factorized_basis = if packet_kernel == :factorized_direct
+                @timeg "diatomic.packet.setup.factorized_basis" begin
+                    _nested_extract_factorized_basis(coefficient_matrix, dims)
+                end
+            else
                 nothing
-            factorized_base_tables_x =
-                packet_kernel == :factorized_direct ?
-                _nested_factorized_axis_base_tables(
-                    factorized_basis.x_functions,
-                    pgdg_x.overlap,
-                    pgdg_x.kinetic,
-                    pgdg_x.position,
-                    pgdg_x.x2,
-                ) :
+            end
+            factorized_base_tables_x = if packet_kernel == :factorized_direct
+                @timeg "diatomic.packet.setup.base_tables.x" begin
+                    _nested_factorized_axis_base_tables(
+                        factorized_basis.x_functions,
+                        pgdg_x.overlap,
+                        pgdg_x.kinetic,
+                        pgdg_x.position,
+                        pgdg_x.x2,
+                    )
+                end
+            else
                 nothing
-            factorized_base_tables_y =
-                packet_kernel == :factorized_direct ?
-                _nested_factorized_axis_base_tables(
-                    factorized_basis.y_functions,
-                    pgdg_y.overlap,
-                    pgdg_y.kinetic,
-                    pgdg_y.position,
-                    pgdg_y.x2,
-                ) :
+            end
+            factorized_base_tables_y = if packet_kernel == :factorized_direct
+                @timeg "diatomic.packet.setup.base_tables.y" begin
+                    _nested_factorized_axis_base_tables(
+                        factorized_basis.y_functions,
+                        pgdg_y.overlap,
+                        pgdg_y.kinetic,
+                        pgdg_y.position,
+                        pgdg_y.x2,
+                    )
+                end
+            else
                 nothing
-            factorized_base_tables_z =
-                packet_kernel == :factorized_direct ?
-                _nested_factorized_axis_base_tables(
-                    factorized_basis.z_functions,
-                    pgdg_z.overlap,
-                    pgdg_z.kinetic,
-                    pgdg_z.position,
-                    pgdg_z.x2,
-                ) :
+            end
+            factorized_base_tables_z = if packet_kernel == :factorized_direct
+                @timeg "diatomic.packet.setup.base_tables.z" begin
+                    _nested_factorized_axis_base_tables(
+                        factorized_basis.z_functions,
+                        pgdg_z.overlap,
+                        pgdg_z.kinetic,
+                        pgdg_z.position,
+                        pgdg_z.x2,
+                    )
+                end
+            else
                 nothing
+            end
             support_workspace, contraction_scratch =
                 packet_kernel == :support_reference ?
                 _nested_support_reference_workspaces(support_coefficients, nsupport, nshell) :
