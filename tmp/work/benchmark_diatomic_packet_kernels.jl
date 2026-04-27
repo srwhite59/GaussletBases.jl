@@ -7,9 +7,20 @@ const SELECTED_TIMING_LABELS = [
     "diatomic.fixed_source.axis_bundles",
     "diatomic.fixed_source.source_assembly",
     "diatomic.source.total",
+    "diatomic.source.split_geometry.initial",
     "diatomic.source.shared_shell_construction",
+    "diatomic.source.adaptive_shell_retention",
+    "shell_layer.nonpacket",
     "diatomic.source.child_sequence_builds",
+    "diatomic.source.child_sequence",
+    "diatomic.source.child_sequence.shell_construction",
+    "diatomic.source.child_sequence.core_block",
+    "diatomic.source.child_sequence.sequence_merge",
+    "diatomic.source.nonuniform_core_block",
+    "diatomic.source.nonuniform_core.coefficient_merge",
     "diatomic.source.final_sequence_merge",
+    "sequence_merge.nonpacket",
+    "diatomic.sequence.coefficient_concat",
     "diatomic.sequence.packet",
     "diatomic.packet.total",
     "diatomic.packet.setup",
@@ -74,7 +85,7 @@ function _timing_stats(report::GaussletBases.TimeG.TimingReport)
 end
 
 function _print_selected_timings(stats::Dict{String,TimingStats})
-    println("selected_timings_begin")
+    println("source_cutset_timings_begin")
     println("label,calls,elapsed_s,self_s,max_call_elapsed_s,status")
     for label in SELECTED_TIMING_LABELS
         if haskey(stats, label)
@@ -91,8 +102,22 @@ function _print_selected_timings(stats::Dict{String,TimingStats})
             println(label, ",0,NaN,NaN,NaN,missing")
         end
     end
-    println("selected_timings_end")
+    println("source_cutset_timings_end")
     return nothing
+end
+
+_format_range(range::UnitRange{Int}) = string(first(range), ":", last(range), "(", length(range), ")")
+
+function _format_box(box)
+    return string("(", join((_format_range(axis_range) for axis_range in box), ", "), ")")
+end
+
+function _format_widths(widths)
+    return @sprintf("(%.6g, %.6g, %.6g)", widths[1], widths[2], widths[3])
+end
+
+function _format_ranges(ranges)
+    return string("[", join((_format_range(range) for range in ranges), ", "), "]")
 end
 
 function _run_kernel(
@@ -158,6 +183,23 @@ function _print_run_summary(run)
     println("did_split=", source.geometry.did_split)
     println("shared_shell_count=", length(source.shared_shell_layers))
     println("child_sequence_count=", length(source.child_sequences))
+    println("parent_box=", _format_box(source.geometry.parent_box))
+    println("split_working_box=", _format_box(source.geometry.working_box))
+    println("split_index=", source.geometry.split_index)
+    println(
+        "child_boxes=",
+        string("[", join((_format_box(box) for box in source.geometry.child_boxes), ", "), "]"),
+    )
+    println(
+        "child_physical_widths=",
+        string(
+            "[",
+            join((_format_widths(widths) for widths in source.geometry.child_physical_widths), ", "),
+            "]",
+        ),
+    )
+    println("child_column_ranges=", _format_ranges(source.child_column_ranges))
+    println("midpoint_slab_column_range=", source.midpoint_slab_column_range)
     _print_selected_timings(run.stats)
     println("run_end")
     return nothing
@@ -176,8 +218,8 @@ function main(args::Vector{String})
     nside = parse(Int, get(values, "nside", "5"))
     bond_length = parse(Float64, get(values, "bond_length", "1.4"))
     core_spacing = parse(Float64, get(values, "core_spacing", "0.5"))
-    xmax_parallel = parse(Float64, get(values, "xmax_parallel", "6.0"))
-    xmax_transverse = parse(Float64, get(values, "xmax_transverse", "4.0"))
+    xmax_parallel = parse(Float64, get(values, "xmax_parallel", "14.0"))
+    xmax_transverse = parse(Float64, get(values, "xmax_transverse", "3.0"))
     bond_axis = Symbol(get(values, "bond_axis", "z"))
 
     expansion = coulomb_gaussian_expansion(doacc = false)
