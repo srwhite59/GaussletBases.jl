@@ -203,16 +203,21 @@ function _qwrg_residual_space_analysis(
 
     ngausslet = size(gausslet_overlap_value, 1)
     ngaussian = size(overlap_aa, 1)
+    overlap_ga_value = Matrix{Float64}(overlap_ga)
+    overlap_aa_value = Matrix{Float64}(overlap_aa)
     raw_overlap = [
-        gausslet_overlap_value Matrix{Float64}(overlap_ga)
-        Matrix{Float64}(transpose(overlap_ga)) Matrix{Float64}(overlap_aa)
+        gausslet_overlap_value overlap_ga_value
+        transpose(overlap_ga_value) overlap_aa_value
     ]
+    # The fixed block is required to be orthonormal above; keep the exact
+    # projection solve but use an explicit SPD factorization for this block.
+    gausslet_overlap_factor = cholesky(Symmetric(gausslet_overlap_value))
     seed_projector = vcat(
-        -(gausslet_overlap_value \ Matrix{Float64}(overlap_ga)),
+        -(gausslet_overlap_factor \ overlap_ga_value),
         Matrix{Float64}(I, ngaussian, ngaussian),
     )
     residual_overlap = Matrix{Float64}(transpose(seed_projector) * raw_overlap * seed_projector)
-    supplement_decomposition = eigen(Symmetric(Matrix{Float64}(overlap_aa)))
+    supplement_decomposition = eigen(Symmetric(overlap_aa_value))
     residual_decomposition = eigen(Symmetric(residual_overlap))
 
     supplement_null_rank_tol = _qwrg_residual_null_rank_tol(supplement_decomposition.values)

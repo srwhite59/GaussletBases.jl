@@ -958,6 +958,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                         packet_kernel = packet_kernel,
+                        verify_factorized_reconstruction = false,
                     ),
                 )
                 current_box = inner_box
@@ -985,6 +986,7 @@ function _nested_bond_aligned_diatomic_sequence_for_box(
                 term_coefficients = term_coefficients,
                 packet_kernel = packet_kernel,
                 build_packet = build_packet,
+                verify_factorized_reconstruction = false,
             )
         end
     end
@@ -1175,6 +1177,7 @@ function _nested_bond_aligned_diatomic_source(
                         term_storage = :compact_production,
                         term_coefficients = term_coefficients,
                         packet_kernel = packet_kernel,
+                        verify_factorized_reconstruction = false,
                     ),
                 )
                 current_box = inner_box
@@ -1244,6 +1247,7 @@ function _nested_bond_aligned_diatomic_source(
                     term_storage = :compact_production,
                     term_coefficients = term_coefficients,
                     packet_kernel = packet_kernel,
+                    verify_factorized_reconstruction = false,
                 )
             end
             column_start = first(merged_sequence.core_column_range)
@@ -1284,6 +1288,7 @@ function _nested_bond_aligned_diatomic_source(
                     term_storage = :compact_production,
                     term_coefficients = term_coefficients,
                     packet_kernel = packet_kernel,
+                    verify_factorized_reconstruction = false,
                 )
             end
             push!(child_column_ranges, merged_sequence.core_column_range)

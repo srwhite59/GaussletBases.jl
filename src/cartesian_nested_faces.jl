@@ -1849,11 +1849,25 @@ function _nested_find_or_push_axis_function!(
     return index
 end
 
+function _nested_record_timeg_leaf!(
+    label::Union{Nothing,String},
+    elapsed_ns::UInt64,
+    call_count::Int,
+)
+    (isnothing(label) || !TimeG.timing_enabled()) && return nothing
+    elapsed_seconds = Float64(elapsed_ns) / 1.0e9
+    TimeG._timing_attach_node!(
+        TimeG.TimingNode(label, elapsed_seconds, elapsed_seconds, call_count, TimeG.TimingNode[]),
+    )
+    return nothing
+end
+
 function _nested_extract_factorized_basis(
     coefficient_matrix::AbstractMatrix{<:Real},
     dims::NTuple{3,Int};
     atol::Float64 = 1.0e-12,
     timing_prefix::Union{Nothing,String} = nothing,
+    verify_reconstruction::Bool = true,
 )
     nparent = prod(dims)
     size(coefficient_matrix, 1) == nparent || throw(
@@ -1873,7 +1887,7 @@ function _nested_extract_factorized_basis(
     z_lookup = Dict{UInt,Vector{Int}}()
     basis_triplets = Vector{NTuple{3,Int}}(undef, nfixed)
     basis_amplitudes = Vector{Float64}(undef, nfixed)
-    reconstruction_max_error = 0.0
+    reconstruction_max_error = verify_reconstruction ? 0.0 : NaN
     x_vector = Vector{Float64}(undef, nx)
     y_vector = Vector{Float64}(undef, ny)
     z_vector = Vector{Float64}(undef, nz)
@@ -1885,23 +1899,28 @@ function _nested_extract_factorized_basis(
         isnothing(timing_prefix) ? nothing : string(timing_prefix, ".reconstruction_check")
     axis_function_dedup_label =
         isnothing(timing_prefix) ? nothing : string(timing_prefix, ".axis_function_dedup")
+    record_extraction_timing = !isnothing(timing_prefix) && TimeG.timing_enabled()
+    anchor_search_elapsed_ns = UInt64(0)
+    axis_vector_extraction_elapsed_ns = UInt64(0)
+    reconstruction_check_elapsed_ns = UInt64(0)
+    axis_function_dedup_elapsed_ns = UInt64(0)
 
     for column in 1:nfixed
         coefficients = @view coefficient_matrix[:, column]
         anchor = 0
-        if isnothing(anchor_search_label)
+        if record_extraction_timing
+            start_ns = time_ns()
             @inbounds for index in 1:nparent
                 abs(Float64(coefficients[index])) > atol || continue
                 anchor = index
                 break
             end
+            anchor_search_elapsed_ns += time_ns() - start_ns
         else
-            @timeg anchor_search_label begin
-                @inbounds for index in 1:nparent
-                    abs(Float64(coefficients[index])) > atol || continue
-                    anchor = index
-                    break
-                end
+            @inbounds for index in 1:nparent
+                abs(Float64(coefficients[index])) > atol || continue
+                anchor = index
+                break
             end
         end
         anchor == 0 && throw(
@@ -1910,7 +1929,8 @@ function _nested_extract_factorized_basis(
         ix0, iy0, iz0 = _cartesian_unflat_index(anchor, dims)
         amplitude = Float64(coefficients[anchor])
         amplitude_inv = inv(amplitude)
-        if isnothing(axis_vector_extraction_label)
+        if record_extraction_timing
+            start_ns = time_ns()
             x_offset = (iy0 - 1) * nz + iz0
             @inbounds for ix in 1:nx
                 x_vector[ix] = Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
@@ -1926,43 +1946,44 @@ function _nested_extract_factorized_basis(
             _nested_zero_small!(x_vector; atol = atol)
             _nested_zero_small!(y_vector; atol = atol)
             _nested_zero_small!(z_vector; atol = atol)
+            axis_vector_extraction_elapsed_ns += time_ns() - start_ns
         else
-            @timeg axis_vector_extraction_label begin
-                x_offset = (iy0 - 1) * nz + iz0
-                @inbounds for ix in 1:nx
-                    x_vector[ix] =
-                        Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
-                end
-                y_offset = (ix0 - 1) * yz_plane + iz0
-                @inbounds for iy in 1:ny
-                    y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
-                end
-                z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
-                @inbounds for iz in 1:nz
-                    z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
-                end
-                _nested_zero_small!(x_vector; atol = atol)
-                _nested_zero_small!(y_vector; atol = atol)
-                _nested_zero_small!(z_vector; atol = atol)
+            x_offset = (iy0 - 1) * nz + iz0
+            @inbounds for ix in 1:nx
+                x_vector[ix] = Float64(coefficients[(ix - 1) * yz_plane + x_offset]) * amplitude_inv
             end
+            y_offset = (ix0 - 1) * yz_plane + iz0
+            @inbounds for iy in 1:ny
+                y_vector[iy] = Float64(coefficients[y_offset + (iy - 1) * nz]) * amplitude_inv
+            end
+            z_offset = (ix0 - 1) * yz_plane + (iy0 - 1) * nz
+            @inbounds for iz in 1:nz
+                z_vector[iz] = Float64(coefficients[z_offset + iz]) * amplitude_inv
+            end
+            _nested_zero_small!(x_vector; atol = atol)
+            _nested_zero_small!(y_vector; atol = atol)
+            _nested_zero_small!(z_vector; atol = atol)
         end
 
-        column_error = 0.0
-        if isnothing(reconstruction_check_label)
-            @inbounds for ix in 1:nx
-                x_scale = amplitude * x_vector[ix]
-                x_base = (ix - 1) * yz_plane
-                for iy in 1:ny
-                    xy_scale = x_scale * y_vector[iy]
-                    yz_base = x_base + (iy - 1) * nz
-                    for iz in 1:nz
-                        error = abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
-                        column_error = max(column_error, error)
+        if verify_reconstruction
+            column_error = 0.0
+            if record_extraction_timing
+                start_ns = time_ns()
+                @inbounds for ix in 1:nx
+                    x_scale = amplitude * x_vector[ix]
+                    x_base = (ix - 1) * yz_plane
+                    for iy in 1:ny
+                        xy_scale = x_scale * y_vector[iy]
+                        yz_base = x_base + (iy - 1) * nz
+                        for iz in 1:nz
+                            error =
+                                abs(xy_scale * z_vector[iz] - Float64(coefficients[yz_base + iz]))
+                            column_error = max(column_error, error)
+                        end
                     end
                 end
-            end
-        else
-            @timeg reconstruction_check_label begin
+                reconstruction_check_elapsed_ns += time_ns() - start_ns
+            else
                 @inbounds for ix in 1:nx
                     x_scale = amplitude * x_vector[ix]
                     x_base = (ix - 1) * yz_plane
@@ -1977,32 +1998,42 @@ function _nested_extract_factorized_basis(
                     end
                 end
             end
+            reconstruction_max_error = max(reconstruction_max_error, column_error)
+            column_error <= 1.0e3 * atol || throw(
+                ArgumentError("nested factorized-basis extraction failed to reconstruct fixed column $column to roundoff (max error = $column_error)"),
+            )
         end
-        reconstruction_max_error = max(reconstruction_max_error, column_error)
-        column_error <= 1.0e3 * atol || throw(
-            ArgumentError("nested factorized-basis extraction failed to reconstruct fixed column $column to roundoff (max error = $column_error)"),
-        )
 
         x_index = 0
         y_index = 0
         z_index = 0
-        if isnothing(axis_function_dedup_label)
+        if record_extraction_timing
+            start_ns = time_ns()
             x_index = _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
             y_index = _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
             z_index = _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
+            axis_function_dedup_elapsed_ns += time_ns() - start_ns
         else
-            @timeg axis_function_dedup_label begin
-                x_index =
-                    _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
-                y_index =
-                    _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
-                z_index =
-                    _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
-            end
+            x_index = _nested_find_or_push_axis_function!(x_functions, x_lookup, x_vector; atol = atol)
+            y_index = _nested_find_or_push_axis_function!(y_functions, y_lookup, y_vector; atol = atol)
+            z_index = _nested_find_or_push_axis_function!(z_functions, z_lookup, z_vector; atol = atol)
         end
         basis_triplets[column] = (x_index, y_index, z_index)
         basis_amplitudes[column] = amplitude
     end
+
+    _nested_record_timeg_leaf!(anchor_search_label, anchor_search_elapsed_ns, nfixed)
+    _nested_record_timeg_leaf!(
+        axis_vector_extraction_label,
+        axis_vector_extraction_elapsed_ns,
+        nfixed,
+    )
+    verify_reconstruction && _nested_record_timeg_leaf!(
+        reconstruction_check_label,
+        reconstruction_check_elapsed_ns,
+        nfixed,
+    )
+    _nested_record_timeg_leaf!(axis_function_dedup_label, axis_function_dedup_elapsed_ns, nfixed)
 
     return _CartesianNestedFactorizedBasis3D(
         dims,
@@ -3295,6 +3326,7 @@ function _nested_shell_packet(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
 )
     return @timeg "diatomic.packet.total" begin
         packet_kernel, term_storage_value, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
@@ -3315,6 +3347,7 @@ function _nested_shell_packet(
                         coefficient_matrix,
                         (size(pgdg.overlap, 1), size(pgdg.overlap, 1), size(pgdg.overlap, 1));
                         timing_prefix = "diatomic.packet.setup.factorized_basis",
+                        verify_reconstruction = verify_factorized_reconstruction,
                     )
                 end
             else
@@ -3647,6 +3680,7 @@ function _nested_shell_packet(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
 )
     return @timeg "diatomic.packet.total" begin
         packet_kernel, term_storage_value, pgdg_x, pgdg_y, pgdg_z, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables_x, factorized_base_tables_y, factorized_base_tables_z, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
@@ -3674,6 +3708,7 @@ function _nested_shell_packet(
                         coefficient_matrix,
                         dims;
                         timing_prefix = "diatomic.packet.setup.factorized_basis",
+                        verify_reconstruction = verify_factorized_reconstruction,
                     )
                 end
             else
@@ -4550,6 +4585,7 @@ function _nested_rectangular_shell(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
 )
     dims = _nested_axis_lengths(bundles)
     side_x_xy = _nested_doside_1d(
@@ -4616,6 +4652,7 @@ function _nested_rectangular_shell(
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
+        verify_factorized_reconstruction = verify_factorized_reconstruction,
     )
     return _CartesianNestedShell3D(
         faces,
@@ -4645,6 +4682,7 @@ function _nested_complete_rectangular_shell(
     packet_kernel::Symbol = :support_reference,
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
 )
     dims = _nested_axis_lengths(bundles)
     shell_faces, edges, corners, coefficient_matrix, face_column_ranges, edge_column_ranges, corner_column_ranges, support_indices = @timeg "shell_layer.nonpacket" begin
@@ -4663,6 +4701,7 @@ function _nested_complete_rectangular_shell(
             packet_kernel = packet_kernel,
             term_storage = term_storage,
             term_coefficients = term_coefficients,
+            verify_factorized_reconstruction = verify_factorized_reconstruction,
         )
 
         side_x_edge = _nested_doside_1d(
@@ -4749,6 +4788,7 @@ function _nested_complete_rectangular_shell(
         packet_kernel = packet_kernel,
         term_storage = term_storage,
         term_coefficients = term_coefficients,
+        verify_factorized_reconstruction = verify_factorized_reconstruction,
     )
     provenance = _nested_complete_shell_provenance(
         x_interval,
@@ -4786,6 +4826,7 @@ function _nested_shell_sequence(
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
+    verify_factorized_reconstruction::Bool = true,
 )
     dims = _nested_axis_lengths(bundles)
     core_indices = _nested_box_support_indices(x_interval, y_interval, z_interval, dims)
@@ -4800,6 +4841,7 @@ function _nested_shell_sequence(
         term_storage = term_storage,
         term_coefficients = term_coefficients,
         build_packet = build_packet,
+        verify_factorized_reconstruction = verify_factorized_reconstruction,
     )
 end
 
@@ -4813,6 +4855,7 @@ function _nested_shell_sequence_from_core_block(
     term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
+    verify_factorized_reconstruction::Bool = true,
 )
     dims = _nested_axis_lengths(bundles)
     support_indices, working_box, coefficient_matrix = @timeg "sequence_merge.nonpacket" begin
@@ -4837,6 +4880,7 @@ function _nested_shell_sequence_from_core_block(
                 packet_kernel = packet_kernel,
                 term_storage = term_storage,
                 term_coefficients = term_coefficients,
+                verify_factorized_reconstruction = verify_factorized_reconstruction,
             )
         end
     else

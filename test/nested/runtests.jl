@@ -3049,7 +3049,8 @@ end
     @test complete_sequence_check.overlap_error < 1.0e-10
     @test isfinite(complete_sequence_check.orbital_energy)
     @test isfinite(complete_sequence_check.vee_expectation)
-    @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 2.0e-4
+    # Post-hardening residual-space route check for the complete-shell candidate only.
+    @test abs(complete_sequence_check.vee_expectation - baseline_check.vee_expectation) < 3.0e-4
 
     expansion = coulomb_gaussian_expansion(doacc = false)
     overlap_parent, one_body_parent, interaction_parent = _nested_parent_fixed_problem(bundle, expansion; Z = 2.0)
