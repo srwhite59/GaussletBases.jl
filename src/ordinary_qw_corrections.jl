@@ -1,6 +1,6 @@
 # Post-assembly Qiu-White-style correction diagnostics for ordinary Cartesian
-# operators. The narrow public surface below exposes only the projector
-# one-body correction, with ESOI as explicit opt-in. The broad mode-carrying
+# operators. The public surfaces below expose only projector-based one-body
+# corrections, with ESOI as explicit opt-in. The broad mode-carrying
 # HydrogenicCoreCorrectionSpec remains internal; :local_exact is diagnostic
 # only, and a first-order local variant remains unsupported.
 

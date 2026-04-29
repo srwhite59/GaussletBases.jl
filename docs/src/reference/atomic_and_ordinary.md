@@ -104,11 +104,19 @@ Branch diagnostics report `branch_nuclear_charges`, `correction_count`,
 `overlap_error`, optional `corrected_center_indices`, and a tuple of
 per-correction diagnostics in `corrections`.
 
-The intended counterpoise pattern is to build one operator payload that retains
-per-center nuclear terms, then reuse it for the full branch and each fragment
-branch:
+The intended counterpoise pattern is to build one operator payload with
+`nuclear_term_storage = :by_center`, then reuse it for the full branch and each
+fragment branch. For molecular Gaussian supplements, use a finite `max_width`
+when the supplement is meant to remain a local/core correction rather than a
+wide diffuse completion:
 
 ```julia
+operators = ordinary_cartesian_qiu_white_operators(
+    basis,
+    supplement;
+    nuclear_charges = [Z, Z],
+    nuclear_term_storage = :by_center,
+)
 spec_a = HydrogenicCoreBranchCorrectionSpec(; Z = Z, nucleus = nuclei[1])
 spec_b = HydrogenicCoreBranchCorrectionSpec(; Z = Z, nucleus = nuclei[2])
 
