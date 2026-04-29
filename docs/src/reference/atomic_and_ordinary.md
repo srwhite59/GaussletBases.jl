@@ -104,6 +104,31 @@ Branch diagnostics report `branch_nuclear_charges`, `correction_count`,
 `overlap_error`, optional `corrected_center_indices`, and a tuple of
 per-correction diagnostics in `corrections`.
 
+The intended counterpoise pattern is to build one operator payload that retains
+per-center nuclear terms, then reuse it for the full branch and each fragment
+branch:
+
+```julia
+spec_a = HydrogenicCoreBranchCorrectionSpec(; Z = Z, nucleus = nuclei[1])
+spec_b = HydrogenicCoreBranchCorrectionSpec(; Z = Z, nucleus = nuclei[2])
+
+full = ordinary_cartesian_corrected_branch(
+    operators;
+    nuclear_charges = [Z, Z],
+    corrections = [spec_a, spec_b],
+)
+atom_a = ordinary_cartesian_corrected_branch(
+    operators;
+    nuclear_charges = [Z, 0.0],
+    corrections = spec_a,
+)
+atom_b = ordinary_cartesian_corrected_branch(
+    operators;
+    nuclear_charges = [0.0, Z],
+    corrections = spec_b,
+)
+```
+
 ```@docs
 HydrogenicCoreProjectorCorrectionSpec
 HydrogenicCoreBranchCorrectionSpec

@@ -241,6 +241,64 @@ end
         nuclear_charges = [1.0, 1.0],
         corrections = [spec_a, HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[1])],
     )
+
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        hybrid_operators = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :ggt_nearest,
+        )
+        hybrid_kinetic_sidecar = hybrid_operators.kinetic_one_body
+        hybrid_nuclear_sidecars = hybrid_operators.nuclear_one_body_by_center
+        hybrid_full = ordinary_cartesian_corrected_branch(
+            hybrid_operators;
+            nuclear_charges = [1.0, 1.0],
+            corrections = [spec_a, spec_b],
+        )
+        hybrid_branch_a = ordinary_cartesian_corrected_branch(
+            hybrid_operators;
+            nuclear_charges = [1.0, 0.0],
+            corrections = spec_a,
+        )
+        hybrid_branch_b = ordinary_cartesian_corrected_branch(
+            hybrid_operators;
+            nuclear_charges = [0.0, 1.0],
+            corrections = spec_b,
+        )
+        hybrid_diagnostics = hybrid_full.diagnostics.corrections
+
+        @test hybrid_full.diagnostics.branch_nuclear_charges == (1.0, 1.0)
+        @test hybrid_full.diagnostics.correction_count == 2
+        @test hybrid_full.diagnostics.corrected_center_indices == (1, 2)
+        @test (hybrid_diagnostics[1].selected_center_index, hybrid_diagnostics[2].selected_center_index) == (1, 2)
+        @test isempty(intersect(
+            hybrid_diagnostics[1].selected_local_subspace_indices,
+            hybrid_diagnostics[2].selected_local_subspace_indices,
+        ))
+        @test hybrid_diagnostics[1].selected_local_subspace_dimension > 0
+        @test hybrid_diagnostics[2].selected_local_subspace_dimension > 0
+        @test hybrid_diagnostics[1].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+        @test hybrid_diagnostics[2].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+        @test only(hybrid_branch_a.diagnostics.corrections).selected_center_index == 1
+        @test only(hybrid_branch_b.diagnostics.corrections).selected_center_index == 2
+        @test hybrid_branch_a.diagnostics.branch_nuclear_charges == (1.0, 0.0)
+        @test hybrid_branch_b.diagnostics.branch_nuclear_charges == (0.0, 1.0)
+        @test hybrid_operators.kinetic_one_body === hybrid_kinetic_sidecar
+        @test hybrid_operators.nuclear_one_body_by_center === hybrid_nuclear_sidecars
+        @test hybrid_operators.nuclear_term_storage == :by_center
+    end
+
     @test operators.kinetic_one_body === kinetic_sidecar
     @test operators.nuclear_one_body_by_center === nuclear_sidecars
     @test operators.nuclear_term_storage == :by_center
