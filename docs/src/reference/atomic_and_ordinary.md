@@ -101,7 +101,10 @@ reference branch by default. For example, a full dimer application branch
 `[Z, Z]` calibrates the nucleus-A correction on `[Z, 0]` and the nucleus-B
 correction on `[0, Z]`, then applies those projector deltas to the full branch.
 Use `reference_nuclear_charges` only as an explicit override for debug or
-embedding studies. `orbital_selector = :global_lowest` remains an explicit
+embedding studies; an explicit reference must still carry `Z` at the corrected
+center. Fragment branches should include corrections only for nuclei present in
+that branch, so an atom-A branch `[Z, 0]` should not carry a nucleus-B
+correction. `orbital_selector = :global_lowest` remains an explicit
 debug/reference selector for single-correction calls. Multi-correction calls
 require localized selectors and reject duplicate localized center indices.
 Branch diagnostics report `branch_nuclear_charges`, `correction_count`,

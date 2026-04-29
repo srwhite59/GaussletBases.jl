@@ -204,6 +204,20 @@ end
             reference_nuclear_charges = [1.0, 1.0],
         ),
     )
+    @test_throws ArgumentError ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 0.0],
+        corrections = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[2]),
+    )
+    @test_throws ArgumentError ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+        corrections = HydrogenicCoreBranchCorrectionSpec(;
+            Z = 1.0,
+            nucleus = basis.nuclei[1],
+            reference_nuclear_charges = [0.0, 1.0],
+        ),
+    )
 
     @test branch_a isa OrdinaryCartesianBranchCorrectionResult
     @test branch_b isa OrdinaryCartesianBranchCorrectionResult

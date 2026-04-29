@@ -66,8 +66,10 @@ matching the original projector behavior; multi-correction calls require
 localized selectors. Set `include_esoi=true` to apply the optional local ESOI
 two-body scalar calibration to the same selected core orbital. By default,
 localized branch corrections calibrate the one-body projector against a
-center-isolated reference branch. Pass `reference_nuclear_charges` only to
-override that calibration branch explicitly.
+center-isolated reference branch. Fragment application branches should include
+corrections only for nuclei present in that branch. Pass
+`reference_nuclear_charges` only to override the calibration branch explicitly;
+the override must carry `Z` at the corrected center.
 """
 struct HydrogenicCoreBranchCorrectionSpec
     Z::Float64
@@ -822,15 +824,50 @@ function _ordinary_cartesian_branch_orbital_selection(
     )
 end
 
-function _ordinary_cartesian_inferred_reference_nuclear_charges(
+function _ordinary_cartesian_localized_selected_center_index(
     operators::OrdinaryCartesianOperators3D,
     spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    spec.orbital_selector == :localized_lowest || return nothing
+    centers, _ = _ordinary_cartesian_branch_partition_centers(operators, spec)
+    selected_center_index, _ = _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
+    return selected_center_index
+end
+
+function _ordinary_cartesian_validate_localized_branch_charge!(
+    charges,
+    selected_center_index,
+    expected_charge::Real,
+    label::AbstractString,
+)
+    charges === nothing && return nothing
+    selected_center_index === nothing && return nothing
+    selected_center_index <= length(charges) || throw(
+        ArgumentError(
+            "$(label) must carry a charge for localized correction center index $(selected_center_index); got $(length(charges)) charges",
+        ),
+    )
+    charge = Float64(charges[selected_center_index])
+    isapprox(charge, Float64(expected_charge); atol = 1.0e-10, rtol = 1.0e-10) || throw(
+        ArgumentError(
+            "$(label) has charge $(charge) at localized correction center index $(selected_center_index), expected $(Float64(expected_charge))",
+        ),
+    )
+    return nothing
+end
+
+function _ordinary_cartesian_inferred_reference_nuclear_charges(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreBranchCorrectionSpec;
+    selected_center_index = nothing,
 )
     spec.reference_nuclear_charges !== nothing && return copy(spec.reference_nuclear_charges)
     spec.orbital_selector == :localized_lowest || return nothing
     hasproperty(operators.basis, :nuclei) || return nothing
     centers, _ = _ordinary_cartesian_branch_partition_centers(operators, spec)
-    selected_center_index, _ = _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
+    if selected_center_index === nothing
+        selected_center_index, _ = _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
+    end
     charges = zeros(Float64, length(centers))
     charges[selected_center_index] = spec.Z
     return charges
@@ -840,10 +877,23 @@ function _ordinary_cartesian_reference_one_body_hamiltonian(
     operators::OrdinaryCartesianOperators3D,
     spec::HydrogenicCoreBranchCorrectionSpec,
     application_h::AbstractMatrix{<:Real},
+    selected_center_index,
 )
-    reference_charges = _ordinary_cartesian_inferred_reference_nuclear_charges(operators, spec)
+    reference_charges = _ordinary_cartesian_inferred_reference_nuclear_charges(
+        operators,
+        spec;
+        selected_center_index = selected_center_index,
+    )
     if reference_charges === nothing
         return Matrix{Float64}(application_h), nothing
+    end
+    if spec.reference_nuclear_charges !== nothing
+        _ordinary_cartesian_validate_localized_branch_charge!(
+            reference_charges,
+            selected_center_index,
+            spec.Z,
+            "reference_nuclear_charges",
+        )
     end
     reference_h = assembled_one_body_hamiltonian(operators; nuclear_charges = reference_charges)
     return reference_h, Tuple(reference_charges)
@@ -1060,10 +1110,18 @@ function ordinary_cartesian_corrected_branch(
     corrected_center_indices = Any[]
     for correction in correction_specs
         internal_spec = _ordinary_cartesian_internal_spec(correction)
+        selected_center_index = _ordinary_cartesian_localized_selected_center_index(operators, correction)
+        _ordinary_cartesian_validate_localized_branch_charge!(
+            branch_charges,
+            selected_center_index,
+            correction.Z,
+            "application nuclear_charges",
+        )
         reference_h, reference_charges = _ordinary_cartesian_reference_one_body_hamiltonian(
             operators,
             correction,
             corrected_h,
+            selected_center_index,
         )
         matrices = _ordinary_cartesian_branch_corrected_matrices(
             operators,
