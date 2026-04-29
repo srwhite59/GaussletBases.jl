@@ -17,6 +17,12 @@
     target_one_body = -0.5 * Z^2
     target_closed_shell = -Z^2 + 5.0 * Z / 8.0
 
+    @test_throws ArgumentError GaussletBases.HydrogenicCoreCorrectionSpec(;
+        Z = Z,
+        one_body_mode = :local_first_order,
+        two_body_mode = :esoi_local,
+    )
+
     for one_body_mode in (:projector, :local_exact)
         spec = GaussletBases.HydrogenicCoreCorrectionSpec(;
             Z = Z,

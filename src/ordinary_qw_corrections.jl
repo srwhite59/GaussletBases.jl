@@ -1,3 +1,14 @@
+#
+# Internal post-assembly Qiu-White-style correction diagnostics for ordinary
+# Cartesian operators. This file is intentionally included but not exported:
+# it is not part of the public ordinary workflow or reference-doc contract.
+#
+# The projector one-body correction is the reference diagnostic mode. The
+# local-exact one-body mode is retained only for internal comparison against a
+# local/diagonal calibration idea; fresh Cr probes showed it is not equivalent
+# enough to projector mode to treat as a co-equal public interface. A
+# first-order local variant remains unsupported.
+#
 abstract type AbstractOrdinaryCartesianCorrectionSpec end
 
 struct HydrogenicCoreCorrectionSpec <: AbstractOrdinaryCartesianCorrectionSpec
@@ -161,6 +172,8 @@ function _ordinary_cartesian_local_exact_corrected_hamiltonian(
     eig_tol::Real = 1.0e-11,
     maxiter::Integer = 80,
 )
+    # Diagnostic-only local alternative to the projector reference: solve for a
+    # single diagonal shift whose lowest hydrogenic eigenvalue is exact.
     initial_eigenvalue, initial_orbital = _ordinary_cartesian_lowest_orbital(h)
     target = -0.5 * Float64(Z)^2
     initial_residual = initial_eigenvalue - target
