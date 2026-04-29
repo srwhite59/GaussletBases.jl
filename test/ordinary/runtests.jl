@@ -104,6 +104,45 @@ end
     end
 end
 
+@testset "Ordinary QW branch hydrogenic projector corrections" begin
+    Z = 2.0
+    basis = build_basis(MappedUniformBasisSpec(
+        :G10;
+        count = 9,
+        mapping = white_lindsey_atomic_mapping(Z = Z, d = 0.2, tail_spacing = 10.0),
+        reference_spacing = 1.0,
+    ))
+    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis,
+        supplement;
+        Z = Z,
+        interaction_treatment = :ggt_nearest,
+        residual_keep_policy = :near_null_only,
+    )
+    target_one_body = -0.5 * Z^2
+    target_closed_shell = -Z^2 + 5.0 * Z / 8.0
+
+    branch_spec = HydrogenicCoreBranchCorrectionSpec(; Z = Z, include_esoi = true)
+    branch_result = ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = operators.nuclear_charges,
+        corrections = branch_spec,
+    )
+    wrapper_result = apply_ordinary_cartesian_corrections(
+        operators,
+        HydrogenicCoreProjectorCorrectionSpec(; Z = Z, include_esoi = true),
+    )
+
+    @test branch_result isa OrdinaryCartesianBranchCorrectionResult
+    @test branch_result.diagnostics.orbital_selector == :global_lowest
+    @test branch_result.diagnostics.branch_nuclear_charges === nothing
+    @test branch_result.diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test branch_result.diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
+    @test branch_result.one_body_hamiltonian ≈ wrapper_result.operators.one_body_hamiltonian atol = 1.0e-12 rtol = 0.0
+    @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-12 rtol = 0.0
+end
+
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
 
 @testset "Bond-aligned homonuclear chain ordinary QW reference path" begin

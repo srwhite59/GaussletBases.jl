@@ -44,6 +44,52 @@ function HydrogenicCoreProjectorCorrectionSpec(;
     )
 end
 
+"""
+    HydrogenicCoreBranchCorrectionSpec(; Z, nucleus=(0.0, 0.0, 0.0),
+        include_esoi=false, orbital_selector=:global_lowest,
+        local_orbital_index=nothing)
+
+Public branch-level hydrogenic core correction specification. This is the
+matrix-level companion to [`HydrogenicCoreProjectorCorrectionSpec`](@ref) for
+counterpoise and branch Hamiltonian work: the one-body branch matrix is first
+assembled with caller-provided nuclear charges, then the projector reference
+correction is applied to the selected core orbital.
+
+This first public staging pass supports one correction with
+`orbital_selector = :global_lowest`, matching the original projector behavior.
+Center-local orbital selection and multi-correction branch application are
+reserved for the next pass. Set `include_esoi=true` to apply the optional local
+ESOI two-body scalar calibration to the same selected core orbital.
+"""
+struct HydrogenicCoreBranchCorrectionSpec
+    Z::Float64
+    nucleus::NTuple{3,Float64}
+    include_esoi::Bool
+    orbital_selector::Symbol
+    local_orbital_index::Union{Nothing,Int}
+end
+
+function HydrogenicCoreBranchCorrectionSpec(;
+    Z::Real,
+    nucleus = (0.0, 0.0, 0.0),
+    include_esoi::Bool = false,
+    orbital_selector::Symbol = :global_lowest,
+    local_orbital_index::Union{Nothing,Integer} = nothing,
+)
+    orbital_selector == :global_lowest || throw(
+        ArgumentError(
+            "unsupported orbital_selector :$(orbital_selector); this branch staging pass supports only :global_lowest",
+        ),
+    )
+    return HydrogenicCoreBranchCorrectionSpec(
+        Float64(Z),
+        _ordinary_cartesian_correction_nucleus_tuple(nucleus),
+        include_esoi,
+        orbital_selector,
+        local_orbital_index === nothing ? nothing : Int(local_orbital_index),
+    )
+end
+
 abstract type AbstractOrdinaryCartesianCorrectionSpec end
 
 struct HydrogenicCoreCorrectionSpec <: AbstractOrdinaryCartesianCorrectionSpec
@@ -98,6 +144,22 @@ contains the corrected [`OrdinaryCartesianOperators3D`](@ref), while
 """
 struct OrdinaryCartesianCorrectionResult
     operators::OrdinaryCartesianOperators3D
+    diagnostics::NamedTuple
+end
+
+"""
+    OrdinaryCartesianBranchCorrectionResult
+
+Matrix-level result returned by [`ordinary_cartesian_corrected_branch`](@ref).
+`one_body_hamiltonian` is the corrected branch one-body matrix assembled from
+the requested nuclear charges, `interaction_matrix` is the corresponding
+interaction matrix after any optional ESOI correction, and `diagnostics` records
+the selected orbital and scalar calibration checks. This result deliberately
+does not claim to be a new [`OrdinaryCartesianOperators3D`](@ref) payload.
+"""
+struct OrdinaryCartesianBranchCorrectionResult
+    one_body_hamiltonian::Matrix{Float64}
+    interaction_matrix::Matrix{Float64}
     diagnostics::NamedTuple
 end
 
@@ -373,20 +435,16 @@ function _ordinary_cartesian_operators_with_corrections(
     )
 end
 
-function _apply_ordinary_cartesian_corrections(
+function _ordinary_cartesian_corrected_matrices(
     operators::OrdinaryCartesianOperators3D,
+    initial_h::AbstractMatrix{<:Real},
+    initial_v::AbstractMatrix{<:Real},
     spec::HydrogenicCoreCorrectionSpec;
-    overlap_tol::Real = 1.0e-8,
+    overlap_error::Real,
+    extra_diagnostics::NamedTuple = (;),
 )
-    overlap_error = norm(operators.overlap - I, Inf)
-    overlap_error <= Float64(overlap_tol) || throw(
-        ArgumentError(
-            "_apply_ordinary_cartesian_corrections currently requires an orthonormal final ordinary Cartesian basis; got overlap error $(overlap_error)",
-        ),
-    )
-
-    initial_h = Matrix{Float64}(operators.one_body_hamiltonian)
-    initial_v = Matrix{Float64}(operators.interaction_matrix)
+    initial_h = Matrix{Float64}(initial_h)
+    initial_v = Matrix{Float64}(initial_v)
     initial_eigenvalue, initial_orbital = _ordinary_cartesian_lowest_orbital(initial_h)
     target_eigenvalue = -0.5 * spec.Z^2
     local_index, local_orbital, local_distance =
@@ -449,8 +507,6 @@ function _apply_ordinary_cartesian_corrections(
         _ordinary_cartesian_closed_shell_proxy_energy(corrected_h, corrected_v, corrected_orbital)
     proxy_target_energy = -spec.Z^2 + 5.0 * spec.Z / 8.0
 
-    corrected_operators =
-        _ordinary_cartesian_operators_with_corrections(operators, corrected_h, corrected_v)
     diagnostics = (
         Z = spec.Z,
         nucleus = spec.nucleus,
@@ -479,7 +535,38 @@ function _apply_ordinary_cartesian_corrections(
         closed_shell_corrected_energy = proxy_corrected_energy,
         closed_shell_target_energy = proxy_target_energy,
     )
-    return OrdinaryCartesianCorrectionResult(corrected_operators, diagnostics)
+    return (
+        one_body_hamiltonian = corrected_h,
+        interaction_matrix = corrected_v,
+        diagnostics = merge(diagnostics, extra_diagnostics),
+    )
+end
+
+function _apply_ordinary_cartesian_corrections(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreCorrectionSpec;
+    overlap_tol::Real = 1.0e-8,
+)
+    overlap_error = norm(operators.overlap - I, Inf)
+    overlap_error <= Float64(overlap_tol) || throw(
+        ArgumentError(
+            "_apply_ordinary_cartesian_corrections currently requires an orthonormal final ordinary Cartesian basis; got overlap error $(overlap_error)",
+        ),
+    )
+
+    matrices = _ordinary_cartesian_corrected_matrices(
+        operators,
+        operators.one_body_hamiltonian,
+        operators.interaction_matrix,
+        spec;
+        overlap_error = overlap_error,
+    )
+    corrected_operators = _ordinary_cartesian_operators_with_corrections(
+        operators,
+        matrices.one_body_hamiltonian,
+        matrices.interaction_matrix,
+    )
+    return OrdinaryCartesianCorrectionResult(corrected_operators, matrices.diagnostics)
 end
 
 function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreProjectorCorrectionSpec)
@@ -491,6 +578,44 @@ function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreProjectorCorrecti
         local_selection = spec.local_orbital_index === nothing ? :nearest_nonresidual : :explicit,
         local_orbital_index = spec.local_orbital_index,
     )
+end
+
+function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreBranchCorrectionSpec)
+    spec.orbital_selector == :global_lowest || throw(
+        ArgumentError(
+            "unsupported orbital_selector :$(spec.orbital_selector); this branch staging pass supports only :global_lowest",
+        ),
+    )
+    return HydrogenicCoreCorrectionSpec(;
+        Z = spec.Z,
+        nucleus = spec.nucleus,
+        one_body_mode = :projector,
+        two_body_mode = spec.include_esoi ? :esoi_local : :none,
+        local_selection = spec.local_orbital_index === nothing ? :nearest_nonresidual : :explicit,
+        local_orbital_index = spec.local_orbital_index,
+    )
+end
+
+function _ordinary_cartesian_single_branch_correction(
+    corrections::HydrogenicCoreBranchCorrectionSpec,
+)
+    return corrections
+end
+
+function _ordinary_cartesian_single_branch_correction(corrections)
+    correction_vector = collect(corrections)
+    length(correction_vector) == 1 || throw(
+        ArgumentError(
+            "ordinary_cartesian_corrected_branch currently supports exactly one branch correction spec",
+        ),
+    )
+    correction = only(correction_vector)
+    correction isa HydrogenicCoreBranchCorrectionSpec || throw(
+        ArgumentError(
+            "ordinary_cartesian_corrected_branch requires HydrogenicCoreBranchCorrectionSpec corrections",
+        ),
+    )
+    return correction
 end
 
 """
@@ -535,4 +660,56 @@ function apply_ordinary_cartesian_corrections(
         local_orbital_index = local_orbital_index,
     )
     return apply_ordinary_cartesian_corrections(operators, spec; overlap_tol = overlap_tol)
+end
+
+"""
+    ordinary_cartesian_corrected_branch(operators; nuclear_charges, corrections,
+        overlap_tol=1e-8)
+
+Apply a narrow branch-level hydrogenic correction to an
+[`OrdinaryCartesianOperators3D`](@ref) payload and return corrected matrices.
+The one-body branch matrix is assembled with `assembled_one_body_hamiltonian`
+using `nuclear_charges`, then one
+[`HydrogenicCoreBranchCorrectionSpec`](@ref) is applied.
+
+This is the intended public entry point for branch/counterpoise correction
+work. The current staging pass supports exactly one correction with
+`orbital_selector = :global_lowest`; center-local selection and multi-center
+correction composition are intentionally deferred. The result is a matrix-level
+[`OrdinaryCartesianBranchCorrectionResult`](@ref), not a transformed
+`OrdinaryCartesianOperators3D`.
+"""
+function ordinary_cartesian_corrected_branch(
+    operators::OrdinaryCartesianOperators3D;
+    nuclear_charges,
+    corrections,
+    overlap_tol::Real = 1.0e-8,
+)
+    overlap_error = norm(operators.overlap - I, Inf)
+    overlap_error <= Float64(overlap_tol) || throw(
+        ArgumentError(
+            "ordinary_cartesian_corrected_branch currently requires an orthonormal final ordinary Cartesian basis; got overlap error $(overlap_error)",
+        ),
+    )
+
+    correction = _ordinary_cartesian_single_branch_correction(corrections)
+    internal_spec = _ordinary_cartesian_internal_spec(correction)
+    branch_charges = nuclear_charges === nothing ? nothing : Float64.(collect(nuclear_charges))
+    branch_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
+    matrices = _ordinary_cartesian_corrected_matrices(
+        operators,
+        branch_h,
+        operators.interaction_matrix,
+        internal_spec;
+        overlap_error = overlap_error,
+        extra_diagnostics = (
+            branch_nuclear_charges = branch_charges === nothing ? nothing : Tuple(branch_charges),
+            orbital_selector = correction.orbital_selector,
+        ),
+    )
+    return OrdinaryCartesianBranchCorrectionResult(
+        matrices.one_body_hamiltonian,
+        matrices.interaction_matrix,
+        matrices.diagnostics,
+    )
 end
