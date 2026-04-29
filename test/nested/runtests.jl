@@ -2175,6 +2175,7 @@ end
         diatomic20_bundle = read_cartesian_basis_bundle(diatomic20_path)
         diatomic_ops_bundle = read_cartesian_basis_bundle(diatomic_ops_path)
         atomic_hybrid_full_bundle = read_cartesian_basis_bundle(atomic_hybrid_full_path)
+        atomic_hybrid_legacy_bundle = read_cartesian_basis_bundle(atomic_hybrid_legacy_path)
         bond_aligned_hybrid_bundle = read_cartesian_basis_bundle(bond_aligned_hybrid_path)
 
         @test square_bundle.path == abspath(square_path)
@@ -2319,6 +2320,12 @@ end
             atomic_hybrid_legacy_path;
             materialize_projector = false,
         )
+        bundle_hybrid_fast_transfer = transfer_orbitals(
+            hybrid_coefficients,
+            atomic_hybrid_full_bundle,
+            atomic_hybrid_legacy_bundle;
+            materialize_projector = false,
+        )
         memory_hybrid_fast_transfer = transfer_orbitals(
             hybrid_coefficients,
             hybrid_fixture.full_rep,
@@ -2332,15 +2339,21 @@ end
         @test disk_hybrid_transfer.projector.matrix ≈
             memory_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
-        @test disk_hybrid_fast_transfer.coefficients ≈
-            disk_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test memory_hybrid_fast_transfer.coefficients ≈
+            memory_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_fast_transfer.coefficients ≈
             memory_hybrid_fast_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test bundle_hybrid_fast_transfer.coefficients ≈
+            memory_hybrid_fast_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_fast_transfer.projector === nothing
+        @test bundle_hybrid_fast_transfer.projector === nothing
         @test memory_hybrid_fast_transfer.projector === nothing
         @test disk_hybrid_fast_transfer.diagnostics.transfer_path == :hybrid_mixed_raw_cross_overlap_transfer
+        @test bundle_hybrid_fast_transfer.diagnostics.transfer_path == :hybrid_mixed_raw_cross_overlap_transfer
         @test isnan(disk_hybrid_fast_transfer.diagnostics.projector_residual_inf)
+        @test isnan(bundle_hybrid_fast_transfer.diagnostics.projector_residual_inf)
         @test isnan(disk_hybrid_fast_transfer.diagnostics.transferred_residual_inf)
+        @test isnan(bundle_hybrid_fast_transfer.diagnostics.transferred_residual_inf)
 
         disk_bond_aligned_hybrid_self =
             cross_overlap(bond_aligned_hybrid_path, bond_aligned_hybrid_path)
