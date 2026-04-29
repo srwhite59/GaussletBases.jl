@@ -235,6 +235,9 @@ export AbstractFunction1D,
        ordinary_cartesian_ida_operators,
        ordinary_cartesian_product_operators,
        ordinary_cartesian_qiu_white_operators,
+       HydrogenicCoreProjectorCorrectionSpec,
+       OrdinaryCartesianCorrectionResult,
+       apply_ordinary_cartesian_corrections,
        assembled_one_body_hamiltonian,
        nested_cartesian_operators,
        diagnose_qwrg_residual_space,
@@ -450,6 +453,7 @@ function ordinary_sho_spectrum end
 function ordinary_cartesian_ida_operators end
 function ordinary_cartesian_product_operators end
 function ordinary_cartesian_qiu_white_operators end
+function apply_ordinary_cartesian_corrections end
 function assembled_one_body_hamiltonian end
 function diagnose_qwrg_residual_space end
 function ordinary_cartesian_1s2_check end

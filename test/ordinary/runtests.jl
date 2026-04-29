@@ -49,6 +49,61 @@
     end
 end
 
+@testset "Ordinary QW public hydrogenic projector corrections" begin
+    Z = 2.0
+    basis = build_basis(MappedUniformBasisSpec(
+        :G10;
+        count = 9,
+        mapping = white_lindsey_atomic_mapping(Z = Z, d = 0.2, tail_spacing = 10.0),
+        reference_spacing = 1.0,
+    ))
+    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis,
+        supplement;
+        Z = Z,
+        interaction_treatment = :ggt_nearest,
+        residual_keep_policy = :near_null_only,
+    )
+    target_one_body = -0.5 * Z^2
+    target_closed_shell = -Z^2 + 5.0 * Z / 8.0
+
+    projector_only = apply_ordinary_cartesian_corrections(
+        operators,
+        HydrogenicCoreProjectorCorrectionSpec(; Z = Z),
+    )
+    projector_esoi = apply_ordinary_cartesian_corrections(
+        operators,
+        HydrogenicCoreProjectorCorrectionSpec(; Z = Z, include_esoi = true),
+    )
+    keyword_result = apply_ordinary_cartesian_corrections(
+        operators;
+        Z = Z,
+        include_esoi = true,
+    )
+
+    @test projector_only isa OrdinaryCartesianCorrectionResult
+    @test projector_only.diagnostics.one_body_mode == :projector
+    @test projector_only.diagnostics.two_body_mode == :none
+    @test projector_only.diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test projector_only.diagnostics.closed_shell_corrected_energy - target_closed_shell ≈
+          projector_only.diagnostics.corrected_1s_coulomb - 5.0 * Z / 8.0 atol = 1.0e-8 rtol = 0.0
+
+    @test projector_esoi.diagnostics.one_body_mode == :projector
+    @test projector_esoi.diagnostics.two_body_mode == :esoi_local
+    @test projector_esoi.diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test projector_esoi.diagnostics.corrected_1s_coulomb ≈ 5.0 * Z / 8.0 atol = 1.0e-10 rtol = 0.0
+    @test projector_esoi.diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
+    @test keyword_result.diagnostics.closed_shell_corrected_energy ≈
+          projector_esoi.diagnostics.closed_shell_corrected_energy atol = 1.0e-12 rtol = 0.0
+
+    for result in (projector_only, projector_esoi)
+        @test result.operators.kinetic_one_body === nothing
+        @test result.operators.nuclear_one_body_by_center === nothing
+        @test result.operators.nuclear_term_storage == :total_only
+    end
+end
+
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
 
 @testset "Bond-aligned homonuclear chain ordinary QW reference path" begin

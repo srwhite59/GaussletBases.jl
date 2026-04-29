@@ -67,3 +67,24 @@ gto_occupancy_matrix
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```
+
+## Hydrogenic core corrections
+
+`apply_ordinary_cartesian_corrections` is a post-assembly correction for
+`OrdinaryCartesianOperators3D`. The public path uses the projector one-body
+reference correction to shift the lowest hydrogenic core eigenvalue to
+`-Z^2/2`. ESOI is explicit opt-in through
+`HydrogenicCoreProjectorCorrectionSpec(; include_esoi=true)` and calibrates the
+same `1s^2` Coulomb scalar to `5Z/8`.
+
+Because these are post-assembly matrix corrections, the returned operators keep
+the total matrices authoritative and drop invalid decomposition sidecars:
+`kinetic_one_body === nothing`, `nuclear_one_body_by_center === nothing`, and
+`nuclear_term_storage == :total_only`. Internal diagnostic modes such as
+`:local_exact` are not part of the public correction surface.
+
+```@docs
+HydrogenicCoreProjectorCorrectionSpec
+OrdinaryCartesianCorrectionResult
+apply_ordinary_cartesian_corrections
+```

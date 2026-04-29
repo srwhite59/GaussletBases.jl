@@ -1,14 +1,49 @@
-#
-# Internal post-assembly Qiu-White-style correction diagnostics for ordinary
-# Cartesian operators. This file is intentionally included but not exported:
-# it is not part of the public ordinary workflow or reference-doc contract.
-#
-# The projector one-body correction is the reference diagnostic mode. The
-# local-exact one-body mode is retained only for internal comparison against a
-# local/diagonal calibration idea; fresh Cr probes showed it is not equivalent
-# enough to projector mode to treat as a co-equal public interface. A
-# first-order local variant remains unsupported.
-#
+# Post-assembly Qiu-White-style correction diagnostics for ordinary Cartesian
+# operators. The narrow public surface below exposes only the projector
+# one-body correction, with ESOI as explicit opt-in. The broad mode-carrying
+# HydrogenicCoreCorrectionSpec remains internal; :local_exact is diagnostic
+# only, and a first-order local variant remains unsupported.
+
+"""
+    HydrogenicCoreProjectorCorrectionSpec(; Z, nucleus=(0.0, 0.0, 0.0),
+        include_esoi=false, local_orbital_index=nothing)
+
+Public post-assembly hydrogenic core correction specification for
+[`OrdinaryCartesianOperators3D`](@ref). The one-body correction is the
+projector reference route: the lowest finite-basis hydrogenic core orbital is
+shifted to the exact `-Z^2/2` eigenvalue. Set `include_esoi=true` to also apply
+the local ESOI-style two-body correction that calibrates the same core orbital's
+`1s^2` Coulomb scalar to `5Z/8`.
+
+The correction is applied after operator assembly. Corrected payloads keep the
+total one-body and interaction matrices as authoritative and deliberately drop
+decomposition sidecars (`kinetic_one_body === nothing`,
+`nuclear_one_body_by_center === nothing`, `nuclear_term_storage == :total_only`).
+`local_orbital_index` is only an optional override for the local basis function
+used by ESOI; by default the nearest non-residual local orbital to `nucleus` is
+selected.
+"""
+struct HydrogenicCoreProjectorCorrectionSpec
+    Z::Float64
+    nucleus::NTuple{3,Float64}
+    include_esoi::Bool
+    local_orbital_index::Union{Nothing,Int}
+end
+
+function HydrogenicCoreProjectorCorrectionSpec(;
+    Z::Real,
+    nucleus = (0.0, 0.0, 0.0),
+    include_esoi::Bool = false,
+    local_orbital_index::Union{Nothing,Integer} = nothing,
+)
+    return HydrogenicCoreProjectorCorrectionSpec(
+        Float64(Z),
+        _ordinary_cartesian_correction_nucleus_tuple(nucleus),
+        include_esoi,
+        local_orbital_index === nothing ? nothing : Int(local_orbital_index),
+    )
+end
+
 abstract type AbstractOrdinaryCartesianCorrectionSpec end
 
 struct HydrogenicCoreCorrectionSpec <: AbstractOrdinaryCartesianCorrectionSpec
@@ -53,6 +88,14 @@ function HydrogenicCoreCorrectionSpec(;
     )
 end
 
+"""
+    OrdinaryCartesianCorrectionResult
+
+Result returned by [`apply_ordinary_cartesian_corrections`](@ref). `operators`
+contains the corrected [`OrdinaryCartesianOperators3D`](@ref), while
+`diagnostics` records the selected local orbital, core eigenvalue shifts,
+`1s^2` Coulomb scalar before/after values, and closed-shell proxy energies.
+"""
 struct OrdinaryCartesianCorrectionResult
     operators::OrdinaryCartesianOperators3D
     diagnostics::NamedTuple
@@ -437,4 +480,59 @@ function _apply_ordinary_cartesian_corrections(
         closed_shell_target_energy = proxy_target_energy,
     )
     return OrdinaryCartesianCorrectionResult(corrected_operators, diagnostics)
+end
+
+function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreProjectorCorrectionSpec)
+    return HydrogenicCoreCorrectionSpec(;
+        Z = spec.Z,
+        nucleus = spec.nucleus,
+        one_body_mode = :projector,
+        two_body_mode = spec.include_esoi ? :esoi_local : :none,
+        local_selection = spec.local_orbital_index === nothing ? :nearest_nonresidual : :explicit,
+        local_orbital_index = spec.local_orbital_index,
+    )
+end
+
+"""
+    apply_ordinary_cartesian_corrections(operators, spec; overlap_tol=1e-8)
+    apply_ordinary_cartesian_corrections(operators; Z, nucleus=(0,0,0),
+        include_esoi=false, local_orbital_index=nothing, overlap_tol=1e-8)
+
+Apply the public projector-based hydrogenic core correction to an assembled
+[`OrdinaryCartesianOperators3D`](@ref). By default this fixes only the lowest
+one-body hydrogenic core eigenvalue to `-Z^2/2`. Pass `include_esoi=true` to
+also calibrate the corresponding closed-shell `1s^2` Coulomb scalar to `5Z/8`.
+
+This is a post-assembly transform. The returned operators preserve the total
+matrices, but corrected payloads no longer have a clean kinetic/nuclear
+decomposition; the invalid sidecars are dropped and `nuclear_term_storage` is
+set to `:total_only`.
+"""
+function apply_ordinary_cartesian_corrections(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreProjectorCorrectionSpec;
+    overlap_tol::Real = 1.0e-8,
+)
+    return _apply_ordinary_cartesian_corrections(
+        operators,
+        _ordinary_cartesian_internal_spec(spec);
+        overlap_tol = overlap_tol,
+    )
+end
+
+function apply_ordinary_cartesian_corrections(
+    operators::OrdinaryCartesianOperators3D;
+    Z::Real,
+    nucleus = (0.0, 0.0, 0.0),
+    include_esoi::Bool = false,
+    local_orbital_index::Union{Nothing,Integer} = nothing,
+    overlap_tol::Real = 1.0e-8,
+)
+    spec = HydrogenicCoreProjectorCorrectionSpec(;
+        Z = Z,
+        nucleus = nucleus,
+        include_esoi = include_esoi,
+        local_orbital_index = local_orbital_index,
+    )
+    return apply_ordinary_cartesian_corrections(operators, spec; overlap_tol = overlap_tol)
 end
