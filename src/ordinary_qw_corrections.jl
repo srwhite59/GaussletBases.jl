@@ -19,7 +19,7 @@ function HydrogenicCoreCorrectionSpec(;
 )
     one_body_mode in (:none, :projector, :local_exact) || throw(
         ArgumentError(
-            "unsupported one_body_mode :$(one_body_mode); supported internal staging modes are :none, :projector, and reserved :local_exact",
+            "unsupported one_body_mode :$(one_body_mode); supported internal staging modes are :none, :projector, and :local_exact",
         ),
     )
     two_body_mode in (:none, :esoi_local) || throw(
@@ -143,6 +143,118 @@ function _ordinary_cartesian_projector_corrected_hamiltonian(
     )
 end
 
+function _ordinary_cartesian_lowest_with_diagonal_shift(
+    h::AbstractMatrix{<:Real},
+    local_index::Integer,
+    shift::Real,
+)
+    shifted = Matrix{Float64}(h)
+    shifted[local_index, local_index] += Float64(shift)
+    eigenvalue, orbital = _ordinary_cartesian_lowest_orbital(shifted)
+    return eigenvalue, orbital, shifted
+end
+
+function _ordinary_cartesian_local_exact_corrected_hamiltonian(
+    h::AbstractMatrix{<:Real},
+    Z::Real,
+    local_index::Integer;
+    eig_tol::Real = 1.0e-11,
+    maxiter::Integer = 80,
+)
+    initial_eigenvalue, initial_orbital = _ordinary_cartesian_lowest_orbital(h)
+    target = -0.5 * Float64(Z)^2
+    initial_residual = initial_eigenvalue - target
+    if abs(initial_residual) <= Float64(eig_tol)
+        return (
+            h = Matrix{Float64}(h),
+            target = target,
+            initial_eigenvalue = initial_eigenvalue,
+            initial_orbital = initial_orbital,
+            shift = 0.0,
+            corrected_eigenvalue = initial_eigenvalue,
+            corrected_orbital = initial_orbital,
+            bracket_iterations = 0,
+            bisection_iterations = 0,
+        )
+    end
+
+    local_weight = max(abs2(initial_orbital[local_index]), eps(Float64))
+    trial_step = (target - initial_eigenvalue) / local_weight
+    trial_step == 0.0 && (trial_step = initial_residual > 0.0 ? -1.0 : 1.0)
+
+    lower_shift = 0.0
+    upper_shift = 0.0
+    lower_value = initial_residual
+    upper_value = initial_residual
+    bracket_iterations = 0
+    if initial_residual > 0.0
+        lower_shift = trial_step < 0.0 ? trial_step : -abs(trial_step)
+        while true
+            bracket_iterations += 1
+            lower_value =
+                _ordinary_cartesian_lowest_with_diagonal_shift(h, local_index, lower_shift)[1] -
+                target
+            lower_value <= 0.0 && break
+            bracket_iterations < maxiter || throw(
+                ErrorException("failed to bracket local_exact hydrogenic one-body correction below target"),
+            )
+            lower_shift *= 2.0
+        end
+    else
+        upper_shift = trial_step > 0.0 ? trial_step : abs(trial_step)
+        while true
+            bracket_iterations += 1
+            upper_value =
+                _ordinary_cartesian_lowest_with_diagonal_shift(h, local_index, upper_shift)[1] -
+                target
+            upper_value >= 0.0 && break
+            bracket_iterations < maxiter || throw(
+                ErrorException("failed to bracket local_exact hydrogenic one-body correction above target"),
+            )
+            upper_shift *= 2.0
+        end
+    end
+
+    corrected_shift = 0.0
+    corrected_eigenvalue = initial_eigenvalue
+    corrected_orbital = initial_orbital
+    corrected_h = Matrix{Float64}(h)
+    bisection_iterations = 0
+    for iteration in 1:maxiter
+        bisection_iterations = iteration
+        midpoint = 0.5 * (lower_shift + upper_shift)
+        eigenvalue, orbital, shifted =
+            _ordinary_cartesian_lowest_with_diagonal_shift(h, local_index, midpoint)
+        residual = eigenvalue - target
+        corrected_shift = midpoint
+        corrected_eigenvalue = eigenvalue
+        corrected_orbital = orbital
+        corrected_h = shifted
+        abs(residual) <= Float64(eig_tol) && break
+        if residual <= 0.0
+            lower_shift = midpoint
+            lower_value = residual
+        else
+            upper_shift = midpoint
+            upper_value = residual
+        end
+        abs(upper_shift - lower_shift) <= max(1.0, abs(midpoint)) * 1.0e-13 && break
+    end
+
+    return (
+        h = corrected_h,
+        target = target,
+        initial_eigenvalue = initial_eigenvalue,
+        initial_orbital = initial_orbital,
+        shift = corrected_shift,
+        corrected_eigenvalue = corrected_eigenvalue,
+        corrected_orbital = corrected_orbital,
+        bracket_iterations = bracket_iterations,
+        bisection_iterations = bisection_iterations,
+        bracket_residuals = (lower = lower_value, upper = upper_value),
+    )
+end
+
 function _ordinary_cartesian_esoi_corrected_interaction(
     v::AbstractMatrix{<:Real},
     orbital::AbstractVector{<:Real},
@@ -221,11 +333,15 @@ function _apply_ordinary_cartesian_corrections(
     initial_v = Matrix{Float64}(operators.interaction_matrix)
     initial_eigenvalue, initial_orbital = _ordinary_cartesian_lowest_orbital(initial_h)
     target_eigenvalue = -0.5 * spec.Z^2
+    local_index, local_orbital, local_distance =
+        _ordinary_cartesian_select_local_orbital(operators, spec)
 
     corrected_h = initial_h
     corrected_eigenvalue = initial_eigenvalue
     corrected_orbital = initial_orbital
     one_body_shift = 0.0
+    local_exact_bracket_iterations = 0
+    local_exact_bisection_iterations = 0
     if spec.one_body_mode == :projector
         one_body = _ordinary_cartesian_projector_corrected_hamiltonian(initial_h, spec.Z)
         corrected_h = one_body.h
@@ -236,11 +352,15 @@ function _apply_ordinary_cartesian_corrections(
         # Leave the one-body matrix untouched and use the uncorrected core
         # orbital for any requested two-body scalar calibration.
     elseif spec.one_body_mode == :local_exact
-        throw(ArgumentError("one_body_mode = :local_exact is reserved but not implemented in the first internal staging pass"))
+        one_body =
+            _ordinary_cartesian_local_exact_corrected_hamiltonian(initial_h, spec.Z, local_index)
+        corrected_h = one_body.h
+        corrected_eigenvalue = one_body.corrected_eigenvalue
+        corrected_orbital = one_body.corrected_orbital
+        one_body_shift = one_body.shift
+        local_exact_bracket_iterations = one_body.bracket_iterations
+        local_exact_bisection_iterations = one_body.bisection_iterations
     end
-
-    local_index, local_orbital, local_distance =
-        _ordinary_cartesian_select_local_orbital(operators, spec)
 
     corrected_v = initial_v
     two_body_target = 5.0 * spec.Z / 8.0
@@ -292,6 +412,8 @@ function _apply_ordinary_cartesian_corrections(
         initial_lowest_core_eigenvalue = initial_eigenvalue,
         corrected_lowest_core_eigenvalue = corrected_eigenvalue,
         one_body_shift = one_body_shift,
+        local_exact_bracket_iterations = local_exact_bracket_iterations,
+        local_exact_bisection_iterations = local_exact_bisection_iterations,
         exact_1s_coulomb = two_body_target,
         initial_1s_coulomb = initial_j,
         corrected_1s_coulomb = corrected_j,

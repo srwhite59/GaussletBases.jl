@@ -14,30 +14,33 @@
         interaction_treatment = :ggt_nearest,
         residual_keep_policy = :near_null_only,
     )
-    spec = GaussletBases.HydrogenicCoreCorrectionSpec(;
-        Z = Z,
-        one_body_mode = :projector,
-        two_body_mode = :esoi_local,
-    )
-    result = GaussletBases._apply_ordinary_cartesian_corrections(operators, spec)
-    corrected = result.operators
-    diagnostics = result.diagnostics
-    check = GaussletBases.ordinary_cartesian_1s2_check(corrected)
     target_one_body = -0.5 * Z^2
     target_closed_shell = -Z^2 + 5.0 * Z / 8.0
 
-    @test result isa GaussletBases.OrdinaryCartesianCorrectionResult
-    @test diagnostics.one_body_mode == :projector
-    @test diagnostics.two_body_mode == :esoi_local
-    @test diagnostics.initial_lowest_core_eigenvalue > target_one_body
-    @test diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test diagnostics.corrected_1s_coulomb ≈ 5.0 * Z / 8.0 atol = 1.0e-10 rtol = 0.0
-    @test diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
-    @test check.orbital_energy ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test 2.0 * check.orbital_energy + check.vee_expectation ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
-    @test corrected.kinetic_one_body === nothing
-    @test corrected.nuclear_one_body_by_center === nothing
-    @test corrected.nuclear_term_storage == :total_only
+    for one_body_mode in (:projector, :local_exact)
+        spec = GaussletBases.HydrogenicCoreCorrectionSpec(;
+            Z = Z,
+            one_body_mode = one_body_mode,
+            two_body_mode = :esoi_local,
+        )
+        result = GaussletBases._apply_ordinary_cartesian_corrections(operators, spec)
+        corrected = result.operators
+        diagnostics = result.diagnostics
+        check = GaussletBases.ordinary_cartesian_1s2_check(corrected)
+
+        @test result isa GaussletBases.OrdinaryCartesianCorrectionResult
+        @test diagnostics.one_body_mode == one_body_mode
+        @test diagnostics.two_body_mode == :esoi_local
+        @test diagnostics.initial_lowest_core_eigenvalue > target_one_body
+        @test diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+        @test diagnostics.corrected_1s_coulomb ≈ 5.0 * Z / 8.0 atol = 1.0e-10 rtol = 0.0
+        @test diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
+        @test check.orbital_energy ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+        @test 2.0 * check.orbital_energy + check.vee_expectation ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
+        @test corrected.kinetic_one_body === nothing
+        @test corrected.nuclear_one_body_by_center === nothing
+        @test corrected.nuclear_term_storage == :total_only
+    end
 end
 
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
