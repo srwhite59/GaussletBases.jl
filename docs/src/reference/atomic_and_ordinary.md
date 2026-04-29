@@ -91,15 +91,18 @@ the total matrices authoritative and drop invalid decomposition sidecars:
 `:local_exact` are not part of the public correction surface.
 
 For branch or counterpoise calculations, use
-`ordinary_cartesian_corrected_branch`. It assembles the branch one-body matrix
-with caller-provided `nuclear_charges` and returns corrected matrices rather
-than a new operator payload. The first staged branch surface supports one
-`HydrogenicCoreBranchCorrectionSpec`. Its default
+`ordinary_cartesian_corrected_branch`. It assembles one branch one-body matrix
+with caller-provided `nuclear_charges`, applies one or more
+`HydrogenicCoreBranchCorrectionSpec`s sequentially, and returns corrected
+matrices rather than a new operator payload. The branch surface default
 `orbital_selector = :localized_lowest` chooses a center-local subspace by
 nearest carried nucleus and degenerates to the full space for one-center
 payloads without carried nuclei. `orbital_selector = :global_lowest` remains an
-explicit debug/reference selector. Multi-center corrections are intentionally
-deferred.
+explicit debug/reference selector for single-correction calls. Multi-correction
+calls require localized selectors and reject duplicate localized center indices.
+Branch diagnostics report `branch_nuclear_charges`, `correction_count`,
+`overlap_error`, optional `corrected_center_indices`, and a tuple of
+per-correction diagnostics in `corrections`.
 
 ```@docs
 HydrogenicCoreProjectorCorrectionSpec

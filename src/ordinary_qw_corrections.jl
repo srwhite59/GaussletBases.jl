@@ -55,15 +55,16 @@ counterpoise and branch Hamiltonian work: the one-body branch matrix is first
 assembled with caller-provided nuclear charges, then the projector reference
 correction is applied to the selected core orbital.
 
-This public branch surface currently supports one correction. The default
+This public branch surface supports one correction or a collection of
+corrections for one assembled branch matrix. The default
 `orbital_selector = :localized_lowest` partitions final-basis orbitals by their
 nearest carried nucleus, diagonalizes the selected center-local subspace, embeds
 that local core orbital back into the full final basis, and applies the
 projector correction to that embedded vector. Use
 `orbital_selector = :global_lowest` as an explicit debug/reference selector
-matching the original projector behavior. Multi-correction branch application
-is reserved for the next pass. Set `include_esoi=true` to apply the optional
-local ESOI two-body scalar calibration to the same selected core orbital.
+matching the original projector behavior; multi-correction calls require
+localized selectors. Set `include_esoi=true` to apply the optional local ESOI
+two-body scalar calibration to the same selected core orbital.
 """
 struct HydrogenicCoreBranchCorrectionSpec
     Z::Float64
@@ -157,9 +158,11 @@ end
 Matrix-level result returned by [`ordinary_cartesian_corrected_branch`](@ref).
 `one_body_hamiltonian` is the corrected branch one-body matrix assembled from
 the requested nuclear charges, `interaction_matrix` is the corresponding
-interaction matrix after any optional ESOI correction, and `diagnostics` records
-the selected orbital and scalar calibration checks. This result deliberately
-does not claim to be a new [`OrdinaryCartesianOperators3D`](@ref) payload.
+interaction matrix after any optional ESOI corrections, and `diagnostics` is a
+branch-level `NamedTuple` containing branch nuclear charges, correction count,
+overlap error, corrected center indices, and a tuple of per-correction
+diagnostic `NamedTuple`s. This result deliberately does not claim to be a new
+[`OrdinaryCartesianOperators3D`](@ref) payload.
 """
 struct OrdinaryCartesianBranchCorrectionResult
     one_body_hamiltonian::Matrix{Float64}
@@ -625,26 +628,36 @@ function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreBranchCorrectionS
     )
 end
 
-function _ordinary_cartesian_single_branch_correction(
+function _ordinary_cartesian_branch_corrections(
     corrections::HydrogenicCoreBranchCorrectionSpec,
 )
-    return corrections
+    return (corrections,)
 end
 
-function _ordinary_cartesian_single_branch_correction(corrections)
+function _ordinary_cartesian_branch_corrections(corrections)
     correction_vector = collect(corrections)
-    length(correction_vector) == 1 || throw(
+    !isempty(correction_vector) || throw(
         ArgumentError(
-            "ordinary_cartesian_corrected_branch currently supports exactly one branch correction spec",
+            "ordinary_cartesian_corrected_branch requires at least one branch correction spec",
         ),
     )
-    correction = only(correction_vector)
-    correction isa HydrogenicCoreBranchCorrectionSpec || throw(
-        ArgumentError(
-            "ordinary_cartesian_corrected_branch requires HydrogenicCoreBranchCorrectionSpec corrections",
-        ),
-    )
-    return correction
+    for correction in correction_vector
+        correction isa HydrogenicCoreBranchCorrectionSpec || throw(
+            ArgumentError(
+                "ordinary_cartesian_corrected_branch requires HydrogenicCoreBranchCorrectionSpec corrections",
+            ),
+        )
+    end
+    if length(correction_vector) > 1
+        for correction in correction_vector
+            correction.orbital_selector == :localized_lowest || throw(
+                ArgumentError(
+                    "multi-correction ordinary_cartesian_corrected_branch calls require orbital_selector = :localized_lowest for every correction",
+                ),
+            )
+        end
+    end
+    return Tuple(correction_vector)
 end
 
 function _ordinary_cartesian_branch_partition_centers(
@@ -772,8 +785,6 @@ function _ordinary_cartesian_branch_corrected_matrices(
     initial_v::AbstractMatrix{<:Real},
     correction::HydrogenicCoreBranchCorrectionSpec,
     internal_spec::HydrogenicCoreCorrectionSpec;
-    overlap_error::Real,
-    branch_nuclear_charges,
 )
     initial_h = Matrix{Float64}(initial_h)
     initial_v = Matrix{Float64}(initial_v)
@@ -835,7 +846,6 @@ function _ordinary_cartesian_branch_corrected_matrices(
         local_orbital_center = (local_orbital.x, local_orbital.y, local_orbital.z),
         local_orbital_distance = local_distance,
         local_density_weight = local_density_weight,
-        overlap_error = overlap_error,
         exact_lowest_core_eigenvalue = one_body.target,
         initial_lowest_core_eigenvalue = initial_global_eigenvalue,
         corrected_lowest_core_eigenvalue = one_body.corrected_eigenvalue,
@@ -861,13 +871,26 @@ function _ordinary_cartesian_branch_corrected_matrices(
         selected_core_initial_expectation = selection.selected_core_initial_expectation,
         selected_core_corrected_expectation = one_body.corrected_expectation,
         selected_local_eigenvalue = selection.selected_local_eigenvalue,
-        branch_nuclear_charges = branch_nuclear_charges,
     )
     return (
         one_body_hamiltonian = corrected_h,
         interaction_matrix = corrected_v,
         diagnostics = diagnostics,
     )
+end
+
+function _ordinary_cartesian_check_duplicate_branch_center!(
+    corrected_center_indices::Vector,
+    selected_center_index,
+)
+    selected_center_index === nothing && return nothing
+    selected_center_index in corrected_center_indices && throw(
+        ArgumentError(
+            "ordinary_cartesian_corrected_branch received duplicate localized corrections for center index $(selected_center_index)",
+        ),
+    )
+    push!(corrected_center_indices, selected_center_index)
+    return nothing
 end
 
 """
@@ -921,15 +944,14 @@ end
 Apply a narrow branch-level hydrogenic correction to an
 [`OrdinaryCartesianOperators3D`](@ref) payload and return corrected matrices.
 The one-body branch matrix is assembled with `assembled_one_body_hamiltonian`
-using `nuclear_charges`, then one
-[`HydrogenicCoreBranchCorrectionSpec`](@ref) is applied.
+using `nuclear_charges`, then one or more
+[`HydrogenicCoreBranchCorrectionSpec`](@ref)s are applied sequentially.
 
 This is the intended public entry point for branch/counterpoise correction
-work. The current staging pass supports exactly one correction. The default
-`orbital_selector = :localized_lowest` uses the selected center-local subspace;
-`orbital_selector = :global_lowest` remains available as an explicit
-debug/reference selector. Multi-center correction composition is intentionally
-deferred. The result is a matrix-level
+work. The default `orbital_selector = :localized_lowest` uses the selected
+center-local subspace. `orbital_selector = :global_lowest` remains available
+only for single-correction debug/reference calls. Multi-correction calls reject
+duplicate localized center indices. The result is a matrix-level
 [`OrdinaryCartesianBranchCorrectionResult`](@ref), not a transformed
 `OrdinaryCartesianOperators3D`.
 """
@@ -946,22 +968,45 @@ function ordinary_cartesian_corrected_branch(
         ),
     )
 
-    correction = _ordinary_cartesian_single_branch_correction(corrections)
-    internal_spec = _ordinary_cartesian_internal_spec(correction)
+    correction_specs = _ordinary_cartesian_branch_corrections(corrections)
     branch_charges = nuclear_charges === nothing ? nothing : Float64.(collect(nuclear_charges))
-    branch_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
-    matrices = _ordinary_cartesian_branch_corrected_matrices(
-        operators,
-        branch_h,
-        operators.interaction_matrix,
-        correction,
-        internal_spec;
-        overlap_error = overlap_error,
+    corrected_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
+    corrected_v = Matrix{Float64}(operators.interaction_matrix)
+    per_correction_diagnostics = NamedTuple[]
+    corrected_center_indices = Any[]
+    for correction in correction_specs
+        internal_spec = _ordinary_cartesian_internal_spec(correction)
+        matrices = _ordinary_cartesian_branch_corrected_matrices(
+            operators,
+            corrected_h,
+            corrected_v,
+            correction,
+            internal_spec,
+        )
+        diagnostic = matrices.diagnostics
+        if length(correction_specs) > 1
+            _ordinary_cartesian_check_duplicate_branch_center!(
+                corrected_center_indices,
+                diagnostic.selected_center_index,
+            )
+        elseif diagnostic.selected_center_index !== nothing
+            push!(corrected_center_indices, diagnostic.selected_center_index)
+        end
+        corrected_h = matrices.one_body_hamiltonian
+        corrected_v = matrices.interaction_matrix
+        push!(per_correction_diagnostics, diagnostic)
+    end
+
+    diagnostics = (
         branch_nuclear_charges = branch_charges === nothing ? nothing : Tuple(branch_charges),
+        correction_count = length(correction_specs),
+        corrections = Tuple(per_correction_diagnostics),
+        overlap_error = overlap_error,
+        corrected_center_indices = Tuple(corrected_center_indices),
     )
     return OrdinaryCartesianBranchCorrectionResult(
-        matrices.one_body_hamiltonian,
-        matrices.interaction_matrix,
-        matrices.diagnostics,
+        corrected_h,
+        corrected_v,
+        diagnostics,
     )
 end

@@ -135,12 +135,15 @@ end
     )
 
     @test branch_result isa OrdinaryCartesianBranchCorrectionResult
-    @test branch_result.diagnostics.orbital_selector == :localized_lowest
-    @test branch_result.diagnostics.selected_local_subspace_dimension == length(operators.orbital_data)
+    @test branch_result.diagnostics.correction_count == 1
     @test branch_result.diagnostics.branch_nuclear_charges === nothing
-    @test branch_result.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test branch_result.diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test branch_result.diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
+    @test branch_result.diagnostics.corrected_center_indices == (1,)
+    branch_diagnostic = only(branch_result.diagnostics.corrections)
+    @test branch_diagnostic.orbital_selector == :localized_lowest
+    @test branch_diagnostic.selected_local_subspace_dimension == length(operators.orbital_data)
+    @test branch_diagnostic.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test branch_diagnostic.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test branch_diagnostic.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
     @test branch_result.one_body_hamiltonian ≈ wrapper_result.operators.one_body_hamiltonian atol = 1.0e-12 rtol = 0.0
     @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-10 rtol = 0.0
 end
@@ -173,29 +176,71 @@ end
         nuclear_charges = [0.0, 1.0],
         corrections = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[2]),
     )
+    spec_a = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[1])
+    spec_b = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[2])
+    full_branch = ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+        corrections = [spec_a, spec_b],
+    )
 
     @test branch_a isa OrdinaryCartesianBranchCorrectionResult
     @test branch_b isa OrdinaryCartesianBranchCorrectionResult
     @test !hasproperty(branch_a, :operators)
     @test !hasproperty(branch_b, :operators)
-    @test branch_a.diagnostics.orbital_selector == :localized_lowest
-    @test branch_b.diagnostics.orbital_selector == :localized_lowest
-    @test branch_a.diagnostics.selected_center_index == 1
-    @test branch_b.diagnostics.selected_center_index == 2
-    @test branch_a.diagnostics.selected_center == basis.nuclei[1]
-    @test branch_b.diagnostics.selected_center == basis.nuclei[2]
     @test branch_a.diagnostics.branch_nuclear_charges == (1.0, 0.0)
     @test branch_b.diagnostics.branch_nuclear_charges == (0.0, 1.0)
-    @test branch_a.diagnostics.selected_local_subspace_dimension > 0
-    @test branch_b.diagnostics.selected_local_subspace_dimension > 0
-    @test branch_a.diagnostics.selected_local_subspace_indices !=
-          branch_b.diagnostics.selected_local_subspace_indices
+    @test branch_a.diagnostics.correction_count == 1
+    @test branch_b.diagnostics.correction_count == 1
+    diagnostic_a = only(branch_a.diagnostics.corrections)
+    diagnostic_b = only(branch_b.diagnostics.corrections)
+    @test diagnostic_a.orbital_selector == :localized_lowest
+    @test diagnostic_b.orbital_selector == :localized_lowest
+    @test diagnostic_a.selected_center_index == 1
+    @test diagnostic_b.selected_center_index == 2
+    @test diagnostic_a.selected_center == basis.nuclei[1]
+    @test diagnostic_b.selected_center == basis.nuclei[2]
+    @test diagnostic_a.selected_local_subspace_dimension > 0
+    @test diagnostic_b.selected_local_subspace_dimension > 0
+    @test diagnostic_a.selected_local_subspace_indices !=
+          diagnostic_b.selected_local_subspace_indices
     @test isempty(intersect(
-        branch_a.diagnostics.selected_local_subspace_indices,
-        branch_b.diagnostics.selected_local_subspace_indices,
+        diagnostic_a.selected_local_subspace_indices,
+        diagnostic_b.selected_local_subspace_indices,
     ))
-    @test branch_a.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test branch_b.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test diagnostic_a.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test diagnostic_b.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+
+    @test full_branch isa OrdinaryCartesianBranchCorrectionResult
+    @test !hasproperty(full_branch, :operators)
+    @test full_branch.diagnostics.branch_nuclear_charges == (1.0, 1.0)
+    @test full_branch.diagnostics.correction_count == 2
+    @test full_branch.diagnostics.corrected_center_indices == (1, 2)
+    full_diagnostics = full_branch.diagnostics.corrections
+    @test (full_diagnostics[1].selected_center_index, full_diagnostics[2].selected_center_index) == (1, 2)
+    @test isempty(intersect(
+        full_diagnostics[1].selected_local_subspace_indices,
+        full_diagnostics[2].selected_local_subspace_indices,
+    ))
+    @test full_diagnostics[1].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test full_diagnostics[2].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test_throws ArgumentError ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+        corrections = [
+            HydrogenicCoreBranchCorrectionSpec(;
+                Z = 1.0,
+                nucleus = basis.nuclei[1],
+                orbital_selector = :global_lowest,
+            ),
+            spec_b,
+        ],
+    )
+    @test_throws ArgumentError ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+        corrections = [spec_a, HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[1])],
+    )
     @test operators.kinetic_one_body === kinetic_sidecar
     @test operators.nuclear_one_body_by_center === nuclear_sidecars
     @test operators.nuclear_term_storage == :by_center
