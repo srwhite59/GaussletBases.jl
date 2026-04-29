@@ -115,7 +115,6 @@ function _build_one_center_atomic_shell_sequence(
         retain_y_edge = retention.retain_y_edge,
         retain_z_edge = retention.retain_z_edge,
         packet_kernel = packet_kernel,
-        term_storage = :compact_production,
         term_coefficients = term_coefficients,
     )
 end

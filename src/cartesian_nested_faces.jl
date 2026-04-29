@@ -220,8 +220,7 @@ fixed-block ingredients:
 - Cartesian position operators
 - Cartesian second-moment operators
 - contracted integral weights for the nested IDA transfer
-- Gaussian-factor term packet
-- pair-factor term packet
+- retained Gaussian-factor and pair-factor sums
 """
 struct _CartesianNestedShellPacket3D
     overlap::Matrix{Float64}
@@ -235,9 +234,6 @@ struct _CartesianNestedShellPacket3D
     weights::Vector{Float64}
     gaussian_sum::Union{Nothing,Matrix{Float64}}
     pair_sum::Union{Nothing,Matrix{Float64}}
-    gaussian_terms::Union{Nothing,Array{Float64,3}}
-    pair_terms::Union{Nothing,Array{Float64,3}}
-    term_storage::Symbol
 end
 
 """
@@ -452,6 +448,7 @@ The object keeps:
 - the propagated fixed-fixed packet on the nested shell basis
 - the contracted fixed-block integral weights used by the IDA interaction
   representation
+- retained Gaussian-factor and pair-factor sums
 - simple shell-center metadata for nearest/GGT diagnostics
 """
 struct _NestedFixedBlock3D{B,S}
@@ -470,9 +467,6 @@ struct _NestedFixedBlock3D{B,S}
     weights::Vector{Float64}
     gaussian_sum::Union{Nothing,Matrix{Float64}}
     pair_sum::Union{Nothing,Matrix{Float64}}
-    gaussian_terms::Union{Nothing,Array{Float64,3}}
-    pair_terms::Union{Nothing,Array{Float64,3}}
-    term_storage::Symbol
     fixed_centers::Matrix{Float64}
     factorized_cartesian_parent_basis::Base.RefValue{Any}
 end
@@ -1756,13 +1750,6 @@ function _nested_normalize_packet_kernel(packet_kernel::Symbol)
     return packet_kernel
 end
 
-function _nested_normalize_term_storage(term_storage::Symbol)
-    term_storage == :compact_production || throw(
-        ArgumentError("nested term storage must be :compact_production"),
-    )
-    return term_storage
-end
-
 function _nested_zero_small!(values::AbstractVector{Float64}; atol::Float64)
     @inbounds for index in eachindex(values)
         abs(values[index]) <= atol && (values[index] = 0.0)
@@ -2339,10 +2326,8 @@ function _nested_factorized_gaussian_terms(
     gaussian_terms_y::Array{Float64,3},
     gaussian_terms_z::Array{Float64,3},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    _nested_normalize_term_storage(term_storage)
     axis_term_tables_x, axis_term_tables_y, axis_term_tables_z, nbasis = @timeg "diatomic.packet.gaussian_terms.setup" begin
         axis_term_tables_x = _nested_factorized_axis_term_tables(
             gaussian_terms_x,
@@ -2365,9 +2350,9 @@ function _nested_factorized_gaussian_terms(
         )
     end
     isnothing(term_coefficients) && throw(
-        ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+        ArgumentError("nested Gaussian-factor sums require explicit term coefficients"),
     )
-    gaussian_sum = @timeg "diatomic.packet.gaussian_terms.contract" begin
+    return @timeg "diatomic.packet.gaussian_terms.contract" begin
         gaussian_sum_local = zeros(Float64, nbasis, nbasis)
         _nested_fill_factorized_weighted_term_sum!(
             gaussian_sum_local,
@@ -2380,10 +2365,6 @@ function _nested_factorized_gaussian_terms(
         )
         gaussian_sum_local
     end
-    return (
-        gaussian_terms = nothing,
-        gaussian_sum = gaussian_sum,
-    )
 end
 
 function _nested_factorized_weight_aware_pair_terms(
@@ -2395,10 +2376,8 @@ function _nested_factorized_weight_aware_pair_terms(
     pair_terms_y::Array{Float64,3},
     pair_terms_z::Array{Float64,3},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    _nested_normalize_term_storage(term_storage)
     axis_weight_x, axis_weight_y, axis_weight_z, basis_weights = @timeg "diatomic.packet.pair_terms.weights" begin
         axis_weight_x = _nested_factorized_axis_weight_projections(factorized_basis.x_functions, weights_x)
         axis_weight_y = _nested_factorized_axis_weight_projections(factorized_basis.y_functions, weights_y)
@@ -2446,7 +2425,7 @@ function _nested_factorized_weight_aware_pair_terms(
     end
     nbasis = length(factorized_basis.basis_triplets)
     isnothing(term_coefficients) && throw(
-        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        ArgumentError("nested pair-factor sums require explicit term coefficients"),
     )
     pair_sum = @timeg "diatomic.packet.pair_terms.contract" begin
         pair_sum_local = zeros(Float64, nbasis, nbasis)
@@ -2463,7 +2442,6 @@ function _nested_factorized_weight_aware_pair_terms(
     end
     return (
         weights = basis_weights,
-        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3145,10 +3123,8 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    _nested_normalize_term_storage(term_storage)
     nterms = size(pgdg.pair_factor_terms, 1)
     nfixed = size(support_coefficients, 2)
     fixed_weights = @timeg "diatomic.packet.pair_terms.weights" begin
@@ -3166,7 +3142,7 @@ function _nested_weight_aware_pair_terms(
         support_coefficients .* reshape(1.0 ./ fixed_weights, 1, :)
     end
     isnothing(term_coefficients) && throw(
-        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        ArgumentError("nested pair-factor sums require explicit term coefficients"),
     )
     pair_sum = _nested_support_reference_pair_sum(
         support_axes,
@@ -3181,7 +3157,6 @@ function _nested_weight_aware_pair_terms(
 
     return (
         weights = fixed_weights,
-        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3194,10 +3169,8 @@ function _nested_weight_aware_pair_terms(
     support_workspace::AbstractMatrix{<:Real},
     contraction_scratch::AbstractMatrix{<:Real},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
-    _nested_normalize_term_storage(term_storage)
     pgdg_x = _nested_axis_pgdg(bundles, :x)
     pgdg_y = _nested_axis_pgdg(bundles, :y)
     pgdg_z = _nested_axis_pgdg(bundles, :z)
@@ -3230,7 +3203,7 @@ function _nested_weight_aware_pair_terms(
     raw_pair_terms_y = pgdg_y.pair_factor_terms_raw
     raw_pair_terms_z = pgdg_z.pair_factor_terms_raw
     isnothing(term_coefficients) && throw(
-        ArgumentError("compact nested pair-term storage requires explicit term coefficients"),
+        ArgumentError("nested pair-factor sums require explicit term coefficients"),
     )
     pair_sum = _nested_support_reference_pair_sum(
         support_axes,
@@ -3245,7 +3218,6 @@ function _nested_weight_aware_pair_terms(
 
     return (
         weights = fixed_weights,
-        pair_terms = nothing,
         pair_sum = pair_sum,
     )
 end
@@ -3255,7 +3227,6 @@ function _nested_weight_aware_pair_terms(
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -3270,7 +3241,6 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
 end
@@ -3280,7 +3250,6 @@ function _nested_weight_aware_pair_terms(
     support_states::AbstractVector{<:NTuple{3,Int}},
     support_coefficients::AbstractMatrix{<:Real},
     ;
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     nsupport = length(support_states)
@@ -3295,7 +3264,6 @@ function _nested_weight_aware_pair_terms(
         support_coefficients,
         support_workspace,
         contraction_scratch,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
 end
@@ -3324,14 +3292,12 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     ;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     verify_factorized_reconstruction::Bool = true,
 )
     return @timeg "diatomic.packet.total" begin
-        packet_kernel, term_storage_value, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
+        packet_kernel, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
             packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
-            term_storage_value = _nested_normalize_term_storage(term_storage)
             support_states = [_cartesian_unflat_index(index, size(pgdg.overlap, 1)) for index in support_indices]
             nshell = size(coefficient_matrix, 2)
             nsupport = length(support_states)
@@ -3369,7 +3335,6 @@ function _nested_shell_packet(
                 (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
             (
                 packet_kernel,
-                term_storage_value,
                 support_states,
                 nshell,
                 nsupport,
@@ -3605,7 +3570,6 @@ function _nested_shell_packet(
                 pgdg.pair_factor_terms_raw,
                 pgdg.pair_factor_terms_raw,
                 pgdg.pair_factor_terms_raw,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
             _nested_weight_aware_pair_terms(
@@ -3615,25 +3579,23 @@ function _nested_shell_packet(
                 support_coefficients,
                 support_workspace,
                 contraction_scratch,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
         end
-        gaussian_terms = @timeg "diatomic.packet.gaussian_terms" begin
+        gaussian_sum = @timeg "diatomic.packet.gaussian_terms" begin
             packet_kernel == :factorized_direct ?
             _nested_factorized_gaussian_terms(
                 factorized_basis,
                 pgdg.gaussian_factor_terms,
                 pgdg.gaussian_factor_terms,
                 pgdg.gaussian_factor_terms,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
             begin
                 isnothing(term_coefficients) && throw(
-                    ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                    ArgumentError("nested Gaussian-factor sums require explicit term coefficients"),
                 )
-                gaussian_sum = _nested_support_reference_gaussian_sum(
+                _nested_support_reference_gaussian_sum(
                     support_axes,
                     support_coefficients,
                     support_workspace,
@@ -3642,10 +3604,6 @@ function _nested_shell_packet(
                     pgdg.gaussian_factor_terms,
                     pgdg.gaussian_factor_terms,
                     pgdg.gaussian_factor_terms,
-                )
-                (
-                    gaussian_terms = nothing,
-                    gaussian_sum = gaussian_sum,
                 )
             end
         end
@@ -3661,11 +3619,8 @@ function _nested_shell_packet(
                 x2_y,
                 x2_z,
                 pair_data.weights,
-                gaussian_terms.gaussian_sum,
+                gaussian_sum,
                 pair_data.pair_sum,
-                gaussian_terms.gaussian_terms,
-                pair_data.pair_terms,
-                term_storage_value,
             ),
             support_states = support_states,
         )
@@ -3678,14 +3633,12 @@ function _nested_shell_packet(
     support_indices::AbstractVector{Int},
     ;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     verify_factorized_reconstruction::Bool = true,
 )
     return @timeg "diatomic.packet.total" begin
-        packet_kernel, term_storage_value, pgdg_x, pgdg_y, pgdg_z, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables_x, factorized_base_tables_y, factorized_base_tables_z, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
+        packet_kernel, pgdg_x, pgdg_y, pgdg_z, support_states, nshell, nsupport, nterms, support_axes, support_coefficients, factorized_basis, factorized_base_tables_x, factorized_base_tables_y, factorized_base_tables_z, support_workspace, contraction_scratch = @timeg "diatomic.packet.setup" begin
             packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
-            term_storage_value = _nested_normalize_term_storage(term_storage)
             dims = _nested_axis_lengths(bundles)
             pgdg_x = _nested_axis_pgdg(bundles, :x)
             pgdg_y = _nested_axis_pgdg(bundles, :y)
@@ -3759,7 +3712,6 @@ function _nested_shell_packet(
                 (Matrix{Float64}(undef, 0, 0), Matrix{Float64}(undef, 0, 0))
             (
                 packet_kernel,
-                term_storage_value,
                 pgdg_x,
                 pgdg_y,
                 pgdg_z,
@@ -4000,7 +3952,6 @@ function _nested_shell_packet(
                 pgdg_x.pair_factor_terms_raw,
                 pgdg_y.pair_factor_terms_raw,
                 pgdg_z.pair_factor_terms_raw,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
             _nested_weight_aware_pair_terms(
@@ -4010,25 +3961,23 @@ function _nested_shell_packet(
                 support_coefficients,
                 support_workspace,
                 contraction_scratch,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             )
         end
-        gaussian_terms = @timeg "diatomic.packet.gaussian_terms" begin
+        gaussian_sum = @timeg "diatomic.packet.gaussian_terms" begin
             packet_kernel == :factorized_direct ?
             _nested_factorized_gaussian_terms(
                 factorized_basis,
                 pgdg_x.gaussian_factor_terms,
                 pgdg_y.gaussian_factor_terms,
                 pgdg_z.gaussian_factor_terms,
-                term_storage = term_storage_value,
                 term_coefficients = term_coefficients,
             ) :
             begin
                 isnothing(term_coefficients) && throw(
-                    ArgumentError("compact nested Gaussian-term storage requires explicit term coefficients"),
+                    ArgumentError("nested Gaussian-factor sums require explicit term coefficients"),
                 )
-                gaussian_sum = _nested_support_reference_gaussian_sum(
+                _nested_support_reference_gaussian_sum(
                     support_axes,
                     support_coefficients,
                     support_workspace,
@@ -4037,10 +3986,6 @@ function _nested_shell_packet(
                     pgdg_x.gaussian_factor_terms,
                     pgdg_y.gaussian_factor_terms,
                     pgdg_z.gaussian_factor_terms,
-                )
-                (
-                    gaussian_terms = nothing,
-                    gaussian_sum = gaussian_sum,
                 )
             end
         end
@@ -4056,11 +4001,8 @@ function _nested_shell_packet(
                 x2_y,
                 x2_z,
                 pair_data.weights,
-                gaussian_terms.gaussian_sum,
+                gaussian_sum,
                 pair_data.pair_sum,
-                gaussian_terms.gaussian_terms,
-                pair_data.pair_terms,
-                term_storage_value,
             ),
             support_states = support_states,
         )
@@ -4186,7 +4128,6 @@ function _nested_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
@@ -4222,7 +4163,6 @@ function _nested_rectangular_shell(
         coefficient_matrix,
         support_indices;
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
     return _CartesianNestedShell3D(
@@ -4263,7 +4203,6 @@ function _nested_complete_rectangular_shell(
     y_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     z_fixed::Tuple{Int,Int} = (1, size(pgdg.overlap, 1)),
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
@@ -4280,7 +4219,6 @@ function _nested_complete_rectangular_shell(
             y_fixed = y_fixed,
             z_fixed = z_fixed,
             packet_kernel = packet_kernel,
-            term_storage = term_storage,
             term_coefficients = term_coefficients,
         )
 
@@ -4351,7 +4289,6 @@ function _nested_complete_rectangular_shell(
         coefficient_matrix,
         support_indices,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
     provenance = _nested_complete_shell_provenance(
@@ -4415,9 +4352,6 @@ function _nested_fixed_block(
         packet.weights,
         packet.gaussian_sum,
         packet.pair_sum,
-        packet.gaussian_terms,
-        packet.pair_terms,
-        packet.term_storage,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
@@ -4431,7 +4365,6 @@ function _nested_shell_plus_core(
     z_interval::UnitRange{Int},
     ;
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     n1d = size(pgdg.overlap, 1)
@@ -4447,7 +4380,6 @@ function _nested_shell_plus_core(
         coefficient_matrix,
         support_indices;
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
     ncore = length(core_indices)
@@ -4487,7 +4419,6 @@ function _nested_shell_sequence(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -4501,7 +4432,6 @@ function _nested_shell_sequence(
         shell_layers;
         enforce_coverage = enforce_coverage,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
         build_packet = build_packet,
     )
@@ -4514,7 +4444,6 @@ function _nested_shell_sequence_from_core_block(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
 )
@@ -4539,7 +4468,6 @@ function _nested_shell_sequence_from_core_block(
                 coefficient_matrix,
                 support_indices,
                 packet_kernel = packet_kernel,
-                term_storage = term_storage,
                 term_coefficients = term_coefficients,
             )
         end
@@ -4583,7 +4511,6 @@ function _nested_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     enforce_symmetric_odd::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     verify_factorized_reconstruction::Bool = true,
 )
@@ -4650,7 +4577,6 @@ function _nested_rectangular_shell(
         coefficient_matrix,
         support_indices,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
         verify_factorized_reconstruction = verify_factorized_reconstruction,
     )
@@ -4680,7 +4606,6 @@ function _nested_complete_rectangular_shell(
     z_fixed::Tuple{Int,Int} = (1, _nested_axis_lengths(bundles)[3]),
     enforce_symmetric_odd::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     verify_factorized_reconstruction::Bool = true,
 )
@@ -4699,7 +4624,6 @@ function _nested_complete_rectangular_shell(
             z_fixed = z_fixed,
             enforce_symmetric_odd = enforce_symmetric_odd,
             packet_kernel = packet_kernel,
-            term_storage = term_storage,
             term_coefficients = term_coefficients,
             verify_factorized_reconstruction = verify_factorized_reconstruction,
         )
@@ -4786,7 +4710,6 @@ function _nested_complete_rectangular_shell(
         coefficient_matrix,
         support_indices,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
         verify_factorized_reconstruction = verify_factorized_reconstruction,
     )
@@ -4823,7 +4746,6 @@ function _nested_shell_sequence(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
     verify_factorized_reconstruction::Bool = true,
@@ -4838,7 +4760,6 @@ function _nested_shell_sequence(
         shell_layers;
         enforce_coverage = enforce_coverage,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
         build_packet = build_packet,
         verify_factorized_reconstruction = verify_factorized_reconstruction,
@@ -4852,7 +4773,6 @@ function _nested_shell_sequence_from_core_block(
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
     enforce_coverage::Bool = true,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     build_packet::Bool = true,
     verify_factorized_reconstruction::Bool = true,
@@ -4878,7 +4798,6 @@ function _nested_shell_sequence_from_core_block(
                 coefficient_matrix,
                 support_indices,
                 packet_kernel = packet_kernel,
-                term_storage = term_storage,
                 term_coefficients = term_coefficients,
                 verify_factorized_reconstruction = verify_factorized_reconstruction,
             )
@@ -4936,7 +4855,6 @@ function _nested_complete_shell_sequence_for_box(
     retain_y_edge::Union{Nothing,Int} = nothing,
     retain_z_edge::Union{Nothing,Int} = nothing,
     packet_kernel::Symbol = :support_reference,
-    term_storage::Symbol = :compact_production,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
 )
     retention = _nested_resolve_complete_shell_retention(
@@ -4968,7 +4886,6 @@ function _nested_complete_shell_sequence_for_box(
                 y_fixed = (first(current_box[2]), last(current_box[2])),
                 z_fixed = (first(current_box[3]), last(current_box[3])),
                 packet_kernel = packet_kernel,
-                term_storage = term_storage,
                 term_coefficients = term_coefficients,
             ),
         )
@@ -4979,7 +4896,6 @@ function _nested_complete_shell_sequence_for_box(
         current_box...,
         shell_layers,
         packet_kernel = packet_kernel,
-        term_storage = term_storage,
         term_coefficients = term_coefficients,
     )
 end
@@ -5296,9 +5212,6 @@ function _nested_fixed_block(
         packet.weights,
         packet.gaussian_sum,
         packet.pair_sum,
-        packet.gaussian_terms,
-        packet.pair_terms,
-        packet.term_storage,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
@@ -5337,9 +5250,6 @@ function _nested_fixed_block(
         packet.weights,
         packet.gaussian_sum,
         packet.pair_sum,
-        packet.gaussian_terms,
-        packet.pair_terms,
-        packet.term_storage,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
@@ -5388,9 +5298,6 @@ function _nested_fixed_block(
         packet.weights,
         packet.gaussian_sum,
         packet.pair_sum,
-        packet.gaussian_terms,
-        packet.pair_terms,
-        packet.term_storage,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )
@@ -5425,9 +5332,6 @@ function _nested_fixed_block(
         packet.weights,
         packet.gaussian_sum,
         packet.pair_sum,
-        packet.gaussian_terms,
-        packet.pair_terms,
-        packet.term_storage,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
     )

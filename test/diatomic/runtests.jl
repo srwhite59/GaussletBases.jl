@@ -111,7 +111,7 @@ end
         fixed_block;
         nuclear_charges = [1.0, 1.0],
         nuclear_term_storage = :by_center,
-        expansion = expansion,
+        expansion,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
     )
@@ -123,7 +123,7 @@ end
         fixed_block;
         nuclear_charges = [1.0, 0.0],
         nuclear_term_storage = :by_center,
-        expansion = expansion,
+        expansion,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
     )
@@ -131,7 +131,7 @@ end
         fixed_block;
         nuclear_charges = [0.0, 1.0],
         nuclear_term_storage = :by_center,
-        expansion = expansion,
+        expansion,
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :pgdg_localized_experimental,
     )
@@ -274,7 +274,7 @@ end
         parent_box,
         working_box;
         bond_axis = :z,
-        midpoint = midpoint,
+        midpoint,
         nside = 5,
         min_parallel_to_transverse_ratio = 0.4,
     )
@@ -283,7 +283,7 @@ end
         parent_box,
         working_box;
         bond_axis = :z,
-        midpoint = midpoint,
+        midpoint,
         nside = 5,
         min_parallel_to_transverse_ratio = 0.75,
     )
@@ -292,7 +292,7 @@ end
         parent_box,
         (3:7, 3:7, 4:12);
         bond_axis = :z,
-        midpoint = midpoint,
+        midpoint,
         nside = 5,
         min_parallel_to_transverse_ratio = 0.4,
     )
@@ -320,7 +320,7 @@ end
         split_parent_box,
         split_diagnostics.geometry.working_box;
         bond_axis = :z,
-        midpoint = midpoint,
+        midpoint,
         nside = 5,
         min_parallel_to_transverse_ratio = 0.4,
     )
@@ -384,7 +384,7 @@ function _bond_aligned_diatomic_shared_shell_ns_local_counts(
             current_box,
             inner_box,
             retention;
-            nside = nside,
+            nside,
             shared_shell_angular_resolution_scale = angular_resolution_scale,
         )
         push!(
@@ -541,7 +541,7 @@ end
         parent_box,
         working_box;
         bond_axis = :z,
-        midpoint = midpoint,
+        midpoint,
         nside = 5,
         min_parallel_to_transverse_ratio = 0.4,
         use_midpoint_slab = false,
@@ -594,10 +594,12 @@ end
     @test size(fixed_block.coefficient_matrix, 1) ==
         length(basis.basis_x) * length(basis.basis_y) * length(basis.basis_z)
     @test size(fixed_block.coefficient_matrix, 2) < size(fixed_block.coefficient_matrix, 1)
-    @test source.sequence.packet.term_storage == :compact_production
-    @test fixed_block.term_storage == :compact_production
-    @test isnothing(fixed_block.gaussian_terms)
-    @test isnothing(fixed_block.pair_terms)
+    @test !hasproperty(source.sequence.packet, :term_storage)
+    @test !hasproperty(source.sequence.packet, :gaussian_terms)
+    @test !hasproperty(source.sequence.packet, :pair_terms)
+    @test !hasproperty(fixed_block, :term_storage)
+    @test !hasproperty(fixed_block, :gaussian_terms)
+    @test !hasproperty(fixed_block, :pair_terms)
     @test !isnothing(fixed_block.gaussian_sum)
     @test !isnothing(fixed_block.pair_sum)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
@@ -630,25 +632,29 @@ end
     term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     explicit_nested = bond_aligned_diatomic_nested_fixed_block(
         basis;
-        expansion = expansion,
-        term_coefficients = term_coefficients,
+        expansion,
+        term_coefficients,
     )
     explicit_fixed_block = explicit_nested.fixed_block
 
-    @test default_source.sequence.packet.term_storage == :compact_production
-    @test default_fixed_block.term_storage == :compact_production
-    @test isnothing(default_fixed_block.gaussian_terms)
-    @test isnothing(default_fixed_block.pair_terms)
+    @test !hasproperty(default_source.sequence.packet, :term_storage)
+    @test !hasproperty(default_source.sequence.packet, :gaussian_terms)
+    @test !hasproperty(default_source.sequence.packet, :pair_terms)
+    @test !hasproperty(default_fixed_block, :term_storage)
+    @test !hasproperty(default_fixed_block, :gaussian_terms)
+    @test !hasproperty(default_fixed_block, :pair_terms)
     @test !isnothing(default_fixed_block.gaussian_sum)
     @test !isnothing(default_fixed_block.pair_sum)
 
-    @test explicit_fixed_block.term_storage == :compact_production
-    @test isnothing(explicit_fixed_block.gaussian_terms)
-    @test isnothing(explicit_fixed_block.pair_terms)
+    @test !hasproperty(explicit_fixed_block, :term_storage)
+    @test !hasproperty(explicit_fixed_block, :gaussian_terms)
+    @test !hasproperty(explicit_fixed_block, :pair_terms)
     @test !isnothing(explicit_fixed_block.gaussian_sum)
     @test !isnothing(explicit_fixed_block.pair_sum)
 
-    @test explicit_nested.source.sequence.packet.term_storage == :compact_production
+    @test !hasproperty(explicit_nested.source.sequence.packet, :term_storage)
+    @test !hasproperty(explicit_nested.source.sequence.packet, :gaussian_terms)
+    @test !hasproperty(explicit_nested.source.sequence.packet, :pair_terms)
 
     @test norm(default_fixed_block.overlap - explicit_fixed_block.overlap, Inf) < 1.0e-12
     @test norm(default_fixed_block.coefficient_matrix - explicit_fixed_block.coefficient_matrix, Inf) < 1.0e-12
@@ -662,16 +668,6 @@ end
         GaussletBases._qwrg_fixed_block_interaction_matrix(explicit_fixed_block, expansion) atol =
         1.0e-10 rtol = 1.0e-10
 
-    @test_throws MethodError bond_aligned_diatomic_nested_fixed_source(
-        basis;
-        expansion = expansion,
-        term_storage = :full_debug,
-    )
-    @test_throws MethodError bond_aligned_diatomic_nested_fixed_block(
-        basis;
-        expansion = expansion,
-        term_storage = :full_debug,
-    )
 end
 
 @testset "Bond-aligned diatomic packet-kernel parity" begin

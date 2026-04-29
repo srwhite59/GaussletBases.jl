@@ -707,9 +707,9 @@ end
     @test source_payload.bond_axis == basis.bond_axis
     @test length(source_payload.points) == prod(length.(source.geometry.parent_box))
     @test source_slice.selected_count > 0
-    @test source.sequence.packet.term_storage == :compact_production
-    @test isnothing(source.sequence.packet.gaussian_terms)
-    @test isnothing(source.sequence.packet.pair_terms)
+    @test !hasproperty(source.sequence.packet, :term_storage)
+    @test !hasproperty(source.sequence.packet, :gaussian_terms)
+    @test !hasproperty(source.sequence.packet, :pair_terms)
     @test !isnothing(source.sequence.packet.gaussian_sum)
     @test !isnothing(source.sequence.packet.pair_sum)
     @test all(isnothing(sequence.support_states) for sequence in source.child_sequences)

@@ -3,8 +3,8 @@
         endpoint = (count - 1) / 2
         s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
         basis = build_basis(MappedUniformBasisSpec(:G10;
-            count = count,
-            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            count,
+            mapping = AsinhMapping(; a, s, tail_spacing),
             reference_spacing = 1.0,
         ))
         return basis, s
@@ -70,8 +70,8 @@ end
         endpoint = (count - 1) / 2
         s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
         basis = build_basis(MappedUniformBasisSpec(:G10;
-            count = count,
-            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            count,
+            mapping = AsinhMapping(; a, s, tail_spacing),
             reference_spacing = 1.0,
         ))
         return basis, s
@@ -94,7 +94,7 @@ end
         interval;
         retain_x = 4,
         retain_y = 3,
-        term_coefficients = term_coefficients,
+        term_coefficients,
     )
     packet = shell.packet
     face_low, face_high = shell.faces
@@ -120,8 +120,9 @@ end
     @test packet.x2_x ≈ transpose(packet.x2_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_y ≈ transpose(packet.x2_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.x2_z ≈ transpose(packet.x2_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test isnothing(packet.gaussian_terms)
-    @test isnothing(packet.pair_terms)
+    @test !hasproperty(packet, :gaussian_terms)
+    @test !hasproperty(packet, :pair_terms)
+    @test !hasproperty(packet, :term_storage)
     @test !isnothing(packet.gaussian_sum)
     @test !isnothing(packet.pair_sum)
     support_coefficients = GaussletBases._nested_support_coefficient_slice(
@@ -191,7 +192,7 @@ end
         retain_xy = (4, 3),
         retain_xz = (4, 3),
         retain_yz = (4, 3),
-        term_coefficients = term_coefficients,
+        term_coefficients,
     )
     support_states = shell.support_states
     support_coefficients = Matrix{Float64}(shell.coefficient_matrix[shell.support_indices, :])
@@ -262,8 +263,8 @@ end
         endpoint = (count - 1) / 2
         s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
         basis = build_basis(MappedUniformBasisSpec(:G10;
-            count = count,
-            mapping = AsinhMapping(a = a, s = s, tail_spacing = tail_spacing),
+            count,
+            mapping = AsinhMapping(; a, s, tail_spacing),
             reference_spacing = 1.0,
         ))
         return basis, s
@@ -287,7 +288,7 @@ end
         retain_xy = (4, 3),
         retain_xz = (4, 3),
         retain_yz = (4, 3),
-        term_coefficients = term_coefficients,
+        term_coefficients,
     )
     packet = shell.packet
     direct_overlap = transpose(shell.coefficient_matrix) * shell.coefficient_matrix
@@ -310,8 +311,9 @@ end
     @test packet.position_x ≈ transpose(packet.position_x) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_y ≈ transpose(packet.position_y) atol = 1.0e-10 rtol = 1.0e-10
     @test packet.position_z ≈ transpose(packet.position_z) atol = 1.0e-10 rtol = 1.0e-10
-    @test isnothing(packet.gaussian_terms)
-    @test isnothing(packet.pair_terms)
+    @test !hasproperty(packet, :gaussian_terms)
+    @test !hasproperty(packet, :pair_terms)
+    @test !hasproperty(packet, :term_storage)
     @test !isnothing(packet.gaussian_sum)
     @test !isnothing(packet.pair_sum)
     support_coefficients = GaussletBases._nested_support_coefficient_slice(
@@ -391,8 +393,9 @@ end
     @test length(fixed_block.support_indices) == length(shell.support_indices)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-10
     @test fixed_block.overlap ≈ shell.packet.overlap atol = 0.0 rtol = 0.0
-    @test isnothing(fixed_block.gaussian_terms)
-    @test isnothing(fixed_block.pair_terms)
+    @test !hasproperty(fixed_block, :gaussian_terms)
+    @test !hasproperty(fixed_block, :pair_terms)
+    @test !hasproperty(fixed_block, :term_storage)
     @test fixed_block.gaussian_sum ≈ shell.packet.gaussian_sum atol = 0.0 rtol = 0.0
     @test fixed_block.pair_sum ≈ shell.packet.pair_sum atol = 0.0 rtol = 0.0
 
@@ -453,8 +456,8 @@ function _one_center_atomic_full_parent_contract_fixture(;
     )
     return _cached_fixture(key, () -> begin
         basis = build_basis(MappedUniformBasisSpec(:G10;
-            count = count,
-            mapping = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = tail_spacing),
+            count,
+            mapping = white_lindsey_atomic_mapping(; Z, d, tail_spacing),
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
@@ -463,7 +466,7 @@ function _one_center_atomic_full_parent_contract_fixture(;
             exponents = expansion.exponents,
             gausslet_backend = :numerical_reference,
             refinement_levels = 0,
-            nside = nside,
+            nside,
         )
         audit = GaussletBases._nested_shell_sequence_contract_audit(sequence, (count, count, count))
         (basis, sequence, audit)
@@ -489,8 +492,8 @@ function _one_center_atomic_legacy_profile_contract_fixture(;
     )
     return _cached_fixture(key, () -> begin
         basis = build_basis(MappedUniformBasisSpec(:G10;
-            count = count,
-            mapping = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = tail_spacing),
+            count,
+            mapping = white_lindsey_atomic_mapping(; Z, d, tail_spacing),
             reference_spacing = 1.0,
         ))
         expansion = coulomb_gaussian_expansion(doacc = false)
@@ -499,13 +502,13 @@ function _one_center_atomic_legacy_profile_contract_fixture(;
             exponents = expansion.exponents,
             gausslet_backend = :numerical_reference,
             refinement_levels = 0,
-            working_box = working_box,
-            nside = nside,
+            working_box,
+            nside,
         )
         diagnostics = one_center_atomic_nested_structure_diagnostics(
             sequence;
             parent_side_count = count,
-            nside = nside,
+            nside,
         )
         ownership = GaussletBases._nested_shell_sequence_piece_ownership_audit(sequence)
         (basis, sequence, diagnostics, ownership)
@@ -717,7 +720,7 @@ function _one_center_atomic_ns9_legacy_profile_qw_fixture()
             operators = ordinary_cartesian_qiu_white_operators(
                 fixed_block,
                 supplement;
-                expansion = expansion,
+                expansion,
                 Z = 10.0,
                 interaction_treatment = :ggt_nearest,
                 residual_keep_policy = :near_null_only,
@@ -919,12 +922,14 @@ end
     @test timed_legacy.timings isa GaussletBases.TimeG.TimingReport
     @test timed_full.fixed_block.shell.working_box == (1:13, 1:13, 1:13)
     @test timed_legacy.fixed_block.shell.working_box == (2:12, 2:12, 2:12)
-    @test isnothing(timed_full.fixed_block.gaussian_terms)
-    @test isnothing(timed_full.fixed_block.pair_terms)
+    @test !hasproperty(timed_full.fixed_block, :gaussian_terms)
+    @test !hasproperty(timed_full.fixed_block, :pair_terms)
+    @test !hasproperty(timed_full.fixed_block, :term_storage)
     @test !isnothing(timed_full.fixed_block.gaussian_sum)
     @test !isnothing(timed_full.fixed_block.pair_sum)
-    @test isnothing(timed_legacy.fixed_block.gaussian_terms)
-    @test isnothing(timed_legacy.fixed_block.pair_terms)
+    @test !hasproperty(timed_legacy.fixed_block, :gaussian_terms)
+    @test !hasproperty(timed_legacy.fixed_block, :pair_terms)
+    @test !hasproperty(timed_legacy.fixed_block, :term_storage)
     @test !isnothing(timed_legacy.fixed_block.gaussian_sum)
     @test !isnothing(timed_legacy.fixed_block.pair_sum)
     @test norm(timed_full.fixed_block.overlap - I, Inf) < 1.0e-10
@@ -1037,25 +1042,25 @@ end
 
     compact_full = one_center_atomic_full_parent_fixed_block(
         basis;
-        expansion = expansion,
+        expansion,
         nside = 5,
     )
     compact_legacy = one_center_atomic_legacy_profile_fixed_block(
         basis;
-        expansion = expansion,
+        expansion,
         working_box = 2:12,
         nside = 5,
     )
 
-    @test compact_full.term_storage == :compact_production
-    @test isnothing(compact_full.gaussian_terms)
-    @test isnothing(compact_full.pair_terms)
+    @test !hasproperty(compact_full, :term_storage)
+    @test !hasproperty(compact_full, :gaussian_terms)
+    @test !hasproperty(compact_full, :pair_terms)
     @test !isnothing(compact_full.gaussian_sum)
     @test !isnothing(compact_full.pair_sum)
 
-    @test compact_legacy.term_storage == :compact_production
-    @test isnothing(compact_legacy.gaussian_terms)
-    @test isnothing(compact_legacy.pair_terms)
+    @test !hasproperty(compact_legacy, :term_storage)
+    @test !hasproperty(compact_legacy, :gaussian_terms)
+    @test !hasproperty(compact_legacy, :pair_terms)
     @test !isnothing(compact_legacy.gaussian_sum)
     @test !isnothing(compact_legacy.pair_sum)
 
@@ -1070,19 +1075,6 @@ end
     @test full_contract.leaf_count === nothing
     @test legacy_contract.leaf_count === nothing
 
-    @test_throws MethodError one_center_atomic_full_parent_fixed_block(
-        basis;
-        expansion = expansion,
-        nside = 5,
-        retain_term_tensors = true,
-    )
-    @test_throws MethodError one_center_atomic_legacy_profile_fixed_block(
-        basis;
-        expansion = expansion,
-        working_box = 2:12,
-        nside = 5,
-        retain_term_tensors = true,
-    )
 end
 
 @testset "Cartesian basis representation for direct-product QW bases" begin
@@ -1133,7 +1125,7 @@ end
     expansion = coulomb_gaussian_expansion(doacc = false)
     fixed_block = one_center_atomic_full_parent_fixed_block(
         basis;
-        expansion = expansion,
+        expansion,
         nside = 5,
     )
     representation = basis_representation(fixed_block)
@@ -1197,9 +1189,6 @@ function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixe
         fixed_block.weights,
         fixed_block.gaussian_sum,
         fixed_block.pair_sum,
-        fixed_block.gaussian_terms,
-        fixed_block.pair_terms,
-        fixed_block.term_storage,
         fixed_block.fixed_centers,
         GaussletBases._nested_factorized_basis_cache(
             fixed_block.factorized_cartesian_parent_basis[],
@@ -1219,7 +1208,7 @@ end
     expansion = coulomb_gaussian_expansion(doacc = false)
     direct_fixed_block = one_center_atomic_full_parent_fixed_block(
         basis;
-        expansion = expansion,
+        expansion,
         nside = 5,
     )
     sparse_fixed_block = _with_sparse_nested_coefficients(direct_fixed_block)
@@ -1279,12 +1268,12 @@ function _atomic_hybrid_cartesian_representation_fixture()
         expansion = coulomb_gaussian_expansion(doacc = false)
         fixed_full = one_center_atomic_full_parent_fixed_block(
             basis;
-            expansion = expansion,
+            expansion,
             nside = 5,
         )
         fixed_legacy = one_center_atomic_legacy_profile_fixed_block(
             basis;
-            expansion = expansion,
+            expansion,
             working_box = 2:12,
             nside = 5,
         )
@@ -1292,7 +1281,7 @@ function _atomic_hybrid_cartesian_representation_fixture()
         full_ops = ordinary_cartesian_qiu_white_operators(
             fixed_full,
             supplement;
-            expansion = expansion,
+            expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
             residual_keep_policy = :near_null_only,
@@ -1300,7 +1289,7 @@ function _atomic_hybrid_cartesian_representation_fixture()
         legacy_ops = ordinary_cartesian_qiu_white_operators(
             fixed_legacy,
             supplement;
-            expansion = expansion,
+            expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
             residual_keep_policy = :near_null_only,
@@ -1374,7 +1363,7 @@ function _atomic_direct_product_he_extent_change_contract_fixture(;
             MappedUniformBasisSpec(
                 :G10;
                 count = source_count,
-                mapping = mapping,
+                mapping,
                 reference_spacing = 1.0,
             ),
         )
@@ -1382,7 +1371,7 @@ function _atomic_direct_product_he_extent_change_contract_fixture(;
             MappedUniformBasisSpec(
                 :G10;
                 count = target_count,
-                mapping = mapping,
+                mapping,
                 reference_spacing = 1.0,
             ),
         )
@@ -1431,27 +1420,27 @@ function _atomic_hybrid_he_same_parent_stress_fixture(;
             MappedUniformBasisSpec(
                 :G10;
                 count = parent_count,
-                mapping = mapping,
+                mapping,
                 reference_spacing = 1.0,
             ),
         )
 
         source_fixed = one_center_atomic_legacy_profile_fixed_block(
             parent_basis;
-            expansion = expansion,
+            expansion,
             working_box = source_working_box,
             nside = 5,
         )
         target_fixed = one_center_atomic_full_parent_fixed_block(
             parent_basis;
-            expansion = expansion,
+            expansion,
             nside = 5,
         )
 
         source_ops = ordinary_cartesian_qiu_white_operators(
             source_fixed,
             supplement;
-            expansion = expansion,
+            expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
             residual_keep_policy = :near_null_only,
@@ -1459,7 +1448,7 @@ function _atomic_hybrid_he_same_parent_stress_fixture(;
         target_ops = ordinary_cartesian_qiu_white_operators(
             target_fixed,
             supplement;
-            expansion = expansion,
+            expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
             residual_keep_policy = :near_null_only,
@@ -2676,10 +2665,12 @@ end
     @test fixed_full_direct.x2_y ≈ fixed_full_reference.x2_y atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.x2_z ≈ fixed_full_reference.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.weights ≈ fixed_full_reference.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test isnothing(fixed_full_direct.gaussian_terms)
-    @test isnothing(fixed_full_direct.pair_terms)
-    @test isnothing(fixed_full_reference.gaussian_terms)
-    @test isnothing(fixed_full_reference.pair_terms)
+    @test !hasproperty(fixed_full_direct, :gaussian_terms)
+    @test !hasproperty(fixed_full_direct, :pair_terms)
+    @test !hasproperty(fixed_full_direct, :term_storage)
+    @test !hasproperty(fixed_full_reference, :gaussian_terms)
+    @test !hasproperty(fixed_full_reference, :pair_terms)
+    @test !hasproperty(fixed_full_reference, :term_storage)
     @test fixed_full_direct.gaussian_sum ≈ fixed_full_reference.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_full_direct.pair_sum ≈ fixed_full_reference.pair_sum atol = 1.0e-10 rtol = 1.0e-10
 
@@ -2692,10 +2683,12 @@ end
     @test fixed_legacy_direct.x2_y ≈ fixed_legacy_reference.x2_y atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.x2_z ≈ fixed_legacy_reference.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.weights ≈ fixed_legacy_reference.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test isnothing(fixed_legacy_direct.gaussian_terms)
-    @test isnothing(fixed_legacy_direct.pair_terms)
-    @test isnothing(fixed_legacy_reference.gaussian_terms)
-    @test isnothing(fixed_legacy_reference.pair_terms)
+    @test !hasproperty(fixed_legacy_direct, :gaussian_terms)
+    @test !hasproperty(fixed_legacy_direct, :pair_terms)
+    @test !hasproperty(fixed_legacy_direct, :term_storage)
+    @test !hasproperty(fixed_legacy_reference, :gaussian_terms)
+    @test !hasproperty(fixed_legacy_reference, :pair_terms)
+    @test !hasproperty(fixed_legacy_reference, :term_storage)
     @test fixed_legacy_direct.gaussian_sum ≈ fixed_legacy_reference.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
     @test fixed_legacy_direct.pair_sum ≈ fixed_legacy_reference.pair_sum atol = 1.0e-10 rtol = 1.0e-10
 end

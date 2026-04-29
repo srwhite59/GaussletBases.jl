@@ -2324,7 +2324,6 @@ function _cartesian_fixed_block_route_metadata(
         working_box_profile = _cartesian_working_box_profile(working_box, axis_counts),
         nside = _cartesian_maybe_complete_shell_nside(fixed_block.shell),
         support_count = length(fixed_block.support_indices),
-        term_storage = fixed_block.term_storage,
     )
 end
 
