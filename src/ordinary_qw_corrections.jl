@@ -46,7 +46,7 @@ end
 
 """
     HydrogenicCoreBranchCorrectionSpec(; Z, nucleus=(0.0, 0.0, 0.0),
-        include_esoi=false, orbital_selector=:global_lowest,
+        include_esoi=false, orbital_selector=:localized_lowest,
         local_orbital_index=nothing)
 
 Public branch-level hydrogenic core correction specification. This is the
@@ -55,11 +55,15 @@ counterpoise and branch Hamiltonian work: the one-body branch matrix is first
 assembled with caller-provided nuclear charges, then the projector reference
 correction is applied to the selected core orbital.
 
-This first public staging pass supports one correction with
-`orbital_selector = :global_lowest`, matching the original projector behavior.
-Center-local orbital selection and multi-correction branch application are
-reserved for the next pass. Set `include_esoi=true` to apply the optional local
-ESOI two-body scalar calibration to the same selected core orbital.
+This public branch surface currently supports one correction. The default
+`orbital_selector = :localized_lowest` partitions final-basis orbitals by their
+nearest carried nucleus, diagonalizes the selected center-local subspace, embeds
+that local core orbital back into the full final basis, and applies the
+projector correction to that embedded vector. Use
+`orbital_selector = :global_lowest` as an explicit debug/reference selector
+matching the original projector behavior. Multi-correction branch application
+is reserved for the next pass. Set `include_esoi=true` to apply the optional
+local ESOI two-body scalar calibration to the same selected core orbital.
 """
 struct HydrogenicCoreBranchCorrectionSpec
     Z::Float64
@@ -73,12 +77,12 @@ function HydrogenicCoreBranchCorrectionSpec(;
     Z::Real,
     nucleus = (0.0, 0.0, 0.0),
     include_esoi::Bool = false,
-    orbital_selector::Symbol = :global_lowest,
+    orbital_selector::Symbol = :localized_lowest,
     local_orbital_index::Union{Nothing,Integer} = nothing,
 )
-    orbital_selector == :global_lowest || throw(
+    orbital_selector in (:localized_lowest, :global_lowest) || throw(
         ArgumentError(
-            "unsupported orbital_selector :$(orbital_selector); this branch staging pass supports only :global_lowest",
+            "unsupported orbital_selector :$(orbital_selector); supported branch selectors are :localized_lowest and :global_lowest",
         ),
     )
     return HydrogenicCoreBranchCorrectionSpec(
@@ -256,6 +260,31 @@ function _ordinary_cartesian_projector_corrected_hamiltonian(
         shift = shift,
         corrected_eigenvalue = corrected_eigenvalue,
         corrected_orbital = corrected_orbital,
+    )
+end
+
+function _ordinary_cartesian_projector_corrected_hamiltonian(
+    h::AbstractMatrix{<:Real},
+    Z::Real,
+    orbital::AbstractVector{<:Real},
+)
+    selected_orbital = Vector{Float64}(orbital)
+    selected_orbital ./= norm(selected_orbital)
+    initial_expectation = _ordinary_cartesian_one_body_expectation(h, selected_orbital)
+    target = -0.5 * Float64(Z)^2
+    shift = target - initial_expectation
+    corrected_h = Matrix{Float64}(h) .+ shift .* (selected_orbital * transpose(selected_orbital))
+    corrected_expectation = _ordinary_cartesian_one_body_expectation(corrected_h, selected_orbital)
+    corrected_eigenvalue, corrected_global_orbital = _ordinary_cartesian_lowest_orbital(corrected_h)
+    return (
+        h = corrected_h,
+        target = target,
+        initial_expectation = initial_expectation,
+        selected_orbital = selected_orbital,
+        shift = shift,
+        corrected_expectation = corrected_expectation,
+        corrected_eigenvalue = corrected_eigenvalue,
+        corrected_global_orbital = corrected_global_orbital,
     )
 end
 
@@ -581,9 +610,9 @@ function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreProjectorCorrecti
 end
 
 function _ordinary_cartesian_internal_spec(spec::HydrogenicCoreBranchCorrectionSpec)
-    spec.orbital_selector == :global_lowest || throw(
+    spec.orbital_selector in (:localized_lowest, :global_lowest) || throw(
         ArgumentError(
-            "unsupported orbital_selector :$(spec.orbital_selector); this branch staging pass supports only :global_lowest",
+            "unsupported orbital_selector :$(spec.orbital_selector); supported branch selectors are :localized_lowest and :global_lowest",
         ),
     )
     return HydrogenicCoreCorrectionSpec(;
@@ -616,6 +645,229 @@ function _ordinary_cartesian_single_branch_correction(corrections)
         ),
     )
     return correction
+end
+
+function _ordinary_cartesian_branch_partition_centers(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    if hasproperty(operators.basis, :nuclei)
+        centers = NTuple{3,Float64}[
+            (Float64(nucleus[1]), Float64(nucleus[2]), Float64(nucleus[3])) for
+            nucleus in getproperty(operators.basis, :nuclei)
+        ]
+        !isempty(centers) || throw(
+            ArgumentError("localized branch correction requires at least one carried nucleus"),
+        )
+        return centers, :basis_nuclei
+    end
+
+    if operators.nuclear_charges !== nothing && length(operators.nuclear_charges) > 1
+        throw(
+            ArgumentError(
+                "localized branch correction cannot infer a multi-center partition from this operator payload; use a basis carrying nuclei",
+            ),
+        )
+    end
+    return NTuple{3,Float64}[spec.nucleus], :correction_nucleus
+end
+
+function _ordinary_cartesian_nearest_center_index(
+    point::NTuple{3,Float64},
+    centers::AbstractVector{<:NTuple{3,Float64}},
+)
+    best_index = 0
+    best_distance2 = Inf
+    px, py, pz = point
+    for (index, center) in pairs(centers)
+        cx, cy, cz = center
+        distance2 = (px - cx)^2 + (py - cy)^2 + (pz - cz)^2
+        if distance2 < best_distance2
+            best_index = index
+            best_distance2 = distance2
+        end
+    end
+    best_index > 0 || throw(ArgumentError("cannot choose nearest center from an empty center list"))
+    return best_index, sqrt(best_distance2)
+end
+
+function _ordinary_cartesian_branch_localized_orbital_selection(
+    operators::OrdinaryCartesianOperators3D,
+    h::AbstractMatrix{<:Real},
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    centers, center_source = _ordinary_cartesian_branch_partition_centers(operators, spec)
+    selected_center_index, selected_center_distance =
+        _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
+    subspace_indices = Int[]
+    for (index, orbital) in pairs(operators.orbital_data)
+        orbital_center = (orbital.x, orbital.y, orbital.z)
+        assigned_center_index, _ = _ordinary_cartesian_nearest_center_index(orbital_center, centers)
+        assigned_center_index == selected_center_index && push!(subspace_indices, index)
+    end
+    !isempty(subspace_indices) || throw(
+        ArgumentError(
+            "localized branch correction selected an empty center-local subspace for center index $(selected_center_index)",
+        ),
+    )
+
+    local_h = Matrix{Float64}(h)[subspace_indices, subspace_indices]
+    local_eigenvalue, local_orbital = _ordinary_cartesian_lowest_orbital(local_h)
+    embedded_orbital = zeros(Float64, size(h, 1))
+    embedded_orbital[subspace_indices] .= local_orbital
+    embedded_orbital ./= norm(embedded_orbital)
+    selected_expectation = _ordinary_cartesian_one_body_expectation(h, embedded_orbital)
+    return (
+        orbital = embedded_orbital,
+        selected_center = centers[selected_center_index],
+        selected_center_index = selected_center_index,
+        selected_center_source = center_source,
+        selected_center_distance = selected_center_distance,
+        selected_local_subspace_dimension = length(subspace_indices),
+        selected_local_subspace_indices = Tuple(subspace_indices),
+        selected_local_eigenvalue = local_eigenvalue,
+        selected_core_initial_expectation = selected_expectation,
+    )
+end
+
+function _ordinary_cartesian_branch_global_orbital_selection(
+    operators::OrdinaryCartesianOperators3D,
+    h::AbstractMatrix{<:Real},
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    eigenvalue, orbital = _ordinary_cartesian_lowest_orbital(h)
+    return (
+        orbital = orbital,
+        selected_center = spec.nucleus,
+        selected_center_index = nothing,
+        selected_center_source = :global_full_space,
+        selected_center_distance = 0.0,
+        selected_local_subspace_dimension = length(operators.orbital_data),
+        selected_local_subspace_indices = Tuple(collect(eachindex(operators.orbital_data))),
+        selected_local_eigenvalue = eigenvalue,
+        selected_core_initial_expectation = eigenvalue,
+    )
+end
+
+function _ordinary_cartesian_branch_orbital_selection(
+    operators::OrdinaryCartesianOperators3D,
+    h::AbstractMatrix{<:Real},
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    if spec.orbital_selector == :localized_lowest
+        return _ordinary_cartesian_branch_localized_orbital_selection(operators, h, spec)
+    elseif spec.orbital_selector == :global_lowest
+        return _ordinary_cartesian_branch_global_orbital_selection(operators, h, spec)
+    end
+    throw(
+        ArgumentError(
+            "unsupported orbital_selector :$(spec.orbital_selector); supported branch selectors are :localized_lowest and :global_lowest",
+        ),
+    )
+end
+
+function _ordinary_cartesian_branch_corrected_matrices(
+    operators::OrdinaryCartesianOperators3D,
+    initial_h::AbstractMatrix{<:Real},
+    initial_v::AbstractMatrix{<:Real},
+    correction::HydrogenicCoreBranchCorrectionSpec,
+    internal_spec::HydrogenicCoreCorrectionSpec;
+    overlap_error::Real,
+    branch_nuclear_charges,
+)
+    initial_h = Matrix{Float64}(initial_h)
+    initial_v = Matrix{Float64}(initial_v)
+    initial_global_eigenvalue, _ = _ordinary_cartesian_lowest_orbital(initial_h)
+    selection = _ordinary_cartesian_branch_orbital_selection(operators, initial_h, correction)
+    local_index, local_orbital, local_distance =
+        _ordinary_cartesian_select_local_orbital(operators, internal_spec)
+
+    one_body = _ordinary_cartesian_projector_corrected_hamiltonian(
+        initial_h,
+        correction.Z,
+        selection.orbital,
+    )
+    corrected_h = one_body.h
+    corrected_orbital = one_body.selected_orbital
+
+    corrected_v = initial_v
+    two_body_target = 5.0 * correction.Z / 8.0
+    initial_j = _ordinary_cartesian_ida_coulomb_scalar(initial_v, corrected_orbital)
+    corrected_j = initial_j
+    two_body_shift = 0.0
+    two_body_scalar_delta = 0.0
+    local_density_weight = begin
+        weights = abs2.(corrected_orbital)
+        weights ./= sum(weights)
+        weights[local_index]
+    end
+    if internal_spec.two_body_mode == :esoi_local
+        two_body = _ordinary_cartesian_esoi_corrected_interaction(
+            initial_v,
+            corrected_orbital,
+            correction.Z,
+            local_index,
+        )
+        corrected_v = two_body.v
+        two_body_target = two_body.target
+        initial_j = two_body.initial_j
+        corrected_j = two_body.corrected_j
+        two_body_shift = two_body.shift
+        two_body_scalar_delta = two_body.scalar_delta
+        local_density_weight = two_body.density_weight
+    end
+
+    proxy_initial_energy =
+        _ordinary_cartesian_closed_shell_proxy_energy(initial_h, initial_v, corrected_orbital)
+    proxy_corrected_energy =
+        _ordinary_cartesian_closed_shell_proxy_energy(corrected_h, corrected_v, corrected_orbital)
+    proxy_target_energy = -correction.Z^2 + 5.0 * correction.Z / 8.0
+
+    diagnostics = (
+        Z = correction.Z,
+        nucleus = correction.nucleus,
+        one_body_mode = :projector,
+        two_body_mode = internal_spec.two_body_mode,
+        local_selection = internal_spec.local_selection,
+        local_orbital_index = local_index,
+        local_orbital_label = local_orbital.label,
+        local_orbital_kind = local_orbital.kind,
+        local_orbital_center = (local_orbital.x, local_orbital.y, local_orbital.z),
+        local_orbital_distance = local_distance,
+        local_density_weight = local_density_weight,
+        overlap_error = overlap_error,
+        exact_lowest_core_eigenvalue = one_body.target,
+        initial_lowest_core_eigenvalue = initial_global_eigenvalue,
+        corrected_lowest_core_eigenvalue = one_body.corrected_eigenvalue,
+        one_body_shift = one_body.shift,
+        local_exact_bracket_iterations = 0,
+        local_exact_bisection_iterations = 0,
+        exact_1s_coulomb = two_body_target,
+        initial_1s_coulomb = initial_j,
+        corrected_1s_coulomb = corrected_j,
+        two_body_scalar_delta = two_body_scalar_delta,
+        two_body_local_shift = two_body_shift,
+        closed_shell_initial_energy = proxy_initial_energy,
+        closed_shell_corrected_energy = proxy_corrected_energy,
+        closed_shell_target_energy = proxy_target_energy,
+        orbital_selector = correction.orbital_selector,
+        selected_center = selection.selected_center,
+        selected_center_index = selection.selected_center_index,
+        selected_center_source = selection.selected_center_source,
+        selected_center_distance = selection.selected_center_distance,
+        selected_local_subspace_dimension = selection.selected_local_subspace_dimension,
+        selected_local_subspace_count = selection.selected_local_subspace_dimension,
+        selected_local_subspace_indices = selection.selected_local_subspace_indices,
+        selected_core_initial_expectation = selection.selected_core_initial_expectation,
+        selected_core_corrected_expectation = one_body.corrected_expectation,
+        selected_local_eigenvalue = selection.selected_local_eigenvalue,
+        branch_nuclear_charges = branch_nuclear_charges,
+    )
+    return (
+        one_body_hamiltonian = corrected_h,
+        interaction_matrix = corrected_v,
+        diagnostics = diagnostics,
+    )
 end
 
 """
@@ -673,9 +925,11 @@ using `nuclear_charges`, then one
 [`HydrogenicCoreBranchCorrectionSpec`](@ref) is applied.
 
 This is the intended public entry point for branch/counterpoise correction
-work. The current staging pass supports exactly one correction with
-`orbital_selector = :global_lowest`; center-local selection and multi-center
-correction composition are intentionally deferred. The result is a matrix-level
+work. The current staging pass supports exactly one correction. The default
+`orbital_selector = :localized_lowest` uses the selected center-local subspace;
+`orbital_selector = :global_lowest` remains available as an explicit
+debug/reference selector. Multi-center correction composition is intentionally
+deferred. The result is a matrix-level
 [`OrdinaryCartesianBranchCorrectionResult`](@ref), not a transformed
 `OrdinaryCartesianOperators3D`.
 """
@@ -696,16 +950,14 @@ function ordinary_cartesian_corrected_branch(
     internal_spec = _ordinary_cartesian_internal_spec(correction)
     branch_charges = nuclear_charges === nothing ? nothing : Float64.(collect(nuclear_charges))
     branch_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
-    matrices = _ordinary_cartesian_corrected_matrices(
+    matrices = _ordinary_cartesian_branch_corrected_matrices(
         operators,
         branch_h,
         operators.interaction_matrix,
+        correction,
         internal_spec;
         overlap_error = overlap_error,
-        extra_diagnostics = (
-            branch_nuclear_charges = branch_charges === nothing ? nothing : Tuple(branch_charges),
-            orbital_selector = correction.orbital_selector,
-        ),
+        branch_nuclear_charges = branch_charges === nothing ? nothing : Tuple(branch_charges),
     )
     return OrdinaryCartesianBranchCorrectionResult(
         matrices.one_body_hamiltonian,

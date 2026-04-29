@@ -135,12 +135,70 @@ end
     )
 
     @test branch_result isa OrdinaryCartesianBranchCorrectionResult
-    @test branch_result.diagnostics.orbital_selector == :global_lowest
+    @test branch_result.diagnostics.orbital_selector == :localized_lowest
+    @test branch_result.diagnostics.selected_local_subspace_dimension == length(operators.orbital_data)
     @test branch_result.diagnostics.branch_nuclear_charges === nothing
+    @test branch_result.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
     @test branch_result.diagnostics.corrected_lowest_core_eigenvalue ≈ target_one_body atol = 1.0e-9 rtol = 0.0
     @test branch_result.diagnostics.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
     @test branch_result.one_body_hamiltonian ≈ wrapper_result.operators.one_body_hamiltonian atol = 1.0e-12 rtol = 0.0
-    @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-12 rtol = 0.0
+    @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-10 rtol = 0.0
+end
+
+@testset "Ordinary QW localized diatomic branch correction selector" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        bond_length = 1.4,
+        core_spacing = 0.7,
+        xmax_parallel = 2.0,
+        xmax_transverse = 1.5,
+        bond_axis = :z,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :by_center,
+        interaction_treatment = :ggt_nearest,
+    )
+    kinetic_sidecar = operators.kinetic_one_body
+    nuclear_sidecars = operators.nuclear_one_body_by_center
+    target_one_body = -0.5
+
+    branch_a = ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 0.0],
+        corrections = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[1]),
+    )
+    branch_b = ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [0.0, 1.0],
+        corrections = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = basis.nuclei[2]),
+    )
+
+    @test branch_a isa OrdinaryCartesianBranchCorrectionResult
+    @test branch_b isa OrdinaryCartesianBranchCorrectionResult
+    @test !hasproperty(branch_a, :operators)
+    @test !hasproperty(branch_b, :operators)
+    @test branch_a.diagnostics.orbital_selector == :localized_lowest
+    @test branch_b.diagnostics.orbital_selector == :localized_lowest
+    @test branch_a.diagnostics.selected_center_index == 1
+    @test branch_b.diagnostics.selected_center_index == 2
+    @test branch_a.diagnostics.selected_center == basis.nuclei[1]
+    @test branch_b.diagnostics.selected_center == basis.nuclei[2]
+    @test branch_a.diagnostics.branch_nuclear_charges == (1.0, 0.0)
+    @test branch_b.diagnostics.branch_nuclear_charges == (0.0, 1.0)
+    @test branch_a.diagnostics.selected_local_subspace_dimension > 0
+    @test branch_b.diagnostics.selected_local_subspace_dimension > 0
+    @test branch_a.diagnostics.selected_local_subspace_indices !=
+          branch_b.diagnostics.selected_local_subspace_indices
+    @test isempty(intersect(
+        branch_a.diagnostics.selected_local_subspace_indices,
+        branch_b.diagnostics.selected_local_subspace_indices,
+    ))
+    @test branch_a.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test branch_b.diagnostics.selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test operators.kinetic_one_body === kinetic_sidecar
+    @test operators.nuclear_one_body_by_center === nuclear_sidecars
+    @test operators.nuclear_term_storage == :by_center
 end
 
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))

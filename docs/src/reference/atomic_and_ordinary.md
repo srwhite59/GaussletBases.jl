@@ -94,8 +94,12 @@ For branch or counterpoise calculations, use
 `ordinary_cartesian_corrected_branch`. It assembles the branch one-body matrix
 with caller-provided `nuclear_charges` and returns corrected matrices rather
 than a new operator payload. The first staged branch surface supports one
-`HydrogenicCoreBranchCorrectionSpec` with `orbital_selector = :global_lowest`;
-center-local selection and multi-center corrections are intentionally deferred.
+`HydrogenicCoreBranchCorrectionSpec`. Its default
+`orbital_selector = :localized_lowest` chooses a center-local subspace by
+nearest carried nucleus and degenerates to the full space for one-center
+payloads without carried nuclei. `orbital_selector = :global_lowest` remains an
+explicit debug/reference selector. Multi-center corrections are intentionally
+deferred.
 
 ```@docs
 HydrogenicCoreProjectorCorrectionSpec
