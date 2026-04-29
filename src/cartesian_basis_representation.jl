@@ -1646,6 +1646,10 @@ end
 
 Returned by `transfer_orbitals(...)`. Bundles the transferred coefficients,
 the exact basis projector when one was materialized, and transfer diagnostics.
+
+`projector === nothing` means the caller selected a supported no-projector
+transfer path, so the exact `C_B = S_BA * C_A` transfer was applied directly to
+the supplied coefficient block without storing the dense `S_BA` matrix.
 """
 struct CartesianOrbitalTransferResult{CT <: Union{Vector{Float64},Matrix{Float64}}}
     coefficients::CT
@@ -1926,18 +1930,23 @@ end
         source_coefficients::AbstractVecOrMat,
         source::CartesianBasisRepresentation3D,
         target::CartesianBasisRepresentation3D,
+        ;
+        materialize_projector::Bool = true,
     )
-
-Transfer orbital coefficients from `source` into `target` using the exact final
-basis cross overlap returned by `basis_projector(...)`. Pass
-`materialize_projector = false` on supported mixed-raw hybrid transfers to apply
-the same transfer to the supplied coefficient block without building the full
-dense projector.
 
 For the final orthonormal working-basis contract used in this repo, the transfer
 formula is
 
 `C_B = S_{BA} * C_A`.
+
+With the default `materialize_projector = true`, this preserves the historical
+explicit-projector route: build the exact dense projector `S_BA` with
+`basis_projector(...)`, then apply it to `source_coefficients`.
+
+With `materialize_projector = false`, supported mixed-raw hybrid transfers apply
+the same exact formula directly to the supplied coefficient block and may return
+`CartesianOrbitalTransferResult.projector === nothing`. Unsupported source/target
+pairs throw rather than silently falling back to projector materialization.
 
 Final-basis self-overlaps are diagnostic only and are not part of this normal
 transfer path. When the source columns already represent an orthonormal occupied

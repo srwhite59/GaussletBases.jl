@@ -624,6 +624,19 @@ function basis_projector(
     )
 end
 
+"""
+    transfer_orbitals(source_coefficients, source_bundle, target_bundle; materialize_projector = true)
+    transfer_orbitals(source_coefficients, source_path, target_path; materialize_projector = true)
+
+Transfer coefficients between Cartesian basis bundles using the same final-basis
+contract as representation-level transfer: `C_B = S_BA * C_A`.
+
+The default `materialize_projector = true` preserves the explicit-projector
+route and returns a result carrying the materialized projector. When
+`materialize_projector = false` is supported by the loaded source/target basis
+representations, the transfer is applied directly to the coefficient block and
+the returned result may have `projector === nothing`.
+"""
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
     source::CartesianBasisBundle3D,
