@@ -49,6 +49,8 @@ LegacyAtomicGaussianShell
 LegacyAtomicGaussianSupplement
 LegacySGaussianData
 legacy_atomic_gaussian_supplement
+legacy_bond_aligned_diatomic_gaussian_supplement
+legacy_bond_aligned_heteronuclear_gaussian_supplement
 legacy_s_gaussian_data
 mapped_ordinary_one_body_operators
 mapped_cartesian_hydrogen_energy
@@ -67,6 +69,11 @@ gto_occupancy_matrix
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```
+
+For molecular Gaussian supplements, `max_width` is a primitive-level
+core/locality cutoff: primitives wider than the cutoff are removed before
+placing the supplement on each nucleus. A contracted shell disappears only when
+no primitive remains after this filtering.
 
 ## Hydrogenic core corrections
 

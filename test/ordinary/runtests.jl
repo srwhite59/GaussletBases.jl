@@ -2414,6 +2414,51 @@ end
         @test length(full_cart.orbitals) == 18
         @test length(trimmed_cart.orbitals) == 8
         @test length(hetero_trimmed_cart.orbitals) < length(hetero_full_cart.orbitals)
+        @test all(
+            all(width <= 1.0 for width in 1.0 ./ sqrt.(2.0 .* orbital.exponents))
+            for orbital in trimmed_cart.orbitals
+        )
+        @test all(
+            all(width <= 1.0 for width in 1.0 ./ sqrt.(2.0 .* orbital.exponents))
+            for orbital in hetero_trimmed_cart.orbitals
+        )
+    end
+
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: He repo-wide-contraction\n" *
+            "He    S\n" *
+            "      8.0000000              1.0000000\n" *
+            "      0.1250000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+
+        nuclei = [(-0.7, 0.0, 0.0), (0.7, 0.0, 0.0)]
+        trimmed = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "He",
+            "repo-wide-contraction",
+            nuclei;
+            lmax = 0,
+            basisfile = path,
+            max_width = 1.0,
+        )
+        removed = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "He",
+            "repo-wide-contraction",
+            nuclei;
+            lmax = 0,
+            basisfile = path,
+            max_width = 0.2,
+        )
+        trimmed_cart = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(trimmed)
+        removed_cart = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(removed)
+
+        @test length(trimmed_cart.orbitals) == 2
+        @test all(orbital.exponents == [8.0] for orbital in trimmed_cart.orbitals)
+        @test all(orbital.coefficients == [1.0] for orbital in trimmed_cart.orbitals)
+        @test isempty(removed_cart.orbitals)
     end
 end
 

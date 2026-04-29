@@ -220,7 +220,21 @@ function _bond_aligned_diatomic_cartesian_shell_supplement_3d(
     )
 end
 
-_legacy_shell_max_width(shell::LegacyAtomicGaussianShell) = maximum(shell.widths)
+function _legacy_width_filtered_shell(
+    shell::LegacyAtomicGaussianShell,
+    max_width::Union{Nothing, Real},
+)
+    max_width === nothing && return shell
+    width_limit = Float64(max_width)
+    keep = findall(width -> width <= width_limit, shell.widths)
+    isempty(keep) && return nothing
+    return LegacyAtomicGaussianShell(
+        shell.l,
+        shell.exponents[keep],
+        shell.widths[keep],
+        shell.coefficients[keep],
+    )
+end
 
 function _bond_aligned_two_center_cartesian_orbitals(
     atomic_sources::NTuple{2,LegacyAtomicGaussianSupplement},
@@ -243,13 +257,12 @@ function _bond_aligned_two_center_cartesian_orbitals(
             Float64(nucleus_raw[2]),
             Float64(nucleus_raw[3]),
         )
-        for shell in source.shells
-            # The diatomic `max_width` knob is a supplement-orbital selection
-            # policy, not a primitive rewrite: keep or drop each shell-derived
-            # orbital family using the widest primitive in that shell.
-            if max_width !== nothing && _legacy_shell_max_width(shell) > Float64(max_width)
-                continue
-            end
+        for source_shell in source.shells
+            # Molecular supplements use `max_width` as a core/locality policy:
+            # drop diffuse primitives inside a contraction, and drop the shell
+            # only if no primitive survives.
+            shell = _legacy_width_filtered_shell(source_shell, max_width)
+            shell === nothing && continue
             shell_entries = _atomic_cartesian_shell_labels(shell.l)
             contraction_columns = _legacy_atomic_shell_contraction_columns(
                 shell,
@@ -689,6 +702,11 @@ The object reuses one atomic named-basis shell definition and places the
 resulting explicit Cartesian shell content on the two supplied nuclear centers.
 It is intended for the first honest molecular QW residual-Gaussian completion
 and does not yet attempt arbitrary molecular placement.
+
+When `max_width` is supplied, it is a molecular core/locality cutoff: primitives
+wider than `max_width` are removed from each contracted shell before placement,
+and a shell contributes no supplement orbital only if all of its primitives are
+removed.
 """
 function legacy_bond_aligned_diatomic_gaussian_supplement(
     atom::AbstractString,
@@ -737,6 +755,11 @@ bond-aligned heteronuclear diatomic.
 The object places one named atomic shell source on nucleus A and one distinct
 named atomic shell source on nucleus B. It is intentionally limited to the
 first honest two-center heteronuclear ordinary-QW line.
+
+When `max_width` is supplied, it is a molecular core/locality cutoff: primitives
+wider than `max_width` are removed from each contracted shell before placement,
+and a shell contributes no supplement orbital only if all of its primitives are
+removed.
 """
 function legacy_bond_aligned_heteronuclear_gaussian_supplement(
     atom_a::AbstractString,
