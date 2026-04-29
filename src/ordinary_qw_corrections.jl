@@ -47,7 +47,7 @@ end
 """
     HydrogenicCoreBranchCorrectionSpec(; Z, nucleus=(0.0, 0.0, 0.0),
         include_esoi=false, orbital_selector=:localized_lowest,
-        local_orbital_index=nothing)
+        local_orbital_index=nothing, reference_nuclear_charges=nothing)
 
 Public branch-level hydrogenic core correction specification. This is the
 matrix-level companion to [`HydrogenicCoreProjectorCorrectionSpec`](@ref) for
@@ -64,7 +64,10 @@ projector correction to that embedded vector. Use
 `orbital_selector = :global_lowest` as an explicit debug/reference selector
 matching the original projector behavior; multi-correction calls require
 localized selectors. Set `include_esoi=true` to apply the optional local ESOI
-two-body scalar calibration to the same selected core orbital.
+two-body scalar calibration to the same selected core orbital. By default,
+localized branch corrections calibrate the one-body projector against a
+center-isolated reference branch. Pass `reference_nuclear_charges` only to
+override that calibration branch explicitly.
 """
 struct HydrogenicCoreBranchCorrectionSpec
     Z::Float64
@@ -72,6 +75,7 @@ struct HydrogenicCoreBranchCorrectionSpec
     include_esoi::Bool
     orbital_selector::Symbol
     local_orbital_index::Union{Nothing,Int}
+    reference_nuclear_charges::Union{Nothing,Vector{Float64}}
 end
 
 function HydrogenicCoreBranchCorrectionSpec(;
@@ -80,6 +84,7 @@ function HydrogenicCoreBranchCorrectionSpec(;
     include_esoi::Bool = false,
     orbital_selector::Symbol = :localized_lowest,
     local_orbital_index::Union{Nothing,Integer} = nothing,
+    reference_nuclear_charges = nothing,
 )
     orbital_selector in (:localized_lowest, :global_lowest) || throw(
         ArgumentError(
@@ -92,6 +97,7 @@ function HydrogenicCoreBranchCorrectionSpec(;
         include_esoi,
         orbital_selector,
         local_orbital_index === nothing ? nothing : Int(local_orbital_index),
+        reference_nuclear_charges === nothing ? nothing : Float64.(collect(reference_nuclear_charges)),
     )
 end
 
@@ -158,15 +164,18 @@ end
 Matrix-level result returned by [`ordinary_cartesian_corrected_branch`](@ref).
 `one_body_hamiltonian` is the corrected branch one-body matrix assembled from
 the requested nuclear charges, `interaction_matrix` is the corresponding
-interaction matrix after any optional ESOI corrections, and `diagnostics` is a
-branch-level `NamedTuple` containing branch nuclear charges, correction count,
-overlap error, corrected center indices, and a tuple of per-correction
-diagnostic `NamedTuple`s. This result deliberately does not claim to be a new
-[`OrdinaryCartesianOperators3D`](@ref) payload.
+interaction matrix after any optional ESOI corrections, `one_body_delta` and
+`interaction_delta` are the final-minus-initial application-branch matrix
+deltas, and `diagnostics` is a branch-level `NamedTuple` containing branch
+nuclear charges, correction count, overlap error, corrected center indices, and
+a tuple of per-correction diagnostic `NamedTuple`s. This result deliberately
+does not claim to be a new [`OrdinaryCartesianOperators3D`](@ref) payload.
 """
 struct OrdinaryCartesianBranchCorrectionResult
     one_body_hamiltonian::Matrix{Float64}
     interaction_matrix::Matrix{Float64}
+    one_body_delta::Matrix{Float64}
+    interaction_delta::Matrix{Float64}
     diagnostics::NamedTuple
 end
 
@@ -286,6 +295,40 @@ function _ordinary_cartesian_projector_corrected_hamiltonian(
         selected_orbital = selected_orbital,
         shift = shift,
         corrected_expectation = corrected_expectation,
+        corrected_eigenvalue = corrected_eigenvalue,
+        corrected_global_orbital = corrected_global_orbital,
+    )
+end
+
+function _ordinary_cartesian_projector_delta_from_reference(
+    application_h::AbstractMatrix{<:Real},
+    reference_h::AbstractMatrix{<:Real},
+    Z::Real,
+    orbital::AbstractVector{<:Real},
+)
+    selected_orbital = Vector{Float64}(orbital)
+    selected_orbital ./= norm(selected_orbital)
+    target = -0.5 * Float64(Z)^2
+    calibration_expectation =
+        _ordinary_cartesian_one_body_expectation(reference_h, selected_orbital)
+    application_initial_expectation =
+        _ordinary_cartesian_one_body_expectation(application_h, selected_orbital)
+    shift = target - calibration_expectation
+    projector = selected_orbital * transpose(selected_orbital)
+    delta_h = shift .* projector
+    corrected_h = Matrix{Float64}(application_h) .+ delta_h
+    application_corrected_expectation =
+        _ordinary_cartesian_one_body_expectation(corrected_h, selected_orbital)
+    corrected_eigenvalue, corrected_global_orbital = _ordinary_cartesian_lowest_orbital(corrected_h)
+    return (
+        h = corrected_h,
+        delta_h = delta_h,
+        target = target,
+        calibration_expectation = calibration_expectation,
+        application_initial_expectation = application_initial_expectation,
+        application_corrected_expectation = application_corrected_expectation,
+        selected_orbital = selected_orbital,
+        shift = shift,
         corrected_eigenvalue = corrected_eigenvalue,
         corrected_global_orbital = corrected_global_orbital,
     )
@@ -779,22 +822,54 @@ function _ordinary_cartesian_branch_orbital_selection(
     )
 end
 
+function _ordinary_cartesian_inferred_reference_nuclear_charges(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    spec.reference_nuclear_charges !== nothing && return copy(spec.reference_nuclear_charges)
+    spec.orbital_selector == :localized_lowest || return nothing
+    hasproperty(operators.basis, :nuclei) || return nothing
+    centers, _ = _ordinary_cartesian_branch_partition_centers(operators, spec)
+    selected_center_index, _ = _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
+    charges = zeros(Float64, length(centers))
+    charges[selected_center_index] = spec.Z
+    return charges
+end
+
+function _ordinary_cartesian_reference_one_body_hamiltonian(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreBranchCorrectionSpec,
+    application_h::AbstractMatrix{<:Real},
+)
+    reference_charges = _ordinary_cartesian_inferred_reference_nuclear_charges(operators, spec)
+    if reference_charges === nothing
+        return Matrix{Float64}(application_h), nothing
+    end
+    reference_h = assembled_one_body_hamiltonian(operators; nuclear_charges = reference_charges)
+    return reference_h, Tuple(reference_charges)
+end
+
 function _ordinary_cartesian_branch_corrected_matrices(
     operators::OrdinaryCartesianOperators3D,
-    initial_h::AbstractMatrix{<:Real},
+    application_h::AbstractMatrix{<:Real},
+    reference_h::AbstractMatrix{<:Real},
     initial_v::AbstractMatrix{<:Real},
     correction::HydrogenicCoreBranchCorrectionSpec,
     internal_spec::HydrogenicCoreCorrectionSpec;
+    reference_nuclear_charges,
 )
-    initial_h = Matrix{Float64}(initial_h)
+    application_h = Matrix{Float64}(application_h)
+    reference_h = Matrix{Float64}(reference_h)
     initial_v = Matrix{Float64}(initial_v)
-    initial_global_eigenvalue, _ = _ordinary_cartesian_lowest_orbital(initial_h)
-    selection = _ordinary_cartesian_branch_orbital_selection(operators, initial_h, correction)
+    application_global_eigenvalue, _ = _ordinary_cartesian_lowest_orbital(application_h)
+    calibration_global_eigenvalue, _ = _ordinary_cartesian_lowest_orbital(reference_h)
+    selection = _ordinary_cartesian_branch_orbital_selection(operators, reference_h, correction)
     local_index, local_orbital, local_distance =
         _ordinary_cartesian_select_local_orbital(operators, internal_spec)
 
-    one_body = _ordinary_cartesian_projector_corrected_hamiltonian(
-        initial_h,
+    one_body = _ordinary_cartesian_projector_delta_from_reference(
+        application_h,
+        reference_h,
         correction.Z,
         selection.orbital,
     )
@@ -829,7 +904,7 @@ function _ordinary_cartesian_branch_corrected_matrices(
     end
 
     proxy_initial_energy =
-        _ordinary_cartesian_closed_shell_proxy_energy(initial_h, initial_v, corrected_orbital)
+        _ordinary_cartesian_closed_shell_proxy_energy(application_h, initial_v, corrected_orbital)
     proxy_corrected_energy =
         _ordinary_cartesian_closed_shell_proxy_energy(corrected_h, corrected_v, corrected_orbital)
     proxy_target_energy = -correction.Z^2 + 5.0 * correction.Z / 8.0
@@ -846,9 +921,12 @@ function _ordinary_cartesian_branch_corrected_matrices(
         local_orbital_center = (local_orbital.x, local_orbital.y, local_orbital.z),
         local_orbital_distance = local_distance,
         local_density_weight = local_density_weight,
+        reference_nuclear_charges = reference_nuclear_charges,
         exact_lowest_core_eigenvalue = one_body.target,
-        initial_lowest_core_eigenvalue = initial_global_eigenvalue,
+        initial_lowest_core_eigenvalue = calibration_global_eigenvalue,
         corrected_lowest_core_eigenvalue = one_body.corrected_eigenvalue,
+        calibration_lowest_core_eigenvalue = calibration_global_eigenvalue,
+        application_lowest_core_eigenvalue = application_global_eigenvalue,
         one_body_shift = one_body.shift,
         local_exact_bracket_iterations = 0,
         local_exact_bisection_iterations = 0,
@@ -868,8 +946,12 @@ function _ordinary_cartesian_branch_corrected_matrices(
         selected_local_subspace_dimension = selection.selected_local_subspace_dimension,
         selected_local_subspace_count = selection.selected_local_subspace_dimension,
         selected_local_subspace_indices = selection.selected_local_subspace_indices,
-        selected_core_initial_expectation = selection.selected_core_initial_expectation,
-        selected_core_corrected_expectation = one_body.corrected_expectation,
+        selected_core_initial_expectation = one_body.calibration_expectation,
+        selected_core_corrected_expectation = one_body.application_corrected_expectation,
+        calibration_core_initial_expectation = one_body.calibration_expectation,
+        calibration_core_corrected_expectation = one_body.target,
+        application_core_initial_expectation = one_body.application_initial_expectation,
+        application_core_corrected_expectation = one_body.application_corrected_expectation,
         selected_local_eigenvalue = selection.selected_local_eigenvalue,
     )
     return (
@@ -970,18 +1052,27 @@ function ordinary_cartesian_corrected_branch(
 
     correction_specs = _ordinary_cartesian_branch_corrections(corrections)
     branch_charges = nuclear_charges === nothing ? nothing : Float64.(collect(nuclear_charges))
-    corrected_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
-    corrected_v = Matrix{Float64}(operators.interaction_matrix)
+    initial_application_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
+    initial_application_v = Matrix{Float64}(operators.interaction_matrix)
+    corrected_h = Matrix{Float64}(initial_application_h)
+    corrected_v = Matrix{Float64}(initial_application_v)
     per_correction_diagnostics = NamedTuple[]
     corrected_center_indices = Any[]
     for correction in correction_specs
         internal_spec = _ordinary_cartesian_internal_spec(correction)
+        reference_h, reference_charges = _ordinary_cartesian_reference_one_body_hamiltonian(
+            operators,
+            correction,
+            corrected_h,
+        )
         matrices = _ordinary_cartesian_branch_corrected_matrices(
             operators,
             corrected_h,
+            reference_h,
             corrected_v,
             correction,
-            internal_spec,
+            internal_spec;
+            reference_nuclear_charges = reference_charges,
         )
         diagnostic = matrices.diagnostics
         if length(correction_specs) > 1
@@ -1004,9 +1095,13 @@ function ordinary_cartesian_corrected_branch(
         overlap_error = overlap_error,
         corrected_center_indices = Tuple(corrected_center_indices),
     )
+    one_body_delta = corrected_h .- initial_application_h
+    interaction_delta = corrected_v .- initial_application_v
     return OrdinaryCartesianBranchCorrectionResult(
         corrected_h,
         corrected_v,
+        one_body_delta,
+        interaction_delta,
         diagnostics,
     )
 end

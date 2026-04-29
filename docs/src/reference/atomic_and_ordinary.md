@@ -96,13 +96,18 @@ with caller-provided `nuclear_charges`, applies one or more
 `HydrogenicCoreBranchCorrectionSpec`s sequentially, and returns corrected
 matrices rather than a new operator payload. The branch surface default
 `orbital_selector = :localized_lowest` chooses a center-local subspace by
-nearest carried nucleus and degenerates to the full space for one-center
-payloads without carried nuclei. `orbital_selector = :global_lowest` remains an
-explicit debug/reference selector for single-correction calls. Multi-correction
-calls require localized selectors and reject duplicate localized center indices.
+nearest carried nucleus and calibrates the projector shift on a center-isolated
+reference branch by default. For example, a full dimer application branch
+`[Z, Z]` calibrates the nucleus-A correction on `[Z, 0]` and the nucleus-B
+correction on `[0, Z]`, then applies those projector deltas to the full branch.
+Use `reference_nuclear_charges` only as an explicit override for debug or
+embedding studies. `orbital_selector = :global_lowest` remains an explicit
+debug/reference selector for single-correction calls. Multi-correction calls
+require localized selectors and reject duplicate localized center indices.
 Branch diagnostics report `branch_nuclear_charges`, `correction_count`,
 `overlap_error`, optional `corrected_center_indices`, and a tuple of
-per-correction diagnostics in `corrections`.
+per-correction diagnostics in `corrections`; the matrix deltas are available as
+`one_body_delta` and `interaction_delta`.
 
 The intended counterpoise pattern is to build one operator payload with
 `nuclear_term_storage = :by_center`, then reuse it for the full branch and each

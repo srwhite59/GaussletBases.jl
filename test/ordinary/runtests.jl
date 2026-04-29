@@ -122,6 +122,11 @@ end
     )
     target_one_body = -0.5 * Z^2
     target_closed_shell = -Z^2 + 5.0 * Z / 8.0
+    initial_branch_h = assembled_one_body_hamiltonian(
+        operators;
+        nuclear_charges = operators.nuclear_charges,
+    )
+    initial_interaction = Matrix{Float64}(operators.interaction_matrix)
 
     branch_spec = HydrogenicCoreBranchCorrectionSpec(; Z = Z, include_esoi = true)
     branch_result = ordinary_cartesian_corrected_branch(
@@ -146,6 +151,8 @@ end
     @test branch_diagnostic.closed_shell_corrected_energy ≈ target_closed_shell atol = 1.0e-8 rtol = 0.0
     @test branch_result.one_body_hamiltonian ≈ wrapper_result.operators.one_body_hamiltonian atol = 1.0e-12 rtol = 0.0
     @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-10 rtol = 0.0
+    @test branch_result.one_body_delta ≈ branch_result.one_body_hamiltonian - initial_branch_h atol = 1.0e-12 rtol = 0.0
+    @test branch_result.interaction_delta ≈ branch_result.interaction_matrix - initial_interaction atol = 1.0e-12 rtol = 0.0
 end
 
 @testset "Ordinary QW localized diatomic branch correction selector" begin
@@ -165,6 +172,11 @@ end
     kinetic_sidecar = operators.kinetic_one_body
     nuclear_sidecars = operators.nuclear_one_body_by_center
     target_one_body = -0.5
+    full_initial_h = assembled_one_body_hamiltonian(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+    )
+    full_initial_v = Matrix{Float64}(operators.interaction_matrix)
 
     branch_a = ordinary_cartesian_corrected_branch(
         operators;
@@ -183,6 +195,15 @@ end
         nuclear_charges = [1.0, 1.0],
         corrections = [spec_a, spec_b],
     )
+    same_branch_reference_a = ordinary_cartesian_corrected_branch(
+        operators;
+        nuclear_charges = [1.0, 1.0],
+        corrections = HydrogenicCoreBranchCorrectionSpec(;
+            Z = 1.0,
+            nucleus = basis.nuclei[1],
+            reference_nuclear_charges = [1.0, 1.0],
+        ),
+    )
 
     @test branch_a isa OrdinaryCartesianBranchCorrectionResult
     @test branch_b isa OrdinaryCartesianBranchCorrectionResult
@@ -196,6 +217,8 @@ end
     diagnostic_b = only(branch_b.diagnostics.corrections)
     @test diagnostic_a.orbital_selector == :localized_lowest
     @test diagnostic_b.orbital_selector == :localized_lowest
+    @test diagnostic_a.reference_nuclear_charges == (1.0, 0.0)
+    @test diagnostic_b.reference_nuclear_charges == (0.0, 1.0)
     @test diagnostic_a.selected_center_index == 1
     @test diagnostic_b.selected_center_index == 2
     @test diagnostic_a.selected_center == basis.nuclei[1]
@@ -218,12 +241,24 @@ end
     @test full_branch.diagnostics.corrected_center_indices == (1, 2)
     full_diagnostics = full_branch.diagnostics.corrections
     @test (full_diagnostics[1].selected_center_index, full_diagnostics[2].selected_center_index) == (1, 2)
+    @test (full_diagnostics[1].reference_nuclear_charges, full_diagnostics[2].reference_nuclear_charges) ==
+          ((1.0, 0.0), (0.0, 1.0))
     @test isempty(intersect(
         full_diagnostics[1].selected_local_subspace_indices,
         full_diagnostics[2].selected_local_subspace_indices,
     ))
-    @test full_diagnostics[1].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-    @test full_diagnostics[2].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    for diagnostic in full_diagnostics
+        @test diagnostic.application_core_corrected_expectation - target_one_body ≈
+              diagnostic.application_core_initial_expectation -
+              diagnostic.calibration_core_initial_expectation atol = 1.0e-9 rtol = 0.0
+        @test diagnostic.calibration_core_corrected_expectation ≈ target_one_body atol = 1.0e-12 rtol = 0.0
+    end
+    same_branch_diagnostic_a = only(same_branch_reference_a.diagnostics.corrections)
+    @test same_branch_diagnostic_a.reference_nuclear_charges == (1.0, 1.0)
+    @test same_branch_diagnostic_a.application_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+    @test full_branch.one_body_delta ≈ full_branch.one_body_hamiltonian - full_initial_h atol = 1.0e-12 rtol = 0.0
+    @test full_branch.interaction_delta ≈ full_branch.interaction_matrix - full_initial_v atol = 1.0e-12 rtol = 0.0
+    @test full_branch.interaction_delta ≈ zeros(size(full_initial_v)) atol = 1.0e-14 rtol = 0.0
     @test_throws ArgumentError ordinary_cartesian_corrected_branch(
         operators;
         nuclear_charges = [1.0, 1.0],
@@ -282,16 +317,26 @@ end
         @test hybrid_full.diagnostics.correction_count == 2
         @test hybrid_full.diagnostics.corrected_center_indices == (1, 2)
         @test (hybrid_diagnostics[1].selected_center_index, hybrid_diagnostics[2].selected_center_index) == (1, 2)
+        @test (hybrid_diagnostics[1].reference_nuclear_charges, hybrid_diagnostics[2].reference_nuclear_charges) ==
+              ((1.0, 0.0), (0.0, 1.0))
         @test isempty(intersect(
             hybrid_diagnostics[1].selected_local_subspace_indices,
             hybrid_diagnostics[2].selected_local_subspace_indices,
         ))
         @test hybrid_diagnostics[1].selected_local_subspace_dimension > 0
         @test hybrid_diagnostics[2].selected_local_subspace_dimension > 0
-        @test hybrid_diagnostics[1].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
-        @test hybrid_diagnostics[2].selected_core_corrected_expectation ≈ target_one_body atol = 1.0e-9 rtol = 0.0
+        for diagnostic in hybrid_diagnostics
+            @test diagnostic.application_core_corrected_expectation - target_one_body ≈
+                  diagnostic.application_core_initial_expectation -
+                  diagnostic.calibration_core_initial_expectation atol = 1.0e-9 rtol = 0.0
+            @test diagnostic.calibration_core_corrected_expectation ≈ target_one_body atol = 1.0e-12 rtol = 0.0
+        end
         @test only(hybrid_branch_a.diagnostics.corrections).selected_center_index == 1
         @test only(hybrid_branch_b.diagnostics.corrections).selected_center_index == 2
+        @test only(hybrid_branch_a.diagnostics.corrections).application_core_corrected_expectation ≈
+              target_one_body atol = 1.0e-9 rtol = 0.0
+        @test only(hybrid_branch_b.diagnostics.corrections).application_core_corrected_expectation ≈
+              target_one_body atol = 1.0e-9 rtol = 0.0
         @test hybrid_branch_a.diagnostics.branch_nuclear_charges == (1.0, 0.0)
         @test hybrid_branch_b.diagnostics.branch_nuclear_charges == (0.0, 1.0)
         @test hybrid_operators.kinetic_one_body === hybrid_kinetic_sidecar
