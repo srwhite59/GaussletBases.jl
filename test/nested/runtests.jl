@@ -2138,7 +2138,8 @@ end
     diatomic_rep20 = basis_representation(diatomic_basis20)
     bond_aligned_hybrid_fixture = _bond_aligned_diatomic_nested_hybrid_bundle_fixture()
 
-    mktempdir() do dir
+    dir = mktempdir()
+    try
         square_path = joinpath(dir, "square_basis.jld2")
         square_fixed_path = joinpath(dir, "square_fixed.jld2")
         diatomic14_path = joinpath(dir, "diatomic14.jld2")
@@ -2312,6 +2313,18 @@ end
             hybrid_fixture.full_rep,
             hybrid_fixture.legacy_rep,
         )
+        disk_hybrid_fast_transfer = transfer_orbitals(
+            hybrid_coefficients,
+            atomic_hybrid_full_path,
+            atomic_hybrid_legacy_path;
+            materialize_projector = false,
+        )
+        memory_hybrid_fast_transfer = transfer_orbitals(
+            hybrid_coefficients,
+            hybrid_fixture.full_rep,
+            hybrid_fixture.legacy_rep;
+            materialize_projector = false,
+        )
         @test disk_hybrid_transfer.coefficients ≈
             memory_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_transfer.projector !== nothing
@@ -2319,6 +2332,15 @@ end
         @test disk_hybrid_transfer.projector.matrix ≈
             memory_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
         @test disk_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+        @test disk_hybrid_fast_transfer.coefficients ≈
+            disk_hybrid_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_hybrid_fast_transfer.coefficients ≈
+            memory_hybrid_fast_transfer.coefficients atol = 1.0e-10 rtol = 1.0e-10
+        @test disk_hybrid_fast_transfer.projector === nothing
+        @test memory_hybrid_fast_transfer.projector === nothing
+        @test disk_hybrid_fast_transfer.diagnostics.transfer_path == :hybrid_mixed_raw_cross_overlap_transfer
+        @test isnan(disk_hybrid_fast_transfer.diagnostics.projector_residual_inf)
+        @test isnan(disk_hybrid_fast_transfer.diagnostics.transferred_residual_inf)
 
         disk_bond_aligned_hybrid_self =
             cross_overlap(bond_aligned_hybrid_path, bond_aligned_hybrid_path)
@@ -2369,6 +2391,8 @@ end
         @test disk_bond_aligned_hybrid_transfer.projector.matrix ≈
             memory_bond_aligned_hybrid_transfer.projector.matrix atol = 1.0e-10 rtol = 1.0e-10
         @test disk_bond_aligned_hybrid_transfer.diagnostics.transferred_residual_inf < 1.0e-10
+    finally
+        rm(dir; recursive = true, force = true)
     end
 end
 

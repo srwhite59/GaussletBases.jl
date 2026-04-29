@@ -580,6 +580,60 @@ function _cartesian_factorized_cartesian_cross_overlap(
     return result
 end
 
+function _cartesian_factorized_cartesian_cross_apply(
+    left_factorized::_CartesianNestedFactorizedBasis3D,
+    right_factorized::_CartesianNestedFactorizedBasis3D,
+    axis_cross_tables::NamedTuple{(:x, :y, :z)},
+    right_coefficients::AbstractMatrix{<:Real},
+    ;
+    block_columns::Int = 8,
+)
+    nright = length(right_factorized.basis_triplets)
+    size(right_coefficients, 1) == nright || throw(
+        DimensionMismatch(
+            "factorized Cartesian cross apply expected $nright source Cartesian rows, got $(size(right_coefficients, 1))",
+        ),
+    )
+    ncols = size(right_coefficients, 2)
+    result = zeros(Float64, length(left_factorized.basis_triplets), ncols)
+    right_triplets = right_factorized.basis_triplets
+    right_amplitudes = right_factorized.basis_amplitudes
+    left_triplets = left_factorized.basis_triplets
+    left_amplitudes = left_factorized.basis_amplitudes
+    nx_right = size(right_factorized.x_functions, 2)
+    ny_right = size(right_factorized.y_functions, 2)
+    nz_right = size(right_factorized.z_functions, 2)
+
+    for first_column in 1:block_columns:ncols
+        last_column = min(ncols, first_column + block_columns - 1)
+        block_range = first_column:last_column
+        block_size = length(block_range)
+        aggregated = zeros(Float64, nx_right, ny_right, nz_right, block_size)
+        @inbounds for source_index in eachindex(right_triplets)
+            ix, iy, iz = right_triplets[source_index]
+            amplitude = right_amplitudes[source_index]
+            for (local_column, global_column) in enumerate(block_range)
+                aggregated[ix, iy, iz, local_column] +=
+                    amplitude * Float64(right_coefficients[source_index, global_column])
+            end
+        end
+
+        aggregated = _cartesian_factorized_contract_axis_x(axis_cross_tables.x, aggregated)
+        aggregated = _cartesian_factorized_contract_axis_y(axis_cross_tables.y, aggregated)
+        aggregated = _cartesian_factorized_contract_axis_z(axis_cross_tables.z, aggregated)
+
+        @inbounds for target_index in eachindex(left_triplets)
+            ix, iy, iz = left_triplets[target_index]
+            amplitude = left_amplitudes[target_index]
+            for (local_column, global_column) in enumerate(block_range)
+                result[target_index, global_column] =
+                    amplitude * aggregated[ix, iy, iz, local_column]
+            end
+        end
+    end
+    return result
+end
+
 function _cartesian_factorized_basis_supplement_cross(
     factorized::_CartesianNestedFactorizedBasis3D,
     basis::CartesianBasisRepresentation3D,
@@ -1120,6 +1174,118 @@ function _cartesian_mixed_raw_cross_overlap_with_stage_timings(
     )
 end
 
+function _cartesian_mixed_raw_cross_apply_with_stage_timings(
+    left::CartesianBasisRepresentation3D,
+    right::CartesianBasisRepresentation3D,
+    right_coefficients::AbstractMatrix{<:Real},
+)
+    size(right_coefficients, 1) == right.metadata.final_dimension || throw(
+        DimensionMismatch(
+            "mixed raw transfer apply expected $(right.metadata.final_dimension) source final rows, got $(size(right_coefficients, 1))",
+        ),
+    )
+    timer = _CartesianCrossOverlapStageTimer()
+    left_raw = nothing
+    right_raw = nothing
+    _cartesian_time_stage!(timer, :factorized_parent_ns) do
+        left_raw = _cartesian_raw_components(left)
+        right_raw = _cartesian_raw_components(right)
+        nothing
+    end
+
+    axis_cross_tables = _cartesian_time_stage!(timer, :axis_cross_table_ns) do
+        _cartesian_factorized_axis_cross_tables(
+            left_raw.cartesian_representation,
+            right_raw.cartesian_representation,
+            left_raw.factorized_cartesian_parent_basis,
+            right_raw.factorized_cartesian_parent_basis,
+        )
+    end
+
+    right_raw_coefficients = _cartesian_time_stage!(timer, :final_contraction_ns) do
+        Matrix{Float64}(right_raw.raw_to_final * right_coefficients)
+    end
+    right_cartesian_dimension = right_raw.cartesian_representation.metadata.final_dimension
+    right_supplement_dimension = length(right_raw.supplement_representation.orbitals)
+    right_cartesian_coefficients =
+        @view right_raw_coefficients[1:right_cartesian_dimension, :]
+    right_supplement_coefficients =
+        @view right_raw_coefficients[(right_cartesian_dimension + 1):(right_cartesian_dimension + right_supplement_dimension), :]
+
+    target_cartesian = _cartesian_time_stage!(timer, :cartesian_cartesian_block_ns) do
+        _cartesian_factorized_cartesian_cross_apply(
+            left_raw.factorized_cartesian_parent_basis,
+            right_raw.factorized_cartesian_parent_basis,
+            axis_cross_tables.tables,
+            right_cartesian_coefficients,
+        )
+    end
+
+    _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
+        if right_supplement_dimension > 0
+            cg = _cartesian_exact_cartesian_supplement_cross(left_raw, right_raw)
+            if cg === nothing
+                cg = _cartesian_factorized_basis_supplement_cross(
+                    left_raw.factorized_cartesian_parent_basis,
+                    left_raw.cartesian_representation,
+                    right_raw.supplement_representation,
+                    left_raw,
+                    right_raw,
+                )
+            end
+            target_cartesian .+= cg * right_supplement_coefficients
+        end
+        nothing
+    end
+
+    left_supplement_dimension = length(left_raw.supplement_representation.orbitals)
+    target_supplement = _cartesian_time_stage!(timer, :cartesian_supplement_block_ns) do
+        if left_supplement_dimension == 0
+            zeros(Float64, 0, size(right_coefficients, 2))
+        else
+            gc = _cartesian_exact_cartesian_supplement_cross(right_raw, left_raw)
+            if gc === nothing
+                gc = _cartesian_factorized_basis_supplement_cross(
+                    right_raw.factorized_cartesian_parent_basis,
+                    right_raw.cartesian_representation,
+                    left_raw.supplement_representation,
+                    right_raw,
+                    left_raw,
+                )
+            end
+            Matrix{Float64}(transpose(gc) * right_cartesian_coefficients)
+        end
+    end
+
+    _cartesian_time_stage!(timer, :supplement_supplement_block_ns) do
+        if left_supplement_dimension > 0 && right_supplement_dimension > 0
+            exact_gg = _cartesian_exact_supplement_cross_overlap(left_raw, right_raw)
+            gg =
+                exact_gg === nothing ?
+                _cartesian_supplement_cross_overlap(
+                    left_raw.supplement_representation,
+                    right_raw.supplement_representation,
+                ) :
+                exact_gg
+            target_supplement .+= gg * right_supplement_coefficients
+        end
+        nothing
+    end
+
+    coefficients = _cartesian_time_stage!(timer, :final_contraction_ns) do
+        raw_target_coefficients =
+            left_supplement_dimension == 0 ?
+            target_cartesian :
+            [target_cartesian; target_supplement]
+        Matrix{Float64}(transpose(left_raw.raw_to_final) * raw_target_coefficients)
+    end
+
+    return (
+        coefficients = coefficients,
+        stage_timings = _cartesian_cross_overlap_stage_timings(timer, axis_cross_tables.timings),
+    )
+end
+
 function _cartesian_mixed_raw_cross_overlap(
     left::CartesianBasisRepresentation3D,
     right::CartesianBasisRepresentation3D,
@@ -1478,13 +1644,12 @@ end
 """
     CartesianOrbitalTransferResult
 
-Returned by `transfer_orbitals(...)`. Bundles the transferred coefficients, the
-exact basis projector used on the normal final-basis transfer path, and
-transfer diagnostics.
+Returned by `transfer_orbitals(...)`. Bundles the transferred coefficients,
+the exact basis projector when one was materialized, and transfer diagnostics.
 """
 struct CartesianOrbitalTransferResult{CT <: Union{Vector{Float64},Matrix{Float64}}}
     coefficients::CT
-    projector::CartesianBasisProjector3D
+    projector::Union{Nothing,CartesianBasisProjector3D}
     diagnostics::CartesianBasisTransferDiagnostics
 end
 
@@ -1496,7 +1661,7 @@ function Base.show(io::IO, result::CartesianOrbitalTransferResult)
         ", path=:",
         result.diagnostics.transfer_path,
         ", projector_size=",
-        size(result.projector.matrix),
+        result.projector === nothing ? "none" : string(size(result.projector.matrix)),
         ")",
     )
 end
@@ -1626,6 +1791,27 @@ function _cartesian_coefficients_matrix(source_coefficients::AbstractMatrix{<:Re
     return Matrix{Float64}(source_coefficients)
 end
 
+function _cartesian_transfer_diagnostics_without_projector(
+    source::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D,
+    source_coefficients::AbstractVecOrMat{<:Real},
+    transferred_coefficients::AbstractVecOrMat{<:Real},
+)
+    source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
+    transferred_coefficients_matrix = _cartesian_coefficients_matrix(transferred_coefficients)
+    return CartesianBasisTransferDiagnostics(
+        source.metadata.final_dimension,
+        target.metadata.final_dimension,
+        _cartesian_transfer_path(source, target),
+        NaN,
+        NaN,
+        NaN,
+        tr(transpose(source_coefficients_matrix) * source_coefficients_matrix),
+        tr(transpose(transferred_coefficients_matrix) * transferred_coefficients_matrix),
+        NaN,
+    )
+end
+
 function _cartesian_basis_projector_with_stage_timings(
     source::CartesianBasisRepresentation3D,
     target::CartesianBasisRepresentation3D,
@@ -1743,7 +1929,10 @@ end
     )
 
 Transfer orbital coefficients from `source` into `target` using the exact final
-basis cross overlap returned by `basis_projector(...)`.
+basis cross overlap returned by `basis_projector(...)`. Pass
+`materialize_projector = false` on supported mixed-raw hybrid transfers to apply
+the same transfer to the supplied coefficient block without building the full
+dense projector.
 
 For the final orthonormal working-basis contract used in this repo, the transfer
 formula is
@@ -1758,8 +1947,37 @@ final cleanup step.
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
     source::CartesianBasisRepresentation3D,
-    target::CartesianBasisRepresentation3D,
+    target::CartesianBasisRepresentation3D;
+    materialize_projector::Bool = true,
 )
+    if !materialize_projector
+        _cartesian_uses_exact_mixed_raw_cross_overlap(target, source) || throw(
+            ArgumentError(
+                "materialize_projector=false currently requires an exact mixed-raw Cartesian transfer path",
+            ),
+        )
+        source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
+        transfer_result = _cartesian_mixed_raw_cross_apply_with_stage_timings(
+            target,
+            source,
+            source_coefficients_matrix,
+        )
+        transferred_coefficients, _ =
+            _cartesian_finalize_transferred_coefficients(
+                source_coefficients,
+                transfer_result.coefficients,
+            )
+        return CartesianOrbitalTransferResult(
+            transferred_coefficients,
+            nothing,
+            _cartesian_transfer_diagnostics_without_projector(
+                source,
+                target,
+                source_coefficients,
+                transferred_coefficients,
+            ),
+        )
+    end
     projector = basis_projector(source, target)
     return transfer_orbitals(source_coefficients, projector)
 end

@@ -627,10 +627,19 @@ end
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
     source::CartesianBasisBundle3D,
-    target::CartesianBasisBundle3D,
+    target::CartesianBasisBundle3D;
+    materialize_projector::Bool = true,
 )
     _cartesian_require_exact_disk_bundle_support(source, "disk-level Cartesian orbital transfer")
     _cartesian_require_exact_disk_bundle_support(target, "disk-level Cartesian orbital transfer")
+    if !materialize_projector
+        return transfer_orbitals(
+            source_coefficients,
+            source.basis,
+            target.basis;
+            materialize_projector = false,
+        )
+    end
     projector = basis_projector(source, target)
     return transfer_orbitals(source_coefficients, projector)
 end
@@ -638,11 +647,13 @@ end
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
     source_path::AbstractString,
-    target_path::AbstractString,
+    target_path::AbstractString;
+    materialize_projector::Bool = true,
 )
     return transfer_orbitals(
         source_coefficients,
         read_cartesian_basis_bundle(source_path),
-        read_cartesian_basis_bundle(target_path),
+        read_cartesian_basis_bundle(target_path);
+        materialize_projector = materialize_projector,
     )
 end
