@@ -3,6 +3,9 @@
 This note records the gap that existed before the explicit 3D atomic shell
 route landed. It is now superseded for ordinary-QW and nested-QW by
 `docs/atomic_true_sp_support_note.md`.
+The original monolithic QW implementation file referenced by this historical
+note has since been retired; current source-map links below point at the split
+live files.
 
 This pass checks whether the current atomic hybrid/QW path can honestly make
 `lmax = 1` a true active physical supplement route.
@@ -20,9 +23,9 @@ the centered `s` channel.
 The present active QW/nested supplement machinery is still built around one
 centered separable 1D Gaussian channel:
 
-- [`_qwrg_supplement_primitives_and_contraction(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl)
+- [`_qwrg_supplement_primitives_and_contraction(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qw_raw_blocks.jl)
   returns one 1D primitive Gaussian list plus one contraction matrix
-- [`_qwrg_raw_overlap_blocks(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl)
+- [`_qwrg_raw_overlap_blocks(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qw_raw_blocks.jl)
   and the related raw-block builders assemble 3D supplement blocks by cubing
   the same 1D channel across `x/y/z`
 - [`hybrid_mapped_ordinary_basis(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_hybrid.jl)
@@ -54,7 +57,7 @@ The current active consumers now reject `LegacyAtomicGaussianSupplement` objects
 that contain non-`s` shells:
 
 - [`hybrid_mapped_ordinary_basis(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_hybrid.jl)
-- [`ordinary_cartesian_qiu_white_operators(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qiu_white_rg.jl)
+- [`ordinary_cartesian_qiu_white_operators(...)`](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/ordinary_qw_operator_assembly.jl)
   for both ordinary and nested fixed-block routes
 
 This keeps the atomic line honest:

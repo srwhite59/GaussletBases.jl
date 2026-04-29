@@ -5,7 +5,8 @@
 1. Start from one finalized Cartesian fixed line.
    In the current repo this means the finalized QW-PGDG fixed line used as the
    parent line for later atomic nesting work.
-   Code: `src/ordinary_mapped_backends.jl`, `src/ordinary_qiu_white_rg.jl`
+   Code: `src/ordinary_mapped_backends.jl`,
+   `src/ordinary_qw_operator_assembly.jl`
 
 2. Choose one one-dimensional interval on that fixed line.
    The first primitive is local, not global: one interval of finalized parent
@@ -45,7 +46,7 @@
    - one shell coefficient map
    - shell overlap
    - one-body packet pieces
-   - Gaussian-factor and pair-factor packet pieces
+   - retained Gaussian-factor and pair-factor sums
    Code: `src/cartesian_nested_faces.jl`
 
 8. Stop at the first shell packet.

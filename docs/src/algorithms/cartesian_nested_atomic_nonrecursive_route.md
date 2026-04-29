@@ -5,7 +5,8 @@
 1. Start from one finalized Cartesian parent fixed block on the atomic QW line.
    In the current repo this is the finalized Cartesian fixed block produced
    before residual-Gaussian completion.
-   Code: `src/ordinary_qiu_white_rg.jl`, `src/ordinary_mapped_backends.jl`
+   Code: `src/ordinary_qw_operator_assembly.jl`,
+   `src/ordinary_mapped_backends.jl`
 
 2. Choose one centered rectangular working cube in the parent index lattice.
    The nonrecursive atomic route works on that parent cube only. It does not
@@ -77,7 +78,8 @@
    - the transformed fixed-fixed packet
    - fixed-Gaussian cross blocks contracted from parent raw blocks through `C`
    Gaussian-Gaussian blocks stay on the existing analytic route.
-   Code: `src/cartesian_nested_faces.jl`, `src/ordinary_qiu_white_rg.jl`
+   Code: `src/cartesian_nested_faces.jl`, `src/ordinary_qw_raw_blocks.jl`,
+   `src/ordinary_qw_operator_assembly.jl`
 
 9. Hand the adapted fixed block to the existing QW residual-Gaussian route.
    This page stops at the nested fixed-block / transferred-packet stage. The
@@ -180,7 +182,7 @@ The current landed implementation is concentrated in
 - `_nested_fixed_block(...)`
   fixed-block adapter construction for step `8`
 
-The downstream handoff point lives in `src/ordinary_qiu_white_rg.jl`:
+The downstream handoff point lives in `src/ordinary_qw_operator_assembly.jl`:
 
 - `ordinary_cartesian_qiu_white_operators(fixed_block::_NestedFixedBlock3D, ...)`
   consumes the adapted fixed block and then follows the QW residual-Gaussian

@@ -12,7 +12,9 @@
    This includes the one-dimensional data needed for both:
    - nuclear-potential assembly
    - electron-electron / `Vee` assembly
-   Code: current consumers include `src/ordinary_cartesian_ida.jl` and `src/ordinary_qiu_white_rg.jl`
+   Code: current consumers include `src/ordinary_cartesian_ida.jl`,
+   `src/ordinary_qw_raw_blocks.jl`, and
+   `src/ordinary_qw_operator_assembly.jl`
 
 3. In the pure distorted-gausslet route, build that one-dimensional Coulomb
    data directly in the distorted-gausslet representation.
@@ -49,7 +51,9 @@
    assembly is conceptually straightforward:
    - product assembly over `x`, `y`, `z`
    - short inner reduction over the Gaussian expansion terms
-   Code: current term-first three-dimensional assembly lives in `src/ordinary_cartesian_ida.jl` and `src/ordinary_qiu_white_rg.jl`
+   Code: current term-first three-dimensional assembly lives in
+   `src/ordinary_cartesian_ida.jl`, `src/ordinary_qw_raw_blocks.jl`, and
+   `src/ordinary_qw_operator_assembly.jl`
 
 8. Interpret the hierarchy operationally.
    In the intended first practical picture:
@@ -119,7 +123,8 @@ Current state:
 - the repo already has ordinary and Qiu-White-related proxy machinery in
   `src/ordinary_mapped_backends.jl`
 - the repo already has efficient term-first three-dimensional assembly routes
-  in `src/ordinary_cartesian_ida.jl` and `src/ordinary_qiu_white_rg.jl`
+  in `src/ordinary_cartesian_ida.jl`, `src/ordinary_qw_raw_blocks.jl`, and
+  `src/ordinary_qw_operator_assembly.jl`
 - the repo now has the first stored analytic ternary `1 -> 1/3` refinement
   mask and narrow local application helpers in
   `src/ordinary_pgdg_refinement_masks.jl`

@@ -47,7 +47,8 @@ surface.
 
 3. Atomic ordinary-QW Cartesian route:
 
-- `src/ordinary_qiu_white_rg.jl`
+- `src/ordinary_qw_operator_assembly.jl`
+- `src/ordinary_qw_raw_blocks.jl`
 - public entry point: `ordinary_cartesian_qiu_white_operators(...)`
 
 This is the scientifically relevant atomic Cartesian comparison path. It now
@@ -77,7 +78,7 @@ The concrete stop points were:
 - `src/legacy_basis_adapter.jl`
   - `_atomic_cartesian_shell_labels(...)`
   - `_atomic_cartesian_shell_supplement_3d(...)`
-- `src/ordinary_qiu_white_rg.jl`
+- `src/ordinary_qw_raw_blocks.jl`
   - `_qwrg_atomic_derivative_terms(...)`
 
 So the atomic QW route had true `SP` support, but not yet true `D` support.
@@ -115,7 +116,7 @@ Atomic-only `d` support was added on the explicit QW shell route:
 - `src/legacy_basis_adapter.jl`
   - atomic Cartesian shell labels now include the six Cartesian `d` functions
   - atomic explicit shell supplement now allows `lmax <= 2`
-- `src/ordinary_qiu_white_rg.jl`
+- `src/ordinary_qw_raw_blocks.jl`
   - atomic shell derivative helper now supports powers `0, 1, 2`
 
 Scope boundary kept explicit:
