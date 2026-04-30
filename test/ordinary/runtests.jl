@@ -363,6 +363,64 @@ end
     @test operators.nuclear_term_storage == :by_center
 end
 
+@testset "Diatomic molecular residuals stay atom-local on nested fallback path" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = 2.0,
+            core_spacing = 0.5,
+            xmax_parallel = 3.0,
+            xmax_transverse = 2.0,
+            bond_axis = :z,
+        )
+        nested = bond_aligned_diatomic_nested_fixed_block(basis; nside = 5)
+        # The CR2 reproducer used H/cc-pVDZ; the checked-in legacy basis file
+        # starts at cc-pVTZ, so this keeps the same H2/nside=5 nested route with
+        # a finite molecular width cutoff to exercise the local/core contract.
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        operators = ordinary_cartesian_qiu_white_operators(
+            nested.fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :ggt_nearest,
+        )
+        residual_orbitals = [
+            orbital for orbital in orbitals(operators)
+            if orbital.kind == :residual_gaussian
+        ]
+        midpoint = (0.0, 0.0, 0.0)
+        distance(a, b) = sqrt(sum((a[axis] - b[axis])^2 for axis in 1:3))
+
+        @test operators.residual_count > 0
+        @test length(residual_orbitals) == operators.residual_count
+        @test operators.residual_nucleus_indices == [orbital.owner_nucleus_index for orbital in residual_orbitals]
+        @test Set(operators.residual_nucleus_indices) == Set([1, 2])
+        @test count(==(1), operators.residual_nucleus_indices) > 0
+        @test count(==(2), operators.residual_nucleus_indices) > 0
+        for (index, orbital) in pairs(residual_orbitals)
+            owner = operators.residual_nucleus_indices[index]
+            center = (orbital.x, orbital.y, orbital.z)
+            @test center == Tuple(operators.residual_centers[index, :])
+            @test distance(center, basis.nuclei[owner]) < 0.25
+            @test distance(center, midpoint) > 0.25
+            @test startswith(orbital.label, owner == 1 ? "rgA" : "rgB")
+        end
+        @test_throws ArgumentError ordinary_cartesian_qiu_white_operators(
+            nested.fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            interaction_treatment = :mwg,
+        )
+    end
+end
+
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
 
 @testset "Bond-aligned homonuclear chain ordinary QW reference path" begin

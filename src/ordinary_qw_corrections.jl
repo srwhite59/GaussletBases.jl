@@ -505,6 +505,7 @@ function _ordinary_cartesian_operators_with_corrections(
         copy(operators.raw_to_final),
         copy(operators.residual_centers),
         copy(operators.residual_widths),
+        copy(operators.residual_nucleus_indices),
         nuclear_charges,
         nothing,
         nothing,

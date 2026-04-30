@@ -349,6 +349,172 @@ function _qwrg_residual_space(
     )
 end
 
+function _qwrg_residual_space_by_owner(
+    gausslet_overlap::AbstractMatrix{<:Real},
+    overlap_ga::AbstractMatrix{<:Real},
+    overlap_aa::AbstractMatrix{<:Real},
+    owner_indices::AbstractVector{<:Integer},
+    ;
+    keep_policy::Symbol = :near_null_only,
+    keep_abs_tol::Real = _QWRG_RESIDUAL_KEEP_ABS_TOL,
+    accept_tol::Real = _QWRG_RESIDUAL_ACCEPT_TOL,
+)
+    keep_policy_value = _qwrg_residual_keep_policy(keep_policy)
+    accept_tol_value = Float64(accept_tol)
+    gausslet_overlap_value = Matrix{Float64}(gausslet_overlap)
+    overlap_error = norm(
+        gausslet_overlap_value - Matrix{Float64}(I, size(gausslet_overlap_value, 1), size(gausslet_overlap_value, 2)),
+        Inf,
+    )
+    overlap_error <= 1.0e-8 || throw(
+        ArgumentError(
+            "Qiu-White owner-local residual construction requires an orthonormal fixed 3D overlap block",
+        ),
+    )
+
+    ngausslet = size(gausslet_overlap_value, 1)
+    ngaussian = size(overlap_aa, 1)
+    length(owner_indices) == ngaussian || throw(
+        DimensionMismatch("owner-local residual construction requires one owner index per supplement orbital"),
+    )
+    all(owner -> owner > 0, owner_indices) || throw(
+        ArgumentError("owner-local residual construction requires positive owner nucleus indices"),
+    )
+
+    overlap_ga_value = Matrix{Float64}(overlap_ga)
+    overlap_aa_value = Matrix{Float64}(overlap_aa)
+    raw_overlap = [
+        gausslet_overlap_value overlap_ga_value
+        transpose(overlap_ga_value) overlap_aa_value
+    ]
+    gausslet_overlap_factor = cholesky(Symmetric(gausslet_overlap_value))
+    global_seed_projector = vcat(
+        -(gausslet_overlap_factor \ overlap_ga_value),
+        Matrix{Float64}(I, ngaussian, ngaussian),
+    )
+    residual_overlap = Matrix{Float64}(transpose(global_seed_projector) * raw_overlap * global_seed_projector)
+    supplement_decomposition = eigen(Symmetric(overlap_aa_value))
+    residual_decomposition = eigen(Symmetric(residual_overlap))
+
+    group_coefficients = Matrix{Float64}[]
+    residual_owner_indices = Int[]
+    group_keep_tols = Float64[]
+    kept_indices = Int[]
+    discarded_indices = Int[]
+    kept_eigenvalues = Float64[]
+    discarded_eigenvalues = Float64[]
+    mode_offset = 0
+    for owner in unique(Int.(owner_indices))
+        group_indices = findall(==(owner), owner_indices)
+        group_seed_projector = zeros(Float64, ngausslet + ngaussian, length(group_indices))
+        group_seed_projector[1:ngausslet, :] .=
+            -(gausslet_overlap_factor \ view(overlap_ga_value, :, group_indices))
+        for (column, supplement_index) in pairs(group_indices)
+            group_seed_projector[ngausslet + supplement_index, column] = 1.0
+        end
+
+        group_residual_overlap =
+            Matrix{Float64}(transpose(group_seed_projector) * raw_overlap * group_seed_projector)
+        group_decomposition = eigen(Symmetric(group_residual_overlap))
+        group_keep_tol = _qwrg_residual_keep_tol(
+            group_decomposition.values;
+            keep_policy = keep_policy_value,
+            abs_tol = keep_abs_tol,
+        )
+        push!(group_keep_tols, group_keep_tol)
+        group_keep = findall(>(group_keep_tol), group_decomposition.values)
+        group_discarded = setdiff(collect(1:length(group_decomposition.values)), group_keep)
+        append!(kept_indices, mode_offset .+ group_keep)
+        append!(discarded_indices, mode_offset .+ group_discarded)
+        append!(kept_eigenvalues, Float64[group_decomposition.values[index] for index in group_keep])
+        append!(discarded_eigenvalues, Float64[group_decomposition.values[index] for index in group_discarded])
+        mode_offset += length(group_decomposition.values)
+        isempty(group_keep) && continue
+
+        kept_group_coefficients = if length(group_keep) == length(group_decomposition.values)
+            # Preserve the atom-centered supplement orientation when the owner
+            # block is full rank; the stabilization step below handles the
+            # owner-local Lowdin normalization without rotating into radial
+            # residual-overlap eigenmodes.
+            Matrix{Float64}(group_seed_projector)
+        else
+            Matrix{Float64}(
+                group_seed_projector *
+                group_decomposition.vectors[:, group_keep] *
+                Diagonal(1.0 ./ sqrt.(group_decomposition.values[group_keep])),
+            )
+        end
+        group_stabilization = _qwrg_stabilize_residual_coefficients(raw_overlap, kept_group_coefficients)
+        push!(group_coefficients, group_stabilization.coefficients)
+        append!(residual_owner_indices, fill(owner, length(group_keep)))
+    end
+
+    isempty(group_coefficients) && throw(
+        ArgumentError("Qiu-White owner-local residual construction produced no nontrivial 3D residual directions"),
+    )
+    residual_coefficients_pre_stabilization = hcat(group_coefficients...)
+    stabilization = _qwrg_stabilize_residual_coefficients(raw_overlap, residual_coefficients_pre_stabilization)
+    residual_coefficients = stabilization.coefficients
+    gausslet_coefficients = vcat(
+        Matrix{Float64}(I, ngausslet, ngausslet),
+        zeros(Float64, ngaussian, ngausslet),
+    )
+    raw_to_final = hcat(gausslet_coefficients, residual_coefficients)
+    final_overlap = Matrix{Float64}(transpose(raw_to_final) * raw_overlap * raw_to_final)
+    final_overlap = Matrix{Float64}(0.5 .* (final_overlap .+ transpose(final_overlap)))
+
+    supplement_null_rank_tol = _qwrg_residual_null_rank_tol(supplement_decomposition.values)
+    residual_null_rank_tol = _qwrg_residual_null_rank_tol(residual_decomposition.values)
+    diagnostics = QWRGResidualSpaceDiagnostics(
+        ngausslet,
+        ngaussian,
+        ngausslet + ngaussian,
+        size(overlap_ga),
+        size(overlap_aa),
+        overlap_error,
+        supplement_null_rank_tol,
+        count(>(supplement_null_rank_tol), supplement_decomposition.values),
+        residual_null_rank_tol,
+        count(>(residual_null_rank_tol), residual_decomposition.values),
+        keep_policy_value,
+        isempty(group_keep_tols) ? Float64(keep_abs_tol) : maximum(group_keep_tols),
+        accept_tol_value,
+        length(residual_owner_indices),
+        ngaussian - length(residual_owner_indices),
+        stabilization.null_tol,
+        stabilization.correction_passes,
+        stabilization.clipped_count,
+        stabilization.dropped_count,
+        stabilization.pre_error,
+        stabilization.post_error,
+        stabilization.pre_symmetry_defect,
+        stabilization.post_symmetry_defect,
+        stabilization.pre_min_eigenvalue,
+        stabilization.pre_max_eigenvalue,
+        stabilization.post_min_eigenvalue,
+        stabilization.post_max_eigenvalue,
+        stabilization.pre_negative_count,
+        stabilization.post_negative_count,
+        stabilization.pre_near_null_count,
+        stabilization.post_near_null_count,
+        Float64[supplement_decomposition.values...],
+        Float64[residual_decomposition.values...],
+        kept_indices,
+        discarded_indices,
+        kept_eigenvalues,
+        discarded_eigenvalues,
+    )
+    return (
+        raw_overlap = raw_overlap,
+        raw_to_final = raw_to_final,
+        residual_coefficients = residual_coefficients,
+        residual_coefficients_pre_stabilization = residual_coefficients_pre_stabilization,
+        final_overlap = final_overlap,
+        diagnostics = diagnostics,
+        residual_nucleus_indices = residual_owner_indices,
+    )
+end
+
 function _qwrg_residual_center_data(
     raw_overlap::AbstractMatrix{<:Real},
     x_raw::AbstractMatrix{<:Real},

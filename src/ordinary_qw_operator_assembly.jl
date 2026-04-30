@@ -881,11 +881,29 @@ function _qwrg_interaction_matrix_mwg(
     return interaction
 end
 
+function _qwrg_residual_label(
+    residual_index::Integer,
+    owner_nucleus_index::Integer,
+    owner_counts::Dict{Int,Int},
+)
+    owner = Int(owner_nucleus_index)
+    if owner == 0
+        return string("rg", residual_index)
+    end
+    owner_counts[owner] = get(owner_counts, owner, 0) + 1
+    owner_label = 1 <= owner <= 26 ? string(Char(Int('A') + owner - 1)) : string("N", owner)
+    return string("rg", owner_label, owner_counts[owner])
+end
+
 function _qwrg_orbital_data(
     gausslet_orbitals::AbstractVector{<:CartesianProductOrbital3D},
     residual_centers::AbstractMatrix{<:Real},
     residual_widths::AbstractMatrix{<:Real},
+    residual_nucleus_indices::AbstractVector{<:Integer} = zeros(Int, size(residual_centers, 1)),
 )
+    length(residual_nucleus_indices) == size(residual_centers, 1) || throw(
+        DimensionMismatch("residual orbital data requires one owner nucleus index per residual center"),
+    )
     orbitals_out = OrdinaryCartesianOrbital3D[]
     for orbital in gausslet_orbitals
         push!(
@@ -904,19 +922,22 @@ function _qwrg_orbital_data(
         )
     end
     base_index = length(gausslet_orbitals)
+    residual_owner_counts = Dict{Int,Int}()
     for index in axes(residual_centers, 1)
+        owner_nucleus_index = Int(residual_nucleus_indices[index])
         push!(
             orbitals_out,
             OrdinaryCartesianOrbital3D(
                 base_index + index,
                 :residual_gaussian,
-                "rg$index",
+                _qwrg_residual_label(index, owner_nucleus_index, residual_owner_counts),
                 residual_centers[index, 1],
                 residual_centers[index, 2],
                 residual_centers[index, 3],
                 residual_widths[index, 1],
                 residual_widths[index, 2],
                 residual_widths[index, 3],
+                owner_nucleus_index,
             ),
         )
     end
@@ -929,9 +950,13 @@ function _qwrg_orbital_data(
     residual_widths::AbstractMatrix{<:Real};
     fixed_kind::Symbol = :nested_fixed,
     fixed_label_prefix::AbstractString = "nf",
+    residual_nucleus_indices::AbstractVector{<:Integer} = zeros(Int, size(residual_centers, 1)),
 )
     size(fixed_centers, 2) == 3 || throw(
         ArgumentError("nested fixed-block orbital data requires an n×3 center matrix"),
+    )
+    length(residual_nucleus_indices) == size(residual_centers, 1) || throw(
+        DimensionMismatch("residual orbital data requires one owner nucleus index per residual center"),
     )
     orbitals_out = OrdinaryCartesianOrbital3D[]
     for index in axes(fixed_centers, 1)
@@ -951,19 +976,22 @@ function _qwrg_orbital_data(
         )
     end
     base_index = size(fixed_centers, 1)
+    residual_owner_counts = Dict{Int,Int}()
     for index in axes(residual_centers, 1)
+        owner_nucleus_index = Int(residual_nucleus_indices[index])
         push!(
             orbitals_out,
             OrdinaryCartesianOrbital3D(
                 base_index + index,
                 :residual_gaussian,
-                "rg$index",
+                _qwrg_residual_label(index, owner_nucleus_index, residual_owner_counts),
                 residual_centers[index, 1],
                 residual_centers[index, 2],
                 residual_centers[index, 3],
                 residual_widths[index, 1],
                 residual_widths[index, 2],
                 residual_widths[index, 3],
+                owner_nucleus_index,
             ),
         )
     end
@@ -1279,21 +1307,25 @@ function _qwrg_bond_aligned_molecular_residual_space(
     context::_QWRGBondAlignedBuildContext,
     carried_data,
     blocks,
+    supplement::_BondAlignedDiatomicCartesianShellSupplement3D,
 )
+    supplement_owner_indices = Int[orbital.owner_nucleus_index for orbital in supplement.orbitals]
     if context.carried_space_kind == :direct_product
-        return _qwrg_residual_space(
+        return _qwrg_residual_space_by_owner(
             carried_data.overlap,
             blocks.overlap_ga,
             blocks.overlap_aa,
+            supplement_owner_indices,
         )
     end
 
     contraction = something(context.contraction)
     overlap_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.overlap_ga)
-    return _qwrg_residual_space(
+    return _qwrg_residual_space_by_owner(
         carried_data.overlap,
         overlap_fg,
         blocks.overlap_aa,
+        supplement_owner_indices,
     )
 end
 
@@ -1552,12 +1584,14 @@ function _qwrg_bond_aligned_molecular_operator_orbitals(
     carried_data,
     residual_centers::AbstractMatrix{<:Real},
     residual_widths::AbstractMatrix{<:Real},
+    residual_nucleus_indices::AbstractVector{<:Integer},
 )
     if context.carried_space_kind == :direct_product
         return _qwrg_orbital_data(
             carried_data.orbitals,
             residual_centers,
             residual_widths,
+            residual_nucleus_indices,
         )
     end
 
@@ -1567,6 +1601,7 @@ function _qwrg_bond_aligned_molecular_operator_orbitals(
         residual_widths;
         fixed_kind = :nested_fixed,
         fixed_label_prefix = "nf",
+        residual_nucleus_indices = residual_nucleus_indices,
     )
 end
 
@@ -1617,6 +1652,7 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
                 context,
                 carried_data,
                 blocks,
+                supplement3d,
             )
         end
 
@@ -1745,12 +1781,14 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
                 carried_data,
                 residual_centers,
                 residual_widths,
+                residual_data.residual_nucleus_indices,
             ),
             carried_data.count,
             size(residual_centers, 1),
             Matrix{Float64}(residual_data.raw_to_final),
             Matrix{Float64}(residual_centers),
             Matrix{Float64}(residual_widths),
+            Int[residual_data.residual_nucleus_indices...],
             Float64[Float64(value) for value in nuclear_charges],
             resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(final_kinetic) : nothing,
             resolved_nuclear_term_storage == :by_center ? final_nuclear_one_body_by_center : nothing,

@@ -125,6 +125,28 @@ struct _AtomicCartesianShellOrbital3D
     exponents::Vector{Float64}
     coefficients::Vector{Float64}
     center::NTuple{3,Float64}
+    owner_nucleus_index::Int
+end
+
+function _AtomicCartesianShellOrbital3D(
+    label::AbstractString,
+    lx::Integer,
+    ly::Integer,
+    lz::Integer,
+    exponents::AbstractVector{<:Real},
+    coefficients::AbstractVector{<:Real},
+    center::NTuple{3,<:Real},
+)
+    return _AtomicCartesianShellOrbital3D(
+        String(label),
+        Int(lx),
+        Int(ly),
+        Int(lz),
+        Float64.(collect(exponents)),
+        Float64.(collect(coefficients)),
+        (Float64(center[1]), Float64(center[2]), Float64(center[3])),
+        0,
+    )
 end
 
 struct _AtomicCartesianShellSupplement3D
@@ -283,6 +305,7 @@ function _bond_aligned_two_center_cartesian_orbitals(
                             Float64[shell.exponents...],
                             Float64[coefficients...],
                             nucleus,
+                            nucleus_index,
                         ),
                     )
                 end

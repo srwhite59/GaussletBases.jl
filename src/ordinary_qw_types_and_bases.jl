@@ -6,7 +6,9 @@ path.
 
 The object records whether the orbital is a Cartesian gausslet product orbital
 or a residual Gaussian together with the associated center and, for residual
-Gaussians, the matched widths used in the MWG diagnostics.
+Gaussians, the matched widths used in the MWG diagnostics. `owner_nucleus_index`
+is `0` for unowned fixed/gausslet orbitals and the 1-based nucleus index for
+atom-local residual Gaussians.
 """
 struct OrdinaryCartesianOrbital3D
     index::Int
@@ -18,6 +20,32 @@ struct OrdinaryCartesianOrbital3D
     wx::Float64
     wy::Float64
     wz::Float64
+    owner_nucleus_index::Int
+end
+
+function OrdinaryCartesianOrbital3D(
+    index::Integer,
+    kind::Symbol,
+    label::AbstractString,
+    x::Real,
+    y::Real,
+    z::Real,
+    wx::Real,
+    wy::Real,
+    wz::Real,
+)
+    return OrdinaryCartesianOrbital3D(
+        Int(index),
+        kind,
+        String(label),
+        Float64(x),
+        Float64(y),
+        Float64(z),
+        Float64(wx),
+        Float64(wy),
+        Float64(wz),
+        0,
+    )
 end
 
 const QiuWhiteHybridOrbital3D = OrdinaryCartesianOrbital3D
@@ -51,6 +79,7 @@ function Base.show(io::IO, orbital::OrdinaryCartesianOrbital3D)
             ")",
         )
     end
+    orbital.owner_nucleus_index == 0 || print(io, ", owner_nucleus_index=", orbital.owner_nucleus_index)
     print(io, ")")
 end
 
@@ -82,6 +111,7 @@ struct OrdinaryCartesianOperators3D{B,D}
     raw_to_final::Matrix{Float64}
     residual_centers::Matrix{Float64}
     residual_widths::Matrix{Float64}
+    residual_nucleus_indices::Vector{Int}
     nuclear_charges::Union{Nothing,Vector{Float64}}
     kinetic_one_body::Union{Nothing,Matrix{Float64}}
     nuclear_one_body_by_center::Union{Nothing,Vector{Matrix{Float64}}}
@@ -121,10 +151,54 @@ function OrdinaryCartesianOperators3D(
         raw_to_final,
         residual_centers,
         residual_widths,
+        zeros(Int, residual_count),
         nothing,
         nothing,
         nothing,
         :total_only,
+    )
+end
+
+function OrdinaryCartesianOperators3D(
+    basis,
+    gaussian_data,
+    gausslet_backend,
+    interaction_treatment,
+    expansion,
+    overlap,
+    one_body_hamiltonian,
+    interaction_matrix,
+    orbital_data,
+    gausslet_count,
+    residual_count,
+    raw_to_final,
+    residual_centers,
+    residual_widths,
+    nuclear_charges,
+    kinetic_one_body,
+    nuclear_one_body_by_center,
+    nuclear_term_storage,
+)
+    return OrdinaryCartesianOperators3D(
+        basis,
+        gaussian_data,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+        orbital_data,
+        gausslet_count,
+        residual_count,
+        raw_to_final,
+        residual_centers,
+        residual_widths,
+        zeros(Int, residual_count),
+        nuclear_charges,
+        kinetic_one_body,
+        nuclear_one_body_by_center,
+        nuclear_term_storage,
     )
 end
 

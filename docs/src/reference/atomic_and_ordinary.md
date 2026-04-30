@@ -116,7 +116,10 @@ The intended counterpoise pattern is to build one operator payload with
 `nuclear_term_storage = :by_center`, then reuse it for the full branch and each
 fragment branch. For molecular Gaussian supplements, use a finite `max_width`
 when the supplement is meant to remain a local/core correction rather than a
-wide diffuse completion:
+wide diffuse completion. On the bond-aligned diatomic molecular fallback path,
+residual directions are constructed by supplement-owner group and exported with
+atom-local residual labels/owner metadata; the MWG molecular nested route
+remains intentionally rejected until finite width metadata is validated there:
 
 ```julia
 operators = ordinary_cartesian_qiu_white_operators(
