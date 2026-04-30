@@ -36,6 +36,12 @@ Reason:
   environment
 - Dropbox-local depots have previously caused operational problems
 
+## Julia style
+
+Use `JuliaStyle.md` as the local guide for small Julia cleanup passes and new
+code edits. These preferences are low priority relative to correctness and
+contract clarity; do not churn numerical kernels solely for style.
+
 ## Final-basis overlap policy
 
 For final working bases that are intended to be orthonormal:
