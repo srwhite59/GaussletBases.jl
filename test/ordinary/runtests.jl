@@ -363,7 +363,7 @@ end
     @test operators.nuclear_term_storage == :by_center
 end
 
-@testset "Diatomic molecular residuals stay atom-local on nested fallback path" begin
+@testset "Diatomic molecular residuals stay atom-local on nested MWG and fallback paths" begin
     if !_legacy_basisfile_available()
         @test true
     else
@@ -385,39 +385,48 @@ end
             lmax = 0,
             max_width = 1.0,
         )
-        operators = ordinary_cartesian_qiu_white_operators(
+        nearest_operators = ordinary_cartesian_qiu_white_operators(
             nested.fixed_block,
             supplement;
             nuclear_charges = [1.0, 1.0],
             interaction_treatment = :ggt_nearest,
         )
-        residual_orbitals = [
-            orbital for orbital in orbitals(operators)
-            if orbital.kind == :residual_gaussian
-        ]
-        midpoint = (0.0, 0.0, 0.0)
-        distance(a, b) = sqrt(sum((a[axis] - b[axis])^2 for axis in 1:3))
-
-        @test operators.residual_count > 0
-        @test length(residual_orbitals) == operators.residual_count
-        @test operators.residual_nucleus_indices == [orbital.owner_nucleus_index for orbital in residual_orbitals]
-        @test Set(operators.residual_nucleus_indices) == Set([1, 2])
-        @test count(==(1), operators.residual_nucleus_indices) > 0
-        @test count(==(2), operators.residual_nucleus_indices) > 0
-        for (index, orbital) in pairs(residual_orbitals)
-            owner = operators.residual_nucleus_indices[index]
-            center = (orbital.x, orbital.y, orbital.z)
-            @test center == Tuple(operators.residual_centers[index, :])
-            @test distance(center, basis.nuclei[owner]) < 0.25
-            @test distance(center, midpoint) > 0.25
-            @test startswith(orbital.label, owner == 1 ? "rgA" : "rgB")
-        end
-        @test_throws ArgumentError ordinary_cartesian_qiu_white_operators(
+        mwg_operators = ordinary_cartesian_qiu_white_operators(
             nested.fixed_block,
             supplement;
             nuclear_charges = [1.0, 1.0],
             interaction_treatment = :mwg,
         )
+        midpoint = (0.0, 0.0, 0.0)
+        distance(a, b) = sqrt(sum((a[axis] - b[axis])^2 for axis in 1:3))
+
+        for operators in (nearest_operators, mwg_operators)
+            residual_orbitals = [
+                orbital for orbital in orbitals(operators)
+                if orbital.kind == :residual_gaussian
+            ]
+            @test operators.residual_count > 0
+            @test length(residual_orbitals) == operators.residual_count
+            @test operators.residual_nucleus_indices == [orbital.owner_nucleus_index for orbital in residual_orbitals]
+            @test Set(operators.residual_nucleus_indices) == Set([1, 2])
+            @test count(==(1), operators.residual_nucleus_indices) > 0
+            @test count(==(2), operators.residual_nucleus_indices) > 0
+            for (index, orbital) in pairs(residual_orbitals)
+                owner = operators.residual_nucleus_indices[index]
+                center = (orbital.x, orbital.y, orbital.z)
+                @test center == Tuple(operators.residual_centers[index, :])
+                @test isequal((orbital.wx, orbital.wy, orbital.wz), Tuple(operators.residual_widths[index, :]))
+                @test distance(center, basis.nuclei[owner]) < 0.25
+                @test distance(center, midpoint) > 0.25
+                @test startswith(orbital.label, owner == 1 ? "rgA" : "rgB")
+            end
+        end
+        @test nearest_operators.interaction_treatment == :ggt_nearest
+        @test all(isnan, nearest_operators.residual_widths)
+        @test mwg_operators.interaction_treatment == :mwg
+        @test all(isfinite, mwg_operators.residual_widths)
+        @test all(>(0.0), mwg_operators.residual_widths)
+        @test mwg_operators.residual_nucleus_indices == nearest_operators.residual_nucleus_indices
     end
 end
 
@@ -2019,7 +2028,7 @@ end
         @test hybrid_direct_context.carried === hybrid_basis
         @test hybrid_direct_context.gaussian_data === hybrid_supplement
         @test hybrid_direct_context.contraction === nothing
-        @test hybrid_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
         @test hybrid_direct_context.capabilities.allowed_gausslet_backends ==
               (:numerical_reference, :pgdg_localized_experimental)
         @test hybrid_direct_context.capabilities.timing_label == "qwrg.diatomic_shell.total"
@@ -2030,7 +2039,7 @@ end
         @test hybrid_nested_context.carried === hybrid_fixed_block
         @test hybrid_nested_context.gaussian_data === hybrid_supplement
         @test hybrid_nested_context.contraction === hybrid_fixed_block.coefficient_matrix
-        @test hybrid_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test hybrid_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
         @test hybrid_nested_context.capabilities.allowed_gausslet_backends ==
               (:numerical_reference, :pgdg_localized_experimental)
         @test hybrid_nested_context.capabilities.localized_parent_kind == :cartesian_product_basis

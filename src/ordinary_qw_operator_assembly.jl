@@ -195,7 +195,7 @@ function _normalized_bond_aligned_build_context(
             route_label = "bond-aligned diatomic molecular QW path",
             allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
             backend_support_scope = " on the direct-contracted molecular one-body backbone",
-            allowed_interaction_treatments = (:ggt_nearest,),
+            allowed_interaction_treatments = (:ggt_nearest, :mwg),
             localized_parent_kind = nothing,
             localized_parent_kind_backend = nothing,
             localized_parent_kind_requirement = nothing,
@@ -234,7 +234,7 @@ function _normalized_bond_aligned_build_context(
             route_label = "bond-aligned diatomic nested molecular QW path",
             allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
             backend_support_scope = " on the direct-contracted molecular one-body backbone",
-            allowed_interaction_treatments = (:ggt_nearest,),
+            allowed_interaction_treatments = (:ggt_nearest, :mwg),
             localized_parent_kind = :cartesian_product_basis,
             localized_parent_kind_backend = :pgdg_localized_experimental,
             localized_parent_kind_requirement =
@@ -750,19 +750,6 @@ function _qwrg_effective_gaussians(
     return x_gaussians, y_gaussians, z_gaussians
 end
 
-function _qwrg_same_gaussians(
-    left::AbstractVector{<:Gaussian},
-    right::AbstractVector{<:Gaussian};
-    tol::Real = 1.0e-12,
-)
-    length(left) == length(right) || return false
-    for index in eachindex(left, right)
-        abs(left[index].center_value - right[index].center_value) <= tol || return false
-        abs(left[index].width - right[index].width) <= tol || return false
-    end
-    return true
-end
-
 function _qwrg_interaction_matrix_nearest(
     gausslet_interaction::AbstractMatrix{<:Real},
     gausslet_orbitals::AbstractVector{<:CartesianProductOrbital3D},
@@ -809,6 +796,59 @@ function _qwrg_interaction_matrix_nearest(
     return interaction
 end
 
+function _qwrg_mwg_interaction_components(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    nresidual = size(residual_centers, 1)
+    x_gaussians, y_gaussians, z_gaussians = _qwrg_effective_gaussians(residual_centers, residual_widths)
+    pair_x = _qwrg_split_block_matrices(bundle_x, x_gaussians, expansion)
+    pair_y = _qwrg_split_block_matrices(bundle_y, y_gaussians, expansion)
+    pair_z = _qwrg_split_block_matrices(bundle_z, z_gaussians, expansion)
+    analytic_x = _qwrg_gaussian_analytic_blocks(x_gaussians, expansion)
+    analytic_y = _qwrg_gaussian_analytic_blocks(y_gaussians, expansion)
+    analytic_z = _qwrg_gaussian_analytic_blocks(z_gaussians, expansion)
+
+    ngausslet =
+        size(bundle_x.pgdg_intermediate.overlap, 1) *
+        size(bundle_y.pgdg_intermediate.overlap, 1) *
+        size(bundle_z.pgdg_intermediate.overlap, 1)
+    gausslet_residual = zeros(Float64, ngausslet, nresidual)
+    scratch = zeros(Float64, ngausslet)
+    for residual in 1:nresidual
+        column = view(gausslet_residual, :, residual)
+        for term in eachindex(expansion.coefficients)
+            fx = view(pair_x.pair_ga[term], :, residual)
+            fy = view(pair_y.pair_ga[term], :, residual)
+            fz = view(pair_z.pair_ga[term], :, residual)
+            _qwrg_fill_product_column!(scratch, fx, fy, fz)
+            column .+= expansion.coefficients[term] .* scratch
+        end
+    end
+
+    residual_residual = zeros(Float64, nresidual, nresidual)
+    for i in 1:nresidual, j in i:nresidual
+        value = 0.0
+        for term in eachindex(expansion.coefficients)
+            value += expansion.coefficients[term] *
+                analytic_x.pair_aa[term][i, j] *
+                analytic_y.pair_aa[term][i, j] *
+                analytic_z.pair_aa[term][i, j]
+        end
+        residual_residual[i, j] = value
+        residual_residual[j, i] = value
+    end
+
+    return (
+        gausslet_residual = gausslet_residual,
+        residual_residual = residual_residual,
+    )
+end
+
 # Alg QW-RG step 8b, 8c, and 8d: Match exact residual moments by effective
 # Gaussians and keep RG terms in the same two-index IDA representation.
 # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
@@ -823,62 +863,126 @@ function _qwrg_interaction_matrix_mwg(
     nresidual = size(residual_centers, 1)
     interaction = zeros(Float64, ngausslet + nresidual, ngausslet + nresidual)
     interaction[1:ngausslet, 1:ngausslet] .= Matrix{Float64}(gausslet_interaction)
-
-    x_gaussians, y_gaussians, z_gaussians = _qwrg_effective_gaussians(residual_centers, residual_widths)
-    # Alg QW-RG step 8d: Evaluate RG-gausslet terms from exact contracted
-    # 1D raw-space pair-factor blocks, then assemble the 3D IDA interaction.
-    # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
-    pair_x = _qwrg_split_block_matrices(
+    components = _qwrg_mwg_interaction_components(
         gausslet_bundle,
-        x_gaussians,
+        gausslet_bundle,
+        gausslet_bundle,
         expansion,
+        residual_centers,
+        residual_widths,
     )
-    pair_y = _qwrg_same_gaussians(x_gaussians, y_gaussians) ? pair_x :
-        _qwrg_split_block_matrices(gausslet_bundle, y_gaussians, expansion)
-    pair_z = if _qwrg_same_gaussians(x_gaussians, z_gaussians)
-        pair_x
-    elseif _qwrg_same_gaussians(y_gaussians, z_gaussians)
-        pair_y
-    else
-        _qwrg_split_block_matrices(gausslet_bundle, z_gaussians, expansion)
-    end
-    analytic_x = _qwrg_gaussian_analytic_blocks(x_gaussians, expansion)
-    analytic_y = _qwrg_same_gaussians(x_gaussians, y_gaussians) ? analytic_x : _qwrg_gaussian_analytic_blocks(y_gaussians, expansion)
-    analytic_z = if _qwrg_same_gaussians(x_gaussians, z_gaussians)
-        analytic_x
-    elseif _qwrg_same_gaussians(y_gaussians, z_gaussians)
-        analytic_y
-    else
-        _qwrg_gaussian_analytic_blocks(z_gaussians, expansion)
-    end
-
-    for residual in 1:nresidual
-        column = zeros(Float64, ngausslet)
-        scratch = zeros(Float64, ngausslet)
-        for term in eachindex(expansion.coefficients)
-            fx = view(pair_x.pair_ga[term], :, residual)
-            fy = view(pair_y.pair_ga[term], :, residual)
-            fz = view(pair_z.pair_ga[term], :, residual)
-            _qwrg_fill_product_column!(scratch, fx, fy, fz)
-            column .+= expansion.coefficients[term] .* scratch
-        end
-        interaction[1:ngausslet, ngausslet + residual] .= column
-        interaction[ngausslet + residual, 1:ngausslet] .= column
-    end
-
-    for i in 1:nresidual, j in i:nresidual
-        value = 0.0
-        for term in eachindex(expansion.coefficients)
-            value += expansion.coefficients[term] *
-                analytic_x.pair_aa[term][i, j] *
-                analytic_y.pair_aa[term][i, j] *
-                analytic_z.pair_aa[term][i, j]
-        end
-        interaction[ngausslet + i, ngausslet + j] = value
-        interaction[ngausslet + j, ngausslet + i] = value
-    end
+    residual_range = (ngausslet + 1):(ngausslet + nresidual)
+    interaction[1:ngausslet, residual_range] .= components.gausslet_residual
+    interaction[residual_range, 1:ngausslet] .= transpose(components.gausslet_residual)
+    interaction[residual_range, residual_range] .= components.residual_residual
 
     return interaction
+end
+
+function _qwrg_diatomic_interaction_matrix_mwg(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    gausslet_interaction = _qwrg_diatomic_interaction_matrix(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+    )
+    ngausslet = size(gausslet_interaction, 1)
+    nresidual = size(residual_centers, 1)
+    interaction = zeros(Float64, ngausslet + nresidual, ngausslet + nresidual)
+    interaction[1:ngausslet, 1:ngausslet] .= gausslet_interaction
+    components = _qwrg_mwg_interaction_components(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+        residual_centers,
+        residual_widths,
+    )
+    residual_range = (ngausslet + 1):(ngausslet + nresidual)
+    interaction[1:ngausslet, residual_range] .= components.gausslet_residual
+    interaction[residual_range, 1:ngausslet] .= transpose(components.gausslet_residual)
+    interaction[residual_range, residual_range] .= components.residual_residual
+    return interaction
+end
+
+function _qwrg_fixed_block_interaction_matrix_mwg(
+    fixed_interaction::AbstractMatrix{<:Real},
+    contraction::AbstractMatrix{<:Real},
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    components = _qwrg_mwg_interaction_components(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+        residual_centers,
+        residual_widths,
+    )
+    fixed_residual = Matrix{Float64}(transpose(contraction) * components.gausslet_residual)
+    nfixed = size(fixed_interaction, 1)
+    nresidual = size(residual_centers, 1)
+    size(fixed_residual) == (nfixed, nresidual) || throw(
+        DimensionMismatch("nested MWG residual coupling requires contracted parent columns to match fixed block size"),
+    )
+    interaction = zeros(Float64, nfixed + nresidual, nfixed + nresidual)
+    interaction[1:nfixed, 1:nfixed] .= Matrix{Float64}(fixed_interaction)
+    residual_range = (nfixed + 1):(nfixed + nresidual)
+    interaction[1:nfixed, residual_range] .= fixed_residual
+    interaction[residual_range, 1:nfixed] .= transpose(fixed_residual)
+    interaction[residual_range, residual_range] .= components.residual_residual
+    return interaction
+end
+
+function _qwrg_validate_residual_mwg_metadata(
+    route_label::AbstractString,
+    nuclei::AbstractVector,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+    residual_nucleus_indices::AbstractVector{<:Integer},
+)
+    size(residual_widths) == size(residual_centers) || throw(
+        DimensionMismatch("$route_label MWG residual widths must match residual centers"),
+    )
+    length(residual_nucleus_indices) == size(residual_centers, 1) || throw(
+        DimensionMismatch("$route_label MWG residual metadata requires one owner index per residual"),
+    )
+    all(isfinite, residual_widths) || throw(
+        ArgumentError("$route_label MWG residual widths must be finite"),
+    )
+    all(>(0.0), residual_widths) || throw(
+        ArgumentError("$route_label MWG residual widths must be positive"),
+    )
+
+    length(nuclei) <= 1 && return nothing
+    for residual in axes(residual_centers, 1)
+        owner = Int(residual_nucleus_indices[residual])
+        1 <= owner <= length(nuclei) || continue
+        owner_distance2 = sum(
+            (Float64(residual_centers[residual, axis]) - Float64(nuclei[owner][axis]))^2 for axis in 1:3
+        )
+        for nucleus_index in eachindex(nuclei)
+            nucleus_index == owner && continue
+            other_distance2 = sum(
+                (Float64(residual_centers[residual, axis]) - Float64(nuclei[nucleus_index][axis]))^2 for axis in 1:3
+            )
+            owner_distance2 < other_distance2 - 1.0e-12 || throw(
+                ArgumentError("$route_label MWG residual center is not nearest to its owner nucleus"),
+            )
+        end
+    end
+    return nothing
 end
 
 function _qwrg_residual_label(
@@ -1485,6 +1589,7 @@ function _qwrg_bond_aligned_molecular_residual_centers(
     bundles,
     blocks,
     residual_data,
+    interaction_treatment::Symbol,
 )
     if context.carried_space_kind == :direct_product
         x_carried = _qwrg_diatomic_gausslet_axis_matrix(
@@ -1527,6 +1632,24 @@ function _qwrg_bond_aligned_molecular_residual_centers(
         center_data.overlap_error <= 1.0e-8 || throw(
             ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
         )
+        if interaction_treatment == :mwg
+            x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
+            x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
+            x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
+            x2_raw = [Matrix{Float64}(fixed_block.x2_x) x2_x_fg; transpose(x2_x_fg) blocks.x2_x_aa]
+            y2_raw = [Matrix{Float64}(fixed_block.x2_y) x2_y_fg; transpose(x2_y_fg) blocks.x2_y_aa]
+            z2_raw = [Matrix{Float64}(fixed_block.x2_z) x2_z_fg; transpose(x2_z_fg) blocks.x2_z_aa]
+            moment_data = _qwrg_residual_moment_data(
+                residual_data.raw_overlap,
+                x_raw,
+                x2_raw,
+                y2_raw,
+                z2_raw,
+                center_data,
+            )
+            residual_centers = moment_data.centers
+            residual_widths = moment_data.widths
+        end
         return residual_centers, residual_widths
     end
 
@@ -1546,6 +1669,42 @@ function _qwrg_bond_aligned_molecular_residual_centers(
     center_data.overlap_error <= 1.0e-8 || throw(
         ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
     )
+    if interaction_treatment == :mwg
+        x2_x_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :x;
+            squared = true,
+        )
+        x2_y_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :y;
+            squared = true,
+        )
+        x2_z_carried = _qwrg_diatomic_gausslet_axis_matrix(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            :z;
+            squared = true,
+        )
+        x2_raw = [x2_x_carried blocks.x2_x_ga; transpose(blocks.x2_x_ga) blocks.x2_x_aa]
+        y2_raw = [x2_y_carried blocks.x2_y_ga; transpose(blocks.x2_y_ga) blocks.x2_y_aa]
+        z2_raw = [x2_z_carried blocks.x2_z_ga; transpose(blocks.x2_z_ga) blocks.x2_z_aa]
+        moment_data = _qwrg_residual_moment_data(
+            residual_data.raw_overlap,
+            x_raw,
+            x2_raw,
+            y2_raw,
+            z2_raw,
+            center_data,
+        )
+        residual_centers = moment_data.centers
+        residual_widths = moment_data.widths
+    end
     return residual_centers, residual_widths
 end
 
@@ -1554,9 +1713,19 @@ function _qwrg_bond_aligned_molecular_interaction_matrix(
     carried_data,
     bundles,
     residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
     expansion::CoulombGaussianExpansion,
+    interaction_treatment::Symbol,
 )
     if context.carried_space_kind == :direct_product
+        interaction_treatment == :mwg && return _qwrg_diatomic_interaction_matrix_mwg(
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            expansion,
+            residual_centers,
+            residual_widths,
+        )
         gausslet_interaction = _qwrg_diatomic_interaction_matrix(
             bundles.bundle_x,
             bundles.bundle_y,
@@ -1572,6 +1741,16 @@ function _qwrg_bond_aligned_molecular_interaction_matrix(
 
     fixed_block = context.carried
     fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    interaction_treatment == :mwg && return _qwrg_fixed_block_interaction_matrix_mwg(
+        fixed_interaction,
+        something(context.contraction),
+        bundles.bundle_x,
+        bundles.bundle_y,
+        bundles.bundle_z,
+        expansion,
+        residual_centers,
+        residual_widths,
+    )
     return _qwrg_interaction_matrix_nearest(
         fixed_interaction,
         carried_data.fixed_centers,
@@ -1754,6 +1933,16 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
                 bundles,
                 blocks,
                 residual_data,
+                interaction_treatment,
+            )
+        end
+        if interaction_treatment == :mwg
+            _qwrg_validate_residual_mwg_metadata(
+                context.capabilities.route_label,
+                context.nuclei,
+                residual_centers,
+                residual_widths,
+                residual_data.residual_nucleus_indices,
             )
         end
 
@@ -1763,7 +1952,9 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
                 carried_data,
                 bundles,
                 residual_centers,
+                residual_widths,
                 expansion,
+                interaction_treatment,
             )
         end
 
@@ -2586,7 +2777,7 @@ end
         gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
         nuclear_charges = fill(1.0, length(basis.nuclei)),
         expansion = coulomb_gaussian_expansion(doacc = false),
-        interaction_treatment = :ggt_nearest,
+        interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
         timing = false,
     )
@@ -2599,7 +2790,8 @@ This first molecular supplement pass is intentionally narrow:
 - one bond-aligned diatomic basis
 - one explicit two-center molecular shell supplement built from a named atomic
   basis
-- only `interaction_treatment = :ggt_nearest`
+- `interaction_treatment = :mwg` as the preferred matched-width residual
+  interaction route, with `:ggt_nearest` retained as fallback/debug
 - this direct-product molecular supplement route now accepts
   `gausslet_backend = :pgdg_localized_experimental` on the carried GG
   one-body backbone only; GA/AA supplement closure remains unchanged
@@ -2613,7 +2805,7 @@ function ordinary_cartesian_qiu_white_operators(
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
-    interaction_treatment::Symbol = :ggt_nearest,
+    interaction_treatment::Symbol = :mwg,
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )
@@ -2638,7 +2830,7 @@ end
         };
         nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
         expansion = coulomb_gaussian_expansion(doacc = false),
-        interaction_treatment = :ggt_nearest,
+        interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
         timing = false,
     )
@@ -2650,7 +2842,8 @@ This nested molecular supplement route now accepts
 `gausslet_backend = :pgdg_localized_experimental` only when the carried nested
 fixed block still represents a pure Cartesian parent space; the widened scope
 is the fixed-space GG one-body backbone, while GA/AA supplement closure
-remains unchanged.
+remains unchanged. `interaction_treatment = :mwg` is the preferred residual
+interaction route; `:ggt_nearest` remains available as fallback/debug.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
@@ -2661,7 +2854,7 @@ function ordinary_cartesian_qiu_white_operators(
     nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
-    interaction_treatment::Symbol = :ggt_nearest,
+    interaction_treatment::Symbol = :mwg,
     gausslet_backend::Symbol = :numerical_reference,
     timing::Bool = false,
 )

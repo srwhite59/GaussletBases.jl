@@ -482,6 +482,7 @@ function _qwrg_atomic_axis_aa_one_body_data(
     overlap = zeros(Float64, nleft, nright)
     kinetic = zeros(Float64, nleft, nright)
     position = zeros(Float64, nleft, nright)
+    x2 = zeros(Float64, nleft, nright)
 
     for j in 1:nright
         exponent_right = Float64(right.exponents[j])
@@ -520,6 +521,17 @@ function _qwrg_atomic_axis_aa_one_body_data(
                 prefactor_right;
                 xpower = 1,
             )
+            x2[i, j] = _qwrg_atomic_basic_integral(
+                exponent_left,
+                center_left,
+                power_left,
+                prefactor_left,
+                exponent_right,
+                center_right,
+                power_right,
+                prefactor_right;
+                xpower = 2,
+            )
         end
     end
 
@@ -527,6 +539,7 @@ function _qwrg_atomic_axis_aa_one_body_data(
         overlap = overlap,
         kinetic = kinetic,
         position = position,
+        x2 = x2,
     )
 end
 
@@ -1814,6 +1827,9 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     position_x_ga = zeros(Float64, ngausslet3d, norbital)
     position_y_ga = zeros(Float64, ngausslet3d, norbital)
     position_z_ga = zeros(Float64, ngausslet3d, norbital)
+    x2_x_ga = zeros(Float64, ngausslet3d, norbital)
+    x2_y_ga = zeros(Float64, ngausslet3d, norbital)
+    x2_z_ga = zeros(Float64, ngausslet3d, norbital)
 
     overlap_aa = zeros(Float64, norbital, norbital)
     kinetic_aa = zeros(Float64, norbital, norbital)
@@ -1821,6 +1837,9 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     position_x_aa = zeros(Float64, norbital, norbital)
     position_y_aa = zeros(Float64, norbital, norbital)
     position_z_aa = zeros(Float64, norbital, norbital)
+    x2_x_aa = zeros(Float64, norbital, norbital)
+    x2_y_aa = zeros(Float64, norbital, norbital)
+    x2_z_aa = zeros(Float64, norbital, norbital)
     nuclear_ga_by_center = [zeros(Float64, ngausslet3d, norbital) for _ in basis.nuclei]
     nuclear_aa_by_center = [zeros(Float64, norbital, norbital) for _ in basis.nuclei]
 
@@ -1896,6 +1915,28 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
                 view(z_data.position, :, primitive),
             )
             position_z_ga[:, orbital_index] .+= coefficient .* scratch
+
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.x2, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            x2_x_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.x2, :, primitive),
+                view(z_data.overlap, :, primitive),
+            )
+            x2_y_ga[:, orbital_index] .+= coefficient .* scratch
+            _qwrg_fill_product_column!(
+                scratch,
+                view(x_data.overlap, :, primitive),
+                view(y_data.overlap, :, primitive),
+                view(z_data.x2, :, primitive),
+            )
+            x2_z_ga[:, orbital_index] .+= coefficient .* scratch
         end
 
         one_body_ga[:, orbital_index] .= kinetic_ga[:, orbital_index]
@@ -2004,6 +2045,27 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
             z_data.position,
             right.coefficients,
         )
+        x2_x_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.x2,
+            y_data.overlap,
+            z_data.overlap,
+            right.coefficients,
+        )
+        x2_y_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.x2,
+            z_data.overlap,
+            right.coefficients,
+        )
+        x2_z_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+            left.coefficients,
+            x_data.overlap,
+            y_data.overlap,
+            z_data.x2,
+            right.coefficients,
+        )
 
         one_body_value = kinetic_aa[left_index, right_index]
         factor_aa_local = Dict{Tuple{Symbol,Float64},Any}()
@@ -2053,6 +2115,12 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
         position_x_aa = Matrix{Float64}(0.5 .* (position_x_aa .+ transpose(position_x_aa))),
         position_y_aa = Matrix{Float64}(0.5 .* (position_y_aa .+ transpose(position_y_aa))),
         position_z_aa = Matrix{Float64}(0.5 .* (position_z_aa .+ transpose(position_z_aa))),
+        x2_x_ga = x2_x_ga,
+        x2_y_ga = x2_y_ga,
+        x2_z_ga = x2_z_ga,
+        x2_x_aa = Matrix{Float64}(0.5 .* (x2_x_aa .+ transpose(x2_x_aa))),
+        x2_y_aa = Matrix{Float64}(0.5 .* (x2_y_aa .+ transpose(x2_y_aa))),
+        x2_z_aa = Matrix{Float64}(0.5 .* (x2_z_aa .+ transpose(x2_z_aa))),
     )
 end
 
