@@ -381,6 +381,52 @@ end
         @test hybrid_operators.kinetic_one_body === hybrid_kinetic_sidecar
         @test hybrid_operators.nuclear_one_body_by_center === hybrid_nuclear_sidecars
         @test hybrid_operators.nuclear_term_storage == :by_center
+
+        nested_basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = 2.0,
+            core_spacing = 0.5,
+            xmax_parallel = 3.0,
+            xmax_transverse = 2.0,
+            bond_axis = :z,
+        )
+        nested = bond_aligned_diatomic_nested_fixed_block(nested_basis; nside = 5)
+        nested_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            nested_basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        nested_spec_a = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = nested_basis.nuclei[1])
+        nested_spec_b = HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = nested_basis.nuclei[2])
+        nested_hybrid_operators = ordinary_cartesian_qiu_white_operators(
+            nested.fixed_block,
+            nested_supplement;
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :mwg,
+        )
+        nested_hybrid_full = ordinary_cartesian_corrected_branch(
+            nested_hybrid_operators;
+            corrections = [nested_spec_a, nested_spec_b],
+        )
+        nested_hybrid_branch_a = ordinary_cartesian_corrected_branch(
+            nested_hybrid_operators;
+            nuclear_charges = [1.0, 0.0],
+            corrections = nested_spec_a,
+        )
+        nested_hybrid_diagnostics = nested_hybrid_full.diagnostics.corrections
+
+        @test nested_hybrid_full.diagnostics.branch_nuclear_charges == (1.0, 1.0)
+        @test nested_hybrid_full.diagnostics.correction_count == 2
+        @test (nested_hybrid_diagnostics[1].selected_center_source, nested_hybrid_diagnostics[2].selected_center_source) ==
+              (:parent_basis_nuclei, :parent_basis_nuclei)
+        @test (nested_hybrid_diagnostics[1].selected_center_index, nested_hybrid_diagnostics[2].selected_center_index) == (1, 2)
+        @test (nested_hybrid_diagnostics[1].reference_nuclear_charges, nested_hybrid_diagnostics[2].reference_nuclear_charges) ==
+              ((1.0, 0.0), (0.0, 1.0))
+        @test only(nested_hybrid_branch_a.diagnostics.corrections).selected_center_source == :parent_basis_nuclei
+        @test only(nested_hybrid_branch_a.diagnostics.corrections).selected_center_index == 1
+        @test only(nested_hybrid_branch_a.diagnostics.corrections).reference_nuclear_charges == (1.0, 0.0)
+        @test nested_hybrid_branch_a.diagnostics.branch_nuclear_charges == (1.0, 0.0)
     end
 
     @test operators.kinetic_one_body === kinetic_sidecar

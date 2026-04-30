@@ -706,7 +706,7 @@ function _ordinary_cartesian_branch_corrections(corrections)
     return Tuple(correction_vector)
 end
 
-function _ordinary_cartesian_branch_partition_centers(
+function _ordinary_cartesian_effective_nuclear_centers(
     operators::OrdinaryCartesianOperators3D,
     spec::HydrogenicCoreBranchCorrectionSpec,
 )
@@ -720,6 +720,19 @@ function _ordinary_cartesian_branch_partition_centers(
         )
         return centers, :basis_nuclei
     end
+    if hasproperty(operators.basis, :parent_basis)
+        parent_basis = getproperty(operators.basis, :parent_basis)
+        if hasproperty(parent_basis, :nuclei)
+            centers = NTuple{3,Float64}[
+                (Float64(nucleus[1]), Float64(nucleus[2]), Float64(nucleus[3])) for
+                nucleus in getproperty(parent_basis, :nuclei)
+            ]
+            !isempty(centers) || throw(
+                ArgumentError("localized branch correction requires at least one carried parent nucleus"),
+            )
+            return centers, :parent_basis_nuclei
+        end
+    end
 
     if operators.nuclear_charges !== nothing && length(operators.nuclear_charges) > 1
         throw(
@@ -729,6 +742,13 @@ function _ordinary_cartesian_branch_partition_centers(
         )
     end
     return NTuple{3,Float64}[spec.nucleus], :correction_nucleus
+end
+
+function _ordinary_cartesian_branch_partition_centers(
+    operators::OrdinaryCartesianOperators3D,
+    spec::HydrogenicCoreBranchCorrectionSpec,
+)
+    return _ordinary_cartesian_effective_nuclear_centers(operators, spec)
 end
 
 function _ordinary_cartesian_nearest_center_index(
@@ -864,8 +884,7 @@ function _ordinary_cartesian_inferred_reference_nuclear_charges(
 )
     spec.reference_nuclear_charges !== nothing && return copy(spec.reference_nuclear_charges)
     spec.orbital_selector == :localized_lowest || return nothing
-    hasproperty(operators.basis, :nuclei) || return nothing
-    centers, _ = _ordinary_cartesian_branch_partition_centers(operators, spec)
+    centers, _ = _ordinary_cartesian_effective_nuclear_centers(operators, spec)
     if selected_center_index === nothing
         selected_center_index, _ = _ordinary_cartesian_nearest_center_index(spec.nucleus, centers)
     end
