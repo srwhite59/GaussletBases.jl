@@ -2180,6 +2180,7 @@ function _cartesian_basis_route_metadata(basis::BondAlignedDiatomicQWBasis3D)
         basis_family = :bond_aligned_diatomic,
         bond_axis = basis.bond_axis,
         nuclei = copy(basis.nuclei),
+        nuclear_charges = copy(basis.nuclear_charges),
         target_core_spacing = basis.target_core_spacing,
     )
 end
@@ -2190,6 +2191,7 @@ function _cartesian_basis_route_metadata(basis::BondAlignedHomonuclearChainQWBas
         chain_axis = basis.chain_axis,
         chain_coordinates = Float64[Float64(value) for value in basis.chain_coordinates],
         nuclei = copy(basis.nuclei),
+        nuclear_charges = copy(basis.nuclear_charges),
         target_core_spacing = basis.target_core_spacing,
     )
 end
@@ -2201,6 +2203,7 @@ function _cartesian_basis_route_metadata(basis::AxisAlignedHomonuclearSquareLatt
         x_coordinates = Float64[Float64(value) for value in basis.x_coordinates],
         y_coordinates = Float64[Float64(value) for value in basis.y_coordinates],
         nuclei = copy(basis.nuclei),
+        nuclear_charges = copy(basis.nuclear_charges),
         target_core_spacing = basis.target_core_spacing,
     )
 end

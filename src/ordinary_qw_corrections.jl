@@ -52,8 +52,8 @@ end
 Public branch-level hydrogenic core correction specification. This is the
 matrix-level companion to [`HydrogenicCoreProjectorCorrectionSpec`](@ref) for
 counterpoise and branch Hamiltonian work: the one-body branch matrix is first
-assembled with caller-provided nuclear charges, then the projector reference
-correction is applied to the selected core orbital.
+assembled with explicit or stored operator nuclear charges, then the projector
+reference correction is applied to the selected core orbital.
 
 This public branch surface supports one correction or a collection of
 corrections for one assembled branch matrix. The default
@@ -1070,14 +1070,29 @@ function apply_ordinary_cartesian_corrections(
     return apply_ordinary_cartesian_corrections(operators, spec; overlap_tol = overlap_tol)
 end
 
+function _ordinary_cartesian_branch_nuclear_charges(
+    operators::OrdinaryCartesianOperators3D,
+    nuclear_charges,
+)
+    if nuclear_charges !== nothing
+        return Float64.(collect(nuclear_charges))
+    end
+    operators.nuclear_charges !== nothing || throw(
+        ArgumentError(
+            "ordinary_cartesian_corrected_branch requires explicit nuclear_charges or stored operator nuclear_charges",
+        ),
+    )
+    return copy(operators.nuclear_charges)
+end
+
 """
-    ordinary_cartesian_corrected_branch(operators; nuclear_charges, corrections,
+    ordinary_cartesian_corrected_branch(operators; nuclear_charges=nothing, corrections,
         overlap_tol=1e-8)
 
 Apply a narrow branch-level hydrogenic correction to an
 [`OrdinaryCartesianOperators3D`](@ref) payload and return corrected matrices.
 The one-body branch matrix is assembled with `assembled_one_body_hamiltonian`
-using `nuclear_charges`, then one or more
+using explicit `nuclear_charges` or `operators.nuclear_charges`, then one or more
 [`HydrogenicCoreBranchCorrectionSpec`](@ref)s are applied sequentially.
 
 This is the intended public entry point for branch/counterpoise correction
@@ -1090,7 +1105,7 @@ duplicate localized center indices. The result is a matrix-level
 """
 function ordinary_cartesian_corrected_branch(
     operators::OrdinaryCartesianOperators3D;
-    nuclear_charges,
+    nuclear_charges = nothing,
     corrections,
     overlap_tol::Real = 1.0e-8,
 )
@@ -1102,7 +1117,7 @@ function ordinary_cartesian_corrected_branch(
     )
 
     correction_specs = _ordinary_cartesian_branch_corrections(corrections)
-    branch_charges = nuclear_charges === nothing ? nothing : Float64.(collect(nuclear_charges))
+    branch_charges = _ordinary_cartesian_branch_nuclear_charges(operators, nuclear_charges)
     initial_application_h = assembled_one_body_hamiltonian(operators; nuclear_charges = branch_charges)
     initial_application_v = Matrix{Float64}(operators.interaction_matrix)
     corrected_h = Matrix{Float64}(initial_application_h)
@@ -1148,7 +1163,7 @@ function ordinary_cartesian_corrected_branch(
     end
 
     diagnostics = (
-        branch_nuclear_charges = branch_charges === nothing ? nothing : Tuple(branch_charges),
+        branch_nuclear_charges = Tuple(branch_charges),
         correction_count = length(correction_specs),
         corrections = Tuple(per_correction_diagnostics),
         overlap_error = overlap_error,

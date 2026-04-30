@@ -122,16 +122,15 @@ end
     )
     target_one_body = -0.5 * Z^2
     target_closed_shell = -Z^2 + 5.0 * Z / 8.0
+    @test operators.nuclear_charges == [Z]
     initial_branch_h = assembled_one_body_hamiltonian(
-        operators;
-        nuclear_charges = operators.nuclear_charges,
+        operators,
     )
     initial_interaction = Matrix{Float64}(operators.interaction_matrix)
 
     branch_spec = HydrogenicCoreBranchCorrectionSpec(; Z = Z, include_esoi = true)
     branch_result = ordinary_cartesian_corrected_branch(
         operators;
-        nuclear_charges = operators.nuclear_charges,
         corrections = branch_spec,
     )
     wrapper_result = apply_ordinary_cartesian_corrections(
@@ -141,7 +140,7 @@ end
 
     @test branch_result isa OrdinaryCartesianBranchCorrectionResult
     @test branch_result.diagnostics.correction_count == 1
-    @test branch_result.diagnostics.branch_nuclear_charges === nothing
+    @test branch_result.diagnostics.branch_nuclear_charges == (Z,)
     @test branch_result.diagnostics.corrected_center_indices == (1,)
     branch_diagnostic = only(branch_result.diagnostics.corrections)
     @test branch_diagnostic.orbital_selector == :localized_lowest
@@ -153,6 +152,32 @@ end
     @test branch_result.interaction_matrix ≈ wrapper_result.operators.interaction_matrix atol = 1.0e-10 rtol = 0.0
     @test branch_result.one_body_delta ≈ branch_result.one_body_hamiltonian - initial_branch_h atol = 1.0e-12 rtol = 0.0
     @test branch_result.interaction_delta ≈ branch_result.interaction_matrix - initial_interaction atol = 1.0e-12 rtol = 0.0
+
+    chargeless = OrdinaryCartesianOperators3D(
+        operators.basis,
+        operators.gaussian_data,
+        operators.gausslet_backend,
+        operators.interaction_treatment,
+        operators.expansion,
+        operators.overlap,
+        operators.one_body_hamiltonian,
+        operators.interaction_matrix,
+        operators.orbital_data,
+        operators.gausslet_count,
+        operators.residual_count,
+        operators.raw_to_final,
+        operators.residual_centers,
+        operators.residual_widths,
+        operators.residual_nucleus_indices,
+        nothing,
+        operators.kinetic_one_body,
+        operators.nuclear_one_body_by_center,
+        operators.nuclear_term_storage,
+    )
+    @test_throws ArgumentError ordinary_cartesian_corrected_branch(
+        chargeless;
+        corrections = branch_spec,
+    )
 end
 
 @testset "Ordinary QW localized diatomic branch correction selector" begin
@@ -1846,6 +1871,15 @@ end
         xmax_transverse = 4.0,
         bond_axis = :z,
     )
+    heteronuclear_basis = bond_aligned_heteronuclear_qw_basis(
+        atoms = ("He", "H"),
+        bond_length = 1.4,
+        core_spacings = (0.45, 0.6),
+        nuclear_charges = (2.0, 1.0),
+        xmax_parallel = 2.0,
+        xmax_transverse = 1.5,
+        bond_axis = :z,
+    )
     chain_basis = bond_aligned_homonuclear_chain_qw_basis(
         natoms = 3,
         spacing = 1.2,
@@ -1904,6 +1938,7 @@ end
 
     @testset "Bond-aligned normalized build context" begin
         diatomic_context = GaussletBases._normalized_bond_aligned_build_context(diatomic_basis)
+        heteronuclear_context = GaussletBases._normalized_bond_aligned_build_context(heteronuclear_basis)
         chain_context = GaussletBases._normalized_bond_aligned_build_context(chain_basis)
         square_context = GaussletBases._normalized_bond_aligned_build_context(square_basis)
         nested_diatomic_context = GaussletBases._normalized_bond_aligned_build_context(nested_fixed_block)
@@ -1920,6 +1955,10 @@ end
         @test diatomic_context.carried === diatomic_basis
         @test diatomic_context.contraction === nothing
         @test diatomic_context.default_nuclear_charges == [1.0, 1.0]
+        @test heteronuclear_basis.nuclear_charges == [2.0, 1.0]
+        @test heteronuclear_context.default_nuclear_charges == [2.0, 1.0]
+        @test heteronuclear_context.route_metadata.nuclear_charges == [2.0, 1.0]
+        @test basis_representation(heteronuclear_basis).metadata.route_metadata.nuclear_charges == [2.0, 1.0]
         @test diatomic_context.route_metadata.basis_family == :bond_aligned_diatomic
         @test diatomic_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
         @test diatomic_context.capabilities.allowed_gausslet_backends ==
@@ -1942,6 +1981,27 @@ end
         @test nested_diatomic_context.capabilities.localized_parent_kind == :cartesian_product_basis
         @test nested_diatomic_context.capabilities.timing_label == "qwrg.bond_aligned_nested_fixed.total"
     end
+
+    heteronuclear_default = ordinary_cartesian_qiu_white_operators(
+        heteronuclear_basis;
+        nuclear_term_storage = :by_center,
+        expansion = expansion,
+        interaction_treatment = :ggt_nearest,
+    )
+    heteronuclear_explicit = ordinary_cartesian_qiu_white_operators(
+        heteronuclear_basis;
+        nuclear_charges = [2.0, 1.0],
+        nuclear_term_storage = :by_center,
+        expansion = expansion,
+        interaction_treatment = :ggt_nearest,
+    )
+    heteronuclear_bundle = cartesian_basis_bundle_payload(heteronuclear_default)
+
+    @test heteronuclear_default.nuclear_charges == [2.0, 1.0]
+    @test heteronuclear_default.one_body_hamiltonian ≈
+          heteronuclear_explicit.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test heteronuclear_bundle.basis["metadata/route/nuclear_charges"] == [2.0, 1.0]
+    @test heteronuclear_bundle.ham["default_nuclear_charges"] == [2.0, 1.0]
 
     diatomic_reference, diatomic_localized, diatomic_reference_check, diatomic_localized_check =
         _check_direct_product_backend_pair(diatomic_basis, [1.0, 1.0])

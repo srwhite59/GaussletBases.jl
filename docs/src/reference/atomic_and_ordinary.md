@@ -92,7 +92,8 @@ the total matrices authoritative and drop invalid decomposition sidecars:
 
 For branch or counterpoise calculations, use
 `ordinary_cartesian_corrected_branch`. It assembles one branch one-body matrix
-with caller-provided `nuclear_charges`, applies one or more
+with explicit `nuclear_charges` or the charges stored on the operator payload,
+applies one or more
 `HydrogenicCoreBranchCorrectionSpec`s sequentially, and returns corrected
 matrices rather than a new operator payload. The branch surface default
 `orbital_selector = :localized_lowest` chooses a center-local subspace by
@@ -114,10 +115,13 @@ per-correction diagnostics in `corrections`; the matrix deltas are available as
 
 The intended counterpoise pattern is to build one operator payload with
 `nuclear_term_storage = :by_center`, then reuse it for the full branch and each
-fragment branch. For molecular Gaussian supplements, use a finite `max_width`
-when the supplement is meant to remain a local/core correction rather than a
-wide diffuse completion. On the bond-aligned diatomic molecular path, residual
-directions are constructed by supplement-owner group and exported with
+fragment branch. Ordinary bond-aligned basis/operator packets store
+`nuclear_charges` alongside `nuclei`; omitted operator-construction charges use
+those stored basis charges, and branch correction requires either explicit
+branch charges or stored operator charges. For molecular Gaussian supplements,
+use a finite `max_width` when the supplement is meant to remain a local/core
+correction rather than a wide diffuse completion. On the bond-aligned diatomic
+molecular path, residual directions are constructed by supplement-owner group and exported with
 atom-local residual labels/owner metadata. `interaction_treatment = :mwg` is
 the preferred residual-Gaussian interaction route because it uses the exported
 residual centers and finite matched widths; `:ggt_nearest` is retained as a
@@ -127,7 +131,6 @@ fallback/debug approximation.
 operators = ordinary_cartesian_qiu_white_operators(
     basis,
     supplement;
-    nuclear_charges = [Z, Z],
     nuclear_term_storage = :by_center,
     interaction_treatment = :mwg,
 )
@@ -136,7 +139,6 @@ spec_b = HydrogenicCoreBranchCorrectionSpec(; Z = Z, nucleus = nuclei[2])
 
 full = ordinary_cartesian_corrected_branch(
     operators;
-    nuclear_charges = [Z, Z],
     corrections = [spec_a, spec_b],
 )
 atom_a = ordinary_cartesian_corrected_branch(

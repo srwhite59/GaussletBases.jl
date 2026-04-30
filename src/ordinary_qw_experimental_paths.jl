@@ -654,7 +654,7 @@ end
 """
     experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         basis::BondAlignedHomonuclearChainQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -674,7 +674,7 @@ the conservative reference policy.
 """
 function experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -704,7 +704,7 @@ end
 """
     experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
         basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -722,7 +722,7 @@ contract.
 """
 function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,

@@ -94,6 +94,16 @@ struct _QWRGBondAlignedBuildContext{
     capabilities::CM
 end
 
+function _qwrg_stored_basis_nuclear_charges(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+)
+    charges = Float64[Float64(charge) for charge in basis.nuclear_charges]
+    length(charges) == length(basis.nuclei) || throw(
+        ArgumentError("ordinary QW basis nuclear_charges must match nuclei"),
+    )
+    return charges
+end
+
 function _pure_bond_aligned_nested_route_label(
     basis_family::Symbol,
 )
@@ -118,7 +128,7 @@ function _normalized_bond_aligned_build_context(
         metadata.carried_representation,
         metadata.parent_representation,
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in basis.nuclei],
-        Float64[1.0 for _ in basis.nuclei],
+        _qwrg_stored_basis_nuclear_charges(basis),
         nothing,
         nothing,
         metadata.carried_route_metadata,
@@ -150,7 +160,7 @@ function _normalized_bond_aligned_build_context(
         metadata.carried_representation,
         metadata.parent_representation,
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in parent_basis.nuclei],
-        Float64[1.0 for _ in parent_basis.nuclei],
+        _qwrg_stored_basis_nuclear_charges(parent_basis),
         fixed_block.coefficient_matrix,
         nothing,
         metadata.carried_route_metadata,
@@ -186,7 +196,7 @@ function _normalized_bond_aligned_build_context(
         metadata.carried_representation,
         metadata.parent_representation,
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in basis.nuclei],
-        Float64[1.0 for _ in basis.nuclei],
+        _qwrg_stored_basis_nuclear_charges(basis),
         nothing,
         gaussian_data,
         metadata.carried_route_metadata,
@@ -225,7 +235,7 @@ function _normalized_bond_aligned_build_context(
         metadata.carried_representation,
         metadata.parent_representation,
         NTuple{3,Float64}[Tuple(Float64.(nucleus)) for nucleus in parent_basis.nuclei],
-        Float64[1.0 for _ in parent_basis.nuclei],
+        _qwrg_stored_basis_nuclear_charges(parent_basis),
         fixed_block.coefficient_matrix,
         gaussian_data,
         metadata.carried_route_metadata,
@@ -1253,7 +1263,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         basis::BondAlignedDiatomicQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -1274,7 +1284,7 @@ This first molecular pass is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedDiatomicQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -1296,7 +1306,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         basis::BondAlignedHomonuclearChainQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -1316,7 +1326,7 @@ This chain milestone is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::BondAlignedHomonuclearChainQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -1338,7 +1348,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -1358,7 +1368,7 @@ This lattice milestone is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D;
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -2488,6 +2498,10 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
             Matrix{Float64}(residual_data.raw_to_final),
             Matrix{Float64}(residual_centers),
             Matrix{Float64}(residual_widths),
+            Float64[Float64(Z)],
+            nothing,
+            nothing,
+            :total_only,
         )
     end
 end
@@ -2638,7 +2652,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
-        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -2661,7 +2675,7 @@ and transferred packet cleanly before molecular Gaussian completion is added.
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -2683,7 +2697,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
-        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -2706,7 +2720,7 @@ This path is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedHomonuclearChainQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -2728,7 +2742,7 @@ end
 """
     ordinary_cartesian_qiu_white_operators(
         fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
-        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :ggt_nearest,
         gausslet_backend = :numerical_reference,
@@ -2751,7 +2765,7 @@ This path is intentionally narrow:
 """
 function ordinary_cartesian_qiu_white_operators(
     fixed_block::_NestedFixedBlock3D{<:AxisAlignedHomonuclearSquareLatticeQWBasis3D};
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :ggt_nearest,
@@ -2775,7 +2789,7 @@ end
     ordinary_cartesian_qiu_white_operators(
         basis::BondAlignedDiatomicQWBasis3D,
         gaussian_data::LegacyBondAlignedDiatomicGaussianSupplement;
-        nuclear_charges = fill(1.0, length(basis.nuclei)),
+        nuclear_charges = basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
@@ -2802,7 +2816,7 @@ function ordinary_cartesian_qiu_white_operators(
         LegacyBondAlignedDiatomicGaussianSupplement,
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :mwg,
@@ -2828,7 +2842,7 @@ end
             LegacyBondAlignedDiatomicGaussianSupplement,
             LegacyBondAlignedHeteronuclearGaussianSupplement,
         };
-        nuclear_charges = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
         expansion = coulomb_gaussian_expansion(doacc = false),
         interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
@@ -2851,7 +2865,7 @@ function ordinary_cartesian_qiu_white_operators(
         LegacyBondAlignedDiatomicGaussianSupplement,
         LegacyBondAlignedHeteronuclearGaussianSupplement,
     };
-    nuclear_charges::AbstractVector{<:Real} = fill(1.0, length(fixed_block.parent_basis.nuclei)),
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
     nuclear_term_storage::Symbol = :auto,
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     interaction_treatment::Symbol = :mwg,

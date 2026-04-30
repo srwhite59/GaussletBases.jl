@@ -300,6 +300,7 @@ struct BondAlignedDiatomicQWBasis3D{B<:MappedUniformBasis} <: AbstractBondAligne
     basis_y::B
     basis_z::B
     nuclei::Vector{NTuple{3,Float64}}
+    nuclear_charges::Vector{Float64}
     target_core_spacing::Float64
 end
 
@@ -316,6 +317,8 @@ function Base.show(io::IO, basis::BondAlignedDiatomicQWBasis3D)
         length(basis.basis_z),
         ", nuclei=",
         basis.nuclei,
+        ", nuclear_charges=",
+        basis.nuclear_charges,
         ", target_core_spacing=",
         basis.target_core_spacing,
         ")",
@@ -334,6 +337,7 @@ struct BondAlignedHomonuclearChainQWBasis3D{B<:MappedUniformBasis} <: AbstractBo
     basis_y::B
     basis_z::B
     nuclei::Vector{NTuple{3,Float64}}
+    nuclear_charges::Vector{Float64}
     chain_coordinates::Vector{Float64}
     target_core_spacing::Float64
 end
@@ -351,6 +355,8 @@ function Base.show(io::IO, basis::BondAlignedHomonuclearChainQWBasis3D)
         length(basis.basis_y),
         ", nz=",
         length(basis.basis_z),
+        ", nuclear_charges=",
+        basis.nuclear_charges,
         ", target_core_spacing=",
         basis.target_core_spacing,
         ")",
@@ -369,6 +375,7 @@ struct AxisAlignedHomonuclearSquareLatticeQWBasis3D{B<:MappedUniformBasis} <: Ab
     basis_y::B
     basis_z::B
     nuclei::Vector{NTuple{3,Float64}}
+    nuclear_charges::Vector{Float64}
     x_coordinates::Vector{Float64}
     y_coordinates::Vector{Float64}
     target_core_spacing::Float64
@@ -385,6 +392,8 @@ function Base.show(io::IO, basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D)
         length(basis.basis_y),
         ", nz=",
         length(basis.basis_z),
+        ", nuclear_charges=",
+        basis.nuclear_charges,
         ", target_core_spacing=",
         basis.target_core_spacing,
         ")",
@@ -620,6 +629,7 @@ function bond_aligned_homonuclear_qw_basis(;
         basis_y,
         basis_z,
         nuclei,
+        fill(nuclear_charge_value, length(nuclei)),
         core_spacing_value,
     )
 end
@@ -717,6 +727,7 @@ function bond_aligned_homonuclear_chain_qw_basis(;
         basis_y,
         basis_z,
         nuclei,
+        fill(nuclear_charge_value, length(nuclei)),
         chain_coordinate_values,
         core_spacing_value,
     )
@@ -841,6 +852,7 @@ function axis_aligned_homonuclear_square_lattice_qw_basis(;
         basis_y,
         basis_z,
         nuclei,
+        fill(nuclear_charge_value, length(nuclei)),
         x_coordinate_values,
         y_coordinate_values,
         core_spacing_value,
@@ -951,6 +963,7 @@ function bond_aligned_heteronuclear_qw_basis(;
         basis_y,
         basis_z,
         nuclei,
+        collect(nuclear_charge_values),
         transverse_spacing_value,
     )
 end
