@@ -44,8 +44,9 @@ end
 """
     MappedPGDGLogFitPrototype1D
 
-Experimental refined analytic proxy for `MappedUniformBasis`, using a short
-weighted log-quadratic Gaussian fit for each distorted primitive.
+Internal diagnostic proxy for `MappedUniformBasis`, using a sampled short-window
+weighted log-quadratic Gaussian fit for each distorted primitive. Public PGDG
+production backends do not call this helper.
 """
 struct MappedPGDGLogFitPrototype1D
     source_basis::MappedUniformBasis
@@ -338,7 +339,7 @@ end
 """
     mapped_pgdg_logfit_prototype(basis::MappedUniformBasis)
 
-Experimental refined analytic proxy for `basis`, using short-window weighted
+Internal diagnostic proxy for `basis`, using sampled short-window weighted
 log-quadratic Gaussian replacements for the distorted primitives.
 """
 function mapped_pgdg_logfit_prototype(basis::MappedUniformBasis)
@@ -360,6 +361,13 @@ function mapped_pgdg_logfit_prototype(basis::MappedUniformBasis)
     )
 end
 
+"""
+    mapped_pgdg_derivativefit_prototype(basis::MappedUniformBasis)
+
+Internal diagnostic proxy for `basis`, using sampled short-window value and
+curvature matching for the distorted primitives. Public PGDG production
+backends do not call this helper.
+"""
 function mapped_pgdg_derivativefit_prototype(basis::MappedUniformBasis)
     gaussian_primitives, primitive_centers, primitive_widths, primitive_amplitudes =
         _mapped_pgdg_derivativefit_primitive_data(basis)

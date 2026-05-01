@@ -155,14 +155,14 @@ function _mapped_ordinary_backend_layer(
     if backend == :numerical_reference
         return basis
     elseif backend == :pgdg_experimental
-        layer = mapped_pgdg_logfit_prototype(basis)
+        layer = mapped_pgdg_prototype(basis)
         _require_analytic_primitive_backend(
             primitive_set(layer),
             "mapped ordinary backend :pgdg_experimental",
         )
         return layer
     elseif backend == :pgdg_localized_experimental
-        layer = mapped_pgdg_localized(mapped_pgdg_derivativefit_prototype(basis))
+        layer = mapped_pgdg_localized(basis)
         _require_analytic_primitive_backend(
             primitive_set(layer),
             "mapped ordinary backend :pgdg_localized_experimental",
@@ -636,10 +636,10 @@ mapped basis.
 The backend choice is explicit:
 
 - `:numerical_reference` keeps the trusted mapped numerical path
-- `:pgdg_experimental` uses the refined pre-COMX analytic PGDG-style proxy
-- `:pgdg_localized_experimental` uses the refined proxy followed by overlap
-  cleanup and COMX-style localization, using the current one-Gaussian
-  derivative-aware proxy
+- `:pgdg_experimental` uses the quadrature-free local-linear analytic
+  PGDG-style Gaussian proxy
+- `:pgdg_localized_experimental` applies overlap cleanup and COMX-style
+  localization to that same analytic proxy
 
 The experimental backends are intended for mild-to-moderate distortion
 regimes, with the numerical path retained as the reference route.

@@ -43,6 +43,12 @@ uhf_scf
 
 ## Ordinary mapped and hybrid line
 
+The public mapped PGDG backends use quadrature-free local-linear analytic
+Gaussian proxy primitives. `:pgdg_experimental` exposes that proxy directly,
+and `:pgdg_localized_experimental` applies overlap cleanup/localization to the
+same primitive layer. Sampled log-fit and derivative-fit proxy helpers are
+diagnostic/refinement tools, not public production backend fallbacks.
+
 ```@docs
 MappedOrdinaryOneBody1D
 LegacyAtomicGaussianShell

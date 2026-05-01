@@ -1555,8 +1555,18 @@ end
     )
     (_, _, overlap_reference_localized, kinetic_reference_localized, _) =
         _localized_numerical_reference_1d(mild_basis, expansion.exponents[1:3])
-    raw_localized = mapped_pgdg_localized(GaussletBases.mapped_pgdg_logfit_prototype(mild_basis))
-    raw_localized_kinetic = kinetic_matrix(raw_localized)
+    pgdg_layer = GaussletBases._mapped_ordinary_backend_layer(mild_basis, :pgdg_experimental)
+    localized_layer = GaussletBases._mapped_ordinary_backend_layer(mild_basis, :pgdg_localized_experimental)
+    pgdg_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_experimental,
+    )
+    localized_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+        backend = :pgdg_localized_experimental,
+    )
 
     @test mild_reference isa MappedOrdinaryOneBody1D
     @test mild_analytic isa MappedOrdinaryOneBody1D
@@ -1566,6 +1576,12 @@ end
     @test mild_analytic.backend == :pgdg_experimental
     @test mild_localized.backend == :pgdg_localized_experimental
     @test mild_oracle.backend == :pgdg_localized_oracle
+    @test primitive_set(pgdg_layer).name_value == :mapped_pgdg_primitives
+    @test primitive_set(localized_layer).name_value == :mapped_pgdg_primitives
+    @test primitive_set(pgdg_bundle.layer).name_value == :mapped_pgdg_primitives
+    @test primitive_set(localized_bundle.layer).name_value == :mapped_pgdg_primitives
+    @test primitive_set(pgdg_layer).name_value != :mapped_pgdg_logfit_primitives
+    @test primitive_set(localized_layer).name_value != :mapped_pgdg_derivativefit_primitives
     @test occursin("experimental=true", sprint(show, mild_analytic))
     @test occursin("experimental=true", sprint(show, mild_localized))
     @test occursin("experimental=true", sprint(show, mild_oracle))
@@ -1586,8 +1602,6 @@ end
     @test norm(mild_localized.overlap - I, Inf) < 1.0e-10
     @test norm(mild_localized.overlap - I, Inf) < norm(mild_analytic.overlap - I, Inf)
     @test norm(mild_localized.overlap - overlap_reference_localized, Inf) < 1.0e-10
-    @test norm(mild_localized.kinetic - kinetic_reference_localized, Inf) <
-          norm(raw_localized_kinetic - kinetic_reference_localized, Inf)
     @test norm(mild_oracle.kinetic - kinetic_reference_localized, Inf) <
           norm(mild_localized.kinetic - kinetic_reference_localized, Inf)
 end
@@ -3525,16 +3539,15 @@ end
     )
     (_, _, overlap_reference_localized, kinetic_reference_localized, gaussian_reference_localized) =
         _localized_numerical_reference_1d(basis, expansion.exponents)
-    raw_localized = mapped_pgdg_localized(GaussletBases.mapped_pgdg_logfit_prototype(basis))
     oracle_localized = GaussletBases._mapped_ordinary_localized_oracle_operators(
         basis;
         exponents = expansion.exponents,
         center = 0.0,
     )
-    raw_h1, _ = _cartesian_hydrogen_energy(
-        overlap_matrix(raw_localized),
-        kinetic_matrix(raw_localized),
-        gaussian_factor_matrices(raw_localized; exponents = expansion.exponents, center = 0.0),
+    proxy_h1, _ = _cartesian_hydrogen_energy(
+        proxy.one_body_1d.overlap,
+        proxy.one_body_1d.kinetic,
+        proxy.one_body_1d.gaussian_factors,
         expansion;
         Z = 2.0,
     )
@@ -3568,9 +3581,8 @@ end
     @test norm(localized.one_body_1d.overlap - I, Inf) < norm(proxy.one_body_1d.overlap - I, Inf)
     @test norm(localized.overlap_3d - I, Inf) < norm(proxy.overlap_3d - I, Inf)
     @test norm(localized.one_body_1d.overlap - overlap_reference_localized, Inf) < 1.0e-10
-    @test norm(localized.one_body_1d.kinetic - kinetic_reference_localized, Inf) <
-          norm(kinetic_matrix(raw_localized) - kinetic_reference_localized, Inf)
-    @test norm(corrected_h1 - reference_h1, Inf) < norm(raw_h1 - reference_h1, Inf)
+    @test localized.one_body_1d.kinetic ≈ transpose(localized.one_body_1d.kinetic) atol = 1.0e-10 rtol = 1.0e-10
+    @test norm(corrected_h1 - reference_h1, Inf) < norm(proxy_h1 - reference_h1, Inf)
     @test norm(oracle_h1 - reference_h1, Inf) < norm(corrected_h1 - reference_h1, Inf)
     @test localized.one_body_hamiltonian ≈ transpose(localized.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
     @test localized.interaction_matrix ≈ transpose(localized.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10

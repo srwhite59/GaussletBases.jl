@@ -714,9 +714,9 @@ The result is a static object, not a He solver:
 `backend = :pgdg_localized_experimental` is the candidate solver-ready
 implementation route in the mild-to-moderate mapped regime. In the current
 experimental implementation, that route uses the cleaned/localized PGDG-style
-one-dimensional basis together with a more derivative-aware analytic primitive
-proxy than the pre-COMX path.
-`:pgdg_experimental` retains the pre-COMX refined proxy path.
+one-dimensional basis on top of the quadrature-free local-linear analytic
+Gaussian proxy.
+`:pgdg_experimental` uses the same unlocalized analytic proxy.
 `:numerical_reference` remains the validation route.
 """
 function ordinary_cartesian_ida_operators(

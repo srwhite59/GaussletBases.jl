@@ -89,13 +89,23 @@ Numerical quadrature remains allowed in:
 Numerical quadrature is **not** part of the PGDG production contract and should
 not be reached by silent fallback on that lane.
 
+The public mapped PGDG backends therefore use the local-linear analytic
+Gaussian proxy layer:
+
+- `:pgdg_experimental` builds `:mapped_pgdg_primitives`
+- `:pgdg_localized_experimental` localizes that same primitive layer
+
+Sampled log-fit or derivative-fit proxy helpers may remain as explicit
+diagnostic/refinement tools, but they are outside the public production
+backend path.
+
 ## Adoption Plan
 
 The intended repo adoption order is:
 
 1. document the contract clearly
 2. add guardrails so the PGDG experimental/production lane refuses silent
-   numerical primitive fallback
+   numerical primitive fallback or sampled proxy construction
 3. keep `:numerical_reference` explicit and separate
 4. later tighten metadata and naming once the production lane is fully wired
    through the public ordinary/nested surfaces
