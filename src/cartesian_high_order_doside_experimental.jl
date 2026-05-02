@@ -4,6 +4,7 @@ const _ExperimentalHighOrderCoefficientMap =
 struct _ExperimentalHighOrderAxisData1D
     basis::MappedUniformBasis
     pgdg_intermediate
+    one_body_layer
     backend::Symbol
     centers::Vector{Float64}
     weights::Vector{Float64}
@@ -12,6 +13,7 @@ struct _ExperimentalHighOrderAxisData1D
     kinetic::Matrix{Float64}
     gaussian_factors::Vector{Matrix{Float64}}
     pair_factors_1d::Vector{Matrix{Float64}}
+    one_body_cache::Dict{Tuple{Tuple{Vararg{Float64}},Float64},MappedOrdinaryOneBody1D}
 end
 
 struct _ExperimentalHighOrderBlock1D
@@ -57,10 +59,39 @@ function _experimental_high_order_centered_interval(
     side::Int,
 )
     side >= 1 || throw(ArgumentError("experimental high-order doside side lengths must be positive"))
-    isodd(side) || throw(ArgumentError("experimental high-order doside lane currently requires odd side lengths"))
     side <= n1d || throw(ArgumentError("experimental high-order doside side length must lie inside the parent basis"))
     start = (n1d - side) ÷ 2 + 1
     return start:(start + side - 1)
+end
+
+function _experimental_high_order_mapping_family(mapping_value::IdentityMapping)
+    return :identity
+end
+
+function _experimental_high_order_mapping_family(mapping_value::AsinhMapping)
+    c_value = mapping_value.a * mapping_value.s
+    if isapprox(c_value, 0.2; atol = 1.0e-12, rtol = 1.0e-12) &&
+       isapprox(mapping_value.s, sqrt(0.4); atol = 1.0e-12, rtol = 1.0e-12) &&
+       isapprox(mapping_value.tail_spacing, 10.0; atol = 1.0e-12, rtol = 1.0e-12)
+        return :white_lindsey_atomic_he_d0p2
+    end
+    throw(
+        ArgumentError(
+            "experimental high-order doside stack currently supports only IdentityMapping or the explicit distorted White-Lindsey He family AsinhMapping(c = 0.2, s = sqrt(0.4), tail_spacing = 10.0)",
+        ),
+    )
+end
+
+function _experimental_high_order_mapping_family(basis::MappedUniformBasis)
+    return _experimental_high_order_mapping_family(mapping(basis))
+end
+
+function _experimental_high_order_centered_working_box(
+    parent_side::Int,
+    working_box_side::Int,
+)
+    interval = _experimental_high_order_centered_interval(parent_side, working_box_side)
+    return (interval, interval, interval)
 end
 
 function _experimental_high_order_validate_request(
@@ -68,23 +99,25 @@ function _experimental_high_order_validate_request(
     sides::AbstractVector{<:Integer},
     doside::Int,
 )
-    mapping(basis) isa IdentityMapping || throw(
-        ArgumentError("experimental high-order doside stack currently requires an undistorted IdentityMapping parent basis"),
+    mapping_family = _experimental_high_order_mapping_family(basis)
+    doside in (4, 5, 6) || throw(
+        ArgumentError("experimental high-order doside stack currently supports only doside = 4, 5, or 6"),
     )
-    doside == 5 || throw(ArgumentError("experimental high-order doside stack currently requires doside = 5"))
     n1d = length(basis)
     isodd(n1d) || throw(ArgumentError("experimental high-order doside stack currently requires an odd parent side length"))
     isempty(sides) && throw(ArgumentError("experimental high-order doside stack requires at least one side length"))
     side_values = Int[Int(side) for side in sides]
     first(side_values) == doside || throw(ArgumentError("experimental high-order doside side ladders must start at doside"))
-    all(isodd, side_values) || throw(ArgumentError("experimental high-order doside side ladders must be odd"))
+    all(side -> isodd(side) == isodd(doside), side_values) || throw(
+        ArgumentError("experimental high-order doside side ladders must keep the same parity as doside"),
+    )
     all(side_values[index + 1] == side_values[index] + 2 for index in 1:(length(side_values) - 1)) || throw(
         ArgumentError("experimental high-order doside side ladders must increase by 2"),
     )
     maximum(side_values) <= n1d || throw(
         ArgumentError("experimental high-order doside stack currently requires maximum(sides) <= length(parent_basis)"),
     )
-    return side_values
+    return side_values, mapping_family
 end
 
 function _experimental_high_order_axis_data_1d(
@@ -96,6 +129,7 @@ function _experimental_high_order_axis_data_1d(
         return _ExperimentalHighOrderAxisData1D(
             basis,
             nothing,
+            basis,
             backend,
             Float64[Float64(value) for value in centers(basis)],
             Float64[Float64(value) for value in integral_weights(basis)],
@@ -104,6 +138,7 @@ function _experimental_high_order_axis_data_1d(
             Matrix{Float64}(representation.basis_matrices.kinetic),
             Matrix{Float64}[],
             Matrix{Float64}[],
+            Dict{Tuple{Tuple{Vararg{Float64}},Float64},MappedOrdinaryOneBody1D}(),
         )
     end
 
@@ -115,6 +150,7 @@ function _experimental_high_order_axis_data_1d(
     return _ExperimentalHighOrderAxisData1D(
         basis,
         pgdg,
+        pgdg.auxiliary_layer,
         backend,
         Float64[Float64(value) for value in pgdg.centers],
         Float64[Float64(value) for value in pgdg.weights],
@@ -123,7 +159,41 @@ function _experimental_high_order_axis_data_1d(
         Matrix{Float64}(pgdg.kinetic),
         Matrix{Float64}[Matrix{Float64}(factor) for factor in pgdg.gaussian_factors],
         Matrix{Float64}[Matrix{Float64}(factor) for factor in pgdg.pair_factors],
+        Dict{Tuple{Tuple{Vararg{Float64}},Float64},MappedOrdinaryOneBody1D}(),
     )
+end
+
+function _experimental_high_order_axis_one_body_1d(
+    axis_data::_ExperimentalHighOrderAxisData1D;
+    exponents::AbstractVector{<:Real} = Float64[],
+    center::Real = 0.0,
+)
+    exponent_values = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    key = (Tuple(exponent_values), center_value)
+    if haskey(axis_data.one_body_cache, key)
+        return axis_data.one_body_cache[key]
+    end
+
+    gaussian_factors = Matrix{Float64}[
+        Matrix{Float64}(factor) for factor in gaussian_factor_matrices(
+            axis_data.one_body_layer;
+            exponents = exponent_values,
+            center = center_value,
+        )
+    ]
+
+    one_body = MappedOrdinaryOneBody1D(
+        axis_data.basis,
+        axis_data.backend,
+        axis_data.overlap,
+        axis_data.kinetic,
+        gaussian_factors,
+        exponent_values,
+        center_value,
+    )
+    axis_data.one_body_cache[key] = one_body
+    return one_body
 end
 
 function _experimental_high_order_interval_data(
@@ -166,11 +236,163 @@ function _experimental_high_order_embed_local_coefficients(
     )
 end
 
+function _experimental_high_order_parent_polynomial_images(
+    local_weights::AbstractVector{<:Real},
+    local_position::AbstractMatrix{<:Real},
+    local_overlap::AbstractMatrix{<:Real},
+    retained_count::Int,
+)
+    nlocal = length(local_weights)
+    retained_count >= 1 || throw(
+        ArgumentError("parent polynomial images require retained_count >= 1"),
+    )
+    retained_count <= nlocal || throw(
+        ArgumentError("parent polynomial images require retained_count <= local interval size"),
+    )
+    overlap_factor = cholesky(Symmetric(Matrix{Float64}(local_overlap)))
+    position_value = Matrix{Float64}(local_position)
+    images = zeros(Float64, nlocal, retained_count)
+    images[:, 1] .= overlap_factor \ Float64.(local_weights)
+    for column in 2:retained_count
+        previous = view(images, :, column - 1)
+        images[:, column] .= overlap_factor \ (position_value * previous)
+    end
+    return images
+end
+
+function _experimental_high_order_metric_projection_summary(
+    targets::AbstractMatrix{<:Real},
+    basis::AbstractMatrix{<:Real},
+    overlap::AbstractMatrix{<:Real},
+)
+    target_value = Matrix{Float64}(targets)
+    basis_value = Matrix{Float64}(basis)
+    couplings = Matrix{Float64}(transpose(basis_value) * overlap * target_value)
+    projected = Matrix{Float64}(basis_value * couplings)
+    residual = Matrix{Float64}(target_value - projected)
+    errors = Float64[]
+    capture_fractions = Float64[]
+    for column in axes(target_value, 2)
+        target_norm = _nested_metric_norm(view(target_value, :, column), overlap)
+        projected_norm = _nested_metric_norm(view(projected, :, column), overlap)
+        residual_norm = _nested_metric_norm(view(residual, :, column), overlap)
+        error_value = residual_norm / max(target_norm, eps(Float64))
+        capture_value = (projected_norm / max(target_norm, eps(Float64)))^2
+        push!(errors, error_value)
+        push!(capture_fractions, min(1.0, max(0.0, capture_value)))
+    end
+    return (
+        errors = errors,
+        capture_fractions = capture_fractions,
+        max_error = isempty(errors) ? 0.0 : maximum(errors),
+        min_capture_fraction = isempty(capture_fractions) ? 1.0 : minimum(capture_fractions),
+    )
+end
+
+function _experimental_high_order_subspace_residual_error(
+    target::AbstractMatrix{<:Real},
+    basis::AbstractMatrix{<:Real},
+    overlap::AbstractMatrix{<:Real},
+)
+    target_value = Matrix{Float64}(target)
+    basis_value = Matrix{Float64}(basis)
+    projected = Matrix{Float64}(basis_value * (transpose(basis_value) * overlap * target_value))
+    residual = Matrix{Float64}(target_value - projected)
+    return norm(transpose(residual) * overlap * residual, Inf)
+end
+
+function _experimental_high_order_axis_shell_indices(axis_count::Int)
+    axis_count >= 1 || throw(ArgumentError("axis shell indices require axis_count >= 1"))
+    if axis_count == 1
+        return Int[]
+    elseif axis_count == 2
+        return Int[1, 2]
+    end
+    return collect(2:(axis_count - 1))
+end
+
+function _experimental_high_order_axis_boundary_indices(axis_count::Int)
+    axis_count >= 1 || throw(ArgumentError("axis boundary indices require axis_count >= 1"))
+    indices = Int[1]
+    axis_count > 1 && push!(indices, axis_count)
+    return unique(indices)
+end
+
+function _experimental_high_order_physical_block_1d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    side::Int;
+    doside::Int = 5,
+)
+    interval = _experimental_high_order_centered_interval(length(axis_data.centers), side)
+    interval_data = _experimental_high_order_interval_data(axis_data, interval)
+    parent_polynomial_images = _experimental_high_order_parent_polynomial_images(
+        interval_data.weights,
+        interval_data.position,
+        interval_data.overlap,
+        doside,
+    )
+    raw_basis = _nested_retained_span(
+        interval_data.weights,
+        interval_data.centers,
+        interval_data.position,
+        interval_data.overlap,
+        doside,
+    )
+    overlap_seed = Matrix{Float64}(transpose(raw_basis) * interval_data.overlap * raw_basis)
+    position_seed = Matrix{Float64}(transpose(raw_basis) * interval_data.position * raw_basis)
+    sign_vector = vec(transpose(interval_data.weights) * raw_basis)
+    transform, localized_centers = _cleanup_comx_transform(overlap_seed, position_seed, sign_vector)
+    local_coefficients = Matrix{Float64}(raw_basis * transform)
+    local_weights = vec(transpose(interval_data.weights) * local_coefficients)
+    coefficients = _experimental_high_order_embed_local_coefficients(
+        local_coefficients,
+        interval,
+        interval_data.n1d,
+    )
+    axis_count = size(local_coefficients, 2)
+    block = _ExperimentalHighOrderBlock1D(
+        side,
+        interval,
+        coefficients,
+        local_coefficients,
+        interval_data.overlap,
+        interval_data.position,
+        local_weights,
+        interval_data.centers,
+        localized_centers,
+        _experimental_high_order_axis_shell_indices(axis_count),
+        _experimental_high_order_axis_boundary_indices(axis_count),
+    )
+    polynomial_capture = _experimental_high_order_metric_projection_summary(
+        parent_polynomial_images,
+        local_coefficients,
+        interval_data.overlap,
+    )
+    diagnostics = (
+        polynomial_degrees = collect(0:(size(parent_polynomial_images, 2) - 1)),
+        precleanup_overlap_spectrum = _experimental_high_order_positive_spectrum(overlap_seed; tol = 1.0e-12),
+        overlap_error = _experimental_high_order_overlap_error(local_coefficients, interval_data.overlap),
+        parent_polynomial_projection_errors = polynomial_capture.errors,
+        parent_polynomial_capture_fractions = polynomial_capture.capture_fractions,
+        max_parent_polynomial_projection_error = polynomial_capture.max_error,
+        min_parent_polynomial_capture_fraction = polynomial_capture.min_capture_fraction,
+    )
+    return (
+        block = block,
+        raw_basis = raw_basis,
+        parent_polynomial_images = parent_polynomial_images,
+        diagnostics = diagnostics,
+    )
+end
+
 function _experimental_high_order_block_1d(
     axis_data::_ExperimentalHighOrderAxisData1D,
     side::Int;
     doside::Int = 5,
 )
+    # Compatibility/debug helper retaining the earlier center-based local block
+    # construction. The physical-coordinate block helper is the intended route
+    # contract for high-order production-like paths.
     interval = _experimental_high_order_centered_interval(length(axis_data.centers), side)
     interval_data = _experimental_high_order_interval_data(axis_data, interval)
     raw_basis = _nested_retained_span(
@@ -269,22 +491,10 @@ function _experimental_high_order_shell_kind_counts(
     return (faces = faces, edges = edges, corners = corners)
 end
 
-function _experimental_high_order_tensor_shell_3d(
-    axis_data::_ExperimentalHighOrderAxisData1D,
-    side::Int;
+function _experimental_high_order_select_shell_indices_and_labels(
+    labels::AbstractVector{<:NTuple{3,Int}};
     doside::Int = 5,
-    column_range::UnitRange{Int} = 1:0,
 )
-    x_block = _experimental_high_order_block_1d(axis_data, side; doside = doside)
-    y_block = _experimental_high_order_block_1d(axis_data, side; doside = doside)
-    z_block = _experimental_high_order_block_1d(axis_data, side; doside = doside)
-    full_block_coefficients, labels = _experimental_high_order_product_coefficients(
-        x_block,
-        y_block,
-        z_block,
-        (length(axis_data.centers), length(axis_data.centers), length(axis_data.centers)),
-    )
-
     shell_indices = Int[]
     shell_labels = NTuple{3,Int}[]
     for (column, label) in enumerate(labels)
@@ -293,16 +503,159 @@ function _experimental_high_order_tensor_shell_3d(
             push!(shell_labels, label)
         end
     end
+    return shell_indices, shell_labels
+end
+
+function _experimental_high_order_tensor_shell_indices_and_labels(
+    doside::Int,
+)
+    labels = NTuple{3,Int}[]
+    for ix in 1:doside, iy in 1:doside, iz in 1:doside
+        push!(labels, (ix, iy, iz))
+    end
+    return _experimental_high_order_select_shell_indices_and_labels(labels; doside = doside)
+end
+
+function _experimental_high_order_tensor_shell_3d(
+    block::_ExperimentalHighOrderBlock1D,
+    parent_side::Int;
+    doside::Int = 5,
+    column_range::UnitRange{Int} = 1:0,
+)
+    full_block_coefficients, labels = _experimental_high_order_product_coefficients(
+        block,
+        block,
+        block,
+        (parent_side, parent_side, parent_side),
+    )
+
+    shell_indices, shell_labels = _experimental_high_order_select_shell_indices_and_labels(
+        labels;
+        doside = doside,
+    )
 
     shell_coefficients = full_block_coefficients[:, shell_indices]
     return _ExperimentalHighOrderTensorShell3D(
-        side,
-        (x_block.interval, y_block.interval, z_block.interval),
+        block.side,
+        (block.interval, block.interval, block.interval),
         full_block_coefficients,
         shell_coefficients,
         shell_labels,
         _experimental_high_order_shell_kind_counts(shell_labels; doside = doside),
         column_range,
+    )
+end
+
+function _experimental_high_order_tensor_shell_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    side::Int;
+    doside::Int = 5,
+    column_range::UnitRange{Int} = 1:0,
+)
+    block = _experimental_high_order_block_1d(axis_data, side; doside = doside)
+    return _experimental_high_order_tensor_shell_3d(
+        block,
+        length(axis_data.centers);
+        doside = doside,
+        column_range = column_range,
+    )
+end
+
+function _experimental_high_order_physical_full_block_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    side::Int;
+    doside::Int = 5,
+)
+    parent_side = length(axis_data.centers)
+    parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data)
+    physical_1d = _experimental_high_order_physical_block_1d(axis_data, side; doside = doside)
+    physical_shell = _experimental_high_order_tensor_shell_3d(
+        physical_1d.block,
+        parent_side;
+        doside = doside,
+    )
+    current_shell = _experimental_high_order_tensor_shell_3d(
+        axis_data,
+        side;
+        doside = doside,
+    )
+    physical_full = Matrix{Float64}(physical_shell.full_block_coefficients)
+    current_full = Matrix{Float64}(current_shell.full_block_coefficients)
+    diagnostics = (
+        full_block_dimension = size(physical_full, 2),
+        full_block_overlap_error = _experimental_high_order_overlap_error(physical_full, parent_overlap),
+        full_block_overlap_spectrum = _experimental_high_order_metric_spectrum(
+            physical_full,
+            parent_overlap;
+            tol = 1.0e-12,
+        ),
+        current_in_physical_residual = _experimental_high_order_subspace_residual_error(
+            current_full,
+            physical_full,
+            parent_overlap,
+        ),
+        physical_in_current_residual = _experimental_high_order_subspace_residual_error(
+            physical_full,
+            current_full,
+            parent_overlap,
+        ),
+    )
+    return (
+        block_1d = physical_1d,
+        shell = physical_shell,
+        current_shell = current_shell,
+        diagnostics = diagnostics,
+    )
+end
+
+function _experimental_high_order_expected_shell_dimension(doside::Int)
+    doside >= 1 || throw(ArgumentError("expected shell dimension requires doside >= 1"))
+    inner = max(doside - 2, 0)
+    return doside^3 - inner^3
+end
+
+function _experimental_high_order_physical_shell_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    side::Int;
+    doside::Int = 5,
+)
+    physical_full = _experimental_high_order_physical_full_block_3d(
+        axis_data,
+        side;
+        doside = doside,
+    )
+    parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data)
+    physical_shell_coefficients = Matrix{Float64}(physical_full.shell.shell_coefficients)
+    current_shell_coefficients = Matrix{Float64}(physical_full.current_shell.shell_coefficients)
+    diagnostics = (
+        shell_dimension = size(physical_shell_coefficients, 2),
+        expected_shell_dimension = _experimental_high_order_expected_shell_dimension(doside),
+        shell_overlap_error = _experimental_high_order_overlap_error(
+            physical_shell_coefficients,
+            parent_overlap,
+        ),
+        shell_overlap_spectrum = _experimental_high_order_metric_spectrum(
+            physical_shell_coefficients,
+            parent_overlap;
+            tol = 1.0e-12,
+        ),
+        shell_kind_counts = physical_full.shell.shell_kind_counts,
+        current_shell_in_physical_residual = _experimental_high_order_subspace_residual_error(
+            current_shell_coefficients,
+            physical_shell_coefficients,
+            parent_overlap,
+        ),
+        physical_shell_in_current_residual = _experimental_high_order_subspace_residual_error(
+            physical_shell_coefficients,
+            current_shell_coefficients,
+            parent_overlap,
+        ),
+    )
+    return (
+        full_block = physical_full,
+        shell = physical_full.shell,
+        current_shell = physical_full.current_shell,
+        diagnostics = diagnostics,
     )
 end
 
@@ -637,17 +990,18 @@ end
 
 function _experimental_high_order_doside_stack_3d(
     basis::MappedUniformBasis;
+    axis_data::Union{Nothing,_ExperimentalHighOrderAxisData1D} = nothing,
     backend::Symbol = :numerical_reference,
     doside::Int = 5,
     sides::AbstractVector{<:Integer} = [5, 7, 9, 11],
 )
-    side_values = _experimental_high_order_validate_request(basis, sides, doside)
-    axis_data = _experimental_high_order_axis_data_1d(basis; backend = backend)
-    parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data)
-    parent_weights = _experimental_high_order_parent_weights_3d(axis_data)
-    parent_coordinates = _experimental_high_order_parent_coordinates_3d(axis_data)
+    side_values, mapping_family = _experimental_high_order_validate_request(basis, sides, doside)
+    axis_data_value = isnothing(axis_data) ? _experimental_high_order_axis_data_1d(basis; backend = backend) : axis_data
+    parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data_value)
+    parent_weights = _experimental_high_order_parent_weights_3d(axis_data_value)
+    parent_coordinates = _experimental_high_order_parent_coordinates_3d(axis_data_value)
 
-    first_block = _experimental_high_order_tensor_shell_3d(axis_data, first(side_values); doside = doside)
+    first_block = _experimental_high_order_tensor_shell_3d(axis_data_value, first(side_values); doside = doside)
     accumulated = Matrix{Float64}(first_block.full_block_coefficients)
     _experimental_high_order_sign_fix_columns!(accumulated, parent_weights)
 
@@ -658,7 +1012,7 @@ function _experimental_high_order_doside_stack_3d(
     next_column = size(accumulated, 2) + 1
 
     for side in side_values[2:end]
-        shell = _experimental_high_order_tensor_shell_3d(axis_data, side; doside = doside)
+        shell = _experimental_high_order_tensor_shell_3d(axis_data_value, side; doside = doside)
         shell_residual = _experimental_high_order_metric_project_out(
             shell.shell_coefficients,
             accumulated,
@@ -716,6 +1070,7 @@ function _experimental_high_order_doside_stack_3d(
         block_column_ranges,
     )
     diagnostics = (
+        parent_mapping_family = mapping_family,
         parent_dimension = size(parent_overlap, 1),
         stack_dimension = size(accumulated, 2),
         parent_padding = length(basis) - maximum(side_values),

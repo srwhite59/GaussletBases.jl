@@ -9,6 +9,24 @@ function _experimental_high_order_identity_basis(
     ))
 end
 
+function _experimental_high_order_distorted_he_basis(
+    count::Int;
+    Z::Real = 2.0,
+    d::Real = 0.2,
+    tail_spacing::Real = 10.0,
+    reference_spacing::Real = 1.0,
+)
+    return build_basis(MappedUniformBasisSpec(:G10;
+        count = count,
+        mapping = white_lindsey_atomic_mapping(
+            Z = Z,
+            d = d,
+            tail_spacing = tail_spacing,
+        ),
+        reference_spacing = Float64(reference_spacing),
+    ))
+end
+
 function _experimental_high_order_he_singlet_case(
     sides::AbstractVector{<:Integer};
     parent_side::Int = maximum(sides),
@@ -38,6 +56,302 @@ function _experimental_high_order_he_singlet_case(
         tol = tol,
     )
     return (basis = basis, stack = stack, data = data)
+end
+
+@testset "Experimental high-order physical 1D polynomial blocks stay sane" begin
+    cases = (
+        (_experimental_high_order_identity_basis(11), 5, 5),
+        (_experimental_high_order_distorted_he_basis(11), 7, 5),
+        (_experimental_high_order_distorted_he_basis(11), 11, 5),
+        (_experimental_high_order_distorted_he_basis(11), 10, 6),
+    )
+
+    for (basis, side, doside) in cases
+        axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+            basis;
+            backend = :numerical_reference,
+        )
+        physical = GaussletBases._experimental_high_order_physical_block_1d(
+            axis_data,
+            side;
+            doside = doside,
+        )
+        current = GaussletBases._experimental_high_order_block_1d(
+            axis_data,
+            side;
+            doside = doside,
+        )
+
+        block = physical.block
+        diagnostics = physical.diagnostics
+        parent_overlap = axis_data.overlap
+        physical_coefficients = Matrix{Float64}(block.coefficients)
+        current_coefficients = Matrix{Float64}(current.coefficients)
+
+        @test size(block.local_coefficients, 2) == doside
+        @test diagnostics.precleanup_overlap_spectrum.kept_rank == doside
+        @test diagnostics.precleanup_overlap_spectrum.minimum_eigenvalue > 1.0e-12
+        @test diagnostics.overlap_error < 1.0e-8
+        @test all(isfinite, diagnostics.parent_polynomial_projection_errors)
+        @test all(isfinite, diagnostics.parent_polynomial_capture_fractions)
+        @test first(diagnostics.parent_polynomial_projection_errors) < 1.0e-12
+        @test diagnostics.max_parent_polynomial_projection_error < 1.0e-12
+        @test diagnostics.min_parent_polynomial_capture_fraction > 1.0 - 1.0e-12
+        @test issorted(block.localized_centers)
+
+        current_in_physical = current_coefficients - physical_coefficients * (
+            transpose(physical_coefficients) * parent_overlap * current_coefficients
+        )
+        physical_in_current = physical_coefficients - current_coefficients * (
+            transpose(current_coefficients) * parent_overlap * physical_coefficients
+        )
+
+        @test norm(transpose(current_in_physical) * parent_overlap * current_in_physical, Inf) < 1.0e-8
+        @test norm(transpose(physical_in_current) * parent_overlap * physical_in_current, Inf) < 1.0e-8
+    end
+end
+
+@testset "Experimental high-order physical 3D full blocks stay sane" begin
+    cases = (
+        (_experimental_high_order_identity_basis(11), 5, 5),
+        (_experimental_high_order_distorted_he_basis(11), 7, 5),
+        (_experimental_high_order_distorted_he_basis(11), 10, 6),
+    )
+
+    for (basis, side, doside) in cases
+        axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+            basis;
+            backend = :numerical_reference,
+        )
+        physical = GaussletBases._experimental_high_order_physical_full_block_3d(
+            axis_data,
+            side;
+            doside = doside,
+        )
+        diagnostics = physical.diagnostics
+
+        @test diagnostics.full_block_dimension == doside^3
+        @test diagnostics.full_block_overlap_error < 1.0e-8
+        @test diagnostics.full_block_overlap_spectrum.kept_rank == doside^3
+        @test diagnostics.full_block_overlap_spectrum.minimum_eigenvalue > 1.0e-12
+        @test diagnostics.current_in_physical_residual < 1.0e-8
+        @test diagnostics.physical_in_current_residual < 1.0e-8
+    end
+end
+
+@testset "Experimental high-order physical 3D shell selection stays sane" begin
+    cases = (
+        (_experimental_high_order_identity_basis(11), 5, 5, (faces = 54, edges = 36, corners = 8)),
+        (_experimental_high_order_distorted_he_basis(11), 7, 5, (faces = 54, edges = 36, corners = 8)),
+        (_experimental_high_order_distorted_he_basis(11), 10, 6, (faces = 96, edges = 48, corners = 8)),
+    )
+
+    for (basis, side, doside, expected_shell_kinds) in cases
+        axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+            basis;
+            backend = :numerical_reference,
+        )
+        physical = GaussletBases._experimental_high_order_physical_shell_3d(
+            axis_data,
+            side;
+            doside = doside,
+        )
+        diagnostics = physical.diagnostics
+
+        @test diagnostics.shell_dimension == GaussletBases._experimental_high_order_expected_shell_dimension(doside)
+        @test diagnostics.expected_shell_dimension == GaussletBases._experimental_high_order_expected_shell_dimension(doside)
+        @test diagnostics.shell_overlap_error < 1.0e-8
+        @test diagnostics.shell_overlap_spectrum.kept_rank == diagnostics.shell_dimension
+        @test diagnostics.shell_overlap_spectrum.minimum_eigenvalue > 1.0e-12
+        @test diagnostics.shell_kind_counts == expected_shell_kinds
+        @test diagnostics.current_shell_in_physical_residual < 1.0e-8
+        @test diagnostics.physical_shell_in_current_residual < 1.0e-8
+    end
+end
+
+@testset "Experimental high-order reduced one-body contraction stays sane" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    identity_data = GaussletBases._experimental_high_order_physical_reduced_one_body_data(
+        _experimental_high_order_identity_basis(11),
+        5;
+        doside = 5,
+        backend = :numerical_reference,
+        expansion = expansion,
+        Z = 2.0,
+        direct_comparison = :always,
+    )
+    identity_diagnostics = identity_data.diagnostics
+
+    @test identity_diagnostics.direct_comparison_performed
+    @test identity_diagnostics.full_overlap_error < 1.0e-8
+    @test identity_diagnostics.full_hamiltonian_error < 1.0e-8
+    @test identity_diagnostics.shell_overlap_error < 1.0e-8
+    @test identity_diagnostics.shell_hamiltonian_error < 1.0e-8
+    @test identity_diagnostics.full_summary.overlap_error < 1.0e-8
+    @test identity_diagnostics.shell_summary.overlap_error < 1.0e-8
+    @test abs(identity_diagnostics.full_summary.ground_energy - identity_diagnostics.direct_full_summary.ground_energy) < 1.0e-8
+    @test abs(identity_diagnostics.shell_summary.ground_energy - identity_diagnostics.direct_shell_summary.ground_energy) < 1.0e-8
+
+    distorted_cases = (
+        (_experimental_high_order_distorted_he_basis(5), 5, 5),
+    )
+
+    for (basis, side, doside) in distorted_cases
+        data = GaussletBases._experimental_high_order_physical_reduced_one_body_data(
+            basis,
+            side;
+            doside = doside,
+            backend = :numerical_reference,
+            expansion = expansion,
+            Z = 2.0,
+            direct_comparison = :never,
+        )
+        diagnostics = data.diagnostics
+
+        @test !diagnostics.direct_comparison_performed
+        @test isnothing(data.parent_data.parent_overlap)
+        @test isnothing(data.parent_data.parent_hamiltonian)
+        @test isnothing(data.direct_full)
+        @test isnothing(data.direct_shell)
+        @test isnan(diagnostics.full_overlap_error)
+        @test isnan(diagnostics.full_hamiltonian_error)
+        @test isnan(diagnostics.shell_overlap_error)
+        @test isnan(diagnostics.shell_hamiltonian_error)
+        @test diagnostics.full_summary.overlap_error < 1.0e-8
+        @test diagnostics.shell_summary.overlap_error < 1.0e-8
+        @test diagnostics.full_summary.overlap_spectrum.minimum_eigenvalue > 1.0e-12
+        @test diagnostics.shell_summary.overlap_spectrum.minimum_eigenvalue > 1.0e-12
+        @test isfinite(diagnostics.full_summary.ground_energy)
+        @test isfinite(diagnostics.shell_summary.ground_energy)
+        @test diagnostics.full_summary.ground_energy <= diagnostics.shell_summary.ground_energy + 1.0e-10
+        @test isnothing(diagnostics.direct_full_summary)
+        @test isnothing(diagnostics.direct_shell_summary)
+    end
+end
+
+@testset "Experimental high-order axis one-body cache reuses repeated requests" begin
+    basis = _experimental_high_order_identity_basis(5)
+    axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :numerical_reference,
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+
+    first_one_body = GaussletBases._experimental_high_order_axis_one_body_1d(
+        axis_data;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+    second_one_body = GaussletBases._experimental_high_order_axis_one_body_1d(
+        axis_data;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+
+    @test first_one_body === second_one_body
+    @test length(axis_data.one_body_cache) == 1
+
+    parent_data = GaussletBases._experimental_high_order_parent_one_body_data(
+        basis;
+        axis_data = axis_data,
+        backend = :numerical_reference,
+        expansion = expansion,
+        Z = 2.0,
+        include_parent_projection_data = false,
+    )
+    @test parent_data.axis_data === axis_data
+
+    reused_stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        axis_data = axis_data,
+        backend = :numerical_reference,
+        doside = 5,
+        sides = [5],
+    )
+    fresh_stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        basis;
+        backend = :numerical_reference,
+        doside = 5,
+        sides = [5],
+    )
+    @test reused_stack.coefficient_matrix ≈ fresh_stack.coefficient_matrix atol = 1.0e-12 rtol = 1.0e-12
+end
+
+@testset "Experimental high-order PGDG axis one-body consumption matches ordinary backend" begin
+    basis = _experimental_high_order_distorted_he_basis(5)
+    axis_data = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :pgdg_localized_experimental,
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+
+    ordinary = mapped_ordinary_one_body_operators(
+        basis;
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = :pgdg_localized_experimental,
+    )
+    cached = GaussletBases._experimental_high_order_axis_one_body_1d(
+        axis_data;
+        exponents = expansion.exponents,
+        center = 0.0,
+    )
+
+    @test cached.backend == :pgdg_localized_experimental
+    @test cached.overlap ≈ ordinary.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test cached.kinetic ≈ ordinary.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test length(cached.gaussian_factors) == length(ordinary.gaussian_factors)
+    for (cached_factor, ordinary_factor) in zip(cached.gaussian_factors, ordinary.gaussian_factors)
+        @test cached_factor ≈ ordinary_factor atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    block = GaussletBases._experimental_high_order_physical_block_1d(
+        axis_data,
+        5;
+        doside = 5,
+    ).block
+    cached_reduced = GaussletBases._experimental_high_order_contract_one_body_1d(
+        cached,
+        block.coefficients,
+    )
+    ordinary_reduced = GaussletBases._experimental_high_order_contract_one_body_1d(
+        ordinary,
+        block.coefficients,
+    )
+
+    @test cached_reduced.overlap ≈ ordinary_reduced.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test cached_reduced.kinetic ≈ ordinary_reduced.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test length(cached_reduced.gaussian_factors) == length(ordinary_reduced.gaussian_factors)
+    for (cached_factor, ordinary_factor) in zip(cached_reduced.gaussian_factors, ordinary_reduced.gaussian_factors)
+        @test cached_factor ≈ ordinary_factor atol = 1.0e-12 rtol = 1.0e-12
+    end
+end
+
+@testset "Experimental high-order PGDG reduced one-body matches dense direct projection on distorted case" begin
+    basis = _experimental_high_order_distorted_he_basis(5)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    data = GaussletBases._experimental_high_order_physical_reduced_one_body_data(
+        basis,
+        5;
+        doside = 5,
+        backend = :pgdg_localized_experimental,
+        expansion = expansion,
+        Z = 2.0,
+        direct_comparison = :always,
+    )
+    diagnostics = data.diagnostics
+
+    @test diagnostics.direct_comparison_performed
+    @test diagnostics.full_overlap_error < 1.0e-8
+    @test diagnostics.full_hamiltonian_error < 1.0e-8
+    @test diagnostics.shell_overlap_error < 1.0e-8
+    @test diagnostics.shell_hamiltonian_error < 1.0e-8
+    @test !isnothing(data.parent_data.parent_overlap)
+    @test !isnothing(data.parent_data.parent_hamiltonian)
+    @test !isnothing(data.direct_full)
+    @test !isnothing(data.direct_shell)
+    @test abs(diagnostics.full_summary.ground_energy - diagnostics.direct_full_summary.ground_energy) < 1.0e-8
+    @test abs(diagnostics.shell_summary.ground_energy - diagnostics.direct_shell_summary.ground_energy) < 1.0e-8
 end
 
 @testset "Experimental high-order doside stack core dimensions" begin
@@ -75,6 +389,107 @@ end
     for shell in stack.shell_layers
         @test length(shell.shell_labels) == 98
         @test shell.shell_kind_counts == (faces = 54, edges = 36, corners = 8)
+    end
+end
+
+@testset "Experimental high-order even-doside stack dimensions and shell counts" begin
+    for (parent_side, doside, sides, expected_dimension, expected_shell_dimension, expected_shell_kinds) in (
+        (11, 4, [4, 6, 8, 10], 232, 56, (faces = 24, edges = 24, corners = 8)),
+        (11, 6, [6, 8, 10], 520, 152, (faces = 96, edges = 48, corners = 8)),
+    )
+        basis = _experimental_high_order_identity_basis(parent_side)
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            doside = doside,
+            sides = sides,
+        )
+
+        @test stack.doside == doside
+        @test stack.sides == Int[sides...]
+        @test size(stack.coefficient_matrix, 2) == expected_dimension
+        @test stack.diagnostics.stack_dimension == expected_dimension
+        @test all(==(expected_shell_dimension), stack.diagnostics.shell_dimensions)
+        @test all(==(expected_shell_kinds), [shell.shell_kind_counts for shell in stack.shell_layers])
+    end
+end
+
+@testset "Experimental high-order even-doside matched count ladders" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_distorted_he_basis(11)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents,
+        backend = :numerical_reference,
+    )
+
+    lower4 = GaussletBases._experimental_high_order_lower_route_data(
+        bundle;
+        expansion = expansion,
+        outer_sides = [4, 6, 8, 10],
+        comparator_nside = 4,
+    )
+    lower6 = GaussletBases._experimental_high_order_lower_route_data(
+        bundle;
+        expansion = expansion,
+        outer_sides = [6, 8, 10],
+        comparator_nside = 6,
+    )
+
+    high4_counts = Int[]
+    for sides in ([4], [4, 6], [4, 6, 8], [4, 6, 8, 10])
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            doside = 4,
+            sides = sides,
+        )
+        push!(high4_counts, size(stack.coefficient_matrix, 2))
+    end
+
+    high6_counts = Int[]
+    for sides in ([6], [6, 8], [6, 8, 10])
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            doside = 6,
+            sides = sides,
+        )
+        push!(high6_counts, size(stack.coefficient_matrix, 2))
+    end
+
+    @test [row.function_count for row in lower4] == high4_counts == [64, 120, 176, 232]
+    @test [row.function_count for row in lower6] == high6_counts == [216, 368, 520]
+end
+
+@testset "Experimental high-order even-doside distorted He+ data stay sane" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_distorted_he_basis(11)
+
+    for (doside, sides) in (
+        (4, [4, 6, 8, 10]),
+        (6, [6, 8, 10]),
+    )
+        stack = GaussletBases._experimental_high_order_doside_stack_3d(
+            basis;
+            backend = :numerical_reference,
+            doside = doside,
+            sides = sides,
+        )
+        data = GaussletBases._experimental_high_order_doside_heplus_data(
+            stack;
+            expansion = expansion,
+            Z = 2.0,
+        )
+
+        @test stack.diagnostics.parent_mapping_family == :white_lindsey_atomic_he_d0p2
+        @test stack.diagnostics.overlap_error < 1.0e-8
+        @test stack.diagnostics.overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+        @test stack.diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+        @test isfinite(data.ground_energy)
+        @test data.overlap_error < 1.0e-8
+        @test data.diagnostics.projected_overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+        @test data.diagnostics.projected_overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
     end
 end
 
@@ -400,6 +815,53 @@ end
     @test length(audit.shell_block_weights) == length(stack.block_labels)
     @test audit.shell_block_weights[1].block_label == :side5_full
     @test abs(sum(weight.total_state_weight for weight in audit.shell_block_weights) - 1.0) < 1.0e-10
+end
+
+@testset "Experimental high-order doside distorted-parent He+ benchmark surface" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = _experimental_high_order_distorted_he_basis(15)
+    benchmark = GaussletBases._experimental_high_order_distorted_parent_heplus_benchmark(
+        basis;
+        backend = :numerical_reference,
+        expansion = expansion,
+        Z = 2.0,
+    )
+    high_outer = benchmark.high_order_rows[end]
+
+    @test benchmark.mapping_family == :white_lindsey_atomic_he_d0p2
+    @test benchmark.parent_side == 15
+    @test benchmark.parent_reference_dimension == 15^3
+    @test isfinite(benchmark.parent_reference_energy)
+    @test benchmark.lower_order_comparator == :one_center_atomic_legacy_profile_fixed_block
+    @test benchmark.comparator_nside == 5
+    @test isfinite(high_outer.energy)
+    @test high_outer.overlap_error < 1.0e-8
+    @test high_outer.support_overlap_error < 1.0e-8
+    @test high_outer.support_overlap_minimum_eigenvalue > 1.0 - 1.0e-8
+    @test high_outer.support_overlap_maximum_eigenvalue < 1.0 + 1.0e-8
+    @test length(benchmark.lower_order_transfer_rows) == 4
+    @test length(benchmark.high_order_transfer_rows) == 4
+    @test all(row -> row.admitted, benchmark.lower_order_transfer_rows)
+    @test all(row -> row.admitted, benchmark.high_order_transfer_rows)
+    @test all(row -> row.used_for_reuse, benchmark.lower_order_transfer_rows)
+    @test all(row -> row.used_for_reuse, benchmark.high_order_transfer_rows)
+    @test length(benchmark.lower_order_rows) == 4
+    @test length(benchmark.high_order_rows) == 4
+    @test length(benchmark.comparison_rows) == 4
+    @test [row.function_count for row in benchmark.lower_order_rows] == [125, 223, 321, 419]
+    @test [row.function_count for row in benchmark.high_order_rows] == [125, 223, 321, 419]
+    @test [row.outer_side for row in benchmark.comparison_rows] == [5, 7, 9, 11]
+    @test [row.function_count for row in benchmark.comparison_rows] == [125, 223, 321, 419]
+    @test all(row -> isfinite(row.energy), benchmark.lower_order_rows)
+    @test all(row -> isfinite(row.error), benchmark.lower_order_rows)
+    @test all(row -> isfinite(row.energy), benchmark.high_order_rows)
+    @test all(row -> isfinite(row.error), benchmark.high_order_rows)
+    @test all(row -> row.overlap_error < 1.0e-8, benchmark.lower_order_rows)
+    @test all(row -> row.overlap_error < 1.0e-8, benchmark.high_order_rows)
+    @test all(row -> row.support_overlap_error < 1.0e-8, benchmark.lower_order_rows)
+    @test all(row -> row.support_overlap_error < 1.0e-8, benchmark.high_order_rows)
+    @test all(row -> isfinite(row.lower_order_error), benchmark.comparison_rows)
+    @test all(row -> isfinite(row.high_order_error), benchmark.comparison_rows)
 end
 
 @testset "Experimental high-order doside He singlet PGDG smoke" begin
