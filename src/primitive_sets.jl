@@ -48,6 +48,31 @@ Base.getindex(set::PrimitiveSet1D, index::Integer) = set.primitive_data[index]
 primitives(set::PrimitiveSet1D) = set.primitive_data
 primitive_set(set::PrimitiveSet1D) = set
 
+function _numerical_quadrature_set_summary(set::PrimitiveSet1D)
+    primitive_kind =
+        isempty(primitives(set)) ? "empty" : string(nameof(typeof(first(primitives(set)))))
+    return (
+        name = something(set.name_value, :unnamed),
+        primitive_count = length(set),
+        first_primitive_kind = primitive_kind,
+        analytic_supported = _supports_analytic_gaussian_backend(set),
+    )
+end
+
+function _red_alert_numerical_quadrature(
+    context_label::AbstractString,
+    sets::PrimitiveSet1D...;
+    detail = nothing,
+)
+    set_summaries = [_numerical_quadrature_set_summary(set) for set in sets]
+    if isnothing(detail)
+        @warn "RED ALERT: using numerical quadrature" context = context_label primitive_sets = set_summaries
+    else
+        @warn "RED ALERT: using numerical quadrature" context = context_label detail = detail primitive_sets = set_summaries
+    end
+    return nothing
+end
+
 function Base.show(io::IO, set::PrimitiveSet1D)
     print(io, "PrimitiveSet1D(length=", length(set))
     set.name_value === nothing || print(io, ", name=:", set.name_value)
@@ -431,6 +456,11 @@ function _primitive_overlap_matrix(
     ::_NumericalPrimitiveMatrixBackend;
     h = nothing,
 )
+    _red_alert_numerical_quadrature(
+        "primitive overlap matrix",
+        set;
+        detail = (requested_h = h,),
+    )
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical primitive overlap requires h > 0"))
@@ -456,6 +486,12 @@ function _primitive_cross_overlap_matrix(
     ::_NumericalPrimitiveMatrixBackend;
     h = nothing,
 )
+    _red_alert_numerical_quadrature(
+        "primitive cross-overlap matrix",
+        left,
+        right;
+        detail = (requested_h = h,),
+    )
     xlo, xhi = _primitive_cross_bounds(left, right)
     h_try = h === nothing ? _primitive_cross_matrix_start_h(left, right) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical primitive cross overlap requires h > 0"))
@@ -481,6 +517,11 @@ function _primitive_kinetic_matrix(
     ::_NumericalPrimitiveMatrixBackend;
     h = nothing,
 )
+    _red_alert_numerical_quadrature(
+        "primitive kinetic matrix",
+        set;
+        detail = (requested_h = h,),
+    )
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical primitive kinetic matrix requires h > 0"))
@@ -505,6 +546,11 @@ function _primitive_position_matrix(
     ::_NumericalPrimitiveMatrixBackend;
     h = nothing,
 )
+    _red_alert_numerical_quadrature(
+        "primitive position matrix",
+        set;
+        detail = (requested_h = h,),
+    )
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical primitive position matrix requires h > 0"))

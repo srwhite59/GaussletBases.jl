@@ -67,6 +67,20 @@ function _qwrg_cross_1d_blocks_midpoint(
     h = nothing,
     include_pair::Bool = true,
 )
+    gaussian_set = PrimitiveSet1D(
+        AbstractPrimitiveFunction1D[gaussian for gaussian in gaussians];
+        name = :qiu_white_cross_gaussians,
+    )
+    _red_alert_numerical_quadrature(
+        "Qiu-White split cross-block midpoint route",
+        primitive_set(basis),
+        gaussian_set;
+        detail = (
+            exponent_count = length(expansion.exponents),
+            include_pair = include_pair,
+            requested_h = h,
+        ),
+    )
     xlo, xhi = _qwrg_support_bounds(basis, gaussians)
     h_try = h === nothing ? _primitive_matrix_start_h(primitive_set(basis)) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("Qiu-White split cross-block construction requires h > 0"))

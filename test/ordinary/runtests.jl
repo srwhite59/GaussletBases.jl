@@ -1604,6 +1604,27 @@ end
     @test norm(mild_localized.overlap - overlap_reference_localized, Inf) < 1.0e-10
     @test norm(mild_oracle.kinetic - kinetic_reference_localized, Inf) <
           norm(mild_localized.kinetic - kinetic_reference_localized, Inf)
+    @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") overlap_matrix(
+        primitive_set(mild_basis),
+    )
+    @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._x2_matrix(
+        primitive_set(mild_basis),
+    )
+    @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._primitive_gaussian_factor_matrices(
+        primitive_set(mild_basis),
+        GaussletBases._NumericalPrimitiveMatrixBackend();
+        exponents = expansion.exponents[1:3],
+        center = 0.0,
+    )
+    @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._primitive_pair_gaussian_factor_matrices(
+        primitive_set(mild_basis),
+        GaussletBases._NumericalPrimitiveMatrixBackend();
+        exponents = expansion.exponents[1:3],
+    )
+    @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._mapped_ordinary_localized_oracle_operators(
+        mild_basis;
+        exponents = expansion.exponents[1:3],
+    )
 end
 
 @testset "Public ordinary and nested backend contract" begin

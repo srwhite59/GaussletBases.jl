@@ -130,6 +130,12 @@ function _localized_alignment_transform(
     localized::MappedPGDGLocalized1D;
     h::Real = 0.02,
 )
+    _red_alert_numerical_quadrature(
+        "localized PGDG oracle alignment transform",
+        primitive_set(basis),
+        primitive_set(localized);
+        detail = (h = Float64(h),),
+    )
     xlo, xhi = _primitive_set_bounds(primitive_set(basis))
     points, weights = _make_midpoint_grid(xlo, xhi, Float64(h))
     reference_values = _basis_sample_matrix(basis, points) * Matrix{Float64}(reference_transform)
@@ -227,6 +233,15 @@ function _basis_space_scalar_factor_data(
     h = nothing,
 )
     primitive_layer = primitive_set(basis_like)
+    _red_alert_numerical_quadrature(
+        "basis-space scalar factor data",
+        primitive_layer;
+        detail = (
+            exponent_count = length(exponents),
+            center = Float64(center),
+            requested_h = h,
+        ),
+    )
     xlo, xhi = _primitive_set_bounds(primitive_layer)
     h_try = h === nothing ? _primitive_matrix_start_h(primitive_layer) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("basis-space scalar factor construction requires h > 0"))
@@ -283,6 +298,11 @@ function _basis_space_pair_factor_terms(
     h = nothing,
 )
     primitive_layer = primitive_set(basis_like)
+    _red_alert_numerical_quadrature(
+        "basis-space pair-factor terms",
+        primitive_layer;
+        detail = (exponent_count = length(exponents), requested_h = h),
+    )
     xlo, xhi = _primitive_set_bounds(primitive_layer)
     h_try = h === nothing ? _primitive_matrix_start_h(primitive_layer) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("basis-space pair-factor construction requires h > 0"))

@@ -3,6 +3,11 @@ function _primitive_x2_matrix(
     ::_NumericalPrimitiveMatrixBackend;
     h = nothing,
 )
+    _red_alert_numerical_quadrature(
+        "primitive x2 matrix",
+        set;
+        detail = (requested_h = h,),
+    )
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical primitive x2 matrix requires h > 0"))

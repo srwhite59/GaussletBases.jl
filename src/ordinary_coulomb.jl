@@ -219,6 +219,11 @@ function _primitive_gaussian_factor_matrix(
 )
     exponent >= 0.0 || throw(ArgumentError("gaussian_factor_matrix requires exponent >= 0"))
     exponent == 0.0 && return overlap_matrix(set)
+    _red_alert_numerical_quadrature(
+        "primitive Gaussian factor matrix",
+        set;
+        detail = (exponent = exponent, center = center, requested_h = h),
+    )
 
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
@@ -273,6 +278,15 @@ function _primitive_gaussian_factor_matrices(
     isempty(exponent_values) && return Matrix{Float64}[]
     all(exponent -> exponent >= 0.0, exponent_values) ||
         throw(ArgumentError("gaussian factor exponents must be nonnegative"))
+    _red_alert_numerical_quadrature(
+        "primitive Gaussian factor matrices",
+        set;
+        detail = (
+            exponent_count = length(exponent_values),
+            center = center,
+            requested_h = h,
+        ),
+    )
 
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)

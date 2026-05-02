@@ -202,6 +202,11 @@ function _primitive_pair_gaussian_factor_matrix(
     h = nothing,
 )
     exponent >= 0.0 || throw(ArgumentError("pair-factor exponent must be >= 0"))
+    _red_alert_numerical_quadrature(
+        "primitive pair-factor matrix",
+        set;
+        detail = (exponent = exponent, requested_h = h),
+    )
 
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
@@ -244,13 +249,21 @@ function _primitive_pair_gaussian_factor_matrices(
     exponents::AbstractVector{<:Real},
     h = nothing,
 )
+    exponent_values = Float64[Float64(exponent) for exponent in exponents]
+    isempty(exponent_values) && return Matrix{Float64}[]
+    all(exponent -> exponent >= 0.0, exponent_values) ||
+        throw(ArgumentError("pair-factor exponents must be >= 0"))
+    _red_alert_numerical_quadrature(
+        "primitive pair-factor matrices",
+        set;
+        detail = (exponent_count = length(exponent_values), requested_h = h),
+    )
     xlo, xhi = _primitive_set_bounds(set)
     h_try = h === nothing ? _primitive_matrix_start_h(set) : Float64(h)
     h_try > 0.0 || throw(ArgumentError("numerical pair-factor matrices require h > 0"))
 
     previous = nothing
     current = nothing
-    exponent_values = Float64[Float64(exponent) for exponent in exponents]
     for _ in 1:_PRIMITIVE_MATRIX_MAXITER
         points, weights = _make_midpoint_grid(xlo, xhi, h_try)
         values = _primitive_sample_matrix(set, points)
