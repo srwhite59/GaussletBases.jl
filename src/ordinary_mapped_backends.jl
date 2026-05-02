@@ -506,6 +506,7 @@ function _mapped_ordinary_pgdg_intermediate_1d(
     exponents::AbstractVector{<:Real} = Float64[],
     center::Real = 0.0,
     backend::Symbol = :pgdg_experimental,
+    include_pair_factors::Bool = true,
     working_layer = nothing,
     refinement_levels::Integer = 0,
     refinement_mask::_TernaryGaussianRefinementMask1D = _default_ternary_gaussian_refinement_mask(),
@@ -538,13 +539,17 @@ function _mapped_ordinary_pgdg_intermediate_1d(
         kinetic = _congruence_transform(core_data.kinetic, transform)
         x2 = _congruence_transform(core_data.x2, transform)
         gaussian_factor_terms = _congruence_transform_terms(core_data.factor_terms, transform)
-        pair_factor_basis = Matrix{Float64}[
-            Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
-                base_layer;
-                exponents = exponents_value,
-            )
-        ]
-        pair_factor_terms_raw = _congruence_transform_terms(_term_tensor(pair_factor_basis), transform)
+        pair_factor_terms_raw = if include_pair_factors
+            pair_factor_basis = Matrix{Float64}[
+                Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
+                    base_layer;
+                    exponents = exponents_value,
+                )
+            ]
+            _congruence_transform_terms(_term_tensor(pair_factor_basis), transform)
+        else
+            zeros(Float64, 0, size(overlap, 1), size(overlap, 2))
+        end
     else
         overlap = Matrix{Float64}(overlap_matrix(layer))
         position = Matrix{Float64}(position_matrix(layer))
@@ -558,23 +563,31 @@ function _mapped_ordinary_pgdg_intermediate_1d(
             )
         ]
         gaussian_factor_terms = _term_tensor(gaussian_factor_basis)
-        pair_factor_basis = Matrix{Float64}[
-            Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
-                auxiliary_layer;
-                exponents = exponents_value,
-            )
-        ]
-        pair_factor_terms_raw = _term_tensor(pair_factor_basis)
+        pair_factor_terms_raw = if include_pair_factors
+            pair_factor_basis = Matrix{Float64}[
+                Matrix{Float64}(factor) for factor in _pair_gaussian_factor_matrices(
+                    auxiliary_layer;
+                    exponents = exponents_value,
+                )
+            ]
+            _term_tensor(pair_factor_basis)
+        else
+            zeros(Float64, 0, size(overlap, 1), size(overlap, 2))
+        end
     end
 
     weight_values = Float64[Float64(weight) for weight in integral_weights(auxiliary_layer)]
     center_values = Float64[Float64(point) for point in centers(auxiliary_layer)]
     gaussian_factors = _tensor_to_matrix_vector(gaussian_factor_terms)
-    weight_outer = weight_values * transpose(weight_values)
-    pair_factors = [
-        Matrix{Float64}(pair_factor_terms_raw[term, :, :] ./ weight_outer) for term in eachindex(exponents_value)
-    ]
-    pair_factor_terms = _term_tensor(pair_factors)
+    pair_factors, pair_factor_terms = if include_pair_factors
+        weight_outer = weight_values * transpose(weight_values)
+        factors = [
+            Matrix{Float64}(pair_factor_terms_raw[term, :, :] ./ weight_outer) for term in eachindex(exponents_value)
+        ]
+        (factors, _term_tensor(factors))
+    else
+        (Matrix{Float64}[], zeros(Float64, 0, size(overlap, 1), size(overlap, 2)))
+    end
 
     return _MappedOrdinaryPGDGIntermediate1D(
         basis,

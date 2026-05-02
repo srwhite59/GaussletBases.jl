@@ -279,11 +279,13 @@ end
 
 @testset "Experimental high-order PGDG axis one-body consumption matches ordinary backend" begin
     basis = _experimental_high_order_distorted_he_basis(5)
+    expansion = coulomb_gaussian_expansion(doacc = false)
     axis_data = GaussletBases._experimental_high_order_axis_data_1d(
         basis;
         backend = :pgdg_localized_experimental,
+        one_body_exponents = expansion.exponents,
+        one_body_center = 0.0,
     )
-    expansion = coulomb_gaussian_expansion(doacc = false)
 
     ordinary = mapped_ordinary_one_body_operators(
         basis;
@@ -298,6 +300,7 @@ end
     )
 
     @test cached.backend == :pgdg_localized_experimental
+    @test isempty(axis_data.pair_factors_1d)
     @test cached.overlap ≈ ordinary.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test cached.kinetic ≈ ordinary.kinetic atol = 1.0e-12 rtol = 1.0e-12
     @test length(cached.gaussian_factors) == length(ordinary.gaussian_factors)

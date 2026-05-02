@@ -149,6 +149,7 @@ function _experimental_high_order_axis_data_1d(
     prepared_bundle::Union{Nothing,_MappedOrdinaryGausslet1DBundle} = nothing,
     one_body_exponents::AbstractVector{<:Real} = Float64[],
     one_body_center::Real = 0.0,
+    include_pair_factors::Bool = false,
 )
     if backend == :numerical_reference
         representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
@@ -178,6 +179,7 @@ function _experimental_high_order_axis_data_1d(
             exponents = pgdg_exponents,
             center = center_value,
             backend = backend,
+            include_pair_factors = include_pair_factors,
         )
         if !isempty(exponent_values)
             cache[key] = _experimental_high_order_one_body_from_pgdg_intermediate(pgdg_intermediate)
