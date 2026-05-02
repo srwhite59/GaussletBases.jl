@@ -412,8 +412,43 @@ end
         direct_comparison = :always,
     )
     diagnostics = data.diagnostics
+    full_parent = GaussletBases._experimental_high_order_parent_one_body_data(
+        basis;
+        axis_data = data.axis_data,
+        backend = :pgdg_localized_experimental,
+        expansion = expansion,
+        Z = 2.0,
+        include_parent_projection_data = true,
+        include_reference_energy = true,
+    )
+    manual_reduced_one_body = GaussletBases._experimental_high_order_contract_one_body_1d(
+        full_parent.one_body,
+        data.physical_shell.full_block.block_1d.block.coefficients,
+    )
+    manual_reduced_full_overlap, manual_reduced_full_hamiltonian = GaussletBases._mapped_cartesian_one_body_matrix(
+        manual_reduced_one_body,
+        expansion;
+        Z = 2.0,
+    )
+    shell_indices, _ = GaussletBases._experimental_high_order_tensor_shell_indices_and_labels(5)
+    manual_reduced_shell_overlap = GaussletBases._symmetrize_ida_matrix(
+        manual_reduced_full_overlap[shell_indices, shell_indices],
+    )
+    manual_reduced_shell_hamiltonian = GaussletBases._symmetrize_ida_matrix(
+        manual_reduced_full_hamiltonian[shell_indices, shell_indices],
+    )
+    manual_full_summary = GaussletBases._experimental_high_order_heplus_summary(
+        manual_reduced_full_overlap,
+        manual_reduced_full_hamiltonian,
+    )
+    manual_shell_summary = GaussletBases._experimental_high_order_heplus_summary(
+        manual_reduced_shell_overlap,
+        manual_reduced_shell_hamiltonian,
+    )
 
     @test diagnostics.direct_comparison_performed
+    @test isnan(data.parent_data.reference_energy)
+    @test isfinite(full_parent.reference_energy)
     @test diagnostics.full_overlap_error < 1.0e-8
     @test diagnostics.full_hamiltonian_error < 1.0e-8
     @test diagnostics.shell_overlap_error < 1.0e-8
@@ -422,6 +457,14 @@ end
     @test !isnothing(data.parent_data.parent_hamiltonian)
     @test !isnothing(data.direct_full)
     @test !isnothing(data.direct_shell)
+    @test data.parent_data.one_body.overlap ≈ full_parent.one_body.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test data.parent_data.one_body.kinetic ≈ full_parent.one_body.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test data.reduced_full_overlap ≈ manual_reduced_full_overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test data.reduced_full_hamiltonian ≈ manual_reduced_full_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test data.reduced_shell_overlap ≈ manual_reduced_shell_overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test data.reduced_shell_hamiltonian ≈ manual_reduced_shell_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
+    @test diagnostics.full_summary.ground_energy ≈ manual_full_summary.ground_energy atol = 1.0e-12 rtol = 1.0e-12
+    @test diagnostics.shell_summary.ground_energy ≈ manual_shell_summary.ground_energy atol = 1.0e-12 rtol = 1.0e-12
     @test abs(diagnostics.full_summary.ground_energy - diagnostics.direct_full_summary.ground_energy) < 1.0e-8
     @test abs(diagnostics.shell_summary.ground_energy - diagnostics.direct_shell_summary.ground_energy) < 1.0e-8
 end

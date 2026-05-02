@@ -89,6 +89,7 @@ function _experimental_high_order_parent_one_body_data(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
     include_parent_projection_data::Bool = true,
+    include_reference_energy::Bool = true,
 )
     return @timeg "high_order.parent_one_body.total" begin
         axis_data_value =
@@ -122,8 +123,12 @@ function _experimental_high_order_parent_one_body_data(
         else
             (nothing, nothing)
         end
-        reference_energy = @timeg "high_order.parent_one_body.reference_energy" begin
-            _mapped_cartesian_hydrogen_energy(one_body, expansion; Z = Z)
+        reference_energy = if include_reference_energy
+            @timeg "high_order.parent_one_body.reference_energy" begin
+                _mapped_cartesian_hydrogen_energy(one_body, expansion; Z = Z)
+            end
+        else
+            NaN
         end
         _ExperimentalHighOrderParentOneBodyData3D(
             basis,
@@ -223,6 +228,7 @@ function _experimental_high_order_physical_reduced_one_body_data(
                 expansion = expansion,
                 Z = Z,
                 include_parent_projection_data = perform_direct_comparison,
+                include_reference_energy = false,
             )
         end
         reduced_one_body = @timeg "high_order.reduced_one_body.contract_1d_operators" begin
