@@ -188,20 +188,7 @@ end
 
 function _gaussian_factor(a::Gaussian, b::Gaussian, exponent::Float64, center_value::Float64)
     exponent >= 0.0 || throw(ArgumentError("gaussian_factor_matrix requires exponent >= 0"))
-    exponent == 0.0 && return _gaussian_overlap(a, b)
-
-    alpha_a = inv(a.width^2)
-    alpha_b = inv(b.width^2)
-    alpha_g = 2.0 * exponent
-    total_alpha = alpha_a + alpha_b + alpha_g
-    weighted_center =
-        (alpha_a * a.center_value + alpha_b * b.center_value + alpha_g * center_value) / total_alpha
-    constant_term =
-        alpha_a * a.center_value^2 +
-        alpha_b * b.center_value^2 +
-        alpha_g * center_value^2
-    return sqrt(2.0 * pi / total_alpha) *
-           exp(-0.5 * (constant_term - total_alpha * weighted_center^2))
+    return GaussianAnalyticIntegrals.gaussian_factor(a, b, exponent, center_value)
 end
 
 function _primitive_gaussian_factor_matrix(

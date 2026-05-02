@@ -160,48 +160,22 @@ function _qwrg_supplement_primitives_and_contraction(
     )
 end
 
-_qwrg_gaussian_exponent(gaussian::Gaussian) = 1.0 / (2.0 * gaussian.width^2)
+_qwrg_gaussian_exponent(gaussian::Gaussian) =
+    GaussianAnalyticIntegrals.gaussian_exponent(gaussian)
 
 function _qwrg_atomic_shell_prefactor(exponent::Float64, power::Int)
     power >= 0 || throw(ArgumentError("atomic shell prefactor requires power >= 0"))
-    numerator = 2.0^(2 * power + 0.5) * exponent^(power + 0.5)
-    denominator = sqrt(pi) * _qwrg_doublefactorial(2 * power - 1)
-    return sqrt(numerator / denominator)
+    return GaussianAnalyticIntegrals.polynomial_gaussian_shell_prefactor(exponent, power)
 end
 
-function _qwrg_doublefactorial(n::Int)
-    n <= 0 && return 1.0
-    value = 1.0
-    for k in n:-2:1
-        value *= k
-    end
-    return value
-end
+_qwrg_doublefactorial(n::Int) =
+    GaussianAnalyticIntegrals.doublefactorial(n)
 
-function _qwrg_shifted_gaussian_moment(gamma::Float64, power::Int)
-    isodd(power) && return 0.0
-    k = power ÷ 2
-    return sqrt(pi) * _qwrg_doublefactorial(2 * k - 1) / (2.0^k * gamma^(k + 0.5))
-end
+_qwrg_shifted_gaussian_moment(gamma::Float64, power::Int) =
+    GaussianAnalyticIntegrals.shifted_gaussian_moment(gamma, power)
 
-function _qwrg_poly_shift_multiply(
-    coefficients::Vector{Float64},
-    shift::Float64,
-    power::Int,
-)
-    power >= 0 || throw(ArgumentError("polynomial shift multiply requires power >= 0"))
-    result = copy(coefficients)
-    for _ in 1:power
-        next = zeros(Float64, length(result) + 1)
-        for degree in eachindex(result)
-            value = result[degree]
-            next[degree] += shift * value
-            next[degree + 1] += value
-        end
-        result = next
-    end
-    return result
-end
+_qwrg_poly_shift_multiply(coefficients::Vector{Float64}, shift::Float64, power::Int) =
+    GaussianAnalyticIntegrals.polynomial_shift_multiply(coefficients, shift, power)
 
 function _qwrg_atomic_basic_integral(
     alpha_left::Float64,
@@ -217,30 +191,32 @@ function _qwrg_atomic_basic_integral(
     extra_center::Float64 = 0.0,
 )
     gamma = alpha_left + alpha_right + extra_exponent
-    gamma > 0.0 || throw(ArgumentError("atomic shell integral requires positive total Gaussian exponent"))
-    weighted_center =
-        (alpha_left * center_left + alpha_right * center_right + extra_exponent * extra_center) / gamma
-    constant =
-        alpha_left * center_left^2 + alpha_right * center_right^2 +
-        extra_exponent * extra_center^2 - gamma * weighted_center^2
-
-    polynomial = Float64[1.0]
-    polynomial = _qwrg_poly_shift_multiply(polynomial, weighted_center - center_left, power_left)
-    polynomial = _qwrg_poly_shift_multiply(polynomial, weighted_center - center_right, power_right)
-    xpower > 0 && (polynomial = _qwrg_poly_shift_multiply(polynomial, weighted_center, xpower))
-
-    value = 0.0
-    for degree in eachindex(polynomial)
-        value += polynomial[degree] * _qwrg_shifted_gaussian_moment(gamma, degree - 1)
-    end
-    return prefactor_left * prefactor_right * exp(-constant) * value
+    gamma > 0.0 ||
+        throw(ArgumentError("atomic shell integral requires positive total Gaussian exponent"))
+    return GaussianAnalyticIntegrals.polynomial_gaussian_basic_integral(
+        alpha_left,
+        center_left,
+        power_left,
+        prefactor_left,
+        alpha_right,
+        center_right,
+        power_right,
+        prefactor_right;
+        xpower,
+        extra_exponent,
+        extra_center,
+    )
 end
 
 function _qwrg_atomic_derivative_terms(power::Int, exponent::Float64)
-    power == 0 && return ((1, -2.0 * exponent),)
-    power == 1 && return ((0, 1.0), (2, -2.0 * exponent))
-    power == 2 && return ((1, 2.0), (3, -2.0 * exponent))
-    throw(ArgumentError("atomic shell derivative terms currently support only powers 0, 1, and 2"))
+    if !(power in (0, 1, 2))
+        throw(
+            ArgumentError(
+                "atomic shell derivative terms currently support only powers 0, 1, and 2",
+            ),
+        )
+    end
+    return GaussianAnalyticIntegrals.polynomial_gaussian_derivative_terms(power, exponent)
 end
 
 function _qwrg_atomic_kinetic_integral(
@@ -253,22 +229,23 @@ function _qwrg_atomic_kinetic_integral(
     power_right::Int,
     prefactor_right::Float64,
 )
-    value = 0.0
-    for (derived_left_power, left_scale) in _qwrg_atomic_derivative_terms(power_left, alpha_left)
-        for (derived_right_power, right_scale) in _qwrg_atomic_derivative_terms(power_right, alpha_right)
-            value += 0.5 * left_scale * right_scale * _qwrg_atomic_basic_integral(
-                alpha_left,
-                center_left,
-                derived_left_power,
-                prefactor_left,
-                alpha_right,
-                center_right,
-                derived_right_power,
-                prefactor_right,
-            )
-        end
+    if !(power_left in (0, 1, 2)) || !(power_right in (0, 1, 2))
+        throw(
+            ArgumentError(
+                "atomic shell derivative terms currently support only powers 0, 1, and 2",
+            ),
+        )
     end
-    return value
+    return GaussianAnalyticIntegrals.polynomial_gaussian_kinetic_integral(
+        alpha_left,
+        center_left,
+        power_left,
+        prefactor_left,
+        alpha_right,
+        center_right,
+        power_right,
+        prefactor_right,
+    )
 end
 
 function _qwrg_atomic_orbital_axis_power(

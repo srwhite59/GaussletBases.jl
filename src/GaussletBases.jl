@@ -558,6 +558,7 @@ end
 include("mappings.jl")
 include("stencils.jl")
 include("functions.jl")
+include("GaussianAnalyticIntegrals.jl")
 include("timing.jl")
 using .TimeG: @timeg,
              timing_enabled,

@@ -1,11 +1,3 @@
-function _gaussian_x2(a::Gaussian, b::Gaussian)
-    sigma2 = a.width^2 + b.width^2
-    weighted_center =
-        (a.center_value * b.width^2 + b.center_value * a.width^2) / sigma2
-    variance = a.width^2 * b.width^2 / sigma2
-    return (weighted_center^2 + variance) * _gaussian_overlap(a, b)
-end
-
 function _primitive_x2_matrix(
     set::PrimitiveSet1D,
     ::_NumericalPrimitiveMatrixBackend;

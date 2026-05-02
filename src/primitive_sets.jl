@@ -526,25 +526,17 @@ function _primitive_position_matrix(
     return current
 end
 
-function _gaussian_overlap(a::Gaussian, b::Gaussian)
-    sigma2 = a.width^2 + b.width^2
-    prefactor = sqrt(2.0 * pi) * a.width * b.width / sqrt(sigma2)
-    return prefactor * exp(-0.5 * (a.center_value - b.center_value)^2 / sigma2)
-end
+_gaussian_overlap(a::Gaussian, b::Gaussian) =
+    GaussianAnalyticIntegrals.gaussian_overlap(a, b)
 
-function _gaussian_kinetic(a::Gaussian, b::Gaussian)
-    sigma2 = a.width^2 + b.width^2
-    overlap_value = _gaussian_overlap(a, b)
-    delta = a.center_value - b.center_value
-    return 0.5 * overlap_value * (1.0 / sigma2) * (1.0 - delta^2 / sigma2)
-end
+_gaussian_kinetic(a::Gaussian, b::Gaussian) =
+    GaussianAnalyticIntegrals.gaussian_kinetic(a, b)
 
-function _gaussian_position(a::Gaussian, b::Gaussian)
-    sigma2 = a.width^2 + b.width^2
-    weighted_center =
-        (a.center_value * b.width^2 + b.center_value * a.width^2) / sigma2
-    return weighted_center * _gaussian_overlap(a, b)
-end
+_gaussian_position(a::Gaussian, b::Gaussian) =
+    GaussianAnalyticIntegrals.gaussian_position(a, b)
+
+_gaussian_x2(a::Gaussian, b::Gaussian) =
+    GaussianAnalyticIntegrals.gaussian_x2(a, b)
 
 function _primitive_overlap_matrix(set::PrimitiveSet1D, ::_AnalyticPrimitiveMatrixBackend)
     matrix = zeros(Float64, length(set), length(set))

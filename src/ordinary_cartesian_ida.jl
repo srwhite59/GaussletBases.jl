@@ -174,23 +174,8 @@ stencil_matrix(layer::_AuxiliaryContractedLayer1D) = layer.coefficient_matrix
 centers(layer::_AuxiliaryContractedLayer1D) = layer.center_data
 integral_weights(layer::_AuxiliaryContractedLayer1D) = layer.integral_weight_data
 
-function _gaussian_pair_factor(a::Gaussian, b::Gaussian, exponent::Float64)
-    exponent >= 0.0 || throw(ArgumentError("pair-factor exponent must be >= 0"))
-
-    alpha_a = inv(a.width^2)
-    alpha_b = inv(b.width^2)
-    a11 = alpha_a + 2.0 * exponent
-    a22 = alpha_b + 2.0 * exponent
-    a12 = -2.0 * exponent
-    determinant = a11 * a22 - a12^2
-    determinant > 0.0 || throw(ArgumentError("pair-factor quadratic form must be positive definite"))
-
-    d1 = alpha_a * a.center_value
-    d2 = alpha_b * b.center_value
-    constant_term = alpha_a * a.center_value^2 + alpha_b * b.center_value^2
-    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
-    return (2.0 * pi / sqrt(determinant)) * exp(-0.5 * (constant_term - quadratic_term))
-end
+_gaussian_pair_factor(a::Gaussian, b::Gaussian, exponent::Float64) =
+    GaussianAnalyticIntegrals.gaussian_pair_factor(a, b, exponent)
 
 function _primitive_pair_gaussian_factor_matrix(
     set::PrimitiveSet1D,
