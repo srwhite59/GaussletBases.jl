@@ -91,7 +91,15 @@ function _experimental_high_order_parent_one_body_data(
     include_parent_projection_data::Bool = true,
 )
     return @timeg "high_order.parent_one_body.total" begin
-        axis_data_value = isnothing(axis_data) ? nothing : axis_data
+        axis_data_value =
+            isnothing(axis_data) && backend != :numerical_reference ?
+            _experimental_high_order_axis_data_1d(
+                basis;
+                backend = backend,
+                one_body_exponents = expansion.exponents,
+                one_body_center = 0.0,
+            ) :
+            axis_data
         one_body = @timeg "high_order.parent_one_body.build_1d_factors" begin
             if isnothing(axis_data_value)
                 mapped_ordinary_one_body_operators(
@@ -195,7 +203,14 @@ function _experimental_high_order_physical_reduced_one_body_data(
             direct_comparison === :never ? false :
             throw(ArgumentError("direct_comparison must be :auto, :always, or :never"))
         axis_data_value = @timeg "high_order.reduced_one_body.build_axis_data" begin
-            isnothing(axis_data) ? _experimental_high_order_axis_data_1d(basis; backend = backend) : axis_data
+            isnothing(axis_data) ?
+            _experimental_high_order_axis_data_1d(
+                basis;
+                backend = backend,
+                one_body_exponents = expansion.exponents,
+                one_body_center = 0.0,
+            ) :
+            axis_data
         end
         physical_shell = @timeg "high_order.reduced_one_body.build_transformed_shell" begin
             _experimental_high_order_physical_shell_3d(axis_data_value, side; doside = doside)
@@ -791,7 +806,13 @@ function _experimental_high_order_distorted_parent_heplus_benchmark(
         exponents = expansion.exponents,
         backend = backend,
     )
-    axis_data = _experimental_high_order_axis_data_1d(basis; backend = backend)
+    axis_data = _experimental_high_order_axis_data_1d(
+        basis;
+        backend = backend,
+        prepared_bundle = gausslet_bundle,
+        one_body_exponents = expansion.exponents,
+        one_body_center = 0.0,
+    )
     parent_data = _experimental_high_order_parent_one_body_data(
         basis;
         axis_data = axis_data,

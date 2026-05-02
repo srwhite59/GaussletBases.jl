@@ -54,6 +54,29 @@ struct ExperimentalHighOrderDosideStack3D
     diagnostics::NamedTuple
 end
 
+function _experimental_high_order_one_body_cache_key(
+    exponents::AbstractVector{<:Real},
+    center::Real,
+)
+    exponent_values = Float64[Float64(exponent) for exponent in exponents]
+    center_value = Float64(center)
+    return exponent_values, center_value, (Tuple(exponent_values), center_value)
+end
+
+function _experimental_high_order_one_body_from_pgdg_intermediate(
+    pgdg_intermediate::_MappedOrdinaryPGDGIntermediate1D,
+)
+    return MappedOrdinaryOneBody1D(
+        pgdg_intermediate.basis,
+        pgdg_intermediate.backend,
+        Matrix{Float64}(pgdg_intermediate.overlap),
+        Matrix{Float64}(pgdg_intermediate.kinetic),
+        Matrix{Float64}[Matrix{Float64}(factor) for factor in pgdg_intermediate.gaussian_factors],
+        copy(pgdg_intermediate.exponents),
+        Float64(pgdg_intermediate.center),
+    )
+end
+
 function _experimental_high_order_centered_interval(
     n1d::Int,
     side::Int,
@@ -123,6 +146,9 @@ end
 function _experimental_high_order_axis_data_1d(
     basis::MappedUniformBasis;
     backend::Symbol = :numerical_reference,
+    prepared_bundle::Union{Nothing,_MappedOrdinaryGausslet1DBundle} = nothing,
+    one_body_exponents::AbstractVector{<:Real} = Float64[],
+    one_body_center::Real = 0.0,
 )
     if backend == :numerical_reference
         representation = basis_representation(basis; operators = (:overlap, :position, :kinetic))
@@ -142,11 +168,37 @@ function _experimental_high_order_axis_data_1d(
         )
     end
 
-    pgdg = _mapped_ordinary_pgdg_intermediate_1d(
-        basis;
-        exponents = [1.0],
-        backend = backend,
-    )
+    cache = Dict{Tuple{Tuple{Vararg{Float64}},Float64},MappedOrdinaryOneBody1D}()
+    exponent_values, center_value, key = _experimental_high_order_one_body_cache_key(one_body_exponents, one_body_center)
+
+    pgdg = if isnothing(prepared_bundle)
+        pgdg_exponents = isempty(exponent_values) ? [1.0] : exponent_values
+        pgdg_intermediate = _mapped_ordinary_pgdg_intermediate_1d(
+            basis;
+            exponents = pgdg_exponents,
+            center = center_value,
+            backend = backend,
+        )
+        if !isempty(exponent_values)
+            cache[key] = _experimental_high_order_one_body_from_pgdg_intermediate(pgdg_intermediate)
+        end
+        pgdg_intermediate
+    else
+        prepared_bundle.backend == backend || throw(
+            ArgumentError(
+                "prepared high-order axis bundle backend $(prepared_bundle.backend) does not match requested backend $backend",
+            ),
+        )
+        prepared_bundle.basis === basis || throw(
+            ArgumentError("prepared high-order axis bundle must come from the same parent basis object"),
+        )
+        prepared = prepared_bundle.pgdg_intermediate
+        if prepared_bundle.exponents == exponent_values &&
+           isapprox(prepared_bundle.center, center_value; atol = 0.0, rtol = 0.0)
+            cache[key] = _mapped_ordinary_one_body_from_bundle(prepared_bundle)
+        end
+        prepared
+    end
     return _ExperimentalHighOrderAxisData1D(
         basis,
         pgdg,
@@ -159,7 +211,7 @@ function _experimental_high_order_axis_data_1d(
         Matrix{Float64}(pgdg.kinetic),
         Matrix{Float64}[Matrix{Float64}(factor) for factor in pgdg.gaussian_factors],
         Matrix{Float64}[Matrix{Float64}(factor) for factor in pgdg.pair_factors],
-        Dict{Tuple{Tuple{Vararg{Float64}},Float64},MappedOrdinaryOneBody1D}(),
+        cache,
     )
 end
 
@@ -168,9 +220,7 @@ function _experimental_high_order_axis_one_body_1d(
     exponents::AbstractVector{<:Real} = Float64[],
     center::Real = 0.0,
 )
-    exponent_values = Float64[Float64(exponent) for exponent in exponents]
-    center_value = Float64(center)
-    key = (Tuple(exponent_values), center_value)
+    exponent_values, center_value, key = _experimental_high_order_one_body_cache_key(exponents, center)
     if haskey(axis_data.one_body_cache, key)
         return axis_data.one_body_cache[key]
     end

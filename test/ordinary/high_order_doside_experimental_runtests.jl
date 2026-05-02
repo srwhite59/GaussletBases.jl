@@ -327,6 +327,75 @@ end
     end
 end
 
+@testset "Experimental high-order PGDG prepared bundle reuse matches fresh one-body path" begin
+    basis = _experimental_high_order_distorted_he_basis(5)
+    expansion = coulomb_gaussian_expansion(doacc = false)
+
+    fresh_axis = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :pgdg_localized_experimental,
+    )
+    fresh_parent = GaussletBases._experimental_high_order_parent_one_body_data(
+        basis;
+        axis_data = fresh_axis,
+        backend = :pgdg_localized_experimental,
+        expansion = expansion,
+        Z = 2.0,
+        include_parent_projection_data = false,
+    )
+
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        basis;
+        exponents = expansion.exponents,
+        backend = :pgdg_localized_experimental,
+    )
+    reused_axis = GaussletBases._experimental_high_order_axis_data_1d(
+        basis;
+        backend = :pgdg_localized_experimental,
+        prepared_bundle = bundle,
+        one_body_exponents = expansion.exponents,
+        one_body_center = 0.0,
+    )
+    reused_parent = GaussletBases._experimental_high_order_parent_one_body_data(
+        basis;
+        axis_data = reused_axis,
+        backend = :pgdg_localized_experimental,
+        expansion = expansion,
+        Z = 2.0,
+        include_parent_projection_data = false,
+    )
+
+    cache_key = (Tuple(Float64[Float64(exponent) for exponent in expansion.exponents]), 0.0)
+    @test reused_axis.pgdg_intermediate === bundle.pgdg_intermediate
+    @test haskey(reused_axis.one_body_cache, cache_key)
+    @test reused_parent.one_body === reused_axis.one_body_cache[cache_key]
+    @test fresh_parent.one_body.overlap ≈ reused_parent.one_body.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test fresh_parent.one_body.kinetic ≈ reused_parent.one_body.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test length(fresh_parent.one_body.gaussian_factors) == length(reused_parent.one_body.gaussian_factors)
+    for (fresh_factor, reused_factor) in zip(fresh_parent.one_body.gaussian_factors, reused_parent.one_body.gaussian_factors)
+        @test fresh_factor ≈ reused_factor atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    block = GaussletBases._experimental_high_order_physical_block_1d(
+        reused_axis,
+        5;
+        doside = 5,
+    ).block
+    fresh_reduced = GaussletBases._experimental_high_order_contract_one_body_1d(
+        fresh_parent.one_body,
+        block.coefficients,
+    )
+    reused_reduced = GaussletBases._experimental_high_order_contract_one_body_1d(
+        reused_parent.one_body,
+        block.coefficients,
+    )
+    @test fresh_reduced.overlap ≈ reused_reduced.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test fresh_reduced.kinetic ≈ reused_reduced.kinetic atol = 1.0e-12 rtol = 1.0e-12
+    for (fresh_factor, reused_factor) in zip(fresh_reduced.gaussian_factors, reused_reduced.gaussian_factors)
+        @test fresh_factor ≈ reused_factor atol = 1.0e-12 rtol = 1.0e-12
+    end
+end
+
 @testset "Experimental high-order PGDG reduced one-body matches dense direct projection on distorted case" begin
     basis = _experimental_high_order_distorted_he_basis(5)
     expansion = coulomb_gaussian_expansion(doacc = false)
