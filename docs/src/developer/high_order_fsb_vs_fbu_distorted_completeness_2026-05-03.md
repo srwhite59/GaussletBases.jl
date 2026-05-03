@@ -6,6 +6,17 @@ This note records a first bounded study of how close the **full-shell basis**
 (FSB) is to the **full-block union** (FBU) as distortion is reduced in the
 current high-order one-body lane.
 
+Correction:
+
+- the first version of this note summarized only the older compatibility/debug
+  construction
+- that earlier near-zero result is still retained, but only as a labeled
+  control
+- the intended scientific question is the physical-coordinate polynomial route,
+  built from `_experimental_high_order_physical_block_1d`,
+  `_experimental_high_order_physical_full_block_3d`, and
+  `_experimental_high_order_physical_shell_3d`
+
 ## Question
 
 The intended question was:
@@ -67,9 +78,20 @@ The primary metrics were:
 
 The production high-order stack helper still gates the supported distorted
 mapping family to the exact White-Lindsey He baseline map. To avoid widening
-that contract just for this study, the sweep driver assembled FSB directly from
-the same lower-level physical-block shell helpers already used by the
-production route.
+that contract just for this study, the sweep driver assembled both FSB and FBU
+directly from lower-level helpers.
+
+Two routes were measured:
+
+- `physical_x`
+  - the intended physical-coordinate polynomial route
+  - physical FBU was built as the metric-cleaned union of physical full blocks
+  - physical FSB started from the first physical full block, then added the
+    physical shell coefficients from larger sides after metric projection and
+    Lowdin cleanup
+- `debug_u`
+  - the older compatibility/debug route
+  - retained only as a control
 
 Driver:
 
@@ -77,38 +99,48 @@ Driver:
 
 Saved artifacts from the run:
 
-- [TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_161107.tsv)
-- [text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_161107.txt)
+- [corrected TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.tsv)
+- [corrected text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.txt)
 
 ## Results
 
-### Case summary
+### Physical-route case summary
 
 | case | max `|E_FSB - E_FBU|` | max capture deficiency | max cross-overlap error |
 | --- | ---: | ---: | ---: |
 | `count=11, doside=5, sides=5:2:11` | `2.60e-14` | `1.22e-15` | `9.67e-13` |
 | `count=13, doside=5, sides=5:2:13` | `9.10e-15` | `1.55e-15` | `5.05e-13` |
 
-### Sweep table
+### Physical-route sweep table
 
 | case | mapping | FSB dim | FBU dim | `E_FSB - E_FBU` | capture deficiency | total wall time |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| `count11_doside5` | `identity` | `419` | `419` | `0.00e+00` | `0.00e+00` | `2.232 s` |
-| `count11_doside5` | `s/s0=1.0` | `419` | `419` | `7.11e-15` | `0.00e+00` | `1.435 s` |
-| `count11_doside5` | `s/s0=0.8` | `419` | `419` | `8.88e-16` | `0.00e+00` | `1.217 s` |
-| `count11_doside5` | `s/s0=0.6` | `419` | `419` | `-1.11e-14` | `1.22e-15` | `0.980 s` |
-| `count11_doside5` | `s/s0=0.4` | `419` | `419` | `1.87e-14` | `0.00e+00` | `0.817 s` |
-| `count11_doside5` | `s/s0=0.2` | `419` | `419` | `-2.60e-14` | `0.00e+00` | `1.009 s` |
-| `count13_doside5` | `identity` | `517` | `517` | `-5.11e-15` | `0.00e+00` | `2.182 s` |
-| `count13_doside5` | `s/s0=1.0` | `517` | `517` | `9.10e-15` | `1.55e-15` | `2.027 s` |
-| `count13_doside5` | `s/s0=0.8` | `517` | `517` | `-3.11e-15` | `1.33e-15` | `1.923 s` |
-| `count13_doside5` | `s/s0=0.6` | `517` | `517` | `-5.33e-15` | `8.88e-16` | `1.842 s` |
-| `count13_doside5` | `s/s0=0.4` | `517` | `517` | `-8.88e-16` | `1.11e-15` | `1.856 s` |
-| `count13_doside5` | `s/s0=0.2` | `517` | `517` | `-6.88e-15` | `0.00e+00` | `1.665 s` |
+| `count11_doside5` | `identity` | `419` | `419` | `0.00e+00` | `0.00e+00` | `2.687 s` |
+| `count11_doside5` | `s/s0=1.0` | `419` | `419` | `7.11e-15` | `0.00e+00` | `1.735 s` |
+| `count11_doside5` | `s/s0=0.8` | `419` | `419` | `8.88e-16` | `0.00e+00` | `1.333 s` |
+| `count11_doside5` | `s/s0=0.6` | `419` | `419` | `-1.11e-14` | `1.22e-15` | `1.339 s` |
+| `count11_doside5` | `s/s0=0.4` | `419` | `419` | `1.87e-14` | `0.00e+00` | `1.356 s` |
+| `count11_doside5` | `s/s0=0.2` | `419` | `419` | `-2.60e-14` | `0.00e+00` | `1.147 s` |
+| `count13_doside5` | `identity` | `517` | `517` | `-5.11e-15` | `0.00e+00` | `3.071 s` |
+| `count13_doside5` | `s/s0=1.0` | `517` | `517` | `9.10e-15` | `1.55e-15` | `3.035 s` |
+| `count13_doside5` | `s/s0=0.8` | `517` | `517` | `-3.11e-15` | `1.33e-15` | `2.880 s` |
+| `count13_doside5` | `s/s0=0.6` | `517` | `517` | `-5.33e-15` | `8.88e-16` | `2.853 s` |
+| `count13_doside5` | `s/s0=0.4` | `517` | `517` | `-8.88e-16` | `1.11e-15` | `2.925 s` |
+| `count13_doside5` | `s/s0=0.2` | `517` | `517` | `-6.88e-15` | `0.00e+00` | `2.899 s` |
+
+### Debug-route control
+
+The older compatibility/debug route was retained as `debug_u` only as a
+control. In the same bounded cases, it gave the same FSB/FBU dimensions,
+He+ gaps, and capture deficiencies to roundoff as the physical route.
+
+So the earlier near-zero result was not wrong numerically; it was simply the
+wrong construction to present as the main answer.
 
 ## Interpretation
 
-Within this bounded same-backend PGDG one-body study, FSB and FBU were already
+Within this bounded same-backend PGDG one-body study, the intended
+physical-coordinate polynomial route already gives FSB and FBU that are
 numerically indistinguishable.
 
 The important points are:
@@ -120,17 +152,18 @@ The important points are:
 - The cross-overlap subspace error remained around `1e-13` to `1e-12`, which
   is fully consistent with the same final subspace to numerical precision.
 
-So the present bounded study does **not** show a visible trend in which FSB
-approaches FBU only as `s` is reduced. In the tested regime, the current
-same-backend PGDG one-body path already gives FSB and FBU that are effectively
-the same for these He+ completeness measures.
+So the corrected physical-route study still does **not** show a visible trend
+in which FSB approaches FBU only as `s` is reduced. In the tested regime, the
+current same-backend PGDG one-body path already gives FSB and FBU that are
+effectively the same for these He+ completeness measures.
 
 ## Performance note
 
 The recent one-body optimizations made this sweep practical. The total per-point
-time in the bounded study was roughly `0.8` to `2.2` seconds, with the larger
-costs coming from parent projected one-body setup and the FBU/FSB builds, not
-from the final He+ eigensolves themselves.
+time in the corrected physical-route study was roughly `1.1` to `3.1` seconds.
+The physical route is measurably more expensive than the debug control because
+the physical FSB/FBU builds assemble the physical-coordinate blocks explicitly,
+but the study is still comfortably bounded.
 
 So this kind of bounded FSB-versus-FBU sweep is now feasible without turning
 into a long run.

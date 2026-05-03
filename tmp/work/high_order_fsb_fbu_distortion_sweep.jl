@@ -1,5 +1,4 @@
 using Dates
-using DelimitedFiles
 using LinearAlgebra
 using Printf
 
@@ -22,11 +21,29 @@ function timed_value(f::Function)
     )
 end
 
-function manual_full_shell_basis(
-    axis_data,
-    sides::AbstractVector{<:Integer},
-    doside::Integer,
-)
+function mapping_for_scale(scale_factor::Union{Nothing,Float64})
+    if isnothing(scale_factor)
+        return IdentityMapping()
+    end
+    return AsinhMapping(c = 0.2, s = scale_factor * sqrt(0.4), tail_spacing = 10.0)
+end
+
+function mapping_label(scale_factor::Union{Nothing,Float64})
+    if isnothing(scale_factor)
+        return "identity"
+    end
+    return @sprintf("s_over_s0=%.1f", scale_factor)
+end
+
+function debug_full_block_union(axis_data, sides::AbstractVector{<:Integer}, doside::Integer)
+    return GaussletBases._experimental_high_order_orthonormalized_full_block_union_coefficients(
+        axis_data,
+        sides;
+        doside = doside,
+    )
+end
+
+function debug_full_shell_basis(axis_data, sides::AbstractVector{<:Integer}, doside::Integer)
     side_values = Int[Int(side) for side in sides]
     parent_overlap = GaussletBases._experimental_high_order_parent_overlap_3d(axis_data)
     parent_weights = GaussletBases._experimental_high_order_parent_weights_3d(axis_data)
@@ -58,6 +75,58 @@ function manual_full_shell_basis(
     return coefficients
 end
 
+function physical_full_block_union(axis_data, sides::AbstractVector{<:Integer}, doside::Integer)
+    parent_overlap = GaussletBases._experimental_high_order_parent_overlap_3d(axis_data)
+    parent_weights = GaussletBases._experimental_high_order_parent_weights_3d(axis_data)
+    full_blocks = Matrix{Float64}[]
+    for side in sides
+        physical = GaussletBases._experimental_high_order_physical_full_block_3d(
+            axis_data,
+            Int(side);
+            doside = doside,
+        )
+        push!(full_blocks, Matrix{Float64}(physical.shell.full_block_coefficients))
+    end
+    union_coefficients = Matrix{Float64}(hcat(full_blocks...))
+    return GaussletBases._experimental_high_order_lowdin_cleanup(
+        union_coefficients,
+        parent_overlap;
+        sign_vector = parent_weights,
+    )
+end
+
+function physical_full_shell_basis(axis_data, sides::AbstractVector{<:Integer}, doside::Integer)
+    side_values = Int[Int(side) for side in sides]
+    parent_overlap = GaussletBases._experimental_high_order_parent_overlap_3d(axis_data)
+    parent_weights = GaussletBases._experimental_high_order_parent_weights_3d(axis_data)
+    first_full = GaussletBases._experimental_high_order_physical_full_block_3d(
+        axis_data,
+        first(side_values);
+        doside = doside,
+    )
+    coefficients = Matrix{Float64}(first_full.shell.full_block_coefficients)
+    GaussletBases._experimental_high_order_sign_fix_columns!(coefficients, parent_weights)
+    for side in side_values[2:end]
+        shell = GaussletBases._experimental_high_order_physical_shell_3d(
+            axis_data,
+            side;
+            doside = doside,
+        )
+        projected_out = GaussletBases._experimental_high_order_metric_project_out(
+            shell.shell.shell_coefficients,
+            coefficients,
+            parent_overlap,
+        )
+        cleaned = GaussletBases._experimental_high_order_lowdin_cleanup(
+            projected_out,
+            parent_overlap;
+            sign_vector = parent_weights,
+        )
+        coefficients = Matrix{Float64}(hcat(coefficients, cleaned))
+    end
+    return coefficients
+end
+
 function fbu_ground_state_coefficients(fbu_heplus_data)
     decomposition = eigen(Symmetric(Matrix{Float64}(fbu_heplus_data.projected_hamiltonian)))
     return Float64[Float64(value) for value in decomposition.vectors[:, 1]]
@@ -70,21 +139,10 @@ function fsb_capture_deficiency(parent_overlap, fsb_coefficients, fbu_coefficien
     return max(0.0, deficiency), cross_overlap
 end
 
-function mapping_for_scale(scale_factor::Union{Nothing,Float64})
-    if isnothing(scale_factor)
-        return IdentityMapping()
-    end
-    return AsinhMapping(c = 0.2, s = scale_factor * sqrt(0.4), tail_spacing = 10.0)
-end
-
-function mapping_label(scale_factor::Union{Nothing,Float64})
-    if isnothing(scale_factor)
-        return "identity"
-    end
-    return @sprintf("s_over_s0=%.1f", scale_factor)
-end
-
-function run_case(
+function run_route(
+    route_label::String,
+    build_fsb::Function,
+    build_fbu::Function,
     case::SweepCase,
     scale_factor::Union{Nothing,Float64};
     backend::Symbol,
@@ -123,14 +181,10 @@ function run_case(
             )
         end
         fsb_data = timed_value() do
-            manual_full_shell_basis(axis_data.value, case.sides, case.doside)
+            build_fsb(axis_data.value, case.sides, case.doside)
         end
         fbu_data = timed_value() do
-            GaussletBases._experimental_high_order_orthonormalized_full_block_union_coefficients(
-                axis_data.value,
-                case.sides;
-                doside = case.doside,
-            )
+            build_fbu(axis_data.value, case.sides, case.doside)
         end
         fsb_heplus = timed_value() do
             GaussletBases._experimental_high_order_doside_heplus_data(parent_data.value, fsb_data.value)
@@ -151,9 +205,9 @@ function run_case(
             NaN
         end
         return (
+            route_label = route_label,
             case = case,
             scale_factor = scale_factor,
-            mapping = mapping,
             basis_size_parent = length(basis_data.value)^3,
             fsb_dimension = size(fsb_data.value, 2),
             fbu_dimension = size(fbu_data.value, 2),
@@ -178,6 +232,7 @@ end
 
 function write_tsv(path::AbstractString, rows)
     header = [
+        "route_label",
         "case_label",
         "count",
         "doside",
@@ -214,6 +269,7 @@ function write_tsv(path::AbstractString, rows)
         println(io, join(header, '\t'))
         for row in rows
             values = [
+                row.route_label,
                 row.case.label,
                 string(row.case.count),
                 string(row.case.doside),
@@ -252,20 +308,23 @@ function write_tsv(path::AbstractString, rows)
 end
 
 function write_summary(path::AbstractString, rows)
-    grouped = Dict{String,Vector{Any}}()
+    grouped = Dict{Tuple{String,String},Vector{Any}}()
     for row in rows
-        push!(get!(grouped, row.case.label, Any[]), row)
+        push!(get!(grouped, (row.route_label, row.case.label), Any[]), row)
     end
     open(path, "w") do io
         println(io, "Bounded high-order full-shell basis (FSB) versus full-block union (FBU) distortion sweep")
         println(io, "backend = :pgdg_localized_experimental")
+        println(io, "route_label = physical_x is the intended physical-coordinate polynomial route")
+        println(io, "route_label = debug_u is the older compatibility/debug route retained only as a control")
         println(io)
-        for case_label in sort(collect(keys(grouped)))
-            case_rows = grouped[case_label]
+        for key in sort(collect(keys(grouped)))
+            route_label, case_label = key
+            case_rows = grouped[key]
             max_gap = maximum(abs(row.energy_gap) for row in case_rows)
             max_capture = maximum(row.capture_deficiency for row in case_rows)
             max_cross = maximum(abs(row.cross_overlap_error) for row in case_rows if isfinite(row.cross_overlap_error))
-            println(io, case_label)
+            println(io, string(route_label, " / ", case_label))
             println(io, @sprintf("  max |E_FSB - E_FBU|: %.3e", max_gap))
             println(io, @sprintf("  max FBU-state capture deficiency: %.3e", max_capture))
             println(io, @sprintf("  max cross-overlap subspace error: %.3e", max_cross))
@@ -297,9 +356,25 @@ function main()
         SweepCase("count11_doside5", 11, 5, [5, 7, 9, 11]),
         SweepCase("count13_doside5", 13, 5, [5, 7, 9, 11, 13]),
     ]
+    routes = [
+        ("physical_x", physical_full_shell_basis, physical_full_block_union),
+        ("debug_u", debug_full_shell_basis, debug_full_block_union),
+    ]
     rows = Any[]
-    for case in cases, scale_factor in scale_factors
-        push!(rows, run_case(case, scale_factor; backend = backend, expansion = expansion, z_value = z_value))
+    for case in cases, scale_factor in scale_factors, (route_label, build_fsb, build_fbu) in routes
+        push!(
+            rows,
+            run_route(
+                route_label,
+                build_fsb,
+                build_fbu,
+                case,
+                scale_factor;
+                backend = backend,
+                expansion = expansion,
+                z_value = z_value,
+            ),
+        )
     end
     timestamp = Dates.format(now(), "yyyy-mm-dd_HHMMSS")
     tsv_path = joinpath(@__DIR__, "high_order_fsb_fbu_distortion_sweep_$timestamp.tsv")
