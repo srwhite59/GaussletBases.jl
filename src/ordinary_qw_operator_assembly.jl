@@ -1461,7 +1461,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
             bundles.bundle_z,
         )
         carried_nuclear_one_body_by_center =
-            resolved_nuclear_term_storage == :by_center ?
+            use_by_center_final_mix ?
             _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
                 basis,
                 _qwrg_full_cartesian_product_factorized_basis(
@@ -1502,7 +1502,7 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
         Matrix{Float64}(fixed_block.kinetic)
     end
     fixed_nuclear_one_body_by_center =
-        resolved_nuclear_term_storage == :by_center ?
+        use_by_center_final_mix ?
         let
             factorized_basis = @timeg "$(timing_prefix).one_body.carried.factorized_basis" begin
                 _nested_factorized_parent_basis(fixed_block)

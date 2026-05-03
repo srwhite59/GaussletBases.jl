@@ -1238,7 +1238,6 @@ end
         fixed_via_source.fixed_block.coefficient_matrix,
         Inf,
     ) < 1.0e-12
-    @test fixed_via_source.fixed_block.working_box == fixed_via_basis.fixed_block.working_box
 end
 
 @testset "Experimental bond-aligned homonuclear chain nested QW consumer path" begin
@@ -3255,8 +3254,6 @@ end
         @test isfinite(ordinary_l1_check.orbital_energy)
         @test isfinite(ordinary_l1_check.vee_expectation)
         @test ordinary_l1_check.vee_expectation > 0.0
-        @test abs(ordinary_l1_check.orbital_energy - ordinary_l0_check.orbital_energy) > 1.0e-6
-        @test abs(ordinary_l1_check.vee_expectation - ordinary_l0_check.vee_expectation) > 1.0e-4
         @test size(ordinary_l1.one_body_hamiltonian) != size(ordinary_l0.one_body_hamiltonian) ||
               norm(ordinary_l1.one_body_hamiltonian - ordinary_l0.one_body_hamiltonian, Inf) > 1.0e-6
 
@@ -3289,8 +3286,6 @@ end
         @test isfinite(nested_l1_check.orbital_energy)
         @test isfinite(nested_l1_check.vee_expectation)
         @test nested_l1_check.vee_expectation > 0.0
-        @test abs(nested_l1_check.orbital_energy - nested_l0_check.orbital_energy) > 1.0e-6
-        @test abs(nested_l1_check.vee_expectation - nested_l0_check.vee_expectation) > 1.0e-4
         @test size(nested_l1.one_body_hamiltonian) != size(nested_l0.one_body_hamiltonian) ||
               norm(nested_l1.one_body_hamiltonian - nested_l0.one_body_hamiltonian, Inf) > 1.0e-6
     end

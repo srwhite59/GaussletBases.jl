@@ -5036,7 +5036,7 @@ function _nested_hierarchical_core_refinement(
         inner_x,
         inner_y,
         inner_z,
-        [inner_shell],
+        [inner_shell];
         kwargs...,
     )
 end
@@ -5063,6 +5063,12 @@ function _nested_shell_sequence_with_hierarchical_core_refinement(
     y_interval::UnitRange{Int},
     z_interval::UnitRange{Int},
     shell_layers::AbstractVector{<:_AbstractCartesianNestedShellLayer3D};
+    retain_xy::Tuple{Int,Int} = (2, 2),
+    retain_xz::Tuple{Int,Int} = (2, 2),
+    retain_yz::Tuple{Int,Int} = (2, 2),
+    retain_x_edge::Int = 2,
+    retain_y_edge::Int = 2,
+    retain_z_edge::Int = 2,
     kwargs...,
 )
     refined_core = _nested_hierarchical_core_refinement(
@@ -5070,13 +5076,19 @@ function _nested_shell_sequence_with_hierarchical_core_refinement(
         x_interval,
         y_interval,
         z_interval;
+        retain_xy = retain_xy,
+        retain_xz = retain_xz,
+        retain_yz = retain_yz,
+        retain_x_edge = retain_x_edge,
+        retain_y_edge = retain_y_edge,
+        retain_z_edge = retain_z_edge,
         kwargs...,
     )
     sequence = _nested_shell_sequence_from_core_block(
         pgdg,
         refined_core.support_indices,
         refined_core.coefficient_matrix,
-        shell_layers,
+        shell_layers;
         kwargs...,
     )
     return (
