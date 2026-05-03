@@ -72,6 +72,8 @@ nested_cartesian_operators
 ordinary_cartesian_qiu_white_operators
 gto_overlap_matrix
 gto_occupancy_matrix
+gaussian_coulomb_pair_index
+gaussian_coulomb_pair_matrix
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```
@@ -80,6 +82,20 @@ For molecular Gaussian supplements, `max_width` is a primitive-level
 core/locality cutoff: primitives wider than the cutoff are removed before
 placing the supplement on each nucleus. A contracted shell disappears only when
 no primitive remains after this filtering.
+
+## Dense Gaussian Coulomb reference
+
+`gaussian_coulomb_pair_matrix` builds a dense pure-Gaussian Coulomb reference
+matrix `G[pq, rs] = (pq|rs)` for small Gaussian supplements and orbital lists.
+It uses the same `CoulombGaussianExpansion` approximation used by the
+Qiu-White/MWG machinery and analytic polynomial Gaussian moments; it does not
+use numerical quadrature.
+
+This is an `N^4` memory/work reference utility, not a production
+large-system ERI backend. It is intended for small Gaussian references,
+stationary-Fock/EGOI diagnostics, and residual-Gaussian interaction validation.
+The flattened pair index is `(p - 1) * n + q`, exposed as
+`gaussian_coulomb_pair_index(p, q, n)`.
 
 ## Hydrogenic core corrections
 

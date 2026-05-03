@@ -112,6 +112,139 @@ function polynomial_shift_multiply(
     return result
 end
 
+function wick2_moment(
+    power_x::Int,
+    power_y::Int,
+    sigma_xx::Float64,
+    sigma_yy::Float64,
+    sigma_xy::Float64,
+)
+    power_x < 0 && return 0.0
+    power_y < 0 && return 0.0
+    power_x == 0 && power_y == 0 && return 1.0
+    if power_x > 0
+        return (power_x - 1) *
+               sigma_xx *
+               wick2_moment(power_x - 2, power_y, sigma_xx, sigma_yy, sigma_xy) +
+               power_y *
+               sigma_xy *
+               wick2_moment(power_x - 1, power_y - 1, sigma_xx, sigma_yy, sigma_xy)
+    end
+    return (power_y - 1) *
+           sigma_yy *
+           wick2_moment(0, power_y - 2, sigma_xx, sigma_yy, sigma_xy)
+end
+
+function shifted_wick2_moment(
+    power_x::Int,
+    power_y::Int,
+    mean_x::Float64,
+    mean_y::Float64,
+    sigma_xx::Float64,
+    sigma_yy::Float64,
+    sigma_xy::Float64,
+)
+    power_x >= 0 && power_y >= 0 ||
+        throw(ArgumentError("shifted Wick moment powers must be nonnegative"))
+    value = 0.0
+    for degree_x in 0:power_x, degree_y in 0:power_y
+        value +=
+            binomial(power_x, degree_x) *
+            mean_x^(power_x - degree_x) *
+            binomial(power_y, degree_y) *
+            mean_y^(power_y - degree_y) *
+            wick2_moment(degree_x, degree_y, sigma_xx, sigma_yy, sigma_xy)
+    end
+    return value
+end
+
+function polynomial_gaussian_pair_factor_integral(
+    alpha_left_a::Float64,
+    center_left_a::Float64,
+    power_left_a::Int,
+    prefactor_left_a::Float64,
+    alpha_left_b::Float64,
+    center_left_b::Float64,
+    power_left_b::Int,
+    prefactor_left_b::Float64,
+    alpha_right_a::Float64,
+    center_right_a::Float64,
+    power_right_a::Int,
+    prefactor_right_a::Float64,
+    alpha_right_b::Float64,
+    center_right_b::Float64,
+    power_right_b::Int,
+    prefactor_right_b::Float64,
+    coupling_exponent::Float64,
+)
+    minimum((
+        power_left_a,
+        power_left_b,
+        power_right_a,
+        power_right_b,
+    )) >= 0 || throw(ArgumentError("polynomial Gaussian pair powers must be nonnegative"))
+    minimum((
+        alpha_left_a,
+        alpha_left_b,
+        alpha_right_a,
+        alpha_right_b,
+    )) > 0.0 || throw(ArgumentError("polynomial Gaussian pair exponents must be positive"))
+    coupling_exponent >= 0.0 ||
+        throw(ArgumentError("polynomial Gaussian pair coupling exponent must be nonnegative"))
+
+    a11 = alpha_left_a + alpha_left_b + coupling_exponent
+    a22 = alpha_right_a + alpha_right_b + coupling_exponent
+    a12 = -coupling_exponent
+    determinant = a11 * a22 - a12^2
+    determinant > 0.0 ||
+        throw(ArgumentError("polynomial Gaussian pair quadratic form must be positive definite"))
+
+    d1 = alpha_left_a * center_left_a + alpha_left_b * center_left_b
+    d2 = alpha_right_a * center_right_a + alpha_right_b * center_right_b
+    constant =
+        alpha_left_a * center_left_a^2 +
+        alpha_left_b * center_left_b^2 +
+        alpha_right_a * center_right_a^2 +
+        alpha_right_b * center_right_b^2
+    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
+    mean_x = (a22 * d1 - a12 * d2) / determinant
+    mean_y = (-a12 * d1 + a11 * d2) / determinant
+    sigma_xx = 0.5 * a22 / determinant
+    sigma_yy = 0.5 * a11 / determinant
+    sigma_xy = -0.5 * a12 / determinant
+
+    polynomial_x = Float64[1.0]
+    polynomial_x = polynomial_shift_multiply(polynomial_x, -center_left_a, power_left_a)
+    polynomial_x = polynomial_shift_multiply(polynomial_x, -center_left_b, power_left_b)
+    polynomial_y = Float64[1.0]
+    polynomial_y = polynomial_shift_multiply(polynomial_y, -center_right_a, power_right_a)
+    polynomial_y = polynomial_shift_multiply(polynomial_y, -center_right_b, power_right_b)
+
+    moment_value = 0.0
+    for degree_x in eachindex(polynomial_x), degree_y in eachindex(polynomial_y)
+        moment_value +=
+            polynomial_x[degree_x] *
+            polynomial_y[degree_y] *
+            shifted_wick2_moment(
+                degree_x - 1,
+                degree_y - 1,
+                mean_x,
+                mean_y,
+                sigma_xx,
+                sigma_yy,
+                sigma_xy,
+            )
+    end
+
+    return prefactor_left_a *
+           prefactor_left_b *
+           prefactor_right_a *
+           prefactor_right_b *
+           (pi / sqrt(determinant)) *
+           exp(-constant + quadratic_term) *
+           moment_value
+end
+
 function polynomial_gaussian_basic_integral(
     alpha_left::Float64,
     center_left::Float64,

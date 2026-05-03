@@ -42,6 +42,8 @@ export AbstractFunction1D,
        read_cartesian_basis_bundle,
        load_cartesian_basis_representation,
        write_cartesian_basis_bundle_jld2,
+       gaussian_coulomb_pair_index,
+       gaussian_coulomb_pair_matrix,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -597,6 +599,7 @@ include("ordinary_qw_operator_assembly.jl")
 include("ordinary_qw_corrections.jl")
 include("ordinary_qw_experimental_paths.jl")
 include("cartesian_basis_representation.jl")
+include("gaussian_coulomb_reference.jl")
 include("bond_aligned_diatomic_geometry.jl")
 include("bond_aligned_diatomic_geometry_export.jl")
 include("partitions.jl")

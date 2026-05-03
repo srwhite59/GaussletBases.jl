@@ -3084,6 +3084,95 @@ end
     end
 end
 
+@testset "Dense Gaussian Coulomb pair matrix reference" begin
+    expansion = CoulombGaussianExpansion(
+        [1.25],
+        [0.4];
+        del = 1.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1.0,
+    )
+    alpha = 0.7
+    centered_s = CartesianGaussianShellOrbitalRepresentation3D(
+        "s0",
+        (0, 0, 0),
+        (0.0, 0.0, 0.0),
+        [alpha],
+        [1.0],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    shifted_s = CartesianGaussianShellOrbitalRepresentation3D(
+        "s1",
+        (0, 0, 0),
+        (0.3, -0.2, 0.4),
+        [0.5],
+        [1.0],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    orbitals = [centered_s, shifted_s]
+    pair_matrix = @test_logs min_level = Logging.Warn gaussian_coulomb_pair_matrix(
+        orbitals;
+        expansion,
+    )
+    n = length(orbitals)
+    pair_index(p, q) = gaussian_coulomb_pair_index(p, q, n)
+
+    @test size(pair_matrix) == (n^2, n^2)
+    @test gaussian_coulomb_pair_index(2, 1, n) == 3
+    @test_throws ArgumentError gaussian_coulomb_pair_index(0, 1, n)
+    @test_throws ArgumentError gaussian_coulomb_pair_matrix(orbitals; expansion, max_orbitals = 1)
+
+    for p in 1:n, q in 1:n, r in 1:n, s_index in 1:n
+        value = pair_matrix[pair_index(p, q), pair_index(r, s_index)]
+        @test isfinite(value)
+        @test value ≈ pair_matrix[pair_index(q, p), pair_index(r, s_index)] atol = 1.0e-12 rtol = 1.0e-12
+        @test value ≈ pair_matrix[pair_index(p, q), pair_index(s_index, r)] atol = 1.0e-12 rtol = 1.0e-12
+        @test value ≈ pair_matrix[pair_index(r, s_index), pair_index(p, q)] atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    gamma = expansion.exponents[1]
+    expected_ssss =
+        expansion.coefficients[1] *
+        (2.0 * alpha / sqrt((2.0 * alpha + gamma)^2 - gamma^2))^3
+    @test pair_matrix[pair_index(1, 1), pair_index(1, 1)] > 0.0
+    @test pair_matrix[pair_index(1, 1), pair_index(1, 1)] ≈ expected_ssss atol = 1.0e-12 rtol = 1.0e-12
+
+    supplement = CartesianGaussianShellSupplementRepresentation3D(
+        :dense_gaussian_coulomb_reference,
+        orbitals,
+        (; source = :test),
+    )
+    @test gaussian_coulomb_pair_matrix(supplement; expansion) ≈ pair_matrix atol = 1.0e-12 rtol = 1.0e-12
+
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: He repo-s\n" *
+            "He    S\n" *
+            "      0.9000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+        legacy = legacy_atomic_gaussian_supplement(
+            "He",
+            "repo-s";
+            lmax = 0,
+            basisfile = path,
+        )
+        legacy_matrix = gaussian_coulomb_pair_matrix(legacy; expansion, max_orbitals = 1)
+        reference_matrix = gaussian_coulomb_pair_matrix(
+            basis_representation(legacy);
+            expansion,
+            max_orbitals = 1,
+        )
+        @test size(legacy_matrix) == (1, 1)
+        @test isfinite(only(legacy_matrix))
+        @test only(legacy_matrix) > 0.0
+        @test legacy_matrix ≈ reference_matrix atol = 1.0e-12 rtol = 1.0e-12
+    end
+end
+
 @testset "Vendored legacy BasisSets lookup and overrides" begin
     vendored = GaussletBases._vendored_legacy_basisfile_path()
     @test isfile(vendored)
