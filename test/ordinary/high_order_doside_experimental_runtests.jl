@@ -603,8 +603,12 @@ end
         @test stack.diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
         @test isfinite(data.ground_energy)
         @test data.overlap_error < 1.0e-8
-        @test data.diagnostics.projected_overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
-        @test data.diagnostics.projected_overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+        projected_spectrum = GaussletBases._experimental_high_order_positive_spectrum(
+            data.projected_overlap;
+            tol = 1.0e-10,
+        )
+        @test projected_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+        @test projected_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
     end
 end
 
