@@ -26,6 +26,7 @@ This section is where to go when you want:
 - [Post-decomposition efficiency resume plan](post_decomposition_efficiency_resume_plan.md)
 - [PGDG Cartesian efficiency contract](pgdg_cartesian_efficiency_contract.md)
 - [Numerical contracts](numerical_contracts.md)
+- [Performance review contracts](performance_review_contracts.md)
 - [Supporting note map](supporting_notes.md)
 
 The broader flat `docs/` tree still contains the full supporting-note history.

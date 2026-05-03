@@ -114,3 +114,63 @@ But those sidecars must remain:
 - clearly auxiliary
 - reproducible from the basis construction
 - not confused with the basis definition itself
+
+## Calculation and analysis preferences
+
+For nontrivial calculations, benchmarks, transfer studies, and solver runs:
+
+- keep coarse `TimeG` timing enabled by default
+- do **not** turn coarse timing off for expensive runs unless there is a
+  specific reason
+- save at least a coarse timing record as a durable artifact when practical
+
+The minimum coarse timing summary should prefer user-facing phase labels such
+as:
+
+- build nested basis
+- assemble operators / Hamiltonian
+- transfer orbitals or states
+- Hartree-Fock / SCF solve
+- total
+
+Do not rely only on terminal scrollback for timing. If a run matters, preserve
+the coarse timing summary in a file, note, or other durable artifact.
+
+## Performance review policy
+
+Performance is part of correctness for public APIs, algorithmic routes, and
+advertised reference utilities. A change is not fully validated until CPU time
+and allocation behavior have been checked against a reasonable scale model.
+
+For performance-sensitive changes, reports and handoffs should include:
+
+- performance category: production route, reference-only but usable, or
+  diagnostic/prototype
+- expected CPU and memory scaling
+- representative fixture size
+- measured time and allocations or memory footprint
+- durable timing/allocation artifact path when practical
+- explicit decision: ready, needs optimization, or prototype-only
+
+Do not call a public feature ready based only on tiny correctness tests. If
+performance was not measured, say that explicitly and treat it as remaining
+validation work.
+
+See also:
+
+- `docs/src/developer/performance_review_contracts.md`
+
+## Result-reporting language
+
+When reporting calculation or analysis results back to the user:
+
+- prefer user-facing language over internal implementation language
+- check labels and summaries for repo-internal shorthand before sending them
+- if a new term is necessary, define it briefly the first time it appears
+- if an internal code label is not directly meaningful to the user, translate it
+  into a plain-language description
+
+Default rule:
+
+- summaries should be understandable without requiring the user to know repo
+  internals, Julia helper names, or private shorthand
