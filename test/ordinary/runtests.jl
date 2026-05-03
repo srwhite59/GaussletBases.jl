@@ -3138,6 +3138,38 @@ end
     @test pair_matrix[pair_index(1, 1), pair_index(1, 1)] > 0.0
     @test pair_matrix[pair_index(1, 1), pair_index(1, 1)] ≈ expected_ssss atol = 1.0e-12 rtol = 1.0e-12
 
+    same_center_s = CartesianGaussianShellOrbitalRepresentation3D(
+        "same_s",
+        (0, 0, 0),
+        (0.2, -0.1, 0.3),
+        [0.9, 0.4],
+        [0.7, -0.2],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    same_center_px = CartesianGaussianShellOrbitalRepresentation3D(
+        "same_px",
+        (1, 0, 0),
+        (0.2, -0.1, 0.3),
+        [0.8, 0.4],
+        [0.5, 0.25],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    same_center_orbitals = [same_center_s, same_center_px]
+    same_center_fast = gaussian_coulomb_pair_matrix(same_center_orbitals; expansion)
+    same_center_general = GaussletBases._gaussian_coulomb_pair_matrix_general(
+        same_center_orbitals;
+        expansion,
+    )
+    @test same_center_fast ≈ same_center_general atol = 1.0e-12 rtol = 1.0e-12
+    same_center_n = length(same_center_orbitals)
+    same_center_pair_index(p, q) = gaussian_coulomb_pair_index(p, q, same_center_n)
+    for p in 1:same_center_n, q in 1:same_center_n, r in 1:same_center_n, s_index in 1:same_center_n
+        value = same_center_fast[same_center_pair_index(p, q), same_center_pair_index(r, s_index)]
+        @test value ≈ same_center_fast[same_center_pair_index(q, p), same_center_pair_index(r, s_index)] atol = 1.0e-12 rtol = 1.0e-12
+        @test value ≈ same_center_fast[same_center_pair_index(p, q), same_center_pair_index(s_index, r)] atol = 1.0e-12 rtol = 1.0e-12
+        @test value ≈ same_center_fast[same_center_pair_index(r, s_index), same_center_pair_index(p, q)] atol = 1.0e-12 rtol = 1.0e-12
+    end
+
     supplement = CartesianGaussianShellSupplementRepresentation3D(
         :dense_gaussian_coulomb_reference,
         orbitals,
@@ -3170,6 +3202,28 @@ end
         @test isfinite(only(legacy_matrix))
         @test only(legacy_matrix) > 0.0
         @test legacy_matrix ≈ reference_matrix atol = 1.0e-12 rtol = 1.0e-12
+    end
+
+    mktemp() do path, io
+        write(io, _ne_repo_v6z_sp_basis_text())
+        close(io)
+        legacy = legacy_atomic_gaussian_supplement(
+            "Ne",
+            "repo-v6z-sp";
+            lmax = 1,
+            basisfile = path,
+        )
+        representation = basis_representation(legacy)
+        contracted_matrix = gaussian_coulomb_pair_matrix(
+            representation;
+            expansion,
+            max_orbitals = 25,
+        )
+        @test length(representation.orbitals) == 25
+        @test size(contracted_matrix) == (25^2, 25^2)
+        @test all(isfinite, contracted_matrix)
+        @test contracted_matrix ≈ transpose(contracted_matrix) atol = 1.0e-12 rtol = 1.0e-12
+        @test contracted_matrix[gaussian_coulomb_pair_index(1, 1, 25), gaussian_coulomb_pair_index(1, 1, 25)] > 0.0
     end
 end
 

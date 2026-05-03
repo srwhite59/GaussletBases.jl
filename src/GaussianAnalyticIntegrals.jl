@@ -158,6 +158,34 @@ function shifted_wick2_moment(
     return value
 end
 
+function centered_polynomial_gaussian_pair_factor_integral(
+    beta_left::Float64,
+    power_left::Int,
+    beta_right::Float64,
+    power_right::Int,
+    coupling_exponent::Float64,
+)
+    power_left >= 0 && power_right >= 0 ||
+        throw(ArgumentError("centered Gaussian pair powers must be nonnegative"))
+    beta_left > 0.0 && beta_right > 0.0 ||
+        throw(ArgumentError("centered Gaussian pair exponents must be positive"))
+    coupling_exponent >= 0.0 ||
+        throw(ArgumentError("centered Gaussian pair coupling exponent must be nonnegative"))
+
+    a11 = beta_left + coupling_exponent
+    a22 = beta_right + coupling_exponent
+    a12 = -coupling_exponent
+    determinant = a11 * a22 - a12^2
+    determinant > 0.0 ||
+        throw(ArgumentError("centered Gaussian pair quadratic form must be positive definite"))
+
+    sigma_xx = 0.5 * a22 / determinant
+    sigma_yy = 0.5 * a11 / determinant
+    sigma_xy = -0.5 * a12 / determinant
+    return (pi / sqrt(determinant)) *
+           wick2_moment(power_left, power_right, sigma_xx, sigma_yy, sigma_xy)
+end
+
 function polynomial_gaussian_pair_factor_integral(
     alpha_left_a::Float64,
     center_left_a::Float64,
