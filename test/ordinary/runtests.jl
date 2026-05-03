@@ -2490,7 +2490,8 @@ end
         @test atomic_nested_context.contraction === fixed_block_shell_plus_core.coefficient_matrix
         @test atomic_nested_context.capabilities.allowed_gausslet_backends ==
               (:numerical_reference,)
-        @test atomic_nested_context.capabilities.allowed_interaction_treatments == (:ggt_nearest,)
+        @test atomic_nested_context.capabilities.allowed_interaction_treatments ==
+              (:ggt_nearest, :mwg)
         @test atomic_nested_context.capabilities.timing_label == "qwrg.nested_atomic_shell.total"
         supplement_text = _reference_only_backend_error(() ->
             ordinary_cartesian_qiu_white_operators(
@@ -2527,19 +2528,36 @@ end
             )
         )
         @test occursin("nested ordinary_cartesian_qiu_white_operators", nested_supplement_text)
-        nested_atomic_mwg_text = _argument_error_text(() ->
-            ordinary_cartesian_qiu_white_operators(
-                fixed_block_shell_plus_core,
-                supplement;
-                expansion = expansion,
-                Z = 2.0,
-                interaction_treatment = :mwg,
-            )
+
+        nested_nearest = _nested_shell_plus_core
+        nested_mwg = ordinary_cartesian_qiu_white_operators(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
         )
-        @test occursin(
-            "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
-            nested_atomic_mwg_text,
-        )
+        @test nested_nearest.interaction_treatment == :ggt_nearest
+        @test nested_mwg.interaction_treatment == :mwg
+        @test nested_mwg.residual_count > 0
+        @test all(isfinite, nested_mwg.residual_centers)
+        @test all(isfinite, nested_mwg.residual_widths)
+        @test all(>(0.0), nested_mwg.residual_widths)
+        @test nested_mwg.interaction_matrix ≈ transpose(nested_mwg.interaction_matrix) atol =
+              1.0e-10 rtol = 1.0e-10
+        @test size(nested_mwg.interaction_matrix) ==
+              (
+                  nested_mwg.gausslet_count + nested_mwg.residual_count,
+                  nested_mwg.gausslet_count + nested_mwg.residual_count,
+              )
+        @test nested_mwg.residual_count == nested_nearest.residual_count
+        @test nested_mwg.overlap ≈ nested_nearest.overlap atol = 1.0e-10 rtol = 1.0e-10
+        @test nested_mwg.one_body_hamiltonian ≈ nested_nearest.one_body_hamiltonian atol =
+              1.0e-10 rtol = 1.0e-10
+        @test nested_mwg.raw_to_final ≈ nested_nearest.raw_to_final atol = 1.0e-10 rtol = 1.0e-10
+        @test nested_mwg.residual_centers ≈ nested_nearest.residual_centers atol =
+              1.0e-10 rtol = 1.0e-10
+        @test norm(nested_mwg.interaction_matrix - nested_nearest.interaction_matrix, Inf) > 1.0e-8
     end
 end
 

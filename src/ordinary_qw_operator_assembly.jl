@@ -427,9 +427,10 @@ function _normalized_atomic_build_context(
         (
             route_label = "nested ordinary_cartesian_qiu_white_operators",
             allowed_gausslet_backends = (:numerical_reference,),
-            allowed_interaction_treatments = (:ggt_nearest,),
+            allowed_interaction_treatments = (:ggt_nearest, :mwg),
             interaction_treatment_error_message =
-                "nested ordinary_cartesian_qiu_white_operators currently supports only interaction_treatment = :ggt_nearest",
+                "nested ordinary_cartesian_qiu_white_operators interaction_treatment must be " *
+                ":ggt_nearest or :mwg",
             timing_label = "qwrg.nested_atomic_shell.total",
             bundle_label = "qwrg.nested_atomic_shell.parent_bundle",
             raw_blocks_label = "qwrg.nested_atomic_shell.raw_blocks",
@@ -2322,6 +2323,27 @@ function _qwrg_atomic_residual_centers_and_widths(
     center_data.overlap_error <= residual_accept_tol || throw(
         ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
     )
+    if interaction_treatment == :mwg
+        x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
+        x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
+        x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
+        fixed_x2_x = Matrix{Float64}(fixed_block.x2_x)
+        fixed_x2_y = Matrix{Float64}(fixed_block.x2_y)
+        fixed_x2_z = Matrix{Float64}(fixed_block.x2_z)
+        x2_raw = [fixed_x2_x x2_x_fg; transpose(x2_x_fg) blocks.x2_x_aa]
+        y2_raw = [fixed_x2_y x2_y_fg; transpose(x2_y_fg) blocks.x2_y_aa]
+        z2_raw = [fixed_x2_z x2_z_fg; transpose(x2_z_fg) blocks.x2_z_aa]
+        moment_data = _qwrg_residual_moment_data(
+            residual_data.raw_overlap,
+            x_raw,
+            x2_raw,
+            y2_raw,
+            z2_raw,
+            center_data,
+        )
+        residual_centers = moment_data.centers
+        residual_widths = moment_data.widths
+    end
     return residual_centers, residual_widths
 end
 
@@ -2357,6 +2379,18 @@ function _qwrg_atomic_interaction_matrix(
 
     fixed_block = context.carried
     fixed_interaction = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    if interaction_treatment == :mwg
+        return _qwrg_fixed_block_interaction_matrix_mwg(
+            fixed_interaction,
+            something(context.contraction),
+            gausslet_bundle,
+            gausslet_bundle,
+            gausslet_bundle,
+            expansion,
+            residual_centers,
+            residual_widths,
+        )
+    end
     return _qwrg_interaction_matrix_nearest(
         fixed_interaction,
         fixed_block.fixed_centers,
@@ -2599,14 +2633,15 @@ Build the first nested fixed-block QW-PGDG consumer path.
 
 This overload reuses the stabilized parent PGDG raw fixed-to-Gaussian blocks,
 contracts them through the supplied shell-level fixed map, and then runs the
-same downstream residual-space / one-body / nearest-GGT algebra as the
-unnested QW-PGDG route.
+same downstream residual-space / one-body / residual-interaction algebra as
+the unnested QW-PGDG route.
 
 This first adapter is intentionally narrow:
 
 - it consumes an already-assembled nonseparable 3D fixed packet
 - it keeps the shell packet as the fixed-fixed block directly
-- it supports only `interaction_treatment = :ggt_nearest`
+- it supports `interaction_treatment = :mwg` as the preferred matched-width
+  residual interaction route, with `:ggt_nearest` retained as fallback/debug
 
 It now uses the explicit atomic-centered 3D Cartesian shell route for all
 active atomic supplement content up to `lmax <= 2`, including pure `s`

@@ -126,12 +126,13 @@ fragment branch. Ordinary bond-aligned basis/operator packets store
 those stored basis charges, and branch correction requires either explicit
 branch charges or stored operator charges. For molecular Gaussian supplements,
 use a finite `max_width` when the supplement is meant to remain a local/core
-correction rather than a wide diffuse completion. On the bond-aligned diatomic
-molecular path, residual directions are constructed by supplement-owner group and exported with
-atom-local residual labels/owner metadata. `interaction_treatment = :mwg` is
-the preferred residual-Gaussian interaction route because it uses the exported
-residual centers and finite matched widths; `:ggt_nearest` is retained as a
-fallback/debug approximation.
+correction rather than a wide diffuse completion. For atomic QW residual
+routes, including nested fixed-block atomic payloads, `:mwg` is the preferred
+matched-width residual interaction treatment; `:ggt_nearest` is retained as
+fallback/debug. On the bond-aligned diatomic
+molecular path, residual directions are constructed by supplement-owner group
+and exported with atom-local residual labels/owner metadata; `:mwg` likewise
+uses those exported centers and finite matched widths.
 
 ```julia
 operators = ordinary_cartesian_qiu_white_operators(
