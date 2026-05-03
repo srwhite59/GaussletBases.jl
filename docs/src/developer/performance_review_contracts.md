@@ -3,13 +3,38 @@
 Performance is part of correctness for public routes, advertised reference
 utilities, and any implementation likely to be used by downstream scientific
 drivers. A feature is not review-complete until its CPU time and allocation
-behavior have been checked against a reasonable scale model.
+behavior have been checked against a reasonable scale model. For nontrivial
+algorithmic work, performance and code organization also belong in the design
+stage, not only in end-stage certification.
 
 This policy exists because a dense Gaussian Coulomb reference helper was
 correct on tiny tests but was unusable on a still-small one-center `25`-orbital
 `625 x 625` pair matrix. The output size was modest, so minutes of runtime and
 billions of allocations indicated a review failure, not merely an optimization
 opportunity.
+
+## Expected Workflow
+
+For nontrivial coding work, the expected workflow is:
+
+1. define the computations, operators, or data transforms that are actually
+   needed.
+2. do an early performance/scaling design pass:
+   - identify likely cost centers.
+   - decide what should be tabulated, cached, reused, or contracted early.
+   - choose representations that avoid avoidable dense work, repeated setup, or
+     bad scaling.
+3. do an early code-organization/reuse pass:
+   - reuse existing kernels and contracts when they fit.
+   - avoid duplicated formulas or parallel private implementations.
+   - choose an implementation seam that can be reviewed and maintained.
+4. implement the route.
+5. do the end-stage performance/readiness review.
+
+This does not mean every change needs an architecture exercise. Clearly trivial
+edits should remain small. The point is that nontrivial numerical routes should
+not be designed as a minimal correctness patch with performance and structure
+left as afterthoughts.
 
 ## Route Categories
 
@@ -59,6 +84,9 @@ Examples:
 
 Doer handoffs for relevant changes should include:
 
+- `Computation definition`: what operators/data transforms are being built.
+- `Performance strategy`: expected cost centers and chosen representation.
+- `Organization strategy`: reuse points, new seams, and duplication risks.
 - `Performance category`: production route, reference-only but usable, or
   diagnostic/prototype.
 - `Scale model`: short expected CPU and memory scaling.

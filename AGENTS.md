@@ -142,8 +142,19 @@ Performance is part of correctness for public APIs, algorithmic routes, and
 advertised reference utilities. A change is not fully validated until CPU time
 and allocation behavior have been checked against a reasonable scale model.
 
+For nontrivial coding work, do not jump directly from "what result is needed"
+to "smallest patch that passes a test." First do a short design pass that:
+
+- defines the computation, operator, or data transform being implemented
+- identifies likely cost centers and expected scaling
+- decides what should be tabulated, cached, reused, or contracted early
+- checks whether existing kernels or contracts should be reused
+- chooses an implementation seam that is reviewable and not needlessly
+  duplicated
+
 For performance-sensitive changes, reports and handoffs should include:
 
+- computation definition and performance/organization strategy
 - performance category: production route, reference-only but usable, or
   diagnostic/prototype
 - expected CPU and memory scaling
