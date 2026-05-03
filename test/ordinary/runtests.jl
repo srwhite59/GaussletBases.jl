@@ -2556,6 +2556,33 @@ end
         @test nested_mwg.raw_to_final ≈ nested_nearest.raw_to_final atol = 1.0e-10 rtol = 1.0e-10
         @test nested_mwg.residual_centers ≈ nested_nearest.residual_centers atol =
               1.0e-10 rtol = 1.0e-10
+        fixed_range = 1:nested_mwg.gausslet_count
+        residual_range = (nested_mwg.gausslet_count + 1):(
+            nested_mwg.gausslet_count + nested_mwg.residual_count
+        )
+        @test nested_mwg.interaction_matrix[fixed_range, fixed_range] ≈
+              nested_nearest.interaction_matrix[fixed_range, fixed_range] atol =
+              1.0e-10 rtol = 1.0e-10
+        nearest_fixed_residual = norm(
+            nested_nearest.interaction_matrix[fixed_range, residual_range],
+            Inf,
+        )
+        mwg_fixed_residual = norm(
+            nested_mwg.interaction_matrix[fixed_range, residual_range],
+            Inf,
+        )
+        nearest_residual_residual = norm(
+            nested_nearest.interaction_matrix[residual_range, residual_range],
+            Inf,
+        )
+        mwg_residual_residual = norm(
+            nested_mwg.interaction_matrix[residual_range, residual_range],
+            Inf,
+        )
+        @test nearest_fixed_residual > 0.0
+        @test nearest_residual_residual > 0.0
+        @test mwg_fixed_residual / nearest_fixed_residual < 25.0
+        @test mwg_residual_residual / nearest_residual_residual < 25.0
         @test norm(nested_mwg.interaction_matrix - nested_nearest.interaction_matrix, Inf) > 1.0e-8
     end
 end
@@ -3626,6 +3653,54 @@ end
         @test abs(mwg_check.vee_expectation - nearest_check.vee_expectation) > 1.0e-3
         @test abs(mwg_check.orbital_energy - combined_check.orbital_energy) < 1.0e-12
     end
+end
+
+@testset "Qiu-White MWG pair-density normalization matches IDA convention" begin
+    expansion = CoulombGaussianExpansion(
+        [0.7, 1.3],
+        [0.2, 0.9];
+        del = 1.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 2,
+    )
+    gaussians = [
+        Gaussian(center = -0.1, width = 0.4),
+        Gaussian(center = 0.2, width = 0.7),
+    ]
+    analytic_blocks = GaussletBases._qwrg_gaussian_analytic_blocks(gaussians, expansion)
+    weights = GaussletBases._qwrg_supplement_integral_weights(gaussians)
+    qiu_normalized = GaussletBases._qwrg_density_normalized_pair_matrices(
+        analytic_blocks.pair_aa,
+        weights,
+        weights;
+        label = "test residual-residual",
+    )
+
+    primitive_layer = PrimitiveSet1D(gaussians; name = :test_mwg_pair_norm)
+    identity_map = Matrix{Float64}(I, length(gaussians), length(gaussians))
+    ida_layer = GaussletBases._AuxiliaryContractedLayer1D(
+        primitive_layer,
+        identity_map,
+        Float64[center(gaussian) for gaussian in gaussians],
+        weights,
+    )
+    ida_raw = GaussletBases._pair_gaussian_factor_matrices(
+        ida_layer;
+        exponents = expansion.exponents,
+    )
+    ida_normalized = [matrix ./ (weights * transpose(weights)) for matrix in ida_raw]
+
+    @test length(qiu_normalized) == length(ida_normalized)
+    for index in eachindex(qiu_normalized)
+        @test qiu_normalized[index] ≈ ida_normalized[index] atol = 1.0e-14 rtol = 1.0e-14
+    end
+    @test_throws ArgumentError GaussletBases._qwrg_density_normalized_pair_matrices(
+        analytic_blocks.pair_aa,
+        [weights[1], 0.0],
+        weights;
+        label = "test zero-weight",
+    )
 end
 
 @testset "Qiu-White residual Gaussian reference path" begin

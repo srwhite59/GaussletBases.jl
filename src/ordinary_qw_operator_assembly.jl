@@ -823,6 +823,48 @@ function _qwrg_mwg_interaction_components(
     analytic_x = _qwrg_gaussian_analytic_blocks(x_gaussians, expansion)
     analytic_y = _qwrg_gaussian_analytic_blocks(y_gaussians, expansion)
     analytic_z = _qwrg_gaussian_analytic_blocks(z_gaussians, expansion)
+    # MWG pair factors are density-normalized kernel averages. The residual
+    # effective Gaussians are unnormalized primitives, so raw pair integrals
+    # must be divided by integral weights before the 3D products are assembled.
+    x_weights = _qwrg_supplement_integral_weights(x_gaussians)
+    y_weights = _qwrg_supplement_integral_weights(y_gaussians)
+    z_weights = _qwrg_supplement_integral_weights(z_gaussians)
+    pair_x_ga = _qwrg_density_normalized_pair_matrices(
+        pair_x.pair_ga,
+        pair_x.weight_gg,
+        x_weights;
+        label = "MWG x gausslet-residual",
+    )
+    pair_y_ga = _qwrg_density_normalized_pair_matrices(
+        pair_y.pair_ga,
+        pair_y.weight_gg,
+        y_weights;
+        label = "MWG y gausslet-residual",
+    )
+    pair_z_ga = _qwrg_density_normalized_pair_matrices(
+        pair_z.pair_ga,
+        pair_z.weight_gg,
+        z_weights;
+        label = "MWG z gausslet-residual",
+    )
+    pair_x_aa = _qwrg_density_normalized_pair_matrices(
+        analytic_x.pair_aa,
+        x_weights,
+        x_weights;
+        label = "MWG x residual-residual",
+    )
+    pair_y_aa = _qwrg_density_normalized_pair_matrices(
+        analytic_y.pair_aa,
+        y_weights,
+        y_weights;
+        label = "MWG y residual-residual",
+    )
+    pair_z_aa = _qwrg_density_normalized_pair_matrices(
+        analytic_z.pair_aa,
+        z_weights,
+        z_weights;
+        label = "MWG z residual-residual",
+    )
 
     ngausslet =
         size(bundle_x.pgdg_intermediate.overlap, 1) *
@@ -833,9 +875,9 @@ function _qwrg_mwg_interaction_components(
     for residual in 1:nresidual
         column = view(gausslet_residual, :, residual)
         for term in eachindex(expansion.coefficients)
-            fx = view(pair_x.pair_ga[term], :, residual)
-            fy = view(pair_y.pair_ga[term], :, residual)
-            fz = view(pair_z.pair_ga[term], :, residual)
+            fx = view(pair_x_ga[term], :, residual)
+            fy = view(pair_y_ga[term], :, residual)
+            fz = view(pair_z_ga[term], :, residual)
             _qwrg_fill_product_column!(scratch, fx, fy, fz)
             column .+= expansion.coefficients[term] .* scratch
         end
@@ -846,9 +888,9 @@ function _qwrg_mwg_interaction_components(
         value = 0.0
         for term in eachindex(expansion.coefficients)
             value += expansion.coefficients[term] *
-                analytic_x.pair_aa[term][i, j] *
-                analytic_y.pair_aa[term][i, j] *
-                analytic_z.pair_aa[term][i, j]
+                pair_x_aa[term][i, j] *
+                pair_y_aa[term][i, j] *
+                pair_z_aa[term][i, j]
         end
         residual_residual[i, j] = value
         residual_residual[j, i] = value

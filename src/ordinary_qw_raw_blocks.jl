@@ -174,6 +174,50 @@ function _qwrg_supplement_primitives_and_contraction(
     )
 end
 
+function _qwrg_supplement_integral_weights(supplement)
+    gaussians, contraction_matrix = _qwrg_supplement_primitives_and_contraction(supplement)
+    primitive_weights = Float64[integral_weight(gaussian) for gaussian in gaussians]
+    weights = vec(transpose(Matrix{Float64}(contraction_matrix)) * primitive_weights)
+    return weights
+end
+
+function _qwrg_validate_pair_density_weights(
+    weights::AbstractVector{<:Real},
+    label::AbstractString,
+)
+    for (index, weight) in pairs(weights)
+        weight_value = Float64(weight)
+        isfinite(weight_value) ||
+            throw(ArgumentError("$label pair-density normalization weight $index is not finite"))
+        abs(weight_value) > 1.0e-12 ||
+            throw(ArgumentError("$label pair-density normalization weight $index is near zero"))
+    end
+    return nothing
+end
+
+function _qwrg_density_normalized_pair_matrices(
+    matrices::AbstractVector{<:AbstractMatrix{<:Real}},
+    left_weights::AbstractVector{<:Real},
+    right_weights::AbstractVector{<:Real};
+    label::AbstractString,
+)
+    _qwrg_validate_pair_density_weights(left_weights, "$label left")
+    _qwrg_validate_pair_density_weights(right_weights, "$label right")
+    normalized = Vector{Matrix{Float64}}(undef, length(matrices))
+    for (index, matrix) in pairs(matrices)
+        size(matrix) == (length(left_weights), length(right_weights)) || throw(
+            DimensionMismatch("$label pair-density matrix dimensions must match normalization weights"),
+        )
+        normalized_matrix = zeros(Float64, size(matrix))
+        @inbounds for column in axes(matrix, 2), row in axes(matrix, 1)
+            denominator = Float64(left_weights[row]) * Float64(right_weights[column])
+            normalized_matrix[row, column] = Float64(matrix[row, column]) / denominator
+        end
+        normalized[index] = normalized_matrix
+    end
+    return normalized
+end
+
 _qwrg_gaussian_exponent(gaussian::Gaussian) =
     GaussianAnalyticIntegrals.gaussian_exponent(gaussian)
 
