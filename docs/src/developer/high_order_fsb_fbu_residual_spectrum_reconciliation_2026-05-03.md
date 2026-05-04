@@ -192,9 +192,9 @@ For the `count = 13`, side `13` spot check:
 - largest residual eigenvalue: `1.000e+00`
 - counts above thresholds: `1680, 1680, 1680`
 
-So the old “nonzero residual sector under distortion” story is not merely
-compatible with the current route. It is reproduced strongly once the target is
-the true local cube rather than the reduced transformed block.
+So the old “nonzero residual sector under distortion” story is not contradicted
+by the current route. Once the target is the true local cube rather than the
+reduced transformed block, a large residual sector remains.
 
 ### 5. Physical-x and debug-U do not separate in this audit
 
@@ -219,11 +219,18 @@ The tension is now resolved as follows:
 3. On that reduced target, FSB and FBU are exact to roundoff.
 4. On the true local distorted cube target, a large residual sector remains.
 
+But this audit does **not** reproduce the older distortion-defect homotopy.
+Here, the true-local-cube residual is already large at identity. So the old
+story of a small zero-at-identity residual that then grew with distortion is
+still historically unresolved.
+
 So `e768d3c` should be read narrowly and is superseded by this audit:
 
 - it established exactness only for the current reduced transformed-block
   target
 - it did **not** establish true distorted local-cube completeness
+- and it did not determine which historical target/construction produced the
+  older zero-at-identity homotopy
 
 ## Consequence for the recent He+ agreement
 
@@ -257,3 +264,6 @@ The corrected conclusion is:
   sector remains
 - therefore the older distorted residual-sector result is **not** contradicted
   by the recent reduced-target FSB/FBU studies
+- but the old small-at-identity homotopy is still not reconstructed here, so
+  the remaining open question is which historical target/construction produced
+  that behavior
