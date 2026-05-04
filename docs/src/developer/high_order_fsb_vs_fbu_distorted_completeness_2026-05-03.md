@@ -95,12 +95,12 @@ Two routes were measured:
 
 Driver:
 
-- [tmp/work/high_order_fsb_fbu_distortion_sweep.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep.jl)
+- `tmp/work/high_order_fsb_fbu_distortion_sweep.jl`
 
 Saved artifacts from the run:
 
-- [corrected TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.tsv)
-- [corrected text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.txt)
+- `tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.tsv`
+- `tmp/work/high_order_fsb_fbu_distortion_sweep_2026-05-03_165017.txt`
 
 ## Results
 

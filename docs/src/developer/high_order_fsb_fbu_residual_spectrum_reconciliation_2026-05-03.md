@@ -39,12 +39,10 @@ Main conclusion:
 
 ## Why this audit was needed
 
-The older note
-
-- [Residual Gausslet Hybrid Report](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/src/developer/residual_gausslet_hybrid_report_2026-04-27.md)
-
-recorded nonzero distorted residual spectra. For example, in the `11^3`,
-`n_s = 5` case, it reported:
+The older local report
+`docs/src/developer/residual_gausslet_hybrid_report_2026-04-27.md` recorded
+nonzero distorted residual spectra. For example, in the `11^3`, `n_s = 5`
+case, it reported:
 
 - side `9`: trace `2.061642e-03`, largest eigenvalue `1.245477e-04`
 - side `11`: trace `2.356384e-03`, largest eigenvalue `1.696710e-04`
@@ -106,18 +104,18 @@ This explicitly checks both:
 
 Driver:
 
-- [tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl)
+- `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl`
 
 Artifacts from the audit pass:
 
-- [TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.tsv)
-- [text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.txt)
+- `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.tsv`
+- `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.txt`
 
 The older reduced-target-only artifacts from `e768d3c` remain useful as a
 control:
 
-- [TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.tsv)
-- [text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.txt)
+- `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.tsv`
+- `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.txt`
 
 ## Results
 
