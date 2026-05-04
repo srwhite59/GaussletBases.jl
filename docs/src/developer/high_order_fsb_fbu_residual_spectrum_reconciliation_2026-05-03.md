@@ -2,44 +2,59 @@
 
 Date: 2026-05-03
 
-This note reconciles the tension between:
+This note supersedes the overly strong conclusion in commit `e768d3c`.
 
-- older residual reports that showed a real distorted residual sector, and
-- the recent bounded same-backend He+ study in which the **full-shell basis**
-  (FSB) and the **full-block union** (FBU) agreed to roundoff.
+That earlier pass correctly showed that the current **full-shell basis**
+(FSB) exactly spans the current reduced transformed-block target. But it did
+**not** test completeness against the true distorted local cube. The present
+audit separates those targets explicitly and shows that the older distorted
+residual-sector result is **not** contradicted.
 
-The result of the present pass is clear:
+## Summary
 
-- on the current physical-coordinate polynomial route, the old distorted
-  residual sector is **not** reproduced
-- shell-only and full-block-before-add residuals are large, as expected
-- but once the current physical shell is added, the full-block-after-add
-  residual collapses to numerical zero at every tested side
+Three distinct target notions must be kept separate:
 
-So, for the current physical route, the later He+ FSB/FBU roundoff agreement is
-fully explainable: the final FSB and FBU really are the same subspace to
-numerical precision in the bounded cases tested here.
+1. `reduced_physical_transformed_block`
+   - the current physical-coordinate transformed block built from the retained
+     `doside` one-dimensional span
+   - for `doside = 5`, side `11`, this has `125` raw columns
 
-## Why this pass was needed
+2. `debug_u_transformed_block`
+   - the older compatibility/debug transformed block
+   - in the bounded cases tested here, it has the same reduced target size and
+     behaves the same as the physical route when judged against the true local
+     cube
+
+3. `true_local_distorted_cube`
+   - the actual centered local cube in the parent basis
+   - for side `11`, this has `1331` raw columns
+
+Main conclusion:
+
+- `e768d3c` proved exactness only for the reduced transformed-block target
+- the new rank/null audit shows that the **full-block union** (FBU) and FSB are
+  exact for that reduced target, but still leave a large residual sector when
+  tested against the true local distorted cube
+- so the older distorted residual-sector story survives
+
+## Why this audit was needed
 
 The older note
 
 - [Residual Gausslet Hybrid Report](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/src/developer/residual_gausslet_hybrid_report_2026-04-27.md)
 
 recorded nonzero distorted residual spectra. For example, in the `11^3`,
-`n_s = 5` case, the distorted-shell hybrid reported:
+`n_s = 5` case, it reported:
 
 - side `9`: trace `2.061642e-03`, largest eigenvalue `1.245477e-04`
 - side `11`: trace `2.356384e-03`, largest eigenvalue `1.696710e-04`
 
-and the homotopy table showed monotone growth of the residual from the identity
-limit to the fully distorted case.
+The recent He+ FSB-versus-FBU sweep instead gave roundoff agreement. The risk
+was that these two results were answering different target questions.
 
-That older evidence was strong enough that a direct reconciliation was needed.
+That is exactly what the present audit confirms.
 
-## Construction used here
-
-This pass used the **current physical-coordinate polynomial route** throughout.
+## Construction audited here
 
 Parent / mapping family:
 
@@ -48,74 +63,44 @@ Parent / mapping family:
 
 Primary bounded case:
 
-- `count = 11`, `doside = 5`, sides `5,7,9,11`
+- `count = 11`, `doside = 5`, sides `5, 7, 9, 11`
 - scales:
   - `identity`
-  - `s/s0 = 1.0, 0.8, 0.6, 0.4, 0.2`
+  - `s/s0 = 1.0`
 
-Spot-check case:
+Spot check:
 
-- `count = 13`, `doside = 5`, sides `5,7,9,11,13`
+- `count = 13`, `doside = 5`, sides `5, 7, 9, 11, 13`
 - `s/s0 = 1.0`
 
-### FBU construction
+The current intended physical route was used for the working basis:
 
-For each side, the physical full block was built from:
+- physical full blocks from
+  `_experimental_high_order_physical_full_block_3d(...)`
+- physical shells accumulated into the FSB by metric projection and Lowdin
+  cleanup
 
-- `_experimental_high_order_physical_full_block_3d(...)`
+The debug route was retained only as a control:
 
-The final FBU was the overlap-metric-cleaned union of those physical full-block
-coefficient matrices.
+- `_experimental_high_order_tensor_shell_3d(...)`
 
-### FSB construction
+## What was measured
 
-The final FSB was built as:
+For each route, side, and target kind, the audit reported:
 
-1. the first physical full block
-2. then, for each larger side, the physical shell coefficients from that side
-3. each added after projection against the accumulated span and Lowdin cleanup
+- raw target column count
+- target Gram rank and spectrum before cleanup
+- FBU union raw column count
+- FBU union metric rank before cleanup
+- FBU cleaned dimension
+- FSB cleaned dimension
+- residual trace / largest eigenvalue / counts above `1e-8`, `1e-10`,
+  `1e-12` after projecting the target against the accumulated FSB span
 
-So this is the current intended physical-`x` shell/full construction, not the
-older compatibility/debug route.
+This explicitly checks both:
 
-## Residual targets that were distinguished
-
-To avoid collapsing different notions of “residual”, the pass measured three
-targets at each side:
-
-1. `full_block_before_add`
-   - residual of the current side’s physical full block against the accumulated
-     FSB span **before** adding the current shell
-
-2. `shell_only_before_add`
-   - residual of the current side’s physical shell coefficients against the
-     accumulated FSB span **before** adding the current shell
-
-3. `full_block_after_add`
-   - residual of the current side’s physical full block against the accumulated
-     FSB span **after** adding the current shell
-
-The last one is the most relevant comparison to the older distorted residual
-story, because it asks whether the current structured shell leaves any leftover
-full-block sector after being added.
-
-For each residual matrix `Y`, the Gram matrix
-
-`G = Y' S_parent Y`
-
-was analyzed, and the following were reported:
-
-- `trace(G)`
-- largest eigenvalue
-- counts above `1e-8`, `1e-10`, `1e-12`
-- target dimension
-- accumulated FSB dimension before/after the shell addition
-
-The final He+ metrics from the recent bounded study were also carried along:
-
-- `E_FSB - E_FBU`
-- FBU ground-state capture deficiency by FSB
-- final FSB/FBU cross-overlap error
+- whether the target itself is reduced or full-rank
+- whether FBU cleanup is discarding many redundant or null directions
 
 ## Driver and artifacts
 
@@ -123,142 +108,152 @@ Driver:
 
 - [tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl)
 
-Saved artifacts:
+Artifacts from the audit pass:
+
+- [TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.tsv)
+- [text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_175030.txt)
+
+The older reduced-target-only artifacts from `e768d3c` remain useful as a
+control:
 
 - [TSV table](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.tsv)
 - [text summary](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03_173141.txt)
 
-## Main results
+## Results
 
-### 1. The current shell does carry the new directions before it is added
+### 1. The “physical full block” at side 11 is reduced, not a true cube
 
-For the primary `count=11`, `doside=5` case, at every distorted scale:
+For `count = 11`, `doside = 5`, side `11`:
 
-- `shell_only_before_add` had trace very close to `98`
-- the largest eigenvalue was essentially `1`
-- there were `98` eigenvalues above all three thresholds
+- `reduced_physical_transformed_block`: `125` raw columns
+- `debug_u_transformed_block`: `125` raw columns
+- `true_local_distorted_cube`: `1331` raw columns
 
-So the new shell is not redundant before it is added. It carries a full
-rank-`98` new sector, just as one would expect.
+So the current physical “full block” is the full tensor product of the
+retained transformed one-dimensional block, not the true `11^3` local cube.
 
-Likewise:
+This is the key reason `e768d3c` was not yet a valid reconciliation.
 
-- `full_block_before_add` had trace around `93` to `98` for outer sides
-- and also had `98` eigenvalues above the thresholds
+### 2. FBU cleanup really is dropping many redundant directions
 
-So before the shell is added, the current full block also has a substantial
-missing sector relative to the accumulated FSB span.
+For `count = 11`, sides `5:2:11`:
 
-### 2. After shell addition, the current full block residual disappears
+- FBU raw union column count: `500`
+- FBU union metric rank before cleanup: `419`
+- FBU cleaned dimension: `419`
+- FSB cleaned dimension: `419`
 
-This is the decisive result.
+For `count = 13`, sides `5:2:13`:
 
-For every tested side and every tested scale:
+- FBU raw union column count: `625`
+- FBU union metric rank before cleanup: `517`
+- FBU cleaned dimension: `517`
+- FSB cleaned dimension: `517`
 
-- `full_block_after_add` had trace around `1e-27` to `1e-26`
-- largest eigenvalue around `1e-30` to `1e-27`
-- zero eigenvalues above `1e-12`
+So the raw FBU union carries many redundant directions before Lowdin cleanup.
+That was not checked in `e768d3c`, and it matters.
 
-Examples for `count=11`, `doside=5`, `s/s0 = 1.0`:
+### 3. Reduced transformed-block targets are still exact
 
-- side `7`, `full_block_after_add`
-  - trace `1.662e-26`
-  - largest eigenvalue `2.824e-27`
-  - counts above `1e-8`, `1e-10`, `1e-12`: `0, 0, 0`
+For both routes, both identity and distorted cases:
 
-- side `9`, `full_block_after_add`
-  - trace `1.522e-26`
-  - largest eigenvalue `3.192e-27`
-  - counts above thresholds: `0, 0, 0`
+- the residual against `reduced_physical_transformed_block` is numerical zero
+- the residual against `debug_u_transformed_block` is numerical zero
 
-- side `11`, `full_block_after_add`
+Example, `count = 11`, `doside = 5`, side `11`, `s/s0 = 1.0`:
+
+- reduced physical target:
   - trace `8.715e-27`
   - largest eigenvalue `2.660e-27`
-  - counts above thresholds: `0, 0, 0`
+  - counts above `1e-8`, `1e-10`, `1e-12`: `0, 0, 0`
 
-This same qualitative pattern held for:
+This confirms the narrow statement from `e768d3c`:
 
-- identity
-- all distorted homotopy points
-- the `count=13`, `s/s0=1.0` spot check
+- the current FSB exactly spans the current reduced transformed-block target
 
-### 3. Final FSB/FBU agreement stays at roundoff level
+### 4. The true local distorted cube leaves a large residual sector
 
-Because the post-add full-block residual vanishes, the final FSB/FBU agreement
-from the earlier bounded He+ note is no longer mysterious.
+This is the decisive audit result.
 
-For the `count=11` homotopy:
+For `count = 11`, `doside = 5`, side `11`, both identity and `s/s0 = 1.0`,
+and for both `physical_x` and `debug_u` routes:
 
-- max `|E_FSB - E_FBU| = 2.60e-14`
-- max FBU-state capture deficiency `= 1.22e-15`
-- final cross-overlap errors stayed around `1e-13` to `1e-12`
+- true local cube raw columns: `1331`
+- true local cube metric rank: `1331`
+- residual trace after projection against accumulated FSB: `9.120e+02`
+- largest residual eigenvalue: `1.000e+00`
+- counts above `1e-8`, `1e-10`, `1e-12`: `912, 912, 912`
 
-For the `count=13`, `s/s0=1.0` spot check:
+For the `count = 13`, side `13` spot check:
 
-- `|E_FSB - E_FBU| = 9.10e-15`
-- capture deficiency `= 1.55e-15`
-- final cross-overlap error `= 5.05e-13`
+- true local cube raw columns: `2197`
+- true local cube metric rank: `2197`
+- residual trace: `1.680e+03`
+- largest residual eigenvalue: `1.000e+00`
+- counts above thresholds: `1680, 1680, 1680`
 
-So the one-electron agreement is explained by the basis result itself:
+So the old “nonzero residual sector under distortion” story is not merely
+compatible with the current route. It is reproduced strongly once the target is
+the true local cube rather than the reduced transformed block.
 
-- after each shell is added, the current physical FSB already spans the current
-  physical full block
-- therefore the final FSB and FBU are the same subspace to numerical precision
+### 5. Physical-x and debug-U do not separate in this audit
 
-## Reconciliation with the older residual report
+In the bounded cases tested here:
 
-The older residual report showed a genuine distorted residual sector.
+- `physical_x` and `debug_u` are both exact on the reduced transformed-block
+  target
+- and both show the same large residual on the true local cube target
 
-The present pass shows that the **current physical-coordinate polynomial route**
-does not reproduce that behavior.
+So the current discrepancy is not “physical route versus debug route.” It is
+“reduced transformed-block target versus true local-cube target.”
 
-So the reconciliation is:
+## Reconciliation
 
-1. The older report was measuring a real residual sector for the construction
-   used at that time.
-2. The current physical route, as now implemented, does not leave a measurable
-   post-shell full-block residual in the bounded cases tested here.
-3. Therefore the current He+ FSB/FBU roundoff agreement is not surprising; it
-   follows directly from the current basis algebra.
+The tension is now resolved as follows:
 
-What remains uncertain is historical, not numerical:
+1. The older residual report was about completeness relative to a fuller local
+   cube notion, and it found a real distorted residual sector.
+2. The recent same-backend He+ FSB-versus-FBU sweep, and the earlier
+   `e768d3c` reconciliation, were effectively testing only the current reduced
+   transformed-block target.
+3. On that reduced target, FSB and FBU are exact to roundoff.
+4. On the true local distorted cube target, a large residual sector remains.
 
-- exactly which change between the older distorted-shell residual study and the
-  current physical route removed that post-shell residual sector
+So `e768d3c` should be read narrowly and is superseded by this audit:
 
-But the numerical reconciliation for the current code is now straightforward:
+- it established exactness only for the current reduced transformed-block
+  target
+- it did **not** establish true distorted local-cube completeness
 
-- the old distorted residual sector is **not** reproduced on the current
-  physical route
-- the current physical shell additions close the current physical full blocks
-  exactly to numerical resolution
+## Consequence for the recent He+ agreement
+
+The recent He+ FSB/FBU roundoff agreement is still explainable, but only in the
+reduced-target sense:
+
+- the current FSB and FBU agree because they span the same reduced transformed
+  block union
+- that says nothing by itself about completeness against the true local
+  distorted cube
+
+So the He+ agreement is not a contradiction of the older residual report. It is
+answering a narrower question.
 
 ## Performance note
 
-The pass stayed bounded as intended.
-
-Measured total per-case times were:
-
-- `count=11` homotopy points: about `1.19 s` to `2.42 s`
-- `count=13`, `s/s0=1.0` spot check: about `2.81 s`
-
-The code reused:
-
-- basis setup
-- axis data
-- parent overlap / one-body package
-- physical full blocks per case/scale
-
-so the pass remained cheap enough to run as a correctness diagnostic.
+This was a bounded scratch/docs audit with reused parent setup per case. The
+timings were acceptable for `count = 11` and the `count = 13` spot check, so no
+broader optimization work was needed here.
 
 ## Bottom line
 
-For the current physical-coordinate high-order route:
+The corrected conclusion is:
 
-- the shell-only and full-block-before-add residuals are real and large
-- but the full-block-after-add residual is numerically zero
-- therefore the final FSB and FBU agree to roundoff in the bounded cases tested
-
-So the recent He+ FSB/FBU roundoff agreement is still explainable, and it is
-explained by the current residual-spectrum result itself rather than by a
-transfer-metric artifact.
+- the current FSB exactly reproduces the current reduced transformed-block
+  target
+- the side `11` physical full block in that reduced sense has `125` columns,
+  not `1331`
+- FBU cleanup drops many redundant directions before final cleanup
+- when the target is the true local distorted cube, a large nonzero residual
+  sector remains
+- therefore the older distorted residual-sector result is **not** contradicted
+  by the recent reduced-target FSB/FBU studies
