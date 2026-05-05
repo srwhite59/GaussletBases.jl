@@ -109,27 +109,6 @@ function _hc_residual_diagnostics(residual::AbstractMatrix{<:Real})
     )
 end
 
-function _hc_regularized_pseudoinverse(
-    matrix::AbstractMatrix{<:Real};
-    regularization::Real,
-)
-    regularization_value = Float64(regularization)
-    regularization_value >= 0.0 ||
-        throw(ArgumentError("regularization must be nonnegative"))
-    decomposition = svd(Matrix{Float64}(matrix))
-    singular_values = Float64[Float64(value) for value in decomposition.S]
-    scale_cutoff =
-        isempty(singular_values) ? 0.0 : max(size(matrix)...) * eps(Float64) * maximum(singular_values)
-    cutoff = max(regularization_value, scale_cutoff)
-    rank = count(value -> value > cutoff, singular_values)
-    inverse_values = [
-        value > cutoff ? inv(value) : 0.0 for value in singular_values
-    ]
-    inverse_matrix =
-        decomposition.V * Diagonal(inverse_values) * transpose(decomposition.U)
-    return inverse_matrix, singular_values, rank
-end
-
 function _hc_qr_orthonormalize_columns(matrix::AbstractMatrix{<:Real})
     dense = Matrix{Float64}(matrix)
     column_count = size(dense, 2)
@@ -164,6 +143,38 @@ function egoi_target_product_matrix(Qtarget::AbstractMatrix{<:Real})
         product[:, (j - 1) * target_count + i] .= q[:, i] .* q[:, j]
     end
     return product
+end
+
+function _egoi_svd_delta_matrix(
+    product::AbstractMatrix{<:Real},
+    delta_target::AbstractMatrix{<:Real};
+    regularization::Real,
+)
+    regularization_value = Float64(regularization)
+    regularization_value >= 0.0 ||
+        throw(ArgumentError("regularization must be nonnegative"))
+    decomposition = svd(Matrix{Float64}(product))
+    singular_values = Float64[Float64(value) for value in decomposition.S]
+    right_vectors = decomposition.V
+    left_vectors = decomposition.U
+    transformed_target = transpose(right_vectors) * Matrix{Float64}(delta_target) * right_vectors
+    transformed_delta = zeros(Float64, length(singular_values), length(singular_values))
+    for nu in eachindex(singular_values), mu in eachindex(singular_values)
+        sigma_product = singular_values[mu] * singular_values[nu]
+        denominator = regularization_value + sigma_product^2
+        transformed_delta[mu, nu] =
+            denominator == 0.0 ? 0.0 :
+            transformed_target[mu, nu] * sigma_product / denominator
+    end
+    diagnostic_cutoff =
+        isempty(singular_values) ? 0.0 : max(size(product)...) * eps(Float64) * maximum(singular_values)
+    rank = count(value -> value > diagnostic_cutoff, singular_values)
+    return (
+        delta = _hc_symmetrize(left_vectors * transformed_delta * transpose(left_vectors)),
+        singular_values = singular_values,
+        rank = rank,
+        diagnostic_cutoff = diagnostic_cutoff,
+    )
 end
 
 function _egoi_gaussian_pair_transform(Ctarget::AbstractMatrix{<:Real})
@@ -214,7 +225,7 @@ space reproduces `exact_target` as closely as possible:
 `P' * (V + ΔV) * P ≈ exact_target`, where `P =
 egoi_target_product_matrix(Qtarget)`.
 
-The correction is confined to the span of `P` using a regularized pseudoinverse,
+The correction follows the CR2 smooth SVD regularization in the product basis,
 so rank-deficient product spaces are handled explicitly and reported in
 diagnostics.
 """
@@ -235,12 +246,9 @@ function egoi_density_density_correction(
     )
     initial_target = _hc_symmetrize(transpose(product) * interaction * product)
     target_residual_before = initial_target - target
-    product_inverse, singular_values, product_rank = _hc_regularized_pseudoinverse(
-        product;
-        regularization,
-    )
     delta_target = target - initial_target
-    delta_v = _hc_symmetrize(transpose(product_inverse) * delta_target * product_inverse)
+    svd_delta = _egoi_svd_delta_matrix(product, delta_target; regularization)
+    delta_v = svd_delta.delta
     corrected = _hc_symmetrize(interaction + delta_v)
     corrected_target = _hc_symmetrize(transpose(product) * corrected * product)
     target_residual_after = corrected_target - target
@@ -255,15 +263,12 @@ function egoi_density_density_correction(
         delta_v_fro = delta_diagnostics.fro,
         delta_v_relative_max = delta_diagnostics.relative_max,
         delta_v_relative_fro = delta_diagnostics.relative_fro,
-        product_rank = product_rank,
-        product_singular_values = singular_values,
-        product_min_singular_value = isempty(singular_values) ? 0.0 : minimum(singular_values),
-        product_max_singular_value = isempty(singular_values) ? 0.0 : maximum(singular_values),
+        product_rank = svd_delta.rank,
+        product_singular_values = svd_delta.singular_values,
+        product_min_singular_value = isempty(svd_delta.singular_values) ? 0.0 : minimum(svd_delta.singular_values),
+        product_max_singular_value = isempty(svd_delta.singular_values) ? 0.0 : maximum(svd_delta.singular_values),
         regularization = Float64(regularization),
-        effective_singular_cutoff = max(
-            Float64(regularization),
-            isempty(singular_values) ? 0.0 : max(size(product)...) * eps(Float64) * maximum(singular_values),
-        ),
+        diagnostic_singular_cutoff = svd_delta.diagnostic_cutoff,
     )
     return EGOIDensityDensityCorrectionResult(corrected, delta_v, diagnostics)
 end
@@ -271,8 +276,8 @@ end
 """
     projected_orbital_density(Qtarget, occupations)
 
-Return the density vector `sum_a occupations[a] * abs2(Qtarget[:, a])` in an
-orthonormal working basis.
+Return the full projected density matrix `sum_a occupations[a] * q_a*q_a'` in
+an orthonormal working basis.
 """
 function projected_orbital_density(
     Qtarget::AbstractMatrix{<:Real},
@@ -283,31 +288,36 @@ function projected_orbital_density(
     size(q, 2) == length(occupation_values) || throw(
         DimensionMismatch("occupation count must match target orbital count"),
     )
-    return Float64[
-        sum(occupation_values[column] * abs2(q[row, column]) for column in axes(q, 2))
-        for row in axes(q, 1)
-    ]
+    density = zeros(Float64, size(q, 1), size(q, 1))
+    for column in axes(q, 2)
+        orbital = @view q[:, column]
+        density .+= occupation_values[column] .* (orbital * transpose(orbital))
+    end
+    return _hc_symmetrize(density)
 end
 
 """
     density_density_restricted_fock(H, V, D)
 
-Build the density-density restricted Fock matrix `H + Diagonal(V * D)` in the
-repo two-index interaction convention. `D` is a working-basis density vector,
-typically from [`projected_orbital_density`](@ref).
+Build the density-density restricted Fock matrix
+`H + Diagonal(V * diag(D)) - 0.5 .* (D .* V)` in the repo two-index
+interaction convention. `D` is the full projected working-basis density matrix
+from [`projected_orbital_density`](@ref).
 """
 function density_density_restricted_fock(
     H::AbstractMatrix{<:Real},
     V::AbstractMatrix{<:Real},
-    D::AbstractVector{<:Real},
+    D::AbstractMatrix{<:Real},
 )
     h = _hc_symmetrize(H)
     interaction = _hc_symmetrize(V)
-    density = Float64[Float64(value) for value in D]
-    size(h, 1) == size(interaction, 1) == length(density) || throw(
+    density = _hc_symmetrize(D)
+    size(h) == size(interaction) == size(density) || throw(
         DimensionMismatch("H, V, and D dimensions must match"),
     )
-    return _hc_symmetrize(h + Diagonal(interaction * density))
+    hartree = Diagonal(interaction * diag(density))
+    exchange_like = 0.5 .* (density .* interaction)
+    return _hc_symmetrize(h + hartree - exchange_like)
 end
 
 """
@@ -462,7 +472,9 @@ end
         max_orbitals=64)
 
 Project selected Gaussian target orbitals into an ordinary Cartesian working
-basis and build their dense Gaussian exact Coulomb target matrix. This is a
+basis, normalize each projected column, and build their dense Gaussian exact
+Coulomb target matrix. Diagnostics retain the raw projected Gram/column norms
+and the normalized Gram so projection quality remains visible. This is a
 convenience adapter for the shared matrix correction layer, not a separate
 ordinary-specific correction model.
 """
@@ -488,7 +500,18 @@ function ordinary_cartesian_projected_gaussian_target(
     size(overlap, 2) == size(target_coefficients, 1) || throw(
         DimensionMismatch("Gaussian target coefficient row count must match supplement orbital count"),
     )
-    projected_orbitals = Matrix{Float64}(overlap * target_coefficients)
+    raw_projected_orbitals = Matrix{Float64}(overlap * target_coefficients)
+    raw_projected_gram = transpose(raw_projected_orbitals) * raw_projected_orbitals
+    raw_projected_norms = Float64[
+        norm(view(raw_projected_orbitals, :, column)) for column in axes(raw_projected_orbitals, 2)
+    ]
+    projected_orbitals = copy(raw_projected_orbitals)
+    for column in axes(projected_orbitals, 2)
+        raw_projected_norms[column] > 1.0e-14 || throw(
+            ArgumentError("projected Gaussian target column $(column) has near-zero norm"),
+        )
+        projected_orbitals[:, column] ./= raw_projected_norms[column]
+    end
     occupation_values =
         occupations === nothing ?
         ones(Float64, length(selected_indices)) :
@@ -502,13 +525,20 @@ function ordinary_cartesian_projected_gaussian_target(
         max_orbitals,
     )
     exact_target = egoi_target_coulomb_matrix(pair_coulomb, target_coefficients)
-    projected_overlap = transpose(projected_orbitals) * projected_orbitals
+    normalized_projected_gram = transpose(projected_orbitals) * projected_orbitals
+    normalized_projected_norms = Float64[
+        norm(view(projected_orbitals, :, i)) for i in axes(projected_orbitals, 2)
+    ]
     diagnostics = (
         selected_indices = Tuple(selected_indices),
         gaussian_orbital_count = size(coefficient_matrix, 1),
         target_count = length(selected_indices),
-        projected_overlap_error = norm(projected_overlap - I, Inf),
-        projected_column_norms = Float64[norm(view(projected_orbitals, :, i)) for i in axes(projected_orbitals, 2)],
+        raw_projected_gram = raw_projected_gram,
+        raw_projected_column_norms = raw_projected_norms,
+        normalized_projected_gram = normalized_projected_gram,
+        normalized_projected_column_norms = normalized_projected_norms,
+        projected_column_norms = normalized_projected_norms,
+        projected_overlap_error = norm(normalized_projected_gram - I, Inf),
         dense_pair_dimension = size(pair_coulomb, 1),
     )
     return OrdinaryProjectedHamiltonianCorrectionTarget(

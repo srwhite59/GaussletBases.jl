@@ -121,7 +121,11 @@ matrix `V`, target orbitals `Qtarget`, and an exact target pair-space Coulomb
 matrix.
 
 `egoi_density_density_correction` constructs a symmetric `ΔV` so the target
-orbital pair products reproduce the requested exact pair-space Coulomb matrix.
+orbital pair products reproduce the requested exact pair-space Coulomb matrix,
+using the smooth SVD regularization shared with the CR2 diagnostic prototype.
+`density_density_restricted_fock` uses the repo density-density convention
+`H + Diagonal(V * diag(D)) - 0.5 .* (D .* V)`, including the IDA-style
+exchange-like term from the full projected density matrix `D`.
 `stationary_fock_one_body_correction` QR-orthonormalizes the occupied target
 columns in the Euclidean working-basis metric and constructs a symmetric `Δh`
 that cancels the occupied-virtual Fock residual. This layer intentionally does
@@ -131,11 +135,12 @@ bases are assumed orthonormal.
 `ordinary_cartesian_projected_gaussian_target` and
 `ordinary_cartesian_egoi_stationary_correction` are convenience adapters for
 ordinary QW operator payloads. They use `gto_overlap_matrix` to project Gaussian
-target columns, `gaussian_coulomb_pair_matrix` to build the dense exact Gaussian
-target, `assembled_one_body_hamiltonian` for the branch one-body matrix, and the
-operator payload's stored density-density interaction. The result is a
-matrix-level `HamiltonianCorrectionResult`, not a new
-`OrdinaryCartesianOperators3D` payload.
+target columns, normalize those projected columns before correction, report the
+raw projected Gram/column norms and normalized Gram for projection-quality
+checks, `gaussian_coulomb_pair_matrix` to build the dense exact Gaussian target,
+`assembled_one_body_hamiltonian` for the branch one-body matrix, and the operator
+payload's stored density-density interaction. The result is a matrix-level
+`HamiltonianCorrectionResult`, not a new `OrdinaryCartesianOperators3D` payload.
 
 Large or cancellation-driven `Δh`/`ΔV` values are diagnostic red flags, not
 validation by themselves. EGOI product matrices and their SVD scale with the

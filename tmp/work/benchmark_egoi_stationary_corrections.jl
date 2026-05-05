@@ -22,6 +22,7 @@ function main()
     product = egoi_target_product_matrix(qtarget)
     exact_target = transpose(product) * (v + known_delta) * product
     occupations = [2.0, 2.0, 0.0]
+    density = projected_orbital_density(qtarget, occupations)
 
     GC.gc()
     timed = @timed egoi_stationary_hamiltonian_correction(
@@ -39,6 +40,7 @@ function main()
     println("ntarget=$(ntarget)")
     println("target_pair_count=$(ntarget^2)")
     @printf("time_s=%.6f alloc_mb=%.3f gc_s=%.6f\n", timed.time, timed.bytes / 1024^2, timed.gctime)
+    @printf("density_offdiag_fro=%.6e\n", norm(density - Diagonal(diag(density))))
     @printf("egoi_residual_max_after=%.6e\n", result.diagnostics.egoi.target_residual_max_after)
     @printf(
         "stationary_residual_max_after=%.6e\n",

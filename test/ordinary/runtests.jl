@@ -201,13 +201,28 @@ end
     ]
     product = egoi_target_product_matrix(Qtarget)
     exact_target = transpose(product) * (V + known_delta) * product
-    egoi = egoi_density_density_correction(V, Qtarget, exact_target)
+    regularization = 1.0e-18
+    egoi = egoi_density_density_correction(V, Qtarget, exact_target; regularization)
+    product_svd = svd(product)
+    delta_target = exact_target - transpose(product) * V * product
+    transformed_target = transpose(product_svd.V) * delta_target * product_svd.V
+    transformed_delta = zeros(Float64, length(product_svd.S), length(product_svd.S))
+    for nu in eachindex(product_svd.S), mu in eachindex(product_svd.S)
+        sigma_product = product_svd.S[mu] * product_svd.S[nu]
+        transformed_delta[mu, nu] =
+            transformed_target[mu, nu] *
+            sigma_product /
+            (regularization + sigma_product^2)
+    end
+    manual_delta_v = product_svd.U * transformed_delta * transpose(product_svd.U)
+    manual_delta_v = 0.5 .* (manual_delta_v .+ transpose(manual_delta_v))
 
     @test egoi isa EGOIDensityDensityCorrectionResult
     @test size(product) == (4, 4)
     @test product[:, 1] == Qtarget[:, 1] .* Qtarget[:, 1]
     @test product[:, 2] == Qtarget[:, 2] .* Qtarget[:, 1]
     @test product[:, 3] == Qtarget[:, 1] .* Qtarget[:, 2]
+    @test egoi.interaction_delta ≈ manual_delta_v atol = 1.0e-12 rtol = 0.0
     @test egoi.interaction_delta ≈ transpose(egoi.interaction_delta) atol = 1.0e-12 rtol = 0.0
     @test egoi.diagnostics.target_residual_fro_after <
           1.0e-10 * max(1.0, egoi.diagnostics.target_residual_fro_before)
@@ -244,6 +259,25 @@ end
     @test target_coulomb ≈ transpose(target_coulomb) atol = 1.0e-12 rtol = 0.0
     @test target_coulomb ≈ manual_target atol = 1.0e-12 rtol = 0.0
 
+    occupations_for_density = [1.5, 0.25]
+    density = projected_orbital_density(Qtarget, occupations_for_density)
+    manual_density =
+        occupations_for_density[1] .* (Qtarget[:, 1] * transpose(Qtarget[:, 1])) +
+        occupations_for_density[2] .* (Qtarget[:, 2] * transpose(Qtarget[:, 2]))
+    H = [
+        -1.0 0.2 0.0 -0.1
+        0.2 -0.7 0.3 0.05
+        0.0 0.3 -0.4 0.2
+        -0.1 0.05 0.2 -0.2
+    ]
+    literal_fock =
+        H + Diagonal(V * diag(manual_density)) - 0.5 .* (manual_density .* V)
+    restricted_fock = density_density_restricted_fock(H, V, density)
+    @test density ≈ manual_density atol = 1.0e-12 rtol = 0.0
+    @test norm(density - Diagonal(diag(density))) > 1.0e-3
+    @test restricted_fock ≈ 0.5 .* (literal_fock .+ transpose(literal_fock)) atol =
+          1.0e-12 rtol = 0.0
+
     Qocc = [
         1.0 0.2
         0.1 0.9
@@ -265,12 +299,6 @@ end
     @test stationary.one_body_delta ≈ transpose(stationary.one_body_delta) atol = 1.0e-12 rtol = 0.0
     @test stationary.diagnostics.occupied_virtual_residual_fro_after < 1.0e-12
 
-    H = [
-        -1.0 0.2 0.0 -0.1
-        0.2 -0.7 0.3 0.05
-        0.0 0.3 -0.4 0.2
-        -0.1 0.05 0.2 -0.2
-    ]
     occupations = [2.0, 0.0]
     combined = egoi_stationary_hamiltonian_correction(
         H,
@@ -330,6 +358,9 @@ end
     @test size(target.projected_orbitals, 1) == size(operators.overlap, 1)
     @test size(target.exact_target) == (1, 1)
     @test isfinite(target.diagnostics.projected_overlap_error)
+    @test target.diagnostics.raw_projected_column_norms[1] > 0.0
+    @test target.diagnostics.normalized_projected_column_norms ≈ [1.0] atol = 1.0e-12 rtol = 0.0
+    @test target.diagnostics.normalized_projected_gram ≈ reshape([1.0], 1, 1) atol = 1.0e-12 rtol = 0.0
     @test result isa HamiltonianCorrectionResult
     @test size(result.one_body_hamiltonian) == size(operators.one_body_hamiltonian)
     @test size(result.interaction_matrix) == size(operators.interaction_matrix)
