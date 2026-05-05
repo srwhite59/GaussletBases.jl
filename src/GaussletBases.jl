@@ -44,6 +44,20 @@ export AbstractFunction1D,
        write_cartesian_basis_bundle_jld2,
        gaussian_coulomb_pair_index,
        gaussian_coulomb_pair_matrix,
+       EGOIDensityDensityCorrectionResult,
+       StationaryFockCorrectionResult,
+       HamiltonianCorrectionResult,
+       OrdinaryProjectedHamiltonianCorrectionTarget,
+       egoi_target_product_matrix,
+       egoi_target_coulomb_matrix,
+       egoi_density_density_correction,
+       projected_orbital_density,
+       density_density_restricted_fock,
+       occupied_virtual_fock_residual,
+       stationary_fock_one_body_correction,
+       egoi_stationary_hamiltonian_correction,
+       ordinary_cartesian_projected_gaussian_target,
+       ordinary_cartesian_egoi_stationary_correction,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -479,6 +493,16 @@ function write_fullida_dense_jld2 end
 function write_sliced_ham_jld2 end
 function gaussian_factor_matrix end
 function gaussian_factor_matrices end
+function egoi_target_product_matrix end
+function egoi_target_coulomb_matrix end
+function egoi_density_density_correction end
+function projected_orbital_density end
+function density_density_restricted_fock end
+function occupied_virtual_fock_residual end
+function stationary_fock_one_body_correction end
+function egoi_stationary_hamiltonian_correction end
+function ordinary_cartesian_projected_gaussian_target end
+function ordinary_cartesian_egoi_stationary_correction end
 function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
@@ -600,6 +624,7 @@ include("ordinary_qw_corrections.jl")
 include("ordinary_qw_experimental_paths.jl")
 include("cartesian_basis_representation.jl")
 include("gaussian_coulomb_reference.jl")
+include("hamiltonian_corrections.jl")
 include("bond_aligned_diatomic_geometry.jl")
 include("bond_aligned_diatomic_geometry_export.jl")
 include("partitions.jl")

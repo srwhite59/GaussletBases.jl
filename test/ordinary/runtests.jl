@@ -180,6 +180,168 @@ end
     )
 end
 
+@testset "Shared EGOI and stationary Hamiltonian corrections" begin
+    Qtarget = [
+        1.0 0.2
+        0.1 0.9
+        0.7 -0.4
+        -0.3 0.5
+    ]
+    V = [
+        0.8 0.1 -0.2 0.0
+        0.1 1.1 0.3 -0.1
+        -0.2 0.3 0.9 0.2
+        0.0 -0.1 0.2 0.7
+    ]
+    known_delta = [
+        0.2 -0.05 0.01 0.03
+        -0.05 -0.1 0.04 0.02
+        0.01 0.04 0.08 -0.06
+        0.03 0.02 -0.06 0.05
+    ]
+    product = egoi_target_product_matrix(Qtarget)
+    exact_target = transpose(product) * (V + known_delta) * product
+    egoi = egoi_density_density_correction(V, Qtarget, exact_target)
+
+    @test egoi isa EGOIDensityDensityCorrectionResult
+    @test size(product) == (4, 4)
+    @test product[:, 1] == Qtarget[:, 1] .* Qtarget[:, 1]
+    @test product[:, 2] == Qtarget[:, 2] .* Qtarget[:, 1]
+    @test product[:, 3] == Qtarget[:, 1] .* Qtarget[:, 2]
+    @test egoi.interaction_delta ≈ transpose(egoi.interaction_delta) atol = 1.0e-12 rtol = 0.0
+    @test egoi.diagnostics.target_residual_fro_after <
+          1.0e-10 * max(1.0, egoi.diagnostics.target_residual_fro_before)
+    @test egoi.diagnostics.target_residual_max_after < 1.0e-10
+    @test egoi.diagnostics.product_rank > 0
+
+    pair_coulomb = [
+        1.0 0.2 0.2 0.4
+        0.2 0.7 0.3 0.1
+        0.2 0.3 0.7 0.1
+        0.4 0.1 0.1 0.9
+    ]
+    Ctarget = [
+        1.0 0.25
+        -0.2 0.8
+    ]
+    target_coulomb = egoi_target_coulomb_matrix(pair_coulomb, Ctarget)
+    manual_target = zeros(Float64, 4, 4)
+    for b in 1:2, a in 1:2, d in 1:2, c in 1:2
+        row = (b - 1) * 2 + a
+        column = (d - 1) * 2 + c
+        value = 0.0
+        for q in 1:2, p in 1:2, s in 1:2, r in 1:2
+            value +=
+                Ctarget[p, a] *
+                Ctarget[q, b] *
+                pair_coulomb[gaussian_coulomb_pair_index(p, q, 2), gaussian_coulomb_pair_index(r, s, 2)] *
+                Ctarget[r, c] *
+                Ctarget[s, d]
+        end
+        manual_target[row, column] = value
+    end
+    @test size(target_coulomb) == (4, 4)
+    @test target_coulomb ≈ transpose(target_coulomb) atol = 1.0e-12 rtol = 0.0
+    @test target_coulomb ≈ manual_target atol = 1.0e-12 rtol = 0.0
+
+    Qocc = [
+        1.0 0.2
+        0.1 0.9
+        0.5 -0.3
+        -0.4 0.6
+    ]
+    F = [
+        0.6 0.4 -0.2 0.1
+        0.4 0.3 0.5 -0.3
+        -0.2 0.5 0.7 0.2
+        0.1 -0.3 0.2 0.4
+    ]
+    residual_before = occupied_virtual_fock_residual(F, Qocc)
+    stationary = stationary_fock_one_body_correction(F, Qocc)
+    residual_after = occupied_virtual_fock_residual(stationary.fock_matrix, Qocc)
+    @test stationary isa StationaryFockCorrectionResult
+    @test norm(residual_before) > 1.0e-8
+    @test norm(residual_after) < 1.0e-12
+    @test stationary.one_body_delta ≈ transpose(stationary.one_body_delta) atol = 1.0e-12 rtol = 0.0
+    @test stationary.diagnostics.occupied_virtual_residual_fro_after < 1.0e-12
+
+    H = [
+        -1.0 0.2 0.0 -0.1
+        0.2 -0.7 0.3 0.05
+        0.0 0.3 -0.4 0.2
+        -0.1 0.05 0.2 -0.2
+    ]
+    occupations = [2.0, 0.0]
+    combined = egoi_stationary_hamiltonian_correction(
+        H,
+        V,
+        Qtarget,
+        exact_target,
+        occupations,
+    )
+    @test combined isa HamiltonianCorrectionResult
+    @test combined.diagnostics.include_egoi
+    @test combined.diagnostics.include_stationary
+    @test combined.diagnostics.egoi.target_residual_max_after < 1.0e-10
+    @test combined.diagnostics.stationary.occupied_virtual_residual_max_after < 1.0e-12
+    @test combined.one_body_hamiltonian ≈ transpose(combined.one_body_hamiltonian) atol = 1.0e-12 rtol = 0.0
+    @test combined.interaction_matrix ≈ transpose(combined.interaction_matrix) atol = 1.0e-12 rtol = 0.0
+    @test combined.one_body_delta ≈ combined.one_body_hamiltonian - H atol = 1.0e-12 rtol = 0.0
+    @test combined.interaction_delta ≈ combined.interaction_matrix - V atol = 1.0e-12 rtol = 0.0
+end
+
+@testset "Ordinary QW EGOI/stationary correction adapter smoke" begin
+    Z = 2.0
+    basis = build_basis(MappedUniformBasisSpec(
+        :G10;
+        count = 5,
+        mapping = white_lindsey_atomic_mapping(Z = Z, d = 0.2, tail_spacing = 10.0),
+        reference_spacing = 1.0,
+    ))
+    supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
+    expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis,
+        supplement;
+        expansion,
+        Z = Z,
+        interaction_treatment = :ggt_nearest,
+        residual_keep_policy = :near_null_only,
+    )
+    gaussian_count = length(basis_representation(supplement).orbitals)
+    coefficients = zeros(Float64, gaussian_count, 1)
+    coefficients[1, 1] = 1.0
+    target = ordinary_cartesian_projected_gaussian_target(
+        operators,
+        supplement,
+        coefficients;
+        occupations = [2.0],
+        expansion,
+        max_orbitals = 8,
+    )
+    result = ordinary_cartesian_egoi_stationary_correction(
+        operators;
+        target,
+        include_egoi = true,
+        include_stationary = true,
+    )
+
+    @test target isa OrdinaryProjectedHamiltonianCorrectionTarget
+    @test size(target.projected_orbitals, 1) == size(operators.overlap, 1)
+    @test size(target.exact_target) == (1, 1)
+    @test isfinite(target.diagnostics.projected_overlap_error)
+    @test result isa HamiltonianCorrectionResult
+    @test size(result.one_body_hamiltonian) == size(operators.one_body_hamiltonian)
+    @test size(result.interaction_matrix) == size(operators.interaction_matrix)
+    @test result.one_body_hamiltonian ≈ transpose(result.one_body_hamiltonian) atol = 1.0e-10 rtol = 0.0
+    @test result.interaction_matrix ≈ transpose(result.interaction_matrix) atol = 1.0e-10 rtol = 0.0
+    @test all(isfinite, result.one_body_delta)
+    @test all(isfinite, result.interaction_delta)
+    @test result.diagnostics.egoi.target_residual_max_after < 1.0e-8
+    @test result.diagnostics.stationary.occupied_virtual_residual_max_after < 1.0e-8
+    @test result.diagnostics.ordinary_adapter.overlap_error < 1.0e-8
+end
+
 @testset "Ordinary QW localized diatomic branch correction selector" begin
     basis = bond_aligned_homonuclear_qw_basis(
         bond_length = 1.4,

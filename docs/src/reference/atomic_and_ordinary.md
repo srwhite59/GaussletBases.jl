@@ -74,6 +74,20 @@ gto_overlap_matrix
 gto_occupancy_matrix
 gaussian_coulomb_pair_index
 gaussian_coulomb_pair_matrix
+EGOIDensityDensityCorrectionResult
+StationaryFockCorrectionResult
+HamiltonianCorrectionResult
+OrdinaryProjectedHamiltonianCorrectionTarget
+egoi_target_product_matrix
+egoi_target_coulomb_matrix
+egoi_density_density_correction
+projected_orbital_density
+density_density_restricted_fock
+occupied_virtual_fock_residual
+stationary_fock_one_body_correction
+egoi_stationary_hamiltonian_correction
+ordinary_cartesian_projected_gaussian_target
+ordinary_cartesian_egoi_stationary_correction
 GaussletBases.ordinary_cartesian_1s2_check
 ordinary_cartesian_vee_expectation
 ```
@@ -96,6 +110,38 @@ large-system ERI backend. It is intended for small Gaussian references,
 stationary-Fock/EGOI diagnostics, and residual-Gaussian interaction validation.
 The flattened pair index is `(p - 1) * n + q`, exposed as
 `gaussian_coulomb_pair_index(p, q, n)`.
+
+## Shared EGOI and stationary-Fock corrections
+
+The shared matrix-level correction layer provides small dense Hamiltonian
+utilities for EGOI density-density corrections and stationary-Fock one-body
+corrections. These routines are basis-agnostic: they operate on an orthonormal
+working-basis one-body matrix `H`, a two-index density-density interaction
+matrix `V`, target orbitals `Qtarget`, and an exact target pair-space Coulomb
+matrix.
+
+`egoi_density_density_correction` constructs a symmetric `ΔV` so the target
+orbital pair products reproduce the requested exact pair-space Coulomb matrix.
+`stationary_fock_one_body_correction` QR-orthonormalizes the occupied target
+columns in the Euclidean working-basis metric and constructs a symmetric `Δh`
+that cancels the occupied-virtual Fock residual. This layer intentionally does
+not expose a generalized metric-overlap API; final correction-stage working
+bases are assumed orthonormal.
+
+`ordinary_cartesian_projected_gaussian_target` and
+`ordinary_cartesian_egoi_stationary_correction` are convenience adapters for
+ordinary QW operator payloads. They use `gto_overlap_matrix` to project Gaussian
+target columns, `gaussian_coulomb_pair_matrix` to build the dense exact Gaussian
+target, `assembled_one_body_hamiltonian` for the branch one-body matrix, and the
+operator payload's stored density-density interaction. The result is a
+matrix-level `HamiltonianCorrectionResult`, not a new
+`OrdinaryCartesianOperators3D` payload.
+
+Large or cancellation-driven `Δh`/`ΔV` values are diagnostic red flags, not
+validation by themselves. EGOI product matrices and their SVD scale with the
+working-basis dimension times the target-pair count; dense Gaussian exact
+targets remain `N^4` small-reference utilities rather than production
+large-system ERI machinery.
 
 ## Hydrogenic core corrections
 
