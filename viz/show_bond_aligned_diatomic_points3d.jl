@@ -428,8 +428,14 @@ function _geometry_bounds_3d(payload::GeometryPayload3D)
 end
 
 function _load_glmakie()
-    isdefined(Main, :GLMakie) || Core.eval(Main, :(using GLMakie))
-    return getfield(Main, :GLMakie)
+    if !isdefined(@__MODULE__, :GLMakie)
+        throw(
+            ArgumentError(
+                "GLMakie must be loaded before opening the 3D viewer; run the viz/showpoints3d.jl or viz/showpath3d.jl wrapper, or call `using GLMakie` before including this file. Metadata-only `--describe` mode does not require GLMakie.",
+            ),
+        )
+    end
+    return getfield(@__MODULE__, :GLMakie)
 end
 
 function render_bond_aligned_diatomic_points3d(
