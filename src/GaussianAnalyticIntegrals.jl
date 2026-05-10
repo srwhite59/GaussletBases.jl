@@ -312,14 +312,9 @@ function polynomial_gaussian_basic_integral(
 end
 
 function polynomial_gaussian_derivative_terms(power::Int, exponent::Float64)
+    power >= 0 || throw(ArgumentError("polynomial Gaussian derivative power must be nonnegative"))
     power == 0 && return ((1, -2.0 * exponent),)
-    power == 1 && return ((0, 1.0), (2, -2.0 * exponent))
-    power == 2 && return ((1, 2.0), (3, -2.0 * exponent))
-    throw(
-        ArgumentError(
-            "polynomial Gaussian derivative terms currently support only powers 0, 1, and 2",
-        ),
-    )
+    return ((power - 1, Float64(power)), (power + 1, -2.0 * exponent))
 end
 
 function polynomial_gaussian_kinetic_integral(

@@ -5,9 +5,9 @@
 This is a narrow repo-support note for the chromium / `Cr2` line.
 
 It records the current ordinary/hybrid Cartesian capability relevant to an
-atomic Cr comparison, the actual blocker that was present in the live repo, and
-the minimum viable extension that makes the atomic test scientifically honest
-without overbuilding for the later two-atom case.
+atomic Cr comparison and the historical blocker that shaped the first atomic
+Cartesian extension. The live atomic QW route now reaches `lmax <= 6`; the
+molecular route remains narrower.
 
 ## Present capability
 
@@ -53,23 +53,24 @@ surface.
 
 This is the scientifically relevant atomic Cartesian comparison path. It now
 uses the explicit atomic-centered 3D Cartesian shell representation for all
-active atomic supplement content up to `lmax = 2`, including pure `s` shells.
+active atomic supplement content up to `lmax = 6`, including pure `s` shells.
 
 After the present pass, the atomic QW path now supports:
 
 - `lmax = 0`: `s`
 - `lmax = 1`: `s, p_x, p_y, p_z`
 - `lmax = 2`: `s, p_x, p_y, p_z, dxx, dyy, dzz, dxy, dxz, dyz`
+- `lmax = 3..6`: deterministic Cartesian monomial shells through `f/g/h/i`
 
 The separate two-center molecular shell route remains intentionally narrower
 for now and still stops at `lmax <= 1`.
 
-## Actual blocker
+## Historical blocker
 
 For an atomic Cr Cartesian comparison, the live blocker was **not** the legacy
 loader itself.
 
-The real blocker was that the active atomic ordinary-QW shell route stopped at
+The original blocker was that the active atomic ordinary-QW shell route stopped at
 `lmax <= 1`, even though the current Cr atom scientific contract is already
 centered on the checked `lmax = 2` atomic referee.
 
@@ -92,13 +93,12 @@ That meant:
 
 ## Minimum viable extension for Cr atom testing
 
-The minimum viable repo extension is:
+The original minimum viable repo extension was:
 
 - keep the vendored basis library narrow
 - rely on `basisfile = ...` or `GAUSSLETBASES_BASISSETS_PATH` for the actual Cr
   basis block
-- extend only the **atomic** explicit 3D Cartesian shell route from `lmax <= 1`
-  to `lmax <= 2`
+- extend only the **atomic** explicit 3D Cartesian shell route first
 - do **not** broaden the separate one-dimensional hybrid builder
 - do **not** broaden the two-center molecular shell route yet
 
@@ -107,7 +107,8 @@ That is the correct first move because the first chromium question is atomic:
 - can the repo build an honest atomic Cartesian QW comparison on the same
   low-`l` footing as the checked Cr atom `Ylm` referee?
 
-For that question, `d` support is the decisive missing ingredient.
+For that first question, `d` support was the decisive missing ingredient. The
+same atomic route now supports higher Cartesian shells through `i`.
 
 ## What was changed in this pass
 
@@ -119,9 +120,12 @@ Atomic-only `d` support was added on the explicit QW shell route:
 - `src/ordinary_qw_raw_blocks.jl`
   - atomic shell derivative helper now supports powers `0, 1, 2`
 
-Scope boundary kept explicit:
+Follow-up high-`l` support later raised the same atomic explicit shell route to
+`lmax <= 6` and generalized the analytic polynomial-Gaussian derivative terms.
 
-- atomic ordinary-QW / nested-QW: now through `lmax <= 2`
+Scope boundary remains explicit:
+
+- atomic ordinary-QW / nested-QW: now through `lmax <= 6`
 - one-dimensional hybrid builder: still `s`-only
 - bond-aligned molecular shell supplement route: still `lmax <= 1`
 
@@ -133,12 +137,13 @@ The correct first repo-side Cr Cartesian test is:
 
 - atomic ordinary-QW Cartesian route
 - external Cr basis block supplied through `basisfile = ...`
-- `legacy_atomic_gaussian_supplement("Cr", basis_name; lmax = 2, basisfile = ...)`
+- `legacy_atomic_gaussian_supplement("Cr", basis_name; lmax = ..., basisfile = ...)`
+  with the requested atomic shell ceiling up to `6`
 - `ordinary_cartesian_qiu_white_operators(...)`
 
 That is the first scientifically meaningful atomic Cartesian comparison because
-it matches the current Cr atom low-`l` contract much more closely than the
-older centered separable hybrid branch.
+it uses the current atomic Cartesian shell route rather than the older centered
+separable hybrid branch.
 
 ## Atom versus later two-atom scope
 

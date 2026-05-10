@@ -2619,7 +2619,7 @@ This is a reference path for validating the Qiu-White formulation, not yet a
 claim that the ordinary branch is solver-ready.
 
 This path now uses the explicit atomic-centered 3D Cartesian shell route for
-all active atomic supplement content up to `lmax <= 2`, including pure `s`
+all active atomic supplement content up to `lmax <= 6`, including pure `s`
 shells.
 
 `nested_profile` selects the shell/working-box geometry contract. It is
@@ -2686,7 +2686,7 @@ This first adapter is intentionally narrow:
   residual interaction route, with `:ggt_nearest` retained as fallback/debug
 
 It now uses the explicit atomic-centered 3D Cartesian shell route for all
-active atomic supplement content up to `lmax <= 2`, including pure `s`
+active atomic supplement content up to `lmax <= 6`, including pure `s`
 shells.
 
 `nested_profile` selects the shell/working-box geometry contract. It is

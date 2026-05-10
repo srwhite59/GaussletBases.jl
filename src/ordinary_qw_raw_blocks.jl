@@ -267,13 +267,6 @@ function _qwrg_atomic_basic_integral(
 end
 
 function _qwrg_atomic_derivative_terms(power::Int, exponent::Float64)
-    if !(power in (0, 1, 2))
-        throw(
-            ArgumentError(
-                "atomic shell derivative terms currently support only powers 0, 1, and 2",
-            ),
-        )
-    end
     return GaussianAnalyticIntegrals.polynomial_gaussian_derivative_terms(power, exponent)
 end
 
@@ -287,13 +280,6 @@ function _qwrg_atomic_kinetic_integral(
     power_right::Int,
     prefactor_right::Float64,
 )
-    if !(power_left in (0, 1, 2)) || !(power_right in (0, 1, 2))
-        throw(
-            ArgumentError(
-                "atomic shell derivative terms currently support only powers 0, 1, and 2",
-            ),
-        )
-    end
     return GaussianAnalyticIntegrals.polynomial_gaussian_kinetic_integral(
         alpha_left,
         center_left,

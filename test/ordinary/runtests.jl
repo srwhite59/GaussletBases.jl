@@ -3779,6 +3779,97 @@ end
     end
 end
 
+@testset "Atomic high-l Cartesian Gaussian supplements build through lmax=6" begin
+    high_l_basis_text =
+        "#BASIS SET: He repo-spdfghi\n" *
+        "He    S\n" *
+        "      1.2000000              1.0000000\n" *
+        "He    P\n" *
+        "      1.0500000              1.0000000\n" *
+        "He    D\n" *
+        "      0.9000000              1.0000000\n" *
+        "He    F\n" *
+        "      0.7500000              1.0000000\n" *
+        "He    G\n" *
+        "      0.6000000              1.0000000\n" *
+        "He    H\n" *
+        "      0.4500000              1.0000000\n" *
+        "He    I\n" *
+        "      0.3000000              1.0000000\n" *
+        "END\n"
+    cartesian_shell_count(lmax) = sum((l + 1) * (l + 2) ÷ 2 for l in 0:lmax)
+
+    mktemp() do path, io
+        write(io, high_l_basis_text)
+        close(io)
+
+        probe_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = fit_asinh_mapping_for_strength(s = 0.8, npoints = 5, xmax = 4.0),
+            reference_spacing = 1.0,
+        ))
+
+        for lmax in (3, 4, 6)
+            supplement = legacy_atomic_gaussian_supplement(
+                "He",
+                "repo-spdfghi";
+                lmax,
+                basisfile = path,
+            )
+            supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
+            representation = basis_representation(supplement)
+            expected_count = cartesian_shell_count(lmax)
+            overlap = gto_overlap_matrix(probe_basis, supplement)
+            occupancy = gto_occupancy_matrix(probe_basis, supplement)
+
+            @test supplement.lmax == lmax
+            @test length(supplement.shells) == lmax + 1
+            @test length(supplement3d.orbitals) == expected_count
+            @test length(representation.orbitals) == expected_count
+            @test maximum(sum(orbital.angular_powers) for orbital in representation.orbitals) == lmax
+            @test size(overlap) == (length(probe_basis)^3, expected_count)
+            @test all(isfinite, overlap)
+            @test occupancy ≈ overlap * transpose(overlap) atol = 1.0e-12 rtol = 1.0e-12
+            @test occupancy ≈ transpose(occupancy) atol = 1.0e-12 rtol = 0.0
+        end
+
+        lmax6 = legacy_atomic_gaussian_supplement(
+            "He",
+            "repo-spdfghi";
+            lmax = 6,
+            basisfile = path,
+        )
+        lmax6_cartesian = GaussletBases._atomic_cartesian_shell_supplement_3d(lmax6)
+        @test any(orbital -> orbital.label == "f_x3_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "g_x4_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "h_x5_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "i_x6_1", lmax6_cartesian.orbitals)
+
+        source_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 3,
+            mapping = fit_asinh_mapping_for_strength(s = 0.8, npoints = 3, xmax = 3.0),
+            reference_spacing = 1.0,
+        ))
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 1)
+        operators = ordinary_cartesian_qiu_white_operators(
+            source_basis,
+            lmax6;
+            expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            residual_keep_policy = :near_null_only,
+        )
+        check = GaussletBases.ordinary_cartesian_1s2_check(operators)
+
+        @test operators.gaussian_data isa LegacyAtomicGaussianSupplement
+        @test operators.residual_count >= 0
+        @test norm(operators.overlap - I, Inf) < 1.0e-8
+        @test check.overlap_error < 1.0e-8
+        @test isfinite(check.orbital_energy)
+        @test isfinite(check.vee_expectation)
+    end
+end
+
 @testset "Legacy He s hybrid supplement check" begin
     if !_legacy_basisfile_available()
         @test true

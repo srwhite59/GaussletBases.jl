@@ -38,7 +38,7 @@ about the current consumer split:
   channel and rejects non-`s` shells
 - the ordinary-QW and nested-QW atomic paths can now consume the full shell
   metadata through an explicit atomic-centered 3D Cartesian shell route for
-  `lmax <= 2`
+  `lmax <= 6`
 - the narrower two-center molecular QW routes remain intentionally smaller for
   now and still stop at `lmax <= 1`
 
@@ -71,6 +71,9 @@ struct LegacyAtomicGaussianSupplement
 end
 
 const LegacySGaussianData = LegacyAtomicGaussianSupplement
+
+const _LEGACY_ATOMIC_CARTESIAN_MAX_L = 6
+const _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L = 1
 
 """
     LegacyBondAlignedDiatomicGaussianSupplement
@@ -182,14 +185,36 @@ function _atomic_cartesian_shell_labels(l::Int)
         ("dxz", (1, 0, 1)),
         ("dyz", (0, 1, 1)),
     ]
-    throw(ArgumentError("atomic Cartesian shell support currently stops at l = 2"))
+    0 <= l <= _LEGACY_ATOMIC_CARTESIAN_MAX_L || throw(
+        ArgumentError("atomic Cartesian shell support currently stops at l = $_LEGACY_ATOMIC_CARTESIAN_MAX_L"),
+    )
+    entries = Tuple{String,Tuple{Int,Int,Int}}[]
+    for nonzero_count in 1:3
+        for lx in reverse(0:l), ly in reverse(0:(l - lx))
+            lz = l - lx - ly
+            powers = (lx, ly, lz)
+            count(power -> power != 0, powers) == nonzero_count || continue
+            push!(entries, (_atomic_cartesian_monomial_label(l, powers), powers))
+        end
+    end
+    return entries
+end
+
+function _atomic_cartesian_monomial_label(l::Int, powers::NTuple{3,Int})
+    shell_letter = ("s", "p", "d", "f", "g", "h", "i")[l + 1]
+    axis_pieces = String[]
+    for (axis_label, power) in zip(("x", "y", "z"), powers)
+        power == 0 && continue
+        push!(axis_pieces, power == 1 ? axis_label : string(axis_label, power))
+    end
+    return string(shell_letter, "_", join(axis_pieces), "_")
 end
 
 function _atomic_cartesian_shell_supplement_3d(
     data::LegacyAtomicGaussianSupplement,
 )
-    any(shell -> shell.l > 2, data.shells) && throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= 2"),
+    any(shell -> shell.l > _LEGACY_ATOMIC_CARTESIAN_MAX_L, data.shells) && throw(
+        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= $_LEGACY_ATOMIC_CARTESIAN_MAX_L"),
     )
     center_value =
         isempty(data.primitive_gaussians) ? 0.0 : Float64(data.primitive_gaussians[1].center_value)
@@ -263,8 +288,14 @@ function _bond_aligned_two_center_cartesian_orbitals(
     nuclei::AbstractVector{<:NTuple{3,<:Real}},
     max_width::Union{Nothing, Real} = nothing,
 )
-    any(source -> any(shell -> shell.l > 1, source.shells), atomic_sources) && throw(
-        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently supports only lmax <= 1"),
+    any(
+        source -> any(
+            shell -> shell.l > _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L,
+            source.shells,
+        ),
+        atomic_sources,
+    ) && throw(
+        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently supports only lmax <= $_LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L"),
     )
     length(nuclei) == 2 || throw(
         ArgumentError("bond-aligned diatomic Cartesian shell supplement currently expects exactly two nuclear centers"),
@@ -678,7 +709,7 @@ The basis-file lookup order is:
 3. vendored repo copy at `data/legacy/BasisSets`
 4. legacy fallback `~/BasisSets`
 
-For atomic ordinary-QW and nested-QW, all shell content up to `lmax = 2`,
+For atomic ordinary-QW and nested-QW, all shell content up to `lmax = 6`,
 including pure `s` shells, is now consumed through an explicit atomic-centered
 3D Cartesian shell supplement route. The one-dimensional hybrid builder remains
 honestly `s`-only, and the separate two-center molecular shell route remains
