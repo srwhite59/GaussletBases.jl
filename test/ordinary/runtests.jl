@@ -3180,6 +3180,14 @@ end
             "      1.1000000              1.0000000\n" *
             "H    P\n" *
             "      0.7000000              1.0000000\n" *
+            "END\n" *
+            "#BASIS SET: He repo-dz\n" *
+            "He    S\n" *
+            "     38.3600000              0.0238090\n" *
+            "      5.7700000              0.1548910\n" *
+            "      1.2400000              0.4699870\n" *
+            "He    S\n" *
+            "      0.2976000              1.0000000\n" *
             "END\n",
         )
         close(io)
@@ -3242,6 +3250,33 @@ end
         @test occursin("not implemented yet", sprint(showerror, shell_equalized_error))
 
         expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        contracted_supplement = legacy_atomic_gaussian_supplement(
+            "He",
+            "repo-dz";
+            lmax = 0,
+            basisfile = path,
+        )
+        contracted_representation = basis_representation(contracted_supplement)
+        contracted_metric = GaussletBases._cartesian_supplement_cross_overlap(
+            contracted_representation,
+            contracted_representation,
+        )
+        contracted_ops = ordinary_cartesian_qiu_white_operators(
+            basis,
+            contracted_supplement;
+            expansion,
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        contracted_raw = GaussletBases._cartesian_raw_components(basis_representation(contracted_ops))
+        contracted_overlap = gto_overlap_matrix(basis, contracted_supplement)
+        @test [orbital.label for orbital in contracted_representation.orbitals] == ["s1", "s2"]
+        @test diag(contracted_metric) ≈ [1.4308416050163905, 1.0] atol = 1.0e-12 rtol = 1.0e-12
+        @test norm(
+            contracted_overlap - contracted_raw.exact_cartesian_supplement_overlap,
+            Inf,
+        ) < 1.0e-12
+
         s_supplement = legacy_atomic_gaussian_supplement(
             "He",
             "repo-sp";

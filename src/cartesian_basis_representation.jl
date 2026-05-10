@@ -802,49 +802,43 @@ function _cartesian_parent_cross_overlap(
     return raw_cross
 end
 
-function _cartesian_basis_supplement_axis_cross(
+function _cartesian_basis_supplement_axis_primitive_cross(
     basis::BasisRepresentation1D,
-    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    orbital::CartesianGaussianShellOrbitalRepresentation3D,
     axis::Symbol,
 )
-    isempty(supplement.orbitals) && return zeros(Float64, size(basis.coefficient_matrix, 2), 0)
     basis_primitives = collect(primitives(primitive_set(basis)))
     all(primitive -> primitive isa Gaussian, basis_primitives) || throw(
         ArgumentError(
             "exact hybrid cartesian-supplement overlap currently requires Gaussian 1D primitives on the Cartesian axis representation",
         ),
     )
-    primitive_cross = zeros(Float64, length(basis_primitives), length(supplement.orbitals))
-    for (column, orbital) in pairs(supplement.orbitals)
-        center_value =
-            axis == :x ? orbital.center[1] :
-            axis == :y ? orbital.center[2] :
-            axis == :z ? orbital.center[3] :
-            throw(ArgumentError("axis must be :x, :y, or :z"))
-        power =
-            axis == :x ? orbital.angular_powers[1] :
-            axis == :y ? orbital.angular_powers[2] :
-            axis == :z ? orbital.angular_powers[3] :
-            throw(ArgumentError("axis must be :x, :y, or :z"))
-        for (row, primitive) in pairs(basis_primitives)
-            alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
-            value = 0.0
-            for index in eachindex(orbital.exponents)
-                exponent = Float64(orbital.exponents[index])
-                coefficient = Float64(orbital.coefficients[index])
-                prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
-                value += coefficient * _qwrg_atomic_basic_integral(
-                    alpha_basis,
-                    primitive.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor,
-                )
-            end
-            primitive_cross[row, column] = value
+    center_value =
+        axis == :x ? orbital.center[1] :
+        axis == :y ? orbital.center[2] :
+        axis == :z ? orbital.center[3] :
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    power =
+        axis == :x ? orbital.angular_powers[1] :
+        axis == :y ? orbital.angular_powers[2] :
+        axis == :z ? orbital.angular_powers[3] :
+        throw(ArgumentError("axis must be :x, :y, or :z"))
+    primitive_cross = zeros(Float64, length(basis_primitives), length(orbital.exponents))
+    for (row, primitive) in pairs(basis_primitives)
+        alpha_basis = _qwrg_gaussian_exponent(primitive::Gaussian)
+        for column in eachindex(orbital.exponents)
+            exponent = Float64(orbital.exponents[column])
+            prefactor = _qwrg_atomic_shell_prefactor(exponent, power)
+            primitive_cross[row, column] = _qwrg_atomic_basic_integral(
+                alpha_basis,
+                primitive.center_value,
+                0,
+                1.0,
+                exponent,
+                center_value,
+                power,
+                prefactor,
+            )
         end
     end
     return Matrix{Float64}(transpose(basis.coefficient_matrix) * primitive_cross)
@@ -855,20 +849,34 @@ function _cartesian_basis_supplement_cross(
     supplement::CartesianGaussianShellSupplementRepresentation3D,
 )
     isempty(supplement.orbitals) && return zeros(Float64, basis.metadata.final_dimension, 0)
-    overlap_x =
-        _cartesian_basis_supplement_axis_cross(basis.axis_representations.x, supplement, :x)
-    overlap_y =
-        _cartesian_basis_supplement_axis_cross(basis.axis_representations.y, supplement, :y)
-    overlap_z =
-        _cartesian_basis_supplement_axis_cross(basis.axis_representations.z, supplement, :z)
     parent = _cartesian_parent_state_basis(basis)
     raw_cross = zeros(Float64, length(parent.states), length(supplement.orbitals))
-    for (row, (ix, iy, iz)) in pairs(parent.states)
-        @inbounds for column in eachindex(supplement.orbitals)
-            raw_cross[row, column] =
-                overlap_x[ix, column] *
-                overlap_y[iy, column] *
-                overlap_z[iz, column]
+    for (column, orbital) in pairs(supplement.orbitals)
+        overlap_x = _cartesian_basis_supplement_axis_primitive_cross(
+            basis.axis_representations.x,
+            orbital,
+            :x,
+        )
+        overlap_y = _cartesian_basis_supplement_axis_primitive_cross(
+            basis.axis_representations.y,
+            orbital,
+            :y,
+        )
+        overlap_z = _cartesian_basis_supplement_axis_primitive_cross(
+            basis.axis_representations.z,
+            orbital,
+            :z,
+        )
+        @inbounds for (row, (ix, iy, iz)) in pairs(parent.states)
+            value = 0.0
+            for primitive in eachindex(orbital.coefficients)
+                value +=
+                    Float64(orbital.coefficients[primitive]) *
+                    overlap_x[ix, primitive] *
+                    overlap_y[iy, primitive] *
+                    overlap_z[iz, primitive]
+            end
+            raw_cross[row, column] = value
         end
     end
     if parent.coefficients !== nothing
@@ -877,7 +885,7 @@ function _cartesian_basis_supplement_cross(
     return raw_cross
 end
 
-function _cartesian_supplement_orbital_axis_overlap(
+function _cartesian_supplement_orbital_axis_overlap_matrix(
     left::CartesianGaussianShellOrbitalRepresentation3D,
     right::CartesianGaussianShellOrbitalRepresentation3D,
     axis::Symbol,
@@ -924,7 +932,7 @@ function _cartesian_supplement_orbital_axis_overlap(
             )
         end
     end
-    return Float64(dot(left.coefficients, matrix * right.coefficients))
+    return matrix
 end
 
 function _cartesian_supplement_cross_overlap(
@@ -933,10 +941,25 @@ function _cartesian_supplement_cross_overlap(
 )
     matrix = zeros(Float64, length(left.orbitals), length(right.orbitals))
     for (row, left_orbital) in pairs(left.orbitals), (column, right_orbital) in pairs(right.orbitals)
+        overlap_x = _cartesian_supplement_orbital_axis_overlap_matrix(
+            left_orbital,
+            right_orbital,
+            :x,
+        )
+        overlap_y = _cartesian_supplement_orbital_axis_overlap_matrix(
+            left_orbital,
+            right_orbital,
+            :y,
+        )
+        overlap_z = _cartesian_supplement_orbital_axis_overlap_matrix(
+            left_orbital,
+            right_orbital,
+            :z,
+        )
+        primitive_overlap =
+            Matrix{Float64}(overlap_x) .* Matrix{Float64}(overlap_y) .* Matrix{Float64}(overlap_z)
         matrix[row, column] =
-            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :x) *
-            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :y) *
-            _cartesian_supplement_orbital_axis_overlap(left_orbital, right_orbital, :z)
+            Float64(dot(left_orbital.coefficients, primitive_overlap * right_orbital.coefficients))
     end
     return matrix
 end
