@@ -2727,7 +2727,6 @@ end
             supplement;
             expansion = expansion,
             Z = 2.0,
-            interaction_treatment = :mwg,
         )
         @test nested_nearest.interaction_treatment == :ggt_nearest
         @test nested_mwg.interaction_treatment == :mwg

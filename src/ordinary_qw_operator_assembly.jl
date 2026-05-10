@@ -2665,7 +2665,7 @@ end
         gaussian_data::LegacyAtomicGaussianSupplement;
         expansion = coulomb_gaussian_expansion(doacc = false),
         Z = 2.0,
-        interaction_treatment = :ggt_nearest,
+        interaction_treatment = :mwg,
         gausslet_backend = :numerical_reference,
         residual_keep_policy = :near_null_only,
         timing = false,
@@ -2709,7 +2709,7 @@ function ordinary_cartesian_qiu_white_operators(
     gaussian_data::LegacyAtomicGaussianSupplement;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
-    interaction_treatment::Symbol = :ggt_nearest,
+    interaction_treatment::Symbol = :mwg,
     gausslet_backend::Symbol = :numerical_reference,
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,

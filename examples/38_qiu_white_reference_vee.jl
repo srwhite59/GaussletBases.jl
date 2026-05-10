@@ -13,28 +13,27 @@ source_basis = build_basis(MappedUniformBasisSpec(:G10;
 ))
 legacy = legacy_s_gaussian_data("He", basis_name)
 expansion = coulomb_gaussian_expansion(doacc = false)
-run_experimental_mwg = get(ENV, "GAUSSLETBASES_RUN_EXPERIMENTAL_MWG", "0") == "1"
-qiu_white_nearest = ordinary_cartesian_qiu_white_operators(
+run_nearest = get(ENV, "GAUSSLETBASES_RUN_GGT_NEAREST", "0") == "1"
+qiu_white_mwg = ordinary_cartesian_qiu_white_operators(
     source_basis,
     legacy;
     expansion = expansion,
     Z = z_value,
-    interaction_treatment = :ggt_nearest,
 )
-nearest_check = GaussletBases.ordinary_cartesian_1s2_check(qiu_white_nearest)
-mwg_result, mwg_error = if run_experimental_mwg
+qiu_white_mwg_check = GaussletBases.ordinary_cartesian_1s2_check(qiu_white_mwg)
+nearest_result, nearest_error = if run_nearest
     try
-        qiu_white_mwg = ordinary_cartesian_qiu_white_operators(
+        qiu_white_nearest = ordinary_cartesian_qiu_white_operators(
             source_basis,
             legacy;
             expansion = expansion,
             Z = z_value,
-            interaction_treatment = :mwg,
+            interaction_treatment = :ggt_nearest,
         )
         (
             (
-                operators = qiu_white_mwg,
-                check = GaussletBases.ordinary_cartesian_1s2_check(qiu_white_mwg),
+                operators = qiu_white_nearest,
+                check = GaussletBases.ordinary_cartesian_1s2_check(qiu_white_nearest),
             ),
             nothing,
         )
@@ -57,27 +56,27 @@ println("  note: this is a slow full-expansion light reference run, not a quick 
 println("  hydrogenic 1s^2 target: ", reference_value)
 println()
 
-println("Paper-faithful Qiu-White nearest / GGT path")
-println("  E1: ", nearest_check.orbital_energy)
-println("  <Vee>: ", nearest_check.vee_expectation)
-println("  difference from 1.25: ", nearest_check.vee_expectation - reference_value)
+println("Paper-faithful Qiu-White MWG path")
+sample_count = min(3, qiu_white_mwg.residual_count)
+println("  E1: ", qiu_white_mwg_check.orbital_energy)
+println("  <Vee>: ", qiu_white_mwg_check.vee_expectation)
+println("  difference from 1.25: ", qiu_white_mwg_check.vee_expectation - reference_value)
+println("  representative residual centers:")
+println(qiu_white_mwg.residual_centers[1:sample_count, :])
+println("  representative residual widths:")
+println(qiu_white_mwg.residual_widths[1:sample_count, :])
 println()
 
-println("Paper-faithful Qiu-White MWG path")
-if mwg_result === nothing
-    if mwg_error === nothing
+println("Paper-faithful Qiu-White nearest / GGT fallback path")
+if nearest_result === nothing
+    if nearest_error === nothing
         println("  skipped by default")
-        println("  set ENV[\"GAUSSLETBASES_RUN_EXPERIMENTAL_MWG\"] = \"1\" to run the still-experimental MWG branch")
+        println("  set ENV[\"GAUSSLETBASES_RUN_GGT_NEAREST\"] = \"1\" to run the fallback/debug nearest-GGT branch")
     else
-        println("  failed: ", sprint(showerror, mwg_error))
+        println("  failed: ", sprint(showerror, nearest_error))
     end
 else
-    sample_count = min(3, mwg_result.operators.residual_count)
-    println("  E1: ", mwg_result.check.orbital_energy)
-    println("  <Vee>: ", mwg_result.check.vee_expectation)
-    println("  difference from 1.25: ", mwg_result.check.vee_expectation - reference_value)
-    println("  representative residual centers:")
-    println(mwg_result.operators.residual_centers[1:sample_count, :])
-    println("  representative residual widths:")
-    println(mwg_result.operators.residual_widths[1:sample_count, :])
+    println("  E1: ", nearest_result.check.orbital_energy)
+    println("  <Vee>: ", nearest_result.check.vee_expectation)
+    println("  difference from 1.25: ", nearest_result.check.vee_expectation - reference_value)
 end
