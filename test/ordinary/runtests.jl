@@ -3716,7 +3716,7 @@ end
     end
 end
 
-@testset "Atomic lmax=2 supplement is explicit in QW routes but not yet molecular" begin
+@testset "Atomic and molecular lmax=2 supplements are explicit in QW routes" begin
     mktemp() do path, io
         write(
             io,
@@ -3768,14 +3768,16 @@ end
             lmax = 2,
             basisfile = path,
         )
-        diatomic_err = try
-            GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(diatomic)
-            nothing
-        catch err
-            err
-        end
-        @test diatomic_err isa ArgumentError
-        @test occursin("lmax <= 1", sprint(showerror, diatomic_err))
+        diatomic3d = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(diatomic)
+        @test length(diatomic3d.orbitals) == 20
+        @test count(orbital -> orbital.owner_nucleus_index == 1, diatomic3d.orbitals) == 10
+        @test count(orbital -> orbital.owner_nucleus_index == 2, diatomic3d.orbitals) == 10
+        @test any(orbital -> orbital.label == "a_dxx1", diatomic3d.orbitals)
+        @test any(orbital -> orbital.label == "b_dzz1", diatomic3d.orbitals)
+        @test all(
+            orbital.center == (orbital.owner_nucleus_index == 1 ? (-0.7, 0.0, 0.0) : (0.7, 0.0, 0.0))
+            for orbital in diatomic3d.orbitals
+        )
     end
 end
 
@@ -3867,6 +3869,183 @@ end
         @test check.overlap_error < 1.0e-8
         @test isfinite(check.orbital_energy)
         @test isfinite(check.vee_expectation)
+    end
+end
+
+@testset "Diatomic high-l Cartesian Gaussian supplements build through lmax=6" begin
+    high_l_basis_text =
+        "#BASIS SET: H repo-spdfghi\n" *
+        "H    S\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    P\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    D\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    F\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    G\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    H\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "H    I\n" *
+        "      2.0000000              1.0000000\n" *
+        "      0.1250000              0.2500000\n" *
+        "END\n"
+    cartesian_shell_count(lmax) = sum((l + 1) * (l + 2) ÷ 2 for l in 0:lmax)
+    distance(a, b) = sqrt(sum((a[axis] - b[axis])^2 for axis in 1:3))
+
+    mktemp() do path, io
+        write(io, high_l_basis_text)
+        close(io)
+
+        basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = 2.0,
+            core_spacing = 1.0,
+            xmax_parallel = 2.0,
+            xmax_transverse = 1.0,
+            bond_axis = :z,
+        )
+
+        for lmax in (3, 4, 6)
+            supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+                "H",
+                "repo-spdfghi",
+                basis.nuclei;
+                lmax,
+                basisfile = path,
+                max_width = 1.0,
+            )
+            supplement3d = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(supplement)
+            representation = basis_representation(supplement)
+            expected_count = 2 * cartesian_shell_count(lmax)
+            overlap = gto_overlap_matrix(basis, supplement)
+            occupancy = gto_occupancy_matrix(basis, supplement)
+
+            @test length(supplement3d.orbitals) == expected_count
+            @test length(representation.orbitals) == expected_count
+            @test maximum(sum(orbital.angular_powers) for orbital in representation.orbitals) == lmax
+            @test count(orbital -> orbital.owner_nucleus_index == 1, supplement3d.orbitals) ==
+                  expected_count ÷ 2
+            @test count(orbital -> orbital.owner_nucleus_index == 2, supplement3d.orbitals) ==
+                  expected_count ÷ 2
+            @test all(
+                orbital.center == basis.nuclei[orbital.owner_nucleus_index]
+                for orbital in supplement3d.orbitals
+            )
+            @test all(
+                all(width <= 1.0 for width in 1.0 ./ sqrt.(2.0 .* orbital.exponents))
+                for orbital in supplement3d.orbitals
+            )
+            @test size(overlap, 2) == expected_count
+            @test all(isfinite, overlap)
+            @test occupancy ≈ overlap * transpose(overlap) atol = 1.0e-12 rtol = 1.0e-12
+            @test occupancy ≈ transpose(occupancy) atol = 1.0e-12 rtol = 0.0
+        end
+
+        lmax6 = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "repo-spdfghi",
+            basis.nuclei;
+            lmax = 6,
+            basisfile = path,
+            max_width = 1.0,
+        )
+        lmax6_cartesian = GaussletBases._bond_aligned_diatomic_cartesian_shell_supplement_3d(lmax6)
+        @test any(orbital -> orbital.label == "a_f_x3_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "b_g_x4_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "a_h_x5_1", lmax6_cartesian.orbitals)
+        @test any(orbital -> orbital.label == "b_i_x6_1", lmax6_cartesian.orbitals)
+
+        mktemp() do qw_path, qw_io
+            write(
+                qw_io,
+                "#BASIS SET: H repo-sgi\n" *
+                "H    S\n" *
+                "      2.0000000              1.0000000\n" *
+                "      0.1250000              0.2500000\n" *
+                "H    G\n" *
+                "      2.0000000              1.0000000\n" *
+                "      0.1250000              0.2500000\n" *
+                "H    I\n" *
+                "      2.0000000              1.0000000\n" *
+                "      0.1250000              0.2500000\n" *
+                "END\n",
+            )
+            close(qw_io)
+
+            qw_basis = bond_aligned_homonuclear_qw_basis(
+                bond_length = 2.0,
+                core_spacing = 1.0,
+                xmax_parallel = 0.5,
+                xmax_transverse = 0.5,
+                bond_axis = :z,
+            )
+            qw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+                "H",
+                "repo-sgi",
+                qw_basis.nuclei;
+                lmax = 6,
+                basisfile = qw_path,
+                max_width = 1.0,
+            )
+            expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 1)
+            nearest = ordinary_cartesian_qiu_white_operators(
+                qw_basis,
+                qw_supplement;
+                nuclear_charges = [1.0, 1.0],
+                nuclear_term_storage = :by_center,
+                expansion,
+                interaction_treatment = :ggt_nearest,
+            )
+            mwg = ordinary_cartesian_qiu_white_operators(
+                qw_basis,
+                qw_supplement;
+                nuclear_charges = [1.0, 1.0],
+                nuclear_term_storage = :by_center,
+                expansion,
+                interaction_treatment = :mwg,
+            )
+
+            @test nearest.interaction_treatment == :ggt_nearest
+            @test mwg.interaction_treatment == :mwg
+            @test nearest.residual_count == mwg.residual_count
+            @test mwg.residual_count > 0
+            @test all(isnan, nearest.residual_widths)
+            @test all(isfinite, mwg.residual_widths)
+            @test all(>(0.0), vec(mwg.residual_widths))
+            @test mwg.residual_nucleus_indices == nearest.residual_nucleus_indices
+            @test Set(mwg.residual_nucleus_indices) == Set([1, 2])
+            for (index, owner) in pairs(mwg.residual_nucleus_indices)
+                center = Tuple(mwg.residual_centers[index, :])
+                other = owner == 1 ? 2 : 1
+                @test distance(center, qw_basis.nuclei[owner]) <
+                      distance(center, qw_basis.nuclei[other])
+                @test distance(center, (0.0, 0.0, 0.0)) > 0.25
+            end
+            @test mwg.nuclear_term_storage == :by_center
+            @test mwg.nuclear_one_body_by_center !== nothing
+
+            branch = ordinary_cartesian_corrected_branch(
+                mwg;
+                corrections = [
+                    HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = qw_basis.nuclei[1]),
+                    HydrogenicCoreBranchCorrectionSpec(; Z = 1.0, nucleus = qw_basis.nuclei[2]),
+                ],
+            )
+            @test branch.diagnostics.correction_count == 2
+            @test branch.diagnostics.branch_nuclear_charges == (1.0, 1.0)
+            @test branch.diagnostics.corrected_center_indices == (1, 2)
+            @test (
+                branch.diagnostics.corrections[1].reference_nuclear_charges,
+                branch.diagnostics.corrections[2].reference_nuclear_charges,
+            ) == ((1.0, 0.0), (0.0, 1.0))
+        end
     end
 end
 

@@ -2880,7 +2880,7 @@ This first molecular supplement pass is intentionally narrow:
 
 - one bond-aligned diatomic basis
 - one explicit two-center molecular shell supplement built from a named atomic
-  basis
+  basis, with Cartesian shell content through `lmax <= 6`
 - `interaction_treatment = :mwg` as the preferred matched-width residual
   interaction route, with `:ggt_nearest` retained as fallback/debug
 - this direct-product molecular supplement route now accepts
@@ -2927,7 +2927,8 @@ end
     )
 
 Build the first bond-aligned diatomic nested fixed-block QW route with a true
-molecular supplement and residual-Gaussian completion.
+molecular supplement and residual-Gaussian completion. The explicit molecular
+Cartesian shell supplement supports shell content through `lmax <= 6`.
 
 This nested molecular supplement route now accepts
 `gausslet_backend = :pgdg_localized_experimental` only when the carried nested

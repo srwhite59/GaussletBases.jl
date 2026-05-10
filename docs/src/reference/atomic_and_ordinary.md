@@ -97,11 +97,14 @@ core/locality cutoff: primitives wider than the cutoff are removed before
 placing the supplement on each nucleus. A contracted shell disappears only when
 no primitive remains after this filtering.
 
-Atomic legacy Gaussian supplements can expose explicit Cartesian shell content
-through `lmax = 6` for atomic ordinary-QW/nested-QW paths and the public
-`gto_overlap_matrix` / `gto_occupancy_matrix` probe helpers. The bond-aligned
-molecular supplement route remains intentionally narrower in this pass and
-still supports only `s/p` Cartesian shell placement (`lmax <= 1`).
+Atomic and bond-aligned diatomic legacy Gaussian supplements can expose
+explicit Cartesian shell content through `lmax = 6` for ordinary-QW/nested-QW
+paths and the public `gto_overlap_matrix` / `gto_occupancy_matrix` probe
+helpers. The diatomic route remains a two-center bond-aligned placement
+contract, but it uses the same deterministic Cartesian shell generator as the
+atomic route. For molecular residual-Gaussian interaction construction,
+`:mwg` is the preferred treatment and `:ggt_nearest` remains the fallback/debug
+path.
 
 ## Dense Gaussian Coulomb reference
 

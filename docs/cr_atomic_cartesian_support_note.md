@@ -7,7 +7,7 @@ This is a narrow repo-support note for the chromium / `Cr2` line.
 It records the current ordinary/hybrid Cartesian capability relevant to an
 atomic Cr comparison and the historical blocker that shaped the first atomic
 Cartesian extension. The live atomic QW route now reaches `lmax <= 6`; the
-molecular route remains narrower.
+bond-aligned molecular QW route now uses the same Cartesian shell cap.
 
 ## Present capability
 
@@ -62,8 +62,9 @@ After the present pass, the atomic QW path now supports:
 - `lmax = 2`: `s, p_x, p_y, p_z, dxx, dyy, dzz, dxy, dxz, dyz`
 - `lmax = 3..6`: deterministic Cartesian monomial shells through `f/g/h/i`
 
-The separate two-center molecular shell route remains intentionally narrower
-for now and still stops at `lmax <= 1`.
+The separate bond-aligned two-center molecular shell route now shares the same
+deterministic Cartesian shell generator and supports `lmax <= 6` for the active
+molecular QW paths.
 
 ## Historical blocker
 
@@ -127,7 +128,7 @@ Scope boundary remains explicit:
 
 - atomic ordinary-QW / nested-QW: now through `lmax <= 6`
 - one-dimensional hybrid builder: still `s`-only
-- bond-aligned molecular shell supplement route: still `lmax <= 1`
+- bond-aligned molecular shell supplement route: now through `lmax <= 6`
 
 ## What should be done first for Cr atom
 

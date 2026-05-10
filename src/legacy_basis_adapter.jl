@@ -39,8 +39,8 @@ about the current consumer split:
 - the ordinary-QW and nested-QW atomic paths can now consume the full shell
   metadata through an explicit atomic-centered 3D Cartesian shell route for
   `lmax <= 6`
-- the narrower two-center molecular QW routes remain intentionally smaller for
-  now and still stop at `lmax <= 1`
+- the bond-aligned two-center molecular QW routes use the same explicit
+  Cartesian shell machinery through `lmax <= 6`
 
 The stored active fields:
 
@@ -73,7 +73,7 @@ end
 const LegacySGaussianData = LegacyAtomicGaussianSupplement
 
 const _LEGACY_ATOMIC_CARTESIAN_MAX_L = 6
-const _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L = 1
+const _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L = 6
 
 """
     LegacyBondAlignedDiatomicGaussianSupplement
@@ -85,7 +85,7 @@ This stays deliberately small in scope:
 
 - one homonuclear atomic shell definition loaded by the legacy named-basis path
 - two physical centers on a bond-aligned diatomic
-- explicit 3D Cartesian `s/p` shell content for the active QW routes
+- explicit 3D Cartesian shell content through `lmax <= 6` for the active QW routes
 
 It is not yet a general arbitrary-molecule placement object.
 """
@@ -106,7 +106,7 @@ This is still deliberately small in scope:
 - one named atomic shell definition for nucleus A
 - one named atomic shell definition for nucleus B
 - two physical centers on a bond-aligned diatomic
-- explicit 3D Cartesian `s/p` shell content for the active ordinary QW route
+- explicit 3D Cartesian shell content through `lmax <= 6` for the active ordinary QW route
 
 It is not yet a general arbitrary-molecule placement object.
 """
@@ -712,8 +712,8 @@ The basis-file lookup order is:
 For atomic ordinary-QW and nested-QW, all shell content up to `lmax = 6`,
 including pure `s` shells, is now consumed through an explicit atomic-centered
 3D Cartesian shell supplement route. The one-dimensional hybrid builder remains
-honestly `s`-only, and the separate two-center molecular shell route remains
-narrower for now.
+honestly `s`-only; the bond-aligned two-center molecular shell route uses the
+same Cartesian shell cap.
 """
 function legacy_atomic_gaussian_supplement(
     atom::AbstractString,
@@ -755,7 +755,8 @@ homonuclear diatomic.
 The object reuses one atomic named-basis shell definition and places the
 resulting explicit Cartesian shell content on the two supplied nuclear centers.
 It is intended for the first honest molecular QW residual-Gaussian completion
-and does not yet attempt arbitrary molecular placement.
+and does not yet attempt arbitrary molecular placement. Shells through
+`lmax = 6` are supported by the shared Cartesian shell machinery.
 
 When `max_width` is supplied, it is a molecular core/locality cutoff: primitives
 wider than `max_width` are removed from each contracted shell before placement,
@@ -808,7 +809,8 @@ bond-aligned heteronuclear diatomic.
 
 The object places one named atomic shell source on nucleus A and one distinct
 named atomic shell source on nucleus B. It is intentionally limited to the
-first honest two-center heteronuclear ordinary-QW line.
+first honest two-center heteronuclear ordinary-QW line. Shells through
+`lmax = 6` are supported by the shared Cartesian shell machinery.
 
 When `max_width` is supplied, it is a molecular core/locality cutoff: primitives
 wider than `max_width` are removed from each contracted shell before placement,
