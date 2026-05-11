@@ -1636,6 +1636,57 @@ function _qwrg_bond_aligned_molecular_supplement_one_body_blocks(
     )
 end
 
+function _qwrg_raw_residual_moment_block(
+    carried::AbstractMatrix{<:Real},
+    ga::AbstractMatrix{<:Real},
+    aa::AbstractMatrix{<:Real},
+)
+    return [Matrix{Float64}(carried) ga; transpose(ga) aa]
+end
+
+function _qwrg_residual_centers_and_widths_from_raw_moments(
+    residual_data,
+    carried_count::Integer,
+    position_moments;
+    interaction_treatment::Symbol,
+    residual_accept_tol::Real,
+    residual_center_label::AbstractString,
+    x2_moment_builder = nothing,
+)
+    center_data = _qwrg_residual_center_data(
+        residual_data.raw_overlap,
+        position_moments.x,
+        position_moments.y,
+        position_moments.z,
+        residual_data.raw_to_final,
+        Int(carried_count),
+    )
+    residual_centers = center_data.centers
+    residual_widths = fill(NaN, size(residual_centers, 1), 3)
+    center_data.overlap_error <= Float64(residual_accept_tol) || throw(
+        ArgumentError("$residual_center_label requires an orthonormal residual block"),
+    )
+
+    if interaction_treatment == :mwg
+        x2_moment_builder === nothing && throw(
+            ArgumentError("$residual_center_label MWG residual widths require second-moment blocks"),
+        )
+        x2_moments = x2_moment_builder()
+        moment_data = _qwrg_residual_moment_data(
+            residual_data.raw_overlap,
+            position_moments.x,
+            x2_moments.x,
+            x2_moments.y,
+            x2_moments.z,
+            center_data,
+        )
+        residual_centers = moment_data.centers
+        residual_widths = moment_data.widths
+    end
+
+    return residual_centers, residual_widths
+end
+
 function _qwrg_bond_aligned_molecular_residual_centers(
     context::_QWRGBondAlignedBuildContext,
     carried_data,
@@ -1669,96 +1720,72 @@ function _qwrg_bond_aligned_molecular_residual_centers(
         x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
         y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
         z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
-        x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
-        y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
-        z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
-        center_data = _qwrg_residual_center_data(
-            residual_data.raw_overlap,
-            x_raw,
-            y_raw,
-            z_raw,
-            residual_data.raw_to_final,
+        position_moments = (
+            x = _qwrg_raw_residual_moment_block(fixed_block.position_x, x_fg, blocks.position_x_aa),
+            y = _qwrg_raw_residual_moment_block(fixed_block.position_y, y_fg, blocks.position_y_aa),
+            z = _qwrg_raw_residual_moment_block(fixed_block.position_z, z_fg, blocks.position_z_aa),
+        )
+        return _qwrg_residual_centers_and_widths_from_raw_moments(
+            residual_data,
             carried_data.count,
+            position_moments;
+            interaction_treatment,
+            residual_accept_tol = 1.0e-8,
+            residual_center_label = context.capabilities.residual_center_label,
+            x2_moment_builder = () -> begin
+                x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
+                x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
+                x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
+                return (
+                    x = _qwrg_raw_residual_moment_block(fixed_block.x2_x, x2_x_fg, blocks.x2_x_aa),
+                    y = _qwrg_raw_residual_moment_block(fixed_block.x2_y, x2_y_fg, blocks.x2_y_aa),
+                    z = _qwrg_raw_residual_moment_block(fixed_block.x2_z, x2_z_fg, blocks.x2_z_aa),
+                )
+            end,
         )
-        residual_centers = center_data.centers
-        residual_widths = fill(NaN, size(residual_centers, 1), 3)
-        center_data.overlap_error <= 1.0e-8 || throw(
-            ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
-        )
-        if interaction_treatment == :mwg
-            x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
-            x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
-            x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
-            x2_raw = [Matrix{Float64}(fixed_block.x2_x) x2_x_fg; transpose(x2_x_fg) blocks.x2_x_aa]
-            y2_raw = [Matrix{Float64}(fixed_block.x2_y) x2_y_fg; transpose(x2_y_fg) blocks.x2_y_aa]
-            z2_raw = [Matrix{Float64}(fixed_block.x2_z) x2_z_fg; transpose(x2_z_fg) blocks.x2_z_aa]
-            moment_data = _qwrg_residual_moment_data(
-                residual_data.raw_overlap,
-                x_raw,
-                x2_raw,
-                y2_raw,
-                z2_raw,
-                center_data,
-            )
-            residual_centers = moment_data.centers
-            residual_widths = moment_data.widths
-        end
-        return residual_centers, residual_widths
     end
 
-    x_raw = [x_carried blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
-    y_raw = [y_carried blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
-    z_raw = [z_carried blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
-    center_data = _qwrg_residual_center_data(
-        residual_data.raw_overlap,
-        x_raw,
-        y_raw,
-        z_raw,
-        residual_data.raw_to_final,
+    position_moments = (
+        x = _qwrg_raw_residual_moment_block(x_carried, blocks.position_x_ga, blocks.position_x_aa),
+        y = _qwrg_raw_residual_moment_block(y_carried, blocks.position_y_ga, blocks.position_y_aa),
+        z = _qwrg_raw_residual_moment_block(z_carried, blocks.position_z_ga, blocks.position_z_aa),
+    )
+    return _qwrg_residual_centers_and_widths_from_raw_moments(
+        residual_data,
         carried_data.count,
+        position_moments;
+        interaction_treatment,
+        residual_accept_tol = 1.0e-8,
+        residual_center_label = context.capabilities.residual_center_label,
+        x2_moment_builder = () -> begin
+            x2_x_carried = _qwrg_diatomic_gausslet_axis_matrix(
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                :x;
+                squared = true,
+            )
+            x2_y_carried = _qwrg_diatomic_gausslet_axis_matrix(
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                :y;
+                squared = true,
+            )
+            x2_z_carried = _qwrg_diatomic_gausslet_axis_matrix(
+                bundles.bundle_x,
+                bundles.bundle_y,
+                bundles.bundle_z,
+                :z;
+                squared = true,
+            )
+            return (
+                x = _qwrg_raw_residual_moment_block(x2_x_carried, blocks.x2_x_ga, blocks.x2_x_aa),
+                y = _qwrg_raw_residual_moment_block(x2_y_carried, blocks.x2_y_ga, blocks.x2_y_aa),
+                z = _qwrg_raw_residual_moment_block(x2_z_carried, blocks.x2_z_ga, blocks.x2_z_aa),
+            )
+        end,
     )
-    residual_centers = center_data.centers
-    residual_widths = fill(NaN, size(residual_centers, 1), 3)
-    center_data.overlap_error <= 1.0e-8 || throw(
-        ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
-    )
-    if interaction_treatment == :mwg
-        x2_x_carried = _qwrg_diatomic_gausslet_axis_matrix(
-            bundles.bundle_x,
-            bundles.bundle_y,
-            bundles.bundle_z,
-            :x;
-            squared = true,
-        )
-        x2_y_carried = _qwrg_diatomic_gausslet_axis_matrix(
-            bundles.bundle_x,
-            bundles.bundle_y,
-            bundles.bundle_z,
-            :y;
-            squared = true,
-        )
-        x2_z_carried = _qwrg_diatomic_gausslet_axis_matrix(
-            bundles.bundle_x,
-            bundles.bundle_y,
-            bundles.bundle_z,
-            :z;
-            squared = true,
-        )
-        x2_raw = [x2_x_carried blocks.x2_x_ga; transpose(blocks.x2_x_ga) blocks.x2_x_aa]
-        y2_raw = [x2_y_carried blocks.x2_y_ga; transpose(blocks.x2_y_ga) blocks.x2_y_aa]
-        z2_raw = [x2_z_carried blocks.x2_z_ga; transpose(blocks.x2_z_ga) blocks.x2_z_aa]
-        moment_data = _qwrg_residual_moment_data(
-            residual_data.raw_overlap,
-            x_raw,
-            x2_raw,
-            y2_raw,
-            z2_raw,
-            center_data,
-        )
-        residual_centers = moment_data.centers
-        residual_widths = moment_data.widths
-    end
-    return residual_centers, residual_widths
 end
 
 function _qwrg_bond_aligned_molecular_interaction_matrix(
@@ -2301,47 +2328,34 @@ function _qwrg_atomic_residual_centers_and_widths(
         x_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :x)
         y_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :y)
         z_gg = _qwrg_gausslet_axis_matrix(gg_blocks, :z)
-        x_raw = [x_gg blocks.position_x_ga; transpose(blocks.position_x_ga) blocks.position_x_aa]
-        y_raw = [y_gg blocks.position_y_ga; transpose(blocks.position_y_ga) blocks.position_y_aa]
-        z_raw = [z_gg blocks.position_z_ga; transpose(blocks.position_z_ga) blocks.position_z_aa]
-        center_data = _qwrg_residual_center_data(
-            residual_data.raw_overlap,
-            x_raw,
-            y_raw,
-            z_raw,
-            residual_data.raw_to_final,
+        position_moments = (
+            x = _qwrg_raw_residual_moment_block(x_gg, blocks.position_x_ga, blocks.position_x_aa),
+            y = _qwrg_raw_residual_moment_block(y_gg, blocks.position_y_ga, blocks.position_y_aa),
+            z = _qwrg_raw_residual_moment_block(z_gg, blocks.position_z_ga, blocks.position_z_aa),
+        )
+        return _qwrg_residual_centers_and_widths_from_raw_moments(
+            residual_data,
             carried_data.count,
+            position_moments;
+            interaction_treatment,
+            residual_accept_tol,
+            residual_center_label = context.capabilities.residual_center_label,
+            x2_moment_builder = () -> begin
+                gg_x2 = (
+                    overlap_gg = gg_blocks.overlap_gg,
+                    position_gg = gg_blocks.position_gg,
+                    x2_gg = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis)),
+                )
+                x2_x_gg = _qwrg_gausslet_axis_matrix(gg_x2, :x; squared = true)
+                x2_y_gg = _qwrg_gausslet_axis_matrix(gg_x2, :y; squared = true)
+                x2_z_gg = _qwrg_gausslet_axis_matrix(gg_x2, :z; squared = true)
+                return (
+                    x = _qwrg_raw_residual_moment_block(x2_x_gg, blocks.x2_x_ga, blocks.x2_x_aa),
+                    y = _qwrg_raw_residual_moment_block(x2_y_gg, blocks.x2_y_ga, blocks.x2_y_aa),
+                    z = _qwrg_raw_residual_moment_block(x2_z_gg, blocks.x2_z_ga, blocks.x2_z_aa),
+                )
+            end,
         )
-        residual_centers = center_data.centers
-        residual_widths = fill(NaN, size(residual_centers, 1), 3)
-        center_data.overlap_error <= residual_accept_tol || throw(
-            ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
-        )
-
-        if interaction_treatment == :mwg
-            gg_x2 = (
-                overlap_gg = gg_blocks.overlap_gg,
-                position_gg = gg_blocks.position_gg,
-                x2_gg = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis)),
-            )
-            x2_x_gg = _qwrg_gausslet_axis_matrix(gg_x2, :x; squared = true)
-            x2_y_gg = _qwrg_gausslet_axis_matrix(gg_x2, :y; squared = true)
-            x2_z_gg = _qwrg_gausslet_axis_matrix(gg_x2, :z; squared = true)
-            x2_raw = [x2_x_gg blocks.x2_x_ga; transpose(blocks.x2_x_ga) blocks.x2_x_aa]
-            y2_raw = [x2_y_gg blocks.x2_y_ga; transpose(blocks.x2_y_ga) blocks.x2_y_aa]
-            z2_raw = [x2_z_gg blocks.x2_z_ga; transpose(blocks.x2_z_ga) blocks.x2_z_aa]
-            moment_data = _qwrg_residual_moment_data(
-                residual_data.raw_overlap,
-                x_raw,
-                x2_raw,
-                y2_raw,
-                z2_raw,
-                center_data,
-            )
-            residual_centers = moment_data.centers
-            residual_widths = moment_data.widths
-        end
-        return residual_centers, residual_widths
     end
 
     fixed_block = context.carried
@@ -2349,44 +2363,29 @@ function _qwrg_atomic_residual_centers_and_widths(
     x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_x_ga)
     y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_y_ga)
     z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.position_z_ga)
-    x_raw = [Matrix{Float64}(fixed_block.position_x) x_fg; transpose(x_fg) blocks.position_x_aa]
-    y_raw = [Matrix{Float64}(fixed_block.position_y) y_fg; transpose(y_fg) blocks.position_y_aa]
-    z_raw = [Matrix{Float64}(fixed_block.position_z) z_fg; transpose(z_fg) blocks.position_z_aa]
-    center_data = _qwrg_residual_center_data(
-        residual_data.raw_overlap,
-        x_raw,
-        y_raw,
-        z_raw,
-        residual_data.raw_to_final,
+    position_moments = (
+        x = _qwrg_raw_residual_moment_block(fixed_block.position_x, x_fg, blocks.position_x_aa),
+        y = _qwrg_raw_residual_moment_block(fixed_block.position_y, y_fg, blocks.position_y_aa),
+        z = _qwrg_raw_residual_moment_block(fixed_block.position_z, z_fg, blocks.position_z_aa),
+    )
+    return _qwrg_residual_centers_and_widths_from_raw_moments(
+        residual_data,
         carried_data.count,
+        position_moments;
+        interaction_treatment,
+        residual_accept_tol,
+        residual_center_label = context.capabilities.residual_center_label,
+        x2_moment_builder = () -> begin
+            x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
+            x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
+            x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
+            return (
+                x = _qwrg_raw_residual_moment_block(fixed_block.x2_x, x2_x_fg, blocks.x2_x_aa),
+                y = _qwrg_raw_residual_moment_block(fixed_block.x2_y, x2_y_fg, blocks.x2_y_aa),
+                z = _qwrg_raw_residual_moment_block(fixed_block.x2_z, x2_z_fg, blocks.x2_z_aa),
+            )
+        end,
     )
-    residual_centers = center_data.centers
-    residual_widths = fill(NaN, size(residual_centers, 1), 3)
-    center_data.overlap_error <= residual_accept_tol || throw(
-        ArgumentError("$(context.capabilities.residual_center_label) requires an orthonormal residual block"),
-    )
-    if interaction_treatment == :mwg
-        x2_x_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_x_ga)
-        x2_y_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_y_ga)
-        x2_z_fg = _qwrg_contract_parent_ga_matrix(contraction, blocks.x2_z_ga)
-        fixed_x2_x = Matrix{Float64}(fixed_block.x2_x)
-        fixed_x2_y = Matrix{Float64}(fixed_block.x2_y)
-        fixed_x2_z = Matrix{Float64}(fixed_block.x2_z)
-        x2_raw = [fixed_x2_x x2_x_fg; transpose(x2_x_fg) blocks.x2_x_aa]
-        y2_raw = [fixed_x2_y x2_y_fg; transpose(x2_y_fg) blocks.x2_y_aa]
-        z2_raw = [fixed_x2_z x2_z_fg; transpose(x2_z_fg) blocks.x2_z_aa]
-        moment_data = _qwrg_residual_moment_data(
-            residual_data.raw_overlap,
-            x_raw,
-            x2_raw,
-            y2_raw,
-            z2_raw,
-            center_data,
-        )
-        residual_centers = moment_data.centers
-        residual_widths = moment_data.widths
-    end
-    return residual_centers, residual_widths
 end
 
 function _qwrg_atomic_interaction_matrix(
