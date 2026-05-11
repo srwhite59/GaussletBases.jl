@@ -307,6 +307,8 @@ function _qwrg_atomic_axis_cross_data(
     orbital::_AtomicCartesianShellOrbital3D,
     axis::Symbol,
     expansion::CoulombGaussianExpansion,
+    ;
+    include_factor_terms::Bool = true,
 )
     proxy_gaussians = _qwrg_proxy_gaussian_primitives(proxy_layer)
     center_value = axis == :x ? orbital.center[1] : axis == :y ? orbital.center[2] : orbital.center[3]
@@ -318,7 +320,9 @@ function _qwrg_atomic_axis_cross_data(
     kinetic = zeros(Float64, nproxy, nprimitive)
     position = zeros(Float64, nproxy, nprimitive)
     x2 = zeros(Float64, nproxy, nprimitive)
-    factor = [zeros(Float64, nproxy, nprimitive) for _ in expansion.exponents]
+    factor = include_factor_terms ?
+        [zeros(Float64, nproxy, nprimitive) for _ in expansion.exponents] :
+        Matrix{Float64}[]
 
     for primitive in 1:nprimitive
         exponent = Float64(orbital.exponents[primitive])
@@ -368,19 +372,21 @@ function _qwrg_atomic_axis_cross_data(
                 prefactor;
                 xpower = 2,
             )
-            for term in eachindex(expansion.exponents)
-                factor[term][proxy, primitive] = _qwrg_atomic_basic_integral(
-                    alpha_proxy,
-                    gaussian.center_value,
-                    0,
-                    1.0,
-                    exponent,
-                    center_value,
-                    power,
-                    prefactor;
-                    extra_exponent = Float64(expansion.exponents[term]),
-                    extra_center = 0.0,
-                )
+            if include_factor_terms
+                for term in eachindex(expansion.exponents)
+                    factor[term][proxy, primitive] = _qwrg_atomic_basic_integral(
+                        alpha_proxy,
+                        gaussian.center_value,
+                        0,
+                        1.0,
+                        exponent,
+                        center_value,
+                        power,
+                        prefactor;
+                        extra_exponent = Float64(expansion.exponents[term]),
+                        extra_center = 0.0,
+                    )
+                end
             end
         end
     end
@@ -399,6 +405,8 @@ function _qwrg_atomic_axis_aa_data(
     right::_AtomicCartesianShellOrbital3D,
     axis::Symbol,
     expansion::CoulombGaussianExpansion,
+    ;
+    include_factor_terms::Bool = true,
 )
     center_left = axis == :x ? left.center[1] : axis == :y ? left.center[2] : left.center[3]
     center_right = axis == :x ? right.center[1] : axis == :y ? right.center[2] : right.center[3]
@@ -411,7 +419,9 @@ function _qwrg_atomic_axis_aa_data(
     kinetic = zeros(Float64, nleft, nright)
     position = zeros(Float64, nleft, nright)
     x2 = zeros(Float64, nleft, nright)
-    factor = [zeros(Float64, nleft, nright) for _ in expansion.exponents]
+    factor = include_factor_terms ?
+        [zeros(Float64, nleft, nright) for _ in expansion.exponents] :
+        Matrix{Float64}[]
 
     for j in 1:nright
         exponent_right = Float64(right.exponents[j])
@@ -461,19 +471,21 @@ function _qwrg_atomic_axis_aa_data(
                 prefactor_right;
                 xpower = 2,
             )
-            for term in eachindex(expansion.exponents)
-                factor[term][i, j] = _qwrg_atomic_basic_integral(
-                    exponent_left,
-                    center_left,
-                    power_left,
-                    prefactor_left,
-                    exponent_right,
-                    center_right,
-                    power_right,
-                    prefactor_right;
-                    extra_exponent = Float64(expansion.exponents[term]),
-                    extra_center = 0.0,
-                )
+            if include_factor_terms
+                for term in eachindex(expansion.exponents)
+                    factor[term][i, j] = _qwrg_atomic_basic_integral(
+                        exponent_left,
+                        center_left,
+                        power_left,
+                        prefactor_left,
+                        exponent_right,
+                        center_right,
+                        power_right,
+                        prefactor_right;
+                        extra_exponent = Float64(expansion.exponents[term]),
+                        extra_center = 0.0,
+                    )
+                end
             end
         end
     end
@@ -484,83 +496,6 @@ function _qwrg_atomic_axis_aa_data(
         position = position,
         x2 = x2,
         factor = factor,
-    )
-end
-
-function _qwrg_atomic_axis_aa_one_body_data(
-    left::_AtomicCartesianShellOrbital3D,
-    right::_AtomicCartesianShellOrbital3D,
-    axis::Symbol,
-    expansion::CoulombGaussianExpansion,
-)
-    center_left = axis == :x ? left.center[1] : axis == :y ? left.center[2] : left.center[3]
-    center_right = axis == :x ? right.center[1] : axis == :y ? right.center[2] : right.center[3]
-    power_left = _qwrg_atomic_orbital_axis_power(left, axis)
-    power_right = _qwrg_atomic_orbital_axis_power(right, axis)
-    nleft = length(left.exponents)
-    nright = length(right.exponents)
-
-    overlap = zeros(Float64, nleft, nright)
-    kinetic = zeros(Float64, nleft, nright)
-    position = zeros(Float64, nleft, nright)
-    x2 = zeros(Float64, nleft, nright)
-
-    for j in 1:nright
-        exponent_right = Float64(right.exponents[j])
-        prefactor_right = _qwrg_atomic_shell_prefactor(exponent_right, power_right)
-        for i in 1:nleft
-            exponent_left = Float64(left.exponents[i])
-            prefactor_left = _qwrg_atomic_shell_prefactor(exponent_left, power_left)
-            overlap[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right,
-            )
-            kinetic[i, j] = _qwrg_atomic_kinetic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right,
-            )
-            position[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right;
-                xpower = 1,
-            )
-            x2[i, j] = _qwrg_atomic_basic_integral(
-                exponent_left,
-                center_left,
-                power_left,
-                prefactor_left,
-                exponent_right,
-                center_right,
-                power_right,
-                prefactor_right;
-                xpower = 2,
-            )
-        end
-    end
-
-    return (
-        overlap = overlap,
-        kinetic = kinetic,
-        position = position,
-        x2 = x2,
     )
 end
 
@@ -686,54 +621,59 @@ function _qwrg_atomic_cartesian_one_body_aa(
     return Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix)))
 end
 
-function _qwrg_atomic_cartesian_blocks_3d(
-    gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
-    supplement::_AtomicCartesianShellSupplement3D,
+function _qwrg_cartesian_shell_cross_moment_blocks_3d(
+    proxy_layers::NamedTuple{(:x,:y,:z)},
+    supplement,
     expansion::CoulombGaussianExpansion,
+    ngausslet3d::Integer;
+    include_factor_terms::Bool,
 )
-    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
-    )
-
-    n1d = size(gausslet_bundle.pgdg_intermediate.overlap, 1)
-    ngausslet3d = n1d^3
     norbital = length(supplement.orbitals)
-    overlap_ga = zeros(Float64, ngausslet3d, norbital)
-    kinetic_ga = zeros(Float64, ngausslet3d, norbital)
-    position_x_ga = zeros(Float64, ngausslet3d, norbital)
-    position_y_ga = zeros(Float64, ngausslet3d, norbital)
-    position_z_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_x_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_y_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_z_ga = zeros(Float64, ngausslet3d, norbital)
-    factor_ga = [zeros(Float64, ngausslet3d, norbital) for _ in expansion.exponents]
-
-    overlap_aa = zeros(Float64, norbital, norbital)
-    kinetic_aa = zeros(Float64, norbital, norbital)
-    position_x_aa = zeros(Float64, norbital, norbital)
-    position_y_aa = zeros(Float64, norbital, norbital)
-    position_z_aa = zeros(Float64, norbital, norbital)
-    x2_x_aa = zeros(Float64, norbital, norbital)
-    x2_y_aa = zeros(Float64, norbital, norbital)
-    x2_z_aa = zeros(Float64, norbital, norbital)
-    factor_aa = [zeros(Float64, norbital, norbital) for _ in expansion.exponents]
+    ncart = Int(ngausslet3d)
+    overlap_ga = zeros(Float64, ncart, norbital)
+    kinetic_ga = zeros(Float64, ncart, norbital)
+    position_x_ga = zeros(Float64, ncart, norbital)
+    position_y_ga = zeros(Float64, ncart, norbital)
+    position_z_ga = zeros(Float64, ncart, norbital)
+    x2_x_ga = zeros(Float64, ncart, norbital)
+    x2_y_ga = zeros(Float64, ncart, norbital)
+    x2_z_ga = zeros(Float64, ncart, norbital)
+    factor_ga = include_factor_terms ?
+        [zeros(Float64, ncart, norbital) for _ in expansion.exponents] :
+        Matrix{Float64}[]
 
     cross_cache = Dict{Tuple{Int,Symbol},Any}()
-    aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
+    scratch = zeros(Float64, ncart)
 
     for (orbital_index, orbital) in pairs(supplement.orbitals)
         x_data = get!(cross_cache, (orbital_index, :x)) do
-            _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :x, expansion)
+            _qwrg_atomic_axis_cross_data(
+                proxy_layers.x,
+                orbital,
+                :x,
+                expansion;
+                include_factor_terms,
+            )
         end
         y_data = get!(cross_cache, (orbital_index, :y)) do
-            _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :y, expansion)
+            _qwrg_atomic_axis_cross_data(
+                proxy_layers.y,
+                orbital,
+                :y,
+                expansion;
+                include_factor_terms,
+            )
         end
         z_data = get!(cross_cache, (orbital_index, :z)) do
-            _qwrg_atomic_axis_cross_data(proxy_layer, orbital, :z, expansion)
+            _qwrg_atomic_axis_cross_data(
+                proxy_layers.z,
+                orbital,
+                :z,
+                expansion;
+                include_factor_terms,
+            )
         end
 
-        scratch = zeros(Float64, ngausslet3d)
         for primitive in eachindex(orbital.coefficients)
             coefficient = Float64(orbital.coefficients[primitive])
             _qwrg_fill_product_column!(
@@ -810,27 +750,61 @@ function _qwrg_atomic_cartesian_blocks_3d(
             )
             x2_z_ga[:, orbital_index] .+= coefficient .* scratch
 
-            for term in eachindex(expansion.exponents)
-                _qwrg_fill_product_column!(
-                    scratch,
-                    view(x_data.factor[term], :, primitive),
-                    view(y_data.factor[term], :, primitive),
-                    view(z_data.factor[term], :, primitive),
-                )
-                factor_ga[term][:, orbital_index] .+= coefficient .* scratch
+            if include_factor_terms
+                for term in eachindex(expansion.exponents)
+                    _qwrg_fill_product_column!(
+                        scratch,
+                        view(x_data.factor[term], :, primitive),
+                        view(y_data.factor[term], :, primitive),
+                        view(z_data.factor[term], :, primitive),
+                    )
+                    factor_ga[term][:, orbital_index] .+= coefficient .* scratch
+                end
             end
         end
     end
 
+    return (
+        overlap_ga = overlap_ga,
+        kinetic_ga = kinetic_ga,
+        position_x_ga = position_x_ga,
+        position_y_ga = position_y_ga,
+        position_z_ga = position_z_ga,
+        x2_x_ga = x2_x_ga,
+        x2_y_ga = x2_y_ga,
+        x2_z_ga = x2_z_ga,
+        factor_ga = factor_ga,
+    )
+end
+
+function _qwrg_cartesian_shell_self_moment_blocks_3d(
+    supplement,
+    expansion::CoulombGaussianExpansion;
+    include_factor_terms::Bool,
+)
+    norbital = length(supplement.orbitals)
+    overlap_aa = zeros(Float64, norbital, norbital)
+    kinetic_aa = zeros(Float64, norbital, norbital)
+    position_x_aa = zeros(Float64, norbital, norbital)
+    position_y_aa = zeros(Float64, norbital, norbital)
+    position_z_aa = zeros(Float64, norbital, norbital)
+    x2_x_aa = zeros(Float64, norbital, norbital)
+    x2_y_aa = zeros(Float64, norbital, norbital)
+    x2_z_aa = zeros(Float64, norbital, norbital)
+    factor_aa = include_factor_terms ?
+        [zeros(Float64, norbital, norbital) for _ in expansion.exponents] :
+        Matrix{Float64}[]
+
+    aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
     for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
         x_data = get!(aa_cache, (left_index, right_index, :x)) do
-            _qwrg_atomic_axis_aa_data(left, right, :x, expansion)
+            _qwrg_atomic_axis_aa_data(left, right, :x, expansion; include_factor_terms)
         end
         y_data = get!(aa_cache, (left_index, right_index, :y)) do
-            _qwrg_atomic_axis_aa_data(left, right, :y, expansion)
+            _qwrg_atomic_axis_aa_data(left, right, :y, expansion; include_factor_terms)
         end
         z_data = get!(aa_cache, (left_index, right_index, :z)) do
-            _qwrg_atomic_axis_aa_data(left, right, :z, expansion)
+            _qwrg_atomic_axis_aa_data(left, right, :z, expansion; include_factor_terms)
         end
         overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
             left.coefficients,
@@ -903,36 +877,76 @@ function _qwrg_atomic_cartesian_blocks_3d(
             z_data.x2,
             right.coefficients,
         )
-        for term in eachindex(expansion.exponents)
-            factor_aa[term][left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-                left.coefficients,
-                x_data.factor[term],
-                y_data.factor[term],
-                z_data.factor[term],
-                right.coefficients,
-            )
+        if include_factor_terms
+            for term in eachindex(expansion.exponents)
+                factor_aa[term][left_index, right_index] = _qwrg_atomic_weighted_hadamard(
+                    left.coefficients,
+                    x_data.factor[term],
+                    y_data.factor[term],
+                    z_data.factor[term],
+                    right.coefficients,
+                )
+            end
         end
     end
 
     return (
-        overlap_ga = overlap_ga,
         overlap_aa = overlap_aa,
-        kinetic_ga = kinetic_ga,
         kinetic_aa = kinetic_aa,
-        position_x_ga = position_x_ga,
-        position_y_ga = position_y_ga,
-        position_z_ga = position_z_ga,
         position_x_aa = position_x_aa,
         position_y_aa = position_y_aa,
         position_z_aa = position_z_aa,
-        x2_x_ga = x2_x_ga,
-        x2_y_ga = x2_y_ga,
-        x2_z_ga = x2_z_ga,
         x2_x_aa = x2_x_aa,
         x2_y_aa = x2_y_aa,
         x2_z_aa = x2_z_aa,
-        factor_ga = factor_ga,
         factor_aa = factor_aa,
+    )
+end
+
+function _qwrg_atomic_cartesian_blocks_3d(
+    gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
+    supplement::_AtomicCartesianShellSupplement3D,
+    expansion::CoulombGaussianExpansion,
+)
+    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
+    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("explicit atomic Cartesian shell supplement currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
+    )
+
+    n1d = size(gausslet_bundle.pgdg_intermediate.overlap, 1)
+    ngausslet3d = n1d^3
+    cross = _qwrg_cartesian_shell_cross_moment_blocks_3d(
+        (x = proxy_layer, y = proxy_layer, z = proxy_layer),
+        supplement,
+        expansion,
+        ngausslet3d;
+        include_factor_terms = true,
+    )
+    self = _qwrg_cartesian_shell_self_moment_blocks_3d(
+        supplement,
+        expansion;
+        include_factor_terms = true,
+    )
+
+    return (
+        overlap_ga = cross.overlap_ga,
+        overlap_aa = self.overlap_aa,
+        kinetic_ga = cross.kinetic_ga,
+        kinetic_aa = self.kinetic_aa,
+        position_x_ga = cross.position_x_ga,
+        position_y_ga = cross.position_y_ga,
+        position_z_ga = cross.position_z_ga,
+        position_x_aa = self.position_x_aa,
+        position_y_aa = self.position_y_aa,
+        position_z_aa = self.position_z_aa,
+        x2_x_ga = cross.x2_x_ga,
+        x2_y_ga = cross.x2_y_ga,
+        x2_z_ga = cross.x2_z_ga,
+        x2_x_aa = self.x2_x_aa,
+        x2_y_aa = self.x2_y_aa,
+        x2_z_aa = self.x2_z_aa,
+        factor_ga = cross.factor_ga,
+        factor_aa = self.factor_aa,
     )
 end
 
@@ -1779,13 +1793,31 @@ function _qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
 
     for (orbital_index, orbital) in pairs(supplement.orbitals)
         x_data = get!(cross_cache, (orbital_index, :x)) do
-            _qwrg_atomic_axis_cross_data(context.proxy_x, orbital, :x, expansion)
+            _qwrg_atomic_axis_cross_data(
+                context.proxy_x,
+                orbital,
+                :x,
+                expansion;
+                include_factor_terms = false,
+            )
         end
         y_data = get!(cross_cache, (orbital_index, :y)) do
-            _qwrg_atomic_axis_cross_data(context.proxy_y, orbital, :y, expansion)
+            _qwrg_atomic_axis_cross_data(
+                context.proxy_y,
+                orbital,
+                :y,
+                expansion;
+                include_factor_terms = false,
+            )
         end
         z_data = get!(cross_cache, (orbital_index, :z)) do
-            _qwrg_atomic_axis_cross_data(context.proxy_z, orbital, :z, expansion)
+            _qwrg_atomic_axis_cross_data(
+                context.proxy_z,
+                orbital,
+                :z,
+                expansion;
+                include_factor_terms = false,
+            )
         end
 
         for primitive in eachindex(orbital.coefficients)
@@ -1802,13 +1834,31 @@ function _qwrg_diatomic_cartesian_shell_overlap_blocks_3d(
 
     for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
         x_data = get!(aa_cache, (left_index, right_index, :x)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :x, expansion)
+            _qwrg_atomic_axis_aa_data(
+                left,
+                right,
+                :x,
+                expansion;
+                include_factor_terms = false,
+            )
         end
         y_data = get!(aa_cache, (left_index, right_index, :y)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :y, expansion)
+            _qwrg_atomic_axis_aa_data(
+                left,
+                right,
+                :y,
+                expansion;
+                include_factor_terms = false,
+            )
         end
         z_data = get!(aa_cache, (left_index, right_index, :z)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :z, expansion)
+            _qwrg_atomic_axis_aa_data(
+                left,
+                right,
+                :z,
+                expansion;
+                include_factor_terms = false,
+            )
         end
         overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
             left.coefficients,
@@ -1842,125 +1892,31 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     ngausslet3d = context.ngausslet3d
     norbital = context.norbital
 
-    overlap_ga = zeros(Float64, ngausslet3d, norbital)
-    kinetic_ga = zeros(Float64, ngausslet3d, norbital)
-    one_body_ga = zeros(Float64, ngausslet3d, norbital)
-    position_x_ga = zeros(Float64, ngausslet3d, norbital)
-    position_y_ga = zeros(Float64, ngausslet3d, norbital)
-    position_z_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_x_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_y_ga = zeros(Float64, ngausslet3d, norbital)
-    x2_z_ga = zeros(Float64, ngausslet3d, norbital)
+    cross = _qwrg_cartesian_shell_cross_moment_blocks_3d(
+        (x = proxy_x, y = proxy_y, z = proxy_z),
+        supplement,
+        expansion,
+        ngausslet3d;
+        include_factor_terms = false,
+    )
+    self = _qwrg_cartesian_shell_self_moment_blocks_3d(
+        supplement,
+        expansion;
+        include_factor_terms = false,
+    )
 
-    overlap_aa = zeros(Float64, norbital, norbital)
-    kinetic_aa = zeros(Float64, norbital, norbital)
-    one_body_aa = zeros(Float64, norbital, norbital)
-    position_x_aa = zeros(Float64, norbital, norbital)
-    position_y_aa = zeros(Float64, norbital, norbital)
-    position_z_aa = zeros(Float64, norbital, norbital)
-    x2_x_aa = zeros(Float64, norbital, norbital)
-    x2_y_aa = zeros(Float64, norbital, norbital)
-    x2_z_aa = zeros(Float64, norbital, norbital)
+    one_body_ga = Matrix{Float64}(cross.kinetic_ga)
+    one_body_aa = Matrix{Float64}(self.kinetic_aa)
     nuclear_ga_by_center = [zeros(Float64, ngausslet3d, norbital) for _ in basis.nuclei]
     nuclear_aa_by_center = [zeros(Float64, norbital, norbital) for _ in basis.nuclei]
 
-    cross_cache = Dict{Tuple{Int,Symbol},Any}()
     factor_cross_cache = Dict{Tuple{Int,Symbol,Int},Any}()
-    aa_cache = Dict{Tuple{Int,Int,Symbol},Any}()
     scratch = zeros(Float64, ngausslet3d)
 
     # Alg QW-RG step 3: build the added 3D molecular Gaussian orbitals as one
     # explicit two-center Cartesian shell set on the bond-aligned nuclei.
     # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
     for (orbital_index, orbital) in pairs(supplement.orbitals)
-        x_data = get!(cross_cache, (orbital_index, :x)) do
-            _qwrg_atomic_axis_cross_data(proxy_x, orbital, :x, expansion)
-        end
-        y_data = get!(cross_cache, (orbital_index, :y)) do
-            _qwrg_atomic_axis_cross_data(proxy_y, orbital, :y, expansion)
-        end
-        z_data = get!(cross_cache, (orbital_index, :z)) do
-            _qwrg_atomic_axis_cross_data(proxy_z, orbital, :z, expansion)
-        end
-
-        for primitive in eachindex(orbital.coefficients)
-            coefficient = Float64(orbital.coefficients[primitive])
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            overlap_ga[:, orbital_index] .+= coefficient .* scratch
-
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.kinetic, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.kinetic, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.kinetic, :, primitive),
-            )
-            kinetic_ga[:, orbital_index] .+= coefficient .* scratch
-
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.position, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            position_x_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.position, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            position_y_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.position, :, primitive),
-            )
-            position_z_ga[:, orbital_index] .+= coefficient .* scratch
-
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.x2, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            x2_x_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.x2, :, primitive),
-                view(z_data.overlap, :, primitive),
-            )
-            x2_y_ga[:, orbital_index] .+= coefficient .* scratch
-            _qwrg_fill_product_column!(
-                scratch,
-                view(x_data.overlap, :, primitive),
-                view(y_data.overlap, :, primitive),
-                view(z_data.x2, :, primitive),
-            )
-            x2_z_ga[:, orbital_index] .+= coefficient .* scratch
-        end
-
-        one_body_ga[:, orbital_index] .= kinetic_ga[:, orbital_index]
         for (nucleus_index, nucleus) in pairs(basis.nuclei)
             charge_value = Float64(nuclear_charges[nucleus_index])
             x_factor = get!(factor_cross_cache, (orbital_index, :x, nucleus_index)) do
@@ -2007,88 +1963,7 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     end
 
     for (left_index, left) in pairs(supplement.orbitals), (right_index, right) in pairs(supplement.orbitals)
-        x_data = get!(aa_cache, (left_index, right_index, :x)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :x, expansion)
-        end
-        y_data = get!(aa_cache, (left_index, right_index, :y)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :y, expansion)
-        end
-        z_data = get!(aa_cache, (left_index, right_index, :z)) do
-            _qwrg_atomic_axis_aa_one_body_data(left, right, :z, expansion)
-        end
-        overlap_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.overlap,
-            y_data.overlap,
-            z_data.overlap,
-            right.coefficients,
-        )
-        kinetic_aa[left_index, right_index] =
-            _qwrg_atomic_weighted_hadamard(
-                left.coefficients,
-                x_data.kinetic,
-                y_data.overlap,
-                z_data.overlap,
-                right.coefficients,
-            ) +
-            _qwrg_atomic_weighted_hadamard(
-                left.coefficients,
-                x_data.overlap,
-                y_data.kinetic,
-                z_data.overlap,
-                right.coefficients,
-            ) +
-            _qwrg_atomic_weighted_hadamard(
-                left.coefficients,
-                x_data.overlap,
-                y_data.overlap,
-                z_data.kinetic,
-                right.coefficients,
-            )
-        position_x_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.position,
-            y_data.overlap,
-            z_data.overlap,
-            right.coefficients,
-        )
-        position_y_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.overlap,
-            y_data.position,
-            z_data.overlap,
-            right.coefficients,
-        )
-        position_z_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.overlap,
-            y_data.overlap,
-            z_data.position,
-            right.coefficients,
-        )
-        x2_x_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.x2,
-            y_data.overlap,
-            z_data.overlap,
-            right.coefficients,
-        )
-        x2_y_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.overlap,
-            y_data.x2,
-            z_data.overlap,
-            right.coefficients,
-        )
-        x2_z_aa[left_index, right_index] = _qwrg_atomic_weighted_hadamard(
-            left.coefficients,
-            x_data.overlap,
-            y_data.overlap,
-            z_data.x2,
-            right.coefficients,
-        )
-
-        one_body_value = kinetic_aa[left_index, right_index]
+        one_body_value = self.kinetic_aa[left_index, right_index]
         factor_aa_local = Dict{Tuple{Symbol,Float64},Any}()
         for (nucleus_index, nucleus) in pairs(basis.nuclei)
             charge_value = Float64(nuclear_charges[nucleus_index])
@@ -2121,27 +1996,27 @@ function _qwrg_diatomic_cartesian_shell_blocks_3d(
     end
 
     return (
-        overlap_ga = overlap_ga,
-        overlap_aa = Matrix{Float64}(0.5 .* (overlap_aa .+ transpose(overlap_aa))),
-        kinetic_ga = kinetic_ga,
-        kinetic_aa = Matrix{Float64}(0.5 .* (kinetic_aa .+ transpose(kinetic_aa))),
+        overlap_ga = cross.overlap_ga,
+        overlap_aa = Matrix{Float64}(0.5 .* (self.overlap_aa .+ transpose(self.overlap_aa))),
+        kinetic_ga = cross.kinetic_ga,
+        kinetic_aa = Matrix{Float64}(0.5 .* (self.kinetic_aa .+ transpose(self.kinetic_aa))),
         one_body_ga = one_body_ga,
         one_body_aa = Matrix{Float64}(0.5 .* (one_body_aa .+ transpose(one_body_aa))),
         nuclear_ga_by_center = nuclear_ga_by_center,
         nuclear_aa_by_center =
             [Matrix{Float64}(0.5 .* (matrix .+ transpose(matrix))) for matrix in nuclear_aa_by_center],
-        position_x_ga = position_x_ga,
-        position_y_ga = position_y_ga,
-        position_z_ga = position_z_ga,
-        position_x_aa = Matrix{Float64}(0.5 .* (position_x_aa .+ transpose(position_x_aa))),
-        position_y_aa = Matrix{Float64}(0.5 .* (position_y_aa .+ transpose(position_y_aa))),
-        position_z_aa = Matrix{Float64}(0.5 .* (position_z_aa .+ transpose(position_z_aa))),
-        x2_x_ga = x2_x_ga,
-        x2_y_ga = x2_y_ga,
-        x2_z_ga = x2_z_ga,
-        x2_x_aa = Matrix{Float64}(0.5 .* (x2_x_aa .+ transpose(x2_x_aa))),
-        x2_y_aa = Matrix{Float64}(0.5 .* (x2_y_aa .+ transpose(x2_y_aa))),
-        x2_z_aa = Matrix{Float64}(0.5 .* (x2_z_aa .+ transpose(x2_z_aa))),
+        position_x_ga = cross.position_x_ga,
+        position_y_ga = cross.position_y_ga,
+        position_z_ga = cross.position_z_ga,
+        position_x_aa = Matrix{Float64}(0.5 .* (self.position_x_aa .+ transpose(self.position_x_aa))),
+        position_y_aa = Matrix{Float64}(0.5 .* (self.position_y_aa .+ transpose(self.position_y_aa))),
+        position_z_aa = Matrix{Float64}(0.5 .* (self.position_z_aa .+ transpose(self.position_z_aa))),
+        x2_x_ga = cross.x2_x_ga,
+        x2_y_ga = cross.x2_y_ga,
+        x2_z_ga = cross.x2_z_ga,
+        x2_x_aa = Matrix{Float64}(0.5 .* (self.x2_x_aa .+ transpose(self.x2_x_aa))),
+        x2_y_aa = Matrix{Float64}(0.5 .* (self.x2_y_aa .+ transpose(self.x2_y_aa))),
+        x2_z_aa = Matrix{Float64}(0.5 .* (self.x2_z_aa .+ transpose(self.x2_z_aa))),
     )
 end
 
