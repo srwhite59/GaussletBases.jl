@@ -162,6 +162,30 @@ struct _BondAlignedDiatomicCartesianShellSupplement3D{S}
     orbitals::Vector{_AtomicCartesianShellOrbital3D}
 end
 
+struct _LegacyCartesianShellPlacement
+    source::LegacyAtomicGaussianSupplement
+    center::NTuple{3,Float64}
+    owner_nucleus_index::Int
+    label_prefix::String
+    max_width::Union{Nothing,Float64}
+end
+
+function _LegacyCartesianShellPlacement(
+    source::LegacyAtomicGaussianSupplement,
+    center::NTuple{3,<:Real},
+    owner_nucleus_index::Integer,
+    label_prefix::AbstractString,
+    max_width::Union{Nothing,Real},
+)
+    return _LegacyCartesianShellPlacement(
+        source,
+        (Float64(center[1]), Float64(center[2]), Float64(center[3])),
+        Int(owner_nucleus_index),
+        String(label_prefix),
+        max_width === nothing ? nothing : Float64(max_width),
+    )
+end
+
 function _legacy_atomic_shell_contraction_columns(
     shell::LegacyAtomicGaussianShell,
     uncontracted::Bool,
@@ -213,35 +237,20 @@ end
 function _atomic_cartesian_shell_supplement_3d(
     data::LegacyAtomicGaussianSupplement,
 )
-    any(shell -> shell.l > _LEGACY_ATOMIC_CARTESIAN_MAX_L, data.shells) && throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently supports only lmax <= $_LEGACY_ATOMIC_CARTESIAN_MAX_L"),
-    )
     center_value =
         isempty(data.primitive_gaussians) ? 0.0 : Float64(data.primitive_gaussians[1].center_value)
-    orbitals = _AtomicCartesianShellOrbital3D[]
-    shell_counts = Dict{String,Int}()
-    for shell in data.shells
-        shell_entries = _atomic_cartesian_shell_labels(shell.l)
-        contraction_columns = _legacy_atomic_shell_contraction_columns(shell, data.uncontracted)
-        for coefficients in contraction_columns
-            for (prefix, (lx, ly, lz)) in shell_entries
-                shell_counts[prefix] = get(shell_counts, prefix, 0) + 1
-                label = string(prefix, shell_counts[prefix])
-                push!(
-                    orbitals,
-                    _AtomicCartesianShellOrbital3D(
-                        label,
-                        lx,
-                        ly,
-                        lz,
-                        Float64[shell.exponents...],
-                        Float64[coefficients...],
-                        (center_value, center_value, center_value),
-                    ),
-                )
-            end
-        end
-    end
+    placement = _LegacyCartesianShellPlacement(
+        data,
+        (center_value, center_value, center_value),
+        0,
+        "",
+        nothing,
+    )
+    orbitals = _legacy_cartesian_shell_orbitals(
+        [placement];
+        max_l = _LEGACY_ATOMIC_CARTESIAN_MAX_L,
+        route_label = "explicit atomic Cartesian shell supplement",
+    )
     return _AtomicCartesianShellSupplement3D(data, orbitals)
 end
 
@@ -283,49 +292,39 @@ function _legacy_width_filtered_shell(
     )
 end
 
-function _bond_aligned_two_center_cartesian_orbitals(
-    atomic_sources::NTuple{2,LegacyAtomicGaussianSupplement},
-    nuclei::AbstractVector{<:NTuple{3,<:Real}},
-    max_width::Union{Nothing, Real} = nothing,
+function _legacy_cartesian_shell_orbitals(
+    placements::AbstractVector{<:_LegacyCartesianShellPlacement};
+    max_l::Int,
+    route_label::AbstractString,
 )
     any(
-        source -> any(
-            shell -> shell.l > _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L,
-            source.shells,
-        ),
-        atomic_sources,
+        placement -> any(shell -> shell.l > max_l, placement.source.shells),
+        placements,
     ) && throw(
-        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently supports only lmax <= $_LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L"),
-    )
-    length(nuclei) == 2 || throw(
-        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently expects exactly two nuclear centers"),
+        ArgumentError("$route_label currently supports only lmax <= $max_l"),
     )
 
     orbitals = _AtomicCartesianShellOrbital3D[]
     shell_counts = Dict{Tuple{Int,String},Int}()
-    for (nucleus_index, nucleus_raw) in pairs(nuclei)
-        source = atomic_sources[nucleus_index]
-        nucleus = (
-            Float64(nucleus_raw[1]),
-            Float64(nucleus_raw[2]),
-            Float64(nucleus_raw[3]),
-        )
-        for source_shell in source.shells
-            # Molecular supplements use `max_width` as a core/locality policy:
+    for placement in placements
+        for source_shell in placement.source.shells
+            # Molecular placements use `max_width` as a core/locality policy:
             # drop diffuse primitives inside a contraction, and drop the shell
-            # only if no primitive survives.
-            shell = _legacy_width_filtered_shell(source_shell, max_width)
+            # only if no primitive survives. Atomic placements pass `nothing`
+            # here because their filtering has already happened in source
+            # construction.
+            shell = _legacy_width_filtered_shell(source_shell, placement.max_width)
             shell === nothing && continue
             shell_entries = _atomic_cartesian_shell_labels(shell.l)
             contraction_columns = _legacy_atomic_shell_contraction_columns(
                 shell,
-                source.uncontracted,
+                placement.source.uncontracted,
             )
             for coefficients in contraction_columns
                 for (prefix, (lx, ly, lz)) in shell_entries
-                    key = (nucleus_index, prefix)
+                    key = (placement.owner_nucleus_index, prefix)
                     shell_counts[key] = get(shell_counts, key, 0) + 1
-                    label = string(nucleus_index == 1 ? "a_" : "b_", prefix, shell_counts[key])
+                    label = string(placement.label_prefix, prefix, shell_counts[key])
                     push!(
                         orbitals,
                         _AtomicCartesianShellOrbital3D(
@@ -335,8 +334,8 @@ function _bond_aligned_two_center_cartesian_orbitals(
                             lz,
                             Float64[shell.exponents...],
                             Float64[coefficients...],
-                            nucleus,
-                            nucleus_index,
+                            placement.center,
+                            placement.owner_nucleus_index,
                         ),
                     )
                 end
@@ -344,6 +343,40 @@ function _bond_aligned_two_center_cartesian_orbitals(
         end
     end
     return orbitals
+end
+
+function _bond_aligned_two_center_cartesian_orbitals(
+    atomic_sources::NTuple{2,LegacyAtomicGaussianSupplement},
+    nuclei::AbstractVector{<:NTuple{3,<:Real}},
+    max_width::Union{Nothing, Real} = nothing,
+)
+    length(nuclei) == 2 || throw(
+        ArgumentError("bond-aligned diatomic Cartesian shell supplement currently expects exactly two nuclear centers"),
+    )
+
+    placements = _LegacyCartesianShellPlacement[]
+    for (nucleus_index, nucleus_raw) in pairs(nuclei)
+        nucleus = (
+            Float64(nucleus_raw[1]),
+            Float64(nucleus_raw[2]),
+            Float64(nucleus_raw[3]),
+        )
+        push!(
+            placements,
+            _LegacyCartesianShellPlacement(
+                atomic_sources[nucleus_index],
+                nucleus,
+                nucleus_index,
+                nucleus_index == 1 ? "a_" : "b_",
+                max_width,
+            ),
+        )
+    end
+    return _legacy_cartesian_shell_orbitals(
+        placements;
+        max_l = _LEGACY_BOND_ALIGNED_DIATOMIC_CARTESIAN_MAX_L,
+        route_label = "bond-aligned diatomic Cartesian shell supplement",
+    )
 end
 
 function Base.show(io::IO, data::LegacyAtomicGaussianSupplement)
