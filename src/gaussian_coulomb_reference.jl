@@ -9,11 +9,30 @@ struct _GaussianCoulombAxisPairTerm
     prefactor_right::Float64
 end
 
+struct _GaussianCoulombAxisKernelTerm
+    alpha_sum::Float64
+    center_weight::Float64
+    constant::Float64
+    prefactor::Float64
+    polynomial_coefficients::Vector{Float64}
+end
+
 struct _GaussianCoulombPairTerm3D
     coefficient::Float64
     x::_GaussianCoulombAxisPairTerm
     y::_GaussianCoulombAxisPairTerm
     z::_GaussianCoulombAxisPairTerm
+end
+
+struct _GaussianCoulombPairTermDescriptor3D
+    x::_GaussianCoulombAxisPairTerm
+    y::_GaussianCoulombAxisPairTerm
+    z::_GaussianCoulombAxisPairTerm
+end
+
+struct _GaussianCoulombPairCoefficient
+    term_index::Int
+    coefficient::Float64
 end
 
 struct _GaussianCenteredPairTerm3D
@@ -77,7 +96,7 @@ function gaussian_coulomb_pair_matrix(
     end
     _gaussian_coulomb_orbitals_share_center(orbitals) &&
         return _gaussian_coulomb_pair_matrix_same_center(orbitals, expansion)
-    return _gaussian_coulomb_pair_matrix_general_checked(orbitals, expansion)
+    return _gaussian_coulomb_pair_matrix_compressed_checked(orbitals, expansion)
 end
 
 function _gaussian_coulomb_pair_matrix_general(
@@ -245,28 +264,277 @@ function _gaussian_coulomb_pair_integral(
     return value
 end
 
+function _gaussian_coulomb_pair_matrix_compressed_checked(
+    orbitals::AbstractVector{<:CartesianGaussianShellOrbitalRepresentation3D},
+    expansion::CoulombGaussianExpansion,
+)
+    orbital_count = length(orbitals)
+    pair_count = orbital_count^2
+    compact_pairs, compact_pair_index = _gaussian_coulomb_compact_pair_index(orbital_count)
+    compact_count = length(compact_pairs)
+    compact_terms = Vector{Vector{_GaussianCoulombPairTerm3D}}(undef, compact_count)
+    for (compact_index, (p, q)) in pairs(compact_pairs)
+        compact_terms[compact_index] = _gaussian_coulomb_pair_terms(orbitals[p], orbitals[q])
+    end
+    compact_coefficients, term_descriptors =
+        _gaussian_coulomb_global_term_coefficients(compact_terms)
+    term_kernel = _gaussian_coulomb_global_term_kernel(term_descriptors, expansion)
+    compact_matrix = _gaussian_coulomb_compact_pair_matrix(
+        compact_coefficients,
+        term_kernel,
+    )
+
+    ordered_to_compact = Vector{Int}(undef, pair_count)
+    for p in 1:orbital_count, q in 1:orbital_count
+        ordered_to_compact[gaussian_coulomb_pair_index(p, q, orbital_count)] =
+            compact_pair_index[p, q]
+    end
+    matrix = Matrix{Float64}(undef, pair_count, pair_count)
+    Base.Threads.@threads :static for column in 1:pair_count
+        compact_column = ordered_to_compact[column]
+        for row in 1:pair_count
+            matrix[row, column] = compact_matrix[ordered_to_compact[row], compact_column]
+        end
+    end
+    return matrix
+end
+
+function _gaussian_coulomb_compact_pair_matrix(
+    compact_coefficients::Vector{Vector{_GaussianCoulombPairCoefficient}},
+    term_kernel::AbstractMatrix{Float64},
+)
+    compact_count = length(compact_coefficients)
+    matrix = zeros(Float64, compact_count, compact_count)
+    Base.Threads.@threads :static for column in 1:compact_count
+        column_coefficients = compact_coefficients[column]
+        for row in 1:column
+            value = 0.0
+            for right in column_coefficients
+                right_index = right.term_index
+                right_coefficient = right.coefficient
+                for left in compact_coefficients[row]
+                    value +=
+                        left.coefficient *
+                        right_coefficient *
+                        term_kernel[left.term_index, right_index]
+                end
+            end
+            matrix[row, column] = value
+            matrix[column, row] = value
+        end
+    end
+    return matrix
+end
+
+function _gaussian_coulomb_term_descriptor(term::_GaussianCoulombPairTerm3D)
+    return _GaussianCoulombPairTermDescriptor3D(term.x, term.y, term.z)
+end
+
+function _gaussian_coulomb_global_term_coefficients(
+    compact_terms::Vector{Vector{_GaussianCoulombPairTerm3D}},
+)
+    term_index_by_descriptor = Dict{_GaussianCoulombPairTermDescriptor3D,Int}()
+    term_descriptors = _GaussianCoulombPairTermDescriptor3D[]
+    compact_coefficients = Vector{Vector{_GaussianCoulombPairCoefficient}}(
+        undef,
+        length(compact_terms),
+    )
+    for compact_index in eachindex(compact_terms)
+        local_coefficients = Dict{Int,Float64}()
+        for term in compact_terms[compact_index]
+            descriptor = _gaussian_coulomb_term_descriptor(term)
+            term_index = get(term_index_by_descriptor, descriptor, 0)
+            if term_index == 0
+                push!(term_descriptors, descriptor)
+                term_index = length(term_descriptors)
+                term_index_by_descriptor[descriptor] = term_index
+            end
+            local_coefficients[term_index] =
+                get(local_coefficients, term_index, 0.0) + term.coefficient
+        end
+        entries = collect(local_coefficients)
+        sort!(entries; by = first)
+        compact_coefficients[compact_index] = [
+            _GaussianCoulombPairCoefficient(term_index, coefficient)
+            for (term_index, coefficient) in entries if coefficient != 0.0
+        ]
+    end
+    return compact_coefficients, term_descriptors
+end
+
+function _gaussian_coulomb_global_term_kernel(
+    term_descriptors::Vector{_GaussianCoulombPairTermDescriptor3D},
+    expansion::CoulombGaussianExpansion,
+)
+    term_count = length(term_descriptors)
+    kernel = zeros(Float64, term_count, term_count)
+    axis_terms, descriptor_axis_indices =
+        _gaussian_coulomb_axis_term_indices(term_descriptors)
+    axis_kernel_terms = _gaussian_coulomb_axis_kernel_terms(axis_terms)
+    for expansion_index in eachindex(expansion.coefficients)
+        coupling_exponent = Float64(expansion.exponents[expansion_index])
+        coefficient = Float64(expansion.coefficients[expansion_index])
+        axis_kernel = _gaussian_coulomb_axis_term_kernel(
+            axis_kernel_terms,
+            coupling_exponent,
+        )
+        Base.Threads.@threads :static for column in 1:term_count
+            right = descriptor_axis_indices[column]
+            for row in 1:column
+                left = descriptor_axis_indices[row]
+                value =
+                    coefficient *
+                    axis_kernel[left[1], right[1]] *
+                    axis_kernel[left[2], right[2]] *
+                    axis_kernel[left[3], right[3]]
+                kernel[row, column] += value
+                row == column || (kernel[column, row] += value)
+            end
+        end
+    end
+    return kernel
+end
+
+function _gaussian_coulomb_axis_term_indices(
+    term_descriptors::Vector{_GaussianCoulombPairTermDescriptor3D},
+)
+    axis_index_by_term = Dict{_GaussianCoulombAxisPairTerm,Int}()
+    axis_terms = _GaussianCoulombAxisPairTerm[]
+    descriptor_axis_indices = Vector{NTuple{3,Int}}(undef, length(term_descriptors))
+    for descriptor_index in eachindex(term_descriptors)
+        descriptor = term_descriptors[descriptor_index]
+        descriptor_axis_indices[descriptor_index] = (
+            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.x),
+            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.y),
+            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.z),
+        )
+    end
+    return axis_terms, descriptor_axis_indices
+end
+
+function _gaussian_coulomb_axis_term_index!(
+    axis_index_by_term::Dict{_GaussianCoulombAxisPairTerm,Int},
+    axis_terms::Vector{_GaussianCoulombAxisPairTerm},
+    axis_term::_GaussianCoulombAxisPairTerm,
+)
+    axis_index = get(axis_index_by_term, axis_term, 0)
+    axis_index != 0 && return axis_index
+    push!(axis_terms, axis_term)
+    axis_index = length(axis_terms)
+    axis_index_by_term[axis_term] = axis_index
+    return axis_index
+end
+
+function _gaussian_coulomb_axis_kernel_terms(
+    axis_terms::Vector{_GaussianCoulombAxisPairTerm},
+)
+    return [_gaussian_coulomb_axis_kernel_term(axis_term) for axis_term in axis_terms]
+end
+
+function _gaussian_coulomb_axis_kernel_term(axis_term::_GaussianCoulombAxisPairTerm)
+    polynomial_coefficients = Float64[1.0]
+    polynomial_coefficients = GaussianAnalyticIntegrals.polynomial_shift_multiply(
+        polynomial_coefficients,
+        -axis_term.center_left,
+        axis_term.power_left,
+    )
+    polynomial_coefficients = GaussianAnalyticIntegrals.polynomial_shift_multiply(
+        polynomial_coefficients,
+        -axis_term.center_right,
+        axis_term.power_right,
+    )
+    return _GaussianCoulombAxisKernelTerm(
+        axis_term.alpha_left + axis_term.alpha_right,
+        axis_term.alpha_left * axis_term.center_left +
+        axis_term.alpha_right * axis_term.center_right,
+        axis_term.alpha_left * axis_term.center_left^2 +
+        axis_term.alpha_right * axis_term.center_right^2,
+        axis_term.prefactor_left * axis_term.prefactor_right,
+        polynomial_coefficients,
+    )
+end
+
+function _gaussian_coulomb_axis_term_kernel(
+    axis_terms::Vector{_GaussianCoulombAxisKernelTerm},
+    coupling_exponent::Float64,
+)
+    axis_count = length(axis_terms)
+    kernel = zeros(Float64, axis_count, axis_count)
+    Base.Threads.@threads :static for column in 1:axis_count
+        for row in 1:column
+            value = _gaussian_coulomb_axis_integral(
+                axis_terms[row],
+                axis_terms[column],
+                coupling_exponent,
+            )
+            kernel[row, column] = value
+            kernel[column, row] = value
+        end
+    end
+    return kernel
+end
+
+function _gaussian_coulomb_axis_integral(
+    left::_GaussianCoulombAxisKernelTerm,
+    right::_GaussianCoulombAxisKernelTerm,
+    coupling_exponent::Float64,
+)
+    a11 = left.alpha_sum + coupling_exponent
+    a22 = right.alpha_sum + coupling_exponent
+    a12 = -coupling_exponent
+    determinant = a11 * a22 - a12^2
+    determinant > 0.0 ||
+        throw(ArgumentError("polynomial Gaussian pair quadratic form must be positive definite"))
+
+    d1 = left.center_weight
+    d2 = right.center_weight
+    constant = left.constant + right.constant
+    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
+    mean_x = (a22 * d1 - a12 * d2) / determinant
+    mean_y = (-a12 * d1 + a11 * d2) / determinant
+    sigma_xx = 0.5 * a22 / determinant
+    sigma_yy = 0.5 * a11 / determinant
+    sigma_xy = -0.5 * a12 / determinant
+
+    moment_value = 0.0
+    left_coefficients = left.polynomial_coefficients
+    right_coefficients = right.polynomial_coefficients
+    @inbounds for x_index in eachindex(left_coefficients)
+        left_coefficient = left_coefficients[x_index]
+        left_coefficient == 0.0 && continue
+        for y_index in eachindex(right_coefficients)
+            right_coefficient = right_coefficients[y_index]
+            right_coefficient == 0.0 && continue
+            moment_value +=
+                left_coefficient *
+                right_coefficient *
+                GaussianAnalyticIntegrals.shifted_wick2_moment(
+                    x_index - 1,
+                    y_index - 1,
+                    mean_x,
+                    mean_y,
+                    sigma_xx,
+                    sigma_yy,
+                    sigma_xy,
+                )
+        end
+    end
+
+    return left.prefactor *
+           right.prefactor *
+           (pi / sqrt(determinant)) *
+           exp(-constant + quadratic_term) *
+           moment_value
+end
+
 function _gaussian_coulomb_axis_integral(
     left::_GaussianCoulombAxisPairTerm,
     right::_GaussianCoulombAxisPairTerm,
     coupling_exponent::Float64,
 )
-    return GaussianAnalyticIntegrals.polynomial_gaussian_pair_factor_integral(
-        left.alpha_left,
-        left.center_left,
-        left.power_left,
-        left.prefactor_left,
-        left.alpha_right,
-        left.center_right,
-        left.power_right,
-        left.prefactor_right,
-        right.alpha_left,
-        right.center_left,
-        right.power_left,
-        right.prefactor_left,
-        right.alpha_right,
-        right.center_right,
-        right.power_right,
-        right.prefactor_right,
+    return _gaussian_coulomb_axis_integral(
+        _gaussian_coulomb_axis_kernel_term(left),
+        _gaussian_coulomb_axis_kernel_term(right),
         coupling_exponent,
     )
 end

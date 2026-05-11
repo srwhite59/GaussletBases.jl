@@ -3364,8 +3364,20 @@ end
         [1.0],
         :axiswise_normalized_cartesian_gaussian,
     )
-    orbitals = [centered_s, shifted_s]
+    shifted_px = CartesianGaussianShellOrbitalRepresentation3D(
+        "px2",
+        (1, 0, 0),
+        (-0.3, 0.1, -0.2),
+        [0.9, 0.4],
+        [0.7, -0.2],
+        :axiswise_normalized_cartesian_gaussian,
+    )
+    orbitals = [centered_s, shifted_s, shifted_px]
     pair_matrix = @test_logs min_level = Logging.Warn gaussian_coulomb_pair_matrix(
+        orbitals;
+        expansion,
+    )
+    pair_matrix_general = GaussletBases._gaussian_coulomb_pair_matrix_general(
         orbitals;
         expansion,
     )
@@ -3373,7 +3385,8 @@ end
     pair_index(p, q) = gaussian_coulomb_pair_index(p, q, n)
 
     @test size(pair_matrix) == (n^2, n^2)
-    @test gaussian_coulomb_pair_index(2, 1, n) == 3
+    @test pair_matrix ≈ pair_matrix_general atol = 1.0e-12 rtol = 1.0e-12
+    @test gaussian_coulomb_pair_index(2, 1, n) == n + 1
     @test_throws ArgumentError gaussian_coulomb_pair_index(0, 1, n)
     @test_throws ArgumentError gaussian_coulomb_pair_matrix(orbitals; expansion, max_orbitals = 1)
 

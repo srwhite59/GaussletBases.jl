@@ -117,6 +117,12 @@ use numerical quadrature.
 This is an `N^4` memory/work reference utility, not a production
 large-system ERI backend. It is intended for small Gaussian references,
 stationary-Fock/EGOI diagnostics, and residual-Gaussian interaction validation.
+The implementation compresses repeated same-center and repeated two-center
+pair-density terms before expanding to the public dense pair matrix, so
+one-center and bond-aligned two-center reference checks are practical for
+moderate diagnostic cases. The returned dense matrix still scales as `N^4`;
+consumers that only need repeated Fock builds should avoid treating it as a
+large-system production ERI store.
 The flattened pair index is `(p - 1) * n + q`, exposed as
 `gaussian_coulomb_pair_index(p, q, n)`.
 
