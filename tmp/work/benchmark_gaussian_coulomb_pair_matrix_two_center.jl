@@ -85,22 +85,15 @@ function c2_cc_pvtz_orbitals()
 end
 
 function compressed_structure_counts(orbitals)
-    compact_pairs, _ = GaussletBases._gaussian_coulomb_compact_pair_index(length(orbitals))
-    compact_terms = Vector{Vector{GaussletBases._GaussianCoulombPairTerm3D}}(
-        undef,
-        length(compact_pairs),
+    _compact_pair_index, compact_terms = GaussletBases._gaussian_coulomb_compact_pair_terms(
+        orbitals,
+        GaussletBases._gaussian_coulomb_pair_terms,
     )
-    for (compact_index, (p, q)) in pairs(compact_pairs)
-        compact_terms[compact_index] = GaussletBases._gaussian_coulomb_pair_terms(
-            orbitals[p],
-            orbitals[q],
-        )
-    end
     compact_coefficients, term_descriptors =
         GaussletBases._gaussian_coulomb_global_term_coefficients(compact_terms)
     axis_terms, _ = GaussletBases._gaussian_coulomb_axis_term_indices(term_descriptors)
     return (
-        compact_pair_count = length(compact_pairs),
+        compact_pair_count = length(compact_terms),
         unique_term_count = length(term_descriptors),
         coefficient_entry_count = sum(length, compact_coefficients),
         unique_axis_term_count = length(axis_terms),

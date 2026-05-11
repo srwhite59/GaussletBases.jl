@@ -46,11 +46,6 @@ struct _GaussianCenteredTermDescriptor3D
     powers::NTuple{3,Int}
 end
 
-struct _GaussianCenteredPairCoefficient
-    term_index::Int
-    coefficient::Float64
-end
-
 """
     gaussian_coulomb_pair_index(p, q, n)
 
@@ -269,13 +264,8 @@ function _gaussian_coulomb_pair_matrix_compressed_checked(
     expansion::CoulombGaussianExpansion,
 )
     orbital_count = length(orbitals)
-    pair_count = orbital_count^2
-    compact_pairs, compact_pair_index = _gaussian_coulomb_compact_pair_index(orbital_count)
-    compact_count = length(compact_pairs)
-    compact_terms = Vector{Vector{_GaussianCoulombPairTerm3D}}(undef, compact_count)
-    for (compact_index, (p, q)) in pairs(compact_pairs)
-        compact_terms[compact_index] = _gaussian_coulomb_pair_terms(orbitals[p], orbitals[q])
-    end
+    compact_pair_index, compact_terms =
+        _gaussian_coulomb_compact_pair_terms(orbitals, _gaussian_coulomb_pair_terms)
     compact_coefficients, term_descriptors =
         _gaussian_coulomb_global_term_coefficients(compact_terms)
     term_kernel = _gaussian_coulomb_global_term_kernel(term_descriptors, expansion)
@@ -283,20 +273,11 @@ function _gaussian_coulomb_pair_matrix_compressed_checked(
         compact_coefficients,
         term_kernel,
     )
-
-    ordered_to_compact = Vector{Int}(undef, pair_count)
-    for p in 1:orbital_count, q in 1:orbital_count
-        ordered_to_compact[gaussian_coulomb_pair_index(p, q, orbital_count)] =
-            compact_pair_index[p, q]
-    end
-    matrix = Matrix{Float64}(undef, pair_count, pair_count)
-    Base.Threads.@threads :static for column in 1:pair_count
-        compact_column = ordered_to_compact[column]
-        for row in 1:pair_count
-            matrix[row, column] = compact_matrix[ordered_to_compact[row], compact_column]
-        end
-    end
-    return matrix
+    return _gaussian_coulomb_expand_compact_pair_matrix(
+        compact_matrix,
+        orbital_count,
+        compact_pair_index,
+    )
 end
 
 function _gaussian_coulomb_compact_pair_matrix(
@@ -321,6 +302,59 @@ function _gaussian_coulomb_compact_pair_matrix(
             end
             matrix[row, column] = value
             matrix[column, row] = value
+        end
+    end
+    return matrix
+end
+
+function _gaussian_coulomb_compact_pair_terms(
+    orbitals::AbstractVector{<:CartesianGaussianShellOrbitalRepresentation3D},
+    pair_term_builder::F,
+) where {F}
+    orbital_count = length(orbitals)
+    compact_pairs, compact_pair_index = _gaussian_coulomb_compact_pair_index(orbital_count)
+    compact_terms = [
+        pair_term_builder(orbitals[p], orbitals[q])
+        for (p, q) in compact_pairs
+    ]
+    return compact_pair_index, compact_terms
+end
+
+function _gaussian_coulomb_ordered_to_compact(
+    orbital_count::Int,
+    compact_pair_index::AbstractMatrix{<:Integer},
+)
+    pair_count = orbital_count^2
+    ordered_to_compact = Vector{Int}(undef, pair_count)
+    for p in 1:orbital_count, q in 1:orbital_count
+        ordered_to_compact[gaussian_coulomb_pair_index(p, q, orbital_count)] =
+            compact_pair_index[p, q]
+    end
+    return ordered_to_compact
+end
+
+function _gaussian_coulomb_expand_compact_pair_matrix(
+    compact_matrix::AbstractMatrix{<:Real},
+    orbital_count::Int,
+    compact_pair_index::AbstractMatrix{<:Integer},
+)
+    ordered_to_compact = _gaussian_coulomb_ordered_to_compact(
+        orbital_count,
+        compact_pair_index,
+    )
+    return _gaussian_coulomb_expand_compact_pair_matrix(compact_matrix, ordered_to_compact)
+end
+
+function _gaussian_coulomb_expand_compact_pair_matrix(
+    compact_matrix::AbstractMatrix{<:Real},
+    ordered_to_compact::AbstractVector{<:Integer},
+)
+    pair_count = length(ordered_to_compact)
+    matrix = Matrix{Float64}(undef, pair_count, pair_count)
+    Base.Threads.@threads :static for column in 1:pair_count
+        compact_column = ordered_to_compact[column]
+        for row in 1:pair_count
+            matrix[row, column] = compact_matrix[ordered_to_compact[row], compact_column]
         end
     end
     return matrix
@@ -544,37 +578,20 @@ function _gaussian_coulomb_pair_matrix_same_center(
     expansion::CoulombGaussianExpansion,
 )
     orbital_count = length(orbitals)
-    pair_count = orbital_count^2
-    compact_pairs, compact_pair_index = _gaussian_coulomb_compact_pair_index(orbital_count)
-    compact_count = length(compact_pairs)
-    compact_terms = Vector{Vector{_GaussianCenteredPairTerm3D}}(undef, compact_count)
-    for (compact_index, (p, q)) in pairs(compact_pairs)
-        compact_terms[compact_index] = _gaussian_centered_pair_terms(orbitals[p], orbitals[q])
-    end
+    compact_pair_index, compact_terms =
+        _gaussian_coulomb_compact_pair_terms(orbitals, _gaussian_centered_pair_terms)
     compact_coefficients, term_descriptors =
         _gaussian_centered_global_term_coefficients(compact_terms)
     term_kernel = _gaussian_centered_term_kernel(term_descriptors, expansion)
-    compact_matrix = zeros(Float64, compact_count, compact_count)
-    for column in 1:compact_count, row in 1:column
-        value = _gaussian_centered_pair_integral(
-            compact_coefficients[row],
-            compact_coefficients[column],
-            term_kernel,
-        )
-        compact_matrix[row, column] = value
-        compact_matrix[column, row] = value
-    end
-
-    matrix = zeros(Float64, pair_count, pair_count)
-    for p in 1:orbital_count, q in 1:orbital_count
-        row = gaussian_coulomb_pair_index(p, q, orbital_count)
-        compact_row = compact_pair_index[p, q]
-        for r in 1:orbital_count, s in 1:orbital_count
-            column = gaussian_coulomb_pair_index(r, s, orbital_count)
-            matrix[row, column] = compact_matrix[compact_row, compact_pair_index[r, s]]
-        end
-    end
-    return matrix
+    compact_matrix = _gaussian_coulomb_compact_pair_matrix(
+        compact_coefficients,
+        term_kernel,
+    )
+    return _gaussian_coulomb_expand_compact_pair_matrix(
+        compact_matrix,
+        orbital_count,
+        compact_pair_index,
+    )
 end
 
 function _gaussian_coulomb_compact_pair_index(orbital_count::Int)
@@ -648,12 +665,12 @@ function _gaussian_centered_global_term_coefficients(
 )
     term_index_by_key = Dict{Tuple{Float64,Int,Int,Int},Int}()
     term_descriptors = _GaussianCenteredTermDescriptor3D[]
-    compact_coefficients = Vector{Vector{_GaussianCenteredPairCoefficient}}(
+    compact_coefficients = Vector{Vector{_GaussianCoulombPairCoefficient}}(
         undef,
         length(compact_terms),
     )
     for compact_index in eachindex(compact_terms)
-        coefficients = _GaussianCenteredPairCoefficient[]
+        coefficients = _GaussianCoulombPairCoefficient[]
         sizehint!(coefficients, length(compact_terms[compact_index]))
         for term in compact_terms[compact_index]
             key = (term.beta, term.powers[1], term.powers[2], term.powers[3])
@@ -668,7 +685,7 @@ function _gaussian_centered_global_term_coefficients(
             end
             push!(
                 coefficients,
-                _GaussianCenteredPairCoefficient(term_index, term.coefficient),
+                _GaussianCoulombPairCoefficient(term_index, term.coefficient),
             )
         end
         compact_coefficients[compact_index] = coefficients
@@ -734,19 +751,4 @@ function _gaussian_centered_axis_descriptors(
         end
     end
     return axis_descriptors, term_axis_indices
-end
-
-function _gaussian_centered_pair_integral(
-    left_terms::Vector{_GaussianCenteredPairCoefficient},
-    right_terms::Vector{_GaussianCenteredPairCoefficient},
-    term_kernel::Matrix{Float64},
-)
-    value = 0.0
-    for left in left_terms, right in right_terms
-        value +=
-            left.coefficient *
-            right.coefficient *
-            term_kernel[left.term_index, right.term_index]
-    end
-    return value
 end
