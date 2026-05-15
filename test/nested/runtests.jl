@@ -121,6 +121,120 @@ end
     @test_throws ArgumentError GaussletBases._nested_owned_unit_coverage_audit([dense_unit], [1, 1, 2])
 end
 
+@testset "Cartesian nested endcap-panel owned shell producer" begin
+    dims = (7, 7, 7)
+    current_box = (1:7, 1:7, 1:7)
+    inner_box = (2:6, 2:6, 2:6)
+    expected_support = setdiff(
+        GaussletBases._nested_box_support_indices(current_box..., dims),
+        GaussletBases._nested_box_support_indices(inner_box..., dims),
+    )
+    sort!(expected_support)
+    expected_roles = (
+        :endcap_low,
+        :endcap_high,
+        :panel_x_low,
+        :panel_x_high,
+        :panel_y_low,
+        :panel_y_high,
+    )
+    expected_support_counts = (49, 49, 35, 35, 25, 25)
+
+    for (q, L, retained_count) in ((3, 3, 54), (4, 4, 96), (5, 5, 150))
+        producer = GaussletBases._nested_endcap_panel_owned_units(
+            dims,
+            current_box,
+            inner_box;
+            bond_axis = :z,
+            q,
+            L,
+        )
+        units = producer.units
+        owned_support = reduce(vcat, (unit.support_indices for unit in units))
+
+        @test producer.expected_support_indices == expected_support
+        @test producer.audit.expected_support_count == length(expected_support)
+        @test producer.audit.owned_support_count == length(expected_support)
+        @test producer.audit.duplicate_count == 0
+        @test producer.audit.missing_count == 0
+        @test producer.audit.outside_count == 0
+        @test producer.audit.retained_count == retained_count
+        @test producer.audit.coverage_ok
+        @test length(owned_support) == length(unique(owned_support))
+        @test sort(owned_support) == expected_support
+        @test getfield.(units, :role) == expected_roles
+        @test length.(getfield.(units, :support_indices)) == expected_support_counts
+        @test sum(size(unit.coefficient_matrix, 2) for unit in units) == retained_count
+        @test all(unit.coefficient_matrix isa SparseMatrixCSC{Float64,Int} for unit in units)
+        @test all(size(unit.coefficient_matrix, 1) == length(unit.support_indices) for unit in units)
+        @test all(all(isfinite, nonzeros(unit.coefficient_matrix)) for unit in units)
+        @test all(unit.metadata.q == q for unit in units)
+        @test all(unit.metadata.L == L for unit in units)
+        @test all(unit.metadata.bond_axis == :z for unit in units)
+        @test first(units).metadata.retained_count == q * q
+        @test last(units).metadata.retained_count == q * L
+    end
+
+    x_axis = GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :x,
+        q = 3,
+        L = 3,
+    )
+    @test getfield.(x_axis.units, :role) == (
+        :endcap_low,
+        :endcap_high,
+        :panel_y_low,
+        :panel_y_high,
+        :panel_z_low,
+        :panel_z_high,
+    )
+    @test x_axis.audit.coverage_ok
+
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q = 0,
+        L = 3,
+    )
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q = 3,
+        L = 0,
+    )
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :bad,
+        q = 3,
+        L = 3,
+    )
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        current_box;
+        bond_axis = :z,
+        q = 3,
+        L = 3,
+    )
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q = 6,
+        L = 6,
+    )
+end
+
 @testset "Cartesian nested shell first packet" begin
     function _fixed_a_nested_shell_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
         endpoint = (count - 1) / 2
