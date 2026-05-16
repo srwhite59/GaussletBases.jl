@@ -122,6 +122,9 @@ function _normalized_nested_source_frontend_context(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    shared_shell_layer_policy::Symbol = :complete_rectangular,
+    shared_shell_endcap_panel_q::Int = 4,
+    shared_shell_endcap_panel_L::Int = 4,
 )
     midpoint =
         sum(_qwrg_axis_coordinate(nucleus, basis.bond_axis) for nucleus in basis.nuclei) /
@@ -146,6 +149,10 @@ function _normalized_nested_source_frontend_context(
             shared_shell_retain_yz = shared_shell_retain_yz,
             packet_kernel = _nested_normalize_packet_kernel(packet_kernel),
             term_coefficients = term_coefficients,
+            shared_shell_layer_policy =
+                _nested_normalize_shared_shell_layer_policy(shared_shell_layer_policy),
+            shared_shell_endcap_panel_q = shared_shell_endcap_panel_q,
+            shared_shell_endcap_panel_L = shared_shell_endcap_panel_L,
         ),
         (
             route_label = "bond-aligned diatomic nested fixed source",
@@ -182,6 +189,9 @@ function _nested_source_from_frontend_context(
         shared_shell_retain_yz = options.shared_shell_retain_yz,
         packet_kernel = options.packet_kernel,
         term_coefficients = term_coefficients,
+        shared_shell_layer_policy = options.shared_shell_layer_policy,
+        shared_shell_endcap_panel_q = options.shared_shell_endcap_panel_q,
+        shared_shell_endcap_panel_L = options.shared_shell_endcap_panel_L,
     )
 end
 
@@ -371,6 +381,19 @@ function _nested_glass_box_leaf_count(
     return nothing
 end
 
+"""
+    bond_aligned_diatomic_nested_fixed_source(basis; kwargs...)
+
+Build the source object for the bond-aligned diatomic nested fixed-block route.
+
+`shared_shell_layer_policy = :complete_rectangular` is the public/default
+policy and preserves the existing complete rectangular shared-shell
+construction. `shared_shell_layer_policy = :endcap_panel_owned` enables the
+experimental owned endcap/panel shared-shell layer, with explicit
+`shared_shell_endcap_panel_q` and `shared_shell_endcap_panel_L` controls. The
+endcap/panel policy is disabled by default and is currently a controlled
+stretched-H2 validation path, not broad OPCU/high-order production machinery.
+"""
 function bond_aligned_diatomic_nested_fixed_source(
     basis::BondAlignedDiatomicQWBasis3D;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
@@ -386,6 +409,9 @@ function bond_aligned_diatomic_nested_fixed_source(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    shared_shell_layer_policy::Symbol = :complete_rectangular,
+    shared_shell_endcap_panel_q::Int = 4,
+    shared_shell_endcap_panel_L::Int = 4,
 )
     context = _normalized_nested_source_frontend_context(
         basis;
@@ -403,10 +429,21 @@ function bond_aligned_diatomic_nested_fixed_source(
         shared_shell_retain_yz = shared_shell_retain_yz,
         packet_kernel = packet_kernel,
         term_coefficients = term_coefficients,
+        shared_shell_layer_policy = shared_shell_layer_policy,
+        shared_shell_endcap_panel_q = shared_shell_endcap_panel_q,
+        shared_shell_endcap_panel_L = shared_shell_endcap_panel_L,
     )
     return _nested_source_frontend_source(context)
 end
 
+"""
+    bond_aligned_diatomic_nested_fixed_block(basis; kwargs...)
+
+Build a bond-aligned diatomic nested fixed block. The shared-shell policy
+keywords are the same as `bond_aligned_diatomic_nested_fixed_source`: the
+default `:complete_rectangular` path is unchanged, while
+`:endcap_panel_owned` is an experimental opt-in validation path.
+"""
 function bond_aligned_diatomic_nested_fixed_block(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
@@ -428,6 +465,9 @@ function bond_aligned_diatomic_nested_fixed_block(
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    shared_shell_layer_policy::Symbol = :complete_rectangular,
+    shared_shell_endcap_panel_q::Int = 4,
+    shared_shell_endcap_panel_L::Int = 4,
 )
     context = _normalized_nested_source_frontend_context(
         basis;
@@ -445,6 +485,9 @@ function bond_aligned_diatomic_nested_fixed_block(
         shared_shell_retain_yz = shared_shell_retain_yz,
         packet_kernel = packet_kernel,
         term_coefficients = term_coefficients,
+        shared_shell_layer_policy = shared_shell_layer_policy,
+        shared_shell_endcap_panel_q = shared_shell_endcap_panel_q,
+        shared_shell_endcap_panel_L = shared_shell_endcap_panel_L,
     )
     return _nested_source_frontend_fixed_block(context)
 end

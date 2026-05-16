@@ -707,7 +707,7 @@ end
             bond_axis = :z,
         )
         expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
-        bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+        term_coefficients = Float64.(expansion.coefficients)
         supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
             "H",
             "cc-pVTZ",
@@ -716,20 +716,48 @@ end
             max_width = 1.0,
         )
 
-        function fixed_source_for_policy(policy::Symbol)
-            source = GaussletBases._nested_bond_aligned_diatomic_source(
-                basis,
-                bundles;
-                bond_axis = :z,
-                nside = 5,
-                term_coefficients = Float64.(expansion.coefficients),
-                packet_kernel = :factorized_direct,
-                shared_shell_layer_policy = policy,
-                shared_shell_endcap_panel_q = 4,
-                shared_shell_endcap_panel_L = 4,
-            )
-            return source, GaussletBases._nested_fixed_block(source)
-        end
+        default_nested = bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+        )
+        endcap_nested = bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :endcap_panel_owned,
+            shared_shell_endcap_panel_q = 4,
+            shared_shell_endcap_panel_L = 4,
+        )
+        endcap_source_only = bond_aligned_diatomic_nested_fixed_source(
+            basis;
+            expansion,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :endcap_panel_owned,
+            shared_shell_endcap_panel_q = 4,
+            shared_shell_endcap_panel_L = 4,
+        )
+        @test_throws ArgumentError bond_aligned_diatomic_nested_fixed_source(
+            basis;
+            expansion,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :bad_policy,
+        )
+
+        default_source = default_nested.source
+        endcap_source = endcap_nested.source
+        default_fixed = default_nested.fixed_block
+        endcap_fixed = endcap_nested.fixed_block
+        @test only(endcap_source_only.shared_shell_layers) isa
+              GaussletBases._CartesianNestedEndcapPanelShellLayer3D
 
         function nested_molecular_operators(fixed_block, treatment::Symbol)
             return ordinary_cartesian_qiu_white_operators(
@@ -758,8 +786,6 @@ end
             @test operators.residual_count > 0
         end
 
-        default_source, default_fixed = fixed_source_for_policy(:complete_rectangular)
-        endcap_source, endcap_fixed = fixed_source_for_policy(:endcap_panel_owned)
         default_mwg = nested_molecular_operators(default_fixed, :mwg)
         endcap_nearest = nested_molecular_operators(endcap_fixed, :ggt_nearest)
         endcap_mwg = nested_molecular_operators(endcap_fixed, :mwg)

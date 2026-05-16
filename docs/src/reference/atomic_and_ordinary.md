@@ -70,6 +70,8 @@ OrdinaryCartesianOperators3D
 ordinary_cartesian_product_operators
 nested_cartesian_operators
 ordinary_cartesian_qiu_white_operators
+bond_aligned_diatomic_nested_fixed_source
+bond_aligned_diatomic_nested_fixed_block
 gto_overlap_matrix
 gto_occupancy_matrix
 gaussian_coulomb_pair_index
@@ -105,6 +107,20 @@ contract, but it uses the same deterministic Cartesian shell generator as the
 atomic route. For molecular residual-Gaussian interaction construction,
 `:mwg` is the preferred treatment and `:ggt_nearest` remains the fallback/debug
 path.
+
+Bond-aligned diatomic nested fixed-block frontends also expose a controlled
+experimental shared-shell policy. The default remains
+`shared_shell_layer_policy = :complete_rectangular`, preserving the existing
+complete rectangular shared-shell construction. Passing
+`shared_shell_layer_policy = :endcap_panel_owned` with explicit
+`shared_shell_endcap_panel_q` and `shared_shell_endcap_panel_L` requests the
+internal endcap/panel owned shared-shell layer. The `:endcap_panel_owned` path
+is validated for the old-standard H2 R = 4.0 operator and HF/ED reproduction,
+but it is not a broad OPCU/high-order production mode. See the developer memos
+[High-order endcap/panel mainline validation](../developer/high_order_endcap_panel_mainline_validation_2026-05-16.md)
+and
+[High-order endcap/panel H2 chemistry reproduction](../developer/high_order_endcap_panel_h2_chemistry_reproduction_2026-05-16.md)
+for the current validation boundary.
 
 ## Dense Gaussian Coulomb reference
 
