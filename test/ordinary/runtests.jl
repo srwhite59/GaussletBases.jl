@@ -694,6 +694,109 @@ end
     end
 end
 
+@testset "Endcap-panel diatomic source builds nested molecular QW operators" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        basis = bond_aligned_homonuclear_qw_basis(
+            family = :G10,
+            bond_length = 1.4,
+            core_spacing = 0.7,
+            xmax_parallel = 6.0,
+            xmax_transverse = 4.0,
+            bond_axis = :z,
+        )
+        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+
+        function fixed_source_for_policy(policy::Symbol)
+            source = GaussletBases._nested_bond_aligned_diatomic_source(
+                basis,
+                bundles;
+                bond_axis = :z,
+                nside = 5,
+                term_coefficients = Float64.(expansion.coefficients),
+                packet_kernel = :factorized_direct,
+                shared_shell_layer_policy = policy,
+                shared_shell_endcap_panel_q = 4,
+                shared_shell_endcap_panel_L = 4,
+            )
+            return source, GaussletBases._nested_fixed_block(source)
+        end
+
+        function nested_molecular_operators(fixed_block, treatment::Symbol)
+            return ordinary_cartesian_qiu_white_operators(
+                fixed_block,
+                supplement;
+                nuclear_charges = [1.0, 1.0],
+                nuclear_term_storage = :by_center,
+                expansion,
+                interaction_treatment = treatment,
+            )
+        end
+
+        function assert_operator_preflight(operators)
+            ndimension = operators.gausslet_count + operators.residual_count
+            @test size(operators.overlap) == (ndimension, ndimension)
+            @test size(operators.one_body_hamiltonian) == (ndimension, ndimension)
+            @test size(operators.interaction_matrix) == (ndimension, ndimension)
+            @test all(isfinite, operators.overlap)
+            @test all(isfinite, operators.one_body_hamiltonian)
+            @test all(isfinite, operators.interaction_matrix)
+            @test norm(operators.overlap - I, Inf) < 1.0e-10
+            @test norm(operators.one_body_hamiltonian - operators.one_body_hamiltonian', Inf) < 1.0e-10
+            @test norm(operators.interaction_matrix - operators.interaction_matrix', Inf) < 1.0e-10
+            @test operators.nuclear_term_storage == :by_center
+            @test !isnothing(operators.nuclear_one_body_by_center)
+            @test operators.residual_count > 0
+        end
+
+        default_source, default_fixed = fixed_source_for_policy(:complete_rectangular)
+        endcap_source, endcap_fixed = fixed_source_for_policy(:endcap_panel_owned)
+        default_mwg = nested_molecular_operators(default_fixed, :mwg)
+        endcap_nearest = nested_molecular_operators(endcap_fixed, :ggt_nearest)
+        endcap_mwg = nested_molecular_operators(endcap_fixed, :mwg)
+
+        @test length(default_source.shared_shell_layers) == 1
+        @test only(default_source.shared_shell_layers) isa GaussletBases._CartesianNestedCompleteShell3D
+        @test length(endcap_source.shared_shell_layers) == 1
+        @test only(endcap_source.shared_shell_layers) isa GaussletBases._CartesianNestedEndcapPanelShellLayer3D
+        @test [size(layer.coefficient_matrix, 2) for layer in default_source.shared_shell_layers] == [130]
+        @test [size(layer.coefficient_matrix, 2) for layer in endcap_source.shared_shell_layers] == [96]
+        @test size(default_fixed.coefficient_matrix) == (539, 347)
+        @test size(endcap_fixed.coefficient_matrix) == (539, 313)
+        @test norm(default_fixed.overlap - I, Inf) < 1.0e-10
+        @test norm(endcap_fixed.overlap - I, Inf) < 1.0e-10
+        @test only(endcap_source.shared_shell_layers).provenance.support_contract ==
+              :thin_endcap_box_perimeter
+        @test only(endcap_source.shared_shell_layers).provenance.coefficient_contract ==
+              :product_doside
+
+        assert_operator_preflight(default_mwg)
+        assert_operator_preflight(endcap_nearest)
+        assert_operator_preflight(endcap_mwg)
+        @test size(default_mwg.one_body_hamiltonian, 1) == 349
+        @test size(endcap_nearest.one_body_hamiltonian, 1) == 315
+        @test size(endcap_mwg.one_body_hamiltonian, 1) == 315
+        @test default_mwg.interaction_treatment == :mwg
+        @test endcap_nearest.interaction_treatment == :ggt_nearest
+        @test endcap_mwg.interaction_treatment == :mwg
+        @test endcap_nearest.residual_count == endcap_mwg.residual_count == 2
+        @test all(isnan, endcap_nearest.residual_widths)
+        @test all(isfinite, endcap_mwg.residual_widths)
+        @test all(>(0.0), endcap_mwg.residual_widths)
+        @test endcap_nearest.residual_nucleus_indices == endcap_mwg.residual_nucleus_indices
+        @test Set(endcap_mwg.residual_nucleus_indices) == Set([1, 2])
+    end
+end
+
 include(joinpath(@__DIR__, "high_order_doside_experimental_runtests.jl"))
 
 @testset "Bond-aligned homonuclear chain ordinary QW reference path" begin
