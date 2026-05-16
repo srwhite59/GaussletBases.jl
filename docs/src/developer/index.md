@@ -24,6 +24,7 @@ This section is where to go when you want:
 - [High-order doside distorted-parent follow-up](high_order_doside_distorted_parent_followup.md)
 - [High-order mainline import readiness](high_order_mainline_import_readiness_2026-05-15.md)
 - [High-order endcap/panel mainline validation](high_order_endcap_panel_mainline_validation_2026-05-16.md)
+- [High-order endcap/panel H2 chemistry reproduction](high_order_endcap_panel_h2_chemistry_reproduction_2026-05-16.md)
 - [High-order doside terminology](high_order_doside_terminology.md)
 - [Test suite reorganization plan](test_suite_reorganization_plan.md)
 - [Post-decomposition efficiency resume plan](post_decomposition_efficiency_resume_plan.md)
