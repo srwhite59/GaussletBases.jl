@@ -429,6 +429,96 @@ end
     )
 end
 
+@testset "Bond-aligned diatomic endcap-panel shared shell source policy" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 1.4,
+        core_spacing = 0.7,
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    term_coefficients = Float64.(expansion.coefficients)
+
+    default_source = GaussletBases._nested_bond_aligned_diatomic_source(
+        basis,
+        bundles;
+        bond_axis = :z,
+        nside = 5,
+        term_coefficients,
+        packet_kernel = :factorized_direct,
+    )
+    endcap_source = GaussletBases._nested_bond_aligned_diatomic_source(
+        basis,
+        bundles;
+        bond_axis = :z,
+        nside = 5,
+        term_coefficients,
+        packet_kernel = :factorized_direct,
+        shared_shell_layer_policy = :endcap_panel_owned,
+        shared_shell_endcap_panel_q = 4,
+        shared_shell_endcap_panel_L = 4,
+    )
+
+    @test length(default_source.shared_shell_layers) == 1
+    @test all(layer isa GaussletBases._CartesianNestedCompleteShell3D for layer in default_source.shared_shell_layers)
+    @test length(endcap_source.shared_shell_layers) == length(default_source.shared_shell_layers)
+    @test only(endcap_source.shared_shell_layers) isa GaussletBases._CartesianNestedEndcapPanelShellLayer3D
+    @test length(endcap_source.child_sequences) == length(default_source.child_sequences) == 1
+    @test size(only(endcap_source.child_sequences).coefficient_matrix, 2) ==
+        size(only(default_source.child_sequences).coefficient_matrix, 2)
+
+    default_shared_columns = [size(layer.coefficient_matrix, 2) for layer in default_source.shared_shell_layers]
+    endcap_shared_columns = [size(layer.coefficient_matrix, 2) for layer in endcap_source.shared_shell_layers]
+    @test default_shared_columns == [130]
+    @test endcap_shared_columns == [96]
+    @test size(endcap_source.sequence.coefficient_matrix, 2) ==
+        size(default_source.sequence.coefficient_matrix, 2) - sum(default_shared_columns) +
+        sum(endcap_shared_columns)
+
+    layer = only(endcap_source.shared_shell_layers)
+    @test layer.provenance.support_contract == :thin_endcap_box_perimeter
+    @test layer.provenance.coefficient_contract == :product_doside
+    @test layer.provenance.q == 4
+    @test layer.provenance.L == 4
+    @test layer.provenance.packet_kernel == :factorized_direct
+    @test layer.owned_units.audit.coverage_ok
+    @test layer.owned_units.audit.expected_support_count == 314
+    @test layer.owned_units.audit.owned_support_count == 314
+    @test layer.owned_units.audit.duplicate_count == 0
+    @test layer.owned_units.audit.missing_count == 0
+    @test layer.owned_units.audit.outside_count == 0
+    @test layer.owned_units.audit.retained_count == 96
+    @test length(layer.support_indices) == 314
+    @test size(layer.coefficient_matrix) == (prod(GaussletBases._nested_axis_lengths(bundles)), 96)
+    @test all(isfinite, layer.packet.overlap)
+    @test norm(layer.packet.overlap - I, Inf) < 1.0e-8
+
+    @test size(default_source.sequence.coefficient_matrix) == (539, 347)
+    @test size(endcap_source.sequence.coefficient_matrix) == (539, 313)
+    @test all(isfinite, endcap_source.sequence.packet.overlap)
+    @test norm(endcap_source.sequence.packet.overlap - I, Inf) < 1.0e-8
+
+    fixed_block = GaussletBases._nested_fixed_block(endcap_source)
+    @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test size(fixed_block.coefficient_matrix) == (539, 313)
+    @test all(isfinite, fixed_block.overlap)
+    @test norm(fixed_block.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, fixed_block.weights)
+
+    @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_source(
+        basis,
+        bundles;
+        bond_axis = :z,
+        nside = 5,
+        term_coefficients,
+        packet_kernel = :factorized_direct,
+        shared_shell_layer_policy = :bad_policy,
+    )
+end
+
 @testset "Cartesian nested shell first packet" begin
     function _fixed_a_nested_shell_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
         endpoint = (count - 1) / 2

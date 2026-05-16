@@ -41,14 +41,14 @@ The source keeps:
 - the child atomic-style subtrees after the bond-axis split
 - the merged shell-sequence object used to build the fixed block
 """
-struct _CartesianNestedBondAlignedDiatomicSource3D{B}
+struct _CartesianNestedBondAlignedDiatomicSource3D{B,S<:_AbstractCartesianNestedShellLayer3D}
     basis::B
     axis_bundles::_CartesianNestedAxisBundles3D
     nside::Int
     child_shell_retention_contract::CartesianNestedCompleteShellRetentionContract
     shared_shell_retention_contract::CartesianNestedCompleteShellRetentionContract
     geometry::_BondAlignedDiatomicSplitGeometry3D
-    shared_shell_layers::Vector{_CartesianNestedCompleteShell3D}
+    shared_shell_layers::Vector{S}
     child_sequences::Vector{_CartesianNestedShellSequence3D}
     child_column_ranges::Vector{UnitRange{Int}}
     midpoint_slab_column_range::Union{Nothing,UnitRange{Int}}
@@ -93,6 +93,15 @@ end
 
 function _nested_source_contract_audit(source::_CartesianNestedBondAlignedDiatomicSource3D)
     return _nested_shell_sequence_contract_audit(source.sequence, _nested_axis_lengths(source.axis_bundles))
+end
+
+function _nested_normalize_shared_shell_layer_policy(policy::Symbol)
+    policy in (:complete_rectangular, :endcap_panel_owned) || throw(
+        ArgumentError(
+            "diatomic nested shared-shell layer policy must be :complete_rectangular or :endcap_panel_owned",
+        ),
+    )
+    return policy
 end
 
 function _nested_diatomic_midpoint_row_index(
@@ -1094,11 +1103,15 @@ function _nested_bond_aligned_diatomic_source(
     retain_z_edge::Union{Nothing,Int} = nothing,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
+    shared_shell_layer_policy::Symbol = :complete_rectangular,
+    shared_shell_endcap_panel_q::Int = 4,
+    shared_shell_endcap_panel_L::Int = 4,
 )
     return @timeg "diatomic.source.total" begin
         isnothing(term_coefficients) && throw(
             ArgumentError("diatomic source assembly requires explicit term coefficients"),
         )
+        shared_layer_policy = _nested_normalize_shared_shell_layer_policy(shared_shell_layer_policy)
         child_retention = _nested_resolve_complete_shell_retention(
             nside;
             retain_xy = retain_xy,
@@ -1123,7 +1136,10 @@ function _nested_bond_aligned_diatomic_source(
         )
         dims = _nested_axis_lengths(bundles)
         parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
-        shared_shell_layers = _CartesianNestedCompleteShell3D[]
+        shared_shell_layers =
+            shared_layer_policy == :complete_rectangular ?
+            _CartesianNestedCompleteShell3D[] :
+            _AbstractCartesianNestedShellLayer3D[]
         current_box = parent_box
         geometry = @timeg "diatomic.source.split_geometry.initial" begin
             _nested_bond_aligned_diatomic_split_geometry(
@@ -1148,35 +1164,52 @@ function _nested_bond_aligned_diatomic_source(
                     break
                 end
                 inner_box = _nested_inner_box(current_box)
-                adaptive_retention = _nested_diatomic_adaptive_shell_retention(
-                    basis,
-                    bundles,
-                    current_box,
-                    inner_box,
-                    shared_retention;
-                    nside = nside,
-                    shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
-                )
-                push!(
-                    shared_shell_layers,
-                    _nested_complete_rectangular_shell(
+                if shared_layer_policy == :complete_rectangular
+                    adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+                        basis,
                         bundles,
-                        inner_box...;
-                        retain_xy = adaptive_retention.retain_xy,
-                        retain_xz = adaptive_retention.retain_xz,
-                        retain_yz = adaptive_retention.retain_yz,
-                        retain_x_edge = adaptive_retention.retain_x_edge,
-                        retain_y_edge = adaptive_retention.retain_y_edge,
-                        retain_z_edge = adaptive_retention.retain_z_edge,
-                        x_fixed = (first(current_box[1]), last(current_box[1])),
-                        y_fixed = (first(current_box[2]), last(current_box[2])),
-                        z_fixed = (first(current_box[3]), last(current_box[3])),
-                        enforce_symmetric_odd = false,
-                        term_coefficients = term_coefficients,
-                        packet_kernel = packet_kernel,
-                        verify_factorized_reconstruction = false,
-                    ),
-                )
+                        current_box,
+                        inner_box,
+                        shared_retention;
+                        nside = nside,
+                        shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
+                    )
+                    push!(
+                        shared_shell_layers,
+                        _nested_complete_rectangular_shell(
+                            bundles,
+                            inner_box...;
+                            retain_xy = adaptive_retention.retain_xy,
+                            retain_xz = adaptive_retention.retain_xz,
+                            retain_yz = adaptive_retention.retain_yz,
+                            retain_x_edge = adaptive_retention.retain_x_edge,
+                            retain_y_edge = adaptive_retention.retain_y_edge,
+                            retain_z_edge = adaptive_retention.retain_z_edge,
+                            x_fixed = (first(current_box[1]), last(current_box[1])),
+                            y_fixed = (first(current_box[2]), last(current_box[2])),
+                            z_fixed = (first(current_box[3]), last(current_box[3])),
+                            enforce_symmetric_odd = false,
+                            term_coefficients = term_coefficients,
+                            packet_kernel = packet_kernel,
+                            verify_factorized_reconstruction = false,
+                        ),
+                    )
+                else
+                    push!(
+                        shared_shell_layers,
+                        _nested_endcap_panel_shell_layer(
+                            bundles,
+                            current_box,
+                            inner_box;
+                            bond_axis = bond_axis,
+                            q = shared_shell_endcap_panel_q,
+                            L = shared_shell_endcap_panel_L,
+                            term_coefficients = term_coefficients,
+                            packet_kernel = packet_kernel,
+                            verify_factorized_reconstruction = false,
+                        ),
+                    )
+                end
                 current_box = inner_box
                 geometry = @timeg "diatomic.source.split_geometry.rescan" begin
                     _nested_bond_aligned_diatomic_split_geometry(
