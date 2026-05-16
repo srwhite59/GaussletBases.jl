@@ -275,6 +275,83 @@ end
         coefficient_contract = :product_doside,
     )
 
+    term_coefficients = Float64.(coulomb_gaussian_expansion(doacc = false).coefficients[1:3])
+    layer = GaussletBases._nested_endcap_panel_shell_layer(
+        bundles,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q,
+        L,
+        packet_kernel = :support_reference,
+        term_coefficients,
+    )
+    expected_ranges = [1:16, 17:32, 33:48, 49:64, 65:80, 81:96]
+    expected_states = [
+        GaussletBases._cartesian_unflat_index(index, dims) for index in expected_support
+    ]
+    outside_support = setdiff(collect(1:prod(dims)), layer.support_indices)
+
+    @test layer isa GaussletBases._CartesianNestedEndcapPanelShellLayer3D
+    @test layer.owned_units.coefficient_contract == :product_doside
+    @test layer.unit_column_ranges == expected_ranges
+    @test size(layer.coefficient_matrix) == (prod(dims), 96)
+    @test layer.support_indices == expected_support
+    @test layer.support_states == expected_states
+    @test nnz(layer.coefficient_matrix[outside_support, :]) == 0
+    @test all(all(isfinite, nonzeros(unit.coefficient_matrix)) for unit in layer.owned_units.units)
+    @test layer.provenance.support_contract == :thin_endcap_box_perimeter
+    @test layer.provenance.coefficient_contract == :product_doside
+    @test layer.provenance.packet_kernel == :support_reference
+    @test layer.provenance.q == q
+    @test layer.provenance.L == L
+    @test all(isfinite, layer.packet.overlap)
+    @test all(isfinite, layer.packet.kinetic)
+    @test all(isfinite, layer.packet.position_x)
+    @test all(isfinite, layer.packet.position_y)
+    @test all(isfinite, layer.packet.position_z)
+    @test all(isfinite, layer.packet.x2_x)
+    @test all(isfinite, layer.packet.x2_y)
+    @test all(isfinite, layer.packet.x2_z)
+    @test all(isfinite, layer.packet.weights)
+    @test !isnothing(layer.packet.gaussian_sum)
+    @test !isnothing(layer.packet.pair_sum)
+    @test all(isfinite, layer.packet.gaussian_sum)
+    @test all(isfinite, layer.packet.pair_sum)
+    @test norm(layer.packet.overlap - I, Inf) < 1.0e-8
+
+    factorized_layer = GaussletBases._nested_endcap_panel_shell_layer(
+        bundles,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q,
+        L,
+        packet_kernel = :factorized_direct,
+        term_coefficients,
+    )
+    @test factorized_layer.provenance.packet_kernel == :factorized_direct
+    for field in (
+        :overlap,
+        :kinetic,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :gaussian_sum,
+        :pair_sum,
+    )
+        @test getfield(factorized_layer.packet, field) ≈ getfield(layer.packet, field) atol = 1.0e-9 rtol = 1.0e-9
+    end
+    @test factorized_layer.packet.weights ≈ layer.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test_throws ArgumentError GaussletBases._nested_endcap_panel_shell_layer(
+        direct_selector,
+        bundles;
+        term_coefficients,
+    )
+
     x_axis = GaussletBases._nested_endcap_panel_owned_units(
         bundles,
         current_box,

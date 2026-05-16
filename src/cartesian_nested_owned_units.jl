@@ -123,6 +123,16 @@ struct _CartesianNestedEndcapPanelOwnedUnits3D{U<:Tuple}
     L::Int
 end
 
+struct _CartesianNestedEndcapPanelShellLayer3D{O,P} <: _AbstractCartesianNestedShellLayer3D
+    owned_units::O
+    unit_column_ranges::Vector{UnitRange{Int}}
+    coefficient_matrix::_CartesianCoefficientMap
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    packet::_CartesianNestedShellPacket3D
+    provenance::P
+end
+
 function _nested_axis_symbol(axis_index::Int)
     axis_index == 1 && return :x
     axis_index == 2 && return :y
@@ -654,5 +664,136 @@ function _nested_endcap_panel_owned_units(
         coefficient_contract,
         q,
         L,
+    )
+end
+
+function _nested_endcap_panel_parent_coefficient_block(
+    unit::_CartesianNestedOwnedUnit3D,
+    parent_row_count::Int,
+)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    matrix = unit.coefficient_matrix
+    if SparseArrays.issparse(matrix)
+        local_rows, cols, nzvals = SparseArrays.findnz(matrix)
+        sizehint!(row_indices, length(nzvals))
+        sizehint!(col_indices, length(nzvals))
+        sizehint!(values, length(nzvals))
+        for index in eachindex(nzvals)
+            push!(row_indices, unit.support_indices[Int(local_rows[index])])
+            push!(col_indices, Int(cols[index]))
+            push!(values, Float64(nzvals[index]))
+        end
+    else
+        for column in axes(matrix, 2), local_row in axes(matrix, 1)
+            value = Float64(matrix[local_row, column])
+            iszero(value) && continue
+            push!(row_indices, unit.support_indices[local_row])
+            push!(col_indices, column)
+            push!(values, value)
+        end
+    end
+    return _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        parent_row_count,
+        size(matrix, 2),
+    )
+end
+
+function _nested_endcap_panel_parent_coefficients(
+    owned_units::_CartesianNestedEndcapPanelOwnedUnits3D,
+    dims::NTuple{3,Int},
+)
+    parent_row_count = prod(dims)
+    blocks = AbstractMatrix{Float64}[]
+    unit_column_ranges = UnitRange{Int}[]
+    column_start = 1
+    for unit in owned_units.units
+        block = _nested_endcap_panel_parent_coefficient_block(unit, parent_row_count)
+        push!(blocks, block)
+        column_count = size(block, 2)
+        push!(unit_column_ranges, column_start:(column_start + column_count - 1))
+        column_start += column_count
+    end
+    return _nested_hcat_coefficient_maps(blocks), unit_column_ranges
+end
+
+function _nested_endcap_panel_shell_layer(
+    owned_units::_CartesianNestedEndcapPanelOwnedUnits3D,
+    bundles::_CartesianNestedAxisBundles3D;
+    packet_kernel::Symbol = :support_reference,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
+)
+    owned_units.coefficient_contract == :product_doside || throw(
+        ArgumentError("nested endcap/panel shell-layer assembly requires product_doside owned-unit coefficients"),
+    )
+    owned_units.audit.coverage_ok || throw(
+        ArgumentError("nested endcap/panel shell-layer assembly requires exact owned-unit support coverage"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    coefficient_matrix, unit_column_ranges =
+        _nested_endcap_panel_parent_coefficients(owned_units, dims)
+    support_indices = copy(owned_units.expected_support_indices)
+    packet_data = _nested_shell_packet(
+        bundles,
+        coefficient_matrix,
+        support_indices;
+        packet_kernel,
+        term_coefficients,
+        verify_factorized_reconstruction,
+    )
+    provenance = (
+        support_contract = owned_units.support_contract,
+        coefficient_contract = owned_units.coefficient_contract,
+        current_box = owned_units.current_box,
+        inner_box = owned_units.inner_box,
+        bond_axis = owned_units.bond_axis,
+        q = owned_units.q,
+        L = owned_units.L,
+        packet_kernel = packet_kernel,
+    )
+    return _CartesianNestedEndcapPanelShellLayer3D(
+        owned_units,
+        unit_column_ranges,
+        coefficient_matrix,
+        support_indices,
+        packet_data.support_states,
+        packet_data.packet,
+        provenance,
+    )
+end
+
+function _nested_endcap_panel_shell_layer(
+    bundles::_CartesianNestedAxisBundles3D,
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    q::Int,
+    L::Int,
+    packet_kernel::Symbol = :support_reference,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
+    enforce_symmetric_odd::Bool = false,
+)
+    owned_units = _nested_endcap_panel_owned_units(
+        bundles,
+        current_box,
+        inner_box;
+        bond_axis,
+        q,
+        L,
+        coefficient_contract = :product_doside,
+        enforce_symmetric_odd,
+    )
+    return _nested_endcap_panel_shell_layer(
+        owned_units,
+        bundles;
+        packet_kernel,
+        term_coefficients,
+        verify_factorized_reconstruction,
     )
 end
