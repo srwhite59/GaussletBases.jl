@@ -118,6 +118,7 @@ struct _CartesianNestedEndcapPanelOwnedUnits3D{U<:Tuple}
     inner_box::NTuple{3,UnitRange{Int}}
     bond_axis::Symbol
     support_contract::Symbol
+    coefficient_contract::Symbol
     q::Int
     L::Int
 end
@@ -185,7 +186,7 @@ function _nested_endcap_panel_support_indices(
     return _nested_endcap_panel_support_indices(dims, axis_indices...)
 end
 
-function _nested_owned_unit_selector_coefficients(
+function _nested_owned_unit_direct_selector_coefficients(
     nsupport::Int,
     retained_count::Int,
     role::Symbol,
@@ -212,23 +213,20 @@ end
 function _nested_endcap_panel_unit(
     role::Symbol,
     support_indices::AbstractVector{Int},
-    retained_count::Int;
+    coefficient_matrix::AbstractMatrix{<:Real};
     q::Int,
     L::Int,
     current_box::NTuple{3,UnitRange{Int}},
     inner_box::NTuple{3,UnitRange{Int}},
     bond_axis::Symbol,
+    coefficient_contract::Symbol,
     enforce_symmetric_odd::Bool,
 )
-    coefficients = _nested_owned_unit_selector_coefficients(
-        length(support_indices),
-        retained_count,
-        role,
-    )
+    retained_count = size(coefficient_matrix, 2)
     return _CartesianNestedOwnedUnit3D(
         role,
         support_indices,
-        coefficients;
+        coefficient_matrix;
         metadata = (
             q = q,
             L = L,
@@ -236,6 +234,7 @@ function _nested_endcap_panel_unit(
             inner_box = inner_box,
             bond_axis = bond_axis,
             support_contract = :thin_endcap_box_perimeter,
+            coefficient_contract = coefficient_contract,
             enforce_symmetric_odd = enforce_symmetric_odd,
             support_count = length(support_indices),
             retained_count = retained_count,
@@ -243,26 +242,55 @@ function _nested_endcap_panel_unit(
     )
 end
 
-"""
-    _nested_endcap_panel_owned_units(dims, current_box, inner_box; bond_axis=:z, q, L)
+function _nested_endcap_panel_direct_selector_unit(
+    spec;
+    q::Int,
+    L::Int,
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    enforce_symmetric_odd::Bool,
+)
+    coefficients = _nested_owned_unit_direct_selector_coefficients(
+        length(spec.support_indices),
+        spec.retained_count,
+        spec.role,
+    )
+    return _nested_endcap_panel_unit(
+        spec.role,
+        spec.support_indices,
+        coefficients;
+        q,
+        L,
+        current_box,
+        inner_box,
+        bond_axis,
+        coefficient_contract = :direct_selector,
+        enforce_symmetric_odd,
+    )
+end
 
-Internal experimental support/count producer for the validated thin
-endcap-box/perimeter shared-shell contract. The support is `current_box \\
-inner_box`, but only for a one-cell-thick shell: two full transverse endcaps on
-the bond-axis ends plus four side panels covering the transverse perimeter over
-the inner bond-axis span. Panel corners are assigned asymmetrically so each
-support index has exactly one owner. The coefficient maps are sparse
-direct-selector scaffolds sized to the intended retained counts; they are not
-yet the physical high-order endcap/panel contraction maps.
 """
-function _nested_endcap_panel_owned_units(
+    _nested_endcap_panel_owned_units(bundles, current_box, inner_box; bond_axis=:z, q, L)
+
+Internal experimental producer for the validated thin endcap-box/perimeter
+shared-shell contract. The support is `current_box \\ inner_box`, but only for
+a one-cell-thick shell: two full transverse endcaps on the bond-axis ends plus
+four side panels covering the transverse perimeter over the inner bond-axis
+span. Panel corners are assigned asymmetrically so each support index has
+exactly one owner.
+
+The bundle-based route builds product `doside` contraction maps over each owned
+support. The dims-only route is retained as explicit `:direct_selector` debug
+scaffolding and is not the intended integration producer.
+"""
+function _nested_endcap_panel_unit_specs(
     dims::NTuple{3,Int},
     current_box::NTuple{3,UnitRange{Int}},
     inner_box::NTuple{3,UnitRange{Int}};
     bond_axis::Symbol = :z,
     q::Int,
     L::Int,
-    enforce_symmetric_odd::Bool = false,
 )
     q >= 1 || throw(ArgumentError("nested endcap/panel producer requires q >= 1"))
     L >= 1 || throw(ArgumentError("nested endcap/panel producer requires L >= 1"))
@@ -271,7 +299,6 @@ function _nested_endcap_panel_owned_units(
     transverse_axes = Tuple(axis for axis in 1:3 if axis != bond_axis_index)
     first_transverse, second_transverse = transverse_axes
 
-    inner_indices = ntuple(axis -> collect(inner_box[axis]), 3)
     low_sides = ntuple(
         axis -> _nested_owned_unit_side_indices(current_box[axis], inner_box[axis], :low),
         3,
@@ -281,19 +308,21 @@ function _nested_endcap_panel_owned_units(
         3,
     )
 
-    function endcap_support(side_indices)
-        axis_indices = ntuple(axis -> axis == bond_axis_index ? side_indices : collect(current_box[axis]), 3)
-        return _nested_endcap_panel_support_indices(dims, axis_indices)
-    end
-
-    function perimeter_panel_support(fixed_axis::Int, fixed_value::Int, trace_axis::Int, trace_range)
+    function support_indices(
+        fixed_axis::Int,
+        fixed_value::Int,
+        first_axis::Int,
+        first_interval::UnitRange{Int},
+        second_axis::Int,
+        second_interval::UnitRange{Int},
+    )
         axis_indices = ntuple(axis -> begin
-            if axis == bond_axis_index
-                inner_indices[axis]
-            elseif axis == fixed_axis
+            if axis == fixed_axis
                 [fixed_value]
-            elseif axis == trace_axis
-                collect(trace_range)
+            elseif axis == first_axis
+                collect(first_interval)
+            elseif axis == second_axis
+                collect(second_interval)
             else
                 throw(ArgumentError("nested endcap/panel perimeter support received inconsistent transverse axes"))
             end
@@ -307,94 +336,219 @@ function _nested_endcap_panel_owned_units(
     first_high = last(current_box[first_transverse])
     second_low = first(current_box[second_transverse])
     second_high = last(current_box[second_transverse])
-    units = (
-        _nested_endcap_panel_unit(
+
+    function spec(
+        role::Symbol,
+        fixed_axis::Int,
+        fixed_index::Int,
+        first_axis::Int,
+        first_interval::UnitRange{Int},
+        first_retained_count::Int,
+        second_axis::Int,
+        second_interval::UnitRange{Int},
+        second_retained_count::Int,
+    )
+        return (
+            role = role,
+            support_indices = support_indices(
+                fixed_axis,
+                fixed_index,
+                first_axis,
+                first_interval,
+                second_axis,
+                second_interval,
+            ),
+            fixed_axis = fixed_axis,
+            fixed_index = fixed_index,
+            first_axis = first_axis,
+            first_interval = first_interval,
+            first_retained_count = first_retained_count,
+            second_axis = second_axis,
+            second_interval = second_interval,
+            second_retained_count = second_retained_count,
+            retained_count = first_retained_count * second_retained_count,
+        )
+    end
+
+    return (
+        spec(
             :endcap_low,
-            endcap_support(low_sides[bond_axis_index]),
-            q * q;
+            bond_axis_index,
+            only(low_sides[bond_axis_index]),
+            first_transverse,
+            current_box[first_transverse],
             q,
-            L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
+            second_transverse,
+            current_box[second_transverse],
+            q,
         ),
-        _nested_endcap_panel_unit(
+        spec(
             :endcap_high,
-            endcap_support(high_sides[bond_axis_index]),
-            q * q;
+            bond_axis_index,
+            only(high_sides[bond_axis_index]),
+            first_transverse,
+            current_box[first_transverse],
             q,
-            L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
+            second_transverse,
+            current_box[second_transverse],
+            q,
         ),
-        _nested_endcap_panel_unit(
+        spec(
             Symbol(:panel_, second_axis, :_low),
-            perimeter_panel_support(
-                second_transverse,
-                second_low,
-                first_transverse,
-                first_low:(first_high - 1),
-            ),
-            q * L;
+            second_transverse,
+            second_low,
+            first_transverse,
+            first_low:(first_high - 1),
             q,
+            bond_axis_index,
+            inner_box[bond_axis_index],
             L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
         ),
-        _nested_endcap_panel_unit(
+        spec(
             Symbol(:panel_, first_axis, :_high),
-            perimeter_panel_support(
-                first_transverse,
-                first_high,
-                second_transverse,
-                second_low:(second_high - 1),
-            ),
-            q * L;
+            first_transverse,
+            first_high,
+            second_transverse,
+            second_low:(second_high - 1),
             q,
+            bond_axis_index,
+            inner_box[bond_axis_index],
             L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
         ),
-        _nested_endcap_panel_unit(
+        spec(
             Symbol(:panel_, second_axis, :_high),
-            perimeter_panel_support(
-                second_transverse,
-                second_high,
-                first_transverse,
-                (first_low + 1):first_high,
-            ),
-            q * L;
+            second_transverse,
+            second_high,
+            first_transverse,
+            (first_low + 1):first_high,
             q,
+            bond_axis_index,
+            inner_box[bond_axis_index],
             L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
         ),
-        _nested_endcap_panel_unit(
+        spec(
             Symbol(:panel_, first_axis, :_low),
-            perimeter_panel_support(
-                first_transverse,
-                first_low,
-                second_transverse,
-                (second_low + 1):second_high,
-            ),
-            q * L;
+            first_transverse,
+            first_low,
+            second_transverse,
+            (second_low + 1):second_high,
             q,
+            bond_axis_index,
+            inner_box[bond_axis_index],
             L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
         ),
     )
+end
+
+function _nested_endcap_panel_product_coefficients(
+    dims::NTuple{3,Int},
+    support_indices::AbstractVector{Int},
+    fixed_axis::Int,
+    fixed_index::Int,
+    first_axis::Int,
+    first_side::_CartesianNestedDoSide1D,
+    second_axis::Int,
+    second_side::_CartesianNestedDoSide1D,
+)
+    length(unique((fixed_axis, first_axis, second_axis))) == 3 || throw(
+        ArgumentError("nested endcap/panel product contraction requires three distinct axes"),
+    )
+    row_lookup = Dict{Int,Int}(index => row for (row, index) in enumerate(support_indices))
+    nfirst = size(first_side.coefficient_matrix, 2)
+    nsecond = size(second_side.coefficient_matrix, 2)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    column = 0
+    state = Vector{Int}(undef, 3)
+    state[fixed_axis] = fixed_index
+    for ifirst in 1:nfirst, isecond in 1:nsecond
+        column += 1
+        for (local_first, index_first) in enumerate(first_side.interval)
+            value_first = Float64(first_side.local_coefficients[local_first, ifirst])
+            iszero(value_first) && continue
+            state[first_axis] = index_first
+            for (local_second, index_second) in enumerate(second_side.interval)
+                value_second = Float64(second_side.local_coefficients[local_second, isecond])
+                iszero(value_second) && continue
+                state[second_axis] = index_second
+                flat_index = _cartesian_flat_index(state[1], state[2], state[3], dims)
+                row = get(row_lookup, flat_index, 0)
+                row > 0 || throw(
+                    ArgumentError("nested endcap/panel product contraction generated support outside its owned unit"),
+                )
+                push!(row_indices, row)
+                push!(col_indices, column)
+                push!(values, value_first * value_second)
+            end
+        end
+    end
+    return _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        length(support_indices),
+        nfirst * nsecond,
+    )
+end
+
+function _nested_endcap_panel_product_unit(
+    spec,
+    bundles::_CartesianNestedAxisBundles3D,
+    dims::NTuple{3,Int};
+    q::Int,
+    L::Int,
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    enforce_symmetric_odd::Bool,
+)
+    first_side = _nested_doside_1d(
+        _nested_axis_bundle(bundles, _nested_axis_symbol(spec.first_axis)),
+        spec.first_interval,
+        spec.first_retained_count;
+        enforce_symmetric_odd,
+    )
+    second_side = _nested_doside_1d(
+        _nested_axis_bundle(bundles, _nested_axis_symbol(spec.second_axis)),
+        spec.second_interval,
+        spec.second_retained_count;
+        enforce_symmetric_odd,
+    )
+    coefficients = _nested_endcap_panel_product_coefficients(
+        dims,
+        spec.support_indices,
+        spec.fixed_axis,
+        spec.fixed_index,
+        spec.first_axis,
+        first_side,
+        spec.second_axis,
+        second_side,
+    )
+    return _nested_endcap_panel_unit(
+        spec.role,
+        spec.support_indices,
+        coefficients;
+        q,
+        L,
+        current_box,
+        inner_box,
+        bond_axis,
+        coefficient_contract = :product_doside,
+        enforce_symmetric_odd,
+    )
+end
+
+function _nested_endcap_panel_owned_units_result(
+    units,
+    dims::NTuple{3,Int},
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    coefficient_contract::Symbol,
+    q::Int,
+    L::Int,
+)
     expected_support_indices = setdiff(
         _nested_box_support_indices(current_box..., dims),
         _nested_box_support_indices(inner_box..., dims),
@@ -409,6 +563,44 @@ function _nested_endcap_panel_owned_units(
         inner_box,
         bond_axis,
         :thin_endcap_box_perimeter,
+        coefficient_contract,
+        q,
+        L,
+    )
+end
+
+function _nested_endcap_panel_owned_units(
+    dims::NTuple{3,Int},
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    q::Int,
+    L::Int,
+    coefficient_contract::Symbol = :direct_selector,
+    enforce_symmetric_odd::Bool = false,
+)
+    coefficient_contract == :direct_selector || throw(
+        ArgumentError("nested endcap/panel dims-only producer supports only coefficient_contract = :direct_selector; pass axis bundles for :product_doside"),
+    )
+    specs = _nested_endcap_panel_unit_specs(dims, current_box, inner_box; bond_axis, q, L)
+    units = Tuple(
+        _nested_endcap_panel_direct_selector_unit(
+            spec;
+            q,
+            L,
+            current_box,
+            inner_box,
+            bond_axis,
+            enforce_symmetric_odd,
+        ) for spec in specs
+    )
+    return _nested_endcap_panel_owned_units_result(
+        units,
+        dims,
+        current_box,
+        inner_box,
+        bond_axis,
+        coefficient_contract,
         q,
         L,
     )
@@ -418,12 +610,49 @@ function _nested_endcap_panel_owned_units(
     bundles::_CartesianNestedAxisBundles3D,
     current_box::NTuple{3,UnitRange{Int}},
     inner_box::NTuple{3,UnitRange{Int}};
-    kwargs...,
+    bond_axis::Symbol = :z,
+    q::Int,
+    L::Int,
+    coefficient_contract::Symbol = :product_doside,
+    enforce_symmetric_odd::Bool = false,
 )
-    return _nested_endcap_panel_owned_units(
-        _nested_axis_lengths(bundles),
+    dims = _nested_axis_lengths(bundles)
+    coefficient_contract in (:product_doside, :direct_selector) || throw(
+        ArgumentError("nested endcap/panel producer supports coefficient_contract = :product_doside or :direct_selector"),
+    )
+    coefficient_contract == :direct_selector && return _nested_endcap_panel_owned_units(
+        dims,
         current_box,
         inner_box;
-        kwargs...,
+        bond_axis,
+        q,
+        L,
+        coefficient_contract,
+        enforce_symmetric_odd,
+    )
+
+    specs = _nested_endcap_panel_unit_specs(dims, current_box, inner_box; bond_axis, q, L)
+    units = Tuple(
+        _nested_endcap_panel_product_unit(
+            spec,
+            bundles,
+            dims;
+            q,
+            L,
+            current_box,
+            inner_box,
+            bond_axis,
+            enforce_symmetric_odd,
+        ) for spec in specs
+    )
+    return _nested_endcap_panel_owned_units_result(
+        units,
+        dims,
+        current_box,
+        inner_box,
+        bond_axis,
+        coefficient_contract,
+        q,
+        L,
     )
 end
