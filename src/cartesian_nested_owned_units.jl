@@ -117,6 +117,7 @@ struct _CartesianNestedEndcapPanelOwnedUnits3D{U<:Tuple}
     current_box::NTuple{3,UnitRange{Int}}
     inner_box::NTuple{3,UnitRange{Int}}
     bond_axis::Symbol
+    support_contract::Symbol
     q::Int
     L::Int
 end
@@ -154,6 +155,9 @@ function _nested_validate_endcap_panel_boxes(
         )
         first(current) < first(inner) <= last(inner) < last(current) || throw(
             ArgumentError("nested endcap/panel inner box must be a strict interior box on every axis"),
+        )
+        first(inner) == first(current) + 1 && last(inner) == last(current) - 1 || throw(
+            ArgumentError("nested endcap/panel producer currently supports only one-cell-thick endcap/perimeter shells"),
         )
     end
     return nothing
@@ -231,6 +235,7 @@ function _nested_endcap_panel_unit(
             current_box = current_box,
             inner_box = inner_box,
             bond_axis = bond_axis,
+            support_contract = :thin_endcap_box_perimeter,
             enforce_symmetric_odd = enforce_symmetric_odd,
             support_count = length(support_indices),
             retained_count = retained_count,
@@ -241,9 +246,12 @@ end
 """
     _nested_endcap_panel_owned_units(dims, current_box, inner_box; bond_axis=:z, q, L)
 
-Internal experimental support/count producer for one shared rectangular shell.
-It partitions `current_box \\ inner_box` into two bond-axis endcaps and four
-side panels with disjoint support ownership. The coefficient maps are sparse
+Internal experimental support/count producer for the validated thin
+endcap-box/perimeter shared-shell contract. The support is `current_box \\
+inner_box`, but only for a one-cell-thick shell: two full transverse endcaps on
+the bond-axis ends plus four side panels covering the transverse perimeter over
+the inner bond-axis span. Panel corners are assigned asymmetrically so each
+support index has exactly one owner. The coefficient maps are sparse
 direct-selector scaffolds sized to the intended retained counts; they are not
 yet the physical high-order endcap/panel contraction maps.
 """
@@ -263,7 +271,6 @@ function _nested_endcap_panel_owned_units(
     transverse_axes = Tuple(axis for axis in 1:3 if axis != bond_axis_index)
     first_transverse, second_transverse = transverse_axes
 
-    current_indices = ntuple(axis -> collect(current_box[axis]), 3)
     inner_indices = ntuple(axis -> collect(inner_box[axis]), 3)
     low_sides = ntuple(
         axis -> _nested_owned_unit_side_indices(current_box[axis], inner_box[axis], :low),
@@ -275,31 +282,20 @@ function _nested_endcap_panel_owned_units(
     )
 
     function endcap_support(side_indices)
-        axis_indices = ntuple(axis -> axis == bond_axis_index ? side_indices : current_indices[axis], 3)
+        axis_indices = ntuple(axis -> axis == bond_axis_index ? side_indices : collect(current_box[axis]), 3)
         return _nested_endcap_panel_support_indices(dims, axis_indices)
     end
 
-    function first_panel_support(side_indices)
+    function perimeter_panel_support(fixed_axis::Int, fixed_value::Int, trace_axis::Int, trace_range)
         axis_indices = ntuple(axis -> begin
             if axis == bond_axis_index
                 inner_indices[axis]
-            elseif axis == first_transverse
-                side_indices
+            elseif axis == fixed_axis
+                [fixed_value]
+            elseif axis == trace_axis
+                collect(trace_range)
             else
-                current_indices[axis]
-            end
-        end, 3)
-        return _nested_endcap_panel_support_indices(dims, axis_indices)
-    end
-
-    function second_panel_support(side_indices)
-        axis_indices = ntuple(axis -> begin
-            if axis == bond_axis_index || axis == first_transverse
-                inner_indices[axis]
-            elseif axis == second_transverse
-                side_indices
-            else
-                current_indices[axis]
+                throw(ArgumentError("nested endcap/panel perimeter support received inconsistent transverse axes"))
             end
         end, 3)
         return _nested_endcap_panel_support_indices(dims, axis_indices)
@@ -307,6 +303,10 @@ function _nested_endcap_panel_owned_units(
 
     first_axis = _nested_axis_symbol(first_transverse)
     second_axis = _nested_axis_symbol(second_transverse)
+    first_low = first(current_box[first_transverse])
+    first_high = last(current_box[first_transverse])
+    second_low = first(current_box[second_transverse])
+    second_high = last(current_box[second_transverse])
     units = (
         _nested_endcap_panel_unit(
             :endcap_low,
@@ -331,8 +331,13 @@ function _nested_endcap_panel_owned_units(
             enforce_symmetric_odd,
         ),
         _nested_endcap_panel_unit(
-            Symbol(:panel_, first_axis, :_low),
-            first_panel_support(low_sides[first_transverse]),
+            Symbol(:panel_, second_axis, :_low),
+            perimeter_panel_support(
+                second_transverse,
+                second_low,
+                first_transverse,
+                first_low:(first_high - 1),
+            ),
             q * L;
             q,
             L,
@@ -343,18 +348,12 @@ function _nested_endcap_panel_owned_units(
         ),
         _nested_endcap_panel_unit(
             Symbol(:panel_, first_axis, :_high),
-            first_panel_support(high_sides[first_transverse]),
-            q * L;
-            q,
-            L,
-            current_box,
-            inner_box,
-            bond_axis,
-            enforce_symmetric_odd,
-        ),
-        _nested_endcap_panel_unit(
-            Symbol(:panel_, second_axis, :_low),
-            second_panel_support(low_sides[second_transverse]),
+            perimeter_panel_support(
+                first_transverse,
+                first_high,
+                second_transverse,
+                second_low:(second_high - 1),
+            ),
             q * L;
             q,
             L,
@@ -365,7 +364,28 @@ function _nested_endcap_panel_owned_units(
         ),
         _nested_endcap_panel_unit(
             Symbol(:panel_, second_axis, :_high),
-            second_panel_support(high_sides[second_transverse]),
+            perimeter_panel_support(
+                second_transverse,
+                second_high,
+                first_transverse,
+                (first_low + 1):first_high,
+            ),
+            q * L;
+            q,
+            L,
+            current_box,
+            inner_box,
+            bond_axis,
+            enforce_symmetric_odd,
+        ),
+        _nested_endcap_panel_unit(
+            Symbol(:panel_, first_axis, :_low),
+            perimeter_panel_support(
+                first_transverse,
+                first_low,
+                second_transverse,
+                (second_low + 1):second_high,
+            ),
             q * L;
             q,
             L,
@@ -388,6 +408,7 @@ function _nested_endcap_panel_owned_units(
         current_box,
         inner_box,
         bond_axis,
+        :thin_endcap_box_perimeter,
         q,
         L,
     )

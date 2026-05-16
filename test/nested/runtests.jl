@@ -122,9 +122,9 @@ end
 end
 
 @testset "Cartesian nested endcap-panel owned shell producer" begin
-    dims = (7, 7, 7)
-    current_box = (1:7, 1:7, 1:7)
-    inner_box = (2:6, 2:6, 2:6)
+    dims = (5, 5, 7)
+    current_box = (1:5, 1:5, 1:7)
+    inner_box = (2:4, 2:4, 2:6)
     expected_support = setdiff(
         GaussletBases._nested_box_support_indices(current_box..., dims),
         GaussletBases._nested_box_support_indices(inner_box..., dims),
@@ -133,47 +133,65 @@ end
     expected_roles = (
         :endcap_low,
         :endcap_high,
-        :panel_x_low,
-        :panel_x_high,
         :panel_y_low,
+        :panel_x_high,
         :panel_y_high,
+        :panel_x_low,
     )
-    expected_support_counts = (49, 49, 35, 35, 25, 25)
+    expected_support_counts = (25, 25, 20, 20, 20, 20)
+    expected_unit_states = (
+        sort([(ix, iy, 1) for ix in 1:5 for iy in 1:5]),
+        sort([(ix, iy, 7) for ix in 1:5 for iy in 1:5]),
+        sort([(ix, 1, iz) for ix in 1:4 for iz in 2:6]),
+        sort([(5, iy, iz) for iy in 1:4 for iz in 2:6]),
+        sort([(ix, 5, iz) for ix in 2:5 for iz in 2:6]),
+        sort([(1, iy, iz) for iy in 2:5 for iz in 2:6]),
+    )
 
-    for (q, L, retained_count) in ((3, 3, 54), (4, 4, 96), (5, 5, 150))
-        producer = GaussletBases._nested_endcap_panel_owned_units(
-            dims,
-            current_box,
-            inner_box;
-            bond_axis = :z,
-            q,
-            L,
-        )
-        units = producer.units
-        owned_support = reduce(vcat, (unit.support_indices for unit in units))
+    q, L = 4, 4
+    retained_count = 2 * q^2 + 4 * q * L
+    producer = GaussletBases._nested_endcap_panel_owned_units(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis = :z,
+        q,
+        L,
+    )
+    units = producer.units
+    owned_support = reduce(vcat, (unit.support_indices for unit in units))
+    unit_states = Tuple(
+        sort([GaussletBases._cartesian_unflat_index(index, dims) for index in unit.support_indices])
+        for unit in units
+    )
 
-        @test producer.expected_support_indices == expected_support
-        @test producer.audit.expected_support_count == length(expected_support)
-        @test producer.audit.owned_support_count == length(expected_support)
-        @test producer.audit.duplicate_count == 0
-        @test producer.audit.missing_count == 0
-        @test producer.audit.outside_count == 0
-        @test producer.audit.retained_count == retained_count
-        @test producer.audit.coverage_ok
-        @test length(owned_support) == length(unique(owned_support))
-        @test sort(owned_support) == expected_support
-        @test getfield.(units, :role) == expected_roles
-        @test length.(getfield.(units, :support_indices)) == expected_support_counts
-        @test sum(size(unit.coefficient_matrix, 2) for unit in units) == retained_count
-        @test all(unit.coefficient_matrix isa SparseMatrixCSC{Float64,Int} for unit in units)
-        @test all(size(unit.coefficient_matrix, 1) == length(unit.support_indices) for unit in units)
-        @test all(all(isfinite, nonzeros(unit.coefficient_matrix)) for unit in units)
-        @test all(unit.metadata.q == q for unit in units)
-        @test all(unit.metadata.L == L for unit in units)
-        @test all(unit.metadata.bond_axis == :z for unit in units)
-        @test first(units).metadata.retained_count == q * q
-        @test last(units).metadata.retained_count == q * L
-    end
+    @test producer.support_contract == :thin_endcap_box_perimeter
+    @test producer.expected_support_indices == expected_support
+    @test length(expected_support) == 130
+    @test producer.audit.expected_support_count == 130
+    @test producer.audit.owned_support_count == 130
+    @test producer.audit.duplicate_count == 0
+    @test producer.audit.missing_count == 0
+    @test producer.audit.outside_count == 0
+    @test producer.audit.retained_count == 96
+    @test producer.audit.retained_count == retained_count
+    @test producer.audit.coverage_ok
+    @test length(owned_support) == length(unique(owned_support))
+    @test sort(owned_support) == expected_support
+    @test getfield.(units, :role) == expected_roles
+    @test unit_states == expected_unit_states
+    @test length.(getfield.(units, :support_indices)) == expected_support_counts
+    @test sum(size(unit.coefficient_matrix, 2) for unit in units) == retained_count
+    @test all(unit.coefficient_matrix isa SparseMatrixCSC{Float64,Int} for unit in units)
+    @test all(size(unit.coefficient_matrix, 1) == length(unit.support_indices) for unit in units)
+    @test all(size(unit.coefficient_matrix, 2) == 16 for unit in units)
+    @test all(all(isfinite, nonzeros(unit.coefficient_matrix)) for unit in units)
+    @test all(unit.metadata.q == q for unit in units)
+    @test all(unit.metadata.L == L for unit in units)
+    @test all(unit.metadata.bond_axis == :z for unit in units)
+    @test all(unit.metadata.support_contract == :thin_endcap_box_perimeter for unit in units)
+    @test first(units).metadata.retained_count == q * q
+    @test last(units).metadata.retained_count == q * L
 
     x_axis = GaussletBases._nested_endcap_panel_owned_units(
         dims,
@@ -186,10 +204,10 @@ end
     @test getfield.(x_axis.units, :role) == (
         :endcap_low,
         :endcap_high,
-        :panel_y_low,
-        :panel_y_high,
         :panel_z_low,
+        :panel_y_high,
         :panel_z_high,
+        :panel_y_low,
     )
     @test x_axis.audit.coverage_ok
 
@@ -228,10 +246,10 @@ end
     @test_throws ArgumentError GaussletBases._nested_endcap_panel_owned_units(
         dims,
         current_box,
-        inner_box;
+        (3:4, 2:4, 2:6);
         bond_axis = :z,
-        q = 6,
-        L = 6,
+        q = 3,
+        L = 3,
     )
 end
 
