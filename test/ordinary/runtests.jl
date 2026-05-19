@@ -327,7 +327,7 @@ end
         reference_spacing = 1.0,
     ))
     supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
-    expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+    expansion = coulomb_gaussian_expansion(doacc = false)
     operators = ordinary_cartesian_qiu_white_operators(
         basis,
         supplement;
@@ -706,7 +706,7 @@ end
             xmax_transverse = 4.0,
             bond_axis = :z,
         )
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
         term_coefficients = Float64.(expansion.coefficients)
         supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
             "H",
@@ -1857,35 +1857,35 @@ end
     ))
     mild_reference = mapped_ordinary_one_body_operators(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :numerical_reference,
     )
     mild_analytic = mapped_ordinary_one_body_operators(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_experimental,
     )
     mild_localized = mapped_ordinary_one_body_operators(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_localized_experimental,
     )
     mild_oracle = GaussletBases._mapped_ordinary_localized_oracle_operators(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
     )
     (_, _, overlap_reference_localized, kinetic_reference_localized, _) =
-        _localized_numerical_reference_1d(mild_basis, expansion.exponents[1:3])
+        _localized_numerical_reference_1d(mild_basis, expansion.exponents)
     pgdg_layer = GaussletBases._mapped_ordinary_backend_layer(mild_basis, :pgdg_experimental)
     localized_layer = GaussletBases._mapped_ordinary_backend_layer(mild_basis, :pgdg_localized_experimental)
     pgdg_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_experimental,
     )
     localized_bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_localized_experimental,
     )
 
@@ -1913,9 +1913,9 @@ end
     @test mild_reference.kinetic ≈ transpose(mild_reference.kinetic) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_analytic.kinetic ≈ transpose(mild_analytic.kinetic) atol = 1.0e-10 rtol = 1.0e-10
     @test mild_localized.kinetic ≈ transpose(mild_localized.kinetic) atol = 1.0e-10 rtol = 1.0e-10
-    @test length(mild_reference.gaussian_factors) == 3
-    @test length(mild_analytic.gaussian_factors) == 3
-    @test length(mild_localized.gaussian_factors) == 3
+    @test length(mild_reference.gaussian_factors) == length(expansion.exponents)
+    @test length(mild_analytic.gaussian_factors) == length(expansion.exponents)
+    @test length(mild_localized.gaussian_factors) == length(expansion.exponents)
     @test mild_basis isa MappedUniformBasis
     @test norm(mild_reference.overlap - mild_analytic.overlap, Inf) < 0.05
     @test norm(mild_reference.kinetic - mild_analytic.kinetic, Inf) < 0.05
@@ -1925,6 +1925,8 @@ end
     @test norm(mild_localized.overlap - overlap_reference_localized, Inf) < 1.0e-10
     @test norm(mild_oracle.kinetic - kinetic_reference_localized, Inf) <
           norm(mild_localized.kinetic - kinetic_reference_localized, Inf)
+    warning_expansion = _single_term_coulomb_expansion_for_formula_test(expansion)
+
     @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") overlap_matrix(
         primitive_set(mild_basis),
     )
@@ -1934,17 +1936,17 @@ end
     @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._primitive_gaussian_factor_matrices(
         primitive_set(mild_basis),
         GaussletBases._NumericalPrimitiveMatrixBackend();
-        exponents = expansion.exponents[1:3],
+        exponents = warning_expansion.exponents,
         center = 0.0,
     )
     @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._primitive_pair_gaussian_factor_matrices(
         primitive_set(mild_basis),
         GaussletBases._NumericalPrimitiveMatrixBackend();
-        exponents = expansion.exponents[1:3],
+        exponents = warning_expansion.exponents,
     )
     @test_logs match_mode = :any (:warn, r"RED ALERT: using numerical quadrature") GaussletBases._mapped_ordinary_localized_oracle_operators(
         mild_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = warning_expansion.exponents,
     )
 end
 
@@ -2329,12 +2331,12 @@ end
 
     @test mapped_ordinary_one_body_operators(
         mapped_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_experimental,
     ).backend == :pgdg_experimental
     @test mapped_ordinary_one_body_operators(
         mapped_basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :pgdg_localized_experimental,
     ).backend == :pgdg_localized_experimental
 
@@ -3378,7 +3380,7 @@ end
         @test shell_equalized_error isa ArgumentError
         @test occursin("not implemented yet", sprint(showerror, shell_equalized_error))
 
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
         contracted_supplement = legacy_atomic_gaussian_supplement(
             "He",
             "repo-dz";
@@ -4028,7 +4030,7 @@ end
             mapping = fit_asinh_mapping_for_strength(s = 0.8, npoints = 3, xmax = 3.0),
             reference_spacing = 1.0,
         ))
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 1)
+        expansion = _single_term_coulomb_expansion_for_formula_test(coulomb_gaussian_expansion(doacc = false))
         operators = ordinary_cartesian_qiu_white_operators(
             source_basis,
             lmax6;
@@ -4170,7 +4172,7 @@ end
                 basisfile = qw_path,
                 max_width = 1.0,
             )
-            expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 1)
+            expansion = _single_term_coulomb_expansion_for_formula_test(coulomb_gaussian_expansion(doacc = false))
             nearest = ordinary_cartesian_qiu_white_operators(
                 qw_basis,
                 qw_supplement;
@@ -4409,7 +4411,7 @@ end
 end
 
 @testset "Ordinary Cartesian localized backend" begin
-    expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+    expansion = coulomb_gaussian_expansion(doacc = false)
     basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
         mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 6.0),
@@ -4509,13 +4511,16 @@ end
     @test norm(one_body_reference.overlap - I, Inf) < 1.0e-10
     @test norm(one_body_analytic.overlap - I, Inf) < 1.0e-10
     @test one_body_analytic.kinetic ≈ transpose(one_body_analytic.kinetic) atol = 1.0e-10 rtol = 1.0e-10
-    hybrid_factor_diff = maximum(
-        norm(one_body_analytic.gaussian_factors[index] - one_body_reference.gaussian_factors[index], Inf)
-        for index in eachindex(one_body_analytic.gaussian_factors)
+    formula_factor_index = first(eachindex(one_body_analytic.gaussian_factors))
+    hybrid_factor_diff = norm(
+        one_body_analytic.gaussian_factors[formula_factor_index] -
+        one_body_reference.gaussian_factors[formula_factor_index],
+        Inf,
     )
-    hard_factor_diff = maximum(
-        norm(hard_analytic.gaussian_factors[index] - hard_reference.gaussian_factors[index], Inf)
-        for index in eachindex(hard_analytic.gaussian_factors)
+    hard_factor_diff = norm(
+        hard_analytic.gaussian_factors[formula_factor_index] -
+        hard_reference.gaussian_factors[formula_factor_index],
+        Inf,
     )
     @test hybrid_factor_diff < hard_factor_diff
     @test abs(energy_analytic - energy_reference) <
@@ -4735,7 +4740,7 @@ if _RUN_SLOW_TESTS
     end
 
     @testset "Ordinary Cartesian IDA backend regimes" begin
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
 
         function ida_difference(s_value)
             basis = build_basis(MappedUniformBasisSpec(:G10;
@@ -4801,7 +4806,7 @@ if _RUN_SLOW_TESTS
     end
 
     @testset "Ordinary Cartesian localized backend agreement" begin
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
 
         function build_pair(s_value)
             basis = build_basis(MappedUniformBasisSpec(:G10;

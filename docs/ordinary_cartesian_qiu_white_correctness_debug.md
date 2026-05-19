@@ -30,17 +30,19 @@ The fix was simply to assign the column vector directly.
 The alarming near-zero outputs from the public Qiu-White example were not, by
 themselves, evidence that the Qiu-White path had collapsed.
 
-That example was still using a deliberately truncated Coulomb expansion
-(`nterms = 3`) as a structural smoke check. On that same truncated setup, the
-simpler ordinary path also gives very small one-body and interaction scalars.
+That example was using a deliberately truncated Coulomb expansion as a
+structural smoke check. On that same truncated setup, the simpler ordinary path
+also gives very small one-body and interaction scalars.
 
 So the very small example values were mainly a benchmark-definition problem:
 
 - the example was structural
 - the `1.25 Eh` He `1s^2` target is the full-expansion physical benchmark
 
-The example output is now labeled more explicitly so that this truncated check
-is not confused with the physical benchmark.
+Reusable examples and chemistry-facing tests should now use at least the normal
+`doacc = false` Coulomb expansion. Tiny truncated expansions are not acceptable
+as silent defaults because they can erase the distance dependence of the
+interaction.
 
 ## What caused the full-expansion collapse
 

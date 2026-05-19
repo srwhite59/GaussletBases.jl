@@ -1,21 +1,10 @@
 using LinearAlgebra
 using GaussletBases
 
-function truncate_expansion(expansion::CoulombGaussianExpansion, nterms::Int)
-    return CoulombGaussianExpansion(
-        expansion.coefficients[1:nterms],
-        expansion.exponents[1:nterms];
-        del = expansion.del,
-        s = expansion.s,
-        c = expansion.c,
-        maxu = expansion.maxu,
-    )
-end
-
 Z = 2.0
 npoints = 5
 rmax = 6.0
-expansion = truncate_expansion(coulomb_gaussian_expansion(doacc = false), 3)
+expansion = coulomb_gaussian_expansion(doacc = false)
 
 mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = npoints, xmax = rmax)
 basis = build_basis(MappedUniformBasisSpec(:G10;

@@ -43,15 +43,7 @@ function one_body_hamiltonian_3d(
     return overlap_3d, hamiltonian
 end
 
-full_expansion = coulomb_gaussian_expansion(doacc = false)
-expansion = CoulombGaussianExpansion(
-    full_expansion.coefficients[1:3],
-    full_expansion.exponents[1:3];
-    del = full_expansion.del,
-    s = full_expansion.s,
-    c = full_expansion.c,
-    maxu = full_expansion.maxu,
-)
+expansion = coulomb_gaussian_expansion(doacc = false)
 
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 5,

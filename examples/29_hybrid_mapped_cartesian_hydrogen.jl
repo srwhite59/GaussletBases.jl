@@ -6,19 +6,7 @@
 using LinearAlgebra
 using GaussletBases
 
-function truncate_expansion(expansion::CoulombGaussianExpansion, nterms::Int)
-    return CoulombGaussianExpansion(
-        expansion.coefficients[1:nterms],
-        expansion.exponents[1:nterms];
-        del = expansion.del,
-        s = expansion.s,
-        c = expansion.c,
-        maxu = expansion.maxu,
-    )
-end
-
-full_expansion = coulomb_gaussian_expansion(doacc = false)
-hydrogen_expansion = truncate_expansion(full_expansion, 5)
+hydrogen_expansion = coulomb_gaussian_expansion(doacc = false)
 
 basis = build_basis(MappedUniformBasisSpec(:G10;
     count = 5,

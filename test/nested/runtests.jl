@@ -14,7 +14,7 @@
     basis, s = _fixed_a_nested_test_basis(13)
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :numerical_reference,
         refinement_levels = 0,
     )
@@ -138,7 +138,7 @@ end
         expansion = coulomb_gaussian_expansion(doacc = false)
         return GaussletBases._mapped_ordinary_gausslet_1d_bundle(
             basis;
-            exponents = expansion.exponents[1:3],
+            exponents = expansion.exponents,
             backend = :numerical_reference,
             refinement_levels = 0,
         )
@@ -275,7 +275,7 @@ end
         coefficient_contract = :product_doside,
     )
 
-    term_coefficients = Float64.(coulomb_gaussian_expansion(doacc = false).coefficients[1:3])
+    term_coefficients = Float64.(coulomb_gaussian_expansion(doacc = false).coefficients)
     layer = GaussletBases._nested_endcap_panel_shell_layer(
         bundles,
         current_box,
@@ -535,12 +535,12 @@ end
     basis, s = _fixed_a_nested_shell_basis(13)
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :numerical_reference,
         refinement_levels = 0,
     )
     pgdg = bundle.pgdg_intermediate
-    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     interval = 2:(length(basis) - 1)
     shell = GaussletBases._nested_xy_shell_pair(
         bundle,
@@ -631,12 +631,12 @@ end
     ))
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :numerical_reference,
         refinement_levels = 0,
     )
     pgdg = bundle.pgdg_intermediate
-    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     interval = 2:(length(basis) - 1)
     shell = GaussletBases._nested_rectangular_shell(
         bundle,
@@ -728,12 +728,12 @@ end
     basis, s = _fixed_a_multi_face_basis(13)
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
-        exponents = expansion.exponents[1:3],
+        exponents = expansion.exponents,
         backend = :numerical_reference,
         refinement_levels = 0,
     )
     interval = 2:(length(basis) - 1)
-    term_coefficients = Float64[Float64(value) for value in expansion.coefficients[1:3]]
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
     shell = GaussletBases._nested_rectangular_shell(
         bundle,
         interval,

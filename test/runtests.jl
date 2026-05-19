@@ -307,10 +307,10 @@ function _quick_mapped_cartesian_hydrogen_fixture()
     end)
 end
 
-function _truncate_coulomb_expansion(expansion::CoulombGaussianExpansion, nterms::Int)
+function _single_term_coulomb_expansion_for_formula_test(expansion::CoulombGaussianExpansion)
     return CoulombGaussianExpansion(
-        expansion.coefficients[1:nterms],
-        expansion.exponents[1:nterms];
+        expansion.coefficients[1:1],
+        expansion.exponents[1:1];
         del = expansion.del,
         s = expansion.s,
         c = expansion.c,
@@ -321,8 +321,7 @@ end
 function _quick_ordinary_cartesian_ida_fixture(; backend = :pgdg_experimental, mapped = true, s = 0.5)
     key = Symbol(:ordinary_cartesian_ida, backend, mapped ? :mapped : :identity, s)
     return _cached_fixture(key, () -> begin
-        full_expansion = coulomb_gaussian_expansion(doacc = false)
-        expansion = _truncate_coulomb_expansion(full_expansion, 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
         mapping_value = mapped ?
             fit_asinh_mapping_for_strength(s = s, npoints = 5, xmax = 6.0) :
             IdentityMapping()
@@ -452,8 +451,7 @@ end
 
 function _quick_hybrid_mapped_ordinary_fixture()
     return _cached_fixture(:quick_hybrid_mapped_ordinary_fixture, () -> begin
-        full_expansion = coulomb_gaussian_expansion(doacc = false)
-        expansion = _truncate_coulomb_expansion(full_expansion, 3)
+        expansion = coulomb_gaussian_expansion(doacc = false)
         basis = build_basis(MappedUniformBasisSpec(:G10;
             count = 5,
             mapping = fit_asinh_mapping_for_strength(s = 0.2, npoints = 5, xmax = 6.0),
@@ -642,15 +640,15 @@ function _legacy_he_s_mwg_fixture(basis_name::String; s::Float64 = 0.6)
     end)
 end
 
-function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::Int = 9, s::Float64 = 0.8, nterms::Int = 3)
-    key = Symbol(:qiu_white_reference_fixture, Symbol(lowercase(basis_name)), count, round(Int, 1000 * s), nterms)
+function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::Int = 9, s::Float64 = 0.8)
+    key = Symbol(:qiu_white_reference_fixture, Symbol(lowercase(basis_name)), count, round(Int, 1000 * s))
     return _cached_fixture(key, () -> begin
         source_basis = build_basis(MappedUniformBasisSpec(:G10;
             count = count,
             mapping = fit_asinh_mapping_for_strength(s = s, npoints = count, xmax = 6.0),
             reference_spacing = 1.0,
         ))
-        expansion = _truncate_coulomb_expansion(coulomb_gaussian_expansion(doacc = false), nterms)
+        expansion = coulomb_gaussian_expansion(doacc = false)
         legacy = legacy_atomic_gaussian_supplement("He", basis_name; lmax = 0)
         hybrid_basis = hybrid_mapped_ordinary_basis(
             source_basis;
