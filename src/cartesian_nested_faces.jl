@@ -481,6 +481,12 @@ function _nested_factorized_basis_cache(
     return Base.RefValue{Any}(factorized_basis)
 end
 
+function _nested_factorized_basis_optional_failure(err)
+    err isa ArgumentError || return false
+    message = sprint(showerror, err)
+    return occursin("nested factorized-basis extraction failed to reconstruct", message)
+end
+
 function _nested_box_point_count(
     box::NTuple{3,UnitRange{Int}},
 )
@@ -2071,12 +2077,18 @@ function _nested_eager_factorized_basis_cache(
     parent_basis,
     coefficient_matrix::AbstractMatrix{<:Real},
 )
-    return _nested_factorized_basis_cache(
-        _nested_extract_factorized_basis(
-            coefficient_matrix,
-            _nested_parent_axis_counts(parent_basis),
-        ),
-    )
+    dims = _nested_parent_axis_counts(parent_basis)
+    try
+        return _nested_factorized_basis_cache(
+            _nested_extract_factorized_basis(
+                coefficient_matrix,
+                dims,
+            ),
+        )
+    catch err
+        _nested_factorized_basis_optional_failure(err) || rethrow()
+        return _nested_factorized_basis_cache()
+    end
 end
 
 function _nested_reconstruct_factorized_coefficients(

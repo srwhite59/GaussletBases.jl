@@ -179,6 +179,83 @@ end
                   reference_nested_contracted_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
         end
     end
+
+    nonfactorized_coefficients = Matrix{Float64}(fixed_block.coefficient_matrix)
+    triplets = nested_factorized_basis.basis_triplets
+    mixed_columns = nothing
+    for left in eachindex(triplets), right in (left + 1):length(triplets)
+        sum(triplets[left][axis] != triplets[right][axis] for axis in 1:3) >= 2 || continue
+        mixed_columns = (left, right)
+        break
+    end
+    @test !isnothing(mixed_columns)
+    left_column, right_column = mixed_columns
+    column_one = copy(nonfactorized_coefficients[:, left_column])
+    column_two = copy(nonfactorized_coefficients[:, right_column])
+    nonfactorized_coefficients[:, left_column] .= (column_one .+ column_two) ./ sqrt(2.0)
+    nonfactorized_coefficients[:, right_column] .= (column_one .- column_two) ./ sqrt(2.0)
+    nonfactorized_cache = GaussletBases._nested_eager_factorized_basis_cache(
+        fixed_block.parent_basis,
+        nonfactorized_coefficients,
+    )
+    @test isnothing(nonfactorized_cache[])
+    @test_throws ArgumentError GaussletBases._nested_eager_factorized_basis_cache(
+        (;),
+        nonfactorized_coefficients,
+    )
+
+    nonfactorized_fixed_block = GaussletBases._NestedFixedBlock3D(
+        fixed_block.parent_basis,
+        fixed_block.shell,
+        nonfactorized_coefficients,
+        fixed_block.support_indices,
+        fixed_block.overlap,
+        fixed_block.kinetic,
+        fixed_block.position_x,
+        fixed_block.position_y,
+        fixed_block.position_z,
+        fixed_block.x2_x,
+        fixed_block.x2_y,
+        fixed_block.x2_z,
+        fixed_block.weights,
+        fixed_block.gaussian_sum,
+        fixed_block.pair_sum,
+        fixed_block.fixed_centers,
+        nonfactorized_cache,
+    )
+    @test isnothing(
+        GaussletBases._qwrg_try_nested_factorized_parent_basis(nonfactorized_fixed_block),
+    )
+    nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
+        fixed_block.parent_basis,
+        expansion;
+        gausslet_backend = :numerical_reference,
+    )
+    fallback_nuclear = GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+        fixed_block.parent_basis,
+        nonfactorized_fixed_block,
+        nested_bundles.bundle_x,
+        nested_bundles.bundle_y,
+        nested_bundles.bundle_z,
+        expansion,
+    )
+    reference_nuclear = GaussletBases._qwrg_bond_aligned_general_contracted_nuclear_one_body_by_center(
+        fixed_block.parent_basis,
+        nonfactorized_coefficients,
+        nested_bundles.bundle_x,
+        nested_bundles.bundle_y,
+        nested_bundles.bundle_z,
+        expansion,
+    )
+    @test length(fallback_nuclear) == 2
+    for nucleus_index in eachindex(fallback_nuclear, reference_nuclear)
+        @test all(isfinite, fallback_nuclear[nucleus_index])
+        @test fallback_nuclear[nucleus_index] ≈
+              transpose(fallback_nuclear[nucleus_index]) atol = 1.0e-12 rtol = 1.0e-12
+        @test fallback_nuclear[nucleus_index] ≈
+              reference_nuclear[nucleus_index] atol = 1.0e-12 rtol = 1.0e-12
+    end
+
     @test assembled_one_body_hamiltonian(full_nested_ops_localized) ≈
           full_nested_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12
     @test assembled_one_body_hamiltonian(full_nested_ops_localized; nuclear_charges = [1.0, 0.0]) ≈

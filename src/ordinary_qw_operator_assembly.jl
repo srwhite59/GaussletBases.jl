@@ -703,6 +703,88 @@ function _qwrg_final_nuclear_one_body_by_center(
     ]
 end
 
+function _qwrg_bond_aligned_general_contracted_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    contraction::AbstractMatrix{<:Real},
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion;
+    timing_setup_label::AbstractString = "qwrg.nuclear.general_contracted.setup",
+    timing_contract_label::AbstractString = "qwrg.nuclear.general_contracted.contract",
+)
+    parent_nuclear_one_body_by_center = @timeg timing_setup_label begin
+        _qwrg_diatomic_nuclear_one_body_by_center(
+            basis,
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion,
+        )
+    end
+    return @timeg timing_contract_label begin
+        [
+            _qwrg_contract_parent_symmetric_matrix(contraction, matrix) for
+            matrix in parent_nuclear_one_body_by_center
+        ]
+    end
+end
+
+function _qwrg_try_nested_factorized_parent_basis(
+    fixed_block::_NestedFixedBlock3D;
+    timing_label::AbstractString = "qwrg.nuclear.factorized_basis",
+)
+    try
+        return @timeg timing_label begin
+            _nested_factorized_parent_basis(fixed_block)
+        end
+    catch err
+        _nested_factorized_basis_optional_failure(err) || rethrow()
+        return nothing
+    end
+end
+
+function _qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    fixed_block::_NestedFixedBlock3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion;
+    timing_factorized_basis_label::AbstractString = "qwrg.nuclear.factorized_basis",
+    timing_setup_label::AbstractString = "qwrg.nuclear.direct_contracted.setup",
+    timing_contract_label::AbstractString = "qwrg.nuclear.direct_contracted.contract",
+    timing_general_setup_label::AbstractString = "qwrg.nuclear.general_contracted.setup",
+    timing_general_contract_label::AbstractString = "qwrg.nuclear.general_contracted.contract",
+)
+    factorized_basis = _qwrg_try_nested_factorized_parent_basis(
+        fixed_block;
+        timing_label = timing_factorized_basis_label,
+    )
+    if !isnothing(factorized_basis)
+        return _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+            basis,
+            factorized_basis,
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion;
+            timing_setup_label,
+            timing_contract_label,
+        )
+    end
+    return _qwrg_bond_aligned_general_contracted_nuclear_one_body_by_center(
+        basis,
+        fixed_block.coefficient_matrix,
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion;
+        timing_setup_label = timing_general_setup_label,
+        timing_contract_label = timing_general_contract_label,
+    )
+end
+
 function _qwrg_nearest_indices(
     gausslet_orbitals::AbstractVector{<:CartesianProductOrbital3D},
     residual_centers::AbstractMatrix{<:Real},
@@ -1545,21 +1627,19 @@ function _qwrg_bond_aligned_molecular_carried_one_body_blocks(
     end
     fixed_nuclear_one_body_by_center =
         use_by_center_final_mix ?
-        let
-            factorized_basis = @timeg "$(timing_prefix).one_body.carried.factorized_basis" begin
-                _nested_factorized_parent_basis(fixed_block)
-            end
-            _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
-                basis,
-                factorized_basis,
-                bundles.bundle_x,
-                bundles.bundle_y,
-                bundles.bundle_z,
-                expansion;
-                timing_setup_label = "$(timing_prefix).one_body.carried.nuclear_setup",
-                timing_contract_label = "$(timing_prefix).one_body.carried.nuclear_contract",
-            )
-        end :
+        _qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+            basis,
+            fixed_block,
+            bundles.bundle_x,
+            bundles.bundle_y,
+            bundles.bundle_z,
+            expansion;
+            timing_factorized_basis_label = "$(timing_prefix).one_body.carried.factorized_basis",
+            timing_setup_label = "$(timing_prefix).one_body.carried.nuclear_setup",
+            timing_contract_label = "$(timing_prefix).one_body.carried.nuclear_contract",
+            timing_general_setup_label = "$(timing_prefix).one_body.carried.general_nuclear_setup",
+            timing_general_contract_label = "$(timing_prefix).one_body.carried.general_nuclear_contract",
+        ) :
         nothing
     fixed_one_body =
         use_by_center_final_mix ?
@@ -2099,9 +2179,9 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
     kinetic_one_body = Matrix{Float64}(fixed_block.kinetic)
     direct_contracted_nuclear =
         resolved_nuclear_term_storage == :by_center ?
-        _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
+        _qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
             basis,
-            _nested_factorized_parent_basis(fixed_block),
+            fixed_block,
             bundles.bundle_x,
             bundles.bundle_y,
             bundles.bundle_z,
