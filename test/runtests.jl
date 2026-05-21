@@ -2713,7 +2713,7 @@ function _dense_exchange_reference(ops::AtomicIDAOperators, density::AbstractMat
         total = 0.0
         for (level_index, multipole) in enumerate(radial_multipoles), left_source in 1:nchannels, right_source in 1:nchannels
             total += multipole[left_radial, right_radial] *
-                     angular_kernels[level_index][left_channel, left_source, right_channel, right_source] *
+                     angular_kernels[level_index][left_channel, left_source, right_source, right_channel] *
                      density[orbital_index(left_source, left_radial), orbital_index(right_source, right_radial)]
         end
         reference[orbital_index(left_channel, left_radial), orbital_index(right_channel, right_radial)] = total

@@ -19,6 +19,8 @@ Sectorized angular-kernel preparation built from the sparse Gaunt table.
 
 For each multipole `L`, the object stores one dense matrix per conserved-`m`
 pair sector rather than one dense kernel over the full channel-pair space.
+The direct/Hartree sectors use conserved `m_left + m_right`; the exchange
+sectors use conserved `m_left - m_right` after the Fock exchange permutation.
 """
 struct AngularKernelSectors
     nchannels::Int
@@ -26,6 +28,10 @@ struct AngularKernelSectors
     pair_to_sector::Vector{Int}
     pair_to_local::Vector{Int}
     sector_matrices::Vector{Vector{Matrix{Float64}}}
+    exchange_sectors::Vector{AngularPairSector}
+    exchange_pair_to_sector::Vector{Int}
+    exchange_pair_to_local::Vector{Int}
+    exchange_sector_matrices::Vector{Vector{Matrix{Float64}}}
 end
 
 @inline _channel_pair_index(nchannels::Int, left::Int, right::Int) = (left - 1) * nchannels + right
@@ -61,6 +67,42 @@ function _pair_groups_by_msum(channels::YlmChannelSet)
         end
 
         push!(sectors, AngularPairSector(msum, pair_indices, left_indices, right_indices))
+    end
+
+    return sectors, pair_to_sector, pair_to_local
+end
+
+function _pair_groups_by_mdiff(channels::YlmChannelSet)
+    nchannels = length(channels)
+    grouped = Dict{Int, Vector{NTuple{3,Int}}}()
+
+    for left in 1:nchannels, right in 1:nchannels
+        mdiff = channels[left].m - channels[right].m
+        pair_index = _channel_pair_index(nchannels, left, right)
+        push!(get!(grouped, mdiff, NTuple{3,Int}[]), (left, right, pair_index))
+    end
+
+    sectors = AngularPairSector[]
+    pair_to_sector = zeros(Int, nchannels^2)
+    pair_to_local = zeros(Int, nchannels^2)
+
+    for (sector_index, mdiff) in enumerate(sort(collect(keys(grouped))))
+        tuples = grouped[mdiff]
+        sort!(tuples; by = tuple -> tuple[3])
+
+        pair_indices = Int[]
+        left_indices = Int[]
+        right_indices = Int[]
+
+        for (local_index, (left, right, pair_index)) in enumerate(tuples)
+            push!(pair_indices, pair_index)
+            push!(left_indices, left)
+            push!(right_indices, right)
+            pair_to_sector[pair_index] = sector_index
+            pair_to_local[pair_index] = local_index
+        end
+
+        push!(sectors, AngularPairSector(mdiff, pair_indices, left_indices, right_indices))
     end
 
     return sectors, pair_to_sector, pair_to_local
@@ -120,7 +162,87 @@ function _build_angular_kernel_sectors(
         sector_matrices[L + 1] = level
     end
 
-    return AngularKernelSectors(nchannels, sectors, pair_to_sector, pair_to_local, sector_matrices)
+    exchange_sectors, exchange_pair_to_sector, exchange_pair_to_local =
+        _pair_groups_by_mdiff(channels)
+    exchange_sector_matrices =
+        _build_exchange_sector_matrices(
+            nchannels,
+            exchange_sectors,
+            pair_to_sector,
+            pair_to_local,
+            sector_matrices,
+        )
+
+    return AngularKernelSectors(
+        nchannels,
+        sectors,
+        pair_to_sector,
+        pair_to_local,
+        sector_matrices,
+        exchange_sectors,
+        exchange_pair_to_sector,
+        exchange_pair_to_local,
+        exchange_sector_matrices,
+    )
+end
+
+function _direct_sector_matrix_value(
+    nchannels::Int,
+    pair_to_sector::AbstractVector{<:Integer},
+    pair_to_local::AbstractVector{<:Integer},
+    level::AbstractVector{<:AbstractMatrix{<:Real}},
+    alpha::Int,
+    beta::Int,
+    alphap::Int,
+    betap::Int,
+)
+    left_pair = _channel_pair_index(nchannels, alpha, beta)
+    right_pair = _channel_pair_index(nchannels, alphap, betap)
+    left_sector = pair_to_sector[left_pair]
+    right_sector = pair_to_sector[right_pair]
+    left_sector == right_sector || return 0.0
+    return level[left_sector][pair_to_local[left_pair], pair_to_local[right_pair]]
+end
+
+function _build_exchange_sector_matrices(
+    nchannels::Int,
+    exchange_sectors::AbstractVector{AngularPairSector},
+    direct_pair_to_sector::AbstractVector{<:Integer},
+    direct_pair_to_local::AbstractVector{<:Integer},
+    direct_sector_matrices::AbstractVector,
+)
+    exchange_sector_matrices =
+        Vector{Vector{Matrix{Float64}}}(undef, length(direct_sector_matrices))
+    for level_index in eachindex(direct_sector_matrices)
+        direct_level = direct_sector_matrices[level_index]
+        exchange_level = [
+            zeros(Float64, length(sector.pair_indices), length(sector.pair_indices))
+            for sector in exchange_sectors
+        ]
+        for (sector_index, sector) in enumerate(exchange_sectors)
+            matrix = exchange_level[sector_index]
+            for source_local in eachindex(sector.pair_indices)
+                source_left = sector.left_channel_indices[source_local]
+                source_right = sector.right_channel_indices[source_local]
+                for output_local in eachindex(sector.pair_indices)
+                    output_left = sector.left_channel_indices[output_local]
+                    output_right = sector.right_channel_indices[output_local]
+                    matrix[output_local, source_local] = _direct_sector_matrix_value(
+                        nchannels,
+                        direct_pair_to_sector,
+                        direct_pair_to_local,
+                        direct_level,
+                        output_left,
+                        source_right,
+                        source_left,
+                        output_right,
+                    )
+                end
+            end
+        end
+        exchange_sector_matrices[level_index] = exchange_level
+    end
+    return exchange_sector_matrices
 end
 
 function _dense_angular_kernel_from_sectors(sectors::AngularKernelSectors, L::Int)
@@ -163,4 +285,3 @@ function _angular_kernel_sector_value(
     right_local = sectors.pair_to_local[right_pair]
     return sectors.sector_matrices[L + 1][left_sector][left_local, right_local]
 end
-

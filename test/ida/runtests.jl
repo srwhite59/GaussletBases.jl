@@ -603,13 +603,38 @@ end
     selection_density[orbital_index(3, 1), orbital_index(1, 2)] = 1.0
     selection_density[orbital_index(1, 2), orbital_index(3, 1)] = 1.0
     selection_exchange = exchange_matrix(ida, selection_density)
-    target_msum = channels[3].m + channels[1].m
+    target_mdiff = channels[3].m - channels[1].m
 
     for left_channel in 1:nchannels, right_channel in 1:nchannels, left_radial in 1:radial_dim, right_radial in 1:radial_dim
         value = selection_exchange[orbital_index(left_channel, left_radial), orbital_index(right_channel, right_radial)]
-        if channels[left_channel].m + channels[right_channel].m != target_msum
+        if channels[left_channel].m - channels[right_channel].m != target_mdiff
             @test abs(value) ≤ 1.0e-12
         end
+    end
+
+    channel_index_by_lm(l::Int, m::Int) =
+        findfirst(channel -> channel.l == l && channel.m == m, channels.channel_data)
+    s_channel = channel_index_by_lm(0, 0)
+    radial_index = min(3, radial_dim)
+    s_orbital = orbital_index(s_channel, radial_index)
+    for shell_l in 1:2
+        shell_density = zeros(Float64, norbitals, norbitals)
+        direct_values = Float64[]
+        exchange_values = Float64[]
+        for m in -shell_l:shell_l
+            shell_channel = channel_index_by_lm(shell_l, m)
+            shell_orbital = orbital_index(shell_channel, radial_index)
+            density_m = zeros(Float64, norbitals, norbitals)
+            density_m[shell_orbital, shell_orbital] = 1.0
+            shell_density[shell_orbital, shell_orbital] = 1.0
+            push!(direct_values, direct_matrix(ida, density_m)[s_orbital, s_orbital])
+            push!(exchange_values, exchange_matrix(ida, density_m)[s_orbital, s_orbital])
+        end
+        @test direct_values ≈ fill(direct_values[1], length(direct_values)) atol = 1.0e-12 rtol = 1.0e-12
+        @test exchange_values ≈ fill(exchange_values[1], length(exchange_values)) atol = 1.0e-12 rtol = 1.0e-12
+        @test minimum(abs.(exchange_values)) > 1.0e-12
+        @test direct_matrix(ida, shell_density)[s_orbital, s_orbital] ≈ sum(direct_values) atol = 1.0e-12 rtol = 1.0e-12
+        @test exchange_matrix(ida, shell_density)[s_orbital, s_orbital] ≈ sum(exchange_values) atol = 1.0e-12 rtol = 1.0e-12
     end
 end
 

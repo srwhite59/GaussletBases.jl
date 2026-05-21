@@ -909,6 +909,9 @@ end
     @test length(sectors.pair_to_sector) == nchannels^2
     @test length(sectors.pair_to_local) == nchannels^2
     @test sum(length(sector.pair_indices) for sector in sectors.sectors) == nchannels^2
+    @test length(sectors.exchange_pair_to_sector) == nchannels^2
+    @test length(sectors.exchange_pair_to_local) == nchannels^2
+    @test sum(length(sector.pair_indices) for sector in sectors.exchange_sectors) == nchannels^2
 
     for (sector_index, sector) in enumerate(sectors.sectors)
         @test issorted(sector.pair_indices)
@@ -925,6 +928,23 @@ end
 
         @test length(matrix_by_L) == GaussletBases.gaunt_Lmax(ida.gaunt_table) + 1
         for level in matrix_by_L
+            @test size(level[sector_index]) == (length(sector.pair_indices), length(sector.pair_indices))
+        end
+    end
+
+    for (sector_index, sector) in enumerate(sectors.exchange_sectors)
+        @test issorted(sector.pair_indices)
+        for local_index in eachindex(sector.pair_indices)
+            pair_index = sector.pair_indices[local_index]
+            alpha = sector.left_channel_indices[local_index]
+            beta = sector.right_channel_indices[local_index]
+            @test channels[alpha].m - channels[beta].m == sector.msum
+            @test sectors.exchange_pair_to_sector[pair_index] == sector_index
+            @test sectors.exchange_pair_to_local[pair_index] == local_index
+        end
+
+        @test length(sectors.exchange_sector_matrices) == GaussletBases.gaunt_Lmax(ida.gaunt_table) + 1
+        for level in sectors.exchange_sector_matrices
             @test size(level[sector_index]) == (length(sector.pair_indices), length(sector.pair_indices))
         end
     end

@@ -39,7 +39,7 @@ function _sectorized_exchange_blocks(
         density_block = density_blocks[left_radial, right_radial]
         exchange_block = zeros(Float64, nchannels, nchannels)
 
-        for (sector_index, sector) in enumerate(sectors.sectors)
+        for (sector_index, sector) in enumerate(sectors.exchange_sectors)
             x = Vector{Float64}(undef, length(sector.pair_indices))
             for local_index in eachindex(sector.pair_indices)
                 left_channel = sector.left_channel_indices[local_index]
@@ -51,7 +51,7 @@ function _sectorized_exchange_blocks(
             for (level_index, multipole) in enumerate(radial_multipoles)
                 coefficient = multipole[left_radial, right_radial]
                 coefficient == 0.0 && continue
-                y .+= coefficient .* (sectors.sector_matrices[level_index][sector_index] * x)
+                y .+= coefficient .* (sectors.exchange_sector_matrices[level_index][sector_index] * x)
             end
 
             for local_index in eachindex(sector.pair_indices)

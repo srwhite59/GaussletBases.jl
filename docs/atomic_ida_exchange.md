@@ -72,7 +72,7 @@ The exchange term instead has the form
 K_{(p,\alpha),(q,\beta)}
 = \sum_{L,\alpha',\beta'}
 M^{(L)}_{p q}\,
-Q_L(\alpha,\alpha',\beta,\beta')\,
+Q_L(\alpha,\alpha',\beta',\beta)\,
 \rho_{(p,\alpha'),(q,\beta')}.
 ```
 
@@ -81,21 +81,22 @@ produces a full two-site one-body matrix.
 
 ## 4. How the sectorized angular representation is used
 
-The key angular fact is the same as before:
+The key angular fact uses the exchanged channel ordering:
 
 ```math
-m_\alpha + m_\beta = m_{\alpha'} + m_{\beta'}
+m_\alpha - m_\beta = m_{\alpha'} - m_{\beta'}
 ```
 
-for any nonzero kernel element.
+for any nonzero exchange kernel element.
 
-So the current sectorized angular structure can be used directly:
+So the current sectorized angular structure is used with an exchange
+permutation:
 
-1. group channel pairs by conserved `m` sum
-2. gather the density block for one radial pair `(p,q)` into those sectors
-3. apply the per-sector angular kernels
+1. use the sectorized direct kernel for pairs `(α,β')` and `(α',β)`
+2. gather the density entry `ρ(α',β')`
+3. apply the exchanged kernel element `Q_L(α,α',β',β)`
 4. scale by the radial multipole value `M^{(L)}_{p q}`
-5. scatter the result back into the orbital matrix
+5. scatter the result to `K(α,β)`
 
 That means the real implementation path can stay on:
 
