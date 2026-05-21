@@ -1647,6 +1647,9 @@ function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixe
         GaussletBases._nested_factorized_basis_cache(
             fixed_block.factorized_cartesian_parent_basis[],
         ),
+        GaussletBases._nested_staged_by_center_sidecar_cache(
+            fixed_block.staged_by_center_sidecar[],
+        ),
     )
 end
 

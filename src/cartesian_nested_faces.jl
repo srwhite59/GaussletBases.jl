@@ -469,6 +469,17 @@ struct _NestedFixedBlock3D{B,S}
     pair_sum::Union{Nothing,Matrix{Float64}}
     fixed_centers::Matrix{Float64}
     factorized_cartesian_parent_basis::Base.RefValue{Any}
+    staged_by_center_sidecar::Base.RefValue{Any}
+end
+
+struct _CartesianNestedStagedByCenterSidecar3D
+    dims::NTuple{3,Int}
+    block_column_ranges::Vector{UnitRange{Int}}
+    block_support_indices::Vector{Vector{Int}}
+    block_support_states::Vector{Vector{NTuple{3,Int}}}
+    block_coefficients::Vector{_CartesianCoefficientMap}
+    provenance::Any
+    diagnostics::Any
 end
 
 function _nested_factorized_basis_cache()
@@ -479,6 +490,14 @@ function _nested_factorized_basis_cache(
     factorized_basis,
 )
     return Base.RefValue{Any}(factorized_basis)
+end
+
+function _nested_staged_by_center_sidecar_cache()
+    return Base.RefValue{Any}(nothing)
+end
+
+function _nested_staged_by_center_sidecar_cache(sidecar)
+    return Base.RefValue{Any}(sidecar)
 end
 
 function _nested_factorized_basis_optional_failure(err)
@@ -2071,6 +2090,149 @@ function _nested_factorized_parent_basis(fixed_block::_NestedFixedBlock3D)
     )
     fixed_block.factorized_cartesian_parent_basis[] = factorized_basis
     return factorized_basis
+end
+
+function _nested_default_staged_sidecar_column_ranges(fixed_block::_NestedFixedBlock3D)
+    shell = fixed_block.shell
+    if shell isa _CartesianNestedShellSequence3D
+        ranges = UnitRange{Int}[shell.core_column_range]
+        append!(ranges, shell.layer_column_ranges)
+        return ranges
+    end
+    return UnitRange{Int}[1:size(fixed_block.coefficient_matrix, 2)]
+end
+
+function _nested_nonzero_coefficient_rows(
+    coefficients::AbstractMatrix{<:Real};
+    atol::Real = 1.0e-14,
+)
+    row_used = falses(size(coefficients, 1))
+    if coefficients isa SparseArrays.SparseMatrixCSC
+        rows = SparseArrays.rowvals(coefficients)
+        values = SparseArrays.nonzeros(coefficients)
+        @inbounds for index in eachindex(values)
+            abs(Float64(values[index])) > atol && (row_used[rows[index]] = true)
+        end
+    else
+        @inbounds for column in axes(coefficients, 2), row in axes(coefficients, 1)
+            if abs(Float64(coefficients[row, column])) > atol
+                row_used[row] = true
+            end
+        end
+    end
+    return findall(row_used)
+end
+
+function _nested_build_staged_by_center_sidecar(
+    fixed_block::_NestedFixedBlock3D;
+    block_column_ranges::Union{Nothing,AbstractVector{<:UnitRange{Int}}} = nothing,
+    atol::Real = 1.0e-14,
+    provenance = (; source = :nested_fixed_block),
+)
+    dims = _nested_parent_axis_counts(fixed_block.parent_basis)
+    ncolumns = size(fixed_block.coefficient_matrix, 2)
+    ranges = isnothing(block_column_ranges) ?
+        _nested_default_staged_sidecar_column_ranges(fixed_block) :
+        UnitRange{Int}[range for range in block_column_ranges]
+    isempty(ranges) && throw(
+        ArgumentError("staged by-center sidecar requires at least one column block"),
+    )
+    for range in ranges
+        first(range) >= 1 && last(range) <= ncolumns || throw(
+            ArgumentError("staged by-center sidecar column block $range exceeds final dimension $ncolumns"),
+        )
+    end
+    covered_columns = sort!(reduce(vcat, (collect(range) for range in ranges)))
+    covered_columns == collect(1:ncolumns) || throw(
+        ArgumentError("staged by-center sidecar column blocks must cover each final representative exactly once"),
+    )
+
+    block_support_indices = Vector{Vector{Int}}(undef, length(ranges))
+    block_support_states = Vector{Vector{NTuple{3,Int}}}(undef, length(ranges))
+    block_coefficients = Vector{_CartesianCoefficientMap}(undef, length(ranges))
+    support_counts = Vector{Int}(undef, length(ranges))
+    column_counts = Vector{Int}(undef, length(ranges))
+    for (block_index, range) in pairs(ranges)
+        coefficient_block = fixed_block.coefficient_matrix[:, range]
+        local_rows = _nested_nonzero_coefficient_rows(coefficient_block; atol)
+        isempty(local_rows) && throw(
+            ArgumentError("staged by-center sidecar column block $range has no parent support"),
+        )
+        global_support = Int.(local_rows)
+        block_support_indices[block_index] = global_support
+        block_support_states[block_index] = [
+            _cartesian_unflat_index(index, dims) for index in global_support
+        ]
+        block_coefficients[block_index] = _cartesian_coefficient_map_storage(
+            coefficient_block[local_rows, :],
+        )
+        support_counts[block_index] = length(local_rows)
+        column_counts[block_index] = length(range)
+    end
+    diagnostics = (
+        parent_dimension = prod(dims),
+        final_dimension = ncolumns,
+        block_count = length(ranges),
+        column_counts = column_counts,
+        support_counts = support_counts,
+        max_support_count = maximum(support_counts),
+    )
+    return _CartesianNestedStagedByCenterSidecar3D(
+        dims,
+        ranges,
+        block_support_indices,
+        block_support_states,
+        block_coefficients,
+        provenance,
+        diagnostics,
+    )
+end
+
+function _nested_attach_staged_by_center_sidecar!(
+    fixed_block::_NestedFixedBlock3D;
+    block_column_ranges::Union{Nothing,AbstractVector{<:UnitRange{Int}}} = nothing,
+    atol::Real = 1.0e-14,
+    provenance = (; source = :nested_fixed_block),
+    replace::Bool = false,
+)
+    cached = fixed_block.staged_by_center_sidecar[]
+    cached isa _CartesianNestedStagedByCenterSidecar3D && !replace && return cached
+    if !isnothing(cached) && !replace
+        throw(ArgumentError("nested fixed block already carries an incompatible staged by-center sidecar"))
+    end
+    factorized_cached = fixed_block.factorized_cartesian_parent_basis[]
+    if factorized_cached isa _CartesianNestedFactorizedBasis3D && !replace
+        throw(
+            ArgumentError("nested fixed block already has a factorized final-basis sidecar; staged by-center sidecar is only for nonfactorized final blocks"),
+        )
+    elseif !isnothing(factorized_cached) && !replace
+        throw(ArgumentError("nested fixed block carries an incompatible factorized-basis sidecar"))
+    end
+    sidecar = _nested_build_staged_by_center_sidecar(
+        fixed_block;
+        block_column_ranges,
+        atol,
+        provenance,
+    )
+    fixed_block.staged_by_center_sidecar[] = sidecar
+    return sidecar
+end
+
+function _nested_staged_by_center_sidecar(fixed_block::_NestedFixedBlock3D)
+    cached = fixed_block.staged_by_center_sidecar[]
+    cached isa _CartesianNestedStagedByCenterSidecar3D && return cached
+    isnothing(cached) && return nothing
+    throw(ArgumentError("nested fixed block carried an incompatible staged by-center sidecar"))
+end
+
+function _nested_by_center_sidecar_path(fixed_block::_NestedFixedBlock3D)
+    cached = fixed_block.factorized_cartesian_parent_basis[]
+    cached isa _CartesianNestedFactorizedBasis3D && return :factorized_final
+    isnothing(cached) || return :unknown_factorized_sidecar
+    staged = fixed_block.staged_by_center_sidecar[]
+    staged isa _CartesianNestedStagedByCenterSidecar3D && return :staged_factorized
+    isnothing(staged) && return :general_parent_dense
+    return :unknown_staged_sidecar
 end
 
 function _nested_eager_factorized_basis_cache(
@@ -4366,6 +4528,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
+        _nested_staged_by_center_sidecar_cache(),
     )
 end
 
@@ -5238,6 +5401,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
+        _nested_staged_by_center_sidecar_cache(),
     )
 end
 
@@ -5276,6 +5440,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
+        _nested_staged_by_center_sidecar_cache(),
     )
 end
 
@@ -5324,6 +5489,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
+        _nested_staged_by_center_sidecar_cache(),
     )
 end
 
@@ -5358,6 +5524,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
+        _nested_staged_by_center_sidecar_cache(),
     )
 end
 

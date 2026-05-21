@@ -142,6 +142,7 @@ end
     @test !isnothing(full_nested_ops_localized.nuclear_one_body_by_center)
     @test length(full_nested_ops_localized.nuclear_one_body_by_center) == 2
     nested_factorized_basis = GaussletBases._nested_factorized_parent_basis(fixed_block)
+    @test GaussletBases._nested_by_center_sidecar_path(fixed_block) == :factorized_final
     for backend in (:numerical_reference, :pgdg_localized_experimental)
         nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
             fixed_block.parent_basis,
@@ -222,10 +223,13 @@ end
         fixed_block.pair_sum,
         fixed_block.fixed_centers,
         nonfactorized_cache,
+        GaussletBases._nested_staged_by_center_sidecar_cache(),
     )
     @test isnothing(
         GaussletBases._qwrg_try_nested_factorized_parent_basis(nonfactorized_fixed_block),
     )
+    @test GaussletBases._nested_by_center_sidecar_path(nonfactorized_fixed_block) ==
+          :general_parent_dense
     nested_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
         fixed_block.parent_basis,
         expansion;
@@ -255,6 +259,66 @@ end
         @test fallback_nuclear[nucleus_index] ≈
               reference_nuclear[nucleus_index] atol = 1.0e-12 rtol = 1.0e-12
     end
+
+    representatives_before_sidecar = Matrix{Float64}(nonfactorized_fixed_block.coefficient_matrix)
+    staged_sidecar = GaussletBases._nested_attach_staged_by_center_sidecar!(
+        nonfactorized_fixed_block;
+        provenance = (; test = :diatomic_nonfactorized_by_center),
+    )
+    @test staged_sidecar isa GaussletBases._CartesianNestedStagedByCenterSidecar3D
+    @test GaussletBases._nested_by_center_sidecar_path(nonfactorized_fixed_block) ==
+          :staged_factorized
+    @test isnothing(
+        GaussletBases._qwrg_try_nested_factorized_parent_basis(nonfactorized_fixed_block),
+    )
+    @test Matrix{Float64}(nonfactorized_fixed_block.coefficient_matrix) ==
+          representatives_before_sidecar
+    @test size(nonfactorized_fixed_block.coefficient_matrix, 2) ==
+          staged_sidecar.diagnostics.final_dimension
+    @test staged_sidecar.diagnostics.block_count >= 1
+    @test staged_sidecar.diagnostics.max_support_count <=
+          size(nonfactorized_fixed_block.coefficient_matrix, 1)
+
+    staged_nuclear = GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+        fixed_block.parent_basis,
+        nonfactorized_fixed_block,
+        nested_bundles.bundle_x,
+        nested_bundles.bundle_y,
+        nested_bundles.bundle_z,
+        expansion,
+    )
+    @test length(staged_nuclear) == length(reference_nuclear)
+    for nucleus_index in eachindex(staged_nuclear, reference_nuclear)
+        @test all(isfinite, staged_nuclear[nucleus_index])
+        @test staged_nuclear[nucleus_index] ≈
+              transpose(staged_nuclear[nucleus_index]) atol = 1.0e-12 rtol = 1.0e-12
+        @test staged_nuclear[nucleus_index] ≈
+              reference_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+    end
+    @test_throws ArgumentError GaussletBases._nested_attach_staged_by_center_sidecar!(
+        nonfactorized_fixed_block;
+        block_column_ranges = [1:1],
+        replace = true,
+    )
+    @test_throws ArgumentError GaussletBases._nested_attach_staged_by_center_sidecar!(
+        nonfactorized_fixed_block;
+        block_column_ranges = [1:(size(nonfactorized_coefficients, 2) + 1)],
+        replace = true,
+    )
+    saved_sidecar = nonfactorized_fixed_block.staged_by_center_sidecar[]
+    nonfactorized_fixed_block.staged_by_center_sidecar[] = (; invalid = true)
+    @test_throws ArgumentError GaussletBases._nested_staged_by_center_sidecar(
+        nonfactorized_fixed_block,
+    )
+    @test_throws ArgumentError GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+        fixed_block.parent_basis,
+        nonfactorized_fixed_block,
+        nested_bundles.bundle_x,
+        nested_bundles.bundle_y,
+        nested_bundles.bundle_z,
+        expansion,
+    )
+    nonfactorized_fixed_block.staged_by_center_sidecar[] = saved_sidecar
 
     @test assembled_one_body_hamiltonian(full_nested_ops_localized) ≈
           full_nested_ops_localized.one_body_hamiltonian atol = 1.0e-12 rtol = 1.0e-12

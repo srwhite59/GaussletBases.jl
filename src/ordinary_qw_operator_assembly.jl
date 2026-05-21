@@ -734,6 +734,10 @@ function _qwrg_try_nested_factorized_parent_basis(
     fixed_block::_NestedFixedBlock3D;
     timing_label::AbstractString = "qwrg.nuclear.factorized_basis",
 )
+    if !(fixed_block.factorized_cartesian_parent_basis[] isa _CartesianNestedFactorizedBasis3D) &&
+       !isnothing(_nested_staged_by_center_sidecar(fixed_block))
+        return nothing
+    end
     try
         return @timeg timing_label begin
             _nested_factorized_parent_basis(fixed_block)
@@ -742,6 +746,14 @@ function _qwrg_try_nested_factorized_parent_basis(
         _nested_factorized_basis_optional_failure(err) || rethrow()
         return nothing
     end
+end
+
+function _qwrg_try_nested_staged_by_center_sidecar(
+    fixed_block::_NestedFixedBlock3D,
+)
+    fixed_block.factorized_cartesian_parent_basis[] isa _CartesianNestedFactorizedBasis3D &&
+        return nothing
+    return _nested_staged_by_center_sidecar(fixed_block)
 end
 
 function _qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
@@ -757,6 +769,19 @@ function _qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
     timing_general_setup_label::AbstractString = "qwrg.nuclear.general_contracted.setup",
     timing_general_contract_label::AbstractString = "qwrg.nuclear.general_contracted.contract",
 )
+    staged_sidecar = _qwrg_try_nested_staged_by_center_sidecar(fixed_block)
+    if !isnothing(staged_sidecar)
+        return _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(
+            basis,
+            staged_sidecar,
+            bundle_x,
+            bundle_y,
+            bundle_z,
+            expansion;
+            timing_setup_label = "qwrg.nuclear.staged_contracted.setup",
+            timing_contract_label = "qwrg.nuclear.staged_contracted.contract",
+        )
+    end
     factorized_basis = _qwrg_try_nested_factorized_parent_basis(
         fixed_block;
         timing_label = timing_factorized_basis_label,

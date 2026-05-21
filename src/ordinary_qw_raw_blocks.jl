@@ -1647,6 +1647,138 @@ function _qwrg_bond_aligned_direct_contracted_nuclear_one_body_by_center(
     end
 end
 
+function _qwrg_fill_staged_nuclear_submatrix!(
+    destination::Matrix{Float64},
+    left_states::AbstractVector{<:NTuple{3,Int}},
+    right_states::AbstractVector{<:NTuple{3,Int}},
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    nterms = length(term_coefficients)
+    size(destination) == (length(left_states), length(right_states)) || throw(
+        ArgumentError("staged nuclear submatrix output has incompatible dimensions"),
+    )
+    @inbounds for column in eachindex(right_states)
+        xj, yj, zj = right_states[column]
+        for row in eachindex(left_states)
+            xi, yi, zi = left_states[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    term_coefficients[term] *
+                    operator_terms_x[term, xi, xj] *
+                    operator_terms_y[term, yi, yj] *
+                    operator_terms_z[term, zi, zj]
+            end
+            destination[row, column] = value
+        end
+    end
+    return destination
+end
+
+function _qwrg_contract_staged_nuclear_block(
+    left_coefficients::AbstractMatrix{<:Real},
+    right_coefficients::AbstractMatrix{<:Real},
+    parent_submatrix::AbstractMatrix{<:Real},
+)
+    return Matrix{Float64}(transpose(left_coefficients) * parent_submatrix * right_coefficients)
+end
+
+function _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    sidecar::_CartesianNestedStagedByCenterSidecar3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion;
+    timing_setup_label::AbstractString = "qwrg.nuclear.staged_contracted.setup",
+    timing_contract_label::AbstractString = "qwrg.nuclear.staged_contracted.contract",
+)
+    sidecar.dims == (
+        size(bundle_x.pgdg_intermediate.overlap, 1),
+        size(bundle_y.pgdg_intermediate.overlap, 1),
+        size(bundle_z.pgdg_intermediate.overlap, 1),
+    ) || throw(
+        ArgumentError("staged molecular nuclear assembly requires sidecar dimensions to match the parent Cartesian product basis"),
+    )
+
+    term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
+    nuclei = basis.nuclei
+    nnuclei = length(nuclei)
+    nfinal = maximum(last(range) for range in sidecar.block_column_ranges)
+    centers_x, centers_y, centers_z = _qwrg_bond_aligned_nuclear_centers_by_axis(nuclei)
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg timing_setup_label begin
+        nx, ny, nz = sidecar.dims
+        tables_x = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, nx, nx),
+            basis.basis_x,
+            centers_x,
+            expansion,
+            bundle_x.backend,
+        )
+        tables_y = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, ny, ny),
+            basis.basis_y,
+            centers_y,
+            expansion,
+            bundle_y.backend,
+        )
+        tables_z = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, nz, nz),
+            basis.basis_z,
+            centers_z,
+            expansion,
+            bundle_z.backend,
+        )
+        (tables_x, tables_y, tables_z)
+    end
+
+    return @timeg timing_contract_label begin
+        matrices = Vector{Matrix{Float64}}(undef, nnuclei)
+        block_count = length(sidecar.block_column_ranges)
+        for nucleus_index in 1:nnuclei
+            matrix = zeros(Float64, nfinal, nfinal)
+            for right_block in 1:block_count
+                right_range = sidecar.block_column_ranges[right_block]
+                right_states = sidecar.block_support_states[right_block]
+                right_coefficients = sidecar.block_coefficients[right_block]
+                for left_block in 1:right_block
+                    left_range = sidecar.block_column_ranges[left_block]
+                    left_states = sidecar.block_support_states[left_block]
+                    left_coefficients = sidecar.block_coefficients[left_block]
+                    parent_submatrix = Matrix{Float64}(
+                        undef,
+                        length(left_states),
+                        length(right_states),
+                    )
+                    _qwrg_fill_staged_nuclear_submatrix!(
+                        parent_submatrix,
+                        left_states,
+                        right_states,
+                        term_coefficients,
+                        axis_term_tables_x[nucleus_index],
+                        axis_term_tables_y[nucleus_index],
+                        axis_term_tables_z[nucleus_index],
+                    )
+                    contracted = _qwrg_contract_staged_nuclear_block(
+                        left_coefficients,
+                        right_coefficients,
+                        parent_submatrix,
+                    )
+                    matrix[left_range, right_range] .= contracted
+                    if left_block != right_block
+                        matrix[right_range, left_range] .= transpose(contracted)
+                    end
+                end
+            end
+            matrices[nucleus_index] = 0.5 .* (matrix .+ transpose(matrix))
+        end
+        matrices
+    end
+end
+
 function _qwrg_diatomic_kinetic_matrix(
     bundle_x::_MappedOrdinaryGausslet1DBundle,
     bundle_y::_MappedOrdinaryGausslet1DBundle,
