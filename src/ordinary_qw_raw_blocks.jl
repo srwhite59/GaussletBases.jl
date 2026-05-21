@@ -1779,6 +1779,263 @@ function _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(
     end
 end
 
+function _qwrg_product_staged_axis_count(
+    axis::_CartesianNestedProductStagedAxis3D,
+)
+    axis.kind == :fixed && return 1
+    axis.kind == :active && return size(axis.coefficient_matrix, 2)
+    throw(ArgumentError("product staged molecular nuclear assembly received unknown axis kind $(axis.kind)"))
+end
+
+function _qwrg_validate_product_staged_axis(
+    axis::_CartesianNestedProductStagedAxis3D,
+    parent_count::Int,
+)
+    if axis.kind == :fixed
+        index = something(axis.fixed_index, 0)
+        1 <= index <= parent_count || throw(
+            ArgumentError("product staged molecular nuclear assembly has fixed-axis index outside parent dimensions"),
+        )
+        size(axis.coefficient_matrix) == (1, 1) || throw(
+            ArgumentError("product staged molecular nuclear assembly requires fixed-axis coefficient maps to be 1x1"),
+        )
+    elseif axis.kind == :active
+        interval = axis.interval
+        !isnothing(interval) || throw(
+            ArgumentError("product staged molecular nuclear assembly active axis is missing its interval"),
+        )
+        first(interval) >= 1 && last(interval) <= parent_count || throw(
+            ArgumentError("product staged molecular nuclear assembly active-axis interval exceeds parent dimensions"),
+        )
+        size(axis.coefficient_matrix, 1) == length(interval) || throw(
+            ArgumentError("product staged molecular nuclear assembly active-axis coefficient rows must match interval length"),
+        )
+        size(axis.coefficient_matrix, 2) >= 1 || throw(
+            ArgumentError("product staged molecular nuclear assembly active-axis coefficient map must retain at least one column"),
+        )
+    else
+        throw(ArgumentError("product staged molecular nuclear assembly received unknown axis kind $(axis.kind)"))
+    end
+    return nothing
+end
+
+function _qwrg_project_product_staged_axis_terms(
+    operator_terms::Array{Float64,3},
+    left_axis::_CartesianNestedProductStagedAxis3D,
+    right_axis::_CartesianNestedProductStagedAxis3D,
+)
+    nterms = size(operator_terms, 1)
+    parent_count = size(operator_terms, 2)
+    size(operator_terms, 3) == parent_count || throw(
+        ArgumentError("product staged molecular nuclear assembly requires square axis term tables"),
+    )
+    _qwrg_validate_product_staged_axis(left_axis, parent_count)
+    _qwrg_validate_product_staged_axis(right_axis, parent_count)
+    nleft = _qwrg_product_staged_axis_count(left_axis)
+    nright = _qwrg_product_staged_axis_count(right_axis)
+    projected = Array{Float64,3}(undef, nterms, nleft, nright)
+    left_coefficients =
+        left_axis.kind == :active ? Matrix{Float64}(left_axis.coefficient_matrix) :
+        Matrix{Float64}(undef, 0, 0)
+    right_coefficients =
+        right_axis.kind == :active ? Matrix{Float64}(right_axis.coefficient_matrix) :
+        Matrix{Float64}(undef, 0, 0)
+    @inbounds for term in 1:nterms
+        if left_axis.kind == :fixed && right_axis.kind == :fixed
+            projected[term, 1, 1] = operator_terms[term, left_axis.fixed_index, right_axis.fixed_index]
+        elseif left_axis.kind == :active && right_axis.kind == :fixed
+            source = @view operator_terms[term, left_axis.interval, right_axis.fixed_index]
+            projected[term, :, 1] .= transpose(left_coefficients) * source
+        elseif left_axis.kind == :fixed && right_axis.kind == :active
+            source = @view operator_terms[term, left_axis.fixed_index, right_axis.interval]
+            projected[term, 1, :] .= vec(transpose(source) * right_coefficients)
+        else
+            source = @view operator_terms[term, left_axis.interval, right_axis.interval]
+            projected[term, :, :] .= transpose(left_coefficients) * source * right_coefficients
+        end
+    end
+    return projected
+end
+
+function _qwrg_fill_product_staged_nuclear_block!(
+    destination::Matrix{Float64},
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    left_unit.kind == :product_doside && right_unit.kind == :product_doside || throw(
+        ArgumentError("product staged molecular nuclear block requires product_doside unit metadata"),
+    )
+    size(destination) == (length(left_unit.column_range), length(right_unit.column_range)) || throw(
+        ArgumentError("product staged molecular nuclear block output has incompatible dimensions"),
+    )
+    length(left_unit.axis_function_indices) == length(left_unit.column_range) || throw(
+        ArgumentError("product staged molecular nuclear left unit axis metadata does not match its column range"),
+    )
+    length(right_unit.axis_function_indices) == length(right_unit.column_range) || throw(
+        ArgumentError("product staged molecular nuclear right unit axis metadata does not match its column range"),
+    )
+    projected_x = _qwrg_project_product_staged_axis_terms(
+        operator_terms_x,
+        left_unit.axes[1],
+        right_unit.axes[1],
+    )
+    projected_y = _qwrg_project_product_staged_axis_terms(
+        operator_terms_y,
+        left_unit.axes[2],
+        right_unit.axes[2],
+    )
+    projected_z = _qwrg_project_product_staged_axis_terms(
+        operator_terms_z,
+        left_unit.axes[3],
+        right_unit.axes[3],
+    )
+    nterms = length(term_coefficients)
+    size(projected_x, 1) == nterms && size(projected_y, 1) == nterms &&
+        size(projected_z, 1) == nterms || throw(
+            ArgumentError("product staged molecular nuclear projected axis terms have inconsistent term counts"),
+        )
+    @inbounds for column in eachindex(right_unit.axis_function_indices)
+        xj, yj, zj = right_unit.axis_function_indices[column]
+        for row in eachindex(left_unit.axis_function_indices)
+            xi, yi, zi = left_unit.axis_function_indices[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    term_coefficients[term] *
+                    projected_x[term, xi, xj] *
+                    projected_y[term, yi, yj] *
+                    projected_z[term, zi, zj]
+            end
+            destination[row, column] = value
+        end
+    end
+    return destination
+end
+
+function _qwrg_fill_product_or_staged_nuclear_block!(
+    destination::Matrix{Float64},
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    term_coefficients::AbstractVector{<:Real},
+    operator_terms_x::Array{Float64,3},
+    operator_terms_y::Array{Float64,3},
+    operator_terms_z::Array{Float64,3},
+)
+    if left_unit.kind == :product_doside && right_unit.kind == :product_doside
+        return _qwrg_fill_product_staged_nuclear_block!(
+            destination,
+            left_unit,
+            right_unit,
+            term_coefficients,
+            operator_terms_x,
+            operator_terms_y,
+            operator_terms_z,
+        )
+    end
+    parent_submatrix = Matrix{Float64}(undef, length(left_unit.support_states), length(right_unit.support_states))
+    _qwrg_fill_staged_nuclear_submatrix!(
+        parent_submatrix,
+        left_unit.support_states,
+        right_unit.support_states,
+        term_coefficients,
+        operator_terms_x,
+        operator_terms_y,
+        operator_terms_z,
+    )
+    destination .= _qwrg_contract_staged_nuclear_block(
+        left_unit.coefficient_matrix,
+        right_unit.coefficient_matrix,
+        parent_submatrix,
+    )
+    return destination
+end
+
+function _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D,
+    sidecar::_CartesianNestedProductStagedByCenterSidecar3D,
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion;
+    timing_setup_label::AbstractString = "qwrg.nuclear.product_staged_contracted.setup",
+    timing_contract_label::AbstractString = "qwrg.nuclear.product_staged_contracted.contract",
+)
+    sidecar.dims == (
+        size(bundle_x.pgdg_intermediate.overlap, 1),
+        size(bundle_y.pgdg_intermediate.overlap, 1),
+        size(bundle_z.pgdg_intermediate.overlap, 1),
+    ) || throw(
+        ArgumentError("product staged molecular nuclear assembly requires sidecar dimensions to match the parent Cartesian product basis"),
+    )
+
+    term_coefficients = Float64[-Float64(value) for value in expansion.coefficients]
+    nuclei = basis.nuclei
+    nnuclei = length(nuclei)
+    nfinal = maximum(last(unit.column_range) for unit in sidecar.units)
+    centers_x, centers_y, centers_z = _qwrg_bond_aligned_nuclear_centers_by_axis(nuclei)
+    axis_term_tables_x, axis_term_tables_y, axis_term_tables_z = @timeg timing_setup_label begin
+        nx, ny, nz = sidecar.dims
+        tables_x = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, nx, nx),
+            basis.basis_x,
+            centers_x,
+            expansion,
+            bundle_x.backend,
+        )
+        tables_y = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, ny, ny),
+            basis.basis_y,
+            centers_y,
+            expansion,
+            bundle_y.backend,
+        )
+        tables_z = _qwrg_contracted_nuclear_axis_term_tables(
+            Matrix{Float64}(I, nz, nz),
+            basis.basis_z,
+            centers_z,
+            expansion,
+            bundle_z.backend,
+        )
+        (tables_x, tables_y, tables_z)
+    end
+
+    return @timeg timing_contract_label begin
+        matrices = Vector{Matrix{Float64}}(undef, nnuclei)
+        unit_count = length(sidecar.units)
+        for nucleus_index in 1:nnuclei
+            matrix = zeros(Float64, nfinal, nfinal)
+            for right_unit_index in 1:unit_count
+                right_unit = sidecar.units[right_unit_index]
+                right_range = right_unit.column_range
+                for left_unit_index in 1:right_unit_index
+                    left_unit = sidecar.units[left_unit_index]
+                    left_range = left_unit.column_range
+                    contracted = Matrix{Float64}(undef, length(left_range), length(right_range))
+                    _qwrg_fill_product_or_staged_nuclear_block!(
+                        contracted,
+                        left_unit,
+                        right_unit,
+                        term_coefficients,
+                        axis_term_tables_x[nucleus_index],
+                        axis_term_tables_y[nucleus_index],
+                        axis_term_tables_z[nucleus_index],
+                    )
+                    matrix[left_range, right_range] .= contracted
+                    if left_unit_index != right_unit_index
+                        matrix[right_range, left_range] .= transpose(contracted)
+                    end
+                end
+            end
+            matrices[nucleus_index] = 0.5 .* (matrix .+ transpose(matrix))
+        end
+        matrices
+    end
+end
+
 function _qwrg_diatomic_kinetic_matrix(
     bundle_x::_MappedOrdinaryGausslet1DBundle,
     bundle_y::_MappedOrdinaryGausslet1DBundle,

@@ -482,6 +482,33 @@ struct _CartesianNestedStagedByCenterSidecar3D
     diagnostics::Any
 end
 
+struct _CartesianNestedProductStagedAxis3D
+    kind::Symbol
+    fixed_index::Union{Nothing,Int}
+    interval::Union{Nothing,UnitRange{Int}}
+    coefficient_matrix::_CartesianCoefficientMap
+end
+
+struct _CartesianNestedProductStagedByCenterUnit3D
+    role::Symbol
+    kind::Symbol
+    column_range::UnitRange{Int}
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    coefficient_matrix::_CartesianCoefficientMap
+    axes::NTuple{3,_CartesianNestedProductStagedAxis3D}
+    axis_function_indices::Vector{NTuple{3,Int}}
+    provenance::Any
+    diagnostics::Any
+end
+
+struct _CartesianNestedProductStagedByCenterSidecar3D
+    dims::NTuple{3,Int}
+    units::Vector{_CartesianNestedProductStagedByCenterUnit3D}
+    provenance::Any
+    diagnostics::Any
+end
+
 function _nested_factorized_basis_cache()
     return Base.RefValue{Any}(nothing)
 end
@@ -498,6 +525,243 @@ end
 
 function _nested_staged_by_center_sidecar_cache(sidecar)
     return Base.RefValue{Any}(sidecar)
+end
+
+function _nested_product_staged_fixed_axis(index::Integer)
+    return _CartesianNestedProductStagedAxis3D(
+        :fixed,
+        Int(index),
+        nothing,
+        Matrix{Float64}(I, 1, 1),
+    )
+end
+
+function _nested_product_staged_active_axis(
+    interval::UnitRange{Int},
+    coefficients::AbstractMatrix{<:Real},
+)
+    return _CartesianNestedProductStagedAxis3D(
+        :active,
+        nothing,
+        interval,
+        _cartesian_coefficient_map_storage(coefficients),
+    )
+end
+
+function _nested_product_axis_function_indices(
+    fixed_axis::Int,
+    first_axis::Int,
+    first_count::Int,
+    second_axis::Int,
+    second_count::Int,
+)
+    length(unique((fixed_axis, first_axis, second_axis))) == 3 || throw(
+        ArgumentError("product staged by-center sidecar requires one fixed axis and two distinct active axes"),
+    )
+    indices = NTuple{3,Int}[]
+    sizehint!(indices, first_count * second_count)
+    for first_index in 1:first_count, second_index in 1:second_count
+        axis_indices = ntuple(axis -> begin
+            axis == fixed_axis && return 1
+            axis == first_axis && return first_index
+            axis == second_axis && return second_index
+            throw(ArgumentError("inconsistent product staged by-center axis metadata"))
+        end, 3)
+        push!(indices, axis_indices)
+    end
+    return indices
+end
+
+function _nested_product_staged_unit_from_owned_unit(
+    unit;
+    column_range::UnitRange{Int},
+    dims::NTuple{3,Int},
+)
+    metadata = unit.metadata
+    metadata.coefficient_contract == :product_doside || throw(
+        ArgumentError("product staged by-center unit requires product_doside owned-unit metadata"),
+    )
+    fixed_axis = Int(metadata.fixed_axis)
+    first_axis = Int(metadata.first_axis)
+    second_axis = Int(metadata.second_axis)
+    first_coefficients = _cartesian_coefficient_map_storage(metadata.first_coefficients)
+    second_coefficients = _cartesian_coefficient_map_storage(metadata.second_coefficients)
+    first_count = size(first_coefficients, 2)
+    second_count = size(second_coefficients, 2)
+    length(column_range) == first_count * second_count || throw(
+        ArgumentError("product staged by-center unit column range does not match active-axis retained counts"),
+    )
+    axes = ntuple(axis -> begin
+        axis == fixed_axis && return _nested_product_staged_fixed_axis(metadata.fixed_index)
+        axis == first_axis && return _nested_product_staged_active_axis(
+            metadata.first_interval,
+            first_coefficients,
+        )
+        axis == second_axis && return _nested_product_staged_active_axis(
+            metadata.second_interval,
+            second_coefficients,
+        )
+        throw(ArgumentError("inconsistent product staged by-center unit axes"))
+    end, 3)
+    support_states = [_cartesian_unflat_index(index, dims) for index in unit.support_indices]
+    diagnostics = (
+        support_count = length(unit.support_indices),
+        retained_count = length(column_range),
+        fixed_axis = fixed_axis,
+        fixed_index = Int(metadata.fixed_index),
+        active_axes = (first_axis, second_axis),
+        active_retained_counts = (first_count, second_count),
+    )
+    return _CartesianNestedProductStagedByCenterUnit3D(
+        unit.role,
+        :product_doside,
+        column_range,
+        copy(unit.support_indices),
+        support_states,
+        _cartesian_coefficient_map_storage(unit.coefficient_matrix),
+        axes,
+        _nested_product_axis_function_indices(
+            fixed_axis,
+            first_axis,
+            first_count,
+            second_axis,
+            second_count,
+        ),
+        metadata,
+        diagnostics,
+    )
+end
+
+function _nested_product_staged_generic_unit(
+    role::Symbol,
+    coefficient_block::AbstractMatrix{<:Real},
+    column_range::UnitRange{Int},
+    dims::NTuple{3,Int};
+    atol::Real = 1.0e-14,
+    provenance = (;),
+)
+    local_rows = _nested_nonzero_coefficient_rows(coefficient_block; atol)
+    isempty(local_rows) && throw(
+        ArgumentError("product staged by-center generic unit $role has no parent support"),
+    )
+    support_indices = Int.(local_rows)
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    support_coefficients = _cartesian_coefficient_map_storage(coefficient_block[local_rows, :])
+    axes = ntuple(_axis -> _nested_product_staged_fixed_axis(1), 3)
+    axis_indices = fill((1, 1, 1), length(column_range))
+    diagnostics = (
+        support_count = length(support_indices),
+        retained_count = length(column_range),
+    )
+    return _CartesianNestedProductStagedByCenterUnit3D(
+        role,
+        :support_dense,
+        column_range,
+        support_indices,
+        support_states,
+        support_coefficients,
+        axes,
+        axis_indices,
+        provenance,
+        diagnostics,
+    )
+end
+
+function _nested_product_staged_sidecar_from_sequence(
+    parent_basis,
+    shell::_CartesianNestedShellSequence3D,
+    coefficient_matrix::AbstractMatrix{<:Real};
+    atol::Real = 1.0e-14,
+)
+    dims = _nested_parent_axis_counts(parent_basis)
+    units = _CartesianNestedProductStagedByCenterUnit3D[]
+    product_count = 0
+    generic_count = 0
+
+    core_block = coefficient_matrix[:, shell.core_column_range]
+    push!(
+        units,
+        _nested_product_staged_generic_unit(
+            :core,
+            core_block,
+            shell.core_column_range,
+            dims;
+            atol,
+            provenance = (; source = :sequence_core),
+        ),
+    )
+    generic_count += 1
+
+    for (layer, layer_range) in zip(shell.shell_layers, shell.layer_column_ranges)
+        if hasproperty(layer, :owned_units) &&
+           hasproperty(layer, :unit_column_ranges) &&
+           getproperty(layer, :owned_units).coefficient_contract == :product_doside
+            layer_first = first(layer_range)
+            for (owned_unit, unit_range) in zip(
+                getproperty(layer, :owned_units).units,
+                getproperty(layer, :unit_column_ranges),
+            )
+                global_range = (layer_first + first(unit_range) - 1):(layer_first + last(unit_range) - 1)
+                push!(
+                    units,
+                    _nested_product_staged_unit_from_owned_unit(
+                        owned_unit;
+                        column_range = global_range,
+                        dims,
+                    ),
+                )
+                product_count += 1
+            end
+        else
+            layer_block = coefficient_matrix[:, layer_range]
+            push!(
+                units,
+                _nested_product_staged_generic_unit(
+                    Symbol(:layer_, length(units)),
+                    layer_block,
+                    layer_range,
+                    dims;
+                    atol,
+                    provenance = (; source = :sequence_layer, layer_type = nameof(typeof(layer))),
+                ),
+            )
+            generic_count += 1
+        end
+    end
+
+    product_count == 0 && return nothing
+    covered_columns = sort!(reduce(vcat, (collect(unit.column_range) for unit in units)))
+    ncolumns = size(coefficient_matrix, 2)
+    covered_columns == collect(1:ncolumns) || throw(
+        ArgumentError("product staged by-center sidecar units must cover every final representative exactly once"),
+    )
+    support_counts = Int[unit.diagnostics.support_count for unit in units]
+    diagnostics = (
+        parent_dimension = prod(dims),
+        final_dimension = ncolumns,
+        unit_count = length(units),
+        product_unit_count = product_count,
+        generic_unit_count = generic_count,
+        support_counts = support_counts,
+        max_support_count = maximum(support_counts),
+    )
+    return _CartesianNestedProductStagedByCenterSidecar3D(
+        dims,
+        units,
+        (; source = :nested_shell_sequence, support_contract = :product_owned_units),
+        diagnostics,
+    )
+end
+
+function _nested_product_staged_by_center_sidecar_cache(
+    parent_basis,
+    shell,
+    coefficient_matrix::AbstractMatrix{<:Real},
+)
+    sidecar = shell isa _CartesianNestedShellSequence3D ?
+        _nested_product_staged_sidecar_from_sequence(parent_basis, shell, coefficient_matrix) :
+        nothing
+    return _nested_staged_by_center_sidecar_cache(sidecar)
 end
 
 function _nested_factorized_basis_optional_failure(err)
@@ -2221,6 +2485,7 @@ end
 function _nested_staged_by_center_sidecar(fixed_block::_NestedFixedBlock3D)
     cached = fixed_block.staged_by_center_sidecar[]
     cached isa _CartesianNestedStagedByCenterSidecar3D && return cached
+    cached isa _CartesianNestedProductStagedByCenterSidecar3D && return cached
     isnothing(cached) && return nothing
     throw(ArgumentError("nested fixed block carried an incompatible staged by-center sidecar"))
 end
@@ -2230,6 +2495,7 @@ function _nested_by_center_sidecar_path(fixed_block::_NestedFixedBlock3D)
     cached isa _CartesianNestedFactorizedBasis3D && return :factorized_final
     isnothing(cached) || return :unknown_factorized_sidecar
     staged = fixed_block.staged_by_center_sidecar[]
+    staged isa _CartesianNestedProductStagedByCenterSidecar3D && return :product_staged_factorized
     staged isa _CartesianNestedStagedByCenterSidecar3D && return :staged_factorized
     isnothing(staged) && return :general_parent_dense
     return :unknown_staged_sidecar
@@ -4528,7 +4794,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
-        _nested_staged_by_center_sidecar_cache(),
+        _nested_product_staged_by_center_sidecar_cache(parent_basis, shell, shell.coefficient_matrix),
     )
 end
 
@@ -5401,7 +5667,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
-        _nested_staged_by_center_sidecar_cache(),
+        _nested_product_staged_by_center_sidecar_cache(parent_basis, shell, shell.coefficient_matrix),
     )
 end
 
@@ -5440,7 +5706,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
-        _nested_staged_by_center_sidecar_cache(),
+        _nested_product_staged_by_center_sidecar_cache(parent_basis, shell, shell.coefficient_matrix),
     )
 end
 
@@ -5489,7 +5755,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
-        _nested_staged_by_center_sidecar_cache(),
+        _nested_product_staged_by_center_sidecar_cache(parent_basis, shell, shell.coefficient_matrix),
     )
 end
 
@@ -5524,7 +5790,7 @@ function _nested_fixed_block(
         packet.pair_sum,
         Matrix{Float64}(fixed_centers),
         _nested_eager_factorized_basis_cache(parent_basis, shell.coefficient_matrix),
-        _nested_staged_by_center_sidecar_cache(),
+        _nested_product_staged_by_center_sidecar_cache(parent_basis, shell, shell.coefficient_matrix),
     )
 end
 

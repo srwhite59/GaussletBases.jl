@@ -504,6 +504,11 @@ end
     fixed_block = GaussletBases._nested_fixed_block(endcap_source)
     @test fixed_block isa GaussletBases._NestedFixedBlock3D
     @test size(fixed_block.coefficient_matrix) == (539, 313)
+    @test fixed_block.staged_by_center_sidecar[] isa
+          GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
+    @test fixed_block.staged_by_center_sidecar[].diagnostics.product_unit_count == 6
+    @test fixed_block.staged_by_center_sidecar[].diagnostics.final_dimension == 313
+    @test fixed_block.staged_by_center_sidecar[].diagnostics.max_support_count <= 225
     @test all(isfinite, fixed_block.overlap)
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-8
     @test all(isfinite, fixed_block.weights)

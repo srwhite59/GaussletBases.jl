@@ -295,6 +295,136 @@ end
         @test staged_nuclear[nucleus_index] ≈
               reference_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
     end
+
+    function _clone_fixed_block_with_sidecars(template, factorized_cache, staged_cache)
+        return GaussletBases._NestedFixedBlock3D(
+            template.parent_basis,
+            template.shell,
+            template.coefficient_matrix,
+            template.support_indices,
+            template.overlap,
+            template.kinetic,
+            template.position_x,
+            template.position_y,
+            template.position_z,
+            template.x2_x,
+            template.x2_y,
+            template.x2_z,
+            template.weights,
+            template.gaussian_sum,
+            template.pair_sum,
+            template.fixed_centers,
+            factorized_cache,
+            staged_cache,
+        )
+    end
+
+    endcap_nested = bond_aligned_diatomic_nested_fixed_block(
+        basis;
+        expansion,
+        shared_shell_layer_policy = :endcap_panel_owned,
+        shared_shell_endcap_panel_q = 4,
+        shared_shell_endcap_panel_L = 4,
+    )
+    endcap_fixed_block = endcap_nested.fixed_block
+    product_sidecar = endcap_fixed_block.staged_by_center_sidecar[]
+    @test isnothing(fixed_block.staged_by_center_sidecar[])
+    @test product_sidecar isa GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
+    @test product_sidecar.diagnostics.product_unit_count >= 6
+    @test product_sidecar.diagnostics.product_unit_count % 6 == 0
+    @test product_sidecar.diagnostics.generic_unit_count >= 1
+    @test product_sidecar.diagnostics.final_dimension == size(endcap_fixed_block.coefficient_matrix, 2)
+    if endcap_fixed_block.factorized_cartesian_parent_basis[] isa
+       GaussletBases._CartesianNestedFactorizedBasis3D
+        @test GaussletBases._nested_by_center_sidecar_path(endcap_fixed_block) == :factorized_final
+    end
+
+    endcap_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(
+        endcap_fixed_block.parent_basis,
+        expansion;
+        gausslet_backend = :numerical_reference,
+    )
+    endcap_dense_fixed_block = _clone_fixed_block_with_sidecars(
+        endcap_fixed_block,
+        GaussletBases._nested_factorized_basis_cache(),
+        GaussletBases._nested_staged_by_center_sidecar_cache(),
+    )
+    @test GaussletBases._nested_by_center_sidecar_path(endcap_dense_fixed_block) ==
+          :general_parent_dense
+    endcap_dense_nuclear =
+        GaussletBases._qwrg_bond_aligned_general_contracted_nuclear_one_body_by_center(
+            endcap_fixed_block.parent_basis,
+            endcap_fixed_block.coefficient_matrix,
+            endcap_bundles.bundle_x,
+            endcap_bundles.bundle_y,
+            endcap_bundles.bundle_z,
+            expansion,
+        )
+
+    endcap_generic_fixed_block = _clone_fixed_block_with_sidecars(
+        endcap_fixed_block,
+        GaussletBases._nested_factorized_basis_cache(),
+        GaussletBases._nested_staged_by_center_sidecar_cache(),
+    )
+    endcap_generic_sidecar = GaussletBases._nested_attach_staged_by_center_sidecar!(
+        endcap_generic_fixed_block;
+        provenance = (; test = :diatomic_endcap_generic_staged_by_center),
+    )
+    @test endcap_generic_sidecar isa GaussletBases._CartesianNestedStagedByCenterSidecar3D
+    @test GaussletBases._nested_by_center_sidecar_path(endcap_generic_fixed_block) ==
+          :staged_factorized
+    endcap_generic_nuclear =
+        GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+            endcap_fixed_block.parent_basis,
+            endcap_generic_fixed_block,
+            endcap_bundles.bundle_x,
+            endcap_bundles.bundle_y,
+            endcap_bundles.bundle_z,
+            expansion,
+        )
+
+    endcap_product_fixed_block = _clone_fixed_block_with_sidecars(
+        endcap_fixed_block,
+        GaussletBases._nested_factorized_basis_cache(),
+        GaussletBases._nested_staged_by_center_sidecar_cache(product_sidecar),
+    )
+    @test GaussletBases._nested_by_center_sidecar_path(endcap_product_fixed_block) ==
+          :product_staged_factorized
+    endcap_product_nuclear =
+        GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+            endcap_fixed_block.parent_basis,
+            endcap_product_fixed_block,
+            endcap_bundles.bundle_x,
+            endcap_bundles.bundle_y,
+            endcap_bundles.bundle_z,
+            expansion,
+        )
+
+    for nucleus_index in eachindex(endcap_dense_nuclear)
+        @test endcap_generic_nuclear[nucleus_index] ≈
+              endcap_dense_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+        @test endcap_product_nuclear[nucleus_index] ≈
+              endcap_dense_nuclear[nucleus_index] atol = 1.0e-10 rtol = 1.0e-10
+    end
+    bad_product_sidecar = GaussletBases._CartesianNestedProductStagedByCenterSidecar3D(
+        (1, 1, 1),
+        product_sidecar.units,
+        product_sidecar.provenance,
+        product_sidecar.diagnostics,
+    )
+    bad_product_fixed_block = _clone_fixed_block_with_sidecars(
+        endcap_fixed_block,
+        GaussletBases._nested_factorized_basis_cache(),
+        GaussletBases._nested_staged_by_center_sidecar_cache(bad_product_sidecar),
+    )
+    @test_throws ArgumentError GaussletBases._qwrg_bond_aligned_nested_fixed_block_nuclear_one_body_by_center(
+        endcap_fixed_block.parent_basis,
+        bad_product_fixed_block,
+        endcap_bundles.bundle_x,
+        endcap_bundles.bundle_y,
+        endcap_bundles.bundle_z,
+        expansion,
+    )
     @test_throws ArgumentError GaussletBases._nested_attach_staged_by_center_sidecar!(
         nonfactorized_fixed_block;
         block_column_ranges = [1:1],

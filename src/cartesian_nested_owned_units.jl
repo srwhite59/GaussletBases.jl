@@ -231,13 +231,11 @@ function _nested_endcap_panel_unit(
     bond_axis::Symbol,
     coefficient_contract::Symbol,
     enforce_symmetric_odd::Bool,
+    product_metadata = (;),
 )
     retained_count = size(coefficient_matrix, 2)
-    return _CartesianNestedOwnedUnit3D(
-        role,
-        support_indices,
-        coefficient_matrix;
-        metadata = (
+    metadata = merge(
+        (
             q = q,
             L = L,
             current_box = current_box,
@@ -249,6 +247,13 @@ function _nested_endcap_panel_unit(
             support_count = length(support_indices),
             retained_count = retained_count,
         ),
+        product_metadata,
+    )
+    return _CartesianNestedOwnedUnit3D(
+        role,
+        support_indices,
+        coefficient_matrix;
+        metadata,
     )
 end
 
@@ -546,6 +551,18 @@ function _nested_endcap_panel_product_unit(
         bond_axis,
         coefficient_contract = :product_doside,
         enforce_symmetric_odd,
+        product_metadata = (
+            fixed_axis = spec.fixed_axis,
+            fixed_index = spec.fixed_index,
+            first_axis = spec.first_axis,
+            first_interval = spec.first_interval,
+            first_retained_count = spec.first_retained_count,
+            first_coefficients = Matrix{Float64}(first_side.local_coefficients),
+            second_axis = spec.second_axis,
+            second_interval = spec.second_interval,
+            second_retained_count = spec.second_retained_count,
+            second_coefficients = Matrix{Float64}(second_side.local_coefficients),
+        ),
     )
 end
 
