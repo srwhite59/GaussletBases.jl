@@ -23,6 +23,30 @@ end
 
 coefficients(fit::RadialYlmSolidHarmonicGTOFit) = fit.coefficients
 
+"""
+    RadialYlmCartesianGTOAdapter
+
+Centered Cartesian-GTO adapter for a `RadialYlmSolidHarmonicGTOFit`.
+
+The `supplement` field is a repo-compatible
+`CartesianGaussianShellSupplementRepresentation3D`. The fitted radial/Ylm
+orbitals are obtained as linear combinations of the supplement columns through
+`coefficient_map`, so downstream projection uses
+
+    gto_overlap_matrix(working, adapter.supplement) * adapter.coefficient_map
+
+The coefficient map explicitly converts the unnormalized reduced-radial fit
+coefficients into the repo's axiswise normalized Cartesian primitive
+convention. Diagnostics record the real-Ylm and primitive-normalization
+contracts used for that conversion.
+"""
+struct RadialYlmCartesianGTOAdapter
+    supplement::CartesianGaussianShellSupplementRepresentation3D
+    coefficient_map::Matrix{Float64}
+    source_fit::RadialYlmSolidHarmonicGTOFit
+    diagnostics::NamedTuple
+end
+
 function _radial_ylm_validate_lm(l::Integer, m::Integer)
     l_value = Int(l)
     m_value = Int(m)
@@ -44,6 +68,19 @@ function _radial_ylm_validate_exponents(exponents::AbstractVector{<:Real})
     return exponent_values
 end
 
+function _radial_ylm_center_tuple(center)
+    length(center) == 3 ||
+        throw(ArgumentError("radial/Ylm Cartesian adapter center must have length 3"))
+    center_tuple = (
+        Float64(center[1]),
+        Float64(center[2]),
+        Float64(center[3]),
+    )
+    all(isfinite, center_tuple) ||
+        throw(ArgumentError("radial/Ylm Cartesian adapter center must be finite"))
+    return center_tuple
+end
+
 function _radial_ylm_validate_grid(points, weights)
     length(points) == length(weights) ||
         throw(ArgumentError("radial/Ylm GTO fitting requires matching point and weight counts"))
@@ -62,6 +99,67 @@ function _radial_ylm_validate_grid(points, weights)
     any(>(0.0), weight_values) ||
         throw(ArgumentError("radial/Ylm GTO fitting requires at least one positive quadrature weight"))
     return point_values, weight_values
+end
+
+function _radial_ylm_real_solid_harmonic_terms(channel::YlmChannel)
+    l = channel.l
+    m = channel.m
+    l > 2 && throw(
+        ArgumentError(
+            "radial/Ylm Cartesian GTO adapter currently supports l = 0, 1, 2; got l = $l",
+        ),
+    )
+
+    if l == 0
+        return [(powers = (0, 0, 0), coefficient = inv(sqrt(4.0 * pi)))]
+    elseif l == 1
+        coefficient = sqrt(3.0 / (4.0 * pi))
+        m == -1 && return [(powers = (0, 1, 0), coefficient = -coefficient)]
+        m == 0 && return [(powers = (0, 0, 1), coefficient = coefficient)]
+        return [(powers = (1, 0, 0), coefficient = -coefficient)]
+    end
+
+    coefficient_m2 = sqrt(15.0 / (4.0 * pi))
+    coefficient_m1 = -sqrt(15.0 / (4.0 * pi))
+    coefficient_m0 = sqrt(5.0 / (16.0 * pi))
+    coefficient_p2 = sqrt(15.0 / (16.0 * pi))
+    m == -2 && return [(powers = (1, 1, 0), coefficient = coefficient_m2)]
+    m == -1 && return [(powers = (0, 1, 1), coefficient = coefficient_m1)]
+    if m == 0
+        return [
+            (powers = (2, 0, 0), coefficient = -coefficient_m0),
+            (powers = (0, 2, 0), coefficient = -coefficient_m0),
+            (powers = (0, 0, 2), coefficient = 2.0 * coefficient_m0),
+        ]
+    end
+    m == 1 && return [(powers = (1, 0, 1), coefficient = coefficient_m1)]
+    return [
+        (powers = (2, 0, 0), coefficient = coefficient_p2),
+        (powers = (0, 2, 0), coefficient = -coefficient_p2),
+    ]
+end
+
+function _radial_ylm_polynomial_value(
+    terms,
+    point::NTuple{3,Float64},
+)
+    value = 0.0
+    x, y, z = point
+    for term in terms
+        lx, ly, lz = term.powers
+        value += term.coefficient * (x ^ lx) * (y ^ ly) * (z ^ lz)
+    end
+    return value
+end
+
+function _radial_ylm_cartesian_primitive_prefactor(
+    exponent::Float64,
+    powers::NTuple{3,Int},
+)
+    return prod(
+        GaussianAnalyticIntegrals.polynomial_gaussian_shell_prefactor(exponent, power)
+        for power in powers
+    )
 end
 
 function _radial_ylm_column_matrix(
@@ -309,4 +407,114 @@ function evaluate_radial_ylm_gto_fit(
     grid::RadialQuadratureGrid,
 )
     return evaluate_radial_ylm_gto_fit(fit, quadrature_points(grid))
+end
+
+"""
+    radial_ylm_fit_cartesian_gto_adapter(fit; center=(0,0,0), label_prefix="radial_ylm")
+
+Convert a centered `RadialYlmSolidHarmonicGTOFit` into a
+`RadialYlmCartesianGTOAdapter`.
+
+This first adapter slice supports `l = 0, 1, 2`. It expands the repo's real
+`YlmChannel(l,m)` convention into Cartesian solid-harmonic polynomials at a
+single center, then emits one axiswise normalized Cartesian primitive probe per
+`(exponent, polynomial term)`. The returned `coefficient_map` combines those
+probe columns back into the fitted radial/Ylm orbital columns.
+"""
+function radial_ylm_fit_cartesian_gto_adapter(
+    fit::RadialYlmSolidHarmonicGTOFit;
+    center = (0.0, 0.0, 0.0),
+    label_prefix::AbstractString = "radial_ylm",
+)
+    center_tuple = _radial_ylm_center_tuple(center)
+    channel = YlmChannel(fit.l, fit.m)
+    terms = _radial_ylm_real_solid_harmonic_terms(channel)
+    orbital_count = length(fit.exponents) * length(terms)
+    coefficient_map = zeros(Float64, orbital_count, size(fit.coefficients, 2))
+    orbitals = Vector{CartesianGaussianShellOrbitalRepresentation3D}(undef, orbital_count)
+
+    row = 0
+    for (exponent_index, exponent) in pairs(fit.exponents)
+        for (term_index, term) in pairs(terms)
+            row += 1
+            powers = term.powers
+            primitive_prefactor = _radial_ylm_cartesian_primitive_prefactor(exponent, powers)
+            primitive_prefactor > 0.0 ||
+                throw(ArgumentError("Cartesian primitive prefactor must be positive"))
+            coefficient_map[row, :] .=
+                (term.coefficient / primitive_prefactor) .* view(fit.coefficients, exponent_index, :)
+            label = string(
+                label_prefix,
+                "_l",
+                fit.l,
+                "_m",
+                fit.m,
+                "_e",
+                exponent_index,
+                "_t",
+                term_index,
+                "_x",
+                powers[1],
+                "y",
+                powers[2],
+                "z",
+                powers[3],
+            )
+            orbitals[row] = CartesianGaussianShellOrbitalRepresentation3D(
+                label,
+                powers,
+                center_tuple,
+                [Float64(exponent)],
+                [1.0],
+                :axiswise_normalized_cartesian_gaussian,
+            )
+        end
+    end
+
+    supplement_metadata = (
+        source_kind = :radial_ylm_solid_harmonic_gto_fit,
+        radial_convention = fit.radial_convention,
+        cartesian_bridge = :centered_real_solid_harmonic_to_cartesian_gto,
+        l = fit.l,
+        m = fit.m,
+        center = center_tuple,
+        exponent_count = length(fit.exponents),
+        fitted_orbital_count = size(fit.coefficients, 2),
+        cartesian_orbital_count = orbital_count,
+        supported_lmax = 2,
+        real_ylm_convention = :GaussletBases_real_YlmChannel,
+        real_ylm_normalization = :included_in_cartesian_coefficient_map,
+        solid_harmonic_polynomial_normalization = :repo_real_ylm_r_power,
+        cartesian_primitive_normalization = :axiswise_normalized_cartesian_gaussian,
+        fit_radial_coefficients = :unnormalized_reduced_radial,
+    )
+    supplement = CartesianGaussianShellSupplementRepresentation3D(
+        :radial_ylm_centered_cartesian_gto_bridge,
+        orbitals,
+        supplement_metadata,
+    )
+    diagnostics = (
+        radial_convention = fit.radial_convention,
+        l = fit.l,
+        m = fit.m,
+        center = center_tuple,
+        exponent_count = length(fit.exponents),
+        fitted_orbital_count = size(fit.coefficients, 2),
+        cartesian_orbital_count = orbital_count,
+        polynomial_terms = terms,
+        coefficient_map_size = size(coefficient_map),
+        gto_overlap_matrix_compatible = true,
+        supported_lmax = 2,
+        real_ylm_convention = :GaussletBases_real_YlmChannel,
+        real_ylm_normalization = :included_in_cartesian_coefficient_map,
+        solid_harmonic_polynomial_normalization = :repo_real_ylm_r_power,
+        cartesian_primitive_normalization = :axiswise_normalized_cartesian_gaussian,
+        fit_radial_coefficients = :unnormalized_reduced_radial,
+    )
+    return RadialYlmCartesianGTOAdapter(
+        supplement,
+        coefficient_map,
+        fit,
+        diagnostics,
+    )
 end

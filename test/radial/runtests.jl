@@ -596,6 +596,144 @@ end
     @test_throws ArgumentError fit_radial_ylm_to_solid_harmonic_gto(grid, l0_target, [-1.0]; l = 0, m = 0)
 end
 
+@testset "Radial Ylm Cartesian GTO adapter" begin
+    function synthetic_fit(l, m, exponents, coefficient_columns)
+        coefficients_matrix =
+            coefficient_columns isa AbstractVector ?
+            reshape(Float64.(coefficient_columns), :, 1) :
+            Matrix{Float64}(coefficient_columns)
+        return RadialYlmSolidHarmonicGTOFit(
+            :reduced_u_over_r,
+            l,
+            m,
+            Float64.(exponents),
+            coefficients_matrix,
+            (; radial_convention = :reduced_u_over_r, l, m),
+        )
+    end
+
+    function normalized_direction(direction)
+        values = Float64.(collect(direction))
+        values ./= norm(values)
+        return values
+    end
+
+    function unnormalized_r2_supplement(beta)
+        orbitals = CartesianGaussianShellOrbitalRepresentation3D[
+            CartesianGaussianShellOrbitalRepresentation3D(
+                "r2_x2",
+                (2, 0, 0),
+                (0.0, 0.0, 0.0),
+                [beta],
+                [1.0],
+                :axiswise_normalized_cartesian_gaussian,
+            ),
+            CartesianGaussianShellOrbitalRepresentation3D(
+                "r2_y2",
+                (0, 2, 0),
+                (0.0, 0.0, 0.0),
+                [beta],
+                [1.0],
+                :axiswise_normalized_cartesian_gaussian,
+            ),
+            CartesianGaussianShellOrbitalRepresentation3D(
+                "r2_z2",
+                (0, 0, 2),
+                (0.0, 0.0, 0.0),
+                [beta],
+                [1.0],
+                :axiswise_normalized_cartesian_gaussian,
+            ),
+        ]
+        supplement = CartesianGaussianShellSupplementRepresentation3D(
+            :test_r2_probe,
+            orbitals,
+            (; source = :radial_adapter_test),
+        )
+        coefficients = [
+            inv(GaussletBases._radial_ylm_cartesian_primitive_prefactor(beta, orbital.angular_powers))
+            for orbital in orbitals
+        ]
+        return supplement, coefficients
+    end
+
+    beta = 0.7
+    s_adapter = radial_ylm_fit_cartesian_gto_adapter(synthetic_fit(0, 0, [beta], [1.0]))
+    @test s_adapter isa RadialYlmCartesianGTOAdapter
+    @test s_adapter.diagnostics.gto_overlap_matrix_compatible
+    @test s_adapter.diagnostics.real_ylm_normalization == :included_in_cartesian_coefficient_map
+    @test s_adapter.diagnostics.cartesian_primitive_normalization == :axiswise_normalized_cartesian_gaussian
+    @test s_adapter.supplement isa CartesianGaussianShellSupplementRepresentation3D
+    @test [orbital.angular_powers for orbital in s_adapter.supplement.orbitals] == [(0, 0, 0)]
+    @test size(s_adapter.coefficient_map) == (1, 1)
+
+    p_expectations = Dict(
+        -1 => ((0, 1, 0), -1.0),
+        0 => ((0, 0, 1), 1.0),
+        1 => ((1, 0, 0), -1.0),
+    )
+    for m in -1:1
+        adapter = radial_ylm_fit_cartesian_gto_adapter(synthetic_fit(1, m, [beta], [1.0]))
+        expected_powers, expected_sign = p_expectations[m]
+        @test [orbital.angular_powers for orbital in adapter.supplement.orbitals] == [expected_powers]
+        @test sign(adapter.coefficient_map[1, 1]) == expected_sign
+    end
+
+    d_expected_powers = Dict(
+        -2 => [(1, 1, 0)],
+        -1 => [(0, 1, 1)],
+        0 => [(2, 0, 0), (0, 2, 0), (0, 0, 2)],
+        1 => [(1, 0, 1)],
+        2 => [(2, 0, 0), (0, 2, 0)],
+    )
+    r2_supplement, r2_coefficients = unnormalized_r2_supplement(beta)
+    for m in -2:2
+        adapter = radial_ylm_fit_cartesian_gto_adapter(synthetic_fit(2, m, [beta], [1.0]))
+        @test [orbital.angular_powers for orbital in adapter.supplement.orbitals] == d_expected_powers[m]
+        overlap = GaussletBases._cartesian_supplement_cross_overlap(
+            adapter.supplement,
+            r2_supplement,
+        )
+        r2_projection = dot(adapter.coefficient_map[:, 1], overlap * r2_coefficients)
+        @test abs(r2_projection) < 1.0e-12
+    end
+
+    directions = (
+        normalized_direction((1.0, 2.0, 3.0)),
+        normalized_direction((-2.0, 0.5, 1.5)),
+        normalized_direction((0.25, -1.0, 0.75)),
+    )
+    radii = (0.6, 1.4)
+    for l in 0:2, m in -l:l
+        channel = YlmChannel(l, m)
+        terms = GaussletBases._radial_ylm_real_solid_harmonic_terms(channel)
+        for direction in directions, radius in radii
+            point_vector = radius .* direction
+            point = (point_vector[1], point_vector[2], point_vector[3])
+            polynomial_value = GaussletBases._radial_ylm_polynomial_value(terms, point)
+            expected_value =
+                radius^l * GaussletBases._real_spherical_harmonic(channel, direction)
+            @test polynomial_value ≈ expected_value atol = 1.0e-12 rtol = 1.0e-12
+        end
+    end
+
+    exponents = [0.25, 1.1]
+    fit = synthetic_fit(1, 0, exponents, [0.8, -0.2])
+    adapter = radial_ylm_fit_cartesian_gto_adapter(fit)
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 4.0),
+        reference_spacing = 1.0,
+    ))
+    overlap = gto_overlap_matrix(basis, adapter.supplement)
+    projected_overlap = overlap * adapter.coefficient_map
+    @test size(overlap) == (length(basis)^3, length(adapter.supplement.orbitals))
+    @test size(projected_overlap) == (length(basis)^3, 1)
+    @test all(isfinite, projected_overlap)
+
+    @test_throws ArgumentError radial_ylm_fit_cartesian_gto_adapter(synthetic_fit(3, 0, [beta], [1.0]))
+end
+
 @testset "Radial atomic operators" begin
     rb, grid, ops, _, _, _ = _quick_radial_atomic_fixture()
 

@@ -59,8 +59,10 @@ export AbstractFunction1D,
        ordinary_cartesian_projected_gaussian_target,
        ordinary_cartesian_egoi_stationary_correction,
        RadialYlmSolidHarmonicGTOFit,
+       RadialYlmCartesianGTOAdapter,
        fit_radial_ylm_to_solid_harmonic_gto,
        evaluate_radial_ylm_gto_fit,
+       radial_ylm_fit_cartesian_gto_adapter,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -508,6 +510,7 @@ function ordinary_cartesian_projected_gaussian_target end
 function ordinary_cartesian_egoi_stationary_correction end
 function fit_radial_ylm_to_solid_harmonic_gto end
 function evaluate_radial_ylm_gto_fit end
+function radial_ylm_fit_cartesian_gto_adapter end
 function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
