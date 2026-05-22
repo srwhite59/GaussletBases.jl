@@ -58,6 +58,9 @@ export AbstractFunction1D,
        egoi_stationary_hamiltonian_correction,
        ordinary_cartesian_projected_gaussian_target,
        ordinary_cartesian_egoi_stationary_correction,
+       RadialYlmSolidHarmonicGTOFit,
+       fit_radial_ylm_to_solid_harmonic_gto,
+       evaluate_radial_ylm_gto_fit,
        BasisBox1D,
        BasisPartition1D,
        HierarchicalBasisBox1D,
@@ -503,6 +506,8 @@ function stationary_fock_one_body_correction end
 function egoi_stationary_hamiltonian_correction end
 function ordinary_cartesian_projected_gaussian_target end
 function ordinary_cartesian_egoi_stationary_correction end
+function fit_radial_ylm_to_solid_harmonic_gto end
+function evaluate_radial_ylm_gto_fit end
 function radial_quadrature end
 function quadrature_points end
 function quadrature_weights end
@@ -641,6 +646,7 @@ include("diagnostics.jl")
 include("radial_boundary_prototypes.jl")
 include("operators.jl")
 include("atomic_ylm.jl")
+include("radial_ylm_gto_bridge.jl")
 include("gaunt_tables.jl")
 include("angular_point_sets.jl")
 include("angular_shell_basis.jl")

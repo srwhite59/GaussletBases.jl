@@ -529,6 +529,73 @@ end
           norm(centrifugal_matrix(rb, grid; l = 2), Inf) ≤ 1.0e-9
 end
 
+@testset "Radial Ylm solid-harmonic GTO bridge" begin
+    rb, grid = _quick_radial_operator_fixture()
+    points = quadrature_points(grid)
+
+    exponents = [0.08, 0.25, 0.9, 2.5]
+    l0_design = GaussletBases._radial_ylm_solid_harmonic_gto_design_matrix(points, 0, exponents)
+    l0_target = l0_design * [1.2, -0.35, 0.08, 0.015]
+    l0_fit = fit_radial_ylm_to_solid_harmonic_gto(grid, l0_target, exponents; l = 0, m = 0)
+    l0_reconstructed = evaluate_radial_ylm_gto_fit(l0_fit, grid)
+
+    @test l0_fit isa RadialYlmSolidHarmonicGTOFit
+    @test l0_fit.radial_convention == :reduced_u_over_r
+    @test l0_fit.diagnostics.cartesian_conversion_status == :deferred_solid_harmonic_to_cartesian
+    @test l0_fit.diagnostics.radial_grid_size == length(points)
+    @test l0_fit.diagnostics.exponent_count == length(exponents)
+    @test l0_fit.diagnostics.effective_rank == length(exponents)
+    @test l0_fit.diagnostics.relative_residual_norms[1] < 1.0e-10
+    @test norm(l0_reconstructed[:, 1] - l0_target) / norm(l0_target) < 1.0e-10
+
+    l1_design = GaussletBases._radial_ylm_solid_harmonic_gto_design_matrix(points, 1, exponents)
+    l1_target = l1_design * [0.4, 0.3, -0.1, 0.02]
+    l1_fit_mneg = fit_radial_ylm_to_solid_harmonic_gto(grid, l1_target, exponents; l = 1, m = -1)
+    l1_fit_mpos = fit_radial_ylm_to_solid_harmonic_gto(grid, l1_target, exponents; l = 1, m = 1)
+    @test l1_fit_mneg.diagnostics.l == 1
+    @test l1_fit_mneg.diagnostics.m == -1
+    @test l1_fit_mpos.diagnostics.m == 1
+    @test l1_fit_mneg.coefficients ≈ l1_fit_mpos.coefficients atol = 1.0e-12 rtol = 1.0e-12
+    @test l1_fit_mneg.diagnostics.relative_residual_norms ≈
+          l1_fit_mpos.diagnostics.relative_residual_norms atol = 1.0e-12 rtol = 1.0e-12
+
+    l2_design = GaussletBases._radial_ylm_solid_harmonic_gto_design_matrix(points, 2, exponents)
+    l2_targets = hcat(
+        l2_design * [0.2, -0.05, 0.03, 0.01],
+        l2_design * [-0.1, 0.2, 0.04, -0.02],
+    )
+    l2_fit_m0 = fit_radial_ylm_to_solid_harmonic_gto(grid, l2_targets, exponents; l = 2, m = 0)
+    l2_fit_m2 = fit_radial_ylm_to_solid_harmonic_gto(grid, l2_targets, exponents; l = 2, m = 2)
+    @test l2_fit_m0.diagnostics.orbital_count == 2
+    @test l2_fit_m0.coefficients ≈ l2_fit_m2.coefficients atol = 1.0e-12 rtol = 1.0e-12
+    @test l2_fit_m0.diagnostics.metric_singular_values ≈
+          l2_fit_m2.diagnostics.metric_singular_values atol = 1.0e-12 rtol = 1.0e-12
+
+    poor_exponents = [8.0, 24.0]
+    poor_fit = fit_radial_ylm_to_solid_harmonic_gto(grid, l0_target, poor_exponents; l = 0, m = 0)
+    @test poor_fit.diagnostics.relative_residual_norms[1] > 1.0e-3
+    @test poor_fit.diagnostics.relative_residual_norms[1] >
+          l0_fit.diagnostics.relative_residual_norms[1] + 1.0e-3
+
+    radial_coefficients = zeros(Float64, length(rb), 2)
+    radial_coefficients[1, 1] = 1.0
+    radial_coefficients[min(2, length(rb)), 2] = 1.0
+    basis_fit = fit_radial_ylm_to_solid_harmonic_gto(
+        rb,
+        radial_coefficients,
+        exponents;
+        l = 0,
+        m = 0,
+        radial_grid = grid,
+    )
+    @test basis_fit.diagnostics.radial_basis_size == length(rb)
+    @test basis_fit.diagnostics.orbital_count == 2
+    @test all(isfinite, basis_fit.diagnostics.residual_norms)
+
+    @test_throws ArgumentError fit_radial_ylm_to_solid_harmonic_gto(grid, l0_target, exponents; l = 1, m = 2)
+    @test_throws ArgumentError fit_radial_ylm_to_solid_harmonic_gto(grid, l0_target, [-1.0]; l = 0, m = 0)
+end
+
 @testset "Radial atomic operators" begin
     rb, grid, ops, _, _, _ = _quick_radial_atomic_fixture()
 
@@ -541,4 +608,3 @@ end
     @test size(multipole(ops, 4)) == (length(rb), length(rb))
     @test_throws BoundsError multipole(ops, 5)
 end
-
