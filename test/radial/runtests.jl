@@ -734,6 +734,107 @@ end
     @test_throws ArgumentError radial_ylm_fit_cartesian_gto_adapter(synthetic_fit(3, 0, [beta], [1.0]))
 end
 
+@testset "Radial Ylm Cartesian projection diagnostics" begin
+    function projection_synthetic_fit(l, m, exponents, coefficient_columns)
+        coefficients_matrix =
+            coefficient_columns isa AbstractVector ?
+            reshape(Float64.(coefficient_columns), :, 1) :
+            Matrix{Float64}(coefficient_columns)
+        column_count = size(coefficients_matrix, 2)
+        return RadialYlmSolidHarmonicGTOFit(
+            :reduced_u_over_r,
+            l,
+            m,
+            Float64.(exponents),
+            coefficients_matrix,
+            (
+                radial_convention = :reduced_u_over_r,
+                l = l,
+                m = m,
+                residual_norms = fill(1.0e-5, column_count),
+                relative_residual_norms = fill(2.0e-5, column_count),
+            ),
+        )
+    end
+
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 5,
+        mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 4.0),
+        reference_spacing = 1.0,
+    ))
+
+    s_adapter = radial_ylm_fit_cartesian_gto_adapter(
+        projection_synthetic_fit(0, 0, [0.4], [0.75]),
+    )
+    p_adapter = radial_ylm_fit_cartesian_gto_adapter(
+        projection_synthetic_fit(1, 0, [0.25, 1.1], [0.8, -0.2]),
+    )
+
+    result = project_radial_ylm_gto_adapter_to_cartesian(basis, p_adapter)
+    direct = gto_overlap_matrix(basis, p_adapter.supplement) * p_adapter.coefficient_map
+    @test result isa RadialYlmCartesianProjectionResult
+    @test result.projected_overlap == result.cartesian_coefficients
+    @test result.projected_overlap ≈ direct atol = 0.0 rtol = 0.0
+    @test size(result.gto_overlap) == (length(basis)^3, length(p_adapter.supplement.orbitals))
+    @test size(result.cartesian_coefficients) == (length(basis)^3, 1)
+    @test all(isfinite, result.cartesian_coefficients)
+    @test all(isfinite, result.diagnostics.source_norms)
+    @test all(isfinite, result.diagnostics.projected_norms)
+    @test all(isfinite, result.diagnostics.norm_losses)
+    @test all(isfinite, result.diagnostics.relative_norm_losses)
+    @test result.diagnostics.final_basis_policy == :assume_orthonormal_final_basis
+    @test result.diagnostics.final_overlap_source == :not_available_assumed_identity
+    @test result.diagnostics.self_overlap_use == :not_used
+    @test result.diagnostics.projection_formula == :S_FG_times_coefficient_map
+    @test result.diagnostics.fit_relative_residual_norms == [2.0e-5]
+
+    multi_column_adapter = radial_ylm_fit_cartesian_gto_adapter(
+        projection_synthetic_fit(
+            1,
+            0,
+            [0.25, 1.1],
+            [0.8 0.1; -0.2 0.3],
+        ),
+    )
+    multi_result = project_radial_ylm_gto_adapter_to_cartesian(basis, multi_column_adapter)
+    @test size(multi_result.cartesian_coefficients) == (length(basis)^3, 2)
+    @test length(multi_result.diagnostics.source_norms) == 2
+    @test length(multi_result.diagnostics.projected_norms) == 2
+    @test length(multi_result.diagnostics.projected_subspace_singular_values) == 2
+    @test multi_result.diagnostics.fit_relative_residual_norms == [2.0e-5, 2.0e-5]
+
+    combined_result = project_radial_ylm_gto_adapter_to_cartesian(
+        basis,
+        [s_adapter, p_adapter],
+    )
+    @test combined_result.diagnostics.adapter_count == 2
+    @test size(combined_result.cartesian_coefficients) == (length(basis)^3, 2)
+    @test length(combined_result.diagnostics.source_norms) == 2
+    @test all(isfinite, combined_result.diagnostics.projected_subspace_singular_values)
+
+    final_dimension = length(basis)^3
+    bad_overlap = Matrix{Float64}(I, final_dimension, final_dimension)
+    bad_overlap[1, 1] = 1.25
+    @test_throws ArgumentError project_radial_ylm_gto_adapter_to_cartesian(
+        basis,
+        p_adapter;
+        diagnostic_final_overlap = bad_overlap,
+        final_overlap_tol = 1.0e-10,
+    )
+    bad_diagnostic_result = project_radial_ylm_gto_adapter_to_cartesian(
+        basis,
+        p_adapter;
+        diagnostic_final_overlap = bad_overlap,
+        final_overlap_tol = 1.0e-10,
+        fail_on_bad_final_overlap = false,
+    )
+    @test bad_diagnostic_result.diagnostics.final_overlap_source ==
+          :explicit_diagnostic_final_overlap
+    @test !bad_diagnostic_result.diagnostics.final_overlap_trustworthy
+    @test bad_diagnostic_result.diagnostics.self_overlap_use ==
+          :diagnostic_only_not_used_for_projection
+end
+
 @testset "Radial atomic operators" begin
     rb, grid, ops, _, _, _ = _quick_radial_atomic_fixture()
 

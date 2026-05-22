@@ -47,6 +47,25 @@ struct RadialYlmCartesianGTOAdapter
     diagnostics::NamedTuple
 end
 
+"""
+    RadialYlmCartesianProjectionResult
+
+Projection diagnostics for one or more radial/Ylm Cartesian GTO adapters into
+a Cartesian final working basis.
+
+`cartesian_coefficients` and `projected_overlap` are the same matrix by design:
+the normal final-basis policy assumes the Cartesian final basis is orthonormal
+and uses `C_F = gto_overlap_matrix(working, supplement) * coefficient_map`.
+Any final self-overlap is diagnostic-only and is never used to compute
+`cartesian_coefficients`.
+"""
+struct RadialYlmCartesianProjectionResult
+    cartesian_coefficients::Matrix{Float64}
+    gto_overlap::Matrix{Float64}
+    projected_overlap::Matrix{Float64}
+    diagnostics::NamedTuple
+end
+
 function _radial_ylm_validate_lm(l::Integer, m::Integer)
     l_value = Int(l)
     m_value = Int(m)
@@ -515,6 +534,247 @@ function radial_ylm_fit_cartesian_gto_adapter(
         supplement,
         coefficient_map,
         fit,
+        diagnostics,
+    )
+end
+
+function _radial_ylm_adapter_fit_relative_residuals(
+    adapter::RadialYlmCartesianGTOAdapter,
+)
+    diagnostics = adapter.source_fit.diagnostics
+    if hasproperty(diagnostics, :relative_residual_norms)
+        return Float64[Float64(value) for value in diagnostics.relative_residual_norms]
+    end
+    return fill(NaN, size(adapter.coefficient_map, 2))
+end
+
+function _radial_ylm_adapter_fit_residuals(
+    adapter::RadialYlmCartesianGTOAdapter,
+)
+    diagnostics = adapter.source_fit.diagnostics
+    if hasproperty(diagnostics, :residual_norms)
+        return Float64[Float64(value) for value in diagnostics.residual_norms]
+    end
+    return fill(NaN, size(adapter.coefficient_map, 2))
+end
+
+function _radial_ylm_combined_adapter_payload(
+    adapter::RadialYlmCartesianGTOAdapter,
+)
+    return (
+        supplement = adapter.supplement,
+        coefficient_map = Matrix{Float64}(adapter.coefficient_map),
+        adapter_count = 1,
+        adapter_diagnostics = (adapter.diagnostics,),
+        fit_residual_norms = _radial_ylm_adapter_fit_residuals(adapter),
+        fit_relative_residual_norms = _radial_ylm_adapter_fit_relative_residuals(adapter),
+    )
+end
+
+function _radial_ylm_combined_adapter_payload(
+    adapters::AbstractVector{<:RadialYlmCartesianGTOAdapter},
+)
+    !isempty(adapters) ||
+        throw(ArgumentError("project_radial_ylm_gto_adapter_to_cartesian requires at least one adapter"))
+    total_orbitals = sum(length(adapter.supplement.orbitals) for adapter in adapters)
+    total_columns = sum(size(adapter.coefficient_map, 2) for adapter in adapters)
+    coefficient_map = zeros(Float64, total_orbitals, total_columns)
+    orbitals = CartesianGaussianShellOrbitalRepresentation3D[]
+    adapter_diagnostics = Vector{NamedTuple}(undef, length(adapters))
+    fit_residual_norms = Float64[]
+    fit_relative_residual_norms = Float64[]
+
+    row_offset = 0
+    column_offset = 0
+    for (adapter_index, adapter) in pairs(adapters)
+        row_count = length(adapter.supplement.orbitals)
+        column_count = size(adapter.coefficient_map, 2)
+        size(adapter.coefficient_map, 1) == row_count ||
+            throw(DimensionMismatch("adapter coefficient_map row count must match supplement orbitals"))
+        append!(orbitals, adapter.supplement.orbitals)
+        coefficient_map[
+            (row_offset + 1):(row_offset + row_count),
+            (column_offset + 1):(column_offset + column_count),
+        ] .= adapter.coefficient_map
+        adapter_diagnostics[adapter_index] = adapter.diagnostics
+        append!(fit_residual_norms, _radial_ylm_adapter_fit_residuals(adapter))
+        append!(fit_relative_residual_norms, _radial_ylm_adapter_fit_relative_residuals(adapter))
+        row_offset += row_count
+        column_offset += column_count
+    end
+
+    supplement = CartesianGaussianShellSupplementRepresentation3D(
+        :radial_ylm_centered_cartesian_gto_bridge_collection,
+        orbitals,
+        (
+            source_kind = :radial_ylm_cartesian_gto_adapter_collection,
+            adapter_count = length(adapters),
+            cartesian_orbital_count = total_orbitals,
+            fitted_orbital_count = total_columns,
+            gto_overlap_matrix_compatible = true,
+            final_basis_policy = :assume_orthonormal_final_basis,
+        ),
+    )
+    return (
+        supplement = supplement,
+        coefficient_map = coefficient_map,
+        adapter_count = length(adapters),
+        adapter_diagnostics = Tuple(adapter_diagnostics),
+        fit_residual_norms = fit_residual_norms,
+        fit_relative_residual_norms = fit_relative_residual_norms,
+    )
+end
+
+function _radial_ylm_diagnostic_final_overlap(
+    working,
+    final_dimension::Int,
+    diagnostic_final_overlap,
+)
+    if diagnostic_final_overlap !== nothing
+        matrix = Matrix{Float64}(diagnostic_final_overlap)
+        return matrix, :explicit_diagnostic_final_overlap
+    elseif hasproperty(working, :overlap)
+        matrix = Matrix{Float64}(getproperty(working, :overlap))
+        return matrix, :working_overlap_field
+    end
+    return nothing, :not_available_assumed_identity
+end
+
+function _radial_ylm_final_overlap_diagnostics(
+    working,
+    final_dimension::Int;
+    diagnostic_final_overlap,
+    final_overlap_tol::Real,
+    fail_on_bad_final_overlap::Bool,
+)
+    tolerance = Float64(final_overlap_tol)
+    tolerance >= 0.0 ||
+        throw(ArgumentError("final_overlap_tol must be nonnegative"))
+    final_overlap, source = _radial_ylm_diagnostic_final_overlap(
+        working,
+        final_dimension,
+        diagnostic_final_overlap,
+    )
+    if final_overlap === nothing
+        return (
+            final_overlap_source = source,
+            final_overlap_error = nothing,
+            final_overlap_symmetry_error = nothing,
+            final_overlap_tolerance = tolerance,
+            final_overlap_trustworthy = true,
+            final_basis_policy = :assume_orthonormal_final_basis,
+            self_overlap_use = :not_used,
+        )
+    end
+    size(final_overlap) == (final_dimension, final_dimension) ||
+        throw(
+            DimensionMismatch(
+                "diagnostic final overlap size $(size(final_overlap)) does not match final dimension $final_dimension",
+            ),
+        )
+    all(isfinite, final_overlap) ||
+        throw(ArgumentError("diagnostic final overlap must be finite"))
+    symmetry_error = norm(final_overlap - transpose(final_overlap), Inf)
+    identity_error = norm(final_overlap - I, Inf)
+    trustworthy = identity_error <= tolerance
+    if fail_on_bad_final_overlap && !trustworthy
+        throw(
+            ArgumentError(
+                "Cartesian final basis overlap error $identity_error exceeds tolerance $tolerance; projection diagnostics are not trustworthy",
+            ),
+        )
+    end
+    return (
+        final_overlap_source = source,
+        final_overlap_error = identity_error,
+        final_overlap_symmetry_error = symmetry_error,
+        final_overlap_tolerance = tolerance,
+        final_overlap_trustworthy = trustworthy,
+        final_basis_policy = :assume_orthonormal_final_basis,
+        self_overlap_use = :diagnostic_only_not_used_for_projection,
+    )
+end
+
+function _radial_ylm_projection_norm_diagnostics(
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+    coefficient_map::AbstractMatrix{<:Real},
+    projected_overlap::AbstractMatrix{<:Real},
+)
+    supplement_metric = _cartesian_supplement_cross_overlap(supplement, supplement)
+    source_gram = transpose(coefficient_map) * supplement_metric * coefficient_map
+    projected_gram = transpose(projected_overlap) * projected_overlap
+    source_norms = sqrt.(max.(real.(diag(source_gram)), 0.0))
+    projected_norms = sqrt.(max.(real.(diag(projected_gram)), 0.0))
+    norm_losses = source_norms .- projected_norms
+    relative_norm_losses = Float64[
+        source_norms[index] > 0.0 ? norm_losses[index] / source_norms[index] : norm_losses[index]
+        for index in eachindex(source_norms)
+    ]
+    singular_values = svdvals(Matrix{Float64}(projected_overlap))
+    return (
+        source_norms = Vector{Float64}(source_norms),
+        projected_norms = Vector{Float64}(projected_norms),
+        norm_losses = Vector{Float64}(norm_losses),
+        relative_norm_losses = relative_norm_losses,
+        source_gram = Matrix{Float64}(source_gram),
+        projected_gram = Matrix{Float64}(projected_gram),
+        projected_subspace_singular_values = Vector{Float64}(singular_values),
+    )
+end
+
+"""
+    project_radial_ylm_gto_adapter_to_cartesian(working, adapter; ...)
+
+Project one `RadialYlmCartesianGTOAdapter`, or a vector of adapters, into a
+supported Cartesian final working basis using existing `gto_overlap_matrix`.
+
+The default path assumes the final Cartesian working basis is orthonormal and
+uses `C_F = S_FG * D`, where `S_FG = gto_overlap_matrix(working,
+adapter.supplement)` and `D = adapter.coefficient_map`. Any final-basis
+self-overlap is checked only as a diagnostic trust gate and is not used for a
+generalized-overlap projection.
+"""
+function project_radial_ylm_gto_adapter_to_cartesian(
+    working,
+    adapter_or_adapters;
+    final_overlap_tol::Real = 1.0e-8,
+    fail_on_bad_final_overlap::Bool = true,
+    diagnostic_final_overlap = nothing,
+)
+    payload = _radial_ylm_combined_adapter_payload(adapter_or_adapters)
+    gto_overlap = gto_overlap_matrix(working, payload.supplement)
+    projected_overlap = Matrix{Float64}(gto_overlap * payload.coefficient_map)
+    final_diagnostics = _radial_ylm_final_overlap_diagnostics(
+        working,
+        size(projected_overlap, 1);
+        diagnostic_final_overlap,
+        final_overlap_tol,
+        fail_on_bad_final_overlap,
+    )
+    norm_diagnostics = _radial_ylm_projection_norm_diagnostics(
+        payload.supplement,
+        payload.coefficient_map,
+        projected_overlap,
+    )
+    diagnostics = merge(
+        (
+            adapter_count = payload.adapter_count,
+            adapter_diagnostics = payload.adapter_diagnostics,
+            coefficient_map_size = size(payload.coefficient_map),
+            gto_overlap_size = size(gto_overlap),
+            projected_overlap_size = size(projected_overlap),
+            fit_residual_norms = payload.fit_residual_norms,
+            fit_relative_residual_norms = payload.fit_relative_residual_norms,
+            projection_formula = :S_FG_times_coefficient_map,
+            final_basis_policy = :assume_orthonormal_final_basis,
+        ),
+        final_diagnostics,
+        norm_diagnostics,
+    )
+    return RadialYlmCartesianProjectionResult(
+        projected_overlap,
+        Matrix{Float64}(gto_overlap),
+        projected_overlap,
         diagnostics,
     )
 end

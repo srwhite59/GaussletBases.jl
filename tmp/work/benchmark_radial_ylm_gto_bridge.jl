@@ -49,10 +49,22 @@ radial_ylm_fit_cartesian_gto_adapter(fit)
 GC.gc()
 adapter_timed = @timed radial_ylm_fit_cartesian_gto_adapter(fit)
 adapter = adapter_timed.value
+basis = build_basis(MappedUniformBasisSpec(:G10;
+    count = 5,
+    mapping = fit_asinh_mapping_for_strength(s = 0.5, npoints = 5, xmax = 4.0),
+    reference_spacing = 1.0,
+))
+
+project_radial_ylm_gto_adapter_to_cartesian(basis, adapter)
+
+GC.gc()
+projection_timed = @timed project_radial_ylm_gto_adapter_to_cartesian(basis, adapter)
+projection = projection_timed.value
 
 @printf("radial_basis_size=%d\n", length(rb))
 @printf("radial_grid_size=%d\n", length(points))
 @printf("l=%d orbital_count=%d exponent_count=%d\n", l, size(targets, 2), length(exponents))
+@printf("cartesian_working_dimension=%d\n", length(basis)^3)
 @printf("cartesian_probe_count=%d coefficient_map=%dx%d\n",
     length(adapter.supplement.orbitals),
     size(adapter.coefficient_map, 1),
@@ -67,3 +79,9 @@ adapter = adapter_timed.value
 @printf("alloc_mb=%.3f\n", timed.bytes / 1024^2)
 @printf("adapter_time_seconds=%.6f\n", adapter_timed.time)
 @printf("adapter_alloc_mb=%.3f\n", adapter_timed.bytes / 1024^2)
+@printf("projection_columns=%d max_relative_norm_loss=%.6e\n",
+    size(projection.cartesian_coefficients, 2),
+    maximum(projection.diagnostics.relative_norm_losses),
+)
+@printf("projection_time_seconds=%.6f\n", projection_timed.time)
+@printf("projection_alloc_mb=%.3f\n", projection_timed.bytes / 1024^2)
