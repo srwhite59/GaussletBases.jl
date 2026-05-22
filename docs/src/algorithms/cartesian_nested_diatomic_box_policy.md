@@ -193,6 +193,11 @@ homonuclear diatomic nested source builder:
 - nonuniform inner-core trimming on the bond axis
 - near-nucleus row protection during that inner-core trimming
 
+This is the default `shared_shell_layer_policy = :complete_rectangular`
+policy. The guarded opt-in endcap/panel owned-unit shared-shell route is a
+separate experimental policy described in
+[Cartesian nested endcap/panel shared-shell route](cartesian_nested_endcap_panel_shared_shell.md).
+
 It is still a geometry-policy page. It does not redefine supplement selection,
 residual orthogonalization, overlap assembly, or bundle storage.
 

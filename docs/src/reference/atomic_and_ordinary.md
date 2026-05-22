@@ -25,6 +25,9 @@ true
 
 ## Atomic one-body and IDA layers
 
+The current exchange helper uses the exchanged angular-sector rule described in
+[Atomic IDA exchange angular-sector rule](../algorithms/atomic_ida_exchange_angular_sectors.md).
+
 ```@docs
 AtomicOneBodyOperators
 atomic_one_body_operators
@@ -116,7 +119,9 @@ complete rectangular shared-shell construction. Passing
 `shared_shell_endcap_panel_q` and `shared_shell_endcap_panel_L` requests the
 internal endcap/panel owned shared-shell layer. The `:endcap_panel_owned` path
 is validated for the old-standard H2 R = 4.0 operator and HF/ED reproduction,
-but it is not a broad OPCU/high-order production mode. See the developer memos
+but it is not a broad OPCU/high-order production mode. See
+[Cartesian nested endcap/panel shared-shell route](../algorithms/cartesian_nested_endcap_panel_shared_shell.md)
+for the algorithm contract, and the developer memos
 [High-order endcap/panel mainline validation](../developer/high_order_endcap_panel_mainline_validation_2026-05-16.md)
 and
 [High-order endcap/panel H2 chemistry reproduction](../developer/high_order_endcap_panel_h2_chemistry_reproduction_2026-05-16.md)

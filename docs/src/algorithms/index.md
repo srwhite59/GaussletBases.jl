@@ -35,9 +35,11 @@ The comment should:
 ## Current pages
 
 - [Qiu-White residual-Gaussian route](qiu_white_residual_gaussian_route.md)
+- [Atomic IDA exchange angular-sector rule](atomic_ida_exchange_angular_sectors.md)
 - [1D distorted-gausslet PGDG refinement hierarchy](distorted_gausslet_pgdg_refinement_hierarchy.md)
 - [Cartesian nested face construction](cartesian_nested_face_construction.md)
 - [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 - [Cartesian nested diatomic box policy](cartesian_nested_diatomic_box_policy.md)
+- [Cartesian nested endcap/panel shared-shell route](cartesian_nested_endcap_panel_shared_shell.md)
 - [Cartesian nested diatomic coordinate distortion](cartesian_nested_diatomic_coordinate_distortion.md)
 - [Radial interval-sampled build and extents](radial_interval_sampled_build_and_extents.md)

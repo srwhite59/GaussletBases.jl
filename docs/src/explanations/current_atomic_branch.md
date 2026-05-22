@@ -54,6 +54,7 @@ Within the rendered docs, the best entry path is:
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 - [Example guide](../howto/example_guide.md)
 - [Atomic and ordinary workflows reference](../reference/atomic_and_ordinary.md)
+- [Atomic IDA exchange angular-sector rule](../algorithms/atomic_ida_exchange_angular_sectors.md)
 
 ## Documentation authority for this branch
 
@@ -76,7 +77,9 @@ The wording discipline for the atomic line remains:
 - the `(l,m)` layer is the first explicit atomic angular layer
 - the present interaction model is density-density / IDA, not a four-index
   Coulomb Hamiltonian
-- direct / exchange / Fock / UHF are narrow current-model layers
+- direct / exchange / Fock / UHF are narrow current-model layers; exchange
+  uses the exchanged angular-sector rule documented in
+  [Atomic IDA exchange angular-sector rule](../algorithms/atomic_ida_exchange_angular_sectors.md)
 - solver-facing export is already supported for the atomic line
 - the newer injected-angular benchmark line is real, but it belongs to the
   separate experimental angular research track rather than to this mature

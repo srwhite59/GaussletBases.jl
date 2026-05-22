@@ -34,6 +34,7 @@ Within the rendered docs, the best supporting pages are:
 - [Qiu-White residual-Gaussian route](../algorithms/qiu_white_residual_gaussian_route.md)
 - [Cartesian nested atomic nonrecursive route](../algorithms/cartesian_nested_atomic_nonrecursive_route.md)
 - [Cartesian nested diatomic box policy](../algorithms/cartesian_nested_diatomic_box_policy.md)
+- [Cartesian nested endcap/panel shared-shell route](../algorithms/cartesian_nested_endcap_panel_shared_shell.md)
 
 The radial tutorial remains useful context because the package’s operator and
 quadrature story was established there first, but it is no longer the whole
@@ -79,6 +80,10 @@ The wording discipline for the ordinary line remains:
 - on the widened diatomic molecular supplement route, only the carried GG/fixed
   nuclear one-body backbone is widened; GA/AA supplement blocks and
   residual-Gaussian closure remain on the existing formulation
+- bond-aligned diatomic nested frontends also expose an opt-in experimental
+  `shared_shell_layer_policy = :endcap_panel_owned` route; it is mainline
+  code, but remains disabled by default and should be compared by consumers
+  before being treated as production policy
 - on that same diatomic molecular supplement route, the final one-body mix is
   now intended to use the carried-plus-residual `raw_to_final` structure
   directly rather than a generic dense final-space congruence
