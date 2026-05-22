@@ -83,5 +83,11 @@ projection = projection_timed.value
     size(projection.cartesian_coefficients, 2),
     maximum(projection.diagnostics.relative_norm_losses),
 )
+@printf("projection_raw_max_singular_value=%.6e\n",
+    maximum(projection.diagnostics.raw_projected_overlap_singular_values),
+)
+@printf("projection_source_orthonormal_max_singular_value=%.6e\n",
+    maximum(projection.diagnostics.source_orthonormal_projected_singular_values),
+)
 @printf("projection_time_seconds=%.6f\n", projection_timed.time)
 @printf("projection_alloc_mb=%.3f\n", projection_timed.bytes / 1024^2)

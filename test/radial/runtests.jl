@@ -787,6 +787,21 @@ end
     @test result.diagnostics.self_overlap_use == :not_used
     @test result.diagnostics.projection_formula == :S_FG_times_coefficient_map
     @test result.diagnostics.fit_relative_residual_norms == [2.0e-5]
+    @test result.diagnostics.projected_subspace_singular_values ==
+          result.diagnostics.source_orthonormal_projected_singular_values
+    @test length(result.diagnostics.raw_projected_overlap_singular_values) == 1
+    @test length(result.diagnostics.source_orthonormal_projected_singular_values) == 1
+
+    scaled_p_adapter = radial_ylm_fit_cartesian_gto_adapter(
+        projection_synthetic_fit(1, 0, [0.25, 1.1], [8.0, -2.0]),
+    )
+    scaled_result = project_radial_ylm_gto_adapter_to_cartesian(basis, scaled_p_adapter)
+    @test only(scaled_result.diagnostics.raw_projected_overlap_singular_values) ≈
+          10.0 * only(result.diagnostics.raw_projected_overlap_singular_values) rtol = 1.0e-12
+    @test only(scaled_result.diagnostics.source_orthonormal_projected_singular_values) ≈
+          only(result.diagnostics.source_orthonormal_projected_singular_values) rtol = 1.0e-12
+    @test only(scaled_result.diagnostics.projected_subspace_singular_values) ≈
+          only(result.diagnostics.projected_subspace_singular_values) rtol = 1.0e-12
 
     multi_column_adapter = radial_ylm_fit_cartesian_gto_adapter(
         projection_synthetic_fit(
@@ -801,6 +816,8 @@ end
     @test length(multi_result.diagnostics.source_norms) == 2
     @test length(multi_result.diagnostics.projected_norms) == 2
     @test length(multi_result.diagnostics.projected_subspace_singular_values) == 2
+    @test length(multi_result.diagnostics.raw_projected_overlap_singular_values) == 2
+    @test multi_result.diagnostics.source_gram_effective_rank == 2
     @test multi_result.diagnostics.fit_relative_residual_norms == [2.0e-5, 2.0e-5]
 
     combined_result = project_radial_ylm_gto_adapter_to_cartesian(
@@ -811,8 +828,20 @@ end
     @test size(combined_result.cartesian_coefficients) == (length(basis)^3, 2)
     @test length(combined_result.diagnostics.source_norms) == 2
     @test all(isfinite, combined_result.diagnostics.projected_subspace_singular_values)
+    @test all(isfinite, combined_result.diagnostics.source_gram_singular_values)
 
     final_dimension = length(basis)^3
+    overlap_3d_diagnostics = GaussletBases._radial_ylm_final_overlap_diagnostics(
+        (overlap_3d = Matrix{Float64}(I, final_dimension, final_dimension),),
+        final_dimension;
+        diagnostic_final_overlap = nothing,
+        final_overlap_tol = 1.0e-10,
+        fail_on_bad_final_overlap = true,
+    )
+    @test overlap_3d_diagnostics.final_overlap_source == :working_overlap_3d_field
+    @test overlap_3d_diagnostics.self_overlap_use ==
+          :diagnostic_only_not_used_for_projection
+
     bad_overlap = Matrix{Float64}(I, final_dimension, final_dimension)
     bad_overlap[1, 1] = 1.25
     @test_throws ArgumentError project_radial_ylm_gto_adapter_to_cartesian(

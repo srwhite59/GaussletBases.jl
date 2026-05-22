@@ -636,6 +636,9 @@ function _radial_ylm_diagnostic_final_overlap(
     elseif hasproperty(working, :overlap)
         matrix = Matrix{Float64}(getproperty(working, :overlap))
         return matrix, :working_overlap_field
+    elseif hasproperty(working, :overlap_3d)
+        matrix = Matrix{Float64}(getproperty(working, :overlap_3d))
+        return matrix, :working_overlap_3d_field
     end
     return nothing, :not_available_assumed_identity
 end
@@ -695,6 +698,34 @@ function _radial_ylm_final_overlap_diagnostics(
     )
 end
 
+function _radial_ylm_source_orthonormal_projected_singular_values(
+    source_gram::AbstractMatrix{<:Real},
+    projected_overlap::AbstractMatrix{<:Real},
+)
+    source_gram_matrix = Matrix{Float64}(source_gram)
+    symmetric_source_gram = Symmetric(
+        (source_gram_matrix + transpose(source_gram_matrix)) ./ 2,
+    )
+    decomposition = eigen(symmetric_source_gram)
+    metric_values = max.(decomposition.values, 0.0)
+    largest = isempty(metric_values) ? 0.0 : maximum(metric_values)
+    tolerance = max(size(source_gram)...) * eps(Float64) * max(largest, 1.0)
+    retained = findall(value -> value > tolerance, metric_values)
+    if isempty(retained)
+        return Float64[], Vector{Float64}(metric_values), 0, tolerance
+    end
+    orthonormalizer =
+        decomposition.vectors[:, retained] *
+        Diagonal(1.0 ./ sqrt.(metric_values[retained]))
+    normalized_projected = Matrix{Float64}(projected_overlap) * orthonormalizer
+    return (
+        Vector{Float64}(svdvals(normalized_projected)),
+        Vector{Float64}(metric_values),
+        length(retained),
+        tolerance,
+    )
+end
+
 function _radial_ylm_projection_norm_diagnostics(
     supplement::CartesianGaussianShellSupplementRepresentation3D,
     coefficient_map::AbstractMatrix{<:Real},
@@ -710,7 +741,16 @@ function _radial_ylm_projection_norm_diagnostics(
         source_norms[index] > 0.0 ? norm_losses[index] / source_norms[index] : norm_losses[index]
         for index in eachindex(source_norms)
     ]
-    singular_values = svdvals(Matrix{Float64}(projected_overlap))
+    raw_singular_values = svdvals(Matrix{Float64}(projected_overlap))
+    (
+        normalized_singular_values,
+        source_gram_singular_values,
+        source_gram_effective_rank,
+        source_gram_inverse_sqrt_tolerance,
+    ) = _radial_ylm_source_orthonormal_projected_singular_values(
+        source_gram,
+        projected_overlap,
+    )
     return (
         source_norms = Vector{Float64}(source_norms),
         projected_norms = Vector{Float64}(projected_norms),
@@ -718,7 +758,12 @@ function _radial_ylm_projection_norm_diagnostics(
         relative_norm_losses = relative_norm_losses,
         source_gram = Matrix{Float64}(source_gram),
         projected_gram = Matrix{Float64}(projected_gram),
-        projected_subspace_singular_values = Vector{Float64}(singular_values),
+        source_gram_singular_values = source_gram_singular_values,
+        source_gram_effective_rank = source_gram_effective_rank,
+        source_gram_inverse_sqrt_tolerance = source_gram_inverse_sqrt_tolerance,
+        raw_projected_overlap_singular_values = Vector{Float64}(raw_singular_values),
+        source_orthonormal_projected_singular_values = normalized_singular_values,
+        projected_subspace_singular_values = normalized_singular_values,
     )
 end
 
