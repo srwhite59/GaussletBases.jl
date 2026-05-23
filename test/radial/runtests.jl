@@ -864,6 +864,84 @@ end
           :diagnostic_only_not_used_for_projection
 end
 
+@testset "Cartesian GTO supplement subspace projection diagnostics" begin
+    function subspace_synthetic_fit(l, m, exponents, coefficient_columns)
+        coefficients_matrix =
+            coefficient_columns isa AbstractVector ?
+            reshape(Float64.(coefficient_columns), :, 1) :
+            Matrix{Float64}(coefficient_columns)
+        return RadialYlmSolidHarmonicGTOFit(
+            :reduced_u_over_r,
+            l,
+            m,
+            Float64.(exponents),
+            coefficients_matrix,
+            (; radial_convention = :reduced_u_over_r, l, m),
+        )
+    end
+
+    beta = 0.7
+    d_adapter = radial_ylm_fit_cartesian_gto_adapter(
+        subspace_synthetic_fit(2, 0, [beta], [1.0]),
+    )
+    d_supplement = d_adapter.supplement
+
+    identity_result = project_cartesian_gto_to_supplement_subspace(
+        d_supplement,
+        d_supplement,
+    )
+    @test identity_result isa CartesianGTOSubspaceProjectionResult
+    @test identity_result.subspace_coefficients ≈
+          Matrix{Float64}(I, length(d_supplement.orbitals), length(d_supplement.orbitals)) atol = 1.0e-10
+    @test maximum(identity_result.diagnostics.residual_norms) < 1.0e-7
+    @test identity_result.diagnostics.source_kind == :cartesian_gto_supplement
+    @test identity_result.diagnostics.source_column_kind == :default_source_columns
+    @test all(identity_result.diagnostics.normalized_capture_singular_values .≈ 1.0)
+
+    complete_result = project_cartesian_gto_to_supplement_subspace(
+        d_adapter,
+        d_supplement,
+    )
+    @test size(complete_result.subspace_coefficients) == (length(d_supplement.orbitals), 1)
+    @test only(complete_result.diagnostics.residual_norms) < 1.0e-7
+    @test only(complete_result.diagnostics.relative_residual_norms) < 1.0e-7
+    @test only(complete_result.diagnostics.normalized_capture_singular_values) ≈ 1.0 atol = 1.0e-10
+    @test complete_result.diagnostics.source_kind == :radial_ylm_cartesian_gto_adapter
+    @test complete_result.diagnostics.source_labels == [orbital.label for orbital in d_supplement.orbitals]
+    @test complete_result.diagnostics.subspace_labels == [orbital.label for orbital in d_supplement.orbitals]
+
+    incomplete_supplement = CartesianGaussianShellSupplementRepresentation3D(
+        :incomplete_d_probe,
+        d_supplement.orbitals[1:2],
+        (; source = :subspace_projection_test),
+    )
+    incomplete_result = project_cartesian_gto_to_supplement_subspace(
+        d_adapter,
+        incomplete_supplement,
+    )
+    @test only(incomplete_result.diagnostics.residual_norms) > 1.0e-6
+    @test only(incomplete_result.diagnostics.relative_residual_norms) > 1.0e-6
+    @test only(incomplete_result.diagnostics.normalized_capture_singular_values) < 1.0
+    @test incomplete_result.diagnostics.subspace_labels ==
+          [orbital.label for orbital in incomplete_supplement.orbitals]
+
+    scaled_result = project_cartesian_gto_to_supplement_subspace(
+        d_adapter,
+        d_supplement;
+        source_coefficients = 10.0 .* d_adapter.coefficient_map,
+    )
+    @test only(scaled_result.diagnostics.raw_subspace_coefficients_singular_values) ≈
+          10.0 * only(complete_result.diagnostics.raw_subspace_coefficients_singular_values) rtol = 1.0e-12
+    @test only(scaled_result.diagnostics.normalized_capture_singular_values) ≈
+          only(complete_result.diagnostics.normalized_capture_singular_values) rtol = 1.0e-12
+
+    @test complete_result.diagnostics.source_orbital_count == length(d_supplement.orbitals)
+    @test complete_result.diagnostics.subspace_orbital_count == length(d_supplement.orbitals)
+    @test complete_result.diagnostics.source_column_count == 1
+    @test complete_result.diagnostics.source_metric_rank == length(d_supplement.orbitals)
+    @test complete_result.diagnostics.subspace_metric_rank == length(d_supplement.orbitals)
+end
+
 @testset "Radial atomic operators" begin
     rb, grid, ops, _, _, _ = _quick_radial_atomic_fixture()
 

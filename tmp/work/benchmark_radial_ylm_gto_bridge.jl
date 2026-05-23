@@ -61,6 +61,24 @@ GC.gc()
 projection_timed = @timed project_radial_ylm_gto_adapter_to_cartesian(basis, adapter)
 projection = projection_timed.value
 
+d_fit = fit_radial_ylm_to_solid_harmonic_gto(
+    grid,
+    targets[:, 1:1],
+    exponents;
+    l = 2,
+    m = 0,
+    metric_svd_cutoff = 1.0e-12,
+)
+d_adapter = radial_ylm_fit_cartesian_gto_adapter(d_fit)
+project_cartesian_gto_to_supplement_subspace(d_adapter, d_adapter.supplement)
+
+GC.gc()
+subspace_timed = @timed project_cartesian_gto_to_supplement_subspace(
+    d_adapter,
+    d_adapter.supplement,
+)
+subspace_projection = subspace_timed.value
+
 @printf("radial_basis_size=%d\n", length(rb))
 @printf("radial_grid_size=%d\n", length(points))
 @printf("l=%d orbital_count=%d exponent_count=%d\n", l, size(targets, 2), length(exponents))
@@ -91,3 +109,16 @@ projection = projection_timed.value
 )
 @printf("projection_time_seconds=%.6f\n", projection_timed.time)
 @printf("projection_alloc_mb=%.3f\n", projection_timed.bytes / 1024^2)
+@printf("subspace_projection_source_l=%d source_columns=%d subspace_orbitals=%d\n",
+    d_fit.l,
+    subspace_projection.diagnostics.source_column_count,
+    subspace_projection.diagnostics.subspace_orbital_count,
+)
+@printf("subspace_projection_max_relative_residual=%.6e\n",
+    subspace_projection.diagnostics.max_relative_residual_norm,
+)
+@printf("subspace_projection_max_capture_singular_value=%.6e\n",
+    maximum(subspace_projection.diagnostics.normalized_capture_singular_values),
+)
+@printf("subspace_projection_time_seconds=%.6f\n", subspace_timed.time)
+@printf("subspace_projection_alloc_mb=%.3f\n", subspace_timed.bytes / 1024^2)

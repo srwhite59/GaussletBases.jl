@@ -66,6 +66,24 @@ struct RadialYlmCartesianProjectionResult
     diagnostics::NamedTuple
 end
 
+"""
+    CartesianGTOSubspaceProjectionResult
+
+Metric-aware diagnostic projection of Cartesian-GTO source columns into a
+Cartesian-GTO supplement subspace.
+
+This is a supplement-space diagnostic utility. It does not change
+`gto_overlap_matrix`, and it is not a generalized final-basis transfer API.
+"""
+struct CartesianGTOSubspaceProjectionResult
+    subspace_coefficients::Matrix{Float64}
+    source_metric::Matrix{Float64}
+    subspace_metric::Matrix{Float64}
+    cross_overlap::Matrix{Float64}
+    source_coefficients::Matrix{Float64}
+    diagnostics::NamedTuple
+end
+
 function _radial_ylm_validate_lm(l::Integer, m::Integer)
     l_value = Int(l)
     m_value = Int(m)
@@ -820,6 +838,251 @@ function project_radial_ylm_gto_adapter_to_cartesian(
         projected_overlap,
         Matrix{Float64}(gto_overlap),
         projected_overlap,
+        diagnostics,
+    )
+end
+
+function _cartesian_gto_orbital_labels(
+    supplement::CartesianGaussianShellSupplementRepresentation3D,
+)
+    return String[orbital.label for orbital in supplement.orbitals]
+end
+
+function _cartesian_gto_source_payload(
+    source::CartesianGaussianShellSupplementRepresentation3D,
+    source_coefficients,
+)
+    orbital_count = length(source.orbitals)
+    coefficients =
+        source_coefficients === nothing ?
+        Matrix{Float64}(I, orbital_count, orbital_count) :
+        Matrix{Float64}(source_coefficients)
+    return (
+        source_supplement = source,
+        source_coefficients = coefficients,
+        source_kind = :cartesian_gto_supplement,
+        source_metadata = source.metadata,
+    )
+end
+
+function _cartesian_gto_source_payload(
+    source::RadialYlmCartesianGTOAdapter,
+    source_coefficients,
+)
+    coefficients =
+        source_coefficients === nothing ?
+        Matrix{Float64}(source.coefficient_map) :
+        Matrix{Float64}(source_coefficients)
+    return (
+        source_supplement = source.supplement,
+        source_coefficients = coefficients,
+        source_kind = :radial_ylm_cartesian_gto_adapter,
+        source_metadata = source.diagnostics,
+    )
+end
+
+function _cartesian_gto_metric_eigen_data(
+    metric::AbstractMatrix{<:Real},
+    metric_svd_cutoff::Real,
+)
+    cutoff = Float64(metric_svd_cutoff)
+    cutoff >= 0.0 ||
+        throw(ArgumentError("metric_svd_cutoff must be nonnegative"))
+    metric_matrix = Matrix{Float64}(metric)
+    size(metric_matrix, 1) == size(metric_matrix, 2) ||
+        throw(DimensionMismatch("GTO metric must be square"))
+    all(isfinite, metric_matrix) ||
+        throw(ArgumentError("GTO metric entries must be finite"))
+    symmetric_metric = Symmetric((metric_matrix + transpose(metric_matrix)) ./ 2)
+    decomposition = eigen(symmetric_metric)
+    values = max.(decomposition.values, 0.0)
+    largest = isempty(values) ? 0.0 : maximum(values)
+    threshold = cutoff * max(largest, 1.0)
+    retained = findall(value -> value > threshold, values)
+    return (
+        values = Vector{Float64}(values),
+        vectors = Matrix{Float64}(decomposition.vectors),
+        retained = retained,
+        rank = length(retained),
+        threshold = threshold,
+        cutoff = cutoff,
+    )
+end
+
+function _cartesian_gto_metric_inverse_apply(
+    eigen_data,
+    right_hand_side::AbstractMatrix{<:Real},
+)
+    if eigen_data.rank == 0
+        return zeros(Float64, size(right_hand_side))
+    end
+    retained = eigen_data.retained
+    vectors = eigen_data.vectors[:, retained]
+    values = eigen_data.values[retained]
+    return vectors * (Diagonal(1.0 ./ values) * (transpose(vectors) * Matrix{Float64}(right_hand_side)))
+end
+
+function _cartesian_gto_metric_capture_singular_values(
+    source_gram::AbstractMatrix{<:Real},
+    captured_gram::AbstractMatrix{<:Real},
+    metric_svd_cutoff::Real,
+)
+    source_data = _cartesian_gto_metric_eigen_data(source_gram, metric_svd_cutoff)
+    if source_data.rank == 0
+        return Float64[], source_data
+    end
+    retained = source_data.retained
+    vectors = source_data.vectors[:, retained]
+    values = source_data.values[retained]
+    source_orthonormalizer = vectors * Diagonal(1.0 ./ sqrt.(values))
+    normalized_capture_gram =
+        transpose(source_orthonormalizer) *
+        Matrix{Float64}(captured_gram) *
+        source_orthonormalizer
+    normalized_capture_gram =
+        (normalized_capture_gram + transpose(normalized_capture_gram)) ./ 2
+    capture_values = max.(eigen(Symmetric(normalized_capture_gram)).values, 0.0)
+    return sort!(sqrt.(Vector{Float64}(capture_values)); rev = true), source_data
+end
+
+function _cartesian_gto_subspace_projection_diagnostics(
+    source_supplement::CartesianGaussianShellSupplementRepresentation3D,
+    subspace::CartesianGaussianShellSupplementRepresentation3D,
+    source_coefficients::AbstractMatrix{<:Real},
+    subspace_coefficients::AbstractMatrix{<:Real},
+    source_metric::AbstractMatrix{<:Real},
+    subspace_metric::AbstractMatrix{<:Real},
+    source_gram::AbstractMatrix{<:Real},
+    captured_gram::AbstractMatrix{<:Real},
+    residual_gram::AbstractMatrix{<:Real},
+    source_metric_data,
+    subspace_metric_data,
+    source_column_kind::Symbol,
+    source_kind::Symbol,
+    source_metadata,
+)
+    source_norms = sqrt.(max.(real.(diag(source_gram)), 0.0))
+    captured_norms = sqrt.(max.(real.(diag(captured_gram)), 0.0))
+    residual_norms = sqrt.(max.(real.(diag(residual_gram)), 0.0))
+    relative_residual_norms = Float64[
+        source_norms[index] > 0.0 ? residual_norms[index] / source_norms[index] : residual_norms[index]
+        for index in eachindex(source_norms)
+    ]
+    normalized_singular_values, source_gram_data =
+        _cartesian_gto_metric_capture_singular_values(
+            source_gram,
+            captured_gram,
+            subspace_metric_data.cutoff,
+        )
+    raw_singular_values = svdvals(Matrix{Float64}(subspace_coefficients))
+    return (
+        source_kind = source_kind,
+        source_metadata = source_metadata,
+        source_supplement_kind = source_supplement.supplement_kind,
+        subspace_supplement_kind = subspace.supplement_kind,
+        source_orbital_count = length(source_supplement.orbitals),
+        subspace_orbital_count = length(subspace.orbitals),
+        source_column_count = size(source_coefficients, 2),
+        source_column_kind = source_column_kind,
+        source_labels = _cartesian_gto_orbital_labels(source_supplement),
+        subspace_labels = _cartesian_gto_orbital_labels(subspace),
+        source_metric_rank = source_metric_data.rank,
+        subspace_metric_rank = subspace_metric_data.rank,
+        source_metric_threshold = source_metric_data.threshold,
+        subspace_metric_threshold = subspace_metric_data.threshold,
+        source_metric_singular_values = source_metric_data.values,
+        subspace_metric_singular_values = subspace_metric_data.values,
+        source_gram_rank = source_gram_data.rank,
+        source_gram_threshold = source_gram_data.threshold,
+        source_gram_singular_values = source_gram_data.values,
+        source_norms = Vector{Float64}(source_norms),
+        captured_norms = Vector{Float64}(captured_norms),
+        residual_norms = Vector{Float64}(residual_norms),
+        relative_residual_norms = relative_residual_norms,
+        max_relative_residual_norm =
+            isempty(relative_residual_norms) ? 0.0 : maximum(relative_residual_norms),
+        source_gram = Matrix{Float64}(source_gram),
+        captured_gram = Matrix{Float64}(captured_gram),
+        residual_gram = Matrix{Float64}(residual_gram),
+        raw_subspace_coefficients_singular_values = Vector{Float64}(raw_singular_values),
+        normalized_capture_singular_values = normalized_singular_values,
+        metric_svd_cutoff = subspace_metric_data.cutoff,
+        projection_formula = :metric_regularized_subspace_least_squares,
+    )
+end
+
+"""
+    project_cartesian_gto_to_supplement_subspace(source, subspace; source_coefficients=nothing, metric_svd_cutoff=1e-12)
+
+Project Cartesian-GTO source columns into a selected
+`CartesianGaussianShellSupplementRepresentation3D` subspace and report
+metric-aware capture diagnostics.
+
+`source` may be either a `CartesianGaussianShellSupplementRepresentation3D` or
+a `RadialYlmCartesianGTOAdapter`. For a plain supplement, omitted
+`source_coefficients` means identity columns. For a radial/Ylm adapter, omitted
+`source_coefficients` means `adapter.coefficient_map`.
+
+The least-squares projection solves `S_bb * C_b = S_bs * C_s` using an
+eigen/SVD cutoff on the subspace metric. This is a GTO supplement diagnostic
+only; it is not a final-basis transfer API.
+"""
+function project_cartesian_gto_to_supplement_subspace(
+    source,
+    subspace::CartesianGaussianShellSupplementRepresentation3D;
+    source_coefficients = nothing,
+    metric_svd_cutoff::Real = 1.0e-12,
+)
+    payload = _cartesian_gto_source_payload(source, source_coefficients)
+    source_supplement = payload.source_supplement
+    coefficients = payload.source_coefficients
+    size(coefficients, 1) == length(source_supplement.orbitals) ||
+        throw(
+            DimensionMismatch(
+                "source_coefficients row count $(size(coefficients, 1)) must match source orbital count $(length(source_supplement.orbitals))",
+            ),
+        )
+    all(isfinite, coefficients) ||
+        throw(ArgumentError("source_coefficients entries must be finite"))
+
+    source_metric = _cartesian_supplement_cross_overlap(source_supplement, source_supplement)
+    subspace_metric = _cartesian_supplement_cross_overlap(subspace, subspace)
+    cross_overlap = _cartesian_supplement_cross_overlap(subspace, source_supplement)
+    subspace_metric_data = _cartesian_gto_metric_eigen_data(subspace_metric, metric_svd_cutoff)
+    source_metric_data = _cartesian_gto_metric_eigen_data(source_metric, metric_svd_cutoff)
+    right_hand_side = cross_overlap * coefficients
+    subspace_coefficients =
+        _cartesian_gto_metric_inverse_apply(subspace_metric_data, right_hand_side)
+    source_gram = transpose(coefficients) * source_metric * coefficients
+    captured_gram =
+        transpose(subspace_coefficients) *
+        subspace_metric *
+        subspace_coefficients
+    residual_gram = source_gram - captured_gram
+    source_column_kind =
+        source_coefficients === nothing ? :default_source_columns : :explicit_source_coefficients
+    diagnostics = _cartesian_gto_subspace_projection_diagnostics(
+        source_supplement,
+        subspace,
+        coefficients,
+        subspace_coefficients,
+        source_metric,
+        subspace_metric,
+        source_gram,
+        captured_gram,
+        residual_gram,
+        source_metric_data,
+        subspace_metric_data,
+        source_column_kind,
+        payload.source_kind,
+        payload.source_metadata,
+    )
+    return CartesianGTOSubspaceProjectionResult(
+        Matrix{Float64}(subspace_coefficients),
+        Matrix{Float64}(source_metric),
+        Matrix{Float64}(subspace_metric),
+        Matrix{Float64}(cross_overlap),
+        Matrix{Float64}(coefficients),
         diagnostics,
     )
 end
