@@ -1,10 +1,11 @@
 """
     _CartesianNestedOwnedUnit3D
 
-Internal experimental scaffolding for future nested owned-unit/endcap-panel
-construction. An owned unit records one declared support region and the local
-contraction map on that support. It is not a public OPCU API and is not wired
-into nested source construction.
+Internal experimental scaffolding for owned-unit/endcap-panel construction.
+An owned unit records one declared support region and the local contraction map
+on that support. It is not a public OPCU API; the bounded endcap/panel route is
+wired into the bond-aligned diatomic nested source only through the guarded
+`:endcap_panel_owned` shared-shell policy.
 """
 struct _CartesianNestedOwnedUnit3D{M}
     role::Symbol

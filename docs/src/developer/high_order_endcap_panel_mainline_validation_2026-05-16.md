@@ -24,7 +24,7 @@ The public/default diatomic nested source path is unchanged:
 shared_shell_layer_policy = :complete_rectangular
 ```
 
-The experimental path is available only through the internal source builder:
+The experimental path is available through the guarded source policy:
 
 ```julia
 _nested_bond_aligned_diatomic_source(
@@ -36,7 +36,10 @@ _nested_bond_aligned_diatomic_source(
 )
 ```
 
-No public frontend keyword has been added.
+Current mainline frontends also expose this as an opt-in experimental keyword
+path through `shared_shell_layer_policy = :endcap_panel_owned`, with explicit
+`shared_shell_endcap_panel_q` and `shared_shell_endcap_panel_L` controls. The
+default remains `:complete_rectangular`.
 
 ## Validated Operator Preflight
 

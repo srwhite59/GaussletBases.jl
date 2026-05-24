@@ -123,8 +123,10 @@ metadata, and timing/allocation rows.
 
 This is a mainline experimental chemistry validation artifact only.
 
-No public frontend keyword was added. No CR2 scripts were edited. No broad OPCU,
-FSB, or FBU machinery was imported. No high-order branch merge was done.
+The current mainline frontend exposes the path only as an opt-in experimental
+keyword, `shared_shell_layer_policy = :endcap_panel_owned`; the default remains
+`:complete_rectangular`. No CR2 scripts were edited. No broad OPCU, FSB, or FBU
+machinery was imported. No high-order branch merge was done.
 
 The current evidence says the internal guarded path is now chemistry-ready for
 repo-manager review at the old-standard H2 R = 4.0 level. The next decision is

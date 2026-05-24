@@ -62,8 +62,9 @@ route, not the default diatomic nested policy and not a broad OPCU import.
    - `:staged_factorized` for generic staged metadata
    - `:general_parent_dense` as the dense fallback/oracle
 
-   The endcap/panel route is intended to hit `:product_staged_factorized` on
-   validated product-owned layers.
+   If exact factorized final-basis extraction succeeds, `:factorized_final` is
+   the correct fastest path. The product-staged sidecar is the intended
+   nonfactorized fallback for validated product-owned layers.
 
 8. Pass the fixed block into the ordinary Qiu-White operator builder. The
    molecular residual-Gaussian interaction treatment should normally use
@@ -123,13 +124,16 @@ For consumer-side trials, record at least:
 - H/V symmetry errors
 - residual owner coverage
 - MWG width finiteness
-- by-center nuclear sidecar path, especially whether
-  `:product_staged_factorized` or a dense fallback was used
+- by-center nuclear sidecar path from `_nested_by_center_sidecar_path`, including
+  whether `:factorized_final`, `:product_staged_factorized`, or a dense fallback
+  was used
 - wall time and allocation for the operator build
 
 If the by-center path reports `:general_parent_dense` on a case that was
-expected to use the staged product route, that is a performance-contract issue
-to investigate before treating the calculation as representative.
+expected to use either the factorized-final or staged-product route, that is a
+performance-contract issue to investigate before treating the calculation as
+representative. Reports should record the actual path instead of inferring it
+from the shared-shell policy.
 
 ## References
 
