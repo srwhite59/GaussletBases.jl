@@ -733,6 +733,17 @@ end
             shared_shell_endcap_panel_q = 4,
             shared_shell_endcap_panel_L = 4,
         )
+        endcap_pgdg_nested = bond_aligned_diatomic_nested_fixed_block(
+            basis;
+            expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :endcap_panel_owned,
+            shared_shell_endcap_panel_q = 4,
+            shared_shell_endcap_panel_L = 4,
+        )
         endcap_source_only = bond_aligned_diatomic_nested_fixed_source(
             basis;
             expansion,
@@ -781,6 +792,8 @@ end
         endcap_source = endcap_nested.source
         default_fixed = default_nested.fixed_block
         endcap_fixed = endcap_nested.fixed_block
+        endcap_pgdg_source = endcap_pgdg_nested.source
+        endcap_pgdg_fixed = endcap_pgdg_nested.fixed_block
         @test only(endcap_source_only.shared_shell_layers) isa
               GaussletBases._CartesianNestedEndcapPanelShellLayer3D
 
@@ -823,8 +836,14 @@ end
         @test [size(layer.coefficient_matrix, 2) for layer in endcap_source.shared_shell_layers] == [96]
         @test size(default_fixed.coefficient_matrix) == (539, 347)
         @test size(endcap_fixed.coefficient_matrix) == (539, 313)
+        @test size(endcap_pgdg_fixed.coefficient_matrix) == (539, 313)
         @test norm(default_fixed.overlap - I, Inf) < 1.0e-10
         @test norm(endcap_fixed.overlap - I, Inf) < 1.0e-10
+        @test norm(endcap_pgdg_fixed.overlap - I, Inf) < 1.0e-10
+        @test only(endcap_pgdg_source.shared_shell_layers) isa
+              GaussletBases._CartesianNestedEndcapPanelShellLayer3D
+        @test [size(layer.coefficient_matrix, 2) for layer in endcap_pgdg_source.shared_shell_layers] == [96]
+        @test GaussletBases._nested_by_center_sidecar_path(endcap_pgdg_fixed) == :factorized_final
         @test only(endcap_source.shared_shell_layers).provenance.support_contract ==
               :thin_endcap_box_perimeter
         @test only(endcap_source.shared_shell_layers).provenance.coefficient_contract ==
