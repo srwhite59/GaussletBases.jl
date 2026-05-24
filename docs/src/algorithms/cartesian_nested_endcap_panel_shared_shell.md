@@ -71,6 +71,11 @@ route, not the default diatomic nested policy and not a broad OPCU import.
    `:mwg`; `:ggt_nearest` remains a fallback/debug route and is still useful
    for reproducing older chemistry rows.
 
+The source frontend accepts `gausslet_backend = :pgdg_localized_experimental`
+on the opt-in `:endcap_panel_owned` path. The older/default
+`:complete_rectangular` nested source frontend remains numerical-reference-only
+until it has a separate analytic-backend validation pass.
+
 9. Treat the route as opt-in until consumer-side chemistry checks justify a
    broader default. It is ready for CR2 and related consumers to compare, but
    not to assume as a settled production policy.

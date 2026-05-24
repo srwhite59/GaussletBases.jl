@@ -743,6 +743,31 @@ end
             shared_shell_endcap_panel_q = 4,
             shared_shell_endcap_panel_L = 4,
         )
+        endcap_pgdg_context = GaussletBases._normalized_nested_source_frontend_context(
+            basis;
+            expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :endcap_panel_owned,
+            shared_shell_endcap_panel_q = 4,
+            shared_shell_endcap_panel_L = 4,
+        )
+        complete_pgdg_context = GaussletBases._normalized_nested_source_frontend_context(
+            basis;
+            expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+            nside = 5,
+            term_coefficients,
+            packet_kernel = :factorized_direct,
+            shared_shell_layer_policy = :complete_rectangular,
+        )
+        @test GaussletBases._require_nested_source_gausslet_backend(endcap_pgdg_context) ==
+              :pgdg_localized_experimental
+        @test_throws ArgumentError GaussletBases._require_nested_source_gausslet_backend(
+            complete_pgdg_context,
+        )
         @test_throws ArgumentError bond_aligned_diatomic_nested_fixed_source(
             basis;
             expansion,

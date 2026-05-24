@@ -91,6 +91,21 @@ struct _QWRGNestedSourceFrontendContext{B,O,C}
     capabilities::C
 end
 
+function _require_nested_source_gausslet_backend(
+    context::_QWRGNestedSourceFrontendContext,
+)
+    backend = context.gausslet_backend
+    backend == :numerical_reference && return backend
+    shared_shell_layer_policy =
+        hasproperty(context.build_options, :shared_shell_layer_policy) ?
+        context.build_options.shared_shell_layer_policy :
+        :complete_rectangular
+    if shared_shell_layer_policy == :endcap_panel_owned && backend == :pgdg_localized_experimental
+        return backend
+    end
+    _require_reference_only_gausslet_backend(context.capabilities.route_label, backend)
+end
+
 _qwrg_optional_timeg(label::Nothing, builder::F) where {F<:Function} = builder()
 
 function _qwrg_optional_timeg(label::AbstractString, builder::F) where {F<:Function}
@@ -197,10 +212,7 @@ end
 
 function _nested_source_frontend_source(context::_QWRGNestedSourceFrontendContext)
     return _qwrg_optional_timeg(context.capabilities.total_timing_label) do
-        _require_reference_only_gausslet_backend(
-            context.capabilities.route_label,
-            context.gausslet_backend,
-        )
+        _require_nested_source_gausslet_backend(context)
         bundles = _qwrg_optional_timeg(context.capabilities.axis_bundles_timing_label) do
             _qwrg_bond_aligned_axis_bundles(
                 context.basis,

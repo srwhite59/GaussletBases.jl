@@ -117,9 +117,13 @@ experimental shared-shell policy. The default remains
 complete rectangular shared-shell construction. Passing
 `shared_shell_layer_policy = :endcap_panel_owned` with explicit
 `shared_shell_endcap_panel_q` and `shared_shell_endcap_panel_L` requests the
-internal endcap/panel owned shared-shell layer. The `:endcap_panel_owned` path
-is validated for the old-standard H2 R = 4.0 operator and HF/ED reproduction,
-but it is not a broad OPCU/high-order production mode. See
+internal endcap/panel owned shared-shell layer. This opt-in path supports the
+validation backend `gausslet_backend = :numerical_reference` and the analytic
+PGDG backend `gausslet_backend = :pgdg_localized_experimental`; the default
+complete-rectangular nested source frontend remains numerical-reference-only.
+The `:endcap_panel_owned` path is validated for the old-standard H2 R = 4.0
+operator and HF/ED reproduction, but it is not a broad OPCU/high-order
+production mode. See
 [Cartesian nested endcap/panel shared-shell route](../algorithms/cartesian_nested_endcap_panel_shared_shell.md)
 for the algorithm contract, and the developer memos
 [High-order endcap/panel mainline validation](../developer/high_order_endcap_panel_mainline_validation_2026-05-16.md)

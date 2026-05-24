@@ -83,15 +83,16 @@ The wording discipline for the ordinary line remains:
 - bond-aligned diatomic nested frontends also expose an opt-in experimental
   `shared_shell_layer_policy = :endcap_panel_owned` route; it is mainline
   code, but remains disabled by default and should be compared by consumers
-  before being treated as production policy
+  before being treated as production policy; this opt-in path may use
+  `gausslet_backend = :pgdg_localized_experimental`
 - on that same diatomic molecular supplement route, the final one-body mix is
   now intended to use the carried-plus-residual `raw_to_final` structure
   directly rather than a generic dense final-space congruence
 - current nested source-building front doors and other supplement-bearing
   Qiu-White routes remain `gausslet_backend = :numerical_reference` unless a
-  route is explicitly documented otherwise; that includes the current
-  diatomic nested source builder, the atomic supplement routes, and the
-  experimental chain/square nested QW source wrappers
+  route is explicitly documented otherwise; that includes the default
+  complete-rectangular diatomic nested source builder, the atomic supplement
+  routes, and the experimental chain/square nested QW source wrappers
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path
