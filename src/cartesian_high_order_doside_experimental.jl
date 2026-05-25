@@ -77,6 +77,93 @@ function _experimental_high_order_one_body_from_pgdg_intermediate(
     )
 end
 
+function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
+    family = :G10,
+    count::Int = 7,
+    dZ::Real = 0.3,
+    d::Real = 0.0214285714,
+    tail_spacing::Real = 10.0,
+    reference_spacing::Real = 1.0,
+    backend::Symbol = :pgdg_localized_experimental,
+    doside::Int = 5,
+    sides::AbstractVector{<:Integer} = [5, 7],
+)
+    backend == :pgdg_localized_experimental || throw(
+        ArgumentError("Cr ns=7 high-order smoke requires backend = :pgdg_localized_experimental; no numerical-reference fallback is allowed"),
+    )
+    count == 7 || throw(ArgumentError("Cr ns=7 high-order smoke requires count = 7"))
+    doside == 5 || throw(
+        ArgumentError("Cr ns=7 high-order smoke keeps doside = 5; high-order 7 means the ns=7 parent family, not doside = 7"),
+    )
+    side_values = Int[Int(side) for side in sides]
+    side_values == [5, 7] || throw(
+        ArgumentError("Cr ns=7 high-order smoke currently requires sides = [5, 7]"),
+    )
+
+    s_value = sqrt(Float64(dZ))
+    basis = build_basis(MappedUniformBasisSpec(
+        family;
+        count,
+        mapping = AsinhMapping(c = Float64(d), s = s_value, tail_spacing = Float64(tail_spacing)),
+        reference_spacing = Float64(reference_spacing),
+    ))
+    mapping_family = _experimental_high_order_mapping_family(basis)
+
+    axis_timed = @timed _experimental_high_order_axis_data_1d(
+        basis;
+        backend = backend,
+    )
+    axis_data = axis_timed.value
+    stack_timed = @timed _experimental_high_order_doside_stack_3d(
+        basis;
+        axis_data = axis_data,
+        backend = backend,
+        doside = doside,
+        sides = side_values,
+    )
+    stack = stack_timed.value
+
+    return (
+        basis = basis,
+        axis_data = axis_data,
+        stack = stack,
+        diagnostics = (
+            route = :cr_ns7_high_order_pgdg_smoke,
+            classification = :diagnostic_only,
+            backend = stack.backend,
+            mapping_family = mapping_family,
+            high_order_7_meaning = :ns7_parent_family,
+            parent_side = length(basis),
+            parent_dimension = length(basis)^3,
+            doside = stack.doside,
+            sides = copy(stack.sides),
+            retained_dimension = size(stack.coefficient_matrix, 2),
+            block_column_ranges = copy(stack.block_column_ranges),
+            block_labels = copy(stack.block_labels),
+            shell_dimensions = copy(stack.diagnostics.shell_dimensions),
+            shell_cleanup_spectra = copy(stack.diagnostics.shell_cleanup_spectra),
+            overlap_error = stack.diagnostics.overlap_error,
+            overlap_spectrum = stack.diagnostics.overlap_spectrum,
+            contracted_weights_finite = stack.diagnostics.contracted_weights_finite,
+            axis_overlap_finite = all(isfinite, axis_data.overlap),
+            axis_weight_finite = all(isfinite, axis_data.weights),
+            reaches_atomic_qw_operators = false,
+            same_density_operator_evaluation = :not_reached,
+            smallest_missing_interface = :high_order_stack_to_atomic_qw_operator_packet_adapter,
+            timing_seconds = (
+                axis_data = axis_timed.time,
+                stack = stack_timed.time,
+                total = axis_timed.time + stack_timed.time,
+            ),
+            allocation_bytes = (
+                axis_data = axis_timed.bytes,
+                stack = stack_timed.bytes,
+                total = axis_timed.bytes + stack_timed.bytes,
+            ),
+        ),
+    )
+end
+
 function _experimental_high_order_centered_interval(
     n1d::Int,
     side::Int,
@@ -98,9 +185,14 @@ function _experimental_high_order_mapping_family(mapping_value::AsinhMapping)
        isapprox(mapping_value.tail_spacing, 10.0; atol = 1.0e-12, rtol = 1.0e-12)
         return :white_lindsey_atomic_he_d0p2
     end
+    if isapprox(c_value, 0.0214285714; atol = 1.0e-12, rtol = 1.0e-10) &&
+       isapprox(mapping_value.s, sqrt(0.3); atol = 1.0e-12, rtol = 1.0e-12) &&
+       isapprox(mapping_value.tail_spacing, 10.0; atol = 1.0e-12, rtol = 1.0e-12)
+        return :white_lindsey_atomic_cr_dZ0p3_d0p0214285714
+    end
     throw(
         ArgumentError(
-            "experimental high-order doside stack currently supports only IdentityMapping or the explicit distorted White-Lindsey He family AsinhMapping(c = 0.2, s = sqrt(0.4), tail_spacing = 10.0)",
+            "experimental high-order doside stack currently supports only IdentityMapping, the explicit distorted White-Lindsey He family AsinhMapping(c = 0.2, s = sqrt(0.4), tail_spacing = 10.0), or the diagnostic Cr family AsinhMapping(c = 0.0214285714, s = sqrt(0.3), tail_spacing = 10.0)",
         ),
     )
 end

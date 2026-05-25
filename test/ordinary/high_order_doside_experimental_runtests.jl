@@ -58,6 +58,48 @@ function _experimental_high_order_he_singlet_case(
     return (basis = basis, stack = stack, data = data)
 end
 
+@testset "Experimental Cr ns=7 high-order PGDG smoke diagnostic" begin
+    smoke = GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic()
+    diagnostics = smoke.diagnostics
+    stack = smoke.stack
+
+    @test diagnostics.route == :cr_ns7_high_order_pgdg_smoke
+    @test diagnostics.classification == :diagnostic_only
+    @test diagnostics.backend == :pgdg_localized_experimental
+    @test stack.backend == :pgdg_localized_experimental
+    @test diagnostics.mapping_family == :white_lindsey_atomic_cr_dZ0p3_d0p0214285714
+    @test stack.diagnostics.parent_mapping_family == diagnostics.mapping_family
+    @test diagnostics.high_order_7_meaning == :ns7_parent_family
+    @test diagnostics.parent_side == 7
+    @test diagnostics.parent_dimension == 7^3
+    @test diagnostics.doside == 5
+    @test diagnostics.sides == [5, 7]
+    @test diagnostics.retained_dimension == 223
+    @test diagnostics.block_column_ranges == [1:125, 126:223]
+    @test diagnostics.block_labels == [:side5_full, :side7_shell]
+    @test diagnostics.shell_dimensions == [98]
+    @test only(diagnostics.shell_cleanup_spectra).kept_rank == 98
+    @test diagnostics.overlap_error < 1.0e-8
+    @test diagnostics.overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
+    @test diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
+    @test diagnostics.contracted_weights_finite
+    @test diagnostics.axis_overlap_finite
+    @test diagnostics.axis_weight_finite
+    @test diagnostics.reaches_atomic_qw_operators == false
+    @test diagnostics.same_density_operator_evaluation == :not_reached
+    @test diagnostics.smallest_missing_interface ==
+        :high_order_stack_to_atomic_qw_operator_packet_adapter
+    @test diagnostics.timing_seconds.total >= 0.0
+    @test diagnostics.allocation_bytes.total > 0
+
+    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(
+        backend = :numerical_reference,
+    )
+    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(
+        doside = 7,
+    )
+end
+
 @testset "Experimental high-order physical 1D polynomial blocks stay sane" begin
     cases = (
         (_experimental_high_order_identity_basis(11), 5, 5),
