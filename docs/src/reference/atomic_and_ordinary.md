@@ -111,6 +111,15 @@ atomic route. For molecular residual-Gaussian interaction construction,
 `:mwg` is the preferred treatment and `:ggt_nearest` remains the fallback/debug
 path.
 
+For the one-center atomic full-parent nested fixed-block and atomic
+supplement-bearing Qiu-White routes, omitted `gausslet_backend` is an explicit
+`:auto` policy that resolves to `:pgdg_localized_experimental` on current
+frontends. The nested atomic operator overload reuses the backend recorded on
+the fixed block; if that provenance is `:unknown`, callers must pass an
+explicit backend rather than silently falling into PGDG. The
+`:numerical_reference` backend is still available as an explicit
+validation/debug route.
+
 Bond-aligned diatomic nested fixed-block frontends also expose a controlled
 experimental shared-shell policy. The default remains
 `shared_shell_layer_policy = :complete_rectangular`, preserving the existing

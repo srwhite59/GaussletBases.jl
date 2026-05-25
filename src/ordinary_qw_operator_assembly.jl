@@ -450,7 +450,12 @@ function _resolve_atomic_qw_gausslet_backend(
 )
     if gausslet_backend == :auto && context.carried_space_kind == :nested_fixed_block
         fixed_backend = context.carried.gausslet_backend
-        fixed_backend == :unknown || return fixed_backend
+        fixed_backend == :unknown && throw(
+            ArgumentError(
+                "nested ordinary_cartesian_qiu_white_operators cannot resolve gausslet_backend = :auto because the fixed-block backend provenance is :unknown; pass gausslet_backend explicitly or rebuild the fixed block with recorded backend provenance",
+            ),
+        )
+        return fixed_backend
     end
     return _resolve_mapped_ordinary_gausslet_backend(gausslet_backend)
 end
@@ -2819,10 +2824,11 @@ This first adapter is intentionally narrow:
 - it keeps the shell packet as the fixed-fixed block directly
 - it supports `interaction_treatment = :mwg` as the preferred matched-width
   residual interaction route, with `:ggt_nearest` retained as fallback/debug
-- `gausslet_backend = :auto` reuses the fixed-block backend when it is known,
-  so the default Cr-facing fixed-block/operator path stays quadrature-free;
-  `:numerical_reference` remains available only as an explicit validation
-  backend
+- `gausslet_backend = :auto` reuses the fixed-block backend when it is known;
+  fixed blocks with `:unknown` backend provenance must pass an explicit
+  backend, so the Cr-facing fixed-block/operator path never silently mixes
+  unknown provenance with PGDG; `:numerical_reference` remains available only
+  as an explicit validation backend
 
 It now uses the explicit atomic-centered 3D Cartesian shell route for all
 active atomic supplement content up to `lmax <= 6`, including pure `s`

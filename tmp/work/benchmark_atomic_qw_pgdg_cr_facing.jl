@@ -37,10 +37,21 @@ basis = build_basis(MappedUniformBasisSpec(:G10;
 ))
 supplement = _cr_like_supplement()
 
-pgdg_fixed, pgdg_fixed_timing = _timed("pgdg fixed block") do
+pgdg_fixed_cold, pgdg_fixed_cold_timing = _timed("pgdg fixed block cold") do
     one_center_atomic_full_parent_fixed_block(basis; expansion, nside = 3)
 end
-numerical_fixed, numerical_fixed_timing = _timed("numerical fixed block") do
+pgdg_fixed, pgdg_fixed_warm_timing = _timed("pgdg fixed block warm") do
+    one_center_atomic_full_parent_fixed_block(basis; expansion, nside = 3)
+end
+numerical_fixed_cold, numerical_fixed_cold_timing = _timed("numerical fixed cold") do
+    one_center_atomic_full_parent_fixed_block(
+        basis;
+        expansion,
+        nside = 3,
+        gausslet_backend = :numerical_reference,
+    )
+end
+numerical_fixed, numerical_fixed_warm_timing = _timed("numerical fixed warm") do
     one_center_atomic_full_parent_fixed_block(
         basis;
         expansion,
@@ -83,7 +94,9 @@ function _symmetry_error(matrix)
 end
 
 @printf("\nCr-like atomic QW PGDG backend summary\n")
+@printf("fixed backend cold default  %s\n", pgdg_fixed_cold.gausslet_backend)
 @printf("fixed backend default       %s\n", pgdg_fixed.gausslet_backend)
+@printf("fixed backend cold ref      %s\n", numerical_fixed_cold.gausslet_backend)
 @printf("fixed backend reference     %s\n", numerical_fixed.gausslet_backend)
 @printf("operator backend explicit   %s\n", pgdg_ops.gausslet_backend)
 @printf("operator backend auto       %s\n", auto_ops.gausslet_backend)

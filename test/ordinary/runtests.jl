@@ -2932,6 +2932,38 @@ end
         pgdg_fixed_metadata = basis_representation(pgdg_fixed_block).metadata.route_metadata
         @test pgdg_fixed_block.gausslet_backend == :pgdg_localized_experimental
         @test pgdg_fixed_metadata.gausslet_backend == :pgdg_localized_experimental
+        unknown_backend_fixed_block = GaussletBases._NestedFixedBlock3D(
+            pgdg_fixed_block.parent_basis,
+            pgdg_fixed_block.shell,
+            pgdg_fixed_block.coefficient_matrix,
+            pgdg_fixed_block.support_indices,
+            pgdg_fixed_block.overlap,
+            pgdg_fixed_block.kinetic,
+            pgdg_fixed_block.position_x,
+            pgdg_fixed_block.position_y,
+            pgdg_fixed_block.position_z,
+            pgdg_fixed_block.x2_x,
+            pgdg_fixed_block.x2_y,
+            pgdg_fixed_block.x2_z,
+            pgdg_fixed_block.weights,
+            pgdg_fixed_block.gaussian_sum,
+            pgdg_fixed_block.pair_sum,
+            pgdg_fixed_block.fixed_centers,
+            pgdg_fixed_block.factorized_cartesian_parent_basis,
+            pgdg_fixed_block.staged_by_center_sidecar,
+        )
+        unknown_backend_text = _argument_error_text(() ->
+            ordinary_cartesian_qiu_white_operators(
+                unknown_backend_fixed_block,
+                supplement;
+                expansion = expansion,
+                Z = 2.0,
+                interaction_treatment = :mwg,
+            )
+        )
+        @test unknown_backend_fixed_block.gausslet_backend == :unknown
+        @test occursin("fixed-block backend provenance is :unknown", unknown_backend_text)
+        @test occursin("pass gausslet_backend explicitly", unknown_backend_text)
         nested_pgdg = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
             pgdg_fixed_block,
             supplement;

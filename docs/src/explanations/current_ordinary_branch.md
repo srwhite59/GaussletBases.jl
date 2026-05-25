@@ -88,11 +88,17 @@ The wording discipline for the ordinary line remains:
 - on that same diatomic molecular supplement route, the final one-body mix is
   now intended to use the carried-plus-residual `raw_to_final` structure
   directly rather than a generic dense final-space congruence
-- current nested source-building front doors and other supplement-bearing
+- the Cr-facing one-center atomic full-parent fixed-block and atomic
+  supplement-bearing Qiu-White routes now resolve omitted
+  `gausslet_backend` through `:auto` to `:pgdg_localized_experimental`; the
+  nested operator overload reuses recorded fixed-block backend provenance, and
+  refuses `:auto` for older/hand-built fixed blocks whose backend provenance is
+  `:unknown`
+- remaining nested source-building front doors and other supplement-bearing
   Qiu-White routes remain `gausslet_backend = :numerical_reference` unless a
   route is explicitly documented otherwise; that includes the default
-  complete-rectangular diatomic nested source builder, the atomic supplement
-  routes, and the experimental chain/square nested QW source wrappers
+  complete-rectangular diatomic nested source builder and the experimental
+  chain/square nested QW source wrappers
 - exact overlap / projector / transfer are now first-class workflow primitives
 - Gaussian-supplement comparisons should go through the separate paper-faithful
   3D Qiu-White route, not the old 1D COMX-cleaned surrogate path
