@@ -103,6 +103,50 @@ end
     )
 end
 
+@testset "Experimental Cr ns=7 high-order PGDG atomic QW operator diagnostic" begin
+    result = GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic()
+    diagnostics = result.diagnostics
+
+    @test diagnostics.route == :cr_ns7_high_order_stack_to_atomic_qw_operator_diagnostic
+    @test diagnostics.classification == :diagnostic_only
+    @test diagnostics.interaction_treatment == :mwg
+    @test diagnostics.parent_dimension == 7^3
+    @test diagnostics.high_order_retained_dimension == 223
+    @test diagnostics.support_count == 7^3
+    @test diagnostics.supplement_dimension == 4
+    @test diagnostics.final_operator_dimension == 227
+    @test diagnostics.residual_count == 4
+    @test diagnostics.final_operator_dimension ==
+          diagnostics.high_order_retained_dimension + diagnostics.residual_count
+    @test diagnostics.stack_backend == :pgdg_localized_experimental
+    @test diagnostics.fixed_backend == :pgdg_localized_experimental
+    @test diagnostics.adapter_backend == :pgdg_localized_experimental
+    @test diagnostics.operator_backend == :pgdg_localized_experimental
+    @test result.fixed_block.gausslet_backend == :pgdg_localized_experimental
+    @test result.operators.gausslet_backend == :pgdg_localized_experimental
+    @test result.operators.interaction_treatment == :mwg
+    @test diagnostics.contracted_weight_zeroish_count == 0
+    @test diagnostics.contracted_weight_negative_count == 0
+    @test diagnostics.contracted_weight_minimum > 0.0
+    @test diagnostics.fixed_overlap_error < 1.0e-8
+    @test diagnostics.operator_overlap_error < 1.0e-8
+    @test diagnostics.h_symmetry_error < 1.0e-10
+    @test diagnostics.v_symmetry_error < 1.0e-10
+    @test diagnostics.residual_widths_finite_positive
+    @test all(isfinite, result.operators.residual_centers)
+    @test diagnostics.same_density_two_electron_evaluation == :operator_available_not_evaluated
+    @test diagnostics.smallest_missing_interface == :cr2_consumer_same_density_probe
+    @test diagnostics.timing_seconds.total >= 0.0
+    @test diagnostics.allocation_bytes.total > 0
+
+    @test_throws ArgumentError GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
+        gausslet_backend = :numerical_reference,
+    )
+    @test_throws ArgumentError GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
+        interaction_treatment = :ggt_nearest,
+    )
+end
+
 @testset "Experimental high-order cleanup names distinguish Lowdin and reduced forms" begin
     coefficients = [1.0 1.0; 0.0 0.0]
     overlap = Matrix{Float64}(I, 2, 2)

@@ -651,6 +651,269 @@ function _experimental_nested_source_backed_path(
     )
 end
 
+function _experimental_high_order_cr_sp_supplement_fixture()
+    return mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: Cr repo-cr-sp\n" *
+            "Cr    S\n" *
+            "      4.0000000              1.0000000\n" *
+            "Cr    P\n" *
+            "      2.5000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+        legacy_atomic_gaussian_supplement("Cr", "repo-cr-sp"; lmax = 1, basisfile = path)
+    end
+end
+
+function _experimental_high_order_axis_x2_matrix(axis_data::_ExperimentalHighOrderAxisData1D)
+    isnothing(axis_data.pgdg_intermediate) && throw(
+        ArgumentError("high-order stack QW diagnostic requires PGDG axis x2 metadata"),
+    )
+    return Matrix{Float64}(axis_data.pgdg_intermediate.x2)
+end
+
+function _experimental_high_order_parent_kinetic_3d(axis_data::_ExperimentalHighOrderAxisData1D)
+    overlap = axis_data.overlap
+    kinetic = axis_data.kinetic
+    return _symmetrize_ida_matrix(
+        kron(kinetic, kron(overlap, overlap)) +
+        kron(overlap, kron(kinetic, overlap)) +
+        kron(overlap, kron(overlap, kinetic)),
+    )
+end
+
+function _experimental_high_order_parent_position_matrices_3d(axis_data::_ExperimentalHighOrderAxisData1D)
+    overlap = axis_data.overlap
+    position = axis_data.position
+    return (
+        x = _symmetrize_ida_matrix(kron(position, kron(overlap, overlap))),
+        y = _symmetrize_ida_matrix(kron(overlap, kron(position, overlap))),
+        z = _symmetrize_ida_matrix(kron(overlap, kron(overlap, position))),
+    )
+end
+
+function _experimental_high_order_parent_x2_matrices_3d(axis_data::_ExperimentalHighOrderAxisData1D)
+    overlap = axis_data.overlap
+    x2 = _experimental_high_order_axis_x2_matrix(axis_data)
+    return (
+        x = _symmetrize_ida_matrix(kron(x2, kron(overlap, overlap))),
+        y = _symmetrize_ida_matrix(kron(overlap, kron(x2, overlap))),
+        z = _symmetrize_ida_matrix(kron(overlap, kron(overlap, x2))),
+    )
+end
+
+function _experimental_high_order_parent_gaussian_sum_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    expansion::CoulombGaussianExpansion,
+)
+    length(axis_data.gaussian_factors) == length(expansion) || throw(
+        ArgumentError("high-order stack QW diagnostic requires one PGDG Gaussian factor per Coulomb-expansion term"),
+    )
+    terms = _term_tensor(axis_data.gaussian_factors)
+    return _mapped_coulomb_expanded_symmetric_matrix(expansion.coefficients, terms, terms, terms)
+end
+
+function _experimental_high_order_parent_pair_sum_3d(
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    expansion::CoulombGaussianExpansion,
+)
+    length(axis_data.pair_factors_1d) == length(expansion) || throw(
+        ArgumentError("high-order stack QW diagnostic requires one PGDG pair factor per Coulomb-expansion term"),
+    )
+    terms = _term_tensor(axis_data.pair_factors_1d)
+    return _mapped_coulomb_expanded_symmetric_matrix(expansion.coefficients, terms, terms, terms)
+end
+
+function _experimental_high_order_project_parent_matrix(
+    coefficients::AbstractMatrix{<:Real},
+    parent_matrix::AbstractMatrix{<:Real},
+)
+    coefficient_value = Matrix{Float64}(coefficients)
+    return _symmetrize_ida_matrix(transpose(coefficient_value) * parent_matrix * coefficient_value)
+end
+
+function _experimental_high_order_active_support_indices(
+    coefficients::AbstractMatrix{<:Real};
+    tol::Real = 1.0e-14,
+)
+    coefficient_value = Matrix{Float64}(coefficients)
+    tol_value = Float64(tol)
+    return Int[
+        row for row in axes(coefficient_value, 1) if maximum(abs, view(coefficient_value, row, :)) > tol_value
+    ]
+end
+
+function _experimental_high_order_stack_fixed_block_for_atomic_qw(
+    stack::ExperimentalHighOrderDosideStack3D,
+    axis_data::_ExperimentalHighOrderAxisData1D,
+    expansion::CoulombGaussianExpansion,
+)
+    stack.backend == :pgdg_localized_experimental || throw(
+        ArgumentError("high-order stack QW diagnostic requires a PGDG stack; numerical-reference stacks are rejected"),
+    )
+    axis_data.backend == stack.backend || throw(
+        ArgumentError("high-order stack QW diagnostic axis backend must match stack backend"),
+    )
+    axis_data.basis === stack.parent_basis || throw(
+        ArgumentError("high-order stack QW diagnostic axis data must come from the stack parent basis"),
+    )
+
+    coefficients = Matrix{Float64}(stack.coefficient_matrix)
+    parent_overlap = _experimental_high_order_parent_overlap_3d(axis_data)
+    parent_kinetic = _experimental_high_order_parent_kinetic_3d(axis_data)
+    positions = _experimental_high_order_parent_position_matrices_3d(axis_data)
+    x2 = _experimental_high_order_parent_x2_matrices_3d(axis_data)
+    parent_gaussian_sum = _experimental_high_order_parent_gaussian_sum_3d(axis_data, expansion)
+    parent_pair_sum = _experimental_high_order_parent_pair_sum_3d(axis_data, expansion)
+    fixed_position_x = _experimental_high_order_project_parent_matrix(coefficients, positions.x)
+    fixed_position_y = _experimental_high_order_project_parent_matrix(coefficients, positions.y)
+    fixed_position_z = _experimental_high_order_project_parent_matrix(coefficients, positions.z)
+
+    return _NestedFixedBlock3D(
+        stack.parent_basis,
+        stack,
+        stack.backend,
+        coefficients,
+        _experimental_high_order_active_support_indices(coefficients),
+        _experimental_high_order_project_parent_matrix(coefficients, parent_overlap),
+        _experimental_high_order_project_parent_matrix(coefficients, parent_kinetic),
+        fixed_position_x,
+        fixed_position_y,
+        fixed_position_z,
+        _experimental_high_order_project_parent_matrix(coefficients, x2.x),
+        _experimental_high_order_project_parent_matrix(coefficients, x2.y),
+        _experimental_high_order_project_parent_matrix(coefficients, x2.z),
+        copy(stack.contracted_weights),
+        _experimental_high_order_project_parent_matrix(coefficients, parent_gaussian_sum),
+        _experimental_high_order_project_parent_matrix(coefficients, parent_pair_sum),
+        Matrix{Float64}(hcat(diag(fixed_position_x), diag(fixed_position_y), diag(fixed_position_z))),
+        Ref{Any}(nothing),
+        Ref{Any}(nothing),
+    )
+end
+
+function _experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
+    smoke = nothing;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    supplement::Union{Nothing,LegacyAtomicGaussianSupplement} = nothing,
+    Z::Real = 24.0,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+)
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError("high-order stack QW diagnostic requires gausslet_backend = :pgdg_localized_experimental; no numerical-reference fallback is allowed"),
+    )
+    interaction_treatment == :mwg || throw(
+        ArgumentError("high-order stack QW diagnostic currently validates only interaction_treatment = :mwg"),
+    )
+
+    smoke_timed = if isnothing(smoke)
+        @timed _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic()
+    else
+        (value = smoke, time = 0.0, bytes = 0, gctime = 0.0, gcstats = nothing)
+    end
+    smoke_value = smoke_timed.value
+    smoke_value.stack.backend == gausslet_backend || throw(
+        ArgumentError("high-order stack QW diagnostic smoke stack backend must be :pgdg_localized_experimental"),
+    )
+
+    axis_timed = @timed _experimental_high_order_axis_data_1d(
+        smoke_value.basis;
+        backend = gausslet_backend,
+        one_body_exponents = expansion.exponents,
+        one_body_center = 0.0,
+        include_pair_factors = true,
+    )
+    axis_data = axis_timed.value
+    stack_timed = @timed _experimental_high_order_doside_stack_3d(
+        smoke_value.basis;
+        axis_data,
+        backend = gausslet_backend,
+        doside = smoke_value.stack.doside,
+        sides = smoke_value.stack.sides,
+    )
+    stack = stack_timed.value
+    fixed_timed = @timed _experimental_high_order_stack_fixed_block_for_atomic_qw(
+        stack,
+        axis_data,
+        expansion,
+    )
+    fixed_block = fixed_timed.value
+    supplement_value = isnothing(supplement) ? _experimental_high_order_cr_sp_supplement_fixture() : supplement
+    supplement_dimension = length(_atomic_cartesian_shell_supplement_3d(supplement_value).orbitals)
+    operators_timed = @timed ordinary_cartesian_qiu_white_operators(
+        fixed_block,
+        supplement_value;
+        expansion,
+        Z,
+        interaction_treatment,
+        gausslet_backend,
+    )
+    operators = operators_timed.value
+
+    residual_widths_positive =
+        operators.residual_count > 0 &&
+        all(isfinite, operators.residual_widths) &&
+        all(>(0.0), vec(operators.residual_widths))
+    fixed_overlap_error = norm(fixed_block.overlap - I, Inf)
+    operator_overlap_error = norm(operators.overlap - I, Inf)
+    h_symmetry_error = norm(operators.one_body_hamiltonian - transpose(operators.one_body_hamiltonian), Inf)
+    v_symmetry_error = norm(operators.interaction_matrix - transpose(operators.interaction_matrix), Inf)
+
+    return (
+        smoke = smoke_value,
+        axis_data = axis_data,
+        stack = stack,
+        fixed_block = fixed_block,
+        supplement = supplement_value,
+        operators = operators,
+        diagnostics = (
+            route = :cr_ns7_high_order_stack_to_atomic_qw_operator_diagnostic,
+            classification = :diagnostic_only,
+            interaction_treatment = interaction_treatment,
+            parent_dimension = length(stack.parent_basis)^3,
+            high_order_retained_dimension = size(stack.coefficient_matrix, 2),
+            support_count = length(fixed_block.support_indices),
+            supplement_dimension = supplement_dimension,
+            final_operator_dimension = size(operators.overlap, 1),
+            residual_count = operators.residual_count,
+            stack_backend = stack.backend,
+            fixed_backend = fixed_block.gausslet_backend,
+            adapter_backend = gausslet_backend,
+            operator_backend = operators.gausslet_backend,
+            contracted_weight_zeroish_count = count(abs.(stack.contracted_weights) .<= 1.0e-14),
+            contracted_weight_negative_count = count(stack.contracted_weights .< -1.0e-14),
+            contracted_weight_minimum = minimum(stack.contracted_weights),
+            contracted_weight_maximum = maximum(stack.contracted_weights),
+            fixed_overlap_error = fixed_overlap_error,
+            operator_overlap_error = operator_overlap_error,
+            h_symmetry_error = h_symmetry_error,
+            v_symmetry_error = v_symmetry_error,
+            residual_widths_finite_positive = residual_widths_positive,
+            same_density_two_electron_evaluation = :operator_available_not_evaluated,
+            smallest_missing_interface = :cr2_consumer_same_density_probe,
+            timing_seconds = (
+                smoke = smoke_timed.time,
+                axis_data = axis_timed.time,
+                stack = stack_timed.time,
+                fixed_block = fixed_timed.time,
+                operators = operators_timed.time,
+                total = smoke_timed.time + axis_timed.time + stack_timed.time + fixed_timed.time + operators_timed.time,
+            ),
+            allocation_bytes = (
+                smoke = smoke_timed.bytes,
+                axis_data = axis_timed.bytes,
+                stack = stack_timed.bytes,
+                fixed_block = fixed_timed.bytes,
+                operators = operators_timed.bytes,
+                total = smoke_timed.bytes + axis_timed.bytes + stack_timed.bytes + fixed_timed.bytes + operators_timed.bytes,
+            ),
+        ),
+    )
+end
+
 """
     experimental_bond_aligned_homonuclear_chain_nested_qw_operators(
         basis::BondAlignedHomonuclearChainQWBasis3D;
