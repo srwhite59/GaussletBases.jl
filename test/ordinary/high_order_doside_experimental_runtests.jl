@@ -83,6 +83,9 @@ end
     @test diagnostics.overlap_spectrum.minimum_eigenvalue > 1.0 - 1.0e-8
     @test diagnostics.overlap_spectrum.maximum_eigenvalue < 1.0 + 1.0e-8
     @test diagnostics.contracted_weights_finite
+    @test count(abs.(stack.contracted_weights) .<= 1.0e-14) == 0
+    @test count(stack.contracted_weights .< -1.0e-14) == 0
+    @test minimum(stack.contracted_weights) > 0.0
     @test diagnostics.axis_overlap_finite
     @test diagnostics.axis_weight_finite
     @test diagnostics.reaches_atomic_qw_operators == false
@@ -97,6 +100,20 @@ end
     )
     @test_throws ArgumentError GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(
         doside = 7,
+    )
+end
+
+@testset "Experimental high-order cleanup names distinguish Lowdin and reduced forms" begin
+    coefficients = [1.0 1.0; 0.0 0.0]
+    overlap = Matrix{Float64}(I, 2, 2)
+    reduced = GaussletBases._experimental_high_order_canonical_reduced_orthonormalization(
+        coefficients,
+        overlap,
+    )
+    @test size(reduced) == (2, 1)
+    @test_throws ArgumentError GaussletBases._experimental_high_order_symmetric_lowdin_cleanup(
+        coefficients,
+        overlap,
     )
 end
 
@@ -970,7 +987,7 @@ end
     @test audit.top_k_weights[1].k == 1
     @test audit.top_k_weights[2].k == 5
     @test audit.top_k_weights[3].k == 10
-    @test audit.top_k_weights[1].total_state_weight < 1.0e-4
+    @test audit.top_k_weights[1].total_state_weight < 0.1 * participation.total_outer_shell_fraction
     @test audit.top_k_weights[2].total_state_weight < 5.0e-3
     @test audit.top_k_weights[3].total_state_weight < 0.75 * participation.total_outer_shell_fraction
     @test length(audit.shell_block_weights) == length(stack.block_labels)

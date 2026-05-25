@@ -858,7 +858,7 @@ function _experimental_high_order_metric_project_out(
     return Matrix{Float64}(candidate_value - basis_value * couplings)
 end
 
-function _experimental_high_order_lowdin_cleanup(
+function _experimental_high_order_canonical_reduced_orthonormalization(
     coefficients::AbstractMatrix{<:Real},
     overlap::AbstractMatrix{<:Real};
     sign_vector::Union{Nothing,AbstractVector{<:Real}} = nothing,
@@ -866,6 +866,31 @@ function _experimental_high_order_lowdin_cleanup(
     overlap_seed = Matrix{Float64}(transpose(coefficients) * overlap * coefficients)
     vectors, invhalf = _s_invsqrt_reduced(overlap_seed)
     cleaned = Matrix{Float64}(coefficients * (vectors * invhalf))
+    if !isnothing(sign_vector)
+        _experimental_high_order_sign_fix_columns!(cleaned, sign_vector)
+    end
+    return cleaned
+end
+
+function _experimental_high_order_symmetric_lowdin_cleanup(
+    coefficients::AbstractMatrix{<:Real},
+    overlap::AbstractMatrix{<:Real};
+    sign_vector::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    tol::Real = 1.0e-10,
+)
+    coefficient_value = Matrix{Float64}(coefficients)
+    overlap_seed = Matrix{Float64}(transpose(coefficient_value) * overlap * coefficient_value)
+    decomposition = eigen(Symmetric(_symmetrize_ida_matrix(overlap_seed)))
+    tol_value = Float64(tol)
+    drop = findall(<=(tol_value), decomposition.values)
+    isempty(drop) || throw(
+        ArgumentError(
+            "experimental high-order symmetric Lowdin cleanup requires full rank; $(length(drop)) overlap eigenvalues are <= $tol_value",
+        ),
+    )
+    invhalf = Diagonal(1.0 ./ sqrt.(decomposition.values))
+    transform = decomposition.vectors * invhalf * transpose(decomposition.vectors)
+    cleaned = Matrix{Float64}(coefficient_value * transform)
     if !isnothing(sign_vector)
         _experimental_high_order_sign_fix_columns!(cleaned, sign_vector)
     end
@@ -1167,7 +1192,7 @@ function _experimental_high_order_doside_stack_3d(
             parent_overlap;
             tol = 1.0e-10,
         )
-        shell_clean = _experimental_high_order_lowdin_cleanup(
+        shell_clean = _experimental_high_order_symmetric_lowdin_cleanup(
             shell_residual,
             parent_overlap;
             sign_vector = parent_weights,

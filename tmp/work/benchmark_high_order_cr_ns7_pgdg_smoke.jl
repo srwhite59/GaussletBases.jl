@@ -25,6 +25,12 @@ println("block labels                ", diagnostics.block_labels)
 println("block column ranges         ", diagnostics.block_column_ranges)
 println("shell dimensions            ", diagnostics.shell_dimensions)
 println("shell cleanup kept ranks    ", [spectrum.kept_rank for spectrum in diagnostics.shell_cleanup_spectra])
+println("contracted weight zeroish   ", count(abs.(result.stack.contracted_weights) .<= 1.0e-14))
+println("contracted weight negative  ", count(result.stack.contracted_weights .< -1.0e-14))
+@printf("contracted weight min/max   %.12e / %.12e\n",
+    minimum(result.stack.contracted_weights),
+    maximum(result.stack.contracted_weights),
+)
 @printf("overlap error               %.6e\n", diagnostics.overlap_error)
 @printf("overlap eig min/max         %.12e / %.12e\n",
     diagnostics.overlap_spectrum.minimum_eigenvalue,

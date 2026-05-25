@@ -402,7 +402,7 @@ function _experimental_high_order_orthonormalized_full_block_union_coefficients(
             doside = doside,
         ),
     )
-    return _experimental_high_order_lowdin_cleanup(
+    return _experimental_high_order_canonical_reduced_orthonormalization(
         union_coefficients,
         parent_overlap;
         sign_vector = parent_weights,
@@ -732,7 +732,7 @@ function _experimental_high_order_high_route_data(
             accumulated,
             parent_overlap,
         )
-        shell_clean = _experimental_high_order_lowdin_cleanup(
+        shell_clean = _experimental_high_order_symmetric_lowdin_cleanup(
             shell_residual,
             parent_overlap;
             sign_vector = parent_weights,
