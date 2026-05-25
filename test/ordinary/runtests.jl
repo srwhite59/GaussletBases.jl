@@ -2376,6 +2376,11 @@ end
     @test mapped_ordinary_one_body_operators(
         mapped_basis;
         exponents = expansion.exponents,
+        backend = :auto,
+    ).backend == :pgdg_localized_experimental
+    @test mapped_ordinary_one_body_operators(
+        mapped_basis;
+        exponents = expansion.exponents,
         backend = :pgdg_experimental,
     ).backend == :pgdg_experimental
     @test mapped_ordinary_one_body_operators(
@@ -2847,7 +2852,7 @@ end
         @test atomic_direct_context.gaussian_data === supplement
         @test atomic_direct_context.contraction === nothing
         @test atomic_direct_context.capabilities.allowed_gausslet_backends ==
-              (:numerical_reference,)
+              (:numerical_reference, :pgdg_localized_experimental)
         @test atomic_direct_context.capabilities.allowed_interaction_treatments == (:ggt_nearest, :mwg)
         @test atomic_direct_context.capabilities.timing_label == "qwrg.atomic_shell.total"
         @test atomic_nested_context.carried_space_kind == :nested_fixed_block
@@ -2856,21 +2861,37 @@ end
         @test atomic_nested_context.gaussian_data === supplement
         @test atomic_nested_context.contraction === fixed_block_shell_plus_core.coefficient_matrix
         @test atomic_nested_context.capabilities.allowed_gausslet_backends ==
-              (:numerical_reference,)
+              (:numerical_reference, :pgdg_localized_experimental)
         @test atomic_nested_context.capabilities.allowed_interaction_treatments ==
               (:ggt_nearest, :mwg)
         @test atomic_nested_context.capabilities.timing_label == "qwrg.nested_atomic_shell.total"
-        supplement_text = _reference_only_backend_error(() ->
-            ordinary_cartesian_qiu_white_operators(
-                mapped_basis,
-                supplement;
-                expansion = expansion,
-                Z = 2.0,
-                interaction_treatment = :ggt_nearest,
-                gausslet_backend = :pgdg_localized_experimental,
-            )
+        direct_pgdg = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
+            mapped_basis,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
         )
-        @test occursin("ordinary_cartesian_qiu_white_operators", supplement_text)
+        direct_reference = ordinary_cartesian_qiu_white_operators(
+            mapped_basis,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
+            gausslet_backend = :numerical_reference,
+        )
+        @test direct_pgdg.gausslet_backend == :pgdg_localized_experimental
+        @test direct_reference.gausslet_backend == :numerical_reference
+        @test direct_pgdg.interaction_treatment == :mwg
+        @test direct_pgdg.residual_count == direct_reference.residual_count
+        @test norm(direct_pgdg.overlap - I, Inf) < 1.0e-8
+        @test direct_pgdg.one_body_hamiltonian ≈
+              transpose(direct_pgdg.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test direct_pgdg.interaction_matrix ≈
+              transpose(direct_pgdg.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test all(isfinite, direct_pgdg.residual_centers)
+        @test all(isfinite, direct_pgdg.residual_widths)
+        @test all(>(0.0), vec(direct_pgdg.residual_widths))
         direct_atomic_bad_interaction_text = _argument_error_text(() ->
             ordinary_cartesian_qiu_white_operators(
                 mapped_basis,
@@ -2884,7 +2905,7 @@ end
             "Qiu-White interaction_treatment must be :ggt_nearest or :mwg",
             direct_atomic_bad_interaction_text,
         )
-        nested_supplement_text = _reference_only_backend_error(() ->
+        nested_mismatch_text = _argument_error_text(() ->
             ordinary_cartesian_qiu_white_operators(
                 fixed_block_shell_plus_core,
                 supplement;
@@ -2894,7 +2915,56 @@ end
                 gausslet_backend = :pgdg_localized_experimental,
             )
         )
-        @test occursin("nested ordinary_cartesian_qiu_white_operators", nested_supplement_text)
+        @test occursin("nested ordinary_cartesian_qiu_white_operators", nested_mismatch_text)
+        @test occursin("match the fixed-block backend", nested_mismatch_text)
+
+        pgdg_fixed_block = @test_logs min_level = Logging.Warn one_center_atomic_full_parent_fixed_block(
+            mapped_basis;
+            expansion = expansion,
+            nside = 3,
+        )
+        numerical_fixed_block = one_center_atomic_full_parent_fixed_block(
+            mapped_basis;
+            expansion = expansion,
+            nside = 3,
+            gausslet_backend = :numerical_reference,
+        )
+        pgdg_fixed_metadata = basis_representation(pgdg_fixed_block).metadata.route_metadata
+        @test pgdg_fixed_block.gausslet_backend == :pgdg_localized_experimental
+        @test pgdg_fixed_metadata.gausslet_backend == :pgdg_localized_experimental
+        nested_pgdg = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
+            pgdg_fixed_block,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
+        )
+        nested_reference = ordinary_cartesian_qiu_white_operators(
+            numerical_fixed_block,
+            supplement;
+            expansion = expansion,
+            Z = 2.0,
+            interaction_treatment = :mwg,
+            gausslet_backend = :numerical_reference,
+        )
+        @test nested_pgdg.gausslet_backend == :pgdg_localized_experimental
+        @test nested_reference.gausslet_backend == :numerical_reference
+        @test nested_pgdg.interaction_treatment == :mwg
+        @test nested_pgdg.basis === pgdg_fixed_block
+        @test numerical_fixed_block.gausslet_backend == :numerical_reference
+        @test nested_pgdg.residual_count > 0
+        @test nested_pgdg.residual_count == nested_reference.residual_count
+        @test norm(nested_pgdg.overlap - I, Inf) < 1.0e-8
+        @test nested_pgdg.one_body_hamiltonian ≈
+              transpose(nested_pgdg.one_body_hamiltonian) atol = 1.0e-10 rtol = 1.0e-10
+        @test nested_pgdg.interaction_matrix ≈
+              transpose(nested_pgdg.interaction_matrix) atol = 1.0e-10 rtol = 1.0e-10
+        @test all(isfinite, nested_pgdg.residual_centers)
+        @test all(isfinite, nested_pgdg.residual_widths)
+        @test all(>(0.0), vec(nested_pgdg.residual_widths))
+        @test norm(nested_pgdg.overlap - nested_reference.overlap, Inf) < 0.1
+        @test norm(nested_pgdg.one_body_hamiltonian - nested_reference.one_body_hamiltonian, Inf) < 5.0
+        @test norm(nested_pgdg.residual_centers - nested_reference.residual_centers, Inf) < 2.0
 
         nested_nearest = _nested_shell_plus_core
         nested_mwg = ordinary_cartesian_qiu_white_operators(
@@ -2902,6 +2972,7 @@ end
             supplement;
             expansion = expansion,
             Z = 2.0,
+            gausslet_backend = :numerical_reference,
         )
         @test nested_nearest.interaction_treatment == :ggt_nearest
         @test nested_mwg.interaction_treatment == :mwg
@@ -2951,6 +3022,83 @@ end
         @test mwg_fixed_residual / nearest_fixed_residual < 25.0
         @test mwg_residual_residual / nearest_residual_residual < 25.0
         @test norm(nested_mwg.interaction_matrix - nested_nearest.interaction_matrix, Inf) > 1.0e-8
+    end
+
+    mktemp() do path, io
+        write(
+            io,
+            "#BASIS SET: Cr repo-cr-sp\n" *
+            "Cr    S\n" *
+            "      4.0000000              1.0000000\n" *
+            "Cr    P\n" *
+            "      2.5000000              1.0000000\n" *
+            "END\n",
+        )
+        close(io)
+
+        cr_basis = build_basis(MappedUniformBasisSpec(:G10;
+            count = 5,
+            mapping = white_lindsey_atomic_mapping(Z = 24.0, d = 0.05, tail_spacing = 10.0),
+            reference_spacing = 1.0,
+        ))
+        cr_supplement = legacy_atomic_gaussian_supplement(
+            "Cr",
+            "repo-cr-sp";
+            lmax = 1,
+            basisfile = path,
+        )
+        cr_fixed = @test_logs min_level = Logging.Warn one_center_atomic_full_parent_fixed_block(
+            cr_basis;
+            expansion = expansion,
+            nside = 3,
+        )
+        cr_reference_fixed = one_center_atomic_full_parent_fixed_block(
+            cr_basis;
+            expansion = expansion,
+            nside = 3,
+            gausslet_backend = :numerical_reference,
+        )
+        cr_pgdg = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
+            cr_fixed,
+            cr_supplement;
+            expansion = expansion,
+            Z = 24.0,
+            interaction_treatment = :mwg,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        cr_auto = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
+            cr_fixed,
+            cr_supplement;
+            expansion = expansion,
+            Z = 24.0,
+            interaction_treatment = :mwg,
+        )
+        cr_reference = ordinary_cartesian_qiu_white_operators(
+            cr_reference_fixed,
+            cr_supplement;
+            expansion = expansion,
+            Z = 24.0,
+            interaction_treatment = :mwg,
+            gausslet_backend = :numerical_reference,
+        )
+
+        @test cr_fixed.gausslet_backend == :pgdg_localized_experimental
+        @test cr_pgdg.gausslet_backend == :pgdg_localized_experimental
+        @test cr_auto.gausslet_backend == :pgdg_localized_experimental
+        @test cr_reference.gausslet_backend == :numerical_reference
+        @test cr_pgdg.interaction_treatment == :mwg
+        @test cr_pgdg.residual_count == cr_auto.residual_count == cr_reference.residual_count
+        @test size(cr_pgdg.overlap) == size(cr_reference.overlap)
+        @test norm(cr_pgdg.overlap - I, Inf) < 1.0e-8
+        @test cr_pgdg.one_body_hamiltonian ≈ transpose(cr_pgdg.one_body_hamiltonian) atol =
+              1.0e-10 rtol = 1.0e-10
+        @test cr_pgdg.interaction_matrix ≈ transpose(cr_pgdg.interaction_matrix) atol =
+              1.0e-10 rtol = 1.0e-10
+        @test all(isfinite, cr_pgdg.residual_centers)
+        @test all(isfinite, cr_pgdg.residual_widths)
+        @test all(>(0.0), vec(cr_pgdg.residual_widths))
+        @test norm(cr_pgdg.overlap - cr_reference.overlap, Inf) < 0.1
+        @test norm(cr_pgdg.one_body_hamiltonian - cr_reference.one_body_hamiltonian, Inf) < 50.0
     end
 end
 
@@ -3718,6 +3866,7 @@ end
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         explicit_ordinary_context = GaussletBases._normalized_atomic_build_context(
             source_basis,
@@ -3755,6 +3904,7 @@ end
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         explicit_nested_context = GaussletBases._normalized_atomic_build_context(
             fixed_block_shell_plus_core,
@@ -3903,6 +4053,7 @@ end
                 expansion = expansion,
                 Z = 10.0,
                 interaction_treatment = :ggt_nearest,
+                gausslet_backend = :numerical_reference,
             )
             explicit_context = GaussletBases._normalized_atomic_build_context(
                 basis,

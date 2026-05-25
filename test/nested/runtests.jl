@@ -1635,6 +1635,7 @@ function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixe
     return GaussletBases._NestedFixedBlock3D(
         fixed_block.parent_basis,
         fixed_block.shell,
+        fixed_block.gausslet_backend,
         sparse(fixed_block.coefficient_matrix),
         fixed_block.support_indices,
         fixed_block.overlap,

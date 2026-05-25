@@ -133,6 +133,8 @@ This helper is the supported atomic one-center backbone:
 - it always uses full parent coverage
 - it always uses `working_box = (1:n, 1:n, 1:n)`
 - it peels complete shells until the direct inner cube reaches `nside`
+- `gausslet_backend = :auto` resolves to `:pgdg_localized_experimental`;
+  pass `:numerical_reference` explicitly only for validation/debug fixtures
 - it uses the legacy/W&L complete-shell contract
   - shell increment `= nside^3 - (nside - 2)^3`
   - faces retain `(nside - 2) × (nside - 2)`
@@ -161,7 +163,7 @@ function build_one_center_atomic_full_parent_shell_sequence(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     refinement_levels::Integer = 0,
     kwargs...,
 )
@@ -222,7 +224,7 @@ function build_one_center_atomic_legacy_profile_shell_sequence(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     refinement_levels::Integer = 0,
     kwargs...,
 )
@@ -283,7 +285,7 @@ function one_center_atomic_full_parent_fixed_block(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     refinement_levels::Integer = 0,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
@@ -363,7 +365,7 @@ function one_center_atomic_legacy_profile_fixed_block(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     refinement_levels::Integer = 0,
     timing::Union{Bool,Symbol} = false,
     timing_io::IO = stdout,
@@ -564,7 +566,7 @@ function one_center_atomic_nested_structure_diagnostics(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     exponents::AbstractVector{<:Real} = expansion.exponents,
     center::Real = 0.0,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     refinement_levels::Integer = 0,
     nside::Int,
 )

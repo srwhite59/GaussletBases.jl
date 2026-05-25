@@ -667,6 +667,7 @@ function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::I
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         qiu_mwg = ordinary_cartesian_qiu_white_operators(
             source_basis,
@@ -674,6 +675,7 @@ function _qiu_white_reference_fixture(; basis_name::String = "cc-pVTZ", count::I
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :mwg,
+            gausslet_backend = :numerical_reference,
         )
         (
             source_basis,
@@ -703,6 +705,7 @@ function _qiu_white_full_nearest_fixture(; basis_name::String = "cc-pVTZ", count
             expansion = coulomb_gaussian_expansion(doacc = false),
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         (
             source_basis,
@@ -765,6 +768,7 @@ function _nested_qiu_white_nearest_fixture(; basis_name::String = "cc-pVTZ", cou
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         nested = ordinary_cartesian_qiu_white_operators(
             fixed_block,
@@ -876,6 +880,7 @@ function _nested_qiu_white_shell_sequence_fixture(; basis_name::String = "cc-pVT
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         shell_plus_core_ops = ordinary_cartesian_qiu_white_operators(
             fixed_shell_plus_core,
@@ -1006,6 +1011,7 @@ function _nested_qiu_white_nside_sequence_fixture(; basis_name::String = "cc-pVT
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         grow_ops = ordinary_cartesian_qiu_white_operators(
             fixed_grow,
@@ -1825,6 +1831,7 @@ function _nested_qiu_white_complete_shell_sequence_fixture(; basis_name::String 
             expansion = expansion,
             Z = 2.0,
             interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
         )
         complete_sequence_ops = ordinary_cartesian_qiu_white_operators(
             fixed_complete_sequence,

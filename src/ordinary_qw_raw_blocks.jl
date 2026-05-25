@@ -903,15 +903,27 @@ function _qwrg_cartesian_shell_self_moment_blocks_3d(
     )
 end
 
+function _qwrg_mapped_supplement_proxy_layer(
+    basis::MappedUniformBasis,
+    gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
+)
+    if gausslet_bundle.backend == :pgdg_localized_experimental
+        return _mapped_legacy_proxy_localized(_mapped_legacy_proxy_layer(basis)).layer
+    end
+
+    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
+    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
+        ArgumentError("explicit atomic Cartesian shell supplement currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
+    )
+    return proxy_layer
+end
+
 function _qwrg_atomic_cartesian_blocks_3d(
     gausslet_bundle::_MappedOrdinaryGausslet1DBundle,
     supplement::_AtomicCartesianShellSupplement3D,
     expansion::CoulombGaussianExpansion,
 )
-    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("explicit atomic Cartesian shell supplement currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
-    )
+    proxy_layer = _qwrg_mapped_supplement_proxy_layer(gausslet_bundle.basis, gausslet_bundle)
 
     n1d = size(gausslet_bundle.pgdg_intermediate.overlap, 1)
     ngausslet3d = n1d^3
@@ -1098,10 +1110,7 @@ function _qwrg_cross_1d_blocks(
     # gausslet side. This keeps the base PGDG one-body side off midpoint
     # sampling as well.
     # See docs/src/algorithms/qiu_white_residual_gaussian_route.md.
-    proxy_layer = gausslet_bundle.pgdg_intermediate.auxiliary_layer
-    proxy_layer isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError("Qiu-White cross-block construction currently requires the base refinement_levels = 0 PGDG proxy line on the gausslet side"),
-    )
+    proxy_layer = _qwrg_mapped_supplement_proxy_layer(gausslet_bundle.basis, gausslet_bundle)
     return _qwrg_cross_1d_blocks_proxy(proxy_layer, supplement, expansion)
 end
 

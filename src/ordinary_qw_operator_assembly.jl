@@ -397,7 +397,7 @@ function _normalized_atomic_build_context(
         nothing,
         (
             route_label = "ordinary_cartesian_qiu_white_operators",
-            allowed_gausslet_backends = (:numerical_reference,),
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
             allowed_interaction_treatments = (:ggt_nearest, :mwg),
             interaction_treatment_error_message =
                 "Qiu-White interaction_treatment must be :ggt_nearest or :mwg",
@@ -426,7 +426,7 @@ function _normalized_atomic_build_context(
         fixed_block.coefficient_matrix,
         (
             route_label = "nested ordinary_cartesian_qiu_white_operators",
-            allowed_gausslet_backends = (:numerical_reference,),
+            allowed_gausslet_backends = (:numerical_reference, :pgdg_localized_experimental),
             allowed_interaction_treatments = (:ggt_nearest, :mwg),
             interaction_treatment_error_message =
                 "nested ordinary_cartesian_qiu_white_operators interaction_treatment must be " *
@@ -440,6 +440,31 @@ function _normalized_atomic_build_context(
             interaction_label = "qwrg.nested_atomic_shell.interaction",
             carried_count_label = "fixed_count",
             residual_center_label = "nested QW-PGDG residual-center extraction",
+        ),
+    )
+end
+
+function _resolve_atomic_qw_gausslet_backend(
+    context::_QWRGAtomicBuildContext,
+    gausslet_backend::Symbol,
+)
+    if gausslet_backend == :auto && context.carried_space_kind == :nested_fixed_block
+        fixed_backend = context.carried.gausslet_backend
+        fixed_backend == :unknown || return fixed_backend
+    end
+    return _resolve_mapped_ordinary_gausslet_backend(gausslet_backend)
+end
+
+function _validate_atomic_qw_nested_backend_consistency(
+    context::_QWRGAtomicBuildContext,
+    gausslet_backend::Symbol,
+)
+    context.carried_space_kind == :nested_fixed_block || return nothing
+    fixed_backend = context.carried.gausslet_backend
+    (fixed_backend == :unknown || fixed_backend == gausslet_backend) && return nothing
+    throw(
+        ArgumentError(
+            "nested ordinary_cartesian_qiu_white_operators requires gausslet_backend = :$fixed_backend to match the fixed-block backend; rebuild the fixed block or pass matching explicit backends (got gausslet_backend = :$gausslet_backend)",
         ),
     )
 end
@@ -2449,7 +2474,7 @@ function _qwrg_atomic_residual_centers_and_widths(
                 gg_x2 = (
                     overlap_gg = gg_blocks.overlap_gg,
                     position_gg = gg_blocks.position_gg,
-                    x2_gg = Matrix{Float64}(_x2_matrix(gausslet_bundle.basis)),
+                    x2_gg = gg_blocks.x2_gg,
                 )
                 x2_x_gg = _qwrg_gausslet_axis_matrix(gg_x2, :x; squared = true)
                 x2_y_gg = _qwrg_gausslet_axis_matrix(gg_x2, :y; squared = true)
@@ -2577,7 +2602,9 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool,
 )
-    _validate_operator_route_backend(context, gausslet_backend)
+    resolved_gausslet_backend = _resolve_atomic_qw_gausslet_backend(context, gausslet_backend)
+    _validate_operator_route_backend(context, resolved_gausslet_backend)
+    _validate_atomic_qw_nested_backend_consistency(context, resolved_gausslet_backend)
     _validate_operator_route_interaction_treatment(context, interaction_treatment)
     residual_keep_policy_value = _qwrg_atomic_residual_keep_policy(residual_keep_policy)
     residual_keep_tol = _qwrg_atomic_residual_keep_tol()
@@ -2591,7 +2618,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
                 parent_basis;
                 exponents = expansion.exponents,
                 center = 0.0,
-                backend = gausslet_backend,
+                backend = resolved_gausslet_backend,
             )
         end
 
@@ -2661,7 +2688,7 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
         return OrdinaryCartesianOperators3D(
             carried,
             context.gaussian_data,
-            gausslet_backend,
+            resolved_gausslet_backend,
             interaction_treatment,
             expansion,
             Matrix{Float64}(residual_data.final_overlap),
@@ -2693,7 +2720,7 @@ end
         expansion = coulomb_gaussian_expansion(doacc = false),
         Z = 2.0,
         interaction_treatment = :mwg,
-        gausslet_backend = :numerical_reference,
+        gausslet_backend = :auto,
         residual_keep_policy = :near_null_only,
         timing = false,
     )
@@ -2714,6 +2741,10 @@ Allowed `interaction_treatment` values are:
 
 - `:ggt_nearest`
 - `:mwg`
+
+`gausslet_backend = :auto` resolves to `:pgdg_localized_experimental`; use
+`:numerical_reference` only when explicitly running the validation/debug
+quadrature backend.
 
 Set `timing = true` to print a TimeG phase tree for debugging the reference
 implementation. This is intentionally narrow and does not add timing noise to
@@ -2747,7 +2778,7 @@ function ordinary_cartesian_qiu_white_operators(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
     interaction_treatment::Symbol = :mwg,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
     )
@@ -2770,7 +2801,7 @@ end
         expansion = coulomb_gaussian_expansion(doacc = false),
         Z = 2.0,
         interaction_treatment = :mwg,
-        gausslet_backend = :numerical_reference,
+        gausslet_backend = :auto,
         residual_keep_policy = :near_null_only,
         timing = false,
     )
@@ -2788,6 +2819,10 @@ This first adapter is intentionally narrow:
 - it keeps the shell packet as the fixed-fixed block directly
 - it supports `interaction_treatment = :mwg` as the preferred matched-width
   residual interaction route, with `:ggt_nearest` retained as fallback/debug
+- `gausslet_backend = :auto` reuses the fixed-block backend when it is known,
+  so the default Cr-facing fixed-block/operator path stays quadrature-free;
+  `:numerical_reference` remains available only as an explicit validation
+  backend
 
 It now uses the explicit atomic-centered 3D Cartesian shell route for all
 active atomic supplement content up to `lmax <= 6`, including pure `s`
@@ -2814,7 +2849,7 @@ function ordinary_cartesian_qiu_white_operators(
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     Z::Real = 2.0,
     interaction_treatment::Symbol = :mwg,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :auto,
     residual_keep_policy::Symbol = :near_null_only,
     timing::Bool = false,
 )

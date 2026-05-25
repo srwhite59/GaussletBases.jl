@@ -24,24 +24,9 @@ function _cartesian_hybrid_supplement_axis_tables(
     axis_bundles::NamedTuple{(:x, :y, :z)},
     route_label::AbstractString,
 )
-    proxy_x = axis_bundles.x.pgdg_intermediate.auxiliary_layer
-    proxy_y = axis_bundles.y.pgdg_intermediate.auxiliary_layer
-    proxy_z = axis_bundles.z.pgdg_intermediate.auxiliary_layer
-    proxy_x isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError(
-            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the x axis",
-        ),
-    )
-    proxy_y isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError(
-            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the y axis",
-        ),
-    )
-    proxy_z isa _MappedLegacyProxyLayer1D || throw(
-        ArgumentError(
-            "$(route_label) factorized hybrid overlap sidecars require the refinement_levels = 0 legacy proxy line on the z axis",
-        ),
-    )
+    proxy_x = _qwrg_mapped_supplement_proxy_layer(axis_bundles.x.basis, axis_bundles.x)
+    proxy_y = _qwrg_mapped_supplement_proxy_layer(axis_bundles.y.basis, axis_bundles.y)
+    proxy_z = _qwrg_mapped_supplement_proxy_layer(axis_bundles.z.basis, axis_bundles.z)
     norbitals = length(supplement3d.orbitals)
     x_table = zeros(Float64, size(factorized_cartesian_parent_basis.x_functions, 2), norbitals)
     y_table = zeros(Float64, size(factorized_cartesian_parent_basis.y_functions, 2), norbitals)

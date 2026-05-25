@@ -454,6 +454,7 @@ The object keeps:
 struct _NestedFixedBlock3D{B,S}
     parent_basis::B
     shell::S
+    gausslet_backend::Symbol
     coefficient_matrix::_CartesianCoefficientMap
     support_indices::Vector{Int}
     overlap::Matrix{Float64}
@@ -470,6 +471,49 @@ struct _NestedFixedBlock3D{B,S}
     fixed_centers::Matrix{Float64}
     factorized_cartesian_parent_basis::Base.RefValue{Any}
     staged_by_center_sidecar::Base.RefValue{Any}
+end
+
+function _NestedFixedBlock3D(
+    parent_basis,
+    shell,
+    coefficient_matrix,
+    support_indices,
+    overlap,
+    kinetic,
+    position_x,
+    position_y,
+    position_z,
+    x2_x,
+    x2_y,
+    x2_z,
+    weights,
+    gaussian_sum,
+    pair_sum,
+    fixed_centers,
+    factorized_cartesian_parent_basis,
+    staged_by_center_sidecar,
+)
+    return _NestedFixedBlock3D(
+        parent_basis,
+        shell,
+        :unknown,
+        coefficient_matrix,
+        support_indices,
+        overlap,
+        kinetic,
+        position_x,
+        position_y,
+        position_z,
+        x2_x,
+        x2_y,
+        x2_z,
+        weights,
+        gaussian_sum,
+        pair_sum,
+        fixed_centers,
+        factorized_cartesian_parent_basis,
+        staged_by_center_sidecar,
+    )
 end
 
 struct _CartesianNestedStagedByCenterSidecar3D
@@ -1015,6 +1059,8 @@ function Base.show(io::IO, fixed_block::_NestedFixedBlock3D)
         size(fixed_block.overlap, 1),
         ", nsupport=",
         length(fixed_block.support_indices),
+        ", backend=:",
+        fixed_block.gausslet_backend,
         ")",
     )
 end
@@ -4769,6 +4815,7 @@ end
 function _nested_fixed_block(
     shell::_CartesianNestedShell3D,
     parent_basis::MappedUniformBasis,
+    gausslet_backend::Symbol = :unknown,
 )
     packet = shell.packet
     fixed_centers = hcat(
@@ -4779,6 +4826,7 @@ function _nested_fixed_block(
     return _NestedFixedBlock3D(
         parent_basis,
         shell,
+        gausslet_backend,
         shell.coefficient_matrix,
         shell.support_indices,
         packet.overlap,
@@ -5642,6 +5690,7 @@ end
 function _nested_fixed_block(
     shell::_CartesianNestedShellPlusCore3D,
     parent_basis::MappedUniformBasis,
+    gausslet_backend::Symbol = :unknown,
 )
     packet = shell.packet
     fixed_centers = hcat(
@@ -5652,6 +5701,7 @@ function _nested_fixed_block(
     return _NestedFixedBlock3D(
         parent_basis,
         shell,
+        gausslet_backend,
         shell.coefficient_matrix,
         shell.support_indices,
         packet.overlap,
@@ -5675,12 +5725,13 @@ function _nested_fixed_block(
     shell::_CartesianNestedShell3D,
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
-    return _nested_fixed_block(shell, bundle.basis)
+    return _nested_fixed_block(shell, bundle.basis, bundle.backend)
 end
 
 function _nested_fixed_block(
     shell::_CartesianNestedCompleteShell3D,
     parent_basis::MappedUniformBasis,
+    gausslet_backend::Symbol = :unknown,
 )
     packet = shell.packet
     fixed_centers = hcat(
@@ -5691,6 +5742,7 @@ function _nested_fixed_block(
     return _NestedFixedBlock3D(
         parent_basis,
         shell,
+        gausslet_backend,
         shell.coefficient_matrix,
         shell.support_indices,
         packet.overlap,
@@ -5714,19 +5766,20 @@ function _nested_fixed_block(
     shell::_CartesianNestedCompleteShell3D,
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
-    return _nested_fixed_block(shell, bundle.basis)
+    return _nested_fixed_block(shell, bundle.basis, bundle.backend)
 end
 
 function _nested_fixed_block(
     shell::_CartesianNestedShellPlusCore3D,
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
-    return _nested_fixed_block(shell, bundle.basis)
+    return _nested_fixed_block(shell, bundle.basis, bundle.backend)
 end
 
 function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
     parent_basis::MappedUniformBasis,
+    gausslet_backend::Symbol = :unknown,
 )
     isnothing(shell.packet) && throw(
         ArgumentError("nested fixed-block construction requires a shell sequence with an assembled packet"),
@@ -5740,6 +5793,7 @@ function _nested_fixed_block(
     return _NestedFixedBlock3D(
         parent_basis,
         shell,
+        gausslet_backend,
         shell.coefficient_matrix,
         shell.support_indices,
         packet.overlap,
@@ -5762,6 +5816,7 @@ end
 function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
     parent_basis,
+    gausslet_backend::Symbol = :unknown,
 )
     isnothing(shell.packet) && throw(
         ArgumentError("nested fixed-block construction requires a shell sequence with an assembled packet"),
@@ -5775,6 +5830,7 @@ function _nested_fixed_block(
     return _NestedFixedBlock3D(
         parent_basis,
         shell,
+        gausslet_backend,
         shell.coefficient_matrix,
         shell.support_indices,
         packet.overlap,
@@ -5798,5 +5854,5 @@ function _nested_fixed_block(
     shell::_CartesianNestedShellSequence3D,
     bundle::_MappedOrdinaryGausslet1DBundle,
 )
-    return _nested_fixed_block(shell, bundle.basis)
+    return _nested_fixed_block(shell, bundle.basis, bundle.backend)
 end

@@ -55,6 +55,13 @@ struct _MappedOrdinaryGausslet1DBundle{B,L,P}
     center::Float64
 end
 
+const _ORDINARY_MAPPED_AUTO_GAUSSLET_BACKEND = :pgdg_localized_experimental
+
+function _resolve_mapped_ordinary_gausslet_backend(backend::Symbol)
+    backend == :auto && return _ORDINARY_MAPPED_AUTO_GAUSSLET_BACKEND
+    return backend
+end
+
 struct _MappedLegacyProxyLayer1D
     primitive_layer::PrimitiveSet1D
     coefficient_matrix::Matrix{Float64}
@@ -158,16 +165,17 @@ function _mapped_ordinary_backend_layer(
     basis::MappedUniformBasis,
     backend::Symbol,
 )
-    if backend == :numerical_reference
+    resolved_backend = _resolve_mapped_ordinary_gausslet_backend(backend)
+    if resolved_backend == :numerical_reference
         return basis
-    elseif backend == :pgdg_experimental
+    elseif resolved_backend == :pgdg_experimental
         layer = mapped_pgdg_prototype(basis)
         _require_analytic_primitive_backend(
             primitive_set(layer),
             "mapped ordinary backend :pgdg_experimental",
         )
         return layer
-    elseif backend == :pgdg_localized_experimental
+    elseif resolved_backend == :pgdg_localized_experimental
         layer = mapped_pgdg_localized(basis)
         _require_analytic_primitive_backend(
             primitive_set(layer),
@@ -175,7 +183,7 @@ function _mapped_ordinary_backend_layer(
         )
         return layer
     else
-        throw(ArgumentError("mapped ordinary backend must be :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
+        throw(ArgumentError("mapped ordinary backend must be :auto, :numerical_reference, :pgdg_experimental, or :pgdg_localized_experimental"))
     end
 end
 
@@ -184,15 +192,16 @@ function _mapped_ordinary_pgdg_base_layer(
     backend::Symbol,
     working_layer,
 )
-    if backend == :numerical_reference
+    resolved_backend = _resolve_mapped_ordinary_gausslet_backend(backend)
+    if resolved_backend == :numerical_reference
         return _mapped_legacy_proxy_layer(basis)
-    elseif backend == :pgdg_experimental
+    elseif resolved_backend == :pgdg_experimental
         _require_analytic_primitive_backend(
             primitive_set(working_layer),
             "mapped ordinary PGDG intermediate :pgdg_experimental",
         )
         return working_layer
-    elseif backend == :pgdg_localized_experimental
+    elseif resolved_backend == :pgdg_localized_experimental
         _require_analytic_primitive_backend(
             primitive_set(working_layer),
             "mapped ordinary PGDG intermediate :pgdg_localized_experimental",
@@ -518,13 +527,16 @@ function _mapped_ordinary_pgdg_intermediate_1d(
         ),
     )
 
+    resolved_backend = _resolve_mapped_ordinary_gausslet_backend(backend)
     exponents_value = Float64[Float64(exponent) for exponent in exponents]
     center_value = Float64(center)
-    layer = working_layer === nothing ? _mapped_ordinary_backend_layer(basis, backend) : working_layer
-    base_layer = _mapped_ordinary_pgdg_base_layer(basis, backend, layer)
+    layer =
+        working_layer === nothing ? _mapped_ordinary_backend_layer(basis, resolved_backend) :
+        working_layer
+    base_layer = _mapped_ordinary_pgdg_base_layer(basis, resolved_backend, layer)
     auxiliary_layer = base_layer
 
-    if backend == :numerical_reference
+    if resolved_backend == :numerical_reference
         core_data = _mapped_legacy_proxy_core_data(
             base_layer;
             exponents = exponents_value,
@@ -591,7 +603,7 @@ function _mapped_ordinary_pgdg_intermediate_1d(
 
     return _MappedOrdinaryPGDGIntermediate1D(
         basis,
-        backend,
+        resolved_backend,
         Int(refinement_levels),
         refinement_mask,
         base_layer,
@@ -619,14 +631,15 @@ function _mapped_ordinary_gausslet_1d_bundle(
     backend::Symbol = :pgdg_experimental,
     refinement_levels::Integer = 0,
 )
+    resolved_backend = _resolve_mapped_ordinary_gausslet_backend(backend)
     exponents_value = Float64[Float64(exponent) for exponent in exponents]
     center_value = Float64(center)
-    layer = _mapped_ordinary_backend_layer(basis, backend)
+    layer = _mapped_ordinary_backend_layer(basis, resolved_backend)
     pgdg_intermediate = _mapped_ordinary_pgdg_intermediate_1d(
         basis;
         exponents = exponents_value,
         center = center_value,
-        backend = backend,
+        backend = resolved_backend,
         working_layer = layer,
         refinement_levels = refinement_levels,
     )
@@ -635,7 +648,7 @@ function _mapped_ordinary_gausslet_1d_bundle(
         basis,
         layer,
         pgdg_intermediate,
-        backend,
+        resolved_backend,
         exponents_value,
         center_value,
     )
@@ -668,6 +681,7 @@ mapped basis.
 
 The backend choice is explicit:
 
+- `:auto` resolves to `:pgdg_localized_experimental`
 - `:numerical_reference` keeps the trusted mapped numerical path
 - `:pgdg_experimental` uses the quadrature-free local-linear analytic
   PGDG-style Gaussian proxy
@@ -683,11 +697,12 @@ function mapped_ordinary_one_body_operators(
     center::Real = 0.0,
     backend::Symbol = :pgdg_experimental,
 )
+    resolved_backend = _resolve_mapped_ordinary_gausslet_backend(backend)
     exponents_value = Float64[Float64(exponent) for exponent in exponents]
     center_value = Float64(center)
-    layer = _mapped_ordinary_backend_layer(basis, backend)
+    layer = _mapped_ordinary_backend_layer(basis, resolved_backend)
 
-    if backend == :numerical_reference
+    if resolved_backend == :numerical_reference
         representation = basis_representation(basis; operators = (:overlap, :kinetic))
         overlap = Matrix{Float64}(representation.basis_matrices.overlap)
         kinetic = Matrix{Float64}(representation.basis_matrices.kinetic)
@@ -706,7 +721,7 @@ function mapped_ordinary_one_body_operators(
 
     return MappedOrdinaryOneBody1D(
         basis,
-        backend,
+        resolved_backend,
         overlap,
         kinetic,
         gaussian_factors,

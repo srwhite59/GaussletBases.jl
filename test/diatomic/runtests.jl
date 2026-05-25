@@ -208,6 +208,7 @@ end
     nonfactorized_fixed_block = GaussletBases._NestedFixedBlock3D(
         fixed_block.parent_basis,
         fixed_block.shell,
+        fixed_block.gausslet_backend,
         nonfactorized_coefficients,
         fixed_block.support_indices,
         fixed_block.overlap,
@@ -300,6 +301,7 @@ end
         return GaussletBases._NestedFixedBlock3D(
             template.parent_basis,
             template.shell,
+            template.gausslet_backend,
             template.coefficient_matrix,
             template.support_indices,
             template.overlap,
