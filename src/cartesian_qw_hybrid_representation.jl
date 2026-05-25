@@ -50,11 +50,11 @@ function _cartesian_atomic_hybrid_overlap_sidecars(
     operators::OrdinaryCartesianOperators3D,
     cartesian_parent::CartesianBasisRepresentation3D,
 )
-    factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
+    factorized_cartesian_parent_basis = _cartesian_optional_factorized_parent_basis(cartesian_parent)
     parent_basis = _cartesian_hybrid_parent_basis(operators)
     parent_basis isa MappedUniformBasis || throw(
         ArgumentError(
-            "factorized atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
+            "atomic hybrid overlap sidecars currently require a MappedUniformBasis or nested fixed block built from one",
         ),
     )
     gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
@@ -73,19 +73,32 @@ function _cartesian_atomic_hybrid_overlap_sidecars(
         cartesian_parent.coefficient_matrix === nothing ?
         Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
         Matrix{Float64}(cartesian_parent.coefficient_matrix)
-    return (
-        hybrid_overlap_kind = :factorized_atomic_mixed_raw,
-        factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
-        cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
-            operators,
-            factorized_cartesian_parent_basis,
-            supplement3d,
-            _cartesian_atomic_axis_bundles(operators, parent_basis),
-            "atomic",
-        ),
+    base_sidecars = (
+        hybrid_overlap_kind =
+            isnothing(factorized_cartesian_parent_basis) ?
+            :dense_atomic_mixed_raw :
+            :factorized_atomic_mixed_raw,
+        cartesian_probe_overlap_kind = :atomic_qw_dense_parent,
+        cartesian_probe_parent_basis = parent_basis,
+        cartesian_probe_expansion = operators.expansion,
+        cartesian_probe_gausslet_backend = operators.gausslet_backend,
         exact_cartesian_supplement_overlap =
             Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
         exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
+    )
+    isnothing(factorized_cartesian_parent_basis) && return base_sidecars
+    return merge(
+        base_sidecars,
+        (
+            factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
+            cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
+                operators,
+                factorized_cartesian_parent_basis,
+                supplement3d,
+                _cartesian_atomic_axis_bundles(operators, parent_basis),
+                "atomic",
+            ),
+        ),
     )
 end
 

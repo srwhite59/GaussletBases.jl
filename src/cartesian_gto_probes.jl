@@ -8,15 +8,39 @@ function _gto_working_representation(working)
             "gto_overlap_matrix requires a Cartesian working-basis representation; got $(typeof(representation)) from $(typeof(working))",
         ),
     )
-    (
-        representation.metadata.parent_kind == :cartesian_product_basis ||
-        _cartesian_supports_exact_hybrid_overlap(representation)
-    ) || throw(
+    _cartesian_supports_gto_overlap(representation) || throw(
         ArgumentError(
-            "gto_overlap_matrix supports explicit Cartesian product, nested fixed-block, and exact hybrid residual-Gaussian Cartesian working bases; got parent_kind :$(representation.metadata.parent_kind)",
+            "gto_overlap_matrix supports explicit Cartesian product, nested fixed-block, and hybrid residual-Gaussian Cartesian working bases with exact factorized sidecars or dense parent analytic GTO sidecars; got parent_kind :$(representation.metadata.parent_kind)",
         ),
     )
     return representation
+end
+
+function _cartesian_supports_gto_overlap(
+    representation::CartesianBasisRepresentation3D,
+)
+    representation.metadata.parent_kind == :cartesian_product_basis && return true
+    representation.metadata.parent_kind == :cartesian_plus_supplement_raw || return false
+    hasproperty(representation.parent_data, :cartesian_parent_representation) || return false
+    hasproperty(representation.parent_data, :supplement_representation) || return false
+    parent_representation = representation.parent_data.cartesian_parent_representation
+    supplement_representation = representation.parent_data.supplement_representation
+    parent_representation isa CartesianBasisRepresentation3D || return false
+    supplement_representation isa CartesianGaussianShellSupplementRepresentation3D || return false
+    parent_representation.metadata.parent_kind == :cartesian_product_basis || return false
+    supplement_representation.supplement_kind in (
+        :atomic_cartesian_shell,
+        :bond_aligned_diatomic_cartesian_shell,
+        :bond_aligned_heteronuclear_cartesian_shell,
+    ) || return false
+    all(
+        orbital -> orbital.primitive_normalization == :axiswise_normalized_cartesian_gaussian,
+        supplement_representation.orbitals,
+    ) || return false
+    return (
+        _cartesian_supports_exact_hybrid_overlap(representation) ||
+        hasproperty(representation.parent_data, :cartesian_probe_overlap_kind)
+    )
 end
 
 function _gto_probe_representation(probes)
@@ -112,6 +136,47 @@ function _cartesian_exact_supplement_probe_cross(
     return Matrix{Float64}(exact_cross)
 end
 
+function _cartesian_gto_factorized_parent_basis(raw)
+    hasproperty(raw, :factorized_cartesian_parent_basis) || return nothing
+    factorized = raw.factorized_cartesian_parent_basis
+    factorized isa _CartesianNestedFactorizedBasis3D && return factorized
+    return nothing
+end
+
+function _cartesian_atomic_qw_dense_parent_probe_overlap(
+    raw,
+    probes::CartesianGaussianShellSupplementRepresentation3D,
+)
+    hasproperty(raw, :cartesian_probe_overlap_kind) || return nothing
+    raw.cartesian_probe_overlap_kind == :atomic_qw_dense_parent || return nothing
+    parent_basis = raw.cartesian_probe_parent_basis
+    parent_basis isa MappedUniformBasis || throw(
+        ArgumentError(
+            "atomic QW dense-parent GTO overlap fallback requires a MappedUniformBasis parent; got $(typeof(parent_basis))",
+        ),
+    )
+    gausslet_bundle = _mapped_ordinary_gausslet_1d_bundle(
+        parent_basis;
+        exponents = raw.cartesian_probe_expansion.exponents,
+        center = 0.0,
+        backend = raw.cartesian_probe_gausslet_backend,
+    )
+    raw_blocks = _qwrg_atomic_cartesian_blocks_3d(
+        gausslet_bundle,
+        probes,
+        raw.cartesian_probe_expansion,
+    )
+    parent_coefficients =
+        raw.cartesian_representation.coefficient_matrix === nothing ?
+        Matrix{Float64}(
+            I,
+            raw.cartesian_representation.metadata.final_dimension,
+            raw.cartesian_representation.metadata.final_dimension,
+        ) :
+        Matrix{Float64}(raw.cartesian_representation.coefficient_matrix)
+    return Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga)
+end
+
 function _cartesian_cartesian_probe_overlap(
     raw,
     probes::CartesianGaussianShellSupplementRepresentation3D,
@@ -124,8 +189,16 @@ function _cartesian_cartesian_probe_overlap(
         return _cartesian_basis_supplement_cross(raw.cartesian_representation, probes)
     catch error
         if error isa ArgumentError
+            dense_parent_cross = _cartesian_atomic_qw_dense_parent_probe_overlap(raw, probes)
+            dense_parent_cross !== nothing && return dense_parent_cross
+            factorized = _cartesian_gto_factorized_parent_basis(raw)
+            factorized === nothing && throw(
+                ArgumentError(
+                    "gto_overlap_matrix cannot build analytic Cartesian-GTO overlap for this working/probe pair: dense parent overlap failed with $(sprint(showerror, error)), and no exact factorized sidecar or dense QW parent sidecar is available",
+                ),
+            )
             return _cartesian_factorized_basis_supplement_cross(
-                raw.factorized_cartesian_parent_basis,
+                factorized,
                 raw.cartesian_representation,
                 probes,
                 raw,
@@ -133,6 +206,73 @@ function _cartesian_cartesian_probe_overlap(
         end
         rethrow()
     end
+end
+
+function _gto_raw_components(
+    representation::CartesianBasisRepresentation3D,
+)
+    if representation.metadata.parent_kind == :cartesian_product_basis
+        nraw = representation.metadata.final_dimension
+        factorized = _cartesian_optional_factorized_parent_basis(representation)
+        return merge(
+            (
+                cartesian_representation = representation,
+                supplement_representation = _cartesian_empty_supplement_representation(),
+                raw_to_final = Matrix{Float64}(I, nraw, nraw),
+                cartesian_supplement_axis_tables = nothing,
+                exact_cartesian_supplement_overlap = nothing,
+                exact_supplement_overlap = nothing,
+            ),
+            isnothing(factorized) ? (;) : (factorized_cartesian_parent_basis = factorized,),
+        )
+    elseif representation.metadata.parent_kind == :cartesian_plus_supplement_raw
+        _cartesian_supports_gto_overlap(representation) || throw(
+            ArgumentError(
+                "gto_overlap_matrix requires hybrid residual-Gaussian representations to expose an exact factorized sidecar or dense parent analytic GTO sidecar",
+            ),
+        )
+        raw_to_final = representation.coefficient_matrix === nothing ?
+            throw(
+                ArgumentError(
+                    "hybrid Cartesian GTO overlap requires an explicit raw_to_final coefficient matrix",
+                ),
+            ) :
+            Matrix{Float64}(representation.coefficient_matrix)
+        return (
+            cartesian_representation = representation.parent_data.cartesian_parent_representation,
+            supplement_representation = representation.parent_data.supplement_representation,
+            raw_to_final = raw_to_final,
+            factorized_cartesian_parent_basis =
+                hasproperty(representation.parent_data, :factorized_cartesian_parent_basis) ?
+                representation.parent_data.factorized_cartesian_parent_basis : nothing,
+            cartesian_supplement_axis_tables =
+                hasproperty(representation.parent_data, :cartesian_supplement_axis_tables) ?
+                representation.parent_data.cartesian_supplement_axis_tables : nothing,
+            exact_cartesian_supplement_overlap =
+                hasproperty(representation.parent_data, :exact_cartesian_supplement_overlap) ?
+                representation.parent_data.exact_cartesian_supplement_overlap : nothing,
+            exact_supplement_overlap =
+                hasproperty(representation.parent_data, :exact_supplement_overlap) ?
+                representation.parent_data.exact_supplement_overlap : nothing,
+            cartesian_probe_overlap_kind =
+                hasproperty(representation.parent_data, :cartesian_probe_overlap_kind) ?
+                representation.parent_data.cartesian_probe_overlap_kind : nothing,
+            cartesian_probe_parent_basis =
+                hasproperty(representation.parent_data, :cartesian_probe_parent_basis) ?
+                representation.parent_data.cartesian_probe_parent_basis : nothing,
+            cartesian_probe_expansion =
+                hasproperty(representation.parent_data, :cartesian_probe_expansion) ?
+                representation.parent_data.cartesian_probe_expansion : nothing,
+            cartesian_probe_gausslet_backend =
+                hasproperty(representation.parent_data, :cartesian_probe_gausslet_backend) ?
+                representation.parent_data.cartesian_probe_gausslet_backend : nothing,
+        )
+    end
+    throw(
+        ArgumentError(
+            "gto_overlap_matrix does not support Cartesian parent kind :$(representation.metadata.parent_kind)",
+        ),
+    )
 end
 
 function _cartesian_supplement_probe_overlap(
@@ -150,7 +290,7 @@ function _gto_overlap_matrix(
     working::CartesianBasisRepresentation3D,
     probes::CartesianGaussianShellSupplementRepresentation3D,
 )
-    raw = _cartesian_raw_components(working)
+    raw = _gto_raw_components(working)
     cg = _cartesian_cartesian_probe_overlap(raw, probes)
     gg = _cartesian_supplement_probe_overlap(raw, probes)
     raw_overlap = [cg; gg]

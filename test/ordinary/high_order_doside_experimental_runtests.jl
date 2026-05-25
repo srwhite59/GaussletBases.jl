@@ -139,6 +139,44 @@ end
     @test diagnostics.timing_seconds.total >= 0.0
     @test diagnostics.allocation_bytes.total > 0
 
+    representation = basis_representation(result.operators)
+    @test representation.parent_data.hybrid_overlap_kind == :dense_atomic_mixed_raw
+    @test !hasproperty(representation.parent_data, :factorized_cartesian_parent_basis)
+    overlap = gto_overlap_matrix(result.operators, result.supplement)
+    supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(result.supplement)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        result.fixed_block.parent_basis;
+        exponents = result.operators.expansion.exponents,
+        center = 0.0,
+        backend = result.operators.gausslet_backend,
+    )
+    raw_blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(
+        bundle,
+        supplement3d,
+        result.operators.expansion,
+    )
+    fixed_cross =
+        transpose(Matrix{Float64}(result.fixed_block.coefficient_matrix)) * raw_blocks.overlap_ga
+    dense_parent_reference = Matrix{Float64}(
+        transpose(Matrix{Float64}(result.operators.raw_to_final)) *
+        [fixed_cross; raw_blocks.overlap_aa],
+    )
+    @test size(overlap) == (diagnostics.final_operator_dimension, diagnostics.supplement_dimension)
+    @test maximum(abs.(overlap .- dense_parent_reference)) < 1.0e-11
+
+    bad_representation = CartesianBasisRepresentation3D(
+        representation.metadata,
+        representation.axis_representations,
+        representation.contraction_kind,
+        representation.coefficient_matrix,
+        representation.parent_labels,
+        representation.parent_centers,
+        representation.support_indices,
+        representation.support_states,
+        (;),
+    )
+    @test_throws ArgumentError gto_overlap_matrix(bad_representation, result.supplement)
+
     @test_throws ArgumentError GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
         gausslet_backend = :numerical_reference,
     )

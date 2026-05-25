@@ -75,6 +75,17 @@ function _cartesian_factorized_parent_basis(
     )
 end
 
+function _cartesian_optional_factorized_parent_basis(
+    representation::CartesianBasisRepresentation3D,
+)
+    try
+        return _cartesian_factorized_parent_basis(representation)
+    catch err
+        _nested_factorized_basis_optional_failure(err) || rethrow()
+        return nothing
+    end
+end
+
 function _cartesian_factorized_axis_cross_table(
     left_functions::AbstractMatrix{<:Real},
     left_axis::BasisRepresentation1D,

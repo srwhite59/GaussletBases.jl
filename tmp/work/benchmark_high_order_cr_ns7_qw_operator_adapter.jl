@@ -18,6 +18,34 @@ end
 
 fields = diagnostic.diagnostics
 operators = diagnostic.operators
+overlap, overlap_timing = _timed("Cr ns7 GTO overlap") do
+    gto_overlap_matrix(operators, diagnostic.supplement)
+end
+warm_overlap, warm_overlap_timing = _timed("Cr ns7 GTO overlap warm") do
+    gto_overlap_matrix(operators, diagnostic.supplement)
+end
+reference_overlap, reference_timing = _timed("Cr ns7 dense overlap ref") do
+    supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(diagnostic.supplement)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        diagnostic.fixed_block.parent_basis;
+        exponents = operators.expansion.exponents,
+        center = 0.0,
+        backend = operators.gausslet_backend,
+    )
+    raw_blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(
+        bundle,
+        supplement3d,
+        operators.expansion,
+    )
+    fixed_cross =
+        transpose(Matrix{Float64}(diagnostic.fixed_block.coefficient_matrix)) * raw_blocks.overlap_ga
+    Matrix{Float64}(
+        transpose(Matrix{Float64}(operators.raw_to_final)) *
+        [fixed_cross; raw_blocks.overlap_aa],
+    )
+end
+overlap_error = maximum(abs.(overlap .- reference_overlap))
+warm_overlap_error = maximum(abs.(warm_overlap .- reference_overlap))
 
 println()
 println("Cr ns=7 high-order PGDG QW adapter diagnostic")
@@ -48,6 +76,9 @@ println("MWG widths finite positive      ", fields.residual_widths_finite_positi
 println("residual centers finite         ", all(isfinite, operators.residual_centers))
 println("same-density status             ", fields.same_density_two_electron_evaluation)
 println("smallest remaining interface    ", fields.smallest_missing_interface)
+println("GTO overlap shape               ", size(overlap))
+@printf("GTO dense fallback max error     %.6e\n", overlap_error)
+@printf("warm GTO fallback max error      %.6e\n", warm_overlap_error)
 @printf("internal smoke time/allocation  %.5f s / %.2f MiB\n",
     fields.timing_seconds.smoke,
     fields.allocation_bytes.smoke / 2.0^20,
@@ -79,4 +110,16 @@ println("smallest remaining interface    ", fields.smallest_missing_interface)
 @printf("script adapter wall/allocation  %.5f s / %.2f MiB\n",
     adapter_timing.time,
     adapter_timing.bytes / 2.0^20,
+)
+@printf("script GTO overlap allocation   %.5f s / %.2f MiB\n",
+    overlap_timing.time,
+    overlap_timing.bytes / 2.0^20,
+)
+@printf("script warm GTO overlap alloc    %.5f s / %.2f MiB\n",
+    warm_overlap_timing.time,
+    warm_overlap_timing.bytes / 2.0^20,
+)
+@printf("script dense ref allocation     %.5f s / %.2f MiB\n",
+    reference_timing.time,
+    reference_timing.bytes / 2.0^20,
 )
