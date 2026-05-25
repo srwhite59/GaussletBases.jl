@@ -1630,6 +1630,16 @@ end
         end
     end
 
+    @test CP.cartesian_parent_gausslet_basis(atomic_parent) === atomic_parent
+    @test CP.parent_axis_counts(CP.cartesian_parent_gausslet_basis(atomic_axis)) ==
+        CP.parent_axis_counts(atomic_parent)
+    @test CP.parent_axis_counts(CP.cartesian_parent_gausslet_basis(diatomic_basis)) ==
+        CP.parent_axis_counts(diatomic_parent)
+    @test CP.parent_axis_counts(CP.cartesian_parent_gausslet_basis(chain_basis)) ==
+        CP.parent_axis_counts(chain_parent)
+    @test CP.parent_axis_counts(CP.cartesian_parent_gausslet_basis(square_basis)) ==
+        CP.parent_axis_counts(square_parent)
+
     @test CP.parent_axes(atomic_parent).x === atomic_axis
     @test CP.axis_basis(atomic_parent, :y) === atomic_axis
     @test CP.parent_box(atomic_parent) == (1:7, 1:7, 1:7)
@@ -1671,14 +1681,18 @@ end
 
     for parent in (atomic_parent, diatomic_parent, chain_parent, square_parent)
         _check_parent_index_contract(parent)
+        @test !hasproperty(parent, :gausslet_backend)
+        @test !hasproperty(parent, :backend)
     end
 
     @test_throws ArgumentError CP.axis_basis(atomic_parent, :q)
     @test_throws ArgumentError CP.parent_flat_index(atomic_parent, 0, 1, 1)
     @test_throws ArgumentError CP.parent_unflat_index(atomic_parent, CP.parent_dimension(atomic_parent) + 1)
+    @test_throws ArgumentError CP.cartesian_parent_gausslet_basis((not_a_parent = true,))
 end
 
 @testset "Cartesian basis representation for nested fixed blocks" begin
+    CP = GaussletBases.CartesianParentGaussletBases
     basis = build_basis(
         MappedUniformBasisSpec(
             :G10;
@@ -1693,6 +1707,7 @@ end
         expansion,
         nside = 5,
     )
+    fixed_parent = CP.cartesian_parent_gausslet_basis(fixed_block)
     representation = basis_representation(fixed_block)
     metadata = basis_metadata(representation)
 
@@ -1700,7 +1715,9 @@ end
     @test metadata.basis_kind == :nested_fixed_block
     @test metadata.parent_kind == :cartesian_product_basis
     @test metadata.parent_axis_counts == (13, 13, 13)
+    @test metadata.parent_axis_counts == CP.parent_axis_counts(fixed_parent)
     @test metadata.parent_dimension == 13^3
+    @test metadata.parent_dimension == CP.parent_dimension(fixed_parent)
     @test metadata.final_dimension == size(fixed_block.coefficient_matrix, 2)
     @test metadata.working_box == (1:13, 1:13, 1:13)
     @test metadata.route_metadata.shell_kind == :shell_sequence
@@ -1711,6 +1728,13 @@ end
     @test representation.support_indices == fixed_block.support_indices
     @test length(representation.support_states) == length(fixed_block.support_indices)
     @test size(metadata.basis_centers) == size(fixed_block.fixed_centers)
+    @test CP.parent_center(fixed_parent, (1, 1, 1)) == (
+        centers(basis)[1],
+        centers(basis)[1],
+        centers(basis)[1],
+    )
+    @test !hasproperty(fixed_parent, :gausslet_backend)
+    @test !hasproperty(fixed_parent, :backend)
     @test !isnothing(fixed_block.factorized_cartesian_parent_basis[])
     @test hasproperty(representation.parent_data, :factorized_cartesian_parent_basis)
     @test representation.parent_data.factorized_cartesian_parent_basis ===

@@ -96,13 +96,18 @@ function _cartesian_axis_signature(representation::BasisRepresentation1D)
     )
 end
 
+function _cartesian_axes_match(
+    left::BasisRepresentation1D,
+    right::BasisRepresentation1D,
+)
+    left === right && return true
+    return isequal(_cartesian_axis_signature(left), _cartesian_axis_signature(right))
+end
+
 function _cartesian_axis_sharing(axis_representations::NamedTuple)
-    x_signature = _cartesian_axis_signature(axis_representations.x)
-    y_signature = _cartesian_axis_signature(axis_representations.y)
-    z_signature = _cartesian_axis_signature(axis_representations.z)
-    xy = isequal(x_signature, y_signature)
-    xz = isequal(x_signature, z_signature)
-    yz = isequal(y_signature, z_signature)
+    xy = _cartesian_axes_match(axis_representations.x, axis_representations.y)
+    xz = _cartesian_axes_match(axis_representations.x, axis_representations.z)
+    yz = _cartesian_axes_match(axis_representations.y, axis_representations.z)
     xy && yz && return :shared_xyz
     xy && return :shared_xy
     xz && return :shared_xz
@@ -339,9 +344,10 @@ function _cartesian_fixed_block_route_metadata(
 end
 
 function basis_representation(fixed_block::_NestedFixedBlock3D)
+    parent_identity = CartesianParentGaussletBases.cartesian_parent_gausslet_basis(fixed_block)
     axis_representations = _cartesian_parent_axis_representations(fixed_block.parent_basis)
     axis_metadata = _cartesian_axis_metadata(axis_representations)
-    axis_counts = _cartesian_axis_counts(axis_representations)
+    axis_counts = CartesianParentGaussletBases.parent_axis_counts(parent_identity)
     x_centers, y_centers, z_centers = _cartesian_axis_centers(axis_representations)
     parent_orbitals = _mapped_cartesian_orbitals(x_centers, y_centers, z_centers)
     parent_labels = _cartesian_product_labels(parent_orbitals)
@@ -354,7 +360,7 @@ function basis_representation(fixed_block::_NestedFixedBlock3D)
         axis_metadata,
         :cartesian_product_basis,
         axis_counts,
-        length(parent_orbitals),
+        CartesianParentGaussletBases.parent_dimension(parent_identity),
         size(fixed_block.coefficient_matrix, 2),
         _cartesian_shell_working_box(fixed_block.shell),
         final_labels,

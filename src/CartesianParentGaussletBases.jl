@@ -8,6 +8,7 @@ import ..GaussletBases: MappedUniformBasis,
                          centers
 
 export CartesianParentGaussletBasis3D,
+       cartesian_parent_gausslet_basis,
        parent_axes,
        axis_basis,
        parent_box,
@@ -46,13 +47,18 @@ function _parent_axis_signature(axis::MappedUniformBasis)
     )
 end
 
+function _parent_axes_match(
+    left::MappedUniformBasis,
+    right::MappedUniformBasis,
+)
+    left === right && return true
+    return isequal(_parent_axis_signature(left), _parent_axis_signature(right))
+end
+
 function _parent_axis_sharing(axes::NamedTuple{(:x,:y,:z)})
-    x_signature = _parent_axis_signature(axes.x)
-    y_signature = _parent_axis_signature(axes.y)
-    z_signature = _parent_axis_signature(axes.z)
-    xy = isequal(x_signature, y_signature)
-    xz = isequal(x_signature, z_signature)
-    yz = isequal(y_signature, z_signature)
+    xy = _parent_axes_match(axes.x, axes.y)
+    xz = _parent_axes_match(axes.x, axes.z)
+    yz = _parent_axes_match(axes.y, axes.z)
     xy && yz && return :shared_xyz
     xy && return :shared_xy
     xz && return :shared_xz
@@ -202,8 +208,34 @@ function CartesianParentGaussletBasis3D(basis::AxisAlignedHomonuclearSquareLatti
     )
 end
 
+cartesian_parent_gausslet_basis(parent::CartesianParentGaussletBasis3D) = parent
+
+cartesian_parent_gausslet_basis(object) = throw(
+    ArgumentError(
+        string(
+            "cannot infer a route-neutral Cartesian parent gausslet basis from ",
+            typeof(object),
+        ),
+    ),
+)
+
+cartesian_parent_gausslet_basis(basis::MappedUniformBasis) =
+    CartesianParentGaussletBasis3D(basis)
+
+cartesian_parent_gausslet_basis(basis::BondAlignedDiatomicQWBasis3D) =
+    CartesianParentGaussletBasis3D(basis)
+
+cartesian_parent_gausslet_basis(basis::BondAlignedHomonuclearChainQWBasis3D) =
+    CartesianParentGaussletBasis3D(basis)
+
+cartesian_parent_gausslet_basis(basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D) =
+    CartesianParentGaussletBasis3D(basis)
+
+cartesian_parent_gausslet_basis(fixed_block::_NestedFixedBlock3D) =
+    cartesian_parent_gausslet_basis(fixed_block.parent_basis)
+
 CartesianParentGaussletBasis3D(fixed_block::_NestedFixedBlock3D) =
-    CartesianParentGaussletBasis3D(fixed_block.parent_basis)
+    cartesian_parent_gausslet_basis(fixed_block)
 
 parent_axes(parent::CartesianParentGaussletBasis3D) = parent.axes
 parent_box(parent::CartesianParentGaussletBasis3D) = parent.parent_box
