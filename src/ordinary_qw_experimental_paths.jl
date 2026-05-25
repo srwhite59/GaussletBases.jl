@@ -810,7 +810,7 @@ function _experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
     )
 
     smoke_timed = if isnothing(smoke)
-        @timed _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic()
+        @timed _experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic()
     else
         (value = smoke, time = 0.0, bytes = 0, gctime = 0.0, gcstats = nothing)
     end
@@ -870,10 +870,16 @@ function _experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
         supplement = supplement_value,
         operators = operators,
         diagnostics = (
-            route = :cr_ns7_high_order_stack_to_atomic_qw_operator_diagnostic,
+            route = :cr_map_count7_high_order_stack_to_atomic_qw_operator_smoke_diagnostic,
             classification = :diagnostic_only,
+            operator_construction_scope = :smoke_plumbing_only_not_same_density_route_validation,
             interaction_treatment = interaction_treatment,
+            parent_side = length(stack.parent_basis),
             parent_dimension = length(stack.parent_basis)^3,
+            route_comparability = :smoke_only_not_ordinary_ns7,
+            ordinary_ns7_comparable = false,
+            ordinary_ns7_reference_parent_side = 27,
+            ordinary_ns7_reference_parent_dimension = 27^3,
             high_order_retained_dimension = size(stack.coefficient_matrix, 2),
             support_count = length(fixed_block.support_indices),
             supplement_dimension = supplement_dimension,
@@ -892,8 +898,12 @@ function _experimental_high_order_stack_to_atomic_qw_operator_diagnostic(
             h_symmetry_error = h_symmetry_error,
             v_symmetry_error = v_symmetry_error,
             residual_widths_finite_positive = residual_widths_positive,
-            same_density_two_electron_evaluation = :operator_available_not_evaluated,
-            smallest_missing_interface = :cr2_consumer_same_density_probe,
+            same_density_two_electron_evaluation =
+                :blocked_smoke_only_not_route_validation,
+            same_density_route_comparison = :blocked_smoke_only_not_ordinary_ns7,
+            occupied_capture_gate = smoke_value.diagnostics.occupied_capture_gate,
+            occupied_capture_status = smoke_value.diagnostics.occupied_capture_status,
+            smallest_missing_interface = :ordinary_ns7_extent_high_order_route,
             timing_seconds = (
                 smoke = smoke_timed.time,
                 axis_data = axis_timed.time,

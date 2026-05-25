@@ -58,20 +58,25 @@ function _experimental_high_order_he_singlet_case(
     return (basis = basis, stack = stack, data = data)
 end
 
-@testset "Experimental Cr ns=7 high-order PGDG smoke diagnostic" begin
-    smoke = GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic()
+@testset "Experimental Cr-map count=7 high-order PGDG smoke diagnostic" begin
+    smoke = GaussletBases._experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic()
     diagnostics = smoke.diagnostics
     stack = smoke.stack
 
-    @test diagnostics.route == :cr_ns7_high_order_pgdg_smoke
+    @test diagnostics.route == :cr_map_count7_high_order_pgdg_smoke
     @test diagnostics.classification == :diagnostic_only
     @test diagnostics.backend == :pgdg_localized_experimental
     @test stack.backend == :pgdg_localized_experimental
     @test diagnostics.mapping_family == :white_lindsey_atomic_cr_dZ0p3_d0p0214285714
     @test stack.diagnostics.parent_mapping_family == diagnostics.mapping_family
-    @test diagnostics.high_order_7_meaning == :ns7_parent_family
+    @test diagnostics.high_order_7_meaning == :parent_side_count_not_ordinary_ns7_extent
+    @test diagnostics.parent_count_meaning == :count7_smoke_lattice
     @test diagnostics.parent_side == 7
     @test diagnostics.parent_dimension == 7^3
+    @test diagnostics.route_comparability == :smoke_only_not_ordinary_ns7
+    @test diagnostics.ordinary_ns7_comparable == false
+    @test diagnostics.ordinary_ns7_reference_parent_side == 27
+    @test diagnostics.ordinary_ns7_reference_parent_dimension == 27^3
     @test diagnostics.doside == 5
     @test diagnostics.sides == [5, 7]
     @test diagnostics.retained_dimension == 223
@@ -89,28 +94,57 @@ end
     @test diagnostics.axis_overlap_finite
     @test diagnostics.axis_weight_finite
     @test diagnostics.reaches_atomic_qw_operators == false
-    @test diagnostics.same_density_operator_evaluation == :not_reached
-    @test diagnostics.smallest_missing_interface ==
-        :high_order_stack_to_atomic_qw_operator_packet_adapter
+    @test diagnostics.same_density_operator_evaluation == :not_reached_smoke_plumbing_only
+    @test diagnostics.same_density_route_comparison ==
+        :blocked_smoke_only_not_ordinary_ns7
+    @test diagnostics.occupied_capture_status == :not_evaluated
+    @test diagnostics.occupied_capture_gate.same_density_interaction_comparison_allowed == false
+    @test diagnostics.smallest_missing_interface == :ordinary_ns7_extent_high_order_route
     @test diagnostics.timing_seconds.total >= 0.0
     @test diagnostics.allocation_bytes.total > 0
 
-    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(
+    insufficient_capture = GaussletBases._experimental_high_order_cr_map_count7_occupied_capture_gate(
+        0.01;
+        threshold = 0.95,
+    )
+    @test insufficient_capture.status == :failed_insufficient_occupied_capture
+    @test insufficient_capture.capture_ok == false
+    @test insufficient_capture.same_density_interaction_comparison_allowed ==
+        false
+
+    sufficient_capture = GaussletBases._experimental_high_order_cr_map_count7_occupied_capture_gate(
+        0.99;
+        threshold = 0.95,
+    )
+    @test sufficient_capture.status == :capture_sufficient_for_projection_gate
+    @test sufficient_capture.capture_ok
+    @test sufficient_capture.same_density_interaction_comparison_allowed ==
+        false
+
+    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic(
         backend = :numerical_reference,
     )
-    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(
+    @test_throws ArgumentError GaussletBases._experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic(
         doside = 7,
     )
 end
 
-@testset "Experimental Cr ns=7 high-order PGDG atomic QW operator diagnostic" begin
+@testset "Experimental Cr-map count=7 high-order PGDG atomic QW operator diagnostic" begin
     result = GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic()
     diagnostics = result.diagnostics
 
-    @test diagnostics.route == :cr_ns7_high_order_stack_to_atomic_qw_operator_diagnostic
+    @test diagnostics.route ==
+        :cr_map_count7_high_order_stack_to_atomic_qw_operator_smoke_diagnostic
     @test diagnostics.classification == :diagnostic_only
+    @test diagnostics.operator_construction_scope ==
+        :smoke_plumbing_only_not_same_density_route_validation
     @test diagnostics.interaction_treatment == :mwg
+    @test diagnostics.parent_side == 7
     @test diagnostics.parent_dimension == 7^3
+    @test diagnostics.route_comparability == :smoke_only_not_ordinary_ns7
+    @test diagnostics.ordinary_ns7_comparable == false
+    @test diagnostics.ordinary_ns7_reference_parent_side == 27
+    @test diagnostics.ordinary_ns7_reference_parent_dimension == 27^3
     @test diagnostics.high_order_retained_dimension == 223
     @test diagnostics.support_count == 7^3
     @test diagnostics.supplement_dimension == 4
@@ -134,8 +168,13 @@ end
     @test diagnostics.v_symmetry_error < 1.0e-10
     @test diagnostics.residual_widths_finite_positive
     @test all(isfinite, result.operators.residual_centers)
-    @test diagnostics.same_density_two_electron_evaluation == :operator_available_not_evaluated
-    @test diagnostics.smallest_missing_interface == :cr2_consumer_same_density_probe
+    @test diagnostics.same_density_two_electron_evaluation ==
+        :blocked_smoke_only_not_route_validation
+    @test diagnostics.same_density_route_comparison ==
+        :blocked_smoke_only_not_ordinary_ns7
+    @test diagnostics.occupied_capture_status == :not_evaluated
+    @test diagnostics.occupied_capture_gate.same_density_interaction_comparison_allowed == false
+    @test diagnostics.smallest_missing_interface == :ordinary_ns7_extent_high_order_route
     @test diagnostics.timing_seconds.total >= 0.0
     @test diagnostics.allocation_bytes.total > 0
 

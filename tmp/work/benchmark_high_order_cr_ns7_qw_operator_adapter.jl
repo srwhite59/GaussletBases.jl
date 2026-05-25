@@ -9,22 +9,22 @@ function _timed(f, label)
     return timing.value, timing
 end
 
-smoke, smoke_timing = _timed("Cr ns7 smoke") do
-    GaussletBases._experimental_high_order_cr_ns7_pgdg_smoke_diagnostic()
+smoke, smoke_timing = _timed("Cr-map count7 smoke") do
+    GaussletBases._experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic()
 end
-diagnostic, adapter_timing = _timed("Cr ns7 QW adapter") do
+diagnostic, adapter_timing = _timed("Cr-map count7 QW adapter") do
     GaussletBases._experimental_high_order_stack_to_atomic_qw_operator_diagnostic(smoke)
 end
 
 fields = diagnostic.diagnostics
 operators = diagnostic.operators
-overlap, overlap_timing = _timed("Cr ns7 GTO overlap") do
+overlap, overlap_timing = _timed("Cr-map count7 GTO overlap") do
     gto_overlap_matrix(operators, diagnostic.supplement)
 end
-warm_overlap, warm_overlap_timing = _timed("Cr ns7 GTO overlap warm") do
+warm_overlap, warm_overlap_timing = _timed("Cr-map count7 GTO overlap warm") do
     gto_overlap_matrix(operators, diagnostic.supplement)
 end
-reference_overlap, reference_timing = _timed("Cr ns7 dense overlap ref") do
+reference_overlap, reference_timing = _timed("Cr-map count7 dense overlap ref") do
     supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(diagnostic.supplement)
     bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         diagnostic.fixed_block.parent_basis;
@@ -48,15 +48,21 @@ overlap_error = maximum(abs.(overlap .- reference_overlap))
 warm_overlap_error = maximum(abs.(warm_overlap .- reference_overlap))
 
 println()
-println("Cr ns=7 high-order PGDG QW adapter diagnostic")
+println("Cr-map count=7 high-order PGDG QW adapter diagnostic")
 println("route                           ", fields.route)
 println("classification                  ", fields.classification)
+println("operator construction scope     ", fields.operator_construction_scope)
 println("interaction treatment           ", fields.interaction_treatment)
 println("stack backend                   ", fields.stack_backend)
 println("fixed backend                   ", fields.fixed_backend)
 println("adapter backend                 ", fields.adapter_backend)
 println("operator backend                ", fields.operator_backend)
+println("parent side                     ", fields.parent_side)
 println("parent dimension                ", fields.parent_dimension)
+println("route comparability             ", fields.route_comparability)
+println("ordinary ns7 comparable         ", fields.ordinary_ns7_comparable)
+println("ordinary ns7 ref side           ", fields.ordinary_ns7_reference_parent_side)
+println("ordinary ns7 ref dimension      ", fields.ordinary_ns7_reference_parent_dimension)
 println("high-order retained dimension   ", fields.high_order_retained_dimension)
 println("support count                   ", fields.support_count)
 println("supplement dimension            ", fields.supplement_dimension)
@@ -75,6 +81,8 @@ println("contracted weight negative      ", fields.contracted_weight_negative_co
 println("MWG widths finite positive      ", fields.residual_widths_finite_positive)
 println("residual centers finite         ", all(isfinite, operators.residual_centers))
 println("same-density status             ", fields.same_density_two_electron_evaluation)
+println("same-density route compare      ", fields.same_density_route_comparison)
+println("occupied capture status         ", fields.occupied_capture_status)
 println("smallest remaining interface    ", fields.smallest_missing_interface)
 println("GTO overlap shape               ", size(overlap))
 @printf("GTO dense fallback max error     %.6e\n", overlap_error)

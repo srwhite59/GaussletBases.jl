@@ -77,7 +77,40 @@ function _experimental_high_order_one_body_from_pgdg_intermediate(
     )
 end
 
-function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
+function _experimental_high_order_cr_map_count7_occupied_capture_gate(
+    occupied_capture::Union{Nothing,Real};
+    threshold::Real = 0.95,
+)
+    threshold_value = Float64(threshold)
+    0.0 <= threshold_value <= 1.0 || throw(
+        ArgumentError("Cr-map count=7 smoke occupied-capture threshold must lie in [0, 1]"),
+    )
+    if isnothing(occupied_capture)
+        return (
+            status = :not_evaluated,
+            capture = nothing,
+            threshold = threshold_value,
+            capture_ok = false,
+            same_density_interaction_comparison_allowed = false,
+        )
+    end
+    capture_value = Float64(occupied_capture)
+    isfinite(capture_value) || throw(
+        ArgumentError("Cr-map count=7 smoke occupied capture must be finite"),
+    )
+    status = capture_value >= threshold_value ?
+        :capture_sufficient_for_projection_gate :
+        :failed_insufficient_occupied_capture
+    return (
+        status = status,
+        capture = capture_value,
+        threshold = threshold_value,
+        capture_ok = capture_value >= threshold_value,
+        same_density_interaction_comparison_allowed = false,
+    )
+end
+
+function _experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic(;
     family = :G10,
     count::Int = 7,
     dZ::Real = 0.3,
@@ -87,17 +120,23 @@ function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
     backend::Symbol = :pgdg_localized_experimental,
     doside::Int = 5,
     sides::AbstractVector{<:Integer} = [5, 7],
+    occupied_capture::Union{Nothing,Real} = nothing,
+    occupied_capture_threshold::Real = 0.95,
 )
     backend == :pgdg_localized_experimental || throw(
-        ArgumentError("Cr ns=7 high-order smoke requires backend = :pgdg_localized_experimental; no numerical-reference fallback is allowed"),
+        ArgumentError("Cr-map count=7 high-order smoke requires backend = :pgdg_localized_experimental; no numerical-reference fallback is allowed"),
     )
-    count == 7 || throw(ArgumentError("Cr ns=7 high-order smoke requires count = 7"))
+    count == 7 || throw(ArgumentError("Cr-map count=7 high-order smoke requires count = 7"))
     doside == 5 || throw(
-        ArgumentError("Cr ns=7 high-order smoke keeps doside = 5; high-order 7 means the ns=7 parent family, not doside = 7"),
+        ArgumentError("Cr-map count=7 high-order smoke keeps doside = 5; count=7 means the parent side count only, not ordinary Cr ns7 extent and not doside = 7"),
     )
     side_values = Int[Int(side) for side in sides]
     side_values == [5, 7] || throw(
-        ArgumentError("Cr ns=7 high-order smoke currently requires sides = [5, 7]"),
+        ArgumentError("Cr-map count=7 high-order smoke currently requires sides = [5, 7]"),
+    )
+    occupied_capture_gate = _experimental_high_order_cr_map_count7_occupied_capture_gate(
+        occupied_capture;
+        threshold = occupied_capture_threshold,
     )
 
     s_value = sqrt(Float64(dZ))
@@ -128,13 +167,18 @@ function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
         axis_data = axis_data,
         stack = stack,
         diagnostics = (
-            route = :cr_ns7_high_order_pgdg_smoke,
+            route = :cr_map_count7_high_order_pgdg_smoke,
             classification = :diagnostic_only,
             backend = stack.backend,
             mapping_family = mapping_family,
-            high_order_7_meaning = :ns7_parent_family,
+            high_order_7_meaning = :parent_side_count_not_ordinary_ns7_extent,
+            parent_count_meaning = :count7_smoke_lattice,
             parent_side = length(basis),
             parent_dimension = length(basis)^3,
+            route_comparability = :smoke_only_not_ordinary_ns7,
+            ordinary_ns7_comparable = false,
+            ordinary_ns7_reference_parent_side = 27,
+            ordinary_ns7_reference_parent_dimension = 27^3,
             doside = stack.doside,
             sides = copy(stack.sides),
             retained_dimension = size(stack.coefficient_matrix, 2),
@@ -148,8 +192,11 @@ function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
             axis_overlap_finite = all(isfinite, axis_data.overlap),
             axis_weight_finite = all(isfinite, axis_data.weights),
             reaches_atomic_qw_operators = false,
-            same_density_operator_evaluation = :not_reached,
-            smallest_missing_interface = :high_order_stack_to_atomic_qw_operator_packet_adapter,
+            same_density_operator_evaluation = :not_reached_smoke_plumbing_only,
+            same_density_route_comparison = :blocked_smoke_only_not_ordinary_ns7,
+            occupied_capture_gate = occupied_capture_gate,
+            occupied_capture_status = occupied_capture_gate.status,
+            smallest_missing_interface = :ordinary_ns7_extent_high_order_route,
             timing_seconds = (
                 axis_data = axis_timed.time,
                 stack = stack_timed.time,
@@ -162,6 +209,10 @@ function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(;
             ),
         ),
     )
+end
+
+function _experimental_high_order_cr_ns7_pgdg_smoke_diagnostic(; kwargs...)
+    return _experimental_high_order_cr_map_count7_pgdg_smoke_diagnostic(; kwargs...)
 end
 
 function _experimental_high_order_centered_interval(
