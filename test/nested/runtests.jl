@@ -998,6 +998,32 @@ end
     @test nested.one_body_hamiltonian == one_body_before
     @test nested.interaction_matrix == interaction_before
 
+    nested_build_source = QWCS.cartesian_qw_operator_build_source(
+        fixed_block,
+        legacy;
+        Z = 2.0,
+        interaction_treatment = nested.interaction_treatment,
+        gausslet_backend = nested.gausslet_backend,
+    )
+    nested_build_diagnostics =
+        QWCS.operator_build_source_diagnostics(nested_build_source)
+    @test QWCS.operator_build_source_provenance(nested_build_source).input_kind ==
+        :atomic_nested_fixed_block_input
+    @test nested_build_source.basis_family == :one_center_atomic
+    @test nested_build_source.carried_space_kind == :nested_fixed_block
+    @test nested_build_source.gausslet_backend == nested.gausslet_backend
+    @test nested_build_source.interaction_treatment == nested.interaction_treatment
+    @test nested_build_source.nuclear_term_storage == nested.nuclear_term_storage
+    @test nested_build_diagnostics.carried_dimension ==
+        nested_diagnostics.carried_dimension
+    @test nested_build_diagnostics.carried_has_contracted_parent ==
+        nested_diagnostics.carried_has_contracted_parent
+    @test nested_build_diagnostics.carried_has_staged_sidecar ==
+        nested_diagnostics.carried_has_staged_sidecar
+    @test nested_build_diagnostics.dense_parent_matrix_used == false
+    @test nested_build_diagnostics.heavy_metric_packet_built == false
+    @test nested_build_diagnostics.operator_built == false
+
     @test shell_plus_core isa GaussletBases._CartesianNestedShellPlusCore3D
     @test fixed_block_shell_plus_core isa GaussletBases._NestedFixedBlock3D
     @test fixed_block_shell_plus_core.parent_basis === basis
@@ -1749,6 +1775,33 @@ end
     @test operators.overlap == overlap_before
     @test operators.one_body_hamiltonian == one_body_before
     @test operators.interaction_matrix == interaction_before
+
+    build_source = QWCS.cartesian_qw_operator_build_source(
+        basis;
+        nuclear_charges = operators.nuclear_charges,
+        nuclear_term_storage = :auto,
+        interaction_treatment = operators.interaction_treatment,
+        gausslet_backend = operators.gausslet_backend,
+    )
+    build_diagnostics = QWCS.operator_build_source_diagnostics(build_source)
+    @test QWCS.operator_build_source_carried_space(build_source) isa
+        CCS.CartesianCarriedSpace3D
+    @test QWCS.operator_build_source_provenance(build_source).input_kind ==
+        :bond_aligned_direct_product_input
+    @test build_source.basis_family == :bond_aligned_diatomic
+    @test build_source.carried_space_kind == :direct_product
+    @test build_source.nuclear_charges == operators.nuclear_charges
+    @test build_source.gausslet_backend == operators.gausslet_backend
+    @test build_source.interaction_treatment == operators.interaction_treatment
+    @test build_source.nuclear_term_storage == operators.nuclear_term_storage
+    @test build_diagnostics.carried_dimension == operator_diagnostics.carried_dimension
+    @test build_diagnostics.carried_has_contracted_parent ==
+        operator_diagnostics.carried_has_contracted_parent
+    @test build_diagnostics.carried_has_staged_sidecar ==
+        operator_diagnostics.carried_has_staged_sidecar
+    @test build_diagnostics.dense_parent_matrix_used == false
+    @test build_diagnostics.heavy_metric_packet_built == false
+    @test build_diagnostics.operator_built == false
 end
 
 @testset "Cartesian parent gausslet basis identity" begin

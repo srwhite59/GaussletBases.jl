@@ -2,10 +2,22 @@ module CartesianQWOperatorCarriedSpaces
 
 import ..GaussletBases:
     AbstractBondAlignedOrdinaryQWBasis3D,
+    BondAlignedDiatomicQWBasis3D,
     CartesianBasisRepresentation3D,
+    LegacyAtomicGaussianSupplement,
+    LegacyBondAlignedDiatomicGaussianSupplement,
+    LegacyBondAlignedHeteronuclearGaussianSupplement,
     MappedUniformBasis,
     OrdinaryCartesianOperators3D,
     _NestedFixedBlock3D,
+    _normalized_atomic_build_context,
+    _normalized_bond_aligned_build_context,
+    _resolve_atomic_qw_gausslet_backend,
+    _resolved_nuclear_term_storage,
+    _validate_atomic_qw_nested_backend_consistency,
+    _validate_nuclear_term_storage,
+    _validate_operator_route_backend,
+    _validate_operator_route_interaction_treatment,
     basis_representation
 import ..GaussletBases.CartesianCarriedSpaces:
     CartesianCarriedSpace3D,
@@ -14,11 +26,16 @@ import ..GaussletBases.CartesianCarriedSpaces:
     cartesian_carried_space
 
 export CartesianQWOperatorCarriedSpaceSidecar,
+       CartesianOperatorBuildSource3D,
        cartesian_qw_operator_carried_space_sidecar,
+       cartesian_qw_operator_build_source,
        qw_operator_carried_space,
        qw_operator_basis_representation,
        qw_operator_carried_space_diagnostics,
-       qw_operator_carried_space_provenance
+       qw_operator_carried_space_provenance,
+       operator_build_source_carried_space,
+       operator_build_source_diagnostics,
+       operator_build_source_provenance
 
 """
     CartesianQWOperatorCarriedSpaceSidecar
@@ -36,6 +53,31 @@ struct CartesianQWOperatorCarriedSpaceSidecar{C<:CartesianCarriedSpace3D,R,D,V}
     provenance::V
 end
 
+"""
+    CartesianOperatorBuildSource3D
+
+Internal pre-build summary for an existing Cartesian QW operator route.
+
+This records the normalized carried space plus route/backend/storage metadata
+before operator construction. It is not a builder and deliberately stores no
+Hamiltonian matrices or residual packets.
+"""
+struct CartesianOperatorBuildSource3D{C<:CartesianCarriedSpace3D,CM,D,V}
+    carried_space::C
+    basis_family::Symbol
+    carried_space_kind::Symbol
+    nuclei::Vector{NTuple{3,Float64}}
+    nuclear_charges::Vector{Float64}
+    gausslet_backend::Symbol
+    requested_gausslet_backend::Symbol
+    interaction_treatment::Symbol
+    nuclear_term_storage::Symbol
+    requested_nuclear_term_storage::Symbol
+    capabilities::CM
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -44,6 +86,13 @@ qw_operator_carried_space_diagnostics(sidecar::CartesianQWOperatorCarriedSpaceSi
     sidecar.diagnostics
 qw_operator_carried_space_provenance(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.provenance
+
+operator_build_source_carried_space(source::CartesianOperatorBuildSource3D) =
+    source.carried_space
+operator_build_source_diagnostics(source::CartesianOperatorBuildSource3D) =
+    source.diagnostics
+operator_build_source_provenance(source::CartesianOperatorBuildSource3D) =
+    source.provenance
 
 function _qw_operator_carried_source(operators::OrdinaryCartesianOperators3D)
     basis = operators.basis
@@ -106,6 +155,340 @@ function _qw_operator_sidecar_provenance(
         basis_type = nameof(typeof(operators.basis)),
         gaussian_data_type =
             isnothing(operators.gaussian_data) ? nothing : nameof(typeof(operators.gaussian_data)),
+    )
+end
+
+_maybe_property(object, name::Symbol, default = nothing) =
+    hasproperty(object, name) ? getproperty(object, name) : default
+
+function _float_nuclear_charges(charges, expected_count::Int)
+    values = Float64[Float64(value) for value in charges]
+    length(values) == expected_count || throw(
+        ArgumentError("Cartesian QW operator build source requires one nuclear charge per nucleus"),
+    )
+    return values
+end
+
+function _capability_metadata(capabilities)
+    return (
+        route_label = _maybe_property(capabilities, :route_label),
+        allowed_gausslet_backends =
+            _maybe_property(capabilities, :allowed_gausslet_backends),
+        backend_support_scope =
+            _maybe_property(capabilities, :backend_support_scope),
+        allowed_interaction_treatments =
+            _maybe_property(capabilities, :allowed_interaction_treatments),
+        localized_parent_kind =
+            _maybe_property(capabilities, :localized_parent_kind),
+        localized_parent_kind_backend =
+            _maybe_property(capabilities, :localized_parent_kind_backend),
+        timing_label = _maybe_property(capabilities, :timing_label),
+    )
+end
+
+function _build_source_diagnostics(
+    context,
+    carried_space::CartesianCarriedSpace3D,
+    basis_family::Symbol,
+    nuclei::Vector{NTuple{3,Float64}},
+    charges::Vector{Float64};
+    gausslet_backend::Symbol,
+    requested_gausslet_backend::Symbol,
+    interaction_treatment::Symbol,
+    nuclear_term_storage::Symbol,
+    requested_nuclear_term_storage::Symbol,
+)
+    carried_diagnostics = carried_space_diagnostics(carried_space)
+    capabilities = _capability_metadata(context.capabilities)
+    return (
+        basis_family = basis_family,
+        carried_space_kind = context.carried_space_kind,
+        parent_dimension = carried_diagnostics.parent_dimension,
+        carried_dimension = carried_diagnostics.representation_final_dimension,
+        carried_has_contracted_parent = carried_diagnostics.has_contracted_parent,
+        carried_has_staged_sidecar = carried_diagnostics.has_staged_sidecar,
+        carried_staged_by_center_path = carried_diagnostics.staged_by_center_path,
+        nucleus_count = length(nuclei),
+        nuclear_charge_count = length(charges),
+        gausslet_backend = gausslet_backend,
+        requested_gausslet_backend = requested_gausslet_backend,
+        interaction_treatment = interaction_treatment,
+        nuclear_term_storage = nuclear_term_storage,
+        requested_nuclear_term_storage = requested_nuclear_term_storage,
+        capability_metadata = capabilities,
+        route_label = capabilities.route_label,
+        dense_parent_matrix_used = false,
+        heavy_metric_packet_built = false,
+        operator_built = false,
+    )
+end
+
+function _build_source_provenance(
+    input_kind::Symbol,
+    carried_source,
+    gaussian_data,
+    context,
+)
+    return (
+        source = :cartesian_qw_operator_build_source,
+        input_kind = input_kind,
+        carried_source_type = nameof(typeof(carried_source)),
+        gaussian_data_type = isnothing(gaussian_data) ? nothing : nameof(typeof(gaussian_data)),
+        route_label = _maybe_property(context.capabilities, :route_label),
+        carried_route_metadata = _maybe_property(context, :route_metadata),
+        parent_route_metadata = _maybe_property(context, :parent_route_metadata),
+    )
+end
+
+function _cartesian_operator_build_source(
+    context,
+    carried_source,
+    gaussian_data,
+    input_kind::Symbol;
+    basis_family::Symbol,
+    nuclei::Vector{NTuple{3,Float64}},
+    nuclear_charges::Vector{Float64},
+    gausslet_backend::Symbol,
+    requested_gausslet_backend::Symbol,
+    interaction_treatment::Symbol,
+    nuclear_term_storage::Symbol,
+    requested_nuclear_term_storage::Symbol,
+)
+    carried_space = cartesian_carried_space(carried_source)
+    diagnostics = _build_source_diagnostics(
+        context,
+        carried_space,
+        basis_family,
+        nuclei,
+        nuclear_charges;
+        gausslet_backend,
+        requested_gausslet_backend,
+        interaction_treatment,
+        nuclear_term_storage,
+        requested_nuclear_term_storage,
+    )
+    provenance = _build_source_provenance(input_kind, carried_source, gaussian_data, context)
+    return CartesianOperatorBuildSource3D(
+        carried_space,
+        basis_family,
+        context.carried_space_kind,
+        nuclei,
+        nuclear_charges,
+        gausslet_backend,
+        requested_gausslet_backend,
+        interaction_treatment,
+        nuclear_term_storage,
+        requested_nuclear_term_storage,
+        _capability_metadata(context.capabilities),
+        diagnostics,
+        provenance,
+    )
+end
+
+function _bond_aligned_build_source(
+    context,
+    carried_source,
+    gaussian_data,
+    input_kind::Symbol;
+    nuclear_charges,
+    nuclear_term_storage::Symbol,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+)
+    _validate_operator_route_backend(context, gausslet_backend)
+    _validate_operator_route_interaction_treatment(context, interaction_treatment)
+    requested_nuclear_term_storage = nuclear_term_storage
+    resolved_nuclear_term_storage = _resolved_nuclear_term_storage(
+        _validate_nuclear_term_storage(nuclear_term_storage),
+        context.carried,
+    )
+    charges = _float_nuclear_charges(nuclear_charges, length(context.nuclei))
+    return _cartesian_operator_build_source(
+        context,
+        carried_source,
+        gaussian_data,
+        input_kind;
+        basis_family = context.basis_family,
+        nuclei = NTuple{3,Float64}[context.nuclei...],
+        nuclear_charges = charges,
+        gausslet_backend,
+        requested_gausslet_backend = gausslet_backend,
+        interaction_treatment,
+        nuclear_term_storage = resolved_nuclear_term_storage,
+        requested_nuclear_term_storage,
+    )
+end
+
+"""
+    cartesian_qw_operator_build_source(...)
+
+Return the internal pre-build summary for an existing Cartesian QW route.
+
+The supported routes mirror existing QW entry points for direct-product and
+nested fixed-block Cartesian inputs. This helper validates the same backend and
+interaction capability metadata as the current builders, but it does not build
+operators or numerical packets.
+"""
+function cartesian_qw_operator_build_source(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+)
+    context = _normalized_bond_aligned_build_context(basis)
+    return _bond_aligned_build_source(
+        context,
+        basis,
+        nothing,
+        :bond_aligned_direct_product_input;
+        nuclear_charges,
+        nuclear_term_storage,
+        interaction_treatment,
+        gausslet_backend,
+    )
+end
+
+function cartesian_qw_operator_build_source(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+)
+    context = _normalized_bond_aligned_build_context(fixed_block)
+    return _bond_aligned_build_source(
+        context,
+        fixed_block,
+        nothing,
+        :bond_aligned_nested_fixed_block_input;
+        nuclear_charges,
+        nuclear_term_storage,
+        interaction_treatment,
+        gausslet_backend,
+    )
+end
+
+function cartesian_qw_operator_build_source(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :numerical_reference,
+)
+    context = _normalized_bond_aligned_build_context(basis, gaussian_data)
+    return _bond_aligned_build_source(
+        context,
+        basis,
+        gaussian_data,
+        :bond_aligned_molecular_direct_product_input;
+        nuclear_charges,
+        nuclear_term_storage,
+        interaction_treatment,
+        gausslet_backend,
+    )
+end
+
+function cartesian_qw_operator_build_source(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :numerical_reference,
+)
+    context = _normalized_bond_aligned_build_context(fixed_block, gaussian_data)
+    return _bond_aligned_build_source(
+        context,
+        fixed_block,
+        gaussian_data,
+        :bond_aligned_molecular_nested_fixed_block_input;
+        nuclear_charges,
+        nuclear_term_storage,
+        interaction_treatment,
+        gausslet_backend,
+    )
+end
+
+function _atomic_build_source(
+    context,
+    carried_source,
+    gaussian_data::LegacyAtomicGaussianSupplement,
+    input_kind::Symbol;
+    Z::Real,
+    interaction_treatment::Symbol,
+    gausslet_backend::Symbol,
+    nuclear_term_storage::Symbol,
+)
+    nuclear_term_storage == :total_only || throw(
+        ArgumentError("atomic QW operator build source currently supports nuclear_term_storage = :total_only"),
+    )
+    resolved_gausslet_backend = _resolve_atomic_qw_gausslet_backend(context, gausslet_backend)
+    _validate_operator_route_backend(context, resolved_gausslet_backend)
+    _validate_atomic_qw_nested_backend_consistency(context, resolved_gausslet_backend)
+    _validate_operator_route_interaction_treatment(context, interaction_treatment)
+    return _cartesian_operator_build_source(
+        context,
+        carried_source,
+        gaussian_data,
+        input_kind;
+        basis_family = :one_center_atomic,
+        nuclei = NTuple{3,Float64}[(0.0, 0.0, 0.0)],
+        nuclear_charges = Float64[Float64(Z)],
+        gausslet_backend = resolved_gausslet_backend,
+        requested_gausslet_backend = gausslet_backend,
+        interaction_treatment,
+        nuclear_term_storage = :total_only,
+        requested_nuclear_term_storage = nuclear_term_storage,
+    )
+end
+
+function cartesian_qw_operator_build_source(
+    basis::MappedUniformBasis,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    Z::Real = 2.0,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :auto,
+    nuclear_term_storage::Symbol = :total_only,
+)
+    context = _normalized_atomic_build_context(basis, gaussian_data)
+    return _atomic_build_source(
+        context,
+        basis,
+        gaussian_data,
+        :atomic_direct_product_input;
+        Z,
+        interaction_treatment,
+        gausslet_backend,
+        nuclear_term_storage,
+    )
+end
+
+function cartesian_qw_operator_build_source(
+    fixed_block::_NestedFixedBlock3D,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    Z::Real = 2.0,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :auto,
+    nuclear_term_storage::Symbol = :total_only,
+)
+    context = _normalized_atomic_build_context(fixed_block, gaussian_data)
+    return _atomic_build_source(
+        context,
+        fixed_block,
+        gaussian_data,
+        :atomic_nested_fixed_block_input;
+        Z,
+        interaction_treatment,
+        gausslet_backend,
+        nuclear_term_storage,
     )
 end
 

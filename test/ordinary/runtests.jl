@@ -889,6 +889,36 @@ end
         @test endcap_mwg.overlap == endcap_overlap_before
         @test endcap_mwg.one_body_hamiltonian == endcap_one_body_before
         @test endcap_mwg.interaction_matrix == endcap_interaction_before
+
+        endcap_build_source = QWCS.cartesian_qw_operator_build_source(
+            endcap_fixed,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = :by_center,
+            interaction_treatment = endcap_mwg.interaction_treatment,
+            gausslet_backend = endcap_mwg.gausslet_backend,
+        )
+        endcap_build_diagnostics =
+            QWCS.operator_build_source_diagnostics(endcap_build_source)
+        @test QWCS.operator_build_source_provenance(endcap_build_source).input_kind ==
+              :bond_aligned_molecular_nested_fixed_block_input
+        @test endcap_build_source.basis_family == :bond_aligned_diatomic
+        @test endcap_build_source.carried_space_kind == :nested_fixed_block
+        @test endcap_build_source.nuclear_charges == endcap_mwg.nuclear_charges
+        @test endcap_build_source.gausslet_backend == endcap_mwg.gausslet_backend
+        @test endcap_build_source.interaction_treatment == endcap_mwg.interaction_treatment
+        @test endcap_build_source.nuclear_term_storage == endcap_mwg.nuclear_term_storage
+        @test endcap_build_diagnostics.carried_dimension ==
+              endcap_sidecar_diagnostics.carried_dimension
+        @test endcap_build_diagnostics.carried_has_contracted_parent ==
+              endcap_sidecar_diagnostics.carried_has_contracted_parent
+        @test endcap_build_diagnostics.carried_has_staged_sidecar ==
+              endcap_sidecar_diagnostics.carried_has_staged_sidecar
+        @test endcap_build_diagnostics.carried_staged_by_center_path ==
+              endcap_sidecar_diagnostics.carried_staged_by_center_path
+        @test endcap_build_diagnostics.dense_parent_matrix_used == false
+        @test endcap_build_diagnostics.heavy_metric_packet_built == false
+        @test endcap_build_diagnostics.operator_built == false
     end
 end
 
