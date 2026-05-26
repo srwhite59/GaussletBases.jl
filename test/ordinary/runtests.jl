@@ -2653,6 +2653,7 @@ end
     if !_legacy_basisfile_available()
         @test true
     else
+        QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
         hybrid_basis = diatomic_basis
         hybrid_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
             "H",
@@ -2720,6 +2721,86 @@ end
               hybrid_localized.gausslet_count + hybrid_localized.residual_count
         @test size(hybrid_nested_localized.raw_to_final, 2) ==
               hybrid_nested_localized.gausslet_count + hybrid_nested_localized.residual_count
+
+        hybrid_direct_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            hybrid_basis,
+            hybrid_supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = hybrid_localized.nuclear_term_storage,
+            interaction_treatment = hybrid_localized.interaction_treatment,
+            gausslet_backend = hybrid_localized.gausslet_backend,
+        )
+        hybrid_direct_receipt_source =
+            QWCS.qw_operator_construction_receipt_source(hybrid_direct_receipt)
+        hybrid_direct_receipt_ops =
+            QWCS.qw_operator_construction_receipt_operators(hybrid_direct_receipt)
+        hybrid_direct_receipt_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(hybrid_direct_receipt)
+        @test QWCS.operator_build_source_provenance(hybrid_direct_receipt_source).input_kind ==
+              :bond_aligned_molecular_direct_product_input
+        @test hybrid_direct_receipt_source.gausslet_backend == hybrid_localized.gausslet_backend
+        @test hybrid_direct_receipt_source.nuclear_term_storage ==
+              hybrid_localized.nuclear_term_storage
+        @test hybrid_direct_receipt_diagnostics.delegated_to_existing_builder
+        @test hybrid_direct_receipt_diagnostics.source_sidecar_agree
+        @test isempty(hybrid_direct_receipt_diagnostics.mismatch_fields)
+        @test :nuclear_charges in hybrid_direct_receipt_diagnostics.forwarded_keyword_names
+        @test :nuclear_term_storage in hybrid_direct_receipt_diagnostics.forwarded_keyword_names
+        @test hybrid_direct_receipt_diagnostics.dense_parent_matrix_used == false
+        @test hybrid_direct_receipt_diagnostics.heavy_metric_packet_built == false
+        @test hybrid_direct_receipt_diagnostics.new_hamiltonian_kernel_used == false
+        @test hybrid_direct_receipt_ops.overlap == hybrid_localized.overlap
+        @test hybrid_direct_receipt_ops.one_body_hamiltonian ==
+              hybrid_localized.one_body_hamiltonian
+        @test hybrid_direct_receipt_ops.interaction_matrix == hybrid_localized.interaction_matrix
+        @test hybrid_direct_receipt_ops.gausslet_backend == hybrid_localized.gausslet_backend
+        @test hybrid_direct_receipt_ops.nuclear_term_storage ==
+              hybrid_localized.nuclear_term_storage
+
+        heteronuclear_supplement =
+            legacy_bond_aligned_heteronuclear_gaussian_supplement(
+                "He",
+                "cc-pVTZ",
+                "H",
+                "cc-pVTZ",
+                heteronuclear_basis.nuclei;
+                lmax = 0,
+                max_width = 1.0,
+            )
+        heteronuclear_supplement_direct = ordinary_cartesian_qiu_white_operators(
+            heteronuclear_basis,
+            heteronuclear_supplement;
+            nuclear_charges = [2.0, 1.0],
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        heteronuclear_supplement_receipt =
+            QWCS.cartesian_qw_operator_construction_receipt(
+                heteronuclear_basis,
+                heteronuclear_supplement;
+                nuclear_charges = [2.0, 1.0],
+                nuclear_term_storage = :by_center,
+                interaction_treatment = :ggt_nearest,
+                gausslet_backend = :numerical_reference,
+            )
+        heteronuclear_supplement_receipt_ops =
+            QWCS.qw_operator_construction_receipt_operators(
+                heteronuclear_supplement_receipt,
+            )
+        heteronuclear_supplement_receipt_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(
+                heteronuclear_supplement_receipt,
+            )
+        @test heteronuclear_supplement_receipt_diagnostics.source_sidecar_agree
+        @test isempty(heteronuclear_supplement_receipt_diagnostics.mismatch_fields)
+        @test heteronuclear_supplement_receipt_ops.overlap ==
+              heteronuclear_supplement_direct.overlap
+        @test heteronuclear_supplement_receipt_ops.one_body_hamiltonian ==
+              heteronuclear_supplement_direct.one_body_hamiltonian
+        @test heteronuclear_supplement_receipt_ops.interaction_matrix ==
+              heteronuclear_supplement_direct.interaction_matrix
+
         @test isfinite(hybrid_localized_check.orbital_energy)
         @test isfinite(hybrid_localized_check.vee_expectation)
         @test isfinite(hybrid_nested_localized_check.orbital_energy)

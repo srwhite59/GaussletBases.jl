@@ -1099,6 +1099,45 @@ function cartesian_qw_operator_construction_receipt(
 end
 
 function cartesian_qw_operator_construction_receipt(
+    basis::BondAlignedDiatomicQWBasis3D,
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :numerical_reference,
+    kwargs...,
+)
+    forwarded_keyword_names = (:nuclear_charges, :nuclear_term_storage,
+        :interaction_treatment, :gausslet_backend, keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        basis,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :bond_aligned_molecular_direct_product_input,
+        forwarded_keyword_names,
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
     gaussian_data::Union{
         LegacyBondAlignedDiatomicGaussianSupplement,
