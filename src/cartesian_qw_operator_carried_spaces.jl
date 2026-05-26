@@ -36,6 +36,7 @@ export CartesianQWOperatorCarriedSpaceSidecar,
        cartesian_qw_operator_build_source,
        cartesian_qw_operator_construction_record,
        cartesian_qw_operator_construction_receipt,
+       cartesian_qw_operator_receipt_coverage,
        qw_operator_carried_space,
        qw_operator_basis_representation,
        qw_operator_carried_space_diagnostics,
@@ -179,6 +180,84 @@ qw_operator_construction_receipt_diagnostics(
 qw_operator_construction_receipt_provenance(
     receipt::CartesianQWOperatorConstructionReceipt3D,
 ) = receipt.provenance
+
+const _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE = (
+    contract = :delegate_plus_audit_only,
+    covered_route_families = (
+        (
+            route_family = :bond_aligned_direct_product,
+            input_kind = :bond_aligned_direct_product_input,
+            inputs = "AbstractBondAlignedOrdinaryQWBasis3D",
+            supplement = nothing,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+        (
+            route_family = :bond_aligned_nested_fixed_block,
+            input_kind = :bond_aligned_nested_fixed_block_input,
+            inputs = "_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D}",
+            supplement = nothing,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+        (
+            route_family = :atomic_direct_product_supplement,
+            input_kind = :atomic_direct_product_input,
+            inputs = "MappedUniformBasis + LegacyAtomicGaussianSupplement",
+            supplement = :legacy_atomic_gaussian,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+        (
+            route_family = :atomic_nested_fixed_block_supplement,
+            input_kind = :atomic_nested_fixed_block_input,
+            inputs = "_NestedFixedBlock3D + LegacyAtomicGaussianSupplement",
+            supplement = :legacy_atomic_gaussian,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+        (
+            route_family = :bond_aligned_molecular_direct_product_supplement,
+            input_kind = :bond_aligned_molecular_direct_product_input,
+            inputs = "BondAlignedDiatomicQWBasis3D + molecular LegacyGaussianSupplement",
+            supplement = :legacy_bond_aligned_molecular_gaussian,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+        (
+            route_family = :bond_aligned_molecular_nested_fixed_block_supplement,
+            input_kind = :bond_aligned_molecular_nested_fixed_block_input,
+            inputs = "_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D} + molecular LegacyGaussianSupplement",
+            supplement = :legacy_bond_aligned_molecular_gaussian,
+            builder = :ordinary_cartesian_qiu_white_operators,
+            status = :covered,
+        ),
+    ),
+    intentionally_uncovered_route_families = (
+        (
+            route_family = :alias_frontends,
+            inputs = "ordinary_cartesian_product_operators / nested_cartesian_operators",
+            reason = "aliases remain direct-builder-only; call the receipt helper with the underlying canonical basis or fixed-block inputs",
+        ),
+        (
+            route_family = :already_built_operators,
+            inputs = "OrdinaryCartesianOperators3D",
+            reason = "receipts are pre-build wrappers; use cartesian_qw_operator_construction_record or cartesian_qw_operator_carried_space_sidecar for already-built operators",
+        ),
+        (
+            route_family = :non_diatomic_molecular_supplement,
+            inputs = "chain/square or arbitrary fixed-block inputs with molecular LegacyGaussianSupplement",
+            reason = "there is no existing direct molecular supplement builder route to delegate to",
+        ),
+        (
+            route_family = :atomic_without_supplement,
+            inputs = "MappedUniformBasis without LegacyAtomicGaussianSupplement",
+            reason = "the receipt layer currently covers QW supplement or bond-aligned product routes, not mapped one-body-only helpers",
+        ),
+    ),
+)
+
+cartesian_qw_operator_receipt_coverage() = _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE
 
 function _qw_operator_carried_source(operators::OrdinaryCartesianOperators3D)
     basis = operators.basis
@@ -1174,6 +1253,36 @@ function cartesian_qw_operator_construction_receipt(
         :bond_aligned_molecular_nested_fixed_block_input,
         forwarded_keyword_names,
     )
+end
+
+function _cartesian_qw_operator_receipt_supported_input_summary()
+    coverage = cartesian_qw_operator_receipt_coverage()
+    return join((row.inputs for row in coverage.covered_route_families), "; ")
+end
+
+function _cartesian_qw_operator_receipt_unsupported_detail(args)
+    isempty(args) && return "no receipt input was provided"
+    first_arg = args[1]
+    if first_arg isa Function
+        return "receipt wrappers do not accept frontend/alias function objects; call cartesian_qw_operator_construction_receipt with the underlying basis, fixed block, and optional supplement inputs"
+    elseif first_arg isa OrdinaryCartesianOperators3D
+        return "received an already-built OrdinaryCartesianOperators3D payload; use cartesian_qw_operator_construction_record or cartesian_qw_operator_carried_space_sidecar for post-build audits"
+    else
+        return "first input type $(typeof(first_arg)) is not in the receipt coverage table"
+    end
+end
+
+function _cartesian_qw_operator_receipt_unsupported_error(args)
+    input_types = isempty(args) ? "()" : join(string.(typeof.(args)), ", ")
+    detail = _cartesian_qw_operator_receipt_unsupported_detail(args)
+    supported = _cartesian_qw_operator_receipt_supported_input_summary()
+    return ArgumentError(
+        "unsupported Cartesian QW operator construction receipt route for input types ($input_types): $detail. Supported receipt input families: $supported. The receipt helper is a delegate/audit wrapper only and will not guess aliases or synthesize new Hamiltonian routes.",
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(args...; kwargs...)
+    throw(_cartesian_qw_operator_receipt_unsupported_error(args))
 end
 
 end

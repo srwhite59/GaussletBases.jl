@@ -2442,6 +2442,7 @@ end
         return reference, localized, reference_check, localized_check
     end
 
+    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     expansion = coulomb_gaussian_expansion(doacc = false)
     mapped_basis = build_basis(MappedUniformBasisSpec(:G10;
         count = 5,
@@ -2650,10 +2651,48 @@ end
     @test isfinite(nested_chain_localized_check.vee_expectation)
     @test isfinite(nested_square_localized_check.vee_expectation)
 
+    receipt_coverage = QWCS.cartesian_qw_operator_receipt_coverage()
+    receipt_covered_input_kinds =
+        Set(map(row -> row.input_kind, receipt_coverage.covered_route_families))
+    receipt_uncovered_route_families =
+        Set(map(row -> row.route_family, receipt_coverage.intentionally_uncovered_route_families))
+    @test receipt_coverage.contract == :delegate_plus_audit_only
+    @test receipt_covered_input_kinds == Set((
+        :bond_aligned_direct_product_input,
+        :bond_aligned_nested_fixed_block_input,
+        :atomic_direct_product_input,
+        :atomic_nested_fixed_block_input,
+        :bond_aligned_molecular_direct_product_input,
+        :bond_aligned_molecular_nested_fixed_block_input,
+    ))
+    @test all(
+        row -> row.builder == :ordinary_cartesian_qiu_white_operators &&
+               row.status == :covered,
+        receipt_coverage.covered_route_families,
+    )
+    @test :alias_frontends in receipt_uncovered_route_families
+    @test :already_built_operators in receipt_uncovered_route_families
+    @test :non_diatomic_molecular_supplement in receipt_uncovered_route_families
+    @test :atomic_without_supplement in receipt_uncovered_route_families
+
+    alias_receipt_error_text = _argument_error_text(() ->
+        QWCS.cartesian_qw_operator_construction_receipt(
+            GaussletBases.ordinary_cartesian_product_operators,
+            diatomic_basis,
+        )
+    )
+    @test occursin("frontend/alias function objects", alias_receipt_error_text)
+    @test occursin("underlying basis, fixed block", alias_receipt_error_text)
+
+    post_build_receipt_error_text = _argument_error_text(() ->
+        QWCS.cartesian_qw_operator_construction_receipt(diatomic_localized)
+    )
+    @test occursin("already-built OrdinaryCartesianOperators3D", post_build_receipt_error_text)
+    @test occursin("cartesian_qw_operator_construction_record", post_build_receipt_error_text)
+
     if !_legacy_basisfile_available()
         @test true
     else
-        QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
         hybrid_basis = diatomic_basis
         hybrid_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
             "H",
