@@ -69,6 +69,136 @@ function _validate_nuclear_term_storage(storage::Symbol)
     return storage
 end
 
+function _qwrg_square_dimension(matrix::AbstractMatrix, label::AbstractString)
+    size(matrix, 1) == size(matrix, 2) || throw(
+        DimensionMismatch("ordinary QW final packaging requires square $(label)"),
+    )
+    return size(matrix, 1)
+end
+
+function _qwrg_zero_residual_matrix()
+    return zeros(Float64, 0, 3)
+end
+
+function _qwrg_finalize_ordinary_cartesian_operators(
+    basis,
+    gaussian_data,
+    gausslet_backend::Symbol,
+    interaction_treatment::Symbol,
+    expansion::CoulombGaussianExpansion;
+    overlap::AbstractMatrix{<:Real},
+    one_body_hamiltonian::AbstractMatrix{<:Real},
+    interaction_matrix::AbstractMatrix{<:Real},
+    orbital_data::AbstractVector{<:OrdinaryCartesianOrbital3D},
+    gausslet_count::Integer,
+    raw_to_final::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    residual_centers::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    residual_widths::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    residual_nucleus_indices::Union{Nothing,AbstractVector{<:Integer}} = nothing,
+    nuclear_charges::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    kinetic_one_body::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    nuclear_one_body_by_center::Union{Nothing,AbstractVector{<:AbstractMatrix{<:Real}}} = nothing,
+    nuclear_term_storage::Symbol = :total_only,
+)
+    final_dimension = _qwrg_square_dimension(overlap, "overlap matrix")
+    _qwrg_square_dimension(one_body_hamiltonian, "one-body matrix") == final_dimension || throw(
+        DimensionMismatch("ordinary QW final packaging requires one-body dimension to match overlap"),
+    )
+    _qwrg_square_dimension(interaction_matrix, "interaction matrix") == final_dimension || throw(
+        DimensionMismatch("ordinary QW final packaging requires interaction dimension to match overlap"),
+    )
+
+    gausslet_count_value = Int(gausslet_count)
+    0 <= gausslet_count_value <= final_dimension || throw(
+        ArgumentError("ordinary QW final packaging requires 0 <= gausslet_count <= final dimension"),
+    )
+    residual_count = final_dimension - gausslet_count_value
+    length(orbital_data) == final_dimension || throw(
+        DimensionMismatch("ordinary QW final packaging requires one orbital record per final basis function"),
+    )
+
+    isnothing(raw_to_final) && residual_count != 0 && throw(
+        ArgumentError("ordinary QW final packaging requires raw_to_final when residual_count > 0"),
+    )
+    raw_to_final_matrix = isnothing(raw_to_final) ?
+        Matrix{Float64}(I, final_dimension, final_dimension) :
+        Matrix{Float64}(raw_to_final)
+    size(raw_to_final_matrix, 2) == final_dimension || throw(
+        DimensionMismatch("ordinary QW final packaging requires raw_to_final columns to match final dimension"),
+    )
+
+    isnothing(residual_centers) && residual_count != 0 && throw(
+        ArgumentError("ordinary QW final packaging requires residual_centers when residual_count > 0"),
+    )
+    isnothing(residual_widths) && residual_count != 0 && throw(
+        ArgumentError("ordinary QW final packaging requires residual_widths when residual_count > 0"),
+    )
+    residual_centers_matrix = isnothing(residual_centers) ?
+        _qwrg_zero_residual_matrix() :
+        Matrix{Float64}(residual_centers)
+    residual_widths_matrix = isnothing(residual_widths) ?
+        _qwrg_zero_residual_matrix() :
+        Matrix{Float64}(residual_widths)
+    size(residual_centers_matrix) == (residual_count, 3) || throw(
+        DimensionMismatch("ordinary QW final packaging requires residual_centers size to match residual count"),
+    )
+    size(residual_widths_matrix) == (residual_count, 3) || throw(
+        DimensionMismatch("ordinary QW final packaging requires residual_widths size to match residual count"),
+    )
+    residual_nucleus_indices_value = isnothing(residual_nucleus_indices) ?
+        zeros(Int, residual_count) :
+        Int[Int(index) for index in residual_nucleus_indices]
+    length(residual_nucleus_indices_value) == residual_count || throw(
+        DimensionMismatch("ordinary QW final packaging requires one residual owner index per residual"),
+    )
+
+    nuclear_charges_value = isnothing(nuclear_charges) ?
+        nothing :
+        Float64[Float64(value) for value in nuclear_charges]
+    kinetic_one_body_value = isnothing(kinetic_one_body) ?
+        nothing :
+        Matrix{Float64}(kinetic_one_body)
+    nuclear_one_body_by_center_value = isnothing(nuclear_one_body_by_center) ?
+        nothing :
+        [Matrix{Float64}(matrix) for matrix in nuclear_one_body_by_center]
+
+    if !isnothing(kinetic_one_body_value)
+        _qwrg_square_dimension(kinetic_one_body_value, "stored kinetic one-body matrix") ==
+            final_dimension || throw(
+                DimensionMismatch("ordinary QW final packaging requires stored kinetic dimension to match overlap"),
+            )
+    end
+    if !isnothing(nuclear_one_body_by_center_value)
+        for matrix in nuclear_one_body_by_center_value
+            _qwrg_square_dimension(matrix, "stored nuclear one-body matrix") == final_dimension || throw(
+                DimensionMismatch("ordinary QW final packaging requires stored nuclear one-body dimensions to match overlap"),
+            )
+        end
+    end
+
+    return OrdinaryCartesianOperators3D(
+        basis,
+        gaussian_data,
+        gausslet_backend,
+        interaction_treatment,
+        expansion,
+        Matrix{Float64}(overlap),
+        Matrix{Float64}(one_body_hamiltonian),
+        Matrix{Float64}(interaction_matrix),
+        OrdinaryCartesianOrbital3D[orbital for orbital in orbital_data],
+        gausslet_count_value,
+        residual_count,
+        raw_to_final_matrix,
+        residual_centers_matrix,
+        residual_widths_matrix,
+        residual_nucleus_indices_value,
+        nuclear_charges_value,
+        kinetic_one_body_value,
+        nuclear_one_body_by_center_value,
+        _validate_nuclear_term_storage(nuclear_term_storage),
+    )
+end
+
 struct _QWRGBondAlignedBuildContext{
     PB,
     C,
@@ -1414,29 +1544,30 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_direct(
     zero_residual_centers = zeros(Float64, 0, 3)
     zero_residual_widths = zeros(Float64, 0, 3)
 
-    return OrdinaryCartesianOperators3D(
+    return _qwrg_finalize_ordinary_cartesian_operators(
         basis,
         nothing,
         gausslet_backend,
         interaction_treatment,
-        expansion,
+        expansion;
         overlap,
         one_body_hamiltonian,
         interaction_matrix,
-        _qwrg_orbital_data(
+        orbital_data = _qwrg_orbital_data(
             gausslet_orbitals,
             zero_residual_centers,
             zero_residual_widths,
         ),
         gausslet_count,
-        0,
-        Matrix{Float64}(I, gausslet_count, gausslet_count),
-        zero_residual_centers,
-        zero_residual_widths,
-        Float64[Float64(value) for value in nuclear_charges],
-        resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(kinetic_one_body) : nothing,
-        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
-        resolved_nuclear_term_storage,
+        raw_to_final = Matrix{Float64}(I, gausslet_count, gausslet_count),
+        residual_centers = zero_residual_centers,
+        residual_widths = zero_residual_widths,
+        nuclear_charges,
+        kinetic_one_body =
+            resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
+        nuclear_one_body_by_center =
+            resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        nuclear_term_storage = resolved_nuclear_term_storage,
     )
 end
 
