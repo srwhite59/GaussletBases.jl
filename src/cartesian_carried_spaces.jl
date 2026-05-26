@@ -5,7 +5,9 @@ import ..GaussletBases:
     BondAlignedDiatomicQWBasis3D,
     BondAlignedHomonuclearChainQWBasis3D,
     CartesianBasisRepresentation3D,
+    MappedUniformBasis,
     _NestedFixedBlock3D,
+    _cartesian_direct_product_representation,
     basis_representation
 import ..GaussletBases.CartesianContractedParents:
     CartesianContractedParent3D,
@@ -225,6 +227,18 @@ cartesian_carried_space(basis::BondAlignedHomonuclearChainQWBasis3D) =
 
 cartesian_carried_space(basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D) =
     _direct_product_carried_space(basis, :axis_aligned_homonuclear_square_lattice_qw_basis)
+
+function cartesian_carried_space(basis::MappedUniformBasis)
+    parent = cartesian_parent_gausslet_basis(basis)
+    representation = _cartesian_direct_product_representation(basis)
+    return _cartesian_carried_space(
+        basis,
+        :mapped_uniform_same_axis_qw_basis,
+        parent,
+        nothing,
+        representation,
+    )
+end
 
 """
     cartesian_carried_space(representation; parent, contracted_parent=nothing)

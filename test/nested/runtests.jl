@@ -922,6 +922,8 @@ end
 end
 
 @testset "Cartesian nested fixed-block QW-PGDG adapter" begin
+    CCS = GaussletBases.CartesianCarriedSpaces
+    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     (
         basis,
         bundle,
@@ -969,6 +971,32 @@ end
     @test nested_check.vee_expectation > 0.0
     @test any(orbital.kind == :nested_fixed for orbital in orbitals(nested))
     @test all(startswith(orbital.label, "nf") for orbital in orbitals(nested)[1:nested.gausslet_count])
+
+    overlap_before = copy(nested.overlap)
+    one_body_before = copy(nested.one_body_hamiltonian)
+    interaction_before = copy(nested.interaction_matrix)
+    nested_sidecar = QWCS.cartesian_qw_operator_carried_space_sidecar(nested)
+    nested_carried = QWCS.qw_operator_carried_space(nested_sidecar)
+    nested_representation = QWCS.qw_operator_basis_representation(nested_sidecar)
+    nested_diagnostics = QWCS.qw_operator_carried_space_diagnostics(nested_sidecar)
+    @test QWCS.qw_operator_carried_space_provenance(nested_sidecar).input_kind ==
+        :nested_fixed_block_operator
+    @test nested_carried isa CCS.CartesianCarriedSpace3D
+    @test nested_representation isa CartesianBasisRepresentation3D
+    @test nested_diagnostics.operator_dimension == size(nested.overlap, 1)
+    @test nested_diagnostics.operator_gausslet_count == nested.gausslet_count
+    @test nested_diagnostics.operator_residual_count == nested.residual_count
+    @test nested_diagnostics.raw_parent_dimension == size(nested.raw_to_final, 1)
+    @test nested_diagnostics.carried_dimension == size(fixed_block.overlap, 1)
+    @test nested_diagnostics.carried_dimension_matches_operator_gausslet_count
+    @test nested_diagnostics.operator_representation_matches_operator_dimension
+    @test nested_diagnostics.carried_has_contracted_parent
+    @test nested_diagnostics.carried_has_staged_sidecar == false
+    @test nested_diagnostics.dense_parent_matrix_used == false
+    @test nested_diagnostics.heavy_metric_packet_built == false
+    @test nested.overlap == overlap_before
+    @test nested.one_body_hamiltonian == one_body_before
+    @test nested.interaction_matrix == interaction_before
 
     @test shell_plus_core isa GaussletBases._CartesianNestedShellPlusCore3D
     @test fixed_block_shell_plus_core isa GaussletBases._NestedFixedBlock3D
@@ -1636,7 +1664,8 @@ end
 @testset "Cartesian basis representation for direct-product QW bases" begin
     CP = GaussletBases.CartesianParentGaussletBases
     CCS = GaussletBases.CartesianCarriedSpaces
-    basis, _operators, _check = _bond_aligned_diatomic_qw_fixture()
+    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
+    basis, operators, _check = _bond_aligned_diatomic_qw_fixture()
     representation = basis_representation(basis)
     metadata = basis_metadata(representation)
     chain_basis, _chain_ops, _chain_diagnostics = _bond_aligned_homonuclear_chain_qw_fixture()
@@ -1695,6 +1724,31 @@ end
         square_representation.metadata.parent_axis_counts
     @test CCS.carried_space_provenance(square_carried).input_kind ==
         :axis_aligned_homonuclear_square_lattice_qw_basis
+
+    overlap_before = copy(operators.overlap)
+    one_body_before = copy(operators.one_body_hamiltonian)
+    interaction_before = copy(operators.interaction_matrix)
+    operator_sidecar = QWCS.cartesian_qw_operator_carried_space_sidecar(operators)
+    operator_carried = QWCS.qw_operator_carried_space(operator_sidecar)
+    operator_representation = QWCS.qw_operator_basis_representation(operator_sidecar)
+    operator_diagnostics = QWCS.qw_operator_carried_space_diagnostics(operator_sidecar)
+    @test QWCS.qw_operator_carried_space_provenance(operator_sidecar).input_kind ==
+        :bond_aligned_direct_product_operator
+    @test operator_carried isa CCS.CartesianCarriedSpace3D
+    @test operator_representation isa CartesianBasisRepresentation3D
+    @test operator_diagnostics.operator_dimension == size(operators.overlap, 1)
+    @test operator_diagnostics.operator_gausslet_count == operators.gausslet_count
+    @test operator_diagnostics.operator_residual_count == operators.residual_count
+    @test operator_diagnostics.carried_dimension == metadata.final_dimension
+    @test operator_diagnostics.carried_dimension_matches_operator_gausslet_count
+    @test operator_diagnostics.operator_representation_matches_operator_dimension
+    @test operator_diagnostics.carried_has_contracted_parent == false
+    @test operator_diagnostics.carried_has_staged_sidecar == false
+    @test operator_diagnostics.dense_parent_matrix_used == false
+    @test operator_diagnostics.heavy_metric_packet_built == false
+    @test operators.overlap == overlap_before
+    @test operators.one_body_hamiltonian == one_body_before
+    @test operators.interaction_matrix == interaction_before
 end
 
 @testset "Cartesian parent gausslet basis identity" begin

@@ -864,6 +864,31 @@ end
         @test all(>(0.0), endcap_mwg.residual_widths)
         @test endcap_nearest.residual_nucleus_indices == endcap_mwg.residual_nucleus_indices
         @test Set(endcap_mwg.residual_nucleus_indices) == Set([1, 2])
+
+        QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
+        endcap_overlap_before = copy(endcap_mwg.overlap)
+        endcap_one_body_before = copy(endcap_mwg.one_body_hamiltonian)
+        endcap_interaction_before = copy(endcap_mwg.interaction_matrix)
+        endcap_sidecar = QWCS.cartesian_qw_operator_carried_space_sidecar(endcap_mwg)
+        endcap_sidecar_diagnostics =
+            QWCS.qw_operator_carried_space_diagnostics(endcap_sidecar)
+        @test QWCS.qw_operator_carried_space_provenance(endcap_sidecar).input_kind ==
+              :nested_fixed_block_operator
+        @test endcap_sidecar_diagnostics.operator_dimension == size(endcap_mwg.overlap, 1)
+        @test endcap_sidecar_diagnostics.operator_gausslet_count == endcap_mwg.gausslet_count
+        @test endcap_sidecar_diagnostics.operator_residual_count == endcap_mwg.residual_count
+        @test endcap_sidecar_diagnostics.carried_dimension == size(endcap_fixed.overlap, 1)
+        @test endcap_sidecar_diagnostics.carried_dimension_matches_operator_gausslet_count
+        @test endcap_sidecar_diagnostics.operator_representation_matches_operator_dimension
+        @test endcap_sidecar_diagnostics.carried_has_contracted_parent
+        @test endcap_sidecar_diagnostics.carried_has_staged_sidecar
+        @test endcap_sidecar_diagnostics.carried_staged_by_center_path ==
+              :product_staged_factorized
+        @test endcap_sidecar_diagnostics.dense_parent_matrix_used == false
+        @test endcap_sidecar_diagnostics.heavy_metric_packet_built == false
+        @test endcap_mwg.overlap == endcap_overlap_before
+        @test endcap_mwg.one_body_hamiltonian == endcap_one_body_before
+        @test endcap_mwg.interaction_matrix == endcap_interaction_before
     end
 end
 
