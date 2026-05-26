@@ -919,6 +919,33 @@ end
         @test endcap_build_diagnostics.dense_parent_matrix_used == false
         @test endcap_build_diagnostics.heavy_metric_packet_built == false
         @test endcap_build_diagnostics.operator_built == false
+
+        endcap_record =
+            QWCS.cartesian_qw_operator_construction_record(endcap_build_source, endcap_mwg)
+        endcap_record_diagnostics =
+            QWCS.qw_operator_construction_record_diagnostics(endcap_record)
+        @test endcap_record_diagnostics.source_sidecar_agree
+        @test isempty(endcap_record_diagnostics.mismatch_fields)
+        @test isempty(endcap_record_diagnostics.ambiguous_mismatch_fields)
+        @test :operator_input_kind in endcap_record_diagnostics.compared_fields
+        @test :gausslet_backend in endcap_record_diagnostics.compared_fields
+        @test :nuclear_term_storage in endcap_record_diagnostics.compared_fields
+        @test :carried_has_staged_sidecar in endcap_record_diagnostics.compared_fields
+        @test endcap_record_diagnostics.source_basis_family == :bond_aligned_diatomic
+        @test endcap_record_diagnostics.source_carried_space_kind == :nested_fixed_block
+        @test endcap_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
+        @test endcap_record_diagnostics.source_sidecar_agree
+        @test endcap_record_diagnostics.numerical_outputs_changed == false
+        @test endcap_record_diagnostics.dense_parent_matrix_used == false
+        @test endcap_record_diagnostics.heavy_metric_packet_built == false
+        @test endcap_record_diagnostics.operator_built == false
+        @test QWCS.qw_operator_construction_record_sidecar(endcap_record) isa
+              QWCS.CartesianQWOperatorCarriedSpaceSidecar
+        @test QWCS.qw_operator_construction_record_provenance(endcap_record).source ==
+              :cartesian_qw_operator_construction_record
+        @test endcap_mwg.overlap == endcap_overlap_before
+        @test endcap_mwg.one_body_hamiltonian == endcap_one_body_before
+        @test endcap_mwg.interaction_matrix == endcap_interaction_before
     end
 end
 

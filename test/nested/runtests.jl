@@ -1024,6 +1024,32 @@ end
     @test nested_build_diagnostics.heavy_metric_packet_built == false
     @test nested_build_diagnostics.operator_built == false
 
+    nested_record =
+        QWCS.cartesian_qw_operator_construction_record(nested_build_source, nested)
+    nested_record_diagnostics =
+        QWCS.qw_operator_construction_record_diagnostics(nested_record)
+    @test nested_record_diagnostics.source_sidecar_agree
+    @test isempty(nested_record_diagnostics.mismatch_fields)
+    @test isempty(nested_record_diagnostics.ambiguous_mismatch_fields)
+    @test :gausslet_backend in nested_record_diagnostics.compared_fields
+    @test :nuclear_term_storage in nested_record_diagnostics.compared_fields
+    @test :nuclear_charges in nested_record_diagnostics.compared_fields
+    @test :carried_dimension in nested_record_diagnostics.compared_fields
+    @test nested_record_diagnostics.source_basis_family == :one_center_atomic
+    @test nested_record_diagnostics.source_carried_space_kind == :nested_fixed_block
+    @test nested_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
+    @test nested_record_diagnostics.numerical_outputs_changed == false
+    @test nested_record_diagnostics.dense_parent_matrix_used == false
+    @test nested_record_diagnostics.heavy_metric_packet_built == false
+    @test nested_record_diagnostics.operator_built == false
+    @test QWCS.qw_operator_construction_record_sidecar(nested_record) isa
+        QWCS.CartesianQWOperatorCarriedSpaceSidecar
+    @test QWCS.qw_operator_construction_record_provenance(nested_record).source ==
+        :cartesian_qw_operator_construction_record
+    @test nested.overlap == overlap_before
+    @test nested.one_body_hamiltonian == one_body_before
+    @test nested.interaction_matrix == interaction_before
+
     @test shell_plus_core isa GaussletBases._CartesianNestedShellPlusCore3D
     @test fixed_block_shell_plus_core isa GaussletBases._NestedFixedBlock3D
     @test fixed_block_shell_plus_core.parent_basis === basis
@@ -1802,6 +1828,53 @@ end
     @test build_diagnostics.dense_parent_matrix_used == false
     @test build_diagnostics.heavy_metric_packet_built == false
     @test build_diagnostics.operator_built == false
+
+    construction_record =
+        QWCS.cartesian_qw_operator_construction_record(build_source, operators)
+    record_diagnostics =
+        QWCS.qw_operator_construction_record_diagnostics(construction_record)
+    @test record_diagnostics.source_sidecar_agree
+    @test isempty(record_diagnostics.mismatch_fields)
+    @test isempty(record_diagnostics.ambiguous_mismatch_fields)
+    @test :operator_input_kind in record_diagnostics.compared_fields
+    @test :gausslet_backend in record_diagnostics.compared_fields
+    @test :interaction_treatment in record_diagnostics.compared_fields
+    @test :nuclear_charges in record_diagnostics.compared_fields
+    @test :carried_has_staged_sidecar in record_diagnostics.compared_fields
+    @test record_diagnostics.source_basis_family == :bond_aligned_diatomic
+    @test record_diagnostics.source_carried_space_kind == :direct_product
+    @test record_diagnostics.sidecar_input_kind == :bond_aligned_direct_product_operator
+    @test record_diagnostics.numerical_outputs_changed == false
+    @test record_diagnostics.dense_parent_matrix_used == false
+    @test record_diagnostics.heavy_metric_packet_built == false
+    @test record_diagnostics.operator_built == false
+    @test QWCS.qw_operator_construction_record_sidecar(construction_record) isa
+        QWCS.CartesianQWOperatorCarriedSpaceSidecar
+    @test QWCS.qw_operator_construction_record_provenance(construction_record).source ==
+        :cartesian_qw_operator_construction_record
+    mismatched_source = QWCS.cartesian_qw_operator_build_source(
+        basis;
+        nuclear_charges = [
+            operators.nuclear_charges[1] + 0.5,
+            operators.nuclear_charges[2],
+        ],
+        nuclear_term_storage = :auto,
+        interaction_treatment = operators.interaction_treatment,
+        gausslet_backend = operators.gausslet_backend,
+    )
+    mismatch_record = QWCS.cartesian_qw_operator_construction_record(
+        mismatched_source,
+        operators;
+        throw_on_mismatch = false,
+    )
+    mismatch_diagnostics =
+        QWCS.qw_operator_construction_record_diagnostics(mismatch_record)
+    @test !mismatch_diagnostics.source_sidecar_agree
+    @test :nuclear_charges in mismatch_diagnostics.mismatch_fields
+    @test_throws ArgumentError QWCS.cartesian_qw_operator_construction_record(
+        mismatched_source,
+        operators,
+    )
 end
 
 @testset "Cartesian parent gausslet basis identity" begin

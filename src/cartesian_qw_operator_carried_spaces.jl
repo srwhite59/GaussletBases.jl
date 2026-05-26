@@ -27,15 +27,20 @@ import ..GaussletBases.CartesianCarriedSpaces:
 
 export CartesianQWOperatorCarriedSpaceSidecar,
        CartesianOperatorBuildSource3D,
+       CartesianQWOperatorConstructionRecord3D,
        cartesian_qw_operator_carried_space_sidecar,
        cartesian_qw_operator_build_source,
+       cartesian_qw_operator_construction_record,
        qw_operator_carried_space,
        qw_operator_basis_representation,
        qw_operator_carried_space_diagnostics,
        qw_operator_carried_space_provenance,
        operator_build_source_carried_space,
        operator_build_source_diagnostics,
-       operator_build_source_provenance
+       operator_build_source_provenance,
+       qw_operator_construction_record_sidecar,
+       qw_operator_construction_record_diagnostics,
+       qw_operator_construction_record_provenance
 
 """
     CartesianQWOperatorCarriedSpaceSidecar
@@ -78,6 +83,28 @@ struct CartesianOperatorBuildSource3D{C<:CartesianCarriedSpace3D,CM,D,V}
     provenance::V
 end
 
+"""
+    CartesianQWOperatorConstructionRecord3D
+
+Internal audit record tying a pre-build `CartesianOperatorBuildSource3D` to an
+already-built `OrdinaryCartesianOperators3D` payload.
+
+The record derives the existing post-build carried-space sidecar and compares
+route metadata only. It never builds operators, does not own Hamiltonian
+matrices, and does not change numerical payloads.
+"""
+struct CartesianQWOperatorConstructionRecord3D{
+    S<:CartesianOperatorBuildSource3D,
+    C<:CartesianQWOperatorCarriedSpaceSidecar,
+    D,
+    V,
+}
+    build_source::S
+    sidecar::C
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -93,6 +120,13 @@ operator_build_source_diagnostics(source::CartesianOperatorBuildSource3D) =
     source.diagnostics
 operator_build_source_provenance(source::CartesianOperatorBuildSource3D) =
     source.provenance
+
+qw_operator_construction_record_sidecar(record::CartesianQWOperatorConstructionRecord3D) =
+    record.sidecar
+qw_operator_construction_record_diagnostics(record::CartesianQWOperatorConstructionRecord3D) =
+    record.diagnostics
+qw_operator_construction_record_provenance(record::CartesianQWOperatorConstructionRecord3D) =
+    record.provenance
 
 function _qw_operator_carried_source(operators::OrdinaryCartesianOperators3D)
     basis = operators.basis
@@ -532,6 +566,188 @@ function cartesian_qw_operator_carried_space_sidecar(
     return CartesianQWOperatorCarriedSpaceSidecar(
         carried_space,
         operator_representation,
+        diagnostics,
+        provenance,
+    )
+end
+
+_record_field_comparison(field::Symbol, source_value, operator_value) = (
+    field = field,
+    source_value = source_value,
+    operator_value = operator_value,
+    matches = source_value == operator_value,
+    ambiguous = false,
+)
+
+_record_nuclear_charge_comparison(source::CartesianOperatorBuildSource3D, operators) = (
+    field = :nuclear_charges,
+    source_value = source.nuclear_charges,
+    operator_value = operators.nuclear_charges,
+    matches = operators.nuclear_charges !== nothing &&
+              source.nuclear_charges == operators.nuclear_charges,
+    ambiguous = operators.nuclear_charges === nothing,
+)
+
+function _expected_operator_input_kind(source_input_kind::Symbol)
+    source_input_kind == :atomic_direct_product_input &&
+        return :mapped_uniform_direct_product_operator
+    source_input_kind == :bond_aligned_direct_product_input &&
+        return :bond_aligned_direct_product_operator
+    source_input_kind == :bond_aligned_molecular_direct_product_input &&
+        return :bond_aligned_direct_product_operator
+    source_input_kind == :atomic_nested_fixed_block_input &&
+        return :nested_fixed_block_operator
+    source_input_kind == :bond_aligned_nested_fixed_block_input &&
+        return :nested_fixed_block_operator
+    source_input_kind == :bond_aligned_molecular_nested_fixed_block_input &&
+        return :nested_fixed_block_operator
+    return :unknown
+end
+
+function _construction_record_comparisons(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    sidecar::CartesianQWOperatorCarriedSpaceSidecar,
+)
+    source_diagnostics = operator_build_source_diagnostics(source)
+    sidecar_diagnostics = qw_operator_carried_space_diagnostics(sidecar)
+    source_provenance = operator_build_source_provenance(source)
+    sidecar_provenance = qw_operator_carried_space_provenance(sidecar)
+    return (
+        operator_input_kind = _record_field_comparison(
+            :operator_input_kind,
+            _expected_operator_input_kind(source_provenance.input_kind),
+            sidecar_provenance.input_kind,
+        ),
+        gausslet_backend = _record_field_comparison(
+            :gausslet_backend,
+            source.gausslet_backend,
+            operators.gausslet_backend,
+        ),
+        interaction_treatment = _record_field_comparison(
+            :interaction_treatment,
+            source.interaction_treatment,
+            operators.interaction_treatment,
+        ),
+        nuclear_term_storage = _record_field_comparison(
+            :nuclear_term_storage,
+            source.nuclear_term_storage,
+            operators.nuclear_term_storage,
+        ),
+        nuclear_charges = _record_nuclear_charge_comparison(source, operators),
+        carried_dimension = _record_field_comparison(
+            :carried_dimension,
+            source_diagnostics.carried_dimension,
+            sidecar_diagnostics.carried_dimension,
+        ),
+        carried_has_contracted_parent = _record_field_comparison(
+            :carried_has_contracted_parent,
+            source_diagnostics.carried_has_contracted_parent,
+            sidecar_diagnostics.carried_has_contracted_parent,
+        ),
+        carried_has_staged_sidecar = _record_field_comparison(
+            :carried_has_staged_sidecar,
+            source_diagnostics.carried_has_staged_sidecar,
+            sidecar_diagnostics.carried_has_staged_sidecar,
+        ),
+        carried_staged_by_center_path = _record_field_comparison(
+            :carried_staged_by_center_path,
+            source_diagnostics.carried_staged_by_center_path,
+            sidecar_diagnostics.carried_staged_by_center_path,
+        ),
+    )
+end
+
+function _construction_record_mismatch_fields(comparisons)
+    return Symbol[
+        name for name in keys(comparisons) if !getfield(comparisons, name).matches
+    ]
+end
+
+function _construction_record_ambiguous_fields(comparisons)
+    return Symbol[
+        name for name in keys(comparisons) if getfield(comparisons, name).ambiguous
+    ]
+end
+
+function _construction_record_diagnostics(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    sidecar::CartesianQWOperatorCarriedSpaceSidecar,
+)
+    source_diagnostics = operator_build_source_diagnostics(source)
+    sidecar_diagnostics = qw_operator_carried_space_diagnostics(sidecar)
+    comparisons = _construction_record_comparisons(source, operators, sidecar)
+    mismatch_fields = _construction_record_mismatch_fields(comparisons)
+    ambiguous_fields = _construction_record_ambiguous_fields(comparisons)
+    return (
+        source_basis_family = source.basis_family,
+        source_carried_space_kind = source.carried_space_kind,
+        source_input_kind = operator_build_source_provenance(source).input_kind,
+        sidecar_input_kind = qw_operator_carried_space_provenance(sidecar).input_kind,
+        operator_dimension = sidecar_diagnostics.operator_dimension,
+        operator_gausslet_count = sidecar_diagnostics.operator_gausslet_count,
+        operator_residual_count = sidecar_diagnostics.operator_residual_count,
+        compared_fields = keys(comparisons),
+        comparisons = comparisons,
+        mismatch_fields = mismatch_fields,
+        ambiguous_mismatch_fields = ambiguous_fields,
+        source_sidecar_agree = isempty(mismatch_fields),
+        source_carried_dimension = source_diagnostics.carried_dimension,
+        sidecar_carried_dimension = sidecar_diagnostics.carried_dimension,
+        dense_parent_matrix_used = false,
+        heavy_metric_packet_built = false,
+        operator_built = false,
+        numerical_outputs_changed = false,
+    )
+end
+
+function _construction_record_provenance(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    sidecar::CartesianQWOperatorCarriedSpaceSidecar,
+)
+    return (
+        source = :cartesian_qw_operator_construction_record,
+        build_source_provenance = operator_build_source_provenance(source),
+        sidecar_provenance = qw_operator_carried_space_provenance(sidecar),
+        operator_type = nameof(typeof(operators)),
+        basis_type = nameof(typeof(operators.basis)),
+        gaussian_data_type =
+            isnothing(operators.gaussian_data) ? nothing : nameof(typeof(operators.gaussian_data)),
+    )
+end
+
+"""
+    cartesian_qw_operator_construction_record(source, operators; throw_on_mismatch=true)
+
+Return an internal audit record tying an existing
+`CartesianOperatorBuildSource3D` to an already-built
+`OrdinaryCartesianOperators3D` payload.
+
+This helper derives the post-build carried-space sidecar and compares route
+metadata. It does not build operators, dispatch kernels, construct metric
+packets, or mutate numerical matrices.
+"""
+function cartesian_qw_operator_construction_record(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D;
+    throw_on_mismatch::Bool = true,
+)
+    sidecar = cartesian_qw_operator_carried_space_sidecar(operators)
+    diagnostics = _construction_record_diagnostics(source, operators, sidecar)
+    if throw_on_mismatch && !diagnostics.source_sidecar_agree
+        throw(
+            ArgumentError(
+                "Cartesian QW operator construction record mismatch for fields " *
+                join(string.(diagnostics.mismatch_fields), ", "),
+            ),
+        )
+    end
+    provenance = _construction_record_provenance(source, operators, sidecar)
+    return CartesianQWOperatorConstructionRecord3D(
+        source,
+        sidecar,
         diagnostics,
         provenance,
     )
