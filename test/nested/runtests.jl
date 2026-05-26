@@ -513,6 +513,66 @@ end
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-8
     @test all(isfinite, fixed_block.weights)
 
+    CP = GaussletBases.CartesianParentGaussletBases
+    CCP = GaussletBases.CartesianContractedParents
+    CCPM = GaussletBases.CartesianContractedParentMetrics
+    pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
+    pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
+    pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
+    axis_metrics = (
+        x = (
+            overlap = pgdg_x.overlap,
+            position = pgdg_x.position,
+            weights = pgdg_x.weights,
+            centers = pgdg_x.centers,
+            source = :nested_pgdg_axis,
+        ),
+        y = (
+            overlap = pgdg_y.overlap,
+            position = pgdg_y.position,
+            weights = pgdg_y.weights,
+            centers = pgdg_y.centers,
+            source = :nested_pgdg_axis,
+        ),
+        z = (
+            overlap = pgdg_z.overlap,
+            position = pgdg_z.position,
+            weights = pgdg_z.weights,
+            centers = pgdg_z.centers,
+            source = :nested_pgdg_axis,
+        ),
+    )
+    contracted_parent = CCP.cartesian_contracted_parent(fixed_block)
+    sidecar_units = fixed_block.staged_by_center_sidecar[].units
+    @test CCP.contracted_parent_metadata(contracted_parent).staged_by_center_path ==
+        :product_staged_factorized
+    @test length(CCP.contracted_parent_units(contracted_parent)) == length(sidecar_units)
+    @test first(CCP.contracted_parent_units(contracted_parent)).metadata.staged_by_center_unit ===
+        first(sidecar_units)
+    support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
+        contracted_parent;
+        axis_metrics,
+    )
+    product_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
+        contracted_parent;
+        axis_metrics,
+        construction_path = :product_staged_metric_contraction,
+    )
+    @test CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent)) == 539
+    @test support_metric_packet.diagnostics.construction_path == :support_local_product
+    @test product_metric_packet.diagnostics.construction_path == :product_staged_metric_contraction
+    @test product_metric_packet.diagnostics.dense_parent_matrix_used == false
+    @test product_metric_packet.diagnostics.product_unit_count == 6
+    @test product_metric_packet.diagnostics.generic_unit_count >= 1
+    @test product_metric_packet.diagnostics.product_block_count > 0
+    @test product_metric_packet.diagnostics.fallback_block_count > 0
+    @test product_metric_packet.overlap ≈ support_metric_packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test product_metric_packet.weights ≈ support_metric_packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test product_metric_packet.centers ≈ support_metric_packet.centers atol = 1.0e-10 rtol = 1.0e-10
+    @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
+
     @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_source(
         basis,
         bundles;
@@ -1933,6 +1993,10 @@ end
     @test_throws ArgumentError CCPM.cartesian_contracted_parent_metric_packet(distorted_contracted)
     @test explicit_packet.diagnostics.dense_parent_matrix_used == false
     @test explicit_packet.diagnostics.axis_metric_sources.x == :test_explicit_no_quadrature
+    @test_throws ArgumentError CCPM.cartesian_contracted_parent_metric_packet(
+        sparse_contracted;
+        construction_path = :product_staged_metric_contraction,
+    )
 end
 
 @testset "Cartesian basis representation for nested fixed blocks" begin

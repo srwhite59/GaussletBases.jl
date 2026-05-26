@@ -2,7 +2,8 @@ module CartesianContractedParents
 
 import ..GaussletBases: _CartesianCoefficientMap,
                          _NestedFixedBlock3D,
-                         _cartesian_coefficient_map_storage
+                         _cartesian_coefficient_map_storage,
+                         _nested_staged_by_center_sidecar
 import ..GaussletBases.CartesianParentGaussletBases:
     CartesianParentGaussletBasis3D,
     cartesian_parent_gausslet_basis,
@@ -112,12 +113,61 @@ function CartesianContractedParent3D(
     )
 end
 
+function _contracted_parent_units_from_staged_sidecar(sidecar)
+    if hasproperty(sidecar, :units)
+        return CartesianContractionUnit3D[
+            CartesianContractionUnit3D(
+                unit.role,
+                unit.support_indices,
+                unit.column_range;
+                metadata = (
+                    source = :nested_product_staged_by_center_sidecar,
+                    staged_by_center_kind = unit.kind,
+                    staged_by_center_unit = unit,
+                ),
+            ) for unit in sidecar.units
+        ]
+    elseif hasproperty(sidecar, :block_column_ranges)
+        return CartesianContractionUnit3D[
+            CartesianContractionUnit3D(
+                Symbol(:staged_block_, block_index),
+                sidecar.block_support_indices[block_index],
+                sidecar.block_column_ranges[block_index];
+                metadata = (
+                    source = :nested_staged_by_center_sidecar,
+                    staged_by_center_kind = :support_dense,
+                    staged_by_center_block_index = block_index,
+                    staged_by_center_coefficients = sidecar.block_coefficients[block_index],
+                    staged_by_center_support_states = sidecar.block_support_states[block_index],
+                ),
+            ) for block_index in eachindex(sidecar.block_column_ranges)
+        ]
+    end
+    throw(ArgumentError("unsupported staged by-center sidecar for Cartesian contracted parent adapter"))
+end
+
 function CartesianContractedParent3D(
     fixed_block::_NestedFixedBlock3D;
     metadata = (source = :nested_fixed_block,),
 )
     parent = cartesian_parent_gausslet_basis(fixed_block)
     coefficients = fixed_block.coefficient_matrix
+    staged_sidecar = _nested_staged_by_center_sidecar(fixed_block)
+    if !isnothing(staged_sidecar)
+        path = hasproperty(staged_sidecar, :units) ? :product_staged_factorized : :staged_factorized
+        return CartesianContractedParent3D(
+            parent,
+            coefficients;
+            units = _contracted_parent_units_from_staged_sidecar(staged_sidecar),
+            metadata = merge(
+                metadata,
+                (
+                    staged_by_center_path = path,
+                    staged_by_center_sidecar = staged_sidecar,
+                ),
+            ),
+        )
+    end
     unit = CartesianContractionUnit3D(
         :nested_fixed_block,
         fixed_block.support_indices,
