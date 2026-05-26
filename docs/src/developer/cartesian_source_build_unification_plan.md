@@ -15,6 +15,7 @@ lands, rather than replaced by ad hoc flat notes.
 See also:
 
 - [Architecture and current direction](architecture.md)
+- [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
 - [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
 
 ## Current judgment
@@ -450,6 +451,19 @@ As of 2026-04-22:
   capability-driven helpers
 - the internal consolidation plan is therefore effectively complete for now
 
+As of 2026-05-26, the QW receipt-wrapper line has a clear internal coverage
+contract. The covered routes share the same pattern:
+
+- record the request as `CartesianOperatorBuildSource3D`
+- run the existing authoritative `ordinary_cartesian_qiu_white_operators(...)`
+  builder
+- audit the result with `CartesianQWOperatorConstructionRecord3D`
+- return a `CartesianQWOperatorConstructionReceipt3D`
+
+This is a wrapper/audit layer, not a new Hamiltonian builder. See
+[Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
+for the covered and intentionally uncovered route families.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
@@ -458,6 +472,8 @@ The next work should be treated as a separate follow-on line:
 
 - test-suite reorganization and trimming
 - optional public/front-door cleanup
+- selective receipt-wrapper consumer migration where source/record/provenance
+  diagnostics are useful
 - occasional cleanup passes when newly-dead scaffolding becomes obvious
 
 ## Main risks

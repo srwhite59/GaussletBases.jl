@@ -19,6 +19,7 @@ This section is where to go when you want:
 
 - [Architecture and current direction](architecture.md)
 - [Cartesian source/build unification plan](cartesian_source_build_unification_plan.md)
+- [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
 - [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
 - [Experimental high-order doside nesting plan](high_order_doside_experimental_plan.md)
 - [High-order doside distorted-parent follow-up](high_order_doside_distorted_parent_followup.md)
