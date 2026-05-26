@@ -2822,30 +2822,27 @@ function _ordinary_cartesian_qiu_white_operators_atomic(
             )
         end
 
-        return OrdinaryCartesianOperators3D(
+        return _qwrg_finalize_ordinary_cartesian_operators(
             carried,
             context.gaussian_data,
             resolved_gausslet_backend,
             interaction_treatment,
-            expansion,
-            Matrix{Float64}(residual_data.final_overlap),
-            final_one_body,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_atomic_operator_orbitals(
+            expansion;
+            overlap = residual_data.final_overlap,
+            one_body_hamiltonian = final_one_body,
+            interaction_matrix = 0.5 .* (interaction_matrix .+ transpose(interaction_matrix)),
+            orbital_data = _qwrg_atomic_operator_orbitals(
                 context,
                 carried_data,
                 residual_centers,
                 residual_widths,
             ),
-            carried_data.count,
-            size(residual_centers, 1),
-            Matrix{Float64}(residual_data.raw_to_final),
-            Matrix{Float64}(residual_centers),
-            Matrix{Float64}(residual_widths),
-            Float64[Float64(Z)],
-            nothing,
-            nothing,
-            :total_only,
+            gausslet_count = carried_data.count,
+            raw_to_final = residual_data.raw_to_final,
+            residual_centers = residual_centers,
+            residual_widths = residual_widths,
+            nuclear_charges = [Z],
+            nuclear_term_storage = :total_only,
         )
     end
 end
