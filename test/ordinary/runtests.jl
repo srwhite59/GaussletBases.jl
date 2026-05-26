@@ -4025,6 +4025,7 @@ end
     if !_legacy_basisfile_available()
         @test true
     else
+        QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
         source_basis, _legacy_old, baseline_ops, baseline_check = _qiu_white_full_nearest_fixture()
         supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 0)
         @test !GaussletBases._legacy_atomic_has_nonseparable_shells(supplement)
@@ -4109,6 +4110,65 @@ end
         @test norm(ordinary_ops.one_body_hamiltonian - explicit_ordinary.one_body_hamiltonian, Inf) < 1.0e-12
         @test norm(nested_ops.overlap - explicit_nested.overlap, Inf) < 1.0e-12
         @test norm(nested_ops.one_body_hamiltonian - explicit_nested.one_body_hamiltonian, Inf) < 1.0e-12
+
+        ordinary_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            source_basis,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        ordinary_receipt_source =
+            QWCS.qw_operator_construction_receipt_source(ordinary_receipt)
+        ordinary_receipt_ops =
+            QWCS.qw_operator_construction_receipt_operators(ordinary_receipt)
+        ordinary_receipt_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(ordinary_receipt)
+        @test ordinary_receipt_source.requested_gausslet_backend == :numerical_reference
+        @test ordinary_receipt_source.gausslet_backend == ordinary_ops.gausslet_backend
+        @test ordinary_receipt_source.nuclear_term_storage == :total_only
+        @test ordinary_receipt_diagnostics.delegated_to_existing_builder
+        @test ordinary_receipt_diagnostics.source_sidecar_agree
+        @test isempty(ordinary_receipt_diagnostics.mismatch_fields)
+        @test ordinary_receipt_diagnostics.dense_parent_matrix_used == false
+        @test ordinary_receipt_diagnostics.heavy_metric_packet_built == false
+        @test ordinary_receipt_diagnostics.new_hamiltonian_kernel_used == false
+        @test ordinary_receipt_ops.overlap == ordinary_ops.overlap
+        @test ordinary_receipt_ops.one_body_hamiltonian == ordinary_ops.one_body_hamiltonian
+        @test ordinary_receipt_ops.interaction_matrix == ordinary_ops.interaction_matrix
+        @test ordinary_receipt_ops.gausslet_backend == ordinary_ops.gausslet_backend
+        @test ordinary_receipt_ops.nuclear_term_storage == ordinary_ops.nuclear_term_storage
+
+        nested_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :numerical_reference,
+        )
+        nested_receipt_source =
+            QWCS.qw_operator_construction_receipt_source(nested_receipt)
+        nested_receipt_ops =
+            QWCS.qw_operator_construction_receipt_operators(nested_receipt)
+        nested_receipt_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(nested_receipt)
+        @test nested_receipt_source.requested_gausslet_backend == :numerical_reference
+        @test nested_receipt_source.gausslet_backend == nested_ops.gausslet_backend
+        @test nested_receipt_source.nuclear_term_storage == :total_only
+        @test nested_receipt_diagnostics.delegated_to_existing_builder
+        @test nested_receipt_diagnostics.source_sidecar_agree
+        @test isempty(nested_receipt_diagnostics.mismatch_fields)
+        @test nested_receipt_diagnostics.dense_parent_matrix_used == false
+        @test nested_receipt_diagnostics.heavy_metric_packet_built == false
+        @test nested_receipt_diagnostics.new_hamiltonian_kernel_used == false
+        @test nested_receipt_ops.overlap == nested_ops.overlap
+        @test nested_receipt_ops.one_body_hamiltonian == nested_ops.one_body_hamiltonian
+        @test nested_receipt_ops.interaction_matrix == nested_ops.interaction_matrix
+        @test nested_receipt_ops.gausslet_backend == nested_ops.gausslet_backend
+        @test nested_receipt_ops.nuclear_term_storage == nested_ops.nuclear_term_storage
+
         @test ordinary_check.orbital_energy ≈ baseline_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
         @test nested_check.orbital_energy ≈ nested_shell_plus_core_check.orbital_energy atol = 1.0e-12 rtol = 1.0e-12
     end
@@ -4118,6 +4178,7 @@ end
     if !_legacy_basisfile_available()
         @test true
     else
+        QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
         supplement = legacy_atomic_gaussian_supplement("He", "cc-pVTZ"; lmax = 1)
         supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(supplement)
 
@@ -4160,6 +4221,28 @@ end
         @test size(ordinary_l1.one_body_hamiltonian) != size(ordinary_l0.one_body_hamiltonian) ||
               norm(ordinary_l1.one_body_hamiltonian - ordinary_l0.one_body_hamiltonian, Inf) > 1.0e-6
 
+        ordinary_auto_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            source_basis_qw,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        ordinary_auto_source =
+            QWCS.qw_operator_construction_receipt_source(ordinary_auto_receipt)
+        ordinary_auto_ops =
+            QWCS.qw_operator_construction_receipt_operators(ordinary_auto_receipt)
+        ordinary_auto_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(ordinary_auto_receipt)
+        @test ordinary_auto_source.requested_gausslet_backend == :auto
+        @test ordinary_auto_source.gausslet_backend == ordinary_l1.gausslet_backend
+        @test ordinary_auto_source.gausslet_backend == :pgdg_localized_experimental
+        @test ordinary_auto_diagnostics.source_sidecar_agree
+        @test isempty(ordinary_auto_diagnostics.mismatch_fields)
+        @test ordinary_auto_ops.overlap == ordinary_l1.overlap
+        @test ordinary_auto_ops.one_body_hamiltonian == ordinary_l1.one_body_hamiltonian
+        @test ordinary_auto_ops.interaction_matrix == ordinary_l1.interaction_matrix
+
         (
             _source_basis_nested,
             _bundle_nested,
@@ -4191,6 +4274,27 @@ end
         @test nested_l1_check.vee_expectation > 0.0
         @test size(nested_l1.one_body_hamiltonian) != size(nested_l0.one_body_hamiltonian) ||
               norm(nested_l1.one_body_hamiltonian - nested_l0.one_body_hamiltonian, Inf) > 1.0e-6
+
+        nested_auto_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            fixed_block_shell_plus_core,
+            supplement;
+            expansion = coulomb_gaussian_expansion(doacc = false),
+            Z = 2.0,
+            interaction_treatment = :ggt_nearest,
+        )
+        nested_auto_source =
+            QWCS.qw_operator_construction_receipt_source(nested_auto_receipt)
+        nested_auto_ops =
+            QWCS.qw_operator_construction_receipt_operators(nested_auto_receipt)
+        nested_auto_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(nested_auto_receipt)
+        @test nested_auto_source.requested_gausslet_backend == :auto
+        @test nested_auto_source.gausslet_backend == nested_l1.gausslet_backend
+        @test nested_auto_diagnostics.source_sidecar_agree
+        @test isempty(nested_auto_diagnostics.mismatch_fields)
+        @test nested_auto_ops.overlap == nested_l1.overlap
+        @test nested_auto_ops.one_body_hamiltonian == nested_l1.one_body_hamiltonian
+        @test nested_auto_ops.interaction_matrix == nested_l1.interaction_matrix
     end
 end
 

@@ -1023,6 +1023,82 @@ function cartesian_qw_operator_construction_receipt(
 end
 
 function cartesian_qw_operator_construction_receipt(
+    basis::MappedUniformBasis,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    Z::Real = 2.0,
+    nuclear_term_storage::Symbol = :total_only,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :auto,
+    residual_keep_policy::Symbol = :near_null_only,
+    kwargs...,
+)
+    forwarded_keyword_names =
+        (:Z, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
+            keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        basis,
+        gaussian_data;
+        Z = Z,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis,
+        gaussian_data;
+        Z = Z,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :atomic_direct_product_input,
+        forwarded_keyword_names,
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(
+    fixed_block::_NestedFixedBlock3D,
+    gaussian_data::LegacyAtomicGaussianSupplement;
+    Z::Real = 2.0,
+    nuclear_term_storage::Symbol = :total_only,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :auto,
+    residual_keep_policy::Symbol = :near_null_only,
+    kwargs...,
+)
+    forwarded_keyword_names =
+        (:Z, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
+            keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        fixed_block,
+        gaussian_data;
+        Z = Z,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block,
+        gaussian_data;
+        Z = Z,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        residual_keep_policy = residual_keep_policy,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :atomic_nested_fixed_block_input,
+        forwarded_keyword_names,
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(
     fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
     gaussian_data::Union{
         LegacyBondAlignedDiatomicGaussianSupplement,
