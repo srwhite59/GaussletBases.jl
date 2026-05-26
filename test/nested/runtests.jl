@@ -1884,6 +1884,43 @@ end
         QWCS.CartesianQWOperatorCarriedSpaceSidecar
     @test QWCS.qw_operator_construction_record_provenance(construction_record).source ==
         :cartesian_qw_operator_construction_record
+
+    construction_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+        basis;
+        nuclear_charges = operators.nuclear_charges,
+        nuclear_term_storage = operators.nuclear_term_storage,
+        interaction_treatment = operators.interaction_treatment,
+        gausslet_backend = operators.gausslet_backend,
+    )
+    receipt_operators =
+        QWCS.qw_operator_construction_receipt_operators(construction_receipt)
+    receipt_record =
+        QWCS.qw_operator_construction_receipt_record(construction_receipt)
+    receipt_diagnostics =
+        QWCS.qw_operator_construction_receipt_diagnostics(construction_receipt)
+    @test QWCS.qw_operator_construction_receipt_source(construction_receipt) isa
+        QWCS.CartesianOperatorBuildSource3D
+    @test receipt_record isa QWCS.CartesianQWOperatorConstructionRecord3D
+    @test receipt_diagnostics.delegated_to_existing_builder
+    @test receipt_diagnostics.builder == :ordinary_cartesian_qiu_white_operators
+    @test receipt_diagnostics.source_sidecar_agree
+    @test isempty(receipt_diagnostics.mismatch_fields)
+    @test receipt_diagnostics.operator_built
+    @test receipt_diagnostics.new_hamiltonian_kernel_used == false
+    @test receipt_diagnostics.dense_parent_matrix_used == false
+    @test receipt_diagnostics.heavy_metric_packet_built == false
+    @test receipt_diagnostics.numerical_outputs_changed == false
+    @test QWCS.qw_operator_construction_receipt_provenance(construction_receipt).source ==
+        :cartesian_qw_operator_construction_receipt
+    @test receipt_operators.overlap == operators.overlap
+    @test receipt_operators.one_body_hamiltonian == operators.one_body_hamiltonian
+    @test receipt_operators.interaction_matrix == operators.interaction_matrix
+    @test receipt_operators.gausslet_count == operators.gausslet_count
+    @test receipt_operators.residual_count == operators.residual_count
+    @test receipt_operators.gausslet_backend == operators.gausslet_backend
+    @test receipt_operators.interaction_treatment == operators.interaction_treatment
+    @test receipt_operators.nuclear_term_storage == operators.nuclear_term_storage
+
     mismatched_source = QWCS.cartesian_qw_operator_build_source(
         basis;
         nuclear_charges = [

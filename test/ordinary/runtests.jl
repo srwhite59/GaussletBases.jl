@@ -959,6 +959,44 @@ end
               QWCS.CartesianQWOperatorCarriedSpaceSidecar
         @test QWCS.qw_operator_construction_record_provenance(endcap_record).source ==
               :cartesian_qw_operator_construction_record
+
+        endcap_receipt = QWCS.cartesian_qw_operator_construction_receipt(
+            endcap_fixed,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = endcap_mwg.nuclear_term_storage,
+            interaction_treatment = endcap_mwg.interaction_treatment,
+            gausslet_backend = endcap_mwg.gausslet_backend,
+        )
+        endcap_receipt_operators =
+            QWCS.qw_operator_construction_receipt_operators(endcap_receipt)
+        endcap_receipt_record =
+            QWCS.qw_operator_construction_receipt_record(endcap_receipt)
+        endcap_receipt_diagnostics =
+            QWCS.qw_operator_construction_receipt_diagnostics(endcap_receipt)
+        @test QWCS.qw_operator_construction_receipt_source(endcap_receipt) isa
+              QWCS.CartesianOperatorBuildSource3D
+        @test endcap_receipt_record isa QWCS.CartesianQWOperatorConstructionRecord3D
+        @test endcap_receipt_diagnostics.delegated_to_existing_builder
+        @test endcap_receipt_diagnostics.builder == :ordinary_cartesian_qiu_white_operators
+        @test endcap_receipt_diagnostics.source_sidecar_agree
+        @test isempty(endcap_receipt_diagnostics.mismatch_fields)
+        @test endcap_receipt_diagnostics.operator_built
+        @test endcap_receipt_diagnostics.new_hamiltonian_kernel_used == false
+        @test endcap_receipt_diagnostics.dense_parent_matrix_used == false
+        @test endcap_receipt_diagnostics.heavy_metric_packet_built == false
+        @test endcap_receipt_diagnostics.numerical_outputs_changed == false
+        @test QWCS.qw_operator_construction_receipt_provenance(endcap_receipt).source ==
+              :cartesian_qw_operator_construction_receipt
+        @test endcap_receipt_operators.overlap == endcap_mwg.overlap
+        @test endcap_receipt_operators.one_body_hamiltonian == endcap_mwg.one_body_hamiltonian
+        @test endcap_receipt_operators.interaction_matrix == endcap_mwg.interaction_matrix
+        @test endcap_receipt_operators.gausslet_count == endcap_mwg.gausslet_count
+        @test endcap_receipt_operators.residual_count == endcap_mwg.residual_count
+        @test endcap_receipt_operators.gausslet_backend == endcap_mwg.gausslet_backend
+        @test endcap_receipt_operators.interaction_treatment == endcap_mwg.interaction_treatment
+        @test endcap_receipt_operators.nuclear_term_storage == endcap_mwg.nuclear_term_storage
+
         @test endcap_mwg.overlap == endcap_overlap_before
         @test endcap_mwg.one_body_hamiltonian == endcap_one_body_before
         @test endcap_mwg.interaction_matrix == endcap_interaction_before

@@ -18,7 +18,8 @@ import ..GaussletBases:
     _validate_nuclear_term_storage,
     _validate_operator_route_backend,
     _validate_operator_route_interaction_treatment,
-    basis_representation
+    basis_representation,
+    ordinary_cartesian_qiu_white_operators
 import ..GaussletBases.CartesianCarriedSpaces:
     CartesianCarriedSpace3D,
     carried_space_diagnostics,
@@ -30,9 +31,11 @@ import ..GaussletBases.CartesianCarriedSpaces:
 export CartesianQWOperatorCarriedSpaceSidecar,
        CartesianOperatorBuildSource3D,
        CartesianQWOperatorConstructionRecord3D,
+       CartesianQWOperatorConstructionReceipt3D,
        cartesian_qw_operator_carried_space_sidecar,
        cartesian_qw_operator_build_source,
        cartesian_qw_operator_construction_record,
+       cartesian_qw_operator_construction_receipt,
        qw_operator_carried_space,
        qw_operator_basis_representation,
        qw_operator_carried_space_diagnostics,
@@ -42,7 +45,12 @@ export CartesianQWOperatorCarriedSpaceSidecar,
        operator_build_source_provenance,
        qw_operator_construction_record_sidecar,
        qw_operator_construction_record_diagnostics,
-       qw_operator_construction_record_provenance
+       qw_operator_construction_record_provenance,
+       qw_operator_construction_receipt_source,
+       qw_operator_construction_receipt_operators,
+       qw_operator_construction_receipt_record,
+       qw_operator_construction_receipt_diagnostics,
+       qw_operator_construction_receipt_provenance
 
 """
     CartesianQWOperatorCarriedSpaceSidecar
@@ -108,6 +116,31 @@ struct CartesianQWOperatorConstructionRecord3D{
     provenance::V
 end
 
+"""
+    CartesianQWOperatorConstructionReceipt3D
+
+Internal audited construction receipt for existing Cartesian QW builders.
+
+The receipt builds a pre-build `CartesianOperatorBuildSource3D`, delegates all
+numerical work to the matching `ordinary_cartesian_qiu_white_operators` method,
+and then records the existing source/operator audit. It is deliberately a thin
+wrapper: it does not implement Hamiltonian kernels, construct metric packets,
+or change backend/route semantics.
+"""
+struct CartesianQWOperatorConstructionReceipt3D{
+    S<:CartesianOperatorBuildSource3D,
+    O<:OrdinaryCartesianOperators3D,
+    R<:CartesianQWOperatorConstructionRecord3D,
+    D,
+    V,
+}
+    build_source::S
+    operators::O
+    construction_record::R
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -130,6 +163,22 @@ qw_operator_construction_record_diagnostics(record::CartesianQWOperatorConstruct
     record.diagnostics
 qw_operator_construction_record_provenance(record::CartesianQWOperatorConstructionRecord3D) =
     record.provenance
+
+qw_operator_construction_receipt_source(
+    receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.build_source
+qw_operator_construction_receipt_operators(
+    receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.operators
+qw_operator_construction_receipt_record(
+    receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.construction_record
+qw_operator_construction_receipt_diagnostics(
+    receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.diagnostics
+qw_operator_construction_receipt_provenance(
+    receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.provenance
 
 function _qw_operator_carried_source(operators::OrdinaryCartesianOperators3D)
     basis = operators.basis
@@ -842,6 +891,173 @@ function cartesian_qw_operator_construction_record(
         sidecar,
         diagnostics,
         provenance,
+    )
+end
+
+function _receipt_diagnostics(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    record::CartesianQWOperatorConstructionRecord3D,
+    input_kind::Symbol,
+    forwarded_keyword_names,
+)
+    record_diagnostics = qw_operator_construction_record_diagnostics(record)
+    return (
+        input_kind = input_kind,
+        source_input_kind = operator_build_source_provenance(source).input_kind,
+        builder = :ordinary_cartesian_qiu_white_operators,
+        delegated_to_existing_builder = true,
+        forwarded_keyword_names = forwarded_keyword_names,
+        source_sidecar_agree = record_diagnostics.source_sidecar_agree,
+        mismatch_fields = record_diagnostics.mismatch_fields,
+        ambiguous_mismatch_fields = record_diagnostics.ambiguous_mismatch_fields,
+        compared_fields = record_diagnostics.compared_fields,
+        operator_dimension = size(operators.overlap, 1),
+        operator_gausslet_count = operators.gausslet_count,
+        operator_residual_count = operators.residual_count,
+        gausslet_backend = operators.gausslet_backend,
+        interaction_treatment = operators.interaction_treatment,
+        nuclear_term_storage = operators.nuclear_term_storage,
+        dense_parent_matrix_used = false,
+        heavy_metric_packet_built = false,
+        metric_packet_built = false,
+        new_hamiltonian_kernel_used = false,
+        numerical_outputs_changed = false,
+        operator_built = true,
+    )
+end
+
+function _receipt_provenance(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    record::CartesianQWOperatorConstructionRecord3D,
+    input_kind::Symbol,
+    forwarded_keyword_names,
+)
+    return (
+        source = :cartesian_qw_operator_construction_receipt,
+        input_kind = input_kind,
+        builder = :ordinary_cartesian_qiu_white_operators,
+        build_source_provenance = operator_build_source_provenance(source),
+        construction_record_provenance = qw_operator_construction_record_provenance(record),
+        operator_type = nameof(typeof(operators)),
+        basis_type = nameof(typeof(operators.basis)),
+        gaussian_data_type =
+            isnothing(operators.gaussian_data) ? nothing : nameof(typeof(operators.gaussian_data)),
+        forwarded_keyword_names = forwarded_keyword_names,
+    )
+end
+
+function _cartesian_qw_operator_construction_receipt(
+    source::CartesianOperatorBuildSource3D,
+    operators::OrdinaryCartesianOperators3D,
+    input_kind::Symbol,
+    forwarded_keyword_names,
+)
+    record = cartesian_qw_operator_construction_record(source, operators)
+    diagnostics = _receipt_diagnostics(
+        source,
+        operators,
+        record,
+        input_kind,
+        forwarded_keyword_names,
+    )
+    provenance = _receipt_provenance(
+        source,
+        operators,
+        record,
+        input_kind,
+        forwarded_keyword_names,
+    )
+    return CartesianQWOperatorConstructionReceipt3D(
+        source,
+        operators,
+        record,
+        diagnostics,
+        provenance,
+    )
+end
+
+"""
+    cartesian_qw_operator_construction_receipt(input; kwargs...)
+
+Build an internal audited receipt for selected existing Cartesian QW routes.
+
+This helper is a construction wrapper only: it first builds the normalized
+pre-build source, delegates operator assembly to the matching existing
+`ordinary_cartesian_qiu_white_operators` method, and records the source/operator
+audit. It is not a new Hamiltonian builder and does not change backend routing
+or numerical kernels.
+"""
+function cartesian_qw_operator_construction_receipt(
+    basis::AbstractBondAlignedOrdinaryQWBasis3D;
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    kwargs...,
+)
+    forwarded_keyword_names = (:nuclear_charges, :nuclear_term_storage,
+        :interaction_treatment, :gausslet_backend, keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        basis;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        basis;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :bond_aligned_direct_product_input,
+        forwarded_keyword_names,
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(
+    fixed_block::_NestedFixedBlock3D{<:BondAlignedDiatomicQWBasis3D},
+    gaussian_data::Union{
+        LegacyBondAlignedDiatomicGaussianSupplement,
+        LegacyBondAlignedHeteronuclearGaussianSupplement,
+    };
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :numerical_reference,
+    kwargs...,
+)
+    forwarded_keyword_names = (:nuclear_charges, :nuclear_term_storage,
+        :interaction_treatment, :gausslet_backend, keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        fixed_block,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block,
+        gaussian_data;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :bond_aligned_molecular_nested_fixed_block_input,
+        forwarded_keyword_names,
     )
 end
 
