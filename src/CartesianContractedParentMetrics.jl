@@ -358,17 +358,17 @@ function _project_staged_axis_vector(axis, values::AbstractVector{<:Real})
     return vec(transpose(axis.coefficient_matrix) * local_values)
 end
 
-function _fill_product_staged_metric_block!(
-    destination::Matrix{Float64},
+function _fill_product_staged_metric_blocks!(
+    overlap::Matrix{Float64},
+    position_x::Matrix{Float64},
+    position_y::Matrix{Float64},
+    position_z::Matrix{Float64},
     left_unit,
     right_unit,
-    axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
+    metrics::NamedTuple{(:x,:y,:z)},
 )
     left_unit.kind == :product_doside && right_unit.kind == :product_doside || throw(
         ArgumentError("product-staged metric block requires product_doside units"),
-    )
-    size(destination) == (length(left_unit.column_range), length(right_unit.column_range)) || throw(
-        ArgumentError("product-staged metric block destination has incompatible dimensions"),
     )
     length(left_unit.axis_function_indices) == length(left_unit.column_range) || throw(
         ArgumentError("product-staged metric left unit axis metadata does not match its column range"),
@@ -376,18 +376,64 @@ function _fill_product_staged_metric_block!(
     length(right_unit.axis_function_indices) == length(right_unit.column_range) || throw(
         ArgumentError("product-staged metric right unit axis metadata does not match its column range"),
     )
-    projected_x = _project_staged_axis_matrix(left_unit.axes[1], right_unit.axes[1], axis_matrices[1])
-    projected_y = _project_staged_axis_matrix(left_unit.axes[2], right_unit.axes[2], axis_matrices[2])
-    projected_z = _project_staged_axis_matrix(left_unit.axes[3], right_unit.axes[3], axis_matrices[3])
-    @inbounds for column in eachindex(right_unit.axis_function_indices)
-        xj, yj, zj = right_unit.axis_function_indices[column]
-        for row in eachindex(left_unit.axis_function_indices)
-            xi, yi, zi = left_unit.axis_function_indices[row]
-            destination[row, column] =
-                projected_x[xi, xj] * projected_y[yi, yj] * projected_z[zi, zj]
+    projected_x_overlap = _project_staged_axis_matrix(
+        left_unit.axes[1],
+        right_unit.axes[1],
+        metrics.x.overlap,
+    )
+    projected_y_overlap = _project_staged_axis_matrix(
+        left_unit.axes[2],
+        right_unit.axes[2],
+        metrics.y.overlap,
+    )
+    projected_z_overlap = _project_staged_axis_matrix(
+        left_unit.axes[3],
+        right_unit.axes[3],
+        metrics.z.overlap,
+    )
+    projected_x_position = _project_staged_axis_matrix(
+        left_unit.axes[1],
+        right_unit.axes[1],
+        metrics.x.position,
+    )
+    projected_y_position = _project_staged_axis_matrix(
+        left_unit.axes[2],
+        right_unit.axes[2],
+        metrics.y.position,
+    )
+    projected_z_position = _project_staged_axis_matrix(
+        left_unit.axes[3],
+        right_unit.axes[3],
+        metrics.z.position,
+    )
+    same_unit = left_unit.column_range == right_unit.column_range
+    @inbounds for local_col in eachindex(right_unit.axis_function_indices)
+        xj, yj, zj = right_unit.axis_function_indices[local_col]
+        global_col = right_unit.column_range[local_col]
+        for local_row in eachindex(left_unit.axis_function_indices)
+            xi, yi, zi = left_unit.axis_function_indices[local_row]
+            global_row = left_unit.column_range[local_row]
+            y_overlap = projected_y_overlap[yi, yj]
+            z_overlap = projected_z_overlap[zi, zj]
+            overlap_value = projected_x_overlap[xi, xj] * y_overlap * z_overlap
+            position_x_value = projected_x_position[xi, xj] * y_overlap * z_overlap
+            position_y_value =
+                projected_x_overlap[xi, xj] * projected_y_position[yi, yj] * z_overlap
+            position_z_value =
+                projected_x_overlap[xi, xj] * y_overlap * projected_z_position[zi, zj]
+            overlap[global_row, global_col] = overlap_value
+            position_x[global_row, global_col] = position_x_value
+            position_y[global_row, global_col] = position_y_value
+            position_z[global_row, global_col] = position_z_value
+            if !same_unit
+                overlap[global_col, global_row] = overlap_value
+                position_x[global_col, global_row] = position_x_value
+                position_y[global_col, global_row] = position_y_value
+                position_z[global_col, global_row] = position_z_value
+            end
         end
     end
-    return destination
+    return nothing
 end
 
 function _staged_unit_entries(unit)
@@ -424,34 +470,58 @@ function _contract_pair_block(
 end
 
 function _fallback_staged_metric_block(
-    left_unit,
-    right_unit,
+    left_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    right_entries::Vector{Vector{_ParentCoefficientEntry3D}},
     axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
 )
     return _contract_pair_block(
-        _staged_unit_entries(left_unit),
-        _staged_unit_entries(right_unit),
+        left_entries,
+        right_entries,
         axis_matrices[1],
         axis_matrices[2],
         axis_matrices[3],
     )
 end
 
-function _staged_metric_block(
-    left_unit,
-    right_unit,
-    axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
+function _cached_staged_unit_entries!(
+    entries_cache::Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}},
+    index::Int,
+    unit,
 )
-    if left_unit.kind == :product_doside && right_unit.kind == :product_doside
-        destination = Matrix{Float64}(undef, length(left_unit.column_range), length(right_unit.column_range))
-        return _fill_product_staged_metric_block!(
-            destination,
-            left_unit,
-            right_unit,
-            axis_matrices,
-        ), true
-    end
-    return _fallback_staged_metric_block(left_unit, right_unit, axis_matrices), false
+    cached = entries_cache[index]
+    cached === nothing || return cached
+    entries = _staged_unit_entries(unit)
+    entries_cache[index] = entries
+    return entries
+end
+
+function _fallback_staged_metric_blocks(
+    left_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    right_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return (
+        overlap = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.overlap, metrics.y.overlap, metrics.z.overlap),
+        ),
+        position_x = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.position, metrics.y.overlap, metrics.z.overlap),
+        ),
+        position_y = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.overlap, metrics.y.position, metrics.z.overlap),
+        ),
+        position_z = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.overlap, metrics.y.overlap, metrics.z.position),
+        ),
+    )
 end
 
 function _staged_unit_linear_vectors(unit, metrics::NamedTuple{(:x,:y,:z)})
@@ -681,43 +751,43 @@ function _product_unit_metric_packet(
     position_z = zeros(Float64, contracted_dimension, contracted_dimension)
     product_block_count = 0
     fallback_block_count = 0
+    entries_cache = Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}}(
+        undef,
+        length(staged_units),
+    )
+    fill!(entries_cache, nothing)
     for right_index in eachindex(staged_units)
         right = staged_units[right_index]
         right_range = right.column_range
         for left_index in 1:right_index
             left = staged_units[left_index]
             left_range = left.column_range
-            block, used_product = _staged_metric_block(
-                left,
-                right,
-                (metrics.x.overlap, metrics.y.overlap, metrics.z.overlap),
-            )
-            block_x, used_product_x = _staged_metric_block(
-                left,
-                right,
-                (metrics.x.position, metrics.y.overlap, metrics.z.overlap),
-            )
-            block_y, used_product_y = _staged_metric_block(
-                left,
-                right,
-                (metrics.x.overlap, metrics.y.position, metrics.z.overlap),
-            )
-            block_z, used_product_z = _staged_metric_block(
-                left,
-                right,
-                (metrics.x.overlap, metrics.y.overlap, metrics.z.position),
-            )
-            used_product && used_product_x && used_product_y && used_product_z ?
-                (product_block_count += 1) : (fallback_block_count += 1)
-            overlap[left_range, right_range] .= block
-            position_x[left_range, right_range] .= block_x
-            position_y[left_range, right_range] .= block_y
-            position_z[left_range, right_range] .= block_z
-            if left_index != right_index
-                overlap[right_range, left_range] .= transpose(block)
-                position_x[right_range, left_range] .= transpose(block_x)
-                position_y[right_range, left_range] .= transpose(block_y)
-                position_z[right_range, left_range] .= transpose(block_z)
+            if left.kind == :product_doside && right.kind == :product_doside
+                _fill_product_staged_metric_blocks!(
+                    overlap,
+                    position_x,
+                    position_y,
+                    position_z,
+                    left,
+                    right,
+                    metrics,
+                )
+                product_block_count += 1
+            else
+                left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
+                right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
+                blocks = _fallback_staged_metric_blocks(left_entries, right_entries, metrics)
+                fallback_block_count += 1
+                overlap[left_range, right_range] .= blocks.overlap
+                position_x[left_range, right_range] .= blocks.position_x
+                position_y[left_range, right_range] .= blocks.position_y
+                position_z[left_range, right_range] .= blocks.position_z
+                if left_index != right_index
+                    overlap[right_range, left_range] .= transpose(blocks.overlap)
+                    position_x[right_range, left_range] .= transpose(blocks.position_x)
+                    position_y[right_range, left_range] .= transpose(blocks.position_y)
+                    position_z[right_range, left_range] .= transpose(blocks.position_z)
+                end
             end
         end
     end
