@@ -2410,31 +2410,32 @@ function _ordinary_cartesian_qiu_white_operators_pure_bond_aligned_nested(
     fixed_count = size(fixed_block.overlap, 1)
     zero_residual_centers = zeros(Float64, 0, 3)
     zero_residual_widths = zeros(Float64, 0, 3)
-    return OrdinaryCartesianOperators3D(
+    return _qwrg_finalize_ordinary_cartesian_operators(
         fixed_block,
         nothing,
         gausslet_backend,
         interaction_treatment,
-        expansion,
-        Matrix{Float64}(fixed_block.overlap),
+        expansion;
+        overlap = fixed_block.overlap,
         one_body_hamiltonian,
-        Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-        _qwrg_orbital_data(
+        interaction_matrix = 0.5 .* (interaction_matrix .+ transpose(interaction_matrix)),
+        orbital_data = _qwrg_orbital_data(
             fixed_block.fixed_centers,
             zero_residual_centers,
             zero_residual_widths;
             fixed_kind = :nested_fixed,
             fixed_label_prefix = "nf",
         ),
-        fixed_count,
-        0,
-        Matrix{Float64}(I, fixed_count, fixed_count),
-        zero_residual_centers,
-        zero_residual_widths,
-        Float64[Float64(value) for value in nuclear_charges],
-        resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
-        resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
-        resolved_nuclear_term_storage,
+        gausslet_count = fixed_count,
+        raw_to_final = Matrix{Float64}(I, fixed_count, fixed_count),
+        residual_centers = zero_residual_centers,
+        residual_widths = zero_residual_widths,
+        nuclear_charges = nuclear_charges,
+        kinetic_one_body =
+            resolved_nuclear_term_storage == :by_center ? kinetic_one_body : nothing,
+        nuclear_one_body_by_center =
+            resolved_nuclear_term_storage == :by_center ? nuclear_one_body_by_center : nothing,
+        nuclear_term_storage = resolved_nuclear_term_storage,
     )
 end
 
