@@ -1102,6 +1102,39 @@ function cartesian_qw_operator_construction_receipt(
 end
 
 function cartesian_qw_operator_construction_receipt(
+    fixed_block::_NestedFixedBlock3D{<:AbstractBondAlignedOrdinaryQWBasis3D};
+    nuclear_charges::AbstractVector{<:Real} = fixed_block.parent_basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :auto,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :numerical_reference,
+    kwargs...,
+)
+    forwarded_keyword_names = (:nuclear_charges, :nuclear_term_storage,
+        :interaction_treatment, :gausslet_backend, keys((; kwargs...))...)
+    source = cartesian_qw_operator_build_source(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    operators = ordinary_cartesian_qiu_white_operators(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        kwargs...,
+    )
+    return _cartesian_qw_operator_construction_receipt(
+        source,
+        operators,
+        :bond_aligned_nested_fixed_block_input,
+        forwarded_keyword_names,
+    )
+end
+
+function cartesian_qw_operator_construction_receipt(
     basis::MappedUniformBasis,
     gaussian_data::LegacyAtomicGaussianSupplement;
     Z::Real = 2.0,

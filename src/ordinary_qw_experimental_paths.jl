@@ -594,7 +594,7 @@ function _experimental_nested_source_backed_path(
             "experimental nested source-backed wrapper diagnostics drifted from the common nested-source contract on leaf_count",
         ),
     )
-    operators = ordinary_cartesian_qiu_white_operators(
+    receipt = CartesianQWOperatorCarriedSpaces.cartesian_qw_operator_construction_receipt(
         fixed_block;
         nuclear_charges = nuclear_charges,
         nuclear_term_storage = nuclear_term_storage,
@@ -603,6 +603,31 @@ function _experimental_nested_source_backed_path(
         gausslet_backend = context.gausslet_backend,
         timing = timing,
     )
+    receipt_diagnostics =
+        CartesianQWOperatorCarriedSpaces.qw_operator_construction_receipt_diagnostics(receipt)
+    receipt_diagnostics.delegated_to_existing_builder || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper receipt did not delegate to the existing QW builder",
+        ),
+    )
+    receipt_diagnostics.source_sidecar_agree || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper receipt source/sidecar mismatch for fields " *
+            join(string.(receipt_diagnostics.mismatch_fields), ", "),
+        ),
+    )
+    receipt_diagnostics.new_hamiltonian_kernel_used == false || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper receipt unexpectedly used a new Hamiltonian kernel",
+        ),
+    )
+    receipt_diagnostics.numerical_outputs_changed == false || throw(
+        ArgumentError(
+            "experimental nested source-backed wrapper receipt reported changed numerical outputs",
+        ),
+    )
+    operators =
+        CartesianQWOperatorCarriedSpaces.qw_operator_construction_receipt_operators(receipt)
     return _experimental_nested_source_backed_path(
         context,
         source,

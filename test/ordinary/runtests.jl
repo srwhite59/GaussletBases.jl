@@ -1192,6 +1192,50 @@ end
     end
 end
 
+function _test_experimental_nested_source_backed_receipt_wrapper(path)
+    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
+    operators = path.operators
+    direct_operators = ordinary_cartesian_qiu_white_operators(
+        path.fixed_block;
+        nuclear_charges = path.nuclear_charges,
+        nuclear_term_storage = :auto,
+        expansion = operators.expansion,
+        interaction_treatment = operators.interaction_treatment,
+        gausslet_backend = operators.gausslet_backend,
+    )
+    receipt = QWCS.cartesian_qw_operator_construction_receipt(
+        path.fixed_block;
+        nuclear_charges = path.nuclear_charges,
+        nuclear_term_storage = :auto,
+        expansion = operators.expansion,
+        interaction_treatment = operators.interaction_treatment,
+        gausslet_backend = operators.gausslet_backend,
+    )
+    receipt_operators = QWCS.qw_operator_construction_receipt_operators(receipt)
+    receipt_diagnostics = QWCS.qw_operator_construction_receipt_diagnostics(receipt)
+    @test receipt_diagnostics.input_kind == :bond_aligned_nested_fixed_block_input
+    @test receipt_diagnostics.delegated_to_existing_builder
+    @test receipt_diagnostics.source_sidecar_agree
+    @test isempty(receipt_diagnostics.mismatch_fields)
+    @test receipt_diagnostics.new_hamiltonian_kernel_used == false
+    @test receipt_diagnostics.dense_parent_matrix_used == false
+    @test receipt_diagnostics.heavy_metric_packet_built == false
+    @test receipt_diagnostics.numerical_outputs_changed == false
+    @test receipt_diagnostics.operator_dimension == size(operators.overlap, 1)
+    @test receipt_diagnostics.operator_gausslet_count == operators.gausslet_count
+    @test receipt_diagnostics.operator_residual_count == operators.residual_count
+    for checked_operators in (direct_operators, receipt_operators)
+        @test checked_operators.overlap == operators.overlap
+        @test checked_operators.one_body_hamiltonian == operators.one_body_hamiltonian
+        @test checked_operators.interaction_matrix == operators.interaction_matrix
+        @test checked_operators.gausslet_count == operators.gausslet_count
+        @test checked_operators.residual_count == operators.residual_count
+        @test checked_operators.gausslet_backend == operators.gausslet_backend
+        @test checked_operators.interaction_treatment == operators.interaction_treatment
+        @test checked_operators.nuclear_term_storage == operators.nuclear_term_storage
+    end
+end
+
 @testset "Experimental axis-aligned homonuclear square-lattice nested QW consumer path" begin
     basis2, path2, check2 =
         _axis_aligned_homonuclear_square_lattice_nested_qw_fixture(; n = 2, spacing = 1.4)
@@ -1242,6 +1286,8 @@ end
         @test common_contract.shared_shell_provenance == diagnostics.shared_shell_provenance
         @test common_contract.leaf_count == diagnostics.leaf_count
     end
+
+    _test_experimental_nested_source_backed_receipt_wrapper(path2)
 
     @test path2.diagnostics.root_node.did_split
     @test path2.diagnostics.root_node.accepted_candidate_index == 1
@@ -1789,6 +1835,8 @@ end
         @test common_contract.shared_shell_provenance == diagnostics.shared_shell_provenance
         @test common_contract.leaf_count == diagnostics.leaf_count
     end
+
+    _test_experimental_nested_source_backed_receipt_wrapper(path3)
 
     @test path3.diagnostics.root_node.did_split
     @test path3.diagnostics.root_node.accepted_candidate_index == 1
