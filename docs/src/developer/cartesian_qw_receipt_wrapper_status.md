@@ -71,6 +71,36 @@ Uncovered scientific route families should stay uncovered until a matching
 authoritative builder exists and the route is deliberately added to the
 receipt coverage table.
 
+## Consumer adoption map
+
+Receipt coverage is broader than receipt adoption. A route family can be
+receipt-covered without every internal caller needing to use the wrapper.
+
+The first internal consumer migration is the experimental nested source-backed
+chain/square QW path in `src/ordinary_qw_experimental_paths.jl`. It now uses the
+receipt wrapper as a construction guard for the nested fixed-block build, then
+returns the same operator payload as before. This is the model for safe
+consumer adoption: unchanged return shape, exact equality with the direct
+builder, and clean receipt diagnostics.
+
+The following paths should stay direct-builder-only:
+
+- the authoritative `ordinary_cartesian_qiu_white_operators(...)` builder
+  overloads and their internal forwarding methods
+- public alias/front-door wrappers such as `ordinary_cartesian_product_operators`
+  and `nested_cartesian_operators`
+- tests, scratch scripts, and benchmark artifacts whose purpose is direct
+  builder validation or route-specific diagnosis
+- already-built operator audit paths, which should use construction records or
+  carried-space sidecars instead of pre-build receipts
+
+After the chain/square consumer migration, there is no remaining general
+low-risk internal consumer that should be migrated automatically. The next
+plausible candidate is the high-order Cr count-7 smoke QW diagnostic, because
+receipt provenance could help audit backend and carried-space agreement there.
+That path is high-order/CR2-adjacent and must not be migrated opportunistically:
+it needs explicit manager scope and focused validation before receipt adoption.
+
 ## Why this is safe
 
 The receipt layer does not:
