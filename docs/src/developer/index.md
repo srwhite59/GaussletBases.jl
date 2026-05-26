@@ -31,6 +31,7 @@ This section is where to go when you want:
 - [PGDG Cartesian efficiency contract](pgdg_cartesian_efficiency_contract.md)
 - [Numerical contracts](numerical_contracts.md)
 - [Performance review contracts](performance_review_contracts.md)
+- [Manager-doer collaboration contract](manager_doer_collaboration_contract_2026-05-26.md)
 - [Supporting note map](supporting_notes.md)
 
 The broader flat `docs/` tree still contains the full supporting-note history.
