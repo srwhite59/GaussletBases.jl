@@ -516,6 +516,7 @@ end
     CP = GaussletBases.CartesianParentGaussletBases
     CCP = GaussletBases.CartesianContractedParents
     CCPM = GaussletBases.CartesianContractedParentMetrics
+    CCS = GaussletBases.CartesianCarriedSpaces
     pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
     pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
     pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
@@ -573,6 +574,41 @@ end
     @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
+
+    carried = CCS.cartesian_carried_space(fixed_block)
+    carried_parent = CCS.carried_space_parent(carried)
+    carried_contracted_parent = CCS.carried_space_contracted_parent(carried)
+    carried_representation = CCS.carried_space_representation(carried)
+    carried_diagnostics = CCS.carried_space_diagnostics(carried)
+    @test carried_parent isa CP.CartesianParentGaussletBasis3D
+    @test carried_contracted_parent isa CCP.CartesianContractedParent3D
+    @test carried_representation isa CartesianBasisRepresentation3D
+    @test CP.parent_dimension(carried_parent) == 539
+    @test carried_diagnostics.parent_axis_counts == CP.parent_axis_counts(carried_parent)
+    @test carried_diagnostics.has_contracted_parent
+    @test carried_diagnostics.contracted_dimension == 313
+    @test carried_diagnostics.contracted_dimension_matches_representation
+    @test carried_diagnostics.contracted_parent_dimension_matches_parent
+    @test carried_diagnostics.has_staged_sidecar
+    @test carried_diagnostics.staged_by_center_path == :product_staged_factorized
+    @test carried_diagnostics.dense_parent_matrix_used == false
+    @test carried_diagnostics.heavy_metric_packet_built == false
+    @test CCS.carried_space_provenance(carried).input_kind == :nested_fixed_block
+    @test CCP.contracted_parent_metadata(carried_contracted_parent).staged_by_center_sidecar ===
+        fixed_block.staged_by_center_sidecar[]
+    @test first(CCP.contracted_parent_units(carried_contracted_parent)).metadata.staged_by_center_unit ===
+        first(sidecar_units)
+    carried_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
+        carried_contracted_parent;
+        axis_metrics,
+        construction_path = :product_staged_metric_contraction,
+    )
+    @test carried_metric_packet.diagnostics.construction_path ==
+        :product_staged_metric_contraction
+    @test carried_metric_packet.diagnostics.dense_parent_matrix_used == false
+    @test carried_metric_packet.overlap ≈ product_metric_packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test carried_metric_packet.weights ≈ product_metric_packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test carried_metric_packet.centers ≈ product_metric_packet.centers atol = 1.0e-10 rtol = 1.0e-10
 
     @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_source(
         basis,
@@ -1598,6 +1634,8 @@ end
 end
 
 @testset "Cartesian basis representation for direct-product QW bases" begin
+    CP = GaussletBases.CartesianParentGaussletBases
+    CCS = GaussletBases.CartesianCarriedSpaces
     basis, _operators, _check = _bond_aligned_diatomic_qw_fixture()
     representation = basis_representation(basis)
     metadata = basis_metadata(representation)
@@ -1631,6 +1669,32 @@ end
     @test square_representation.metadata.basis_kind == :direct_product
     @test square_representation.metadata.route_metadata.basis_family ==
         :axis_aligned_homonuclear_square_lattice
+
+    carried = CCS.cartesian_carried_space(basis)
+    chain_carried = CCS.cartesian_carried_space(chain_basis)
+    square_carried = CCS.cartesian_carried_space(square_basis)
+    @test CCS.carried_space_parent(carried) isa CP.CartesianParentGaussletBasis3D
+    @test isnothing(CCS.carried_space_contracted_parent(carried))
+    @test CCS.carried_space_representation(carried) isa CartesianBasisRepresentation3D
+    @test CCS.carried_space_diagnostics(carried).parent_axis_counts ==
+        metadata.parent_axis_counts
+    @test CCS.carried_space_diagnostics(carried).parent_dimension ==
+        metadata.parent_dimension
+    @test CCS.carried_space_diagnostics(carried).representation_final_dimension ==
+        metadata.final_dimension
+    @test CCS.carried_space_diagnostics(carried).has_contracted_parent == false
+    @test CCS.carried_space_diagnostics(carried).dense_parent_matrix_used == false
+    @test CCS.carried_space_diagnostics(carried).heavy_metric_packet_built == false
+    @test CCS.carried_space_provenance(carried).input_kind ==
+        :bond_aligned_diatomic_qw_basis
+    @test CCS.carried_space_diagnostics(chain_carried).parent_axis_counts ==
+        chain_representation.metadata.parent_axis_counts
+    @test CCS.carried_space_provenance(chain_carried).input_kind ==
+        :bond_aligned_homonuclear_chain_qw_basis
+    @test CCS.carried_space_diagnostics(square_carried).parent_axis_counts ==
+        square_representation.metadata.parent_axis_counts
+    @test CCS.carried_space_provenance(square_carried).input_kind ==
+        :axis_aligned_homonuclear_square_lattice_qw_basis
 end
 
 @testset "Cartesian parent gausslet basis identity" begin
@@ -2003,6 +2067,7 @@ end
 @testset "Cartesian basis representation for nested fixed blocks" begin
     CP = GaussletBases.CartesianParentGaussletBases
     CCP = GaussletBases.CartesianContractedParents
+    CCS = GaussletBases.CartesianCarriedSpaces
     basis = build_basis(
         MappedUniformBasisSpec(
             :G10;
@@ -2071,6 +2136,17 @@ end
     @test hasproperty(representation.parent_data, :factorized_cartesian_parent_basis)
     @test representation.parent_data.factorized_cartesian_parent_basis ===
           fixed_block.factorized_cartesian_parent_basis[]
+    fixed_carried = CCS.cartesian_carried_space(fixed_block)
+    @test CCS.carried_space_parent(fixed_carried) isa CP.CartesianParentGaussletBasis3D
+    @test CCS.carried_space_contracted_parent(fixed_carried) isa CCP.CartesianContractedParent3D
+    @test CCS.carried_space_representation(fixed_carried) isa CartesianBasisRepresentation3D
+    @test CCS.carried_space_diagnostics(fixed_carried).parent_dimension ==
+        metadata.parent_dimension
+    @test CCS.carried_space_diagnostics(fixed_carried).contracted_dimension ==
+        metadata.final_dimension
+    @test CCS.carried_space_diagnostics(fixed_carried).contracted_dimension_matches_representation
+    @test CCS.carried_space_diagnostics(fixed_carried).contracted_parent_dimension_matches_parent
+    @test CCS.carried_space_provenance(fixed_carried).input_kind == :nested_fixed_block
 
     square_basis, _source, square_fixed_block, _diagnostics =
         _axis_aligned_homonuclear_square_lattice_nested_fixture()
@@ -2091,6 +2167,15 @@ end
     @test hasproperty(square_representation.parent_data, :factorized_cartesian_parent_basis)
     @test square_representation.parent_data.factorized_cartesian_parent_basis ===
           square_fixed_block.factorized_cartesian_parent_basis[]
+    square_carried = CCS.cartesian_carried_space(square_fixed_block)
+    @test CCS.carried_space_parent(square_carried) isa CP.CartesianParentGaussletBasis3D
+    @test CCS.carried_space_contracted_parent(square_carried) isa CCP.CartesianContractedParent3D
+    @test CCS.carried_space_diagnostics(square_carried).parent_axis_counts ==
+        square_metadata.parent_axis_counts
+    @test CCS.carried_space_diagnostics(square_carried).contracted_dimension ==
+        square_metadata.final_dimension
+    @test CCS.carried_space_diagnostics(square_carried).contracted_dimension_matches_representation
+    @test CCS.carried_space_provenance(square_carried).input_kind == :nested_fixed_block
 end
 
 function _with_sparse_nested_coefficients(fixed_block::GaussletBases._NestedFixedBlock3D)
