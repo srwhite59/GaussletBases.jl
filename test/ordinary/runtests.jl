@@ -930,11 +930,27 @@ end
         @test :operator_input_kind in endcap_record_diagnostics.compared_fields
         @test :gausslet_backend in endcap_record_diagnostics.compared_fields
         @test :nuclear_term_storage in endcap_record_diagnostics.compared_fields
+        @test :carried_parent_axis_counts in endcap_record_diagnostics.compared_fields
+        @test :carried_parent_dimension in endcap_record_diagnostics.compared_fields
+        @test :carried_representation_basis_kind in endcap_record_diagnostics.compared_fields
+        @test :carried_representation_parent_kind in endcap_record_diagnostics.compared_fields
+        @test :carried_representation_final_dimension in endcap_record_diagnostics.compared_fields
+        @test :carried_axis_sharing in endcap_record_diagnostics.compared_fields
         @test :carried_has_staged_sidecar in endcap_record_diagnostics.compared_fields
+        @test :carried_provenance_input_kind in endcap_record_diagnostics.compared_fields
+        @test :carried_provenance_route_metadata in endcap_record_diagnostics.compared_fields
         @test endcap_record_diagnostics.source_basis_family == :bond_aligned_diatomic
         @test endcap_record_diagnostics.source_carried_space_kind == :nested_fixed_block
         @test endcap_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
         @test endcap_record_diagnostics.source_sidecar_agree
+        @test endcap_record_diagnostics.source_parent_axis_counts ==
+              endcap_record_diagnostics.sidecar_parent_axis_counts
+        @test endcap_record_diagnostics.source_parent_dimension ==
+              endcap_record_diagnostics.sidecar_parent_dimension
+        @test :coefficient_matrix_values in
+              endcap_record_diagnostics.intentionally_not_compared
+        @test :metric_packet_values in
+              endcap_record_diagnostics.intentionally_not_compared
         @test endcap_record_diagnostics.numerical_outputs_changed == false
         @test endcap_record_diagnostics.dense_parent_matrix_used == false
         @test endcap_record_diagnostics.heavy_metric_packet_built == false

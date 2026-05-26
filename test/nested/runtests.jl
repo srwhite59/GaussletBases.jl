@@ -1035,9 +1035,25 @@ end
     @test :nuclear_term_storage in nested_record_diagnostics.compared_fields
     @test :nuclear_charges in nested_record_diagnostics.compared_fields
     @test :carried_dimension in nested_record_diagnostics.compared_fields
+    @test :carried_parent_axis_counts in nested_record_diagnostics.compared_fields
+    @test :carried_parent_dimension in nested_record_diagnostics.compared_fields
+    @test :carried_representation_basis_kind in nested_record_diagnostics.compared_fields
+    @test :carried_representation_parent_kind in nested_record_diagnostics.compared_fields
+    @test :carried_representation_final_dimension in nested_record_diagnostics.compared_fields
+    @test :carried_axis_sharing in nested_record_diagnostics.compared_fields
+    @test :carried_provenance_input_kind in nested_record_diagnostics.compared_fields
+    @test :carried_provenance_route_metadata in nested_record_diagnostics.compared_fields
     @test nested_record_diagnostics.source_basis_family == :one_center_atomic
     @test nested_record_diagnostics.source_carried_space_kind == :nested_fixed_block
     @test nested_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
+    @test nested_record_diagnostics.source_parent_axis_counts ==
+        nested_record_diagnostics.sidecar_parent_axis_counts
+    @test nested_record_diagnostics.source_parent_dimension ==
+        nested_record_diagnostics.sidecar_parent_dimension
+    @test :coefficient_matrix_values in
+        nested_record_diagnostics.intentionally_not_compared
+    @test :overlap_matrix_values in
+        nested_record_diagnostics.intentionally_not_compared
     @test nested_record_diagnostics.numerical_outputs_changed == false
     @test nested_record_diagnostics.dense_parent_matrix_used == false
     @test nested_record_diagnostics.heavy_metric_packet_built == false
@@ -1840,10 +1856,26 @@ end
     @test :gausslet_backend in record_diagnostics.compared_fields
     @test :interaction_treatment in record_diagnostics.compared_fields
     @test :nuclear_charges in record_diagnostics.compared_fields
+    @test :carried_parent_axis_counts in record_diagnostics.compared_fields
+    @test :carried_parent_dimension in record_diagnostics.compared_fields
+    @test :carried_representation_basis_kind in record_diagnostics.compared_fields
+    @test :carried_representation_parent_kind in record_diagnostics.compared_fields
+    @test :carried_representation_final_dimension in record_diagnostics.compared_fields
+    @test :carried_axis_sharing in record_diagnostics.compared_fields
+    @test :carried_provenance_input_kind in record_diagnostics.compared_fields
+    @test :carried_provenance_route_metadata in record_diagnostics.compared_fields
     @test :carried_has_staged_sidecar in record_diagnostics.compared_fields
     @test record_diagnostics.source_basis_family == :bond_aligned_diatomic
     @test record_diagnostics.source_carried_space_kind == :direct_product
     @test record_diagnostics.sidecar_input_kind == :bond_aligned_direct_product_operator
+    @test record_diagnostics.source_parent_axis_counts ==
+        record_diagnostics.sidecar_parent_axis_counts
+    @test record_diagnostics.source_parent_dimension ==
+        record_diagnostics.sidecar_parent_dimension
+    @test :coefficient_matrix_values in
+        record_diagnostics.intentionally_not_compared
+    @test :interaction_matrix_values in
+        record_diagnostics.intentionally_not_compared
     @test record_diagnostics.numerical_outputs_changed == false
     @test record_diagnostics.dense_parent_matrix_used == false
     @test record_diagnostics.heavy_metric_packet_built == false
@@ -1873,6 +1905,44 @@ end
     @test :nuclear_charges in mismatch_diagnostics.mismatch_fields
     @test_throws ArgumentError QWCS.cartesian_qw_operator_construction_record(
         mismatched_source,
+        operators,
+    )
+    mismatched_carried_source = QWCS.CartesianOperatorBuildSource3D(
+        chain_carried,
+        build_source.basis_family,
+        build_source.carried_space_kind,
+        build_source.nuclei,
+        build_source.nuclear_charges,
+        build_source.gausslet_backend,
+        build_source.requested_gausslet_backend,
+        build_source.interaction_treatment,
+        build_source.nuclear_term_storage,
+        build_source.requested_nuclear_term_storage,
+        build_source.capabilities,
+        build_source.diagnostics,
+        build_source.provenance,
+    )
+    carried_mismatch_record = QWCS.cartesian_qw_operator_construction_record(
+        mismatched_carried_source,
+        operators;
+        throw_on_mismatch = false,
+    )
+    carried_mismatch_diagnostics =
+        QWCS.qw_operator_construction_record_diagnostics(carried_mismatch_record)
+    @test !carried_mismatch_diagnostics.source_sidecar_agree
+    @test !isempty(
+        intersect(
+            carried_mismatch_diagnostics.mismatch_fields,
+            [
+                :carried_parent_axis_counts,
+                :carried_parent_dimension,
+                :carried_representation_final_dimension,
+                :carried_provenance_input_kind,
+            ],
+        ),
+    )
+    @test_throws ArgumentError QWCS.cartesian_qw_operator_construction_record(
+        mismatched_carried_source,
         operators,
     )
 end

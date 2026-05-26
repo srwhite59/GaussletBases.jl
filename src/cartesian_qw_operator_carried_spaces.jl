@@ -22,6 +22,8 @@ import ..GaussletBases:
 import ..GaussletBases.CartesianCarriedSpaces:
     CartesianCarriedSpace3D,
     carried_space_diagnostics,
+    carried_space_parent,
+    carried_space_provenance,
     carried_space_representation,
     cartesian_carried_space
 
@@ -90,8 +92,9 @@ Internal audit record tying a pre-build `CartesianOperatorBuildSource3D` to an
 already-built `OrdinaryCartesianOperators3D` payload.
 
 The record derives the existing post-build carried-space sidecar and compares
-route metadata only. It never builds operators, does not own Hamiltonian
-matrices, and does not change numerical payloads.
+route metadata plus lightweight carried-space identity metadata. It never
+builds operators, does not own Hamiltonian matrices, and does not change
+numerical payloads.
 """
 struct CartesianQWOperatorConstructionRecord3D{
     S<:CartesianOperatorBuildSource3D,
@@ -575,7 +578,7 @@ _record_field_comparison(field::Symbol, source_value, operator_value) = (
     field = field,
     source_value = source_value,
     operator_value = operator_value,
-    matches = source_value == operator_value,
+    matches = isequal(source_value, operator_value),
     ambiguous = false,
 )
 
@@ -604,13 +607,35 @@ function _expected_operator_input_kind(source_input_kind::Symbol)
     return :unknown
 end
 
+function _carried_space_identity_metadata(space::CartesianCarriedSpace3D)
+    diagnostics = carried_space_diagnostics(space)
+    representation = carried_space_representation(space)
+    provenance = carried_space_provenance(space)
+    parent = carried_space_parent(space)
+    return (
+        parent_axis_counts = diagnostics.parent_axis_counts,
+        parent_dimension = diagnostics.parent_dimension,
+        representation_basis_kind = diagnostics.representation_basis_kind,
+        representation_parent_kind = representation.metadata.parent_kind,
+        representation_final_dimension = diagnostics.representation_final_dimension,
+        axis_sharing = parent.axis_sharing,
+        has_contracted_parent = diagnostics.has_contracted_parent,
+        has_staged_sidecar = diagnostics.has_staged_sidecar,
+        staged_by_center_path = diagnostics.staged_by_center_path,
+        provenance_input_kind = provenance.input_kind,
+        provenance_source_type = provenance.source_type,
+        provenance_representation_basis_kind = provenance.representation_basis_kind,
+        provenance_route_metadata = provenance.route_metadata,
+    )
+end
+
 function _construction_record_comparisons(
     source::CartesianOperatorBuildSource3D,
     operators::OrdinaryCartesianOperators3D,
     sidecar::CartesianQWOperatorCarriedSpaceSidecar,
 )
-    source_diagnostics = operator_build_source_diagnostics(source)
-    sidecar_diagnostics = qw_operator_carried_space_diagnostics(sidecar)
+    source_carried_metadata = _carried_space_identity_metadata(source.carried_space)
+    sidecar_carried_metadata = _carried_space_identity_metadata(sidecar.carried_space)
     source_provenance = operator_build_source_provenance(source)
     sidecar_provenance = qw_operator_carried_space_provenance(sidecar)
     return (
@@ -637,23 +662,73 @@ function _construction_record_comparisons(
         nuclear_charges = _record_nuclear_charge_comparison(source, operators),
         carried_dimension = _record_field_comparison(
             :carried_dimension,
-            source_diagnostics.carried_dimension,
-            sidecar_diagnostics.carried_dimension,
+            source_carried_metadata.representation_final_dimension,
+            sidecar_carried_metadata.representation_final_dimension,
+        ),
+        carried_parent_axis_counts = _record_field_comparison(
+            :carried_parent_axis_counts,
+            source_carried_metadata.parent_axis_counts,
+            sidecar_carried_metadata.parent_axis_counts,
+        ),
+        carried_parent_dimension = _record_field_comparison(
+            :carried_parent_dimension,
+            source_carried_metadata.parent_dimension,
+            sidecar_carried_metadata.parent_dimension,
+        ),
+        carried_representation_basis_kind = _record_field_comparison(
+            :carried_representation_basis_kind,
+            source_carried_metadata.representation_basis_kind,
+            sidecar_carried_metadata.representation_basis_kind,
+        ),
+        carried_representation_parent_kind = _record_field_comparison(
+            :carried_representation_parent_kind,
+            source_carried_metadata.representation_parent_kind,
+            sidecar_carried_metadata.representation_parent_kind,
+        ),
+        carried_representation_final_dimension = _record_field_comparison(
+            :carried_representation_final_dimension,
+            source_carried_metadata.representation_final_dimension,
+            sidecar_carried_metadata.representation_final_dimension,
+        ),
+        carried_axis_sharing = _record_field_comparison(
+            :carried_axis_sharing,
+            source_carried_metadata.axis_sharing,
+            sidecar_carried_metadata.axis_sharing,
         ),
         carried_has_contracted_parent = _record_field_comparison(
             :carried_has_contracted_parent,
-            source_diagnostics.carried_has_contracted_parent,
-            sidecar_diagnostics.carried_has_contracted_parent,
+            source_carried_metadata.has_contracted_parent,
+            sidecar_carried_metadata.has_contracted_parent,
         ),
         carried_has_staged_sidecar = _record_field_comparison(
             :carried_has_staged_sidecar,
-            source_diagnostics.carried_has_staged_sidecar,
-            sidecar_diagnostics.carried_has_staged_sidecar,
+            source_carried_metadata.has_staged_sidecar,
+            sidecar_carried_metadata.has_staged_sidecar,
         ),
         carried_staged_by_center_path = _record_field_comparison(
             :carried_staged_by_center_path,
-            source_diagnostics.carried_staged_by_center_path,
-            sidecar_diagnostics.carried_staged_by_center_path,
+            source_carried_metadata.staged_by_center_path,
+            sidecar_carried_metadata.staged_by_center_path,
+        ),
+        carried_provenance_input_kind = _record_field_comparison(
+            :carried_provenance_input_kind,
+            source_carried_metadata.provenance_input_kind,
+            sidecar_carried_metadata.provenance_input_kind,
+        ),
+        carried_provenance_source_type = _record_field_comparison(
+            :carried_provenance_source_type,
+            source_carried_metadata.provenance_source_type,
+            sidecar_carried_metadata.provenance_source_type,
+        ),
+        carried_provenance_representation_basis_kind = _record_field_comparison(
+            :carried_provenance_representation_basis_kind,
+            source_carried_metadata.provenance_representation_basis_kind,
+            sidecar_carried_metadata.provenance_representation_basis_kind,
+        ),
+        carried_provenance_route_metadata = _record_field_comparison(
+            :carried_provenance_route_metadata,
+            source_carried_metadata.provenance_route_metadata,
+            sidecar_carried_metadata.provenance_route_metadata,
         ),
     )
 end
@@ -675,7 +750,8 @@ function _construction_record_diagnostics(
     operators::OrdinaryCartesianOperators3D,
     sidecar::CartesianQWOperatorCarriedSpaceSidecar,
 )
-    source_diagnostics = operator_build_source_diagnostics(source)
+    source_carried_metadata = _carried_space_identity_metadata(source.carried_space)
+    sidecar_carried_metadata = _carried_space_identity_metadata(sidecar.carried_space)
     sidecar_diagnostics = qw_operator_carried_space_diagnostics(sidecar)
     comparisons = _construction_record_comparisons(source, operators, sidecar)
     mismatch_fields = _construction_record_mismatch_fields(comparisons)
@@ -693,8 +769,23 @@ function _construction_record_diagnostics(
         mismatch_fields = mismatch_fields,
         ambiguous_mismatch_fields = ambiguous_fields,
         source_sidecar_agree = isempty(mismatch_fields),
-        source_carried_dimension = source_diagnostics.carried_dimension,
-        sidecar_carried_dimension = sidecar_diagnostics.carried_dimension,
+        source_carried_dimension = source_carried_metadata.representation_final_dimension,
+        sidecar_carried_dimension = sidecar_carried_metadata.representation_final_dimension,
+        source_parent_axis_counts = source_carried_metadata.parent_axis_counts,
+        sidecar_parent_axis_counts = sidecar_carried_metadata.parent_axis_counts,
+        source_parent_dimension = source_carried_metadata.parent_dimension,
+        sidecar_parent_dimension = sidecar_carried_metadata.parent_dimension,
+        intentionally_not_compared = (
+            :parent_axis_object_identity,
+            :parent_axis_tables,
+            :coefficient_matrix_values,
+            :support_index_values,
+            :overlap_matrix_values,
+            :one_body_matrix_values,
+            :interaction_matrix_values,
+            :residual_packet_values,
+            :metric_packet_values,
+        ),
         dense_parent_matrix_used = false,
         heavy_metric_packet_built = false,
         operator_built = false,
@@ -726,8 +817,9 @@ Return an internal audit record tying an existing
 `OrdinaryCartesianOperators3D` payload.
 
 This helper derives the post-build carried-space sidecar and compares route
-metadata. It does not build operators, dispatch kernels, construct metric
-packets, or mutate numerical matrices.
+metadata plus cheap carried-space identity metadata. It does not build
+operators, dispatch kernels, construct metric packets, or mutate numerical
+matrices.
 """
 function cartesian_qw_operator_construction_record(
     source::CartesianOperatorBuildSource3D,
