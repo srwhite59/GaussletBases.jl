@@ -31,6 +31,7 @@ import ..GaussletBases:
     basis_representation,
     bond_aligned_homonuclear_qw_basis,
     coulomb_gaussian_expansion,
+    legacy_bond_aligned_diatomic_gaussian_supplement,
     ordinary_cartesian_qiu_white_operators
 import ..GaussletBases.CartesianCarriedSpaces:
     CartesianCarriedSpace3D,
@@ -215,6 +216,21 @@ struct _BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D{B,QR,D,V}
     provenance::V
 end
 
+"""
+    _BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D
+
+Internal supplement-aware homonuclear q-row fixture receipt. It composes the
+private homonuclear q-row fixture wrapper with the existing nested molecular
+supplement QW receipt; it does not implement Hamiltonian kernels.
+"""
+struct _BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D{FR,S,QR,D,V}
+    fixture_receipt::FR
+    supplement::S
+    supplement_qw_receipt::QR
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -268,6 +284,14 @@ _nested_bond_aligned_homonuclear_high_order_q_row_fixture_diagnostics(
 
 _nested_bond_aligned_homonuclear_high_order_q_row_fixture_provenance(
     receipt::_BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D,
+) = receipt.provenance
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_diagnostics(
+    receipt::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D,
+) = receipt.diagnostics
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_provenance(
+    receipt::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D,
 ) = receipt.provenance
 
 const _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE = (
@@ -1693,6 +1717,150 @@ function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(;
     return _BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D(
         basis,
         route_receipt,
+        diagnostics,
+        provenance,
+    )
+end
+
+"""
+    _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(; ...)
+
+Private supplement-aware homonuclear q-row fixture wrapper. It constructs the
+q-row fixed block through
+`_nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt`, constructs
+a legacy homonuclear bond-aligned molecular supplement on the same nuclei, and
+delegates QW construction to the existing nested molecular supplement receipt.
+"""
+function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(;
+    bond_length,
+    core_spacing,
+    xmax_parallel,
+    xmax_transverse,
+    shared_q::Integer,
+    atom::AbstractString,
+    basis_name::AbstractString,
+    family = :G10,
+    bond_axis::Symbol = :z,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+    shared_order::Integer = shared_q,
+    protected_atom_side_count::Integer = 5,
+    q_min::Integer = 4,
+    nside::Integer = 5,
+    expansion = coulomb_gaussian_expansion(doacc = false),
+    packet_kernel::Symbol = :factorized_direct,
+    lmax::Integer = 0,
+    basisfile::Union{Nothing,AbstractString} = nothing,
+    max_width::Union{Nothing,Real} = nothing,
+    nuclear_term_storage::Symbol = :by_center,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+)
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError(
+            "experimental high-order q-row fixture supplement receipt requires gausslet_backend = :pgdg_localized_experimental",
+        ),
+    )
+    fixture_receipt =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+            bond_length = bond_length,
+            core_spacing = core_spacing,
+            xmax_parallel = xmax_parallel,
+            xmax_transverse = xmax_transverse,
+            shared_q = shared_q,
+            family = family,
+            bond_axis = bond_axis,
+            nuclear_charge = nuclear_charge,
+            reference_spacing = reference_spacing,
+            tail_spacing = tail_spacing,
+            shared_order = shared_order,
+            protected_atom_side_count = protected_atom_side_count,
+            q_min = q_min,
+            nside = nside,
+            expansion = expansion,
+            packet_kernel = packet_kernel,
+            gausslet_backend = gausslet_backend,
+        )
+    basis = fixture_receipt.basis
+    fixed_block = fixture_receipt.q_row_route_receipt.fixed_block
+    supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+        atom,
+        basis_name,
+        basis.nuclei;
+        lmax = lmax,
+        basisfile = basisfile,
+        max_width = max_width,
+    )
+    supplement_qw_receipt = cartesian_qw_operator_construction_receipt(
+        fixed_block,
+        supplement;
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        expansion = expansion,
+    )
+    fixture_diagnostics =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_diagnostics(
+            fixture_receipt,
+        )
+    fixture_provenance =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_provenance(
+            fixture_receipt,
+        )
+    supplement_diagnostics = qw_operator_construction_receipt_diagnostics(
+        supplement_qw_receipt,
+    )
+    supplement_record_diagnostics = qw_operator_construction_record_diagnostics(
+        qw_operator_construction_receipt_record(supplement_qw_receipt),
+    )
+    operators = qw_operator_construction_receipt_operators(supplement_qw_receipt)
+    diagnostics = (
+        route_label = :bond_aligned_homonuclear_high_order_q_row_fixture_supplement,
+        receipt_contract =
+            :construct_homonuclear_q_row_fixture_then_delegate_nested_molecular_supplement_receipt,
+        fixture_diagnostics = fixture_diagnostics,
+        supplement_constructor = :legacy_bond_aligned_diatomic_gaussian_supplement,
+        supplement_atom = String(atom),
+        supplement_basis_name = String(basis_name),
+        supplement_lmax = Int(lmax),
+        supplement_basisfile = basisfile,
+        supplement_max_width = max_width === nothing ? nothing : Float64(max_width),
+        supplement_nuclei = Tuple(supplement.nuclei),
+        nuclear_charges = Tuple(Float64.(fixed_block.parent_basis.nuclear_charges)),
+        backend = supplement_diagnostics.gausslet_backend,
+        interaction_treatment = supplement_diagnostics.interaction_treatment,
+        nuclear_term_storage = supplement_diagnostics.nuclear_term_storage,
+        gausslet_count = operators.gausslet_count,
+        residual_count = operators.residual_count,
+        final_dimension = size(operators.overlap, 1),
+        source_sidecar_agree = supplement_diagnostics.source_sidecar_agree &&
+                               supplement_record_diagnostics.source_sidecar_agree,
+        mismatch_fields = Tuple(supplement_diagnostics.mismatch_fields),
+        dense_parent_matrix_used = supplement_diagnostics.dense_parent_matrix_used,
+        heavy_metric_packet_built = supplement_diagnostics.heavy_metric_packet_built,
+        new_hamiltonian_kernel_used =
+            supplement_diagnostics.new_hamiltonian_kernel_used,
+        numerical_outputs_changed = supplement_diagnostics.numerical_outputs_changed,
+        supplement_qw_receipt_diagnostics = supplement_diagnostics,
+    )
+    provenance = (
+        source =
+            :_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt,
+        fixture_source = fixture_provenance.source,
+        supplement_constructor = :legacy_bond_aligned_diatomic_gaussian_supplement,
+        qw_builder = :cartesian_qw_operator_construction_receipt,
+        charge_policy = :fixed_block_parent_basis_nuclear_charges,
+        homonuclear_only = true,
+        heteronuclear_support = false,
+        public_api = false,
+        science_validation = false,
+    )
+    return _BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D(
+        fixture_receipt,
+        supplement,
+        supplement_qw_receipt,
         diagnostics,
         provenance,
     )

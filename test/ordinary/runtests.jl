@@ -3181,6 +3181,134 @@ end
         @test hybrid_direct_receipt_ops.nuclear_term_storage ==
               hybrid_localized.nuclear_term_storage
 
+        q4_fixture_receipt = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            family = :G10,
+            bond_axis = :z,
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q4_fixed_block = q4_fixture_receipt.q_row_route_receipt.fixed_block
+        q4_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            q4_fixture_receipt.basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        q4_direct_supplement = @test_logs min_level = Logging.Warn ordinary_cartesian_qiu_white_operators(
+            q4_fixed_block,
+            q4_supplement;
+            nuclear_charges = q4_fixed_block.parent_basis.nuclear_charges,
+            nuclear_term_storage = :by_center,
+            expansion = expansion,
+            interaction_treatment = :mwg,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q4_fixture_supplement_receipt = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            family = :G10,
+            bond_axis = :z,
+            expansion = expansion,
+            lmax = 0,
+            max_width = 1.0,
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :mwg,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q4_fixture_supplement_ops =
+            QWCS.qw_operator_construction_receipt_operators(
+                q4_fixture_supplement_receipt.supplement_qw_receipt,
+            )
+        q4_fixture_supplement_diagnostics =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_diagnostics(
+                q4_fixture_supplement_receipt,
+            )
+        q4_fixture_supplement_provenance =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_provenance(
+                q4_fixture_supplement_receipt,
+            )
+        @test q4_fixture_supplement_diagnostics.route_label ==
+              :bond_aligned_homonuclear_high_order_q_row_fixture_supplement
+        @test q4_fixture_supplement_diagnostics.fixture_diagnostics.fixed_dimension == 469
+        @test q4_fixture_supplement_diagnostics.supplement_constructor ==
+              :legacy_bond_aligned_diatomic_gaussian_supplement
+        @test q4_fixture_supplement_diagnostics.supplement_atom == "H"
+        @test q4_fixture_supplement_diagnostics.supplement_basis_name == "cc-pVTZ"
+        @test q4_fixture_supplement_diagnostics.supplement_lmax == 0
+        @test q4_fixture_supplement_diagnostics.supplement_max_width == 1.0
+        @test q4_fixture_supplement_diagnostics.supplement_nuclei ==
+              Tuple(q4_fixture_receipt.basis.nuclei)
+        @test q4_fixture_supplement_diagnostics.nuclear_charges == (1.0, 1.0)
+        @test q4_fixture_supplement_diagnostics.backend == :pgdg_localized_experimental
+        @test q4_fixture_supplement_diagnostics.interaction_treatment == :mwg
+        @test q4_fixture_supplement_diagnostics.nuclear_term_storage == :by_center
+        @test q4_fixture_supplement_diagnostics.gausslet_count == 469
+        @test q4_fixture_supplement_diagnostics.residual_count > 0
+        @test q4_fixture_supplement_diagnostics.final_dimension ==
+              q4_fixture_supplement_diagnostics.gausslet_count +
+              q4_fixture_supplement_diagnostics.residual_count
+        @test q4_fixture_supplement_diagnostics.source_sidecar_agree
+        @test isempty(q4_fixture_supplement_diagnostics.mismatch_fields)
+        @test q4_fixture_supplement_diagnostics.dense_parent_matrix_used == false
+        @test q4_fixture_supplement_diagnostics.heavy_metric_packet_built == false
+        @test q4_fixture_supplement_diagnostics.new_hamiltonian_kernel_used == false
+        @test q4_fixture_supplement_diagnostics.numerical_outputs_changed == false
+        @test q4_fixture_supplement_provenance.charge_policy ==
+              :fixed_block_parent_basis_nuclear_charges
+        @test q4_fixture_supplement_provenance.homonuclear_only
+        @test !q4_fixture_supplement_provenance.heteronuclear_support
+        @test !q4_fixture_supplement_provenance.public_api
+        @test !q4_fixture_supplement_provenance.science_validation
+        @test q4_fixture_supplement_ops.overlap == q4_direct_supplement.overlap
+        @test q4_fixture_supplement_ops.one_body_hamiltonian ==
+              q4_direct_supplement.one_body_hamiltonian
+        @test q4_fixture_supplement_ops.interaction_matrix ==
+              q4_direct_supplement.interaction_matrix
+        @test q4_fixture_supplement_ops.gausslet_count ==
+              q4_direct_supplement.gausslet_count
+        @test q4_fixture_supplement_ops.residual_count ==
+              q4_direct_supplement.residual_count
+        @test q4_fixture_supplement_ops.gausslet_backend ==
+              q4_direct_supplement.gausslet_backend
+        @test q4_fixture_supplement_ops.interaction_treatment ==
+              q4_direct_supplement.interaction_treatment
+        @test q4_fixture_supplement_ops.nuclear_term_storage ==
+              q4_direct_supplement.nuclear_term_storage
+        @test q4_fixture_supplement_ops.raw_to_final ==
+              q4_direct_supplement.raw_to_final
+        @test q4_fixture_supplement_ops.residual_centers ==
+              q4_direct_supplement.residual_centers
+        @test q4_fixture_supplement_ops.residual_widths ==
+              q4_direct_supplement.residual_widths
+        @test q4_fixture_supplement_ops.residual_nucleus_indices ==
+              q4_direct_supplement.residual_nucleus_indices
+        @test q4_fixture_supplement_ops.kinetic_one_body ==
+              q4_direct_supplement.kinetic_one_body
+        @test q4_fixture_supplement_ops.nuclear_one_body_by_center ==
+              q4_direct_supplement.nuclear_one_body_by_center
+        @test_throws ArgumentError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            expansion = expansion,
+            gausslet_backend = :numerical_reference,
+        )
+
         heteronuclear_supplement =
             legacy_bond_aligned_heteronuclear_gaussian_supplement(
                 "He",
