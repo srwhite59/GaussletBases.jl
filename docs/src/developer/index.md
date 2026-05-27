@@ -27,6 +27,7 @@ This section is where to go when you want:
 - [High-order endcap/panel mainline validation](high_order_endcap_panel_mainline_validation_2026-05-16.md)
 - [High-order endcap/panel H2 chemistry reproduction](high_order_endcap_panel_h2_chemistry_reproduction_2026-05-16.md)
 - [High-order Cr side-29 support policy audit](high_order_cr_side29_support_policy_audit_2026-05-27.md)
+- [High-order q4 recipe CR2 validation handoff](high_order_q4_recipe_cr2_validation_handoff_2026-05-27.md)
 - [High-order doside terminology](high_order_doside_terminology.md)
 - [Test suite reorganization plan](test_suite_reorganization_plan.md)
 - [Post-decomposition efficiency resume plan](post_decomposition_efficiency_resume_plan.md)
