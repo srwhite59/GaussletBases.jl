@@ -1194,6 +1194,165 @@ end
         Inf,
     ) < 1.0e-12
 
+    shared_q6_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        policy.construction_plan;
+        q_min = 4,
+        atom_q = 4,
+        atom_order = 4,
+        shared_q = 6,
+        shared_order = 6,
+        contact_q = 4,
+        contact_order = 4,
+        outer_mismatch_q = 4,
+        outer_mismatch_order = 4,
+    )
+    shared_q6_packeted_construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            shared_q6_policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = true,
+        )
+    shared_q6_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+            shared_q6_packeted_construction,
+        )
+    shared_q6_region_builds = shared_q6_diagnostics.region_builds
+    @test shared_q6_diagnostics.recipe_label == :mixed_atom_cubic_shared_endcap_panel
+    @test shared_q6_diagnostics.active_builder_consumes
+    @test shared_q6_diagnostics.parent_dimension == 7 * 7 * 15
+    @test shared_q6_diagnostics.fixed_dimension == 589
+    @test shared_q6_diagnostics.support_coverage.coverage_ok
+    @test [build.q for build in shared_q6_region_builds] == [4, 6, 4, 4, 4]
+    @test [build.order for build in shared_q6_region_builds] == [4, 6, 4, 4, 4]
+    @test [build.retained_count for build in shared_q6_region_builds] ==
+          [98, 216, 125, 125, 25]
+    @test [build.column_range for build in shared_q6_region_builds] ==
+          [1:98, 374:589, 99:223, 224:348, 349:373]
+    @test shared_q6_region_builds[2].metadata.coefficient_contract == :product_doside
+    @test all(
+        build.retained_count == build.built_support_count for
+        build in shared_q6_region_builds[[1, 3, 4, 5]]
+    )
+    @test shared_q6_diagnostics.metadata.non_shared_q_policy == :fixed_q4_order4
+    @test shared_q6_diagnostics.metadata.shared_q_values == (6,)
+    @test shared_q6_diagnostics.metadata.shared_order_values == (6,)
+
+    shared_q6_readiness =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+            shared_q6_packeted_construction;
+            build_fixed_block = true,
+        )
+    shared_q6_readiness_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+            shared_q6_readiness,
+        )
+    @test shared_q6_readiness_diagnostics.sequence_packet_available
+    @test shared_q6_readiness_diagnostics.overlap_available
+    @test shared_q6_readiness_diagnostics.weights_available
+    @test shared_q6_readiness_diagnostics.overlap_error < 1.0e-8
+    @test shared_q6_readiness_diagnostics.can_produce_fixed_block
+    @test isempty(shared_q6_readiness_diagnostics.fixed_block_missing_fields)
+    @test shared_q6_readiness_diagnostics.fixed_block_built
+    @test shared_q6_readiness_diagnostics.fixed_block_dimension == 589
+    @test shared_q6_readiness_diagnostics.fixed_block_support_count == 7 * 7 * 15
+    @test shared_q6_readiness_diagnostics.staged_by_center_sidecar_available
+    shared_q6_fixed_block = shared_q6_readiness.fixed_block
+    @test shared_q6_fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test size(shared_q6_fixed_block.coefficient_matrix) == (7 * 7 * 15, 589)
+    @test norm(shared_q6_fixed_block.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, shared_q6_fixed_block.weights)
+    @test shared_q6_fixed_block.staged_by_center_sidecar[] isa
+          GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
+
+    shared_q6_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
+        shared_q6_fixed_block;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+        expansion = expansion,
+    )
+    shared_q6_operators = QWCS.qw_operator_construction_receipt_operators(shared_q6_receipt)
+    shared_q6_receipt_diagnostics =
+        QWCS.qw_operator_construction_receipt_diagnostics(shared_q6_receipt)
+    shared_q6_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
+        QWCS.qw_operator_construction_receipt_record(shared_q6_receipt),
+    )
+    @test shared_q6_receipt_diagnostics.delegated_to_existing_builder
+    @test shared_q6_receipt_diagnostics.source_sidecar_agree
+    @test isempty(shared_q6_receipt_diagnostics.mismatch_fields)
+    @test shared_q6_receipt_diagnostics.operator_built
+    @test shared_q6_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
+    @test shared_q6_receipt_diagnostics.interaction_treatment == :ggt_nearest
+    @test shared_q6_receipt_diagnostics.nuclear_term_storage == :total_only
+    @test shared_q6_receipt_diagnostics.dense_parent_matrix_used == false
+    @test shared_q6_receipt_diagnostics.heavy_metric_packet_built == false
+    @test shared_q6_receipt_diagnostics.new_hamiltonian_kernel_used == false
+    @test shared_q6_receipt_diagnostics.numerical_outputs_changed == false
+    @test shared_q6_record_diagnostics.source_sidecar_agree
+    @test isempty(shared_q6_record_diagnostics.mismatch_fields)
+    @test shared_q6_record_diagnostics.source_parent_dimension == 7 * 7 * 15
+    @test shared_q6_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
+    @test shared_q6_record_diagnostics.source_carried_dimension == 589
+    @test shared_q6_record_diagnostics.sidecar_carried_dimension == 589
+    @test shared_q6_operators.gausslet_backend == :pgdg_localized_experimental
+    @test shared_q6_operators.interaction_treatment == :ggt_nearest
+    @test shared_q6_operators.gausslet_count == 589
+    @test shared_q6_operators.residual_count == 0
+    @test size(shared_q6_operators.overlap) == (589, 589)
+    @test size(shared_q6_operators.one_body_hamiltonian) == (589, 589)
+    @test size(shared_q6_operators.interaction_matrix) == (589, 589)
+    @test all(isfinite, shared_q6_operators.overlap)
+    @test all(isfinite, shared_q6_operators.one_body_hamiltonian)
+    @test all(isfinite, shared_q6_operators.interaction_matrix)
+    @test norm(shared_q6_operators.overlap - I, Inf) < 1.0e-8
+    @test norm(
+        shared_q6_operators.one_body_hamiltonian -
+        transpose(shared_q6_operators.one_body_hamiltonian),
+        Inf,
+    ) < 1.0e-12
+    @test norm(
+        shared_q6_operators.interaction_matrix -
+        transpose(shared_q6_operators.interaction_matrix),
+        Inf,
+    ) < 1.0e-12
+
+    shared_q7_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        policy.construction_plan;
+        q_min = 4,
+        atom_q = 4,
+        atom_order = 4,
+        shared_q = 7,
+        shared_order = 7,
+        contact_q = 4,
+        contact_order = 4,
+        outer_mismatch_q = 4,
+        outer_mismatch_order = 4,
+    )
+    shared_q7_error = try
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            shared_q7_policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = false,
+        )
+        nothing
+    catch err
+        err
+    end
+    @test shared_q7_error isa ArgumentError
+    @test occursin(
+        "nested doside retained_count must not exceed the interval size",
+        sprint(showerror, shared_q7_error),
+    )
+
     annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
         policy.construction_plan;
         q_min = 4,
