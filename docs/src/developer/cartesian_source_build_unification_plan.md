@@ -547,6 +547,18 @@ same-density validation, not production default support, and not public route
 readiness. The q label remains a convergence/control parameter, not a validated
 accuracy tier.
 
+The next validation stage should therefore be a q-family/q-ladder study, not a
+deeper one-off q4 conclusion. q4 is the first integration and acceptance
+fixture because it exercises the opt-in recipe, fixed-block handoff, PGDG QW
+smoke, receipt diagnostics, and external-target capture/H1 path end to end.
+The useful q range is a scientific and numerical convergence question that
+depends on molecule, geometry, ECP, basis, and target accuracy. Future q rows
+must keep the same provenance gates: support ownership and grid/order audits,
+PGDG/no-fallback behavior, carried-space and receipt diagnostics, and
+per-column/per-spin capture plus H1 reporting. Reports should separate
+parent-target loss from fixed-space loss, and q-specific evidence should be
+treated as validation anchors rather than hard-coded architecture.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
