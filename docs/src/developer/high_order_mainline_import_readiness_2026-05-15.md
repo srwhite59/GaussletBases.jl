@@ -66,6 +66,14 @@ case but was too aggressive when all shared shells were replaced. The
 `q=5,L=5` policy improves R = 4 energy slightly but costs substantially more
 functions.
 
+For future atom-centered high-order diatomic recipes, this import slice should
+be interpreted with the official box-policy rule: grow protected atom-local
+boxes until contact or near-contact, keep the middle/contact region simple and
+shared, and absorb unavoidable parity/spacing/`q` mismatch at the outermost
+shared molecular shell whenever possible. The full parent box remains the
+default support. A smaller side ladder or cropped parent is a labelled
+diagnostic/research request, not the default route.
+
 ## Evidence
 
 ### One-Shell Replacement

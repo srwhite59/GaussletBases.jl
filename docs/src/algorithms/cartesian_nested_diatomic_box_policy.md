@@ -201,6 +201,42 @@ separate experimental policy described in
 It is still a geometry-policy page. It does not redefine supplement selection,
 residual orthogonalization, overlap assembly, or bundle storage.
 
+## High-Order Recipe Policy
+
+For future high-order or general-`q` bond-aligned diatomic recipes, the
+default construction policy is:
+
+- start from protected atom-centered boxes around each nucleus
+- grow the atom-local boxes outward shell by shell while they remain honest
+  local boxes
+- stop atom-local growth when the two atom regions touch, or when they miss by
+  only a small bond-axis contact layer
+- keep the contact region simple and shared, using a midpoint cap or bridge
+  when needed
+- keep the far exterior as shared molecular structure, using rectangular
+  shell, endcap/panel, annulus, or equivalent owned-unit descriptions
+- cover the full parent box by default
+
+When a parity, spacing, or `q` mismatch has to be absorbed, the preferred
+place to resolve it is the outermost shared molecular shell. Do not put
+awkward leftover geometry into the chemically important middle/contact region
+unless an explicit diagnostic proves that this is the better choice.
+
+This means that the midpoint region should not receive raw leftover slabs just
+because the atom-local boxes do not tile perfectly. The normal resolution is:
+
+- keep atom-local interiors regular and nucleus-centered
+- keep the contact/middle region as simple and symmetric as the molecule
+  permits
+- absorb unavoidable tiling mismatch at the outside boundary through an
+  explicit shared molecular shell policy
+
+Explicit cropped-parent experiments are allowed only as diagnostic or research
+requests. They are not the default construction policy and must be labelled as
+cropped in diagnostics/provenance. Production-directed recipes must preserve
+full parent support coverage and must not use numerical quadrature as a hidden
+fallback for these tiling decisions.
+
 ## Real Implementation Notes
 
 The real repo path is close to the 2D sandbox policy that motivated this
