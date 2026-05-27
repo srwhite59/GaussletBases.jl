@@ -260,9 +260,22 @@ function _experimental_high_order_centered_working_box(
     return (interval, interval, interval)
 end
 
+function _experimental_high_order_default_side_ladder(
+    parent_side::Int,
+    doside::Int,
+)
+    doside <= parent_side || throw(
+        ArgumentError("experimental high-order doside default ladder requires doside <= parent side"),
+    )
+    isodd(parent_side) == isodd(doside) || throw(
+        ArgumentError("experimental high-order doside default ladder cannot cover the full parent with mixed parity; pass explicit sides for a cropped or alternate-parity experiment"),
+    )
+    return collect(doside:2:parent_side)
+end
+
 function _experimental_high_order_validate_request(
     basis::MappedUniformBasis,
-    sides::AbstractVector{<:Integer},
+    sides::Union{Nothing,AbstractVector{<:Integer}},
     doside::Int,
 )
     mapping_family = _experimental_high_order_mapping_family(basis)
@@ -271,8 +284,10 @@ function _experimental_high_order_validate_request(
     )
     n1d = length(basis)
     isodd(n1d) || throw(ArgumentError("experimental high-order doside stack currently requires an odd parent side length"))
-    isempty(sides) && throw(ArgumentError("experimental high-order doside stack requires at least one side length"))
-    side_values = Int[Int(side) for side in sides]
+    side_values = isnothing(sides) ?
+        _experimental_high_order_default_side_ladder(n1d, doside) :
+        Int[Int(side) for side in sides]
+    isempty(side_values) && throw(ArgumentError("experimental high-order doside stack requires at least one side length"))
     first(side_values) == doside || throw(ArgumentError("experimental high-order doside side ladders must start at doside"))
     all(side -> isodd(side) == isodd(doside), side_values) || throw(
         ArgumentError("experimental high-order doside side ladders must keep the same parity as doside"),
@@ -1213,7 +1228,7 @@ function _experimental_high_order_doside_stack_3d(
     axis_data::Union{Nothing,_ExperimentalHighOrderAxisData1D} = nothing,
     backend::Symbol = :numerical_reference,
     doside::Int = 5,
-    sides::AbstractVector{<:Integer} = [5, 7, 9, 11],
+    sides::Union{Nothing,AbstractVector{<:Integer}} = nothing,
 )
     side_values, mapping_family = _experimental_high_order_validate_request(basis, sides, doside)
     axis_data_value = isnothing(axis_data) ? _experimental_high_order_axis_data_1d(basis; backend = backend) : axis_data
@@ -1294,6 +1309,8 @@ function _experimental_high_order_doside_stack_3d(
         parent_dimension = size(parent_overlap, 1),
         stack_dimension = size(accumulated, 2),
         parent_padding = length(basis) - maximum(side_values),
+        side_ladder_source = isnothing(sides) ? :default_full_parent : :explicit,
+        support_coverage = maximum(side_values) == length(basis) ? :full_parent : :explicit_cropped_parent,
         shell_dimensions = Int[length(shell.shell_labels) for shell in shell_layers],
         shell_kind_counts = [shell.shell_kind_counts for shell in shell_layers],
         overlap_error = _experimental_high_order_overlap_error(accumulated, parent_overlap),

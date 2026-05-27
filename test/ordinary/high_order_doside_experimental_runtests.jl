@@ -650,6 +650,19 @@ end
 end
 
 @testset "Experimental high-order doside stack core dimensions" begin
+    @test GaussletBases._experimental_high_order_default_side_ladder(29, 5) == collect(5:2:29)
+    @test_throws ArgumentError GaussletBases._experimental_high_order_default_side_ladder(29, 4)
+
+    default_basis = _experimental_high_order_identity_basis(7)
+    default_stack = GaussletBases._experimental_high_order_doside_stack_3d(
+        default_basis;
+        backend = :numerical_reference,
+    )
+    @test default_stack.sides == [5, 7]
+    @test default_stack.diagnostics.parent_padding == 0
+    @test default_stack.diagnostics.side_ladder_source == :default_full_parent
+    @test default_stack.diagnostics.support_coverage == :full_parent
+
     for (sides, expected_dimension) in (
         ([5], 125),
         ([5, 7], 223),
@@ -668,6 +681,8 @@ end
         @test stack.parent_side == maximum(sides)
         @test size(stack.coefficient_matrix, 2) == expected_dimension
         @test stack.diagnostics.stack_dimension == expected_dimension
+        @test stack.diagnostics.side_ladder_source == :explicit
+        @test stack.diagnostics.support_coverage == :full_parent
     end
 end
 

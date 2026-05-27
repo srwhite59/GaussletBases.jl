@@ -193,7 +193,7 @@ _experimental_high_order_doside_stack_3d(
     basis::MappedUniformBasis;
     backend::Symbol = :numerical_reference,
     doside::Int = 5,
-    sides::AbstractVector{<:Integer} = [5, 7, 9, 11],
+    sides::Union{Nothing,AbstractVector{<:Integer}} = nothing,
 )
 ```
 
@@ -202,6 +202,10 @@ Phase-1 constructor rules:
 - `basis` must be uniform and undistorted
 - cubic parent only
 - `doside == 5`
+- `sides = nothing` means use the full parent box, with the default ladder
+  `doside:2:length(basis)`
+- explicit `sides` with `maximum(sides) < length(basis)` is a cropped
+  diagnostic/research request, not the default construction policy
 - `sides[1] == 5`
 - all `sides` odd
 - `sides` strictly increasing by `2`
