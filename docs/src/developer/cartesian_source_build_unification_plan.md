@@ -522,6 +522,31 @@ repo-native parent one-body target. It does not replace a real target-space
 occupied capture, PySCF comparison, CR2 handoff, same-density test, or chemistry
 validation.
 
+Pass 001 of the 2026-05-27 CR2 handoff added the first external-target
+capture/H1 diagnostic for this exact q4 fixture. The target provenance was
+duplicated one-center PySCF Cr ccECP occupied spaces, source-metric Lowdin in
+the two-center GTO AO metric. The handoff matrices had shapes alpha
+`(735, 20)`, beta `(735, 8)`, and combined `(735, 28)`. The repo diagnostic
+verified the q4 fixture, grid order, and center coordinates exactly, with
+parent and fixed backends both `:pgdg_localized_experimental`, warning log
+count `0`, and `numerical_reference_fallback = false`.
+
+That external target had lower capture into the q4 parent itself than into the
+q4 fixed block: CR2-reported parent capture was alpha `0.9558876918` and beta
+`0.9811637481`. Conditional on that q4 parent target, the opt-in fixed block
+captured alpha `0.9994161870`, beta `0.9998427016`, and combined spin-sum
+`0.9995403327`. The worst alpha column was `alpha_right_mo7_col18` with
+capture `0.9987695368`; the worst beta column was `beta_left_mo0_col1` with
+capture `0.9998415239`. The max absolute H1 delta was `7.249921e-03`.
+
+This separates two questions. The q4 fixed block captures the supplied q4
+parent-space target well, but the q4 parent target already loses some of the
+original CR2 occupied-space norm. This is still only a fixed-space capture/H1
+diagnostic. It is not relaxed Cr2 energy evidence, not a two-electron or
+same-density validation, not production default support, and not public route
+readiness. The q label remains a convergence/control parameter, not a validated
+accuracy tier.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the

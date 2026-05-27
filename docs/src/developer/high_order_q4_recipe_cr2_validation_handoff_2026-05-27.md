@@ -14,6 +14,23 @@ Repo-side evidence currently covers:
 - one dimensionally matched repo-native parent-reference capture/H1 sanity
   check
 
+The CR2 external-target diagnostic used duplicated one-center PySCF Cr ccECP
+occupied spaces with source-metric Lowdin in the two-center GTO AO metric. It
+verified the exact q4 fixture, grid order, and centers for alpha `(735, 20)`,
+beta `(735, 8)`, and combined `(735, 28)` target matrices. The q4 parent
+capture reported by CR2 was alpha `0.9558876918` and beta `0.9811637481`.
+Conditional on that q4 parent target, the opt-in fixed block captured alpha
+`0.9994161870`, beta `0.9998427016`, and combined spin-sum `0.9995403327`.
+Worst-column capture was `0.9987695368` for `alpha_right_mo7_col18` and
+`0.9998415239` for `beta_left_mo0_col1`; max absolute H1 delta was
+`7.249921e-03`. The diagnostic used `:pgdg_localized_experimental`, warning
+log count `0`, and no numerical-reference fallback.
+
+This updates the request note with one completed capture/H1 check only. It
+does not validate relaxed Cr2 energy, two-electron terms, same-density
+energies, production defaults, or public route readiness. The q label remains a
+convergence/control parameter, not a validated accuracy tier.
+
 The existing side-29 Cr occupied artifacts are not compatible with this q4
 fixture and must not be reused for this validation.
 
