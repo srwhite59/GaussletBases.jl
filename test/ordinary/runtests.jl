@@ -1975,6 +1975,15 @@ end
           diagnostics_via_source.child_sequence_dimensions
     @test diagnostics_via_source.child_sequence_dimensions ==
         diagnostics_via_basis.child_sequence_dimensions
+    @test diagnostics_via_source.atom_growth_anatomy.status ==
+        :unavailable_for_current_geometry
+    @test diagnostics_via_source.atom_growth_anatomy.protected_atom_side_count == 5
+    @test occursin(
+        "overlap before clean contact",
+        diagnostics_via_source.atom_growth_anatomy.unavailable_reason,
+    )
+    @test diagnostics_via_context.atom_growth_anatomy.status ==
+        diagnostics_via_source.atom_growth_anatomy.status
     @test diagnostics_via_source.fixed_dimension == diagnostics_via_basis.fixed_dimension
     @test diagnostics_via_source.contract_audit.support_count ==
         diagnostics_via_basis.contract_audit.support_count
@@ -2013,6 +2022,54 @@ end
         fixed_via_source.fixed_block.coefficient_matrix,
         Inf,
     ) < 1.0e-12
+end
+
+@testset "Bond-aligned diatomic diagnostics expose atom-growth anatomy" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 5.0,
+        core_spacing = 0.7,
+        xmax_parallel = 8.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    diagnostics = bond_aligned_diatomic_nested_geometry_diagnostics(
+        basis;
+        nside = 5,
+    )
+    source = bond_aligned_diatomic_nested_fixed_source(
+        basis;
+        nside = 5,
+    )
+    source_diagnostics = bond_aligned_diatomic_nested_geometry_diagnostics(source)
+    anatomy = diagnostics.atom_growth_anatomy
+
+    @test anatomy.status == :available
+    @test anatomy.protected_atom_side_count == 5
+    @test anatomy.atom_axis_indices == (5, 11)
+    @test anatomy.atom_side_count_ladder == [5]
+    @test anatomy.final_atom_side_count == 5
+    @test anatomy.contact_policy == :single_shared_contact_cap
+    @test anatomy.left_atom_box == (2:6, 2:6, 3:7)
+    @test anatomy.right_atom_box == (2:6, 2:6, 9:13)
+    @test anatomy.contact_box == (2:6, 2:6, 8:8)
+    @test anatomy.inner_atom_contact_box == (2:6, 2:6, 3:13)
+    @test anatomy.outer_regular_start_box == (1:7, 1:7, 2:14)
+    @test anatomy.regular_shared_shell_count == 1
+    @test anatomy.outer_mismatch_low_counts == (0, 0, 1)
+    @test anatomy.outer_mismatch_high_counts == (0, 0, 1)
+    @test anatomy.support_coverage.status == :full_parent_covered
+    @test anatomy.support_coverage.expected_support_count == 7 * 7 * 15
+    @test anatomy.support_coverage.atom_contact_support_count == 275
+    @test anatomy.support_coverage.shared_molecular_support_count == 460
+    @test anatomy.support_coverage.coverage_ok
+    @test anatomy.documented_policy_agrees
+    @test isnothing(anatomy.unavailable_reason)
+    @test source_diagnostics.atom_growth_anatomy.status == anatomy.status
+    @test source_diagnostics.atom_growth_anatomy.left_atom_box == anatomy.left_atom_box
+    @test source_diagnostics.atom_growth_anatomy.right_atom_box == anatomy.right_atom_box
+    @test source_diagnostics.atom_growth_anatomy.contact_policy == anatomy.contact_policy
+    @test source_diagnostics.atom_growth_anatomy.support_coverage.coverage_ok
 end
 
 @testset "Experimental bond-aligned homonuclear chain nested QW consumer path" begin

@@ -249,6 +249,66 @@ function _nested_source_frontend_fixed_block(
     return _nested_source_fixed_block(_nested_source_frontend_source(context))
 end
 
+function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    protected_atom_side_count = source.nside
+    try
+        anatomy = _nested_bond_aligned_diatomic_atom_growth_anatomy(
+            source.basis,
+            source.axis_bundles;
+            protected_atom_side_count,
+        )
+        documented_policy_agrees =
+            anatomy.recipe.contact_cap_policy == :single_shared_contact_cap &&
+            anatomy.recipe.mismatch_absorption_policy == :outermost_shared_molecular_shell &&
+            anatomy.support_coverage.status == :full_parent_covered &&
+            anatomy.support_coverage.coverage_ok
+        return (
+            status = :available,
+            protected_atom_side_count = protected_atom_side_count,
+            anatomy = anatomy,
+            atom_axis_indices = anatomy.recipe.atom_axis_indices,
+            atom_side_count_ladder = anatomy.atom_side_count_ladder,
+            final_atom_side_count = anatomy.final_atom_side_count,
+            contact_policy = anatomy.contact_policy,
+            left_atom_box = anatomy.left_atom_box,
+            right_atom_box = anatomy.right_atom_box,
+            contact_box = anatomy.contact_box,
+            inner_atom_contact_box = anatomy.inner_atom_contact_box,
+            outer_regular_start_box = anatomy.outer_regular_start_box,
+            regular_shared_shell_count = anatomy.regular_shared_shell_count,
+            outer_mismatch_low_counts = anatomy.outer_mismatch_low_counts,
+            outer_mismatch_high_counts = anatomy.outer_mismatch_high_counts,
+            support_coverage = anatomy.support_coverage,
+            documented_policy_agrees = documented_policy_agrees,
+            unavailable_reason = nothing,
+        )
+    catch err
+        err isa ArgumentError || rethrow()
+        return (
+            status = :unavailable_for_current_geometry,
+            protected_atom_side_count = protected_atom_side_count,
+            anatomy = nothing,
+            atom_axis_indices = nothing,
+            atom_side_count_ladder = Int[],
+            final_atom_side_count = 0,
+            contact_policy = :unavailable,
+            left_atom_box = nothing,
+            right_atom_box = nothing,
+            contact_box = nothing,
+            inner_atom_contact_box = nothing,
+            outer_regular_start_box = nothing,
+            regular_shared_shell_count = 0,
+            outer_mismatch_low_counts = (0, 0, 0),
+            outer_mismatch_high_counts = (0, 0, 0),
+            support_coverage = nothing,
+            documented_policy_agrees = false,
+            unavailable_reason = sprint(showerror, err),
+        )
+    end
+end
+
 struct _CartesianNestedSourceGlassBoxContract{A}
     fixed_dimension::Int
     contract_audit::A
@@ -530,6 +590,7 @@ function _bond_aligned_diatomic_nested_geometry_diagnostics(
             child_sequence_dimensions = child_sequence_dimensions,
             fixed_dimension = common_contract.fixed_dimension,
             contract_audit = common_contract.contract_audit,
+            atom_growth_anatomy = _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(source),
         )
     end
 end
