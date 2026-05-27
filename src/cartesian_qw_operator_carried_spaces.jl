@@ -10,6 +10,16 @@ import ..GaussletBases:
     MappedUniformBasis,
     OrdinaryCartesianOperators3D,
     _NestedFixedBlock3D,
+    _nested_bond_aligned_diatomic_high_order_recipe_policy,
+    _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics,
+    _nested_bond_aligned_diatomic_high_order_recipe_realization_audit,
+    _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics,
+    _nested_bond_aligned_diatomic_high_order_recipe_source_construction,
+    _nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics,
+    _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block,
+    _nested_bond_aligned_diatomic_high_order_recipe_source_readiness,
+    _nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics,
+    _qwrg_bond_aligned_axis_bundles,
     _normalized_atomic_build_context,
     _normalized_bond_aligned_build_context,
     _resolve_atomic_qw_gausslet_backend,
@@ -19,6 +29,7 @@ import ..GaussletBases:
     _validate_operator_route_backend,
     _validate_operator_route_interaction_treatment,
     basis_representation,
+    coulomb_gaussian_expansion,
     ordinary_cartesian_qiu_white_operators
 import ..GaussletBases.CartesianCarriedSpaces:
     CartesianCarriedSpace3D,
@@ -142,6 +153,52 @@ struct CartesianQWOperatorConstructionReceipt3D{
     provenance::V
 end
 
+"""
+    _BondAlignedDiatomicHighOrderQRowRouteReceipt3D
+
+Internal q-row route receipt for the experimental high-order diatomic
+atom-growth/endcap-panel path. It records existing policy, source, fixed-block,
+and QW receipt objects for diagnostics only; all numerical work is delegated to
+the existing nested source and QW builders.
+"""
+struct _BondAlignedDiatomicHighOrderQRowRouteReceipt3D{
+    B,
+    E,
+    A,
+    P,
+    PD,
+    RA,
+    RD,
+    C,
+    CD,
+    R,
+    RDD,
+    F,
+    QR,
+    QD,
+    QCD,
+    D,
+    PR,
+}
+    basis::B
+    expansion::E
+    axis_bundles::A
+    policy::P
+    policy_diagnostics::PD
+    realization_audit::RA
+    realization_diagnostics::RD
+    source_construction::C
+    source_construction_diagnostics::CD
+    readiness::R
+    readiness_diagnostics::RDD
+    fixed_block::F
+    qw_receipt::QR
+    qw_receipt_diagnostics::QD
+    qw_record_diagnostics::QCD
+    diagnostics::D
+    provenance::PR
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -179,6 +236,14 @@ qw_operator_construction_receipt_diagnostics(
 ) = receipt.diagnostics
 qw_operator_construction_receipt_provenance(
     receipt::CartesianQWOperatorConstructionReceipt3D,
+) = receipt.provenance
+
+_nested_bond_aligned_diatomic_high_order_q_row_route_diagnostics(
+    receipt::_BondAlignedDiatomicHighOrderQRowRouteReceipt3D,
+) = receipt.diagnostics
+
+_nested_bond_aligned_diatomic_high_order_q_row_route_provenance(
+    receipt::_BondAlignedDiatomicHighOrderQRowRouteReceipt3D,
 ) = receipt.provenance
 
 const _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE = (
@@ -1285,6 +1350,205 @@ function cartesian_qw_operator_construction_receipt(
         operators,
         :bond_aligned_molecular_nested_fixed_block_input,
         forwarded_keyword_names,
+    )
+end
+
+function _nested_q_row_retained_counts(region_builds)
+    return Tuple(build.retained_count for build in region_builds)
+end
+
+function _nested_q_row_shared_retained_count(region_builds)
+    shared_counts = [
+        build.retained_count for build in region_builds
+        if build.role == :regular_shared_molecular_shell
+    ]
+    return isempty(shared_counts) ? nothing : only(shared_counts)
+end
+
+function _nested_q_row_region_roles(region_builds)
+    return Tuple(build.role for build in region_builds)
+end
+
+"""
+    _nested_bond_aligned_diatomic_high_order_q_row_route_receipt(basis; shared_q, ...)
+
+Internal q-row receipt for the experimental high-order diatomic
+atom-growth/endcap-panel path. The helper only composes existing recipe,
+fixed-block, and QW receipt helpers; it does not add a public frontend, change
+defaults, or implement Hamiltonian kernels.
+"""
+function _nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
+    basis::BondAlignedDiatomicQWBasis3D;
+    shared_q::Integer,
+    shared_order::Integer = shared_q,
+    protected_atom_side_count::Integer = 5,
+    q_min::Integer = 4,
+    nside::Integer = 5,
+    expansion = coulomb_gaussian_expansion(doacc = false),
+    term_coefficients = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+    nuclear_charges::AbstractVector{<:Real} = basis.nuclear_charges,
+    nuclear_term_storage::Symbol = :total_only,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+)
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError(
+            "experimental high-order q-row route receipt requires gausslet_backend = :pgdg_localized_experimental",
+        ),
+    )
+    q_min_int = Int(q_min)
+    q_min_int == 4 || throw(
+        ArgumentError("experimental high-order q-row route receipt currently requires q_min = 4"),
+    )
+    shared_q_int = Int(shared_q)
+    shared_order_int = Int(shared_order)
+    nside_int = Int(nside)
+    protected_atom_side_count_int = Int(protected_atom_side_count)
+    coefficients =
+        isnothing(term_coefficients) ? Float64.(expansion.coefficients) :
+        Float64.(term_coefficients)
+
+    axis_bundles = _qwrg_bond_aligned_axis_bundles(basis, expansion)
+    policy = _nested_bond_aligned_diatomic_high_order_recipe_policy(
+        basis,
+        axis_bundles;
+        protected_atom_side_count = protected_atom_side_count_int,
+        q_min = q_min_int,
+        atom_q = 4,
+        atom_order = 4,
+        shared_q = shared_q_int,
+        shared_order = shared_order_int,
+        contact_q = 4,
+        contact_order = 4,
+        outer_mismatch_q = 4,
+        outer_mismatch_order = 4,
+    )
+    policy_diagnostics = _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(
+        policy,
+    )
+    realization_audit = _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
+        policy,
+    )
+    realization_diagnostics =
+        _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics(
+            realization_audit,
+        )
+    source_construction =
+        _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            axis_bundles,
+            policy;
+            nside = nside_int,
+            term_coefficients = coefficients,
+            packet_kernel = packet_kernel,
+            build_sequence_packet = true,
+        )
+    source_diagnostics =
+        _nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+            source_construction,
+        )
+    readiness = _nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+        source_construction;
+        build_fixed_block = true,
+    )
+    readiness_diagnostics =
+        _nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+            readiness,
+        )
+    fixed_block = readiness.fixed_block
+    isnothing(fixed_block) && throw(
+        ArgumentError("experimental high-order q-row route receipt did not produce a fixed block"),
+    )
+
+    # Keep the existing helper as the fixed-block contract oracle without
+    # rebuilding the block: readiness used it when `build_fixed_block=true`.
+    readiness_diagnostics.can_produce_fixed_block || throw(
+        ArgumentError(
+            "experimental high-order q-row route receipt is not fixed-block ready",
+        ),
+    )
+
+    qw_receipt = cartesian_qw_operator_construction_receipt(
+        fixed_block;
+        nuclear_charges = nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+        expansion = expansion,
+    )
+    qw_receipt_diagnostics = qw_operator_construction_receipt_diagnostics(qw_receipt)
+    qw_record_diagnostics = qw_operator_construction_record_diagnostics(
+        qw_operator_construction_receipt_record(qw_receipt),
+    )
+    operators = qw_operator_construction_receipt_operators(qw_receipt)
+    region_builds = source_diagnostics.region_builds
+    diagnostics = (
+        route_label = :bond_aligned_diatomic_high_order_q_row_route,
+        receipt_contract = :delegate_existing_recipe_fixed_block_and_qw_receipt,
+        shared_q = shared_q_int,
+        shared_order = shared_order_int,
+        q_min = q_min_int,
+        protected_atom_side_count = protected_atom_side_count_int,
+        nside = nside_int,
+        non_shared_q_policy = get(source_diagnostics.metadata, :non_shared_q_policy, :unknown),
+        parent_dimension = readiness_diagnostics.parent_dimension,
+        fixed_dimension = readiness_diagnostics.fixed_dimension,
+        retained_counts_by_region = _nested_q_row_retained_counts(region_builds),
+        shared_retained_count = _nested_q_row_shared_retained_count(region_builds),
+        region_roles = _nested_q_row_region_roles(region_builds),
+        support_coverage = source_diagnostics.support_coverage,
+        overlap_error = readiness_diagnostics.overlap_error,
+        staged_sidecar_available =
+            readiness_diagnostics.staged_by_center_sidecar_available,
+        backend = qw_receipt_diagnostics.gausslet_backend,
+        interaction_treatment = qw_receipt_diagnostics.interaction_treatment,
+        nuclear_term_storage = qw_receipt_diagnostics.nuclear_term_storage,
+        residual_count = operators.residual_count,
+        gausslet_count = operators.gausslet_count,
+        source_sidecar_agree = qw_receipt_diagnostics.source_sidecar_agree &&
+                               qw_record_diagnostics.source_sidecar_agree,
+        mismatch_fields = Tuple(qw_receipt_diagnostics.mismatch_fields),
+        dense_parent_matrix_used = qw_receipt_diagnostics.dense_parent_matrix_used,
+        heavy_metric_packet_built = qw_receipt_diagnostics.heavy_metric_packet_built,
+        new_hamiltonian_kernel_used = qw_receipt_diagnostics.new_hamiltonian_kernel_used,
+        numerical_outputs_changed = qw_receipt_diagnostics.numerical_outputs_changed,
+        default_source_builder_changed =
+            get(source_diagnostics.metadata, :default_source_builder_changed, false),
+        active_builder_consumes = source_diagnostics.active_builder_consumes,
+    )
+    provenance = (
+        source = :_nested_bond_aligned_diatomic_high_order_q_row_route_receipt,
+        basis_type = nameof(typeof(basis)),
+        q_row_scope = :shared_endcap_panel_only,
+        non_shared_q_policy = :fixed_q4_order4,
+        source_builder =
+            :_nested_bond_aligned_diatomic_high_order_recipe_source_construction,
+        fixed_block_builder =
+            :_nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block,
+        qw_builder = :cartesian_qw_operator_construction_receipt,
+        public_api = false,
+        science_validation = false,
+    )
+
+    return _BondAlignedDiatomicHighOrderQRowRouteReceipt3D(
+        basis,
+        expansion,
+        axis_bundles,
+        policy,
+        policy_diagnostics,
+        realization_audit,
+        realization_diagnostics,
+        source_construction,
+        source_diagnostics,
+        readiness,
+        readiness_diagnostics,
+        fixed_block,
+        qw_receipt,
+        qw_receipt_diagnostics,
+        qw_record_diagnostics,
+        diagnostics,
+        provenance,
     )
 end
 

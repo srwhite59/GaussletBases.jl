@@ -1353,6 +1353,75 @@ end
         sprint(showerror, shared_q7_error),
     )
 
+    q_row_expectations = (
+        (q = 4, fixed_dimension = 469, retained = (98, 96, 125, 125, 25), shared = 96),
+        (q = 5, fixed_dimension = 523, retained = (98, 150, 125, 125, 25), shared = 150),
+        (q = 6, fixed_dimension = 589, retained = (98, 216, 125, 125, 25), shared = 216),
+    )
+    for expected in q_row_expectations
+        q_row_receipt = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
+            basis;
+            shared_q = expected.q,
+            shared_order = expected.q,
+            protected_atom_side_count = 5,
+            q_min = 4,
+            nside = 5,
+            expansion = expansion,
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q_row_diagnostics =
+            QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_diagnostics(
+                q_row_receipt,
+            )
+        @test q_row_diagnostics.route_label ==
+              :bond_aligned_diatomic_high_order_q_row_route
+        @test q_row_diagnostics.shared_q == expected.q
+        @test q_row_diagnostics.shared_order == expected.q
+        @test q_row_diagnostics.non_shared_q_policy == :fixed_q4_order4
+        @test q_row_diagnostics.parent_dimension == 7 * 7 * 15
+        @test q_row_diagnostics.fixed_dimension == expected.fixed_dimension
+        @test q_row_diagnostics.retained_counts_by_region == expected.retained
+        @test q_row_diagnostics.shared_retained_count == expected.shared
+        @test q_row_diagnostics.overlap_error < 1.0e-8
+        @test q_row_diagnostics.staged_sidecar_available
+        @test q_row_diagnostics.backend == :pgdg_localized_experimental
+        @test q_row_diagnostics.residual_count == 0
+        @test q_row_diagnostics.gausslet_count == expected.fixed_dimension
+        @test q_row_diagnostics.source_sidecar_agree
+        @test isempty(q_row_diagnostics.mismatch_fields)
+        @test q_row_diagnostics.dense_parent_matrix_used == false
+        @test q_row_diagnostics.heavy_metric_packet_built == false
+        @test q_row_diagnostics.new_hamiltonian_kernel_used == false
+        @test q_row_diagnostics.default_source_builder_changed == false
+    end
+
+    @test_throws ArgumentError QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
+        basis;
+        shared_q = 4,
+        expansion = expansion,
+        gausslet_backend = :numerical_reference,
+    )
+    q_row_q7_error = try
+        QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
+            basis;
+            shared_q = 7,
+            shared_order = 7,
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        nothing
+    catch err
+        err
+    end
+    @test q_row_q7_error isa ArgumentError
+    @test occursin(
+        "nested doside retained_count must not exceed the interval size",
+        sprint(showerror, q_row_q7_error),
+    )
+
     annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
         policy.construction_plan;
         q_min = 4,
