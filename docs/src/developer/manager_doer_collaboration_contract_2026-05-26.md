@@ -136,6 +136,56 @@ The manager may commit and push directly when:
 If the situation is ambiguous, the manager should either hold the commit or make
 the next blurb include explicit commit commands for the doer.
 
+## File-baton loop policy
+
+Longer manager/doer runs can use a repo-local, ignored handoff directory such
+as `.agent_handoffs/<run_id>/`. This is useful when the manager should direct a
+doer for several bounded passes without a user paste between every pass.
+
+The durable loop shape is:
+
+1. Manager writes `RUN.md`, `state.md`, `DOER_STARTUP.md`, and
+   `MANAGER_STARTUP.md`.
+2. Manager publishes exactly one `blurb.NNN.md` at a time, using an atomic
+   `.tmp`-then-rename write.
+3. Doer reads only the active pass named by `state.md`, executes it, writes
+   `response.NNN.md.tmp`, renames it to `response.NNN.md`, and then keeps
+   polling.
+4. Manager reviews the actual repo state and diff, validates, commits/pushes if
+   appropriate, writes `review.NNN.md`, updates `state.md`, and then publishes
+   the next blurb or a stop/attention file.
+
+`state.md` is authoritative for the active pass, but it is not a stop signal by
+itself. If the doer has written `response.NNN.md` and `state.md` still points
+to `blurb.NNN.md`, the doer should assume the manager has not advanced the
+baton yet or that file sync/context is stale. The correct behavior is to keep
+polling `state.md`, `ATTENTION.md`, `STOP.md`, and `blurb.NNN+1.md`. Do not
+rerun pass `NNN`, and do not stop merely because `state.md` has not advanced.
+
+Actual doer stop conditions are:
+
+- `STOP.md` appears
+- `ATTENTION.md` appears
+- the run reaches its explicit max pass count and the current response has been
+  written
+- a real blocker prevents safe progress
+- the manager or user explicitly says to stop
+
+Every polling cycle should reread `DOER_STARTUP.md` and `state.md` from disk
+rather than relying on remembered loop state. This matters in long runs and in
+cross-machine Dropbox runs, where context or file sync can lag behind the
+manager's last action.
+
+The doer should ignore `.tmp` files, should never update manager-owned files
+such as `state.md`, `review.NNN.md`, `ATTENTION.md`, or `STOP.md`, and should
+never self-assign `blurb.NNN+1.md`.
+
+The manager should treat the loop as a review discipline, not a commit
+machine. Every pass still needs actual diff/status inspection, risk-sized
+validation, clean staging, and a written `review.NNN.md`. It is fine to stop a
+loop early at a natural boundary rather than spend the remaining pass budget on
+low-value churn.
+
 ## Validation judgment
 
 Do not run broad slow tests automatically just because a doer reported them.
