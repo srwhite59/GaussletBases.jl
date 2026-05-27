@@ -1978,6 +1978,9 @@ end
     @test diagnostics_via_source.atom_growth_anatomy.status ==
         :unavailable_for_current_geometry
     @test diagnostics_via_source.atom_growth_anatomy.protected_atom_side_count == 5
+    @test isnothing(diagnostics_via_source.atom_growth_anatomy.construction_plan)
+    @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_policy)
+    @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_policy_diagnostics)
     @test occursin(
         "overlap before clean contact",
         diagnostics_via_source.atom_growth_anatomy.unavailable_reason,
@@ -2064,6 +2067,26 @@ end
     @test anatomy.support_coverage.shared_molecular_support_count == 460
     @test anatomy.support_coverage.coverage_ok
     @test anatomy.documented_policy_agrees
+    @test anatomy.construction_plan.support_coverage.coverage_ok
+    @test anatomy.construction_plan.region_order == [
+        :outer_mismatch_shared_molecular_shell,
+        :regular_shared_molecular_shell,
+        :left_atom_box,
+        :right_atom_box,
+        :contact_cap,
+    ]
+    @test anatomy.recipe_policy.recipe_label == :mixed_atom_cubic_shared_endcap_panel
+    @test anatomy.recipe_policy.q_region_counts == Dict(4 => 5)
+    @test anatomy.recipe_policy.buildable_region_count == 3
+    @test anatomy.recipe_policy.planned_region_count == 2
+    @test anatomy.recipe_policy.experimental_region_count == 0
+    @test anatomy.recipe_policy_diagnostics.active_builder_uses_policy == false
+    @test anatomy.recipe_policy_diagnostics.region_choices[1].recipe_family ==
+        :outermost_mismatch_shared_molecular_shell
+    @test anatomy.recipe_policy_diagnostics.region_choices[2].recipe_family ==
+        :shared_endcap_panel_exterior
+    @test anatomy.recipe_policy_diagnostics.region_choices[3].recipe_family ==
+        :protected_atom_cubic_shell
     @test isnothing(anatomy.unavailable_reason)
     @test source_diagnostics.atom_growth_anatomy.status == anatomy.status
     @test source_diagnostics.atom_growth_anatomy.left_atom_box == anatomy.left_atom_box

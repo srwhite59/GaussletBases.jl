@@ -172,6 +172,48 @@ struct _BondAlignedDiatomicAtomGrowthConstructionPlan3D
     middle_contact_clean::Bool
 end
 
+"""
+    _BondAlignedDiatomicHighOrderRecipeRegionChoice3D
+
+Internal per-region high-order recipe selection metadata. This records what a
+future construction consumer selected by q/order and whether that piece is
+currently buildable or only planned/experimental. It does not build any
+coefficient maps or operators.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeRegionChoice3D
+    region_role::Symbol
+    region_order_index::Int
+    region_category::Symbol
+    recipe_family::Symbol
+    q::Int
+    order::Int
+    q_min::Int
+    support_count::Int
+    implementation_status::Symbol
+    buildability_status::Symbol
+    selected::Bool
+    metadata::NamedTuple
+end
+
+"""
+    _BondAlignedDiatomicHighOrderRecipePolicy3D
+
+Internal q-organized high-order recipe policy layered on an atom-growth
+construction plan. This is a diagnostic/planning object only; active diatomic
+source construction and Hamiltonian paths do not consume it yet.
+"""
+struct _BondAlignedDiatomicHighOrderRecipePolicy3D
+    construction_plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D
+    recipe_label::Symbol
+    q_min::Int
+    region_choices::Vector{_BondAlignedDiatomicHighOrderRecipeRegionChoice3D}
+    q_region_counts::Dict{Int,Int}
+    buildable_region_count::Int
+    planned_region_count::Int
+    experimental_region_count::Int
+    metadata::NamedTuple
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -249,6 +291,21 @@ function Base.show(io::IO, plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3
         plan.support_coverage.coverage_ok,
         ", outer_mismatch_is_outermost=",
         plan.outer_mismatch_is_outermost,
+        ")",
+    )
+end
+
+function Base.show(io::IO, policy::_BondAlignedDiatomicHighOrderRecipePolicy3D)
+    print(
+        io,
+        "_BondAlignedDiatomicHighOrderRecipePolicy3D(label=:",
+        policy.recipe_label,
+        ", q_min=",
+        policy.q_min,
+        ", nregions=",
+        length(policy.region_choices),
+        ", buildable=",
+        policy.buildable_region_count,
         ")",
     )
 end
@@ -867,6 +924,327 @@ function _nested_bond_aligned_diatomic_atom_growth_construction_plan(
 )
     return _nested_bond_aligned_diatomic_atom_growth_construction_plan(
         _nested_bond_aligned_diatomic_atom_growth_anatomy(parent_box; kwargs...),
+    )
+end
+
+function _nested_diatomic_high_order_recipe_region_category(role::Symbol)
+    role in (:left_atom_box, :right_atom_box) && return :atom_local
+    role == :contact_cap && return :contact_cap
+    role == :regular_shared_molecular_shell && return :shared_exterior
+    role == :outer_mismatch_shared_molecular_shell && return :outer_mismatch
+    throw(ArgumentError("unsupported diatomic high-order recipe region role $role"))
+end
+
+function _nested_diatomic_high_order_default_recipe_label(shared_exterior_family::Symbol)
+    shared_exterior_family == :shared_endcap_panel_exterior &&
+        return :mixed_atom_cubic_shared_endcap_panel
+    shared_exterior_family == :transverse_annulus_exterior &&
+        return :mixed_atom_cubic_shared_transverse_annulus
+    throw(ArgumentError("unsupported shared-exterior recipe family $shared_exterior_family"))
+end
+
+function _nested_diatomic_high_order_recipe_status(recipe_family::Symbol)
+    if recipe_family == :protected_atom_cubic_shell
+        return (
+            implementation_status = :validated_improvement,
+            buildability_status = :buildable_now,
+        )
+    elseif recipe_family == :shared_endcap_panel_exterior
+        return (
+            implementation_status = :validated_improvement,
+            buildability_status = :buildable_now,
+        )
+    elseif recipe_family == :transverse_annulus_exterior
+        return (
+            implementation_status = :promising_experimental,
+            buildability_status = :planned_experimental,
+        )
+    elseif recipe_family == :shared_contact_cap
+        return (
+            implementation_status = :planned_policy_metadata,
+            buildability_status = :planned_only,
+        )
+    elseif recipe_family == :outermost_mismatch_shared_molecular_shell
+        return (
+            implementation_status = :planned_policy_metadata,
+            buildability_status = :planned_only,
+        )
+    end
+    throw(ArgumentError("unsupported diatomic high-order recipe family $recipe_family"))
+end
+
+function _nested_diatomic_high_order_recipe_family(
+    region_category::Symbol;
+    atom_recipe_family::Symbol,
+    shared_exterior_family::Symbol,
+    contact_recipe_family::Symbol,
+    outer_mismatch_recipe_family::Symbol,
+)
+    region_category == :atom_local && return atom_recipe_family
+    region_category == :shared_exterior && return shared_exterior_family
+    region_category == :contact_cap && return contact_recipe_family
+    region_category == :outer_mismatch && return outer_mismatch_recipe_family
+    throw(ArgumentError("unsupported diatomic high-order recipe region category $region_category"))
+end
+
+function _nested_diatomic_high_order_recipe_q_order(
+    region_category::Symbol;
+    q_min::Int,
+    atom_q::Int,
+    atom_order::Int,
+    shared_q::Int,
+    shared_order::Int,
+    contact_q::Int,
+    contact_order::Int,
+    outer_mismatch_q::Int,
+    outer_mismatch_order::Int,
+)
+    q, order =
+        region_category == :atom_local ? (atom_q, atom_order) :
+        region_category == :shared_exterior ? (shared_q, shared_order) :
+        region_category == :contact_cap ? (contact_q, contact_order) :
+        region_category == :outer_mismatch ? (outer_mismatch_q, outer_mismatch_order) :
+        throw(ArgumentError("unsupported diatomic high-order recipe region category $region_category"))
+    q >= q_min || throw(
+        ArgumentError("diatomic high-order recipe region q=$q is below q_min=$q_min"),
+    )
+    order >= 1 || throw(
+        ArgumentError("diatomic high-order recipe region order must be positive"),
+    )
+    return q, order
+end
+
+function _nested_diatomic_high_order_recipe_region_choice(
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D;
+    q_min::Int,
+    atom_recipe_family::Symbol,
+    shared_exterior_family::Symbol,
+    contact_recipe_family::Symbol,
+    outer_mismatch_recipe_family::Symbol,
+    atom_q::Int,
+    atom_order::Int,
+    shared_q::Int,
+    shared_order::Int,
+    contact_q::Int,
+    contact_order::Int,
+    outer_mismatch_q::Int,
+    outer_mismatch_order::Int,
+)
+    category = _nested_diatomic_high_order_recipe_region_category(region.role)
+    family = _nested_diatomic_high_order_recipe_family(
+        category;
+        atom_recipe_family,
+        shared_exterior_family,
+        contact_recipe_family,
+        outer_mismatch_recipe_family,
+    )
+    q, order = _nested_diatomic_high_order_recipe_q_order(
+        category;
+        q_min,
+        atom_q,
+        atom_order,
+        shared_q,
+        shared_order,
+        contact_q,
+        contact_order,
+        outer_mismatch_q,
+        outer_mismatch_order,
+    )
+    status = _nested_diatomic_high_order_recipe_status(family)
+    return _BondAlignedDiatomicHighOrderRecipeRegionChoice3D(
+        region.role,
+        region.order_index,
+        category,
+        family,
+        q,
+        order,
+        q_min,
+        length(region.support_indices),
+        status.implementation_status,
+        status.buildability_status,
+        true,
+        (
+            region_box = region.box,
+            inner_exclusion_box = region.inner_exclusion_box,
+            region_metadata = region.metadata,
+        ),
+    )
+end
+
+function _nested_diatomic_high_order_q_region_counts(
+    choices::AbstractVector{_BondAlignedDiatomicHighOrderRecipeRegionChoice3D},
+)
+    counts = Dict{Int,Int}()
+    for choice in choices
+        counts[choice.q] = get(counts, choice.q, 0) + 1
+    end
+    return counts
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_policy(
+    plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D;
+    recipe_label::Union{Nothing,Symbol} = nothing,
+    q_min::Integer = 4,
+    atom_q::Integer = q_min,
+    atom_order::Integer = atom_q,
+    shared_q::Integer = q_min,
+    shared_order::Integer = shared_q,
+    contact_q::Integer = shared_q,
+    contact_order::Integer = contact_q,
+    outer_mismatch_q::Integer = shared_q,
+    outer_mismatch_order::Integer = outer_mismatch_q,
+    atom_recipe_family::Symbol = :protected_atom_cubic_shell,
+    shared_exterior_family::Symbol = :shared_endcap_panel_exterior,
+    contact_recipe_family::Symbol = :shared_contact_cap,
+    outer_mismatch_recipe_family::Symbol = :outermost_mismatch_shared_molecular_shell,
+)
+    q_min_int = Int(q_min)
+    q_min_int >= 1 || throw(ArgumentError("diatomic high-order recipe q_min must be positive"))
+    atom_q_int = Int(atom_q)
+    atom_order_int = Int(atom_order)
+    shared_q_int = Int(shared_q)
+    shared_order_int = Int(shared_order)
+    contact_q_int = Int(contact_q)
+    contact_order_int = Int(contact_order)
+    outer_mismatch_q_int = Int(outer_mismatch_q)
+    outer_mismatch_order_int = Int(outer_mismatch_order)
+    label = isnothing(recipe_label) ?
+        _nested_diatomic_high_order_default_recipe_label(shared_exterior_family) :
+        recipe_label
+
+    choices = [
+        _nested_diatomic_high_order_recipe_region_choice(
+            region;
+            q_min = q_min_int,
+            atom_recipe_family,
+            shared_exterior_family,
+            contact_recipe_family,
+            outer_mismatch_recipe_family,
+            atom_q = atom_q_int,
+            atom_order = atom_order_int,
+            shared_q = shared_q_int,
+            shared_order = shared_order_int,
+            contact_q = contact_q_int,
+            contact_order = contact_order_int,
+            outer_mismatch_q = outer_mismatch_q_int,
+            outer_mismatch_order = outer_mismatch_order_int,
+        )
+        for region in plan.regions
+    ]
+    buildable_count = count(
+        choice -> choice.buildability_status == :buildable_now,
+        choices,
+    )
+    planned_count = count(
+        choice -> choice.buildability_status == :planned_only,
+        choices,
+    )
+    experimental_count = count(
+        choice -> choice.buildability_status == :planned_experimental,
+        choices,
+    )
+    return _BondAlignedDiatomicHighOrderRecipePolicy3D(
+        plan,
+        label,
+        q_min_int,
+        choices,
+        _nested_diatomic_high_order_q_region_counts(choices),
+        buildable_count,
+        planned_count,
+        experimental_count,
+        (
+            active_builder_uses_policy = false,
+            source_builder_changed = false,
+            q_organized = true,
+            support_coverage = plan.support_coverage,
+            outer_mismatch_is_outermost = plan.outer_mismatch_is_outermost,
+            middle_contact_clean = plan.middle_contact_clean,
+        ),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_policy(
+    anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D;
+    kwargs...,
+)
+    return _nested_bond_aligned_diatomic_high_order_recipe_policy(
+        _nested_bond_aligned_diatomic_atom_growth_construction_plan(anatomy);
+        kwargs...,
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_policy(
+    parent_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    atom_axis_indices::NTuple{2,<:Integer},
+    protected_atom_side_count::Integer,
+    cover_parent::Bool = true,
+    kwargs...,
+)
+    plan = _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+        parent_box;
+        bond_axis,
+        atom_axis_indices,
+        protected_atom_side_count,
+        cover_parent,
+    )
+    return _nested_bond_aligned_diatomic_high_order_recipe_policy(
+        plan;
+        kwargs...,
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_policy(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    bond_axis::Union{Nothing,Symbol} = nothing,
+    protected_atom_side_count::Integer,
+    cover_parent::Bool = true,
+    kwargs...,
+)
+    anatomy = _nested_bond_aligned_diatomic_atom_growth_anatomy(
+        basis,
+        bundles;
+        bond_axis,
+        protected_atom_side_count,
+        cover_parent,
+    )
+    return _nested_bond_aligned_diatomic_high_order_recipe_policy(
+        anatomy;
+        kwargs...,
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D,
+)
+    return (
+        recipe_label = policy.recipe_label,
+        q_min = policy.q_min,
+        q_region_counts = policy.q_region_counts,
+        region_count = length(policy.region_choices),
+        buildable_region_count = policy.buildable_region_count,
+        planned_region_count = policy.planned_region_count,
+        experimental_region_count = policy.experimental_region_count,
+        region_choices = [
+            (
+                role = choice.region_role,
+                order_index = choice.region_order_index,
+                region_category = choice.region_category,
+                recipe_family = choice.recipe_family,
+                q = choice.q,
+                order = choice.order,
+                implementation_status = choice.implementation_status,
+                buildability_status = choice.buildability_status,
+                support_count = choice.support_count,
+                selected = choice.selected,
+            )
+            for choice in policy.region_choices
+        ],
+        support_coverage = policy.construction_plan.support_coverage,
+        outer_mismatch_is_outermost = policy.construction_plan.outer_mismatch_is_outermost,
+        middle_contact_clean = policy.construction_plan.middle_contact_clean,
+        active_builder_uses_policy = false,
     )
 end
 

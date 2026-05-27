@@ -264,10 +264,18 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
             anatomy.recipe.mismatch_absorption_policy == :outermost_shared_molecular_shell &&
             anatomy.support_coverage.status == :full_parent_covered &&
             anatomy.support_coverage.coverage_ok
+        construction_plan =
+            _nested_bond_aligned_diatomic_atom_growth_construction_plan(anatomy)
+        recipe_policy =
+            _nested_bond_aligned_diatomic_high_order_recipe_policy(construction_plan)
         return (
             status = :available,
             protected_atom_side_count = protected_atom_side_count,
             anatomy = anatomy,
+            construction_plan = construction_plan,
+            recipe_policy = recipe_policy,
+            recipe_policy_diagnostics =
+                _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(recipe_policy),
             atom_axis_indices = anatomy.recipe.atom_axis_indices,
             atom_side_count_ladder = anatomy.atom_side_count_ladder,
             final_atom_side_count = anatomy.final_atom_side_count,
@@ -290,6 +298,9 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
             status = :unavailable_for_current_geometry,
             protected_atom_side_count = protected_atom_side_count,
             anatomy = nothing,
+            construction_plan = nothing,
+            recipe_policy = nothing,
+            recipe_policy_diagnostics = nothing,
             atom_axis_indices = nothing,
             atom_side_count_ladder = Int[],
             final_atom_side_count = 0,
