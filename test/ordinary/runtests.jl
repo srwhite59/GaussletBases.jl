@@ -49,6 +49,144 @@
     end
 end
 
+@testset "Ordinary QW final packaging helper residual safety checks" begin
+    expansion = CoulombGaussianExpansion(
+        [0.7],
+        [1.0];
+        del = 1.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1,
+    )
+    overlap = Matrix{Float64}(I, 2, 2)
+    one_body = zeros(Float64, 2, 2)
+    interaction = zeros(Float64, 2, 2)
+    orbital_data = GaussletBases.OrdinaryCartesianOrbital3D[
+        GaussletBases.OrdinaryCartesianOrbital3D(
+            1,
+            :cartesian_gausslet,
+            "g1",
+            0.0,
+            0.0,
+            0.0,
+            NaN,
+            NaN,
+            NaN,
+        ),
+        GaussletBases.OrdinaryCartesianOrbital3D(
+            2,
+            :residual_gaussian,
+            "r1",
+            0.2,
+            0.0,
+            0.0,
+            0.4,
+            0.5,
+            0.6,
+        ),
+    ]
+    raw_to_final = Matrix{Float64}(I, 2, 2)
+    residual_centers = reshape(Float64[0.2, 0.0, 0.0], 1, 3)
+    positive_widths = reshape(Float64[0.4, 0.5, 0.6], 1, 3)
+
+    function finalize_probe(;
+        interaction_treatment = :mwg,
+        residual_widths = positive_widths,
+        residual_nucleus_indices = nothing,
+        nuclear_charges = [2.0],
+        kinetic_one_body = nothing,
+        nuclear_one_body_by_center = nothing,
+        nuclear_term_storage = :total_only,
+    )
+        return GaussletBases._qwrg_finalize_ordinary_cartesian_operators(
+            nothing,
+            nothing,
+            :pgdg_localized_experimental,
+            interaction_treatment,
+            expansion;
+            overlap,
+            one_body_hamiltonian = one_body,
+            interaction_matrix = interaction,
+            orbital_data,
+            gausslet_count = 1,
+            raw_to_final,
+            residual_centers,
+            residual_widths,
+            residual_nucleus_indices,
+            nuclear_charges,
+            kinetic_one_body,
+            nuclear_one_body_by_center,
+            nuclear_term_storage,
+        )
+    end
+
+    atomic_default = finalize_probe()
+    @test atomic_default.residual_nucleus_indices == [0]
+    @test atomic_default.nuclear_term_storage == :total_only
+    @test atomic_default.kinetic_one_body === nothing
+    @test atomic_default.nuclear_one_body_by_center === nothing
+
+    multi_center = finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [2],
+    )
+    @test multi_center.residual_nucleus_indices == [2]
+    @test multi_center.nuclear_charges == [1.0, 2.0]
+
+    @test_throws ArgumentError finalize_probe(nuclear_charges = [1.0, 2.0])
+    @test_throws ArgumentError finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [0],
+    )
+    @test_throws ArgumentError finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [3],
+    )
+
+    @test_throws ArgumentError finalize_probe(
+        residual_widths = reshape(Float64[NaN, 0.5, 0.6], 1, 3),
+    )
+    @test_throws ArgumentError finalize_probe(
+        residual_widths = reshape(Float64[0.0, 0.5, 0.6], 1, 3),
+    )
+    nearest_with_nan_widths = finalize_probe(
+        interaction_treatment = :ggt_nearest,
+        residual_widths = reshape(Float64[NaN, NaN, NaN], 1, 3),
+    )
+    @test all(isnan, nearest_with_nan_widths.residual_widths)
+
+    by_center_matrices = [zeros(Float64, 2, 2), zeros(Float64, 2, 2)]
+    @test_throws ArgumentError finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [1],
+        nuclear_term_storage = :by_center,
+        nuclear_one_body_by_center = by_center_matrices,
+    )
+    @test_throws ArgumentError finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [1],
+        nuclear_term_storage = :by_center,
+        kinetic_one_body = zeros(Float64, 2, 2),
+    )
+    @test_throws DimensionMismatch finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [1],
+        nuclear_term_storage = :by_center,
+        kinetic_one_body = zeros(Float64, 2, 2),
+        nuclear_one_body_by_center = [zeros(Float64, 2, 2)],
+    )
+    by_center = finalize_probe(
+        nuclear_charges = [1.0, 2.0],
+        residual_nucleus_indices = [1],
+        nuclear_term_storage = :by_center,
+        kinetic_one_body = zeros(Float64, 2, 2),
+        nuclear_one_body_by_center = by_center_matrices,
+    )
+    @test by_center.nuclear_term_storage == :by_center
+    @test by_center.kinetic_one_body == zeros(Float64, 2, 2)
+    @test length(by_center.nuclear_one_body_by_center) == 2
+end
+
 @testset "Ordinary QW public hydrogenic projector corrections" begin
     Z = 2.0
     basis = build_basis(MappedUniformBasisSpec(

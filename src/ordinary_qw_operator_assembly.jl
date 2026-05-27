@@ -100,6 +100,7 @@ function _qwrg_finalize_ordinary_cartesian_operators(
     nuclear_one_body_by_center::Union{Nothing,AbstractVector{<:AbstractMatrix{<:Real}}} = nothing,
     nuclear_term_storage::Symbol = :total_only,
 )
+    nuclear_term_storage_value = _validate_nuclear_term_storage(nuclear_term_storage)
     final_dimension = _qwrg_square_dimension(overlap, "overlap matrix")
     _qwrg_square_dimension(one_body_hamiltonian, "one-body matrix") == final_dimension || throw(
         DimensionMismatch("ordinary QW final packaging requires one-body dimension to match overlap"),
@@ -145,6 +146,11 @@ function _qwrg_finalize_ordinary_cartesian_operators(
     size(residual_widths_matrix) == (residual_count, 3) || throw(
         DimensionMismatch("ordinary QW final packaging requires residual_widths size to match residual count"),
     )
+    if residual_count > 0 && interaction_treatment == :mwg
+        all(isfinite, residual_widths_matrix) && all(>(0.0), residual_widths_matrix) || throw(
+            ArgumentError("ordinary QW final packaging requires finite positive residual_widths for :mwg"),
+        )
+    end
     residual_nucleus_indices_value = isnothing(residual_nucleus_indices) ?
         zeros(Int, residual_count) :
         Int[Int(index) for index in residual_nucleus_indices]
@@ -161,6 +167,28 @@ function _qwrg_finalize_ordinary_cartesian_operators(
     nuclear_one_body_by_center_value = isnothing(nuclear_one_body_by_center) ?
         nothing :
         [Matrix{Float64}(matrix) for matrix in nuclear_one_body_by_center]
+    if residual_count > 0 && !isnothing(nuclear_charges_value) && length(nuclear_charges_value) > 1
+        isnothing(residual_nucleus_indices) && throw(
+            ArgumentError("ordinary QW final packaging requires explicit residual owner indices for multi-center residuals"),
+        )
+        all(index -> 1 <= index <= length(nuclear_charges_value), residual_nucleus_indices_value) || throw(
+            ArgumentError("ordinary QW final packaging requires residual owner indices in 1:length(nuclear_charges)"),
+        )
+    end
+    if nuclear_term_storage_value == :by_center
+        isnothing(nuclear_charges_value) && throw(
+            ArgumentError("ordinary QW final packaging requires nuclear_charges for :by_center nuclear storage"),
+        )
+        isnothing(kinetic_one_body_value) && throw(
+            ArgumentError("ordinary QW final packaging requires stored kinetic_one_body for :by_center nuclear storage"),
+        )
+        isnothing(nuclear_one_body_by_center_value) && throw(
+            ArgumentError("ordinary QW final packaging requires nuclear_one_body_by_center for :by_center nuclear storage"),
+        )
+        length(nuclear_one_body_by_center_value) == length(nuclear_charges_value) || throw(
+            DimensionMismatch("ordinary QW final packaging requires by-center nuclear sidecar count to match nuclear charges"),
+        )
+    end
 
     if !isnothing(kinetic_one_body_value)
         _qwrg_square_dimension(kinetic_one_body_value, "stored kinetic one-body matrix") ==
@@ -195,7 +223,7 @@ function _qwrg_finalize_ordinary_cartesian_operators(
         nuclear_charges_value,
         kinetic_one_body_value,
         nuclear_one_body_by_center_value,
-        _validate_nuclear_term_storage(nuclear_term_storage),
+        nuclear_term_storage_value,
     )
 end
 
