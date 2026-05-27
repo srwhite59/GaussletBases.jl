@@ -116,6 +116,62 @@ struct _BondAlignedDiatomicAtomGrowthAnatomy3D
     support_coverage::_BondAlignedDiatomicAtomGrowthCoverage3D
 end
 
+"""
+    _BondAlignedDiatomicAtomGrowthConstructionRegion3D
+
+One ordered, disjoint support region in the recipe-backed atom-growth
+construction plan. Regions are geometry/provenance only: they do not carry
+coefficient maps, operators, backend state, or Hamiltonian packets.
+"""
+struct _BondAlignedDiatomicAtomGrowthConstructionRegion3D
+    role::Symbol
+    order_index::Int
+    box::NTuple{3,UnitRange{Int}}
+    inner_exclusion_box::Union{Nothing,NTuple{3,UnitRange{Int}}}
+    support_indices::Vector{Int}
+    metadata::NamedTuple
+end
+
+"""
+    _BondAlignedDiatomicAtomGrowthConstructionCoverage3D
+
+Support audit for atom-growth construction-plan regions. Duplicate counts
+represent extra ownership occurrences beyond the first region claiming a
+parent support index.
+"""
+struct _BondAlignedDiatomicAtomGrowthConstructionCoverage3D
+    expected_support_count::Int
+    region_support_count::Int
+    covered_support_count::Int
+    duplicate_count::Int
+    missing_count::Int
+    outside_count::Int
+    coverage_ok::Bool
+end
+
+"""
+    _BondAlignedDiatomicAtomGrowthConstructionPlan3D
+
+Internal construction-region plan derived from
+`_BondAlignedDiatomicAtomGrowthAnatomy3D`. The ordered regions are:
+
+- optional outermost mismatch shell
+- regular shared molecular shells, ordered outside-in
+- left and right protected atom boxes
+- optional one-layer contact cap
+
+This is still a diagnostic/planning object and is not used by the active
+diatomic source builder.
+"""
+struct _BondAlignedDiatomicAtomGrowthConstructionPlan3D
+    anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D
+    regions::Vector{_BondAlignedDiatomicAtomGrowthConstructionRegion3D}
+    region_order::Vector{Symbol}
+    support_coverage::_BondAlignedDiatomicAtomGrowthConstructionCoverage3D
+    outer_mismatch_is_outermost::Bool
+    middle_contact_clean::Bool
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -180,6 +236,19 @@ function Base.show(io::IO, anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D)
         anatomy.regular_shared_shell_count,
         ", coverage=:",
         anatomy.support_coverage.status,
+        ")",
+    )
+end
+
+function Base.show(io::IO, plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D)
+    print(
+        io,
+        "_BondAlignedDiatomicAtomGrowthConstructionPlan3D(nregions=",
+        length(plan.regions),
+        ", coverage_ok=",
+        plan.support_coverage.coverage_ok,
+        ", outer_mismatch_is_outermost=",
+        plan.outer_mismatch_is_outermost,
         ")",
     )
 end
@@ -550,6 +619,255 @@ function _nested_bond_aligned_diatomic_atom_growth_anatomy(
 )
     recipe = _nested_bond_aligned_diatomic_atom_growth_recipe(basis, bundles; kwargs...)
     return _nested_bond_aligned_diatomic_atom_growth_anatomy(recipe)
+end
+
+function _nested_diatomic_atom_growth_plan_dims(
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    all(first(parent_box[index]) == 1 for index in 1:3) || throw(
+        ArgumentError("diatomic atom-growth construction plan requires a 1-based parent index domain"),
+    )
+    return ntuple(index -> length(parent_box[index]), 3)
+end
+
+function _nested_diatomic_state_inside_box(
+    state::NTuple{3,Int},
+    box::NTuple{3,UnitRange{Int}},
+)
+    return state[1] in box[1] && state[2] in box[2] && state[3] in box[3]
+end
+
+function _nested_diatomic_shell_support_indices(
+    outer_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    dims::NTuple{3,Int},
+)
+    _nested_box_inside_parent(inner_box, outer_box) || throw(
+        ArgumentError("diatomic atom-growth shell region requires inner_box inside outer_box"),
+    )
+    support = Int[]
+    for ix in outer_box[1], iy in outer_box[2], iz in outer_box[3]
+        state = (ix, iy, iz)
+        _nested_diatomic_state_inside_box(state, inner_box) && continue
+        push!(support, _cartesian_flat_index(ix, iy, iz, dims))
+    end
+    return support
+end
+
+function _nested_diatomic_expand_box(
+    box::NTuple{3,UnitRange{Int}},
+    amount::Int,
+)
+    amount >= 0 || throw(ArgumentError("diatomic atom-growth box expansion must be nonnegative"))
+    return ntuple(
+        index -> (first(box[index]) - amount):(last(box[index]) + amount),
+        3,
+    )
+end
+
+function _nested_diatomic_atom_growth_plan_region(
+    role::Symbol,
+    order_index::Int,
+    box::NTuple{3,UnitRange{Int}},
+    inner_exclusion_box::Union{Nothing,NTuple{3,UnitRange{Int}}},
+    dims::NTuple{3,Int};
+    metadata::NamedTuple = (;),
+)
+    support_indices = isnothing(inner_exclusion_box) ?
+        _nested_box_support_indices(box..., dims) :
+        _nested_diatomic_shell_support_indices(box, inner_exclusion_box, dims)
+    return _BondAlignedDiatomicAtomGrowthConstructionRegion3D(
+        role,
+        order_index,
+        box,
+        inner_exclusion_box,
+        support_indices,
+        metadata,
+    )
+end
+
+function _nested_diatomic_atom_growth_construction_coverage(
+    parent_box::NTuple{3,UnitRange{Int}},
+    regions::AbstractVector{_BondAlignedDiatomicAtomGrowthConstructionRegion3D},
+)
+    dims = _nested_diatomic_atom_growth_plan_dims(parent_box)
+    expected = Set(_nested_box_support_indices(parent_box..., dims))
+    owned_counts = Dict{Int,Int}()
+    region_support_count = 0
+    for region in regions
+        region_support_count += length(region.support_indices)
+        for index in region.support_indices
+            owned_counts[index] = get(owned_counts, index, 0) + 1
+        end
+    end
+    owned = Set(keys(owned_counts))
+    duplicate_count = sum(max(count - 1, 0) for count in values(owned_counts))
+    missing_count = length(setdiff(expected, owned))
+    outside_count = length(setdiff(owned, expected))
+    coverage_ok = duplicate_count == 0 && missing_count == 0 && outside_count == 0
+    return _BondAlignedDiatomicAtomGrowthConstructionCoverage3D(
+        length(expected),
+        region_support_count,
+        length(owned),
+        duplicate_count,
+        missing_count,
+        outside_count,
+        coverage_ok,
+    )
+end
+
+function _nested_diatomic_atom_growth_outer_mismatch_is_outermost(
+    regions::AbstractVector{_BondAlignedDiatomicAtomGrowthConstructionRegion3D},
+)
+    mismatch_indices = findall(
+        region -> region.role == :outer_mismatch_shared_molecular_shell,
+        regions,
+    )
+    isempty(mismatch_indices) && return true
+    return mismatch_indices == [1]
+end
+
+function _nested_diatomic_atom_growth_middle_contact_clean(
+    anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D,
+    regions::AbstractVector{_BondAlignedDiatomicAtomGrowthConstructionRegion3D},
+)
+    atom_contact_roles = Set([:left_atom_box, :right_atom_box, :contact_cap])
+    atom_contact_count = sum(
+        length(region.support_indices) for region in regions if region.role in atom_contact_roles
+    )
+    contact_policy_ok =
+        anatomy.contact_policy == :touching_atom_boxes ||
+        any(region -> region.role == :contact_cap, regions)
+    return contact_policy_ok && atom_contact_count == anatomy.support_coverage.atom_contact_support_count
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+    anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D,
+)
+    anatomy.support_coverage.coverage_ok || throw(
+        ArgumentError("diatomic atom-growth construction plan requires clean anatomy support coverage"),
+    )
+    dims = _nested_diatomic_atom_growth_plan_dims(anatomy.recipe.parent_box)
+    regions = _BondAlignedDiatomicAtomGrowthConstructionRegion3D[]
+    order_index = 1
+
+    outer_mismatch = _nested_diatomic_atom_growth_plan_region(
+        :outer_mismatch_shared_molecular_shell,
+        order_index,
+        anatomy.recipe.parent_box,
+        anatomy.outer_regular_start_box,
+        dims;
+        metadata = (
+            mismatch_absorption_policy = anatomy.recipe.mismatch_absorption_policy,
+            low_counts = anatomy.outer_mismatch_low_counts,
+            high_counts = anatomy.outer_mismatch_high_counts,
+            is_outermost = true,
+        ),
+    )
+    if !isempty(outer_mismatch.support_indices)
+        push!(regions, outer_mismatch)
+        order_index += 1
+    end
+
+    for shell_offset in anatomy.regular_shared_shell_count:-1:1
+        current_box = _nested_diatomic_expand_box(anatomy.inner_atom_contact_box, shell_offset)
+        next_inner_box = _nested_diatomic_expand_box(anatomy.inner_atom_contact_box, shell_offset - 1)
+        push!(
+            regions,
+            _nested_diatomic_atom_growth_plan_region(
+                :regular_shared_molecular_shell,
+                order_index,
+                current_box,
+                next_inner_box,
+                dims;
+                metadata = (
+                    shell_offset = shell_offset,
+                    outside_in_index = anatomy.regular_shared_shell_count - shell_offset + 1,
+                    total_regular_shared_shells = anatomy.regular_shared_shell_count,
+                ),
+            ),
+        )
+        order_index += 1
+    end
+
+    push!(
+        regions,
+        _nested_diatomic_atom_growth_plan_region(
+            :left_atom_box,
+            order_index,
+            anatomy.left_atom_box,
+            nothing,
+            dims;
+            metadata = (
+                atom_side = :left,
+                atom_axis_index = anatomy.recipe.atom_axis_indices[1],
+                final_atom_side_count = anatomy.final_atom_side_count,
+            ),
+        ),
+    )
+    order_index += 1
+    push!(
+        regions,
+        _nested_diatomic_atom_growth_plan_region(
+            :right_atom_box,
+            order_index,
+            anatomy.right_atom_box,
+            nothing,
+            dims;
+            metadata = (
+                atom_side = :right,
+                atom_axis_index = anatomy.recipe.atom_axis_indices[2],
+                final_atom_side_count = anatomy.final_atom_side_count,
+            ),
+        ),
+    )
+    order_index += 1
+    if !isnothing(anatomy.contact_box)
+        push!(
+            regions,
+            _nested_diatomic_atom_growth_plan_region(
+                :contact_cap,
+                order_index,
+                anatomy.contact_box,
+                nothing,
+                dims;
+                metadata = (
+                    contact_policy = anatomy.contact_policy,
+                    contact_gap_count = anatomy.contact_gap_count,
+                ),
+            ),
+        )
+    end
+
+    support_coverage = _nested_diatomic_atom_growth_construction_coverage(
+        anatomy.recipe.parent_box,
+        regions,
+    )
+    return _BondAlignedDiatomicAtomGrowthConstructionPlan3D(
+        anatomy,
+        regions,
+        [region.role for region in regions],
+        support_coverage,
+        _nested_diatomic_atom_growth_outer_mismatch_is_outermost(regions),
+        _nested_diatomic_atom_growth_middle_contact_clean(anatomy, regions),
+    )
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+    recipe::_BondAlignedDiatomicAtomGrowthRecipe3D,
+)
+    return _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+        _nested_bond_aligned_diatomic_atom_growth_anatomy(recipe),
+    )
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+    parent_box::NTuple{3,UnitRange{Int}};
+    kwargs...,
+)
+    return _nested_bond_aligned_diatomic_atom_growth_construction_plan(
+        _nested_bond_aligned_diatomic_atom_growth_anatomy(parent_box; kwargs...),
+    )
 end
 
 function _nested_normalize_shared_shell_layer_policy(policy::Symbol)
