@@ -580,6 +580,26 @@ q-family source construction. Any CR2 q-ladder report should state which
 regions actually consumed q, and should keep parent-target loss separate from
 fixed-space loss.
 
+Commits `187e327` and `a58f1c0` implement and smoke-test that first shared
+endcap/panel q/L step. The internal opt-in path now accepts variable
+shared-region q/L while keeping atom-local, contact-cap, and outer-mismatch
+regions fixed at q4/order4 semantics. The q4 acceptance fixture remains
+unchanged. The tested q5 shared endcap/panel row records:
+
+- parent dimension: `735`
+- fixed dimension: `523`
+- retained counts by region: `[98, 150, 125, 125, 25]`
+- fixed-block handoff: `_NestedFixedBlock3D`
+- QW receipt backend: `:pgdg_localized_experimental`
+- residual count: `0`
+- clean source/sidecar agreement and no mismatch fields
+- no dense parent matrix, no heavy metric packet, and no new Hamiltonian kernel
+- warning-level fallback logs rejected in the focused PGDG receipt test
+
+This q5 row is construction-smoke evidence for the shared endcap/panel seam
+only. It is not Cr2 accuracy evidence, energy validation, public q-ladder API
+support, or a change to atom-local/contact/mismatch/transverse-annulus status.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
