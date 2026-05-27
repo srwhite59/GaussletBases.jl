@@ -514,6 +514,29 @@ Assembly remains route-specific. Any next code seam before this final endpoint
 requires a separate design pass; it should not be treated as an automatic
 extension of the packaging helper migration.
 
+### Pre-packaging seam audit
+
+A follow-on read-only audit reviewed the likely pre-packaging extraction seams:
+
+- one-body final mixing
+- interaction symmetrization
+- residual-space overlap and `raw_to_final` setup
+- by-center nuclear sidecar preparation
+- residual orbital metadata
+
+No broad pre-packaging extraction is currently recommended. The remaining code
+is mostly route-specific orchestration around backend policy, residual
+ownership, by-center sidecars, MWG center/width semantics, and geometry
+contracts. Some low-level helpers are already shared, but treating those shared
+pieces as permission to merge route assembly would create conceptual drift.
+
+Future work should start with a design and test harness for exact
+pre-packaging equality fields before moving code. At minimum, that harness
+would need to compare final overlap, one-body, interaction, `raw_to_final`,
+residual centers, residual widths, residual owner indices, stored kinetic
+sidecars, by-center nuclear sidecars, counts, and route diagnostics for each
+route under consideration.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
