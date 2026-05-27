@@ -933,6 +933,57 @@ end
     @test region_builds[2].metadata.support_contract == :thin_endcap_box_perimeter
     @test region_builds[2].metadata.coefficient_contract == :product_doside
     @test region_builds[5].metadata.descriptor_scope == :middle_contact_cap
+    @test diagnostics.metadata.q_policy == :atom_growth_endcap_panel_shared_q_variable
+    @test diagnostics.metadata.q4_acceptance_fixture
+    @test diagnostics.metadata.non_shared_q_policy == :fixed_q4_order4
+    @test diagnostics.metadata.shared_q_values == (4,)
+    @test diagnostics.metadata.shared_order_values == (4,)
+
+    shared_q5_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        policy.construction_plan;
+        q_min = 4,
+        atom_q = 4,
+        atom_order = 4,
+        shared_q = 5,
+        shared_order = 5,
+        contact_q = 4,
+        contact_order = 4,
+        outer_mismatch_q = 4,
+        outer_mismatch_order = 4,
+    )
+    shared_q5_construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            shared_q5_policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = false,
+        )
+    shared_q5_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+            shared_q5_construction,
+        )
+    shared_q5_region_builds = shared_q5_diagnostics.region_builds
+    @test shared_q5_diagnostics.recipe_label == :mixed_atom_cubic_shared_endcap_panel
+    @test shared_q5_diagnostics.active_builder_consumes
+    @test shared_q5_diagnostics.parent_dimension == 7 * 7 * 15
+    @test shared_q5_diagnostics.fixed_dimension == 523
+    @test shared_q5_diagnostics.support_coverage.coverage_ok
+    @test [build.q for build in shared_q5_region_builds] == [4, 5, 4, 4, 4]
+    @test [build.order for build in shared_q5_region_builds] == [4, 5, 4, 4, 4]
+    @test [build.retained_count for build in shared_q5_region_builds] == [98, 150, 125, 125, 25]
+    @test [build.column_range for build in shared_q5_region_builds] ==
+          [1:98, 374:523, 99:223, 224:348, 349:373]
+    @test shared_q5_region_builds[2].metadata.coefficient_contract == :product_doside
+    @test shared_q5_region_builds[5].metadata.descriptor_scope == :middle_contact_cap
+    @test shared_q5_diagnostics.metadata.q_policy == :atom_growth_endcap_panel_shared_q_variable
+    @test !shared_q5_diagnostics.metadata.q4_acceptance_fixture
+    @test shared_q5_diagnostics.metadata.non_shared_q_policy == :fixed_q4_order4
+    @test shared_q5_diagnostics.metadata.shared_q_values == (5,)
+    @test shared_q5_diagnostics.metadata.shared_order_values == (5,)
+    @test isnothing(shared_q5_construction.sequence.packet)
 
     no_packet_readiness =
         GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
@@ -1063,6 +1114,26 @@ end
         basis,
         bundles,
         annulus_policy;
+        nside = 5,
+        term_coefficients = Float64.(expansion.coefficients),
+        packet_kernel = :factorized_direct,
+        build_sequence_packet = false,
+    )
+
+    atom_q5_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        policy.construction_plan;
+        q_min = 4,
+        atom_q = 5,
+        atom_order = 5,
+        shared_q = 5,
+        shared_order = 5,
+        contact_q = 4,
+        outer_mismatch_q = 4,
+    )
+    @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+        basis,
+        bundles,
+        atom_q5_policy;
         nside = 5,
         term_coefficients = Float64.(expansion.coefficients),
         packet_kernel = :factorized_direct,

@@ -2007,15 +2007,33 @@ function _nested_diatomic_assert_default_q4_opt_in_policy(
 )
     policy.recipe_label == :mixed_atom_cubic_shared_endcap_panel || throw(
         ArgumentError(
-            "experimental diatomic high-order source construction only consumes the default endcap/panel q4 policy",
+            "experimental diatomic high-order source construction only consumes the atom-growth/endcap-panel policy",
         ),
     )
     policy.q_min == 4 || throw(
         ArgumentError("experimental diatomic high-order source construction requires q_min = 4"),
     )
-    all(choice -> choice.q == 4 && choice.order == 4, policy.region_choices) || throw(
-        ArgumentError("experimental diatomic high-order source construction requires q=4, order=4 for every region"),
-    )
+    for choice in policy.region_choices
+        if choice.region_category == :shared_exterior
+            choice.recipe_family == :shared_endcap_panel_exterior || throw(
+                ArgumentError(
+                    "experimental diatomic high-order source construction only consumes shared endcap/panel exterior regions",
+                ),
+            )
+            choice.q >= 4 || throw(
+                ArgumentError("experimental diatomic high-order shared endcap/panel q must be >= 4"),
+            )
+            choice.order >= 1 || throw(
+                ArgumentError("experimental diatomic high-order shared endcap/panel order must be positive"),
+            )
+        else
+            choice.q == 4 && choice.order == 4 || throw(
+                ArgumentError(
+                    "experimental diatomic high-order source construction keeps non-shared regions at q=4, order=4",
+                ),
+            )
+        end
+    end
     audit.ready_for_opt_in_builder || throw(
         ArgumentError(
             "experimental diatomic high-order source construction requires a realization-ready policy",
@@ -2311,6 +2329,9 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
         support_coverage.coverage_ok || throw(
             ArgumentError("experimental diatomic high-order source construction did not cover the parent support"),
         )
+        shared_choices = [
+            choice for choice in policy.region_choices if choice.region_category == :shared_exterior
+        ]
         _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D(
             basis,
             bundles,
@@ -2329,7 +2350,13 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                 active_builder_uses_policy = true,
                 default_source_builder_changed = false,
                 source_builder_entry = :_nested_bond_aligned_diatomic_high_order_recipe_source_construction,
-                q_policy = :default_q4_atom_growth_endcap_panel,
+                q_policy = :atom_growth_endcap_panel_shared_q_variable,
+                q4_acceptance_fixture =
+                    all(choice -> choice.q == 4 && choice.order == 4, policy.region_choices),
+                non_shared_q_policy = :fixed_q4_order4,
+                shared_q_values = Tuple(sort(unique(choice.q for choice in shared_choices))),
+                shared_order_values =
+                    Tuple(sort(unique(choice.order for choice in shared_choices))),
                 packet_kernel = packet_kernel,
                 build_sequence_packet = build_sequence_packet,
             ),
