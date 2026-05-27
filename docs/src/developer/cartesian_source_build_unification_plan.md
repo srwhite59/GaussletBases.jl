@@ -647,6 +647,27 @@ not element-label provenance, not a supplement route, not Be2/Cr2 science
 validation, not an energy result, and not a change to source builders,
 Hamiltonian kernels, backend defaults, or quadrature policy.
 
+Commit `de26059` adds a private supplement-aware variant:
+`_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(...)`.
+It composes the homonuclear q-row fixture wrapper with the existing nested
+molecular supplement receipt, constructs a
+`LegacyBondAlignedDiatomicGaussianSupplement` through
+`legacy_bond_aligned_diatomic_gaussian_supplement(atom, basis_name, basis.nuclei; ...)`,
+and forwards `fixed_block.parent_basis.nuclear_charges` into the delegated
+operator construction. The wrapper requires
+`gausslet_backend = :pgdg_localized_experimental` and rejects
+`:numerical_reference`.
+
+The focused q4 H/cc-pVTZ supplement test uses `lmax = 0` and
+`max_width = 1.0`, then compares exact equality against the existing direct
+builder for matrices, counts, raw-to-final, residual metadata,
+backend/treatment/storage, kinetic sidecars, and by-center nuclear sidecars.
+The focused path rejects warning-level logs so numerical fallback warnings
+cannot pass silently there. This remains a private delegate/audit bridge only:
+not public API, not heteronuclear support, not a default route, not a new
+Hamiltonian path, not a new supplement representation, and not
+Be2/Cr2/PySCF/HF/energy validation.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
