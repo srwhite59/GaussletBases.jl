@@ -492,6 +492,36 @@ The current small q4 smoke fixture records:
 - staged by-center sidecar preserved on the fixed block
 - finite symmetric overlap, one-body, and interaction matrices
 
+The first dimensionally matched capture/H1 sanity check is also repo-native
+only. It generated eight parent one-body generalized eigenvectors on the exact
+same q4 smoke parent and then projected them into the opt-in fixed block. The
+target is labeled `repo_native_parent_one_body_generalized_eigenvectors`; it is
+not PySCF data, not CR2 evidence, and not an energy validation. The artifact
+paths used for this note were:
+
+- `tmp/work/q4_recipe_parent_reference_capture_report.txt`
+- `tmp/work/q4_recipe_parent_reference_capture.tsv`
+
+That parent-reference target records:
+
+- parent dimension: `735`
+- fixed dimension: `469`
+- parent axis counts: `(7, 7, 15)`
+- coefficient ordering:
+  `cartesian_flat_index = (ix - 1) * ny * nz + (iy - 1) * nz + iz`
+- parent and fixed backends: `:pgdg_localized_experimental`
+- warning-level fallback logs rejected; no `:numerical_reference` fallback
+- target vector count: `8`
+- primary lowest-vector capture: `0.9999809353`
+- primary H1 delta: `4.69e-5`
+- worst capture over the eight vectors: `0.9876930450`
+- max absolute H1 delta over the eight vectors: `0.0140`
+
+This is useful evidence that the q4 fixed block can capture a compatible
+repo-native parent one-body target. It does not replace a real target-space
+occupied capture, PySCF comparison, CR2 handoff, same-density test, or chemistry
+validation.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
