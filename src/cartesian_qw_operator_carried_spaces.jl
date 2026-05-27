@@ -1145,7 +1145,7 @@ function cartesian_qw_operator_construction_receipt(
     kwargs...,
 )
     forwarded_keyword_names =
-        (:Z, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
+        (:Z, :nuclear_term_storage, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
             keys((; kwargs...))...)
     source = cartesian_qw_operator_build_source(
         basis,
@@ -1183,7 +1183,7 @@ function cartesian_qw_operator_construction_receipt(
     kwargs...,
 )
     forwarded_keyword_names =
-        (:Z, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
+        (:Z, :nuclear_term_storage, :interaction_treatment, :gausslet_backend, :residual_keep_policy,
             keys((; kwargs...))...)
     source = cartesian_qw_operator_build_source(
         fixed_block,

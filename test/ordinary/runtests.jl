@@ -4526,6 +4526,7 @@ end
         @test ordinary_receipt_diagnostics.delegated_to_existing_builder
         @test ordinary_receipt_diagnostics.source_sidecar_agree
         @test isempty(ordinary_receipt_diagnostics.mismatch_fields)
+        @test :nuclear_term_storage in ordinary_receipt_diagnostics.forwarded_keyword_names
         @test ordinary_receipt_diagnostics.dense_parent_matrix_used == false
         @test ordinary_receipt_diagnostics.heavy_metric_packet_built == false
         @test ordinary_receipt_diagnostics.new_hamiltonian_kernel_used == false
@@ -4555,6 +4556,7 @@ end
         @test nested_receipt_diagnostics.delegated_to_existing_builder
         @test nested_receipt_diagnostics.source_sidecar_agree
         @test isempty(nested_receipt_diagnostics.mismatch_fields)
+        @test :nuclear_term_storage in nested_receipt_diagnostics.forwarded_keyword_names
         @test nested_receipt_diagnostics.dense_parent_matrix_used == false
         @test nested_receipt_diagnostics.heavy_metric_packet_built == false
         @test nested_receipt_diagnostics.new_hamiltonian_kernel_used == false
