@@ -559,6 +559,27 @@ per-column/per-spin capture plus H1 reporting. Reports should separate
 parent-target loss from fixed-space loss, and q-specific evidence should be
 treated as validation anchors rather than hard-coded architecture.
 
+The current implementation is not yet a full q-family construction interface.
+Its per-region q status is:
+
+- atom-local cubic boxes: q/order metadata exists, but construction is still
+  driven by box/support size and the existing complete-shell sequence path
+  rather than by a q-retention knob
+- shared endcap/panel exterior: q/L is consumed by the owned-unit product
+  `doside` construction, so this is the first natural parameterization seam
+- contact cap: q/order metadata exists, but construction currently uses direct
+  full-support slab coefficients
+- outer mismatch shells: q/order metadata exists, but construction currently
+  uses direct full-support boundary slabs
+- transverse annulus: optional experimental policy metadata only; there is no
+  owned-unit producer yet
+
+The smallest future implementation step should therefore be limited to shared
+endcap/panel q/L parameterization unless a manager explicitly scopes broader
+q-family source construction. Any CR2 q-ladder report should state which
+regions actually consumed q, and should keep parent-target loss separate from
+fixed-space loss.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
