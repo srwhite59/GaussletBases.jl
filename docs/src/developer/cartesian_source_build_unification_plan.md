@@ -464,6 +464,59 @@ This is a wrapper/audit layer, not a new Hamiltonian builder. See
 [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
 for the covered and intentionally uncovered route families.
 
+As of 2026-05-27, the default q4 high-order atom-growth/endcap-panel recipe
+has an internal opt-in construction path, but it is not a default route and is
+not CR2-validated. The implementation trail is:
+
+- `3470566`: added explicit opt-in recipe source construction for the ready
+  q4 atom-growth/endcap-panel policy
+- `faa5e60`: added readiness diagnostics and fixed-block handoff auditing
+- `c15f8e8`: added the first PGDG QW construction smoke through the existing
+  nested fixed-block builder
+
+The ready default recipe can now be selected, realized, built into a shell
+sequence, and converted into `_NestedFixedBlock3D` through:
+
+- `_nested_bond_aligned_diatomic_high_order_recipe_source_construction(...)`
+- `_nested_bond_aligned_diatomic_high_order_recipe_source_readiness(...)`
+- `_nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(...)`
+
+The current small q4 smoke fixture records:
+
+- fixed block size: `(735, 469)`
+- operator dimension: `469`
+- `gausslet_backend = :pgdg_localized_experimental`
+- `interaction_treatment = :ggt_nearest`
+- residual count: `0`
+- clean `CartesianQWOperatorConstructionReceipt3D` source/sidecar agreement
+- staged by-center sidecar preserved on the fixed block
+- finite symmetric overlap, one-body, and interaction matrices
+
+This status means the path is construction-smoke-ready only. It remains
+explicit/internal, and active/default source builders still do not consume the
+recipe policy. Legacy source-object wrapping is also not claimed: the
+readiness audit records missing legacy split/source fields such as
+`split_geometry`, child retention contracts, child sequences, child column
+ranges, and midpoint-slab metadata. The safe handoff surface today is the
+fixed block, not a replacement `_CartesianNestedBondAlignedDiatomicSource3D`.
+
+The q5 transverse annulus recipe remains experimental/incomplete. It is
+allowed to appear in planning metadata as a selected future policy, but it is
+not consumed by the opt-in builder and should fail rather than silently
+falling back to q4 or complete-rectangular behavior.
+
+Numerical quadrature is forbidden on this PGDG smoke path. A valid smoke must
+force `gausslet_backend = :pgdg_localized_experimental` and must not accept a
+silent `:numerical_reference` fallback or warning-level numerical-quadrature
+route. Existing numerical-reference/debug paths elsewhere in the test suite do
+not change this contract.
+
+Before CR2 use, the next scientific validation must be explicit and separate:
+at minimum occupied-capture/H1 checks on the target parent and then route-
+appropriate same-density or chemistry comparisons. The current smoke does not
+validate Cr2 energies, CR2 workflows, public frontend support, or production
+default behavior.
+
 As of commit `928ee87`, ordinary Cartesian QW final packaging is unified for
 the current builder routes. The implementation trail is:
 
