@@ -187,6 +187,95 @@ end
     @test length(by_center.nuclear_one_body_by_center) == 2
 end
 
+@testset "Molecular supplement final packaging helper preserves constructor shape" begin
+    if !_legacy_basisfile_available()
+        @test true
+    else
+        function old_constructor_repack(operators)
+            return GaussletBases.OrdinaryCartesianOperators3D(
+                operators.basis,
+                operators.gaussian_data,
+                operators.gausslet_backend,
+                operators.interaction_treatment,
+                operators.expansion,
+                operators.overlap,
+                operators.one_body_hamiltonian,
+                operators.interaction_matrix,
+                operators.orbital_data,
+                operators.gausslet_count,
+                operators.residual_count,
+                operators.raw_to_final,
+                operators.residual_centers,
+                operators.residual_widths,
+                operators.residual_nucleus_indices,
+                operators.nuclear_charges,
+                operators.kinetic_one_body,
+                operators.nuclear_one_body_by_center,
+                operators.nuclear_term_storage,
+            )
+        end
+
+        function check_constructor_shape(operators)
+            repacked = old_constructor_repack(operators)
+            @test operators.overlap == repacked.overlap
+            @test operators.one_body_hamiltonian == repacked.one_body_hamiltonian
+            @test operators.interaction_matrix == repacked.interaction_matrix
+            @test operators.orbital_data == repacked.orbital_data
+            @test operators.gausslet_count == repacked.gausslet_count
+            @test operators.residual_count == repacked.residual_count
+            @test operators.raw_to_final == repacked.raw_to_final
+            @test operators.residual_centers == repacked.residual_centers
+            @test operators.residual_widths == repacked.residual_widths
+            @test operators.residual_nucleus_indices == repacked.residual_nucleus_indices
+            @test operators.nuclear_charges == repacked.nuclear_charges
+            @test operators.kinetic_one_body == repacked.kinetic_one_body
+            @test operators.nuclear_one_body_by_center == repacked.nuclear_one_body_by_center
+            @test operators.nuclear_term_storage == repacked.nuclear_term_storage
+            @test operators.residual_count > 0
+            @test Set(operators.residual_nucleus_indices) == Set([1, 2])
+            @test operators.nuclear_charges == [1.0, 1.0]
+            @test operators.nuclear_term_storage == :by_center
+            @test !isnothing(operators.kinetic_one_body)
+            @test length(operators.nuclear_one_body_by_center) == length(operators.nuclear_charges)
+            @test all(isfinite, operators.residual_widths)
+            @test all(>(0.0), operators.residual_widths)
+        end
+
+        basis = bond_aligned_homonuclear_qw_basis(
+            bond_length = 2.0,
+            core_spacing = 0.5,
+            xmax_parallel = 3.0,
+            xmax_transverse = 2.0,
+            bond_axis = :z,
+        )
+        supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
+            "H",
+            "cc-pVTZ",
+            basis.nuclei;
+            lmax = 0,
+            max_width = 1.0,
+        )
+        direct = ordinary_cartesian_qiu_white_operators(
+            basis,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :mwg,
+        )
+        nested = bond_aligned_diatomic_nested_fixed_block(basis; nside = 5)
+        nested_operators = ordinary_cartesian_qiu_white_operators(
+            nested.fixed_block,
+            supplement;
+            nuclear_charges = [1.0, 1.0],
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :mwg,
+        )
+
+        check_constructor_shape(direct)
+        check_constructor_shape(nested_operators)
+    end
+end
+
 @testset "Ordinary QW public hydrogenic projector corrections" begin
     Z = 2.0
     basis = build_basis(MappedUniformBasisSpec(

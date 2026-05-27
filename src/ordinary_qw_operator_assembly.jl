@@ -2332,32 +2332,33 @@ function _ordinary_cartesian_qiu_white_operators_bond_aligned_molecular(
             )
         end
 
-        return OrdinaryCartesianOperators3D(
+        return _qwrg_finalize_ordinary_cartesian_operators(
             carried,
             gaussian_data,
             gausslet_backend,
             interaction_treatment,
-            expansion,
-            Matrix{Float64}(residual_data.final_overlap),
-            final_one_body,
-            Matrix{Float64}(0.5 .* (interaction_matrix .+ transpose(interaction_matrix))),
-            _qwrg_bond_aligned_molecular_operator_orbitals(
+            expansion;
+            overlap = residual_data.final_overlap,
+            one_body_hamiltonian = final_one_body,
+            interaction_matrix = 0.5 .* (interaction_matrix .+ transpose(interaction_matrix)),
+            orbital_data = _qwrg_bond_aligned_molecular_operator_orbitals(
                 context,
                 carried_data,
                 residual_centers,
                 residual_widths,
                 residual_data.residual_nucleus_indices,
             ),
-            carried_data.count,
-            size(residual_centers, 1),
-            Matrix{Float64}(residual_data.raw_to_final),
-            Matrix{Float64}(residual_centers),
-            Matrix{Float64}(residual_widths),
-            Int[residual_data.residual_nucleus_indices...],
-            Float64[Float64(value) for value in nuclear_charges],
-            resolved_nuclear_term_storage == :by_center ? Matrix{Float64}(final_kinetic) : nothing,
-            resolved_nuclear_term_storage == :by_center ? final_nuclear_one_body_by_center : nothing,
-            resolved_nuclear_term_storage,
+            gausslet_count = carried_data.count,
+            raw_to_final = residual_data.raw_to_final,
+            residual_centers = residual_centers,
+            residual_widths = residual_widths,
+            residual_nucleus_indices = residual_data.residual_nucleus_indices,
+            nuclear_charges = nuclear_charges,
+            kinetic_one_body =
+                resolved_nuclear_term_storage == :by_center ? final_kinetic : nothing,
+            nuclear_one_body_by_center =
+                resolved_nuclear_term_storage == :by_center ? final_nuclear_one_body_by_center : nothing,
+            nuclear_term_storage = resolved_nuclear_term_storage,
         )
     end
 end
