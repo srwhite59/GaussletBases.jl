@@ -580,25 +580,30 @@ q-family source construction. Any CR2 q-ladder report should state which
 regions actually consumed q, and should keep parent-target loss separate from
 fixed-space loss.
 
-Commits `187e327` and `a58f1c0` implement and smoke-test that first shared
-endcap/panel q/L step. The internal opt-in path now accepts variable
-shared-region q/L while keeping atom-local, contact-cap, and outer-mismatch
-regions fixed at q4/order4 semantics. The q4 acceptance fixture remains
-unchanged. The tested q5 shared endcap/panel row records:
+Commits `187e327`, `a58f1c0`, and `34fc4b7` implement and smoke-test that
+first shared endcap/panel q/L step. The internal opt-in path now accepts
+variable shared-region q/L while keeping atom-local, contact-cap, and
+outer-mismatch regions fixed at q4/order4 direct-support semantics. The
+current small-fixture shared endcap/panel rows are:
 
-- parent dimension: `735`
-- fixed dimension: `523`
-- retained counts by region: `[98, 150, 125, 125, 25]`
-- fixed-block handoff: `_NestedFixedBlock3D`
-- QW receipt backend: `:pgdg_localized_experimental`
-- residual count: `0`
-- clean source/sidecar agreement and no mismatch fields
-- no dense parent matrix, no heavy metric packet, and no new Hamiltonian kernel
-- warning-level fallback logs rejected in the focused PGDG receipt test
+- q4/order4: fixed dimension `469`, retained counts
+  `[98, 96, 125, 125, 25]`
+- q5/order5: fixed dimension `523`, retained counts
+  `[98, 150, 125, 125, 25]`
+- q6/order6: fixed dimension `589`, retained counts
+  `[98, 216, 125, 125, 25]`
 
-This q5 row is construction-smoke evidence for the shared endcap/panel seam
-only. It is not Cr2 accuracy evidence, energy validation, public q-ladder API
-support, or a change to atom-local/contact/mismatch/transverse-annulus status.
+The q5 and q6 rows both have focused PGDG QW smoke coverage through the
+existing receipt path: backend `:pgdg_localized_experimental`, zero residuals,
+clean source/sidecar agreement, no dense parent matrix, no heavy metric
+packet, no new Hamiltonian kernel, and warning-level fallback logs rejected.
+q7/order7 is not supported for this fixture because the requested nested
+`doside` retained count exceeds the interval size.
+
+These rows are construction-smoke evidence for the shared endcap/panel seam
+only. They are not Cr2 accuracy evidence, energy validation, public q-ladder
+API support, or a change to atom-local/contact/mismatch semantics. The
+transverse annulus remains experimental/missing.
 
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
