@@ -55,6 +55,67 @@ struct _CartesianNestedBondAlignedDiatomicSource3D{B,S<:_AbstractCartesianNested
     sequence::_CartesianNestedShellSequence3D
 end
 
+"""
+    _BondAlignedDiatomicAtomGrowthRecipe3D
+
+Internal high-order/general-q anatomy recipe for bond-aligned diatomic atom
+growth. This is metadata only: it records the official box policy without
+building source functions, QW operators, Hamiltonian kernels, or quadrature
+objects.
+"""
+struct _BondAlignedDiatomicAtomGrowthRecipe3D
+    parent_box::NTuple{3,UnitRange{Int}}
+    bond_axis::Symbol
+    atom_axis_indices::NTuple{2,Int}
+    protected_atom_side_count::Int
+    cover_parent::Bool
+    contact_cap_policy::Symbol
+    mismatch_absorption_policy::Symbol
+end
+
+"""
+    _BondAlignedDiatomicAtomGrowthCoverage3D
+
+Support-coverage audit for the atom-growth anatomy layer. The shared molecular
+support is the parent-box exterior outside the atom/contact bounding box.
+"""
+struct _BondAlignedDiatomicAtomGrowthCoverage3D
+    expected_support_count::Int
+    atom_contact_support_count::Int
+    shared_molecular_support_count::Int
+    covered_support_count::Int
+    duplicate_count::Int
+    missing_count::Int
+    outside_count::Int
+    status::Symbol
+    coverage_ok::Bool
+end
+
+"""
+    _BondAlignedDiatomicAtomGrowthAnatomy3D
+
+Internal report for the protected-atom growth policy. Atom-local boxes grow in
+side-count steps of two until they touch or leave exactly one shared contact
+layer. Any parity/spacing/q mismatch between the atom/contact interior and the
+full parent is assigned to the outermost shared molecular shell.
+"""
+struct _BondAlignedDiatomicAtomGrowthAnatomy3D
+    recipe::_BondAlignedDiatomicAtomGrowthRecipe3D
+    atom_side_count_ladder::Vector{Int}
+    final_atom_side_count::Int
+    contact_gap_count::Int
+    contact_policy::Symbol
+    left_atom_box::NTuple{3,UnitRange{Int}}
+    right_atom_box::NTuple{3,UnitRange{Int}}
+    contact_box::Union{Nothing,NTuple{3,UnitRange{Int}}}
+    inner_atom_contact_box::NTuple{3,UnitRange{Int}}
+    outer_regular_start_box::NTuple{3,UnitRange{Int}}
+    regular_shared_shell_count::Int
+    outer_mismatch_low_counts::NTuple{3,Int}
+    outer_mismatch_high_counts::NTuple{3,Int}
+    support_coverage::_BondAlignedDiatomicAtomGrowthCoverage3D
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -91,8 +152,404 @@ function Base.show(io::IO, source::_CartesianNestedBondAlignedDiatomicSource3D)
     )
 end
 
+function Base.show(io::IO, recipe::_BondAlignedDiatomicAtomGrowthRecipe3D)
+    print(
+        io,
+        "_BondAlignedDiatomicAtomGrowthRecipe3D(axis=:",
+        recipe.bond_axis,
+        ", atoms=",
+        recipe.atom_axis_indices,
+        ", core_side=",
+        recipe.protected_atom_side_count,
+        ", cover_parent=",
+        recipe.cover_parent,
+        ")",
+    )
+end
+
+function Base.show(io::IO, anatomy::_BondAlignedDiatomicAtomGrowthAnatomy3D)
+    print(
+        io,
+        "_BondAlignedDiatomicAtomGrowthAnatomy3D(axis=:",
+        anatomy.recipe.bond_axis,
+        ", final_atom_side=",
+        anatomy.final_atom_side_count,
+        ", contact_policy=:",
+        anatomy.contact_policy,
+        ", regular_shared_shells=",
+        anatomy.regular_shared_shell_count,
+        ", coverage=:",
+        anatomy.support_coverage.status,
+        ")",
+    )
+end
+
 function _nested_source_contract_audit(source::_CartesianNestedBondAlignedDiatomicSource3D)
     return _nested_shell_sequence_contract_audit(source.sequence, _nested_axis_lengths(source.axis_bundles))
+end
+
+function _nested_validate_diatomic_atom_growth_parent_box(parent_box::NTuple{3,UnitRange{Int}})
+    all(length(interval) >= 1 for interval in parent_box) || throw(
+        ArgumentError("diatomic atom-growth recipe requires nonempty parent-box intervals"),
+    )
+    return parent_box
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_recipe(
+    parent_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    atom_axis_indices::NTuple{2,<:Integer},
+    protected_atom_side_count::Integer,
+    cover_parent::Bool = true,
+)
+    _nested_validate_diatomic_atom_growth_parent_box(parent_box)
+    axis = _nested_axis_index(bond_axis)
+    side_count = Int(protected_atom_side_count)
+    side_count >= 1 || throw(
+        ArgumentError("diatomic atom-growth protected atom side count must be positive"),
+    )
+    atoms = (Int(atom_axis_indices[1]), Int(atom_axis_indices[2]))
+    atoms[1] < atoms[2] || throw(
+        ArgumentError("diatomic atom-growth atom_axis_indices must be ordered left to right"),
+    )
+    interval = parent_box[axis]
+    first(interval) <= atoms[1] <= last(interval) || throw(
+        ArgumentError("diatomic atom-growth left atom index must lie inside the parent bond-axis interval"),
+    )
+    first(interval) <= atoms[2] <= last(interval) || throw(
+        ArgumentError("diatomic atom-growth right atom index must lie inside the parent bond-axis interval"),
+    )
+    return _BondAlignedDiatomicAtomGrowthRecipe3D(
+        parent_box,
+        bond_axis,
+        atoms,
+        side_count,
+        cover_parent,
+        :single_shared_contact_cap,
+        :outermost_shared_molecular_shell,
+    )
+end
+
+function _nested_diatomic_atom_growth_nearest_axis_index(
+    centers_axis::AbstractVector{<:Real},
+    coordinate::Real,
+)
+    _, index = findmin(abs.(Float64.(centers_axis) .- Float64(coordinate)))
+    return Int(index)
+end
+
+function _nested_diatomic_atom_growth_bond_axis(basis, bond_axis::Union{Nothing,Symbol})
+    if isnothing(bond_axis)
+        hasproperty(basis, :bond_axis) || throw(
+            ArgumentError("diatomic atom-growth basis recipe requires bond_axis or a basis carrying bond_axis"),
+        )
+        return getproperty(basis, :bond_axis)
+    end
+    return bond_axis
+end
+
+function _nested_diatomic_atom_growth_atom_axis_indices(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    bond_axis::Symbol,
+)
+    length(basis.nuclei) == 2 || throw(
+        ArgumentError("diatomic atom-growth basis recipe requires exactly two nuclei"),
+    )
+    axis = _nested_axis_index(bond_axis)
+    centers_axis = _nested_axis_pgdg(bundles, bond_axis).centers
+    indices = sort(Int[
+        _nested_diatomic_atom_growth_nearest_axis_index(centers_axis, nucleus[axis])
+        for nucleus in basis.nuclei
+    ])
+    indices[1] < indices[2] || throw(
+        ArgumentError("diatomic atom-growth basis recipe requires nuclei to map to distinct bond-axis parent sites"),
+    )
+    return (indices[1], indices[2])
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_recipe(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    bond_axis::Union{Nothing,Symbol} = nothing,
+    protected_atom_side_count::Integer,
+    cover_parent::Bool = true,
+)
+    resolved_bond_axis = _nested_diatomic_atom_growth_bond_axis(basis, bond_axis)
+    dims = _nested_axis_lengths(bundles)
+    parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
+    return _nested_bond_aligned_diatomic_atom_growth_recipe(
+        parent_box;
+        bond_axis = resolved_bond_axis,
+        atom_axis_indices = _nested_diatomic_atom_growth_atom_axis_indices(
+            basis,
+            bundles,
+            resolved_bond_axis,
+        ),
+        protected_atom_side_count,
+        cover_parent,
+    )
+end
+
+function _nested_diatomic_atom_growth_interval(
+    center::Int,
+    side_count::Int,
+    even_bias::Symbol,
+)
+    if isodd(side_count)
+        half = div(side_count, 2)
+        return (center - half):(center + half)
+    end
+    half = div(side_count, 2)
+    even_bias == :lower && return (center - half):(center + half - 1)
+    even_bias == :upper && return (center - half + 1):(center + half)
+    throw(ArgumentError("diatomic atom-growth even interval bias must be :lower or :upper"))
+end
+
+function _nested_diatomic_atom_growth_transverse_center(interval::UnitRange{Int})
+    return first(interval) + div(length(interval) - 1, 2)
+end
+
+function _nested_diatomic_atom_growth_box(
+    parent_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    atom_axis_index::Int,
+    side_count::Int,
+    atom_side::Symbol,
+)
+    axis = _nested_axis_index(bond_axis)
+    atom_side in (:left, :right) || throw(
+        ArgumentError("diatomic atom-growth box side must be :left or :right"),
+    )
+    return ntuple(3) do index
+        if index == axis
+            bias = atom_side == :left ? :upper : :lower
+            _nested_diatomic_atom_growth_interval(atom_axis_index, side_count, bias)
+        else
+            center = _nested_diatomic_atom_growth_transverse_center(parent_box[index])
+            _nested_diatomic_atom_growth_interval(center, side_count, :upper)
+        end
+    end
+end
+
+function _nested_interval_inside_parent(
+    interval::UnitRange{Int},
+    parent_interval::UnitRange{Int},
+)
+    return first(parent_interval) <= first(interval) && last(interval) <= last(parent_interval)
+end
+
+function _nested_box_inside_parent(
+    box::NTuple{3,UnitRange{Int}},
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    return all(
+        _nested_interval_inside_parent(box[index], parent_box[index]) for index in 1:3
+    )
+end
+
+function _nested_diatomic_atom_growth_contact_box(
+    left_atom_box::NTuple{3,UnitRange{Int}},
+    right_atom_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+)
+    axis = _nested_axis_index(bond_axis)
+    contact_axis = (last(left_atom_box[axis]) + 1):(first(right_atom_box[axis]) - 1)
+    length(contact_axis) == 1 || throw(
+        ArgumentError("diatomic atom-growth contact cap requires exactly one missing bond-axis layer"),
+    )
+    return ntuple(index -> index == axis ? contact_axis : left_atom_box[index], 3)
+end
+
+function _nested_diatomic_bounding_box(
+    boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
+)
+    isempty(boxes) && throw(ArgumentError("diatomic atom-growth bounding box requires at least one box"))
+    return ntuple(3) do index
+        minimum(first(box[index]) for box in boxes):maximum(last(box[index]) for box in boxes)
+    end
+end
+
+function _nested_diatomic_box_support_count(box::NTuple{3,UnitRange{Int}})
+    return prod(length.(box))
+end
+
+function _nested_diatomic_atom_growth_component_count(
+    component_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    seen = Set{NTuple{3,Int}}()
+    duplicate_count = 0
+    outside_count = 0
+    for box in component_boxes, ix in box[1], iy in box[2], iz in box[3]
+        state = (ix, iy, iz)
+        if !(
+            first(parent_box[1]) <= ix <= last(parent_box[1]) &&
+            first(parent_box[2]) <= iy <= last(parent_box[2]) &&
+            first(parent_box[3]) <= iz <= last(parent_box[3])
+        )
+            outside_count += 1
+        end
+        if state in seen
+            duplicate_count += 1
+        else
+            push!(seen, state)
+        end
+    end
+    return (
+        unique_support_count = length(seen),
+        duplicate_count = duplicate_count,
+        outside_count = outside_count,
+    )
+end
+
+function _nested_diatomic_atom_growth_outer_regular_start(
+    parent_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+)
+    low_margins = ntuple(index -> first(inner_box[index]) - first(parent_box[index]), 3)
+    high_margins = ntuple(index -> last(parent_box[index]) - last(inner_box[index]), 3)
+    all(value >= 0 for value in low_margins) && all(value >= 0 for value in high_margins) || throw(
+        ArgumentError("diatomic atom-growth inner atom/contact box must lie inside the parent box"),
+    )
+    regular_shell_count = minimum((low_margins..., high_margins...))
+    outer_regular_start_box = ntuple(
+        index -> (first(inner_box[index]) - regular_shell_count):(last(inner_box[index]) + regular_shell_count),
+        3,
+    )
+    outer_mismatch_low_counts = ntuple(index -> first(outer_regular_start_box[index]) - first(parent_box[index]), 3)
+    outer_mismatch_high_counts = ntuple(index -> last(parent_box[index]) - last(outer_regular_start_box[index]), 3)
+    return (
+        outer_regular_start_box = outer_regular_start_box,
+        regular_shared_shell_count = regular_shell_count,
+        outer_mismatch_low_counts = outer_mismatch_low_counts,
+        outer_mismatch_high_counts = outer_mismatch_high_counts,
+    )
+end
+
+function _nested_diatomic_atom_growth_support_coverage(
+    recipe::_BondAlignedDiatomicAtomGrowthRecipe3D,
+    component_boxes::AbstractVector{<:NTuple{3,UnitRange{Int}}},
+    inner_box::NTuple{3,UnitRange{Int}},
+)
+    parent_count = _nested_diatomic_box_support_count(recipe.parent_box)
+    component_count = _nested_diatomic_atom_growth_component_count(component_boxes, recipe.parent_box)
+    atom_contact_count = component_count.unique_support_count
+    shared_count = recipe.cover_parent ? parent_count - _nested_diatomic_box_support_count(inner_box) : 0
+    covered_count = atom_contact_count + shared_count
+    missing_count = recipe.cover_parent ? 0 : max(parent_count - covered_count, 0)
+    status =
+        recipe.cover_parent && component_count.duplicate_count == 0 && component_count.outside_count == 0 && missing_count == 0 ?
+        :full_parent_covered :
+        recipe.cover_parent ? :invalid_full_parent_coverage : :cropped_parent
+    return _BondAlignedDiatomicAtomGrowthCoverage3D(
+        parent_count,
+        atom_contact_count,
+        shared_count,
+        covered_count,
+        component_count.duplicate_count,
+        missing_count,
+        component_count.outside_count,
+        status,
+        status == :full_parent_covered,
+    )
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_anatomy(
+    recipe::_BondAlignedDiatomicAtomGrowthRecipe3D,
+)
+    axis = _nested_axis_index(recipe.bond_axis)
+    side_count = recipe.protected_atom_side_count
+    side_ladder = Int[]
+    while true
+        push!(side_ladder, side_count)
+        left_atom_box = _nested_diatomic_atom_growth_box(
+            recipe.parent_box,
+            recipe.bond_axis,
+            recipe.atom_axis_indices[1],
+            side_count,
+            :left,
+        )
+        right_atom_box = _nested_diatomic_atom_growth_box(
+            recipe.parent_box,
+            recipe.bond_axis,
+            recipe.atom_axis_indices[2],
+            side_count,
+            :right,
+        )
+        if !(
+            _nested_box_inside_parent(left_atom_box, recipe.parent_box) &&
+            _nested_box_inside_parent(right_atom_box, recipe.parent_box)
+        )
+            throw(
+                ArgumentError(
+                    "diatomic atom-growth boxes cannot reach touch or one-layer contact before hitting the parent boundary",
+                ),
+            )
+        end
+        all(left_atom_box[index] == right_atom_box[index] for index in 1:3 if index != axis) || throw(
+            ArgumentError("diatomic atom-growth atom boxes must share identical transverse ranges"),
+        )
+        contact_gap_count = first(right_atom_box[axis]) - last(left_atom_box[axis]) - 1
+        contact_gap_count >= 0 || throw(
+            ArgumentError("diatomic atom-growth protected atom boxes overlap before clean contact"),
+        )
+        if contact_gap_count <= 1
+            contact_policy =
+                contact_gap_count == 0 ? :touching_atom_boxes : recipe.contact_cap_policy
+            contact_box =
+                contact_gap_count == 1 ?
+                _nested_diatomic_atom_growth_contact_box(left_atom_box, right_atom_box, recipe.bond_axis) :
+                nothing
+            component_boxes = isnothing(contact_box) ?
+                [left_atom_box, right_atom_box] :
+                [left_atom_box, right_atom_box, contact_box]
+            inner_atom_contact_box = _nested_diatomic_bounding_box(component_boxes)
+            outer = _nested_diatomic_atom_growth_outer_regular_start(
+                recipe.parent_box,
+                inner_atom_contact_box,
+            )
+            support_coverage = _nested_diatomic_atom_growth_support_coverage(
+                recipe,
+                component_boxes,
+                inner_atom_contact_box,
+            )
+            return _BondAlignedDiatomicAtomGrowthAnatomy3D(
+                recipe,
+                side_ladder,
+                side_count,
+                contact_gap_count,
+                contact_policy,
+                left_atom_box,
+                right_atom_box,
+                contact_box,
+                inner_atom_contact_box,
+                outer.outer_regular_start_box,
+                outer.regular_shared_shell_count,
+                outer.outer_mismatch_low_counts,
+                outer.outer_mismatch_high_counts,
+                support_coverage,
+            )
+        end
+        side_count += 2
+    end
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_anatomy(
+    parent_box::NTuple{3,UnitRange{Int}};
+    kwargs...,
+)
+    recipe = _nested_bond_aligned_diatomic_atom_growth_recipe(parent_box; kwargs...)
+    return _nested_bond_aligned_diatomic_atom_growth_anatomy(recipe)
+end
+
+function _nested_bond_aligned_diatomic_atom_growth_anatomy(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    kwargs...,
+)
+    recipe = _nested_bond_aligned_diatomic_atom_growth_recipe(basis, bundles; kwargs...)
+    return _nested_bond_aligned_diatomic_atom_growth_anatomy(recipe)
 end
 
 function _nested_normalize_shared_shell_layer_policy(policy::Symbol)
