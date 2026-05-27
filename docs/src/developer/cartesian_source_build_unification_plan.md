@@ -668,6 +668,27 @@ not public API, not heteronuclear support, not a default route, not a new
 Hamiltonian path, not a new supplement representation, and not
 Be2/Cr2/PySCF/HF/energy validation.
 
+Commit `a525b80` adds the first private capture/H1 diagnostic for the q-row
+plus supplement route:
+`_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(...)`.
+The helper accepts exact parent-grid target coefficient matrices only. The row
+count must equal the fixture parent dimension; for the focused q4 fixture this
+means `(7, 7, 15)` parent axes, `735` rows, and the repo Cartesian flat order
+with `z` fastest. The helper rejects wrong row counts, non-finite target
+entries, bad label or occupation vector lengths, negative occupations, and
+`:numerical_reference`.
+
+The diagnostic builds the existing q-row supplement receipt and reads back
+existing QW operator/sidecar data. It reports fixed-only capture, final hybrid
+capture, parent/fixed/final H1 expectations, final-overlap trust-gate
+diagnostics, route diagnostics, and the first-pass omissions that are still
+intentional. Final self-overlap remains diagnostic only; this pass did not add
+generalized final-overlap transfer logic. The focused regression uses
+repo-native q4 parent-grid columns as targets, not CR2 or PySCF artifacts.
+This is capture/H1 diagnostic infrastructure only. It is not Be2/Cr2 science,
+energy validation, HF/ED, same-density validation, a public API, or default
+route adoption.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
