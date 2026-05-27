@@ -1981,6 +1981,8 @@ end
     @test isnothing(diagnostics_via_source.atom_growth_anatomy.construction_plan)
     @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_policy)
     @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_policy_diagnostics)
+    @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_realization_audit)
+    @test isnothing(diagnostics_via_source.atom_growth_anatomy.recipe_realization_diagnostics)
     @test occursin(
         "overlap before clean contact",
         diagnostics_via_source.atom_growth_anatomy.unavailable_reason,
@@ -2087,6 +2089,22 @@ end
         :shared_endcap_panel_exterior
     @test anatomy.recipe_policy_diagnostics.region_choices[3].recipe_family ==
         :protected_atom_cubic_shell
+    @test anatomy.recipe_realization_diagnostics.mapped_region_count == 3
+    @test anatomy.recipe_realization_diagnostics.missing_region_count == 2
+    @test anatomy.recipe_realization_diagnostics.buildable_without_mapped_primitive_count == 0
+    @test anatomy.recipe_realization_diagnostics.ready_for_opt_in_builder == false
+    @test anatomy.recipe_realization_diagnostics.region_realizations[1].missing_implementation ==
+        :outer_mismatch_shell_decomposition_or_owned_units
+    @test anatomy.recipe_realization_diagnostics.region_realizations[2].mapped_primitive ==
+        :_nested_endcap_panel_shell_layer
+    @test anatomy.recipe_realization_diagnostics.region_realizations[3].mapped_primitive ==
+        :_nested_bond_aligned_diatomic_sequence_for_box
+    @test anatomy.recipe_realization_diagnostics.region_realizations[end].missing_implementation ==
+        :contact_cap_region_constructor
+    @test all(
+        !realization.active_builder_consumes
+        for realization in anatomy.recipe_realization_diagnostics.region_realizations
+    )
     @test isnothing(anatomy.unavailable_reason)
     @test source_diagnostics.atom_growth_anatomy.status == anatomy.status
     @test source_diagnostics.atom_growth_anatomy.left_atom_box == anatomy.left_atom_box

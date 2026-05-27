@@ -268,6 +268,8 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
             _nested_bond_aligned_diatomic_atom_growth_construction_plan(anatomy)
         recipe_policy =
             _nested_bond_aligned_diatomic_high_order_recipe_policy(construction_plan)
+        recipe_realization_audit =
+            _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(recipe_policy)
         return (
             status = :available,
             protected_atom_side_count = protected_atom_side_count,
@@ -276,6 +278,11 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
             recipe_policy = recipe_policy,
             recipe_policy_diagnostics =
                 _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(recipe_policy),
+            recipe_realization_audit = recipe_realization_audit,
+            recipe_realization_diagnostics =
+                _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics(
+                    recipe_realization_audit,
+                ),
             atom_axis_indices = anatomy.recipe.atom_axis_indices,
             atom_side_count_ladder = anatomy.atom_side_count_ladder,
             final_atom_side_count = anatomy.final_atom_side_count,
@@ -301,6 +308,8 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
             construction_plan = nothing,
             recipe_policy = nothing,
             recipe_policy_diagnostics = nothing,
+            recipe_realization_audit = nothing,
+            recipe_realization_diagnostics = nothing,
             atom_axis_indices = nothing,
             atom_side_count_ladder = Int[],
             final_atom_side_count = 0,

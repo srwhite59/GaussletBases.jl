@@ -214,6 +214,48 @@ struct _BondAlignedDiatomicHighOrderRecipePolicy3D
     metadata::NamedTuple
 end
 
+"""
+    _BondAlignedDiatomicHighOrderRecipeRegionRealization3D
+
+Internal build-readiness row for one selected high-order recipe region. The
+row names the existing primitive a future opt-in builder would use, or the
+missing implementation needed before the selected region can be consumed.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeRegionRealization3D
+    region_role::Symbol
+    region_order_index::Int
+    region_category::Symbol
+    recipe_family::Symbol
+    q::Int
+    order::Int
+    support_count::Int
+    buildability_status::Symbol
+    mapped_primitive::Union{Nothing,Symbol}
+    mapped_primitive_status::Symbol
+    missing_implementation::Union{Nothing,Symbol}
+    active_builder_consumes::Bool
+    existing_opt_in_route::Union{Nothing,Symbol}
+    metadata::NamedTuple
+end
+
+"""
+    _BondAlignedDiatomicHighOrderRecipeRealizationAudit3D
+
+Internal audit for mapping a q-organized recipe policy to currently available
+construction primitives. This is metadata only; it does not call those
+primitives or alter source construction.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeRealizationAudit3D
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D
+    region_realizations::Vector{_BondAlignedDiatomicHighOrderRecipeRegionRealization3D}
+    mapped_region_count::Int
+    missing_region_count::Int
+    buildable_without_mapped_primitive_count::Int
+    active_builder_consumed_region_count::Int
+    ready_for_opt_in_builder::Bool
+    metadata::NamedTuple
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -306,6 +348,21 @@ function Base.show(io::IO, policy::_BondAlignedDiatomicHighOrderRecipePolicy3D)
         length(policy.region_choices),
         ", buildable=",
         policy.buildable_region_count,
+        ")",
+    )
+end
+
+function Base.show(io::IO, audit::_BondAlignedDiatomicHighOrderRecipeRealizationAudit3D)
+    print(
+        io,
+        "_BondAlignedDiatomicHighOrderRecipeRealizationAudit3D(label=:",
+        audit.policy.recipe_label,
+        ", mapped=",
+        audit.mapped_region_count,
+        ", missing=",
+        audit.missing_region_count,
+        ", ready=",
+        audit.ready_for_opt_in_builder,
         ")",
     )
 end
@@ -1244,6 +1301,174 @@ function _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(
         support_coverage = policy.construction_plan.support_coverage,
         outer_mismatch_is_outermost = policy.construction_plan.outer_mismatch_is_outermost,
         middle_contact_clean = policy.construction_plan.middle_contact_clean,
+        active_builder_uses_policy = false,
+    )
+end
+
+function _nested_diatomic_high_order_recipe_realization_mapping(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+)
+    if choice.recipe_family == :protected_atom_cubic_shell
+        return (
+            mapped_primitive = :_nested_bond_aligned_diatomic_sequence_for_box,
+            mapped_primitive_status = :existing_internal_primitive,
+            missing_implementation = nothing,
+            existing_opt_in_route = nothing,
+            notes = (
+                primitive_scope = :atom_local_cubic_box,
+                uses_existing_nested_complete_shell_sequence = true,
+            ),
+        )
+    elseif choice.recipe_family == :shared_endcap_panel_exterior
+        return (
+            mapped_primitive = :_nested_endcap_panel_shell_layer,
+            mapped_primitive_status = :existing_internal_primitive,
+            missing_implementation = nothing,
+            existing_opt_in_route = :shared_shell_layer_policy_endcap_panel_owned,
+            notes = (
+                primitive_scope = :one_cell_shared_exterior_shell,
+                requires_product_doside = true,
+            ),
+        )
+    elseif choice.recipe_family == :shared_contact_cap
+        return (
+            mapped_primitive = nothing,
+            mapped_primitive_status = :missing_region_primitive,
+            missing_implementation = :contact_cap_region_constructor,
+            existing_opt_in_route = nothing,
+            notes = (
+                primitive_scope = :middle_contact_cap,
+                reason = :contact_cap_is_not_a_complete_shell_or_endcap_panel_exterior,
+            ),
+        )
+    elseif choice.recipe_family == :outermost_mismatch_shared_molecular_shell
+        return (
+            mapped_primitive = nothing,
+            mapped_primitive_status = :missing_region_primitive,
+            missing_implementation = :outer_mismatch_shell_decomposition_or_owned_units,
+            existing_opt_in_route = nothing,
+            notes = (
+                primitive_scope = :outermost_mismatch_shell,
+                reason = :mismatch_region_can_be_multi_layer_or_directionally_unbalanced,
+            ),
+        )
+    elseif choice.recipe_family == :transverse_annulus_exterior
+        return (
+            mapped_primitive = nothing,
+            mapped_primitive_status = :missing_experimental_primitive,
+            missing_implementation = :transverse_annulus_owned_unit_producer,
+            existing_opt_in_route = nothing,
+            notes = (
+                primitive_scope = :shared_exterior_transverse_annulus,
+                reason = :q5_annulus_is_optional_experimental_policy_metadata,
+            ),
+        )
+    end
+    throw(ArgumentError("unsupported diatomic high-order realization recipe family $(choice.recipe_family)"))
+end
+
+function _nested_diatomic_high_order_recipe_region_realization(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+)
+    mapping = _nested_diatomic_high_order_recipe_realization_mapping(choice)
+    return _BondAlignedDiatomicHighOrderRecipeRegionRealization3D(
+        choice.region_role,
+        choice.region_order_index,
+        choice.region_category,
+        choice.recipe_family,
+        choice.q,
+        choice.order,
+        choice.support_count,
+        choice.buildability_status,
+        mapping.mapped_primitive,
+        mapping.mapped_primitive_status,
+        mapping.missing_implementation,
+        false,
+        mapping.existing_opt_in_route,
+        (
+            implementation_status = choice.implementation_status,
+            selected = choice.selected,
+            realization_notes = mapping.notes,
+            active_builder_uses_policy = false,
+        ),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D,
+)
+    realizations = [
+        _nested_diatomic_high_order_recipe_region_realization(choice)
+        for choice in policy.region_choices
+    ]
+    mapped_count = count(realization -> !isnothing(realization.mapped_primitive), realizations)
+    missing_count = count(realization -> !isnothing(realization.missing_implementation), realizations)
+    buildable_without_mapped = count(
+        realization ->
+            realization.buildability_status == :buildable_now &&
+            isnothing(realization.mapped_primitive),
+        realizations,
+    )
+    active_consumed = count(realization -> realization.active_builder_consumes, realizations)
+    return _BondAlignedDiatomicHighOrderRecipeRealizationAudit3D(
+        policy,
+        realizations,
+        mapped_count,
+        missing_count,
+        buildable_without_mapped,
+        active_consumed,
+        missing_count == 0,
+        (
+            active_builder_uses_policy = false,
+            audit_only = true,
+            no_source_builder_change = true,
+            no_operator_change = true,
+            support_coverage = policy.construction_plan.support_coverage,
+        ),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
+    plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D;
+    kwargs...,
+)
+    return _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
+        _nested_bond_aligned_diatomic_high_order_recipe_policy(plan; kwargs...),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics(
+    audit::_BondAlignedDiatomicHighOrderRecipeRealizationAudit3D,
+)
+    return (
+        recipe_label = audit.policy.recipe_label,
+        q_min = audit.policy.q_min,
+        region_count = length(audit.region_realizations),
+        mapped_region_count = audit.mapped_region_count,
+        missing_region_count = audit.missing_region_count,
+        buildable_without_mapped_primitive_count =
+            audit.buildable_without_mapped_primitive_count,
+        active_builder_consumed_region_count = audit.active_builder_consumed_region_count,
+        ready_for_opt_in_builder = audit.ready_for_opt_in_builder,
+        region_realizations = [
+            (
+                role = realization.region_role,
+                order_index = realization.region_order_index,
+                region_category = realization.region_category,
+                recipe_family = realization.recipe_family,
+                q = realization.q,
+                order = realization.order,
+                support_count = realization.support_count,
+                buildability_status = realization.buildability_status,
+                mapped_primitive = realization.mapped_primitive,
+                mapped_primitive_status = realization.mapped_primitive_status,
+                missing_implementation = realization.missing_implementation,
+                active_builder_consumes = realization.active_builder_consumes,
+                existing_opt_in_route = realization.existing_opt_in_route,
+            )
+            for realization in audit.region_realizations
+        ],
+        support_coverage = audit.policy.construction_plan.support_coverage,
         active_builder_uses_policy = false,
     )
 end
