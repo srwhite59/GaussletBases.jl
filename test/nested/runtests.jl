@@ -1398,6 +1398,81 @@ end
         @test q_row_diagnostics.default_source_builder_changed == false
     end
 
+    for expected in q_row_expectations
+        fixture_receipt = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = expected.q,
+            shared_order = expected.q,
+            family = :G10,
+            bond_axis = :z,
+            nuclear_charge = 1.0,
+            reference_spacing = 1.0,
+            tail_spacing = 10.0,
+            protected_atom_side_count = 5,
+            q_min = 4,
+            nside = 5,
+            expansion = expansion,
+            nuclear_term_storage = :total_only,
+            interaction_treatment = :ggt_nearest,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        fixture_diagnostics =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_diagnostics(
+                fixture_receipt,
+            )
+        fixture_provenance =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_provenance(
+                fixture_receipt,
+            )
+        route_diagnostics = fixture_diagnostics.q_row_route_diagnostics
+        @test fixture_diagnostics.route_label ==
+              :bond_aligned_homonuclear_high_order_q_row_fixture
+        @test fixture_diagnostics.receipt_contract ==
+              :construct_homonuclear_basis_then_delegate_q_row_route
+        @test fixture_diagnostics.basis_constructor ==
+              :bond_aligned_homonuclear_qw_basis
+        @test fixture_diagnostics.family == :G10
+        @test fixture_diagnostics.bond_length == 5.0
+        @test fixture_diagnostics.core_spacing == 0.7
+        @test fixture_diagnostics.xmax_parallel == 8.0
+        @test fixture_diagnostics.xmax_transverse == 4.0
+        @test fixture_diagnostics.bond_axis == :z
+        @test fixture_diagnostics.reference_spacing == 1.0
+        @test fixture_diagnostics.tail_spacing == 10.0
+        @test fixture_diagnostics.nuclear_charge == 1.0
+        @test fixture_diagnostics.basis_nuclear_charges == (1.0, 1.0)
+        @test fixture_receipt.basis.nuclear_charges == [1.0, 1.0]
+        @test fixture_diagnostics.basis_nuclei == ((0.0, 0.0, -2.5), (0.0, 0.0, 2.5))
+        @test fixture_diagnostics.parent_axis_counts == (7, 7, 15)
+        @test fixture_diagnostics.parent_dimension == 7 * 7 * 15
+        @test fixture_diagnostics.flat_index_convention.one_based
+        @test fixture_diagnostics.flat_index_convention.fastest_axis == :z
+        @test fixture_diagnostics.flat_index_convention.slowest_axis == :x
+        @test fixture_diagnostics.shared_q == expected.q
+        @test fixture_diagnostics.shared_order == expected.q
+        @test fixture_diagnostics.q_min == 4
+        @test fixture_diagnostics.protected_atom_side_count == 5
+        @test fixture_diagnostics.nside == 5
+        @test fixture_diagnostics.fixed_dimension == expected.fixed_dimension
+        @test fixture_diagnostics.retained_counts_by_region == expected.retained
+        @test fixture_diagnostics.shared_retained_count == expected.shared
+        @test route_diagnostics.route_label ==
+              :bond_aligned_diatomic_high_order_q_row_route
+        @test route_diagnostics.parent_dimension == fixture_diagnostics.parent_dimension
+        @test route_diagnostics.fixed_dimension == expected.fixed_dimension
+        @test route_diagnostics.backend == :pgdg_localized_experimental
+        @test route_diagnostics.source_sidecar_agree
+        @test isempty(route_diagnostics.mismatch_fields)
+        @test fixture_provenance.charge_policy == :basis_nuclear_charges_only
+        @test fixture_provenance.homonuclear_only
+        @test !fixture_provenance.heteronuclear_support
+        @test !fixture_provenance.public_api
+        @test !fixture_provenance.science_validation
+    end
+
     @test_throws ArgumentError QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
         basis;
         shared_q = 4,
@@ -1420,6 +1495,43 @@ end
     @test occursin(
         "nested doside retained_count must not exceed the interval size",
         sprint(showerror, q_row_q7_error),
+    )
+
+    @test_throws ArgumentError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+        bond_length = 5.0,
+        core_spacing = 0.7,
+        xmax_parallel = 8.0,
+        xmax_transverse = 4.0,
+        shared_q = 4,
+        expansion = expansion,
+        gausslet_backend = :numerical_reference,
+    )
+    @test_throws UndefKeywordError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+        bond_length = 5.0,
+        core_spacing = 0.7,
+        xmax_transverse = 4.0,
+        shared_q = 4,
+        expansion = expansion,
+    )
+    fixture_q7_error = try
+        QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 7,
+            shared_order = 7,
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        nothing
+    catch err
+        err
+    end
+    @test fixture_q7_error isa ArgumentError
+    @test occursin(
+        "nested doside retained_count must not exceed the interval size",
+        sprint(showerror, fixture_q7_error),
     )
 
     annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(

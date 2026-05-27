@@ -29,6 +29,7 @@ import ..GaussletBases:
     _validate_operator_route_backend,
     _validate_operator_route_interaction_treatment,
     basis_representation,
+    bond_aligned_homonuclear_qw_basis,
     coulomb_gaussian_expansion,
     ordinary_cartesian_qiu_white_operators
 import ..GaussletBases.CartesianCarriedSpaces:
@@ -199,6 +200,21 @@ struct _BondAlignedDiatomicHighOrderQRowRouteReceipt3D{
     provenance::PR
 end
 
+"""
+    _BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D
+
+Internal homonuclear fixture receipt for the experimental q-row route. It
+constructs the existing `BondAlignedDiatomicQWBasis3D` from explicit geometry,
+delegates numerical work to the basis-object q-row route receipt, and records
+fixture provenance only.
+"""
+struct _BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D{B,QR,D,V}
+    basis::B
+    q_row_route_receipt::QR
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -244,6 +260,14 @@ _nested_bond_aligned_diatomic_high_order_q_row_route_diagnostics(
 
 _nested_bond_aligned_diatomic_high_order_q_row_route_provenance(
     receipt::_BondAlignedDiatomicHighOrderQRowRouteReceipt3D,
+) = receipt.provenance
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_diagnostics(
+    receipt::_BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D,
+) = receipt.diagnostics
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_provenance(
+    receipt::_BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D,
 ) = receipt.provenance
 
 const _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE = (
@@ -1547,6 +1571,128 @@ function _nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
         qw_receipt,
         qw_receipt_diagnostics,
         qw_record_diagnostics,
+        diagnostics,
+        provenance,
+    )
+end
+
+"""
+    _nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(; ...)
+
+Private homonuclear fixture wrapper for the experimental q-row route. The
+helper requires geometry-defining inputs, constructs the existing
+`BondAlignedDiatomicQWBasis3D` with `bond_aligned_homonuclear_qw_basis`, and
+delegates unchanged to
+`_nested_bond_aligned_diatomic_high_order_q_row_route_receipt`.
+"""
+function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(;
+    bond_length,
+    core_spacing,
+    xmax_parallel,
+    xmax_transverse,
+    shared_q::Integer,
+    family = :G10,
+    bond_axis::Symbol = :z,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+    shared_order::Integer = shared_q,
+    protected_atom_side_count::Integer = 5,
+    q_min::Integer = 4,
+    nside::Integer = 5,
+    expansion = coulomb_gaussian_expansion(doacc = false),
+    packet_kernel::Symbol = :factorized_direct,
+    nuclear_term_storage::Symbol = :total_only,
+    interaction_treatment::Symbol = :ggt_nearest,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+)
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = family,
+        bond_length = bond_length,
+        core_spacing = core_spacing,
+        xmax_parallel = xmax_parallel,
+        xmax_transverse = xmax_transverse,
+        bond_axis = bond_axis,
+        nuclear_charge = nuclear_charge,
+        reference_spacing = reference_spacing,
+        tail_spacing = tail_spacing,
+    )
+    route_receipt = _nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
+        basis;
+        shared_q = shared_q,
+        shared_order = shared_order,
+        protected_atom_side_count = protected_atom_side_count,
+        q_min = q_min,
+        nside = nside,
+        expansion = expansion,
+        packet_kernel = packet_kernel,
+        nuclear_charges = basis.nuclear_charges,
+        nuclear_term_storage = nuclear_term_storage,
+        interaction_treatment = interaction_treatment,
+        gausslet_backend = gausslet_backend,
+    )
+    route_diagnostics =
+        _nested_bond_aligned_diatomic_high_order_q_row_route_diagnostics(
+            route_receipt,
+        )
+    route_provenance =
+        _nested_bond_aligned_diatomic_high_order_q_row_route_provenance(
+            route_receipt,
+        )
+    parent_axis_counts = (
+        length(basis.basis_x),
+        length(basis.basis_y),
+        length(basis.basis_z),
+    )
+    parent_dimension = prod(parent_axis_counts)
+    flat_index_convention = (
+        one_based = true,
+        formula = "flat = (ix - 1) * ny * nz + (iy - 1) * nz + iz",
+        fastest_axis = :z,
+        slowest_axis = :x,
+    )
+    diagnostics = (
+        route_label = :bond_aligned_homonuclear_high_order_q_row_fixture,
+        receipt_contract = :construct_homonuclear_basis_then_delegate_q_row_route,
+        basis_constructor = :bond_aligned_homonuclear_qw_basis,
+        family = family,
+        bond_length = Float64(bond_length),
+        core_spacing = Float64(core_spacing),
+        xmax_parallel = Float64(xmax_parallel),
+        xmax_transverse = Float64(xmax_transverse),
+        bond_axis = bond_axis,
+        reference_spacing = Float64(reference_spacing),
+        tail_spacing = Float64(tail_spacing),
+        nuclear_charge = Float64(nuclear_charge),
+        basis_nuclear_charges = Tuple(Float64.(basis.nuclear_charges)),
+        basis_nuclei = Tuple(basis.nuclei),
+        parent_axis_counts = parent_axis_counts,
+        parent_dimension = parent_dimension,
+        flat_index_convention = flat_index_convention,
+        shared_q = route_diagnostics.shared_q,
+        shared_order = route_diagnostics.shared_order,
+        q_min = route_diagnostics.q_min,
+        protected_atom_side_count = route_diagnostics.protected_atom_side_count,
+        nside = route_diagnostics.nside,
+        fixed_dimension = route_diagnostics.fixed_dimension,
+        retained_counts_by_region = route_diagnostics.retained_counts_by_region,
+        shared_retained_count = route_diagnostics.shared_retained_count,
+        q_row_route_diagnostics = route_diagnostics,
+    )
+    provenance = (
+        source = :_nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt,
+        basis_constructor = :bond_aligned_homonuclear_qw_basis,
+        delegated_route = route_provenance.source,
+        charge_policy = :basis_nuclear_charges_only,
+        homonuclear_only = true,
+        heteronuclear_support = false,
+        element_label_provenance = false,
+        public_api = false,
+        science_validation = false,
+    )
+    return _BondAlignedHomonuclearHighOrderQRowFixtureReceipt3D(
+        basis,
+        route_receipt,
         diagnostics,
         provenance,
     )
