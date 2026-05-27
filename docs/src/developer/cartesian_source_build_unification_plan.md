@@ -625,6 +625,28 @@ PGDG receipt path. This is still not a public q-ladder API, not a GTO
 supplement path, not Be2/Cr2 science validation, not an MWG/HF route, not a
 new Hamiltonian kernel, and not a quadrature-route change.
 
+Commit `d36b81d` adds the next private fixture layer:
+`_nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(...)`.
+This helper is still internal and unexported. It constructs the existing
+`bond_aligned_homonuclear_qw_basis(...)` from explicit small-molecule geometry
+and then delegates unchanged to the q-row route receipt above. The required
+fixture inputs are `bond_length`, `core_spacing`, `xmax_parallel`,
+`xmax_transverse`, and `shared_q`. Its explicit default provenance includes
+`family = :G10`, `bond_axis = :z`, `nuclear_charge = 1.0`,
+`reference_spacing = 1.0`, `tail_spacing = 10.0`,
+`shared_order = shared_q`, `protected_atom_side_count = 5`, `q_min = 4`,
+`nside = 5`, and `gausslet_backend = :pgdg_localized_experimental`.
+
+The fixture forwards `basis.nuclear_charges` from the constructed homonuclear
+basis and deliberately does not accept a separate `nuclear_charges` override.
+It records the basis constructor inputs, nuclei, parent axis counts, parent
+dimension, Cartesian flat-index convention, and delegated q-row diagnostics so
+a later CR2 handoff can identify the parent grid and ordering. This is only a
+parameterized construction/provenance bridge. It is not heteronuclear support,
+not element-label provenance, not a supplement route, not Be2/Cr2 science
+validation, not an energy result, and not a change to source builders,
+Hamiltonian kernels, backend defaults, or quadrature policy.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
