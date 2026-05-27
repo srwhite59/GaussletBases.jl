@@ -605,6 +605,26 @@ only. They are not Cr2 accuracy evidence, energy validation, public q-ladder
 API support, or a change to atom-local/contact/mismatch semantics. The
 transverse annulus remains experimental/missing.
 
+Commit `71d7084` adds a private q-row route receipt wrapper for that smoke
+path. `_nested_bond_aligned_diatomic_high_order_q_row_route_receipt(...)` lives
+in the QW receipt/diagnostic layer and is not exported. It accepts an
+already-built bond-aligned diatomic basis plus explicit shared q/order, then
+composes the existing chain:
+
+```text
+basis -> q policy -> source construction -> readiness/fixed block ->
+QW receipt -> route diagnostics
+```
+
+The wrapper is route/provenance infrastructure only. It keeps non-shared
+regions fixed at q4/order4 direct-support semantics, requires
+`gausslet_backend = :pgdg_localized_experimental`, rejects
+`:numerical_reference`, and preserves the q7/order7 retained-count rejection.
+Its focused tests pin q4/q5/q6 success and q7 failure through the existing
+PGDG receipt path. This is still not a public q-ladder API, not a GTO
+supplement path, not Be2/Cr2 science validation, not an MWG/HF route, not a
+new Hamiltonian kernel, and not a quadrature-route change.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
