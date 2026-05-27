@@ -2089,18 +2089,30 @@ end
         :shared_endcap_panel_exterior
     @test anatomy.recipe_policy_diagnostics.region_choices[3].recipe_family ==
         :protected_atom_cubic_shell
-    @test anatomy.recipe_realization_diagnostics.mapped_region_count == 3
-    @test anatomy.recipe_realization_diagnostics.missing_region_count == 2
+    @test anatomy.recipe_realization_diagnostics.mapped_region_count == 5
+    @test anatomy.recipe_realization_diagnostics.missing_region_count == 0
     @test anatomy.recipe_realization_diagnostics.buildable_without_mapped_primitive_count == 0
-    @test anatomy.recipe_realization_diagnostics.ready_for_opt_in_builder == false
-    @test anatomy.recipe_realization_diagnostics.region_realizations[1].missing_implementation ==
-        :outer_mismatch_shell_decomposition_or_owned_units
+    @test anatomy.recipe_realization_diagnostics.descriptor_region_count == 2
+    @test anatomy.recipe_realization_diagnostics.exact_descriptor_region_count == 2
+    @test anatomy.recipe_realization_diagnostics.ready_for_opt_in_builder == true
+    @test anatomy.recipe_realization_diagnostics.region_realizations[1].mapped_primitive ==
+        :_nested_diatomic_high_order_outer_mismatch_descriptor
+    @test anatomy.recipe_realization_diagnostics.region_realizations[1].realization_descriptor.owned_unit_count ==
+        2
+    @test anatomy.recipe_realization_diagnostics.region_realizations[1].realization_descriptor.parent_support_count ==
+        98
+    @test anatomy.recipe_realization_diagnostics.region_realizations[1].realization_descriptor.support_coverage.coverage_ok
     @test anatomy.recipe_realization_diagnostics.region_realizations[2].mapped_primitive ==
         :_nested_endcap_panel_shell_layer
     @test anatomy.recipe_realization_diagnostics.region_realizations[3].mapped_primitive ==
         :_nested_bond_aligned_diatomic_sequence_for_box
-    @test anatomy.recipe_realization_diagnostics.region_realizations[end].missing_implementation ==
-        :contact_cap_region_constructor
+    @test anatomy.recipe_realization_diagnostics.region_realizations[end].mapped_primitive ==
+        :_nested_diatomic_high_order_contact_cap_descriptor
+    @test anatomy.recipe_realization_diagnostics.region_realizations[end].realization_descriptor.owned_unit_count ==
+        1
+    @test anatomy.recipe_realization_diagnostics.region_realizations[end].realization_descriptor.parent_support_count ==
+        25
+    @test anatomy.recipe_realization_diagnostics.region_realizations[end].realization_descriptor.support_coverage.coverage_ok
     @test all(
         !realization.active_builder_consumes
         for realization in anatomy.recipe_realization_diagnostics.region_realizations

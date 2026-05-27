@@ -757,19 +757,33 @@ end
     @test audit isa GaussletBases._BondAlignedDiatomicHighOrderRecipeRealizationAudit3D
     @test diagnostics.recipe_label == :mixed_atom_cubic_shared_endcap_panel
     @test diagnostics.region_count == 9
-    @test diagnostics.mapped_region_count == 7
-    @test diagnostics.missing_region_count == 2
+    @test diagnostics.mapped_region_count == 9
+    @test diagnostics.missing_region_count == 0
     @test diagnostics.buildable_without_mapped_primitive_count == 0
     @test diagnostics.active_builder_consumed_region_count == 0
-    @test diagnostics.ready_for_opt_in_builder == false
+    @test diagnostics.descriptor_region_count == 2
+    @test diagnostics.exact_descriptor_region_count == 2
+    @test diagnostics.ready_for_opt_in_builder == true
     @test diagnostics.active_builder_uses_policy == false
     @test diagnostics.support_coverage.coverage_ok
 
     realizations = diagnostics.region_realizations
     @test realizations[1].role == :outer_mismatch_shared_molecular_shell
-    @test isnothing(realizations[1].mapped_primitive)
-    @test realizations[1].missing_implementation ==
-        :outer_mismatch_shell_decomposition_or_owned_units
+    @test realizations[1].mapped_primitive ==
+        :_nested_diatomic_high_order_outer_mismatch_descriptor
+    @test realizations[1].mapped_primitive_status == :construction_piece_descriptor
+    @test isnothing(realizations[1].missing_implementation)
+    @test realizations[1].realization_descriptor.parent_support_count ==
+        length(plan29.regions[1].support_indices)
+    @test realizations[1].realization_descriptor.owned_unit_count == 4
+    @test realizations[1].realization_descriptor.primitive_family ==
+        :outer_mismatch_boundary_slab_set
+    @test realizations[1].realization_descriptor.support_coverage.coverage_ok
+    @test realizations[1].realization_descriptor.exact_full_coverage
+    @test all(
+        piece.primitive_family == :outer_mismatch_boundary_slab
+        for piece in realizations[1].realization_descriptor.pieces
+    )
     @test all(
         realization.mapped_primitive == :_nested_endcap_panel_shell_layer &&
         realization.mapped_primitive_status == :existing_internal_primitive &&
@@ -786,8 +800,16 @@ end
         if realization.region_category == :atom_local
     )
     @test realizations[end].role == :contact_cap
-    @test isnothing(realizations[end].mapped_primitive)
-    @test realizations[end].missing_implementation == :contact_cap_region_constructor
+    @test realizations[end].mapped_primitive ==
+        :_nested_diatomic_high_order_contact_cap_descriptor
+    @test realizations[end].mapped_primitive_status == :construction_piece_descriptor
+    @test isnothing(realizations[end].missing_implementation)
+    @test realizations[end].realization_descriptor.parent_support_count ==
+        length(plan29.regions[end].support_indices)
+    @test realizations[end].realization_descriptor.owned_unit_count == 1
+    @test realizations[end].realization_descriptor.primitive_family == :contact_cap_owned_slab
+    @test realizations[end].realization_descriptor.support_coverage.coverage_ok
+    @test realizations[end].realization_descriptor.exact_full_coverage
     @test all(
         !(
             realization.buildability_status == :buildable_now &&
@@ -815,9 +837,11 @@ end
             annulus_audit,
         )
     @test annulus_diagnostics.recipe_label == :mixed_atom_cubic_shared_transverse_annulus
-    @test annulus_diagnostics.mapped_region_count == 2
-    @test annulus_diagnostics.missing_region_count == 7
+    @test annulus_diagnostics.mapped_region_count == 4
+    @test annulus_diagnostics.missing_region_count == 5
     @test annulus_diagnostics.buildable_without_mapped_primitive_count == 0
+    @test annulus_diagnostics.descriptor_region_count == 2
+    @test annulus_diagnostics.exact_descriptor_region_count == 2
     @test annulus_diagnostics.ready_for_opt_in_builder == false
     @test all(
         realization.recipe_family == :transverse_annulus_exterior &&

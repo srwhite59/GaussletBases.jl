@@ -215,6 +215,61 @@ struct _BondAlignedDiatomicHighOrderRecipePolicy3D
 end
 
 """
+    _BondAlignedDiatomicHighOrderConstructionPiece3D
+
+One disjoint, support-owning construction piece inside a selected high-order
+recipe region. Pieces are realization metadata only: they describe how a future
+opt-in builder can feed owned-unit/shell-like primitives without constructing
+coefficients, operators, backend state, or Hamiltonian packets.
+"""
+struct _BondAlignedDiatomicHighOrderConstructionPiece3D
+    role::Symbol
+    piece_index::Int
+    primitive_family::Symbol
+    box::NTuple{3,UnitRange{Int}}
+    inner_exclusion_box::Union{Nothing,NTuple{3,UnitRange{Int}}}
+    support_indices::Vector{Int}
+    metadata::NamedTuple
+end
+
+"""
+    _BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+
+Support audit for the pieces associated with one recipe region.
+"""
+struct _BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+    expected_support_count::Int
+    piece_support_count::Int
+    covered_support_count::Int
+    duplicate_count::Int
+    missing_count::Int
+    outside_count::Int
+    coverage_ok::Bool
+end
+
+"""
+    _BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D
+
+Construction-piece descriptor for one selected high-order recipe region. This
+closes region-level planning gaps without making the active source builder
+consume the policy.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D
+    region_role::Symbol
+    region_order_index::Int
+    recipe_family::Symbol
+    q::Int
+    order::Int
+    parent_support_count::Int
+    owned_unit_count::Int
+    primitive_family::Symbol
+    pieces::Vector{_BondAlignedDiatomicHighOrderConstructionPiece3D}
+    support_coverage::_BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+    exact_full_coverage::Bool
+    metadata::NamedTuple
+end
+
+"""
     _BondAlignedDiatomicHighOrderRecipeRegionRealization3D
 
 Internal build-readiness row for one selected high-order recipe region. The
@@ -235,6 +290,10 @@ struct _BondAlignedDiatomicHighOrderRecipeRegionRealization3D
     missing_implementation::Union{Nothing,Symbol}
     active_builder_consumes::Bool
     existing_opt_in_route::Union{Nothing,Symbol}
+    realization_descriptor::Union{
+        Nothing,
+        _BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D,
+    }
     metadata::NamedTuple
 end
 
@@ -1305,8 +1364,226 @@ function _nested_bond_aligned_diatomic_high_order_recipe_policy_diagnostics(
     )
 end
 
+function _nested_diatomic_high_order_construction_piece_coverage(
+    expected_support_indices::AbstractVector{Int},
+    pieces::AbstractVector{_BondAlignedDiatomicHighOrderConstructionPiece3D},
+)
+    expected = Set(expected_support_indices)
+    length(expected) == length(expected_support_indices) || throw(
+        ArgumentError("diatomic high-order construction-piece coverage requires unique expected support"),
+    )
+    owned_counts = Dict{Int,Int}()
+    piece_support_count = 0
+    for piece in pieces
+        piece_support_count += length(piece.support_indices)
+        for index in piece.support_indices
+            owned_counts[index] = get(owned_counts, index, 0) + 1
+        end
+    end
+    owned = Set(keys(owned_counts))
+    duplicate_count = sum(max(count - 1, 0) for count in values(owned_counts))
+    missing_count = length(setdiff(expected, owned))
+    outside_count = length(setdiff(owned, expected))
+    coverage_ok = duplicate_count == 0 && missing_count == 0 && outside_count == 0
+    return _BondAlignedDiatomicHighOrderConstructionPieceCoverage3D(
+        length(expected),
+        piece_support_count,
+        length(owned),
+        duplicate_count,
+        missing_count,
+        outside_count,
+        coverage_ok,
+    )
+end
+
+function _nested_diatomic_high_order_construction_piece(
+    role::Symbol,
+    piece_index::Int,
+    primitive_family::Symbol,
+    box::NTuple{3,UnitRange{Int}},
+    inner_exclusion_box::Union{Nothing,NTuple{3,UnitRange{Int}}},
+    dims::NTuple{3,Int};
+    metadata::NamedTuple = (;),
+)
+    support_indices = isnothing(inner_exclusion_box) ?
+        _nested_box_support_indices(box..., dims) :
+        _nested_diatomic_shell_support_indices(box, inner_exclusion_box, dims)
+    return _BondAlignedDiatomicHighOrderConstructionPiece3D(
+        role,
+        piece_index,
+        primitive_family,
+        box,
+        inner_exclusion_box,
+        support_indices,
+        metadata,
+    )
+end
+
+function _nested_diatomic_high_order_piece_descriptor(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    primitive_family::Symbol,
+    pieces::Vector{_BondAlignedDiatomicHighOrderConstructionPiece3D};
+    metadata::NamedTuple = (;),
+)
+    coverage = _nested_diatomic_high_order_construction_piece_coverage(
+        region.support_indices,
+        pieces,
+    )
+    return _BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D(
+        choice.region_role,
+        choice.region_order_index,
+        choice.recipe_family,
+        choice.q,
+        choice.order,
+        length(region.support_indices),
+        length(pieces),
+        primitive_family,
+        pieces,
+        coverage,
+        coverage.coverage_ok,
+        metadata,
+    )
+end
+
+function _nested_diatomic_high_order_contact_cap_descriptor(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    region.role == :contact_cap || throw(
+        ArgumentError("diatomic high-order contact-cap descriptor requires a contact-cap region"),
+    )
+    dims = _nested_diatomic_atom_growth_plan_dims(parent_box)
+    piece = _nested_diatomic_high_order_construction_piece(
+        :contact_cap_slab,
+        1,
+        :contact_cap_owned_slab,
+        region.box,
+        nothing,
+        dims;
+        metadata = (
+            contact_policy = get(region.metadata, :contact_policy, :unknown),
+            contact_gap_count = get(region.metadata, :contact_gap_count, 0),
+            exact_region_support = true,
+        ),
+    )
+    return _nested_diatomic_high_order_piece_descriptor(
+        choice,
+        region,
+        :contact_cap_owned_slab,
+        [piece];
+        metadata = (
+            descriptor_scope = :middle_contact_cap,
+            exact_full_coverage = true,
+            feeds_future_primitive_family = :contact_cap_owned_slab,
+        ),
+    )
+end
+
+function _nested_diatomic_outer_mismatch_piece_role(axis_index::Int, side::Symbol)
+    axis_symbol = (:x, :y, :z)[axis_index]
+    return Symbol("outer_mismatch_", String(axis_symbol), "_", String(side), "_slab")
+end
+
+function _nested_diatomic_outer_mismatch_piece_box(
+    outer_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    axis_index::Int,
+    side::Symbol,
+)
+    axis_range =
+        side == :low ? (first(outer_box[axis_index]):(first(inner_box[axis_index]) - 1)) :
+        side == :high ? ((last(inner_box[axis_index]) + 1):last(outer_box[axis_index])) :
+        throw(ArgumentError("diatomic high-order outer mismatch side must be :low or :high"))
+    isempty(axis_range) && return nothing
+    return ntuple(3) do index
+        index < axis_index ? inner_box[index] :
+        index == axis_index ? axis_range :
+        outer_box[index]
+    end
+end
+
+function _nested_diatomic_high_order_outer_mismatch_descriptor(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    region.role == :outer_mismatch_shared_molecular_shell || throw(
+        ArgumentError("diatomic high-order outer-mismatch descriptor requires an outer-mismatch region"),
+    )
+    inner_box = region.inner_exclusion_box
+    isnothing(inner_box) && throw(
+        ArgumentError("diatomic high-order outer-mismatch descriptor requires an inner exclusion box"),
+    )
+    dims = _nested_diatomic_atom_growth_plan_dims(parent_box)
+    outer_box = region.box
+    _nested_box_inside_parent(inner_box, outer_box) || throw(
+        ArgumentError("diatomic high-order outer-mismatch inner box must be inside the outer box"),
+    )
+    pieces = _BondAlignedDiatomicHighOrderConstructionPiece3D[]
+    piece_index = 1
+    for axis_index in 1:3, side in (:low, :high)
+        piece_box = _nested_diatomic_outer_mismatch_piece_box(
+            outer_box,
+            inner_box,
+            axis_index,
+            side,
+        )
+        isnothing(piece_box) && continue
+        push!(
+            pieces,
+            _nested_diatomic_high_order_construction_piece(
+                _nested_diatomic_outer_mismatch_piece_role(axis_index, side),
+                piece_index,
+                :outer_mismatch_boundary_slab,
+                piece_box,
+                nothing,
+                dims;
+                metadata = (
+                    axis = (:x, :y, :z)[axis_index],
+                    axis_index = axis_index,
+                    side = side,
+                    edge_assignment_policy = :earlier_axes_absorb_outer_edges,
+                ),
+            ),
+        )
+        piece_index += 1
+    end
+    return _nested_diatomic_high_order_piece_descriptor(
+        choice,
+        region,
+        :outer_mismatch_boundary_slab_set,
+        pieces;
+        metadata = (
+            descriptor_scope = :outermost_mismatch_shell,
+            exact_full_coverage = true,
+            feeds_future_primitive_family = :outer_mismatch_boundary_slab,
+            slab_order_policy = :axis_ordered_disjoint_boundary_slabs,
+        ),
+    )
+end
+
+function _nested_diatomic_high_order_recipe_region_realization_descriptor(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    choice.recipe_family == :shared_contact_cap && return (
+        _nested_diatomic_high_order_contact_cap_descriptor(choice, region, parent_box)
+    )
+    choice.recipe_family == :outermost_mismatch_shared_molecular_shell && return (
+        _nested_diatomic_high_order_outer_mismatch_descriptor(choice, region, parent_box)
+    )
+    return nothing
+end
+
 function _nested_diatomic_high_order_recipe_realization_mapping(
     choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    descriptor::Union{
+        Nothing,
+        _BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D,
+    } = nothing,
 )
     if choice.recipe_family == :protected_atom_cubic_shell
         return (
@@ -1331,6 +1608,19 @@ function _nested_diatomic_high_order_recipe_realization_mapping(
             ),
         )
     elseif choice.recipe_family == :shared_contact_cap
+        if !isnothing(descriptor)
+            return (
+                mapped_primitive = :_nested_diatomic_high_order_contact_cap_descriptor,
+                mapped_primitive_status = :construction_piece_descriptor,
+                missing_implementation = nothing,
+                existing_opt_in_route = nothing,
+                notes = (
+                    primitive_scope = :middle_contact_cap,
+                    descriptor_family = descriptor.primitive_family,
+                    owned_unit_count = descriptor.owned_unit_count,
+                ),
+            )
+        end
         return (
             mapped_primitive = nothing,
             mapped_primitive_status = :missing_region_primitive,
@@ -1342,6 +1632,19 @@ function _nested_diatomic_high_order_recipe_realization_mapping(
             ),
         )
     elseif choice.recipe_family == :outermost_mismatch_shared_molecular_shell
+        if !isnothing(descriptor)
+            return (
+                mapped_primitive = :_nested_diatomic_high_order_outer_mismatch_descriptor,
+                mapped_primitive_status = :construction_piece_descriptor,
+                missing_implementation = nothing,
+                existing_opt_in_route = nothing,
+                notes = (
+                    primitive_scope = :outermost_mismatch_shell,
+                    descriptor_family = descriptor.primitive_family,
+                    owned_unit_count = descriptor.owned_unit_count,
+                ),
+            )
+        end
         return (
             mapped_primitive = nothing,
             mapped_primitive_status = :missing_region_primitive,
@@ -1369,8 +1672,18 @@ end
 
 function _nested_diatomic_high_order_recipe_region_realization(
     choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    parent_box::NTuple{3,UnitRange{Int}},
 )
-    mapping = _nested_diatomic_high_order_recipe_realization_mapping(choice)
+    choice.region_role == region.role && choice.region_order_index == region.order_index || throw(
+        ArgumentError("diatomic high-order realization choice does not match its construction region"),
+    )
+    descriptor = _nested_diatomic_high_order_recipe_region_realization_descriptor(
+        choice,
+        region,
+        parent_box,
+    )
+    mapping = _nested_diatomic_high_order_recipe_realization_mapping(choice, descriptor)
     return _BondAlignedDiatomicHighOrderRecipeRegionRealization3D(
         choice.region_role,
         choice.region_order_index,
@@ -1385,6 +1698,7 @@ function _nested_diatomic_high_order_recipe_region_realization(
         mapping.missing_implementation,
         false,
         mapping.existing_opt_in_route,
+        descriptor,
         (
             implementation_status = choice.implementation_status,
             selected = choice.selected,
@@ -1397,9 +1711,16 @@ end
 function _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
     policy::_BondAlignedDiatomicHighOrderRecipePolicy3D,
 )
+    length(policy.region_choices) == length(policy.construction_plan.regions) || throw(
+        ArgumentError("diatomic high-order realization audit requires one choice per construction region"),
+    )
     realizations = [
-        _nested_diatomic_high_order_recipe_region_realization(choice)
-        for choice in policy.region_choices
+        _nested_diatomic_high_order_recipe_region_realization(
+            choice,
+            region,
+            policy.construction_plan.anatomy.recipe.parent_box,
+        )
+        for (choice, region) in zip(policy.region_choices, policy.construction_plan.regions)
     ]
     mapped_count = count(realization -> !isnothing(realization.mapped_primitive), realizations)
     missing_count = count(realization -> !isnothing(realization.missing_implementation), realizations)
@@ -1428,6 +1749,57 @@ function _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
     )
 end
 
+function _nested_diatomic_high_order_piece_coverage_diagnostics(
+    coverage::_BondAlignedDiatomicHighOrderConstructionPieceCoverage3D,
+)
+    return (
+        expected_support_count = coverage.expected_support_count,
+        piece_support_count = coverage.piece_support_count,
+        covered_support_count = coverage.covered_support_count,
+        duplicate_count = coverage.duplicate_count,
+        missing_count = coverage.missing_count,
+        outside_count = coverage.outside_count,
+        coverage_ok = coverage.coverage_ok,
+    )
+end
+
+function _nested_diatomic_high_order_realization_descriptor_diagnostics(
+    descriptor::Nothing,
+)
+    return nothing
+end
+
+function _nested_diatomic_high_order_realization_descriptor_diagnostics(
+    descriptor::_BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D,
+)
+    return (
+        region_role = descriptor.region_role,
+        region_order_index = descriptor.region_order_index,
+        recipe_family = descriptor.recipe_family,
+        q = descriptor.q,
+        order = descriptor.order,
+        parent_support_count = descriptor.parent_support_count,
+        owned_unit_count = descriptor.owned_unit_count,
+        primitive_family = descriptor.primitive_family,
+        support_coverage =
+            _nested_diatomic_high_order_piece_coverage_diagnostics(descriptor.support_coverage),
+        exact_full_coverage = descriptor.exact_full_coverage,
+        pieces = [
+            (
+                role = piece.role,
+                piece_index = piece.piece_index,
+                primitive_family = piece.primitive_family,
+                support_count = length(piece.support_indices),
+                box = piece.box,
+                inner_exclusion_box = piece.inner_exclusion_box,
+                metadata = piece.metadata,
+            )
+            for piece in descriptor.pieces
+        ],
+        metadata = descriptor.metadata,
+    )
+end
+
 function _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
     plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D;
     kwargs...,
@@ -1449,6 +1821,15 @@ function _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics
         buildable_without_mapped_primitive_count =
             audit.buildable_without_mapped_primitive_count,
         active_builder_consumed_region_count = audit.active_builder_consumed_region_count,
+        descriptor_region_count =
+            count(realization -> !isnothing(realization.realization_descriptor), audit.region_realizations),
+        exact_descriptor_region_count =
+            count(
+                realization ->
+                    !isnothing(realization.realization_descriptor) &&
+                    realization.realization_descriptor.exact_full_coverage,
+                audit.region_realizations,
+            ),
         ready_for_opt_in_builder = audit.ready_for_opt_in_builder,
         region_realizations = [
             (
@@ -1465,6 +1846,10 @@ function _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics
                 missing_implementation = realization.missing_implementation,
                 active_builder_consumes = realization.active_builder_consumes,
                 existing_opt_in_route = realization.existing_opt_in_route,
+                realization_descriptor =
+                    _nested_diatomic_high_order_realization_descriptor_diagnostics(
+                        realization.realization_descriptor,
+                    ),
             )
             for realization in audit.region_realizations
         ],
