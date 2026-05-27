@@ -1101,6 +1101,99 @@ end
         Inf,
     ) < 1.0e-12
 
+    shared_q5_packeted_construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            shared_q5_policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = true,
+        )
+    shared_q5_readiness =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+            shared_q5_packeted_construction;
+            build_fixed_block = true,
+        )
+    shared_q5_readiness_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+            shared_q5_readiness,
+        )
+    @test shared_q5_readiness_diagnostics.sequence_packet_available
+    @test shared_q5_readiness_diagnostics.overlap_available
+    @test shared_q5_readiness_diagnostics.weights_available
+    @test shared_q5_readiness_diagnostics.overlap_error < 1.0e-8
+    @test shared_q5_readiness_diagnostics.can_produce_fixed_block
+    @test isempty(shared_q5_readiness_diagnostics.fixed_block_missing_fields)
+    @test shared_q5_readiness_diagnostics.fixed_block_built
+    @test shared_q5_readiness_diagnostics.fixed_block_dimension == 523
+    @test shared_q5_readiness_diagnostics.fixed_block_support_count == 7 * 7 * 15
+    @test shared_q5_readiness_diagnostics.staged_by_center_sidecar_available
+    shared_q5_fixed_block =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(
+            shared_q5_packeted_construction,
+        )
+    @test shared_q5_fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test size(shared_q5_fixed_block.coefficient_matrix) == (7 * 7 * 15, 523)
+    @test norm(shared_q5_fixed_block.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, shared_q5_fixed_block.weights)
+    @test shared_q5_fixed_block.staged_by_center_sidecar[] isa
+          GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
+
+    shared_q5_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
+        shared_q5_fixed_block;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+        expansion = expansion,
+    )
+    shared_q5_operators = QWCS.qw_operator_construction_receipt_operators(shared_q5_receipt)
+    shared_q5_receipt_diagnostics =
+        QWCS.qw_operator_construction_receipt_diagnostics(shared_q5_receipt)
+    shared_q5_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
+        QWCS.qw_operator_construction_receipt_record(shared_q5_receipt),
+    )
+    @test shared_q5_receipt_diagnostics.delegated_to_existing_builder
+    @test shared_q5_receipt_diagnostics.source_sidecar_agree
+    @test isempty(shared_q5_receipt_diagnostics.mismatch_fields)
+    @test shared_q5_receipt_diagnostics.operator_built
+    @test shared_q5_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
+    @test shared_q5_receipt_diagnostics.interaction_treatment == :ggt_nearest
+    @test shared_q5_receipt_diagnostics.nuclear_term_storage == :total_only
+    @test shared_q5_receipt_diagnostics.dense_parent_matrix_used == false
+    @test shared_q5_receipt_diagnostics.heavy_metric_packet_built == false
+    @test shared_q5_receipt_diagnostics.new_hamiltonian_kernel_used == false
+    @test shared_q5_receipt_diagnostics.numerical_outputs_changed == false
+    @test shared_q5_record_diagnostics.source_sidecar_agree
+    @test isempty(shared_q5_record_diagnostics.mismatch_fields)
+    @test shared_q5_record_diagnostics.source_parent_dimension == 7 * 7 * 15
+    @test shared_q5_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
+    @test shared_q5_record_diagnostics.source_carried_dimension == 523
+    @test shared_q5_record_diagnostics.sidecar_carried_dimension == 523
+    @test shared_q5_operators.gausslet_backend == :pgdg_localized_experimental
+    @test shared_q5_operators.interaction_treatment == :ggt_nearest
+    @test shared_q5_operators.gausslet_count == 523
+    @test shared_q5_operators.residual_count == 0
+    @test size(shared_q5_operators.overlap) == (523, 523)
+    @test size(shared_q5_operators.one_body_hamiltonian) == (523, 523)
+    @test size(shared_q5_operators.interaction_matrix) == (523, 523)
+    @test all(isfinite, shared_q5_operators.overlap)
+    @test all(isfinite, shared_q5_operators.one_body_hamiltonian)
+    @test all(isfinite, shared_q5_operators.interaction_matrix)
+    @test norm(shared_q5_operators.overlap - I, Inf) < 1.0e-8
+    @test norm(
+        shared_q5_operators.one_body_hamiltonian -
+        transpose(shared_q5_operators.one_body_hamiltonian),
+        Inf,
+    ) < 1.0e-12
+    @test norm(
+        shared_q5_operators.interaction_matrix -
+        transpose(shared_q5_operators.interaction_matrix),
+        Inf,
+    ) < 1.0e-12
+
     annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
         policy.construction_plan;
         q_min = 4,
