@@ -1,5 +1,7 @@
 module CartesianQWOperatorCarriedSpaces
 
+using LinearAlgebra: I, Symmetric, diag, norm
+
 import ..GaussletBases:
     AbstractBondAlignedOrdinaryQWBasis3D,
     BondAlignedDiatomicQWBasis3D,
@@ -31,6 +33,7 @@ import ..GaussletBases:
     basis_representation,
     bond_aligned_homonuclear_qw_basis,
     coulomb_gaussian_expansion,
+    gto_overlap_matrix,
     legacy_bond_aligned_diatomic_gaussian_supplement,
     ordinary_cartesian_qiu_white_operators
 import ..GaussletBases.CartesianCarriedSpaces:
@@ -231,6 +234,35 @@ struct _BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D{FR,S,QR,D,
     provenance::V
 end
 
+"""
+    _BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D
+
+Private parent-grid target capture/H1 diagnostic for the homonuclear q-row
+fixture supplement route. It reuses the existing q-row/supplement receipt and
+QW operators; it does not implement Hamiltonian kernels.
+"""
+struct _BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D{
+    R,
+    P,
+    T,
+    F,
+    H,
+    ROWS,
+    S,
+    D,
+    V,
+}
+    route_receipt::R
+    parent_qw_receipt::P
+    target_coefficients::T
+    fixed_projected_coefficients::F
+    final_projected_coefficients::H
+    target_rows::ROWS
+    summary::S
+    diagnostics::D
+    provenance::V
+end
+
 qw_operator_carried_space(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
     sidecar.carried_space
 qw_operator_basis_representation(sidecar::CartesianQWOperatorCarriedSpaceSidecar) =
@@ -293,6 +325,22 @@ _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_diagnostics
 _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_provenance(
     receipt::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementReceipt3D,
 ) = receipt.provenance
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_diagnostics(
+    diagnostic::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D,
+) = diagnostic.diagnostics
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_rows(
+    diagnostic::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D,
+) = diagnostic.target_rows
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_summary(
+    diagnostic::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D,
+) = diagnostic.summary
+
+_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_provenance(
+    diagnostic::_BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D,
+) = diagnostic.provenance
 
 const _CARTESIAN_QW_OPERATOR_RECEIPT_COVERAGE = (
     contract = :delegate_plus_audit_only,
@@ -1861,6 +1909,383 @@ function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_re
         fixture_receipt,
         supplement,
         supplement_qw_receipt,
+        diagnostics,
+        provenance,
+    )
+end
+
+function _nested_capture_target_matrix(
+    target_coefficients::AbstractMatrix{<:Real},
+)
+    matrix = Matrix{Float64}(target_coefficients)
+    all(isfinite, matrix) || throw(
+        ArgumentError("q-row fixture supplement capture/H1 target coefficients must be finite"),
+    )
+    return matrix
+end
+
+function _nested_capture_target_labels(labels, ntarget::Int)
+    labels === nothing && return ["target_$(index)" for index in 1:ntarget]
+    length(labels) == ntarget || throw(
+        DimensionMismatch(
+            "target label count $(length(labels)) does not match target column count $(ntarget)",
+        ),
+    )
+    return String[string(label) for label in labels]
+end
+
+function _nested_capture_target_occupations(occupations, ntarget::Int)
+    occupations === nothing && return nothing
+    length(occupations) == ntarget || throw(
+        DimensionMismatch(
+            "target occupation count $(length(occupations)) does not match target column count $(ntarget)",
+        ),
+    )
+    values = Float64[Float64(occupation) for occupation in occupations]
+    all(isfinite, values) || throw(ArgumentError("target occupations must be finite"))
+    all(>=(0.0), values) || throw(ArgumentError("target occupations must be nonnegative"))
+    return values
+end
+
+function _nested_capture_column_gram_values(
+    gram::AbstractMatrix{<:Real},
+    label::AbstractString,
+)
+    values = Float64[Float64(value) for value in real.(diag(gram))]
+    all(isfinite, values) || throw(ArgumentError("$(label) diagonal values must be finite"))
+    return values
+end
+
+function _nested_capture_positive_source_norms(source_norms::AbstractVector{<:Real})
+    all(>(0.0), source_norms) || throw(
+        ArgumentError(
+            "q-row fixture supplement capture/H1 requires every target column to have positive parent-overlap norm",
+        ),
+    )
+    return source_norms
+end
+
+function _nested_capture_expectations(
+    coefficients::AbstractMatrix{<:Real},
+    matrix::AbstractMatrix{<:Real},
+    norms::AbstractVector{<:Real},
+)
+    projected = transpose(coefficients) * Matrix{Float64}(matrix) * coefficients
+    values = _nested_capture_column_gram_values(projected, "projected expectation")
+    return Float64[values[index] / Float64(norms[index]) for index in eachindex(values)]
+end
+
+function _nested_capture_rows(
+    labels::AbstractVector{<:AbstractString},
+    occupations,
+    source_norms::AbstractVector{<:Real},
+    fixed_norms::AbstractVector{<:Real},
+    final_norms::AbstractVector{<:Real},
+    parent_h1::AbstractVector{<:Real},
+    fixed_h1::AbstractVector{<:Real},
+    final_h1::AbstractVector{<:Real},
+)
+    rows = NamedTuple[]
+    for index in eachindex(labels)
+        source_norm = Float64(source_norms[index])
+        fixed_norm = Float64(fixed_norms[index])
+        final_norm = Float64(final_norms[index])
+        fixed_fraction = fixed_norm / source_norm
+        final_fraction = final_norm / source_norm
+        parent_value = Float64(parent_h1[index])
+        fixed_value = Float64(fixed_h1[index])
+        final_value = Float64(final_h1[index])
+        push!(
+            rows,
+            (
+                column = index,
+                label = labels[index],
+                occupation = occupations === nothing ? nothing : occupations[index],
+                source_norm = source_norm,
+                fixed_captured_norm = fixed_norm,
+                final_captured_norm = final_norm,
+                fixed_capture_fraction = fixed_fraction,
+                final_capture_fraction = final_fraction,
+                final_minus_fixed_capture = final_fraction - fixed_fraction,
+                parent_h1_expectation = parent_value,
+                fixed_projected_h1_expectation = fixed_value,
+                final_projected_h1_expectation = final_value,
+                fixed_h1_delta = fixed_value - parent_value,
+                final_h1_delta = final_value - parent_value,
+            ),
+        )
+    end
+    return rows
+end
+
+function _nested_capture_summary(rows::AbstractVector, occupations)
+    weights = occupations === nothing ? ones(Float64, length(rows)) : Float64.(occupations)
+    source_total = sum(weights[index] * rows[index].source_norm for index in eachindex(rows))
+    fixed_total = sum(weights[index] * rows[index].fixed_captured_norm for index in eachindex(rows))
+    final_total = sum(weights[index] * rows[index].final_captured_norm for index in eachindex(rows))
+    source_total > 0.0 || throw(
+        ArgumentError("q-row fixture supplement capture/H1 summary requires positive total source norm"),
+    )
+    fixed_fractions = Float64[row.fixed_capture_fraction for row in rows]
+    final_fractions = Float64[row.final_capture_fraction for row in rows]
+    worst_fixed_index = argmin(fixed_fractions)
+    worst_final_index = argmin(final_fractions)
+    max_fixed_h1_delta = maximum(abs(row.fixed_h1_delta) for row in rows)
+    max_final_h1_delta = maximum(abs(row.final_h1_delta) for row in rows)
+    return (
+        target_count = length(rows),
+        occupation_policy = occupations === nothing ? :unit_weights : :explicit_occupations,
+        source_norm_total = source_total,
+        fixed_captured_norm_total = fixed_total,
+        final_captured_norm_total = final_total,
+        fixed_capture_fraction_total = fixed_total / source_total,
+        final_capture_fraction_total = final_total / source_total,
+        final_minus_fixed_capture_total = (final_total - fixed_total) / source_total,
+        worst_fixed_label = rows[worst_fixed_index].label,
+        worst_fixed_capture = rows[worst_fixed_index].fixed_capture_fraction,
+        worst_final_label = rows[worst_final_index].label,
+        worst_final_capture = rows[worst_final_index].final_capture_fraction,
+        max_abs_fixed_h1_delta = max_fixed_h1_delta,
+        max_abs_final_h1_delta = max_final_h1_delta,
+    )
+end
+
+"""
+    _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(target_coefficients; ...)
+
+Private parent-grid target capture/H1 diagnostic for the homonuclear q-row
+fixture supplement route. The target columns must be expressed in the exact
+parent Cartesian grid of the fixture. Final-basis self-overlap is reported as a
+trust gate only; the final projection uses the existing orthonormal final-basis
+contract.
+"""
+function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(
+    target_coefficients::AbstractMatrix{<:Real};
+    target_labels = nothing,
+    target_occupations = nothing,
+    bond_length,
+    core_spacing,
+    xmax_parallel,
+    xmax_transverse,
+    shared_q::Integer,
+    atom::AbstractString,
+    basis_name::AbstractString,
+    family = :G10,
+    bond_axis::Symbol = :z,
+    nuclear_charge::Real = 1.0,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+    shared_order::Integer = shared_q,
+    protected_atom_side_count::Integer = 5,
+    q_min::Integer = 4,
+    nside::Integer = 5,
+    expansion = coulomb_gaussian_expansion(doacc = false),
+    packet_kernel::Symbol = :factorized_direct,
+    lmax::Integer = 0,
+    basisfile::Union{Nothing,AbstractString} = nothing,
+    max_width::Union{Nothing,Real} = nothing,
+    nuclear_term_storage::Symbol = :by_center,
+    interaction_treatment::Symbol = :mwg,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+)
+    target_matrix = _nested_capture_target_matrix(target_coefficients)
+    gausslet_backend == :pgdg_localized_experimental || throw(
+        ArgumentError(
+            "experimental q-row fixture supplement capture/H1 requires gausslet_backend = :pgdg_localized_experimental",
+        ),
+    )
+    route_receipt =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(
+            bond_length = bond_length,
+            core_spacing = core_spacing,
+            xmax_parallel = xmax_parallel,
+            xmax_transverse = xmax_transverse,
+            shared_q = shared_q,
+            atom = atom,
+            basis_name = basis_name,
+            family = family,
+            bond_axis = bond_axis,
+            nuclear_charge = nuclear_charge,
+            reference_spacing = reference_spacing,
+            tail_spacing = tail_spacing,
+            shared_order = shared_order,
+            protected_atom_side_count = protected_atom_side_count,
+            q_min = q_min,
+            nside = nside,
+            expansion = expansion,
+            packet_kernel = packet_kernel,
+            lmax = lmax,
+            basisfile = basisfile,
+            max_width = max_width,
+            nuclear_term_storage = nuclear_term_storage,
+            interaction_treatment = interaction_treatment,
+            gausslet_backend = gausslet_backend,
+        )
+    fixture_receipt = route_receipt.fixture_receipt
+    fixed_block = fixture_receipt.q_row_route_receipt.fixed_block
+    basis = fixture_receipt.basis
+    fixture_diagnostics =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_diagnostics(
+            fixture_receipt,
+        )
+    parent_dimension = fixture_diagnostics.parent_dimension
+    size(target_matrix, 1) == parent_dimension || throw(
+        DimensionMismatch(
+            "q-row fixture supplement capture/H1 target row count $(size(target_matrix, 1)) does not match parent dimension $(parent_dimension)",
+        ),
+    )
+    ntarget = size(target_matrix, 2)
+    ntarget > 0 || throw(
+        ArgumentError("q-row fixture supplement capture/H1 requires at least one target column"),
+    )
+    labels = _nested_capture_target_labels(target_labels, ntarget)
+    occupations = _nested_capture_target_occupations(target_occupations, ntarget)
+
+    parent_qw_receipt = cartesian_qw_operator_construction_receipt(
+        basis;
+        nuclear_charges = fixed_block.parent_basis.nuclear_charges,
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = gausslet_backend,
+        expansion = expansion,
+    )
+    parent_ops = qw_operator_construction_receipt_operators(parent_qw_receipt)
+    fixed_ops = qw_operator_construction_receipt_operators(
+        fixture_receipt.q_row_route_receipt.qw_receipt,
+    )
+    final_ops = qw_operator_construction_receipt_operators(
+        route_receipt.supplement_qw_receipt,
+    )
+
+    parent_overlap = Matrix{Float64}(parent_ops.overlap)
+    parent_hamiltonian = Matrix{Float64}(parent_ops.one_body_hamiltonian)
+    fixed_overlap = Matrix{Float64}(fixed_block.overlap)
+    fixed_hamiltonian = Matrix{Float64}(fixed_ops.one_body_hamiltonian)
+    final_overlap = Matrix{Float64}(final_ops.overlap)
+    final_hamiltonian = Matrix{Float64}(final_ops.one_body_hamiltonian)
+    fixed_coefficients = Matrix{Float64}(fixed_block.coefficient_matrix)
+    parent_target_overlap = parent_overlap * target_matrix
+    source_gram = transpose(target_matrix) * parent_target_overlap
+    source_norms = _nested_capture_positive_source_norms(
+        _nested_capture_column_gram_values(source_gram, "parent target source norm"),
+    )
+
+    fixed_target_overlap = transpose(fixed_coefficients) * parent_target_overlap
+    fixed_projected = Symmetric(fixed_overlap) \ fixed_target_overlap
+    fixed_capture_gram =
+        transpose(fixed_projected) * fixed_overlap * fixed_projected
+    fixed_norms = _nested_capture_column_gram_values(
+        fixed_capture_gram,
+        "fixed capture norm",
+    )
+
+    supplement_parent_overlap = gto_overlap_matrix(basis, route_receipt.supplement)
+    supplement_target_overlap = transpose(supplement_parent_overlap) * target_matrix
+    raw_target_overlap = vcat(fixed_target_overlap, supplement_target_overlap)
+    size(raw_target_overlap, 1) == size(final_ops.raw_to_final, 1) || throw(
+        DimensionMismatch(
+            "q-row fixture supplement capture/H1 raw target overlap rows do not match raw_to_final rows",
+        ),
+    )
+    final_projected =
+        Matrix{Float64}(transpose(final_ops.raw_to_final) * raw_target_overlap)
+    final_capture_gram = transpose(final_projected) * final_projected
+    final_norms = _nested_capture_column_gram_values(
+        final_capture_gram,
+        "final capture norm",
+    )
+
+    parent_h1 = _nested_capture_expectations(
+        target_matrix,
+        parent_hamiltonian,
+        source_norms,
+    )
+    fixed_h1 = _nested_capture_expectations(
+        fixed_projected,
+        fixed_hamiltonian,
+        fixed_norms,
+    )
+    final_h1 = _nested_capture_expectations(
+        final_projected,
+        final_hamiltonian,
+        final_norms,
+    )
+    rows = _nested_capture_rows(
+        labels,
+        occupations,
+        source_norms,
+        fixed_norms,
+        final_norms,
+        parent_h1,
+        fixed_h1,
+        final_h1,
+    )
+    summary = _nested_capture_summary(rows, occupations)
+    route_diagnostics =
+        _nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_diagnostics(
+            route_receipt,
+        )
+    parent_receipt_diagnostics = qw_operator_construction_receipt_diagnostics(
+        parent_qw_receipt,
+    )
+    diagnostics = (
+        route_label = :bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1,
+        diagnostic_contract = :parent_grid_target_capture_h1,
+        target_space = :parent_grid_coefficients,
+        target_shape = size(target_matrix),
+        parent_dimension = parent_dimension,
+        fixed_dimension = route_diagnostics.fixture_diagnostics.fixed_dimension,
+        final_dimension = route_diagnostics.final_dimension,
+        residual_count = route_diagnostics.residual_count,
+        source_gram = Matrix{Float64}(source_gram),
+        fixed_capture_gram = Matrix{Float64}(fixed_capture_gram),
+        final_capture_gram = Matrix{Float64}(final_capture_gram),
+        fixed_overlap_error = norm(fixed_overlap - I, Inf),
+        final_overlap_error = norm(final_overlap - I, Inf),
+        final_basis_policy = :assume_orthonormal_final_basis,
+        final_overlap_usage = :diagnostic_trust_gate_only,
+        fixed_projection_formula = :solve_fixed_overlap_against_parent_target_overlap,
+        final_projection_formula = :raw_target_overlap_times_raw_to_final,
+        route_diagnostics = route_diagnostics,
+        parent_receipt_diagnostics = parent_receipt_diagnostics,
+        backend = route_diagnostics.backend,
+        parent_backend = parent_ops.gausslet_backend,
+        source_sidecar_agree = route_diagnostics.source_sidecar_agree &&
+                               parent_receipt_diagnostics.source_sidecar_agree,
+        mismatch_fields = Tuple(route_diagnostics.mismatch_fields),
+        dense_parent_matrix_used = route_diagnostics.dense_parent_matrix_used ||
+                                   parent_receipt_diagnostics.dense_parent_matrix_used,
+        heavy_metric_packet_built = route_diagnostics.heavy_metric_packet_built ||
+                                    parent_receipt_diagnostics.heavy_metric_packet_built,
+        new_hamiltonian_kernel_used =
+            route_diagnostics.new_hamiltonian_kernel_used ||
+            parent_receipt_diagnostics.new_hamiltonian_kernel_used,
+        numerical_outputs_changed =
+            route_diagnostics.numerical_outputs_changed ||
+            parent_receipt_diagnostics.numerical_outputs_changed,
+        omitted_diagnostics = (
+            spin_summary = :not_in_first_pass,
+            tsv_parsing = :not_in_first_pass,
+            normalized_capture_singular_values = :not_in_first_pass,
+        ),
+    )
+    provenance = (
+        source =
+            :_nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1,
+        route_receipt = route_receipt.provenance.source,
+        target_contract = :exact_parent_grid_coefficients,
+        public_api = false,
+        science_validation = false,
+        cr2_file_parser = false,
+    )
+    return _BondAlignedHomonuclearHighOrderQRowFixtureSupplementCaptureH1Diagnostic3D(
+        route_receipt,
+        parent_qw_receipt,
+        target_matrix,
+        Matrix{Float64}(fixed_projected),
+        final_projected,
+        rows,
+        summary,
         diagnostics,
         provenance,
     )

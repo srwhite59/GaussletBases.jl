@@ -3309,6 +3309,135 @@ end
             gausslet_backend = :numerical_reference,
         )
 
+        q4_capture_target = Matrix{Float64}(q4_fixed_block.coefficient_matrix[:, 1:3])
+        q4_capture = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(
+            q4_capture_target;
+            target_labels = ["fixed_col_1", "fixed_col_2", "fixed_col_3"],
+            target_occupations = [2.0, 1.0, 0.5],
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            family = :G10,
+            bond_axis = :z,
+            expansion = expansion,
+            lmax = 0,
+            max_width = 1.0,
+            nuclear_term_storage = :by_center,
+            interaction_treatment = :mwg,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q4_capture_diagnostics =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_diagnostics(
+                q4_capture,
+            )
+        q4_capture_rows =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_rows(
+                q4_capture,
+            )
+        q4_capture_summary =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_summary(
+                q4_capture,
+            )
+        q4_capture_provenance =
+            QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1_provenance(
+                q4_capture,
+            )
+        @test q4_capture_diagnostics.route_label ==
+              :bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1
+        @test q4_capture_diagnostics.target_space == :parent_grid_coefficients
+        @test q4_capture_diagnostics.target_shape == (7 * 7 * 15, 3)
+        @test q4_capture_diagnostics.parent_dimension == 7 * 7 * 15
+        @test q4_capture_diagnostics.fixed_dimension == 469
+        @test q4_capture_diagnostics.final_dimension ==
+              q4_fixture_supplement_diagnostics.final_dimension
+        @test q4_capture_diagnostics.backend == :pgdg_localized_experimental
+        @test q4_capture_diagnostics.parent_backend == :pgdg_localized_experimental
+        @test q4_capture_diagnostics.source_sidecar_agree
+        @test isempty(q4_capture_diagnostics.mismatch_fields)
+        @test q4_capture_diagnostics.dense_parent_matrix_used == false
+        @test q4_capture_diagnostics.heavy_metric_packet_built == false
+        @test q4_capture_diagnostics.new_hamiltonian_kernel_used == false
+        @test q4_capture_diagnostics.numerical_outputs_changed == false
+        @test q4_capture_diagnostics.final_overlap_usage ==
+              :diagnostic_trust_gate_only
+        @test q4_capture_diagnostics.final_basis_policy ==
+              :assume_orthonormal_final_basis
+        @test q4_capture_diagnostics.fixed_overlap_error < 1.0e-8
+        @test q4_capture_diagnostics.final_overlap_error < 1.0e-8
+        @test q4_capture_provenance.target_contract == :exact_parent_grid_coefficients
+        @test !q4_capture_provenance.public_api
+        @test !q4_capture_provenance.science_validation
+        @test !q4_capture_provenance.cr2_file_parser
+        @test size(q4_capture.fixed_projected_coefficients) == (469, 3)
+        @test size(q4_capture.final_projected_coefficients) ==
+              (q4_capture_diagnostics.final_dimension, 3)
+        @test length(q4_capture_rows) == 3
+        for row in q4_capture_rows
+            @test isfinite(row.source_norm)
+            @test isfinite(row.fixed_captured_norm)
+            @test isfinite(row.final_captured_norm)
+            @test -1.0e-8 <= row.fixed_capture_fraction <= 1.0 + 1.0e-8
+            @test -1.0e-8 <= row.final_capture_fraction <= 1.0 + 1.0e-8
+            @test row.final_capture_fraction + 1.0e-8 >= row.fixed_capture_fraction
+            @test isfinite(row.parent_h1_expectation)
+            @test isfinite(row.fixed_projected_h1_expectation)
+            @test isfinite(row.final_projected_h1_expectation)
+            @test isfinite(row.fixed_h1_delta)
+            @test isfinite(row.final_h1_delta)
+        end
+        @test q4_capture_summary.target_count == 3
+        @test q4_capture_summary.occupation_policy == :explicit_occupations
+        @test isfinite(q4_capture_summary.fixed_capture_fraction_total)
+        @test isfinite(q4_capture_summary.final_capture_fraction_total)
+        @test q4_capture_summary.final_capture_fraction_total + 1.0e-8 >=
+              q4_capture_summary.fixed_capture_fraction_total
+        @test q4_capture_summary.worst_fixed_label in
+              ["fixed_col_1", "fixed_col_2", "fixed_col_3"]
+        @test q4_capture_summary.worst_final_label in
+              ["fixed_col_1", "fixed_col_2", "fixed_col_3"]
+        @test_throws DimensionMismatch QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(
+            q4_capture_target[1:(end - 1), :];
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        q4_bad_target = copy(q4_capture_target)
+        q4_bad_target[1, 1] = NaN
+        @test_throws ArgumentError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(
+            q4_bad_target;
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            expansion = expansion,
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+        @test_throws ArgumentError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_capture_h1(
+            q4_capture_target;
+            bond_length = 5.0,
+            core_spacing = 0.7,
+            xmax_parallel = 8.0,
+            xmax_transverse = 4.0,
+            shared_q = 4,
+            atom = "H",
+            basis_name = "cc-pVTZ",
+            expansion = expansion,
+            gausslet_backend = :numerical_reference,
+        )
+
         heteronuclear_supplement =
             legacy_bond_aligned_heteronuclear_gaussian_supplement(
                 "He",
