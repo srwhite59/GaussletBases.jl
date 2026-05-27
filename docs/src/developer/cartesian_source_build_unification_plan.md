@@ -464,6 +464,56 @@ This is a wrapper/audit layer, not a new Hamiltonian builder. See
 [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
 for the covered and intentionally uncovered route families.
 
+As of commit `928ee87`, ordinary Cartesian QW final packaging is unified for
+the current builder routes. The implementation trail is:
+
+- `16d9e9d`: introduced `_qwrg_finalize_ordinary_cartesian_operators(...)`
+- `9479210`: migrated pure nested fixed-block packaging
+- `7aa93df`: migrated atomic supplement packaging
+- `a3d7929`: added molecular-owner, MWG-width, and by-center sidecar
+  guardrails
+- `928ee87`: migrated molecular supplement packaging
+
+The helper is now used by:
+
+- pure bond-aligned direct-product routes
+- pure bond-aligned nested fixed-block routes
+- one-center atomic direct-product routes with
+  `LegacyAtomicGaussianSupplement`
+- one-center atomic nested fixed-block routes with
+  `LegacyAtomicGaussianSupplement`
+- bond-aligned molecular direct-product routes with legacy Gaussian
+  supplements
+- bond-aligned molecular nested fixed-block routes with legacy Gaussian
+  supplements
+
+This is a final-packaging checkpoint, not a new Hamiltonian builder. The helper
+is allowed to:
+
+- validate cheap final dimensions, counts, and metadata consistency
+- normalize final matrices and vectors into the stored
+  `OrdinaryCartesianOperators3D` representation
+- enforce explicit owner indices for multi-center residuals
+- require finite positive residual widths for `interaction_treatment = :mwg`
+- require kinetic and by-center nuclear sidecars when
+  `nuclear_term_storage = :by_center`
+- construct the final `OrdinaryCartesianOperators3D` payload from
+  already-assembled inputs
+
+The helper must not:
+
+- build or alter overlap, one-body, interaction, residual, or raw blocks
+- choose or reinterpret `gausslet_backend`
+- change PGDG / numerical-reference routing
+- change geometry policy, residual filtering, residual ownership, or MWG
+  center/width extraction
+- change timing labels or public return shapes
+- become a source-driven Hamiltonian implementation
+
+Assembly remains route-specific. Any next code seam before this final endpoint
+requires a separate design pass; it should not be treated as an automatic
+extension of the packaging helper migration.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
@@ -475,6 +525,8 @@ The next work should be treated as a separate follow-on line:
 - selective receipt-wrapper consumer migration where source/record/provenance
   diagnostics are useful
 - occasional cleanup passes when newly-dead scaffolding becomes obvious
+- a separately designed pre-packaging Hamiltonian assembly seam, if one is
+  clearly identified and validated
 
 ## Main risks
 
