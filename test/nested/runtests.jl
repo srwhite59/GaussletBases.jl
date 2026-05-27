@@ -853,6 +853,107 @@ end
     )
 end
 
+@testset "Bond-aligned diatomic high-order recipe opt-in source construction" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 5.0,
+        core_spacing = 0.7,
+        xmax_parallel = 8.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        basis,
+        bundles;
+        protected_atom_side_count = 5,
+        q_min = 4,
+    )
+    realization_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics(
+            GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_realization_audit(
+                policy,
+            ),
+        )
+    @test realization_diagnostics.ready_for_opt_in_builder
+    @test !realization_diagnostics.active_builder_uses_policy
+    @test realization_diagnostics.active_builder_consumed_region_count == 0
+
+    construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = false,
+        )
+    diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+            construction,
+        )
+
+    @test construction isa
+          GaussletBases._BondAlignedDiatomicHighOrderRecipeSourceConstruction3D
+    @test diagnostics.recipe_label == :mixed_atom_cubic_shared_endcap_panel
+    @test diagnostics.active_builder_consumes
+    @test diagnostics.active_builder_uses_policy
+    @test diagnostics.metadata.default_source_builder_changed == false
+    @test diagnostics.consumed_region_count == diagnostics.region_count == 5
+    @test diagnostics.unsupported_region_count == 0
+    @test diagnostics.parent_dimension == 7 * 7 * 15
+    @test diagnostics.fixed_dimension == 469
+    @test diagnostics.support_coverage.expected_support_count == 7 * 7 * 15
+    @test diagnostics.support_coverage.coverage_ok
+    @test isnothing(construction.sequence.packet)
+
+    region_builds = diagnostics.region_builds
+    @test [build.role for build in region_builds] == [
+        :outer_mismatch_shared_molecular_shell,
+        :regular_shared_molecular_shell,
+        :left_atom_box,
+        :right_atom_box,
+        :contact_cap,
+    ]
+    @test [build.primitive_family for build in region_builds] == [
+        :outer_mismatch_boundary_slab_set,
+        :shared_endcap_panel_shell_layer,
+        :atom_local_complete_shell_sequence,
+        :atom_local_complete_shell_sequence,
+        :contact_cap_owned_slab,
+    ]
+    @test [build.built_support_count for build in region_builds] == [98, 362, 125, 125, 25]
+    @test [build.retained_count for build in region_builds] == [98, 96, 125, 125, 25]
+    @test [build.column_range for build in region_builds] ==
+          [1:98, 374:469, 99:223, 224:348, 349:373]
+    @test all(build.built && build.active_builder_consumes for build in region_builds)
+    @test all(build.support_coverage.coverage_ok for build in region_builds)
+    @test region_builds[2].metadata.support_contract == :thin_endcap_box_perimeter
+    @test region_builds[2].metadata.coefficient_contract == :product_doside
+    @test region_builds[5].metadata.descriptor_scope == :middle_contact_cap
+
+    annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        policy.construction_plan;
+        q_min = 4,
+        atom_q = 4,
+        shared_q = 5,
+        contact_q = 4,
+        outer_mismatch_q = 4,
+        shared_exterior_family = :transverse_annulus_exterior,
+    )
+    @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+        basis,
+        bundles,
+        annulus_policy;
+        nside = 5,
+        term_coefficients = Float64.(expansion.coefficients),
+        packet_kernel = :factorized_direct,
+        build_sequence_packet = false,
+    )
+end
+
 @testset "Bond-aligned diatomic endcap-panel shared shell source policy" begin
     basis = bond_aligned_homonuclear_qw_basis(
         family = :G10,

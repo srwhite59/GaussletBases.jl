@@ -315,6 +315,60 @@ struct _BondAlignedDiatomicHighOrderRecipeRealizationAudit3D
     metadata::NamedTuple
 end
 
+"""
+    _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D
+
+One region consumed by the experimental recipe-backed source-piece builder.
+This records which existing primitive was called and what support/columns it
+produced. It is opt-in construction provenance only; the active diatomic source
+builder does not use these rows.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D
+    region_role::Symbol
+    region_order_index::Int
+    region_category::Symbol
+    recipe_family::Symbol
+    q::Int
+    order::Int
+    mapped_primitive::Symbol
+    primitive_family::Symbol
+    region_support_count::Int
+    built_support_count::Int
+    retained_count::Int
+    column_range::UnitRange{Int}
+    support_coverage::_BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+    built::Bool
+    unsupported_reason::Union{Nothing,Symbol}
+    active_builder_consumes::Bool
+    built_object::Any
+    metadata::NamedTuple
+end
+
+"""
+    _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D
+
+Experimental opt-in source-piece construction for a ready q4 atom-growth
+recipe. It delegates to existing atom-box, endcap/panel, and direct-slab
+primitives, then merges the pieces into a nested shell sequence. It does not
+change public/default source construction or any Hamiltonian route.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D
+    basis::Any
+    axis_bundles::_CartesianNestedAxisBundles3D
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D
+    realization_audit::_BondAlignedDiatomicHighOrderRecipeRealizationAudit3D
+    region_builds::Vector{_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D}
+    sequence::_CartesianNestedShellSequence3D
+    shared_shell_layers::Vector{_AbstractCartesianNestedShellLayer3D}
+    core_support_indices::Vector{Int}
+    core_coefficient_matrix::_CartesianCoefficientMap
+    support_coverage::_BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+    consumed_region_count::Int
+    unsupported_region_count::Int
+    active_builder_consumes::Bool
+    metadata::NamedTuple
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -422,6 +476,24 @@ function Base.show(io::IO, audit::_BondAlignedDiatomicHighOrderRecipeRealization
         audit.missing_region_count,
         ", ready=",
         audit.ready_for_opt_in_builder,
+        ")",
+    )
+end
+
+function Base.show(
+    io::IO,
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    print(
+        io,
+        "_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D(label=:",
+        construction.policy.recipe_label,
+        ", consumed=",
+        construction.consumed_region_count,
+        ", unsupported=",
+        construction.unsupported_region_count,
+        ", nfixed=",
+        size(construction.sequence.coefficient_matrix, 2),
         ")",
     )
 end
@@ -1855,6 +1927,415 @@ function _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics
         ],
         support_coverage = audit.policy.construction_plan.support_coverage,
         active_builder_uses_policy = false,
+    )
+end
+
+function _nested_diatomic_high_order_indices_coverage(
+    expected_support_indices::AbstractVector{Int},
+    owned_support_indices::AbstractVector{Int},
+)
+    expected = Set(expected_support_indices)
+    length(expected) == length(expected_support_indices) || throw(
+        ArgumentError("diatomic high-order support coverage requires unique expected support"),
+    )
+    owned_counts = Dict{Int,Int}()
+    for index in owned_support_indices
+        owned_counts[index] = get(owned_counts, index, 0) + 1
+    end
+    owned = Set(keys(owned_counts))
+    duplicate_count = sum(max(count - 1, 0) for count in values(owned_counts))
+    missing_count = length(setdiff(expected, owned))
+    outside_count = length(setdiff(owned, expected))
+    return _BondAlignedDiatomicHighOrderConstructionPieceCoverage3D(
+        length(expected),
+        length(owned_support_indices),
+        length(owned),
+        duplicate_count,
+        missing_count,
+        outside_count,
+        duplicate_count == 0 && missing_count == 0 && outside_count == 0,
+    )
+end
+
+function _nested_diatomic_assert_default_q4_opt_in_policy(
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D,
+    audit::_BondAlignedDiatomicHighOrderRecipeRealizationAudit3D,
+)
+    policy.recipe_label == :mixed_atom_cubic_shared_endcap_panel || throw(
+        ArgumentError(
+            "experimental diatomic high-order source construction only consumes the default endcap/panel q4 policy",
+        ),
+    )
+    policy.q_min == 4 || throw(
+        ArgumentError("experimental diatomic high-order source construction requires q_min = 4"),
+    )
+    all(choice -> choice.q == 4 && choice.order == 4, policy.region_choices) || throw(
+        ArgumentError("experimental diatomic high-order source construction requires q=4, order=4 for every region"),
+    )
+    audit.ready_for_opt_in_builder || throw(
+        ArgumentError(
+            "experimental diatomic high-order source construction requires a realization-ready policy",
+        ),
+    )
+    for realization in audit.region_realizations
+        isnothing(realization.missing_implementation) || throw(
+            ArgumentError(
+                "experimental diatomic high-order source construction cannot consume $(realization.region_role): missing $(realization.missing_implementation)",
+            ),
+        )
+    end
+    return nothing
+end
+
+function _nested_diatomic_high_order_descriptor_direct_coefficients(
+    bundles::_CartesianNestedAxisBundles3D,
+    descriptor::_BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D,
+)
+    descriptor.exact_full_coverage || throw(
+        ArgumentError("diatomic high-order descriptor construction requires exact region coverage"),
+    )
+    descriptor.support_coverage.coverage_ok || throw(
+        ArgumentError("diatomic high-order descriptor construction requires clean piece support coverage"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    support_indices = reduce(
+        vcat,
+        (piece.support_indices for piece in descriptor.pieces);
+        init = Int[],
+    )
+    return (
+        support_indices = support_indices,
+        coefficient_matrix = _nested_direct_box_coefficients(dims, support_indices),
+    )
+end
+
+function _nested_diatomic_region_build_from_data(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+    realization::_BondAlignedDiatomicHighOrderRecipeRegionRealization3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D;
+    mapped_primitive::Symbol,
+    primitive_family::Symbol,
+    built_support_indices::AbstractVector{Int},
+    retained_count::Int,
+    column_range::UnitRange{Int},
+    built_object,
+    metadata::NamedTuple,
+)
+    coverage = _nested_diatomic_high_order_indices_coverage(
+        region.support_indices,
+        built_support_indices,
+    )
+    coverage.coverage_ok || throw(
+        ArgumentError(
+            "experimental diatomic high-order source construction produced incomplete support for $(region.role)",
+        ),
+    )
+    return _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D(
+        choice.region_role,
+        choice.region_order_index,
+        choice.region_category,
+        choice.recipe_family,
+        choice.q,
+        choice.order,
+        mapped_primitive,
+        primitive_family,
+        length(region.support_indices),
+        length(built_support_indices),
+        retained_count,
+        column_range,
+        coverage,
+        true,
+        nothing,
+        true,
+        built_object,
+        merge(
+            (
+                realization_mapped_primitive_status =
+                    realization.mapped_primitive_status,
+                active_builder_uses_policy = true,
+            ),
+            metadata,
+        ),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    policy::_BondAlignedDiatomicHighOrderRecipePolicy3D;
+    nside::Int = 5,
+    reference_fudge_factor::Float64 = 1.2,
+    core_near_nucleus_protect_rows::Union{Symbol,Integer} = :auto,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+    build_sequence_packet::Bool = true,
+)
+    return @timeg "diatomic.high_order_recipe_source.total" begin
+        isnothing(term_coefficients) && throw(
+            ArgumentError("experimental diatomic high-order source construction requires explicit term coefficients"),
+        )
+        dims = _nested_axis_lengths(bundles)
+        parent_box = (1:dims[1], 1:dims[2], 1:dims[3])
+        policy.construction_plan.anatomy.recipe.parent_box == parent_box || throw(
+            ArgumentError("experimental diatomic high-order source construction requires the policy parent_box to match the bundles"),
+        )
+        audit = _nested_bond_aligned_diatomic_high_order_recipe_realization_audit(policy)
+        _nested_diatomic_assert_default_q4_opt_in_policy(policy, audit)
+
+        bond_axis = policy.construction_plan.anatomy.recipe.bond_axis
+        retention = _nested_resolve_complete_shell_retention(nside)
+        protect_rows = _nested_diatomic_resolve_core_near_nucleus_protect_rows(
+            core_near_nucleus_protect_rows,
+            nside,
+        )
+        core_support_blocks = Vector{Vector{Int}}()
+        core_coefficient_blocks = _CartesianCoefficientMap[]
+        shared_shell_layers = _AbstractCartesianNestedShellLayer3D[]
+        region_data = NamedTuple[]
+
+        for (choice, region, realization) in zip(
+            policy.region_choices,
+            policy.construction_plan.regions,
+            audit.region_realizations,
+        )
+            if choice.recipe_family == :protected_atom_cubic_shell
+                sequence = _nested_bond_aligned_diatomic_sequence_for_box(
+                    basis,
+                    bundles,
+                    region.box,
+                    retention;
+                    bond_axis = bond_axis,
+                    nside = nside,
+                    reference_fudge_factor = reference_fudge_factor,
+                    core_near_nucleus_protect_rows = protect_rows,
+                    term_coefficients = term_coefficients,
+                    packet_kernel = packet_kernel,
+                    build_packet = false,
+                )
+                push!(core_support_blocks, sequence.support_indices)
+                push!(core_coefficient_blocks, sequence.coefficient_matrix)
+                push!(
+                    region_data,
+                    (
+                        kind = :core,
+                        choice = choice,
+                        region = region,
+                        realization = realization,
+                        mapped_primitive = :_nested_bond_aligned_diatomic_sequence_for_box,
+                        primitive_family = :atom_local_complete_shell_sequence,
+                        built_support_indices = sequence.support_indices,
+                        retained_count = size(sequence.coefficient_matrix, 2),
+                        built_object = sequence,
+                        metadata = (
+                            atom_side = get(region.metadata, :atom_side, :unknown),
+                            nside = nside,
+                            primitive_note = :existing_nested_sequence_for_box,
+                        ),
+                    ),
+                )
+            elseif choice.recipe_family == :shared_endcap_panel_exterior
+                isnothing(region.inner_exclusion_box) && throw(
+                    ArgumentError("endcap/panel recipe region requires an inner exclusion box"),
+                )
+                layer = _nested_endcap_panel_shell_layer(
+                    bundles,
+                    region.box,
+                    region.inner_exclusion_box;
+                    bond_axis = bond_axis,
+                    q = choice.q,
+                    L = choice.order,
+                    packet_kernel = packet_kernel,
+                    term_coefficients = term_coefficients,
+                    verify_factorized_reconstruction = false,
+                )
+                push!(shared_shell_layers, layer)
+                push!(
+                    region_data,
+                    (
+                        kind = :shell,
+                        choice = choice,
+                        region = region,
+                        realization = realization,
+                        mapped_primitive = :_nested_endcap_panel_shell_layer,
+                        primitive_family = :shared_endcap_panel_shell_layer,
+                        built_support_indices = layer.support_indices,
+                        retained_count = size(layer.coefficient_matrix, 2),
+                        built_object = layer,
+                        metadata = (
+                            support_contract = layer.provenance.support_contract,
+                            coefficient_contract = layer.provenance.coefficient_contract,
+                            packet_kernel = layer.provenance.packet_kernel,
+                        ),
+                    ),
+                )
+            elseif choice.recipe_family in (
+                :shared_contact_cap,
+                :outermost_mismatch_shared_molecular_shell,
+            )
+                descriptor = realization.realization_descriptor
+                isnothing(descriptor) && throw(
+                    ArgumentError("descriptor-backed recipe region $(region.role) has no realization descriptor"),
+                )
+                direct = _nested_diatomic_high_order_descriptor_direct_coefficients(
+                    bundles,
+                    descriptor,
+                )
+                push!(core_support_blocks, direct.support_indices)
+                push!(core_coefficient_blocks, direct.coefficient_matrix)
+                push!(
+                    region_data,
+                    (
+                        kind = :core,
+                        choice = choice,
+                        region = region,
+                        realization = realization,
+                        mapped_primitive = realization.mapped_primitive,
+                        primitive_family = descriptor.primitive_family,
+                        built_support_indices = direct.support_indices,
+                        retained_count = size(direct.coefficient_matrix, 2),
+                        built_object = direct,
+                        metadata = (
+                            descriptor_scope = get(descriptor.metadata, :descriptor_scope, :unknown),
+                            owned_unit_count = descriptor.owned_unit_count,
+                            exact_full_coverage = descriptor.exact_full_coverage,
+                        ),
+                    ),
+                )
+            else
+                throw(
+                    ArgumentError(
+                        "experimental diatomic high-order source construction does not consume recipe family $(choice.recipe_family)",
+                    ),
+                )
+            end
+        end
+
+        core_support_indices = reduce(vcat, core_support_blocks; init = Int[])
+        core_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
+        sequence = _nested_shell_sequence_from_core_block(
+            bundles,
+            core_support_indices,
+            core_coefficients,
+            shared_shell_layers;
+            term_coefficients = term_coefficients,
+            packet_kernel = packet_kernel,
+            build_packet = build_sequence_packet,
+            verify_factorized_reconstruction = false,
+        )
+
+        core_column_start = 1
+        core_ranges = UnitRange{Int}[]
+        for block in core_coefficient_blocks
+            column_count = size(block, 2)
+            push!(core_ranges, core_column_start:(core_column_start + column_count - 1))
+            core_column_start += column_count
+        end
+        shell_ranges = sequence.layer_column_ranges
+        core_index = 0
+        shell_index = 0
+        region_builds = _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D[]
+        for data in region_data
+            column_range = if data.kind == :core
+                core_index += 1
+                core_ranges[core_index]
+            else
+                shell_index += 1
+                shell_ranges[shell_index]
+            end
+            push!(
+                region_builds,
+                _nested_diatomic_region_build_from_data(
+                    data.choice,
+                    data.realization,
+                    data.region;
+                    mapped_primitive = data.mapped_primitive,
+                    primitive_family = data.primitive_family,
+                    built_support_indices = data.built_support_indices,
+                    retained_count = data.retained_count,
+                    column_range = column_range,
+                    built_object = data.built_object,
+                    metadata = data.metadata,
+                ),
+            )
+        end
+
+        expected_support = _nested_box_support_indices(parent_box..., dims)
+        support_coverage = _nested_diatomic_high_order_indices_coverage(
+            expected_support,
+            sequence.support_indices,
+        )
+        support_coverage.coverage_ok || throw(
+            ArgumentError("experimental diatomic high-order source construction did not cover the parent support"),
+        )
+        _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D(
+            basis,
+            bundles,
+            policy,
+            audit,
+            region_builds,
+            sequence,
+            shared_shell_layers,
+            core_support_indices,
+            core_coefficients,
+            support_coverage,
+            count(build -> build.built, region_builds),
+            count(build -> !isnothing(build.unsupported_reason), region_builds),
+            true,
+            (
+                active_builder_uses_policy = true,
+                default_source_builder_changed = false,
+                source_builder_entry = :_nested_bond_aligned_diatomic_high_order_recipe_source_construction,
+                q_policy = :default_q4_atom_growth_endcap_panel,
+                packet_kernel = packet_kernel,
+                build_sequence_packet = build_sequence_packet,
+            ),
+        )
+    end
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    return (
+        recipe_label = construction.policy.recipe_label,
+        q_min = construction.policy.q_min,
+        active_builder_consumes = construction.active_builder_consumes,
+        active_builder_uses_policy = construction.active_builder_consumes,
+        default_source_builder_changed = false,
+        consumed_region_count = construction.consumed_region_count,
+        unsupported_region_count = construction.unsupported_region_count,
+        region_count = length(construction.region_builds),
+        fixed_dimension = size(construction.sequence.coefficient_matrix, 2),
+        parent_dimension = size(construction.sequence.coefficient_matrix, 1),
+        support_coverage = _nested_diatomic_high_order_piece_coverage_diagnostics(
+            construction.support_coverage,
+        ),
+        region_builds = [
+            (
+                role = build.region_role,
+                order_index = build.region_order_index,
+                region_category = build.region_category,
+                recipe_family = build.recipe_family,
+                q = build.q,
+                order = build.order,
+                mapped_primitive = build.mapped_primitive,
+                primitive_family = build.primitive_family,
+                region_support_count = build.region_support_count,
+                built_support_count = build.built_support_count,
+                retained_count = build.retained_count,
+                column_range = build.column_range,
+                support_coverage =
+                    _nested_diatomic_high_order_piece_coverage_diagnostics(
+                        build.support_coverage,
+                    ),
+                built = build.built,
+                unsupported_reason = build.unsupported_reason,
+                active_builder_consumes = build.active_builder_consumes,
+                metadata = build.metadata,
+            )
+            for build in construction.region_builds
+        ],
+        metadata = construction.metadata,
     )
 end
 
