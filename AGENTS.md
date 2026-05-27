@@ -3,6 +3,27 @@
 These repo-local instructions are meant to reduce friction and keep future
 agent work aligned with the current engineering contract.
 
+## Agent identity and signoff
+
+When a `GaussletBases` agent is asked to reread startup docs, it should recover
+its role identity and handback signature from these rules plus the current user
+or manager assignment.
+
+Default repo role signoffs are:
+
+- manager handbacks: `-- repo-manager@<host>`
+- implementation doer handbacks: `-- repo-doer@<host>`
+
+Use a more specific role name only when the startup prompt, role identity file,
+or user explicitly gives one. For example, an informal "repo-doer2" terminal is
+still normally the implementation doer unless it has been assigned a distinct
+signature.
+
+Sign any message that hands control back to the user: final handoffs,
+close-outs, ready-for-review reports, gate completions, audit results, and
+safe-to-resume judgments. Do not sign progress updates while continuing work
+without waiting on the user. The signoff must be the final line.
+
 ## Julia execution
 
 Prefer one of these two launch styles for routine work:

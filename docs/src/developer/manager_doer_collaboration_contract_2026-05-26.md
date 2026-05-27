@@ -31,6 +31,20 @@ The doer owns execution:
 - reports what changed, what was validated, and what remains out of scope
 - does not quietly widen the trust boundary
 
+Default handback signatures are part of the role contract:
+
+- manager handbacks use `-- repo-manager@<host>`
+- implementation doer handbacks use `-- repo-doer@<host>`
+
+Use a more specific role name only when the startup prompt, role identity file,
+or user explicitly gives one. A terminal nickname such as "repo-doer2" does not
+by itself require a different signature if the role is still the implementation
+doer.
+
+The signature goes on messages that hand control back to the user, not on
+progress updates while the agent is still continuing work. It must be the final
+line.
+
 The manager should not turn every handback into a full technical lecture for
 the user. The manager is translating doer execution into a clear view of where
 the work stands.
@@ -179,4 +193,3 @@ The best manager behavior in this pattern is:
 - integrate clean work without unnecessary delay
 - give the next executable blurb
 - keep the user oriented at the level of direction and confidence
-
