@@ -369,6 +369,34 @@ struct _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D
     metadata::NamedTuple
 end
 
+"""
+    _BondAlignedDiatomicHighOrderRecipeSourceReadiness3D
+
+Readiness audit for handing an opt-in recipe source construction to existing
+nested source/fixed-block consumers. Fixed-block handoff is allowed only when
+the construction already carries an assembled shell-sequence packet. Legacy
+diatomic source-object handoff remains false until the recipe path owns the old
+split-geometry/child-sequence fields explicitly.
+"""
+struct _BondAlignedDiatomicHighOrderRecipeSourceReadiness3D
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D
+    parent_dimension::Int
+    fixed_dimension::Int
+    support_coverage::_BondAlignedDiatomicHighOrderConstructionPieceCoverage3D
+    sequence_packet_available::Bool
+    overlap_available::Bool
+    weights_available::Bool
+    overlap_error::Union{Nothing,Float64}
+    can_produce_nested_source::Bool
+    nested_source_missing_fields::Vector{Symbol}
+    can_produce_fixed_block::Bool
+    fixed_block_missing_fields::Vector{Symbol}
+    fixed_block::Union{Nothing,_NestedFixedBlock3D}
+    active_builder_consumes::Bool
+    default_builders_unchanged::Bool
+    metadata::NamedTuple
+end
+
 function Base.show(io::IO, geometry::_BondAlignedDiatomicSplitGeometry3D)
     print(
         io,
@@ -494,6 +522,22 @@ function Base.show(
         construction.unsupported_region_count,
         ", nfixed=",
         size(construction.sequence.coefficient_matrix, 2),
+        ")",
+    )
+end
+
+function Base.show(
+    io::IO,
+    readiness::_BondAlignedDiatomicHighOrderRecipeSourceReadiness3D,
+)
+    print(
+        io,
+        "_BondAlignedDiatomicHighOrderRecipeSourceReadiness3D(fixed_ready=",
+        readiness.can_produce_fixed_block,
+        ", nested_source_ready=",
+        readiness.can_produce_nested_source,
+        ", nfixed=",
+        readiness.fixed_dimension,
         ")",
     )
 end
@@ -2336,6 +2380,141 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction_dia
             for build in construction.region_builds
         ],
         metadata = construction.metadata,
+    )
+end
+
+function _nested_diatomic_high_order_sequence_overlap_error(
+    sequence::_CartesianNestedShellSequence3D,
+)
+    packet = sequence.packet
+    isnothing(packet) && return nothing
+    n = size(packet.overlap, 1)
+    return norm(packet.overlap - Matrix{Float64}(I, n, n), Inf)
+end
+
+function _nested_diatomic_high_order_fixed_block_missing_fields(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    missing = Symbol[]
+    construction.support_coverage.coverage_ok || push!(missing, :support_coverage)
+    sequence = construction.sequence
+    size(sequence.coefficient_matrix, 1) == construction.support_coverage.expected_support_count ||
+        push!(missing, :parent_dimension)
+    size(sequence.coefficient_matrix, 2) > 0 || push!(missing, :fixed_dimension)
+    isnothing(sequence.packet) && push!(missing, :sequence_packet)
+    return missing
+end
+
+function _nested_diatomic_high_order_legacy_source_missing_fields(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    missing = Symbol[]
+    construction.active_builder_consumes || push!(missing, :active_builder_consumes)
+    construction.support_coverage.coverage_ok || push!(missing, :support_coverage)
+    append!(
+        missing,
+        [
+            :split_geometry,
+            :child_shell_retention_contract,
+            :shared_shell_retention_contract,
+            :child_sequences,
+            :child_column_ranges,
+            :midpoint_slab_column_range,
+        ],
+    )
+    return unique(missing)
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    missing = _nested_diatomic_high_order_fixed_block_missing_fields(construction)
+    isempty(missing) || throw(
+        ArgumentError(
+            "experimental diatomic high-order recipe source construction is not fixed-block ready; missing $(missing)",
+        ),
+    )
+    return @timeg "diatomic.high_order_recipe_source.fixed_block" begin
+        _nested_fixed_block(construction.sequence, construction.basis)
+    end
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    build_fixed_block::Bool = false,
+)
+    sequence = construction.sequence
+    packet = sequence.packet
+    sequence_packet_available = !isnothing(packet)
+    overlap_available =
+        sequence_packet_available &&
+        size(packet.overlap, 1) == size(sequence.coefficient_matrix, 2) &&
+        size(packet.overlap, 2) == size(sequence.coefficient_matrix, 2)
+    weights_available =
+        sequence_packet_available &&
+        length(packet.weights) == size(sequence.coefficient_matrix, 2) &&
+        all(isfinite, packet.weights)
+    fixed_missing = _nested_diatomic_high_order_fixed_block_missing_fields(construction)
+    can_produce_fixed_block = isempty(fixed_missing)
+    fixed_block =
+        build_fixed_block && can_produce_fixed_block ?
+        _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(construction) :
+        nothing
+    nested_source_missing = _nested_diatomic_high_order_legacy_source_missing_fields(construction)
+    return _BondAlignedDiatomicHighOrderRecipeSourceReadiness3D(
+        construction,
+        size(sequence.coefficient_matrix, 1),
+        size(sequence.coefficient_matrix, 2),
+        construction.support_coverage,
+        sequence_packet_available,
+        overlap_available,
+        weights_available,
+        _nested_diatomic_high_order_sequence_overlap_error(sequence),
+        false,
+        nested_source_missing,
+        can_produce_fixed_block,
+        fixed_missing,
+        fixed_block,
+        construction.active_builder_consumes,
+        true,
+        (
+            source_object_contract = :legacy_diatomic_source_requires_split_geometry,
+            fixed_block_contract = :existing_nested_shell_sequence_fixed_block,
+            default_source_builder_changed = false,
+            no_qw_or_hamiltonian_change = true,
+        ),
+    )
+end
+
+function _nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+    readiness::_BondAlignedDiatomicHighOrderRecipeSourceReadiness3D,
+)
+    fixed_block = readiness.fixed_block
+    return (
+        parent_dimension = readiness.parent_dimension,
+        fixed_dimension = readiness.fixed_dimension,
+        support_coverage = _nested_diatomic_high_order_piece_coverage_diagnostics(
+            readiness.support_coverage,
+        ),
+        sequence_packet_available = readiness.sequence_packet_available,
+        overlap_available = readiness.overlap_available,
+        weights_available = readiness.weights_available,
+        overlap_error = readiness.overlap_error,
+        can_produce_nested_source = readiness.can_produce_nested_source,
+        nested_source_missing_fields = readiness.nested_source_missing_fields,
+        can_produce_fixed_block = readiness.can_produce_fixed_block,
+        fixed_block_missing_fields = readiness.fixed_block_missing_fields,
+        fixed_block_built = !isnothing(fixed_block),
+        fixed_block_backend = isnothing(fixed_block) ? nothing : fixed_block.gausslet_backend,
+        fixed_block_dimension =
+            isnothing(fixed_block) ? nothing : size(fixed_block.coefficient_matrix, 2),
+        fixed_block_support_count =
+            isnothing(fixed_block) ? nothing : length(fixed_block.support_indices),
+        staged_by_center_sidecar_available =
+            isnothing(fixed_block) ? nothing : !isnothing(fixed_block.staged_by_center_sidecar[]),
+        active_builder_consumes = readiness.active_builder_consumes,
+        default_builders_unchanged = readiness.default_builders_unchanged,
+        metadata = readiness.metadata,
     )
 end
 

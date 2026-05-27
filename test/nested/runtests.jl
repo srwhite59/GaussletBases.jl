@@ -934,6 +934,69 @@ end
     @test region_builds[2].metadata.coefficient_contract == :product_doside
     @test region_builds[5].metadata.descriptor_scope == :middle_contact_cap
 
+    no_packet_readiness =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+            construction,
+        )
+    no_packet_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+            no_packet_readiness,
+        )
+    @test no_packet_diagnostics.parent_dimension == 7 * 7 * 15
+    @test no_packet_diagnostics.fixed_dimension == 469
+    @test no_packet_diagnostics.support_coverage.coverage_ok
+    @test !no_packet_diagnostics.sequence_packet_available
+    @test !no_packet_diagnostics.can_produce_fixed_block
+    @test no_packet_diagnostics.fixed_block_missing_fields == [:sequence_packet]
+    @test !no_packet_diagnostics.can_produce_nested_source
+    @test :split_geometry in no_packet_diagnostics.nested_source_missing_fields
+    @test no_packet_diagnostics.default_builders_unchanged
+
+    packeted_construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
+            build_sequence_packet = true,
+        )
+    readiness =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness(
+            packeted_construction;
+            build_fixed_block = true,
+        )
+    readiness_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_readiness_diagnostics(
+            readiness,
+        )
+    @test readiness isa
+          GaussletBases._BondAlignedDiatomicHighOrderRecipeSourceReadiness3D
+    @test readiness_diagnostics.sequence_packet_available
+    @test readiness_diagnostics.overlap_available
+    @test readiness_diagnostics.weights_available
+    @test readiness_diagnostics.overlap_error < 1.0e-8
+    @test readiness_diagnostics.can_produce_fixed_block
+    @test isempty(readiness_diagnostics.fixed_block_missing_fields)
+    @test readiness_diagnostics.fixed_block_built
+    @test readiness_diagnostics.fixed_block_backend == :unknown
+    @test readiness_diagnostics.fixed_block_dimension == 469
+    @test readiness_diagnostics.fixed_block_support_count == 7 * 7 * 15
+    @test readiness_diagnostics.staged_by_center_sidecar_available
+    @test !readiness_diagnostics.can_produce_nested_source
+    @test :child_sequences in readiness_diagnostics.nested_source_missing_fields
+    fixed_block =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(
+            packeted_construction,
+        )
+    @test fixed_block isa GaussletBases._NestedFixedBlock3D
+    @test size(fixed_block.coefficient_matrix) == (7 * 7 * 15, 469)
+    @test norm(fixed_block.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, fixed_block.weights)
+    @test fixed_block.staged_by_center_sidecar[] isa
+          GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
+
     annulus_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
         policy.construction_plan;
         q_min = 4,
