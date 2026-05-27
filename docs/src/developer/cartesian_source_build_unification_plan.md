@@ -689,6 +689,30 @@ This is capture/H1 diagnostic infrastructure only. It is not Be2/Cr2 science,
 energy validation, HF/ED, same-density validation, a public API, or default
 route adoption.
 
+The first CR2 external-target run on 2026-05-27 exercised this plumbing for
+the q4 parent-grid fixture. CR2 supplied parent-grid alpha/beta target
+matrices matching `(7, 7, 15)` / `735` rows, and the repo driver accepted the
+artifact without falling back to `:numerical_reference`. The run used the
+private H/cc-pVTZ supplement fixture with `lmax = 0`, `max_width = 1.0`,
+`shared_q = shared_order = 4`, and backend
+`:pgdg_localized_experimental`. The reported dimensions were fixed dimension
+`469`, final dimension `471`, and residual count `2`.
+
+The external-target capture/H1 checkpoint values were:
+
+- alpha final capture `0.9994163575`
+- beta final capture `0.9998428679`
+- alpha max final H1 delta `7.25` mHa
+- beta max final H1 delta `2.95` mHa
+
+This result means the external parent-grid target path is working: CR2 can
+stage a target, the repo can verify the grid/order contract, the PGDG route is
+enforced, and fixed/final capture plus H1 readback can be reported. It is not
+Cr ECP physics validation, not Cr2 science validation, not energy validation,
+and not evidence for two-electron or same-density accuracy. The H/cc-pVTZ
+`lmax = 0` supplement fixture is deliberately a plumbing target, not a
+chromium ECP supplement model.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
