@@ -1453,12 +1453,16 @@ function _nested_q_row_retained_counts(region_builds)
     return Tuple(build.retained_count for build in region_builds)
 end
 
-function _nested_q_row_shared_retained_count(region_builds)
-    shared_counts = [
+function _nested_q_row_shared_retained_counts(region_builds)
+    return Tuple(
         build.retained_count for build in region_builds
         if build.role == :regular_shared_molecular_shell
-    ]
-    return isempty(shared_counts) ? nothing : only(shared_counts)
+    )
+end
+
+function _nested_q_row_shared_retained_count(region_builds)
+    shared_counts = _nested_q_row_shared_retained_counts(region_builds)
+    return length(shared_counts) == 1 ? only(shared_counts) : nothing
 end
 
 function _nested_q_row_region_roles(region_builds)
@@ -1591,6 +1595,7 @@ function _nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
         parent_dimension = readiness_diagnostics.parent_dimension,
         fixed_dimension = readiness_diagnostics.fixed_dimension,
         retained_counts_by_region = _nested_q_row_retained_counts(region_builds),
+        shared_retained_counts = _nested_q_row_shared_retained_counts(region_builds),
         shared_retained_count = _nested_q_row_shared_retained_count(region_builds),
         region_roles = _nested_q_row_region_roles(region_builds),
         support_coverage = source_diagnostics.support_coverage,
@@ -1748,6 +1753,7 @@ function _nested_bond_aligned_homonuclear_high_order_q_row_fixture_receipt(;
         nside = route_diagnostics.nside,
         fixed_dimension = route_diagnostics.fixed_dimension,
         retained_counts_by_region = route_diagnostics.retained_counts_by_region,
+        shared_retained_counts = route_diagnostics.shared_retained_counts,
         shared_retained_count = route_diagnostics.shared_retained_count,
         q_row_route_diagnostics = route_diagnostics,
     )

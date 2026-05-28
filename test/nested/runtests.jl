@@ -1358,6 +1358,18 @@ end
         (q = 5, fixed_dimension = 523, retained = (98, 150, 125, 125, 25), shared = 150),
         (q = 6, fixed_dimension = 589, retained = (98, 216, 125, 125, 25), shared = 216),
     )
+    multi_shared_region_builds = (
+        (role = :outer_mismatch_shared_molecular_shell, retained_count = 12),
+        (role = :regular_shared_molecular_shell, retained_count = 24),
+        (role = :regular_shared_molecular_shell, retained_count = 36),
+        (role = :left_atom_box, retained_count = 64),
+    )
+    @test QWCS._nested_q_row_shared_retained_counts(multi_shared_region_builds) ==
+          (24, 36)
+    @test QWCS._nested_q_row_shared_retained_count(multi_shared_region_builds) ===
+          nothing
+    @test QWCS._nested_q_row_shared_retained_counts(()) == ()
+    @test QWCS._nested_q_row_shared_retained_count(()) === nothing
     for expected in q_row_expectations
         q_row_receipt = @test_logs min_level = Logging.Warn QWCS._nested_bond_aligned_diatomic_high_order_q_row_route_receipt(
             basis;
@@ -1384,6 +1396,7 @@ end
         @test q_row_diagnostics.parent_dimension == 7 * 7 * 15
         @test q_row_diagnostics.fixed_dimension == expected.fixed_dimension
         @test q_row_diagnostics.retained_counts_by_region == expected.retained
+        @test q_row_diagnostics.shared_retained_counts == (expected.shared,)
         @test q_row_diagnostics.shared_retained_count == expected.shared
         @test q_row_diagnostics.overlap_error < 1.0e-8
         @test q_row_diagnostics.staged_sidecar_available
@@ -1458,6 +1471,7 @@ end
         @test fixture_diagnostics.nside == 5
         @test fixture_diagnostics.fixed_dimension == expected.fixed_dimension
         @test fixture_diagnostics.retained_counts_by_region == expected.retained
+        @test fixture_diagnostics.shared_retained_counts == (expected.shared,)
         @test fixture_diagnostics.shared_retained_count == expected.shared
         @test route_diagnostics.route_label ==
               :bond_aligned_diatomic_high_order_q_row_route
