@@ -1,6 +1,8 @@
 module CartesianContractedParents
 
 import ..GaussletBases: _CartesianCoefficientMap,
+                         _CartesianNestedProductStagedByCenterUnit3D,
+                         _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _NestedFixedBlock3D,
                          _cartesian_coefficient_map_storage,
                          _nested_staged_by_center_sidecar
@@ -10,8 +12,10 @@ import ..GaussletBases.CartesianParentGaussletBases:
     parent_dimension
 
 export CartesianContractionUnit3D,
+       CartesianContractionRule3D,
        CartesianContractedParent3D,
        CartesianContractedParentStructuralAudit,
+       cartesian_contraction_rule,
        cartesian_contracted_parent,
        contracted_parent_basis,
        contracted_parent_coefficients,
@@ -23,10 +27,208 @@ export CartesianContractionUnit3D,
        contraction_unit_support_indices,
        contraction_unit_column_range,
        contraction_unit_metadata,
+       contraction_unit_rule,
+       contraction_rule_family,
+       contraction_rule_kind,
+       contraction_rule_support_summary,
+       contraction_rule_column_range,
+       contraction_rule_source_dimension,
+       contraction_rule_retained_dimension,
+       contraction_rule_transform_rule,
+       contraction_rule_cleanup_rule,
+       contraction_rule_metric_capability,
        contracted_parent_unit_column_ranges,
        contracted_parent_unit_support_indices,
        contracted_parent_support_indices,
        contracted_parent_structural_audit
+
+"""
+    CartesianContractionRule3D
+
+Internal metadata record describing how a contracted-parent unit is meant to
+be constructed. This is deliberately descriptive only: coefficient matrices,
+fixed-block builders, metric packets, QW operators, and Hamiltonians remain
+owned by their existing route-specific implementations.
+"""
+struct CartesianContractionRule3D{S,L,D,P}
+    rule_family::Symbol
+    kind::Symbol
+    role::Union{Nothing,Symbol}
+    support_indices::Vector{Int}
+    support_summary::S
+    local_geometry::L
+    column_range::Union{Nothing,UnitRange{Int}}
+    source_dimension::Int
+    retained_dimension::Int
+    transform_rule::Symbol
+    cleanup_rule::Symbol
+    metric_capability::Symbol
+    diagnostics::D
+    provenance::P
+end
+
+function _contraction_rule_support_summary(
+    support_indices::AbstractVector{<:Integer};
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    values = Int[Int(index) for index in support_indices]
+    unique_values = unique(values)
+    duplicate_count = length(values) - length(unique_values)
+    if isnothing(parent_dimension)
+        return (
+            parent_dimension = nothing,
+            entry_count = length(values),
+            unique_count = length(unique_values),
+            duplicate_count,
+            outside_count = nothing,
+            missing_count = nothing,
+            support_complete = nothing,
+            coverage_checked = false,
+        )
+    end
+    valid_range = 1:Int(parent_dimension)
+    inside = Int[value for value in values if value in valid_range]
+    unique_inside = unique(inside)
+    return (
+        parent_dimension = Int(parent_dimension),
+        entry_count = length(values),
+        unique_count = length(unique_inside),
+        duplicate_count = length(inside) - length(unique_inside),
+        outside_count = length(values) - length(inside),
+        missing_count = Int(parent_dimension) - length(unique_inside),
+        support_complete = length(unique_inside) == Int(parent_dimension),
+        coverage_checked = true,
+    )
+end
+
+function _staged_axis_rule_summary(axis)
+    return (
+        kind = axis.kind,
+        fixed_index = axis.fixed_index,
+        interval = axis.interval,
+        coefficient_shape = size(axis.coefficient_matrix),
+    )
+end
+
+function _product_staged_rule_family(kind::Symbol)
+    kind == :product_doside && return :product_owned_unit
+    kind == :support_dense && return :support_dense_fallback
+    return :staged_unit
+end
+
+function _product_staged_transform_rule(kind::Symbol)
+    kind == :product_doside && return :two_active_axis_product_doside
+    kind == :support_dense && return :explicit_support_dense_coefficients
+    return :staged_unit_coefficients
+end
+
+function _product_staged_cleanup_rule(kind::Symbol)
+    kind == :product_doside && return :locally_orthonormal_product_doside
+    kind == :support_dense && return :external_or_already_cleaned
+    return :unspecified
+end
+
+function _product_staged_metric_capability(kind::Symbol)
+    kind == :product_doside && return :product_staged_metric_contraction
+    kind == :support_dense && return :support_local_product
+    return :support_local_product
+end
+
+function cartesian_contraction_rule(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    diagnostics = merge(
+        (
+            source = :nested_product_staged_by_center_unit,
+            coefficient_shape = size(unit.coefficient_matrix),
+            axis_function_count = length(unit.axis_function_indices),
+            coefficient_contract = hasproperty(unit.provenance, :coefficient_contract) ?
+                                   unit.provenance.coefficient_contract :
+                                   nothing,
+        ),
+        unit.diagnostics,
+    )
+    local_geometry = (
+        axes = map(_staged_axis_rule_summary, unit.axes),
+        axis_function_index_count = length(unit.axis_function_indices),
+    )
+    return CartesianContractionRule3D(
+        _product_staged_rule_family(unit.kind),
+        unit.kind,
+        unit.role,
+        copy(unit.support_indices),
+        _contraction_rule_support_summary(
+            unit.support_indices;
+            parent_dimension,
+        ),
+        local_geometry,
+        unit.column_range,
+        size(unit.coefficient_matrix, 1),
+        length(unit.column_range),
+        _product_staged_transform_rule(unit.kind),
+        _product_staged_cleanup_rule(unit.kind),
+        _product_staged_metric_capability(unit.kind),
+        diagnostics,
+        (
+            source = :nested_product_staged_by_center_sidecar,
+            staged_unit = unit,
+            original_provenance = unit.provenance,
+        ),
+    )
+end
+
+function cartesian_contraction_rule(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    full_block_dimension = prod(length.(descriptor.current_box))
+    diagnostics = (
+        source = :projected_q_shell_staged_unit_descriptor,
+        support_count = descriptor.support_count,
+        boundary_mode_count = descriptor.mode_count,
+        retained_count = descriptor.retained_count,
+        boundary_column_count = length(descriptor.boundary_column_indices),
+        cleanup_rank_count = descriptor.cleanup_rank_count,
+        cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
+        cleanup_cutoff = descriptor.cleanup_cutoff,
+        non_contracts = descriptor.non_contracts,
+        active_consumption = descriptor.active_consumption,
+        original_diagnostics = descriptor.diagnostics,
+    )
+    local_geometry = (
+        current_box = descriptor.current_box,
+        inner_box = descriptor.inner_box,
+        bond_axis = descriptor.bond_axis,
+        q = descriptor.q,
+        L = descriptor.L,
+        axis_intervals = descriptor.axis_intervals,
+        axis_local_coefficient_shapes = map(size, descriptor.axis_local_coefficients),
+        cleanup_matrix_size = descriptor.cleanup_matrix_size,
+    )
+    return CartesianContractionRule3D(
+        :projected_q_shell_boundary_modes,
+        descriptor.kind,
+        descriptor.role,
+        copy(descriptor.support_indices),
+        _contraction_rule_support_summary(
+            descriptor.support_indices;
+            parent_dimension,
+        ),
+        local_geometry,
+        nothing,
+        full_block_dimension,
+        descriptor.retained_count,
+        :boundary_comx_product_modes_raw_boundary_projection,
+        :full_rank_symmetric_lowdin,
+        :pqs_low_order_product_metric_prototype,
+        diagnostics,
+        (
+            source = :projected_q_shell_staged_unit_descriptor,
+            descriptor,
+        ),
+    )
+end
 
 """
     CartesianContractionUnit3D
@@ -58,6 +260,43 @@ function CartesianContractionUnit3D(
         Int[Int(index) for index in support_indices],
         Int(first(column_range)):Int(last(column_range)),
         metadata,
+    )
+end
+
+function cartesian_contraction_rule(
+    unit::CartesianContractionUnit3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    if hasproperty(unit.metadata, :contraction_rule)
+        return unit.metadata.contraction_rule
+    elseif hasproperty(unit.metadata, :staged_by_center_unit)
+        return cartesian_contraction_rule(
+            unit.metadata.staged_by_center_unit;
+            parent_dimension,
+        )
+    end
+    diagnostics = (
+        source = :cartesian_contraction_unit,
+        metadata = unit.metadata,
+    )
+    return CartesianContractionRule3D(
+        :support_dense_fallback,
+        :support_dense,
+        unit.role,
+        copy(unit.support_indices),
+        _contraction_rule_support_summary(
+            unit.support_indices;
+            parent_dimension,
+        ),
+        (;),
+        unit.column_range,
+        length(unit.support_indices),
+        length(unit.column_range),
+        :explicit_support_dense_coefficients,
+        :external_or_already_cleaned,
+        :support_local_product,
+        diagnostics,
+        (source = :cartesian_contraction_unit,),
     )
 end
 
@@ -115,6 +354,7 @@ end
 
 function _contracted_parent_units_from_staged_sidecar(sidecar)
     if hasproperty(sidecar, :units)
+        parent_dim = hasproperty(sidecar, :dims) ? prod(sidecar.dims) : nothing
         return CartesianContractionUnit3D[
             CartesianContractionUnit3D(
                 unit.role,
@@ -124,6 +364,10 @@ function _contracted_parent_units_from_staged_sidecar(sidecar)
                     source = :nested_product_staged_by_center_sidecar,
                     staged_by_center_kind = unit.kind,
                     staged_by_center_unit = unit,
+                    contraction_rule = cartesian_contraction_rule(
+                        unit;
+                        parent_dimension = parent_dim,
+                    ),
                 ),
             ) for unit in sidecar.units
         ]
@@ -204,6 +448,20 @@ contraction_unit_role(unit::CartesianContractionUnit3D) = unit.role
 contraction_unit_support_indices(unit::CartesianContractionUnit3D) = unit.support_indices
 contraction_unit_column_range(unit::CartesianContractionUnit3D) = unit.column_range
 contraction_unit_metadata(unit::CartesianContractionUnit3D) = unit.metadata
+contraction_unit_rule(
+    unit::CartesianContractionUnit3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+) = cartesian_contraction_rule(unit; parent_dimension)
+
+contraction_rule_family(rule::CartesianContractionRule3D) = rule.rule_family
+contraction_rule_kind(rule::CartesianContractionRule3D) = rule.kind
+contraction_rule_support_summary(rule::CartesianContractionRule3D) = rule.support_summary
+contraction_rule_column_range(rule::CartesianContractionRule3D) = rule.column_range
+contraction_rule_source_dimension(rule::CartesianContractionRule3D) = rule.source_dimension
+contraction_rule_retained_dimension(rule::CartesianContractionRule3D) = rule.retained_dimension
+contraction_rule_transform_rule(rule::CartesianContractionRule3D) = rule.transform_rule
+contraction_rule_cleanup_rule(rule::CartesianContractionRule3D) = rule.cleanup_rule
+contraction_rule_metric_capability(rule::CartesianContractionRule3D) = rule.metric_capability
 
 contracted_parent_unit_column_ranges(parent::CartesianContractedParent3D) =
     UnitRange{Int}[unit.column_range for unit in parent.units]

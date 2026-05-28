@@ -162,6 +162,7 @@ end
     term_coefficients = Float64.(expansion.coefficients)
     bundle5 = _pqs_test_bundle(5)
     bundle7 = _pqs_test_bundle(7)
+    CCP = GaussletBases.CartesianContractedParents
 
     cubic_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle5)
     cubic_current = (1:5, 1:5, 1:5)
@@ -248,6 +249,34 @@ end
     @test !cubic_descriptor.active_consumption.fixed_block_sidecar_installed
     @test !cubic_descriptor.active_consumption.metric_packet_consumes
     @test !cubic_descriptor.active_consumption.by_center_consumes
+    cubic_rule = CCP.cartesian_contraction_rule(
+        cubic_descriptor;
+        parent_dimension = 5 * 5 * 5,
+    )
+    @test cubic_rule isa CCP.CartesianContractionRule3D
+    @test CCP.contraction_rule_family(cubic_rule) == :projected_q_shell_boundary_modes
+    @test CCP.contraction_rule_kind(cubic_rule) == :projected_q_shell
+    @test isnothing(cubic_rule.role)
+    @test cubic_rule.support_indices == cubic.support_indices
+    @test cubic_rule.support_summary.entry_count == 98
+    @test cubic_rule.support_summary.unique_count == 98
+    @test cubic_rule.support_summary.duplicate_count == 0
+    @test cubic_rule.support_summary.outside_count == 0
+    @test cubic_rule.support_summary.missing_count == 27
+    @test !cubic_rule.support_summary.support_complete
+    @test cubic_rule.local_geometry.current_box == cubic_current
+    @test cubic_rule.local_geometry.inner_box == cubic_inner
+    @test cubic_rule.local_geometry.axis_local_coefficient_shapes == ((5, 5), (5, 5), (5, 5))
+    @test CCP.contraction_rule_column_range(cubic_rule) === nothing
+    @test CCP.contraction_rule_source_dimension(cubic_rule) == 125
+    @test CCP.contraction_rule_retained_dimension(cubic_rule) == 98
+    @test CCP.contraction_rule_transform_rule(cubic_rule) ==
+          :boundary_comx_product_modes_raw_boundary_projection
+    @test CCP.contraction_rule_cleanup_rule(cubic_rule) == :full_rank_symmetric_lowdin
+    @test CCP.contraction_rule_metric_capability(cubic_rule) ==
+          :pqs_low_order_product_metric_prototype
+    @test cubic_rule.diagnostics.boundary_mode_count == 98
+    @test cubic_rule.diagnostics.cleanup_rank_drop_count == 0
     @test cubic.diagnostics.pqs_staged_unit_descriptor_available
     @test cubic.diagnostics.pqs_staged_unit_kind == :projected_q_shell
     @test cubic.provenance.pqs_staged_unit_descriptor === cubic_descriptor
@@ -381,6 +410,24 @@ end
     @test :dense_full_parent_fallback in rectangular_descriptor.non_contracts
     @test rectangular_descriptor.diagnostics.metadata_only
     @test !rectangular_descriptor.active_consumption.fixed_block_sidecar_installed
+    rectangular_rule = CCP.cartesian_contraction_rule(
+        rectangular_descriptor;
+        parent_dimension = 5 * 5 * 7,
+    )
+    @test CCP.contraction_rule_family(rectangular_rule) == :projected_q_shell_boundary_modes
+    @test rectangular_rule.support_summary.entry_count == 130
+    @test rectangular_rule.support_summary.unique_count == 130
+    @test rectangular_rule.support_summary.missing_count == 45
+    @test rectangular_rule.local_geometry.current_box == rectangular_current
+    @test rectangular_rule.local_geometry.inner_box == rectangular_inner
+    @test rectangular_rule.local_geometry.axis_local_coefficient_shapes == ((5, 5), (5, 5), (7, 7))
+    @test CCP.contraction_rule_source_dimension(rectangular_rule) == 175
+    @test CCP.contraction_rule_retained_dimension(rectangular_rule) == 130
+    @test CCP.contraction_rule_transform_rule(rectangular_rule) ==
+          :boundary_comx_product_modes_raw_boundary_projection
+    @test CCP.contraction_rule_cleanup_rule(rectangular_rule) == :full_rank_symmetric_lowdin
+    @test CCP.contraction_rule_metric_capability(rectangular_rule) ==
+          :pqs_low_order_product_metric_prototype
     rectangular_metric_prototype =
         GaussletBases._nested_projected_q_shell_descriptor_metric_prototype(
             rectangular,
@@ -2289,6 +2336,49 @@ end
     @test length(CCP.contracted_parent_units(contracted_parent)) == length(sidecar_units)
     @test first(CCP.contracted_parent_units(contracted_parent)).metadata.staged_by_center_unit ===
         first(sidecar_units)
+    contraction_rules = [
+        CCP.contraction_unit_rule(
+            unit;
+            parent_dimension = CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent)),
+        ) for unit in CCP.contracted_parent_units(contracted_parent)
+    ]
+    product_rules = filter(
+        rule -> CCP.contraction_rule_family(rule) == :product_owned_unit,
+        contraction_rules,
+    )
+    support_rules = filter(
+        rule -> CCP.contraction_rule_family(rule) == :support_dense_fallback,
+        contraction_rules,
+    )
+    @test length(product_rules) == 6
+    @test length(support_rules) >= 1
+    first_product_rule = first(product_rules)
+    @test first_product_rule.kind == :product_doside
+    @test first_product_rule.support_summary.parent_dimension == 539
+    @test first_product_rule.support_summary.entry_count ==
+          length(first_product_rule.support_indices)
+    @test first_product_rule.support_summary.duplicate_count == 0
+    @test first_product_rule.support_summary.outside_count == 0
+    @test CCP.contraction_rule_retained_dimension(first_product_rule) ==
+          length(first_product_rule.column_range)
+    @test CCP.contraction_rule_transform_rule(first_product_rule) ==
+          :two_active_axis_product_doside
+    @test CCP.contraction_rule_cleanup_rule(first_product_rule) ==
+          :locally_orthonormal_product_doside
+    @test CCP.contraction_rule_metric_capability(first_product_rule) ==
+          :product_staged_metric_contraction
+    @test first_product_rule.local_geometry.axis_function_index_count ==
+          CCP.contraction_rule_retained_dimension(first_product_rule)
+    @test first_product_rule.diagnostics.coefficient_contract == :product_doside
+    first_support_rule = first(support_rules)
+    @test first_support_rule.kind == :support_dense
+    @test first_support_rule.support_summary.outside_count == 0
+    @test CCP.contraction_rule_transform_rule(first_support_rule) ==
+          :explicit_support_dense_coefficients
+    @test CCP.contraction_rule_cleanup_rule(first_support_rule) ==
+          :external_or_already_cleaned
+    @test CCP.contraction_rule_metric_capability(first_support_rule) ==
+          :support_local_product
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
         contracted_parent;
         axis_metrics,
