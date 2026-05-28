@@ -742,6 +742,27 @@ validation: the supplement fixture remains H/cc-pVTZ with `lmax = 0`,
 diagnostic only. The cleaned local driver now writes timing reports under each
 q output directory instead of emitting live timing spam to stdout.
 
+A later Be2 total-basis closure probe corrected the target contract for
+orbitals that live in the GTO supplement space. The earlier parent-grid-only
+Be2 capture/H1 recipe is still useful as a parent-filtered target diagnostic,
+but it is not the right closure test for a PySCF/GTO target whose closure
+requires the supplement rows. The corrected total raw projection uses:
+
+- fixed rows `<fixed(parent)|PySCF GTO> C`
+- supplement rows `<supplement GTO|PySCF GTO> C`
+
+With Be2/cc-pVDZ targets and a matching cc-pVDZ supplement at `lmax = 2`, the
+total-basis route closes essentially exactly:
+
+- q4 final capture `0.999999998974`, max final H1 error `0.001920` mHa
+- q6 final capture `0.999999999397`, max final H1 error `0.001840` mHa
+
+This supersedes the earlier interpretation that the roughly `32` mHa gap was
+necessarily a parent/core-spacing limitation of the total route. Same-basis
+GTO supplement closure works, and q is not limiting this closure. This is
+still closure plumbing, not Be2 energy validation, not HF/same-density or
+two-electron validation, and not a public/default route claim.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
