@@ -2222,13 +2222,14 @@ function _nested_projected_q_shell_axis_piece_pair_blocks(
 )
     piece_count = length(pieces)
     blocks = Matrix{Matrix{Float64}}(undef, piece_count, piece_count)
-    coefficients = Matrix{Float64}(local_coefficients)
+    coefficients = local_coefficients isa Matrix{Float64} ?
+        local_coefficients : Matrix{Float64}(local_coefficients)
     for row_piece in 1:piece_count, col_piece in 1:piece_count
         row_local = pieces[row_piece].local_axis_ranges[axis]
         col_local = pieces[col_piece].local_axis_ranges[axis]
         row_axis = pieces[row_piece].axis_ranges[axis]
         col_axis = pieces[col_piece].axis_ranges[axis]
-        blocks[row_piece, col_piece] = Matrix{Float64}(
+        @views blocks[row_piece, col_piece] = Matrix{Float64}(
             transpose(coefficients[row_local, :]) *
             axis_operator[row_axis, col_axis] *
             coefficients[col_local, :],
@@ -2244,38 +2245,62 @@ function _nested_projected_q_shell_axis_piece_weight_vectors(
     axis::Int,
 )
     vectors = Vector{Vector{Float64}}(undef, length(pieces))
-    coefficients = Matrix{Float64}(local_coefficients)
+    coefficients = local_coefficients isa Matrix{Float64} ?
+        local_coefficients : Matrix{Float64}(local_coefficients)
     for piece_index in eachindex(pieces)
         local_rows = pieces[piece_index].local_axis_ranges[axis]
         axis_rows = pieces[piece_index].axis_ranges[axis]
-        vectors[piece_index] = vec(
+        @views vectors[piece_index] = vec(
             transpose(coefficients[local_rows, :]) * axis_weights[axis_rows],
         )
     end
     return vectors
 end
 
+function _nested_projected_q_shell_boundary_mode_axis_indices(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+)
+    mode_count = length(descriptor.boundary_mode_indices)
+    mode_x = Vector{Int}(undef, mode_count)
+    mode_y = Vector{Int}(undef, mode_count)
+    mode_z = Vector{Int}(undef, mode_count)
+    @inbounds for index in 1:mode_count
+        mode_x[index], mode_y[index], mode_z[index] =
+            descriptor.boundary_mode_indices[index]
+    end
+    return (mode_x, mode_y, mode_z)
+end
+
 function _nested_projected_q_shell_mode_matrix_from_axis_piece_blocks(
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
     pieces,
     axis_blocks::NTuple{3,Matrix{Matrix{Float64}}},
+    mode_axis_indices::NTuple{3,Vector{Int}},
 )
-    mode_count = length(descriptor.boundary_mode_indices)
+    mode_x, mode_y, mode_z = mode_axis_indices
+    mode_count = length(mode_x)
     mode_matrix = zeros(Float64, mode_count, mode_count)
     @inbounds for piece_row in eachindex(pieces), piece_col in eachindex(pieces)
         x_blocks = axis_blocks[1][piece_row, piece_col]
         y_blocks = axis_blocks[2][piece_row, piece_col]
         z_blocks = axis_blocks[3][piece_row, piece_col]
         for mode_row in 1:mode_count
-            ix_row, iy_row, iz_row = descriptor.boundary_mode_indices[mode_row]
-            for mode_col in 1:mode_count
-                ix_col, iy_col, iz_col = descriptor.boundary_mode_indices[mode_col]
+            ix_row = mode_x[mode_row]
+            iy_row = mode_y[mode_row]
+            iz_row = mode_z[mode_row]
+            for mode_col in 1:mode_row
+                ix_col = mode_x[mode_col]
+                iy_col = mode_y[mode_col]
+                iz_col = mode_z[mode_col]
                 mode_matrix[mode_row, mode_col] +=
                     x_blocks[ix_row, ix_col] *
                     y_blocks[iy_row, iy_col] *
                     z_blocks[iz_row, iz_col]
             end
         end
+    end
+    @inbounds for mode_row in 2:mode_count, mode_col in 1:(mode_row - 1)
+        mode_matrix[mode_col, mode_row] = mode_matrix[mode_row, mode_col]
     end
     return mode_matrix
 end
@@ -2285,7 +2310,11 @@ function _nested_projected_q_shell_cleaned_mode_matrix(
     mode_matrix::AbstractMatrix{<:Real},
 )
     transform = descriptor.cleanup_transform
-    return Matrix{Float64}(transpose(transform) * mode_matrix * transform)
+    scratch = Matrix{Float64}(undef, size(mode_matrix, 1), size(transform, 2))
+    result = Matrix{Float64}(undef, size(transform, 2), size(transform, 2))
+    mul!(scratch, mode_matrix, transform)
+    mul!(result, transpose(transform), scratch)
+    return result
 end
 
 function _nested_projected_q_shell_descriptor_metric_product_contraction(
@@ -2316,6 +2345,7 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         axis,
     ), 3)
     mode_count = length(descriptor.boundary_mode_indices)
+    mode_axis_indices = _nested_projected_q_shell_boundary_mode_axis_indices(descriptor)
 
     axis_weight_vectors = ntuple(axis -> _nested_projected_q_shell_axis_piece_weight_vectors(
         pieces,
@@ -2329,7 +2359,9 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         y_weights = axis_weight_vectors[2][piece_index]
         z_weights = axis_weight_vectors[3][piece_index]
         for mode_index in 1:mode_count
-            ix, iy, iz = descriptor.boundary_mode_indices[mode_index]
+            ix = mode_axis_indices[1][mode_index]
+            iy = mode_axis_indices[2][mode_index]
+            iz = mode_axis_indices[3][mode_index]
             mode_weights[mode_index] += x_weights[ix] * y_weights[iy] * z_weights[iz]
         end
     end
@@ -2346,6 +2378,7 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
             descriptor,
             pieces,
             (axis_position_blocks[1], axis_overlap_blocks[2], axis_overlap_blocks[3]),
+            mode_axis_indices,
         ),
     )
     position_y = _nested_projected_q_shell_cleaned_mode_matrix(
@@ -2354,6 +2387,7 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
             descriptor,
             pieces,
             (axis_overlap_blocks[1], axis_position_blocks[2], axis_overlap_blocks[3]),
+            mode_axis_indices,
         ),
     )
     position_z = _nested_projected_q_shell_cleaned_mode_matrix(
@@ -2362,6 +2396,7 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
             descriptor,
             pieces,
             (axis_overlap_blocks[1], axis_overlap_blocks[2], axis_position_blocks[3]),
+            mode_axis_indices,
         ),
     )
 
@@ -2388,6 +2423,9 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         overlap_invariant_error = 0.0,
         overlap_is_operator_target = false,
         nontrivial_product_contracted_terms = (:weights, :position_x, :position_y, :position_z),
+        mode_axis_indices_cached = true,
+        symmetric_mode_matrix_assembly = true,
+        axis_piece_blocks_use_views = true,
         dense_parent_matrix_used = false,
         dense_full_parent_matrix_used = false,
         product_doside_unit = false,

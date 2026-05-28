@@ -304,6 +304,9 @@ end
     @test !cubic_product_metric.diagnostics.overlap_is_operator_target
     @test cubic_product_metric.diagnostics.nontrivial_product_contracted_terms ==
           (:weights, :position_x, :position_y, :position_z)
+    @test cubic_product_metric.diagnostics.mode_axis_indices_cached
+    @test cubic_product_metric.diagnostics.symmetric_mode_matrix_assembly
+    @test cubic_product_metric.diagnostics.axis_piece_blocks_use_views
     @test !cubic_product_metric.diagnostics.product_doside_unit
     @test !cubic_product_metric.diagnostics.fixed_block_sidecar_installed
     @test !cubic_product_metric.diagnostics.optimized_sidecar_installed
@@ -426,6 +429,9 @@ end
     @test !rectangular_product_metric.diagnostics.overlap_is_operator_target
     @test rectangular_product_metric.diagnostics.nontrivial_product_contracted_terms ==
           (:weights, :position_x, :position_y, :position_z)
+    @test rectangular_product_metric.diagnostics.mode_axis_indices_cached
+    @test rectangular_product_metric.diagnostics.symmetric_mode_matrix_assembly
+    @test rectangular_product_metric.diagnostics.axis_piece_blocks_use_views
     @test !rectangular_product_metric.diagnostics.product_doside_unit
     @test !rectangular_product_metric.diagnostics.fixed_block_sidecar_installed
     @test !rectangular_product_metric.diagnostics.optimized_sidecar_installed
