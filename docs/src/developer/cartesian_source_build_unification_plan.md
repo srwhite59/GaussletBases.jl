@@ -17,6 +17,7 @@ See also:
 - [Architecture and current direction](architecture.md)
 - [Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
 - [Cartesian nested decomposition plan](cartesian_nested_decomposition_plan.md)
+- [Projected q-Shell policy](projected_q_shell_policy.md)
 
 ## Current judgment
 
@@ -775,6 +776,15 @@ The q5 transverse annulus recipe remains experimental/incomplete. It is
 allowed to appear in planning metadata as a selected future policy, but it is
 not consumed by the opt-in builder and should fail rather than silently
 falling back to q4 or complete-rectangular behavior.
+
+The longer-term high-order shell target is now Projected q-Shell (PQS), defined
+as the raw-boundary projection of the full local block transform. Cubic
+atom-local shells should move toward `PQS(q, q)`, and rectangular
+molecular/exterior shells should move toward `PQS(q, L)`. Existing q-row and
+endcap/panel work is transitional infrastructure and validation scaffolding,
+not the preferred regular shell abstraction. See
+[`projected_q_shell_policy.md`](projected_q_shell_policy.md) for the policy
+definition and the first q=5 C2 `R = 4.7` external preflight evidence.
 
 Numerical quadrature is forbidden on this PGDG smoke path. A valid smoke must
 force `gausslet_backend = :pgdg_localized_experimental` and must not accept a
