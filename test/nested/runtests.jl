@@ -943,6 +943,67 @@ end
         for realization in realizations
         if realization.region_category == :shared_exterior
     )
+    shared_realizations = [
+        realization for realization in realizations
+        if realization.region_category == :shared_exterior
+    ]
+    @test all(
+        !isnothing(realization.metadata.realization_notes.projected_q_shell_candidate)
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.mapped_primitive ==
+        :_nested_projected_q_shell_layer
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.primitive_family ==
+        :projected_q_shell
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.realization_primitive ==
+        :projected_q_shell_boundary_comx_product_modes
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.support_contract ==
+        :projected_q_shell_raw_boundary
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.coefficient_contract ==
+        :full_block_boundary_comx_product_mode_projection
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.cleanup_contract ==
+        :full_rank_symmetric_lowdin
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.mode_selection_rule ==
+        :any_axis_mode_index_first_or_last
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.sidecar_status ==
+        :not_yet_optimized_product_staged_for_pqs
+        for realization in shared_realizations
+    )
+    @test all(
+        !realization.metadata.realization_notes.projected_q_shell_candidate.active_builder_consumes &&
+        !realization.metadata.realization_notes.projected_q_shell_candidate.source_builder_consumes &&
+        !realization.metadata.realization_notes.projected_q_shell_candidate.fixed_block_consumes &&
+        !realization.metadata.realization_notes.projected_q_shell_candidate.qw_consumes &&
+        !realization.metadata.realization_notes.projected_q_shell_candidate.hamiltonian_consumes
+        for realization in shared_realizations
+    )
+    @test all(
+        realization.metadata.realization_notes.projected_q_shell_candidate.current_transitional_implementation ==
+        :_nested_endcap_panel_shell_layer
+        for realization in shared_realizations
+    )
     @test all(
         realization.mapped_primitive == :_nested_bond_aligned_diatomic_sequence_for_box &&
         realization.mapped_primitive_status == :existing_internal_primitive &&
@@ -998,7 +1059,8 @@ end
         realization.recipe_family == :transverse_annulus_exterior &&
         realization.q == 5 &&
         realization.mapped_primitive_status == :missing_experimental_primitive &&
-        realization.missing_implementation == :transverse_annulus_owned_unit_producer
+        realization.missing_implementation == :transverse_annulus_owned_unit_producer &&
+        !(:projected_q_shell_candidate in propertynames(realization.metadata.realization_notes))
         for realization in annulus_diagnostics.region_realizations
         if realization.region_category == :shared_exterior
     )

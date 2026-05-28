@@ -1694,6 +1694,35 @@ function _nested_diatomic_high_order_recipe_region_realization_descriptor(
     return nothing
 end
 
+function _nested_diatomic_high_order_projected_q_shell_candidate(
+    choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
+)
+    choice.region_role == :regular_shared_molecular_shell || return nothing
+    choice.recipe_family == :shared_endcap_panel_exterior || return nothing
+    return (
+        realization_primitive = :projected_q_shell_boundary_comx_product_modes,
+        mapped_primitive = :_nested_projected_q_shell_layer,
+        mapped_primitive_status = :private_internal_metadata_candidate,
+        primitive_family = :projected_q_shell,
+        support_contract = :projected_q_shell_raw_boundary,
+        coefficient_contract = :full_block_boundary_comx_product_mode_projection,
+        seed_contract = :boundary_comx_product_modes_from_full_local_block_transform,
+        mode_selection_rule = :any_axis_mode_index_first_or_last,
+        cleanup_contract = :full_rank_symmetric_lowdin,
+        sidecar_status = :not_yet_optimized_product_staged_for_pqs,
+        active_builder_consumes = false,
+        source_builder_consumes = false,
+        fixed_block_consumes = false,
+        qw_consumes = false,
+        hamiltonian_consumes = false,
+        current_transitional_implementation = :_nested_endcap_panel_shell_layer,
+        current_transitional_recipe_family = :shared_endcap_panel_exterior,
+        endcap_panel_status = :transitional_current_active_implementation,
+        q = choice.q,
+        order = choice.order,
+    )
+end
+
 function _nested_diatomic_high_order_recipe_realization_mapping(
     choice::_BondAlignedDiatomicHighOrderRecipeRegionChoice3D,
     descriptor::Union{
@@ -1713,6 +1742,7 @@ function _nested_diatomic_high_order_recipe_realization_mapping(
             ),
         )
     elseif choice.recipe_family == :shared_endcap_panel_exterior
+        pqs_candidate = _nested_diatomic_high_order_projected_q_shell_candidate(choice)
         return (
             mapped_primitive = :_nested_endcap_panel_shell_layer,
             mapped_primitive_status = :existing_internal_primitive,
@@ -1721,6 +1751,8 @@ function _nested_diatomic_high_order_recipe_realization_mapping(
             notes = (
                 primitive_scope = :one_cell_shared_exterior_shell,
                 requires_product_doside = true,
+                current_transitional_implementation = :_nested_endcap_panel_shell_layer,
+                projected_q_shell_candidate = pqs_candidate,
             ),
         )
     elseif choice.recipe_family == :shared_contact_cap
@@ -1966,6 +1998,7 @@ function _nested_bond_aligned_diatomic_high_order_recipe_realization_diagnostics
                     _nested_diatomic_high_order_realization_descriptor_diagnostics(
                         realization.realization_descriptor,
                     ),
+                metadata = realization.metadata,
             )
             for realization in audit.region_realizations
         ],
