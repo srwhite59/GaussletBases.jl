@@ -154,6 +154,10 @@ end
         return true
     end
 
+    function _pqs_boundary_mode_rule_ok(mode::NTuple{3,Int}, sides::NTuple{3,Int})
+        return any(axis -> mode[axis] == 1 || mode[axis] == sides[axis], 1:3)
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     term_coefficients = Float64.(expansion.coefficients)
     bundle5 = _pqs_test_bundle(5)
@@ -211,6 +215,42 @@ end
     @test norm(cubic.packet.overlap - I, Inf) < 1.0e-8
     @test all(isfinite, cubic.packet.weights)
     @test minimum(cubic.packet.weights) > -1.0e-10
+    cubic_descriptor = GaussletBases._nested_projected_q_shell_staged_unit_descriptor(cubic)
+    @test cubic_descriptor.kind == :projected_q_shell
+    @test isnothing(cubic_descriptor.role)
+    @test cubic_descriptor.support_indices == cubic.support_indices
+    @test cubic_descriptor.support_states == cubic.support_states
+    @test cubic_descriptor.current_box == cubic_current
+    @test cubic_descriptor.inner_box == cubic_inner
+    @test cubic_descriptor.bond_axis == :z
+    @test cubic_descriptor.q == 5
+    @test cubic_descriptor.L == 5
+    @test cubic_descriptor.support_count == 98
+    @test cubic_descriptor.mode_count == 98
+    @test cubic_descriptor.retained_count == 98
+    @test length(cubic_descriptor.boundary_mode_indices) == 98
+    @test all(
+        mode -> _pqs_boundary_mode_rule_ok(mode, (5, 5, 5)),
+        cubic_descriptor.boundary_mode_indices,
+    )
+    @test cubic_descriptor.selection_rule == :any_axis_mode_index_first_or_last
+    @test cubic_descriptor.cleanup_method == :projected_boundary_symmetric_lowdin
+    @test cubic_descriptor.cleanup_matrix_size == (98, 98)
+    @test cubic_descriptor.cleanup_rank_count == 98
+    @test cubic_descriptor.cleanup_rank_drop_count == 0
+    @test length(cubic_descriptor.cleanup_eigenvalues) == 98
+    @test all(>(cubic_descriptor.cleanup_cutoff), cubic_descriptor.cleanup_eigenvalues)
+    @test cubic_descriptor.support_local_coefficient_shape == (98, 98)
+    @test :product_doside_unit in cubic_descriptor.non_contracts
+    @test :dense_full_parent_fallback in cubic_descriptor.non_contracts
+    @test cubic_descriptor.diagnostics.metadata_only
+    @test !cubic_descriptor.diagnostics.product_doside_unit
+    @test !cubic_descriptor.active_consumption.fixed_block_sidecar_installed
+    @test !cubic_descriptor.active_consumption.metric_packet_consumes
+    @test !cubic_descriptor.active_consumption.by_center_consumes
+    @test cubic.diagnostics.pqs_staged_unit_descriptor_available
+    @test cubic.diagnostics.pqs_staged_unit_kind == :projected_q_shell
+    @test cubic.provenance.pqs_staged_unit_descriptor === cubic_descriptor
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,
@@ -255,6 +295,32 @@ end
     )
     @test all(isfinite, rectangular.packet.weights)
     @test minimum(rectangular.packet.weights) > -1.0e-10
+    rectangular_descriptor =
+        GaussletBases._nested_projected_q_shell_staged_unit_descriptor(rectangular)
+    @test rectangular_descriptor.kind == :projected_q_shell
+    @test rectangular_descriptor.current_box == rectangular_current
+    @test rectangular_descriptor.inner_box == rectangular_inner
+    @test rectangular_descriptor.bond_axis == :z
+    @test rectangular_descriptor.q == 5
+    @test rectangular_descriptor.L == 7
+    @test rectangular_descriptor.support_count == 130
+    @test rectangular_descriptor.mode_count == 130
+    @test rectangular_descriptor.retained_count == 130
+    @test all(
+        mode -> _pqs_boundary_mode_rule_ok(mode, (5, 5, 7)),
+        rectangular_descriptor.boundary_mode_indices,
+    )
+    @test rectangular_descriptor.boundary_column_indices ==
+          rectangular.provenance.pqs_staged_unit_descriptor.boundary_column_indices
+    @test rectangular_descriptor.cleanup_method == :projected_boundary_symmetric_lowdin
+    @test rectangular_descriptor.cleanup_matrix_size == (130, 130)
+    @test rectangular_descriptor.cleanup_rank_count == 130
+    @test rectangular_descriptor.cleanup_rank_drop_count == 0
+    @test rectangular_descriptor.support_local_coefficient_shape == (130, 130)
+    @test :product_doside_unit in rectangular_descriptor.non_contracts
+    @test :dense_full_parent_fallback in rectangular_descriptor.non_contracts
+    @test rectangular_descriptor.diagnostics.metadata_only
+    @test !rectangular_descriptor.active_consumption.fixed_block_sidecar_installed
 
     x_axis_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
     x_axis = GaussletBases._nested_projected_q_shell_layer(
@@ -1210,6 +1276,39 @@ end
     @test pqs_diagnostics.region_builds[2].metadata.raw_L == 13
     @test pqs_diagnostics.region_builds[2].metadata.policy_q == 4
     @test pqs_diagnostics.region_builds[2].metadata.policy_order == 4
+    pqs_source_descriptor =
+        pqs_diagnostics.region_builds[2].metadata.pqs_staged_unit_descriptor
+    @test pqs_source_descriptor.kind == :projected_q_shell
+    @test length.(pqs_source_descriptor.current_box) == (7, 7, 13)
+    @test all(
+        axis ->
+            first(pqs_source_descriptor.inner_box[axis]) ==
+            first(pqs_source_descriptor.current_box[axis]) + 1 &&
+            last(pqs_source_descriptor.inner_box[axis]) ==
+            last(pqs_source_descriptor.current_box[axis]) - 1,
+        1:3,
+    )
+    @test pqs_source_descriptor.bond_axis == :z
+    @test pqs_source_descriptor.q == 7
+    @test pqs_source_descriptor.L == 13
+    @test pqs_source_descriptor.support_count == 362
+    @test pqs_source_descriptor.mode_count == 362
+    @test pqs_source_descriptor.retained_count == 362
+    @test pqs_source_descriptor.cleanup_method == :projected_boundary_symmetric_lowdin
+    @test pqs_source_descriptor.cleanup_matrix_size == (362, 362)
+    @test pqs_source_descriptor.cleanup_rank_count == 362
+    @test pqs_source_descriptor.cleanup_rank_drop_count == 0
+    @test pqs_source_descriptor.selection_rule == :any_axis_mode_index_first_or_last
+    @test all(
+        mode -> any(axis -> mode[axis] == 1 || mode[axis] == (7, 7, 13)[axis], 1:3),
+        pqs_source_descriptor.boundary_mode_indices,
+    )
+    @test :product_doside_unit in pqs_source_descriptor.non_contracts
+    @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
+    @test pqs_source_descriptor.diagnostics.metadata_only
+    @test !pqs_source_descriptor.active_consumption.fixed_block_sidecar_installed
+    @test !pqs_source_descriptor.active_consumption.metric_packet_consumes
+    @test !pqs_source_descriptor.active_consumption.by_center_consumes
     @test pqs_diagnostics.region_builds[2].retained_count == 362
     @test pqs_diagnostics.fixed_dimension == 7 * 7 * 15
     @test !isnothing(pqs_construction.sequence.packet)

@@ -413,6 +413,44 @@ struct _CartesianNestedProjectedQShellLayer3D{D,P} <: _AbstractCartesianNestedSh
 end
 
 """
+    _CartesianNestedProjectedQShellStagedUnitDescriptor3D
+
+Metadata-only descriptor for a future optimized PQS staged sidecar.
+
+This is deliberately not a `product_doside` unit and is not installed as a
+fixed-block `staged_by_center_sidecar`. It records the PQS seed contract:
+boundary COMX-product modes from the full local block, raw-boundary row
+projection, and full-rank symmetric Lowdin cleanup.
+"""
+struct _CartesianNestedProjectedQShellStagedUnitDescriptor3D
+    kind::Symbol
+    role::Union{Nothing,Symbol}
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    current_box::NTuple{3,UnitRange{Int}}
+    inner_box::NTuple{3,UnitRange{Int}}
+    bond_axis::Symbol
+    q::Int
+    L::Int
+    boundary_mode_indices::Vector{NTuple{3,Int}}
+    boundary_column_indices::Vector{Int}
+    selection_rule::Symbol
+    cleanup_method::Symbol
+    cleanup_matrix_size::NTuple{2,Int}
+    cleanup_eigenvalues::Vector{Float64}
+    cleanup_rank_count::Int
+    cleanup_rank_drop_count::Int
+    cleanup_cutoff::Float64
+    support_count::Int
+    mode_count::Int
+    retained_count::Int
+    support_local_coefficient_shape::NTuple{2,Int}
+    non_contracts::NTuple{5,Symbol}
+    active_consumption::Any
+    diagnostics::Any
+end
+
+"""
     _CartesianNestedShellPlusCore3D
 
 First nonrecursive shell-plus-core fixed-space object.
@@ -1891,6 +1929,96 @@ function _nested_projected_q_shell_cleanup(
     )
 end
 
+function _nested_projected_q_shell_make_staged_unit_descriptor(
+    support_indices::AbstractVector{<:Integer},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+    bond_axis::Symbol,
+    q::Int,
+    L::Int,
+    boundary_modes,
+    cleanup,
+    coefficient_matrix::AbstractMatrix{<:Real};
+    role::Union{Nothing,Symbol} = nothing,
+)
+    retained_count = size(coefficient_matrix, 2)
+    mode_count = length(boundary_modes.column_indices)
+    retained_count == mode_count || throw(
+        ArgumentError("projected q-shell staged descriptor requires one retained column per boundary COMX-product mode"),
+    )
+    cleanup_size = size(cleanup.transform)
+    cleanup_size == (mode_count, retained_count) || throw(
+        ArgumentError("projected q-shell staged descriptor cleanup matrix dimensions do not match mode/retained counts"),
+    )
+    non_contracts = (
+        :contracted_inner_cube_subtraction,
+        :locked_prior_span_projection,
+        :endcap_panel_stitching,
+        :product_doside_unit,
+        :dense_full_parent_fallback,
+    )
+    active_consumption = (
+        fixed_block_sidecar_installed = false,
+        contracted_parent_consumes = false,
+        metric_packet_consumes = false,
+        by_center_consumes = false,
+        qw_consumes = false,
+        hamiltonian_consumes = false,
+        public_api = false,
+        default_builder_consumes = false,
+    )
+    diagnostics = (
+        metadata_only = true,
+        seed_contract = :boundary_comx_product_modes_from_full_local_block_transform,
+        support_contract = :projected_q_shell_raw_boundary,
+        coefficient_contract = :full_block_boundary_comx_product_mode_projection,
+        cleanup_contract = :full_rank_symmetric_lowdin,
+        dense_parent_matrix_used = false,
+        full_parent_dense_matrix_used = false,
+        product_doside_unit = false,
+        fixed_block_sidecar_installed = false,
+        optimized_metric_contraction_available = false,
+        optimized_by_center_contraction_available = false,
+    )
+    return _CartesianNestedProjectedQShellStagedUnitDescriptor3D(
+        :projected_q_shell,
+        role,
+        Int[Int(index) for index in support_indices],
+        NTuple{3,Int}[state for state in support_states],
+        current_box,
+        inner_box,
+        bond_axis,
+        q,
+        L,
+        NTuple{3,Int}[mode for mode in boundary_modes.mode_indices],
+        Int[Int(index) for index in boundary_modes.column_indices],
+        boundary_modes.selection_rule,
+        cleanup.cleanup_method,
+        (cleanup_size[1], cleanup_size[2]),
+        Float64[value for value in cleanup.eigenvalues],
+        cleanup.rank_count,
+        cleanup.rank_drop_count,
+        cleanup.cutoff,
+        length(support_indices),
+        mode_count,
+        retained_count,
+        (length(support_indices), retained_count),
+        non_contracts,
+        active_consumption,
+        diagnostics,
+    )
+end
+
+function _nested_projected_q_shell_staged_unit_descriptor(
+    layer::_CartesianNestedProjectedQShellLayer3D,
+)
+    hasproperty(layer.provenance, :pqs_staged_unit_descriptor) || throw(
+        ArgumentError("projected q-shell layer does not carry a staged-unit descriptor"),
+    )
+    return layer.provenance.pqs_staged_unit_descriptor
+end
+
 function _nested_projected_q_shell_parent_coefficients(
     boundary_coefficients::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
@@ -2096,6 +2224,18 @@ function _nested_projected_q_shell_layer(
         support_indices,
         prod(dims),
     )
+    staged_descriptor = _nested_projected_q_shell_make_staged_unit_descriptor(
+        support_indices,
+        support_states,
+        current_box,
+        inner_box,
+        bond_axis,
+        q,
+        L,
+        boundary_modes,
+        cleanup,
+        coefficient_matrix,
+    )
     packet_data = _nested_projected_q_shell_metric_packet(
         bundles,
         coefficient_matrix,
@@ -2132,6 +2272,15 @@ function _nested_projected_q_shell_layer(
         dense_parent_matrix_used = false,
         full_parent_dense_matrix_used = false,
         endcap_panel_stitching = false,
+        pqs_staged_unit_descriptor_available = true,
+        pqs_staged_unit_kind = staged_descriptor.kind,
+        pqs_staged_unit_metadata_only = staged_descriptor.diagnostics.metadata_only,
+        pqs_staged_unit_fixed_block_sidecar_installed =
+            staged_descriptor.active_consumption.fixed_block_sidecar_installed,
+        pqs_staged_unit_metric_packet_consumes =
+            staged_descriptor.active_consumption.metric_packet_consumes,
+        pqs_staged_unit_by_center_consumes =
+            staged_descriptor.active_consumption.by_center_consumes,
         active_builder_consumes = false,
         private_internal = true,
     )
@@ -2152,6 +2301,7 @@ function _nested_projected_q_shell_layer(
         q = q,
         L = L,
         packet_kernel = packet_kernel,
+        pqs_staged_unit_descriptor = staged_descriptor,
         public_api = false,
         source_builder_changed = false,
     )
