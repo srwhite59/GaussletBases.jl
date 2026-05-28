@@ -268,6 +268,34 @@ end
     @test !cubic_metric_prototype.diagnostics.product_doside_unit
     @test !cubic_metric_prototype.diagnostics.fixed_block_sidecar_installed
     @test !cubic_metric_prototype.diagnostics.optimized_sidecar_installed
+    cubic_product_metric =
+        GaussletBases._nested_projected_q_shell_descriptor_metric_product_contraction(
+            cubic,
+            cubic_bundles,
+        )
+    @test cubic_product_metric.overlap ≈ cubic_metric_prototype.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.weights ≈ cubic_metric_prototype.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.overlap ≈ cubic.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.weights ≈ cubic.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.coverage.piece_count == 6
+    @test cubic_product_metric.coverage.piece_roles == (:xlo, :xhi, :ylo, :yhi, :zlo, :zhi)
+    @test cubic_product_metric.coverage.support_count == 98
+    @test cubic_product_metric.coverage.unique_support_count == 98
+    @test cubic_product_metric.coverage.duplicate_count == 0
+    @test cubic_product_metric.coverage.missing_count == 0
+    @test cubic_product_metric.coverage.outside_count == 0
+    @test cubic_product_metric.coverage.coverage_ok
+    @test cubic_product_metric.diagnostics.descriptor_kind == :projected_q_shell
+    @test cubic_product_metric.diagnostics.slab_decomposed_product_contraction
+    @test !cubic_product_metric.diagnostics.support_local_boundary_matrix_used
+    @test !cubic_product_metric.diagnostics.dense_full_parent_matrix_used
+    @test cubic_product_metric.diagnostics.boundary_comx_product_modes_used
+    @test cubic_product_metric.diagnostics.raw_boundary_projection_used
+    @test cubic_product_metric.diagnostics.lowdin_cleanup_applied
+    @test !cubic_product_metric.diagnostics.product_doside_unit
+    @test !cubic_product_metric.diagnostics.fixed_block_sidecar_installed
+    @test !cubic_product_metric.diagnostics.optimized_sidecar_installed
+    @test cubic_product_metric.diagnostics.prototype_only
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,
@@ -350,6 +378,34 @@ end
     @test !rectangular_metric_prototype.diagnostics.product_doside_unit
     @test !rectangular_metric_prototype.diagnostics.fixed_block_sidecar_installed
     @test !rectangular_metric_prototype.diagnostics.optimized_sidecar_installed
+    rectangular_product_metric =
+        GaussletBases._nested_projected_q_shell_descriptor_metric_product_contraction(
+            rectangular,
+            rectangular_bundles,
+        )
+    @test rectangular_product_metric.overlap ≈ rectangular_metric_prototype.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.weights ≈ rectangular_metric_prototype.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.overlap ≈ rectangular.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.weights ≈ rectangular.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.coverage.piece_count == 6
+    @test rectangular_product_metric.coverage.piece_roles == (:xlo, :xhi, :ylo, :yhi, :zlo, :zhi)
+    @test rectangular_product_metric.coverage.support_count == 130
+    @test rectangular_product_metric.coverage.unique_support_count == 130
+    @test rectangular_product_metric.coverage.duplicate_count == 0
+    @test rectangular_product_metric.coverage.missing_count == 0
+    @test rectangular_product_metric.coverage.outside_count == 0
+    @test rectangular_product_metric.coverage.coverage_ok
+    @test rectangular_product_metric.diagnostics.descriptor_kind == :projected_q_shell
+    @test rectangular_product_metric.diagnostics.slab_decomposed_product_contraction
+    @test !rectangular_product_metric.diagnostics.support_local_boundary_matrix_used
+    @test !rectangular_product_metric.diagnostics.dense_full_parent_matrix_used
+    @test rectangular_product_metric.diagnostics.boundary_comx_product_modes_used
+    @test rectangular_product_metric.diagnostics.raw_boundary_projection_used
+    @test rectangular_product_metric.diagnostics.lowdin_cleanup_applied
+    @test !rectangular_product_metric.diagnostics.product_doside_unit
+    @test !rectangular_product_metric.diagnostics.fixed_block_sidecar_installed
+    @test !rectangular_product_metric.diagnostics.optimized_sidecar_installed
+    @test rectangular_product_metric.diagnostics.prototype_only
 
     x_axis_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
     x_axis = GaussletBases._nested_projected_q_shell_layer(

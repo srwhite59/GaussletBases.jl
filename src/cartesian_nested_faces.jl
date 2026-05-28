@@ -2124,6 +2124,239 @@ function _nested_projected_q_shell_descriptor_metric_prototype(
     )
 end
 
+function _nested_projected_q_shell_boundary_rectangular_pieces(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+)
+    current = descriptor.current_box
+    inner = descriptor.inner_box
+    for axis in 1:3
+        first(inner[axis]) == first(current[axis]) + 1 &&
+            last(inner[axis]) == last(current[axis]) - 1 || throw(
+                ArgumentError("projected q-shell slab pieces require a one-cell raw boundary"),
+            )
+    end
+    ranges = (
+        (current[1], current[2], current[3]),
+        (current[1], current[2], current[3]),
+        (inner[1], current[2], current[3]),
+        (inner[1], current[2], current[3]),
+        (inner[1], inner[2], current[3]),
+        (inner[1], inner[2], current[3]),
+    )
+    ranges = (
+        (first(current[1]):first(current[1]), ranges[1][2], ranges[1][3]),
+        (last(current[1]):last(current[1]), ranges[2][2], ranges[2][3]),
+        (ranges[3][1], first(current[2]):first(current[2]), ranges[3][3]),
+        (ranges[4][1], last(current[2]):last(current[2]), ranges[4][3]),
+        (ranges[5][1], ranges[5][2], first(current[3]):first(current[3])),
+        (ranges[6][1], ranges[6][2], last(current[3]):last(current[3])),
+    )
+    roles = (:xlo, :xhi, :ylo, :yhi, :zlo, :zhi)
+    return [
+        begin
+            axis_ranges = ranges[index]
+            local_axis_ranges = ntuple(axis -> begin
+                interval = descriptor.axis_intervals[axis]
+                first(interval) <= first(axis_ranges[axis]) <= last(axis_ranges[axis]) <= last(interval) || throw(
+                    ArgumentError("projected q-shell slab piece lies outside descriptor axis intervals"),
+                )
+                (first(axis_ranges[axis]) - first(interval) + 1):(
+                    last(axis_ranges[axis]) - first(interval) + 1
+                )
+            end, 3)
+            support_count = prod(length.(axis_ranges))
+            (
+                role = roles[index],
+                axis_ranges = axis_ranges,
+                local_axis_ranges = local_axis_ranges,
+                support_count = support_count,
+            )
+        end for index in eachindex(roles)
+    ]
+end
+
+function _nested_projected_q_shell_piece_support_states(piece)
+    states = NTuple{3,Int}[]
+    for ix in piece.axis_ranges[1], iy in piece.axis_ranges[2], iz in piece.axis_ranges[3]
+        push!(states, (ix, iy, iz))
+    end
+    return states
+end
+
+function _nested_projected_q_shell_boundary_piece_coverage(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    pieces,
+)
+    states = NTuple{3,Int}[]
+    for piece in pieces
+        append!(states, _nested_projected_q_shell_piece_support_states(piece))
+    end
+    expected = Set(descriptor.support_states)
+    actual = Set(states)
+    duplicate_count = length(states) - length(actual)
+    missing_count = length(setdiff(expected, actual))
+    outside_count = length(setdiff(actual, expected))
+    return (
+        piece_count = length(pieces),
+        piece_roles = Tuple(piece.role for piece in pieces),
+        expected_support_count = length(descriptor.support_states),
+        support_count = length(states),
+        unique_support_count = length(actual),
+        duplicate_count = duplicate_count,
+        missing_count = missing_count,
+        outside_count = outside_count,
+        coverage_ok = duplicate_count == 0 && missing_count == 0 && outside_count == 0,
+    )
+end
+
+function _nested_projected_q_shell_axis_piece_pair_blocks(
+    pieces,
+    local_coefficients::AbstractMatrix{<:Real},
+    axis_operator::AbstractMatrix{<:Real},
+    axis::Int,
+)
+    piece_count = length(pieces)
+    blocks = Matrix{Matrix{Float64}}(undef, piece_count, piece_count)
+    coefficients = Matrix{Float64}(local_coefficients)
+    for row_piece in 1:piece_count, col_piece in 1:piece_count
+        row_local = pieces[row_piece].local_axis_ranges[axis]
+        col_local = pieces[col_piece].local_axis_ranges[axis]
+        row_axis = pieces[row_piece].axis_ranges[axis]
+        col_axis = pieces[col_piece].axis_ranges[axis]
+        blocks[row_piece, col_piece] = Matrix{Float64}(
+            transpose(coefficients[row_local, :]) *
+            axis_operator[row_axis, col_axis] *
+            coefficients[col_local, :],
+        )
+    end
+    return blocks
+end
+
+function _nested_projected_q_shell_axis_piece_weight_vectors(
+    pieces,
+    local_coefficients::AbstractMatrix{<:Real},
+    axis_weights::AbstractVector{<:Real},
+    axis::Int,
+)
+    vectors = Vector{Vector{Float64}}(undef, length(pieces))
+    coefficients = Matrix{Float64}(local_coefficients)
+    for piece_index in eachindex(pieces)
+        local_rows = pieces[piece_index].local_axis_ranges[axis]
+        axis_rows = pieces[piece_index].axis_ranges[axis]
+        vectors[piece_index] = vec(
+            transpose(coefficients[local_rows, :]) * axis_weights[axis_rows],
+        )
+    end
+    return vectors
+end
+
+function _nested_projected_q_shell_descriptor_metric_product_contraction(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("projected q-shell product metric contraction requires a projected_q_shell descriptor"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    all(index -> 1 <= index <= prod(dims), descriptor.support_indices) || throw(
+        ArgumentError("projected q-shell product metric contraction support exceeds parent dimensions"),
+    )
+    pieces = _nested_projected_q_shell_boundary_rectangular_pieces(descriptor)
+    coverage = _nested_projected_q_shell_boundary_piece_coverage(descriptor, pieces)
+    coverage.coverage_ok || throw(
+        ArgumentError("projected q-shell slab pieces do not exactly cover descriptor support"),
+    )
+    pgdgs = (
+        _nested_axis_pgdg(bundles, :x),
+        _nested_axis_pgdg(bundles, :y),
+        _nested_axis_pgdg(bundles, :z),
+    )
+    axis_overlap_blocks = ntuple(axis -> _nested_projected_q_shell_axis_piece_pair_blocks(
+        pieces,
+        descriptor.axis_local_coefficients[axis],
+        pgdgs[axis].overlap,
+        axis,
+    ), 3)
+    mode_count = length(descriptor.boundary_mode_indices)
+    mode_overlap = zeros(Float64, mode_count, mode_count)
+    @inbounds for piece_row in eachindex(pieces), piece_col in eachindex(pieces)
+        x_blocks = axis_overlap_blocks[1][piece_row, piece_col]
+        y_blocks = axis_overlap_blocks[2][piece_row, piece_col]
+        z_blocks = axis_overlap_blocks[3][piece_row, piece_col]
+        for mode_row in 1:mode_count
+            ix_row, iy_row, iz_row = descriptor.boundary_mode_indices[mode_row]
+            for mode_col in 1:mode_count
+                ix_col, iy_col, iz_col = descriptor.boundary_mode_indices[mode_col]
+                mode_overlap[mode_row, mode_col] +=
+                    x_blocks[ix_row, ix_col] *
+                    y_blocks[iy_row, iy_col] *
+                    z_blocks[iz_row, iz_col]
+            end
+        end
+    end
+
+    axis_weight_vectors = ntuple(axis -> _nested_projected_q_shell_axis_piece_weight_vectors(
+        pieces,
+        descriptor.axis_local_coefficients[axis],
+        pgdgs[axis].weights,
+        axis,
+    ), 3)
+    mode_weights = zeros(Float64, mode_count)
+    @inbounds for piece_index in eachindex(pieces)
+        x_weights = axis_weight_vectors[1][piece_index]
+        y_weights = axis_weight_vectors[2][piece_index]
+        z_weights = axis_weight_vectors[3][piece_index]
+        for mode_index in 1:mode_count
+            ix, iy, iz = descriptor.boundary_mode_indices[mode_index]
+            mode_weights[mode_index] += x_weights[ix] * y_weights[iy] * z_weights[iz]
+        end
+    end
+
+    transform = descriptor.cleanup_transform
+    overlap = Matrix{Float64}(transpose(transform) * mode_overlap * transform)
+    weights = vec(transpose(transform) * mode_weights)
+    diagnostics = (
+        descriptor_kind = descriptor.kind,
+        support_count = descriptor.support_count,
+        mode_count = descriptor.mode_count,
+        retained_count = descriptor.retained_count,
+        cleanup_method = descriptor.cleanup_method,
+        cleanup_matrix_size = descriptor.cleanup_matrix_size,
+        piece_count = length(pieces),
+        piece_roles = coverage.piece_roles,
+        piece_pair_count = length(pieces)^2,
+        boundary_comx_product_modes_used = true,
+        raw_boundary_projection_used = true,
+        lowdin_cleanup_applied = true,
+        support_local_boundary_matrix_used = false,
+        slab_decomposed_product_contraction = true,
+        dense_parent_matrix_used = false,
+        dense_full_parent_matrix_used = false,
+        product_doside_unit = false,
+        fixed_block_sidecar_installed =
+            descriptor.active_consumption.fixed_block_sidecar_installed,
+        optimized_sidecar_installed = false,
+        optimized_metric_contraction_available = true,
+        prototype_only = true,
+    )
+    return (
+        overlap = overlap,
+        weights = weights,
+        coverage = coverage,
+        diagnostics = diagnostics,
+    )
+end
+
+function _nested_projected_q_shell_descriptor_metric_product_contraction(
+    layer::_CartesianNestedProjectedQShellLayer3D,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    return _nested_projected_q_shell_descriptor_metric_product_contraction(
+        _nested_projected_q_shell_staged_unit_descriptor(layer),
+        bundles,
+    )
+end
+
 function _nested_projected_q_shell_parent_coefficients(
     boundary_coefficients::AbstractMatrix{<:Real},
     support_indices::AbstractVector{Int},
