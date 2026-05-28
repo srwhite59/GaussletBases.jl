@@ -713,6 +713,35 @@ and not evidence for two-electron or same-density accuracy. The H/cc-pVTZ
 `lmax = 0` supplement fixture is deliberately a plumbing target, not a
 chromium ECP supplement model.
 
+The follow-on q-ladder CR2 run on 2026-05-27 used the same `735`-row
+parent-grid target for q4, q5, and q6. PGDG was enforced for all three rows,
+with no `:numerical_reference` fallback. The fixed/final/residual dimensions
+and final capture values were:
+
+| q | fixed/final/residual | alpha final capture | beta final capture |
+|---:|---|---:|---:|
+| 4 | `469 / 471 / 2` | `0.9994163575` | `0.9998428679` |
+| 5 | `523 / 525 / 2` | `0.9997040846` | `0.9998748198` |
+| 6 | `589 / 591 / 2` | `0.9998268146` | `0.9999020226` |
+
+The maximum final H1 deltas decreased across the ladder:
+
+| q | alpha max final H1 delta | beta max final H1 delta |
+|---:|---:|---:|
+| 4 | `7.250` mHa | `2.949` mHa |
+| 5 | `5.271` mHa | `2.649` mHa |
+| 6 | `4.782` mHa | `2.073` mHa |
+
+The worst alpha orbital remained source MO 7 on the left/right labels. The
+worst beta orbital shifted from source MO 0 at q4 to source MO 3 at q5 and
+q6. q7 was not run and remains expected unsupported for this fixture. This
+q-ladder result shows that the q-row plumbing works and that increasing q
+improves capture/H1 for this target. It is still not Cr ECP energy or physics
+validation: the supplement fixture remains H/cc-pVTZ with `lmax = 0`,
+`max_width = 1.0`, so the result is a target-plumbing and fixed-space
+diagnostic only. The cleaned local driver now writes timing reports under each
+q output directory instead of emitting live timing spam to stdout.
+
 This status means the path is construction-smoke-ready only. It remains
 explicit/internal, and active/default source builders still do not consume the
 recipe policy. Legacy source-object wrapping is also not claimed: the
