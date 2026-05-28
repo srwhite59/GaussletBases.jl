@@ -18,16 +18,16 @@ PQS is a raw-boundary projection of the full local block transform.
 For a `q x q x L` local block:
 
 1. Build or use the full local product/block transform for the whole block.
-2. Project that transform onto the raw outer-shell coordinates.
-3. Equivalently for support accounting, zero or discard the raw inner
-   `(q - 2) x (q - 2) x (L - 2)` coordinates.
-4. Keep and clean/orthonormalize the resulting boundary span.
+2. Select the boundary COMX-product modes: product columns whose local mode
+   index is first or last on at least one axis.
+3. Project those selected product modes onto the raw outer-shell coordinates.
+4. Apply full-rank symmetric Lowdin cleanup to the projected boundary span.
 
 The shell must not depend on how the interior block was contracted. It must
 not be defined by subtracting a previously locked contracted inner cube, and
 it must not depend on locked prior spans. Interior contraction is a separate
-choice; PQS is defined by the raw boundary trace of the full local block
-transform.
+choice; PQS is defined by boundary COMX-product modes from the full local
+block transform projected onto raw boundary rows.
 
 The subtraction formula is a counting picture, not the construction contract:
 
@@ -77,6 +77,39 @@ The reported rows were:
 This is positive first-gate evidence for PQS as the intended abstraction. It
 deserves an accepted-R ladder follow-up before any default-policy decision.
 It is not enough by itself to make PQS the default route.
+
+## Mainline Implementation Checkpoint
+
+As of 2026-05-28, mainline has a private opt-in PQS construction smoke. The
+implementation trail is:
+
+- `06483f8`: added the private projected q-shell local layer helper
+- `bd66e51`: exposed PQS as a realization candidate in metadata
+- `e4fbcca`: added opt-in PQS source and fixed-block construction
+- `42103e3`: added the pure nested PGDG QW smoke for the opt-in PQS fixed
+  block
+
+The helper follows the intended boundary-mode contract: build the full local
+COMX transforms, select boundary COMX-product modes, project those modes onto
+raw boundary rows, and apply full-rank symmetric Lowdin cleanup. It does not
+subtract a contracted inner cube and does not project against locked prior
+spans.
+
+The path remains private and explicit opt-in. Existing defaults continue to
+use the endcap/panel route where they did before. The first small fixture has
+full-parent dimension `735`; that is construction and QW-smoke evidence only,
+not a compression-quality, energy, CR2, or production science claim.
+
+The pure nested QW smoke uses the existing receipt path with
+`gausslet_backend = :pgdg_localized_experimental`,
+`interaction_treatment = :ggt_nearest`, and `nuclear_term_storage =
+:total_only`. It reports clean source/sidecar agreement, finite symmetric
+overlap/one-body/interaction matrices, zero residuals, and no warning-level
+numerical-quadrature logs for that path.
+
+The missing next design problem is product-staged PQS sidecar and performance
+work. PQS should not be adopted for by-center, supplement, or
+performance-sensitive routes until that sidecar/performance contract exists.
 
 ## Consequences For Mainline
 

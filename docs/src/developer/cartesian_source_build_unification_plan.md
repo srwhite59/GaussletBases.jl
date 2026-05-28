@@ -778,13 +778,35 @@ not consumed by the opt-in builder and should fail rather than silently
 falling back to q4 or complete-rectangular behavior.
 
 The longer-term high-order shell target is now Projected q-Shell (PQS), defined
-as the raw-boundary projection of the full local block transform. Cubic
+as boundary COMX-product modes from the full local block transform, projected
+to raw boundary rows, then cleaned with full-rank symmetric Lowdin. Cubic
 atom-local shells should move toward `PQS(q, q)`, and rectangular
 molecular/exterior shells should move toward `PQS(q, L)`. Existing q-row and
 endcap/panel work is transitional infrastructure and validation scaffolding,
 not the preferred regular shell abstraction. See
 [`projected_q_shell_policy.md`](projected_q_shell_policy.md) for the policy
 definition and the first q=5 C2 `R = 4.7` external preflight evidence.
+
+As of commits `06483f8`, `bd66e51`, `e4fbcca`, and `42103e3`, mainline also
+has a private opt-in PQS construction smoke. The local layer helper uses
+boundary COMX-product mode selection, raw-boundary projection, and full-rank
+symmetric Lowdin cleanup. PQS realization metadata is visible as a candidate,
+and the opt-in source/fixed-block path can build the first small fixture with
+full-parent dimension `735`.
+
+That smoke is deliberately narrow. Defaults still use the existing
+endcap/panel route where they did before, and the PQS path is private and
+explicit opt-in. The pure nested QW receipt smoke uses PGDG with
+`:ggt_nearest` and `:total_only`, has clean source/sidecar agreement, finite
+symmetric overlap/one-body/interaction matrices, zero residuals, and rejects
+warning-level numerical-quadrature logs for that path. This is construction
+and QW-smoke evidence only; it is not a compression-quality, CR2, energy, or
+production-default claim.
+
+The next PQS design problem is product-staged sidecar and performance support.
+PQS should not be treated as ready for by-center, supplement, or
+performance-sensitive adoption until that sidecar/performance contract is
+implemented and validated.
 
 Numerical quadrature is forbidden on this PGDG smoke path. A valid smoke must
 force `gausslet_backend = :pgdg_localized_experimental` and must not accept a
