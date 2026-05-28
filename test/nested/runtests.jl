@@ -1151,6 +1151,95 @@ end
     @test diagnostics.metadata.non_shared_q_policy == :fixed_q4_order4
     @test diagnostics.metadata.shared_q_values == (4,)
     @test diagnostics.metadata.shared_order_values == (4,)
+    @test diagnostics.metadata.shared_shell_realization == :endcap_panel_owned
+    @test !diagnostics.metadata.projected_q_shell_opt_in
+
+    pqs_construction =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+            basis,
+            bundles,
+            policy;
+            nside = 5,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :support_reference,
+            shared_shell_realization = :projected_q_shell,
+        )
+    pqs_diagnostics =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction_diagnostics(
+            pqs_construction,
+        )
+    @test pqs_diagnostics.metadata.shared_shell_realization == :projected_q_shell
+    @test pqs_diagnostics.metadata.projected_q_shell_opt_in
+    @test pqs_diagnostics.metadata.default_source_builder_changed == false
+    @test pqs_diagnostics.metadata.packet_kernel == :support_reference
+    @test pqs_diagnostics.metadata.build_sequence_packet
+    @test pqs_diagnostics.support_coverage.coverage_ok
+    @test pqs_diagnostics.support_coverage.expected_support_count == 7 * 7 * 15
+    @test pqs_diagnostics.support_coverage.covered_support_count == 7 * 7 * 15
+    @test pqs_diagnostics.support_coverage.duplicate_count == 0
+    @test pqs_diagnostics.support_coverage.missing_count == 0
+    @test pqs_diagnostics.support_coverage.outside_count == 0
+    @test [build.role for build in pqs_diagnostics.region_builds] ==
+          [build.role for build in region_builds]
+    @test [build.primitive_family for build in pqs_diagnostics.region_builds] == [
+        :outer_mismatch_boundary_slab_set,
+        :projected_q_shell,
+        :atom_local_complete_shell_sequence,
+        :atom_local_complete_shell_sequence,
+        :contact_cap_owned_slab,
+    ]
+    @test [
+        build.built_support_count for build in pqs_diagnostics.region_builds
+    ] == [build.built_support_count for build in region_builds]
+    @test pqs_diagnostics.region_builds[2].mapped_primitive ==
+          :_nested_projected_q_shell_layer
+    @test pqs_diagnostics.region_builds[2].metadata.support_contract ==
+          :projected_q_shell_raw_boundary
+    @test pqs_diagnostics.region_builds[2].metadata.coefficient_contract ==
+          :full_block_boundary_comx_product_mode_projection
+    @test pqs_diagnostics.region_builds[2].metadata.seed_contract ==
+          :raw_boundary_projection_of_boundary_comx_product_modes_from_full_local_block_transform
+    @test pqs_diagnostics.region_builds[2].metadata.cleanup_contract ==
+          :full_rank_symmetric_lowdin
+    @test pqs_diagnostics.region_builds[2].metadata.cleanup_method ==
+          :projected_boundary_symmetric_lowdin
+    @test !pqs_diagnostics.region_builds[2].metadata.pqs_product_staged_sidecar_available
+    @test !pqs_diagnostics.region_builds[2].metadata.factorized_direct_allowed
+    @test !pqs_diagnostics.region_builds[2].metadata.active_default_builder_changed
+    @test pqs_diagnostics.region_builds[2].metadata.raw_q == 7
+    @test pqs_diagnostics.region_builds[2].metadata.raw_L == 13
+    @test pqs_diagnostics.region_builds[2].metadata.policy_q == 4
+    @test pqs_diagnostics.region_builds[2].metadata.policy_order == 4
+    @test pqs_diagnostics.region_builds[2].retained_count == 362
+    @test pqs_diagnostics.fixed_dimension == 7 * 7 * 15
+    @test !isnothing(pqs_construction.sequence.packet)
+    @test all(isfinite, pqs_construction.sequence.packet.overlap)
+    @test all(isfinite, pqs_construction.sequence.packet.kinetic)
+    @test all(isfinite, pqs_construction.sequence.packet.weights)
+    @test all(isfinite, pqs_construction.sequence.packet.gaussian_sum)
+    @test all(isfinite, pqs_construction.sequence.packet.pair_sum)
+    @test norm(pqs_construction.sequence.packet.overlap - I, Inf) < 1.0e-8
+    pqs_fixed_block =
+        GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(
+            pqs_construction,
+        )
+    @test size(pqs_fixed_block.coefficient_matrix) == (7 * 7 * 15, 7 * 7 * 15)
+    @test all(isfinite, pqs_fixed_block.overlap)
+    @test all(isfinite, pqs_fixed_block.kinetic)
+    @test all(isfinite, pqs_fixed_block.weights)
+    @test all(isfinite, pqs_fixed_block.gaussian_sum)
+    @test all(isfinite, pqs_fixed_block.pair_sum)
+    @test norm(pqs_fixed_block.overlap - I, Inf) < 1.0e-8
+    @test pqs_fixed_block.staged_by_center_sidecar[] === nothing
+    @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+        basis,
+        bundles,
+        policy;
+        nside = 5,
+        term_coefficients = Float64.(expansion.coefficients),
+        packet_kernel = :factorized_direct,
+        shared_shell_realization = :projected_q_shell,
+    )
 
     shared_q5_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
         policy.construction_plan;

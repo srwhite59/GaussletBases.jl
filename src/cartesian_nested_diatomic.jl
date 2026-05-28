@@ -2082,6 +2082,28 @@ function _nested_diatomic_assert_default_q4_opt_in_policy(
     return nothing
 end
 
+function _nested_diatomic_validate_shared_shell_realization(realization::Symbol)
+    realization in (:endcap_panel_owned, :projected_q_shell) || throw(
+        ArgumentError(
+            "experimental diatomic high-order shared-shell realization must be :endcap_panel_owned or :projected_q_shell",
+        ),
+    )
+    return realization
+end
+
+function _nested_diatomic_projected_q_shell_region_dimensions(
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    bond_axis::Symbol,
+)
+    bond_axis_index = _nested_axis_index(bond_axis)
+    lengths = length.(region.box)
+    transverse_lengths = Tuple(lengths[axis] for axis in 1:3 if axis != bond_axis_index)
+    transverse_lengths[1] == transverse_lengths[2] || throw(
+        ArgumentError("projected q-shell shared region requires equal transverse raw side lengths"),
+    )
+    return (q = transverse_lengths[1], L = lengths[bond_axis_index])
+end
+
 function _nested_diatomic_high_order_descriptor_direct_coefficients(
     bundles::_CartesianNestedAxisBundles3D,
     descriptor::_BondAlignedDiatomicHighOrderRecipeRegionRealizationDescriptor3D,
@@ -2164,8 +2186,24 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
     build_sequence_packet::Bool = true,
+    shared_shell_realization::Symbol = :endcap_panel_owned,
 )
     return @timeg "diatomic.high_order_recipe_source.total" begin
+        shared_shell_realization =
+            _nested_diatomic_validate_shared_shell_realization(shared_shell_realization)
+        normalized_packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+        if shared_shell_realization == :projected_q_shell
+            normalized_packet_kernel == :support_reference || throw(
+                ArgumentError(
+                    "projected q-shell opt-in source construction requires packet_kernel = :support_reference",
+                ),
+            )
+            build_sequence_packet || throw(
+                ArgumentError(
+                    "projected q-shell opt-in source construction requires build_sequence_packet = true",
+                ),
+            )
+        end
         isnothing(term_coefficients) && throw(
             ArgumentError("experimental diatomic high-order source construction requires explicit term coefficients"),
         )
@@ -2230,19 +2268,60 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                 )
             elseif choice.recipe_family == :shared_endcap_panel_exterior
                 isnothing(region.inner_exclusion_box) && throw(
-                    ArgumentError("endcap/panel recipe region requires an inner exclusion box"),
+                    ArgumentError("shared exterior recipe region requires an inner exclusion box"),
                 )
-                layer = _nested_endcap_panel_shell_layer(
-                    bundles,
-                    region.box,
-                    region.inner_exclusion_box;
-                    bond_axis = bond_axis,
-                    q = choice.q,
-                    L = choice.order,
-                    packet_kernel = packet_kernel,
-                    term_coefficients = term_coefficients,
-                    verify_factorized_reconstruction = false,
-                )
+                if shared_shell_realization == :projected_q_shell
+                    pqs_dimensions =
+                        _nested_diatomic_projected_q_shell_region_dimensions(region, bond_axis)
+                    layer = _nested_projected_q_shell_layer(
+                        bundles,
+                        region.box,
+                        region.inner_exclusion_box;
+                        bond_axis = bond_axis,
+                        q = pqs_dimensions.q,
+                        L = pqs_dimensions.L,
+                        packet_kernel = :support_reference,
+                        term_coefficients = term_coefficients,
+                        verify_factorized_reconstruction = false,
+                    )
+                    primitive_family = :projected_q_shell
+                    mapped_primitive = :_nested_projected_q_shell_layer
+                    layer_metadata = (
+                        support_contract = layer.provenance.support_contract,
+                        coefficient_contract = layer.provenance.coefficient_contract,
+                        seed_contract =
+                            layer.provenance.construction_contract,
+                        cleanup_contract = :full_rank_symmetric_lowdin,
+                        cleanup_method = layer.diagnostics.cleanup_method,
+                        packet_kernel = layer.provenance.packet_kernel,
+                        raw_q = pqs_dimensions.q,
+                        raw_L = pqs_dimensions.L,
+                        policy_q = choice.q,
+                        policy_order = choice.order,
+                        pqs_product_staged_sidecar_available = false,
+                        factorized_direct_allowed = false,
+                        active_default_builder_changed = false,
+                    )
+                else
+                    layer = _nested_endcap_panel_shell_layer(
+                        bundles,
+                        region.box,
+                        region.inner_exclusion_box;
+                        bond_axis = bond_axis,
+                        q = choice.q,
+                        L = choice.order,
+                        packet_kernel = packet_kernel,
+                        term_coefficients = term_coefficients,
+                        verify_factorized_reconstruction = false,
+                    )
+                    primitive_family = :shared_endcap_panel_shell_layer
+                    mapped_primitive = :_nested_endcap_panel_shell_layer
+                    layer_metadata = (
+                        support_contract = layer.provenance.support_contract,
+                        coefficient_contract = layer.provenance.coefficient_contract,
+                        packet_kernel = layer.provenance.packet_kernel,
+                    )
+                end
                 push!(shared_shell_layers, layer)
                 push!(
                     region_data,
@@ -2251,16 +2330,12 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                         choice = choice,
                         region = region,
                         realization = realization,
-                        mapped_primitive = :_nested_endcap_panel_shell_layer,
-                        primitive_family = :shared_endcap_panel_shell_layer,
+                        mapped_primitive = mapped_primitive,
+                        primitive_family = primitive_family,
                         built_support_indices = layer.support_indices,
                         retained_count = size(layer.coefficient_matrix, 2),
                         built_object = layer,
-                        metadata = (
-                            support_contract = layer.provenance.support_contract,
-                            coefficient_contract = layer.provenance.coefficient_contract,
-                            packet_kernel = layer.provenance.packet_kernel,
-                        ),
+                        metadata = layer_metadata,
                     ),
                 )
             elseif choice.recipe_family in (
@@ -2390,8 +2465,10 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                 shared_q_values = Tuple(sort(unique(choice.q for choice in shared_choices))),
                 shared_order_values =
                     Tuple(sort(unique(choice.order for choice in shared_choices))),
-                packet_kernel = packet_kernel,
+                packet_kernel = normalized_packet_kernel,
                 build_sequence_packet = build_sequence_packet,
+                shared_shell_realization = shared_shell_realization,
+                projected_q_shell_opt_in = shared_shell_realization == :projected_q_shell,
             ),
         )
     end
