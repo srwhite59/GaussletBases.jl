@@ -435,7 +435,10 @@ struct _CartesianNestedProjectedQShellStagedUnitDescriptor3D
     boundary_mode_indices::Vector{NTuple{3,Int}}
     boundary_column_indices::Vector{Int}
     selection_rule::Symbol
+    axis_intervals::NTuple{3,UnitRange{Int}}
+    axis_local_coefficients::NTuple{3,Matrix{Float64}}
     cleanup_method::Symbol
+    cleanup_transform::Matrix{Float64}
     cleanup_matrix_size::NTuple{2,Int}
     cleanup_eigenvalues::Vector{Float64}
     cleanup_rank_count::Int
@@ -1937,6 +1940,7 @@ function _nested_projected_q_shell_make_staged_unit_descriptor(
     bond_axis::Symbol,
     q::Int,
     L::Int,
+    full_sides::NTuple{3,_CartesianNestedDoSide1D},
     boundary_modes,
     cleanup,
     coefficient_matrix::AbstractMatrix{<:Real};
@@ -1950,6 +1954,11 @@ function _nested_projected_q_shell_make_staged_unit_descriptor(
     cleanup_size = size(cleanup.transform)
     cleanup_size == (mode_count, retained_count) || throw(
         ArgumentError("projected q-shell staged descriptor cleanup matrix dimensions do not match mode/retained counts"),
+    )
+    axis_intervals = ntuple(axis -> full_sides[axis].interval, 3)
+    axis_local_coefficients = ntuple(
+        axis -> Matrix{Float64}(full_sides[axis].local_coefficients),
+        3,
     )
     non_contracts = (
         :contracted_inner_cube_subtraction,
@@ -1994,7 +2003,10 @@ function _nested_projected_q_shell_make_staged_unit_descriptor(
         NTuple{3,Int}[mode for mode in boundary_modes.mode_indices],
         Int[Int(index) for index in boundary_modes.column_indices],
         boundary_modes.selection_rule,
+        axis_intervals,
+        axis_local_coefficients,
         cleanup.cleanup_method,
+        Matrix{Float64}(cleanup.transform),
         (cleanup_size[1], cleanup_size[2]),
         Float64[value for value in cleanup.eigenvalues],
         cleanup.rank_count,
@@ -2017,6 +2029,99 @@ function _nested_projected_q_shell_staged_unit_descriptor(
         ArgumentError("projected q-shell layer does not carry a staged-unit descriptor"),
     )
     return layer.provenance.pqs_staged_unit_descriptor
+end
+
+function _nested_projected_q_shell_descriptor_seed_coefficients(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+)
+    seed = Matrix{Float64}(undef, descriptor.support_count, descriptor.mode_count)
+    intervals = descriptor.axis_intervals
+    local_coefficients = descriptor.axis_local_coefficients
+    @inbounds for (row, state) in enumerate(descriptor.support_states)
+        local_rows = ntuple(axis -> begin
+            interval = intervals[axis]
+            first(interval) <= state[axis] <= last(interval) || throw(
+                ArgumentError("projected q-shell descriptor support state lies outside its local axis interval"),
+            )
+            state[axis] - first(interval) + 1
+        end, 3)
+        for (column, mode) in enumerate(descriptor.boundary_mode_indices)
+            seed[row, column] =
+                local_coefficients[1][local_rows[1], mode[1]] *
+                local_coefficients[2][local_rows[2], mode[2]] *
+                local_coefficients[3][local_rows[3], mode[3]]
+        end
+    end
+    return seed
+end
+
+function _nested_projected_q_shell_descriptor_metric_prototype(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("projected q-shell metric prototype requires a projected_q_shell descriptor"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    descriptor.current_box == ntuple(axis -> descriptor.axis_intervals[axis], 3) || throw(
+        ArgumentError("projected q-shell metric prototype descriptor axis intervals must match current_box"),
+    )
+    all(index -> 1 <= index <= prod(dims), descriptor.support_indices) || throw(
+        ArgumentError("projected q-shell metric prototype support exceeds parent dimensions"),
+    )
+    seed = _nested_projected_q_shell_descriptor_seed_coefficients(descriptor)
+    cleaned = seed * descriptor.cleanup_transform
+    pgdg_x = _nested_axis_pgdg(bundles, :x)
+    pgdg_y = _nested_axis_pgdg(bundles, :y)
+    pgdg_z = _nested_axis_pgdg(bundles, :z)
+    boundary_overlap = _nested_support_product_matrix(
+        descriptor.support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    overlap = Matrix{Float64}(transpose(cleaned) * boundary_overlap * cleaned)
+    raw_weights = Float64[
+        pgdg_x.weights[state[1]] * pgdg_y.weights[state[2]] * pgdg_z.weights[state[3]]
+        for state in descriptor.support_states
+    ]
+    weights = vec(transpose(cleaned) * raw_weights)
+    diagnostics = (
+        descriptor_kind = descriptor.kind,
+        support_count = descriptor.support_count,
+        mode_count = descriptor.mode_count,
+        retained_count = descriptor.retained_count,
+        cleanup_method = descriptor.cleanup_method,
+        cleanup_matrix_size = descriptor.cleanup_matrix_size,
+        boundary_comx_product_modes_used = true,
+        raw_boundary_projection_used = true,
+        lowdin_cleanup_applied = true,
+        support_local_boundary_matrix_used = true,
+        slab_decomposed_product_contraction = false,
+        dense_parent_matrix_used = false,
+        dense_full_parent_matrix_used = false,
+        product_doside_unit = false,
+        fixed_block_sidecar_installed =
+            descriptor.active_consumption.fixed_block_sidecar_installed,
+        optimized_sidecar_installed = false,
+        optimized_metric_contraction_available = false,
+        prototype_only = true,
+    )
+    return (
+        overlap = overlap,
+        weights = weights,
+        diagnostics = diagnostics,
+    )
+end
+
+function _nested_projected_q_shell_descriptor_metric_prototype(
+    layer::_CartesianNestedProjectedQShellLayer3D,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    return _nested_projected_q_shell_descriptor_metric_prototype(
+        _nested_projected_q_shell_staged_unit_descriptor(layer),
+        bundles,
+    )
 end
 
 function _nested_projected_q_shell_parent_coefficients(
@@ -2232,6 +2337,7 @@ function _nested_projected_q_shell_layer(
         bond_axis,
         q,
         L,
+        full_sides,
         boundary_modes,
         cleanup,
         coefficient_matrix,

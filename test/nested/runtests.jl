@@ -251,6 +251,23 @@ end
     @test cubic.diagnostics.pqs_staged_unit_descriptor_available
     @test cubic.diagnostics.pqs_staged_unit_kind == :projected_q_shell
     @test cubic.provenance.pqs_staged_unit_descriptor === cubic_descriptor
+    cubic_metric_prototype =
+        GaussletBases._nested_projected_q_shell_descriptor_metric_prototype(
+            cubic,
+            cubic_bundles,
+        )
+    @test cubic_metric_prototype.overlap ≈ cubic.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_metric_prototype.weights ≈ cubic.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_metric_prototype.diagnostics.descriptor_kind == :projected_q_shell
+    @test cubic_metric_prototype.diagnostics.boundary_comx_product_modes_used
+    @test cubic_metric_prototype.diagnostics.raw_boundary_projection_used
+    @test cubic_metric_prototype.diagnostics.lowdin_cleanup_applied
+    @test cubic_metric_prototype.diagnostics.support_local_boundary_matrix_used
+    @test !cubic_metric_prototype.diagnostics.slab_decomposed_product_contraction
+    @test !cubic_metric_prototype.diagnostics.dense_full_parent_matrix_used
+    @test !cubic_metric_prototype.diagnostics.product_doside_unit
+    @test !cubic_metric_prototype.diagnostics.fixed_block_sidecar_installed
+    @test !cubic_metric_prototype.diagnostics.optimized_sidecar_installed
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,
@@ -321,6 +338,18 @@ end
     @test :dense_full_parent_fallback in rectangular_descriptor.non_contracts
     @test rectangular_descriptor.diagnostics.metadata_only
     @test !rectangular_descriptor.active_consumption.fixed_block_sidecar_installed
+    rectangular_metric_prototype =
+        GaussletBases._nested_projected_q_shell_descriptor_metric_prototype(
+            rectangular,
+            rectangular_bundles,
+        )
+    @test rectangular_metric_prototype.overlap ≈ rectangular.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_metric_prototype.weights ≈ rectangular.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_metric_prototype.diagnostics.descriptor_kind == :projected_q_shell
+    @test !rectangular_metric_prototype.diagnostics.dense_full_parent_matrix_used
+    @test !rectangular_metric_prototype.diagnostics.product_doside_unit
+    @test !rectangular_metric_prototype.diagnostics.fixed_block_sidecar_installed
+    @test !rectangular_metric_prototype.diagnostics.optimized_sidecar_installed
 
     x_axis_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
     x_axis = GaussletBases._nested_projected_q_shell_layer(
