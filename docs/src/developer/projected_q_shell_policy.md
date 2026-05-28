@@ -128,13 +128,22 @@ metric without reinterpreting the construction:
 
 Two private metric prototypes have been checked:
 
-- a support-local descriptor prototype that reproduces overlap and weights;
+- a support-local descriptor prototype that reproduces overlap and weights and
+  acts as the overlap-invariant debug oracle;
 - a slab/product prototype that decomposes the raw boundary into six
-  rectangular pieces and reproduces overlap and weights without building a
-  support-local boundary overlap matrix or any dense full-parent matrix.
+  rectangular pieces without building a support-local boundary overlap matrix
+  or any dense full-parent matrix.
 
-The first benchmark was direction-setting rather than publication-quality. On
-small q=5 fixtures it found:
+The overlap contract was then tightened: PQS overlap is an orthonormality
+invariant, not an operator-contraction target. The slab/product helper returns
+identity overlap after the PQS cleanup contract has been established, while the
+support-local prototype records the debug overlap error. The nontrivial
+slab/product checks now cover weights and first moments (`x`, `y`, `z`) against
+the existing support-reference packet.
+
+The first benchmark, run before the overlap-invariant correction, was
+direction-setting rather than publication-quality. On small q=5 fixtures it
+found:
 
 | fixture | support/retained | support-local prototype | slab/product prototype |
 |---|---:|---:|---:|

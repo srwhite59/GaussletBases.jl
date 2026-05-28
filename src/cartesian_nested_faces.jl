@@ -2086,6 +2086,7 @@ function _nested_projected_q_shell_descriptor_metric_prototype(
         for state in descriptor.support_states
     ]
     weights = vec(transpose(cleaned) * raw_weights)
+    overlap_invariant_error = norm(overlap - I, Inf)
     diagnostics = (
         descriptor_kind = descriptor.kind,
         support_count = descriptor.support_count,
@@ -2098,6 +2099,10 @@ function _nested_projected_q_shell_descriptor_metric_prototype(
         lowdin_cleanup_applied = true,
         support_local_boundary_matrix_used = true,
         slab_decomposed_product_contraction = false,
+        overlap_invariant_applied = false,
+        overlap_invariant_debug_check = true,
+        overlap_invariant_error = overlap_invariant_error,
+        overlap_is_operator_target = false,
         dense_parent_matrix_used = false,
         dense_full_parent_matrix_used = false,
         product_doside_unit = false,
@@ -2250,6 +2255,39 @@ function _nested_projected_q_shell_axis_piece_weight_vectors(
     return vectors
 end
 
+function _nested_projected_q_shell_mode_matrix_from_axis_piece_blocks(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    pieces,
+    axis_blocks::NTuple{3,Matrix{Matrix{Float64}}},
+)
+    mode_count = length(descriptor.boundary_mode_indices)
+    mode_matrix = zeros(Float64, mode_count, mode_count)
+    @inbounds for piece_row in eachindex(pieces), piece_col in eachindex(pieces)
+        x_blocks = axis_blocks[1][piece_row, piece_col]
+        y_blocks = axis_blocks[2][piece_row, piece_col]
+        z_blocks = axis_blocks[3][piece_row, piece_col]
+        for mode_row in 1:mode_count
+            ix_row, iy_row, iz_row = descriptor.boundary_mode_indices[mode_row]
+            for mode_col in 1:mode_count
+                ix_col, iy_col, iz_col = descriptor.boundary_mode_indices[mode_col]
+                mode_matrix[mode_row, mode_col] +=
+                    x_blocks[ix_row, ix_col] *
+                    y_blocks[iy_row, iy_col] *
+                    z_blocks[iz_row, iz_col]
+            end
+        end
+    end
+    return mode_matrix
+end
+
+function _nested_projected_q_shell_cleaned_mode_matrix(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    mode_matrix::AbstractMatrix{<:Real},
+)
+    transform = descriptor.cleanup_transform
+    return Matrix{Float64}(transpose(transform) * mode_matrix * transform)
+end
+
 function _nested_projected_q_shell_descriptor_metric_product_contraction(
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
     bundles::_CartesianNestedAxisBundles3D,
@@ -2278,22 +2316,6 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         axis,
     ), 3)
     mode_count = length(descriptor.boundary_mode_indices)
-    mode_overlap = zeros(Float64, mode_count, mode_count)
-    @inbounds for piece_row in eachindex(pieces), piece_col in eachindex(pieces)
-        x_blocks = axis_overlap_blocks[1][piece_row, piece_col]
-        y_blocks = axis_overlap_blocks[2][piece_row, piece_col]
-        z_blocks = axis_overlap_blocks[3][piece_row, piece_col]
-        for mode_row in 1:mode_count
-            ix_row, iy_row, iz_row = descriptor.boundary_mode_indices[mode_row]
-            for mode_col in 1:mode_count
-                ix_col, iy_col, iz_col = descriptor.boundary_mode_indices[mode_col]
-                mode_overlap[mode_row, mode_col] +=
-                    x_blocks[ix_row, ix_col] *
-                    y_blocks[iy_row, iy_col] *
-                    z_blocks[iz_row, iz_col]
-            end
-        end
-    end
 
     axis_weight_vectors = ntuple(axis -> _nested_projected_q_shell_axis_piece_weight_vectors(
         pieces,
@@ -2312,8 +2334,39 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         end
     end
 
+    axis_position_blocks = ntuple(axis -> _nested_projected_q_shell_axis_piece_pair_blocks(
+        pieces,
+        descriptor.axis_local_coefficients[axis],
+        pgdgs[axis].position,
+        axis,
+    ), 3)
+    position_x = _nested_projected_q_shell_cleaned_mode_matrix(
+        descriptor,
+        _nested_projected_q_shell_mode_matrix_from_axis_piece_blocks(
+            descriptor,
+            pieces,
+            (axis_position_blocks[1], axis_overlap_blocks[2], axis_overlap_blocks[3]),
+        ),
+    )
+    position_y = _nested_projected_q_shell_cleaned_mode_matrix(
+        descriptor,
+        _nested_projected_q_shell_mode_matrix_from_axis_piece_blocks(
+            descriptor,
+            pieces,
+            (axis_overlap_blocks[1], axis_position_blocks[2], axis_overlap_blocks[3]),
+        ),
+    )
+    position_z = _nested_projected_q_shell_cleaned_mode_matrix(
+        descriptor,
+        _nested_projected_q_shell_mode_matrix_from_axis_piece_blocks(
+            descriptor,
+            pieces,
+            (axis_overlap_blocks[1], axis_overlap_blocks[2], axis_position_blocks[3]),
+        ),
+    )
+
     transform = descriptor.cleanup_transform
-    overlap = Matrix{Float64}(transpose(transform) * mode_overlap * transform)
+    overlap = Matrix{Float64}(I, descriptor.retained_count, descriptor.retained_count)
     weights = vec(transpose(transform) * mode_weights)
     diagnostics = (
         descriptor_kind = descriptor.kind,
@@ -2330,6 +2383,11 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
         lowdin_cleanup_applied = true,
         support_local_boundary_matrix_used = false,
         slab_decomposed_product_contraction = true,
+        overlap_invariant_applied = true,
+        overlap_invariant_debug_check = false,
+        overlap_invariant_error = 0.0,
+        overlap_is_operator_target = false,
+        nontrivial_product_contracted_terms = (:weights, :position_x, :position_y, :position_z),
         dense_parent_matrix_used = false,
         dense_full_parent_matrix_used = false,
         product_doside_unit = false,
@@ -2342,6 +2400,9 @@ function _nested_projected_q_shell_descriptor_metric_product_contraction(
     return (
         overlap = overlap,
         weights = weights,
+        position_x = position_x,
+        position_y = position_y,
+        position_z = position_z,
         coverage = coverage,
         diagnostics = diagnostics,
     )

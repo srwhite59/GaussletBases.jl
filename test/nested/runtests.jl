@@ -264,6 +264,10 @@ end
     @test cubic_metric_prototype.diagnostics.lowdin_cleanup_applied
     @test cubic_metric_prototype.diagnostics.support_local_boundary_matrix_used
     @test !cubic_metric_prototype.diagnostics.slab_decomposed_product_contraction
+    @test !cubic_metric_prototype.diagnostics.overlap_invariant_applied
+    @test cubic_metric_prototype.diagnostics.overlap_invariant_debug_check
+    @test cubic_metric_prototype.diagnostics.overlap_invariant_error < 1.0e-10
+    @test !cubic_metric_prototype.diagnostics.overlap_is_operator_target
     @test !cubic_metric_prototype.diagnostics.dense_full_parent_matrix_used
     @test !cubic_metric_prototype.diagnostics.product_doside_unit
     @test !cubic_metric_prototype.diagnostics.fixed_block_sidecar_installed
@@ -273,10 +277,12 @@ end
             cubic,
             cubic_bundles,
         )
-    @test cubic_product_metric.overlap ≈ cubic_metric_prototype.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.overlap == Matrix{Float64}(I, 98, 98)
     @test cubic_product_metric.weights ≈ cubic_metric_prototype.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test cubic_product_metric.overlap ≈ cubic.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test cubic_product_metric.weights ≈ cubic.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.position_x ≈ cubic.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.position_y ≈ cubic.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test cubic_product_metric.position_z ≈ cubic.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
     @test cubic_product_metric.coverage.piece_count == 6
     @test cubic_product_metric.coverage.piece_roles == (:xlo, :xhi, :ylo, :yhi, :zlo, :zhi)
     @test cubic_product_metric.coverage.support_count == 98
@@ -292,6 +298,12 @@ end
     @test cubic_product_metric.diagnostics.boundary_comx_product_modes_used
     @test cubic_product_metric.diagnostics.raw_boundary_projection_used
     @test cubic_product_metric.diagnostics.lowdin_cleanup_applied
+    @test cubic_product_metric.diagnostics.overlap_invariant_applied
+    @test !cubic_product_metric.diagnostics.overlap_invariant_debug_check
+    @test cubic_product_metric.diagnostics.overlap_invariant_error == 0.0
+    @test !cubic_product_metric.diagnostics.overlap_is_operator_target
+    @test cubic_product_metric.diagnostics.nontrivial_product_contracted_terms ==
+          (:weights, :position_x, :position_y, :position_z)
     @test !cubic_product_metric.diagnostics.product_doside_unit
     @test !cubic_product_metric.diagnostics.fixed_block_sidecar_installed
     @test !cubic_product_metric.diagnostics.optimized_sidecar_installed
@@ -374,6 +386,10 @@ end
     @test rectangular_metric_prototype.overlap ≈ rectangular.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test rectangular_metric_prototype.weights ≈ rectangular.packet.weights atol = 1.0e-10 rtol = 1.0e-10
     @test rectangular_metric_prototype.diagnostics.descriptor_kind == :projected_q_shell
+    @test !rectangular_metric_prototype.diagnostics.overlap_invariant_applied
+    @test rectangular_metric_prototype.diagnostics.overlap_invariant_debug_check
+    @test rectangular_metric_prototype.diagnostics.overlap_invariant_error < 1.0e-10
+    @test !rectangular_metric_prototype.diagnostics.overlap_is_operator_target
     @test !rectangular_metric_prototype.diagnostics.dense_full_parent_matrix_used
     @test !rectangular_metric_prototype.diagnostics.product_doside_unit
     @test !rectangular_metric_prototype.diagnostics.fixed_block_sidecar_installed
@@ -383,10 +399,12 @@ end
             rectangular,
             rectangular_bundles,
         )
-    @test rectangular_product_metric.overlap ≈ rectangular_metric_prototype.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.overlap == Matrix{Float64}(I, 130, 130)
     @test rectangular_product_metric.weights ≈ rectangular_metric_prototype.weights atol = 1.0e-10 rtol = 1.0e-10
-    @test rectangular_product_metric.overlap ≈ rectangular.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test rectangular_product_metric.weights ≈ rectangular.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.position_x ≈ rectangular.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.position_y ≈ rectangular.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test rectangular_product_metric.position_z ≈ rectangular.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
     @test rectangular_product_metric.coverage.piece_count == 6
     @test rectangular_product_metric.coverage.piece_roles == (:xlo, :xhi, :ylo, :yhi, :zlo, :zhi)
     @test rectangular_product_metric.coverage.support_count == 130
@@ -402,6 +420,12 @@ end
     @test rectangular_product_metric.diagnostics.boundary_comx_product_modes_used
     @test rectangular_product_metric.diagnostics.raw_boundary_projection_used
     @test rectangular_product_metric.diagnostics.lowdin_cleanup_applied
+    @test rectangular_product_metric.diagnostics.overlap_invariant_applied
+    @test !rectangular_product_metric.diagnostics.overlap_invariant_debug_check
+    @test rectangular_product_metric.diagnostics.overlap_invariant_error == 0.0
+    @test !rectangular_product_metric.diagnostics.overlap_is_operator_target
+    @test rectangular_product_metric.diagnostics.nontrivial_product_contracted_terms ==
+          (:weights, :position_x, :position_y, :position_z)
     @test !rectangular_product_metric.diagnostics.product_doside_unit
     @test !rectangular_product_metric.diagnostics.fixed_block_sidecar_installed
     @test !rectangular_product_metric.diagnostics.optimized_sidecar_installed
