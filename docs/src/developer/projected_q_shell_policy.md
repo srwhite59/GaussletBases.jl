@@ -111,6 +111,44 @@ The missing next design problem is product-staged PQS sidecar and performance
 work. PQS should not be adopted for by-center, supplement, or
 performance-sensitive routes until that sidecar/performance contract exists.
 
+## Sidecar Prototype Checkpoint
+
+As of 2026-05-28, mainline also has a private descriptor/prototype line for
+future PQS sidecar work. This line is internal scaffolding only; it is not
+installed into fixed blocks, contracted-parent metrics, QW builders, or public
+routes.
+
+The staged descriptor now records the data needed to reproduce the PQS shell
+metric without reinterpreting the construction:
+
+- boundary COMX-product mode indices selected from the full local block;
+- raw-boundary support rows;
+- axis-local COMX transforms and axis intervals;
+- the stored full-rank symmetric Lowdin cleanup transform.
+
+Two private metric prototypes have been checked:
+
+- a support-local descriptor prototype that reproduces overlap and weights;
+- a slab/product prototype that decomposes the raw boundary into six
+  rectangular pieces and reproduces overlap and weights without building a
+  support-local boundary overlap matrix or any dense full-parent matrix.
+
+The first benchmark was direction-setting rather than publication-quality. On
+small q=5 fixtures it found:
+
+| fixture | support/retained | support-local prototype | slab/product prototype |
+|---|---:|---:|---:|
+| `PQS(5,5)` | `98 / 98` | `0.000084 s / 0.471 MiB` | `0.000334 s / 0.510 MiB` |
+| `PQS(5,7)` | `130 / 130` | `0.000093 s / 0.847 MiB` | `0.000521 s / 0.798 MiB` |
+| `PQS(5,13)` | `226 / 226` | `0.000348 s / 2.349 MiB` | `0.001611 s / 1.995 MiB` |
+
+The interpretation is deliberately conservative: the slab/product helper is
+correct and allocation-promising for longer rectangular shells, but it is not
+yet a speed win on small q=5 fixtures. Before sidecar adoption, the next
+technical work should optimize the product path with caching, scratch reuse,
+and boundary-mode grouping. This checkpoint does not justify immediate
+by-center, supplement, QW, Hamiltonian, CR2, or science-route adoption.
+
 ## Consequences For Mainline
 
 The next source-construction design should treat PQS as the regular shell
