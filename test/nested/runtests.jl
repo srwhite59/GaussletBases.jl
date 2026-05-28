@@ -1231,6 +1231,71 @@ end
     @test all(isfinite, pqs_fixed_block.pair_sum)
     @test norm(pqs_fixed_block.overlap - I, Inf) < 1.0e-8
     @test pqs_fixed_block.staged_by_center_sidecar[] === nothing
+    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
+    pqs_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
+        pqs_fixed_block;
+        nuclear_charges = [1.0, 1.0],
+        nuclear_term_storage = :total_only,
+        interaction_treatment = :ggt_nearest,
+        gausslet_backend = :pgdg_localized_experimental,
+        expansion = expansion,
+    )
+    pqs_operators = QWCS.qw_operator_construction_receipt_operators(pqs_receipt)
+    pqs_receipt_diagnostics = QWCS.qw_operator_construction_receipt_diagnostics(
+        pqs_receipt,
+    )
+    pqs_record_diagnostics = QWCS.qw_operator_construction_record_diagnostics(
+        QWCS.qw_operator_construction_receipt_record(pqs_receipt),
+    )
+    @test pqs_receipt_diagnostics.delegated_to_existing_builder
+    @test pqs_receipt_diagnostics.builder == :ordinary_cartesian_qiu_white_operators
+    @test pqs_receipt_diagnostics.source_sidecar_agree
+    @test isempty(pqs_receipt_diagnostics.mismatch_fields)
+    @test pqs_receipt_diagnostics.operator_built
+    @test pqs_receipt_diagnostics.gausslet_backend == :pgdg_localized_experimental
+    @test pqs_receipt_diagnostics.interaction_treatment == :ggt_nearest
+    @test pqs_receipt_diagnostics.nuclear_term_storage == :total_only
+    @test pqs_receipt_diagnostics.dense_parent_matrix_used == false
+    @test pqs_receipt_diagnostics.heavy_metric_packet_built == false
+    @test pqs_receipt_diagnostics.new_hamiltonian_kernel_used == false
+    @test pqs_receipt_diagnostics.numerical_outputs_changed == false
+    @test pqs_receipt_diagnostics.operator_residual_count == 0
+    @test pqs_record_diagnostics.source_sidecar_agree
+    @test :carried_has_staged_sidecar in pqs_record_diagnostics.compared_fields
+    @test !pqs_record_diagnostics.comparisons.carried_has_staged_sidecar.source_value
+    @test !pqs_record_diagnostics.comparisons.carried_has_staged_sidecar.operator_value
+    @test isnothing(
+        pqs_record_diagnostics.comparisons.carried_staged_by_center_path.source_value,
+    )
+    @test isnothing(
+        pqs_record_diagnostics.comparisons.carried_staged_by_center_path.operator_value,
+    )
+    @test pqs_record_diagnostics.source_parent_dimension == 7 * 7 * 15
+    @test pqs_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
+    @test pqs_record_diagnostics.source_carried_dimension == 7 * 7 * 15
+    @test pqs_record_diagnostics.sidecar_carried_dimension == 7 * 7 * 15
+    @test pqs_record_diagnostics.source_carried_space_kind == :nested_fixed_block
+    @test pqs_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
+    @test pqs_operators.gausslet_backend == :pgdg_localized_experimental
+    @test pqs_operators.interaction_treatment == :ggt_nearest
+    @test pqs_operators.nuclear_term_storage == :total_only
+    @test pqs_operators.gausslet_count == 7 * 7 * 15
+    @test pqs_operators.residual_count == 0
+    @test size(pqs_operators.overlap) == (7 * 7 * 15, 7 * 7 * 15)
+    @test size(pqs_operators.one_body_hamiltonian) == (7 * 7 * 15, 7 * 7 * 15)
+    @test size(pqs_operators.interaction_matrix) == (7 * 7 * 15, 7 * 7 * 15)
+    @test all(isfinite, pqs_operators.overlap)
+    @test all(isfinite, pqs_operators.one_body_hamiltonian)
+    @test all(isfinite, pqs_operators.interaction_matrix)
+    @test norm(pqs_operators.overlap - I, Inf) < 1.0e-8
+    @test norm(
+        pqs_operators.one_body_hamiltonian - transpose(pqs_operators.one_body_hamiltonian),
+        Inf,
+    ) < 1.0e-12
+    @test norm(
+        pqs_operators.interaction_matrix - transpose(pqs_operators.interaction_matrix),
+        Inf,
+    ) < 1.0e-12
     @test_throws ArgumentError GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
         basis,
         bundles,
@@ -1350,7 +1415,6 @@ end
     @test fixed_block.staged_by_center_sidecar[] isa
           GaussletBases._CartesianNestedProductStagedByCenterSidecar3D
 
-    QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
         fixed_block;
         nuclear_charges = [1.0, 1.0],
