@@ -392,6 +392,27 @@ struct _CartesianNestedCompleteShell3D <: _AbstractCartesianNestedShellLayer3D
 end
 
 """
+    _CartesianNestedProjectedQShellLayer3D
+
+Private Projected q-Shell (PQS) local shell layer.
+
+PQS is represented as the raw-boundary projection of the full local
+`q x q x L` product/block transform. The local shell seed is the set of
+boundary COMX-product modes from the full block: product-mode indices where at
+least one 1D local mode index is first or last. The construction deliberately
+does not subtract a contracted inner cube and does not project against
+previously locked spans.
+"""
+struct _CartesianNestedProjectedQShellLayer3D{D,P} <: _AbstractCartesianNestedShellLayer3D
+    coefficient_matrix::_CartesianCoefficientMap
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    packet::_CartesianNestedShellPacket3D
+    diagnostics::D
+    provenance::P
+end
+
+"""
     _CartesianNestedShellPlusCore3D
 
 First nonrecursive shell-plus-core fixed-space object.
@@ -1710,6 +1731,438 @@ function _nested_product_coefficients(
     n1d::Int,
 )
     return _nested_product_coefficients(x_side, y_side, z_side, (n1d, n1d, n1d))
+end
+
+function _nested_projected_q_shell_validate_boxes(
+    dims::NTuple{3,Int},
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol,
+    q::Int,
+    L::Int,
+)
+    q >= 3 || throw(ArgumentError("projected q-shell construction requires q >= 3"))
+    L >= 3 || throw(ArgumentError("projected q-shell construction requires L >= 3"))
+    bond_axis_index = _nested_axis_index(bond_axis)
+    for axis in 1:3
+        current = current_box[axis]
+        inner = inner_box[axis]
+        first(current) >= 1 && last(current) <= dims[axis] || throw(
+            ArgumentError("projected q-shell current box must lie inside parent dimensions"),
+        )
+        first(inner) == first(current) + 1 && last(inner) == last(current) - 1 || throw(
+            ArgumentError("projected q-shell requires a one-cell raw boundary around a strict inner box"),
+        )
+        expected_length = axis == bond_axis_index ? L : q
+        length(current) == expected_length || throw(
+            ArgumentError("projected q-shell current box length on axis $axis must match q/L metadata"),
+        )
+    end
+    return bond_axis_index
+end
+
+function _nested_projected_q_shell_boundary_support_indices(
+    dims::NTuple{3,Int},
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}},
+)
+    support = setdiff(
+        _nested_box_support_indices(current_box..., dims),
+        _nested_box_support_indices(inner_box..., dims),
+    )
+    sort!(support)
+    return support
+end
+
+function _nested_projected_q_shell_support_coverage(
+    support_indices::AbstractVector{Int},
+    expected_support_indices::AbstractVector{Int},
+)
+    expected = Set(expected_support_indices)
+    support = Set(support_indices)
+    duplicate_count = length(support_indices) - length(support)
+    missing_count = length(setdiff(expected, support))
+    outside_count = length(setdiff(support, expected))
+    return (
+        expected_support_count = length(expected_support_indices),
+        support_count = length(support_indices),
+        unique_support_count = length(support),
+        duplicate_count = duplicate_count,
+        missing_count = missing_count,
+        outside_count = outside_count,
+        coverage_ok = duplicate_count == 0 && missing_count == 0 && outside_count == 0,
+    )
+end
+
+function _nested_projected_q_shell_full_sides(
+    bundles::_CartesianNestedAxisBundles3D,
+    current_box::NTuple{3,UnitRange{Int}},
+)
+    axis_symbols = (:x, :y, :z)
+    return ntuple(axis -> begin
+        interval = current_box[axis]
+        _nested_doside_1d(
+            _nested_axis_pgdg(bundles, axis_symbols[axis]),
+            interval,
+            length(interval);
+            enforce_symmetric_odd = false,
+        )
+    end, 3)
+end
+
+function _nested_projected_q_shell_boundary_comx_product_modes(
+    current_box::NTuple{3,UnitRange{Int}},
+)
+    nx, ny, nz = length.(current_box)
+    mode_indices = NTuple{3,Int}[]
+    column_indices = Int[]
+    for mode_x in 1:nx, mode_y in 1:ny, mode_z in 1:nz
+        if mode_x == 1 ||
+           mode_x == nx ||
+           mode_y == 1 ||
+           mode_y == ny ||
+           mode_z == 1 ||
+           mode_z == nz
+            push!(mode_indices, (mode_x, mode_y, mode_z))
+            push!(
+                column_indices,
+                (mode_x - 1) * ny * nz + (mode_y - 1) * nz + mode_z,
+            )
+        end
+    end
+    return (
+        mode_indices = mode_indices,
+        column_indices = column_indices,
+        selection_rule = :any_axis_mode_index_first_or_last,
+    )
+end
+
+function _nested_projected_q_shell_cleanup(
+    projected_coefficients::AbstractMatrix{<:Real},
+    boundary_overlap::AbstractMatrix{<:Real};
+    cleanup_rtol::Float64 = 1.0e-12,
+)
+    projected = Matrix{Float64}(projected_coefficients)
+    gram = Matrix{Float64}(transpose(projected) * boundary_overlap * projected)
+    decomposition = eigen(Symmetric(gram))
+    eigenvalues = Float64.(decomposition.values)
+    max_eigenvalue = maximum(eigenvalues)
+    max_eigenvalue > 0.0 || throw(
+        ArgumentError("projected q-shell boundary projection produced no positive metric span"),
+    )
+    cutoff = max(cleanup_rtol * max_eigenvalue, eps(Float64) * max(size(gram)...))
+    minimum(eigenvalues) > cutoff || throw(
+        ArgumentError(
+            "projected q-shell symmetric Lowdin cleanup requires a full-rank boundary shell projection",
+        ),
+    )
+    # Full-rank symmetric Lowdin: S^(-1/2) = V * diag(1 / sqrt(lambda)) * V'.
+    # Do not replace this with reduced canonical factors; that changes the
+    # shell-function gauge and can produce misleading weight diagnostics.
+    vectors = Matrix{Float64}(decomposition.vectors)
+    transform = vectors * Diagonal(1.0 ./ sqrt.(eigenvalues)) * transpose(vectors)
+    cleaned = projected * transform
+    for column in axes(cleaned, 2)
+        pivot = argmax(abs.(view(cleaned, :, column)))
+        if cleaned[pivot, column] < 0.0
+            cleaned[:, column] .*= -1.0
+            transform[:, column] .*= -1.0
+        end
+    end
+    cleaned_overlap = Matrix{Float64}(transpose(cleaned) * boundary_overlap * cleaned)
+    overlap_error = norm(cleaned_overlap - I, Inf)
+    all(isfinite, cleaned) || throw(
+        ArgumentError("projected q-shell cleanup produced non-finite coefficients"),
+    )
+    isfinite(overlap_error) || throw(
+        ArgumentError("projected q-shell cleanup produced a non-finite overlap error"),
+    )
+    return (
+        coefficients = cleaned,
+        transform = transform,
+        eigenvalues = eigenvalues,
+        retained_eigenvalues = eigenvalues,
+        rank_count = size(projected, 2),
+        rank_drop_count = 0,
+        cutoff = cutoff,
+        cleanup_method = :projected_boundary_symmetric_lowdin,
+        gauge = :largest_boundary_component_positive,
+        overlap_error = overlap_error,
+    )
+end
+
+function _nested_projected_q_shell_parent_coefficients(
+    boundary_coefficients::AbstractMatrix{<:Real},
+    support_indices::AbstractVector{Int},
+    parent_row_count::Int,
+)
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    for column in axes(boundary_coefficients, 2), local_row in axes(boundary_coefficients, 1)
+        value = Float64(boundary_coefficients[local_row, column])
+        iszero(value) && continue
+        push!(row_indices, support_indices[local_row])
+        push!(col_indices, column)
+        push!(values, value)
+    end
+    return _nested_sparse_coefficient_map(
+        row_indices,
+        col_indices,
+        values,
+        parent_row_count,
+        size(boundary_coefficients, 2),
+    )
+end
+
+function _nested_projected_q_shell_project_matrix(
+    support_coefficients::AbstractMatrix{<:Real},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    operator_x::AbstractMatrix{<:Real},
+    operator_y::AbstractMatrix{<:Real},
+    operator_z::AbstractMatrix{<:Real},
+)
+    support_matrix = _nested_support_product_matrix(
+        support_states,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
+    return Matrix{Float64}(
+        transpose(support_coefficients) * support_matrix * support_coefficients,
+    )
+end
+
+function _nested_projected_q_shell_metric_packet(
+    bundles::_CartesianNestedAxisBundles3D,
+    coefficient_matrix::AbstractMatrix{<:Real},
+    support_indices::AbstractVector{Int},
+)
+    dims = _nested_axis_lengths(bundles)
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    support_coefficients = Matrix{Float64}(coefficient_matrix[support_indices, :])
+    pgdg_x = _nested_axis_pgdg(bundles, :x)
+    pgdg_y = _nested_axis_pgdg(bundles, :y)
+    pgdg_z = _nested_axis_pgdg(bundles, :z)
+    overlap = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    kinetic = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.kinetic,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    ) + _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.kinetic,
+        pgdg_z.overlap,
+    ) + _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.kinetic,
+    )
+    position_x = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.position,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    position_y = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.position,
+        pgdg_z.overlap,
+    )
+    position_z = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.position,
+    )
+    x2_x = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.x2,
+        pgdg_y.overlap,
+        pgdg_z.overlap,
+    )
+    x2_y = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.x2,
+        pgdg_z.overlap,
+    )
+    x2_z = _nested_projected_q_shell_project_matrix(
+        support_coefficients,
+        support_states,
+        pgdg_x.overlap,
+        pgdg_y.overlap,
+        pgdg_z.x2,
+    )
+    raw_weights = Float64[
+        pgdg_x.weights[state[1]] * pgdg_y.weights[state[2]] * pgdg_z.weights[state[3]]
+        for state in support_states
+    ]
+    weights = vec(transpose(support_coefficients) * raw_weights)
+    return (
+        packet = _CartesianNestedShellPacket3D(
+            overlap,
+            kinetic,
+            position_x,
+            position_y,
+            position_z,
+            x2_x,
+            x2_y,
+            x2_z,
+            weights,
+            nothing,
+            nothing,
+        ),
+        support_states = support_states,
+    )
+end
+
+function _nested_projected_q_shell_layer(
+    bundles::_CartesianNestedAxisBundles3D,
+    current_box::NTuple{3,UnitRange{Int}},
+    inner_box::NTuple{3,UnitRange{Int}};
+    bond_axis::Symbol = :z,
+    q::Int,
+    L::Int,
+    packet_kernel::Symbol = :support_reference,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    cleanup_rtol::Float64 = 1.0e-12,
+    verify_factorized_reconstruction::Bool = true,
+)
+    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+    packet_kernel == :support_reference || throw(
+        ArgumentError("projected q-shell local diagnostic layer currently supports only packet_kernel = :support_reference"),
+    )
+    isnothing(term_coefficients) || length(term_coefficients) >= 1 || throw(
+        ArgumentError("projected q-shell term_coefficients, when supplied, must be nonempty"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    bond_axis_index = _nested_projected_q_shell_validate_boxes(
+        dims,
+        current_box,
+        inner_box;
+        bond_axis,
+        q,
+        L,
+    )
+    support_indices = _nested_projected_q_shell_boundary_support_indices(
+        dims,
+        current_box,
+        inner_box,
+    )
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    coverage = _nested_projected_q_shell_support_coverage(support_indices, support_indices)
+    coverage.coverage_ok || throw(
+        ArgumentError("projected q-shell raw-boundary support coverage must be exact"),
+    )
+
+    full_sides = _nested_projected_q_shell_full_sides(bundles, current_box)
+    full_coefficients = _nested_product_coefficients(full_sides..., dims)
+    boundary_modes = _nested_projected_q_shell_boundary_comx_product_modes(current_box)
+    projected_coefficients = Matrix{Float64}(
+        full_coefficients[support_indices, boundary_modes.column_indices],
+    )
+    boundary_overlap = _nested_support_product_matrix(
+        support_states,
+        _nested_axis_pgdg(bundles, :x).overlap,
+        _nested_axis_pgdg(bundles, :y).overlap,
+        _nested_axis_pgdg(bundles, :z).overlap,
+    )
+    cleanup = _nested_projected_q_shell_cleanup(
+        projected_coefficients,
+        boundary_overlap;
+        cleanup_rtol,
+    )
+    coefficient_matrix = _nested_projected_q_shell_parent_coefficients(
+        cleanup.coefficients,
+        support_indices,
+        prod(dims),
+    )
+    packet_data = _nested_projected_q_shell_metric_packet(
+        bundles,
+        coefficient_matrix,
+        support_indices,
+    )
+    diagnostics = (
+        support_contract = :projected_q_shell_raw_boundary,
+        coefficient_contract = :full_block_boundary_comx_product_mode_projection,
+        primitive_family = :projected_q_shell,
+        current_box = current_box,
+        inner_box = inner_box,
+        bond_axis = bond_axis,
+        bond_axis_index = bond_axis_index,
+        q = q,
+        L = L,
+        full_block_column_count = size(full_coefficients, 2),
+        boundary_comx_product_mode_count = length(boundary_modes.column_indices),
+        boundary_comx_product_mode_selection_rule = boundary_modes.selection_rule,
+        boundary_support_count = length(support_indices),
+        retained_count = size(coefficient_matrix, 2),
+        rank_count = cleanup.rank_count,
+        rank_drop_count = cleanup.rank_drop_count,
+        cleanup_method = cleanup.cleanup_method,
+        cleanup_gauge = cleanup.gauge,
+        cleanup_cutoff = cleanup.cutoff,
+        overlap_error = cleanup.overlap_error,
+        packet_overlap_error = norm(packet_data.packet.overlap - I, Inf),
+        packet_contract = :metric_only_support_reference,
+        gaussian_pair_terms_built = false,
+        duplicate_count = coverage.duplicate_count,
+        missing_count = coverage.missing_count,
+        outside_count = coverage.outside_count,
+        coverage_ok = coverage.coverage_ok,
+        dense_parent_matrix_used = false,
+        full_parent_dense_matrix_used = false,
+        endcap_panel_stitching = false,
+        active_builder_consumes = false,
+        private_internal = true,
+    )
+    provenance = (
+        source = :_nested_projected_q_shell_layer,
+        support_contract = diagnostics.support_contract,
+        coefficient_contract = diagnostics.coefficient_contract,
+        construction_contract =
+            :raw_boundary_projection_of_boundary_comx_product_modes_from_full_local_block_transform,
+        not_contract = (
+            :contracted_inner_cube_subtraction,
+            :locked_prior_span_projection,
+            :endcap_panel_stitching,
+        ),
+        current_box = current_box,
+        inner_box = inner_box,
+        bond_axis = bond_axis,
+        q = q,
+        L = L,
+        packet_kernel = packet_kernel,
+        public_api = false,
+        source_builder_changed = false,
+    )
+    return _CartesianNestedProjectedQShellLayer3D(
+        coefficient_matrix,
+        support_indices,
+        packet_data.support_states,
+        packet_data.packet,
+        diagnostics,
+        provenance,
+    )
 end
 
 function _nested_contracted_core_coefficients(

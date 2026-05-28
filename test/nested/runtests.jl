@@ -121,6 +121,157 @@ end
     @test_throws ArgumentError GaussletBases._nested_owned_unit_coverage_audit([dense_unit], [1, 1, 2])
 end
 
+@testset "Cartesian nested projected q-shell local layer" begin
+    function _pqs_test_bundle(count::Int)
+        xmax = 8.0
+        tail = 10.0
+        endpoint = (count - 1) / 2
+        basis = build_basis(MappedUniformBasisSpec(:G10;
+            count,
+            mapping = AsinhMapping(
+                a = 0.25,
+                s = asinh(xmax / 0.25) / (endpoint - xmax / tail),
+                tail_spacing = tail,
+            ),
+            reference_spacing = 1.0,
+        ))
+        expansion = coulomb_gaussian_expansion(doacc = false)
+        return GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+            basis;
+            exponents = expansion.exponents,
+            backend = :numerical_reference,
+            refinement_levels = 0,
+        )
+    end
+
+    function _pqs_one_hot_selector_columns(matrix::AbstractMatrix{<:Real})
+        dense = Matrix{Float64}(matrix)
+        for column in axes(dense, 2)
+            rows = findall(!iszero, dense[:, column])
+            length(rows) == 1 || return false
+            dense[only(rows), column] == 1.0 || return false
+        end
+        return true
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    term_coefficients = Float64.(expansion.coefficients)
+    bundle5 = _pqs_test_bundle(5)
+    bundle7 = _pqs_test_bundle(7)
+
+    cubic_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle5)
+    cubic_current = (1:5, 1:5, 1:5)
+    cubic_inner = (2:4, 2:4, 2:4)
+    cubic_expected = setdiff(
+        GaussletBases._nested_box_support_indices(cubic_current..., (5, 5, 5)),
+        GaussletBases._nested_box_support_indices(cubic_inner..., (5, 5, 5)),
+    )
+    sort!(cubic_expected)
+    cubic = GaussletBases._nested_projected_q_shell_layer(
+        cubic_bundles,
+        cubic_current,
+        cubic_inner;
+        bond_axis = :z,
+        q = 5,
+        L = 5,
+        term_coefficients,
+    )
+
+    @test cubic isa GaussletBases._CartesianNestedProjectedQShellLayer3D
+    @test cubic.support_indices == cubic_expected
+    @test cubic.diagnostics.support_contract == :projected_q_shell_raw_boundary
+    @test cubic.diagnostics.coefficient_contract ==
+          :full_block_boundary_comx_product_mode_projection
+    @test cubic.diagnostics.primitive_family == :projected_q_shell
+    @test cubic.diagnostics.boundary_support_count == 98
+    @test cubic.diagnostics.full_block_column_count == 125
+    @test cubic.diagnostics.boundary_comx_product_mode_count == 98
+    @test cubic.diagnostics.boundary_comx_product_mode_selection_rule ==
+          :any_axis_mode_index_first_or_last
+    @test cubic.diagnostics.retained_count == 98
+    @test cubic.diagnostics.rank_count == 98
+    @test cubic.diagnostics.rank_drop_count == 0
+    @test cubic.diagnostics.duplicate_count == 0
+    @test cubic.diagnostics.missing_count == 0
+    @test cubic.diagnostics.outside_count == 0
+    @test cubic.diagnostics.coverage_ok
+    @test cubic.diagnostics.cleanup_method == :projected_boundary_symmetric_lowdin
+    @test cubic.diagnostics.overlap_error < 1.0e-8
+    @test cubic.diagnostics.packet_overlap_error < 1.0e-8
+    @test !cubic.diagnostics.dense_parent_matrix_used
+    @test !cubic.diagnostics.endcap_panel_stitching
+    @test !cubic.diagnostics.active_builder_consumes
+    @test cubic.provenance.construction_contract ==
+          :raw_boundary_projection_of_boundary_comx_product_modes_from_full_local_block_transform
+    @test :contracted_inner_cube_subtraction in cubic.provenance.not_contract
+    @test :locked_prior_span_projection in cubic.provenance.not_contract
+    @test size(cubic.coefficient_matrix) == (125, 98)
+    @test all(isfinite, Matrix{Float64}(cubic.coefficient_matrix[cubic.support_indices, :]))
+    @test !_pqs_one_hot_selector_columns(cubic.coefficient_matrix[cubic.support_indices, :])
+    @test norm(cubic.packet.overlap - I, Inf) < 1.0e-8
+    @test all(isfinite, cubic.packet.weights)
+    @test minimum(cubic.packet.weights) > -1.0e-10
+
+    rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
+        bundle5,
+        bundle5,
+        bundle7,
+    )
+    rectangular_current = (1:5, 1:5, 1:7)
+    rectangular_inner = (2:4, 2:4, 2:6)
+    rectangular_expected = setdiff(
+        GaussletBases._nested_box_support_indices(rectangular_current..., (5, 5, 7)),
+        GaussletBases._nested_box_support_indices(rectangular_inner..., (5, 5, 7)),
+    )
+    sort!(rectangular_expected)
+    rectangular = GaussletBases._nested_projected_q_shell_layer(
+        rectangular_bundles,
+        rectangular_current,
+        rectangular_inner;
+        bond_axis = :z,
+        q = 5,
+        L = 7,
+        term_coefficients,
+    )
+
+    @test rectangular.support_indices == rectangular_expected
+    @test rectangular.diagnostics.boundary_support_count == 130
+    @test rectangular.diagnostics.full_block_column_count == 175
+    @test rectangular.diagnostics.boundary_comx_product_mode_count == 130
+    @test rectangular.diagnostics.boundary_comx_product_mode_selection_rule ==
+          :any_axis_mode_index_first_or_last
+    @test rectangular.diagnostics.retained_count == 130
+    @test rectangular.diagnostics.rank_count == 130
+    @test rectangular.diagnostics.rank_drop_count == 0
+    @test rectangular.diagnostics.duplicate_count == 0
+    @test rectangular.diagnostics.missing_count == 0
+    @test rectangular.diagnostics.outside_count == 0
+    @test rectangular.diagnostics.overlap_error < 1.0e-8
+    @test rectangular.diagnostics.packet_overlap_error < 1.0e-8
+    @test !rectangular.diagnostics.endcap_panel_stitching
+    @test size(rectangular.coefficient_matrix) == (175, 130)
+    @test !_pqs_one_hot_selector_columns(
+        rectangular.coefficient_matrix[rectangular.support_indices, :],
+    )
+    @test all(isfinite, rectangular.packet.weights)
+    @test minimum(rectangular.packet.weights) > -1.0e-10
+
+    x_axis_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
+    x_axis = GaussletBases._nested_projected_q_shell_layer(
+        x_axis_bundles,
+        (1:7, 1:5, 1:5),
+        (2:6, 2:4, 2:4);
+        bond_axis = :x,
+        q = 5,
+        L = 7,
+        term_coefficients,
+    )
+    @test x_axis.diagnostics.bond_axis == :x
+    @test x_axis.diagnostics.boundary_support_count == 130
+    @test x_axis.diagnostics.retained_count == 130
+    @test x_axis.diagnostics.overlap_error < 1.0e-8
+end
+
 @testset "Cartesian nested endcap-panel owned shell producer" begin
     function _owned_unit_test_bundle(count::Int)
         xmax = 8.0
