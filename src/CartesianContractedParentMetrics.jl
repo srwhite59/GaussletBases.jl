@@ -446,6 +446,22 @@ function _metric_dispatch_block_path(left_path, right_path)
     return :support_local_fallback
 end
 
+function _pqs_product_mixed_block_policy(; explicit_reference_requested::Bool = false)
+    return (
+        pair_kind = :pqs_product_mixed,
+        optimized_metric_path = :unsupported_pqs_product_optimized,
+        optimized_supported = false,
+        support_local_reference_allowed = explicit_reference_requested,
+        support_local_reference_path = explicit_reference_requested ?
+                                       :support_local_reference_explicit_only :
+                                       :not_available_without_explicit_request,
+        fixture_only = true,
+        production_supported = false,
+        reason = :pqs_product_optimized_metric_not_implemented,
+        required_next_step = :separate_reference_or_optimized_helper_design,
+    )
+end
+
 function _metric_dispatch_plan_from_unit_paths(unit_paths; source::Symbol)
     product_unit_count = count(path -> path.block_role == :product, unit_paths)
     fallback_unit_count = count(path -> path.block_role == :fallback, unit_paths)
@@ -808,7 +824,10 @@ function _resolved_payload_low_order_metric_block(left, right, metrics::NamedTup
         ArgumentError("resolved payload low-order metric block is unsupported"),
     )
     block_path == :unsupported_pqs_product_optimized && throw(
-        ArgumentError("PQS/product optimized metric blocks are not implemented; use an explicit support-local reference path"),
+        ArgumentError(
+            "PQS/product optimized metric blocks are explicitly unsupported; " *
+            "support-local reference requires a separately named explicit reference helper",
+        ),
     )
 
     left_entries = _entries_from_resolved_payload(left)

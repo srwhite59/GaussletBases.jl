@@ -667,6 +667,65 @@ end
     @test sidecar_self_block.position_z ≈ pqs_self_block.position_z atol = 1.0e-12 rtol = 1.0e-12
     @test sidecar_mixed_block.overlap ≈ pqs_mixed_block.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test sidecar_mixed_block.position_x ≈ pqs_mixed_block.position_x atol = 1.0e-12 rtol = 1.0e-12
+    pqs_product_policy = CCPM._pqs_product_mixed_block_policy()
+    @test pqs_product_policy.pair_kind == :pqs_product_mixed
+    @test pqs_product_policy.optimized_metric_path == :unsupported_pqs_product_optimized
+    @test !pqs_product_policy.optimized_supported
+    @test !pqs_product_policy.support_local_reference_allowed
+    @test pqs_product_policy.support_local_reference_path ==
+          :not_available_without_explicit_request
+    @test pqs_product_policy.fixture_only
+    @test !pqs_product_policy.production_supported
+    @test pqs_product_policy.reason == :pqs_product_optimized_metric_not_implemented
+    pqs_product_reference_policy = CCPM._pqs_product_mixed_block_policy(
+        explicit_reference_requested = true,
+    )
+    @test pqs_product_reference_policy.support_local_reference_allowed
+    @test pqs_product_reference_policy.support_local_reference_path ==
+          :support_local_reference_explicit_only
+    fake_product_resolved = CCP._CartesianResolvedContractionPayload3D(
+        :product_staged_metric_contraction,
+        true,
+        :product_doside,
+        1:1,
+        Int[1],
+        NTuple{3,Int}[(1, 1, 1)],
+        cubic_pqs_payload,
+        (),
+        (
+            source = :pqs_product_policy_test,
+            rule_family = :product_owned_unit,
+            rule_kind = :product_doside,
+            metric_capability = :product_staged_metric_contraction,
+            linear_vector_path = :product_staged_axis_projection,
+            block_role = :product,
+            unsupported = false,
+            prototype = false,
+        ),
+        (source = :pqs_product_policy_test,),
+    )
+    pqs_product_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
+        [cubic_pqs_resolved, fake_product_resolved],
+    )
+    @test !pqs_product_dispatch.plan_supported
+    @test pqs_product_dispatch.pqs_product_unsupported_block_count == 1
+    @test :unsupported_pqs_product_optimized in
+          [path.path for path in pqs_product_dispatch.block_paths]
+    pqs_product_error = try
+        CCPM._resolved_payload_low_order_metric_block(
+            cubic_pqs_resolved,
+            fake_product_resolved,
+            cubic_metrics,
+        )
+        nothing
+    catch err
+        err
+    end
+    @test pqs_product_error isa ArgumentError
+    @test occursin(
+        "PQS/product optimized metric blocks are explicitly unsupported",
+        sprint(showerror, pqs_product_error),
+    )
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,
