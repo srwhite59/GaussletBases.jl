@@ -2670,10 +2670,13 @@ end
     @test dispatch_shadow.rule_plan.plan_supported
     @test dispatch_shadow.payload_plan.unit_count == rule_inventory.rule_count
     @test dispatch_shadow.rule_plan.unit_count == rule_inventory.rule_count
+    @test dispatch_shadow.resolved_plan.unit_count == rule_inventory.rule_count
     @test dispatch_shadow.payload_plan.product_unit_count == 6
     @test dispatch_shadow.rule_plan.product_unit_count == 6
+    @test dispatch_shadow.resolved_plan.product_unit_count == 6
     @test dispatch_shadow.payload_plan.support_fallback_unit_count == length(support_rules)
     @test dispatch_shadow.rule_plan.support_fallback_unit_count == length(support_rules)
+    @test dispatch_shadow.resolved_plan.support_fallback_unit_count == length(support_rules)
     expected_product_blocks = 6 * (6 + 1) ÷ 2
     expected_total_blocks = rule_inventory.rule_count * (rule_inventory.rule_count + 1) ÷ 2
     @test dispatch_shadow.payload_plan.product_product_block_count == expected_product_blocks
@@ -2682,9 +2685,15 @@ end
           expected_total_blocks - expected_product_blocks
     @test dispatch_shadow.rule_plan.fallback_block_count ==
           expected_total_blocks - expected_product_blocks
+    @test dispatch_shadow.resolved_plan.fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
     @test dispatch_shadow.payload_plan.unsupported_unit_count == 0
     @test dispatch_shadow.rule_plan.unsupported_unit_count == 0
+    @test dispatch_shadow.resolved_plan.unsupported_unit_count == 0
     @test dispatch_shadow.rule_plan.prototype_rule_count == 0
+    @test dispatch_shadow.resolved_plan.prototype_rule_count == 0
+    @test dispatch_shadow.resolved_comparison.agree
+    @test isempty(dispatch_shadow.resolved_comparison.mismatch_fields)
     @test all(payload -> payload.ready_for_metric_execution, resolved_payloads)
     @test [payload.diagnostics.block_role for payload in resolved_payloads] ==
           [path.block_role for path in dispatch_shadow.payload_plan.unit_paths]
@@ -2703,14 +2712,37 @@ end
         axis_metrics,
         construction_path = :product_staged_metric_contraction,
     )
+    resolved_metric_packet = CCPM._resolved_payload_product_staged_metric_packet(
+        contracted_parent;
+        axis_metrics,
+    )
     @test CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent)) == 539
     @test support_metric_packet.diagnostics.construction_path == :support_local_product
     @test product_metric_packet.diagnostics.construction_path == :product_staged_metric_contraction
+    @test resolved_metric_packet.diagnostics.construction_path ==
+          :resolved_payload_product_staged_metric_contraction
+    @test resolved_metric_packet.diagnostics.source == :resolved_payload_metric_shadow
+    @test !resolved_metric_packet.diagnostics.default_metric_execution_changed
+    @test resolved_metric_packet.diagnostics.resolved_payload_count ==
+          rule_inventory.rule_count
     @test product_metric_packet.diagnostics.dense_parent_matrix_used == false
+    @test resolved_metric_packet.diagnostics.dense_parent_matrix_used == false
     @test product_metric_packet.diagnostics.product_unit_count == 6
+    @test resolved_metric_packet.diagnostics.product_unit_count ==
+          product_metric_packet.diagnostics.product_unit_count
     @test product_metric_packet.diagnostics.generic_unit_count >= 1
+    @test resolved_metric_packet.diagnostics.generic_unit_count ==
+          product_metric_packet.diagnostics.generic_unit_count
     @test product_metric_packet.diagnostics.product_block_count > 0
+    @test resolved_metric_packet.diagnostics.product_block_count ==
+          product_metric_packet.diagnostics.product_block_count
     @test product_metric_packet.diagnostics.fallback_block_count > 0
+    @test resolved_metric_packet.diagnostics.fallback_block_count ==
+          product_metric_packet.diagnostics.fallback_block_count
+    @test resolved_metric_packet.overlap ≈ product_metric_packet.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test resolved_metric_packet.weights ≈ product_metric_packet.weights atol = 1.0e-12 rtol = 1.0e-12
+    @test resolved_metric_packet.centers ≈ product_metric_packet.centers atol = 1.0e-12 rtol = 1.0e-12
+    @test resolved_metric_packet.first_moments ≈ product_metric_packet.first_moments atol = 1.0e-12 rtol = 1.0e-12
     @test product_metric_packet.overlap ≈ support_metric_packet.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ support_metric_packet.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ support_metric_packet.centers atol = 1.0e-10 rtol = 1.0e-10

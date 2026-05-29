@@ -13,6 +13,7 @@ import ..GaussletBases: _NestedFixedBlock3D,
                          primitive_set
 import ..GaussletBases.CartesianContractedParents:
     CartesianContractedParent3D,
+    _cartesian_resolved_contraction_payload,
     cartesian_contracted_parent,
     contracted_parent_contraction_rules,
     contracted_parent_basis,
@@ -373,6 +374,46 @@ function _metric_dispatch_unit_path_from_rule(rule)
     )
 end
 
+function _metric_dispatch_unit_path_from_resolved_payload(payload)
+    if payload.ready_for_metric_execution &&
+       payload.payload_kind == :product_doside &&
+       payload.metric_path == :product_staged_metric_contraction
+        return (
+            family = :product_owned_unit,
+            kind = payload.payload_kind,
+            metric_capability = payload.diagnostics.metric_capability,
+            linear_vector_path = payload.diagnostics.linear_vector_path,
+            block_role = payload.diagnostics.block_role,
+            unsupported = false,
+            prototype = false,
+        )
+    elseif payload.ready_for_metric_execution &&
+           payload.payload_kind == :support_dense &&
+           payload.metric_path == :support_local_product
+        return (
+            family = :support_dense_fallback,
+            kind = payload.payload_kind,
+            metric_capability = payload.diagnostics.metric_capability,
+            linear_vector_path = payload.diagnostics.linear_vector_path,
+            block_role = payload.diagnostics.block_role,
+            unsupported = false,
+            prototype = false,
+        )
+    end
+    prototype =
+        payload.metric_path == :unsupported_prototype ||
+        getproperty(payload.diagnostics, :prototype)
+    return (
+        family = getproperty(payload.diagnostics, :rule_family),
+        kind = payload.payload_kind,
+        metric_capability = getproperty(payload.diagnostics, :metric_capability),
+        linear_vector_path = :unsupported,
+        block_role = prototype ? :unsupported_prototype : :unsupported,
+        unsupported = true,
+        prototype = prototype,
+    )
+end
+
 function _metric_dispatch_block_path(left_path, right_path)
     (left_path.unsupported || right_path.unsupported) && return :unsupported
     left_path.block_role == :product && right_path.block_role == :product &&
@@ -417,6 +458,16 @@ function _metric_dispatch_plan_from_unit_paths(unit_paths; source::Symbol)
     )
 end
 
+function _contracted_parent_resolved_payloads(
+    contracted_parent::CartesianContractedParent3D,
+)
+    parent_dim = contracted_parent_parent_dimension(contracted_parent)
+    return [
+        _cartesian_resolved_contraction_payload(unit; parent_dimension = parent_dim)
+        for unit in contracted_parent_units(contracted_parent)
+    ]
+end
+
 function _contracted_parent_metric_dispatch_plan_from_payload(
     contracted_parent::CartesianContractedParent3D,
 )
@@ -427,6 +478,19 @@ function _contracted_parent_metric_dispatch_plan_from_payload(
     return _metric_dispatch_plan_from_unit_paths(
         unit_paths;
         source = :staged_payload,
+    )
+end
+
+function _contracted_parent_metric_dispatch_plan_from_resolved_payloads(
+    contracted_parent::CartesianContractedParent3D,
+)
+    unit_paths = [
+        _metric_dispatch_unit_path_from_resolved_payload(payload)
+        for payload in _contracted_parent_resolved_payloads(contracted_parent)
+    ]
+    return _metric_dispatch_plan_from_unit_paths(
+        unit_paths;
+        source = :resolved_payload,
     )
 end
 
@@ -485,10 +549,17 @@ function _contracted_parent_metric_dispatch_shadow_plan(
 )
     payload_plan = _contracted_parent_metric_dispatch_plan_from_payload(contracted_parent)
     rule_plan = _contracted_parent_metric_dispatch_plan_from_rules(contracted_parent)
+    resolved_plan =
+        _contracted_parent_metric_dispatch_plan_from_resolved_payloads(contracted_parent)
     return (
         payload_plan = payload_plan,
         rule_plan = rule_plan,
+        resolved_plan = resolved_plan,
         comparison = _metric_dispatch_plan_agreement(payload_plan, rule_plan),
+        resolved_comparison = _metric_dispatch_plan_agreement(
+            payload_plan,
+            resolved_plan,
+        ),
     )
 end
 
@@ -1028,6 +1099,138 @@ function _product_unit_metric_packet(
         first_moments;
         diagnostics,
     )
+end
+
+function _resolved_payload_product_staged_metric_packet(
+    contracted_parent::CartesianContractedParent3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    resolved_payloads = _contracted_parent_resolved_payloads(contracted_parent)
+    isempty(resolved_payloads) && throw(
+        ArgumentError("resolved-payload metric contraction requires contracted-parent units"),
+    )
+    staged_units = Any[]
+    product_unit_count = 0
+    generic_unit_count = 0
+    for resolved in resolved_payloads
+        resolved.ready_for_metric_execution || throw(
+            ArgumentError(
+                "resolved-payload metric contraction cannot consume $(resolved.payload_kind): missing $(resolved.missing_fields)",
+            ),
+        )
+        resolved.payload_kind == :product_doside && (product_unit_count += 1)
+        resolved.payload_kind == :support_dense && (generic_unit_count += 1)
+        resolved.payload_kind in (:product_doside, :support_dense) || throw(
+            ArgumentError("unsupported resolved metric payload kind $(resolved.payload_kind)"),
+        )
+        push!(staged_units, resolved.payload)
+    end
+    product_unit_count == 0 && throw(
+        ArgumentError("resolved-payload metric contraction found no product_doside units"),
+    )
+    contracted_dimension = contracted_parent_dimension(contracted_parent)
+    overlap = zeros(Float64, contracted_dimension, contracted_dimension)
+    position_x = zeros(Float64, contracted_dimension, contracted_dimension)
+    position_y = zeros(Float64, contracted_dimension, contracted_dimension)
+    position_z = zeros(Float64, contracted_dimension, contracted_dimension)
+    product_block_count = 0
+    fallback_block_count = 0
+    entries_cache = Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}}(
+        undef,
+        length(staged_units),
+    )
+    fill!(entries_cache, nothing)
+    for right_index in eachindex(staged_units)
+        right = staged_units[right_index]
+        right_range = right.column_range
+        for left_index in 1:right_index
+            left = staged_units[left_index]
+            left_range = left.column_range
+            if left.kind == :product_doside && right.kind == :product_doside
+                _fill_product_staged_metric_blocks!(
+                    overlap,
+                    position_x,
+                    position_y,
+                    position_z,
+                    left,
+                    right,
+                    metrics,
+                )
+                product_block_count += 1
+            else
+                left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
+                right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
+                blocks = _fallback_staged_metric_blocks(left_entries, right_entries, metrics)
+                fallback_block_count += 1
+                overlap[left_range, right_range] .= blocks.overlap
+                position_x[left_range, right_range] .= blocks.position_x
+                position_y[left_range, right_range] .= blocks.position_y
+                position_z[left_range, right_range] .= blocks.position_z
+                if left_index != right_index
+                    overlap[right_range, left_range] .= transpose(blocks.overlap)
+                    position_x[right_range, left_range] .= transpose(blocks.position_x)
+                    position_y[right_range, left_range] .= transpose(blocks.position_y)
+                    position_z[right_range, left_range] .= transpose(blocks.position_z)
+                end
+            end
+        end
+    end
+    weights = zeros(Float64, contracted_dimension)
+    first_moments = zeros(Float64, contracted_dimension, 3)
+    for unit in staged_units
+        unit_weights, unit_first_moments = _staged_unit_linear_vectors(unit, metrics)
+        weights[unit.column_range] .= unit_weights
+        first_moments[unit.column_range, :] .= unit_first_moments
+    end
+    retained_counts = Int[length(unit.column_range) for unit in staged_units]
+    support_counts = Int[length(unit.support_indices) for unit in staged_units]
+    diagnostics = _packet_diagnostics_from_counts(
+        construction_path = :resolved_payload_product_staged_metric_contraction,
+        dense_parent_matrix_used = false,
+        contracted_parent = contracted_parent,
+        metrics = metrics,
+        overlap = overlap,
+        coefficient_nnz = _coefficient_nnz(contracted_parent_coefficients(contracted_parent)),
+        max_column_nnz = 0,
+        product_unit_count = product_unit_count,
+        generic_unit_count = generic_unit_count,
+        product_block_count = product_block_count,
+        fallback_block_count = fallback_block_count,
+        max_unit_support_count = isempty(support_counts) ? 0 : maximum(support_counts),
+        max_unit_retained_count = isempty(retained_counts) ? 0 : maximum(retained_counts),
+    )
+    return _metric_packet_from_matrices(
+        contracted_parent,
+        metrics,
+        Vector{_ParentCoefficientEntry3D}[],
+        overlap,
+        position_x,
+        position_y,
+        position_z,
+        weights,
+        first_moments;
+        diagnostics = merge(
+            diagnostics,
+            (
+                source = :resolved_payload_metric_shadow,
+                resolved_payload_count = length(resolved_payloads),
+                default_metric_execution_changed = false,
+            ),
+        ),
+    )
+end
+
+function _resolved_payload_product_staged_metric_packet(
+    contracted_parent::CartesianContractedParent3D;
+    axis_metrics = nothing,
+)
+    parent = contracted_parent_basis(contracted_parent)
+    dims = parent_axis_counts(parent)
+    metrics = _validate_axis_metric_data(
+        _parent_axis_metric_data(parent; axis_metrics),
+        dims,
+    )
+    return _resolved_payload_product_staged_metric_packet(contracted_parent, metrics)
 end
 
 """
