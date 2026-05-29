@@ -297,12 +297,27 @@ or axis metric mismatches reject. This checkpoint is recorded by
 `bde3dac Add private product retained block helper` and
 `0470f27 Test product retained block helper guards`.
 
-The retained-block helper is still private infrastructure. It is not wired into
-production metric execution, public/default routes, QW/Hamiltonian builders,
-backend/default policy, PGDG/quadrature policy, CR2 paths, or science
-validation. It also does not add PQS/product mixed blocks, support-dense mixed
-packets, all-pairs production matrices, kinetic, nuclear/local, Gaussian, MWG,
-or interaction terms.
+The product low-order adoption checkpoint then uses these private helpers only
+inside the existing product/doside low-order metric plumbing. As of
+`250b3d7 Adopt product retained block fill helper`,
+`_fill_product_staged_metric_blocks!(...)` delegates product/doside
+`:overlap` and physical `:position_x`, `:position_y`, and `:position_z`
+retained block fills to `_product_doside_retained_low_order_block(...)`. As of
+`57738aa Factor product linear vector helper`,
+`_staged_unit_linear_vectors(...)` delegates product/doside retained weights
+and first moments to `_product_doside_retained_linear_vectors(...)`.
+Support-dense and generic fallback paths remain unchanged. Pair blocks and
+one-unit linear vectors remain distinct concepts; weights and first moments
+are not pair packets.
+
+The helper seam is still private low-order infrastructure. Its adoption only
+removes duplicate product/doside internals in the existing metric path. It does
+not change public/default routes, QW/Hamiltonian builders, backend/default
+policy, PGDG/quadrature policy, IDA or positive-weight assumptions, CR2 paths,
+or science validation. It also does not add PQS/product mixed blocks,
+support-dense mixed packet generalization, all-pairs production matrices,
+kinetic, nuclear/local, Gaussian, MWG, or interaction terms. GTO supplement
+functions remain outside retained-column positive quadrature assumptions.
 
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
