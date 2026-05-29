@@ -936,6 +936,51 @@ construction pieces classifiable and auditable through one rule vocabulary,
 while preserving all coefficient maps, metric kernels, QW/Hamiltonian behavior,
 public/default behavior, and PGDG/numerical-reference policy.
 
+### Resolved-payload seam checkpoint
+
+The next execution-facing seam is now in place for the existing
+product/support-dense contracted-parent metric path. `CartesianShellRegion3D`
+remains metadata-only: it records finite region facts and retention intent, but
+it does not carry heavy coefficient blocks, full supports by default, fixed
+blocks, QW operators, Hamiltonians, or metric packets.
+
+The active execution seam for current product-staged contracted-parent metrics
+is now:
+
+```text
+CartesianContractionRule3D -> resolved payload -> existing metric kernel
+```
+
+Resolved payloads normalize only executable payloads that already exist:
+
+- product-owned staged units with `kind = :product_doside`
+- support-dense staged units with `kind = :support_dense`
+- `CartesianContractionUnit3D` values that carry an existing
+  `metadata.staged_by_center_unit`
+
+The public `:product_staged_metric_contraction` path is routed internally
+through these resolved payloads. Its output shape and diagnostics contract are
+preserved: it still reports `construction_path =
+:product_staged_metric_contraction`, and it does not expose shadow-only fields
+such as `resolved_payload_count` in the public packet diagnostics.
+
+The numerical kernels remain the same authority:
+
+- product/product blocks use the existing product-staged block fill
+- mixed or support-dense blocks use the existing support-local fallback
+- support-local default metric execution remains direct and unchanged
+
+PQS remains outside this execution seam. PQS descriptors are still
+prototype-only metadata: they report missing installed sidecar/product-staged
+payload fields, are not installed into fixed-block sidecars, and are not
+consumed by contracted-parent metric execution.
+
+This checkpoint changes no QW/Hamiltonian construction, backend defaults, PGDG
+policy, quadrature policy, public/default route behavior, source builders, or
+coefficient maps. Any next step should be a separate scoped decision rather
+than automatic continuation: either payload resolution for another existing
+metric path, or a dedicated PQS sidecar design pass.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
