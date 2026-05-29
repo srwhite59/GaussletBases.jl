@@ -1065,6 +1065,110 @@ end
         pqs_resolved_pair;
         term = :axis_index_x,
     )
+    physical_axis_metrics = (
+        x = (
+            overlap = Matrix{Float64}(I, 2, 2),
+            position = Matrix(Diagonal([0.25, 1.75])),
+            weights = [1.0, 1.0],
+            centers = [0.25, 1.75],
+            source = :synthetic_noninteger_axis_metric_fixture,
+        ),
+        y = (
+            overlap = Matrix{Float64}(I, 2, 2),
+            position = Matrix(Diagonal([-0.5, 0.5])),
+            weights = [1.0, 1.0],
+            centers = [-0.5, 0.5],
+            source = :synthetic_noninteger_axis_metric_fixture,
+        ),
+        z = (
+            overlap = Matrix{Float64}(I, 1, 1),
+            position = Matrix(Diagonal([3.25])),
+            weights = [1.0],
+            centers = [3.25],
+            source = :synthetic_noninteger_axis_metric_fixture,
+        ),
+    )
+    product_support_states = product_self_pair.left_raw_source.provenance.unit.support_states
+    function support_local_physical_position_reference(term::Symbol)
+        axis_matrices = term == :position_x ? (
+            physical_axis_metrics.x.position,
+            physical_axis_metrics.y.overlap,
+            physical_axis_metrics.z.overlap,
+        ) : term == :position_y ? (
+            physical_axis_metrics.x.overlap,
+            physical_axis_metrics.y.position,
+            physical_axis_metrics.z.overlap,
+        ) : term == :position_z ? (
+            physical_axis_metrics.x.overlap,
+            physical_axis_metrics.y.overlap,
+            physical_axis_metrics.z.position,
+        ) : throw(ArgumentError("unsupported test physical position term"))
+        reference = zeros(Float64, length(product_support_states), length(product_support_states))
+        for col in eachindex(product_support_states)
+            jx, jy, jz = product_support_states[col]
+            for row in eachindex(product_support_states)
+                ix, iy, iz = product_support_states[row]
+                reference[row, col] =
+                    axis_matrices[1][ix, jx] *
+                    axis_matrices[2][iy, jy] *
+                    axis_matrices[3][iz, jz]
+            end
+        end
+        return reference
+    end
+    expected_physical_positions = (
+        position_x = Diagonal([0.25, 0.25, 1.75, 1.75]),
+        position_y = Diagonal([-0.5, 0.5, -0.5, 0.5]),
+        position_z = Diagonal([3.25, 3.25, 3.25, 3.25]),
+    )
+    physical_position_packets = Dict{Symbol,Any}()
+    for term in (:position_x, :position_y, :position_z)
+        packet = CCP._cartesian_physical_raw_low_order_operator_packet(
+            product_self_pair;
+            term,
+            axis_metrics = physical_axis_metrics,
+        )
+        physical_position_packets[term] = packet
+        expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
+        reference = support_local_physical_position_reference(term)
+        @test packet.left_source_id == :identity_product_slab_source
+        @test packet.right_source_id == :identity_product_slab_source
+        @test packet.operator_kind == :low_order_metric
+        @test packet.term == term
+        @test packet.source_dimensions == (4, 4)
+        @test packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test packet.raw_operator_matrix != expected_product_axis_index_x
+        @test packet.diagnostics.raw_reference ==
+              Symbol(:identity_product_slab_physical_, term)
+        @test packet.diagnostics.raw_reference_error == 0.0
+        @test packet.diagnostics.physical_position_operator
+        @test !packet.diagnostics.axis_index_diagnostic
+        @test packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
+        @test packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test !packet.diagnostics.dense_parent_matrix_used
+        @test packet.diagnostics.fixture_only
+        @test !packet.diagnostics.production_supported
+        @test !packet.diagnostics.metric_execution_changed
+        @test !packet.diagnostics.qwhamiltonian_consumes
+        @test !packet.diagnostics.public_default_consumes
+        @test !packet.diagnostics.backend_policy_changed
+        @test !packet.diagnostics.quadrature_policy_changed
+        @test !packet.diagnostics.cr2_science_status_changed
+    end
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        pqs_resolved_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        product_self_pair;
+        term = :axis_index_x,
+        axis_metrics = physical_axis_metrics,
+    )
     product_retained_overlap = CCP._cartesian_retained_low_order_operator_block(
         product_raw_overlap_packet,
         product_source_transform.retained_transform,
@@ -1119,6 +1223,38 @@ end
     @test !product_retained_axis_index_x.diagnostics.quadrature_policy_changed
     @test !product_retained_axis_index_x.diagnostics.cr2_science_status_changed
     @test !product_retained_axis_index_x.diagnostics.ida_weight_division_allowed
+    for term in (:position_x, :position_y, :position_z)
+        retained = CCP._cartesian_retained_low_order_operator_block(
+            physical_position_packets[term],
+            product_source_transform.retained_transform,
+        )
+        expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
+        reference = support_local_physical_position_reference(term)
+        @test retained.left_source_id == :identity_product_slab_source
+        @test retained.right_source_id == :identity_product_slab_source
+        @test retained.operator_kind == :low_order_metric
+        @test retained.term == term
+        @test retained.retained_dimensions == (4, 4)
+        @test retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test retained.retained_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test retained.diagnostics.left_transform_kind == :product_axis_transform
+        @test retained.diagnostics.right_transform_kind == :product_axis_transform
+        @test retained.diagnostics.left_transform_materialized
+        @test retained.diagnostics.right_transform_materialized
+        @test retained.diagnostics.retained_transform_applied
+        @test retained.diagnostics.retained_operator_block_built
+        @test retained.diagnostics.retained_reference == :explicit_materialized_transform
+        @test retained.diagnostics.raw_operator_matrix_source ==
+              :private_physical_raw_low_order_operator_packet
+        @test !retained.diagnostics.all_pair_matrices_built
+        @test !retained.diagnostics.metric_execution_changed
+        @test !retained.diagnostics.qwhamiltonian_consumes
+        @test !retained.diagnostics.public_default_consumes
+        @test !retained.diagnostics.backend_policy_changed
+        @test !retained.diagnostics.quadrature_policy_changed
+        @test !retained.diagnostics.cr2_science_status_changed
+        @test !retained.diagnostics.ida_weight_division_allowed
+    end
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,
         pqs_retained_transform,
