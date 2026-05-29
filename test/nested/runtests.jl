@@ -731,6 +731,124 @@ end
     @test installed_self_block.position_z ≈ pqs_self_block.position_z atol = 1.0e-12 rtol = 1.0e-12
     @test installed_mixed_block.overlap ≈ pqs_mixed_block.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test installed_mixed_block.position_x ≈ pqs_mixed_block.position_x atol = 1.0e-12 rtol = 1.0e-12
+    installed_source_transform =
+        only(CCP._cartesian_raw_product_source_retained_transform(pqs_fixed_sidecar_block))
+    pqs_raw_source = installed_source_transform.raw_source
+    pqs_retained_transform = installed_source_transform.retained_transform
+    @test pqs_raw_source.source_dimension == 5 * 5 * 5
+    @test pqs_raw_source.local_box == cubic_current
+    @test pqs_raw_source.axis_intervals == cubic_current
+    @test pqs_raw_source.raw_source_weight_role == :raw_source_positive
+    @test pqs_raw_source.support_indices === nothing
+    @test pqs_raw_source.support_summary.support_scope == :full_local_product_box
+    @test pqs_raw_source.support_summary.raw_product_support_count == 5 * 5 * 5
+    @test pqs_raw_source.support_summary.boundary_support_count == 98
+    @test pqs_raw_source.diagnostics.raw_source_contract == :full_local_product_block
+    @test !pqs_raw_source.diagnostics.operator_matrices_built
+    @test pqs_retained_transform.source_id == pqs_raw_source.source_id
+    @test pqs_retained_transform.retained_dimension == 98
+    @test pqs_retained_transform.transform_kind == :boundary_projection_lowdin
+    @test pqs_retained_transform.transform_matrix === nothing
+    @test pqs_retained_transform.transform_stages == (
+        :raw_product_modes,
+        :raw_boundary_projection,
+        :full_rank_symmetric_lowdin_cleanup,
+        :retained_columns,
+    )
+    @test pqs_retained_transform.retained_column_weight_role == :debug_reference_only
+    @test pqs_retained_transform.diagnostics.transform_contract ==
+          :factored_raw_product_to_retained
+    @test pqs_retained_transform.diagnostics.transform_matrix_scope ==
+          :factored_raw_product_to_retained
+    @test !pqs_retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
+    @test !pqs_retained_transform.diagnostics.full_raw_to_retained_matrix_available
+    @test pqs_retained_transform.diagnostics.cleanup_stage_matrix_scope ==
+          :boundary_mode_to_retained
+    @test pqs_retained_transform.diagnostics.boundary_projection_stage ==
+          :raw_product_modes_to_boundary_rows
+    @test pqs_retained_transform.diagnostics.cleanup_stage ==
+          :full_rank_symmetric_lowdin_boundary_cleanup
+    @test pqs_retained_transform.diagnostics.raw_source_dimension == 5 * 5 * 5
+    @test pqs_retained_transform.diagnostics.boundary_support_indices ==
+          cubic.support_indices
+    @test pqs_retained_transform.diagnostics.boundary_support_count == 98
+    @test pqs_retained_transform.diagnostics.boundary_mode_indices ==
+          cubic_descriptor.boundary_mode_indices
+    @test pqs_retained_transform.diagnostics.boundary_column_indices ==
+          cubic_descriptor.boundary_column_indices
+    @test pqs_retained_transform.diagnostics.boundary_mode_count == 98
+    @test pqs_retained_transform.diagnostics.retained_count == 98
+    @test pqs_retained_transform.provenance.cleanup_stage_matrix ==
+          cubic_pqs_payload.cleanup_transform
+    @test pqs_retained_transform.diagnostics.cleanup_method ==
+          :projected_boundary_symmetric_lowdin
+    @test pqs_retained_transform.diagnostics.retained_weight_positive_checked == false
+    @test pqs_retained_transform.diagnostics.ida_weight_division_allowed == false
+    pqs_pair_packet = CCP._cartesian_raw_product_source_pair_operator_packet(
+        pqs_raw_source,
+        pqs_raw_source;
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :weights, :position_x, :position_y, :position_z),
+    )
+    @test pqs_pair_packet.left_source_id == pqs_raw_source.source_id
+    @test pqs_pair_packet.right_source_id == pqs_raw_source.source_id
+    @test pqs_pair_packet.operator_kind == :low_order_metric
+    @test pqs_pair_packet.supported_terms ==
+          (:overlap, :weights, :position_x, :position_y, :position_z)
+    @test pqs_pair_packet.symmetry_status == :symmetric_upper_triangle_placeholder
+    @test pqs_pair_packet.backend == :metadata_only
+    @test pqs_pair_packet.operator_matrices === nothing
+    @test pqs_pair_packet.diagnostics.placeholder_only
+    @test !pqs_pair_packet.diagnostics.operator_matrices_built
+    @test pqs_pair_packet.diagnostics.ids_terms_provenance_only
+    @test !pqs_pair_packet.diagnostics.all_pairs_inventory_built
+    @test !pqs_pair_packet.diagnostics.left_right_sources_embedded
+    @test !pqs_pair_packet.diagnostics.left_right_retained_transforms_embedded
+    @test pqs_pair_packet.diagnostics.future_inventory_must_resolve_sources_and_transforms
+    @test !pqs_pair_packet.diagnostics.raw_operator_block_ready
+    identity_axis = Matrix{Float64}(I, 2, 2)
+    product_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :identity_product_slab,
+        :product_doside,
+        1:4,
+        collect(1:4),
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1), (2, 1, 1), (2, 2, 1)],
+        Matrix{Float64}(I, 4, 4),
+        (
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_fixed_axis(1),
+        ),
+        GaussletBases._nested_product_axis_function_indices(3, 1, 2, 2, 2),
+        (source = :raw_product_source_test_fixture,),
+        (support_count = 4, retained_count = 4),
+    )
+    product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        product_unit;
+        source_id = :identity_product_slab_source,
+        parent_dims = (2, 2, 1),
+    )
+    @test product_source_transform.raw_source.source_id == :identity_product_slab_source
+    @test product_source_transform.raw_source.source_dimension == 4
+    @test product_source_transform.raw_source.support_indices == collect(1:4)
+    @test product_source_transform.raw_source.raw_source_weight_role == :raw_source_positive
+    @test product_source_transform.raw_source.local_box == (1:2, 1:2, 1:1)
+    @test product_source_transform.retained_transform.source_id ==
+          :identity_product_slab_source
+    @test product_source_transform.retained_transform.retained_dimension == 4
+    @test product_source_transform.retained_transform.transform_kind ==
+          :product_axis_transform
+    @test product_source_transform.retained_transform.transform_stages == (
+        :raw_product_source,
+        :separable_axis_transform_metadata,
+        :retained_columns,
+    )
+    @test product_source_transform.retained_transform.retained_column_weight_role ==
+          :debug_reference_only
+    @test !product_source_transform.retained_transform.diagnostics.ida_weight_division_allowed
+    @test product_source_transform.retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
+    @test product_source_transform.retained_transform.diagnostics.fast_product_path_requires_separable_axis_transforms
+    @test product_source_transform.retained_transform.diagnostics.separable_axis_transforms_available
     pqs_product_policy = CCPM._pqs_product_mixed_block_policy()
     @test pqs_product_policy.pair_kind == :pqs_product_mixed
     @test pqs_product_policy.optimized_metric_path == :unsupported_pqs_product_optimized

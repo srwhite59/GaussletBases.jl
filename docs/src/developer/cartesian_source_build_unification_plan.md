@@ -1003,6 +1003,23 @@ coefficient maps. Any next step should be a separate scoped decision rather
 than automatic continuation: either payload resolution for another existing
 metric path, or a dedicated PQS sidecar design pass.
 
+### Raw product source and retained transform direction
+
+The next construction abstraction should treat most retained Cartesian pieces
+as a raw product source space plus a retained-space transform. Operator blocks
+can then be assembled in the smaller product source spaces and finished by
+small dense transforms, rather than creating a new special case for every
+mixed pair such as PQS/product.
+
+This direction is documented in
+[Raw product source and retained transform policy](raw_product_source_retained_transform_policy.md).
+That note also records the quadrature-weight contract: gausslet-derived slabs,
+shells, and PQS units start from raw product sources with positive
+source-point weights in non-pathological cases. Retained-column weights need an
+explicit role and finite-positive check before any IDA-style division, while
+angular GTO supplements and other non-quadrature final functions must not be
+treated as positive-weight quadrature carriers.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.

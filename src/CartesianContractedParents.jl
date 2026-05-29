@@ -243,6 +243,67 @@ struct _CartesianProjectedQShellSidecarFixture3D{U,P,D}
     diagnostics::D
 end
 
+"""
+    _CartesianRawProductSource3D
+
+Private metadata-only description of a local raw product source space. This is
+the "source" half of the planned raw-product-source -> retained-transform ->
+retained-unit contract; it does not build operator matrices or change metric
+execution.
+"""
+struct _CartesianRawProductSource3D{S,P,D}
+    source_id::Symbol
+    role::Symbol
+    parent_dims::NTuple{3,Int}
+    local_box::NTuple{3,UnitRange{Int}}
+    axis_intervals::NTuple{3,UnitRange{Int}}
+    source_dimension::Int
+    support_indices::Union{Nothing,Vector{Int}}
+    support_summary::S
+    raw_source_weight_role::Symbol
+    provenance::P
+    diagnostics::D
+end
+
+"""
+    _CartesianRetainedTransform3D
+
+Private metadata-only retained transform description for one raw product
+source. `transform_matrix === nothing` is the explicit identity/no-matrix
+case. Non-identity transforms must carry an explicit weight role so IDA-like
+weight division is never inferred silently.
+"""
+struct _CartesianRetainedTransform3D{M,C,P,D}
+    source_id::Symbol
+    retained_dimension::Int
+    transform_kind::Symbol
+    transform_matrix::M
+    transform_stages::Tuple{Vararg{Symbol}}
+    cleanup_diagnostics::C
+    retained_column_weight_role::Symbol
+    provenance::P
+    diagnostics::D
+end
+
+"""
+    _CartesianRawProductSourcePairOperatorPacket3D
+
+Placeholder for future source_i/source_j raw operator blocks. This pass records
+shape, symmetry, term capability, and provenance only; `operator_matrices` must
+remain `nothing`.
+"""
+struct _CartesianRawProductSourcePairOperatorPacket3D{P,D}
+    left_source_id::Symbol
+    right_source_id::Symbol
+    operator_kind::Symbol
+    supported_terms::Tuple{Vararg{Symbol}}
+    symmetry_status::Symbol
+    backend::Symbol
+    operator_matrices::Nothing
+    provenance::P
+    diagnostics::D
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -1607,6 +1668,296 @@ function _cartesian_projected_q_shell_fixed_block_sidecar_fixture(
         fixed_centers,
         Base.RefValue{Any}(nothing),
         Base.RefValue{Any}(installed_sidecar),
+    )
+end
+
+function _cartesian_interval_product_dimension(intervals::NTuple{3,UnitRange{Int}})
+    return prod(length(interval) for interval in intervals)
+end
+
+function _cartesian_support_box_from_states(states::AbstractVector{<:NTuple{3,Int}})
+    isempty(states) && throw(ArgumentError("raw product source support states cannot be empty"))
+    return ntuple(axis -> begin
+        values = Int[state[axis] for state in states]
+        minimum(values):maximum(values)
+    end, 3)
+end
+
+function _cartesian_raw_product_source(
+    payload::_CartesianExecutableProjectedQShellPayload3D;
+    source_id::Symbol = :projected_q_shell_raw_product_source,
+    parent_dims::Union{Nothing,NTuple{3,Int}} = nothing,
+)
+    dims = isnothing(parent_dims) ? ntuple(axis -> last(payload.axis_intervals[axis]), 3) : parent_dims
+    source_dimension = _cartesian_interval_product_dimension(payload.axis_intervals)
+    source_dimension == payload.q * payload.q * payload.L || throw(
+        DimensionMismatch("projected q-shell raw source dimension must equal q*q*L"),
+    )
+    support_summary = (
+        support_indices_available = false,
+        support_scope = :full_local_product_box,
+        raw_product_support_count = source_dimension,
+        boundary_support_count = length(payload.support_indices),
+        retained_count = length(payload.column_range),
+    )
+    diagnostics = (
+        source = :projected_q_shell_raw_product_source_adapter,
+        fixture_only = true,
+        production_supported = false,
+        raw_source_contract = :full_local_product_block,
+        raw_source_weight_role = :raw_source_positive,
+        retained_transform_expected = :boundary_projection_lowdin,
+        operator_matrices_built = false,
+        q = payload.q,
+        L = payload.L,
+    )
+    return _CartesianRawProductSource3D(
+        source_id,
+        isnothing(payload.role) ? :projected_q_shell : payload.role,
+        dims,
+        payload.current_box,
+        payload.axis_intervals,
+        source_dimension,
+        nothing,
+        support_summary,
+        :raw_source_positive,
+        (
+            source = :projected_q_shell_executable_payload_fixture,
+            payload = payload,
+            descriptor = payload.descriptor,
+        ),
+        diagnostics,
+    )
+end
+
+function _cartesian_retained_transform(
+    payload::_CartesianExecutableProjectedQShellPayload3D;
+    source_id::Symbol = :projected_q_shell_raw_product_source,
+)
+    diagnostics = (
+        source = :projected_q_shell_retained_transform_adapter,
+        fixture_only = true,
+        production_supported = false,
+        transform_contract = :factored_raw_product_to_retained,
+        transform_matrix_scope = :factored_raw_product_to_retained,
+        full_raw_to_retained_matrix_materialized = false,
+        full_raw_to_retained_matrix_available = false,
+        cleanup_stage_matrix_scope = :boundary_mode_to_retained,
+        boundary_projection_stage = :raw_product_modes_to_boundary_rows,
+        cleanup_stage = :full_rank_symmetric_lowdin_boundary_cleanup,
+        raw_source_dimension = payload.q * payload.q * payload.L,
+        boundary_support_indices = copy(payload.support_indices),
+        boundary_support_count = length(payload.support_indices),
+        boundary_mode_indices = copy(payload.boundary_mode_indices),
+        boundary_column_indices = copy(payload.boundary_column_indices),
+        boundary_mode_count = payload.descriptor.mode_count,
+        retained_count = length(payload.column_range),
+        cleanup_method = payload.cleanup_diagnostics.method,
+        cleanup_rank_count = payload.cleanup_diagnostics.rank_count,
+        cleanup_rank_drop_count = payload.cleanup_diagnostics.rank_drop_count,
+        retained_column_weight_role = :debug_reference_only,
+        retained_weight_positive_checked = false,
+        ida_weight_division_allowed = false,
+    )
+    return _CartesianRetainedTransform3D(
+        source_id,
+        length(payload.column_range),
+        :boundary_projection_lowdin,
+        nothing,
+        (
+            :raw_product_modes,
+            :raw_boundary_projection,
+            :full_rank_symmetric_lowdin_cleanup,
+            :retained_columns,
+        ),
+        payload.cleanup_diagnostics,
+        :debug_reference_only,
+        (
+            source = :projected_q_shell_executable_payload_fixture,
+            payload = payload,
+            descriptor = payload.descriptor,
+            cleanup_stage_matrix = payload.cleanup_transform,
+        ),
+        diagnostics,
+    )
+end
+
+function _cartesian_raw_product_source_retained_transform(
+    payload::_CartesianExecutableProjectedQShellPayload3D;
+    source_id::Symbol = :projected_q_shell_raw_product_source,
+    parent_dims::Union{Nothing,NTuple{3,Int}} = nothing,
+)
+    return (
+        raw_source = _cartesian_raw_product_source(
+            payload;
+            source_id,
+            parent_dims,
+        ),
+        retained_transform = _cartesian_retained_transform(payload; source_id),
+    )
+end
+
+function _cartesian_raw_product_source_retained_transform(
+    sidecar::_CartesianProjectedQShellSidecarFixture3D,
+)
+    return Tuple(
+        _cartesian_raw_product_source_retained_transform(
+            payload;
+            source_id = Symbol(:projected_q_shell_raw_product_source_, index),
+            parent_dims = sidecar.dims,
+        ) for (index, payload) in pairs(sidecar.payloads)
+    )
+end
+
+function _cartesian_raw_product_source_retained_transform(
+    fixed_block::_NestedFixedBlock3D,
+)
+    sidecar = _nested_projected_q_shell_sidecar_fixture(fixed_block)
+    isnothing(sidecar) && throw(
+        ArgumentError("nested fixed block does not carry a projected q-shell sidecar fixture"),
+    )
+    return _cartesian_raw_product_source_retained_transform(sidecar)
+end
+
+function _cartesian_raw_product_source(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    source_id::Symbol = Symbol(unit.role, :_raw_product_source),
+    parent_dims::NTuple{3,Int},
+)
+    axis_intervals = ntuple(axis -> begin
+        staged_axis = unit.axes[axis]
+        staged_axis.kind == :fixed && return staged_axis.fixed_index:staged_axis.fixed_index
+        staged_axis.kind == :active && return staged_axis.interval
+        throw(ArgumentError("unsupported product-staged axis kind $(staged_axis.kind)"))
+    end, 3)
+    local_box = _cartesian_support_box_from_states(unit.support_states)
+    source_dimension = _cartesian_interval_product_dimension(axis_intervals)
+    source_dimension == length(unit.support_indices) || throw(
+        DimensionMismatch("product-staged raw source dimension must match unit support count"),
+    )
+    support_summary = _contraction_rule_support_summary(
+        unit.support_indices;
+        parent_dimension = prod(parent_dims),
+    )
+    raw_source_weight_role =
+        unit.kind == :product_doside ? :raw_source_positive : :debug_reference_only
+    return _CartesianRawProductSource3D(
+        source_id,
+        unit.role,
+        parent_dims,
+        local_box,
+        axis_intervals,
+        source_dimension,
+        copy(unit.support_indices),
+        support_summary,
+        raw_source_weight_role,
+        (
+            source = :nested_product_staged_by_center_unit,
+            unit = unit,
+        ),
+        (
+            source = :product_staged_raw_product_source_adapter,
+            fixture_only = true,
+            production_supported = false,
+            staged_by_center_kind = unit.kind,
+            raw_source_weight_role = raw_source_weight_role,
+            operator_matrices_built = false,
+        ),
+    )
+end
+
+function _cartesian_retained_transform(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    source_id::Symbol = Symbol(unit.role, :_raw_product_source),
+)
+    transform_kind = unit.kind == :product_doside ?
+                     :product_axis_transform :
+                     :support_dense_coefficients
+    return _CartesianRetainedTransform3D(
+        source_id,
+        length(unit.column_range),
+        transform_kind,
+        unit.coefficient_matrix,
+        (
+            :raw_product_source,
+            unit.kind == :product_doside ?
+                :separable_axis_transform_metadata :
+                :support_local_dense_transform,
+            :retained_columns,
+        ),
+        (
+            method = :none,
+            rank_count = length(unit.column_range),
+            rank_drop_count = 0,
+        ),
+        :debug_reference_only,
+        (
+            source = :nested_product_staged_by_center_unit,
+            unit = unit,
+        ),
+        (
+            source = :product_staged_retained_transform_adapter,
+            fixture_only = true,
+            production_supported = false,
+            retained_column_weight_role = :debug_reference_only,
+            retained_weight_positive_checked = false,
+            ida_weight_division_allowed = false,
+            transform_matrix_scope = :support_local_to_retained,
+            full_raw_to_retained_matrix_materialized = true,
+            fast_product_path_requires_separable_axis_transforms = true,
+            separable_axis_transforms_available = unit.kind == :product_doside,
+        ),
+    )
+end
+
+function _cartesian_raw_product_source_retained_transform(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    source_id::Symbol = Symbol(unit.role, :_raw_product_source),
+    parent_dims::NTuple{3,Int},
+)
+    return (
+        raw_source = _cartesian_raw_product_source(
+            unit;
+            source_id,
+            parent_dims,
+        ),
+        retained_transform = _cartesian_retained_transform(unit; source_id),
+    )
+end
+
+function _cartesian_raw_product_source_pair_operator_packet(
+    left::_CartesianRawProductSource3D,
+    right::_CartesianRawProductSource3D;
+    operator_kind::Symbol,
+    supported_terms::Tuple{Vararg{Symbol}},
+    symmetry_status::Symbol = :symmetric_upper_triangle_placeholder,
+    backend::Symbol = :metadata_only,
+    provenance = (; source = :raw_product_source_pair_operator_packet_placeholder),
+)
+    return _CartesianRawProductSourcePairOperatorPacket3D(
+        left.source_id,
+        right.source_id,
+        operator_kind,
+        supported_terms,
+        symmetry_status,
+        backend,
+        nothing,
+        provenance,
+        (
+            source = :raw_product_source_pair_operator_packet_placeholder,
+            placeholder_only = true,
+            production_supported = false,
+            operator_matrices_built = false,
+            ids_terms_provenance_only = true,
+            all_pairs_inventory_built = false,
+            left_right_sources_embedded = false,
+            left_right_retained_transforms_embedded = false,
+            future_inventory_must_resolve_sources_and_transforms = true,
+            left_source_dimension = left.source_dimension,
+            right_source_dimension = right.source_dimension,
+            raw_operator_block_ready = false,
+            retained_operator_block_built = false,
+        ),
     )
 end
 
