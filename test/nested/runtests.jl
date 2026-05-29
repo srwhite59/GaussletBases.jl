@@ -484,10 +484,36 @@ end
     @test !cubic_pqs_payload.diagnostics.fixed_block_sidecar_installed
     @test !cubic_pqs_payload.diagnostics.default_builder_consumes
     @test !cubic_pqs_payload.diagnostics.pqs_product_optimized_path_ready
+    cubic_pqs_sidecar = CCP._cartesian_projected_q_shell_sidecar_fixture(
+        cubic_descriptor;
+        column_range = 1:98,
+        dims = (5, 5, 5),
+    )
+    @test cubic_pqs_sidecar.dims == (5, 5, 5)
+    @test length(cubic_pqs_sidecar.payloads) == 1
+    @test only(cubic_pqs_sidecar.payloads).support_coefficient_matrix ==
+          cubic_pqs_payload.support_coefficient_matrix
+    @test cubic_pqs_sidecar.diagnostics.fixture_only
+    @test !cubic_pqs_sidecar.diagnostics.production_supported
+    @test !cubic_pqs_sidecar.diagnostics.fixed_block_sidecar_installed
+    @test !cubic_pqs_sidecar.diagnostics.default_builder_consumes
+    @test !cubic_pqs_sidecar.diagnostics.qw_consumes
+    @test !cubic_pqs_sidecar.diagnostics.hamiltonian_consumes
+    @test cubic_pqs_sidecar.diagnostics.support_local_reference_only
+    @test !cubic_pqs_sidecar.diagnostics.pqs_product_optimized_path_ready
+    @test !cubic_pqs_sidecar.provenance.installed_in_fixed_block
     cubic_pqs_resolved = CCP._cartesian_resolved_contraction_payload(
         cubic_pqs_payload;
         parent_dimension = 5 * 5 * 5,
     )
+    cubic_pqs_sidecar_resolved = CCP._cartesian_resolved_contraction_payloads(
+        cubic_pqs_sidecar,
+    )
+    @test length(cubic_pqs_sidecar_resolved) == 1
+    @test only(cubic_pqs_sidecar_resolved).ready_for_metric_execution
+    @test only(cubic_pqs_sidecar_resolved).payload === only(cubic_pqs_sidecar.payloads)
+    @test only(cubic_pqs_sidecar_resolved).metric_path ==
+          :pqs_low_order_support_local_reference
     @test cubic_pqs_resolved.metric_path == :pqs_low_order_support_local_reference
     @test cubic_pqs_resolved.ready_for_metric_execution
     @test cubic_pqs_resolved.payload_kind == :projected_q_shell

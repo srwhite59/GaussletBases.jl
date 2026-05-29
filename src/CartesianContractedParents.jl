@@ -226,6 +226,20 @@ struct _CartesianExecutableProjectedQShellPayload3D{C,D,P}
     diagnostics::P
 end
 
+"""
+    _CartesianProjectedQShellSidecarFixture3D
+
+Private sidecar-shaped fixture for executable PQS payload plumbing. This is a
+real container for PQS payloads, but it is deliberately not installed into
+fixed blocks or consumed by default metric/QW/Hamiltonian routes.
+"""
+struct _CartesianProjectedQShellSidecarFixture3D{U,P,D}
+    dims::NTuple{3,Int}
+    payloads::U
+    provenance::P
+    diagnostics::D
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -1438,6 +1452,54 @@ function _cartesian_resolved_contraction_payload(
             descriptor = payload.descriptor,
         ),
     )
+end
+
+function _cartesian_projected_q_shell_sidecar_fixture(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    column_range::UnitRange{Int},
+    dims::NTuple{3,Int},
+)
+    parent_dimension = prod(dims)
+    payload = _cartesian_executable_projected_q_shell_payload_fixture(
+        descriptor;
+        column_range,
+        parent_dimension,
+    )
+    diagnostics = (
+        source = :projected_q_shell_sidecar_fixture,
+        fixture_only = true,
+        production_supported = false,
+        fixed_block_sidecar_installed = false,
+        default_builder_consumes = false,
+        metric_packet_consumes = false,
+        qw_consumes = false,
+        hamiltonian_consumes = false,
+        payload_count = 1,
+        metric_capability = :pqs_low_order_support_local_reference,
+        support_local_reference_only = true,
+        pqs_product_optimized_path_ready = false,
+    )
+    return _CartesianProjectedQShellSidecarFixture3D(
+        dims,
+        [payload],
+        (
+            source = :projected_q_shell_sidecar_fixture,
+            descriptor = descriptor,
+            installed_in_fixed_block = false,
+            public_api = false,
+        ),
+        diagnostics,
+    )
+end
+
+function _cartesian_resolved_contraction_payloads(
+    sidecar::_CartesianProjectedQShellSidecarFixture3D,
+)
+    parent_dimension = prod(sidecar.dims)
+    return [
+        _cartesian_resolved_contraction_payload(payload; parent_dimension)
+        for payload in sidecar.payloads
+    ]
 end
 
 """
