@@ -1494,6 +1494,73 @@ end
     @test product_direct_self_overlap ≈ product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test factorized_product_retained_overlap.retained_operator_matrix ≈
           product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
+    @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
+        product_unit,
+        product_unit,
+        physical_axis_metrics;
+        term = :axis_index_x,
+    )
+    @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
+        product_unit,
+        product_unit,
+        physical_axis_metrics;
+        term = :kinetic,
+    )
+    support_dense_retained_block_guard_unit =
+        GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+            :support_dense_retained_block_guard,
+            :support_dense,
+            1:4,
+            copy(product_unit.support_indices),
+            copy(product_unit.support_states),
+            product_unit.coefficient_matrix,
+            product_unit.axes,
+            copy(product_unit.axis_function_indices),
+            (source = :product_retained_block_guard_test,),
+            (support_count = 4, retained_count = 4),
+        )
+    @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
+        support_dense_retained_block_guard_unit,
+        product_unit,
+        physical_axis_metrics;
+        term = :overlap,
+    )
+    mismatched_axis_metadata_retained_block_guard_unit =
+        GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+            :mismatched_axis_metadata_retained_block_guard,
+            :product_doside,
+            1:4,
+            copy(product_unit.support_indices),
+            copy(product_unit.support_states),
+            product_unit.coefficient_matrix,
+            product_unit.axes,
+            product_unit.axis_function_indices[1:3],
+            (source = :product_retained_block_guard_test,),
+            (support_count = 4, retained_count = 4),
+        )
+    @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
+        mismatched_axis_metadata_retained_block_guard_unit,
+        product_unit,
+        physical_axis_metrics;
+        term = :overlap,
+    )
+    bad_retained_block_axis_metrics = (
+        x = (
+            overlap = Matrix{Float64}(I, 1, 1),
+            position = Matrix{Float64}(I, 1, 1),
+            weights = [1.0],
+            centers = [0.0],
+            source = :bad_product_retained_block_axis_metric_fixture,
+        ),
+        y = physical_axis_metrics.y,
+        z = physical_axis_metrics.z,
+    )
+    @test_throws ArgumentError CCPM._product_doside_retained_low_order_block(
+        product_unit,
+        product_unit,
+        bad_retained_block_axis_metrics;
+        term = :overlap,
+    )
     @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
         overlap_omitting_pair;
         term = :overlap,
