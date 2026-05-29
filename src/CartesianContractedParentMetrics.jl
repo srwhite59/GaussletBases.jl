@@ -784,62 +784,42 @@ function _fill_product_staged_metric_blocks!(
     length(right_unit.axis_function_indices) == length(right_unit.column_range) || throw(
         ArgumentError("product-staged metric right unit axis metadata does not match its column range"),
     )
-    projected_x_overlap = _project_staged_axis_matrix(
-        left_unit.axes[1],
-        right_unit.axes[1],
-        metrics.x.overlap,
+    overlap_block = _product_doside_retained_low_order_block(
+        left_unit,
+        right_unit,
+        metrics;
+        term = :overlap,
     )
-    projected_y_overlap = _project_staged_axis_matrix(
-        left_unit.axes[2],
-        right_unit.axes[2],
-        metrics.y.overlap,
+    position_x_block = _product_doside_retained_low_order_block(
+        left_unit,
+        right_unit,
+        metrics;
+        term = :position_x,
     )
-    projected_z_overlap = _project_staged_axis_matrix(
-        left_unit.axes[3],
-        right_unit.axes[3],
-        metrics.z.overlap,
+    position_y_block = _product_doside_retained_low_order_block(
+        left_unit,
+        right_unit,
+        metrics;
+        term = :position_y,
     )
-    projected_x_position = _project_staged_axis_matrix(
-        left_unit.axes[1],
-        right_unit.axes[1],
-        metrics.x.position,
+    position_z_block = _product_doside_retained_low_order_block(
+        left_unit,
+        right_unit,
+        metrics;
+        term = :position_z,
     )
-    projected_y_position = _project_staged_axis_matrix(
-        left_unit.axes[2],
-        right_unit.axes[2],
-        metrics.y.position,
-    )
-    projected_z_position = _project_staged_axis_matrix(
-        left_unit.axes[3],
-        right_unit.axes[3],
-        metrics.z.position,
-    )
+    left_range = left_unit.column_range
+    right_range = right_unit.column_range
     same_unit = left_unit.column_range == right_unit.column_range
-    @inbounds for local_col in eachindex(right_unit.axis_function_indices)
-        xj, yj, zj = right_unit.axis_function_indices[local_col]
-        global_col = right_unit.column_range[local_col]
-        for local_row in eachindex(left_unit.axis_function_indices)
-            xi, yi, zi = left_unit.axis_function_indices[local_row]
-            global_row = left_unit.column_range[local_row]
-            y_overlap = projected_y_overlap[yi, yj]
-            z_overlap = projected_z_overlap[zi, zj]
-            overlap_value = projected_x_overlap[xi, xj] * y_overlap * z_overlap
-            position_x_value = projected_x_position[xi, xj] * y_overlap * z_overlap
-            position_y_value =
-                projected_x_overlap[xi, xj] * projected_y_position[yi, yj] * z_overlap
-            position_z_value =
-                projected_x_overlap[xi, xj] * y_overlap * projected_z_position[zi, zj]
-            overlap[global_row, global_col] = overlap_value
-            position_x[global_row, global_col] = position_x_value
-            position_y[global_row, global_col] = position_y_value
-            position_z[global_row, global_col] = position_z_value
-            if !same_unit
-                overlap[global_col, global_row] = overlap_value
-                position_x[global_col, global_row] = position_x_value
-                position_y[global_col, global_row] = position_y_value
-                position_z[global_col, global_row] = position_z_value
-            end
-        end
+    overlap[left_range, right_range] .= overlap_block
+    position_x[left_range, right_range] .= position_x_block
+    position_y[left_range, right_range] .= position_y_block
+    position_z[left_range, right_range] .= position_z_block
+    if !same_unit
+        overlap[right_range, left_range] .= transpose(overlap_block)
+        position_x[right_range, left_range] .= transpose(position_x_block)
+        position_y[right_range, left_range] .= transpose(position_y_block)
+        position_z[right_range, left_range] .= transpose(position_z_block)
     end
     return nothing
 end
