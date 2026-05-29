@@ -163,6 +163,7 @@ end
     bundle5 = _pqs_test_bundle(5)
     bundle7 = _pqs_test_bundle(7)
     CCP = GaussletBases.CartesianContractedParents
+    CCPM = GaussletBases.CartesianContractedParentMetrics
 
     cubic_bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle5)
     cubic_current = (1:5, 1:5, 1:5)
@@ -305,6 +306,15 @@ end
     @test !cubic_rule_inventory.diagnostics.all_rules_have_column_ranges
     @test cubic_rule_inventory.diagnostics.q_shell_rule_present
     @test !cubic_rule_inventory.diagnostics.q_shell_installed_as_contracted_parent_unit
+    cubic_rule_dispatch =
+        CCPM._contracted_parent_metric_dispatch_plan_from_rules([cubic_rule])
+    @test cubic_rule_dispatch.unit_count == 1
+    @test cubic_rule_dispatch.unsupported_unit_count == 1
+    @test cubic_rule_dispatch.prototype_rule_count == 1
+    @test cubic_rule_dispatch.unsupported_block_count == 1
+    @test !cubic_rule_dispatch.plan_supported
+    @test only(cubic_rule_dispatch.unit_paths).block_role == :unsupported_prototype
+    @test only(cubic_rule_dispatch.block_paths).path == :unsupported
     @test cubic.diagnostics.pqs_staged_unit_descriptor_available
     @test cubic.diagnostics.pqs_staged_unit_kind == :projected_q_shell
     @test cubic.provenance.pqs_staged_unit_descriptor === cubic_descriptor
@@ -2457,6 +2467,30 @@ end
     @test !rule_inventory.any_prototype_rule
     @test rule_inventory.diagnostics.parent_level_unit_inventory
     @test rule_inventory.diagnostics.all_rules_have_column_ranges
+    dispatch_shadow = CCPM._contracted_parent_metric_dispatch_shadow_plan(contracted_parent)
+    @test dispatch_shadow.comparison.agree
+    @test isempty(dispatch_shadow.comparison.mismatch_fields)
+    @test dispatch_shadow.payload_plan.plan_supported
+    @test dispatch_shadow.rule_plan.plan_supported
+    @test dispatch_shadow.payload_plan.unit_count == rule_inventory.rule_count
+    @test dispatch_shadow.rule_plan.unit_count == rule_inventory.rule_count
+    @test dispatch_shadow.payload_plan.product_unit_count == 6
+    @test dispatch_shadow.rule_plan.product_unit_count == 6
+    @test dispatch_shadow.payload_plan.support_fallback_unit_count == length(support_rules)
+    @test dispatch_shadow.rule_plan.support_fallback_unit_count == length(support_rules)
+    expected_product_blocks = 6 * (6 + 1) ÷ 2
+    expected_total_blocks = rule_inventory.rule_count * (rule_inventory.rule_count + 1) ÷ 2
+    @test dispatch_shadow.payload_plan.product_product_block_count == expected_product_blocks
+    @test dispatch_shadow.rule_plan.product_product_block_count == expected_product_blocks
+    @test dispatch_shadow.payload_plan.fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
+    @test dispatch_shadow.rule_plan.fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
+    @test dispatch_shadow.payload_plan.unsupported_unit_count == 0
+    @test dispatch_shadow.rule_plan.unsupported_unit_count == 0
+    @test dispatch_shadow.rule_plan.prototype_rule_count == 0
+    @test [path.path for path in dispatch_shadow.payload_plan.block_paths] ==
+          [path.path for path in dispatch_shadow.rule_plan.block_paths]
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
         contracted_parent;
         axis_metrics,

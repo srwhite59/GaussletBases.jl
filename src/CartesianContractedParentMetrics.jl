@@ -14,6 +14,7 @@ import ..GaussletBases: _NestedFixedBlock3D,
 import ..GaussletBases.CartesianContractedParents:
     CartesianContractedParent3D,
     cartesian_contracted_parent,
+    contracted_parent_contraction_rules,
     contracted_parent_basis,
     contracted_parent_coefficients,
     contracted_parent_dimension,
@@ -289,6 +290,206 @@ function _staged_unit(contraction_unit)
     hasproperty(metadata, :staged_by_center_unit) &&
         return getproperty(metadata, :staged_by_center_unit)
     return nothing
+end
+
+function _metric_dispatch_unit_path_from_payload(staged_unit)
+    if staged_unit === nothing
+        return (
+            family = :unsupported,
+            kind = :missing_staged_payload,
+            metric_capability = :none,
+            linear_vector_path = :unsupported,
+            block_role = :unsupported,
+            unsupported = true,
+            prototype = false,
+        )
+    elseif staged_unit.kind == :product_doside
+        return (
+            family = :product_owned_unit,
+            kind = staged_unit.kind,
+            metric_capability = :product_staged_metric_contraction,
+            linear_vector_path = :product_staged_axis_projection,
+            block_role = :product,
+            unsupported = false,
+            prototype = false,
+        )
+    elseif staged_unit.kind == :support_dense
+        return (
+            family = :support_dense_fallback,
+            kind = staged_unit.kind,
+            metric_capability = :support_local_product,
+            linear_vector_path = :support_local_fallback,
+            block_role = :fallback,
+            unsupported = false,
+            prototype = false,
+        )
+    end
+    return (
+        family = :unsupported,
+        kind = staged_unit.kind,
+        metric_capability = :none,
+        linear_vector_path = :unsupported,
+        block_role = :unsupported,
+        unsupported = true,
+        prototype = false,
+    )
+end
+
+function _metric_dispatch_unit_path_from_rule(rule)
+    if rule.rule_family == :product_owned_unit &&
+       rule.metric_capability == :product_staged_metric_contraction
+        return (
+            family = rule.rule_family,
+            kind = rule.kind,
+            metric_capability = rule.metric_capability,
+            linear_vector_path = :product_staged_axis_projection,
+            block_role = :product,
+            unsupported = false,
+            prototype = false,
+        )
+    elseif rule.rule_family == :support_dense_fallback &&
+           rule.metric_capability == :support_local_product
+        return (
+            family = rule.rule_family,
+            kind = rule.kind,
+            metric_capability = rule.metric_capability,
+            linear_vector_path = :support_local_fallback,
+            block_role = :fallback,
+            unsupported = false,
+            prototype = false,
+        )
+    end
+    prototype =
+        rule.rule_family == :projected_q_shell_boundary_modes ||
+        rule.metric_capability == :pqs_low_order_product_metric_prototype
+    return (
+        family = rule.rule_family,
+        kind = rule.kind,
+        metric_capability = rule.metric_capability,
+        linear_vector_path = :unsupported,
+        block_role = prototype ? :unsupported_prototype : :unsupported,
+        unsupported = true,
+        prototype = prototype,
+    )
+end
+
+function _metric_dispatch_block_path(left_path, right_path)
+    (left_path.unsupported || right_path.unsupported) && return :unsupported
+    left_path.block_role == :product && right_path.block_role == :product &&
+        return :product_product
+    return :support_local_fallback
+end
+
+function _metric_dispatch_plan_from_unit_paths(unit_paths; source::Symbol)
+    product_unit_count = count(path -> path.block_role == :product, unit_paths)
+    fallback_unit_count = count(path -> path.block_role == :fallback, unit_paths)
+    unsupported_unit_count = count(path -> path.unsupported, unit_paths)
+    prototype_rule_count = count(path -> path.prototype, unit_paths)
+    block_paths = NamedTuple[]
+    product_block_count = 0
+    fallback_block_count = 0
+    unsupported_block_count = 0
+    for right_index in eachindex(unit_paths)
+        for left_index in 1:right_index
+            path = _metric_dispatch_block_path(unit_paths[left_index], unit_paths[right_index])
+            path == :product_product && (product_block_count += 1)
+            path == :support_local_fallback && (fallback_block_count += 1)
+            path == :unsupported && (unsupported_block_count += 1)
+            push!(
+                block_paths,
+                (left_index = left_index, right_index = right_index, path = path),
+            )
+        end
+    end
+    return (
+        source = source,
+        unit_count = length(unit_paths),
+        unit_paths = Tuple(unit_paths),
+        block_paths = Tuple(block_paths),
+        product_unit_count = product_unit_count,
+        support_fallback_unit_count = fallback_unit_count,
+        unsupported_unit_count = unsupported_unit_count,
+        prototype_rule_count = prototype_rule_count,
+        product_product_block_count = product_block_count,
+        fallback_block_count = fallback_block_count,
+        unsupported_block_count = unsupported_block_count,
+        plan_supported = unsupported_unit_count == 0 && unsupported_block_count == 0,
+    )
+end
+
+function _contracted_parent_metric_dispatch_plan_from_payload(
+    contracted_parent::CartesianContractedParent3D,
+)
+    unit_paths = [
+        _metric_dispatch_unit_path_from_payload(_staged_unit(unit)) for
+        unit in contracted_parent_units(contracted_parent)
+    ]
+    return _metric_dispatch_plan_from_unit_paths(
+        unit_paths;
+        source = :staged_payload,
+    )
+end
+
+function _contracted_parent_metric_dispatch_plan_from_rules(rules::AbstractVector)
+    unit_paths = [_metric_dispatch_unit_path_from_rule(rule) for rule in rules]
+    return _metric_dispatch_plan_from_unit_paths(
+        unit_paths;
+        source = :contraction_rules,
+    )
+end
+
+function _contracted_parent_metric_dispatch_plan_from_rules(
+    contracted_parent::CartesianContractedParent3D,
+)
+    return _contracted_parent_metric_dispatch_plan_from_rules(
+        contracted_parent_contraction_rules(contracted_parent),
+    )
+end
+
+function _metric_dispatch_plan_agreement(payload_plan, rule_plan)
+    mismatch_fields = Symbol[]
+    for field in (
+        :unit_count,
+        :product_unit_count,
+        :support_fallback_unit_count,
+        :unsupported_unit_count,
+        :prototype_rule_count,
+        :product_product_block_count,
+        :fallback_block_count,
+        :unsupported_block_count,
+        :plan_supported,
+    )
+        getproperty(payload_plan, field) == getproperty(rule_plan, field) ||
+            push!(mismatch_fields, field)
+    end
+    payload_units = [
+        (path.family, path.kind, path.metric_capability, path.linear_vector_path, path.block_role) for
+        path in payload_plan.unit_paths
+    ]
+    rule_units = [
+        (path.family, path.kind, path.metric_capability, path.linear_vector_path, path.block_role) for
+        path in rule_plan.unit_paths
+    ]
+    payload_units == rule_units || push!(mismatch_fields, :unit_paths)
+    payload_blocks = [path.path for path in payload_plan.block_paths]
+    rule_blocks = [path.path for path in rule_plan.block_paths]
+    payload_blocks == rule_blocks || push!(mismatch_fields, :block_paths)
+    return (
+        agree = isempty(mismatch_fields),
+        mismatch_fields = Tuple(mismatch_fields),
+    )
+end
+
+function _contracted_parent_metric_dispatch_shadow_plan(
+    contracted_parent::CartesianContractedParent3D,
+)
+    payload_plan = _contracted_parent_metric_dispatch_plan_from_payload(contracted_parent)
+    rule_plan = _contracted_parent_metric_dispatch_plan_from_rules(contracted_parent)
+    return (
+        payload_plan = payload_plan,
+        rule_plan = rule_plan,
+        comparison = _metric_dispatch_plan_agreement(payload_plan, rule_plan),
+    )
 end
 
 function _staged_axis_interval(axis)
