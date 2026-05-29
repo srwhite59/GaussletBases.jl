@@ -277,6 +277,34 @@ end
           :pqs_low_order_product_metric_prototype
     @test cubic_rule.diagnostics.boundary_mode_count == 98
     @test cubic_rule.diagnostics.cleanup_rank_drop_count == 0
+    cubic_rule_inventory = CCP.cartesian_contraction_rule_inventory(
+        [cubic_rule];
+        parent_dimension = 5 * 5 * 5,
+        contracted_dimension = nothing,
+        unit_count = 0,
+        every_unit_has_rule_metadata = false,
+        every_unit_rule_derivable = false,
+        provenance = (source = :pqs_descriptor_rule_path,),
+    )
+    @test cubic_rule_inventory.rule_count == 1
+    @test cubic_rule_inventory.unit_count == 0
+    @test cubic_rule_inventory.contracted_dimension === nothing
+    @test Dict(cubic_rule_inventory.rule_family_counts) ==
+          Dict(:projected_q_shell_boundary_modes => 1)
+    @test cubic_rule_inventory.metric_capabilities ==
+          [:pqs_low_order_product_metric_prototype]
+    @test cubic_rule_inventory.total_source_dimension == 125
+    @test cubic_rule_inventory.total_retained_dimension == 98
+    @test cubic_rule_inventory.support_summary.entry_count == 98
+    @test cubic_rule_inventory.support_summary.missing_count == 27
+    @test !cubic_rule_inventory.every_unit_has_rule_metadata
+    @test !cubic_rule_inventory.every_unit_rule_derivable
+    @test cubic_rule_inventory.any_metadata_only_rule
+    @test cubic_rule_inventory.any_prototype_rule
+    @test !cubic_rule_inventory.diagnostics.parent_level_unit_inventory
+    @test !cubic_rule_inventory.diagnostics.all_rules_have_column_ranges
+    @test cubic_rule_inventory.diagnostics.q_shell_rule_present
+    @test !cubic_rule_inventory.diagnostics.q_shell_installed_as_contracted_parent_unit
     @test cubic.diagnostics.pqs_staged_unit_descriptor_available
     @test cubic.diagnostics.pqs_staged_unit_kind == :projected_q_shell
     @test cubic.provenance.pqs_staged_unit_descriptor === cubic_descriptor
@@ -2379,6 +2407,27 @@ end
           :external_or_already_cleaned
     @test CCP.contraction_rule_metric_capability(first_support_rule) ==
           :support_local_product
+    rule_inventory = CCP.contracted_parent_rule_inventory(contracted_parent)
+    rule_family_counts = Dict(rule_inventory.rule_family_counts)
+    @test rule_inventory.rule_count == length(CCP.contracted_parent_units(contracted_parent))
+    @test rule_inventory.unit_count == length(CCP.contracted_parent_units(contracted_parent))
+    @test rule_family_counts[:product_owned_unit] == 6
+    @test rule_family_counts[:support_dense_fallback] == length(support_rules)
+    @test rule_inventory.parent_dimension == 539
+    @test rule_inventory.contracted_dimension == 313
+    @test rule_inventory.total_retained_dimension == 313
+    @test rule_inventory.support_summary.parent_dimension == 539
+    @test rule_inventory.support_summary.outside_count == 0
+    @test rule_inventory.support_summary.missing_count == 0
+    @test rule_inventory.support_summary.support_complete
+    @test Set(rule_inventory.metric_capabilities) ==
+          Set([:product_staged_metric_contraction, :support_local_product])
+    @test rule_inventory.every_unit_has_rule_metadata
+    @test rule_inventory.every_unit_rule_derivable
+    @test !rule_inventory.any_metadata_only_rule
+    @test !rule_inventory.any_prototype_rule
+    @test rule_inventory.diagnostics.parent_level_unit_inventory
+    @test rule_inventory.diagnostics.all_rules_have_column_ranges
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
         contracted_parent;
         axis_metrics,

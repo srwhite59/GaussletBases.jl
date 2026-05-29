@@ -13,10 +13,14 @@ import ..GaussletBases.CartesianParentGaussletBases:
 
 export CartesianContractionUnit3D,
        CartesianContractionRule3D,
+       CartesianContractionRuleInventory3D,
        CartesianContractedParent3D,
        CartesianContractedParentStructuralAudit,
        cartesian_contraction_rule,
+       cartesian_contraction_rule_inventory,
        cartesian_contracted_parent,
+       contracted_parent_contraction_rules,
+       contracted_parent_rule_inventory,
        contracted_parent_basis,
        contracted_parent_coefficients,
        contracted_parent_units,
@@ -63,6 +67,35 @@ struct CartesianContractionRule3D{S,L,D,P}
     transform_rule::Symbol
     cleanup_rule::Symbol
     metric_capability::Symbol
+    diagnostics::D
+    provenance::P
+end
+
+"""
+    CartesianContractionRuleInventory3D
+
+Metadata-only parent/rule inventory for contracted-parent construction rules.
+It summarizes rule families, support coverage, retained dimensions, and metric
+capabilities without building coefficient maps, metric packets, or operators.
+"""
+struct CartesianContractionRuleInventory3D{R,F,C,S,D,P}
+    parent_dimension::Int
+    contracted_dimension::Union{Nothing,Int}
+    unit_count::Int
+    rule_count::Int
+    rules::R
+    rule_family_counts::F
+    metric_capabilities::C
+    total_source_dimension::Int
+    total_retained_dimension::Int
+    support_summary::S
+    rule_support_summaries::Vector{Any}
+    every_unit_has_rule_metadata::Bool
+    every_unit_rule_derivable::Bool
+    metadata_only_rule_count::Int
+    prototype_rule_count::Int
+    any_metadata_only_rule::Bool
+    any_prototype_rule::Bool
     diagnostics::D
     provenance::P
 end
@@ -134,6 +167,34 @@ function _product_staged_metric_capability(kind::Symbol)
     return :support_local_product
 end
 
+function _symbol_count_pairs(values)
+    counts = Dict{Symbol,Int}()
+    for value in values
+        counts[value] = get(counts, value, 0) + 1
+    end
+    return sort!(collect(pairs(counts)); by = pair -> string(first(pair)))
+end
+
+_sorted_unique_symbols(values) = sort!(collect(Set(values)); by = string)
+
+function _diagnostic_bool(diagnostics, name::Symbol)
+    hasproperty(diagnostics, name) || return false
+    return getproperty(diagnostics, name) === true
+end
+
+function _rule_metadata_only(rule::CartesianContractionRule3D)
+    _diagnostic_bool(rule.diagnostics, :metadata_only) && return true
+    hasproperty(rule.diagnostics, :original_diagnostics) || return false
+    return _diagnostic_bool(rule.diagnostics.original_diagnostics, :metadata_only)
+end
+
+function _rule_prototype_only(rule::CartesianContractionRule3D)
+    _diagnostic_bool(rule.diagnostics, :prototype_only) && return true
+    rule.metric_capability == :pqs_low_order_product_metric_prototype && return true
+    hasproperty(rule.diagnostics, :original_diagnostics) || return false
+    return _diagnostic_bool(rule.diagnostics.original_diagnostics, :prototype_only)
+end
+
 function cartesian_contraction_rule(
     unit::_CartesianNestedProductStagedByCenterUnit3D;
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -143,6 +204,8 @@ function cartesian_contraction_rule(
             source = :nested_product_staged_by_center_unit,
             coefficient_shape = size(unit.coefficient_matrix),
             axis_function_count = length(unit.axis_function_indices),
+            metadata_only = false,
+            prototype_only = false,
             coefficient_contract = hasproperty(unit.provenance, :coefficient_contract) ?
                                    unit.provenance.coefficient_contract :
                                    nothing,
@@ -192,6 +255,9 @@ function cartesian_contraction_rule(
         cleanup_rank_count = descriptor.cleanup_rank_count,
         cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
         cleanup_cutoff = descriptor.cleanup_cutoff,
+        metadata_only = true,
+        prototype_only = true,
+        contracted_parent_unit_installed = false,
         non_contracts = descriptor.non_contracts,
         active_consumption = descriptor.active_consumption,
         original_diagnostics = descriptor.diagnostics,
@@ -227,6 +293,74 @@ function cartesian_contraction_rule(
             source = :projected_q_shell_staged_unit_descriptor,
             descriptor,
         ),
+    )
+end
+
+function cartesian_contraction_rule_inventory(
+    rules::AbstractVector{<:CartesianContractionRule3D};
+    parent_dimension::Integer,
+    contracted_dimension::Union{Nothing,Integer} = nothing,
+    unit_count::Integer = length(rules),
+    every_unit_has_rule_metadata::Bool = false,
+    every_unit_rule_derivable::Bool = false,
+    provenance = (; source = :cartesian_contraction_rule_collection),
+)
+    rule_values = collect(rules)
+    parent_dim = Int(parent_dimension)
+    contracted_dim = isnothing(contracted_dimension) ? nothing : Int(contracted_dimension)
+    support_indices = Int[]
+    for rule in rule_values
+        append!(support_indices, rule.support_indices)
+    end
+    family_counts = _symbol_count_pairs(rule.rule_family for rule in rule_values)
+    metric_capabilities = _sorted_unique_symbols(rule.metric_capability for rule in rule_values)
+    metadata_only_count = count(_rule_metadata_only, rule_values)
+    prototype_count = count(_rule_prototype_only, rule_values)
+    all_rules_have_column_ranges = all(rule -> !isnothing(rule.column_range), rule_values)
+    diagnostics = (
+        source = :cartesian_contraction_rule_inventory,
+        parent_level_unit_inventory =
+            every_unit_rule_derivable &&
+            Int(unit_count) == length(rule_values) &&
+            all_rules_have_column_ranges,
+        all_rules_have_column_ranges,
+        rule_family_counts = family_counts,
+        metric_capabilities,
+        metadata_only_rule_count = metadata_only_count,
+        prototype_rule_count = prototype_count,
+        any_metadata_only_rule = metadata_only_count > 0,
+        any_prototype_rule = prototype_count > 0,
+        q_shell_rule_present = any(
+            rule -> rule.rule_family == :projected_q_shell_boundary_modes,
+            rule_values,
+        ),
+        q_shell_installed_as_contracted_parent_unit = any(
+            rule ->
+                rule.rule_family == :projected_q_shell_boundary_modes &&
+                !isnothing(rule.column_range),
+            rule_values,
+        ),
+    )
+    return CartesianContractionRuleInventory3D(
+        parent_dim,
+        contracted_dim,
+        Int(unit_count),
+        length(rule_values),
+        rule_values,
+        family_counts,
+        metric_capabilities,
+        sum(rule.source_dimension for rule in rule_values),
+        sum(rule.retained_dimension for rule in rule_values),
+        _contraction_rule_support_summary(support_indices; parent_dimension = parent_dim),
+        Any[rule.support_summary for rule in rule_values],
+        every_unit_has_rule_metadata,
+        every_unit_rule_derivable,
+        metadata_only_count,
+        prototype_count,
+        metadata_only_count > 0,
+        prototype_count > 0,
+        diagnostics,
+        provenance,
     )
 end
 
@@ -278,6 +412,8 @@ function cartesian_contraction_rule(
     diagnostics = (
         source = :cartesian_contraction_unit,
         metadata = unit.metadata,
+        metadata_only = false,
+        prototype_only = false,
     )
     return CartesianContractionRule3D(
         :support_dense_fallback,
@@ -443,6 +579,32 @@ contracted_parent_parent_dimension(parent::CartesianContractedParent3D) =
     parent_dimension(parent.parent)
 contracted_parent_dimension(parent::CartesianContractedParent3D) =
     size(parent.coefficient_matrix, 2)
+
+function contracted_parent_contraction_rules(parent::CartesianContractedParent3D)
+    parent_dim = contracted_parent_parent_dimension(parent)
+    return [
+        contraction_unit_rule(unit; parent_dimension = parent_dim) for unit in parent.units
+    ]
+end
+
+function contracted_parent_rule_inventory(parent::CartesianContractedParent3D)
+    units = contracted_parent_units(parent)
+    return cartesian_contraction_rule_inventory(
+        contracted_parent_contraction_rules(parent);
+        parent_dimension = contracted_parent_parent_dimension(parent),
+        contracted_dimension = contracted_parent_dimension(parent),
+        unit_count = length(units),
+        every_unit_has_rule_metadata = all(
+            unit -> hasproperty(unit.metadata, :contraction_rule),
+            units,
+        ),
+        every_unit_rule_derivable = true,
+        provenance = (
+            source = :cartesian_contracted_parent,
+            contracted_parent_metadata = parent.metadata,
+        ),
+    )
+end
 
 contraction_unit_role(unit::CartesianContractionUnit3D) = unit.role
 contraction_unit_support_indices(unit::CartesianContractionUnit3D) = unit.support_indices
