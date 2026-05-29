@@ -285,6 +285,25 @@ retained metric block kernel. This proves the low-order product/product
 factorization for the private fixtures; it is still not a large-region fast
 operator assembly path.
 
+The follow-up retained-block checkpoint removes that raw support-row matrix
+from the private product/doside comparison path. The helper
+`CartesianContractedParentMetrics._product_doside_retained_low_order_block(...)`
+directly returns retained product/product blocks from staged 1D factors for
+`:overlap` and physical `:position_x`, `:position_y`, and `:position_z`. It
+matches both `_fill_product_staged_metric_blocks!(...)` and the private
+raw-packet retained path on the focused fixtures. Guard tests pin that
+unsupported terms reject, non-`:product_doside` units reject, and axis metadata
+or axis metric mismatches reject. This checkpoint is recorded by
+`bde3dac Add private product retained block helper` and
+`0470f27 Test product retained block helper guards`.
+
+The retained-block helper is still private infrastructure. It is not wired into
+production metric execution, public/default routes, QW/Hamiltonian builders,
+backend/default policy, PGDG/quadrature policy, CR2 paths, or science
+validation. It also does not add PQS/product mixed blocks, support-dense mixed
+packets, all-pairs production matrices, kinetic, nuclear/local, Gaussian, MWG,
+or interaction terms.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
