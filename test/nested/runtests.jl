@@ -976,6 +976,43 @@ end
           :generic_product_slab_source
     @test generic_product_source_transform.retained_transform.transform_kind ==
           :product_axis_transform
+    nonidentity_transform = [
+        inv(sqrt(2.0)) 0.0
+        0.0 inv(sqrt(2.0))
+        inv(sqrt(2.0)) 0.0
+        0.0 -inv(sqrt(2.0))
+    ]
+    nonidentity_product_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :nonidentity_product_slab,
+        :product_doside,
+        1:2,
+        collect(1:4),
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1), (2, 1, 1), (2, 2, 1)],
+        nonidentity_transform,
+        (
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_fixed_axis(1),
+        ),
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1)],
+        (source = :nonidentity_raw_product_source_test_fixture,),
+        (support_count = 4, retained_count = 2),
+    )
+    nonidentity_product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        nonidentity_product_unit;
+        source_id = :nonidentity_product_slab_source,
+        parent_dims = (2, 2, 1),
+    )
+    @test nonidentity_product_source_transform.raw_source.source_id ==
+          :nonidentity_product_slab_source
+    @test nonidentity_product_source_transform.raw_source.source_dimension == 4
+    @test nonidentity_product_source_transform.raw_source.support_indices == collect(1:4)
+    @test nonidentity_product_source_transform.retained_transform.source_id ==
+          :nonidentity_product_slab_source
+    @test nonidentity_product_source_transform.retained_transform.retained_dimension == 2
+    @test nonidentity_product_source_transform.retained_transform.transform_kind ==
+          :product_axis_transform
+    @test nonidentity_product_source_transform.retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
     mixed_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (installed_source_transform, product_source_transform);
         operator_kind = :low_order_metric,
@@ -1051,6 +1088,17 @@ end
     )
     @test generic_product_self_pair.pair_key ==
           (:generic_product_slab_source, :generic_product_slab_source)
+    nonidentity_product_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (nonidentity_product_source_transform,);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :axis_index_x, :position_x, :position_y, :position_z),
+        source = :nonidentity_product_raw_source_pair_plan_test,
+    )
+    nonidentity_product_self_pair = only(
+        CCP._cartesian_resolved_raw_product_source_pairs(nonidentity_product_pair_plan)
+    )
+    @test nonidentity_product_self_pair.pair_key ==
+          (:nonidentity_product_slab_source, :nonidentity_product_slab_source)
     position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (product_source_transform,);
         operator_kind = :low_order_metric,
@@ -1111,6 +1159,10 @@ end
     )
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
         generic_product_self_pair;
+        term = :axis_index_x,
+    )
+    @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
+        nonidentity_product_self_pair;
         term = :axis_index_x,
     )
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
@@ -1175,6 +1227,7 @@ end
     )
     physical_position_packets = Dict{Symbol,Any}()
     generic_physical_position_packets = Dict{Symbol,Any}()
+    nonidentity_physical_position_packets = Dict{Symbol,Any}()
     for term in (:position_x, :position_y, :position_z)
         packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             product_self_pair;
@@ -1186,8 +1239,14 @@ end
             term,
             axis_metrics = physical_axis_metrics,
         )
+        nonidentity_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
+            nonidentity_product_self_pair;
+            term,
+            axis_metrics = physical_axis_metrics,
+        )
         physical_position_packets[term] = packet
         generic_physical_position_packets[term] = generic_packet
+        nonidentity_physical_position_packets[term] = nonidentity_packet
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         @test packet.left_source_id == :identity_product_slab_source
@@ -1204,46 +1263,73 @@ end
         @test generic_packet.source_dimensions == (4, 4)
         @test generic_packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
         @test generic_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test nonidentity_packet.left_source_id == :nonidentity_product_slab_source
+        @test nonidentity_packet.right_source_id == :nonidentity_product_slab_source
+        @test nonidentity_packet.operator_kind == :low_order_metric
+        @test nonidentity_packet.term == term
+        @test nonidentity_packet.source_dimensions == (4, 4)
+        @test nonidentity_packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test nonidentity_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
         @test packet.raw_operator_matrix != expected_product_axis_index_x
         @test generic_packet.raw_operator_matrix != expected_product_axis_index_x
+        @test nonidentity_packet.raw_operator_matrix != expected_product_axis_index_x
         @test packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
         @test generic_packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
+        @test nonidentity_packet.diagnostics.raw_reference ==
+              Symbol(:product_doside_physical_, term)
         @test packet.diagnostics.raw_reference_error == 0.0
         @test generic_packet.diagnostics.raw_reference_error == 0.0
+        @test nonidentity_packet.diagnostics.raw_reference_error == 0.0
         @test packet.diagnostics.physical_position_operator
         @test generic_packet.diagnostics.physical_position_operator
+        @test nonidentity_packet.diagnostics.physical_position_operator
         @test !packet.diagnostics.axis_index_diagnostic
         @test !generic_packet.diagnostics.axis_index_diagnostic
+        @test !nonidentity_packet.diagnostics.axis_index_diagnostic
         @test packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test generic_packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test nonidentity_packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
         @test generic_packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
+        @test nonidentity_packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
         @test packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test generic_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test nonidentity_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test !packet.diagnostics.dense_parent_matrix_used
         @test !generic_packet.diagnostics.dense_parent_matrix_used
+        @test !nonidentity_packet.diagnostics.dense_parent_matrix_used
         @test packet.diagnostics.fixture_only
         @test generic_packet.diagnostics.fixture_only
+        @test nonidentity_packet.diagnostics.fixture_only
         @test !packet.diagnostics.production_supported
         @test !generic_packet.diagnostics.production_supported
+        @test !nonidentity_packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
         @test !generic_packet.diagnostics.metric_execution_changed
+        @test !nonidentity_packet.diagnostics.metric_execution_changed
         @test !packet.diagnostics.qwhamiltonian_consumes
         @test !generic_packet.diagnostics.qwhamiltonian_consumes
+        @test !nonidentity_packet.diagnostics.qwhamiltonian_consumes
         @test !packet.diagnostics.public_default_consumes
         @test !generic_packet.diagnostics.public_default_consumes
+        @test !nonidentity_packet.diagnostics.public_default_consumes
         @test !packet.diagnostics.backend_policy_changed
         @test !generic_packet.diagnostics.backend_policy_changed
+        @test !nonidentity_packet.diagnostics.backend_policy_changed
         @test !packet.diagnostics.quadrature_policy_changed
         @test !generic_packet.diagnostics.quadrature_policy_changed
+        @test !nonidentity_packet.diagnostics.quadrature_policy_changed
         @test !packet.diagnostics.cr2_science_status_changed
         @test !generic_packet.diagnostics.cr2_science_status_changed
+        @test !nonidentity_packet.diagnostics.cr2_science_status_changed
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         pqs_resolved_pair;
@@ -1323,8 +1409,13 @@ end
             generic_physical_position_packets[term],
             generic_product_source_transform.retained_transform,
         )
+        nonidentity_retained = CCP._cartesian_retained_low_order_operator_block(
+            nonidentity_physical_position_packets[term],
+            nonidentity_product_source_transform.retained_transform,
+        )
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
+        nonidentity_reference = transpose(nonidentity_transform) * reference * nonidentity_transform
         @test retained.left_source_id == :identity_product_slab_source
         @test retained.right_source_id == :identity_product_slab_source
         @test retained.operator_kind == :low_order_metric
@@ -1339,40 +1430,63 @@ end
         @test generic_retained.retained_dimensions == (4, 4)
         @test generic_retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
         @test generic_retained.retained_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test nonidentity_retained.left_source_id == :nonidentity_product_slab_source
+        @test nonidentity_retained.right_source_id == :nonidentity_product_slab_source
+        @test nonidentity_retained.operator_kind == :low_order_metric
+        @test nonidentity_retained.term == term
+        @test nonidentity_retained.retained_dimensions == (2, 2)
+        @test nonidentity_retained.retained_operator_matrix ≈ nonidentity_reference atol = 1.0e-14 rtol = 1.0e-14
         @test retained.diagnostics.left_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.left_transform_kind == :product_axis_transform
+        @test nonidentity_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test retained.diagnostics.right_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.right_transform_kind == :product_axis_transform
+        @test nonidentity_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test retained.diagnostics.left_transform_materialized
         @test generic_retained.diagnostics.left_transform_materialized
+        @test nonidentity_retained.diagnostics.left_transform_materialized
         @test retained.diagnostics.right_transform_materialized
         @test generic_retained.diagnostics.right_transform_materialized
+        @test nonidentity_retained.diagnostics.right_transform_materialized
         @test retained.diagnostics.retained_transform_applied
         @test generic_retained.diagnostics.retained_transform_applied
+        @test nonidentity_retained.diagnostics.retained_transform_applied
         @test retained.diagnostics.retained_operator_block_built
         @test generic_retained.diagnostics.retained_operator_block_built
+        @test nonidentity_retained.diagnostics.retained_operator_block_built
         @test retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test generic_retained.diagnostics.retained_reference == :explicit_materialized_transform
+        @test nonidentity_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
         @test generic_retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
+        @test nonidentity_retained.diagnostics.raw_operator_matrix_source ==
+              :private_physical_raw_low_order_operator_packet
         @test !retained.diagnostics.all_pair_matrices_built
         @test !generic_retained.diagnostics.all_pair_matrices_built
+        @test !nonidentity_retained.diagnostics.all_pair_matrices_built
         @test !retained.diagnostics.metric_execution_changed
         @test !generic_retained.diagnostics.metric_execution_changed
+        @test !nonidentity_retained.diagnostics.metric_execution_changed
         @test !retained.diagnostics.qwhamiltonian_consumes
         @test !generic_retained.diagnostics.qwhamiltonian_consumes
+        @test !nonidentity_retained.diagnostics.qwhamiltonian_consumes
         @test !retained.diagnostics.public_default_consumes
         @test !generic_retained.diagnostics.public_default_consumes
+        @test !nonidentity_retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
         @test !generic_retained.diagnostics.backend_policy_changed
+        @test !nonidentity_retained.diagnostics.backend_policy_changed
         @test !retained.diagnostics.quadrature_policy_changed
         @test !generic_retained.diagnostics.quadrature_policy_changed
+        @test !nonidentity_retained.diagnostics.quadrature_policy_changed
         @test !retained.diagnostics.cr2_science_status_changed
         @test !generic_retained.diagnostics.cr2_science_status_changed
+        @test !nonidentity_retained.diagnostics.cr2_science_status_changed
         @test !retained.diagnostics.ida_weight_division_allowed
         @test !generic_retained.diagnostics.ida_weight_division_allowed
+        @test !nonidentity_retained.diagnostics.ida_weight_division_allowed
     end
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,
