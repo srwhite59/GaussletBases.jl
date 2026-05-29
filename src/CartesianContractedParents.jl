@@ -323,6 +323,36 @@ struct _CartesianRawProductSourcePairPlan3D{S,T,P,D}
     diagnostics::D
 end
 
+"""
+    _CartesianResolvedRawProductSourcePair3D
+
+Private dereferenced view of one raw-source pair-packet inside a pair plan. It
+links the packet ids back to the plan-owned raw source and retained-transform
+records and records only planning/audit diagnostics.
+"""
+struct _CartesianResolvedRawProductSourcePair3D{L,R,LT,RT,P,D}
+    pair_key::NTuple{2,Symbol}
+    pair_index::Int
+    left_raw_source::L
+    right_raw_source::R
+    left_retained_transform::LT
+    right_retained_transform::RT
+    pair_packet::P
+    diagnostics::D
+end
+
+"""
+    _CartesianRawProductSourcePairPlanAudit3D
+
+Private metadata-only audit of a raw-source pair plan. This confirms lookup,
+upper-triangle, placeholder, and weight-role contracts without building raw or
+retained operator matrices.
+"""
+struct _CartesianRawProductSourcePairPlanAudit3D{R,D}
+    resolved_pairs::R
+    diagnostics::D
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -2109,6 +2139,205 @@ function _cartesian_raw_product_source_pair_plan(
         backend,
         source = :projected_q_shell_fixed_block_pair_plan,
     )
+end
+
+function _cartesian_explicit_quadrature_weight_role(role::Symbol)
+    return role in (
+        :raw_source_positive,
+        :positive_required,
+        :not_quadrature_weight,
+        :debug_reference_only,
+    )
+end
+
+function _cartesian_retained_ida_weight_division_allowed(
+    transform::_CartesianRetainedTransform3D,
+)
+    return hasproperty(transform.diagnostics, :ida_weight_division_allowed) ?
+           Bool(transform.diagnostics.ida_weight_division_allowed) : false
+end
+
+function _cartesian_pair_plan_source_index(
+    plan::_CartesianRawProductSourcePairPlan3D,
+    source_id::Symbol,
+)
+    index = findfirst(==(source_id), plan.source_ids)
+    isnothing(index) && throw(
+        ArgumentError("source id $source_id is not present in raw-source pair plan"),
+    )
+    return Int(index)
+end
+
+function _cartesian_resolve_raw_product_source_pair(
+    plan::_CartesianRawProductSourcePairPlan3D,
+    pair_index::Integer,
+)
+    packet = plan.pair_packets[Int(pair_index)]
+    return _cartesian_resolve_raw_product_source_pair(plan, packet, Int(pair_index))
+end
+
+function _cartesian_resolve_raw_product_source_pair(
+    plan::_CartesianRawProductSourcePairPlan3D,
+    packet::_CartesianRawProductSourcePairOperatorPacket3D,
+    pair_index::Integer = something(
+        findfirst(==(packet), collect(plan.pair_packets)),
+        0,
+    ),
+)
+    haskey(plan.raw_sources, packet.left_source_id) || throw(
+        ArgumentError("left raw source $(packet.left_source_id) is missing from pair plan"),
+    )
+    haskey(plan.raw_sources, packet.right_source_id) || throw(
+        ArgumentError("right raw source $(packet.right_source_id) is missing from pair plan"),
+    )
+    haskey(plan.retained_transforms, packet.left_source_id) || throw(
+        ArgumentError("left retained transform $(packet.left_source_id) is missing from pair plan"),
+    )
+    haskey(plan.retained_transforms, packet.right_source_id) || throw(
+        ArgumentError("right retained transform $(packet.right_source_id) is missing from pair plan"),
+    )
+
+    left_raw_source = plan.raw_sources[packet.left_source_id]
+    right_raw_source = plan.raw_sources[packet.right_source_id]
+    left_retained_transform = plan.retained_transforms[packet.left_source_id]
+    right_retained_transform = plan.retained_transforms[packet.right_source_id]
+    left_index = _cartesian_pair_plan_source_index(plan, packet.left_source_id)
+    right_index = _cartesian_pair_plan_source_index(plan, packet.right_source_id)
+    upper_triangular = left_index <= right_index
+    placeholder_only = isnothing(packet.operator_matrices)
+    raw_roles_explicit =
+        _cartesian_explicit_quadrature_weight_role(left_raw_source.raw_source_weight_role) &&
+        _cartesian_explicit_quadrature_weight_role(right_raw_source.raw_source_weight_role)
+    retained_roles_explicit =
+        _cartesian_explicit_quadrature_weight_role(
+            left_retained_transform.retained_column_weight_role,
+        ) &&
+        _cartesian_explicit_quadrature_weight_role(
+            right_retained_transform.retained_column_weight_role,
+        )
+    left_retained_ida_allowed =
+        _cartesian_retained_ida_weight_division_allowed(left_retained_transform)
+    right_retained_ida_allowed =
+        _cartesian_retained_ida_weight_division_allowed(right_retained_transform)
+
+    diagnostics = (
+        source = :raw_product_source_pair_plan_resolution,
+        pair_index = Int(pair_index),
+        pair_key = (packet.left_source_id, packet.right_source_id),
+        upper_triangular = upper_triangular,
+        placeholder_only = placeholder_only,
+        operator_matrices_built = false,
+        raw_operator_block_ready = false,
+        retained_operator_block_built = false,
+        plan_operator_kind_matches = packet.operator_kind == plan.operator_kind,
+        plan_supported_terms_match = packet.supported_terms == plan.supported_terms,
+        plan_symmetry_status_matches = packet.symmetry_status == plan.symmetry_status,
+        left_source_dimension = left_raw_source.source_dimension,
+        right_source_dimension = right_raw_source.source_dimension,
+        left_retained_dimension = left_retained_transform.retained_dimension,
+        right_retained_dimension = right_retained_transform.retained_dimension,
+        left_transform_kind = left_retained_transform.transform_kind,
+        right_transform_kind = right_retained_transform.transform_kind,
+        left_transform_stages = left_retained_transform.transform_stages,
+        right_transform_stages = right_retained_transform.transform_stages,
+        left_raw_source_weight_role = left_raw_source.raw_source_weight_role,
+        right_raw_source_weight_role = right_raw_source.raw_source_weight_role,
+        left_retained_column_weight_role =
+            left_retained_transform.retained_column_weight_role,
+        right_retained_column_weight_role =
+            right_retained_transform.retained_column_weight_role,
+        raw_weight_roles_explicit = raw_roles_explicit,
+        retained_weight_roles_explicit = retained_roles_explicit,
+        left_retained_ida_weight_division_allowed = left_retained_ida_allowed,
+        right_retained_ida_weight_division_allowed = right_retained_ida_allowed,
+        retained_ida_weight_division_allowed =
+            left_retained_ida_allowed || right_retained_ida_allowed,
+        pqs_factored_transform_present = any(
+            stages -> stages == (
+                :raw_product_modes,
+                :raw_boundary_projection,
+                :full_rank_symmetric_lowdin_cleanup,
+                :retained_columns,
+            ),
+            (left_retained_transform.transform_stages, right_retained_transform.transform_stages),
+        ),
+        fixture_only = true,
+        production_supported = false,
+    )
+
+    return _CartesianResolvedRawProductSourcePair3D(
+        (packet.left_source_id, packet.right_source_id),
+        Int(pair_index),
+        left_raw_source,
+        right_raw_source,
+        left_retained_transform,
+        right_retained_transform,
+        packet,
+        diagnostics,
+    )
+end
+
+function _cartesian_resolved_raw_product_source_pairs(
+    plan::_CartesianRawProductSourcePairPlan3D,
+)
+    return Tuple(
+        _cartesian_resolve_raw_product_source_pair(plan, index)
+        for index in eachindex(plan.pair_packets)
+    )
+end
+
+function _cartesian_raw_product_source_pair_plan_audit(
+    plan::_CartesianRawProductSourcePairPlan3D,
+)
+    resolved_pairs = _cartesian_resolved_raw_product_source_pairs(plan)
+    diagnostics = (
+        source = :raw_product_source_pair_plan_audit,
+        fixture_only = true,
+        production_supported = false,
+        source_count = length(plan.source_ids),
+        pair_count = length(plan.pair_packets),
+        expected_upper_triangle_pair_count =
+            length(plan.source_ids) * (length(plan.source_ids) + 1) ÷ 2,
+        every_pair_resolves_raw_sources = all(
+            pair -> pair.left_raw_source.source_id == pair.pair_key[1] &&
+                    pair.right_raw_source.source_id == pair.pair_key[2],
+            resolved_pairs,
+        ),
+        every_pair_resolves_retained_transforms = all(
+            pair -> pair.left_retained_transform.source_id == pair.pair_key[1] &&
+                    pair.right_retained_transform.source_id == pair.pair_key[2],
+            resolved_pairs,
+        ),
+        every_pair_upper_triangular = all(
+            pair -> pair.diagnostics.upper_triangular,
+            resolved_pairs,
+        ),
+        every_pair_placeholder_only = all(
+            pair -> pair.diagnostics.placeholder_only,
+            resolved_pairs,
+        ),
+        raw_weight_roles_explicit = all(
+            pair -> pair.diagnostics.raw_weight_roles_explicit,
+            resolved_pairs,
+        ),
+        retained_weight_roles_explicit = all(
+            pair -> pair.diagnostics.retained_weight_roles_explicit,
+            resolved_pairs,
+        ),
+        retained_ida_weight_division_allowed = any(
+            pair -> pair.diagnostics.retained_ida_weight_division_allowed,
+            resolved_pairs,
+        ),
+        raw_operator_matrices_built = false,
+        retained_operator_blocks_built = false,
+        metric_execution_changed = false,
+        qwhamiltonian_consumes = false,
+        public_default_consumes = false,
+        backend_policy_changed = false,
+        quadrature_policy_changed = false,
+        cr2_science_status_changed = false,
+    )
+    return _CartesianRawProductSourcePairPlanAudit3D(resolved_pairs, diagnostics)
 end
 
 function _cartesian_resolved_contraction_payloads(

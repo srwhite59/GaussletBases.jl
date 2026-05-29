@@ -848,6 +848,49 @@ end
     @test !pqs_pair_plan.diagnostics.backend_policy_changed
     @test !pqs_pair_plan.diagnostics.quadrature_policy_changed
     @test !pqs_pair_plan.diagnostics.cr2_science_status_changed
+    pqs_resolved_pair = CCP._cartesian_resolve_raw_product_source_pair(pqs_pair_plan, 1)
+    @test pqs_resolved_pair.pair_key ==
+          (pqs_raw_source.source_id, pqs_raw_source.source_id)
+    @test pqs_resolved_pair.left_raw_source.source_dimension == 5 * 5 * 5
+    @test pqs_resolved_pair.right_raw_source.source_dimension == 5 * 5 * 5
+    @test pqs_resolved_pair.left_retained_transform.retained_dimension == 98
+    @test pqs_resolved_pair.right_retained_transform.retained_dimension == 98
+    @test pqs_resolved_pair.left_retained_transform.transform_kind ==
+          :boundary_projection_lowdin
+    @test pqs_resolved_pair.right_retained_transform.transform_kind ==
+          :boundary_projection_lowdin
+    @test pqs_resolved_pair.diagnostics.upper_triangular
+    @test pqs_resolved_pair.diagnostics.placeholder_only
+    @test !pqs_resolved_pair.diagnostics.operator_matrices_built
+    @test pqs_resolved_pair.diagnostics.left_raw_source_weight_role ==
+          :raw_source_positive
+    @test pqs_resolved_pair.diagnostics.right_raw_source_weight_role ==
+          :raw_source_positive
+    @test pqs_resolved_pair.diagnostics.left_retained_column_weight_role ==
+          :debug_reference_only
+    @test pqs_resolved_pair.diagnostics.right_retained_column_weight_role ==
+          :debug_reference_only
+    @test pqs_resolved_pair.diagnostics.raw_weight_roles_explicit
+    @test pqs_resolved_pair.diagnostics.retained_weight_roles_explicit
+    @test !pqs_resolved_pair.diagnostics.retained_ida_weight_division_allowed
+    @test pqs_resolved_pair.diagnostics.pqs_factored_transform_present
+    pqs_plan_audit = CCP._cartesian_raw_product_source_pair_plan_audit(pqs_pair_plan)
+    @test length(pqs_plan_audit.resolved_pairs) == 1
+    @test pqs_plan_audit.diagnostics.every_pair_resolves_raw_sources
+    @test pqs_plan_audit.diagnostics.every_pair_resolves_retained_transforms
+    @test pqs_plan_audit.diagnostics.every_pair_upper_triangular
+    @test pqs_plan_audit.diagnostics.every_pair_placeholder_only
+    @test pqs_plan_audit.diagnostics.raw_weight_roles_explicit
+    @test pqs_plan_audit.diagnostics.retained_weight_roles_explicit
+    @test !pqs_plan_audit.diagnostics.retained_ida_weight_division_allowed
+    @test !pqs_plan_audit.diagnostics.raw_operator_matrices_built
+    @test !pqs_plan_audit.diagnostics.retained_operator_blocks_built
+    @test !pqs_plan_audit.diagnostics.metric_execution_changed
+    @test !pqs_plan_audit.diagnostics.qwhamiltonian_consumes
+    @test !pqs_plan_audit.diagnostics.public_default_consumes
+    @test !pqs_plan_audit.diagnostics.backend_policy_changed
+    @test !pqs_plan_audit.diagnostics.quadrature_policy_changed
+    @test !pqs_plan_audit.diagnostics.cr2_science_status_changed
     identity_axis = Matrix{Float64}(I, 2, 2)
     product_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
         :identity_product_slab,
@@ -926,6 +969,61 @@ end
         packet -> packet.symmetry_status == :symmetric_upper_triangle_placeholder,
         mixed_pair_plan.pair_packets,
     )
+    mixed_resolved_pairs =
+        CCP._cartesian_resolved_raw_product_source_pairs(mixed_pair_plan)
+    @test length(mixed_resolved_pairs) == 3
+    @test [pair.pair_key for pair in mixed_resolved_pairs] == expected_mixed_pair_keys
+    @test all(pair -> pair.diagnostics.upper_triangular, mixed_resolved_pairs)
+    @test all(pair -> pair.diagnostics.placeholder_only, mixed_resolved_pairs)
+    @test all(pair -> pair.diagnostics.raw_weight_roles_explicit, mixed_resolved_pairs)
+    @test all(
+        pair -> pair.diagnostics.retained_weight_roles_explicit,
+        mixed_resolved_pairs,
+    )
+    @test all(
+        pair -> !pair.diagnostics.retained_ida_weight_division_allowed,
+        mixed_resolved_pairs,
+    )
+    @test all(
+        pair -> pair.left_raw_source.source_id == pair.pair_key[1] &&
+                pair.right_raw_source.source_id == pair.pair_key[2],
+        mixed_resolved_pairs,
+    )
+    @test all(
+        pair -> pair.left_retained_transform.source_id == pair.pair_key[1] &&
+                pair.right_retained_transform.source_id == pair.pair_key[2],
+        mixed_resolved_pairs,
+    )
+    mixed_cross_pair = only(
+        pair for pair in mixed_resolved_pairs
+        if pair.pair_key == (mixed_source_ids[1], mixed_source_ids[2])
+    )
+    @test Set((
+        mixed_cross_pair.left_raw_source.source_dimension,
+        mixed_cross_pair.right_raw_source.source_dimension,
+    )) == Set((4, 5 * 5 * 5))
+    @test Set((
+        mixed_cross_pair.left_retained_transform.retained_dimension,
+        mixed_cross_pair.right_retained_transform.retained_dimension,
+    )) == Set((4, 98))
+    @test mixed_cross_pair.diagnostics.pqs_factored_transform_present
+    mixed_plan_audit = CCP._cartesian_raw_product_source_pair_plan_audit(mixed_pair_plan)
+    @test length(mixed_plan_audit.resolved_pairs) == 3
+    @test mixed_plan_audit.diagnostics.every_pair_resolves_raw_sources
+    @test mixed_plan_audit.diagnostics.every_pair_resolves_retained_transforms
+    @test mixed_plan_audit.diagnostics.every_pair_upper_triangular
+    @test mixed_plan_audit.diagnostics.every_pair_placeholder_only
+    @test mixed_plan_audit.diagnostics.raw_weight_roles_explicit
+    @test mixed_plan_audit.diagnostics.retained_weight_roles_explicit
+    @test !mixed_plan_audit.diagnostics.retained_ida_weight_division_allowed
+    @test !mixed_plan_audit.diagnostics.raw_operator_matrices_built
+    @test !mixed_plan_audit.diagnostics.retained_operator_blocks_built
+    @test !mixed_plan_audit.diagnostics.metric_execution_changed
+    @test !mixed_plan_audit.diagnostics.qwhamiltonian_consumes
+    @test !mixed_plan_audit.diagnostics.public_default_consumes
+    @test !mixed_plan_audit.diagnostics.backend_policy_changed
+    @test !mixed_plan_audit.diagnostics.quadrature_policy_changed
+    @test !mixed_plan_audit.diagnostics.cr2_science_status_changed
     pqs_product_policy = CCPM._pqs_product_mixed_block_policy()
     @test pqs_product_policy.pair_kind == :pqs_product_mixed
     @test pqs_product_policy.optimized_metric_path == :unsupported_pqs_product_optimized
