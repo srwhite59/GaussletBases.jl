@@ -5180,6 +5180,45 @@ end
     @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
+    kinetic_axis_ops = (
+        x = (overlap = pgdg_x.overlap, kinetic = pgdg_x.kinetic),
+        y = (overlap = pgdg_y.overlap, kinetic = pgdg_y.kinetic),
+        z = (overlap = pgdg_z.overlap, kinetic = pgdg_z.kinetic),
+    )
+    kinetic_product_units = [
+        unit for unit in sidecar_units if unit.kind == :product_doside
+    ]
+    @test length(kinetic_product_units) ==
+          fixed_block.staged_by_center_sidecar[].diagnostics.product_unit_count
+    kinetic_shadow_block_count = 0
+    kinetic_shadow_errors = Float64[]
+    for right_index in eachindex(kinetic_product_units)
+        right = kinetic_product_units[right_index]
+        for left_index in 1:right_index
+            left = kinetic_product_units[left_index]
+            kinetic_shadow_block = CCPM._product_doside_retained_kinetic_block(
+                left,
+                right,
+                kinetic_axis_ops,
+            )
+            kinetic_reference_block =
+                fixed_block.kinetic[left.column_range, right.column_range]
+            push!(
+                kinetic_shadow_errors,
+                maximum(abs.(kinetic_shadow_block .- kinetic_reference_block)),
+            )
+            @test kinetic_shadow_block ≈ kinetic_reference_block atol = 1.0e-10 rtol = 1.0e-10
+            if left_index != right_index
+                kinetic_mirror_reference =
+                    fixed_block.kinetic[right.column_range, left.column_range]
+                @test transpose(kinetic_shadow_block) ≈ kinetic_mirror_reference atol = 1.0e-10 rtol = 1.0e-10
+            end
+            kinetic_shadow_block_count += 1
+        end
+    end
+    @test kinetic_shadow_block_count ==
+          length(kinetic_product_units) * (length(kinetic_product_units) + 1) ÷ 2
+    @test maximum(kinetic_shadow_errors) <= 1.0e-10
 
     carried = CCS.cartesian_carried_space(fixed_block)
     carried_parent = CCS.carried_space_parent(carried)
