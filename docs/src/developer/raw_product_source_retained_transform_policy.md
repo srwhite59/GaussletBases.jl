@@ -405,6 +405,48 @@ builder should consume this source shape upstream, rather than reconstructing
 it after `_nested_shell_packet(...)` has already built the authoritative
 packet.
 
+The first safe-field shadow checkpoint is recorded by
+`b662efa Add packet build source safe-field shadow`. The private helper
+`CartesianContractedParentMetrics._cartesian_packet_build_source_safe_field_shadow(...)`
+consumes a `_CartesianPacketBuildSource3D` plus explicit axis data and
+reconstructs the safe field set only:
+
+```text
+overlap
+position_x / position_y / position_z
+weights
+first_moments
+kinetic
+```
+
+On the q4 bond-aligned endcap-panel fixture, the shadow fields match the
+authoritative/reference data with maximum errors:
+
+```text
+overlap       1.71e-15
+position_x    5.33e-15
+position_y    5.33e-15
+position_z    1.00e-14
+weights       3.51e-14
+first_moments 0.0
+kinetic       6.57e-14
+```
+
+`first_moments` are compared against the contracted-parent metric packet
+reference, not `_CartesianNestedShellPacket3D`, because the shell packet does
+not carry first moments. Product/product blocks use the retained
+product/doside helpers; support/support and product/support blocks use the
+support-local fallback.
+
+This helper is still source-driven shadow infrastructure, not packet
+construction adoption. `_nested_shell_packet(...)` remains the current
+numerical packet authority, and no fixed-block construction, metric-packet
+public behavior, QW/Hamiltonian path, backend/quadrature policy, IDA or
+positive-weight semantics, CR2 path, or science behavior changed. The next
+architecture question is whether and how to produce `_CartesianPacketBuildSource3D`
+upstream before `_nested_shell_packet(...)`, rather than reconstructing it from
+a sidecar after packet construction has already happened.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
