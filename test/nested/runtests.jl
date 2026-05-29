@@ -667,6 +667,70 @@ end
     @test sidecar_self_block.position_z ≈ pqs_self_block.position_z atol = 1.0e-12 rtol = 1.0e-12
     @test sidecar_mixed_block.overlap ≈ pqs_mixed_block.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test sidecar_mixed_block.position_x ≈ pqs_mixed_block.position_x atol = 1.0e-12 rtol = 1.0e-12
+    pqs_fixed_sidecar_block =
+        CCP._cartesian_projected_q_shell_fixed_block_sidecar_fixture(
+            bundle5.basis,
+            cubic;
+            gausslet_backend = :pgdg_localized_experimental,
+        )
+    @test pqs_fixed_sidecar_block isa GaussletBases._NestedFixedBlock3D
+    @test pqs_fixed_sidecar_block.shell === cubic
+    @test pqs_fixed_sidecar_block.gausslet_backend == :pgdg_localized_experimental
+    @test size(pqs_fixed_sidecar_block.coefficient_matrix) == (5 * 5 * 5, 98)
+    @test pqs_fixed_sidecar_block.support_indices == cubic.support_indices
+    installed_pqs_sidecar =
+        CCP._nested_projected_q_shell_sidecar_fixture(pqs_fixed_sidecar_block)
+    @test installed_pqs_sidecar === pqs_fixed_sidecar_block.staged_by_center_sidecar[]
+    @test installed_pqs_sidecar.dims == (5, 5, 5)
+    @test installed_pqs_sidecar.provenance.source ==
+          :projected_q_shell_fixed_block_sidecar_fixture
+    @test installed_pqs_sidecar.provenance.installed_in_fixed_block
+    @test installed_pqs_sidecar.provenance.fixed_block_sidecar_slot ==
+          :staged_by_center_sidecar_fixture_only
+    @test installed_pqs_sidecar.diagnostics.source ==
+          :projected_q_shell_fixed_block_sidecar_fixture
+    @test installed_pqs_sidecar.diagnostics.fixture_only
+    @test installed_pqs_sidecar.diagnostics.fixed_block_sidecar_installed
+    @test !installed_pqs_sidecar.diagnostics.by_center_consumes
+    @test !installed_pqs_sidecar.diagnostics.default_builder_consumes
+    @test !installed_pqs_sidecar.diagnostics.qw_consumes
+    @test !installed_pqs_sidecar.diagnostics.hamiltonian_consumes
+    @test !installed_pqs_sidecar.diagnostics.production_supported
+    @test installed_pqs_sidecar.diagnostics.metric_capability ==
+          :pqs_low_order_support_local_reference
+    @test_throws ArgumentError GaussletBases._nested_staged_by_center_sidecar(
+        pqs_fixed_sidecar_block,
+    )
+    @test GaussletBases._nested_by_center_sidecar_path(pqs_fixed_sidecar_block) ==
+          :unknown_staged_sidecar
+    installed_pqs_resolved = CCP._cartesian_resolved_contraction_payloads(
+        installed_pqs_sidecar,
+    )
+    @test length(installed_pqs_resolved) == 1
+    @test only(installed_pqs_resolved).ready_for_metric_execution
+    @test only(installed_pqs_resolved).diagnostics.fixture_only
+    @test !only(installed_pqs_resolved).diagnostics.production_supported
+    @test only(installed_pqs_resolved).diagnostics.fixed_block_sidecar_installed
+    @test only(installed_pqs_resolved).diagnostics.block_role == :pqs
+    installed_metric_reference =
+        CCPM._projected_q_shell_sidecar_low_order_metric_reference(
+            installed_pqs_sidecar,
+            cubic_metrics;
+            mixed_payloads = (support_dense_resolved,),
+        )
+    @test installed_metric_reference.diagnostics.fixed_block_sidecar_installed
+    @test !installed_metric_reference.diagnostics.default_builder_consumes
+    @test !installed_metric_reference.diagnostics.qw_consumes
+    @test !installed_metric_reference.diagnostics.hamiltonian_consumes
+    installed_self_block = only(installed_metric_reference.self_blocks)
+    installed_mixed_block = only(installed_metric_reference.mixed_blocks)
+    @test installed_self_block.overlap == pqs_self_block.overlap
+    @test installed_self_block.weights ≈ pqs_self_block.weights atol = 1.0e-12 rtol = 1.0e-12
+    @test installed_self_block.position_x ≈ pqs_self_block.position_x atol = 1.0e-12 rtol = 1.0e-12
+    @test installed_self_block.position_y ≈ pqs_self_block.position_y atol = 1.0e-12 rtol = 1.0e-12
+    @test installed_self_block.position_z ≈ pqs_self_block.position_z atol = 1.0e-12 rtol = 1.0e-12
+    @test installed_mixed_block.overlap ≈ pqs_mixed_block.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test installed_mixed_block.position_x ≈ pqs_mixed_block.position_x atol = 1.0e-12 rtol = 1.0e-12
     pqs_product_policy = CCPM._pqs_product_mixed_block_policy()
     @test pqs_product_policy.pair_kind == :pqs_product_mixed
     @test pqs_product_policy.optimized_metric_path == :unsupported_pqs_product_optimized

@@ -7,10 +7,13 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _CartesianNestedEndcapPanelOwnedUnits3D,
                          _CartesianNestedEndcapPanelShellLayer3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
+                         _CartesianNestedProjectedQShellLayer3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _NestedFixedBlock3D,
                          _cartesian_coefficient_map_storage,
+                         _nested_parent_axis_counts,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
+                         _nested_projected_q_shell_staged_unit_descriptor,
                          _nested_staged_by_center_sidecar
 import ..GaussletBases.CartesianParentGaussletBases:
     CartesianParentGaussletBasis3D,
@@ -1412,6 +1415,7 @@ end
 function _cartesian_resolved_contraction_payload(
     payload::_CartesianExecutableProjectedQShellPayload3D;
     parent_dimension::Union{Nothing,Int} = nothing,
+    fixed_block_sidecar_installed::Bool = false,
 )
     support_summary = _contraction_rule_support_summary(
         payload.support_indices;
@@ -1444,7 +1448,7 @@ function _cartesian_resolved_contraction_payload(
             parent_dimension_coefficient_map = false,
             payload_ready_for_current_metric_execution = true,
             default_builder_consumes = false,
-            fixed_block_sidecar_installed = false,
+            fixed_block_sidecar_installed = fixed_block_sidecar_installed,
             support_summary = support_summary,
         ),
         (
@@ -1492,12 +1496,133 @@ function _cartesian_projected_q_shell_sidecar_fixture(
     )
 end
 
+function _cartesian_projected_q_shell_installed_sidecar_fixture(
+    sidecar::_CartesianProjectedQShellSidecarFixture3D,
+)
+    diagnostics = merge(
+        sidecar.diagnostics,
+        (
+            source = :projected_q_shell_fixed_block_sidecar_fixture,
+            fixture_only = true,
+            fixed_block_sidecar_installed = true,
+            by_center_consumes = false,
+            default_builder_consumes = false,
+            qw_consumes = false,
+            hamiltonian_consumes = false,
+            production_supported = false,
+            metric_capability = :pqs_low_order_support_local_reference,
+            pqs_product_optimized_path_ready = false,
+        ),
+    )
+    provenance = merge(
+        sidecar.provenance,
+        (
+            source = :projected_q_shell_fixed_block_sidecar_fixture,
+            installed_in_fixed_block = true,
+            fixed_block_sidecar_slot = :staged_by_center_sidecar_fixture_only,
+            by_center_consumes = false,
+            public_api = false,
+        ),
+    )
+    return _CartesianProjectedQShellSidecarFixture3D(
+        sidecar.dims,
+        sidecar.payloads,
+        provenance,
+        diagnostics,
+    )
+end
+
+function _nested_projected_q_shell_sidecar_fixture(fixed_block::_NestedFixedBlock3D)
+    sidecar = fixed_block.staged_by_center_sidecar[]
+    isnothing(sidecar) && return nothing
+    sidecar isa _CartesianProjectedQShellSidecarFixture3D || throw(
+        ArgumentError("nested fixed block does not carry a projected q-shell sidecar fixture"),
+    )
+    dims = _nested_parent_axis_counts(fixed_block.parent_basis)
+    sidecar.dims == dims || throw(
+        DimensionMismatch("projected q-shell fixed-block sidecar dimensions must match parent basis"),
+    )
+    ncolumns = size(fixed_block.coefficient_matrix, 2)
+    isempty(sidecar.payloads) && throw(
+        ArgumentError("projected q-shell fixed-block sidecar requires at least one payload"),
+    )
+    ranges = UnitRange{Int}[payload.column_range for payload in sidecar.payloads]
+    for range in ranges
+        first(range) >= 1 && last(range) <= ncolumns || throw(
+            ArgumentError("projected q-shell sidecar column range $range exceeds fixed dimension $ncolumns"),
+        )
+    end
+    covered_columns = sort!(reduce(vcat, (collect(range) for range in ranges)))
+    covered_columns == collect(1:ncolumns) || throw(
+        ArgumentError("projected q-shell fixed-block sidecar payloads must cover every fixed column exactly once"),
+    )
+    return sidecar
+end
+
+function _cartesian_projected_q_shell_fixed_block_sidecar_fixture(
+    parent_basis,
+    layer::_CartesianNestedProjectedQShellLayer3D;
+    gausslet_backend::Symbol = :unknown,
+)
+    descriptor = _nested_projected_q_shell_staged_unit_descriptor(layer)
+    dims = _nested_parent_axis_counts(parent_basis)
+    parent_dimension = prod(dims)
+    size(layer.coefficient_matrix, 1) == parent_dimension || throw(
+        DimensionMismatch("projected q-shell fixed-block fixture parent dimension does not match parent basis"),
+    )
+    ncolumns = size(layer.coefficient_matrix, 2)
+    ncolumns == descriptor.retained_count || throw(
+        DimensionMismatch("projected q-shell fixed-block fixture column count must match descriptor retained count"),
+    )
+    sidecar = _cartesian_projected_q_shell_sidecar_fixture(
+        descriptor;
+        column_range = 1:ncolumns,
+        dims,
+    )
+    installed_sidecar = _cartesian_projected_q_shell_installed_sidecar_fixture(sidecar)
+    packet = layer.packet
+    fixed_centers = Matrix{Float64}(undef, ncolumns, 3)
+    @inbounds for column in 1:ncolumns
+        fixed_centers[column, 1] = packet.position_x[column, column]
+        fixed_centers[column, 2] = packet.position_y[column, column]
+        fixed_centers[column, 3] = packet.position_z[column, column]
+    end
+    return _NestedFixedBlock3D(
+        parent_basis,
+        layer,
+        gausslet_backend,
+        layer.coefficient_matrix,
+        copy(layer.support_indices),
+        packet.overlap,
+        packet.kinetic,
+        packet.position_x,
+        packet.position_y,
+        packet.position_z,
+        packet.x2_x,
+        packet.x2_y,
+        packet.x2_z,
+        packet.weights,
+        packet.gaussian_sum,
+        packet.pair_sum,
+        fixed_centers,
+        Base.RefValue{Any}(nothing),
+        Base.RefValue{Any}(installed_sidecar),
+    )
+end
+
 function _cartesian_resolved_contraction_payloads(
     sidecar::_CartesianProjectedQShellSidecarFixture3D,
 )
     parent_dimension = prod(sidecar.dims)
+    fixed_block_sidecar_installed =
+        hasproperty(sidecar.diagnostics, :fixed_block_sidecar_installed) ?
+        Bool(sidecar.diagnostics.fixed_block_sidecar_installed) : false
     return [
-        _cartesian_resolved_contraction_payload(payload; parent_dimension)
+        _cartesian_resolved_contraction_payload(
+            payload;
+            parent_dimension,
+            fixed_block_sidecar_installed,
+        )
         for payload in sidecar.payloads
     ]
 end
