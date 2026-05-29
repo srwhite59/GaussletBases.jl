@@ -5131,6 +5131,70 @@ end
           [path.metric_capability for path in dispatch_shadow.payload_plan.unit_paths]
     @test [path.path for path in dispatch_shadow.payload_plan.block_paths] ==
           [path.path for path in dispatch_shadow.rule_plan.block_paths]
+    packet_build_plan = CCP._cartesian_packet_build_plan(
+        fixed_block.staged_by_center_sidecar[],
+    )
+    packet_build_source = packet_build_plan.source
+    packet_payload_counts = Dict(packet_build_source.payload_kind_counts)
+    @test packet_build_plan isa CCP._CartesianPacketBuildPlan3D
+    @test packet_build_source isa CCP._CartesianPacketBuildSource3D
+    @test packet_build_source.parent_dimension == parent_dim
+    @test packet_build_source.contracted_dimension == 313
+    @test length(packet_build_source.resolved_payloads) == length(resolved_payloads)
+    @test [payload.payload for payload in packet_build_source.resolved_payloads] ==
+          [payload.payload for payload in resolved_payloads]
+    @test [payload.payload_kind for payload in packet_build_source.resolved_payloads] ==
+          [payload.payload_kind for payload in resolved_payloads]
+    @test [payload.column_range for payload in packet_build_source.resolved_payloads] ==
+          [payload.column_range for payload in resolved_payloads]
+    @test all(payload -> payload.ready_for_metric_execution, packet_build_source.resolved_payloads)
+    @test packet_build_source.column_ranges ==
+          [unit.column_range for unit in sidecar_units]
+    @test packet_build_source.column_coverage.entry_count == 313
+    @test packet_build_source.column_coverage.unique_count == 313
+    @test packet_build_source.column_coverage.duplicate_count == 0
+    @test packet_build_source.column_coverage.missing_count == 0
+    @test packet_build_source.column_coverage.outside_count == 0
+    @test packet_build_source.support_summary.parent_dimension == parent_dim
+    @test packet_build_source.support_summary.outside_count == 0
+    @test packet_payload_counts[:product_doside] == 6
+    @test packet_payload_counts[:support_dense] == length(support_rules)
+    @test packet_build_source.available_packet_fields == (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :weights,
+        :first_moments,
+        :kinetic,
+    )
+    @test :x2_x in packet_build_source.missing_packet_fields
+    @test :gaussian_local_terms in packet_build_source.missing_packet_fields
+    @test :mwg_interaction in packet_build_source.missing_packet_fields
+    @test packet_build_source.axis_operator_requirements.kinetic ==
+          (:overlap, :kinetic)
+    @test packet_build_source.diagnostics.metadata_only
+    @test packet_build_source.diagnostics.descriptor_does_not_drive_builder
+    @test packet_build_source.diagnostics.current_builder_authority ==
+          :nested_shell_packet
+    @test !packet_build_source.diagnostics.numerical_packet_matrices_built
+    @test !packet_build_source.diagnostics.overlap_matrix_built
+    @test !packet_build_source.diagnostics.kinetic_matrix_built
+    @test packet_build_source.diagnostics.column_ranges_cover_contract
+    @test packet_build_source.diagnostics.ready_for_available_packet_fields
+    @test !packet_build_source.diagnostics.full_packet_builder_ready
+    @test packet_build_plan.current_builder_authority == :nested_shell_packet
+    @test !packet_build_plan.descriptor_drives_builder
+    @test !packet_build_plan.numerical_packet_matrices_built
+    @test packet_build_plan.diagnostics.metadata_only
+    @test packet_build_plan.diagnostics.current_nested_shell_packet_authoritative
+    @test !packet_build_plan.diagnostics.fixed_block_construction_changed
+    @test !packet_build_plan.diagnostics.metric_packet_execution_changed
+    @test !packet_build_plan.diagnostics.qwhamiltonian_changed
+    @test !packet_build_plan.diagnostics.backend_policy_changed
+    @test !packet_build_plan.diagnostics.quadrature_policy_changed
+    @test !packet_build_plan.diagnostics.ida_positive_weight_semantics_changed
+    @test !packet_build_plan.diagnostics.cr2_science_status_changed
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
         contracted_parent;
         axis_metrics,

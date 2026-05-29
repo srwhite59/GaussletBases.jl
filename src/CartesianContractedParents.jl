@@ -8,6 +8,7 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
                          _CartesianNestedEndcapPanelOwnedUnits3D,
                          _CartesianNestedEndcapPanelShellLayer3D,
+                         _CartesianNestedProductStagedByCenterSidecar3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
                          _CartesianNestedProjectedQShellLayer3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
@@ -198,6 +199,46 @@ struct _CartesianResolvedContractionPayload3D{S,H,D,P}
     support_states::S
     payload::H
     missing_fields::Tuple{Vararg{Symbol}}
+    diagnostics::D
+    provenance::P
+end
+
+"""
+    _CartesianPacketBuildSource3D
+
+Private metadata-only description of the resolved payloads a future Cartesian
+packet builder would consume. It records dimensions, coverage, packet-field
+capabilities, and axis requirements without building packet matrices or
+changing the existing `_nested_shell_packet(...)` authority.
+"""
+struct _CartesianPacketBuildSource3D{R,C,S,K,A,M,D,P}
+    parent_dimension::Int
+    contracted_dimension::Int
+    resolved_payloads::R
+    column_ranges::Vector{UnitRange{Int}}
+    column_coverage::C
+    support_summary::S
+    payload_kind_counts::K
+    available_packet_fields::Tuple{Vararg{Symbol}}
+    missing_packet_fields::Tuple{Vararg{Symbol}}
+    axis_operator_requirements::A
+    unit_descriptors::M
+    diagnostics::D
+    provenance::P
+end
+
+"""
+    _CartesianPacketBuildPlan3D
+
+Private metadata-only construction plan around a packet build source. This is
+an audit/planning object only: it must not build overlap, kinetic, local,
+Gaussian, MWG, interaction, QW, or Hamiltonian data.
+"""
+struct _CartesianPacketBuildPlan3D{S,D,P}
+    source::S
+    current_builder_authority::Symbol
+    descriptor_drives_builder::Bool
+    numerical_packet_matrices_built::Bool
     diagnostics::D
     provenance::P
 end
@@ -3028,6 +3069,190 @@ function _cartesian_resolved_contraction_payloads(
         )
         for payload in sidecar.payloads
     ]
+end
+
+function _packet_build_column_coverage(
+    column_ranges::AbstractVector{<:UnitRange{Int}},
+    contracted_dimension::Integer,
+)
+    columns = Int[]
+    for range in column_ranges
+        append!(columns, collect(range))
+    end
+    return _entry_counts(columns, 1:Int(contracted_dimension))
+end
+
+function _packet_build_source_unit_descriptor(payload::_CartesianResolvedContractionPayload3D)
+    return (
+        payload_kind = payload.payload_kind,
+        metric_path = payload.metric_path,
+        ready_for_metric_execution = payload.ready_for_metric_execution,
+        column_range = payload.column_range,
+        support_count = isnothing(payload.support_indices) ? nothing : length(payload.support_indices),
+        block_role = hasproperty(payload.diagnostics, :block_role) ?
+                     payload.diagnostics.block_role : nothing,
+        metric_capability = hasproperty(payload.diagnostics, :metric_capability) ?
+                            payload.diagnostics.metric_capability : nothing,
+        numerical_packet_matrices_built = false,
+    )
+end
+
+function _cartesian_packet_build_source_from_resolved_payloads(
+    resolved_payloads;
+    parent_dimension::Integer,
+    contracted_dimension::Union{Nothing,Integer} = nothing,
+    provenance = (; source = :resolved_contraction_payloads),
+)
+    payloads = collect(resolved_payloads)
+    isempty(payloads) && throw(
+        ArgumentError("Cartesian packet build source requires at least one resolved payload"),
+    )
+    all(payload -> payload.ready_for_metric_execution, payloads) || throw(
+        ArgumentError("Cartesian packet build source requires executable resolved payloads"),
+    )
+    any(payload -> isnothing(payload.column_range), payloads) && throw(
+        ArgumentError("Cartesian packet build source requires every payload to have a column range"),
+    )
+    column_ranges = UnitRange{Int}[payload.column_range for payload in payloads]
+    resolved_contracted_dimension = isnothing(contracted_dimension) ?
+        maximum(last(range) for range in column_ranges) :
+        Int(contracted_dimension)
+    support_indices = Int[]
+    for payload in payloads
+        isnothing(payload.support_indices) && throw(
+            ArgumentError("Cartesian packet build source requires every payload to have support indices"),
+        )
+        append!(support_indices, payload.support_indices)
+    end
+    column_coverage = _packet_build_column_coverage(
+        column_ranges,
+        resolved_contracted_dimension,
+    )
+    support_summary = _contraction_rule_support_summary(
+        support_indices;
+        parent_dimension = Int(parent_dimension),
+    )
+    payload_kind_counts = _symbol_count_pairs(payload.payload_kind for payload in payloads)
+    available_packet_fields = (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :weights,
+        :first_moments,
+        :kinetic,
+    )
+    missing_packet_fields = (
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :gaussian_local_terms,
+        :gaussian_sum,
+        :pair_sum,
+        :mwg_interaction,
+        :interaction,
+    )
+    axis_operator_requirements = (
+        overlap = (:overlap,),
+        position = (:position,),
+        weights = (:weights,),
+        centers = (:centers,),
+        kinetic = (:overlap, :kinetic),
+    )
+    unit_descriptors = [
+        _packet_build_source_unit_descriptor(payload) for payload in payloads
+    ]
+    return _CartesianPacketBuildSource3D(
+        Int(parent_dimension),
+        resolved_contracted_dimension,
+        payloads,
+        column_ranges,
+        column_coverage,
+        support_summary,
+        payload_kind_counts,
+        available_packet_fields,
+        missing_packet_fields,
+        axis_operator_requirements,
+        unit_descriptors,
+        (
+            source = :cartesian_packet_build_source,
+            metadata_only = true,
+            descriptor_does_not_drive_builder = true,
+            current_builder_authority = :nested_shell_packet,
+            numerical_packet_matrices_built = false,
+            overlap_matrix_built = false,
+            position_matrices_built = false,
+            weights_built = false,
+            kinetic_matrix_built = false,
+            gaussian_terms_built = false,
+            interaction_terms_built = false,
+            column_ranges_cover_contract =
+                column_coverage.missing_count == 0 &&
+                column_coverage.outside_count == 0 &&
+                column_coverage.duplicate_count == 0,
+            ready_for_available_packet_fields =
+                column_coverage.missing_count == 0 &&
+                column_coverage.outside_count == 0 &&
+                column_coverage.duplicate_count == 0,
+            full_packet_builder_ready = false,
+        ),
+        provenance,
+    )
+end
+
+function _cartesian_packet_build_source(
+    sidecar::_CartesianNestedProductStagedByCenterSidecar3D,
+)
+    parent_dimension = prod(sidecar.dims)
+    resolved_payloads = [
+        _cartesian_resolved_contraction_payload(unit; parent_dimension)
+        for unit in sidecar.units
+    ]
+    contracted_dimension = hasproperty(sidecar.diagnostics, :final_dimension) ?
+        Int(sidecar.diagnostics.final_dimension) :
+        maximum(last(unit.column_range) for unit in sidecar.units)
+    return _cartesian_packet_build_source_from_resolved_payloads(
+        resolved_payloads;
+        parent_dimension,
+        contracted_dimension,
+        provenance = (
+            source = :nested_product_staged_by_center_sidecar,
+            sidecar,
+            original_provenance = sidecar.provenance,
+        ),
+    )
+end
+
+function _cartesian_packet_build_plan(
+    sidecar::_CartesianNestedProductStagedByCenterSidecar3D,
+)
+    source = _cartesian_packet_build_source(sidecar)
+    return _CartesianPacketBuildPlan3D(
+        source,
+        :nested_shell_packet,
+        false,
+        false,
+        (
+            source = :cartesian_packet_build_plan,
+            metadata_only = true,
+            descriptor_does_not_drive_builder = true,
+            current_nested_shell_packet_authoritative = true,
+            fixed_block_construction_changed = false,
+            metric_packet_execution_changed = false,
+            qwhamiltonian_changed = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            ida_positive_weight_semantics_changed = false,
+            cr2_science_status_changed = false,
+            numerical_packet_matrices_built = false,
+            available_packet_fields = source.available_packet_fields,
+            missing_packet_fields = source.missing_packet_fields,
+        ),
+        (
+            source = :nested_product_staged_by_center_sidecar,
+            packet_build_source = source,
+        ),
+    )
 end
 
 """
