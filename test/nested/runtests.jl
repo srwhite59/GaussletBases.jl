@@ -961,6 +961,21 @@ end
     @test product_source_transform.retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
     @test product_source_transform.retained_transform.diagnostics.fast_product_path_requires_separable_axis_transforms
     @test product_source_transform.retained_transform.diagnostics.separable_axis_transforms_available
+    generic_product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        product_unit;
+        source_id = :generic_product_slab_source,
+        parent_dims = (2, 2, 1),
+    )
+    @test generic_product_source_transform.raw_source.source_id ==
+          :generic_product_slab_source
+    @test generic_product_source_transform.raw_source.source_dimension == 4
+    @test generic_product_source_transform.raw_source.support_indices == collect(1:4)
+    @test generic_product_source_transform.raw_source.raw_source_weight_role ==
+          :raw_source_positive
+    @test generic_product_source_transform.retained_transform.source_id ==
+          :generic_product_slab_source
+    @test generic_product_source_transform.retained_transform.transform_kind ==
+          :product_axis_transform
     mixed_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (installed_source_transform, product_source_transform);
         operator_kind = :low_order_metric,
@@ -1025,6 +1040,17 @@ end
         pair for pair in mixed_resolved_pairs
         if pair.pair_key == (:identity_product_slab_source, :identity_product_slab_source)
     )
+    generic_product_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (generic_product_source_transform,);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :axis_index_x, :position_x, :position_y, :position_z),
+        source = :generic_product_raw_source_pair_plan_test,
+    )
+    generic_product_self_pair = only(
+        CCP._cartesian_resolved_raw_product_source_pairs(generic_product_pair_plan)
+    )
+    @test generic_product_self_pair.pair_key ==
+          (:generic_product_slab_source, :generic_product_slab_source)
     position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (product_source_transform,);
         operator_kind = :low_order_metric,
@@ -1081,6 +1107,10 @@ end
     )
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
         axis_index_omitting_pair;
+        term = :axis_index_x,
+    )
+    @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
+        generic_product_self_pair;
         term = :axis_index_x,
     )
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
@@ -1144,13 +1174,20 @@ end
         position_z = Diagonal([3.25, 3.25, 3.25, 3.25]),
     )
     physical_position_packets = Dict{Symbol,Any}()
+    generic_physical_position_packets = Dict{Symbol,Any}()
     for term in (:position_x, :position_y, :position_z)
         packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             product_self_pair;
             term,
             axis_metrics = physical_axis_metrics,
         )
+        generic_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
+            generic_product_self_pair;
+            term,
+            axis_metrics = physical_axis_metrics,
+        )
         physical_position_packets[term] = packet
+        generic_physical_position_packets[term] = generic_packet
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         @test packet.left_source_id == :identity_product_slab_source
@@ -1160,26 +1197,53 @@ end
         @test packet.source_dimensions == (4, 4)
         @test packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
         @test packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test generic_packet.left_source_id == :generic_product_slab_source
+        @test generic_packet.right_source_id == :generic_product_slab_source
+        @test generic_packet.operator_kind == :low_order_metric
+        @test generic_packet.term == term
+        @test generic_packet.source_dimensions == (4, 4)
+        @test generic_packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test generic_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
         @test packet.raw_operator_matrix != expected_product_axis_index_x
+        @test generic_packet.raw_operator_matrix != expected_product_axis_index_x
         @test packet.diagnostics.raw_reference ==
-              Symbol(:identity_product_slab_physical_, term)
+              Symbol(:product_doside_physical_, term)
+        @test generic_packet.diagnostics.raw_reference ==
+              Symbol(:product_doside_physical_, term)
         @test packet.diagnostics.raw_reference_error == 0.0
+        @test generic_packet.diagnostics.raw_reference_error == 0.0
         @test packet.diagnostics.physical_position_operator
+        @test generic_packet.diagnostics.physical_position_operator
         @test !packet.diagnostics.axis_index_diagnostic
+        @test !generic_packet.diagnostics.axis_index_diagnostic
         @test packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test generic_packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
+        @test generic_packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
         @test packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test generic_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test !packet.diagnostics.dense_parent_matrix_used
+        @test !generic_packet.diagnostics.dense_parent_matrix_used
         @test packet.diagnostics.fixture_only
+        @test generic_packet.diagnostics.fixture_only
         @test !packet.diagnostics.production_supported
+        @test !generic_packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
+        @test !generic_packet.diagnostics.metric_execution_changed
         @test !packet.diagnostics.qwhamiltonian_consumes
+        @test !generic_packet.diagnostics.qwhamiltonian_consumes
         @test !packet.diagnostics.public_default_consumes
+        @test !generic_packet.diagnostics.public_default_consumes
         @test !packet.diagnostics.backend_policy_changed
+        @test !generic_packet.diagnostics.backend_policy_changed
         @test !packet.diagnostics.quadrature_policy_changed
+        @test !generic_packet.diagnostics.quadrature_policy_changed
         @test !packet.diagnostics.cr2_science_status_changed
+        @test !generic_packet.diagnostics.cr2_science_status_changed
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         pqs_resolved_pair;
@@ -1255,6 +1319,10 @@ end
             physical_position_packets[term],
             product_source_transform.retained_transform,
         )
+        generic_retained = CCP._cartesian_retained_low_order_operator_block(
+            generic_physical_position_packets[term],
+            generic_product_source_transform.retained_transform,
+        )
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         @test retained.left_source_id == :identity_product_slab_source
@@ -1264,23 +1332,47 @@ end
         @test retained.retained_dimensions == (4, 4)
         @test retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
         @test retained.retained_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test generic_retained.left_source_id == :generic_product_slab_source
+        @test generic_retained.right_source_id == :generic_product_slab_source
+        @test generic_retained.operator_kind == :low_order_metric
+        @test generic_retained.term == term
+        @test generic_retained.retained_dimensions == (4, 4)
+        @test generic_retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test generic_retained.retained_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
         @test retained.diagnostics.left_transform_kind == :product_axis_transform
+        @test generic_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test retained.diagnostics.right_transform_kind == :product_axis_transform
+        @test generic_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test retained.diagnostics.left_transform_materialized
+        @test generic_retained.diagnostics.left_transform_materialized
         @test retained.diagnostics.right_transform_materialized
+        @test generic_retained.diagnostics.right_transform_materialized
         @test retained.diagnostics.retained_transform_applied
+        @test generic_retained.diagnostics.retained_transform_applied
         @test retained.diagnostics.retained_operator_block_built
+        @test generic_retained.diagnostics.retained_operator_block_built
         @test retained.diagnostics.retained_reference == :explicit_materialized_transform
+        @test generic_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
+        @test generic_retained.diagnostics.raw_operator_matrix_source ==
+              :private_physical_raw_low_order_operator_packet
         @test !retained.diagnostics.all_pair_matrices_built
+        @test !generic_retained.diagnostics.all_pair_matrices_built
         @test !retained.diagnostics.metric_execution_changed
+        @test !generic_retained.diagnostics.metric_execution_changed
         @test !retained.diagnostics.qwhamiltonian_consumes
+        @test !generic_retained.diagnostics.qwhamiltonian_consumes
         @test !retained.diagnostics.public_default_consumes
+        @test !generic_retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
+        @test !generic_retained.diagnostics.backend_policy_changed
         @test !retained.diagnostics.quadrature_policy_changed
+        @test !generic_retained.diagnostics.quadrature_policy_changed
         @test !retained.diagnostics.cr2_science_status_changed
+        @test !generic_retained.diagnostics.cr2_science_status_changed
         @test !retained.diagnostics.ida_weight_division_allowed
+        @test !generic_retained.diagnostics.ida_weight_division_allowed
     end
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,

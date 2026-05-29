@@ -2577,22 +2577,17 @@ function _cartesian_raw_source_support_states(raw_source::_CartesianRawProductSo
     return states
 end
 
-function _cartesian_identity_product_slab_physical_position_packet_matrix(
+function _cartesian_product_doside_physical_position_packet_matrix(
     raw_source::_CartesianRawProductSource3D;
     term::Symbol,
     axis_metrics,
 )
-    raw_source.source_id == :identity_product_slab_source || throw(
-        ArgumentError(
-            "private physical position raw packet is restricted to the identity product/slab fixture",
-        ),
-    )
     hasproperty(raw_source.provenance, :unit) || throw(
-        ArgumentError("physical position product/slab packet requires staged-unit provenance"),
+        ArgumentError("physical position product/doside packet requires staged-unit provenance"),
     )
     unit = raw_source.provenance.unit
     unit.kind == :product_doside || throw(
-        ArgumentError("physical position product/slab packet requires a product_doside unit"),
+        ArgumentError("physical position product/doside packet requires a product_doside unit"),
     )
     _cartesian_validate_position_axis_metrics(axis_metrics, raw_source.parent_dims)
     position_axis = _cartesian_physical_position_axis(term)
@@ -2618,7 +2613,7 @@ function _cartesian_identity_product_slab_physical_position_packet_matrix(
     end
     return (
         matrix,
-        Symbol(:identity_product_slab_physical_, term),
+        Symbol(:product_doside_physical_, term),
         0.0,
         position_axis,
     )
@@ -2645,7 +2640,7 @@ function _cartesian_physical_raw_low_order_operator_packet(
         DimensionMismatch("raw self-pair dimensions must match"),
     )
     matrix, raw_reference, reference_error, _ =
-        _cartesian_identity_product_slab_physical_position_packet_matrix(
+        _cartesian_product_doside_physical_position_packet_matrix(
             resolved_pair.left_raw_source;
             term,
             axis_metrics,
