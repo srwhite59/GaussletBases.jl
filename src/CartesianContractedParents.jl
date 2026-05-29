@@ -375,6 +375,25 @@ struct _CartesianRawProductSourceLowOrderOperatorPacket3D{M,P,D}
     diagnostics::D
 end
 
+"""
+    _CartesianRetainedLowOrderOperatorBlock3D
+
+Private retained-space block built from one raw low-order packet and explicit
+materialized retained transforms. This is fixture/reference-only and is not a
+metric execution or operator assembly path.
+"""
+struct _CartesianRetainedLowOrderOperatorBlock3D{M,P,D}
+    left_source_id::Symbol
+    right_source_id::Symbol
+    operator_kind::Symbol
+    term::Symbol
+    retained_dimensions::NTuple{2,Int}
+    symmetry_status::Symbol
+    retained_operator_matrix::M
+    provenance::P
+    diagnostics::D
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -2410,6 +2429,81 @@ function _cartesian_raw_low_order_operator_packet(
             backend_policy_changed = false,
             quadrature_policy_changed = false,
             cr2_science_status_changed = false,
+        ),
+    )
+end
+
+function _cartesian_materialized_retained_transform_matrix(
+    transform::_CartesianRetainedTransform3D,
+)
+    isnothing(transform.transform_matrix) && throw(
+        ArgumentError("private retained low-order block requires a materialized retained transform"),
+    )
+    return Matrix{Float64}(transform.transform_matrix)
+end
+
+function _cartesian_retained_low_order_operator_block(
+    raw_packet::_CartesianRawProductSourceLowOrderOperatorPacket3D,
+    left_transform::_CartesianRetainedTransform3D,
+    right_transform::_CartesianRetainedTransform3D = left_transform,
+)
+    raw_packet.term == :overlap || throw(
+        ArgumentError("private retained low-order block currently supports only :overlap"),
+    )
+    raw_packet.left_source_id == left_transform.source_id || throw(
+        ArgumentError("left retained transform source id does not match raw packet"),
+    )
+    raw_packet.right_source_id == right_transform.source_id || throw(
+        ArgumentError("right retained transform source id does not match raw packet"),
+    )
+    left_matrix = _cartesian_materialized_retained_transform_matrix(left_transform)
+    right_matrix = _cartesian_materialized_retained_transform_matrix(right_transform)
+    size(raw_packet.raw_operator_matrix) == (size(left_matrix, 1), size(right_matrix, 1)) ||
+        throw(
+            DimensionMismatch("raw operator matrix dimensions must match retained transform source dimensions"),
+        )
+    retained_matrix =
+        transpose(left_matrix) * raw_packet.raw_operator_matrix * right_matrix
+    all(isfinite, retained_matrix) || throw(
+        ArgumentError("private retained low-order block entries must be finite"),
+    )
+    return _CartesianRetainedLowOrderOperatorBlock3D(
+        raw_packet.left_source_id,
+        raw_packet.right_source_id,
+        raw_packet.operator_kind,
+        raw_packet.term,
+        (size(left_matrix, 2), size(right_matrix, 2)),
+        raw_packet.symmetry_status,
+        retained_matrix,
+        (
+            source = :private_retained_low_order_operator_block,
+            raw_packet = raw_packet,
+            left_retained_transform = left_transform,
+            right_retained_transform = right_transform,
+        ),
+        (
+            source = :private_retained_low_order_operator_block,
+            fixture_only = true,
+            production_supported = false,
+            term = raw_packet.term,
+            left_transform_kind = left_transform.transform_kind,
+            right_transform_kind = right_transform.transform_kind,
+            left_transform_materialized = true,
+            right_transform_materialized = true,
+            retained_transform_applied = true,
+            retained_operator_block_built = true,
+            retained_reference = :explicit_materialized_transform,
+            raw_operator_matrix_source = raw_packet.provenance.source,
+            all_pair_matrices_built = false,
+            metric_execution_changed = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            cr2_science_status_changed = false,
+            ida_weight_division_allowed =
+                _cartesian_retained_ida_weight_division_allowed(left_transform) ||
+                _cartesian_retained_ida_weight_division_allowed(right_transform),
         ),
     )
 end

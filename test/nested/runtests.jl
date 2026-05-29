@@ -1021,6 +1021,47 @@ end
                 pair.right_retained_transform.source_id == pair.pair_key[2],
         mixed_resolved_pairs,
     )
+    product_self_pair = only(
+        pair for pair in mixed_resolved_pairs
+        if pair.pair_key == (:identity_product_slab_source, :identity_product_slab_source)
+    )
+    product_raw_overlap_packet = CCP._cartesian_raw_low_order_operator_packet(
+        product_self_pair;
+        term = :overlap,
+    )
+    @test product_raw_overlap_packet.source_dimensions == (4, 4)
+    @test product_raw_overlap_packet.raw_operator_matrix == Matrix{Float64}(I, 4, 4)
+    product_retained_overlap = CCP._cartesian_retained_low_order_operator_block(
+        product_raw_overlap_packet,
+        product_source_transform.retained_transform,
+    )
+    @test product_retained_overlap.left_source_id == :identity_product_slab_source
+    @test product_retained_overlap.right_source_id == :identity_product_slab_source
+    @test product_retained_overlap.operator_kind == :low_order_metric
+    @test product_retained_overlap.term == :overlap
+    @test product_retained_overlap.retained_dimensions == (4, 4)
+    @test product_retained_overlap.retained_operator_matrix ≈
+          Matrix{Float64}(I, 4, 4) atol = 1.0e-14 rtol = 1.0e-14
+    @test product_retained_overlap.diagnostics.left_transform_kind ==
+          :product_axis_transform
+    @test product_retained_overlap.diagnostics.right_transform_kind ==
+          :product_axis_transform
+    @test product_retained_overlap.diagnostics.left_transform_materialized
+    @test product_retained_overlap.diagnostics.right_transform_materialized
+    @test product_retained_overlap.diagnostics.retained_transform_applied
+    @test product_retained_overlap.diagnostics.retained_operator_block_built
+    @test !product_retained_overlap.diagnostics.all_pair_matrices_built
+    @test !product_retained_overlap.diagnostics.metric_execution_changed
+    @test !product_retained_overlap.diagnostics.qwhamiltonian_consumes
+    @test !product_retained_overlap.diagnostics.public_default_consumes
+    @test !product_retained_overlap.diagnostics.backend_policy_changed
+    @test !product_retained_overlap.diagnostics.quadrature_policy_changed
+    @test !product_retained_overlap.diagnostics.cr2_science_status_changed
+    @test !product_retained_overlap.diagnostics.ida_weight_division_allowed
+    @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
+        pqs_raw_overlap_packet,
+        pqs_retained_transform,
+    )
     mixed_cross_pair = only(
         pair for pair in mixed_resolved_pairs
         if pair.pair_key == (mixed_source_ids[1], mixed_source_ids[2])
