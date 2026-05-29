@@ -214,6 +214,50 @@ They prove payload discovery and low-order checks, but they do not yet install
 this full raw-product-source contract into production metric, QW, Hamiltonian,
 or CR2 routes.
 
+## Private Metadata Checkpoint
+
+The current private implementation now has the first raw-source planning
+scaffold:
+
+- raw product source metadata;
+- retained transform metadata;
+- an upper-triangular raw source pair plan;
+- a resolved raw source pair audit;
+- a private raw overlap packet;
+- a private retained low-order overlap block for materialized product/slab
+  transforms.
+
+The only retained-block calculation is the identity product/slab self-overlap
+fixture:
+
+```text
+source dimension 4 -> retained dimension 4
+retained transform kind = :product_axis_transform
+T' * I_raw * T == I_4
+```
+
+This is a contract checkpoint, not production metric execution. The PQS raw
+overlap packet exists only as raw packet/reference plumbing. PQS retained
+transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
+as the full raw-to-retained transform. PQS/product mixed retained blocks remain
+unsupported.
+
+Before any PQS retained-block execution, the code needs an explicit way to
+represent or resolve the full factored PQS transform:
+
+```text
+raw_product_modes
+-> raw_boundary_projection
+-> full_rank_symmetric_lowdin_cleanup
+-> retained_columns
+```
+
+Nontrivial raw source pair operator packets for position, kinetic, nuclear,
+Gaussian/local, interaction/MWG, and mixed product/PQS pairs need separate
+design. The current checkpoint changes no all-pairs matrix construction, QW or
+Hamiltonian path, public/default route, backend/default policy, PGDG or
+quadrature policy, CR2 path, or science status.
+
 ## Non-Goals
 
 This policy does not change:

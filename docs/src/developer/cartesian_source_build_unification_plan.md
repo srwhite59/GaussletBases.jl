@@ -1020,6 +1020,31 @@ explicit role and finite-positive check before any IDA-style division, while
 angular GTO supplements and other non-quadrature final functions must not be
 treated as positive-weight quadrature carriers.
 
+A private raw-source pair checkpoint now exists. It includes raw product source
+metadata, retained transform metadata, an upper-triangular pair plan, a
+resolved pair audit, a private raw overlap packet, and one private retained
+low-order overlap block for materialized product/slab transforms. The retained
+block is intentionally tiny: identity product/slab self-overlap with source
+dimension `4`, retained dimension `4`, transform kind
+`:product_axis_transform`, and `T' * I_raw * T == I_4`.
+
+This checkpoint does not apply PQS retained transforms. The PQS raw overlap
+packet remains raw packet/reference plumbing only. The PQS Lowdin cleanup
+matrix is not treated as the full raw-to-retained transform, and PQS/product
+mixed retained blocks remain unsupported. Any PQS retained-block execution must
+first represent or resolve the full factored transform:
+
+```text
+raw_product_modes
+-> raw_boundary_projection
+-> full_rank_symmetric_lowdin_cleanup
+-> retained_columns
+```
+
+The checkpoint also does not add all-pairs matrices, kinetic, nuclear, local
+potential, interaction/MWG, QW, Hamiltonian, public/default, backend/default,
+PGDG/quadrature, CR2, or science behavior.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
