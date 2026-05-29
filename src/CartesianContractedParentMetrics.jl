@@ -1386,6 +1386,314 @@ function _staged_unit_linear_vectors(unit, metrics::NamedTuple{(:x,:y,:z)})
     return weights, first_moments
 end
 
+const _PACKET_BUILD_SOURCE_SAFE_FIELDS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :weights,
+    :first_moments,
+    :kinetic,
+)
+
+function _packet_build_source_safe_fields(fields)
+    selected = Tuple(Symbol(field) for field in fields)
+    isempty(selected) && throw(
+        ArgumentError("packet-build source safe-field shadow requires at least one field"),
+    )
+    unsupported = setdiff(selected, _PACKET_BUILD_SOURCE_SAFE_FIELDS)
+    isempty(unsupported) || throw(
+        ArgumentError("packet-build source safe-field shadow does not support fields $(unsupported)"),
+    )
+    length(unique(selected)) == length(selected) || throw(
+        ArgumentError("packet-build source safe-field shadow fields must be unique"),
+    )
+    return selected
+end
+
+function _packet_build_axis_property(axis_data, axis_name::Symbol, property_name::Symbol)
+    hasproperty(axis_data, property_name) || throw(
+        ArgumentError("packet-build source safe-field shadow axis $(axis_name) is missing $(property_name)"),
+    )
+    return getproperty(axis_data, property_name)
+end
+
+function _packet_build_axis_data(axis_data, axis_name::Symbol)
+    overlap = Matrix{Float64}(
+        _packet_build_axis_property(axis_data, axis_name, :overlap),
+    )
+    position = Matrix{Float64}(
+        _packet_build_axis_property(axis_data, axis_name, :position),
+    )
+    kinetic = Matrix{Float64}(
+        _packet_build_axis_property(axis_data, axis_name, :kinetic),
+    )
+    weights = Float64[
+        Float64(value) for value in
+        _packet_build_axis_property(axis_data, axis_name, :weights)
+    ]
+    centers = Float64[
+        Float64(value) for value in
+        _packet_build_axis_property(axis_data, axis_name, :centers)
+    ]
+    size(overlap, 1) == size(overlap, 2) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) overlap must be square"),
+    )
+    size(position) == size(overlap) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) position size must match overlap"),
+    )
+    size(kinetic) == size(overlap) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) kinetic size must match overlap"),
+    )
+    length(weights) == size(overlap, 1) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) weights length must match overlap"),
+    )
+    length(centers) == size(overlap, 1) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) centers length must match overlap"),
+    )
+    all(isfinite, overlap) &&
+        all(isfinite, position) &&
+        all(isfinite, kinetic) &&
+        all(isfinite, weights) &&
+        all(isfinite, centers) || throw(
+            ArgumentError("packet-build source safe-field shadow $(axis_name) axis data must be finite"),
+        )
+    source = hasproperty(axis_data, :source) ?
+        Symbol(getproperty(axis_data, :source)) :
+        :explicit_packet_build_axis_data
+    return (
+        overlap = overlap,
+        position = position,
+        weights = weights,
+        centers = centers,
+        kinetic = kinetic,
+        source = source,
+    )
+end
+
+function _packet_build_safe_axis_data(axis_data)
+    for axis_name in (:x, :y, :z)
+        hasproperty(axis_data, axis_name) || throw(
+            ArgumentError("packet-build source safe-field shadow axis data is missing $(axis_name)"),
+        )
+    end
+    return (
+        x = _packet_build_axis_data(getproperty(axis_data, :x), :x),
+        y = _packet_build_axis_data(getproperty(axis_data, :y), :y),
+        z = _packet_build_axis_data(getproperty(axis_data, :z), :z),
+    )
+end
+
+function _packet_build_safe_axis_ops(axis_data::NamedTuple{(:x,:y,:z)})
+    return (
+        x = (overlap = axis_data.x.overlap, kinetic = axis_data.x.kinetic),
+        y = (overlap = axis_data.y.overlap, kinetic = axis_data.y.kinetic),
+        z = (overlap = axis_data.z.overlap, kinetic = axis_data.z.kinetic),
+    )
+end
+
+function _packet_build_assign_pair_block!(
+    matrix::Matrix{Float64},
+    left_range::UnitRange{Int},
+    right_range::UnitRange{Int},
+    block::AbstractMatrix{<:Real},
+)
+    matrix[left_range, right_range] .= block
+    left_range == right_range || (matrix[right_range, left_range] .= transpose(block))
+    return nothing
+end
+
+function _packet_build_source_units(source)
+    payloads = collect(source.resolved_payloads)
+    isempty(payloads) && throw(
+        ArgumentError("packet-build source safe-field shadow requires at least one payload"),
+    )
+    for payload in payloads
+        payload.ready_for_metric_execution || throw(
+            ArgumentError("packet-build source safe-field shadow cannot consume non-executable payload $(payload.payload_kind)"),
+        )
+        payload.payload_kind in (:product_doside, :support_dense) || throw(
+            ArgumentError("packet-build source safe-field shadow supports only product_doside/support_dense payloads; got $(payload.payload_kind)"),
+        )
+        isnothing(payload.column_range) && throw(
+            ArgumentError("packet-build source safe-field shadow requires every payload to have a column range"),
+        )
+        isnothing(payload.support_indices) && throw(
+            ArgumentError("packet-build source safe-field shadow requires every payload to have support indices"),
+        )
+    end
+    return [payload.payload for payload in payloads]
+end
+
+function _cartesian_packet_build_source_safe_field_shadow(
+    source,
+    axis_data;
+    fields = _PACKET_BUILD_SOURCE_SAFE_FIELDS,
+)
+    selected_fields = _packet_build_source_safe_fields(fields)
+    for field in selected_fields
+        field in source.candidate_packet_fields || throw(
+            ArgumentError("packet-build source safe-field shadow field $(field) is not a candidate packet field"),
+        )
+        field in source.missing_packet_fields && throw(
+            ArgumentError("packet-build source safe-field shadow field $(field) is marked missing/not implemented"),
+        )
+    end
+    source.diagnostics.column_layout_ready_for_candidate_fields || throw(
+        ArgumentError("packet-build source safe-field shadow requires complete non-overlapping column layout"),
+    )
+
+    units = _packet_build_source_units(source)
+    axis_data = _packet_build_safe_axis_data(axis_data)
+    axis_ops = _packet_build_safe_axis_ops(axis_data)
+    contracted_dimension = source.contracted_dimension
+
+    build_low_order = any(
+        field -> field in selected_fields,
+        (:overlap, :position_x, :position_y, :position_z),
+    )
+    build_linear = any(field -> field in selected_fields, (:weights, :first_moments))
+    build_kinetic = :kinetic in selected_fields
+
+    overlap = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    position_x = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    position_y = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    position_z = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    weights = build_linear ? zeros(Float64, contracted_dimension) : nothing
+    first_moments = build_linear ? zeros(Float64, contracted_dimension, 3) : nothing
+    kinetic = build_kinetic ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+
+    entries_cache = Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}}(
+        undef,
+        length(units),
+    )
+    fill!(entries_cache, nothing)
+
+    low_order_product_block_count = 0
+    low_order_fallback_block_count = 0
+    kinetic_product_block_count = 0
+    kinetic_fallback_block_count = 0
+    total_block_count = length(units) * (length(units) + 1) ÷ 2
+    for right_index in eachindex(units)
+        right = units[right_index]
+        for left_index in 1:right_index
+            left = units[left_index]
+            left_range = left.column_range
+            right_range = right.column_range
+            if build_low_order
+                if left.kind == :product_doside && right.kind == :product_doside
+                    _fill_product_staged_metric_blocks!(
+                        overlap,
+                        position_x,
+                        position_y,
+                        position_z,
+                        left,
+                        right,
+                        axis_data,
+                    )
+                    low_order_product_block_count += 1
+                else
+                    left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
+                    right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
+                    blocks = _fallback_staged_metric_blocks(left_entries, right_entries, axis_data)
+                    _packet_build_assign_pair_block!(overlap, left_range, right_range, blocks.overlap)
+                    _packet_build_assign_pair_block!(
+                        position_x,
+                        left_range,
+                        right_range,
+                        blocks.position_x,
+                    )
+                    _packet_build_assign_pair_block!(
+                        position_y,
+                        left_range,
+                        right_range,
+                        blocks.position_y,
+                    )
+                    _packet_build_assign_pair_block!(
+                        position_z,
+                        left_range,
+                        right_range,
+                        blocks.position_z,
+                    )
+                    low_order_fallback_block_count += 1
+                end
+            end
+            if build_kinetic
+                if left.kind == :product_doside && right.kind == :product_doside
+                    block = _product_doside_retained_kinetic_block(left, right, axis_ops)
+                    kinetic_product_block_count += 1
+                else
+                    left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
+                    right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
+                    block = _fallback_staged_kinetic_block(left_entries, right_entries, axis_ops)
+                    kinetic_fallback_block_count += 1
+                end
+                _packet_build_assign_pair_block!(kinetic, left_range, right_range, block)
+            end
+        end
+    end
+
+    if build_linear
+        for unit in units
+            unit_weights, unit_first_moments = _staged_unit_linear_vectors(unit, axis_data)
+            weights[unit.column_range] .= unit_weights
+            first_moments[unit.column_range, :] .= unit_first_moments
+        end
+    end
+
+    product_unit_count = count(unit -> unit.kind == :product_doside, units)
+    support_dense_unit_count = count(unit -> unit.kind == :support_dense, units)
+    return (
+        overlap = :overlap in selected_fields ? overlap : nothing,
+        position_x = :position_x in selected_fields ? position_x : nothing,
+        position_y = :position_y in selected_fields ? position_y : nothing,
+        position_z = :position_z in selected_fields ? position_z : nothing,
+        weights = :weights in selected_fields ? weights : nothing,
+        first_moments = :first_moments in selected_fields ? first_moments : nothing,
+        kinetic = :kinetic in selected_fields ? kinetic : nothing,
+        diagnostics = (
+            source = :cartesian_packet_build_source_safe_field_shadow,
+            source_driven_shadow_only = true,
+            construction_adoption = false,
+            current_builder_authority = :nested_shell_packet,
+            nested_shell_packet_remains_authoritative = true,
+            descriptor_drives_builder = false,
+            numerical_packet_authority_changed = false,
+            numerical_packet_matrices_built = true,
+            operator_data_available_on_source = source.diagnostics.operator_data_available,
+            packet_operator_data_checked_on_source = source.diagnostics.packet_operator_data_checked,
+            fixed_block_construction_changed = false,
+            metric_packet_execution_changed = false,
+            qwhamiltonian_changed = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            ida_positive_weight_semantics_changed = false,
+            cr2_science_status_changed = false,
+            requested_fields = selected_fields,
+            candidate_packet_fields = source.candidate_packet_fields,
+            missing_packet_fields = source.missing_packet_fields,
+            out_of_scope_fields = source.missing_packet_fields,
+            x2_built = false,
+            gaussian_terms_built = false,
+            nuclear_one_body_built = false,
+            local_coulomb_one_body_built = false,
+            local_ecp_one_body_built = false,
+            pair_mwg_interaction_built = false,
+            parent_dimension = source.parent_dimension,
+            contracted_dimension = contracted_dimension,
+            unit_count = length(units),
+            product_unit_count = product_unit_count,
+            support_dense_unit_count = support_dense_unit_count,
+            total_upper_triangular_block_count = total_block_count,
+            low_order_product_block_count = low_order_product_block_count,
+            low_order_fallback_block_count = low_order_fallback_block_count,
+            kinetic_product_block_count = kinetic_product_block_count,
+            kinetic_fallback_block_count = kinetic_fallback_block_count,
+            first_moment_reference_required = :contracted_parent_metric_packet_or_support_local_reference,
+        ),
+    )
+end
+
 function _packet_diagnostics(;
     construction_path::Symbol,
     dense_parent_matrix_used::Bool,

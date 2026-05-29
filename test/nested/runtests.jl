@@ -5254,6 +5254,61 @@ end
     @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
+    safe_axis_data = (
+        x = merge(axis_metrics.x, (kinetic = pgdg_x.kinetic,)),
+        y = merge(axis_metrics.y, (kinetic = pgdg_y.kinetic,)),
+        z = merge(axis_metrics.z, (kinetic = pgdg_z.kinetic,)),
+    )
+    safe_field_shadow = CCPM._cartesian_packet_build_source_safe_field_shadow(
+        packet_build_source,
+        safe_axis_data,
+    )
+    @test safe_field_shadow.diagnostics.source ==
+          :cartesian_packet_build_source_safe_field_shadow
+    @test safe_field_shadow.diagnostics.source_driven_shadow_only
+    @test !safe_field_shadow.diagnostics.construction_adoption
+    @test safe_field_shadow.diagnostics.current_builder_authority ==
+          :nested_shell_packet
+    @test safe_field_shadow.diagnostics.nested_shell_packet_remains_authoritative
+    @test !safe_field_shadow.diagnostics.descriptor_drives_builder
+    @test !safe_field_shadow.diagnostics.numerical_packet_authority_changed
+    @test !safe_field_shadow.diagnostics.fixed_block_construction_changed
+    @test !safe_field_shadow.diagnostics.metric_packet_execution_changed
+    @test !safe_field_shadow.diagnostics.qwhamiltonian_changed
+    @test !safe_field_shadow.diagnostics.backend_policy_changed
+    @test !safe_field_shadow.diagnostics.quadrature_policy_changed
+    @test !safe_field_shadow.diagnostics.ida_positive_weight_semantics_changed
+    @test !safe_field_shadow.diagnostics.cr2_science_status_changed
+    @test safe_field_shadow.diagnostics.requested_fields ==
+          packet_build_source.candidate_packet_fields
+    @test safe_field_shadow.diagnostics.missing_packet_fields ==
+          packet_build_source.missing_packet_fields
+    @test !safe_field_shadow.diagnostics.x2_built
+    @test !safe_field_shadow.diagnostics.gaussian_terms_built
+    @test !safe_field_shadow.diagnostics.nuclear_one_body_built
+    @test !safe_field_shadow.diagnostics.local_coulomb_one_body_built
+    @test !safe_field_shadow.diagnostics.local_ecp_one_body_built
+    @test !safe_field_shadow.diagnostics.pair_mwg_interaction_built
+    @test safe_field_shadow.diagnostics.product_unit_count == 6
+    @test safe_field_shadow.diagnostics.support_dense_unit_count == length(support_rules)
+    @test safe_field_shadow.diagnostics.low_order_product_block_count == expected_product_blocks
+    @test safe_field_shadow.diagnostics.kinetic_product_block_count == expected_product_blocks
+    @test safe_field_shadow.diagnostics.low_order_fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
+    @test safe_field_shadow.diagnostics.kinetic_fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
+    @test safe_field_shadow.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.position_x ≈ fixed_block.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.position_y ≈ fixed_block.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.position_z ≈ fixed_block.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.kinetic ≈ fixed_block.kinetic atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.first_moments ≈ product_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
+    @test_throws ArgumentError CCPM._cartesian_packet_build_source_safe_field_shadow(
+        packet_build_source,
+        safe_axis_data;
+        fields = (:x2_x,),
+    )
     kinetic_axis_ops = (
         x = (overlap = pgdg_x.overlap, kinetic = pgdg_x.kinetic),
         y = (overlap = pgdg_y.overlap, kinetic = pgdg_y.kinetic),
