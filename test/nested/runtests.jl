@@ -874,6 +874,33 @@ end
     @test pqs_resolved_pair.diagnostics.retained_weight_roles_explicit
     @test !pqs_resolved_pair.diagnostics.retained_ida_weight_division_allowed
     @test pqs_resolved_pair.diagnostics.pqs_factored_transform_present
+    pqs_raw_overlap_packet = CCP._cartesian_raw_low_order_operator_packet(
+        pqs_resolved_pair;
+        term = :overlap,
+    )
+    @test pqs_raw_overlap_packet.left_source_id == pqs_raw_source.source_id
+    @test pqs_raw_overlap_packet.right_source_id == pqs_raw_source.source_id
+    @test pqs_raw_overlap_packet.operator_kind == :low_order_metric
+    @test pqs_raw_overlap_packet.term == :overlap
+    @test pqs_raw_overlap_packet.source_dimensions == (5 * 5 * 5, 5 * 5 * 5)
+    @test pqs_raw_overlap_packet.symmetry_status == :symmetric_upper_triangle_placeholder
+    @test pqs_raw_overlap_packet.backend == :private_raw_product_reference
+    @test pqs_raw_overlap_packet.raw_operator_matrix ==
+          Matrix{Float64}(I, 5 * 5 * 5, 5 * 5 * 5)
+    @test pqs_raw_overlap_packet.diagnostics.raw_reference ==
+          :orthonormal_raw_product_mode_overlap_identity
+    @test pqs_raw_overlap_packet.diagnostics.raw_reference_error == 0.0
+    @test pqs_raw_overlap_packet.diagnostics.raw_operator_matrix_built
+    @test !pqs_raw_overlap_packet.diagnostics.retained_operator_block_built
+    @test !pqs_raw_overlap_packet.diagnostics.retained_transform_applied
+    @test !pqs_raw_overlap_packet.diagnostics.all_pair_matrices_built
+    @test !pqs_raw_overlap_packet.diagnostics.metric_execution_changed
+    @test !pqs_raw_overlap_packet.diagnostics.qwhamiltonian_consumes
+    @test !pqs_raw_overlap_packet.diagnostics.public_default_consumes
+    @test !pqs_raw_overlap_packet.diagnostics.backend_policy_changed
+    @test !pqs_raw_overlap_packet.diagnostics.quadrature_policy_changed
+    @test !pqs_raw_overlap_packet.diagnostics.cr2_science_status_changed
+    @test only(pqs_pair_plan.pair_packets).operator_matrices === nothing
     pqs_plan_audit = CCP._cartesian_raw_product_source_pair_plan_audit(pqs_pair_plan)
     @test length(pqs_plan_audit.resolved_pairs) == 1
     @test pqs_plan_audit.diagnostics.every_pair_resolves_raw_sources

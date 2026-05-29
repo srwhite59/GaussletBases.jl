@@ -1,5 +1,7 @@
 module CartesianContractedParents
 
+using LinearAlgebra: I, norm
+
 import ..GaussletBases: _CartesianCoefficientMap,
                          _BondAlignedDiatomicAtomGrowthConstructionRegion3D,
                          _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D,
@@ -350,6 +352,26 @@ retained operator matrices.
 """
 struct _CartesianRawProductSourcePairPlanAudit3D{R,D}
     resolved_pairs::R
+    diagnostics::D
+end
+
+"""
+    _CartesianRawProductSourceLowOrderOperatorPacket3D
+
+Private fixture/reference packet for one raw low-order operator block. This is
+not installed in pair plans and does not apply retained transforms; it only
+records a raw source-space matrix for a deliberately scoped helper path.
+"""
+struct _CartesianRawProductSourceLowOrderOperatorPacket3D{M,P,D}
+    left_source_id::Symbol
+    right_source_id::Symbol
+    operator_kind::Symbol
+    term::Symbol
+    source_dimensions::NTuple{2,Int}
+    symmetry_status::Symbol
+    backend::Symbol
+    raw_operator_matrix::M
+    provenance::P
     diagnostics::D
 end
 
@@ -2338,6 +2360,58 @@ function _cartesian_raw_product_source_pair_plan_audit(
         cr2_science_status_changed = false,
     )
     return _CartesianRawProductSourcePairPlanAudit3D(resolved_pairs, diagnostics)
+end
+
+function _cartesian_raw_low_order_operator_packet(
+    resolved_pair::_CartesianResolvedRawProductSourcePair3D;
+    term::Symbol,
+    backend::Symbol = :private_raw_product_reference,
+)
+    term == :overlap || throw(
+        ArgumentError("private raw low-order packet currently supports only :overlap"),
+    )
+    resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
+        ArgumentError("private raw low-order packet currently supports only self-pairs"),
+    )
+    left_dimension = resolved_pair.left_raw_source.source_dimension
+    right_dimension = resolved_pair.right_raw_source.source_dimension
+    left_dimension == right_dimension || throw(
+        DimensionMismatch("raw self-overlap dimensions must match"),
+    )
+    matrix = Matrix{Float64}(I, left_dimension, right_dimension)
+    reference_error = norm(matrix - Matrix{Float64}(I, left_dimension, right_dimension), Inf)
+    return _CartesianRawProductSourceLowOrderOperatorPacket3D(
+        resolved_pair.pair_key[1],
+        resolved_pair.pair_key[2],
+        :low_order_metric,
+        term,
+        (left_dimension, right_dimension),
+        resolved_pair.pair_packet.symmetry_status,
+        backend,
+        matrix,
+        (
+            source = :private_raw_low_order_operator_packet,
+            resolved_pair = resolved_pair,
+        ),
+        (
+            source = :private_raw_low_order_operator_packet,
+            fixture_only = true,
+            production_supported = false,
+            term = term,
+            raw_reference = :orthonormal_raw_product_mode_overlap_identity,
+            raw_reference_error = reference_error,
+            raw_operator_matrix_built = true,
+            retained_operator_block_built = false,
+            retained_transform_applied = false,
+            all_pair_matrices_built = false,
+            metric_execution_changed = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            cr2_science_status_changed = false,
+        ),
+    )
 end
 
 function _cartesian_resolved_contraction_payloads(
