@@ -278,6 +278,21 @@ end
     @test !cubic_region.diagnostics.fixed_block_sidecar_installed
     @test cubic_region.geometry.boundary_mode_count == 98
     @test cubic_region.geometry.selection_rule == :any_axis_mode_index_first_or_last
+    cubic_resolved_payload = CCP._cartesian_resolved_contraction_payload(
+        cubic_descriptor;
+        parent_dimension = 5 * 5 * 5,
+    )
+    @test cubic_resolved_payload isa CCP._CartesianResolvedContractionPayload3D
+    @test cubic_resolved_payload.metric_path == :unsupported_prototype
+    @test !cubic_resolved_payload.ready_for_metric_execution
+    @test cubic_resolved_payload.payload_kind == :projected_q_shell
+    @test isnothing(cubic_resolved_payload.column_range)
+    @test cubic_resolved_payload.payload === cubic_descriptor
+    @test :fixed_block_sidecar_payload in cubic_resolved_payload.missing_fields
+    @test :product_staged_metric_payload in cubic_resolved_payload.missing_fields
+    @test cubic_resolved_payload.diagnostics.prototype
+    @test cubic_resolved_payload.diagnostics.metric_capability ==
+          :pqs_low_order_product_metric_prototype
     cubic_rule = CCP.cartesian_contraction_rule(
         cubic_descriptor;
         parent_dimension = 5 * 5 * 5,
@@ -2518,6 +2533,40 @@ end
     @test length(rule_built_units) == length(sidecar_units)
     @test first(CCP.contracted_parent_units(contracted_parent)).metadata.staged_by_center_unit ===
         first(sidecar_units)
+    product_sidecar_unit = first(unit for unit in sidecar_units if unit.kind == :product_doside)
+    support_sidecar_unit = first(unit for unit in sidecar_units if unit.kind == :support_dense)
+    product_resolved_payload = CCP._cartesian_resolved_contraction_payload(
+        product_sidecar_unit;
+        parent_dimension = parent_dim,
+    )
+    support_resolved_payload = CCP._cartesian_resolved_contraction_payload(
+        support_sidecar_unit;
+        parent_dimension = parent_dim,
+    )
+    @test product_resolved_payload isa CCP._CartesianResolvedContractionPayload3D
+    @test support_resolved_payload isa CCP._CartesianResolvedContractionPayload3D
+    @test product_resolved_payload.metric_path == :product_staged_metric_contraction
+    @test support_resolved_payload.metric_path == :support_local_product
+    @test product_resolved_payload.ready_for_metric_execution
+    @test support_resolved_payload.ready_for_metric_execution
+    @test product_resolved_payload.payload_kind == :product_doside
+    @test support_resolved_payload.payload_kind == :support_dense
+    @test product_resolved_payload.column_range == product_sidecar_unit.column_range
+    @test support_resolved_payload.column_range == support_sidecar_unit.column_range
+    @test product_resolved_payload.support_indices == product_sidecar_unit.support_indices
+    @test support_resolved_payload.support_indices == support_sidecar_unit.support_indices
+    @test product_resolved_payload.support_states == product_sidecar_unit.support_states
+    @test support_resolved_payload.support_states == support_sidecar_unit.support_states
+    @test product_resolved_payload.payload === product_sidecar_unit
+    @test support_resolved_payload.payload === support_sidecar_unit
+    @test isempty(product_resolved_payload.missing_fields)
+    @test isempty(support_resolved_payload.missing_fields)
+    @test product_resolved_payload.diagnostics.linear_vector_path ==
+          :product_staged_axis_projection
+    @test support_resolved_payload.diagnostics.linear_vector_path ==
+          :support_local_fallback
+    @test product_resolved_payload.diagnostics.block_role == :product
+    @test support_resolved_payload.diagnostics.block_role == :fallback
     for (sidecar_unit, rule_unit, adapted_unit) in zip(
         sidecar_units,
         rule_built_units,
@@ -2538,6 +2587,13 @@ end
               adapted_unit.metadata.contraction_rule.kind
         @test adapted_unit.metadata.rule_metric_capability ==
               adapted_unit.metadata.contraction_rule.metric_capability
+        adapted_resolved_payload = CCP._cartesian_resolved_contraction_payload(
+            adapted_unit;
+            parent_dimension = parent_dim,
+        )
+        @test adapted_resolved_payload.payload === sidecar_unit
+        @test adapted_resolved_payload.column_range == sidecar_unit.column_range
+        @test adapted_resolved_payload.ready_for_metric_execution
     end
     contraction_rules = [
         CCP.contraction_unit_rule(
@@ -2604,6 +2660,10 @@ end
     @test rule_inventory.diagnostics.parent_level_unit_inventory
     @test rule_inventory.diagnostics.all_rules_have_column_ranges
     dispatch_shadow = CCPM._contracted_parent_metric_dispatch_shadow_plan(contracted_parent)
+    resolved_payloads = [
+        CCP._cartesian_resolved_contraction_payload(unit; parent_dimension = parent_dim)
+        for unit in CCP.contracted_parent_units(contracted_parent)
+    ]
     @test dispatch_shadow.comparison.agree
     @test isempty(dispatch_shadow.comparison.mismatch_fields)
     @test dispatch_shadow.payload_plan.plan_supported
@@ -2625,6 +2685,13 @@ end
     @test dispatch_shadow.payload_plan.unsupported_unit_count == 0
     @test dispatch_shadow.rule_plan.unsupported_unit_count == 0
     @test dispatch_shadow.rule_plan.prototype_rule_count == 0
+    @test all(payload -> payload.ready_for_metric_execution, resolved_payloads)
+    @test [payload.diagnostics.block_role for payload in resolved_payloads] ==
+          [path.block_role for path in dispatch_shadow.payload_plan.unit_paths]
+    @test [payload.diagnostics.linear_vector_path for payload in resolved_payloads] ==
+          [path.linear_vector_path for path in dispatch_shadow.payload_plan.unit_paths]
+    @test [payload.diagnostics.metric_capability for payload in resolved_payloads] ==
+          [path.metric_capability for path in dispatch_shadow.payload_plan.unit_paths]
     @test [path.path for path in dispatch_shadow.payload_plan.block_paths] ==
           [path.path for path in dispatch_shadow.rule_plan.block_paths]
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(

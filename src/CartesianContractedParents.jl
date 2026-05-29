@@ -174,6 +174,27 @@ struct CartesianContractionRuleInventory3D{R,F,C,S,D,P}
     provenance::P
 end
 
+"""
+    _CartesianResolvedContractionPayload3D
+
+Private execution-facing normalization record for an already-existing
+contraction payload. Region and rule records validate intent; this object is
+only a thin description of a concrete payload that an existing metric kernel can
+consume. It does not generate coefficient maps or install new sidecars.
+"""
+struct _CartesianResolvedContractionPayload3D{S,H,D,P}
+    metric_path::Symbol
+    ready_for_metric_execution::Bool
+    payload_kind::Symbol
+    column_range::Union{Nothing,UnitRange{Int}}
+    support_indices::Union{Nothing,Vector{Int}}
+    support_states::S
+    payload::H
+    missing_fields::Tuple{Vararg{Symbol}}
+    diagnostics::D
+    provenance::P
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -1079,6 +1100,168 @@ function cartesian_contraction_rule_inventory(
     )
 end
 
+function _resolved_payload_path(rule::CartesianContractionRule3D)
+    if rule.rule_family == :product_owned_unit &&
+       rule.kind == :product_doside &&
+       rule.metric_capability == :product_staged_metric_contraction
+        return (
+            metric_path = :product_staged_metric_contraction,
+            linear_vector_path = :product_staged_axis_projection,
+            block_role = :product,
+            unsupported = false,
+            prototype = false,
+        )
+    elseif rule.rule_family == :support_dense_fallback &&
+           rule.kind == :support_dense &&
+           rule.metric_capability == :support_local_product
+        return (
+            metric_path = :support_local_product,
+            linear_vector_path = :support_local_fallback,
+            block_role = :fallback,
+            unsupported = false,
+            prototype = false,
+        )
+    end
+    prototype = _rule_prototype_only(rule)
+    return (
+        metric_path = prototype ? :unsupported_prototype : :unsupported,
+        linear_vector_path = :unsupported,
+        block_role = prototype ? :unsupported_prototype : :unsupported,
+        unsupported = true,
+        prototype = prototype,
+    )
+end
+
+function _validate_resolved_payload_rule(
+    rule::CartesianContractionRule3D,
+    payload::_CartesianNestedProductStagedByCenterUnit3D,
+)
+    rule.kind == payload.kind || throw(
+        ArgumentError("resolved payload kind $(payload.kind) does not match contraction rule kind $(rule.kind)"),
+    )
+    rule.role == payload.role || throw(
+        ArgumentError("resolved payload role $(payload.role) does not match contraction rule role $(rule.role)"),
+    )
+    rule.support_indices == payload.support_indices || throw(
+        ArgumentError("resolved payload support does not match contraction rule support"),
+    )
+    rule.column_range == payload.column_range || throw(
+        ArgumentError("resolved payload column range does not match contraction rule column range"),
+    )
+    rule.retained_dimension == length(payload.column_range) || throw(
+        ArgumentError("resolved payload retained dimension does not match its column range"),
+    )
+    return nothing
+end
+
+function _cartesian_resolved_contraction_payload(
+    payload::_CartesianNestedProductStagedByCenterUnit3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+    rule::Union{Nothing,CartesianContractionRule3D} = nothing,
+)
+    resolved_rule = isnothing(rule) ?
+                    cartesian_contraction_rule(payload; parent_dimension) :
+                    rule
+    _validate_resolved_payload_rule(resolved_rule, payload)
+    path = _resolved_payload_path(resolved_rule)
+    missing_fields = path.unsupported ? (:supported_product_or_support_dense_payload,) : ()
+    return _CartesianResolvedContractionPayload3D(
+        path.metric_path,
+        !path.unsupported,
+        payload.kind,
+        payload.column_range,
+        copy(payload.support_indices),
+        copy(payload.support_states),
+        payload,
+        missing_fields,
+        (
+            source = :nested_product_staged_by_center_unit,
+            rule_family = resolved_rule.rule_family,
+            rule_kind = resolved_rule.kind,
+            metric_capability = resolved_rule.metric_capability,
+            linear_vector_path = path.linear_vector_path,
+            block_role = path.block_role,
+            unsupported = path.unsupported,
+            prototype = path.prototype,
+            coefficient_shape = size(payload.coefficient_matrix),
+            payload_ready_for_current_metric_execution = !path.unsupported,
+        ),
+        (
+            source = :nested_product_staged_by_center_unit,
+            contraction_rule = resolved_rule,
+        ),
+    )
+end
+
+function _cartesian_resolved_contraction_payload(rule::CartesianContractionRule3D)
+    path = _resolved_payload_path(rule)
+    missing_fields =
+        path.prototype ? (:installed_executable_payload, :fixed_block_sidecar_payload) :
+        (:executable_payload,)
+    return _CartesianResolvedContractionPayload3D(
+        path.metric_path,
+        false,
+        rule.kind,
+        rule.column_range,
+        copy(rule.support_indices),
+        nothing,
+        nothing,
+        missing_fields,
+        (
+            source = :cartesian_contraction_rule,
+            rule_family = rule.rule_family,
+            rule_kind = rule.kind,
+            metric_capability = rule.metric_capability,
+            linear_vector_path = path.linear_vector_path,
+            block_role = path.block_role,
+            unsupported = true,
+            prototype = path.prototype,
+            payload_ready_for_current_metric_execution = false,
+        ),
+        (
+            source = :cartesian_contraction_rule,
+            contraction_rule = rule,
+        ),
+    )
+end
+
+function _cartesian_resolved_contraction_payload(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    rule = cartesian_contraction_rule(descriptor; parent_dimension)
+    return _CartesianResolvedContractionPayload3D(
+        :unsupported_prototype,
+        false,
+        descriptor.kind,
+        nothing,
+        copy(descriptor.support_indices),
+        copy(descriptor.support_states),
+        descriptor,
+        (
+            :column_range,
+            :fixed_block_sidecar_payload,
+            :product_staged_metric_payload,
+        ),
+        (
+            source = :projected_q_shell_staged_unit_descriptor,
+            rule_family = rule.rule_family,
+            rule_kind = rule.kind,
+            metric_capability = rule.metric_capability,
+            linear_vector_path = :unsupported,
+            block_role = :unsupported_prototype,
+            unsupported = true,
+            prototype = true,
+            payload_ready_for_current_metric_execution = false,
+            prototype_metric_capability = :pqs_low_order_product_metric_prototype,
+        ),
+        (
+            source = :projected_q_shell_staged_unit_descriptor,
+            contraction_rule = rule,
+        ),
+    )
+end
+
 """
     CartesianContractionUnit3D
 
@@ -1188,6 +1371,49 @@ function cartesian_contraction_rule(
         :support_local_product,
         diagnostics,
         (source = :cartesian_contraction_unit,),
+    )
+end
+
+function _cartesian_resolved_contraction_payload(
+    unit::CartesianContractionUnit3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    if hasproperty(unit.metadata, :staged_by_center_unit)
+        payload = unit.metadata.staged_by_center_unit
+        rule = hasproperty(unit.metadata, :contraction_rule) ?
+               unit.metadata.contraction_rule :
+               cartesian_contraction_rule(payload; parent_dimension)
+        return _cartesian_resolved_contraction_payload(
+            payload;
+            parent_dimension,
+            rule,
+        )
+    end
+    rule = cartesian_contraction_rule(unit; parent_dimension)
+    return _CartesianResolvedContractionPayload3D(
+        :unsupported_missing_payload,
+        false,
+        rule.kind,
+        rule.column_range,
+        copy(rule.support_indices),
+        nothing,
+        nothing,
+        (:staged_by_center_unit,),
+        (
+            source = :cartesian_contraction_unit,
+            rule_family = rule.rule_family,
+            rule_kind = rule.kind,
+            metric_capability = rule.metric_capability,
+            linear_vector_path = :unsupported,
+            block_role = :unsupported,
+            unsupported = true,
+            prototype = _rule_prototype_only(rule),
+            payload_ready_for_current_metric_execution = false,
+        ),
+        (
+            source = :cartesian_contraction_unit,
+            contraction_rule = rule,
+        ),
     )
 end
 
