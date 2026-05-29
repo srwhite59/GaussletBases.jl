@@ -349,6 +349,16 @@ against the transposed kinetic block, and the observed maximum block error was
 about `8.9e-16`. This remains private shadow validation only, not construction
 adoption.
 
+The product-only shadow-matrix checkpoint is recorded by
+`8cd2f17 Add product-only kinetic shadow matrix`. The private helper
+`_product_doside_retained_kinetic_shadow_matrix(...)` fills only the
+product/product kinetic subblocks using
+`_product_doside_retained_kinetic_block(...)`. In the same q4 bond-aligned
+endcap-panel fixture, it covers six product units and 21 product/product
+blocks, matching `fixed_block.kinetic` product subblocks to about `8.9e-16`.
+Rows and columns outside the product units remain explicitly zero/absent, so
+the helper does not claim support-dense or mixed kinetic coverage.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
@@ -388,12 +398,11 @@ This policy does not change:
 - supplement handling;
 - CR2 or science validation status.
 
-The next design choice is either to build a private product-only kinetic shadow
-matrix/packet from product/product blocks, or to stop before broader adoption.
-Full kinetic adoption requires support-dense and mixed fallback blocks, so it
-should not be inferred from the product/product shadow result. Local/Gaussian
-one-body terms, PQS/product mixed blocks, support-dense mixed packet
-generalization, and all-pairs production assembly remain separate design
-questions. Any adoption pass should remain private until it has explicit
-operator checks, signed-block diagnostics, and a clear production-readiness
-decision.
+The next step is a read-only support-dense/mixed kinetic fallback audit before
+any full kinetic packet or adoption pass. Full kinetic adoption requires
+support-dense and mixed fallback blocks, so it should not be inferred from the
+product/product shadow result. Local/Gaussian one-body terms, PQS/product mixed
+blocks, support-dense mixed packet generalization, and all-pairs production
+assembly remain separate design questions. Any adoption pass should remain
+private until it has explicit operator checks, signed-block diagnostics, and a
+clear production-readiness decision.
