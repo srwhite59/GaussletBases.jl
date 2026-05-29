@@ -1031,6 +1031,34 @@ end
     )
     @test product_raw_overlap_packet.source_dimensions == (4, 4)
     @test product_raw_overlap_packet.raw_operator_matrix == Matrix{Float64}(I, 4, 4)
+    expected_product_position_x = Float64[
+        1 0 0 0
+        0 1 0 0
+        0 0 2 0
+        0 0 0 2
+    ]
+    product_raw_position_x_packet = CCP._cartesian_raw_low_order_operator_packet(
+        product_self_pair;
+        term = :position_x,
+    )
+    @test product_raw_position_x_packet.left_source_id == :identity_product_slab_source
+    @test product_raw_position_x_packet.right_source_id == :identity_product_slab_source
+    @test product_raw_position_x_packet.operator_kind == :low_order_metric
+    @test product_raw_position_x_packet.term == :position_x
+    @test product_raw_position_x_packet.source_dimensions == (4, 4)
+    @test product_raw_position_x_packet.raw_operator_matrix == expected_product_position_x
+    @test product_raw_position_x_packet.diagnostics.raw_reference ==
+          :identity_product_slab_separable_axis_index_position_x
+    @test product_raw_position_x_packet.diagnostics.raw_reference_error == 0.0
+    @test product_raw_position_x_packet.diagnostics.separable_axis_metadata_used
+    @test !product_raw_position_x_packet.diagnostics.dense_parent_matrix_used
+    @test product_raw_position_x_packet.diagnostics.raw_operator_matrix_built
+    @test !product_raw_position_x_packet.diagnostics.retained_operator_block_built
+    @test !product_raw_position_x_packet.diagnostics.retained_transform_applied
+    @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
+        pqs_resolved_pair;
+        term = :position_x,
+    )
     product_retained_overlap = CCP._cartesian_retained_low_order_operator_block(
         product_raw_overlap_packet,
         product_source_transform.retained_transform,
@@ -1058,6 +1086,33 @@ end
     @test !product_retained_overlap.diagnostics.quadrature_policy_changed
     @test !product_retained_overlap.diagnostics.cr2_science_status_changed
     @test !product_retained_overlap.diagnostics.ida_weight_division_allowed
+    product_retained_position_x = CCP._cartesian_retained_low_order_operator_block(
+        product_raw_position_x_packet,
+        product_source_transform.retained_transform,
+    )
+    @test product_retained_position_x.left_source_id == :identity_product_slab_source
+    @test product_retained_position_x.right_source_id == :identity_product_slab_source
+    @test product_retained_position_x.operator_kind == :low_order_metric
+    @test product_retained_position_x.term == :position_x
+    @test product_retained_position_x.retained_dimensions == (4, 4)
+    @test product_retained_position_x.retained_operator_matrix ≈
+          expected_product_position_x atol = 1.0e-14 rtol = 1.0e-14
+    @test product_retained_position_x.diagnostics.left_transform_kind ==
+          :product_axis_transform
+    @test product_retained_position_x.diagnostics.right_transform_kind ==
+          :product_axis_transform
+    @test product_retained_position_x.diagnostics.retained_transform_applied
+    @test product_retained_position_x.diagnostics.retained_operator_block_built
+    @test product_retained_position_x.diagnostics.retained_reference ==
+          :explicit_materialized_transform
+    @test !product_retained_position_x.diagnostics.all_pair_matrices_built
+    @test !product_retained_position_x.diagnostics.metric_execution_changed
+    @test !product_retained_position_x.diagnostics.qwhamiltonian_consumes
+    @test !product_retained_position_x.diagnostics.public_default_consumes
+    @test !product_retained_position_x.diagnostics.backend_policy_changed
+    @test !product_retained_position_x.diagnostics.quadrature_policy_changed
+    @test !product_retained_position_x.diagnostics.cr2_science_status_changed
+    @test !product_retained_position_x.diagnostics.ida_weight_division_allowed
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,
         pqs_retained_transform,

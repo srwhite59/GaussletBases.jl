@@ -2386,8 +2386,8 @@ function _cartesian_raw_low_order_operator_packet(
     term::Symbol,
     backend::Symbol = :private_raw_product_reference,
 )
-    term == :overlap || throw(
-        ArgumentError("private raw low-order packet currently supports only :overlap"),
+    term in (:overlap, :position_x) || throw(
+        ArgumentError("private raw low-order packet currently supports only :overlap and :position_x"),
     )
     resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
         ArgumentError("private raw low-order packet currently supports only self-pairs"),
@@ -2395,10 +2395,20 @@ function _cartesian_raw_low_order_operator_packet(
     left_dimension = resolved_pair.left_raw_source.source_dimension
     right_dimension = resolved_pair.right_raw_source.source_dimension
     left_dimension == right_dimension || throw(
-        DimensionMismatch("raw self-overlap dimensions must match"),
+        DimensionMismatch("raw self-pair dimensions must match"),
     )
-    matrix = Matrix{Float64}(I, left_dimension, right_dimension)
-    reference_error = norm(matrix - Matrix{Float64}(I, left_dimension, right_dimension), Inf)
+    matrix, raw_reference, reference_error = if term == :overlap
+        identity_matrix = Matrix{Float64}(I, left_dimension, right_dimension)
+        (
+            identity_matrix,
+            :orthonormal_raw_product_mode_overlap_identity,
+            norm(identity_matrix - Matrix{Float64}(I, left_dimension, right_dimension), Inf),
+        )
+    else
+        _cartesian_identity_product_slab_position_x_packet_matrix(
+            resolved_pair.left_raw_source,
+        )
+    end
     return _CartesianRawProductSourceLowOrderOperatorPacket3D(
         resolved_pair.pair_key[1],
         resolved_pair.pair_key[2],
@@ -2417,11 +2427,13 @@ function _cartesian_raw_low_order_operator_packet(
             fixture_only = true,
             production_supported = false,
             term = term,
-            raw_reference = :orthonormal_raw_product_mode_overlap_identity,
+            raw_reference = raw_reference,
             raw_reference_error = reference_error,
             raw_operator_matrix_built = true,
             retained_operator_block_built = false,
             retained_transform_applied = false,
+            separable_axis_metadata_used = term == :position_x,
+            dense_parent_matrix_used = false,
             all_pair_matrices_built = false,
             metric_execution_changed = false,
             qwhamiltonian_consumes = false,
@@ -2431,6 +2443,56 @@ function _cartesian_raw_low_order_operator_packet(
             cr2_science_status_changed = false,
         ),
     )
+end
+
+function _cartesian_identity_product_slab_position_x_packet_matrix(
+    raw_source::_CartesianRawProductSource3D,
+)
+    raw_source.source_id == :identity_product_slab_source || throw(
+        ArgumentError("private :position_x raw packet is restricted to the identity product/slab fixture"),
+    )
+    hasproperty(raw_source.provenance, :unit) || throw(
+        ArgumentError("identity product/slab :position_x packet requires staged-unit provenance"),
+    )
+    unit = raw_source.provenance.unit
+    unit.kind == :product_doside || throw(
+        ArgumentError("identity product/slab :position_x packet requires a product_doside unit"),
+    )
+    length(unit.axis_function_indices) == raw_source.source_dimension || throw(
+        DimensionMismatch("axis-function metadata must match the raw source dimension"),
+    )
+    matrix = zeros(Float64, raw_source.source_dimension, raw_source.source_dimension)
+    x_values = _cartesian_raw_source_axis_index_values(unit, 1)
+    for (left_column, left_indices) in pairs(unit.axis_function_indices)
+        for (right_column, right_indices) in pairs(unit.axis_function_indices)
+            left_indices[2] == right_indices[2] || continue
+            left_indices[3] == right_indices[3] || continue
+            left_indices[1] == right_indices[1] || continue
+            matrix[left_column, right_column] = x_values[left_indices[1]]
+        end
+    end
+    support_reference = zeros(Float64, raw_source.source_dimension, raw_source.source_dimension)
+    for (index, state) in pairs(unit.support_states)
+        support_reference[index, index] = Float64(state[1])
+    end
+    return (
+        matrix,
+        :identity_product_slab_separable_axis_index_position_x,
+        norm(matrix - support_reference, Inf),
+    )
+end
+
+function _cartesian_raw_source_axis_index_values(
+    unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis::Int,
+)
+    staged_axis = unit.axes[axis]
+    if staged_axis.kind == :fixed
+        return Float64[Int(staged_axis.fixed_index)]
+    elseif staged_axis.kind == :active
+        return Float64[index for index in staged_axis.interval]
+    end
+    throw(ArgumentError("unsupported staged axis kind $(staged_axis.kind)"))
 end
 
 function _cartesian_materialized_retained_transform_matrix(
@@ -2447,8 +2509,8 @@ function _cartesian_retained_low_order_operator_block(
     left_transform::_CartesianRetainedTransform3D,
     right_transform::_CartesianRetainedTransform3D = left_transform,
 )
-    raw_packet.term == :overlap || throw(
-        ArgumentError("private retained low-order block currently supports only :overlap"),
+    raw_packet.term in (:overlap, :position_x) || throw(
+        ArgumentError("private retained low-order block currently supports only :overlap and :position_x"),
     )
     raw_packet.left_source_id == left_transform.source_id || throw(
         ArgumentError("left retained transform source id does not match raw packet"),
