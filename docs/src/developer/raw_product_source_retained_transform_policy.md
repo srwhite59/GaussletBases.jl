@@ -319,15 +319,33 @@ support-dense mixed packet generalization, all-pairs production matrices,
 kinetic, nuclear/local, Gaussian, MWG, or interaction terms. GTO supplement
 functions remain outside retained-column positive quadrature assumptions.
 
+The first private non-low-order operator checkpoint is kinetic. As of
+`04b7095 Add private product kinetic block helper`,
+`_product_doside_retained_separable_sum_block(left_unit, right_unit,
+axis_factor_terms)` builds retained product/doside blocks from explicit
+separable axis-factor triples, and
+`_product_doside_retained_kinetic_block(left_unit, right_unit, axis_ops)` is a
+thin wrapper for
+
+```text
+(Kx, Sy, Sz) + (Sx, Ky, Sz) + (Sx, Sy, Kz)
+```
+
+The focused tests compare product/doside self and cross-unit kinetic blocks
+against support-local retained references formed from `_staged_unit_entries(...)`
+and `_contract_pair_block(...)`. This is private signed operator-block
+infrastructure only. Kinetic is not a weight object, not a positive quadrature
+claim, and not an IDA division path.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
 as the full raw-to-retained transform. PQS/product mixed retained blocks remain
 unsupported. Support-dense mixed packets, production product/product
-operator assembly, all-pairs matrix construction, kinetic, nuclear/local,
-Gaussian, MWG, interaction, QW/Hamiltonian, public/default, backend/default,
-PGDG/quadrature, CR2, and science/energy behavior remain unchanged and outside
-this private fixture line.
+operator assembly, all-pairs matrix construction, kinetic adoption outside the
+private product/doside helper, nuclear/local, Gaussian, MWG, interaction,
+QW/Hamiltonian, public/default, backend/default, PGDG/quadrature, CR2, and
+science/energy behavior remain unchanged and outside this private fixture line.
 
 Before any PQS retained-block execution, the code needs an explicit way to
 represent or resolve the full factored PQS transform:
@@ -340,11 +358,12 @@ raw_product_modes
 ```
 
 General physical raw source pair operator packets beyond these private
-product/slab fixtures, plus kinetic, nuclear, Gaussian/local, interaction/MWG,
-and mixed product/PQS or product/support-dense pairs, need separate design.
-The current checkpoint changes no all-pairs matrix construction, QW or
-Hamiltonian path, public/default route, backend/default policy, PGDG or
-quadrature policy, CR2 path, or science status.
+product/slab fixtures, kinetic adoption into existing real route consumers,
+nuclear, Gaussian/local, interaction/MWG, and mixed product/PQS or
+product/support-dense pairs need separate design. The current checkpoint
+changes no all-pairs matrix construction, QW or Hamiltonian path,
+public/default route, backend/default policy, PGDG or quadrature policy, CR2
+path, or science status.
 
 ## Non-Goals
 
@@ -357,11 +376,10 @@ This policy does not change:
 - supplement handling;
 - CR2 or science validation status.
 
-The next implementation step should be a scoped choice of the first consumer or
-operator term beyond private low-order product/doside plumbing. Likely
-candidates are kinetic, local/Gaussian one-body terms, PQS/product mixed
-blocks, support-dense mixed packet generalization, or all-pairs production
-assembly. Kinetic is the natural first design candidate if the required 1D
-factor data are already cleanly available. Any such pass should remain private
-until it has explicit metric/operator checks, weight-role diagnostics, and a
-clear production-readiness decision.
+The next step should be a read-only adoption audit for kinetic: compare the
+private product/doside kinetic helper against existing kinetic construction in
+real route fixtures before wiring it into any consumer. Local/Gaussian one-body
+terms, PQS/product mixed blocks, support-dense mixed packet generalization, and
+all-pairs production assembly remain separate design questions. Any adoption
+pass should remain private until it has explicit operator checks, signed-block
+diagnostics, and a clear production-readiness decision.
