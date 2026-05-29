@@ -2577,19 +2577,38 @@ function _cartesian_raw_source_support_states(raw_source::_CartesianRawProductSo
     return states
 end
 
-function _cartesian_product_doside_physical_position_packet_matrix(
+function _cartesian_require_product_doside_physical_position_source(
     raw_source::_CartesianRawProductSource3D;
-    term::Symbol,
-    axis_metrics,
+    side::Symbol,
 )
     hasproperty(raw_source.provenance, :unit) || throw(
-        ArgumentError("physical position product/doside packet requires staged-unit provenance"),
+        ArgumentError("physical position product/doside packet requires staged-unit provenance on $(side) source"),
     )
     unit = raw_source.provenance.unit
     unit.kind == :product_doside || throw(
-        ArgumentError("physical position product/doside packet requires a product_doside unit"),
+        ArgumentError("physical position product/doside packet requires a product_doside unit on $(side) source"),
     )
-    _cartesian_validate_position_axis_metrics(axis_metrics, raw_source.parent_dims)
+    return unit
+end
+
+function _cartesian_product_doside_physical_position_packet_matrix(
+    left_raw_source::_CartesianRawProductSource3D,
+    right_raw_source::_CartesianRawProductSource3D;
+    term::Symbol,
+    axis_metrics,
+)
+    _cartesian_require_product_doside_physical_position_source(
+        left_raw_source;
+        side = :left,
+    )
+    _cartesian_require_product_doside_physical_position_source(
+        right_raw_source;
+        side = :right,
+    )
+    left_raw_source.parent_dims == right_raw_source.parent_dims || throw(
+        DimensionMismatch("physical position product/doside cross packet requires matching parent dimensions"),
+    )
+    _cartesian_validate_position_axis_metrics(axis_metrics, left_raw_source.parent_dims)
     position_axis = _cartesian_physical_position_axis(term)
     axis_matrices = ntuple(
         axis -> _cartesian_axis_metric_matrix(
@@ -2599,12 +2618,13 @@ function _cartesian_product_doside_physical_position_packet_matrix(
         ),
         3,
     )
-    support_states = _cartesian_raw_source_support_states(raw_source)
-    matrix = zeros(Float64, length(support_states), length(support_states))
-    for col in eachindex(support_states)
-        jx, jy, jz = support_states[col]
-        for row in eachindex(support_states)
-            ix, iy, iz = support_states[row]
+    left_support_states = _cartesian_raw_source_support_states(left_raw_source)
+    right_support_states = _cartesian_raw_source_support_states(right_raw_source)
+    matrix = zeros(Float64, length(left_support_states), length(right_support_states))
+    for col in eachindex(right_support_states)
+        jx, jy, jz = right_support_states[col]
+        for row in eachindex(left_support_states)
+            ix, iy, iz = left_support_states[row]
             matrix[row, col] =
                 axis_matrices[1][ix, jx] *
                 axis_matrices[2][iy, jy] *
@@ -2616,6 +2636,19 @@ function _cartesian_product_doside_physical_position_packet_matrix(
         Symbol(:product_doside_physical_, term),
         0.0,
         position_axis,
+    )
+end
+
+function _cartesian_product_doside_physical_position_packet_matrix(
+    raw_source::_CartesianRawProductSource3D;
+    term::Symbol,
+    axis_metrics,
+)
+    return _cartesian_product_doside_physical_position_packet_matrix(
+        raw_source,
+        raw_source;
+        term,
+        axis_metrics,
     )
 end
 
@@ -2631,20 +2664,18 @@ function _cartesian_physical_raw_low_order_operator_packet(
         term;
         helper = :private_physical_raw_low_order_operator_packet,
     )
-    resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
-        ArgumentError("private physical raw low-order packet currently supports only self-pairs"),
-    )
     left_dimension = resolved_pair.left_raw_source.source_dimension
     right_dimension = resolved_pair.right_raw_source.source_dimension
-    left_dimension == right_dimension || throw(
-        DimensionMismatch("raw self-pair dimensions must match"),
-    )
     matrix, raw_reference, reference_error, _ =
         _cartesian_product_doside_physical_position_packet_matrix(
-            resolved_pair.left_raw_source;
+            resolved_pair.left_raw_source,
+            resolved_pair.right_raw_source;
             term,
             axis_metrics,
         )
+    size(matrix) == (left_dimension, right_dimension) || throw(
+        DimensionMismatch("raw physical operator matrix dimensions must match left/right raw source dimensions"),
+    )
     axis_metric_sources = (
         x = _cartesian_axis_metric_source(axis_metrics, :x),
         y = _cartesian_axis_metric_source(axis_metrics, :y),
@@ -2670,6 +2701,9 @@ function _cartesian_physical_raw_low_order_operator_packet(
             term = term,
             raw_reference = raw_reference,
             raw_reference_error = reference_error,
+            cross_pair = resolved_pair.pair_key[1] != resolved_pair.pair_key[2],
+            left_source_dimension = left_dimension,
+            right_source_dimension = right_dimension,
             raw_operator_matrix_built = true,
             retained_operator_block_built = false,
             retained_transform_applied = false,

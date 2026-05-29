@@ -1099,6 +1099,29 @@ end
     )
     @test nonidentity_product_self_pair.pair_key ==
           (:nonidentity_product_slab_source, :nonidentity_product_slab_source)
+    cross_product_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform, nonidentity_product_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_x, :position_y, :position_z),
+        source = :identity_nonidentity_product_cross_pair_plan_test,
+    )
+    cross_product_pairs =
+        CCP._cartesian_resolved_raw_product_source_pairs(cross_product_pair_plan)
+    cross_product_pair = only(
+        pair for pair in cross_product_pairs
+        if pair.pair_key ==
+           (:identity_product_slab_source, :nonidentity_product_slab_source)
+    )
+    @test length(cross_product_pairs) == 3
+    @test cross_product_pair.left_raw_source.source_id ==
+          :identity_product_slab_source
+    @test cross_product_pair.right_raw_source.source_id ==
+          :nonidentity_product_slab_source
+    @test cross_product_pair.left_raw_source.source_dimension == 4
+    @test cross_product_pair.right_raw_source.source_dimension == 4
+    @test cross_product_pair.left_retained_transform.retained_dimension == 4
+    @test cross_product_pair.right_retained_transform.retained_dimension == 2
+    @test !cross_product_pair.diagnostics.pqs_factored_transform_present
     position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (product_source_transform,);
         operator_kind = :low_order_metric,
@@ -1116,6 +1139,19 @@ end
     )
     axis_index_omitting_pair = only(
         CCP._cartesian_resolved_raw_product_source_pairs(axis_index_omitting_pair_plan)
+    )
+    cross_position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform, nonidentity_product_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_y, :position_z),
+        source = :position_omitting_product_cross_pair_plan_test,
+    )
+    cross_position_omitting_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            cross_position_omitting_pair_plan,
+        )
+        if pair.pair_key ==
+           (:identity_product_slab_source, :nonidentity_product_slab_source)
     )
     product_raw_overlap_packet = CCP._cartesian_raw_low_order_operator_packet(
         product_self_pair;
@@ -1193,7 +1229,11 @@ end
         ),
     )
     product_support_states = product_self_pair.left_raw_source.provenance.unit.support_states
-    function support_local_physical_position_reference(term::Symbol)
+    function support_local_physical_position_reference(
+        term::Symbol,
+        left_support_states = product_support_states,
+        right_support_states = product_support_states,
+    )
         axis_matrices = term == :position_x ? (
             physical_axis_metrics.x.position,
             physical_axis_metrics.y.overlap,
@@ -1207,11 +1247,12 @@ end
             physical_axis_metrics.y.overlap,
             physical_axis_metrics.z.position,
         ) : throw(ArgumentError("unsupported test physical position term"))
-        reference = zeros(Float64, length(product_support_states), length(product_support_states))
-        for col in eachindex(product_support_states)
-            jx, jy, jz = product_support_states[col]
-            for row in eachindex(product_support_states)
-                ix, iy, iz = product_support_states[row]
+        reference =
+            zeros(Float64, length(left_support_states), length(right_support_states))
+        for col in eachindex(right_support_states)
+            jx, jy, jz = right_support_states[col]
+            for row in eachindex(left_support_states)
+                ix, iy, iz = left_support_states[row]
                 reference[row, col] =
                     axis_matrices[1][ix, jx] *
                     axis_matrices[2][iy, jy] *
@@ -1228,6 +1269,7 @@ end
     physical_position_packets = Dict{Symbol,Any}()
     generic_physical_position_packets = Dict{Symbol,Any}()
     nonidentity_physical_position_packets = Dict{Symbol,Any}()
+    cross_physical_position_packets = Dict{Symbol,Any}()
     for term in (:position_x, :position_y, :position_z)
         packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             product_self_pair;
@@ -1244,11 +1286,22 @@ end
             term,
             axis_metrics = physical_axis_metrics,
         )
+        cross_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
+            cross_product_pair;
+            term,
+            axis_metrics = physical_axis_metrics,
+        )
         physical_position_packets[term] = packet
         generic_physical_position_packets[term] = generic_packet
         nonidentity_physical_position_packets[term] = nonidentity_packet
+        cross_physical_position_packets[term] = cross_packet
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
+        cross_reference = support_local_physical_position_reference(
+            term,
+            cross_product_pair.left_raw_source.provenance.unit.support_states,
+            cross_product_pair.right_raw_source.provenance.unit.support_states,
+        )
         @test packet.left_source_id == :identity_product_slab_source
         @test packet.right_source_id == :identity_product_slab_source
         @test packet.operator_kind == :low_order_metric
@@ -1270,29 +1323,44 @@ end
         @test nonidentity_packet.source_dimensions == (4, 4)
         @test nonidentity_packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
         @test nonidentity_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test cross_packet.left_source_id == :identity_product_slab_source
+        @test cross_packet.right_source_id == :nonidentity_product_slab_source
+        @test cross_packet.operator_kind == :low_order_metric
+        @test cross_packet.term == term
+        @test cross_packet.source_dimensions == (4, 4)
+        @test cross_packet.raw_operator_matrix ≈ cross_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test cross_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
         @test packet.raw_operator_matrix != expected_product_axis_index_x
         @test generic_packet.raw_operator_matrix != expected_product_axis_index_x
         @test nonidentity_packet.raw_operator_matrix != expected_product_axis_index_x
+        @test cross_packet.raw_operator_matrix != expected_product_axis_index_x
         @test packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
         @test generic_packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
         @test nonidentity_packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
+        @test cross_packet.diagnostics.raw_reference ==
+              Symbol(:product_doside_physical_, term)
         @test packet.diagnostics.raw_reference_error == 0.0
         @test generic_packet.diagnostics.raw_reference_error == 0.0
         @test nonidentity_packet.diagnostics.raw_reference_error == 0.0
+        @test cross_packet.diagnostics.raw_reference_error == 0.0
         @test packet.diagnostics.physical_position_operator
         @test generic_packet.diagnostics.physical_position_operator
         @test nonidentity_packet.diagnostics.physical_position_operator
+        @test cross_packet.diagnostics.physical_position_operator
         @test !packet.diagnostics.axis_index_diagnostic
         @test !generic_packet.diagnostics.axis_index_diagnostic
         @test !nonidentity_packet.diagnostics.axis_index_diagnostic
+        @test !cross_packet.diagnostics.axis_index_diagnostic
         @test packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test generic_packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test nonidentity_packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test cross_packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
@@ -1300,36 +1368,54 @@ end
               :synthetic_noninteger_axis_metric_fixture
         @test nonidentity_packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
+        @test cross_packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
         @test packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test generic_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test nonidentity_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test cross_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test !packet.diagnostics.cross_pair
+        @test !generic_packet.diagnostics.cross_pair
+        @test !nonidentity_packet.diagnostics.cross_pair
+        @test cross_packet.diagnostics.cross_pair
+        @test cross_packet.diagnostics.left_source_dimension == 4
+        @test cross_packet.diagnostics.right_source_dimension == 4
         @test !packet.diagnostics.dense_parent_matrix_used
         @test !generic_packet.diagnostics.dense_parent_matrix_used
         @test !nonidentity_packet.diagnostics.dense_parent_matrix_used
+        @test !cross_packet.diagnostics.dense_parent_matrix_used
         @test packet.diagnostics.fixture_only
         @test generic_packet.diagnostics.fixture_only
         @test nonidentity_packet.diagnostics.fixture_only
+        @test cross_packet.diagnostics.fixture_only
         @test !packet.diagnostics.production_supported
         @test !generic_packet.diagnostics.production_supported
         @test !nonidentity_packet.diagnostics.production_supported
+        @test !cross_packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
         @test !generic_packet.diagnostics.metric_execution_changed
         @test !nonidentity_packet.diagnostics.metric_execution_changed
+        @test !cross_packet.diagnostics.metric_execution_changed
         @test !packet.diagnostics.qwhamiltonian_consumes
         @test !generic_packet.diagnostics.qwhamiltonian_consumes
         @test !nonidentity_packet.diagnostics.qwhamiltonian_consumes
+        @test !cross_packet.diagnostics.qwhamiltonian_consumes
         @test !packet.diagnostics.public_default_consumes
         @test !generic_packet.diagnostics.public_default_consumes
         @test !nonidentity_packet.diagnostics.public_default_consumes
+        @test !cross_packet.diagnostics.public_default_consumes
         @test !packet.diagnostics.backend_policy_changed
         @test !generic_packet.diagnostics.backend_policy_changed
         @test !nonidentity_packet.diagnostics.backend_policy_changed
+        @test !cross_packet.diagnostics.backend_policy_changed
         @test !packet.diagnostics.quadrature_policy_changed
         @test !generic_packet.diagnostics.quadrature_policy_changed
         @test !nonidentity_packet.diagnostics.quadrature_policy_changed
+        @test !cross_packet.diagnostics.quadrature_policy_changed
         @test !packet.diagnostics.cr2_science_status_changed
         @test !generic_packet.diagnostics.cr2_science_status_changed
         @test !nonidentity_packet.diagnostics.cr2_science_status_changed
+        @test !cross_packet.diagnostics.cr2_science_status_changed
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         pqs_resolved_pair;
@@ -1342,9 +1428,23 @@ end
         axis_metrics = physical_axis_metrics,
     )
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        cross_position_omitting_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         product_self_pair;
         term = :axis_index_x,
         axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        cross_product_pair;
+        term = :axis_index_x,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
+        cross_product_pair;
+        term = :axis_index_x,
     )
     product_retained_overlap = CCP._cartesian_retained_low_order_operator_block(
         product_raw_overlap_packet,
@@ -1413,9 +1513,20 @@ end
             nonidentity_physical_position_packets[term],
             nonidentity_product_source_transform.retained_transform,
         )
+        cross_retained = CCP._cartesian_retained_low_order_operator_block(
+            cross_physical_position_packets[term],
+            product_source_transform.retained_transform,
+            nonidentity_product_source_transform.retained_transform,
+        )
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         nonidentity_reference = transpose(nonidentity_transform) * reference * nonidentity_transform
+        cross_reference = support_local_physical_position_reference(
+            term,
+            cross_product_pair.left_raw_source.provenance.unit.support_states,
+            cross_product_pair.right_raw_source.provenance.unit.support_states,
+        )
+        cross_retained_reference = cross_reference * nonidentity_transform
         @test retained.left_source_id == :identity_product_slab_source
         @test retained.right_source_id == :identity_product_slab_source
         @test retained.operator_kind == :low_order_metric
@@ -1436,57 +1547,80 @@ end
         @test nonidentity_retained.term == term
         @test nonidentity_retained.retained_dimensions == (2, 2)
         @test nonidentity_retained.retained_operator_matrix ≈ nonidentity_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test cross_retained.left_source_id == :identity_product_slab_source
+        @test cross_retained.right_source_id == :nonidentity_product_slab_source
+        @test cross_retained.operator_kind == :low_order_metric
+        @test cross_retained.term == term
+        @test cross_retained.retained_dimensions == (4, 2)
+        @test cross_retained.retained_operator_matrix ≈ cross_retained_reference atol = 1.0e-14 rtol = 1.0e-14
         @test retained.diagnostics.left_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test nonidentity_retained.diagnostics.left_transform_kind == :product_axis_transform
+        @test cross_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test retained.diagnostics.right_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test nonidentity_retained.diagnostics.right_transform_kind == :product_axis_transform
+        @test cross_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test retained.diagnostics.left_transform_materialized
         @test generic_retained.diagnostics.left_transform_materialized
         @test nonidentity_retained.diagnostics.left_transform_materialized
+        @test cross_retained.diagnostics.left_transform_materialized
         @test retained.diagnostics.right_transform_materialized
         @test generic_retained.diagnostics.right_transform_materialized
         @test nonidentity_retained.diagnostics.right_transform_materialized
+        @test cross_retained.diagnostics.right_transform_materialized
         @test retained.diagnostics.retained_transform_applied
         @test generic_retained.diagnostics.retained_transform_applied
         @test nonidentity_retained.diagnostics.retained_transform_applied
+        @test cross_retained.diagnostics.retained_transform_applied
         @test retained.diagnostics.retained_operator_block_built
         @test generic_retained.diagnostics.retained_operator_block_built
         @test nonidentity_retained.diagnostics.retained_operator_block_built
+        @test cross_retained.diagnostics.retained_operator_block_built
         @test retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test generic_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test nonidentity_retained.diagnostics.retained_reference == :explicit_materialized_transform
+        @test cross_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
         @test generic_retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
         @test nonidentity_retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
+        @test cross_retained.diagnostics.raw_operator_matrix_source ==
+              :private_physical_raw_low_order_operator_packet
         @test !retained.diagnostics.all_pair_matrices_built
         @test !generic_retained.diagnostics.all_pair_matrices_built
         @test !nonidentity_retained.diagnostics.all_pair_matrices_built
+        @test !cross_retained.diagnostics.all_pair_matrices_built
         @test !retained.diagnostics.metric_execution_changed
         @test !generic_retained.diagnostics.metric_execution_changed
         @test !nonidentity_retained.diagnostics.metric_execution_changed
+        @test !cross_retained.diagnostics.metric_execution_changed
         @test !retained.diagnostics.qwhamiltonian_consumes
         @test !generic_retained.diagnostics.qwhamiltonian_consumes
         @test !nonidentity_retained.diagnostics.qwhamiltonian_consumes
+        @test !cross_retained.diagnostics.qwhamiltonian_consumes
         @test !retained.diagnostics.public_default_consumes
         @test !generic_retained.diagnostics.public_default_consumes
         @test !nonidentity_retained.diagnostics.public_default_consumes
+        @test !cross_retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
         @test !generic_retained.diagnostics.backend_policy_changed
         @test !nonidentity_retained.diagnostics.backend_policy_changed
+        @test !cross_retained.diagnostics.backend_policy_changed
         @test !retained.diagnostics.quadrature_policy_changed
         @test !generic_retained.diagnostics.quadrature_policy_changed
         @test !nonidentity_retained.diagnostics.quadrature_policy_changed
+        @test !cross_retained.diagnostics.quadrature_policy_changed
         @test !retained.diagnostics.cr2_science_status_changed
         @test !generic_retained.diagnostics.cr2_science_status_changed
         @test !nonidentity_retained.diagnostics.cr2_science_status_changed
+        @test !cross_retained.diagnostics.cr2_science_status_changed
         @test !retained.diagnostics.ida_weight_division_allowed
         @test !generic_retained.diagnostics.ida_weight_division_allowed
         @test !nonidentity_retained.diagnostics.ida_weight_division_allowed
+        @test !cross_retained.diagnostics.ida_weight_division_allowed
     end
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,
