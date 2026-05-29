@@ -357,7 +357,11 @@ This policy does not change:
 - supplement handling;
 - CR2 or science validation status.
 
-The next implementation step should be a scoped design for a raw product source
-plus retained transform payload. It should start with small metric blocks and
-weight-role diagnostics before claiming H1, interaction, or production route
-readiness.
+The next implementation step should be a scoped choice of the first consumer or
+operator term beyond private low-order product/doside plumbing. Likely
+candidates are kinetic, local/Gaussian one-body terms, PQS/product mixed
+blocks, support-dense mixed packet generalization, or all-pairs production
+assembly. Kinetic is the natural first design candidate if the required 1D
+factor data are already cleanly available. Any such pass should remain private
+until it has explicit metric/operator checks, weight-role diagnostics, and a
+clear production-readiness decision.
