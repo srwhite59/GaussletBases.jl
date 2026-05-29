@@ -987,6 +987,16 @@ This PQS sidecar-fixture checkpoint does not imply kinetic, nuclear, Gaussian
 or pair, interaction, QW/Hamiltonian, H1, energy, CR2, or production metric
 readiness.
 
+A follow-up private checkpoint installs that same sidecar fixture into a
+synthetic single-PQS-layer `_NestedFixedBlock3D`, discoverable only through a
+PQS-specific private accessor. The sidecar is stored in a fixed-block sidecar
+slot for attachment/discovery testing, but ordinary by-center, QW, and
+Hamiltonian consumers do not consume it; `_nested_staged_by_center_sidecar`
+remains incompatible/loud for this PQS fixture. The validated checks remain
+low-order and reference-scoped: PQS self blocks and PQS/support-dense mixed
+blocks. The mixed q4 recipe fixed block is not covered by this fixture, and
+PQS/product optimized metric blocks remain explicitly unsupported.
+
 This checkpoint changes no QW/Hamiltonian construction, backend defaults, PGDG
 policy, quadrature policy, public/default route behavior, source builders, or
 coefficient maps. Any next step should be a separate scoped decision rather

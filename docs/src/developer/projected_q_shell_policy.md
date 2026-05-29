@@ -160,16 +160,24 @@ by-center, supplement, QW, Hamiltonian, CR2, or science-route adoption.
 
 ## Private Sidecar-Fixture Checkpoint
 
-The next private checkpoint adds a sidecar-shaped executable resolved-payload
+The private checkpoint first added a sidecar-shaped executable resolved-payload
 fixture for PQS low-order metric checks. Descriptor-only PQS remains
 unsupported/prototype: without an explicit `column_range` it still reports
-missing installed sidecar payload fields and is not consumed by fixed blocks,
-production metric paths, or public/default routes.
+missing installed sidecar payload fields and is not consumed by production
+metric paths or public/default routes.
 
 The fixture combines the existing PQS descriptor with an explicit
 `column_range`, raw-boundary support coefficients, boundary COMX mode data,
 and the stored full-rank symmetric Lowdin cleanup transform. It is fixture-only
-and does not install PQS into real fixed-block sidecars.
+and does not make PQS production-supported.
+
+A follow-up checkpoint now adds a private single-PQS-layer `_NestedFixedBlock3D`
+fixture that stores `_CartesianProjectedQShellSidecarFixture3D` in a
+fixed-block sidecar slot, but only exposes it behind a PQS-specific private
+accessor. Ordinary by-center, QW, and Hamiltonian consumers do not consume this
+sidecar, and `_nested_staged_by_center_sidecar` remains incompatible/loud for
+the PQS fixture. This proves fixed-block sidecar attachment/discovery only; the
+mixed q4 recipe fixed block is not covered by this fixture.
 
 Validated low-order checks are deliberately narrow:
 
@@ -185,12 +193,12 @@ Validated low-order checks are deliberately narrow:
 This is low-order metric readiness only. It does not imply readiness for
 kinetic, `x2`, nuclear/local one-body terms, Gaussian or pair terms,
 interactions, QW/Hamiltonian construction, H1, energy, CR2 validation, or any
-science route. No default builders, fixed-block sidecars, public APIs, backend
-policy, PGDG/quadrature policy, or QW/Hamiltonian paths changed.
+science route. No default builders, public APIs, backend policy,
+PGDG/quadrature policy, or QW/Hamiltonian paths changed.
 
-If scoped later, the next implementation should be a tiny real
-sidecar-installation fixture with the same guards before any broader metric or
-operator adoption.
+If scoped later, the next implementation should still stay in a tiny private
+fixture lane unless a separate design explicitly covers mixed q4 recipe sidecar
+coverage and non-low-order metric terms.
 
 ## Consequences For Mainline
 
