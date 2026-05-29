@@ -806,6 +806,48 @@ end
     @test !pqs_pair_packet.diagnostics.left_right_retained_transforms_embedded
     @test pqs_pair_packet.diagnostics.future_inventory_must_resolve_sources_and_transforms
     @test !pqs_pair_packet.diagnostics.raw_operator_block_ready
+    pqs_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        pqs_fixed_sidecar_block;
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :weights, :position_x, :position_y, :position_z),
+    )
+    @test pqs_pair_plan.operator_kind == :low_order_metric
+    @test pqs_pair_plan.supported_terms ==
+          (:overlap, :weights, :position_x, :position_y, :position_z)
+    @test pqs_pair_plan.symmetry_status == :symmetric_upper_triangle_placeholder
+    @test pqs_pair_plan.source_ids == [pqs_raw_source.source_id]
+    @test length(pqs_pair_plan.raw_sources) == 1
+    @test length(pqs_pair_plan.retained_transforms) == 1
+    @test length(pqs_pair_plan.pair_packets) == 1
+    @test pqs_pair_plan.pair_keys == [(pqs_raw_source.source_id, pqs_raw_source.source_id)]
+    @test pqs_pair_plan.raw_sources[pqs_raw_source.source_id].source_id ==
+          pqs_raw_source.source_id
+    @test pqs_pair_plan.retained_transforms[pqs_raw_source.source_id].source_id ==
+          pqs_raw_source.source_id
+    @test pqs_pair_plan.retained_transforms[pqs_raw_source.source_id].transform_stages ==
+          pqs_retained_transform.transform_stages
+    @test pqs_pair_plan.retained_transforms[pqs_raw_source.source_id].transform_matrix ===
+          nothing
+    @test only(pqs_pair_plan.pair_packets).left_source_id == pqs_raw_source.source_id
+    @test only(pqs_pair_plan.pair_packets).right_source_id == pqs_raw_source.source_id
+    @test only(pqs_pair_plan.pair_packets).operator_matrices === nothing
+    @test pqs_pair_plan.diagnostics.source == :projected_q_shell_fixed_block_pair_plan
+    @test pqs_pair_plan.diagnostics.source_count == 1
+    @test pqs_pair_plan.diagnostics.retained_transform_count == 1
+    @test pqs_pair_plan.diagnostics.pair_count == 1
+    @test pqs_pair_plan.diagnostics.expected_upper_triangle_pair_count == 1
+    @test pqs_pair_plan.diagnostics.upper_triangle_only
+    @test pqs_pair_plan.diagnostics.all_pairs_resolve_sources
+    @test pqs_pair_plan.diagnostics.all_pairs_resolve_retained_transforms
+    @test pqs_pair_plan.diagnostics.pair_packets_placeholder_only
+    @test !pqs_pair_plan.diagnostics.raw_operator_matrices_built
+    @test !pqs_pair_plan.diagnostics.retained_operator_blocks_built
+    @test !pqs_pair_plan.diagnostics.metric_execution_changed
+    @test !pqs_pair_plan.diagnostics.qwhamiltonian_consumes
+    @test !pqs_pair_plan.diagnostics.public_default_consumes
+    @test !pqs_pair_plan.diagnostics.backend_policy_changed
+    @test !pqs_pair_plan.diagnostics.quadrature_policy_changed
+    @test !pqs_pair_plan.diagnostics.cr2_science_status_changed
     identity_axis = Matrix{Float64}(I, 2, 2)
     product_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
         :identity_product_slab,
@@ -849,6 +891,41 @@ end
     @test product_source_transform.retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
     @test product_source_transform.retained_transform.diagnostics.fast_product_path_requires_separable_axis_transforms
     @test product_source_transform.retained_transform.diagnostics.separable_axis_transforms_available
+    mixed_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (installed_source_transform, product_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :position_x),
+        source = :pqs_product_raw_source_pair_plan_test,
+    )
+    mixed_source_ids = sort!(
+        [pqs_raw_source.source_id, :identity_product_slab_source];
+        by = string,
+    )
+    expected_mixed_pair_keys = NTuple{2,Symbol}[]
+    for right_index in eachindex(mixed_source_ids)
+        right_id = mixed_source_ids[right_index]
+        for left_index in 1:right_index
+            push!(expected_mixed_pair_keys, (mixed_source_ids[left_index], right_id))
+        end
+    end
+    @test length(mixed_pair_plan.raw_sources) == 2
+    @test length(mixed_pair_plan.retained_transforms) == 2
+    @test length(mixed_pair_plan.pair_packets) == 3
+    @test mixed_pair_plan.source_ids == mixed_source_ids
+    @test all(id -> haskey(mixed_pair_plan.raw_sources, id), mixed_source_ids)
+    @test all(id -> haskey(mixed_pair_plan.retained_transforms, id), mixed_source_ids)
+    @test mixed_pair_plan.pair_keys == expected_mixed_pair_keys
+    @test mixed_pair_plan.diagnostics.source == :pqs_product_raw_source_pair_plan_test
+    @test mixed_pair_plan.diagnostics.expected_upper_triangle_pair_count == 3
+    @test mixed_pair_plan.diagnostics.upper_triangle_only
+    @test mixed_pair_plan.diagnostics.all_pairs_resolve_sources
+    @test mixed_pair_plan.diagnostics.all_pairs_resolve_retained_transforms
+    @test mixed_pair_plan.diagnostics.pair_packets_placeholder_only
+    @test all(packet -> packet.operator_matrices === nothing, mixed_pair_plan.pair_packets)
+    @test all(
+        packet -> packet.symmetry_status == :symmetric_upper_triangle_placeholder,
+        mixed_pair_plan.pair_packets,
+    )
     pqs_product_policy = CCPM._pqs_product_mixed_block_policy()
     @test pqs_product_policy.pair_kind == :pqs_product_mixed
     @test pqs_product_policy.optimized_metric_path == :unsupported_pqs_product_optimized

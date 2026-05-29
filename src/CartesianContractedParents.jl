@@ -304,6 +304,25 @@ struct _CartesianRawProductSourcePairOperatorPacket3D{P,D}
     diagnostics::D
 end
 
+"""
+    _CartesianRawProductSourcePairPlan3D
+
+Private all-pairs planning record for raw product source operator packets. The
+plan owns source/transform lookup tables and upper-triangular placeholder pair
+packets, but it does not build raw or retained operator matrices.
+"""
+struct _CartesianRawProductSourcePairPlan3D{S,T,P,D}
+    operator_kind::Symbol
+    supported_terms::Tuple{Vararg{Symbol}}
+    symmetry_status::Symbol
+    source_ids::Vector{Symbol}
+    raw_sources::S
+    retained_transforms::T
+    pair_packets::P
+    pair_keys::Vector{NTuple{2,Symbol}}
+    diagnostics::D
+end
+
 function _contraction_rule_support_summary(
     support_indices::AbstractVector{<:Integer};
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -1958,6 +1977,137 @@ function _cartesian_raw_product_source_pair_operator_packet(
             raw_operator_block_ready = false,
             retained_operator_block_built = false,
         ),
+    )
+end
+
+function _cartesian_raw_product_source_pair_plan(
+    records;
+    operator_kind::Symbol,
+    supported_terms::Tuple{Vararg{Symbol}},
+    symmetry_status::Symbol = :symmetric_upper_triangle_placeholder,
+    backend::Symbol = :metadata_only,
+    source = :raw_product_source_pair_plan,
+)
+    raw_sources = Dict{Symbol,_CartesianRawProductSource3D}()
+    retained_transforms = Dict{Symbol,_CartesianRetainedTransform3D}()
+    for record in records
+        raw_source = record.raw_source
+        retained_transform = record.retained_transform
+        raw_source.source_id == retained_transform.source_id || throw(
+            ArgumentError("raw source and retained transform source ids must match"),
+        )
+        haskey(raw_sources, raw_source.source_id) && throw(
+            ArgumentError("duplicate raw product source id $(raw_source.source_id)"),
+        )
+        raw_sources[raw_source.source_id] = raw_source
+        retained_transforms[retained_transform.source_id] = retained_transform
+    end
+
+    source_ids = sort!(collect(keys(raw_sources)); by = string)
+    pair_keys = NTuple{2,Symbol}[]
+    pair_packets = _CartesianRawProductSourcePairOperatorPacket3D[]
+    for right_index in eachindex(source_ids)
+        right_id = source_ids[right_index]
+        for left_index in 1:right_index
+            left_id = source_ids[left_index]
+            push!(pair_keys, (left_id, right_id))
+            push!(
+                pair_packets,
+                _cartesian_raw_product_source_pair_operator_packet(
+                    raw_sources[left_id],
+                    raw_sources[right_id];
+                    operator_kind,
+                    supported_terms,
+                    symmetry_status,
+                    backend,
+                    provenance = (
+                        source = source,
+                        left_source_id = left_id,
+                        right_source_id = right_id,
+                    ),
+                ),
+            )
+        end
+    end
+
+    diagnostics = (
+        source = source,
+        fixture_only = true,
+        production_supported = false,
+        source_count = length(source_ids),
+        retained_transform_count = length(retained_transforms),
+        pair_count = length(pair_packets),
+        expected_upper_triangle_pair_count =
+            length(source_ids) * (length(source_ids) + 1) ÷ 2,
+        upper_triangle_only = true,
+        all_pairs_resolve_sources = all(
+            packet -> haskey(raw_sources, packet.left_source_id) &&
+                      haskey(raw_sources, packet.right_source_id),
+            pair_packets,
+        ),
+        all_pairs_resolve_retained_transforms = all(
+            packet -> haskey(retained_transforms, packet.left_source_id) &&
+                      haskey(retained_transforms, packet.right_source_id),
+            pair_packets,
+        ),
+        pair_packets_placeholder_only = all(
+            packet -> isnothing(packet.operator_matrices),
+            pair_packets,
+        ),
+        raw_operator_matrices_built = false,
+        retained_operator_blocks_built = false,
+        metric_execution_changed = false,
+        qwhamiltonian_consumes = false,
+        public_default_consumes = false,
+        backend_policy_changed = false,
+        quadrature_policy_changed = false,
+        cr2_science_status_changed = false,
+    )
+
+    return _CartesianRawProductSourcePairPlan3D(
+        operator_kind,
+        supported_terms,
+        symmetry_status,
+        source_ids,
+        raw_sources,
+        retained_transforms,
+        Tuple(pair_packets),
+        pair_keys,
+        diagnostics,
+    )
+end
+
+function _cartesian_raw_product_source_pair_plan(
+    sidecar::_CartesianProjectedQShellSidecarFixture3D;
+    operator_kind::Symbol,
+    supported_terms::Tuple{Vararg{Symbol}},
+    symmetry_status::Symbol = :symmetric_upper_triangle_placeholder,
+    backend::Symbol = :metadata_only,
+)
+    return _cartesian_raw_product_source_pair_plan(
+        _cartesian_raw_product_source_retained_transform(sidecar);
+        operator_kind,
+        supported_terms,
+        symmetry_status,
+        backend,
+        source = :projected_q_shell_sidecar_pair_plan,
+    )
+end
+
+function _cartesian_raw_product_source_pair_plan(
+    fixed_block::_NestedFixedBlock3D;
+    operator_kind::Symbol,
+    supported_terms::Tuple{Vararg{Symbol}},
+    symmetry_status::Symbol = :symmetric_upper_triangle_placeholder,
+    backend::Symbol = :metadata_only,
+)
+    return _cartesian_raw_product_source_pair_plan(
+        _cartesian_raw_product_source_retained_transform(fixed_block);
+        operator_kind,
+        supported_terms,
+        symmetry_status,
+        backend,
+        source = :projected_q_shell_fixed_block_pair_plan,
     )
 end
 
