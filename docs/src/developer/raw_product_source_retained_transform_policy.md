@@ -359,15 +359,28 @@ blocks, matching `fixed_block.kinetic` product subblocks to about `8.9e-16`.
 Rows and columns outside the product units remain explicitly zero/absent, so
 the helper does not claim support-dense or mixed kinetic coverage.
 
+The full private kinetic shadow-matrix checkpoint is recorded by
+`59c2595 Add full kinetic shadow matrix`. The private helper
+`_staged_retained_kinetic_shadow_matrix(...)` fills product/product blocks
+with `_product_doside_retained_kinetic_block(...)` and fills every other
+staged-unit pair with support-local kinetic fallback through
+`_staged_unit_entries(...)` and `_contract_pair_block(...)`. In the same q4
+bond-aligned endcap-panel fixture, it checks the complete shadow matrix
+against `fixed_block.kinetic`: 21 product/product blocks, 7 fallback blocks,
+28 total upper-triangular blocks, and maximum full-matrix error about
+`6.6e-14`. This is private shadow/reference infrastructure only, not kinetic
+construction adoption.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
 as the full raw-to-retained transform. PQS/product mixed retained blocks remain
-unsupported. Support-dense mixed packets, production product/product
-operator assembly, all-pairs matrix construction, kinetic adoption outside the
-private product/doside helper, nuclear/local, Gaussian, MWG, interaction,
-QW/Hamiltonian, public/default, backend/default, PGDG/quadrature, CR2, and
-science/energy behavior remain unchanged and outside this private fixture line.
+unsupported. Production support-dense/mixed packets, production
+product/product operator assembly, all-pairs matrix construction, kinetic
+adoption outside the private shadow helpers, nuclear/local, Gaussian, MWG,
+interaction, QW/Hamiltonian, public/default, backend/default,
+PGDG/quadrature, CR2, and science/energy behavior remain unchanged and outside
+this private fixture line.
 
 Before any PQS retained-block execution, the code needs an explicit way to
 represent or resolve the full factored PQS transform:
@@ -398,11 +411,12 @@ This policy does not change:
 - supplement handling;
 - CR2 or science validation status.
 
-The next step is a read-only support-dense/mixed kinetic fallback audit before
-any full kinetic packet or adoption pass. Full kinetic adoption requires
-support-dense and mixed fallback blocks, so it should not be inferred from the
-product/product shadow result. Local/Gaussian one-body terms, PQS/product mixed
-blocks, support-dense mixed packet generalization, and all-pairs production
-assembly remain separate design questions. Any adoption pass should remain
-private until it has explicit operator checks, signed-block diagnostics, and a
-clear production-readiness decision.
+The next decision should be a read-only adoption-risk audit before routing any
+real construction through the private shadow helper. Full kinetic adoption
+still requires a deliberate production contract for support-dense and mixed
+blocks, so it should not be inferred from the private full-shadow result.
+Local/Gaussian one-body terms, PQS/product mixed blocks, support-dense mixed
+packet generalization, and all-pairs production assembly remain separate design
+questions. Any adoption pass should remain private until it has explicit
+operator checks, signed-block diagnostics, and a clear production-readiness
+decision.
