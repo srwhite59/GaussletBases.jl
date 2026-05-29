@@ -201,7 +201,9 @@ end
 
 Private executable fixture for a projected q-shell descriptor. This is not a
 fixed-block sidecar and is not consumed by default routes; it is only the first
-resolved-payload shape needed to prove PQS metric dispatch contracts.
+resolved-payload shape needed to prove PQS metric dispatch contracts. Its
+coefficients are support-local boundary-row coefficients, not a full
+parent-dimension coefficient map.
 """
 struct _CartesianExecutableProjectedQShellPayload3D{C,D,P}
     kind::Symbol
@@ -209,7 +211,7 @@ struct _CartesianExecutableProjectedQShellPayload3D{C,D,P}
     column_range::UnitRange{Int}
     support_indices::Vector{Int}
     support_states::Vector{NTuple{3,Int}}
-    coefficient_matrix::_CartesianCoefficientMap
+    support_coefficient_matrix::_CartesianCoefficientMap
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D
     current_box::NTuple{3,UnitRange{Int}}
     inner_box::NTuple{3,UnitRange{Int}}
@@ -1337,11 +1339,15 @@ function _cartesian_executable_projected_q_shell_payload_fixture(
     diagnostics = (
         source = :projected_q_shell_executable_payload_fixture,
         fixture_only = true,
+        production_supported = false,
+        coefficient_scope = :support_local_boundary_rows,
+        parent_dimension_coefficient_map = false,
         fixed_block_sidecar_installed = false,
         default_builder_consumes = false,
         metric_packet_consumes = false,
         support_summary = support_summary,
         support_count = descriptor.support_count,
+        support_coefficient_shape = size(support_coefficients),
         mode_count = descriptor.mode_count,
         retained_count = descriptor.retained_count,
         cleanup_method = descriptor.cleanup_method,
@@ -1419,6 +1425,9 @@ function _cartesian_resolved_contraction_payload(
             unsupported = false,
             prototype = false,
             fixture_only = true,
+            production_supported = false,
+            coefficient_scope = :support_local_boundary_rows,
+            parent_dimension_coefficient_map = false,
             payload_ready_for_current_metric_execution = true,
             default_builder_consumes = false,
             fixed_block_sidecar_installed = false,

@@ -470,8 +470,17 @@ end
     @test cubic_pqs_payload.column_range == 1:98
     @test cubic_pqs_payload.support_indices == cubic.support_indices
     @test cubic_pqs_payload.support_states == cubic.support_states
-    @test size(cubic_pqs_payload.coefficient_matrix) == (98, 98)
+    @test !hasproperty(cubic_pqs_payload, :coefficient_matrix)
+    @test hasproperty(cubic_pqs_payload, :support_coefficient_matrix)
+    @test size(cubic_pqs_payload.support_coefficient_matrix) == (98, 98)
+    @test size(cubic_pqs_payload.support_coefficient_matrix, 1) ==
+          length(cubic_pqs_payload.support_indices)
+    @test size(cubic_pqs_payload.support_coefficient_matrix, 1) != 5 * 5 * 5
     @test cubic_pqs_payload.diagnostics.fixture_only
+    @test !cubic_pqs_payload.diagnostics.production_supported
+    @test cubic_pqs_payload.diagnostics.coefficient_scope == :support_local_boundary_rows
+    @test !cubic_pqs_payload.diagnostics.parent_dimension_coefficient_map
+    @test cubic_pqs_payload.diagnostics.support_coefficient_shape == (98, 98)
     @test !cubic_pqs_payload.diagnostics.fixed_block_sidecar_installed
     @test !cubic_pqs_payload.diagnostics.default_builder_consumes
     @test !cubic_pqs_payload.diagnostics.pqs_product_optimized_path_ready
@@ -487,6 +496,9 @@ end
     @test cubic_pqs_resolved.diagnostics.block_role == :pqs
     @test cubic_pqs_resolved.diagnostics.metric_capability ==
           :pqs_low_order_support_local_reference
+    @test cubic_pqs_resolved.diagnostics.coefficient_scope == :support_local_boundary_rows
+    @test !cubic_pqs_resolved.diagnostics.parent_dimension_coefficient_map
+    @test !cubic_pqs_resolved.diagnostics.production_supported
     @test !cubic_pqs_resolved.diagnostics.fixed_block_sidecar_installed
     pqs_self_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
         [cubic_pqs_resolved],
@@ -507,7 +519,7 @@ end
     @test pqs_self_block.position_x ≈ cubic.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
     @test pqs_self_block.position_y ≈ cubic.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
     @test pqs_self_block.position_z ≈ cubic.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
-    support_coefficients = Matrix{Float64}(cubic_pqs_payload.coefficient_matrix)
+    support_coefficients = Matrix{Float64}(cubic_pqs_payload.support_coefficient_matrix)
     expected_first_moments = hcat(
         vec(
             transpose(support_coefficients) * Float64[

@@ -773,6 +773,21 @@ function _staged_unit_entries(unit)
     return entries
 end
 
+function _staged_unit_entries(unit::_CartesianExecutableProjectedQShellPayload3D)
+    entries = [Vector{_ParentCoefficientEntry3D}() for _ in unit.column_range]
+    coefficients = unit.support_coefficient_matrix
+    for local_col in axes(coefficients, 2)
+        column_entries = entries[local_col]
+        for local_row in axes(coefficients, 1)
+            value = Float64(coefficients[local_row, local_col])
+            iszero(value) && continue
+            ix, iy, iz = unit.support_states[local_row]
+            push!(column_entries, _ParentCoefficientEntry3D(ix, iy, iz, value))
+        end
+    end
+    return entries
+end
+
 function _entries_from_resolved_payload(payload)
     payload.ready_for_metric_execution || throw(
         ArgumentError("resolved payload $(payload.payload_kind) is not ready for metric execution"),
