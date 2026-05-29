@@ -812,12 +812,10 @@ function _product_doside_axis_operator_matrix(axis_ops::NamedTuple{(:x,:y,:z)}, 
     return getproperty(axis_data, kind)
 end
 
-function _product_doside_retained_kinetic_block(
-    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
-    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+function _product_doside_kinetic_axis_factor_terms(
     axis_ops::NamedTuple{(:x,:y,:z)},
 )
-    axis_factor_terms = (
+    return (
         (
             _product_doside_axis_operator_matrix(axis_ops, 1, :kinetic),
             _product_doside_axis_operator_matrix(axis_ops, 2, :overlap),
@@ -834,10 +832,53 @@ function _product_doside_retained_kinetic_block(
             _product_doside_axis_operator_matrix(axis_ops, 3, :kinetic),
         ),
     )
+end
+
+function _product_doside_retained_kinetic_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_ops::NamedTuple{(:x,:y,:z)},
+)
     return _product_doside_retained_separable_sum_block(
         left_unit,
         right_unit,
-        axis_factor_terms,
+        _product_doside_kinetic_axis_factor_terms(axis_ops),
+    )
+end
+
+function _fallback_staged_separable_sum_block(
+    left_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    right_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    axis_factor_terms,
+)
+    !isempty(axis_factor_terms) || throw(
+        ArgumentError("fallback staged separable-sum block requires at least one axis-factor triple"),
+    )
+    block = zeros(Float64, length(left_entries), length(right_entries))
+    for term in axis_factor_terms
+        length(term) == 3 || throw(
+            ArgumentError("fallback staged separable-sum block terms must be axis-factor triples"),
+        )
+        block .+= _contract_pair_block(
+            left_entries,
+            right_entries,
+            term[1],
+            term[2],
+            term[3],
+        )
+    end
+    return block
+end
+
+function _fallback_staged_kinetic_block(
+    left_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    right_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    axis_ops::NamedTuple{(:x,:y,:z)},
+)
+    return _fallback_staged_separable_sum_block(
+        left_entries,
+        right_entries,
+        _product_doside_kinetic_axis_factor_terms(axis_ops),
     )
 end
 
@@ -893,6 +934,96 @@ function _product_doside_retained_kinetic_shadow_matrix(
             cr2_science_status_changed = false,
             product_unit_count = length(product_units),
             product_block_count = product_block_count,
+            final_dimension = resolved_final_dimension,
+        ),
+    )
+end
+
+function _staged_retained_kinetic_shadow_matrix(
+    units,
+    axis_ops::NamedTuple{(:x,:y,:z)};
+    final_dimension = nothing,
+)
+    !isempty(units) || throw(
+        ArgumentError("staged retained kinetic shadow matrix requires staged units"),
+    )
+    resolved_final_dimension = if isnothing(final_dimension)
+        maximum(last(unit.column_range) for unit in units)
+    else
+        Int(final_dimension)
+    end
+    for unit in units
+        first(unit.column_range) >= 1 &&
+            last(unit.column_range) <= resolved_final_dimension ||
+            throw(
+                ArgumentError("staged retained kinetic shadow matrix final dimension does not cover unit columns"),
+            )
+    end
+    kinetic = zeros(Float64, resolved_final_dimension, resolved_final_dimension)
+    product_unit_count = count(unit -> unit.kind == :product_doside, units)
+    generic_unit_count = length(units) - product_unit_count
+    product_block_count = 0
+    fallback_block_count = 0
+    entries_cache = Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}}(
+        undef,
+        length(units),
+    )
+    fill!(entries_cache, nothing)
+    for right_index in eachindex(units)
+        right_unit = units[right_index]
+        for left_index in 1:right_index
+            left_unit = units[left_index]
+            if left_unit.kind == :product_doside && right_unit.kind == :product_doside
+                block = _product_doside_retained_kinetic_block(
+                    left_unit,
+                    right_unit,
+                    axis_ops,
+                )
+                product_block_count += 1
+            else
+                left_entries = _cached_staged_unit_entries!(
+                    entries_cache,
+                    left_index,
+                    left_unit,
+                )
+                right_entries = _cached_staged_unit_entries!(
+                    entries_cache,
+                    right_index,
+                    right_unit,
+                )
+                block = _fallback_staged_kinetic_block(
+                    left_entries,
+                    right_entries,
+                    axis_ops,
+                )
+                fallback_block_count += 1
+            end
+            kinetic[left_unit.column_range, right_unit.column_range] .= block
+            if left_index != right_index
+                kinetic[right_unit.column_range, left_unit.column_range] .= transpose(block)
+            end
+        end
+    end
+    return (
+        kinetic = kinetic,
+        diagnostics = (
+            source = :staged_retained_kinetic_shadow_matrix,
+            full_private_shadow_matrix = true,
+            product_only_shadow = false,
+            production_adoption = false,
+            default_execution_changed = false,
+            metric_packet_execution_changed = false,
+            fixed_block_construction_changed = false,
+            qwhamiltonian_consumes = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            ida_positive_weight_semantics_changed = false,
+            cr2_science_status_changed = false,
+            product_unit_count = product_unit_count,
+            generic_unit_count = generic_unit_count,
+            product_block_count = product_block_count,
+            fallback_block_count = fallback_block_count,
+            total_block_count = product_block_count + fallback_block_count,
             final_dimension = resolved_final_dimension,
         ),
     )

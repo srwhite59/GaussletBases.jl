@@ -5247,6 +5247,37 @@ end
     @test !isempty(nonproduct_columns)
     @test maximum(abs.(kinetic_shadow_packet.kinetic[nonproduct_columns, :])) == 0.0
     @test maximum(abs.(kinetic_shadow_packet.kinetic[:, nonproduct_columns])) == 0.0
+    full_kinetic_shadow_packet = CCPM._staged_retained_kinetic_shadow_matrix(
+        sidecar_units,
+        kinetic_axis_ops;
+        final_dimension = size(fixed_block.kinetic, 1),
+    )
+    expected_kinetic_total_blocks = length(sidecar_units) * (length(sidecar_units) + 1) ÷ 2
+    @test size(full_kinetic_shadow_packet.kinetic) == size(fixed_block.kinetic)
+    @test full_kinetic_shadow_packet.diagnostics.full_private_shadow_matrix
+    @test !full_kinetic_shadow_packet.diagnostics.product_only_shadow
+    @test !full_kinetic_shadow_packet.diagnostics.production_adoption
+    @test !full_kinetic_shadow_packet.diagnostics.default_execution_changed
+    @test !full_kinetic_shadow_packet.diagnostics.metric_packet_execution_changed
+    @test !full_kinetic_shadow_packet.diagnostics.fixed_block_construction_changed
+    @test !full_kinetic_shadow_packet.diagnostics.qwhamiltonian_consumes
+    @test !full_kinetic_shadow_packet.diagnostics.backend_policy_changed
+    @test !full_kinetic_shadow_packet.diagnostics.quadrature_policy_changed
+    @test !full_kinetic_shadow_packet.diagnostics.ida_positive_weight_semantics_changed
+    @test !full_kinetic_shadow_packet.diagnostics.cr2_science_status_changed
+    @test full_kinetic_shadow_packet.diagnostics.product_unit_count ==
+          length(kinetic_product_units)
+    @test full_kinetic_shadow_packet.diagnostics.generic_unit_count ==
+          length(sidecar_units) - length(kinetic_product_units)
+    @test full_kinetic_shadow_packet.diagnostics.product_block_count ==
+          kinetic_shadow_block_count
+    @test full_kinetic_shadow_packet.diagnostics.fallback_block_count ==
+          expected_kinetic_total_blocks - kinetic_shadow_block_count
+    @test full_kinetic_shadow_packet.diagnostics.total_block_count ==
+          expected_kinetic_total_blocks
+    @test full_kinetic_shadow_packet.diagnostics.final_dimension ==
+          size(fixed_block.kinetic, 1)
+    @test maximum(abs.(full_kinetic_shadow_packet.kinetic .- fixed_block.kinetic)) <= 1.0e-10
 
     carried = CCS.cartesian_carried_space(fixed_block)
     carried_parent = CCS.carried_space_parent(carried)
