@@ -973,12 +973,19 @@ The numerical kernels remain the same authority:
 PQS remains outside production metric execution. Descriptor-only PQS is still
 prototype-only metadata: it reports missing installed sidecar/product-staged
 payload fields, is not installed into fixed-block sidecars, and is not
-consumed by public contracted-parent metric execution. A later private fixture
-checkpoint added an explicit-column-range executable PQS resolved payload for
-low-order reference checks only. That fixture validates PQS self blocks and
-PQS/support-dense mixed blocks through support-local/reference contracts, keeps
-PQS/product optimized blocks explicitly unsupported, and does not imply QW,
-Hamiltonian, H1, energy, CR2, or production metric readiness.
+consumed by public contracted-parent metric execution. A later private
+sidecar-fixture checkpoint added an explicit-`column_range` executable PQS
+resolved payload for low-order reference checks only. That fixture validates
+PQS self blocks and PQS/support-dense mixed blocks through private
+support-local/reference contracts. PQS self-overlap may use identity only as
+the post-cleanup self-block invariant; mixed overlaps do not use that shortcut.
+PQS/product optimized metric blocks remain explicitly unsupported, and any
+PQS/product support-local reference must be a separately named explicit
+reference/debug helper rather than a silent fallback.
+
+This PQS sidecar-fixture checkpoint does not imply kinetic, nuclear, Gaussian
+or pair, interaction, QW/Hamiltonian, H1, energy, CR2, or production metric
+readiness.
 
 This checkpoint changes no QW/Hamiltonian construction, backend defaults, PGDG
 policy, quadrature policy, public/default route behavior, source builders, or

@@ -158,12 +158,13 @@ technical work should optimize the product path with caching, scratch reuse,
 and boundary-mode grouping. This checkpoint does not justify immediate
 by-center, supplement, QW, Hamiltonian, CR2, or science-route adoption.
 
-## Executable Payload Fixture Checkpoint
+## Private Sidecar-Fixture Checkpoint
 
-The next private checkpoint adds an executable resolved-payload fixture for
-PQS low-order metric checks. Descriptor-only PQS remains unsupported/prototype:
-without an explicit `column_range` it still reports missing installed sidecar
-payload fields and is not consumed by fixed blocks or production metric paths.
+The next private checkpoint adds a sidecar-shaped executable resolved-payload
+fixture for PQS low-order metric checks. Descriptor-only PQS remains
+unsupported/prototype: without an explicit `column_range` it still reports
+missing installed sidecar payload fields and is not consumed by fixed blocks,
+production metric paths, or public/default routes.
 
 The fixture combines the existing PQS descriptor with an explicit
 `column_range`, raw-boundary support coefficients, boundary COMX mode data,
@@ -177,7 +178,9 @@ Validated low-order checks are deliberately narrow:
   moments against the existing reference path.
 - PQS/support-dense mixed blocks use the support-local reference path. They do
   not use the identity shortcut for mixed overlap.
-- PQS/product optimized blocks remain explicitly unsupported.
+- PQS/product optimized metric blocks remain explicitly unsupported. Any
+  support-local PQS/product reference must be a separately named explicit
+  reference/debug helper, not a silent fallback from the optimized path.
 
 This is low-order metric readiness only. It does not imply readiness for
 kinetic, `x2`, nuclear/local one-body terms, Gaussian or pair terms,
