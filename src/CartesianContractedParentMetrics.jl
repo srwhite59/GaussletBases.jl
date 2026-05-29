@@ -991,119 +991,25 @@ function _product_unit_metric_packet(
     metrics::NamedTuple{(:x,:y,:z)},
     dims::NTuple{3,Int},
 )
-    units = contracted_parent_units(contracted_parent)
-    isempty(units) && throw(
-        ArgumentError("product-staged metric contraction requires contracted-parent units from a staged sidecar"),
-    )
-    staged_units = Any[]
-    product_unit_count = 0
-    generic_unit_count = 0
-    for unit in units
-        staged_unit = _staged_unit(unit)
-        isnothing(staged_unit) && throw(
-            ArgumentError(
-                "product-staged metric contraction requires units adapted from existing nested staged sidecars; " *
-                "use :support_local_product for generic contracted-parent units",
-            ),
-        )
-        push!(staged_units, staged_unit)
-        staged_unit.kind == :product_doside && (product_unit_count += 1)
-        staged_unit.kind == :support_dense && (generic_unit_count += 1)
-        staged_unit.kind in (:product_doside, :support_dense) || throw(
-            ArgumentError("unsupported nested staged sidecar unit kind $(staged_unit.kind)"),
-        )
-    end
-    product_unit_count == 0 && throw(
-        ArgumentError("product-staged metric contraction found no product_doside units"),
-    )
-    contracted_dimension = contracted_parent_dimension(contracted_parent)
-    overlap = zeros(Float64, contracted_dimension, contracted_dimension)
-    position_x = zeros(Float64, contracted_dimension, contracted_dimension)
-    position_y = zeros(Float64, contracted_dimension, contracted_dimension)
-    position_z = zeros(Float64, contracted_dimension, contracted_dimension)
-    product_block_count = 0
-    fallback_block_count = 0
-    entries_cache = Vector{Union{Nothing,Vector{Vector{_ParentCoefficientEntry3D}}}}(
-        undef,
-        length(staged_units),
-    )
-    fill!(entries_cache, nothing)
-    for right_index in eachindex(staged_units)
-        right = staged_units[right_index]
-        right_range = right.column_range
-        for left_index in 1:right_index
-            left = staged_units[left_index]
-            left_range = left.column_range
-            if left.kind == :product_doside && right.kind == :product_doside
-                _fill_product_staged_metric_blocks!(
-                    overlap,
-                    position_x,
-                    position_y,
-                    position_z,
-                    left,
-                    right,
-                    metrics,
-                )
-                product_block_count += 1
-            else
-                left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
-                right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
-                blocks = _fallback_staged_metric_blocks(left_entries, right_entries, metrics)
-                fallback_block_count += 1
-                overlap[left_range, right_range] .= blocks.overlap
-                position_x[left_range, right_range] .= blocks.position_x
-                position_y[left_range, right_range] .= blocks.position_y
-                position_z[left_range, right_range] .= blocks.position_z
-                if left_index != right_index
-                    overlap[right_range, left_range] .= transpose(blocks.overlap)
-                    position_x[right_range, left_range] .= transpose(blocks.position_x)
-                    position_y[right_range, left_range] .= transpose(blocks.position_y)
-                    position_z[right_range, left_range] .= transpose(blocks.position_z)
-                end
-            end
-        end
-    end
-    weights = zeros(Float64, contracted_dimension)
-    first_moments = zeros(Float64, contracted_dimension, 3)
-    for unit in staged_units
-        unit_weights, unit_first_moments = _staged_unit_linear_vectors(unit, metrics)
-        weights[unit.column_range] .= unit_weights
-        first_moments[unit.column_range, :] .= unit_first_moments
-    end
-    retained_counts = Int[length(unit.column_range) for unit in staged_units]
-    support_counts = Int[length(unit.support_indices) for unit in staged_units]
-    diagnostics = _packet_diagnostics_from_counts(
-        construction_path = :product_staged_metric_contraction,
-        dense_parent_matrix_used = false,
-        contracted_parent = contracted_parent,
-        metrics = metrics,
-        overlap = overlap,
-        coefficient_nnz = _coefficient_nnz(contracted_parent_coefficients(contracted_parent)),
-        max_column_nnz = 0,
-        product_unit_count = product_unit_count,
-        generic_unit_count = generic_unit_count,
-        product_block_count = product_block_count,
-        fallback_block_count = fallback_block_count,
-        max_unit_support_count = isempty(support_counts) ? 0 : maximum(support_counts),
-        max_unit_retained_count = isempty(retained_counts) ? 0 : maximum(retained_counts),
-    )
-    return _metric_packet_from_matrices(
+    return _resolved_payload_product_staged_metric_packet(
         contracted_parent,
-        metrics,
-        Vector{_ParentCoefficientEntry3D}[],
-        overlap,
-        position_x,
-        position_y,
-        position_z,
-        weights,
-        first_moments;
-        diagnostics,
+        metrics;
+        construction_path = :product_staged_metric_contraction,
+        extra_diagnostics = (;),
+        include_resolved_payload_count = false,
     )
 end
 
 function _resolved_payload_product_staged_metric_packet(
     contracted_parent::CartesianContractedParent3D,
     metrics::NamedTuple{(:x,:y,:z)},
+    ;
+    construction_path::Symbol = :resolved_payload_product_staged_metric_contraction,
+    extra_diagnostics = (
+        source = :resolved_payload_metric_shadow,
+        default_metric_execution_changed = false,
+    ),
+    include_resolved_payload_count::Bool = true,
 )
     resolved_payloads = _contracted_parent_resolved_payloads(contracted_parent)
     isempty(resolved_payloads) && throw(
@@ -1185,7 +1091,7 @@ function _resolved_payload_product_staged_metric_packet(
     retained_counts = Int[length(unit.column_range) for unit in staged_units]
     support_counts = Int[length(unit.support_indices) for unit in staged_units]
     diagnostics = _packet_diagnostics_from_counts(
-        construction_path = :resolved_payload_product_staged_metric_contraction,
+        construction_path = construction_path,
         dense_parent_matrix_used = false,
         contracted_parent = contracted_parent,
         metrics = metrics,
@@ -1211,11 +1117,9 @@ function _resolved_payload_product_staged_metric_packet(
         first_moments;
         diagnostics = merge(
             diagnostics,
-            (
-                source = :resolved_payload_metric_shadow,
-                resolved_payload_count = length(resolved_payloads),
-                default_metric_execution_changed = false,
-            ),
+            include_resolved_payload_count ?
+            (resolved_payload_count = length(resolved_payloads),) : (;),
+            extra_diagnostics,
         ),
     )
 end

@@ -2719,6 +2719,8 @@ end
     @test CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent)) == 539
     @test support_metric_packet.diagnostics.construction_path == :support_local_product
     @test product_metric_packet.diagnostics.construction_path == :product_staged_metric_contraction
+    @test !(:resolved_payload_count in propertynames(product_metric_packet.diagnostics))
+    @test !(:default_metric_execution_changed in propertynames(product_metric_packet.diagnostics))
     @test resolved_metric_packet.diagnostics.construction_path ==
           :resolved_payload_product_staged_metric_contraction
     @test resolved_metric_packet.diagnostics.source == :resolved_payload_metric_shadow
