@@ -4872,6 +4872,117 @@ end
     @test all(isfinite, layer.packet.overlap)
     @test norm(layer.packet.overlap - I, Inf) < 1.0e-8
     CCP = GaussletBases.CartesianContractedParents
+    CP = GaussletBases.CartesianParentGaussletBases
+    CCPM = GaussletBases.CartesianContractedParentMetrics
+    pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
+    pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
+    pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
+    axis_metrics = (
+        x = (
+            overlap = pgdg_x.overlap,
+            position = pgdg_x.position,
+            weights = pgdg_x.weights,
+            centers = pgdg_x.centers,
+            source = :nested_pgdg_axis,
+        ),
+        y = (
+            overlap = pgdg_y.overlap,
+            position = pgdg_y.position,
+            weights = pgdg_y.weights,
+            centers = pgdg_y.centers,
+            source = :nested_pgdg_axis,
+        ),
+        z = (
+            overlap = pgdg_z.overlap,
+            position = pgdg_z.position,
+            weights = pgdg_z.weights,
+            centers = pgdg_z.centers,
+            source = :nested_pgdg_axis,
+        ),
+    )
+    safe_axis_data = (
+        x = merge(axis_metrics.x, (kinetic = pgdg_x.kinetic,)),
+        y = merge(axis_metrics.y, (kinetic = pgdg_y.kinetic,)),
+        z = merge(axis_metrics.z, (kinetic = pgdg_z.kinetic,)),
+    )
+    dims = GaussletBases._nested_axis_lengths(bundles)
+    pre_packet_source = CCP._cartesian_endcap_panel_pre_packet_build_source(
+        layer.owned_units,
+        layer.coefficient_matrix,
+        layer.unit_column_ranges,
+        layer.support_indices,
+        dims,
+    )
+    post_layer_units = [
+        GaussletBases._nested_product_staged_unit_from_owned_unit(
+            owned_unit;
+            column_range,
+            dims,
+        ) for (owned_unit, column_range) in
+            zip(layer.owned_units.units, layer.unit_column_ranges)
+    ]
+    post_layer_sidecar = GaussletBases._CartesianNestedProductStagedByCenterSidecar3D(
+        dims,
+        post_layer_units,
+        (; source = :post_layer_test_sidecar, support_contract = :product_owned_units),
+        (
+            parent_dimension = prod(dims),
+            final_dimension = size(layer.coefficient_matrix, 2),
+            unit_count = length(post_layer_units),
+            product_unit_count = length(post_layer_units),
+            generic_unit_count = 0,
+            support_counts = Int[unit.diagnostics.support_count for unit in post_layer_units],
+            max_support_count = maximum(unit.diagnostics.support_count for unit in post_layer_units),
+        ),
+    )
+    post_layer_source = CCP._cartesian_packet_build_source(post_layer_sidecar)
+    @test pre_packet_source.parent_dimension == post_layer_source.parent_dimension == prod(dims)
+    @test pre_packet_source.contracted_dimension == post_layer_source.contracted_dimension == 96
+    @test pre_packet_source.payload_kind_counts == post_layer_source.payload_kind_counts
+    @test Dict(pre_packet_source.payload_kind_counts)[:product_doside] == 6
+    @test [payload.payload_kind for payload in pre_packet_source.resolved_payloads] ==
+          [payload.payload_kind for payload in post_layer_source.resolved_payloads]
+    @test [payload.column_range for payload in pre_packet_source.resolved_payloads] ==
+          [payload.column_range for payload in post_layer_source.resolved_payloads]
+    @test [payload.support_indices for payload in pre_packet_source.resolved_payloads] ==
+          [payload.support_indices for payload in post_layer_source.resolved_payloads]
+    @test pre_packet_source.candidate_packet_fields == post_layer_source.candidate_packet_fields
+    @test pre_packet_source.missing_packet_fields == post_layer_source.missing_packet_fields
+    @test pre_packet_source.diagnostics.packet_construction_consumes_source == false
+    @test pre_packet_source.diagnostics.source_object_builds_packet_matrices == false
+    @test pre_packet_source.diagnostics.nested_shell_packet_remains_authoritative
+    @test !pre_packet_source.diagnostics.numerical_packet_matrices_built
+    @test !pre_packet_source.diagnostics.operator_data_available
+    @test !pre_packet_source.diagnostics.packet_operator_data_checked
+    pre_packet_shadow = CCPM._cartesian_packet_build_source_safe_field_shadow(
+        pre_packet_source,
+        safe_axis_data,
+    )
+    layer_parent = CP.cartesian_parent_gausslet_basis(basis)
+    layer_contracted_parent = CCP.cartesian_contracted_parent(
+        layer_parent,
+        layer.coefficient_matrix;
+        units = CCP._contracted_parent_units_from_staged_sidecar(post_layer_sidecar),
+        metadata = (; source = :endcap_panel_layer_pre_packet_shadow_test),
+    )
+    layer_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
+        layer_contracted_parent;
+        axis_metrics,
+        construction_path = :product_staged_metric_contraction,
+    )
+    @test pre_packet_shadow.diagnostics.source_driven_shadow_only
+    @test !pre_packet_shadow.diagnostics.construction_adoption
+    @test pre_packet_shadow.diagnostics.current_builder_authority ==
+          :nested_shell_packet
+    @test pre_packet_shadow.diagnostics.product_unit_count == 6
+    @test pre_packet_shadow.diagnostics.support_dense_unit_count == 0
+    @test pre_packet_shadow.overlap ≈ layer.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.position_x ≈ layer.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.position_y ≈ layer.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.position_z ≈ layer.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.weights ≈ layer.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.kinetic ≈ layer.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.first_moments ≈ layer_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
     layer_region = CCP.cartesian_shell_region(
         layer;
         parent_dimension = prod(GaussletBases._nested_axis_lengths(bundles)),
@@ -4917,35 +5028,7 @@ end
     @test norm(fixed_block.overlap - I, Inf) < 1.0e-8
     @test all(isfinite, fixed_block.weights)
 
-    CP = GaussletBases.CartesianParentGaussletBases
-    CCPM = GaussletBases.CartesianContractedParentMetrics
     CCS = GaussletBases.CartesianCarriedSpaces
-    pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
-    pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
-    pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
-    axis_metrics = (
-        x = (
-            overlap = pgdg_x.overlap,
-            position = pgdg_x.position,
-            weights = pgdg_x.weights,
-            centers = pgdg_x.centers,
-            source = :nested_pgdg_axis,
-        ),
-        y = (
-            overlap = pgdg_y.overlap,
-            position = pgdg_y.position,
-            weights = pgdg_y.weights,
-            centers = pgdg_y.centers,
-            source = :nested_pgdg_axis,
-        ),
-        z = (
-            overlap = pgdg_z.overlap,
-            position = pgdg_z.position,
-            weights = pgdg_z.weights,
-            centers = pgdg_z.centers,
-            source = :nested_pgdg_axis,
-        ),
-    )
     contracted_parent = CCP.cartesian_contracted_parent(fixed_block)
     sidecar_units = fixed_block.staged_by_center_sidecar[].units
     parent_dim = CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent))
@@ -5254,11 +5337,6 @@ end
     @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
-    safe_axis_data = (
-        x = merge(axis_metrics.x, (kinetic = pgdg_x.kinetic,)),
-        y = merge(axis_metrics.y, (kinetic = pgdg_y.kinetic,)),
-        z = merge(axis_metrics.z, (kinetic = pgdg_z.kinetic,)),
-    )
     safe_field_shadow = CCPM._cartesian_packet_build_source_safe_field_shadow(
         packet_build_source,
         safe_axis_data,

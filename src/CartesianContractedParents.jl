@@ -18,6 +18,7 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _nested_parent_axis_counts,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _nested_projected_q_shell_staged_unit_descriptor,
+                         _nested_product_staged_unit_from_owned_unit,
                          _nested_staged_by_center_sidecar
 import ..GaussletBases.CartesianParentGaussletBases:
     CartesianParentGaussletBasis3D,
@@ -3203,9 +3204,92 @@ function _cartesian_packet_build_source_from_resolved_payloads(
             support_union_summary_informational = true,
             parent_support_complete_required = false,
             overlapping_payload_support_allowed = true,
+            packet_construction_consumes_source = false,
+            source_object_builds_packet_matrices = false,
+            nested_shell_packet_remains_authoritative = true,
             full_packet_builder_ready = false,
         ),
         provenance,
+    )
+end
+
+function _cartesian_endcap_panel_pre_packet_build_source(
+    owned_units::_CartesianNestedEndcapPanelOwnedUnits3D,
+    coefficient_matrix::AbstractMatrix{<:Real},
+    unit_column_ranges::AbstractVector{<:UnitRange{Int}},
+    support_indices::AbstractVector{<:Integer},
+    dims::NTuple{3,Int};
+    provenance = (;),
+)
+    owned_units.coefficient_contract == :product_doside || throw(
+        ArgumentError("endcap/panel pre-packet build source requires product_doside owned units"),
+    )
+    owned_units.audit.coverage_ok || throw(
+        ArgumentError("endcap/panel pre-packet build source requires exact owned-unit support coverage"),
+    )
+    length(owned_units.units) == length(unit_column_ranges) || throw(
+        ArgumentError("endcap/panel pre-packet build source unit column ranges must match owned units"),
+    )
+    parent_dimension = prod(dims)
+    size(coefficient_matrix, 1) == parent_dimension || throw(
+        DimensionMismatch("endcap/panel pre-packet coefficient rows must match parent dimension"),
+    )
+    expected_support = sort(Int[index for index in owned_units.expected_support_indices])
+    actual_support = sort(Int[Int(index) for index in support_indices])
+    actual_support == expected_support || throw(
+        ArgumentError("endcap/panel pre-packet support indices must match owned-unit expected support"),
+    )
+
+    column_ranges = UnitRange{Int}[
+        first(range):last(range) for range in unit_column_ranges
+    ]
+    column_coverage = _packet_build_column_coverage(
+        column_ranges,
+        size(coefficient_matrix, 2),
+    )
+    column_coverage.missing_count == 0 &&
+        column_coverage.outside_count == 0 &&
+        column_coverage.duplicate_count == 0 || throw(
+            ArgumentError("endcap/panel pre-packet unit column ranges must exactly cover coefficient columns"),
+        )
+
+    staged_units = [
+        _nested_product_staged_unit_from_owned_unit(
+            owned_unit;
+            column_range,
+            dims,
+        ) for (owned_unit, column_range) in zip(owned_units.units, column_ranges)
+    ]
+    resolved_payloads = [
+        _cartesian_resolved_contraction_payload(unit; parent_dimension)
+        for unit in staged_units
+    ]
+    support_counts = Int[unit.diagnostics.support_count for unit in staged_units]
+    return _cartesian_packet_build_source_from_resolved_payloads(
+        resolved_payloads;
+        parent_dimension,
+        contracted_dimension = size(coefficient_matrix, 2),
+        provenance = (
+            source = :endcap_panel_pre_packet_build_source,
+            support_contract = owned_units.support_contract,
+            coefficient_contract = owned_units.coefficient_contract,
+            current_box = owned_units.current_box,
+            inner_box = owned_units.inner_box,
+            bond_axis = owned_units.bond_axis,
+            q = owned_units.q,
+            L = owned_units.L,
+            parent_dimension = parent_dimension,
+            contracted_dimension = size(coefficient_matrix, 2),
+            unit_count = length(staged_units),
+            product_unit_count = length(staged_units),
+            generic_unit_count = 0,
+            support_counts = support_counts,
+            max_support_count = isempty(support_counts) ? 0 : maximum(support_counts),
+            packet_construction_consumes_source = false,
+            source_object_builds_packet_matrices = false,
+            nested_shell_packet_remains_authoritative = true,
+            user_provenance = provenance,
+        ),
     )
 end
 
