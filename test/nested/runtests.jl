@@ -1122,6 +1122,19 @@ end
     @test cross_product_pair.left_retained_transform.retained_dimension == 4
     @test cross_product_pair.right_retained_transform.retained_dimension == 2
     @test !cross_product_pair.diagnostics.pqs_factored_transform_present
+    cross_overlap_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform, nonidentity_product_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap,),
+        source = :identity_nonidentity_product_cross_overlap_pair_plan_test,
+    )
+    cross_overlap_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            cross_overlap_pair_plan,
+        )
+        if pair.pair_key ==
+           (:identity_product_slab_source, :nonidentity_product_slab_source)
+    )
     position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (product_source_transform,);
         operator_kind = :low_order_metric,
@@ -1139,6 +1152,15 @@ end
     )
     axis_index_omitting_pair = only(
         CCP._cartesian_resolved_raw_product_source_pairs(axis_index_omitting_pair_plan)
+    )
+    overlap_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform,);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_x, :position_y, :position_z),
+        source = :overlap_omitting_product_raw_source_pair_plan_test,
+    )
+    overlap_omitting_pair = only(
+        CCP._cartesian_resolved_raw_product_source_pairs(overlap_omitting_pair_plan)
     )
     cross_position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (product_source_transform, nonidentity_product_source_transform);
@@ -1261,10 +1283,121 @@ end
         end
         return reference
     end
+    function support_local_overlap_reference(
+        axis_metrics,
+        left_support_states = product_support_states,
+        right_support_states = product_support_states,
+    )
+        axis_matrices = (
+            axis_metrics.x.overlap,
+            axis_metrics.y.overlap,
+            axis_metrics.z.overlap,
+        )
+        reference =
+            zeros(Float64, length(left_support_states), length(right_support_states))
+        for col in eachindex(right_support_states)
+            jx, jy, jz = right_support_states[col]
+            for row in eachindex(left_support_states)
+                ix, iy, iz = left_support_states[row]
+                reference[row, col] =
+                    axis_matrices[1][ix, jx] *
+                    axis_matrices[2][iy, jy] *
+                    axis_matrices[3][iz, jz]
+            end
+        end
+        return reference
+    end
     expected_physical_positions = (
         position_x = Diagonal([0.25, 0.25, 1.75, 1.75]),
         position_y = Diagonal([-0.5, 0.5, -0.5, 0.5]),
         position_z = Diagonal([3.25, 3.25, 3.25, 3.25]),
+    )
+    factorized_product_overlap_packet =
+        CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+            product_self_pair;
+            term = :overlap,
+            axis_metrics = physical_axis_metrics,
+        )
+    factorized_cross_overlap_packet =
+        CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+            cross_overlap_pair;
+            term = :overlap,
+            axis_metrics = physical_axis_metrics,
+        )
+    product_overlap_reference = support_local_overlap_reference(physical_axis_metrics)
+    cross_overlap_reference = support_local_overlap_reference(
+        physical_axis_metrics,
+        cross_overlap_pair.left_raw_source.provenance.unit.support_states,
+        cross_overlap_pair.right_raw_source.provenance.unit.support_states,
+    )
+    @test factorized_product_overlap_packet.left_source_id ==
+          :identity_product_slab_source
+    @test factorized_product_overlap_packet.right_source_id ==
+          :identity_product_slab_source
+    @test factorized_product_overlap_packet.term == :overlap
+    @test factorized_product_overlap_packet.source_dimensions == (4, 4)
+    @test factorized_product_overlap_packet.raw_operator_matrix ≈
+          product_overlap_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test factorized_product_overlap_packet.diagnostics.raw_reference ==
+          :product_doside_factorized_overlap
+    @test factorized_product_overlap_packet.diagnostics.factorized_axis_path_used
+    @test factorized_product_overlap_packet.diagnostics.axis_factor_scope ==
+          :staged_local_axis_intervals
+    @test !factorized_product_overlap_packet.diagnostics.support_row_reference_used
+    @test factorized_product_overlap_packet.diagnostics.raw_basis_scope ==
+          :raw_product_source_rows
+    @test factorized_product_overlap_packet.diagnostics.fixture_only
+    @test !factorized_product_overlap_packet.diagnostics.production_supported
+    @test !factorized_product_overlap_packet.diagnostics.dense_parent_matrix_used
+    @test !factorized_product_overlap_packet.diagnostics.metric_execution_changed
+    @test !factorized_product_overlap_packet.diagnostics.retained_positive_weight_claim
+    @test !factorized_product_overlap_packet.diagnostics.ida_weight_division_allowed
+    @test factorized_cross_overlap_packet.left_source_id ==
+          :identity_product_slab_source
+    @test factorized_cross_overlap_packet.right_source_id ==
+          :nonidentity_product_slab_source
+    @test factorized_cross_overlap_packet.source_dimensions == (4, 4)
+    @test factorized_cross_overlap_packet.raw_operator_matrix ≈
+          cross_overlap_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test factorized_cross_overlap_packet.diagnostics.cross_pair
+    @test factorized_cross_overlap_packet.diagnostics.left_source_dimension == 4
+    @test factorized_cross_overlap_packet.diagnostics.right_source_dimension == 4
+    @test factorized_cross_overlap_packet.diagnostics.factorized_axis_path_used
+    factorized_product_retained_overlap =
+        CCP._cartesian_retained_low_order_operator_block(
+            factorized_product_overlap_packet,
+            product_source_transform.retained_transform,
+        )
+    factorized_cross_retained_overlap =
+        CCP._cartesian_retained_low_order_operator_block(
+            factorized_cross_overlap_packet,
+            product_source_transform.retained_transform,
+            nonidentity_product_source_transform.retained_transform,
+        )
+    @test factorized_product_retained_overlap.retained_operator_matrix ≈
+          product_overlap_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test factorized_cross_retained_overlap.retained_dimensions == (4, 2)
+    @test factorized_cross_retained_overlap.retained_operator_matrix ≈
+          cross_overlap_reference * nonidentity_transform atol = 1.0e-14 rtol = 1.0e-14
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        overlap_omitting_pair;
+        term = :overlap,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        cross_product_pair;
+        term = :overlap,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        pqs_resolved_pair;
+        term = :overlap,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        product_self_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
     )
     physical_position_packets = Dict{Symbol,Any}()
     generic_physical_position_packets = Dict{Symbol,Any}()
@@ -1702,6 +1835,19 @@ end
     @test distinct_cross_pair.left_retained_transform.retained_dimension == 3
     @test distinct_cross_pair.right_retained_transform.retained_dimension == 2
     @test !distinct_cross_pair.diagnostics.pqs_factored_transform_present
+    distinct_overlap_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (distinct_left_source_transform, distinct_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap,),
+        source = :distinct_support_product_cross_overlap_pair_plan_test,
+    )
+    distinct_overlap_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            distinct_overlap_pair_plan,
+        )
+        if pair.pair_key ==
+           (:distinct_left_product_slab_source, :distinct_right_product_slab_source)
+    )
     distinct_position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (distinct_left_source_transform, distinct_right_source_transform);
         operator_kind = :low_order_metric,
@@ -1781,6 +1927,118 @@ end
         end
         return reference
     end
+    function distinct_support_overlap_reference()
+        left_states = distinct_overlap_pair.left_raw_source.provenance.unit.support_states
+        right_states = distinct_overlap_pair.right_raw_source.provenance.unit.support_states
+        axis_matrices = (
+            distinct_axis_metrics.x.overlap,
+            distinct_axis_metrics.y.overlap,
+            distinct_axis_metrics.z.overlap,
+        )
+        reference = zeros(Float64, length(left_states), length(right_states))
+        for col in eachindex(right_states)
+            jx, jy, jz = right_states[col]
+            for row in eachindex(left_states)
+                ix, iy, iz = left_states[row]
+                reference[row, col] =
+                    axis_matrices[1][ix, jx] *
+                    axis_matrices[2][iy, jy] *
+                    axis_matrices[3][iz, jz]
+            end
+        end
+        return reference
+    end
+    distinct_overlap_packet =
+        CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+            distinct_overlap_pair;
+            term = :overlap,
+            axis_metrics = distinct_axis_metrics,
+        )
+    distinct_overlap_reference = distinct_support_overlap_reference()
+    distinct_overlap_retained = CCP._cartesian_retained_low_order_operator_block(
+        distinct_overlap_packet,
+        distinct_left_source_transform.retained_transform,
+        distinct_right_source_transform.retained_transform,
+    )
+    distinct_overlap_retained_reference =
+        transpose(distinct_left_transform) *
+        distinct_overlap_reference *
+        distinct_right_transform
+    @test distinct_overlap_packet.left_source_id == :distinct_left_product_slab_source
+    @test distinct_overlap_packet.right_source_id == :distinct_right_product_slab_source
+    @test distinct_overlap_packet.source_dimensions == (4, 4)
+    @test distinct_overlap_packet.raw_operator_matrix ≈ distinct_overlap_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test distinct_overlap_packet.raw_operator_matrix != Matrix{Float64}(I, 4, 4)
+    @test distinct_overlap_packet.diagnostics.cross_pair
+    @test distinct_overlap_packet.diagnostics.factorized_axis_path_used
+    @test distinct_overlap_packet.diagnostics.axis_factor_scope ==
+          :staged_local_axis_intervals
+    @test distinct_overlap_packet.diagnostics.raw_basis_scope ==
+          :raw_product_source_rows
+    @test !distinct_overlap_packet.diagnostics.support_row_reference_used
+    @test distinct_overlap_packet.diagnostics.fixture_only
+    @test !distinct_overlap_packet.diagnostics.production_supported
+    @test !distinct_overlap_packet.diagnostics.dense_parent_matrix_used
+    @test !distinct_overlap_packet.diagnostics.metric_execution_changed
+    @test !distinct_overlap_packet.diagnostics.qwhamiltonian_consumes
+    @test !distinct_overlap_packet.diagnostics.backend_policy_changed
+    @test !distinct_overlap_packet.diagnostics.quadrature_policy_changed
+    @test !distinct_overlap_packet.diagnostics.cr2_science_status_changed
+    @test distinct_overlap_retained.retained_dimensions == (3, 2)
+    @test distinct_overlap_retained.retained_operator_matrix ≈ distinct_overlap_retained_reference atol = 1.0e-14 rtol = 1.0e-14
+    bad_distinct_axis_metrics = (
+        x = (
+            overlap = Matrix{Float64}(I, 2, 2),
+            source = :bad_axis_metric_dimension_fixture,
+        ),
+        y = distinct_axis_metrics.y,
+        z = distinct_axis_metrics.z,
+    )
+    @test_throws DimensionMismatch CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        distinct_overlap_pair;
+        term = :overlap,
+        axis_metrics = bad_distinct_axis_metrics,
+    )
+    outside_interval_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :outside_interval_product_slab,
+        :product_doside,
+        1:4,
+        [1, 2, 5, 4],
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1), (3, 1, 1), (2, 2, 1)],
+        Matrix{Float64}(I, 4, 4),
+        (
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_fixed_axis(1),
+        ),
+        GaussletBases._nested_product_axis_function_indices(3, 1, 2, 2, 2),
+        (source = :outside_interval_raw_product_source_test_fixture,),
+        (support_count = 4, retained_count = 4),
+    )
+    outside_interval_source_transform =
+        CCP._cartesian_raw_product_source_retained_transform(
+            outside_interval_unit;
+            source_id = :outside_interval_product_slab_source,
+            parent_dims = (3, 2, 1),
+        )
+    outside_interval_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (outside_interval_source_transform, distinct_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap,),
+        source = :outside_interval_product_overlap_pair_plan_test,
+    )
+    outside_interval_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            outside_interval_pair_plan,
+        )
+        if pair.pair_key ==
+           (:distinct_right_product_slab_source, :outside_interval_product_slab_source)
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        outside_interval_pair;
+        term = :overlap,
+        axis_metrics = distinct_axis_metrics,
+    )
     for term in (:position_x, :position_y, :position_z)
         distinct_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             distinct_cross_pair;

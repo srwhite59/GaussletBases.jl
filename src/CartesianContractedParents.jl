@@ -2543,6 +2543,16 @@ function _cartesian_axis_metric_matrix(axis_metrics, axis::Int, kind::Symbol)
     return Matrix{Float64}(getproperty(data, kind))
 end
 
+function _cartesian_validate_overlap_axis_metrics(axis_metrics, dims::NTuple{3,Int})
+    for (axis, axis_name) in enumerate((:x, :y, :z))
+        overlap = _cartesian_axis_metric_matrix(axis_metrics, axis, :overlap)
+        size(overlap) == (dims[axis], dims[axis]) || throw(
+            DimensionMismatch("$(axis_name)-axis overlap metric size must match raw source parent dimensions"),
+        )
+    end
+    return nothing
+end
+
 function _cartesian_validate_position_axis_metrics(axis_metrics, dims::NTuple{3,Int})
     for (axis, axis_name) in enumerate((:x, :y, :z))
         overlap = _cartesian_axis_metric_matrix(axis_metrics, axis, :overlap)
@@ -2555,6 +2565,36 @@ function _cartesian_validate_position_axis_metrics(axis_metrics, dims::NTuple{3,
         )
     end
     return nothing
+end
+
+function _cartesian_product_doside_axis_interval(axis)
+    axis.kind == :fixed && return axis.fixed_index:axis.fixed_index
+    axis.kind == :active && return axis.interval
+    throw(ArgumentError("unsupported product/doside staged axis kind $(axis.kind)"))
+end
+
+function _cartesian_product_doside_axis_factor_matrix(left_axis, right_axis, axis_matrix)
+    parent_count = size(axis_matrix, 1)
+    size(axis_matrix, 2) == parent_count || throw(
+        ArgumentError("product/doside axis factor matrix must be square"),
+    )
+    left_interval = _cartesian_product_doside_axis_interval(left_axis)
+    right_interval = _cartesian_product_doside_axis_interval(right_axis)
+    first(left_interval) >= 1 && last(left_interval) <= parent_count || throw(
+        ArgumentError("left product/doside staged axis interval exceeds axis metric dimensions"),
+    )
+    first(right_interval) >= 1 && last(right_interval) <= parent_count || throw(
+        ArgumentError("right product/doside staged axis interval exceeds axis metric dimensions"),
+    )
+    return Matrix{Float64}(axis_matrix[left_interval, right_interval])
+end
+
+function _cartesian_product_doside_axis_local_index(axis, index::Int)
+    interval = _cartesian_product_doside_axis_interval(axis)
+    index in interval || throw(
+        ArgumentError("raw product source support state index $(index) lies outside staged axis interval $(interval)"),
+    )
+    return index - first(interval) + 1
 end
 
 function _cartesian_raw_source_support_states(raw_source::_CartesianRawProductSource3D)
@@ -2577,18 +2617,149 @@ function _cartesian_raw_source_support_states(raw_source::_CartesianRawProductSo
     return states
 end
 
-function _cartesian_require_product_doside_physical_position_source(
+function _cartesian_require_product_doside_raw_packet_source(
     raw_source::_CartesianRawProductSource3D;
     side::Symbol,
 )
     hasproperty(raw_source.provenance, :unit) || throw(
-        ArgumentError("physical position product/doside packet requires staged-unit provenance on $(side) source"),
+        ArgumentError("product/doside raw packet requires staged-unit provenance on $(side) source"),
     )
     unit = raw_source.provenance.unit
     unit.kind == :product_doside || throw(
-        ArgumentError("physical position product/doside packet requires a product_doside unit on $(side) source"),
+        ArgumentError("product/doside raw packet requires a product_doside unit on $(side) source"),
     )
     return unit
+end
+
+function _cartesian_product_doside_axis_factor_low_order_matrix(
+    left_raw_source::_CartesianRawProductSource3D,
+    right_raw_source::_CartesianRawProductSource3D;
+    term::Symbol,
+    axis_metrics,
+)
+    term == :overlap || throw(
+        ArgumentError("private factorized product/doside raw packet currently supports only :overlap"),
+    )
+    left_unit = _cartesian_require_product_doside_raw_packet_source(
+        left_raw_source;
+        side = :left,
+    )
+    right_unit = _cartesian_require_product_doside_raw_packet_source(
+        right_raw_source;
+        side = :right,
+    )
+    left_raw_source.parent_dims == right_raw_source.parent_dims || throw(
+        DimensionMismatch("factorized product/doside overlap packet requires matching parent dimensions"),
+    )
+    _cartesian_validate_overlap_axis_metrics(axis_metrics, left_raw_source.parent_dims)
+    axis_factors = ntuple(
+        axis -> _cartesian_product_doside_axis_factor_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _cartesian_axis_metric_matrix(axis_metrics, axis, :overlap),
+        ),
+        3,
+    )
+    left_support_states = _cartesian_raw_source_support_states(left_raw_source)
+    right_support_states = _cartesian_raw_source_support_states(right_raw_source)
+    matrix = zeros(Float64, length(left_support_states), length(right_support_states))
+    for col in eachindex(right_support_states)
+        right_state = right_support_states[col]
+        jx = _cartesian_product_doside_axis_local_index(right_unit.axes[1], right_state[1])
+        jy = _cartesian_product_doside_axis_local_index(right_unit.axes[2], right_state[2])
+        jz = _cartesian_product_doside_axis_local_index(right_unit.axes[3], right_state[3])
+        for row in eachindex(left_support_states)
+            left_state = left_support_states[row]
+            ix = _cartesian_product_doside_axis_local_index(left_unit.axes[1], left_state[1])
+            iy = _cartesian_product_doside_axis_local_index(left_unit.axes[2], left_state[2])
+            iz = _cartesian_product_doside_axis_local_index(left_unit.axes[3], left_state[3])
+            matrix[row, col] =
+                axis_factors[1][ix, jx] *
+                axis_factors[2][iy, jy] *
+                axis_factors[3][iz, jz]
+        end
+    end
+    return (
+        matrix,
+        :product_doside_factorized_overlap,
+        0.0,
+    )
+end
+
+function _cartesian_factorized_product_doside_raw_low_order_operator_packet(
+    resolved_pair::_CartesianResolvedRawProductSourcePair3D;
+    term::Symbol,
+    axis_metrics,
+    backend::Symbol = :private_raw_product_factor_reference,
+)
+    term == :overlap || throw(
+        ArgumentError("private factorized product/doside raw packet currently supports only :overlap"),
+    )
+    _cartesian_require_raw_pair_supported_term(
+        resolved_pair,
+        term;
+        helper = :private_factorized_product_doside_raw_low_order_operator_packet,
+    )
+    left_dimension = resolved_pair.left_raw_source.source_dimension
+    right_dimension = resolved_pair.right_raw_source.source_dimension
+    matrix, raw_reference, reference_error =
+        _cartesian_product_doside_axis_factor_low_order_matrix(
+            resolved_pair.left_raw_source,
+            resolved_pair.right_raw_source;
+            term,
+            axis_metrics,
+        )
+    size(matrix) == (left_dimension, right_dimension) || throw(
+        DimensionMismatch("factorized raw overlap matrix dimensions must match left/right raw source dimensions"),
+    )
+    axis_metric_sources = (
+        x = _cartesian_axis_metric_source(axis_metrics, :x),
+        y = _cartesian_axis_metric_source(axis_metrics, :y),
+        z = _cartesian_axis_metric_source(axis_metrics, :z),
+    )
+    return _CartesianRawProductSourceLowOrderOperatorPacket3D(
+        resolved_pair.pair_key[1],
+        resolved_pair.pair_key[2],
+        :low_order_metric,
+        term,
+        (left_dimension, right_dimension),
+        resolved_pair.pair_packet.symmetry_status,
+        backend,
+        matrix,
+        (
+            source = :private_factorized_product_doside_raw_low_order_operator_packet,
+            resolved_pair = resolved_pair,
+        ),
+        (
+            source = :private_factorized_product_doside_raw_low_order_operator_packet,
+            fixture_only = true,
+            production_supported = false,
+            term = term,
+            raw_reference = raw_reference,
+            raw_reference_error = reference_error,
+            cross_pair = resolved_pair.pair_key[1] != resolved_pair.pair_key[2],
+            left_source_dimension = left_dimension,
+            right_source_dimension = right_dimension,
+            factorized_axis_path_used = true,
+            axis_factor_scope = :staged_local_axis_intervals,
+            support_row_reference_used = false,
+            raw_basis_scope = :raw_product_source_rows,
+            raw_operator_matrix_built = true,
+            retained_operator_block_built = false,
+            retained_transform_applied = false,
+            axis_metric_sources = axis_metric_sources,
+            dense_parent_matrix_used = false,
+            all_pair_matrices_built = false,
+            metric_execution_changed = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            cr2_science_status_changed = false,
+            retained_positive_weight_claim = false,
+            ida_weight_division_allowed = false,
+        ),
+    )
 end
 
 function _cartesian_product_doside_physical_position_packet_matrix(
@@ -2597,16 +2768,16 @@ function _cartesian_product_doside_physical_position_packet_matrix(
     term::Symbol,
     axis_metrics,
 )
-    _cartesian_require_product_doside_physical_position_source(
+    _cartesian_require_product_doside_raw_packet_source(
         left_raw_source;
         side = :left,
     )
-    _cartesian_require_product_doside_physical_position_source(
+    _cartesian_require_product_doside_raw_packet_source(
         right_raw_source;
         side = :right,
     )
     left_raw_source.parent_dims == right_raw_source.parent_dims || throw(
-        DimensionMismatch("physical position product/doside cross packet requires matching parent dimensions"),
+        DimensionMismatch("product/doside physical position raw packet requires matching parent dimensions"),
     )
     _cartesian_validate_position_axis_metrics(axis_metrics, left_raw_source.parent_dims)
     position_axis = _cartesian_physical_position_axis(term)
