@@ -227,14 +227,22 @@ scaffold:
 - a private toy raw `:axis_index_x` packet for the identity product/slab
   fixture;
 - private physical raw `:position_x`, `:position_y`, and `:position_z` packets
-  for that same identity product/slab fixture, consuming explicit 1D axis
-  metric data with non-integer positions;
-- private retained low-order blocks for materialized product/slab transforms.
+  for product/slab fixtures, consuming explicit 1D axis metric data with
+  non-integer positions;
+- private retained low-order blocks for materialized product/slab transforms;
+- a nonidentity materialized product/slab retained transform;
+- product/product cross-pair physical position packets for same-support
+  identity/nonidentity fixtures;
+- product/product cross-pair physical position packets for distinct shifted
+  supports with nontrivial explicit axis metrics.
 
-The retained-block calculations are intentionally tiny identity product/slab
-fixtures. The baseline commits for this checkpoint are `8ba7ab4 Rename toy
-product packet axis index term` and `d0fb995 Add private physical product
-position packets`.
+The retained-block calculations are intentionally tiny product/slab fixtures.
+The baseline commits for the raw-packet line include `8ba7ab4 Rename toy
+product packet axis index term`, `d0fb995 Add private physical product position
+packets`, `3ef0fa1 Generalize private physical product packets`, `9589f9a Test
+nonidentity product retained position blocks`, `26f88d6 Add private product
+cross position packets`, and `c6d4f41 Test product cross packets on distinct
+supports`.
 
 ```text
 source dimension 4 -> retained dimension 4
@@ -253,15 +261,21 @@ were one.
 The private physical position packets are separate. They build raw matrices
 over raw product source support rows from explicit 1D axis metric data and do
 not build dense full-parent 3D matrices. Retained blocks are checked only
-where the retained transform is materialized, as in the identity product/slab
-fixture, and match the support-local fixture reference. This does not yet
-generalize physical position packets beyond that fixture.
+where the retained transforms are materialized. The current private checks
+cover self-pair retained overlap/position, nonidentity retained transforms,
+same-support product/product cross pairs, and distinct-support product/product
+cross pairs. All of these remain fixture/reference checks, not production
+metric execution.
 
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
 as the full raw-to-retained transform. PQS/product mixed retained blocks remain
-unsupported.
+unsupported. Support-dense mixed packets, optimized product/product
+contraction, all-pairs matrix construction, kinetic, nuclear/local, Gaussian,
+MWG, interaction, QW/Hamiltonian, public/default, backend/default,
+PGDG/quadrature, CR2, and science/energy behavior remain unchanged and
+unsupported by this private fixture line.
 
 Before any PQS retained-block execution, the code needs an explicit way to
 represent or resolve the full factored PQS transform:
@@ -273,12 +287,12 @@ raw_product_modes
 -> retained_columns
 ```
 
-General physical raw source pair operator packets beyond the identity
-product/slab fixture, plus kinetic, nuclear, Gaussian/local, interaction/MWG,
-and mixed product/PQS pairs, need separate design. The current checkpoint
-changes no all-pairs matrix construction, QW or Hamiltonian path,
-public/default route, backend/default policy, PGDG or quadrature policy, CR2
-path, or science status.
+General physical raw source pair operator packets beyond these private
+product/slab fixtures, plus kinetic, nuclear, Gaussian/local, interaction/MWG,
+and mixed product/PQS or product/support-dense pairs, need separate design.
+The current checkpoint changes no all-pairs matrix construction, QW or
+Hamiltonian path, public/default route, backend/default policy, PGDG or
+quadrature policy, CR2 path, or science status.
 
 ## Non-Goals
 
