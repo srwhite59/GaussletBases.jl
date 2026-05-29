@@ -208,8 +208,9 @@ end
 
 Private metadata-only description of the resolved payloads a future Cartesian
 packet builder would consume. It records dimensions, coverage, packet-field
-capabilities, and axis requirements without building packet matrices or
-changing the existing `_nested_shell_packet(...)` authority.
+candidate fields, and axis requirements without checking operator data,
+building packet matrices, or changing the existing `_nested_shell_packet(...)`
+authority.
 """
 struct _CartesianPacketBuildSource3D{R,C,S,K,A,M,D,P}
     parent_dimension::Int
@@ -217,9 +218,9 @@ struct _CartesianPacketBuildSource3D{R,C,S,K,A,M,D,P}
     resolved_payloads::R
     column_ranges::Vector{UnitRange{Int}}
     column_coverage::C
-    support_summary::S
+    support_union_summary::S
     payload_kind_counts::K
-    available_packet_fields::Tuple{Vararg{Symbol}}
+    candidate_packet_fields::Tuple{Vararg{Symbol}}
     missing_packet_fields::Tuple{Vararg{Symbol}}
     axis_operator_requirements::A
     unit_descriptors::M
@@ -3128,12 +3129,12 @@ function _cartesian_packet_build_source_from_resolved_payloads(
         column_ranges,
         resolved_contracted_dimension,
     )
-    support_summary = _contraction_rule_support_summary(
+    support_union_summary = _contraction_rule_support_summary(
         support_indices;
         parent_dimension = Int(parent_dimension),
     )
     payload_kind_counts = _symbol_count_pairs(payload.payload_kind for payload in payloads)
-    available_packet_fields = (
+    candidate_packet_fields = (
         :overlap,
         :position_x,
         :position_y,
@@ -3146,6 +3147,9 @@ function _cartesian_packet_build_source_from_resolved_payloads(
         :x2_x,
         :x2_y,
         :x2_z,
+        :nuclear_one_body,
+        :local_coulomb_one_body,
+        :local_ecp_one_body,
         :gaussian_local_terms,
         :gaussian_sum,
         :pair_sum,
@@ -3168,9 +3172,9 @@ function _cartesian_packet_build_source_from_resolved_payloads(
         payloads,
         column_ranges,
         column_coverage,
-        support_summary,
+        support_union_summary,
         payload_kind_counts,
-        available_packet_fields,
+        candidate_packet_fields,
         missing_packet_fields,
         axis_operator_requirements,
         unit_descriptors,
@@ -3180,6 +3184,8 @@ function _cartesian_packet_build_source_from_resolved_payloads(
             descriptor_does_not_drive_builder = true,
             current_builder_authority = :nested_shell_packet,
             numerical_packet_matrices_built = false,
+            operator_data_available = false,
+            packet_operator_data_checked = false,
             overlap_matrix_built = false,
             position_matrices_built = false,
             weights_built = false,
@@ -3190,10 +3196,13 @@ function _cartesian_packet_build_source_from_resolved_payloads(
                 column_coverage.missing_count == 0 &&
                 column_coverage.outside_count == 0 &&
                 column_coverage.duplicate_count == 0,
-            ready_for_available_packet_fields =
+            column_layout_ready_for_candidate_fields =
                 column_coverage.missing_count == 0 &&
                 column_coverage.outside_count == 0 &&
                 column_coverage.duplicate_count == 0,
+            support_union_summary_informational = true,
+            parent_support_complete_required = false,
+            overlapping_payload_support_allowed = true,
             full_packet_builder_ready = false,
         ),
         provenance,
@@ -3245,7 +3254,9 @@ function _cartesian_packet_build_plan(
             ida_positive_weight_semantics_changed = false,
             cr2_science_status_changed = false,
             numerical_packet_matrices_built = false,
-            available_packet_fields = source.available_packet_fields,
+            operator_data_available = false,
+            packet_operator_data_checked = false,
+            candidate_packet_fields = source.candidate_packet_fields,
             missing_packet_fields = source.missing_packet_fields,
         ),
         (

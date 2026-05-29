@@ -5155,11 +5155,11 @@ end
     @test packet_build_source.column_coverage.duplicate_count == 0
     @test packet_build_source.column_coverage.missing_count == 0
     @test packet_build_source.column_coverage.outside_count == 0
-    @test packet_build_source.support_summary.parent_dimension == parent_dim
-    @test packet_build_source.support_summary.outside_count == 0
+    @test packet_build_source.support_union_summary.parent_dimension == parent_dim
+    @test packet_build_source.support_union_summary.outside_count == 0
     @test packet_payload_counts[:product_doside] == 6
     @test packet_payload_counts[:support_dense] == length(support_rules)
-    @test packet_build_source.available_packet_fields == (
+    @test packet_build_source.candidate_packet_fields == (
         :overlap,
         :position_x,
         :position_y,
@@ -5169,6 +5169,9 @@ end
         :kinetic,
     )
     @test :x2_x in packet_build_source.missing_packet_fields
+    @test :nuclear_one_body in packet_build_source.missing_packet_fields
+    @test :local_coulomb_one_body in packet_build_source.missing_packet_fields
+    @test :local_ecp_one_body in packet_build_source.missing_packet_fields
     @test :gaussian_local_terms in packet_build_source.missing_packet_fields
     @test :mwg_interaction in packet_build_source.missing_packet_fields
     @test packet_build_source.axis_operator_requirements.kinetic ==
@@ -5178,10 +5181,15 @@ end
     @test packet_build_source.diagnostics.current_builder_authority ==
           :nested_shell_packet
     @test !packet_build_source.diagnostics.numerical_packet_matrices_built
+    @test !packet_build_source.diagnostics.operator_data_available
+    @test !packet_build_source.diagnostics.packet_operator_data_checked
     @test !packet_build_source.diagnostics.overlap_matrix_built
     @test !packet_build_source.diagnostics.kinetic_matrix_built
     @test packet_build_source.diagnostics.column_ranges_cover_contract
-    @test packet_build_source.diagnostics.ready_for_available_packet_fields
+    @test packet_build_source.diagnostics.column_layout_ready_for_candidate_fields
+    @test packet_build_source.diagnostics.support_union_summary_informational
+    @test !packet_build_source.diagnostics.parent_support_complete_required
+    @test packet_build_source.diagnostics.overlapping_payload_support_allowed
     @test !packet_build_source.diagnostics.full_packet_builder_ready
     @test packet_build_plan.current_builder_authority == :nested_shell_packet
     @test !packet_build_plan.descriptor_drives_builder
@@ -5195,6 +5203,8 @@ end
     @test !packet_build_plan.diagnostics.quadrature_policy_changed
     @test !packet_build_plan.diagnostics.ida_positive_weight_semantics_changed
     @test !packet_build_plan.diagnostics.cr2_science_status_changed
+    @test !packet_build_plan.diagnostics.operator_data_available
+    @test !packet_build_plan.diagnostics.packet_operator_data_checked
     support_metric_packet = CCPM.cartesian_contracted_parent_metric_packet(
         contracted_parent;
         axis_metrics,
