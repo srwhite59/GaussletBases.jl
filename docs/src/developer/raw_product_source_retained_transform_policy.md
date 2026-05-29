@@ -371,6 +371,40 @@ against `fixed_block.kinetic`: 21 product/product blocks, 7 fallback blocks,
 `6.6e-14`. This is private shadow/reference infrastructure only, not kinetic
 construction adoption.
 
+The packet-build source plan checkpoint is recorded by
+`c78e9e4 Add packet build source plan metadata` and
+`6beebad Tighten packet build source metadata`. The private records
+`_CartesianPacketBuildSource3D` and `_CartesianPacketBuildPlan3D`, with helpers
+such as `_cartesian_packet_build_source(...)` and
+`_cartesian_packet_build_plan(...)`, describe the resolved payload layout that a
+future packet builder might consume. The tightened contract is deliberately
+metadata-only: the fields are candidate packet fields, not executable operator
+fields; the readiness flag is column-layout readiness, not operator readiness;
+operator data is explicitly unavailable and unchecked; no numerical packet
+matrices are built; and `_nested_shell_packet(...)` remains the authoritative
+current packet builder.
+
+The q4 bond-aligned endcap-panel fixture is the current structural evidence for
+that plan shape. It records parent dimension `539`, contracted dimension `313`,
+six product/doside payloads, support-dense fallback payloads, and complete
+column coverage. Its candidate packet fields are `:overlap`, `:position_x`,
+`:position_y`, `:position_z`, `:weights`, `:first_moments`, and `:kinetic`.
+Missing or not-implemented packet fields remain explicit: `:x2_x`, `:x2_y`,
+`:x2_z`, `:nuclear_one_body`, `:local_coulomb_one_body`,
+`:local_ecp_one_body`, `:gaussian_local_terms`, `:gaussian_sum`, `:pair_sum`,
+`:mwg_interaction`, and `:interaction`. The support union summary is
+informational only; parent support completeness is not required, and overlapping
+payload support is allowed.
+
+This plan does not drive construction. It changes no fixed-block construction,
+contracted-parent metric packet execution, QW/Hamiltonian path,
+backend/default policy, PGDG/quadrature policy, IDA or positive-weight
+semantics, CR2 path, or science behavior. Before more construction-boundary
+coding, repo-auditor/user review should decide whether and how a future packet
+builder should consume this source shape upstream, rather than reconstructing
+it after `_nested_shell_packet(...)` has already built the authoritative
+packet.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
