@@ -1085,24 +1085,32 @@ function _fallback_staged_metric_blocks(
     )
 end
 
+function _product_doside_retained_linear_vectors(
+    unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    _require_product_doside_retained_block_unit(unit; side = :linear)
+    wx = _project_staged_axis_vector(unit.axes[1], metrics.x.weights)
+    wy = _project_staged_axis_vector(unit.axes[2], metrics.y.weights)
+    wz = _project_staged_axis_vector(unit.axes[3], metrics.z.weights)
+    xw = _project_staged_axis_vector(unit.axes[1], metrics.x.centers .* metrics.x.weights)
+    yw = _project_staged_axis_vector(unit.axes[2], metrics.y.centers .* metrics.y.weights)
+    zw = _project_staged_axis_vector(unit.axes[3], metrics.z.centers .* metrics.z.weights)
+    weights = zeros(Float64, length(unit.column_range))
+    first_moments = zeros(Float64, length(unit.column_range), 3)
+    @inbounds for column in eachindex(unit.axis_function_indices)
+        xi, yi, zi = unit.axis_function_indices[column]
+        weights[column] = wx[xi] * wy[yi] * wz[zi]
+        first_moments[column, 1] = xw[xi] * wy[yi] * wz[zi]
+        first_moments[column, 2] = wx[xi] * yw[yi] * wz[zi]
+        first_moments[column, 3] = wx[xi] * wy[yi] * zw[zi]
+    end
+    return weights, first_moments
+end
+
 function _staged_unit_linear_vectors(unit, metrics::NamedTuple{(:x,:y,:z)})
     if unit.kind == :product_doside
-        wx = _project_staged_axis_vector(unit.axes[1], metrics.x.weights)
-        wy = _project_staged_axis_vector(unit.axes[2], metrics.y.weights)
-        wz = _project_staged_axis_vector(unit.axes[3], metrics.z.weights)
-        xw = _project_staged_axis_vector(unit.axes[1], metrics.x.centers .* metrics.x.weights)
-        yw = _project_staged_axis_vector(unit.axes[2], metrics.y.centers .* metrics.y.weights)
-        zw = _project_staged_axis_vector(unit.axes[3], metrics.z.centers .* metrics.z.weights)
-        weights = zeros(Float64, length(unit.column_range))
-        first_moments = zeros(Float64, length(unit.column_range), 3)
-        @inbounds for column in eachindex(unit.axis_function_indices)
-            xi, yi, zi = unit.axis_function_indices[column]
-            weights[column] = wx[xi] * wy[yi] * wz[zi]
-            first_moments[column, 1] = xw[xi] * wy[yi] * wz[zi]
-            first_moments[column, 2] = wx[xi] * yw[yi] * wz[zi]
-            first_moments[column, 3] = wx[xi] * wy[yi] * zw[zi]
-        end
-        return weights, first_moments
+        return _product_doside_retained_linear_vectors(unit, metrics)
     end
     entries = _staged_unit_entries(unit)
     weights = _contract_linear_vector(

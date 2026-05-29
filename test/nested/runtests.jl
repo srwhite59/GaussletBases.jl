@@ -2599,6 +2599,41 @@ end
     @test consistent_product_staged_blocks.helper_path ==
           :fill_product_staged_metric_blocks
     @test consistent_product_staged_blocks.fixture_scope == :private_test_only
+    consistent_left_helper_weights, consistent_left_helper_first_moments =
+        CCPM._product_doside_retained_linear_vectors(
+            consistent_left_unit,
+            distinct_axis_metrics,
+        )
+    consistent_left_staged_weights, consistent_left_staged_first_moments =
+        CCPM._staged_unit_linear_vectors(
+            consistent_left_unit,
+            distinct_axis_metrics,
+        )
+    consistent_left_support_dense_linear_reference_unit =
+        GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+            :consistent_left_support_dense_linear_vector_reference,
+            :support_dense,
+            consistent_left_unit.column_range,
+            copy(consistent_left_unit.support_indices),
+            copy(consistent_left_unit.support_states),
+            consistent_left_unit.coefficient_matrix,
+            consistent_left_unit.axes,
+            copy(consistent_left_unit.axis_function_indices),
+            (source = :consistent_left_product_staged_linear_vector_reference_fixture,),
+            (support_count = 4, retained_count = 4),
+        )
+    consistent_left_reference_weights, consistent_left_reference_first_moments =
+        CCPM._staged_unit_linear_vectors(
+            consistent_left_support_dense_linear_reference_unit,
+            distinct_axis_metrics,
+        )
+    @test consistent_left_helper_weights ≈ consistent_left_staged_weights atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_left_helper_first_moments ≈ consistent_left_staged_first_moments atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_left_helper_weights ≈ consistent_left_reference_weights atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_left_helper_first_moments ≈ consistent_left_reference_first_moments atol = 1.0e-14 rtol = 1.0e-14
+    @test length(consistent_left_helper_weights) == length(consistent_left_unit.column_range)
+    @test size(consistent_left_helper_first_moments) ==
+          (length(consistent_left_unit.column_range), 3)
     for term in (:overlap, :position_x, :position_y, :position_z)
         packet = CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
             consistent_cross_pair;
