@@ -893,6 +893,49 @@ residual centers, residual widths, residual owner indices, stored kinetic
 sidecars, by-center nuclear sidecars, counts, and route diagnostics for each
 route under consideration.
 
+### Contracted-parent rule-seam checkpoint
+
+The first small rule-driven seam now exists at the contracted-parent metadata
+level. `CartesianContractionRule3D` can describe three current families:
+
+- product-owned staged units from the existing endcap/panel sidecar path
+- support-dense fallback units that still contract through support-local
+  coefficient entries
+- PQS descriptor/prototype rules, which describe the projected-q-shell idea
+  but are not installed as fixed-block sidecars
+
+For existing product-staged sidecars, contracted-parent unit creation now goes
+through a rule-aware helper. That preserves the staged payload, role, support
+indices, column range, and global coefficient map. The global
+`CartesianContractedParent3D` coefficient matrix remains the source of truth;
+rules are provenance and classification, not regenerated coefficients.
+
+`CartesianContractionRuleInventory3D` summarizes the rules that make up a
+contracted parent: rule-family counts, retained/source dimensions, parent
+support coverage, metric capabilities, and whether each unit has derivable rule
+metadata. Private metric dispatch shadow plans can also compare rule-derived
+classification against the current staged-payload dispatch for the
+product/support-dense metric packet. On the existing endcap/panel fixture, the
+rule plan and payload plan agree on product-unit counts, support-fallback
+counts, product/product blocks, fallback blocks, and unsupported/prototype
+counts.
+
+This is not yet a full "define a new nesting rule and everything works" layer.
+Metric execution remains payload-driven, and current product-staged metric
+contraction still reads concrete staged sidecar data such as axis intervals,
+fixed/active axis state, 1D coefficient matrices, support states, and
+support-dense block coefficients. PQS remains descriptor/prototype metadata
+only and is intentionally rejected by the product-staged metric dispatch plan.
+
+Current recommendation: keep the shadow dispatch plan as a private test/audit
+helper. Do not attach full plans to packet diagnostics by default, do not add a
+runtime assertion keyword, and do not route metric execution from rules until a
+concrete consumer needs that guard and the payload-resolution contract is
+designed. This checkpoint addresses the earlier framework concern by making
+construction pieces classifiable and auditable through one rule vocabulary,
+while preserving all coefficient maps, metric kernels, QW/Hamiltonian behavior,
+public/default behavior, and PGDG/numerical-reference policy.
+
 ## Current bounded chunk
 
 There is no active required bounded chunk on this consolidation line.
