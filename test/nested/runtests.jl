@@ -635,6 +635,38 @@ end
     @test pqs_mixed_block.first_moments === nothing
     @test pqs_mixed_block.diagnostics.support_local_reference_used
     @test !pqs_mixed_block.diagnostics.pqs_self_overlap_invariant_applied
+    sidecar_metric_reference =
+        CCPM._projected_q_shell_sidecar_low_order_metric_reference(
+            cubic_pqs_sidecar,
+            cubic_metrics;
+            mixed_payloads = (support_dense_resolved,),
+        )
+    @test sidecar_metric_reference.diagnostics.fixture_only
+    @test sidecar_metric_reference.diagnostics.reference_scoped
+    @test !sidecar_metric_reference.diagnostics.production_supported
+    @test sidecar_metric_reference.diagnostics.support_local_reference_only
+    @test !sidecar_metric_reference.diagnostics.fixed_block_sidecar_installed
+    @test !sidecar_metric_reference.diagnostics.default_builder_consumes
+    @test !sidecar_metric_reference.diagnostics.qw_consumes
+    @test !sidecar_metric_reference.diagnostics.hamiltonian_consumes
+    @test sidecar_metric_reference.diagnostics.payload_count == 1
+    @test sidecar_metric_reference.diagnostics.self_block_count == 1
+    @test sidecar_metric_reference.diagnostics.mixed_block_count == 1
+    @test !sidecar_metric_reference.diagnostics.pqs_product_optimized_path_ready
+    @test only(sidecar_metric_reference.resolved_payloads).ready_for_metric_execution
+    @test only(sidecar_metric_reference.resolved_payloads).payload ===
+          only(cubic_pqs_sidecar.payloads)
+    sidecar_self_block = only(sidecar_metric_reference.self_blocks)
+    sidecar_mixed_block = only(sidecar_metric_reference.mixed_blocks)
+    @test sidecar_self_block.path == :pqs_pqs_low_order_reference
+    @test sidecar_mixed_block.path == :pqs_support_local_reference
+    @test sidecar_self_block.overlap == pqs_self_block.overlap
+    @test sidecar_self_block.weights ≈ pqs_self_block.weights atol = 1.0e-12 rtol = 1.0e-12
+    @test sidecar_self_block.position_x ≈ pqs_self_block.position_x atol = 1.0e-12 rtol = 1.0e-12
+    @test sidecar_self_block.position_y ≈ pqs_self_block.position_y atol = 1.0e-12 rtol = 1.0e-12
+    @test sidecar_self_block.position_z ≈ pqs_self_block.position_z atol = 1.0e-12 rtol = 1.0e-12
+    @test sidecar_mixed_block.overlap ≈ pqs_mixed_block.overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test sidecar_mixed_block.position_x ≈ pqs_mixed_block.position_x atol = 1.0e-12 rtol = 1.0e-12
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,

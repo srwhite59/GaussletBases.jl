@@ -14,7 +14,9 @@ import ..GaussletBases: _NestedFixedBlock3D,
 import ..GaussletBases.CartesianContractedParents:
     CartesianContractedParent3D,
     _CartesianExecutableProjectedQShellPayload3D,
+    _CartesianProjectedQShellSidecarFixture3D,
     _cartesian_resolved_contraction_payload,
+    _cartesian_resolved_contraction_payloads,
     cartesian_contracted_parent,
     contracted_parent_contraction_rules,
     contracted_parent_basis,
@@ -886,6 +888,59 @@ function _resolved_payload_low_order_metric_block(left, right, metrics::NamedTup
                 :pair_sum,
                 :interaction,
             ),
+        ),
+    )
+end
+
+function _projected_q_shell_sidecar_low_order_metric_reference(
+    sidecar::_CartesianProjectedQShellSidecarFixture3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    mixed_payloads = (),
+)
+    resolved_payloads = _cartesian_resolved_contraction_payloads(sidecar)
+    isempty(resolved_payloads) && throw(
+        ArgumentError("PQS sidecar metric reference requires at least one payload"),
+    )
+    all(payload -> payload.payload_kind == :projected_q_shell, resolved_payloads) || throw(
+        ArgumentError("PQS sidecar metric reference only accepts projected_q_shell payloads"),
+    )
+    self_blocks = [
+        _resolved_payload_low_order_metric_block(payload, payload, metrics)
+        for payload in resolved_payloads
+    ]
+    mixed_blocks = [
+        _resolved_payload_low_order_metric_block(payload, mixed, metrics)
+        for payload in resolved_payloads
+        for mixed in mixed_payloads
+    ]
+    return (
+        resolved_payloads = resolved_payloads,
+        self_blocks = self_blocks,
+        mixed_blocks = mixed_blocks,
+        diagnostics = (
+            source = :projected_q_shell_sidecar_low_order_metric_reference,
+            fixture_only = true,
+            reference_scoped = true,
+            production_supported = false,
+            support_local_reference_only = true,
+            fixed_block_sidecar_installed = sidecar.diagnostics.fixed_block_sidecar_installed,
+            default_builder_consumes = sidecar.diagnostics.default_builder_consumes,
+            qw_consumes = sidecar.diagnostics.qw_consumes,
+            hamiltonian_consumes = sidecar.diagnostics.hamiltonian_consumes,
+            payload_count = length(resolved_payloads),
+            self_block_count = length(self_blocks),
+            mixed_block_count = length(mixed_blocks),
+            metric_capability = :pqs_low_order_support_local_reference,
+            supported_terms = (:overlap, :weights, :position_x, :position_y, :position_z),
+            unsupported_terms = (
+                :kinetic,
+                :x2,
+                :nuclear_one_body,
+                :gaussian_sum,
+                :pair_sum,
+                :interaction,
+            ),
+            pqs_product_optimized_path_ready = false,
         ),
     )
 end
