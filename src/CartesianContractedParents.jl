@@ -1,6 +1,11 @@
 module CartesianContractedParents
 
 import ..GaussletBases: _CartesianCoefficientMap,
+                         _BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+                         _BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D,
+                         _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+                         _CartesianNestedEndcapPanelOwnedUnits3D,
+                         _CartesianNestedEndcapPanelShellLayer3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _NestedFixedBlock3D,
@@ -16,10 +21,15 @@ export CartesianContractionUnit3D,
        CartesianContractionRuleInventory3D,
        CartesianContractedParent3D,
        CartesianContractedParentStructuralAudit,
+       CartesianShellRegionInventory3D,
+       CartesianShellRegionRetention3D,
+       CartesianShellRegion3D,
        cartesian_contraction_rule,
        cartesian_contraction_rule_inventory,
        cartesian_contraction_unit_from_rule,
        cartesian_contracted_parent,
+       cartesian_shell_region,
+       cartesian_shell_region_inventory,
        contracted_parent_contraction_rules,
        contracted_parent_rule_inventory,
        contracted_parent_basis,
@@ -46,6 +56,69 @@ export CartesianContractionUnit3D,
        contracted_parent_unit_support_indices,
        contracted_parent_support_indices,
        contracted_parent_structural_audit
+
+"""
+    CartesianShellRegionRetention3D
+
+Metadata-only retention/contraction facts for a shell region. These fields are
+kept separate from region geometry so a region can be audited without implying
+that a particular contraction rule already drives construction.
+"""
+struct CartesianShellRegionRetention3D{D}
+    retention_rule::Symbol
+    cleanup_rule::Symbol
+    preferred_contraction_rule::Symbol
+    expected_unit_family::Symbol
+    metric_capability::Symbol
+    required_payload_fields::Tuple{Vararg{Symbol}}
+    missing_payload_fields::Tuple{Vararg{Symbol}}
+    diagnostics::D
+end
+
+"""
+    CartesianShellRegion3D
+
+Metadata-only descriptor for a finite Cartesian shell/region between a full
+parent lattice and final contraction units. Region facts are deliberately
+separate from retention/contraction facts; this object does not build
+coefficient maps, metric packets, fixed blocks, QW operators, or Hamiltonians.
+"""
+struct CartesianShellRegion3D{S,G,R,D,P}
+    region_family::Symbol
+    role::Union{Nothing,Symbol}
+    status::Symbol
+    box::Union{Nothing,NTuple{3,UnitRange{Int}}}
+    inner_exclusion_box::Union{Nothing,NTuple{3,UnitRange{Int}}}
+    support_indices::Union{Nothing,Vector{Int}}
+    support_summary::S
+    ownership_coverage_contract::Symbol
+    geometry::G
+    retention::R
+    current_route_consumes::Bool
+    descriptor_drives_builder::Bool
+    descriptor_only::Bool
+    diagnostics::D
+    provenance::P
+end
+
+"""
+    CartesianShellRegionInventory3D
+
+Ordered metadata-only inventory of shell regions for one construction route or
+diagnostic source.
+"""
+struct CartesianShellRegionInventory3D{R,S,C,D,P}
+    route::Symbol
+    regions::R
+    region_count::Int
+    region_order::Vector{Symbol}
+    status_counts::C
+    support_summary::S
+    current_route_consumes_count::Int
+    descriptor_only_count::Int
+    diagnostics::D
+    provenance::P
+end
 
 """
     CartesianContractionRule3D
@@ -132,6 +205,647 @@ function _contraction_rule_support_summary(
         missing_count = Int(parent_dimension) - length(unique_inside),
         support_complete = length(unique_inside) == Int(parent_dimension),
         coverage_checked = true,
+    )
+end
+
+function _shell_region_support_summary(
+    support_indices::AbstractVector{<:Integer};
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    return merge(
+        _contraction_rule_support_summary(support_indices; parent_dimension),
+        (support_indices_available = true,),
+    )
+end
+
+function _shell_region_support_summary(
+    support_indices::Nothing;
+    parent_dimension::Union{Nothing,Int} = nothing,
+    support_count::Union{Nothing,Int} = nothing,
+)
+    complete =
+        !isnothing(parent_dimension) && !isnothing(support_count) ?
+        Int(parent_dimension) == Int(support_count) : nothing
+    return (
+        parent_dimension = isnothing(parent_dimension) ? nothing : Int(parent_dimension),
+        entry_count = isnothing(support_count) ? nothing : Int(support_count),
+        unique_count = isnothing(support_count) ? nothing : Int(support_count),
+        duplicate_count = nothing,
+        outside_count = nothing,
+        missing_count = complete === true ? 0 : nothing,
+        support_complete = complete,
+        coverage_checked = false,
+        support_indices_available = false,
+    )
+end
+
+function _shell_region_named_property(metadata, name::Symbol, default)
+    hasproperty(metadata, name) && return getproperty(metadata, name)
+    return default
+end
+
+function _shell_region_retention(;
+    retention_rule::Symbol,
+    cleanup_rule::Symbol,
+    preferred_contraction_rule::Symbol,
+    expected_unit_family::Symbol,
+    metric_capability::Symbol,
+    required_payload_fields::Tuple{Vararg{Symbol}},
+    missing_payload_fields::Tuple{Vararg{Symbol}} = (),
+    diagnostics = (;),
+)
+    return CartesianShellRegionRetention3D(
+        retention_rule,
+        cleanup_rule,
+        preferred_contraction_rule,
+        expected_unit_family,
+        metric_capability,
+        required_payload_fields,
+        missing_payload_fields,
+        diagnostics,
+    )
+end
+
+function _atom_growth_region_family(role::Symbol)
+    role in (:left_atom_box, :right_atom_box) && return :atom_core_cube
+    role == :contact_cap && return :shared_midpoint_slab_cap
+    role == :regular_shared_molecular_shell && return :rectangular_molecular_shell
+    role == :outer_mismatch_shared_molecular_shell && return :outer_boundary_shell
+    return :support_dense_leftover_debug_region
+end
+
+function _atom_growth_region_status(role::Symbol)
+    role in (
+        :left_atom_box,
+        :right_atom_box,
+        :regular_shared_molecular_shell,
+        :contact_cap,
+        :outer_mismatch_shared_molecular_shell,
+    ) && return :clean
+    return :debug_oracle
+end
+
+function _atom_growth_region_retention_rule(role::Symbol)
+    role in (:left_atom_box, :right_atom_box) && return :protected_atom_cubic_shell
+    role == :contact_cap && return :shared_contact_cap
+    role == :regular_shared_molecular_shell && return :policy_selected_shared_exterior
+    role == :outer_mismatch_shared_molecular_shell &&
+        return :outermost_mismatch_shared_molecular_shell
+    return :explicit_support_dense_coefficients
+end
+
+function _atom_growth_region_contraction_rule(role::Symbol)
+    role in (:left_atom_box, :right_atom_box) && return :complete_shell_sequence
+    role == :contact_cap && return :contact_cap_owned_slab
+    role == :regular_shared_molecular_shell && return :policy_selected_shared_exterior
+    role == :outer_mismatch_shared_molecular_shell &&
+        return :outer_mismatch_boundary_slab_set
+    return :support_dense_fallback
+end
+
+function _atom_growth_region_expected_unit_family(role::Symbol)
+    role == :regular_shared_molecular_shell && return :policy_dependent_shell_region
+    return :support_dense_fallback
+end
+
+function _atom_growth_region_metric_capability(role::Symbol)
+    role == :regular_shared_molecular_shell && return :metadata_only_policy_dependent
+    return :support_local_product
+end
+
+function _atom_growth_region_payload_fields(role::Symbol)
+    role in (:left_atom_box, :right_atom_box) && return (
+        required = (:box, :support_indices, :coefficient_matrix, :column_range),
+        missing = (:coefficient_matrix, :column_range),
+    )
+    role == :regular_shared_molecular_shell && return (
+        required = (:box, :inner_exclusion_box, :policy_selected_layer, :column_range),
+        missing = (:policy_selected_layer, :column_range),
+    )
+    role == :contact_cap && return (
+        required = (:box, :support_indices, :coefficient_matrix, :column_range),
+        missing = (:coefficient_matrix, :column_range),
+    )
+    role == :outer_mismatch_shared_molecular_shell && return (
+        required = (:box, :inner_exclusion_box, :piece_descriptors, :column_range),
+        missing = (:piece_descriptors, :column_range),
+    )
+    return (
+        required = (:support_indices, :coefficient_matrix, :column_range),
+        missing = (:coefficient_matrix, :column_range),
+    )
+end
+
+function _source_build_region_family(build::_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D)
+    build.region_category == :atom_local && return :atom_core_cube
+    build.region_category == :contact_cap && return :shared_midpoint_slab_cap
+    build.region_category == :outer_mismatch && return :outer_boundary_shell
+    if build.region_category == :shared_exterior
+        build.primitive_family == :shared_endcap_panel_shell_layer &&
+            return :endcap_panel_shared_exterior
+        build.primitive_family == :projected_q_shell &&
+            return :projected_q_shell_boundary_modes
+        return :rectangular_molecular_shell
+    end
+    return :support_dense_leftover_debug_region
+end
+
+function _source_build_region_status(build::_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D)
+    build.primitive_family == :shared_endcap_panel_shell_layer && return :transitional
+    build.primitive_family == :projected_q_shell && return :prototype
+    build.unsupported_reason !== nothing && return :debug_oracle
+    return :clean
+end
+
+function _source_build_coverage_contract(build::_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D)
+    build.primitive_family in (:shared_endcap_panel_shell_layer, :projected_q_shell) &&
+        return :boundary_only
+    return :disjoint_partition_piece
+end
+
+function _source_build_retention_spec(build::_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D)
+    family = build.primitive_family
+    if family == :shared_endcap_panel_shell_layer
+        return (
+            retention_rule = :old_endcap_panel_product_split,
+            cleanup_rule = :locally_orthonormal_product_doside,
+            preferred_contraction_rule = :old_endcap_panel_product_split,
+            expected_unit_family = :product_owned_unit,
+            metric_capability = :product_staged_metric_contraction,
+            required_payload_fields = (
+                :owned_units,
+                :unit_column_ranges,
+                :support_indices,
+                :support_states,
+                :staged_axes,
+                :axis_function_indices,
+                :coefficient_matrix,
+                :column_range,
+            ),
+            missing_payload_fields = (),
+            payload_ready = true,
+        )
+    elseif family == :projected_q_shell
+        return (
+            retention_rule = :boundary_comx_product_modes_raw_boundary_projection,
+            cleanup_rule = :full_rank_symmetric_lowdin,
+            preferred_contraction_rule = :pqs_boundary_projection_from_filled_box,
+            expected_unit_family = :projected_q_shell_descriptor,
+            metric_capability = :pqs_low_order_product_metric_prototype,
+            required_payload_fields = (
+                :support_indices,
+                :support_states,
+                :axis_local_coefficients,
+                :boundary_mode_indices,
+                :cleanup_transform,
+                :column_range,
+                :fixed_block_sidecar_payload,
+            ),
+            missing_payload_fields = (
+                :fixed_block_sidecar_payload,
+                :product_staged_metric_payload,
+            ),
+            payload_ready = false,
+        )
+    elseif family == :atom_local_complete_shell_sequence
+        return (
+            retention_rule = :protected_atom_cubic_shell,
+            cleanup_rule = :complete_shell_sequence_cleanup,
+            preferred_contraction_rule = :complete_shell_sequence,
+            expected_unit_family = :support_dense_fallback,
+            metric_capability = :support_local_product,
+            required_payload_fields = (:box_or_sequence, :coefficient_matrix, :column_range),
+            missing_payload_fields = (),
+            payload_ready = true,
+        )
+    elseif family == :contact_cap_owned_slab
+        return (
+            retention_rule = :shared_contact_cap,
+            cleanup_rule = :explicit_direct_slab,
+            preferred_contraction_rule = :contact_cap_owned_slab,
+            expected_unit_family = :support_dense_fallback,
+            metric_capability = :support_local_product,
+            required_payload_fields = (:box, :support_indices, :coefficient_matrix, :column_range),
+            missing_payload_fields = (),
+            payload_ready = true,
+        )
+    elseif family == :outer_mismatch_boundary_slab_set
+        return (
+            retention_rule = :outermost_mismatch_shared_molecular_shell,
+            cleanup_rule = :explicit_direct_slab_set,
+            preferred_contraction_rule = :outer_mismatch_boundary_slab_set,
+            expected_unit_family = :support_dense_fallback,
+            metric_capability = :support_local_product,
+            required_payload_fields = (
+                :piece_descriptors,
+                :support_indices,
+                :coefficient_matrix,
+                :column_range,
+            ),
+            missing_payload_fields = (),
+            payload_ready = true,
+        )
+    end
+    return (
+        retention_rule = :explicit_support_dense_coefficients,
+        cleanup_rule = :external_or_already_cleaned,
+        preferred_contraction_rule = :support_dense_fallback,
+        expected_unit_family = :support_dense_fallback,
+        metric_capability = :support_local_product,
+        required_payload_fields = (:support_indices, :coefficient_matrix, :column_range),
+        missing_payload_fields = build.unsupported_reason === nothing ? () : (:coefficient_matrix,),
+        payload_ready = build.unsupported_reason === nothing,
+    )
+end
+
+function cartesian_shell_region(
+    build::_BondAlignedDiatomicHighOrderRecipeRegionSourceBuild3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    spec = _source_build_retention_spec(build)
+    retention = _shell_region_retention(
+        retention_rule = spec.retention_rule,
+        cleanup_rule = spec.cleanup_rule,
+        preferred_contraction_rule = spec.preferred_contraction_rule,
+        expected_unit_family = spec.expected_unit_family,
+        metric_capability = spec.metric_capability,
+        required_payload_fields = spec.required_payload_fields,
+        missing_payload_fields = spec.missing_payload_fields,
+        diagnostics = (
+            source = :bond_aligned_diatomic_high_order_recipe_region_source_build,
+            payload_ready_for_current_metric_execution = spec.payload_ready,
+        ),
+    )
+    geometry = (
+        source = :bond_aligned_diatomic_high_order_recipe_region_source_build,
+        region_order_index = build.region_order_index,
+        region_category = build.region_category,
+        recipe_family = build.recipe_family,
+        q = build.q,
+        order = build.order,
+        mapped_primitive = build.mapped_primitive,
+        primitive_family = build.primitive_family,
+        region_support_count = build.region_support_count,
+        built_support_count = build.built_support_count,
+        retained_count = build.retained_count,
+        column_range = build.column_range,
+    )
+    diagnostics = (
+        metadata_only = true,
+        built = build.built,
+        unsupported_reason = build.unsupported_reason,
+        support_coverage_ok = build.support_coverage.coverage_ok,
+        coefficient_map_generated = false,
+        metric_packet_generated = false,
+        fixed_block_sidecar_installed = false,
+    )
+    return CartesianShellRegion3D(
+        _source_build_region_family(build),
+        build.region_role,
+        _source_build_region_status(build),
+        nothing,
+        nothing,
+        nothing,
+        _shell_region_support_summary(
+            nothing;
+            parent_dimension,
+            support_count = build.built_support_count,
+        ),
+        _source_build_coverage_contract(build),
+        geometry,
+        retention,
+        build.active_builder_consumes,
+        false,
+        !build.active_builder_consumes,
+        diagnostics,
+        (
+            source = :bond_aligned_diatomic_high_order_recipe_region_source_build,
+            original_metadata = build.metadata,
+        ),
+    )
+end
+
+function cartesian_shell_region(
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    payload_fields = _atom_growth_region_payload_fields(region.role)
+    retention = _shell_region_retention(
+        retention_rule = _atom_growth_region_retention_rule(region.role),
+        cleanup_rule = :region_rule_dependent_or_external,
+        preferred_contraction_rule = _atom_growth_region_contraction_rule(region.role),
+        expected_unit_family = _atom_growth_region_expected_unit_family(region.role),
+        metric_capability = _atom_growth_region_metric_capability(region.role),
+        required_payload_fields = payload_fields.required,
+        missing_payload_fields = payload_fields.missing,
+        diagnostics = (
+            source = :bond_aligned_diatomic_atom_growth_construction_region,
+            payload_ready_for_current_metric_execution = false,
+        ),
+    )
+    geometry = (
+        source = :bond_aligned_diatomic_atom_growth_construction_region,
+        order_index = region.order_index,
+        box = region.box,
+        inner_exclusion_box = region.inner_exclusion_box,
+        atom_side = _shell_region_named_property(region.metadata, :atom_side, nothing),
+        atom_axis_index = _shell_region_named_property(region.metadata, :atom_axis_index, nothing),
+        shell_offset = _shell_region_named_property(region.metadata, :shell_offset, nothing),
+        contact_policy = _shell_region_named_property(region.metadata, :contact_policy, nothing),
+        contact_gap_count = _shell_region_named_property(region.metadata, :contact_gap_count, nothing),
+        mismatch_low_counts = _shell_region_named_property(region.metadata, :low_counts, nothing),
+        mismatch_high_counts = _shell_region_named_property(region.metadata, :high_counts, nothing),
+    )
+    diagnostics = (
+        metadata_only = true,
+        source_region_role = region.role,
+        support_count = length(region.support_indices),
+        coefficient_map_generated = false,
+        metric_packet_generated = false,
+        fixed_block_sidecar_installed = false,
+    )
+    return CartesianShellRegion3D(
+        _atom_growth_region_family(region.role),
+        region.role,
+        _atom_growth_region_status(region.role),
+        region.box,
+        region.inner_exclusion_box,
+        copy(region.support_indices),
+        _shell_region_support_summary(region.support_indices; parent_dimension),
+        :disjoint_partition_piece,
+        geometry,
+        retention,
+        false,
+        false,
+        true,
+        diagnostics,
+        (
+            source = :bond_aligned_diatomic_atom_growth_construction_region,
+            original_metadata = region.metadata,
+        ),
+    )
+end
+
+function cartesian_shell_region(
+    owned_units::_CartesianNestedEndcapPanelOwnedUnits3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+    active_builder_consumes::Bool = true,
+)
+    retention = _shell_region_retention(
+        retention_rule = :old_endcap_panel_product_split,
+        cleanup_rule = :locally_orthonormal_product_doside,
+        preferred_contraction_rule = :old_endcap_panel_product_split,
+        expected_unit_family = :product_owned_unit,
+        metric_capability = :product_staged_metric_contraction,
+        required_payload_fields = (
+            :owned_units,
+            :unit_column_ranges,
+            :support_indices,
+            :support_states,
+            :staged_axes,
+            :axis_function_indices,
+            :coefficient_matrix,
+            :column_range,
+        ),
+        missing_payload_fields = (),
+        diagnostics = (
+            source = :nested_endcap_panel_owned_units,
+            payload_ready_for_current_metric_execution = true,
+        ),
+    )
+    geometry = (
+        source = :nested_endcap_panel_owned_units,
+        current_box = owned_units.current_box,
+        inner_box = owned_units.inner_box,
+        bond_axis = owned_units.bond_axis,
+        q = owned_units.q,
+        L = owned_units.L,
+        unit_count = length(owned_units.units),
+        support_contract = owned_units.support_contract,
+        coefficient_contract = owned_units.coefficient_contract,
+        retained_count = owned_units.audit.retained_count,
+    )
+    diagnostics = (
+        metadata_only = true,
+        transitional_current_active_implementation = true,
+        coverage_ok = owned_units.audit.coverage_ok,
+        support_count = length(owned_units.expected_support_indices),
+        owned_unit_count = length(owned_units.units),
+        coefficient_map_generated = false,
+        metric_packet_generated = false,
+        fixed_block_sidecar_installed = false,
+    )
+    return CartesianShellRegion3D(
+        :endcap_panel_shared_exterior,
+        :shared_endcap_panel_shell_layer,
+        :transitional,
+        owned_units.current_box,
+        owned_units.inner_box,
+        copy(owned_units.expected_support_indices),
+        _shell_region_support_summary(owned_units.expected_support_indices; parent_dimension),
+        :boundary_only,
+        geometry,
+        retention,
+        active_builder_consumes,
+        false,
+        !active_builder_consumes,
+        diagnostics,
+        (
+            source = :nested_endcap_panel_owned_units,
+            support_contract = owned_units.support_contract,
+            coefficient_contract = owned_units.coefficient_contract,
+        ),
+    )
+end
+
+function cartesian_shell_region(
+    layer::_CartesianNestedEndcapPanelShellLayer3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    region = cartesian_shell_region(
+        layer.owned_units;
+        parent_dimension,
+        active_builder_consumes = true,
+    )
+    return CartesianShellRegion3D(
+        region.region_family,
+        region.role,
+        region.status,
+        region.box,
+        region.inner_exclusion_box,
+        copy(layer.support_indices),
+        _shell_region_support_summary(layer.support_indices; parent_dimension),
+        region.ownership_coverage_contract,
+        merge(
+            region.geometry,
+            (
+                source = :nested_endcap_panel_shell_layer,
+                retained_count = size(layer.coefficient_matrix, 2),
+                packet_available = true,
+            ),
+        ),
+        region.retention,
+        region.current_route_consumes,
+        region.descriptor_drives_builder,
+        region.descriptor_only,
+        merge(
+            region.diagnostics,
+            (
+                source_layer_retained_count = size(layer.coefficient_matrix, 2),
+                packet_available = true,
+            ),
+        ),
+        (
+            source = :nested_endcap_panel_shell_layer,
+            layer_provenance = layer.provenance,
+        ),
+    )
+end
+
+function cartesian_shell_region(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    retention = _shell_region_retention(
+        retention_rule = :boundary_comx_product_modes_raw_boundary_projection,
+        cleanup_rule = :full_rank_symmetric_lowdin,
+        preferred_contraction_rule = :pqs_boundary_projection_from_filled_box,
+        expected_unit_family = :projected_q_shell_descriptor,
+        metric_capability = :pqs_low_order_product_metric_prototype,
+        required_payload_fields = (
+            :support_indices,
+            :support_states,
+            :axis_local_coefficients,
+            :boundary_mode_indices,
+            :cleanup_transform,
+            :column_range,
+            :fixed_block_sidecar_payload,
+        ),
+        missing_payload_fields = (
+            :column_range,
+            :fixed_block_sidecar_payload,
+            :product_staged_metric_payload,
+        ),
+        diagnostics = (
+            source = :projected_q_shell_staged_unit_descriptor,
+            payload_ready_for_current_metric_execution = false,
+        ),
+    )
+    geometry = (
+        source = :projected_q_shell_staged_unit_descriptor,
+        current_box = descriptor.current_box,
+        inner_box = descriptor.inner_box,
+        bond_axis = descriptor.bond_axis,
+        q = descriptor.q,
+        L = descriptor.L,
+        selection_rule = descriptor.selection_rule,
+        axis_intervals = descriptor.axis_intervals,
+        boundary_mode_count = descriptor.mode_count,
+        boundary_column_count = length(descriptor.boundary_column_indices),
+        cleanup_rank_count = descriptor.cleanup_rank_count,
+        cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
+    )
+    diagnostics = (
+        metadata_only = true,
+        prototype_only = true,
+        support_count = descriptor.support_count,
+        retained_count = descriptor.retained_count,
+        mode_count = descriptor.mode_count,
+        coefficient_map_generated = false,
+        metric_packet_generated = false,
+        fixed_block_sidecar_installed =
+            descriptor.active_consumption.fixed_block_sidecar_installed,
+        product_doside_unit = false,
+        active_consumption = descriptor.active_consumption,
+    )
+    return CartesianShellRegion3D(
+        :projected_q_shell_boundary_modes,
+        descriptor.role,
+        :prototype,
+        descriptor.current_box,
+        descriptor.inner_box,
+        copy(descriptor.support_indices),
+        _shell_region_support_summary(descriptor.support_indices; parent_dimension),
+        :boundary_only,
+        geometry,
+        retention,
+        false,
+        false,
+        true,
+        diagnostics,
+        (
+            source = :projected_q_shell_staged_unit_descriptor,
+            original_diagnostics = descriptor.diagnostics,
+        ),
+    )
+end
+
+function _shell_region_status_counts(regions)
+    counts = Dict{Symbol,Int}()
+    for region in regions
+        counts[region.status] = get(counts, region.status, 0) + 1
+    end
+    return (; (key => counts[key] for key in sort(collect(keys(counts))))...)
+end
+
+function _shell_region_inventory_support_summary(
+    regions;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    counts = [
+        region.support_summary.entry_count
+        for region in regions
+        if !isnothing(region.support_summary.entry_count)
+    ]
+    total_count = isempty(counts) ? nothing : sum(counts)
+    complete =
+        !isnothing(parent_dimension) && !isnothing(total_count) ?
+        Int(parent_dimension) == Int(total_count) : nothing
+    all_count_summaries = all(!region.support_summary.support_indices_available for region in regions)
+    return (
+        parent_dimension = isnothing(parent_dimension) ? nothing : Int(parent_dimension),
+        region_support_entry_count = total_count,
+        support_complete_by_region_counts = complete,
+        support_indices_available_for_all_regions =
+            all(region.support_summary.support_indices_available for region in regions),
+        count_only_summaries_for_all_regions = all_count_summaries,
+    )
+end
+
+function cartesian_shell_region_inventory(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    effective_parent_dimension =
+        isnothing(parent_dimension) ? length(construction.sequence.support_indices) : parent_dimension
+    regions = [
+        cartesian_shell_region(build; parent_dimension = effective_parent_dimension)
+        for build in construction.region_builds
+    ]
+    return CartesianShellRegionInventory3D(
+        :bond_aligned_diatomic_high_order_recipe_source_construction,
+        Tuple(regions),
+        length(regions),
+        Symbol[region.role for region in regions],
+        _shell_region_status_counts(regions),
+        _shell_region_inventory_support_summary(
+            regions;
+            parent_dimension = effective_parent_dimension,
+        ),
+        count(region -> region.current_route_consumes, regions),
+        count(region -> region.descriptor_only, regions),
+        (
+            metadata_only = true,
+            route_uses_existing_builder = true,
+            descriptor_driven_builder_count =
+                count(region -> region.descriptor_drives_builder, regions),
+            coefficient_maps_changed = false,
+            metric_execution_changed = false,
+        ),
+        (
+            source = :bond_aligned_diatomic_high_order_recipe_source_construction,
+            construction_metadata = construction.metadata,
+        ),
     )
 end
 

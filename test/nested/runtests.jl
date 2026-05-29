@@ -250,6 +250,34 @@ end
     @test !cubic_descriptor.active_consumption.fixed_block_sidecar_installed
     @test !cubic_descriptor.active_consumption.metric_packet_consumes
     @test !cubic_descriptor.active_consumption.by_center_consumes
+    cubic_region = CCP.cartesian_shell_region(
+        cubic_descriptor;
+        parent_dimension = 5 * 5 * 5,
+    )
+    @test cubic_region isa CCP.CartesianShellRegion3D
+    @test cubic_region.region_family == :projected_q_shell_boundary_modes
+    @test cubic_region.status == :prototype
+    @test cubic_region.box == cubic_current
+    @test cubic_region.inner_exclusion_box == cubic_inner
+    @test cubic_region.support_indices == cubic.support_indices
+    @test cubic_region.support_summary.entry_count == 98
+    @test cubic_region.support_summary.missing_count == 27
+    @test cubic_region.ownership_coverage_contract == :boundary_only
+    @test cubic_region.retention.retention_rule ==
+          :boundary_comx_product_modes_raw_boundary_projection
+    @test cubic_region.retention.cleanup_rule == :full_rank_symmetric_lowdin
+    @test cubic_region.retention.preferred_contraction_rule ==
+          :pqs_boundary_projection_from_filled_box
+    @test cubic_region.retention.expected_unit_family == :projected_q_shell_descriptor
+    @test cubic_region.retention.metric_capability == :pqs_low_order_product_metric_prototype
+    @test :fixed_block_sidecar_payload in cubic_region.retention.missing_payload_fields
+    @test !cubic_region.current_route_consumes
+    @test !cubic_region.descriptor_drives_builder
+    @test cubic_region.descriptor_only
+    @test cubic_region.diagnostics.prototype_only
+    @test !cubic_region.diagnostics.fixed_block_sidecar_installed
+    @test cubic_region.geometry.boundary_mode_count == 98
+    @test cubic_region.geometry.selection_rule == :any_axis_mode_index_first_or_last
     cubic_rule = CCP.cartesian_contraction_rule(
         cubic_descriptor;
         parent_dimension = 5 * 5 * 5,
@@ -1000,6 +1028,51 @@ end
     @test plan29.regions[2].metadata.shell_offset == 5
     @test plan29.regions[6].metadata.shell_offset == 1
     @test plan29.regions[end].metadata.contact_policy == :single_shared_contact_cap
+    CCP = GaussletBases.CartesianContractedParents
+    atom_region = CCP.cartesian_shell_region(
+        plan29.regions[end - 2];
+        parent_dimension = 29^3,
+    )
+    shared_region = CCP.cartesian_shell_region(
+        plan29.regions[2];
+        parent_dimension = 29^3,
+    )
+    contact_region = CCP.cartesian_shell_region(
+        plan29.regions[end];
+        parent_dimension = 29^3,
+    )
+    mismatch_region = CCP.cartesian_shell_region(
+        plan29.regions[1];
+        parent_dimension = 29^3,
+    )
+    @test atom_region isa CCP.CartesianShellRegion3D
+    @test atom_region.region_family == :atom_core_cube
+    @test atom_region.status == :clean
+    @test atom_region.role == :left_atom_box
+    @test atom_region.support_summary.entry_count == 9^3
+    @test atom_region.support_summary.outside_count == 0
+    @test atom_region.ownership_coverage_contract == :disjoint_partition_piece
+    @test atom_region.retention.retention_rule == :protected_atom_cubic_shell
+    @test atom_region.retention.preferred_contraction_rule == :complete_shell_sequence
+    @test atom_region.retention.metric_capability == :support_local_product
+    @test :coefficient_matrix in atom_region.retention.missing_payload_fields
+    @test !atom_region.current_route_consumes
+    @test !atom_region.descriptor_drives_builder
+    @test atom_region.descriptor_only
+    @test shared_region.region_family == :rectangular_molecular_shell
+    @test shared_region.retention.retention_rule == :policy_selected_shared_exterior
+    @test shared_region.retention.metric_capability == :metadata_only_policy_dependent
+    @test contact_region.region_family == :shared_midpoint_slab_cap
+    @test contact_region.status == :clean
+    @test contact_region.retention.preferred_contraction_rule == :contact_cap_owned_slab
+    @test !contact_region.current_route_consumes
+    @test mismatch_region.region_family == :outer_boundary_shell
+    @test mismatch_region.retention.retention_rule ==
+          :outermost_mismatch_shared_molecular_shell
+    @test mismatch_region.retention.preferred_contraction_rule ==
+          :outer_mismatch_boundary_slab_set
+    @test mismatch_region.geometry.mismatch_low_counts == (5, 5, 0)
+    @test !mismatch_region.current_route_consumes
 
     even_plan = GaussletBases._nested_bond_aligned_diatomic_atom_growth_construction_plan(
         (1:20, 1:20, 1:20);
@@ -1412,6 +1485,42 @@ end
     @test region_builds[2].metadata.support_contract == :thin_endcap_box_perimeter
     @test region_builds[2].metadata.coefficient_contract == :product_doside
     @test region_builds[5].metadata.descriptor_scope == :middle_contact_cap
+    CCP = GaussletBases.CartesianContractedParents
+    inventory = CCP.cartesian_shell_region_inventory(
+        construction;
+        parent_dimension = diagnostics.parent_dimension,
+    )
+    @test inventory isa CCP.CartesianShellRegionInventory3D
+    @test inventory.region_count == diagnostics.region_count == length(region_builds)
+    @test inventory.region_order == [build.role for build in region_builds]
+    @test [region.role for region in inventory.regions] == inventory.region_order
+    @test [region.status for region in inventory.regions] ==
+          [:clean, :transitional, :clean, :clean, :clean]
+    @test [region.retention.preferred_contraction_rule for region in inventory.regions] == [
+        :outer_mismatch_boundary_slab_set,
+        :old_endcap_panel_product_split,
+        :complete_shell_sequence,
+        :complete_shell_sequence,
+        :contact_cap_owned_slab,
+    ]
+    @test inventory.status_counts.clean == 4
+    @test inventory.status_counts.transitional == 1
+    @test inventory.current_route_consumes_count == diagnostics.region_count
+    @test inventory.descriptor_only_count == 0
+    @test inventory.support_summary.region_support_entry_count ==
+          diagnostics.support_coverage.covered_support_count
+    @test inventory.support_summary.support_complete_by_region_counts
+    @test inventory.support_summary.count_only_summaries_for_all_regions
+    @test all(isnothing(region.support_indices) for region in inventory.regions)
+    @test all(region.current_route_consumes for region in inventory.regions)
+    @test all(!region.descriptor_drives_builder for region in inventory.regions)
+    @test all(!region.descriptor_only for region in inventory.regions)
+    @test inventory.regions[2].ownership_coverage_contract == :boundary_only
+    @test inventory.regions[2].retention.metric_capability ==
+          :product_staged_metric_contraction
+    @test isempty(inventory.regions[2].retention.missing_payload_fields)
+    @test inventory.regions[5].ownership_coverage_contract == :disjoint_partition_piece
+    @test isempty(inventory.regions[5].retention.missing_payload_fields)
     @test diagnostics.metadata.q_policy == :atom_growth_endcap_panel_shared_q_variable
     @test diagnostics.metadata.q4_acceptance_fixture
     @test diagnostics.metadata.non_shared_q_policy == :fixed_q4_order4
@@ -2319,6 +2428,34 @@ end
     @test size(layer.coefficient_matrix) == (prod(GaussletBases._nested_axis_lengths(bundles)), 96)
     @test all(isfinite, layer.packet.overlap)
     @test norm(layer.packet.overlap - I, Inf) < 1.0e-8
+    CCP = GaussletBases.CartesianContractedParents
+    layer_region = CCP.cartesian_shell_region(
+        layer;
+        parent_dimension = prod(GaussletBases._nested_axis_lengths(bundles)),
+    )
+    @test layer_region isa CCP.CartesianShellRegion3D
+    @test layer_region.region_family == :endcap_panel_shared_exterior
+    @test layer_region.role == :shared_endcap_panel_shell_layer
+    @test layer_region.status == :transitional
+    @test layer_region.box == layer.provenance.current_box
+    @test layer_region.inner_exclusion_box == layer.provenance.inner_box
+    @test layer_region.support_summary.entry_count == length(layer.support_indices)
+    @test layer_region.support_summary.outside_count == 0
+    @test layer_region.ownership_coverage_contract == :boundary_only
+    @test layer_region.retention.retention_rule == :old_endcap_panel_product_split
+    @test layer_region.retention.cleanup_rule == :locally_orthonormal_product_doside
+    @test layer_region.retention.preferred_contraction_rule ==
+          :old_endcap_panel_product_split
+    @test layer_region.retention.expected_unit_family == :product_owned_unit
+    @test layer_region.retention.metric_capability == :product_staged_metric_contraction
+    @test isempty(layer_region.retention.missing_payload_fields)
+    @test layer_region.current_route_consumes
+    @test !layer_region.descriptor_drives_builder
+    @test !layer_region.descriptor_only
+    @test layer_region.geometry.q == 4
+    @test layer_region.geometry.L == 4
+    @test layer_region.geometry.unit_count == 6
+    @test layer_region.diagnostics.transitional_current_active_implementation
 
     @test size(default_source.sequence.coefficient_matrix) == (539, 347)
     @test size(endcap_source.sequence.coefficient_matrix) == (539, 313)
@@ -2338,7 +2475,6 @@ end
     @test all(isfinite, fixed_block.weights)
 
     CP = GaussletBases.CartesianParentGaussletBases
-    CCP = GaussletBases.CartesianContractedParents
     CCPM = GaussletBases.CartesianContractedParentMetrics
     CCS = GaussletBases.CartesianCarriedSpaces
     pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
