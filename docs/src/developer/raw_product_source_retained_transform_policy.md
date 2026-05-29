@@ -226,21 +226,36 @@ scaffold:
 - a private raw overlap packet;
 - a private toy raw `:axis_index_x` packet for the identity product/slab
   fixture;
+- private physical raw `:position_x`, `:position_y`, and `:position_z` packets
+  for that same identity product/slab fixture, consuming explicit 1D axis
+  metric data with non-integer positions;
 - private retained low-order blocks for materialized product/slab transforms.
 
 The retained-block calculations are intentionally tiny identity product/slab
-fixtures:
+fixtures. The baseline commits for this checkpoint are `8ba7ab4 Rename toy
+product packet axis index term` and `d0fb995 Add private physical product
+position packets`.
 
 ```text
 source dimension 4 -> retained dimension 4
 retained transform kind = :product_axis_transform
 T' * I_raw * T == I_4
 T' * axis_index_x_raw * T == diag(1, 1, 2, 2)
+T' * position_x_raw * T == diag(0.25, 0.25, 1.75, 1.75)
+T' * position_y_raw * T == diag(-0.5, 0.5, -0.5, 0.5)
+T' * position_z_raw * T == diag(3.25, 3.25, 3.25, 3.25)
 ```
 
 The `:axis_index_x` packet is a toy axis-index diagnostic for the fixture. It
 is not a physical `position_x` operator and should not be extended as if it
 were one.
+
+The private physical position packets are separate. They build raw matrices
+over raw product source support rows from explicit 1D axis metric data and do
+not build dense full-parent 3D matrices. Retained blocks are checked only
+where the retained transform is materialized, as in the identity product/slab
+fixture, and match the support-local fixture reference. This does not yet
+generalize physical position packets beyond that fixture.
 
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
@@ -258,11 +273,12 @@ raw_product_modes
 -> retained_columns
 ```
 
-Real physical raw source pair operator packets for position, kinetic, nuclear,
-Gaussian/local, interaction/MWG, and mixed product/PQS pairs need separate
-design. The current checkpoint changes no all-pairs matrix construction, QW or
-Hamiltonian path, public/default route, backend/default policy, PGDG or
-quadrature policy, CR2 path, or science status.
+General physical raw source pair operator packets beyond the identity
+product/slab fixture, plus kinetic, nuclear, Gaussian/local, interaction/MWG,
+and mixed product/PQS pairs, need separate design. The current checkpoint
+changes no all-pairs matrix construction, QW or Hamiltonian path,
+public/default route, backend/default policy, PGDG or quadrature policy, CR2
+path, or science status.
 
 ## Non-Goals
 

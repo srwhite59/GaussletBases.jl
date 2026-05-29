@@ -1023,15 +1023,27 @@ treated as positive-weight quadrature carriers.
 A private raw-source pair checkpoint now exists. It includes raw product source
 metadata, retained transform metadata, an upper-triangular pair plan, a
 resolved pair audit, a private raw overlap packet, a toy raw `:axis_index_x`
-packet for the identity product/slab fixture, and private retained low-order
-blocks for materialized product/slab transforms. The retained blocks are
-intentionally tiny: identity product/slab self-overlap and axis-index
-diagnostic checks with source dimension `4`, retained dimension `4`, transform
-kind `:product_axis_transform`, `T' * I_raw * T == I_4`, and
-`T' * axis_index_x_raw * T == diag(1, 1, 2, 2)`.
+packet for the identity product/slab fixture, private physical
+`:position_x/y/z` packets for that same fixture, and private retained low-order
+blocks for materialized product/slab transforms. The baseline commits are
+`8ba7ab4 Rename toy product packet axis index term` and `d0fb995 Add private
+physical product position packets`.
 
-The `:axis_index_x` packet is not a physical `position_x` operator. Real
-physical product/source position packets still require a separate design.
+The retained blocks are intentionally tiny: identity product/slab self-overlap,
+axis-index diagnostics, and non-integer physical-position checks with source
+dimension `4`, retained dimension `4`, transform kind
+`:product_axis_transform`, `T' * I_raw * T == I_4`,
+`T' * axis_index_x_raw * T == diag(1, 1, 2, 2)`,
+`T' * position_x_raw * T == diag(0.25, 0.25, 1.75, 1.75)`,
+`T' * position_y_raw * T == diag(-0.5, 0.5, -0.5, 0.5)`, and
+`T' * position_z_raw * T == diag(3.25, 3.25, 3.25, 3.25)`.
+
+The `:axis_index_x` packet is not a physical `position_x` operator. The
+private physical packets are separate, consume explicit 1D axis metric data,
+build raw matrices over raw product source support rows, avoid dense
+full-parent 3D matrices, and match a support-local fixture reference. They are
+not generalized beyond the identity product/slab fixture and are not
+production metric execution.
 
 This checkpoint does not apply PQS retained transforms. The PQS raw overlap
 packet remains raw packet/reference plumbing only. The PQS Lowdin cleanup
