@@ -13,6 +13,7 @@ import ..GaussletBases: _NestedFixedBlock3D,
                          primitive_set
 import ..GaussletBases.CartesianContractedParents:
     CartesianContractedParent3D,
+    _CartesianExecutableProjectedQShellPayload3D,
     _cartesian_resolved_contraction_payload,
     cartesian_contracted_parent,
     contracted_parent_contraction_rules,
@@ -399,6 +400,18 @@ function _metric_dispatch_unit_path_from_resolved_payload(payload)
             unsupported = false,
             prototype = false,
         )
+    elseif payload.ready_for_metric_execution &&
+           payload.payload_kind == :projected_q_shell &&
+           payload.metric_path == :pqs_low_order_support_local_reference
+        return (
+            family = :projected_q_shell_boundary_modes,
+            kind = payload.payload_kind,
+            metric_capability = payload.diagnostics.metric_capability,
+            linear_vector_path = payload.diagnostics.linear_vector_path,
+            block_role = payload.diagnostics.block_role,
+            unsupported = false,
+            prototype = false,
+        )
     end
     prototype =
         payload.metric_path == :unsupported_prototype ||
@@ -418,23 +431,46 @@ function _metric_dispatch_block_path(left_path, right_path)
     (left_path.unsupported || right_path.unsupported) && return :unsupported
     left_path.block_role == :product && right_path.block_role == :product &&
         return :product_product
+    left_path.block_role == :pqs && right_path.block_role == :pqs &&
+        return :pqs_pqs_low_order_reference
+    if (left_path.block_role == :pqs && right_path.block_role == :product) ||
+       (left_path.block_role == :product && right_path.block_role == :pqs)
+        return :unsupported_pqs_product_optimized
+    end
+    if (left_path.block_role == :pqs && right_path.block_role == :fallback) ||
+       (left_path.block_role == :fallback && right_path.block_role == :pqs)
+        return :pqs_support_local_reference
+    end
     return :support_local_fallback
 end
 
 function _metric_dispatch_plan_from_unit_paths(unit_paths; source::Symbol)
     product_unit_count = count(path -> path.block_role == :product, unit_paths)
     fallback_unit_count = count(path -> path.block_role == :fallback, unit_paths)
+    pqs_unit_count = count(path -> path.block_role == :pqs, unit_paths)
     unsupported_unit_count = count(path -> path.unsupported, unit_paths)
     prototype_rule_count = count(path -> path.prototype, unit_paths)
     block_paths = NamedTuple[]
     product_block_count = 0
     fallback_block_count = 0
+    pqs_pqs_block_count = 0
+    pqs_support_block_count = 0
+    pqs_product_unsupported_block_count = 0
     unsupported_block_count = 0
     for right_index in eachindex(unit_paths)
         for left_index in 1:right_index
             path = _metric_dispatch_block_path(unit_paths[left_index], unit_paths[right_index])
             path == :product_product && (product_block_count += 1)
             path == :support_local_fallback && (fallback_block_count += 1)
+            path == :pqs_pqs_low_order_reference && (pqs_pqs_block_count += 1)
+            path == :pqs_support_local_reference && begin
+                pqs_support_block_count += 1
+                fallback_block_count += 1
+            end
+            path == :unsupported_pqs_product_optimized && begin
+                pqs_product_unsupported_block_count += 1
+                unsupported_block_count += 1
+            end
             path == :unsupported && (unsupported_block_count += 1)
             push!(
                 block_paths,
@@ -449,12 +485,26 @@ function _metric_dispatch_plan_from_unit_paths(unit_paths; source::Symbol)
         block_paths = Tuple(block_paths),
         product_unit_count = product_unit_count,
         support_fallback_unit_count = fallback_unit_count,
+        pqs_unit_count = pqs_unit_count,
         unsupported_unit_count = unsupported_unit_count,
         prototype_rule_count = prototype_rule_count,
         product_product_block_count = product_block_count,
         fallback_block_count = fallback_block_count,
+        pqs_pqs_block_count = pqs_pqs_block_count,
+        pqs_support_block_count = pqs_support_block_count,
+        pqs_product_unsupported_block_count = pqs_product_unsupported_block_count,
         unsupported_block_count = unsupported_block_count,
         plan_supported = unsupported_unit_count == 0 && unsupported_block_count == 0,
+    )
+end
+
+function _metric_dispatch_plan_from_resolved_payloads(
+    payloads::AbstractVector;
+    source::Symbol = :resolved_payload_fixture,
+)
+    return _metric_dispatch_plan_from_unit_paths(
+        [_metric_dispatch_unit_path_from_resolved_payload(payload) for payload in payloads];
+        source,
     )
 end
 
@@ -721,6 +771,108 @@ function _staged_unit_entries(unit)
         end
     end
     return entries
+end
+
+function _entries_from_resolved_payload(payload)
+    payload.ready_for_metric_execution || throw(
+        ArgumentError("resolved payload $(payload.payload_kind) is not ready for metric execution"),
+    )
+    payload.payload_kind in (:projected_q_shell, :support_dense, :product_doside) || throw(
+        ArgumentError("unsupported resolved low-order metric payload kind $(payload.payload_kind)"),
+    )
+    return _staged_unit_entries(payload.payload)
+end
+
+function _resolved_payload_low_order_metric_block(left, right, metrics::NamedTuple{(:x,:y,:z)})
+    left_path = _metric_dispatch_unit_path_from_resolved_payload(left)
+    right_path = _metric_dispatch_unit_path_from_resolved_payload(right)
+    block_path = _metric_dispatch_block_path(left_path, right_path)
+    block_path == :unsupported && throw(
+        ArgumentError("resolved payload low-order metric block is unsupported"),
+    )
+    block_path == :unsupported_pqs_product_optimized && throw(
+        ArgumentError("PQS/product optimized metric blocks are not implemented; use an explicit support-local reference path"),
+    )
+
+    left_entries = _entries_from_resolved_payload(left)
+    right_entries = _entries_from_resolved_payload(right)
+    support_overlap = _contract_pair_block(
+        left_entries,
+        right_entries,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    same_pqs_payload =
+        left.payload_kind == :projected_q_shell &&
+        right.payload_kind == :projected_q_shell &&
+        left.payload === right.payload
+    overlap =
+        same_pqs_payload ?
+        Matrix{Float64}(LinearAlgebra.I, length(left_entries), length(right_entries)) :
+        support_overlap
+    position_x = _contract_pair_block(
+        left_entries,
+        right_entries,
+        metrics.x.position,
+        metrics.y.overlap,
+        metrics.z.overlap,
+    )
+    position_y = _contract_pair_block(
+        left_entries,
+        right_entries,
+        metrics.x.overlap,
+        metrics.y.position,
+        metrics.z.overlap,
+    )
+    position_z = _contract_pair_block(
+        left_entries,
+        right_entries,
+        metrics.x.overlap,
+        metrics.y.overlap,
+        metrics.z.position,
+    )
+    weights = same_pqs_payload ?
+              _contract_linear_vector(
+                  left_entries,
+                  metrics.x.weights,
+                  metrics.y.weights,
+                  metrics.z.weights,
+              ) : nothing
+    first_moments = same_pqs_payload ?
+                    _contracted_first_moments(left_entries, metrics) : nothing
+    return (
+        path = block_path,
+        overlap = overlap,
+        position_x = position_x,
+        position_y = position_y,
+        position_z = position_z,
+        weights = weights,
+        first_moments = first_moments,
+        diagnostics = (
+            source = :resolved_payload_low_order_metric_block,
+            block_path = block_path,
+            left_kind = left.payload_kind,
+            right_kind = right.payload_kind,
+            support_local_reference_used =
+                block_path in (:pqs_support_local_reference, :support_local_fallback),
+            pqs_self_overlap_invariant_applied = same_pqs_payload,
+            pqs_cross_overlap_identity_shortcut_used = false,
+            support_overlap_debug_error =
+                same_pqs_payload ?
+                LinearAlgebra.norm(support_overlap - LinearAlgebra.I, Inf) : nothing,
+            production_optimized_pqs_product_path = false,
+            supported_terms = (:overlap, :weights, :position_x, :position_y, :position_z),
+            unsupported_terms = (
+                :kinetic,
+                :x2,
+                :nuclear_one_body,
+                :gaussian_sum,
+                :pair_sum,
+                :interaction,
+            ),
+        ),
+    )
 end
 
 function _contract_pair_block(

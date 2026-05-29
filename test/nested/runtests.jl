@@ -158,6 +158,46 @@ end
         return any(axis -> mode[axis] == 1 || mode[axis] == sides[axis], 1:3)
     end
 
+    function _pqs_axis_metrics(bundles)
+        pgdg_x = GaussletBases._nested_axis_pgdg(bundles, :x)
+        pgdg_y = GaussletBases._nested_axis_pgdg(bundles, :y)
+        pgdg_z = GaussletBases._nested_axis_pgdg(bundles, :z)
+        return (
+            x = (
+                overlap = pgdg_x.overlap,
+                position = pgdg_x.position,
+                weights = pgdg_x.weights,
+                centers = pgdg_x.centers,
+                source = :nested_pgdg_axis,
+            ),
+            y = (
+                overlap = pgdg_y.overlap,
+                position = pgdg_y.position,
+                weights = pgdg_y.weights,
+                centers = pgdg_y.centers,
+                source = :nested_pgdg_axis,
+            ),
+            z = (
+                overlap = pgdg_z.overlap,
+                position = pgdg_z.position,
+                weights = pgdg_z.weights,
+                centers = pgdg_z.centers,
+                source = :nested_pgdg_axis,
+            ),
+        )
+    end
+
+    function _pqs_cross_product_matrix(left_states, right_states, mx, my, mz)
+        result = Matrix{Float64}(undef, length(left_states), length(right_states))
+        for right_index in eachindex(right_states), left_index in eachindex(left_states)
+            ix, iy, iz = left_states[left_index]
+            jx, jy, jz = right_states[right_index]
+            result[left_index, right_index] =
+                mx[ix, jx] * my[iy, jy] * mz[iz, jz]
+        end
+        return result
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     term_coefficients = Float64.(expansion.coefficients)
     bundle5 = _pqs_test_bundle(5)
@@ -421,6 +461,142 @@ end
     @test !cubic_product_metric.diagnostics.fixed_block_sidecar_installed
     @test !cubic_product_metric.diagnostics.optimized_sidecar_installed
     @test cubic_product_metric.diagnostics.prototype_only
+    cubic_pqs_payload = CCP._cartesian_executable_projected_q_shell_payload_fixture(
+        cubic_descriptor;
+        column_range = 1:98,
+        parent_dimension = 5 * 5 * 5,
+    )
+    @test cubic_pqs_payload.kind == :projected_q_shell
+    @test cubic_pqs_payload.column_range == 1:98
+    @test cubic_pqs_payload.support_indices == cubic.support_indices
+    @test cubic_pqs_payload.support_states == cubic.support_states
+    @test size(cubic_pqs_payload.coefficient_matrix) == (98, 98)
+    @test cubic_pqs_payload.diagnostics.fixture_only
+    @test !cubic_pqs_payload.diagnostics.fixed_block_sidecar_installed
+    @test !cubic_pqs_payload.diagnostics.default_builder_consumes
+    @test !cubic_pqs_payload.diagnostics.pqs_product_optimized_path_ready
+    cubic_pqs_resolved = CCP._cartesian_resolved_contraction_payload(
+        cubic_pqs_payload;
+        parent_dimension = 5 * 5 * 5,
+    )
+    @test cubic_pqs_resolved.metric_path == :pqs_low_order_support_local_reference
+    @test cubic_pqs_resolved.ready_for_metric_execution
+    @test cubic_pqs_resolved.payload_kind == :projected_q_shell
+    @test cubic_pqs_resolved.column_range == 1:98
+    @test isempty(cubic_pqs_resolved.missing_fields)
+    @test cubic_pqs_resolved.diagnostics.block_role == :pqs
+    @test cubic_pqs_resolved.diagnostics.metric_capability ==
+          :pqs_low_order_support_local_reference
+    @test !cubic_pqs_resolved.diagnostics.fixed_block_sidecar_installed
+    pqs_self_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
+        [cubic_pqs_resolved],
+    )
+    @test pqs_self_dispatch.plan_supported
+    @test pqs_self_dispatch.pqs_unit_count == 1
+    @test pqs_self_dispatch.pqs_pqs_block_count == 1
+    @test only(pqs_self_dispatch.block_paths).path == :pqs_pqs_low_order_reference
+    cubic_metrics = _pqs_axis_metrics(cubic_bundles)
+    pqs_self_block = CCPM._resolved_payload_low_order_metric_block(
+        cubic_pqs_resolved,
+        cubic_pqs_resolved,
+        cubic_metrics,
+    )
+    @test pqs_self_block.path == :pqs_pqs_low_order_reference
+    @test pqs_self_block.overlap == Matrix{Float64}(I, 98, 98)
+    @test pqs_self_block.weights ≈ cubic_product_metric.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test pqs_self_block.position_x ≈ cubic.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test pqs_self_block.position_y ≈ cubic.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test pqs_self_block.position_z ≈ cubic.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
+    support_coefficients = Matrix{Float64}(cubic_pqs_payload.coefficient_matrix)
+    expected_first_moments = hcat(
+        vec(
+            transpose(support_coefficients) * Float64[
+                cubic_metrics.x.centers[state[1]] *
+                cubic_metrics.x.weights[state[1]] *
+                cubic_metrics.y.weights[state[2]] *
+                cubic_metrics.z.weights[state[3]] for state in cubic.support_states
+            ],
+        ),
+        vec(
+            transpose(support_coefficients) * Float64[
+                cubic_metrics.x.weights[state[1]] *
+                cubic_metrics.y.centers[state[2]] *
+                cubic_metrics.y.weights[state[2]] *
+                cubic_metrics.z.weights[state[3]] for state in cubic.support_states
+            ],
+        ),
+        vec(
+            transpose(support_coefficients) * Float64[
+                cubic_metrics.x.weights[state[1]] *
+                cubic_metrics.y.weights[state[2]] *
+                cubic_metrics.z.centers[state[3]] *
+                cubic_metrics.z.weights[state[3]] for state in cubic.support_states
+            ],
+        ),
+    )
+    @test pqs_self_block.first_moments ≈ expected_first_moments atol = 1.0e-10 rtol = 1.0e-10
+    @test pqs_self_block.diagnostics.pqs_self_overlap_invariant_applied
+    @test pqs_self_block.diagnostics.support_overlap_debug_error < 1.0e-10
+    @test !pqs_self_block.diagnostics.production_optimized_pqs_product_path
+    support_dense_coefficients = zeros(Float64, 5 * 5 * 5, 2)
+    support_dense_coefficients[cubic.support_indices[1], 1] = 1.0
+    support_dense_coefficients[cubic.support_indices[end], 2] = 1.0
+    support_dense_unit = GaussletBases._nested_product_staged_generic_unit(
+        :pqs_mixed_reference,
+        support_dense_coefficients,
+        99:100,
+        (5, 5, 5),
+    )
+    support_dense_resolved = CCP._cartesian_resolved_contraction_payload(
+        support_dense_unit;
+        parent_dimension = 5 * 5 * 5,
+    )
+    pqs_mixed_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
+        [cubic_pqs_resolved, support_dense_resolved],
+    )
+    @test pqs_mixed_dispatch.plan_supported
+    @test pqs_mixed_dispatch.pqs_unit_count == 1
+    @test pqs_mixed_dispatch.support_fallback_unit_count == 1
+    @test pqs_mixed_dispatch.pqs_pqs_block_count == 1
+    @test pqs_mixed_dispatch.pqs_support_block_count == 1
+    @test :pqs_support_local_reference in [path.path for path in pqs_mixed_dispatch.block_paths]
+    @test CCPM._metric_dispatch_block_path(
+        (unsupported = false, block_role = :pqs),
+        (unsupported = false, block_role = :product),
+    ) == :unsupported_pqs_product_optimized
+    pqs_mixed_block = CCPM._resolved_payload_low_order_metric_block(
+        cubic_pqs_resolved,
+        support_dense_resolved,
+        cubic_metrics,
+    )
+    dense_coefficients = Matrix{Float64}(support_dense_unit.coefficient_matrix)
+    expected_mixed_overlap =
+        transpose(support_coefficients) *
+        _pqs_cross_product_matrix(
+            cubic.support_states,
+            support_dense_unit.support_states,
+            cubic_metrics.x.overlap,
+            cubic_metrics.y.overlap,
+            cubic_metrics.z.overlap,
+        ) *
+        dense_coefficients
+    expected_mixed_position_x =
+        transpose(support_coefficients) *
+        _pqs_cross_product_matrix(
+            cubic.support_states,
+            support_dense_unit.support_states,
+            cubic_metrics.x.position,
+            cubic_metrics.y.overlap,
+            cubic_metrics.z.overlap,
+        ) *
+        dense_coefficients
+    @test pqs_mixed_block.path == :pqs_support_local_reference
+    @test pqs_mixed_block.overlap ≈ expected_mixed_overlap atol = 1.0e-12 rtol = 1.0e-12
+    @test pqs_mixed_block.position_x ≈ expected_mixed_position_x atol = 1.0e-12 rtol = 1.0e-12
+    @test pqs_mixed_block.weights === nothing
+    @test pqs_mixed_block.first_moments === nothing
+    @test pqs_mixed_block.diagnostics.support_local_reference_used
+    @test !pqs_mixed_block.diagnostics.pqs_self_overlap_invariant_applied
 
     rectangular_bundles = GaussletBases._CartesianNestedAxisBundles3D(
         bundle5,

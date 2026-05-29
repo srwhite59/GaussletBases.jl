@@ -10,6 +10,7 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _NestedFixedBlock3D,
                          _cartesian_coefficient_map_storage,
+                         _nested_projected_q_shell_descriptor_seed_coefficients,
                          _nested_staged_by_center_sidecar
 import ..GaussletBases.CartesianParentGaussletBases:
     CartesianParentGaussletBasis3D,
@@ -193,6 +194,34 @@ struct _CartesianResolvedContractionPayload3D{S,H,D,P}
     missing_fields::Tuple{Vararg{Symbol}}
     diagnostics::D
     provenance::P
+end
+
+"""
+    _CartesianExecutableProjectedQShellPayload3D
+
+Private executable fixture for a projected q-shell descriptor. This is not a
+fixed-block sidecar and is not consumed by default routes; it is only the first
+resolved-payload shape needed to prove PQS metric dispatch contracts.
+"""
+struct _CartesianExecutableProjectedQShellPayload3D{C,D,P}
+    kind::Symbol
+    role::Union{Nothing,Symbol}
+    column_range::UnitRange{Int}
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    coefficient_matrix::_CartesianCoefficientMap
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D
+    current_box::NTuple{3,UnitRange{Int}}
+    inner_box::NTuple{3,UnitRange{Int}}
+    q::Int
+    L::Int
+    bond_axis::Symbol
+    axis_intervals::NTuple{3,UnitRange{Int}}
+    boundary_mode_indices::Vector{NTuple{3,Int}}
+    boundary_column_indices::Vector{Int}
+    cleanup_transform::C
+    cleanup_diagnostics::D
+    diagnostics::P
 end
 
 function _contraction_rule_support_summary(
@@ -1258,6 +1287,146 @@ function _cartesian_resolved_contraction_payload(
         (
             source = :projected_q_shell_staged_unit_descriptor,
             contraction_rule = rule,
+        ),
+    )
+end
+
+function _cartesian_executable_projected_q_shell_payload_fixture(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    column_range::UnitRange{Int},
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("projected q-shell executable payload fixture requires a projected_q_shell descriptor"),
+    )
+    length(column_range) == descriptor.retained_count || throw(
+        DimensionMismatch("projected q-shell executable payload column range must match retained count"),
+    )
+    first(column_range) >= 1 || throw(
+        ArgumentError("projected q-shell executable payload column range must start at a positive index"),
+    )
+    descriptor.cleanup_rank_drop_count == 0 || throw(
+        ArgumentError("projected q-shell executable payload requires full-rank symmetric Lowdin cleanup"),
+    )
+    size(descriptor.cleanup_transform) == descriptor.cleanup_matrix_size || throw(
+        DimensionMismatch("projected q-shell executable payload cleanup transform has inconsistent dimensions"),
+    )
+    descriptor.cleanup_matrix_size == (descriptor.mode_count, descriptor.retained_count) ||
+        throw(
+            DimensionMismatch("projected q-shell executable payload cleanup dimensions must match mode/retained counts"),
+        )
+    support_summary = _contraction_rule_support_summary(
+        descriptor.support_indices;
+        parent_dimension,
+    )
+    support_summary.outside_count in (nothing, 0) || throw(
+        ArgumentError("projected q-shell executable payload support lies outside the parent dimension"),
+    )
+    seed = _nested_projected_q_shell_descriptor_seed_coefficients(descriptor)
+    size(seed) == (descriptor.support_count, descriptor.mode_count) || throw(
+        DimensionMismatch("projected q-shell seed coefficient shape does not match descriptor metadata"),
+    )
+    support_coefficients = Matrix{Float64}(seed * descriptor.cleanup_transform)
+    size(support_coefficients) == (descriptor.support_count, descriptor.retained_count) ||
+        throw(
+            DimensionMismatch("projected q-shell executable payload coefficient shape does not match descriptor metadata"),
+        )
+    all(isfinite, support_coefficients) || throw(
+        ArgumentError("projected q-shell executable payload coefficients must be finite"),
+    )
+    diagnostics = (
+        source = :projected_q_shell_executable_payload_fixture,
+        fixture_only = true,
+        fixed_block_sidecar_installed = false,
+        default_builder_consumes = false,
+        metric_packet_consumes = false,
+        support_summary = support_summary,
+        support_count = descriptor.support_count,
+        mode_count = descriptor.mode_count,
+        retained_count = descriptor.retained_count,
+        cleanup_method = descriptor.cleanup_method,
+        cleanup_rank_count = descriptor.cleanup_rank_count,
+        cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
+        cleanup_cutoff = descriptor.cleanup_cutoff,
+        metric_capability = :pqs_low_order_support_local_reference,
+        supported_metric_terms = (:overlap, :weights, :position_x, :position_y, :position_z),
+        unsupported_metric_terms = (
+            :kinetic,
+            :x2,
+            :nuclear_one_body,
+            :gaussian_sum,
+            :pair_sum,
+            :interaction,
+        ),
+        pqs_product_optimized_path_ready = false,
+    )
+    return _CartesianExecutableProjectedQShellPayload3D(
+        :projected_q_shell,
+        descriptor.role,
+        column_range,
+        copy(descriptor.support_indices),
+        copy(descriptor.support_states),
+        _cartesian_coefficient_map_storage(support_coefficients),
+        descriptor,
+        descriptor.current_box,
+        descriptor.inner_box,
+        descriptor.q,
+        descriptor.L,
+        descriptor.bond_axis,
+        descriptor.axis_intervals,
+        copy(descriptor.boundary_mode_indices),
+        copy(descriptor.boundary_column_indices),
+        Matrix{Float64}(descriptor.cleanup_transform),
+        (
+            method = descriptor.cleanup_method,
+            matrix_size = descriptor.cleanup_matrix_size,
+            eigenvalues = Float64[value for value in descriptor.cleanup_eigenvalues],
+            rank_count = descriptor.cleanup_rank_count,
+            rank_drop_count = descriptor.cleanup_rank_drop_count,
+            cutoff = descriptor.cleanup_cutoff,
+        ),
+        diagnostics,
+    )
+end
+
+function _cartesian_resolved_contraction_payload(
+    payload::_CartesianExecutableProjectedQShellPayload3D;
+    parent_dimension::Union{Nothing,Int} = nothing,
+)
+    support_summary = _contraction_rule_support_summary(
+        payload.support_indices;
+        parent_dimension,
+    )
+    support_summary.outside_count in (nothing, 0) || throw(
+        ArgumentError("projected q-shell resolved payload support lies outside the parent dimension"),
+    )
+    return _CartesianResolvedContractionPayload3D(
+        :pqs_low_order_support_local_reference,
+        true,
+        payload.kind,
+        payload.column_range,
+        copy(payload.support_indices),
+        copy(payload.support_states),
+        payload,
+        (),
+        (
+            source = :projected_q_shell_executable_payload_fixture,
+            rule_family = :projected_q_shell_boundary_modes,
+            rule_kind = payload.kind,
+            metric_capability = :pqs_low_order_support_local_reference,
+            linear_vector_path = :pqs_support_local_reference,
+            block_role = :pqs,
+            unsupported = false,
+            prototype = false,
+            fixture_only = true,
+            payload_ready_for_current_metric_execution = true,
+            default_builder_consumes = false,
+            fixed_block_sidecar_installed = false,
+            support_summary = support_summary,
+        ),
+        (
+            source = :projected_q_shell_executable_payload_fixture,
+            descriptor = payload.descriptor,
         ),
     )
 end
