@@ -18,6 +18,7 @@ export CartesianContractionUnit3D,
        CartesianContractedParentStructuralAudit,
        cartesian_contraction_rule,
        cartesian_contraction_rule_inventory,
+       cartesian_contraction_unit_from_rule,
        cartesian_contracted_parent,
        contracted_parent_contraction_rules,
        contracted_parent_rule_inventory,
@@ -397,6 +398,46 @@ function CartesianContractionUnit3D(
     )
 end
 
+function cartesian_contraction_unit_from_rule(
+    rule::CartesianContractionRule3D,
+    payload::_CartesianNestedProductStagedByCenterUnit3D;
+    metadata = (;),
+)
+    rule.kind == payload.kind || throw(
+        ArgumentError("contraction rule kind $(rule.kind) does not match staged payload kind $(payload.kind)"),
+    )
+    rule.role == payload.role || throw(
+        ArgumentError("contraction rule role $(rule.role) does not match staged payload role $(payload.role)"),
+    )
+    rule.support_indices == payload.support_indices || throw(
+        ArgumentError("contraction rule support does not match staged payload support"),
+    )
+    rule.column_range == payload.column_range || throw(
+        ArgumentError("contraction rule column range does not match staged payload column range"),
+    )
+    rule.retained_dimension == length(payload.column_range) || throw(
+        ArgumentError("contraction rule retained dimension does not match staged payload column range"),
+    )
+    return CartesianContractionUnit3D(
+        payload.role,
+        payload.support_indices,
+        payload.column_range;
+        metadata = merge(
+            (
+                source = :nested_product_staged_by_center_sidecar,
+                rule_driven_unit_creation = true,
+                rule_family = rule.rule_family,
+                rule_kind = rule.kind,
+                rule_metric_capability = rule.metric_capability,
+                staged_by_center_kind = payload.kind,
+                staged_by_center_unit = payload,
+                contraction_rule = rule,
+            ),
+            metadata,
+        ),
+    )
+end
+
 function cartesian_contraction_rule(
     unit::CartesianContractionUnit3D;
     parent_dimension::Union{Nothing,Int} = nothing,
@@ -492,19 +533,9 @@ function _contracted_parent_units_from_staged_sidecar(sidecar)
     if hasproperty(sidecar, :units)
         parent_dim = hasproperty(sidecar, :dims) ? prod(sidecar.dims) : nothing
         return CartesianContractionUnit3D[
-            CartesianContractionUnit3D(
-                unit.role,
-                unit.support_indices,
-                unit.column_range;
-                metadata = (
-                    source = :nested_product_staged_by_center_sidecar,
-                    staged_by_center_kind = unit.kind,
-                    staged_by_center_unit = unit,
-                    contraction_rule = cartesian_contraction_rule(
-                        unit;
-                        parent_dimension = parent_dim,
-                    ),
-                ),
+            cartesian_contraction_unit_from_rule(
+                cartesian_contraction_rule(unit; parent_dimension = parent_dim),
+                unit,
             ) for unit in sidecar.units
         ]
     elseif hasproperty(sidecar, :block_column_ranges)

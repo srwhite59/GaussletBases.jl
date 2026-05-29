@@ -2359,15 +2359,44 @@ end
     )
     contracted_parent = CCP.cartesian_contracted_parent(fixed_block)
     sidecar_units = fixed_block.staged_by_center_sidecar[].units
+    parent_dim = CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent))
+    rule_built_units = [
+        CCP.cartesian_contraction_unit_from_rule(
+            CCP.cartesian_contraction_rule(sidecar_unit; parent_dimension = parent_dim),
+            sidecar_unit,
+        ) for sidecar_unit in sidecar_units
+    ]
     @test CCP.contracted_parent_metadata(contracted_parent).staged_by_center_path ==
         :product_staged_factorized
     @test length(CCP.contracted_parent_units(contracted_parent)) == length(sidecar_units)
+    @test length(rule_built_units) == length(sidecar_units)
     @test first(CCP.contracted_parent_units(contracted_parent)).metadata.staged_by_center_unit ===
         first(sidecar_units)
+    for (sidecar_unit, rule_unit, adapted_unit) in zip(
+        sidecar_units,
+        rule_built_units,
+        CCP.contracted_parent_units(contracted_parent),
+    )
+        @test rule_unit.role == sidecar_unit.role
+        @test rule_unit.support_indices == sidecar_unit.support_indices
+        @test rule_unit.column_range == sidecar_unit.column_range
+        @test adapted_unit.role == rule_unit.role
+        @test adapted_unit.support_indices == rule_unit.support_indices
+        @test adapted_unit.column_range == rule_unit.column_range
+        @test adapted_unit.metadata.staged_by_center_unit === sidecar_unit
+        @test adapted_unit.metadata.contraction_rule.kind == sidecar_unit.kind
+        @test adapted_unit.metadata.rule_driven_unit_creation
+        @test adapted_unit.metadata.rule_family ==
+              adapted_unit.metadata.contraction_rule.rule_family
+        @test adapted_unit.metadata.rule_kind ==
+              adapted_unit.metadata.contraction_rule.kind
+        @test adapted_unit.metadata.rule_metric_capability ==
+              adapted_unit.metadata.contraction_rule.metric_capability
+    end
     contraction_rules = [
         CCP.contraction_unit_rule(
             unit;
-            parent_dimension = CP.parent_dimension(CCP.contracted_parent_basis(contracted_parent)),
+            parent_dimension = parent_dim,
         ) for unit in CCP.contracted_parent_units(contracted_parent)
     ]
     product_rules = filter(
