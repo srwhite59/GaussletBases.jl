@@ -13,6 +13,7 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _NestedFixedBlock3D,
                          _cartesian_coefficient_map_storage,
+                         _cartesian_unflat_index,
                          _nested_parent_axis_counts,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _nested_projected_q_shell_staged_unit_descriptor,
@@ -2383,6 +2384,21 @@ function _cartesian_raw_product_source_pair_plan_audit(
     return _CartesianRawProductSourcePairPlanAudit3D(resolved_pairs, diagnostics)
 end
 
+function _cartesian_require_raw_pair_supported_term(
+    resolved_pair::_CartesianResolvedRawProductSourcePair3D,
+    term::Symbol;
+    helper::Symbol,
+)
+    term in resolved_pair.pair_packet.supported_terms && return nothing
+    throw(
+        ArgumentError(
+            "private raw packet helper $(helper) cannot build term $(repr(term)); " *
+            "resolved pair $(resolved_pair.pair_key) advertises supported_terms = " *
+            repr(resolved_pair.pair_packet.supported_terms),
+        ),
+    )
+end
+
 function _cartesian_raw_low_order_operator_packet(
     resolved_pair::_CartesianResolvedRawProductSourcePair3D;
     term::Symbol,
@@ -2390,6 +2406,11 @@ function _cartesian_raw_low_order_operator_packet(
 )
     term in (:overlap, :axis_index_x) || throw(
         ArgumentError("private raw low-order packet currently supports only :overlap and :axis_index_x"),
+    )
+    _cartesian_require_raw_pair_supported_term(
+        resolved_pair,
+        term;
+        helper = :private_raw_low_order_operator_packet,
     )
     resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
         ArgumentError("private raw low-order packet currently supports only self-pairs"),
@@ -2551,13 +2572,7 @@ function _cartesian_raw_source_support_states(raw_source::_CartesianRawProductSo
         1 <= index <= parent_dimension || throw(
             ArgumentError("raw source support index lies outside parent dimensions"),
         )
-        shifted = index - 1
-        plane = ny * nz
-        ix = shifted ÷ plane + 1
-        remainder = shifted % plane
-        iy = remainder ÷ nz + 1
-        iz = remainder % nz + 1
-        push!(states, (ix, iy, iz))
+        push!(states, _cartesian_unflat_index(index, raw_source.parent_dims))
     end
     return states
 end
@@ -2616,6 +2631,11 @@ function _cartesian_physical_raw_low_order_operator_packet(
     backend::Symbol = :private_raw_product_reference,
 )
     position_axis = _cartesian_physical_position_axis(term)
+    _cartesian_require_raw_pair_supported_term(
+        resolved_pair,
+        term;
+        helper = :private_physical_raw_low_order_operator_packet,
+    )
     resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
         ArgumentError("private physical raw low-order packet currently supports only self-pairs"),
     )

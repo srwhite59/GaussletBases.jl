@@ -964,7 +964,7 @@ end
     mixed_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
         (installed_source_transform, product_source_transform);
         operator_kind = :low_order_metric,
-        supported_terms = (:overlap, :axis_index_x),
+        supported_terms = (:overlap, :axis_index_x, :position_x, :position_y, :position_z),
         source = :pqs_product_raw_source_pair_plan_test,
     )
     mixed_source_ids = sort!(
@@ -1025,6 +1025,24 @@ end
         pair for pair in mixed_resolved_pairs
         if pair.pair_key == (:identity_product_slab_source, :identity_product_slab_source)
     )
+    position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform,);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :axis_index_x),
+        source = :position_omitting_product_raw_source_pair_plan_test,
+    )
+    position_omitting_pair = only(
+        CCP._cartesian_resolved_raw_product_source_pairs(position_omitting_pair_plan)
+    )
+    axis_index_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (product_source_transform,);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :position_x, :position_y, :position_z),
+        source = :axis_index_omitting_product_raw_source_pair_plan_test,
+    )
+    axis_index_omitting_pair = only(
+        CCP._cartesian_resolved_raw_product_source_pairs(axis_index_omitting_pair_plan)
+    )
     product_raw_overlap_packet = CCP._cartesian_raw_low_order_operator_packet(
         product_self_pair;
         term = :overlap,
@@ -1060,6 +1078,10 @@ end
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
         product_self_pair;
         term = :position_x,
+    )
+    @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
+        axis_index_omitting_pair;
+        term = :axis_index_x,
     )
     @test_throws ArgumentError CCP._cartesian_raw_low_order_operator_packet(
         pqs_resolved_pair;
@@ -1161,6 +1183,11 @@ end
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         pqs_resolved_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        position_omitting_pair;
         term = :position_x,
         axis_metrics = physical_axis_metrics,
     )
