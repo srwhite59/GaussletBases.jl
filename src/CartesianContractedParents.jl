@@ -271,9 +271,11 @@ end
     _CartesianRetainedTransform3D
 
 Private metadata-only retained transform description for one raw product
-source. `transform_matrix === nothing` is the explicit identity/no-matrix
-case. Non-identity transforms must carry an explicit weight role so IDA-like
-weight division is never inferred silently.
+source. `transform_matrix === nothing` means the full raw-to-retained
+transform is not materialized; callers must inspect `transform_kind`,
+`transform_stages`, and diagnostics such as
+`full_raw_to_retained_matrix_materialized`. Non-identity transforms must carry
+an explicit weight role so IDA-like weight division is never inferred silently.
 """
 struct _CartesianRetainedTransform3D{M,C,P,D}
     source_id::Symbol
@@ -2386,8 +2388,8 @@ function _cartesian_raw_low_order_operator_packet(
     term::Symbol,
     backend::Symbol = :private_raw_product_reference,
 )
-    term in (:overlap, :position_x) || throw(
-        ArgumentError("private raw low-order packet currently supports only :overlap and :position_x"),
+    term in (:overlap, :axis_index_x) || throw(
+        ArgumentError("private raw low-order packet currently supports only :overlap and :axis_index_x"),
     )
     resolved_pair.pair_key[1] == resolved_pair.pair_key[2] || throw(
         ArgumentError("private raw low-order packet currently supports only self-pairs"),
@@ -2405,7 +2407,7 @@ function _cartesian_raw_low_order_operator_packet(
             norm(identity_matrix - Matrix{Float64}(I, left_dimension, right_dimension), Inf),
         )
     else
-        _cartesian_identity_product_slab_position_x_packet_matrix(
+        _cartesian_identity_product_slab_axis_index_x_packet_matrix(
             resolved_pair.left_raw_source,
         )
     end
@@ -2432,7 +2434,9 @@ function _cartesian_raw_low_order_operator_packet(
             raw_operator_matrix_built = true,
             retained_operator_block_built = false,
             retained_transform_applied = false,
-            separable_axis_metadata_used = term == :position_x,
+            separable_axis_metadata_used = term == :axis_index_x,
+            axis_index_diagnostic = term == :axis_index_x,
+            physical_position_operator = false,
             dense_parent_matrix_used = false,
             all_pair_matrices_built = false,
             metric_execution_changed = false,
@@ -2445,18 +2449,18 @@ function _cartesian_raw_low_order_operator_packet(
     )
 end
 
-function _cartesian_identity_product_slab_position_x_packet_matrix(
+function _cartesian_identity_product_slab_axis_index_x_packet_matrix(
     raw_source::_CartesianRawProductSource3D,
 )
     raw_source.source_id == :identity_product_slab_source || throw(
-        ArgumentError("private :position_x raw packet is restricted to the identity product/slab fixture"),
+        ArgumentError("private :axis_index_x raw packet is restricted to the identity product/slab fixture"),
     )
     hasproperty(raw_source.provenance, :unit) || throw(
-        ArgumentError("identity product/slab :position_x packet requires staged-unit provenance"),
+        ArgumentError("identity product/slab :axis_index_x packet requires staged-unit provenance"),
     )
     unit = raw_source.provenance.unit
     unit.kind == :product_doside || throw(
-        ArgumentError("identity product/slab :position_x packet requires a product_doside unit"),
+        ArgumentError("identity product/slab :axis_index_x packet requires a product_doside unit"),
     )
     length(unit.axis_function_indices) == raw_source.source_dimension || throw(
         DimensionMismatch("axis-function metadata must match the raw source dimension"),
@@ -2477,7 +2481,7 @@ function _cartesian_identity_product_slab_position_x_packet_matrix(
     end
     return (
         matrix,
-        :identity_product_slab_separable_axis_index_position_x,
+        :identity_product_slab_axis_index_x,
         norm(matrix - support_reference, Inf),
     )
 end
@@ -2509,8 +2513,8 @@ function _cartesian_retained_low_order_operator_block(
     left_transform::_CartesianRetainedTransform3D,
     right_transform::_CartesianRetainedTransform3D = left_transform,
 )
-    raw_packet.term in (:overlap, :position_x) || throw(
-        ArgumentError("private retained low-order block currently supports only :overlap and :position_x"),
+    raw_packet.term in (:overlap, :axis_index_x) || throw(
+        ArgumentError("private retained low-order block currently supports only :overlap and :axis_index_x"),
     )
     raw_packet.left_source_id == left_transform.source_id || throw(
         ArgumentError("left retained transform source id does not match raw packet"),

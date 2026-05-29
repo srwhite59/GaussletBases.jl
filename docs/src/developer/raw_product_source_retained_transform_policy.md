@@ -224,17 +224,23 @@ scaffold:
 - an upper-triangular raw source pair plan;
 - a resolved raw source pair audit;
 - a private raw overlap packet;
-- a private retained low-order overlap block for materialized product/slab
-  transforms.
+- a private toy raw `:axis_index_x` packet for the identity product/slab
+  fixture;
+- private retained low-order blocks for materialized product/slab transforms.
 
-The only retained-block calculation is the identity product/slab self-overlap
-fixture:
+The retained-block calculations are intentionally tiny identity product/slab
+fixtures:
 
 ```text
 source dimension 4 -> retained dimension 4
 retained transform kind = :product_axis_transform
 T' * I_raw * T == I_4
+T' * axis_index_x_raw * T == diag(1, 1, 2, 2)
 ```
+
+The `:axis_index_x` packet is a toy axis-index diagnostic for the fixture. It
+is not a physical `position_x` operator and should not be extended as if it
+were one.
 
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
@@ -252,7 +258,7 @@ raw_product_modes
 -> retained_columns
 ```
 
-Nontrivial raw source pair operator packets for position, kinetic, nuclear,
+Real physical raw source pair operator packets for position, kinetic, nuclear,
 Gaussian/local, interaction/MWG, and mixed product/PQS pairs need separate
 design. The current checkpoint changes no all-pairs matrix construction, QW or
 Hamiltonian path, public/default route, backend/default policy, PGDG or

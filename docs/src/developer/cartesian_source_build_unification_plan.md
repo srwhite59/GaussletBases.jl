@@ -1022,11 +1022,16 @@ treated as positive-weight quadrature carriers.
 
 A private raw-source pair checkpoint now exists. It includes raw product source
 metadata, retained transform metadata, an upper-triangular pair plan, a
-resolved pair audit, a private raw overlap packet, and one private retained
-low-order overlap block for materialized product/slab transforms. The retained
-block is intentionally tiny: identity product/slab self-overlap with source
-dimension `4`, retained dimension `4`, transform kind
-`:product_axis_transform`, and `T' * I_raw * T == I_4`.
+resolved pair audit, a private raw overlap packet, a toy raw `:axis_index_x`
+packet for the identity product/slab fixture, and private retained low-order
+blocks for materialized product/slab transforms. The retained blocks are
+intentionally tiny: identity product/slab self-overlap and axis-index
+diagnostic checks with source dimension `4`, retained dimension `4`, transform
+kind `:product_axis_transform`, `T' * I_raw * T == I_4`, and
+`T' * axis_index_x_raw * T == diag(1, 1, 2, 2)`.
+
+The `:axis_index_x` packet is not a physical `position_x` operator. Real
+physical product/source position packets still require a separate design.
 
 This checkpoint does not apply PQS retained transforms. The PQS raw overlap
 packet remains raw packet/reference plumbing only. The PQS Lowdin cleanup
