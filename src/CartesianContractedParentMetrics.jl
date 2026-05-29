@@ -841,6 +841,63 @@ function _product_doside_retained_kinetic_block(
     )
 end
 
+function _product_doside_retained_kinetic_shadow_matrix(
+    units,
+    axis_ops::NamedTuple{(:x,:y,:z)};
+    final_dimension = nothing,
+)
+    product_units = [unit for unit in units if unit.kind == :product_doside]
+    !isempty(product_units) || throw(
+        ArgumentError("product-only kinetic shadow matrix requires at least one product_doside unit"),
+    )
+    resolved_final_dimension = if isnothing(final_dimension)
+        maximum(last(unit.column_range) for unit in units)
+    else
+        Int(final_dimension)
+    end
+    max_product_column = maximum(last(unit.column_range) for unit in product_units)
+    max_product_column <= resolved_final_dimension || throw(
+        ArgumentError("product-only kinetic shadow matrix final dimension does not cover product columns"),
+    )
+    kinetic = zeros(Float64, resolved_final_dimension, resolved_final_dimension)
+    product_block_count = 0
+    for right_index in eachindex(product_units)
+        right_unit = product_units[right_index]
+        for left_index in 1:right_index
+            left_unit = product_units[left_index]
+            block = _product_doside_retained_kinetic_block(
+                left_unit,
+                right_unit,
+                axis_ops,
+            )
+            kinetic[left_unit.column_range, right_unit.column_range] .= block
+            if left_index != right_index
+                kinetic[right_unit.column_range, left_unit.column_range] .= transpose(block)
+            end
+            product_block_count += 1
+        end
+    end
+    return (
+        kinetic = kinetic,
+        product_units = product_units,
+        diagnostics = (
+            source = :product_doside_retained_kinetic_shadow_matrix,
+            product_only_shadow = true,
+            full_kinetic_packet = false,
+            support_dense_blocks_absent = true,
+            mixed_blocks_absent = true,
+            default_execution_changed = false,
+            qwhamiltonian_consumes = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            cr2_science_status_changed = false,
+            product_unit_count = length(product_units),
+            product_block_count = product_block_count,
+            final_dimension = resolved_final_dimension,
+        ),
+    )
+end
+
 function _fill_product_staged_metric_blocks!(
     overlap::Matrix{Float64},
     position_x::Matrix{Float64},

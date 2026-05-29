@@ -5190,17 +5190,34 @@ end
     ]
     @test length(kinetic_product_units) ==
           fixed_block.staged_by_center_sidecar[].diagnostics.product_unit_count
+    kinetic_shadow_packet = CCPM._product_doside_retained_kinetic_shadow_matrix(
+        sidecar_units,
+        kinetic_axis_ops;
+        final_dimension = size(fixed_block.kinetic, 1),
+    )
+    @test kinetic_shadow_packet.product_units == kinetic_product_units
+    @test size(kinetic_shadow_packet.kinetic) == size(fixed_block.kinetic)
+    @test kinetic_shadow_packet.diagnostics.product_only_shadow
+    @test !kinetic_shadow_packet.diagnostics.full_kinetic_packet
+    @test kinetic_shadow_packet.diagnostics.support_dense_blocks_absent
+    @test kinetic_shadow_packet.diagnostics.mixed_blocks_absent
+    @test !kinetic_shadow_packet.diagnostics.default_execution_changed
+    @test !kinetic_shadow_packet.diagnostics.qwhamiltonian_consumes
+    @test !kinetic_shadow_packet.diagnostics.backend_policy_changed
+    @test !kinetic_shadow_packet.diagnostics.quadrature_policy_changed
+    @test !kinetic_shadow_packet.diagnostics.cr2_science_status_changed
+    @test kinetic_shadow_packet.diagnostics.product_unit_count ==
+          length(kinetic_product_units)
+    @test kinetic_shadow_packet.diagnostics.final_dimension ==
+          size(fixed_block.kinetic, 1)
     kinetic_shadow_block_count = 0
     kinetic_shadow_errors = Float64[]
     for right_index in eachindex(kinetic_product_units)
         right = kinetic_product_units[right_index]
         for left_index in 1:right_index
             left = kinetic_product_units[left_index]
-            kinetic_shadow_block = CCPM._product_doside_retained_kinetic_block(
-                left,
-                right,
-                kinetic_axis_ops,
-            )
+            kinetic_shadow_block =
+                kinetic_shadow_packet.kinetic[left.column_range, right.column_range]
             kinetic_reference_block =
                 fixed_block.kinetic[left.column_range, right.column_range]
             push!(
@@ -5218,7 +5235,18 @@ end
     end
     @test kinetic_shadow_block_count ==
           length(kinetic_product_units) * (length(kinetic_product_units) + 1) ÷ 2
+    @test kinetic_shadow_packet.diagnostics.product_block_count ==
+          kinetic_shadow_block_count
     @test maximum(kinetic_shadow_errors) <= 1.0e-10
+    product_columns = Int[]
+    for unit in kinetic_product_units
+        append!(product_columns, unit.column_range)
+    end
+    product_columns = sort(unique(product_columns))
+    nonproduct_columns = setdiff(1:size(fixed_block.kinetic, 1), product_columns)
+    @test !isempty(nonproduct_columns)
+    @test maximum(abs.(kinetic_shadow_packet.kinetic[nonproduct_columns, :])) == 0.0
+    @test maximum(abs.(kinetic_shadow_packet.kinetic[:, nonproduct_columns])) == 0.0
 
     carried = CCS.cartesian_carried_space(fixed_block)
     carried_parent = CCS.carried_space_parent(carried)
