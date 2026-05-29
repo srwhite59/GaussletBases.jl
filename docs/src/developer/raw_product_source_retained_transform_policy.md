@@ -234,7 +234,12 @@ scaffold:
 - product/product cross-pair physical position packets for same-support
   identity/nonidentity fixtures;
 - product/product cross-pair physical position packets for distinct shifted
-  supports with nontrivial explicit axis metrics.
+  supports with nontrivial explicit axis metrics;
+- private factorized product/doside raw packets for `:overlap` and physical
+  `:position_x`, `:position_y`, and `:position_z`, built from explicit 1D axis
+  factors over staged local intervals;
+- private retained-block comparisons against the existing product-staged metric
+  block kernel for overlap and physical position terms.
 
 The retained-block calculations are intentionally tiny product/slab fixtures.
 The baseline commits for the raw-packet line include `8ba7ab4 Rename toy
@@ -242,7 +247,10 @@ product packet axis index term`, `d0fb995 Add private physical product position
 packets`, `3ef0fa1 Generalize private physical product packets`, `9589f9a Test
 nonidentity product retained position blocks`, `26f88d6 Add private product
 cross position packets`, and `c6d4f41 Test product cross packets on distinct
-supports`.
+supports`. The factorized packet checkpoint continues through `107e68c Add
+private factorized product overlap packets`, `3c1eb95 Add private factorized
+product position packets`, and `1c28f8f Compare factorized product packets to
+staged metrics`.
 
 ```text
 source dimension 4 -> retained dimension 4
@@ -267,15 +275,25 @@ same-support product/product cross pairs, and distinct-support product/product
 cross pairs. All of these remain fixture/reference checks, not production
 metric execution.
 
+The private factorized product/doside packets are the next validation layer.
+They build materialized raw support-row matrices for these small fixtures, but
+the entries are assembled from explicit 1D overlap/position factors restricted
+to staged local intervals. Retained blocks are then checked with the same
+`T_left' * O_raw * T_right` algebra and compared against
+`_fill_product_staged_metric_blocks!(...)`, the existing product-staged
+retained metric block kernel. This proves the low-order product/product
+factorization for the private fixtures; it is still not a large-region fast
+operator assembly path.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
 as the full raw-to-retained transform. PQS/product mixed retained blocks remain
-unsupported. Support-dense mixed packets, optimized product/product
-contraction, all-pairs matrix construction, kinetic, nuclear/local, Gaussian,
-MWG, interaction, QW/Hamiltonian, public/default, backend/default,
-PGDG/quadrature, CR2, and science/energy behavior remain unchanged and
-unsupported by this private fixture line.
+unsupported. Support-dense mixed packets, production product/product
+operator assembly, all-pairs matrix construction, kinetic, nuclear/local,
+Gaussian, MWG, interaction, QW/Hamiltonian, public/default, backend/default,
+PGDG/quadrature, CR2, and science/energy behavior remain unchanged and outside
+this private fixture line.
 
 Before any PQS retained-block execution, the code needs an explicit way to
 represent or resolve the full factored PQS transform:
