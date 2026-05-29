@@ -1622,6 +1622,216 @@ end
         @test !nonidentity_retained.diagnostics.ida_weight_division_allowed
         @test !cross_retained.diagnostics.ida_weight_division_allowed
     end
+    distinct_left_transform = [
+        1.0 0.0 0.0
+        0.0 1.0 0.0
+        0.0 0.0 1.0
+        0.5 -0.25 0.75
+    ]
+    distinct_right_transform = [
+        0.6 0.0
+        0.0 0.7
+        0.8 0.1
+        0.0 -0.6
+    ]
+    distinct_left_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :distinct_left_product_slab,
+        :product_doside,
+        1:3,
+        collect(1:4),
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1), (2, 1, 1), (2, 2, 1)],
+        distinct_left_transform,
+        (
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_fixed_axis(1),
+        ),
+        NTuple{3,Int}[(1, 1, 1), (2, 1, 1), (2, 2, 1)],
+        (source = :distinct_left_raw_product_source_test_fixture,),
+        (support_count = 4, retained_count = 3),
+    )
+    distinct_right_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :distinct_right_product_slab,
+        :product_doside,
+        1:2,
+        collect(3:6),
+        NTuple{3,Int}[(2, 1, 1), (2, 2, 1), (3, 1, 1), (3, 2, 1)],
+        distinct_right_transform,
+        (
+            GaussletBases._nested_product_staged_active_axis(2:3, identity_axis),
+            GaussletBases._nested_product_staged_active_axis(1:2, identity_axis),
+            GaussletBases._nested_product_staged_fixed_axis(1),
+        ),
+        NTuple{3,Int}[(1, 1, 1), (2, 2, 1)],
+        (source = :distinct_right_raw_product_source_test_fixture,),
+        (support_count = 4, retained_count = 2),
+    )
+    distinct_left_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        distinct_left_unit;
+        source_id = :distinct_left_product_slab_source,
+        parent_dims = (3, 2, 1),
+    )
+    distinct_right_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        distinct_right_unit;
+        source_id = :distinct_right_product_slab_source,
+        parent_dims = (3, 2, 1),
+    )
+    @test distinct_left_source_transform.raw_source.support_indices == collect(1:4)
+    @test distinct_right_source_transform.raw_source.support_indices == collect(3:6)
+    @test distinct_left_source_transform.raw_source.support_indices !=
+          distinct_right_source_transform.raw_source.support_indices
+    @test distinct_left_source_transform.retained_transform.retained_dimension == 3
+    @test distinct_right_source_transform.retained_transform.retained_dimension == 2
+    distinct_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (distinct_left_source_transform, distinct_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_x, :position_y, :position_z),
+        source = :distinct_support_product_cross_pair_plan_test,
+    )
+    distinct_cross_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            distinct_pair_plan,
+        )
+        if pair.pair_key ==
+           (:distinct_left_product_slab_source, :distinct_right_product_slab_source)
+    )
+    @test distinct_cross_pair.left_raw_source.parent_dims == (3, 2, 1)
+    @test distinct_cross_pair.right_raw_source.parent_dims == (3, 2, 1)
+    @test distinct_cross_pair.left_raw_source.source_dimension == 4
+    @test distinct_cross_pair.right_raw_source.source_dimension == 4
+    @test distinct_cross_pair.left_retained_transform.retained_dimension == 3
+    @test distinct_cross_pair.right_retained_transform.retained_dimension == 2
+    @test !distinct_cross_pair.diagnostics.pqs_factored_transform_present
+    distinct_position_omitting_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (distinct_left_source_transform, distinct_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_y, :position_z),
+        source = :distinct_support_position_omitting_pair_plan_test,
+    )
+    distinct_position_omitting_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            distinct_position_omitting_pair_plan,
+        )
+        if pair.pair_key ==
+           (:distinct_left_product_slab_source, :distinct_right_product_slab_source)
+    )
+    distinct_axis_metrics = (
+        x = (
+            overlap = [
+                1.0 0.1 0.0
+                0.1 1.0 0.2
+                0.0 0.2 1.0
+            ],
+            position = [
+                0.0 0.05 0.0
+                0.05 1.0 0.3
+                0.0 0.3 2.0
+            ],
+            weights = [1.0, 1.0, 1.0],
+            centers = [0.0, 1.0, 2.0],
+            source = :distinct_support_axis_metric_fixture,
+        ),
+        y = (
+            overlap = [
+                1.0 0.05
+                0.05 1.0
+            ],
+            position = [
+                -0.5 0.02
+                0.02 0.5
+            ],
+            weights = [1.0, 1.0],
+            centers = [-0.5, 0.5],
+            source = :distinct_support_axis_metric_fixture,
+        ),
+        z = (
+            overlap = Matrix{Float64}(I, 1, 1),
+            position = Matrix(Diagonal([2.75])),
+            weights = [1.0],
+            centers = [2.75],
+            source = :distinct_support_axis_metric_fixture,
+        ),
+    )
+    function distinct_support_physical_position_reference(term::Symbol)
+        axis_matrices = term == :position_x ? (
+            distinct_axis_metrics.x.position,
+            distinct_axis_metrics.y.overlap,
+            distinct_axis_metrics.z.overlap,
+        ) : term == :position_y ? (
+            distinct_axis_metrics.x.overlap,
+            distinct_axis_metrics.y.position,
+            distinct_axis_metrics.z.overlap,
+        ) : term == :position_z ? (
+            distinct_axis_metrics.x.overlap,
+            distinct_axis_metrics.y.overlap,
+            distinct_axis_metrics.z.position,
+        ) : throw(ArgumentError("unsupported distinct-support physical term"))
+        left_states = distinct_cross_pair.left_raw_source.provenance.unit.support_states
+        right_states = distinct_cross_pair.right_raw_source.provenance.unit.support_states
+        reference = zeros(Float64, length(left_states), length(right_states))
+        for col in eachindex(right_states)
+            jx, jy, jz = right_states[col]
+            for row in eachindex(left_states)
+                ix, iy, iz = left_states[row]
+                reference[row, col] =
+                    axis_matrices[1][ix, jx] *
+                    axis_matrices[2][iy, jy] *
+                    axis_matrices[3][iz, jz]
+            end
+        end
+        return reference
+    end
+    for term in (:position_x, :position_y, :position_z)
+        distinct_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
+            distinct_cross_pair;
+            term,
+            axis_metrics = distinct_axis_metrics,
+        )
+        distinct_reference = distinct_support_physical_position_reference(term)
+        distinct_retained = CCP._cartesian_retained_low_order_operator_block(
+            distinct_packet,
+            distinct_left_source_transform.retained_transform,
+            distinct_right_source_transform.retained_transform,
+        )
+        distinct_retained_reference =
+            transpose(distinct_left_transform) *
+            distinct_reference *
+            distinct_right_transform
+        @test distinct_packet.left_source_id == :distinct_left_product_slab_source
+        @test distinct_packet.right_source_id == :distinct_right_product_slab_source
+        @test distinct_packet.source_dimensions == (4, 4)
+        @test distinct_packet.raw_operator_matrix ≈ distinct_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_packet.raw_operator_matrix !=
+              Matrix{Float64}(getproperty(expected_physical_positions, term))
+        @test distinct_packet.diagnostics.cross_pair
+        @test distinct_packet.diagnostics.left_source_dimension == 4
+        @test distinct_packet.diagnostics.right_source_dimension == 4
+        @test distinct_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test distinct_packet.diagnostics.fixture_only
+        @test !distinct_packet.diagnostics.production_supported
+        @test !distinct_packet.diagnostics.dense_parent_matrix_used
+        @test !distinct_packet.diagnostics.metric_execution_changed
+        @test !distinct_packet.diagnostics.qwhamiltonian_consumes
+        @test !distinct_packet.diagnostics.backend_policy_changed
+        @test !distinct_packet.diagnostics.quadrature_policy_changed
+        @test !distinct_packet.diagnostics.cr2_science_status_changed
+        @test distinct_retained.retained_dimensions == (3, 2)
+        @test distinct_retained.retained_operator_matrix ≈ distinct_retained_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_retained.diagnostics.retained_transform_applied
+        @test distinct_retained.diagnostics.retained_operator_block_built
+        @test !distinct_retained.diagnostics.all_pair_matrices_built
+        @test !distinct_retained.diagnostics.metric_execution_changed
+        @test !distinct_retained.diagnostics.qwhamiltonian_consumes
+        @test !distinct_retained.diagnostics.public_default_consumes
+        @test !distinct_retained.diagnostics.backend_policy_changed
+        @test !distinct_retained.diagnostics.quadrature_policy_changed
+        @test !distinct_retained.diagnostics.cr2_science_status_changed
+    end
+    @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        distinct_position_omitting_pair;
+        term = :position_x,
+        axis_metrics = distinct_axis_metrics,
+    )
     @test_throws ArgumentError CCP._cartesian_retained_low_order_operator_block(
         pqs_raw_overlap_packet,
         pqs_retained_transform,
