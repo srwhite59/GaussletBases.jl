@@ -198,6 +198,104 @@ end
         return result
     end
 
+    function _product_staged_comparison_axis_row(axis, state_index::Int)
+        axis.kind == :fixed && return 1
+        axis.kind == :active && return state_index - first(axis.interval) + 1
+        throw(ArgumentError("unsupported staged axis kind $(axis.kind)"))
+    end
+
+    function _product_staged_comparison_coefficient_matrix(
+        support_states::AbstractVector{<:NTuple{3,Int}},
+        axes::NTuple{3,Any},
+        axis_function_indices::AbstractVector{<:NTuple{3,Int}},
+    )
+        coefficients = zeros(Float64, length(support_states), length(axis_function_indices))
+        for (column, axis_function_index) in pairs(axis_function_indices)
+            for (row, state) in pairs(support_states)
+                value = 1.0
+                for axis_index in 1:3
+                    axis = axes[axis_index]
+                    axis_row =
+                        _product_staged_comparison_axis_row(axis, state[axis_index])
+                    value *= axis.coefficient_matrix[axis_row, axis_function_index[axis_index]]
+                end
+                coefficients[row, column] = value
+            end
+        end
+        return coefficients
+    end
+
+    function _product_staged_comparison_unit_with_range(unit, column_range::UnitRange{Int})
+        length(column_range) == length(unit.column_range) || throw(
+            ArgumentError("test product-staged column range must preserve retained count"),
+        )
+        return GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+            unit.role,
+            unit.kind,
+            column_range,
+            copy(unit.support_indices),
+            copy(unit.support_states),
+            unit.coefficient_matrix,
+            unit.axes,
+            copy(unit.axis_function_indices),
+            (
+                source = :product_staged_metric_comparison_test_packaging,
+                original_provenance = unit.provenance,
+                original_column_range = unit.column_range,
+            ),
+            (
+                source = :product_staged_metric_comparison_test_packaging,
+                original_diagnostics = unit.diagnostics,
+            ),
+        )
+    end
+
+    function _product_staged_comparison_retained_blocks(left_unit, right_unit, axis_metrics)
+        left_range = 1:length(left_unit.column_range)
+        same_unit = left_unit === right_unit
+        if same_unit
+            left_packaged = _product_staged_comparison_unit_with_range(left_unit, left_range)
+            right_packaged = left_packaged
+            right_range = left_range
+            dimension = length(left_range)
+        else
+            right_range =
+                (last(left_range) + 1):(last(left_range) + length(right_unit.column_range))
+            left_packaged = _product_staged_comparison_unit_with_range(left_unit, left_range)
+            right_packaged = _product_staged_comparison_unit_with_range(right_unit, right_range)
+            dimension = last(right_range)
+        end
+        overlap = zeros(Float64, dimension, dimension)
+        position_x = zeros(Float64, dimension, dimension)
+        position_y = zeros(Float64, dimension, dimension)
+        position_z = zeros(Float64, dimension, dimension)
+        GaussletBases.CartesianContractedParentMetrics._fill_product_staged_metric_blocks!(
+            overlap,
+            position_x,
+            position_y,
+            position_z,
+            left_packaged,
+            right_packaged,
+            axis_metrics,
+        )
+        return (
+            helper_path = :fill_product_staged_metric_blocks,
+            fixture_scope = :private_test_only,
+            overlap = Matrix{Float64}(overlap[left_range, right_range]),
+            position_x = Matrix{Float64}(position_x[left_range, right_range]),
+            position_y = Matrix{Float64}(position_y[left_range, right_range]),
+            position_z = Matrix{Float64}(position_z[left_range, right_range]),
+        )
+    end
+
+    function _product_staged_comparison_block_for_term(blocks, term::Symbol)
+        term == :overlap && return blocks.overlap
+        term == :position_x && return blocks.position_x
+        term == :position_y && return blocks.position_y
+        term == :position_z && return blocks.position_z
+        throw(ArgumentError("unsupported product-staged comparison term $term"))
+    end
+
     expansion = coulomb_gaussian_expansion(doacc = false)
     term_coefficients = Float64.(expansion.coefficients)
     bundle5 = _pqs_test_bundle(5)
@@ -1379,6 +1477,15 @@ end
     @test factorized_cross_retained_overlap.retained_dimensions == (4, 2)
     @test factorized_cross_retained_overlap.retained_operator_matrix ≈
           cross_overlap_reference * nonidentity_transform atol = 1.0e-14 rtol = 1.0e-14
+    product_staged_self_blocks = _product_staged_comparison_retained_blocks(
+        product_unit,
+        product_unit,
+        physical_axis_metrics,
+    )
+    @test product_staged_self_blocks.helper_path == :fill_product_staged_metric_blocks
+    @test product_staged_self_blocks.fixture_scope == :private_test_only
+    @test factorized_product_retained_overlap.retained_operator_matrix ≈
+          product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
         overlap_omitting_pair;
         term = :overlap,
@@ -1792,6 +1899,8 @@ end
         @test factorized_retained.term == term
         @test factorized_retained.retained_dimensions == (4, 4)
         @test factorized_retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_retained.retained_operator_matrix ≈
+              _product_staged_comparison_block_for_term(product_staged_self_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test factorized_cross_retained.left_source_id ==
               :identity_product_slab_source
         @test factorized_cross_retained.right_source_id ==
@@ -2303,6 +2412,135 @@ end
         @test !distinct_retained.diagnostics.backend_policy_changed
         @test !distinct_retained.diagnostics.quadrature_policy_changed
         @test !distinct_retained.diagnostics.cr2_science_status_changed
+    end
+    consistent_left_axes = (
+        GaussletBases._nested_product_staged_active_axis(
+            1:2,
+            [
+                1.0 0.2
+                0.1 0.9
+            ],
+        ),
+        GaussletBases._nested_product_staged_active_axis(
+            1:2,
+            [
+                0.8 0.3
+                -0.2 1.1
+            ],
+        ),
+        GaussletBases._nested_product_staged_fixed_axis(1),
+    )
+    consistent_left_support_states =
+        NTuple{3,Int}[(1, 1, 1), (1, 2, 1), (2, 1, 1), (2, 2, 1)]
+    consistent_left_axis_function_indices =
+        GaussletBases._nested_product_axis_function_indices(3, 1, 2, 2, 2)
+    consistent_left_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :consistent_left_product_slab,
+        :product_doside,
+        1:4,
+        collect(1:4),
+        consistent_left_support_states,
+        _product_staged_comparison_coefficient_matrix(
+            consistent_left_support_states,
+            consistent_left_axes,
+            consistent_left_axis_function_indices,
+        ),
+        consistent_left_axes,
+        consistent_left_axis_function_indices,
+        (source = :consistent_left_product_staged_metric_comparison_fixture,),
+        (support_count = 4, retained_count = 4),
+    )
+    consistent_right_axes = (
+        GaussletBases._nested_product_staged_active_axis(
+            2:3,
+            [
+                0.6 -0.1
+                0.4 0.9
+            ],
+        ),
+        GaussletBases._nested_product_staged_active_axis(
+            1:2,
+            reshape([0.7, -0.6], 2, 1),
+        ),
+        GaussletBases._nested_product_staged_fixed_axis(1),
+    )
+    consistent_right_support_states =
+        NTuple{3,Int}[(2, 1, 1), (2, 2, 1), (3, 1, 1), (3, 2, 1)]
+    consistent_right_axis_function_indices =
+        GaussletBases._nested_product_axis_function_indices(3, 1, 2, 2, 1)
+    consistent_right_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+        :consistent_right_product_slab,
+        :product_doside,
+        1:2,
+        collect(3:6),
+        consistent_right_support_states,
+        _product_staged_comparison_coefficient_matrix(
+            consistent_right_support_states,
+            consistent_right_axes,
+            consistent_right_axis_function_indices,
+        ),
+        consistent_right_axes,
+        consistent_right_axis_function_indices,
+        (source = :consistent_right_product_staged_metric_comparison_fixture,),
+        (support_count = 4, retained_count = 2),
+    )
+    consistent_left_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        consistent_left_unit;
+        source_id = :consistent_left_product_slab_source,
+        parent_dims = (3, 2, 1),
+    )
+    consistent_right_source_transform = CCP._cartesian_raw_product_source_retained_transform(
+        consistent_right_unit;
+        source_id = :consistent_right_product_slab_source,
+        parent_dims = (3, 2, 1),
+    )
+    consistent_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (consistent_left_source_transform, consistent_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:overlap, :position_x, :position_y, :position_z),
+        source = :consistent_product_staged_metric_comparison_pair_plan_test,
+    )
+    consistent_cross_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            consistent_pair_plan,
+        )
+        if pair.pair_key ==
+           (:consistent_left_product_slab_source, :consistent_right_product_slab_source)
+    )
+    consistent_product_staged_blocks = _product_staged_comparison_retained_blocks(
+        consistent_left_unit,
+        consistent_right_unit,
+        distinct_axis_metrics,
+    )
+    @test consistent_product_staged_blocks.helper_path ==
+          :fill_product_staged_metric_blocks
+    @test consistent_product_staged_blocks.fixture_scope == :private_test_only
+    for term in (:overlap, :position_x, :position_y, :position_z)
+        packet = CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+            consistent_cross_pair;
+            term,
+            axis_metrics = distinct_axis_metrics,
+        )
+        retained = CCP._cartesian_retained_low_order_operator_block(
+            packet,
+            consistent_left_source_transform.retained_transform,
+            consistent_right_source_transform.retained_transform,
+        )
+        @test retained.retained_dimensions == (4, 2)
+        @test retained.retained_operator_matrix ≈
+              _product_staged_comparison_block_for_term(consistent_product_staged_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
+        @test packet.diagnostics.factorized_axis_path_used
+        @test !packet.diagnostics.support_row_reference_used
+        @test packet.diagnostics.fixture_only
+        @test !packet.diagnostics.production_supported
+        @test !packet.diagnostics.metric_execution_changed
+        @test !retained.diagnostics.metric_execution_changed
+        @test !retained.diagnostics.qwhamiltonian_consumes
+        @test !retained.diagnostics.public_default_consumes
+        @test !retained.diagnostics.backend_policy_changed
+        @test !retained.diagnostics.quadrature_policy_changed
+        @test !retained.diagnostics.cr2_science_status_changed
+        @test !retained.diagnostics.ida_weight_division_allowed
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         distinct_position_omitting_pair;
