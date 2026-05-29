@@ -1477,6 +1477,12 @@ end
     @test factorized_cross_retained_overlap.retained_dimensions == (4, 2)
     @test factorized_cross_retained_overlap.retained_operator_matrix ≈
           cross_overlap_reference * nonidentity_transform atol = 1.0e-14 rtol = 1.0e-14
+    product_direct_self_overlap = CCPM._product_doside_retained_low_order_block(
+        product_unit,
+        product_unit,
+        physical_axis_metrics;
+        term = :overlap,
+    )
     product_staged_self_blocks = _product_staged_comparison_retained_blocks(
         product_unit,
         product_unit,
@@ -1484,6 +1490,8 @@ end
     )
     @test product_staged_self_blocks.helper_path == :fill_product_staged_metric_blocks
     @test product_staged_self_blocks.fixture_scope == :private_test_only
+    @test size(product_direct_self_overlap) == (4, 4)
+    @test product_direct_self_overlap ≈ product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test factorized_product_retained_overlap.retained_operator_matrix ≈
           product_staged_self_blocks.overlap atol = 1.0e-14 rtol = 1.0e-14
     @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
@@ -1899,6 +1907,15 @@ end
         @test factorized_retained.term == term
         @test factorized_retained.retained_dimensions == (4, 4)
         @test factorized_retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        product_direct_self_block = CCPM._product_doside_retained_low_order_block(
+            product_unit,
+            product_unit,
+            physical_axis_metrics;
+            term,
+        )
+        @test size(product_direct_self_block) == (4, 4)
+        @test product_direct_self_block ≈
+              _product_staged_comparison_block_for_term(product_staged_self_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test factorized_retained.retained_operator_matrix ≈
               _product_staged_comparison_block_for_term(product_staged_self_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test factorized_cross_retained.left_source_id ==
@@ -2526,7 +2543,16 @@ end
             consistent_left_source_transform.retained_transform,
             consistent_right_source_transform.retained_transform,
         )
+        direct_retained = CCPM._product_doside_retained_low_order_block(
+            consistent_left_unit,
+            consistent_right_unit,
+            distinct_axis_metrics;
+            term,
+        )
         @test retained.retained_dimensions == (4, 2)
+        @test size(direct_retained) == (4, 2)
+        @test direct_retained ≈
+              _product_staged_comparison_block_for_term(consistent_product_staged_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test retained.retained_operator_matrix ≈
               _product_staged_comparison_block_for_term(consistent_product_staged_blocks, term) atol = 1.0e-14 rtol = 1.0e-14
         @test packet.diagnostics.factorized_axis_path_used

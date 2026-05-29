@@ -4,6 +4,7 @@ import LinearAlgebra
 import SparseArrays
 
 import ..GaussletBases: _NestedFixedBlock3D,
+                         _CartesianNestedProductStagedByCenterUnit3D,
                          _require_analytic_primitive_backend,
                          centers,
                          contract_primitive_matrix,
@@ -696,6 +697,73 @@ function _project_staged_axis_vector(axis, values::AbstractVector{<:Real})
     interval = _staged_axis_interval(axis)
     local_values = Float64[Float64(value) for value in values[interval]]
     return vec(transpose(axis.coefficient_matrix) * local_values)
+end
+
+function _product_doside_low_order_axis_matrix_kind(term::Symbol, axis::Int)
+    term == :overlap && return :overlap
+    term == :position_x && return axis == 1 ? :position : :overlap
+    term == :position_y && return axis == 2 ? :position : :overlap
+    term == :position_z && return axis == 3 ? :position : :overlap
+    throw(
+        ArgumentError(
+            "product/doside retained low-order block supports only :overlap and :position_x/y/z",
+        ),
+    )
+end
+
+function _product_doside_axis_metric_matrix(metrics::NamedTuple{(:x,:y,:z)}, axis::Int, kind::Symbol)
+    axis_name = (:x, :y, :z)[axis]
+    return getproperty(getproperty(metrics, axis_name), kind)
+end
+
+function _require_product_doside_retained_block_unit(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    side::Symbol,
+)
+    unit.kind == :product_doside || throw(
+        ArgumentError("product/doside retained low-order block requires a product_doside $(side) unit"),
+    )
+    length(unit.axis_function_indices) == length(unit.column_range) || throw(
+        ArgumentError("product/doside retained low-order block $(side) unit axis metadata does not match its column range"),
+    )
+    return nothing
+end
+
+function _product_doside_retained_low_order_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+)
+    term in (:overlap, :position_x, :position_y, :position_z) || throw(
+        ArgumentError("product/doside retained low-order block supports only :overlap and :position_x/y/z"),
+    )
+    _require_product_doside_retained_block_unit(left_unit; side = :left)
+    _require_product_doside_retained_block_unit(right_unit; side = :right)
+    projected_axis_matrices = ntuple(
+        axis -> _project_staged_axis_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _product_doside_axis_metric_matrix(
+                metrics,
+                axis,
+                _product_doside_low_order_axis_matrix_kind(term, axis),
+            ),
+        ),
+        3,
+    )
+    block = zeros(Float64, length(left_unit.column_range), length(right_unit.column_range))
+    @inbounds for local_col in eachindex(right_unit.axis_function_indices)
+        xj, yj, zj = right_unit.axis_function_indices[local_col]
+        for local_row in eachindex(left_unit.axis_function_indices)
+            xi, yi, zi = left_unit.axis_function_indices[local_row]
+            block[local_row, local_col] =
+                projected_axis_matrices[1][xi, xj] *
+                projected_axis_matrices[2][yi, yj] *
+                projected_axis_matrices[3][zi, zj]
+        end
+    end
+    return block
 end
 
 function _fill_product_staged_metric_blocks!(
