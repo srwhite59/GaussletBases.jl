@@ -1394,15 +1394,12 @@ end
         term = :overlap,
         axis_metrics = physical_axis_metrics,
     )
-    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
-        product_self_pair;
-        term = :position_x,
-        axis_metrics = physical_axis_metrics,
-    )
     physical_position_packets = Dict{Symbol,Any}()
     generic_physical_position_packets = Dict{Symbol,Any}()
     nonidentity_physical_position_packets = Dict{Symbol,Any}()
     cross_physical_position_packets = Dict{Symbol,Any}()
+    factorized_position_packets = Dict{Symbol,Any}()
+    factorized_cross_position_packets = Dict{Symbol,Any}()
     for term in (:position_x, :position_y, :position_z)
         packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             product_self_pair;
@@ -1424,10 +1421,24 @@ end
             term,
             axis_metrics = physical_axis_metrics,
         )
+        factorized_packet =
+            CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+                product_self_pair;
+                term,
+                axis_metrics = physical_axis_metrics,
+            )
+        factorized_cross_packet =
+            CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+                cross_product_pair;
+                term,
+                axis_metrics = physical_axis_metrics,
+            )
         physical_position_packets[term] = packet
         generic_physical_position_packets[term] = generic_packet
         nonidentity_physical_position_packets[term] = nonidentity_packet
         cross_physical_position_packets[term] = cross_packet
+        factorized_position_packets[term] = factorized_packet
+        factorized_cross_position_packets[term] = factorized_cross_packet
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         cross_reference = support_local_physical_position_reference(
@@ -1463,10 +1474,26 @@ end
         @test cross_packet.source_dimensions == (4, 4)
         @test cross_packet.raw_operator_matrix ≈ cross_reference atol = 1.0e-14 rtol = 1.0e-14
         @test cross_packet.raw_operator_matrix ≈ expected atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_packet.left_source_id == :identity_product_slab_source
+        @test factorized_packet.right_source_id == :identity_product_slab_source
+        @test factorized_packet.operator_kind == :low_order_metric
+        @test factorized_packet.term == term
+        @test factorized_packet.source_dimensions == (4, 4)
+        @test factorized_packet.raw_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_packet.raw_operator_matrix ≈ packet.raw_operator_matrix atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_cross_packet.left_source_id == :identity_product_slab_source
+        @test factorized_cross_packet.right_source_id == :nonidentity_product_slab_source
+        @test factorized_cross_packet.operator_kind == :low_order_metric
+        @test factorized_cross_packet.term == term
+        @test factorized_cross_packet.source_dimensions == (4, 4)
+        @test factorized_cross_packet.raw_operator_matrix ≈ cross_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_cross_packet.raw_operator_matrix ≈ cross_packet.raw_operator_matrix atol = 1.0e-14 rtol = 1.0e-14
         @test packet.raw_operator_matrix != expected_product_axis_index_x
         @test generic_packet.raw_operator_matrix != expected_product_axis_index_x
         @test nonidentity_packet.raw_operator_matrix != expected_product_axis_index_x
         @test cross_packet.raw_operator_matrix != expected_product_axis_index_x
+        @test factorized_packet.raw_operator_matrix != expected_product_axis_index_x
+        @test factorized_cross_packet.raw_operator_matrix != expected_product_axis_index_x
         @test packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
         @test generic_packet.diagnostics.raw_reference ==
@@ -1475,14 +1502,22 @@ end
               Symbol(:product_doside_physical_, term)
         @test cross_packet.diagnostics.raw_reference ==
               Symbol(:product_doside_physical_, term)
+        @test factorized_packet.diagnostics.raw_reference ==
+              Symbol(:product_doside_factorized_, term)
+        @test factorized_cross_packet.diagnostics.raw_reference ==
+              Symbol(:product_doside_factorized_, term)
         @test packet.diagnostics.raw_reference_error == 0.0
         @test generic_packet.diagnostics.raw_reference_error == 0.0
         @test nonidentity_packet.diagnostics.raw_reference_error == 0.0
         @test cross_packet.diagnostics.raw_reference_error == 0.0
+        @test factorized_packet.diagnostics.raw_reference_error == 0.0
+        @test factorized_cross_packet.diagnostics.raw_reference_error == 0.0
         @test packet.diagnostics.physical_position_operator
         @test generic_packet.diagnostics.physical_position_operator
         @test nonidentity_packet.diagnostics.physical_position_operator
         @test cross_packet.diagnostics.physical_position_operator
+        @test factorized_packet.diagnostics.physical_position_operator
+        @test factorized_cross_packet.diagnostics.physical_position_operator
         @test !packet.diagnostics.axis_index_diagnostic
         @test !generic_packet.diagnostics.axis_index_diagnostic
         @test !nonidentity_packet.diagnostics.axis_index_diagnostic
@@ -1495,6 +1530,10 @@ end
               (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test cross_packet.diagnostics.position_axis ==
               (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test factorized_packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test factorized_cross_packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
         @test packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
         @test generic_packet.diagnostics.axis_metric_sources.x ==
@@ -1503,52 +1542,89 @@ end
               :synthetic_noninteger_axis_metric_fixture
         @test cross_packet.diagnostics.axis_metric_sources.x ==
               :synthetic_noninteger_axis_metric_fixture
+        @test factorized_packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
+        @test factorized_cross_packet.diagnostics.axis_metric_sources.x ==
+              :synthetic_noninteger_axis_metric_fixture
         @test packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test generic_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test nonidentity_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
         @test cross_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test factorized_packet.diagnostics.raw_basis_scope == :raw_product_source_rows
+        @test factorized_cross_packet.diagnostics.raw_basis_scope ==
+              :raw_product_source_rows
+        @test factorized_packet.diagnostics.factorized_axis_path_used
+        @test factorized_cross_packet.diagnostics.factorized_axis_path_used
+        @test factorized_packet.diagnostics.axis_factor_scope ==
+              :staged_local_axis_intervals
+        @test factorized_cross_packet.diagnostics.axis_factor_scope ==
+              :staged_local_axis_intervals
+        @test !factorized_packet.diagnostics.support_row_reference_used
+        @test !factorized_cross_packet.diagnostics.support_row_reference_used
         @test !packet.diagnostics.cross_pair
         @test !generic_packet.diagnostics.cross_pair
         @test !nonidentity_packet.diagnostics.cross_pair
         @test cross_packet.diagnostics.cross_pair
+        @test !factorized_packet.diagnostics.cross_pair
+        @test factorized_cross_packet.diagnostics.cross_pair
         @test cross_packet.diagnostics.left_source_dimension == 4
         @test cross_packet.diagnostics.right_source_dimension == 4
+        @test factorized_cross_packet.diagnostics.left_source_dimension == 4
+        @test factorized_cross_packet.diagnostics.right_source_dimension == 4
         @test !packet.diagnostics.dense_parent_matrix_used
         @test !generic_packet.diagnostics.dense_parent_matrix_used
         @test !nonidentity_packet.diagnostics.dense_parent_matrix_used
         @test !cross_packet.diagnostics.dense_parent_matrix_used
+        @test !factorized_packet.diagnostics.dense_parent_matrix_used
+        @test !factorized_cross_packet.diagnostics.dense_parent_matrix_used
         @test packet.diagnostics.fixture_only
         @test generic_packet.diagnostics.fixture_only
         @test nonidentity_packet.diagnostics.fixture_only
         @test cross_packet.diagnostics.fixture_only
+        @test factorized_packet.diagnostics.fixture_only
+        @test factorized_cross_packet.diagnostics.fixture_only
         @test !packet.diagnostics.production_supported
         @test !generic_packet.diagnostics.production_supported
         @test !nonidentity_packet.diagnostics.production_supported
         @test !cross_packet.diagnostics.production_supported
+        @test !factorized_packet.diagnostics.production_supported
+        @test !factorized_cross_packet.diagnostics.production_supported
         @test !packet.diagnostics.metric_execution_changed
         @test !generic_packet.diagnostics.metric_execution_changed
         @test !nonidentity_packet.diagnostics.metric_execution_changed
         @test !cross_packet.diagnostics.metric_execution_changed
+        @test !factorized_packet.diagnostics.metric_execution_changed
+        @test !factorized_cross_packet.diagnostics.metric_execution_changed
         @test !packet.diagnostics.qwhamiltonian_consumes
         @test !generic_packet.diagnostics.qwhamiltonian_consumes
         @test !nonidentity_packet.diagnostics.qwhamiltonian_consumes
         @test !cross_packet.diagnostics.qwhamiltonian_consumes
+        @test !factorized_packet.diagnostics.qwhamiltonian_consumes
+        @test !factorized_cross_packet.diagnostics.qwhamiltonian_consumes
         @test !packet.diagnostics.public_default_consumes
         @test !generic_packet.diagnostics.public_default_consumes
         @test !nonidentity_packet.diagnostics.public_default_consumes
         @test !cross_packet.diagnostics.public_default_consumes
+        @test !factorized_packet.diagnostics.public_default_consumes
+        @test !factorized_cross_packet.diagnostics.public_default_consumes
         @test !packet.diagnostics.backend_policy_changed
         @test !generic_packet.diagnostics.backend_policy_changed
         @test !nonidentity_packet.diagnostics.backend_policy_changed
         @test !cross_packet.diagnostics.backend_policy_changed
+        @test !factorized_packet.diagnostics.backend_policy_changed
+        @test !factorized_cross_packet.diagnostics.backend_policy_changed
         @test !packet.diagnostics.quadrature_policy_changed
         @test !generic_packet.diagnostics.quadrature_policy_changed
         @test !nonidentity_packet.diagnostics.quadrature_policy_changed
         @test !cross_packet.diagnostics.quadrature_policy_changed
+        @test !factorized_packet.diagnostics.quadrature_policy_changed
+        @test !factorized_cross_packet.diagnostics.quadrature_policy_changed
         @test !packet.diagnostics.cr2_science_status_changed
         @test !generic_packet.diagnostics.cr2_science_status_changed
         @test !nonidentity_packet.diagnostics.cr2_science_status_changed
         @test !cross_packet.diagnostics.cr2_science_status_changed
+        @test !factorized_packet.diagnostics.cr2_science_status_changed
+        @test !factorized_cross_packet.diagnostics.cr2_science_status_changed
     end
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         pqs_resolved_pair;
@@ -1560,12 +1636,27 @@ end
         term = :position_x,
         axis_metrics = physical_axis_metrics,
     )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        position_omitting_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
+    )
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
         cross_position_omitting_pair;
         term = :position_x,
         axis_metrics = physical_axis_metrics,
     )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        cross_position_omitting_pair;
+        term = :position_x,
+        axis_metrics = physical_axis_metrics,
+    )
     @test_throws ArgumentError CCP._cartesian_physical_raw_low_order_operator_packet(
+        product_self_pair;
+        term = :axis_index_x,
+        axis_metrics = physical_axis_metrics,
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
         product_self_pair;
         term = :axis_index_x,
         axis_metrics = physical_axis_metrics,
@@ -1651,6 +1742,15 @@ end
             product_source_transform.retained_transform,
             nonidentity_product_source_transform.retained_transform,
         )
+        factorized_retained = CCP._cartesian_retained_low_order_operator_block(
+            factorized_position_packets[term],
+            product_source_transform.retained_transform,
+        )
+        factorized_cross_retained = CCP._cartesian_retained_low_order_operator_block(
+            factorized_cross_position_packets[term],
+            product_source_transform.retained_transform,
+            nonidentity_product_source_transform.retained_transform,
+        )
         expected = Matrix{Float64}(getproperty(expected_physical_positions, term))
         reference = support_local_physical_position_reference(term)
         nonidentity_reference = transpose(nonidentity_transform) * reference * nonidentity_transform
@@ -1686,34 +1786,68 @@ end
         @test cross_retained.term == term
         @test cross_retained.retained_dimensions == (4, 2)
         @test cross_retained.retained_operator_matrix ≈ cross_retained_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_retained.left_source_id == :identity_product_slab_source
+        @test factorized_retained.right_source_id == :identity_product_slab_source
+        @test factorized_retained.operator_kind == :low_order_metric
+        @test factorized_retained.term == term
+        @test factorized_retained.retained_dimensions == (4, 4)
+        @test factorized_retained.retained_operator_matrix ≈ reference atol = 1.0e-14 rtol = 1.0e-14
+        @test factorized_cross_retained.left_source_id ==
+              :identity_product_slab_source
+        @test factorized_cross_retained.right_source_id ==
+              :nonidentity_product_slab_source
+        @test factorized_cross_retained.operator_kind == :low_order_metric
+        @test factorized_cross_retained.term == term
+        @test factorized_cross_retained.retained_dimensions == (4, 2)
+        @test factorized_cross_retained.retained_operator_matrix ≈ cross_retained_reference atol = 1.0e-14 rtol = 1.0e-14
         @test retained.diagnostics.left_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test nonidentity_retained.diagnostics.left_transform_kind == :product_axis_transform
         @test cross_retained.diagnostics.left_transform_kind == :product_axis_transform
+        @test factorized_retained.diagnostics.left_transform_kind ==
+              :product_axis_transform
+        @test factorized_cross_retained.diagnostics.left_transform_kind ==
+              :product_axis_transform
         @test retained.diagnostics.right_transform_kind == :product_axis_transform
         @test generic_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test nonidentity_retained.diagnostics.right_transform_kind == :product_axis_transform
         @test cross_retained.diagnostics.right_transform_kind == :product_axis_transform
+        @test factorized_retained.diagnostics.right_transform_kind ==
+              :product_axis_transform
+        @test factorized_cross_retained.diagnostics.right_transform_kind ==
+              :product_axis_transform
         @test retained.diagnostics.left_transform_materialized
         @test generic_retained.diagnostics.left_transform_materialized
         @test nonidentity_retained.diagnostics.left_transform_materialized
         @test cross_retained.diagnostics.left_transform_materialized
+        @test factorized_retained.diagnostics.left_transform_materialized
+        @test factorized_cross_retained.diagnostics.left_transform_materialized
         @test retained.diagnostics.right_transform_materialized
         @test generic_retained.diagnostics.right_transform_materialized
         @test nonidentity_retained.diagnostics.right_transform_materialized
         @test cross_retained.diagnostics.right_transform_materialized
+        @test factorized_retained.diagnostics.right_transform_materialized
+        @test factorized_cross_retained.diagnostics.right_transform_materialized
         @test retained.diagnostics.retained_transform_applied
         @test generic_retained.diagnostics.retained_transform_applied
         @test nonidentity_retained.diagnostics.retained_transform_applied
         @test cross_retained.diagnostics.retained_transform_applied
+        @test factorized_retained.diagnostics.retained_transform_applied
+        @test factorized_cross_retained.diagnostics.retained_transform_applied
         @test retained.diagnostics.retained_operator_block_built
         @test generic_retained.diagnostics.retained_operator_block_built
         @test nonidentity_retained.diagnostics.retained_operator_block_built
         @test cross_retained.diagnostics.retained_operator_block_built
+        @test factorized_retained.diagnostics.retained_operator_block_built
+        @test factorized_cross_retained.diagnostics.retained_operator_block_built
         @test retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test generic_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test nonidentity_retained.diagnostics.retained_reference == :explicit_materialized_transform
         @test cross_retained.diagnostics.retained_reference == :explicit_materialized_transform
+        @test factorized_retained.diagnostics.retained_reference ==
+              :explicit_materialized_transform
+        @test factorized_cross_retained.diagnostics.retained_reference ==
+              :explicit_materialized_transform
         @test retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
         @test generic_retained.diagnostics.raw_operator_matrix_source ==
@@ -1722,38 +1856,58 @@ end
               :private_physical_raw_low_order_operator_packet
         @test cross_retained.diagnostics.raw_operator_matrix_source ==
               :private_physical_raw_low_order_operator_packet
+        @test factorized_retained.diagnostics.raw_operator_matrix_source ==
+              :private_factorized_product_doside_raw_low_order_operator_packet
+        @test factorized_cross_retained.diagnostics.raw_operator_matrix_source ==
+              :private_factorized_product_doside_raw_low_order_operator_packet
         @test !retained.diagnostics.all_pair_matrices_built
         @test !generic_retained.diagnostics.all_pair_matrices_built
         @test !nonidentity_retained.diagnostics.all_pair_matrices_built
         @test !cross_retained.diagnostics.all_pair_matrices_built
+        @test !factorized_retained.diagnostics.all_pair_matrices_built
+        @test !factorized_cross_retained.diagnostics.all_pair_matrices_built
         @test !retained.diagnostics.metric_execution_changed
         @test !generic_retained.diagnostics.metric_execution_changed
         @test !nonidentity_retained.diagnostics.metric_execution_changed
         @test !cross_retained.diagnostics.metric_execution_changed
+        @test !factorized_retained.diagnostics.metric_execution_changed
+        @test !factorized_cross_retained.diagnostics.metric_execution_changed
         @test !retained.diagnostics.qwhamiltonian_consumes
         @test !generic_retained.diagnostics.qwhamiltonian_consumes
         @test !nonidentity_retained.diagnostics.qwhamiltonian_consumes
         @test !cross_retained.diagnostics.qwhamiltonian_consumes
+        @test !factorized_retained.diagnostics.qwhamiltonian_consumes
+        @test !factorized_cross_retained.diagnostics.qwhamiltonian_consumes
         @test !retained.diagnostics.public_default_consumes
         @test !generic_retained.diagnostics.public_default_consumes
         @test !nonidentity_retained.diagnostics.public_default_consumes
         @test !cross_retained.diagnostics.public_default_consumes
+        @test !factorized_retained.diagnostics.public_default_consumes
+        @test !factorized_cross_retained.diagnostics.public_default_consumes
         @test !retained.diagnostics.backend_policy_changed
         @test !generic_retained.diagnostics.backend_policy_changed
         @test !nonidentity_retained.diagnostics.backend_policy_changed
         @test !cross_retained.diagnostics.backend_policy_changed
+        @test !factorized_retained.diagnostics.backend_policy_changed
+        @test !factorized_cross_retained.diagnostics.backend_policy_changed
         @test !retained.diagnostics.quadrature_policy_changed
         @test !generic_retained.diagnostics.quadrature_policy_changed
         @test !nonidentity_retained.diagnostics.quadrature_policy_changed
         @test !cross_retained.diagnostics.quadrature_policy_changed
+        @test !factorized_retained.diagnostics.quadrature_policy_changed
+        @test !factorized_cross_retained.diagnostics.quadrature_policy_changed
         @test !retained.diagnostics.cr2_science_status_changed
         @test !generic_retained.diagnostics.cr2_science_status_changed
         @test !nonidentity_retained.diagnostics.cr2_science_status_changed
         @test !cross_retained.diagnostics.cr2_science_status_changed
+        @test !factorized_retained.diagnostics.cr2_science_status_changed
+        @test !factorized_cross_retained.diagnostics.cr2_science_status_changed
         @test !retained.diagnostics.ida_weight_division_allowed
         @test !generic_retained.diagnostics.ida_weight_division_allowed
         @test !nonidentity_retained.diagnostics.ida_weight_division_allowed
         @test !cross_retained.diagnostics.ida_weight_division_allowed
+        @test !factorized_retained.diagnostics.ida_weight_division_allowed
+        @test !factorized_cross_retained.diagnostics.ida_weight_division_allowed
     end
     distinct_left_transform = [
         1.0 0.0 0.0
@@ -1999,6 +2153,20 @@ end
         term = :overlap,
         axis_metrics = bad_distinct_axis_metrics,
     )
+    bad_distinct_position_axis_metrics = (
+        x = (
+            overlap = Matrix{Float64}(I, 3, 3),
+            position = Matrix{Float64}(I, 2, 2),
+            source = :bad_position_axis_metric_dimension_fixture,
+        ),
+        y = distinct_axis_metrics.y,
+        z = distinct_axis_metrics.z,
+    )
+    @test_throws DimensionMismatch CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        distinct_cross_pair;
+        term = :position_x,
+        axis_metrics = bad_distinct_position_axis_metrics,
+    )
     outside_interval_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
         :outside_interval_product_slab,
         :product_doside,
@@ -2039,15 +2207,44 @@ end
         term = :overlap,
         axis_metrics = distinct_axis_metrics,
     )
+    outside_interval_position_pair_plan = CCP._cartesian_raw_product_source_pair_plan(
+        (outside_interval_source_transform, distinct_right_source_transform);
+        operator_kind = :low_order_metric,
+        supported_terms = (:position_x,),
+        source = :outside_interval_product_position_pair_plan_test,
+    )
+    outside_interval_position_pair = only(
+        pair for pair in CCP._cartesian_resolved_raw_product_source_pairs(
+            outside_interval_position_pair_plan,
+        )
+        if pair.pair_key ==
+           (:distinct_right_product_slab_source, :outside_interval_product_slab_source)
+    )
+    @test_throws ArgumentError CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+        outside_interval_position_pair;
+        term = :position_x,
+        axis_metrics = distinct_axis_metrics,
+    )
     for term in (:position_x, :position_y, :position_z)
         distinct_packet = CCP._cartesian_physical_raw_low_order_operator_packet(
             distinct_cross_pair;
             term,
             axis_metrics = distinct_axis_metrics,
         )
+        distinct_factorized_packet =
+            CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
+                distinct_cross_pair;
+                term,
+                axis_metrics = distinct_axis_metrics,
+            )
         distinct_reference = distinct_support_physical_position_reference(term)
         distinct_retained = CCP._cartesian_retained_low_order_operator_block(
             distinct_packet,
+            distinct_left_source_transform.retained_transform,
+            distinct_right_source_transform.retained_transform,
+        )
+        distinct_factorized_retained = CCP._cartesian_retained_low_order_operator_block(
+            distinct_factorized_packet,
             distinct_left_source_transform.retained_transform,
             distinct_right_source_transform.retained_transform,
         )
@@ -2061,6 +2258,24 @@ end
         @test distinct_packet.raw_operator_matrix ≈ distinct_reference atol = 1.0e-14 rtol = 1.0e-14
         @test distinct_packet.raw_operator_matrix !=
               Matrix{Float64}(getproperty(expected_physical_positions, term))
+        @test distinct_factorized_packet.left_source_id ==
+              :distinct_left_product_slab_source
+        @test distinct_factorized_packet.right_source_id ==
+              :distinct_right_product_slab_source
+        @test distinct_factorized_packet.source_dimensions == (4, 4)
+        @test distinct_factorized_packet.raw_operator_matrix ≈ distinct_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_factorized_packet.raw_operator_matrix ≈ distinct_packet.raw_operator_matrix atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_factorized_packet.diagnostics.factorized_axis_path_used
+        @test distinct_factorized_packet.diagnostics.physical_position_operator
+        @test distinct_factorized_packet.diagnostics.position_axis ==
+              (term == :position_x ? :x : term == :position_y ? :y : :z)
+        @test !distinct_factorized_packet.diagnostics.support_row_reference_used
+        @test distinct_factorized_packet.diagnostics.raw_basis_scope ==
+              :raw_product_source_rows
+        @test distinct_factorized_packet.diagnostics.fixture_only
+        @test !distinct_factorized_packet.diagnostics.production_supported
+        @test !distinct_factorized_packet.diagnostics.dense_parent_matrix_used
+        @test !distinct_factorized_packet.diagnostics.metric_execution_changed
         @test distinct_packet.diagnostics.cross_pair
         @test distinct_packet.diagnostics.left_source_dimension == 4
         @test distinct_packet.diagnostics.right_source_dimension == 4
@@ -2075,6 +2290,10 @@ end
         @test !distinct_packet.diagnostics.cr2_science_status_changed
         @test distinct_retained.retained_dimensions == (3, 2)
         @test distinct_retained.retained_operator_matrix ≈ distinct_retained_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_factorized_retained.retained_dimensions == (3, 2)
+        @test distinct_factorized_retained.retained_operator_matrix ≈ distinct_retained_reference atol = 1.0e-14 rtol = 1.0e-14
+        @test distinct_factorized_retained.diagnostics.raw_operator_matrix_source ==
+              :private_factorized_product_doside_raw_low_order_operator_packet
         @test distinct_retained.diagnostics.retained_transform_applied
         @test distinct_retained.diagnostics.retained_operator_block_built
         @test !distinct_retained.diagnostics.all_pair_matrices_built
