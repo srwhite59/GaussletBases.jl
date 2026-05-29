@@ -766,6 +766,81 @@ function _product_doside_retained_low_order_block(
     return block
 end
 
+function _product_doside_retained_separable_sum_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_factor_terms,
+)
+    _require_product_doside_retained_block_unit(left_unit; side = :left)
+    _require_product_doside_retained_block_unit(right_unit; side = :right)
+    !isempty(axis_factor_terms) || throw(
+        ArgumentError("product/doside retained separable-sum block requires at least one axis-factor triple"),
+    )
+    block = zeros(Float64, length(left_unit.column_range), length(right_unit.column_range))
+    for term in axis_factor_terms
+        length(term) == 3 || throw(
+            ArgumentError("product/doside retained separable-sum block terms must be axis-factor triples"),
+        )
+        projected_axis_matrices = ntuple(
+            axis -> _project_staged_axis_matrix(
+                left_unit.axes[axis],
+                right_unit.axes[axis],
+                term[axis],
+            ),
+            3,
+        )
+        @inbounds for local_col in eachindex(right_unit.axis_function_indices)
+            xj, yj, zj = right_unit.axis_function_indices[local_col]
+            for local_row in eachindex(left_unit.axis_function_indices)
+                xi, yi, zi = left_unit.axis_function_indices[local_row]
+                block[local_row, local_col] +=
+                    projected_axis_matrices[1][xi, xj] *
+                    projected_axis_matrices[2][yi, yj] *
+                    projected_axis_matrices[3][zi, zj]
+            end
+        end
+    end
+    return block
+end
+
+function _product_doside_axis_operator_matrix(axis_ops::NamedTuple{(:x,:y,:z)}, axis::Int, kind::Symbol)
+    axis_name = (:x, :y, :z)[axis]
+    axis_data = getproperty(axis_ops, axis_name)
+    hasproperty(axis_data, kind) || throw(
+        ArgumentError("product/doside retained kinetic block axis $(axis_name) is missing $(kind) matrix"),
+    )
+    return getproperty(axis_data, kind)
+end
+
+function _product_doside_retained_kinetic_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_ops::NamedTuple{(:x,:y,:z)},
+)
+    axis_factor_terms = (
+        (
+            _product_doside_axis_operator_matrix(axis_ops, 1, :kinetic),
+            _product_doside_axis_operator_matrix(axis_ops, 2, :overlap),
+            _product_doside_axis_operator_matrix(axis_ops, 3, :overlap),
+        ),
+        (
+            _product_doside_axis_operator_matrix(axis_ops, 1, :overlap),
+            _product_doside_axis_operator_matrix(axis_ops, 2, :kinetic),
+            _product_doside_axis_operator_matrix(axis_ops, 3, :overlap),
+        ),
+        (
+            _product_doside_axis_operator_matrix(axis_ops, 1, :overlap),
+            _product_doside_axis_operator_matrix(axis_ops, 2, :overlap),
+            _product_doside_axis_operator_matrix(axis_ops, 3, :kinetic),
+        ),
+    )
+    return _product_doside_retained_separable_sum_block(
+        left_unit,
+        right_unit,
+        axis_factor_terms,
+    )
+end
+
 function _fill_product_staged_metric_blocks!(
     overlap::Matrix{Float64},
     position_x::Matrix{Float64},

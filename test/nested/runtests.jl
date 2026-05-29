@@ -2634,6 +2634,87 @@ end
     @test length(consistent_left_helper_weights) == length(consistent_left_unit.column_range)
     @test size(consistent_left_helper_first_moments) ==
           (length(consistent_left_unit.column_range), 3)
+    kinetic_axis_ops = (
+        x = (
+            overlap = distinct_axis_metrics.x.overlap,
+            kinetic = [
+                1.2 -0.4 0.1
+                -0.4 1.6 -0.35
+                0.1 -0.35 2.1
+            ],
+        ),
+        y = (
+            overlap = distinct_axis_metrics.y.overlap,
+            kinetic = [
+                0.9 -0.25
+                -0.25 1.3
+            ],
+        ),
+        z = (
+            overlap = distinct_axis_metrics.z.overlap,
+            kinetic = [0.7;;],
+        ),
+    )
+    kinetic_axis_factor_terms = (
+        (kinetic_axis_ops.x.kinetic, kinetic_axis_ops.y.overlap, kinetic_axis_ops.z.overlap),
+        (kinetic_axis_ops.x.overlap, kinetic_axis_ops.y.kinetic, kinetic_axis_ops.z.overlap),
+        (kinetic_axis_ops.x.overlap, kinetic_axis_ops.y.overlap, kinetic_axis_ops.z.kinetic),
+    )
+    function product_doside_support_local_separable_sum_reference(
+        left_unit,
+        right_unit,
+        axis_factor_terms,
+    )
+        left_entries = CCPM._staged_unit_entries(left_unit)
+        right_entries = CCPM._staged_unit_entries(right_unit)
+        reference = zeros(Float64, length(left_unit.column_range), length(right_unit.column_range))
+        for factors in axis_factor_terms
+            reference .+= CCPM._contract_pair_block(
+                left_entries,
+                right_entries,
+                factors[1],
+                factors[2],
+                factors[3],
+            )
+        end
+        return reference
+    end
+    consistent_left_kinetic =
+        CCPM._product_doside_retained_kinetic_block(
+            consistent_left_unit,
+            consistent_left_unit,
+            kinetic_axis_ops,
+        )
+    consistent_left_kinetic_reference =
+        product_doside_support_local_separable_sum_reference(
+            consistent_left_unit,
+            consistent_left_unit,
+            kinetic_axis_factor_terms,
+        )
+    consistent_cross_kinetic =
+        CCPM._product_doside_retained_kinetic_block(
+            consistent_left_unit,
+            consistent_right_unit,
+            kinetic_axis_ops,
+        )
+    consistent_cross_separable_sum =
+        CCPM._product_doside_retained_separable_sum_block(
+            consistent_left_unit,
+            consistent_right_unit,
+            kinetic_axis_factor_terms,
+        )
+    consistent_cross_kinetic_reference =
+        product_doside_support_local_separable_sum_reference(
+            consistent_left_unit,
+            consistent_right_unit,
+            kinetic_axis_factor_terms,
+        )
+    @test size(consistent_left_kinetic) == (4, 4)
+    @test size(consistent_cross_kinetic) == (4, 2)
+    @test consistent_left_kinetic ≈ consistent_left_kinetic_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_left_kinetic ≈ transpose(consistent_left_kinetic) atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_cross_kinetic ≈ consistent_cross_separable_sum atol = 1.0e-14 rtol = 1.0e-14
+    @test consistent_cross_kinetic ≈ consistent_cross_kinetic_reference atol = 1.0e-14 rtol = 1.0e-14
     for term in (:overlap, :position_x, :position_y, :position_z)
         packet = CCP._cartesian_factorized_product_doside_raw_low_order_operator_packet(
             consistent_cross_pair;
