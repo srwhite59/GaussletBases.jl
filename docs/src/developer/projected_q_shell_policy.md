@@ -158,6 +158,37 @@ technical work should optimize the product path with caching, scratch reuse,
 and boundary-mode grouping. This checkpoint does not justify immediate
 by-center, supplement, QW, Hamiltonian, CR2, or science-route adoption.
 
+## Executable Payload Fixture Checkpoint
+
+The next private checkpoint adds an executable resolved-payload fixture for
+PQS low-order metric checks. Descriptor-only PQS remains unsupported/prototype:
+without an explicit `column_range` it still reports missing installed sidecar
+payload fields and is not consumed by fixed blocks or production metric paths.
+
+The fixture combines the existing PQS descriptor with an explicit
+`column_range`, raw-boundary support coefficients, boundary COMX mode data,
+and the stored full-rank symmetric Lowdin cleanup transform. It is fixture-only
+and does not install PQS into real fixed-block sidecars.
+
+Validated low-order checks are deliberately narrow:
+
+- PQS self blocks use identity self-overlap only as the post-cleanup
+  orthonormality invariant, and validate weights, position matrices, and first
+  moments against the existing reference path.
+- PQS/support-dense mixed blocks use the support-local reference path. They do
+  not use the identity shortcut for mixed overlap.
+- PQS/product optimized blocks remain explicitly unsupported.
+
+This is low-order metric readiness only. It does not imply readiness for
+kinetic, `x2`, nuclear/local one-body terms, Gaussian or pair terms,
+interactions, QW/Hamiltonian construction, H1, energy, CR2 validation, or any
+science route. No default builders, fixed-block sidecars, public APIs, backend
+policy, PGDG/quadrature policy, or QW/Hamiltonian paths changed.
+
+If scoped later, the next implementation should be a tiny real
+sidecar-installation fixture with the same guards before any broader metric or
+operator adoption.
+
 ## Consequences For Mainline
 
 The next source-construction design should treat PQS as the regular shell

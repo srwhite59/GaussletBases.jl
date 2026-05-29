@@ -970,10 +970,15 @@ The numerical kernels remain the same authority:
 - mixed or support-dense blocks use the existing support-local fallback
 - support-local default metric execution remains direct and unchanged
 
-PQS remains outside this execution seam. PQS descriptors are still
-prototype-only metadata: they report missing installed sidecar/product-staged
-payload fields, are not installed into fixed-block sidecars, and are not
-consumed by contracted-parent metric execution.
+PQS remains outside production metric execution. Descriptor-only PQS is still
+prototype-only metadata: it reports missing installed sidecar/product-staged
+payload fields, is not installed into fixed-block sidecars, and is not
+consumed by public contracted-parent metric execution. A later private fixture
+checkpoint added an explicit-column-range executable PQS resolved payload for
+low-order reference checks only. That fixture validates PQS self blocks and
+PQS/support-dense mixed blocks through support-local/reference contracts, keeps
+PQS/product optimized blocks explicitly unsupported, and does not imply QW,
+Hamiltonian, H1, energy, CR2, or production metric readiness.
 
 This checkpoint changes no QW/Hamiltonian construction, backend defaults, PGDG
 policy, quadrature policy, public/default route behavior, source builders, or
