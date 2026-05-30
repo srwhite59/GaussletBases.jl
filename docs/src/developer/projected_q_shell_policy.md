@@ -265,13 +265,45 @@ The strict PQS q5 occupied orbital energies in this smoke were
 `(-4.7317411478, -4.7317331742, -0.3803502823, -0.2518522168)`. Strict PQS q5
 and the fair q-row final route both converge in this density-density IDA/MWG
 SCF smoke. The strict PQS q5 final energy is higher than the fair q-row final
-by `+0.003402597777 Eh`, but IDA/MWG is not a variational two-electron model,
-so this is a model-dependent energy difference, not a basis-quality ordering.
+by `+0.003402597777 Eh`. IDA/MWG is the intended gausslet electron-electron
+Hamiltonian form; the repo does not normally use a Galerkin four-index Coulomb
+tensor with gausslet bases. The caution is narrower: lower IDA/MWG energy
+should not be reported as automatically better basis quality in the usual
+basis-set variational sense.
 
 This proves private HF-smoke compatibility of the strict PQS q5 final
-operators. It is not production HF validation, does not add a public HF API,
-and does not change QW/Hamiltonian construction, IDA/MWG semantics, CR2
-artifacts, or public/default routes.
+operators for the intended gausslet RHF Hamiltonian form. It is not production
+HF validation, does not add a public HF API, and does not change
+QW/Hamiltonian construction, IDA/MWG semantics, CR2 artifacts, or
+public/default routes.
+
+The external conventional-Coulomb RHF reference ladder for all-electron Be2 at
+`R = 5.0` bohr is:
+
+| PySCF basis | RHF total energy | delta vs 5Z |
+|---|---:|---:|
+| cc-pVDZ | `-29.136053493620 Eh` | `+1.622 mHa` |
+| cc-pVTZ | `-29.137357901570 Eh` | `+0.317 mHa` |
+| cc-pVQZ | `-29.137579392916 Eh` | `+0.096 mHa` |
+| cc-pV5Z | `-29.137675195692 Eh` | `0.000 mHa` |
+
+`aug-cc-pVQZ` lowers `cc-pVQZ` by only `0.018 mHa`. These PySCF totals include
+nuclear repulsion. For Be2 with `Z = 4` and `R = 5.0` bohr, the nuclear
+repulsion is `3.2 Eh`, so the PySCF cc-pV5Z electronic-only energy is
+approximately `-32.337675195692 Eh`. Repo private SCF smoke energies appear to
+be electronic energies unless nuclear repulsion is added separately. Compare
+total-to-total or electronic-to-electronic only, and keep the Hamiltonian model
+difference explicit: PySCF uses the conventional Gaussian four-index Coulomb
+Hamiltonian, while the repo smoke uses the intended gausslet IDA/MWG
+Hamiltonian.
+
+The near-term scientific step should be a Be2 gausslet-RHF ladder under the
+intended IDA/MWG Hamiltonian, tracking q/source-mode/basis-size convergence.
+The PySCF RHF ladder should be used as an external conventional-Coulomb
+reference, not as a direct same-model variational target. `cc-pVDZ` remains
+useful as a small plumbing/capture target; `cc-pVQZ` or `cc-pV5Z` is the more
+appropriate conventional-Coulomb reference for a nearly converged Be2 RHF
+number.
 
 ## Sidecar Prototype Checkpoint
 
