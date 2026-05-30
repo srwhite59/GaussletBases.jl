@@ -479,6 +479,46 @@ kinetic, while first moments are compared against the contracted-parent metric
 packet reference. This is not sequence-level source composition and not packet
 construction adoption.
 
+The sequence-level pre-packet source checkpoint is recorded by
+`10bd5fe Add sequence pre-packet source shadow`. The private helper
+`_cartesian_nested_sequence_pre_packet_build_source(...)` builds a
+sequence-level `_CartesianPacketBuildSource3D` from sequence ingredients before
+packet construction, again in diagnostic/shadow mode only. Its explicit inputs
+are parent `dims`, `core_indices`, `core_coefficients`, `core_column_range`,
+`shell_layers`, `layer_column_ranges`, the full sequence `coefficient_matrix`,
+and sequence `support_indices`.
+
+The sequence representation follows existing staged-sidecar conventions rather
+than inventing new coefficient semantics. The core is represented as one
+`:support_dense` payload. Product endcap/panel shell layers expand their
+`owned_units` into `:product_doside` payloads with sequence-global column
+ranges. Non-product layers use support-dense fallback through
+`coefficient_matrix[:, layer_range]`.
+
+The helper diagnostics preserve the same authority boundary:
+
+```text
+packet_construction_consumes_source = false
+source_object_builds_packet_matrices = false
+nested_shell_packet_remains_authoritative = true
+```
+
+Two auditor caveats are part of the contract. First, `core_coefficients` are
+accepted separately from `coefficient_matrix[:, core_column_range]`; the helper
+checks shape and support but does not currently check coefficient-value
+equality. Second, product/doside layer payloads are reconstructed from
+`owned_units`, not from the layer coefficient slice. That matches the sidecar
+logic, while the safe-field shadow comparison is the check that catches packet
+or coefficient mismatches. This is acceptable diagnostic infrastructure, not
+packet construction adoption.
+
+On the q4 bond-aligned endcap/panel fixture, the pre-sequence source matches
+the post-sidecar source in dimensions, payload counts and kinds, column ranges,
+support indices, coverage summaries, and candidate/missing fields. Its
+safe-field shadow matches the authoritative fixed-block overlap,
+`position_x`, `position_y`, `position_z`, weights, and kinetic fields. First
+moments compare against the contracted-parent metric packet reference.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
