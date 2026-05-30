@@ -3300,6 +3300,13 @@ end
         q4_fixture_supplement_representation = basis_representation(q4_fixture_supplement_ops)
         @test q4_fixture_supplement_representation.parent_data.hybrid_overlap_kind ==
               :factorized_bond_aligned_diatomic_mixed_raw
+        @test q4_fixture_supplement_representation.parent_data.hybrid_overlap_audit_contract ==
+              :block_support_sparse_parent_to_fixed_map_materialized_densely_for_exact_parent_to_supplement_overlap_audit
+        @test q4_fixture_supplement_representation.parent_data.hybrid_overlap_audit_coefficient_scope ==
+              :parent_to_fixed
+        @test q4_fixture_supplement_representation.parent_data.hybrid_overlap_audit_cross_overlap ==
+              :parent_to_supplement
+        @test !q4_fixture_supplement_representation.parent_data.hybrid_overlap_audit_parent_parent_operator
         @test hasproperty(
             q4_fixture_supplement_representation.parent_data,
             :factorized_cartesian_parent_basis,

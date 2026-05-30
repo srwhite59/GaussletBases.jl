@@ -240,6 +240,13 @@ product/factorized parent data. PQS fixed columns are therefore not marked as
 product-factorized. Product/q-row fixed columns still keep the existing
 factorized sidecar path and its reconstruction checks.
 
+The dense fallback is an exact parent-to-supplement overlap audit. Its
+coefficient factor is a block/support-sparse parent-to-fixed coefficient map
+materialized densely for exact parent-to-supplement overlap audit, then
+contracted as `parent_to_fixed_coefficients' * overlap_ga`. It is not a dense
+parent-parent operator and must not be confused with
+`dense_parent_matrix_used` in QW construction.
+
 The strict PQS q5 supplement probe now reports
 `final_receipt_audit_available = true`. Its hybrid overlap sidecar kind is
 `:dense_bond_aligned_diatomic_mixed_raw`, and the receipt-built final

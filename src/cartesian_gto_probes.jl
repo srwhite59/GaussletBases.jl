@@ -166,7 +166,7 @@ function _cartesian_atomic_qw_dense_parent_probe_overlap(
         probes,
         raw.cartesian_probe_expansion,
     )
-    parent_coefficients =
+    parent_to_fixed_coefficients =
         raw.cartesian_representation.coefficient_matrix === nothing ?
         Matrix{Float64}(
             I,
@@ -174,7 +174,7 @@ function _cartesian_atomic_qw_dense_parent_probe_overlap(
             raw.cartesian_representation.metadata.final_dimension,
         ) :
         Matrix{Float64}(raw.cartesian_representation.coefficient_matrix)
-    return Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga)
+    return Matrix{Float64}(transpose(parent_to_fixed_coefficients) * raw_blocks.overlap_ga)
 end
 
 function _cartesian_cartesian_probe_overlap(

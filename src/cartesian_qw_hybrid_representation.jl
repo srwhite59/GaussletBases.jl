@@ -69,7 +69,7 @@ function _cartesian_atomic_hybrid_overlap_sidecars(
         supplement3d,
         operators.expansion,
     )
-    parent_coefficients =
+    parent_to_fixed_coefficients =
         cartesian_parent.coefficient_matrix === nothing ?
         Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
         Matrix{Float64}(cartesian_parent.coefficient_matrix)
@@ -82,8 +82,13 @@ function _cartesian_atomic_hybrid_overlap_sidecars(
         cartesian_probe_parent_basis = parent_basis,
         cartesian_probe_expansion = operators.expansion,
         cartesian_probe_gausslet_backend = operators.gausslet_backend,
+        hybrid_overlap_audit_contract =
+            :block_support_sparse_parent_to_fixed_map_materialized_densely_for_exact_parent_to_supplement_overlap_audit,
+        hybrid_overlap_audit_coefficient_scope = :parent_to_fixed,
+        hybrid_overlap_audit_cross_overlap = :parent_to_supplement,
+        hybrid_overlap_audit_parent_parent_operator = false,
         exact_cartesian_supplement_overlap =
-            Matrix{Float64}(transpose(parent_coefficients) * raw_blocks.overlap_ga),
+            Matrix{Float64}(transpose(parent_to_fixed_coefficients) * raw_blocks.overlap_ga),
         exact_supplement_overlap = Matrix{Float64}(raw_blocks.overlap_aa),
     )
     isnothing(factorized_cartesian_parent_basis) && return base_sidecars
@@ -125,7 +130,7 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
         parent_basis,
         operators.expansion,
     )
-    parent_coefficients =
+    parent_to_fixed_coefficients =
         cartesian_parent.coefficient_matrix === nothing ?
         Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
         Matrix{Float64}(cartesian_parent.coefficient_matrix)
@@ -134,8 +139,13 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
             isnothing(factorized_cartesian_parent_basis) ?
             :dense_bond_aligned_diatomic_mixed_raw :
             :factorized_bond_aligned_diatomic_mixed_raw,
+        hybrid_overlap_audit_contract =
+            :block_support_sparse_parent_to_fixed_map_materialized_densely_for_exact_parent_to_supplement_overlap_audit,
+        hybrid_overlap_audit_coefficient_scope = :parent_to_fixed,
+        hybrid_overlap_audit_cross_overlap = :parent_to_supplement,
+        hybrid_overlap_audit_parent_parent_operator = false,
         exact_cartesian_supplement_overlap =
-            Matrix{Float64}(transpose(parent_coefficients) * overlap_blocks.overlap_ga),
+            Matrix{Float64}(transpose(parent_to_fixed_coefficients) * overlap_blocks.overlap_ga),
         exact_supplement_overlap = Matrix{Float64}(overlap_blocks.overlap_aa),
     )
     isnothing(factorized_cartesian_parent_basis) && return base_sidecars
