@@ -256,6 +256,18 @@ change supplement construction, QW/Hamiltonian assembly, public/default route
 adoption, CR2 artifacts, optimized PQS/product kernels,
 local/ECP/Gaussian/MWG handling, or numerical fallback policy.
 
+Interaction and weight diagnostics must keep two contracts separate. Active
+fixed/final operators use the intended gausslet IDA/MWG electron-electron
+route through the existing nested pair-sum interaction data. Retained PQS
+per-column weights in private executable payloads are different: they are
+debug/reference metadata, not generic positive quadrature masses and not IDA
+division weights. PQS diagnostics should therefore report retained-column
+weight role `:debug_reference_only`, `ida_weight_division_allowed = false`, and
+no claimed quadrature-weight semantics. Those flags do not disable or weaken
+the active IDA/MWG interaction path; they only prevent PQS retained-transform
+weights from being mistaken for the positive weights owned by the pair-sum
+construction.
+
 The private density-density SCF smoke then used the existing matrix-level
 `_closed_shell_density_density_scf` helper on the final
 `OrdinaryCartesianOperators3D` data: overlap, H1, and `interaction_matrix`.

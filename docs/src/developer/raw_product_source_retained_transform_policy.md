@@ -159,6 +159,14 @@ divide by retained weights should either operate at the raw source level or
 require an explicit retained-column `:positive_required` role plus a finite
 positive check.
 
+This label is independent of whether an operator object contains the intended
+gausslet IDA/MWG electron-electron interaction. For PQS, the active fixed/final
+interaction may still be the normal nested pair-sum IDA/MWG route, while the
+private PQS retained-transform payload reports retained-column weights as
+`:debug_reference_only` with `ida_weight_division_allowed = false`. That
+combination is intentional: the interaction path remains active, but retained
+PQS columns are not themselves promoted to positive quadrature carriers.
+
 Supplement or final-basis functions are different. Angular GTO supplements
 such as p and d functions, residual directions, and other non-quadrature
 additions do not carry positive quadrature weights. Their integral or weight

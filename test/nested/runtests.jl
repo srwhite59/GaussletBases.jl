@@ -579,6 +579,14 @@ end
     @test cubic_pqs_payload.diagnostics.coefficient_scope == :support_local_boundary_rows
     @test !cubic_pqs_payload.diagnostics.parent_dimension_coefficient_map
     @test cubic_pqs_payload.diagnostics.support_coefficient_shape == (98, 98)
+    @test cubic_pqs_payload.diagnostics.retained_column_weight_role ==
+          :debug_reference_only
+    @test cubic_pqs_payload.diagnostics.retained_weight_semantics ==
+          :debug_reference_only
+    @test !cubic_pqs_payload.diagnostics.retained_weights_used_for_ida_division
+    @test !cubic_pqs_payload.diagnostics.ida_weight_division_allowed
+    @test !cubic_pqs_payload.diagnostics.quadrature_weight_semantics_claimed
+    @test cubic_pqs_payload.diagnostics.active_interaction_path == :none_fixture_only
     @test !cubic_pqs_payload.diagnostics.fixed_block_sidecar_installed
     @test !cubic_pqs_payload.diagnostics.default_builder_consumes
     @test !cubic_pqs_payload.diagnostics.pqs_product_optimized_path_ready
@@ -622,6 +630,14 @@ end
           :pqs_low_order_support_local_reference
     @test cubic_pqs_resolved.diagnostics.coefficient_scope == :support_local_boundary_rows
     @test !cubic_pqs_resolved.diagnostics.parent_dimension_coefficient_map
+    @test cubic_pqs_resolved.diagnostics.retained_column_weight_role ==
+          :debug_reference_only
+    @test cubic_pqs_resolved.diagnostics.retained_weight_semantics ==
+          :debug_reference_only
+    @test !cubic_pqs_resolved.diagnostics.retained_weights_used_for_ida_division
+    @test !cubic_pqs_resolved.diagnostics.ida_weight_division_allowed
+    @test !cubic_pqs_resolved.diagnostics.quadrature_weight_semantics_claimed
+    @test cubic_pqs_resolved.diagnostics.active_interaction_path == :none_fixture_only
     @test !cubic_pqs_resolved.diagnostics.production_supported
     @test !cubic_pqs_resolved.diagnostics.fixed_block_sidecar_installed
     pqs_self_dispatch = CCPM._metric_dispatch_plan_from_resolved_payloads(
