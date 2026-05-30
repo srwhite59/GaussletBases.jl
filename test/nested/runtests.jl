@@ -4983,6 +4983,28 @@ end
     @test pre_packet_shadow.weights ≈ layer.packet.weights atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.kinetic ≈ layer.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.first_moments ≈ layer_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
+    sequence_core_coefficients =
+        endcap_source.sequence.coefficient_matrix[:, endcap_source.sequence.core_column_range]
+    pre_sequence_source = CCP._cartesian_nested_sequence_pre_packet_build_source(
+        dims,
+        endcap_source.sequence.core_indices,
+        sequence_core_coefficients,
+        endcap_source.sequence.core_column_range,
+        endcap_source.sequence.shell_layers,
+        endcap_source.sequence.layer_column_ranges,
+        endcap_source.sequence.coefficient_matrix,
+        endcap_source.sequence.support_indices,
+    )
+    @test pre_sequence_source.parent_dimension == prod(dims)
+    @test pre_sequence_source.contracted_dimension == size(endcap_source.sequence.coefficient_matrix, 2)
+    @test Dict(pre_sequence_source.payload_kind_counts)[:product_doside] == 6
+    @test Dict(pre_sequence_source.payload_kind_counts)[:support_dense] == 1
+    @test pre_sequence_source.diagnostics.packet_construction_consumes_source == false
+    @test pre_sequence_source.diagnostics.source_object_builds_packet_matrices == false
+    @test pre_sequence_source.diagnostics.nested_shell_packet_remains_authoritative
+    @test !pre_sequence_source.diagnostics.numerical_packet_matrices_built
+    @test !pre_sequence_source.diagnostics.operator_data_available
+    @test !pre_sequence_source.diagnostics.packet_operator_data_checked
     layer_region = CCP.cartesian_shell_region(
         layer;
         parent_dimension = prod(GaussletBases._nested_axis_lengths(bundles)),
@@ -5219,11 +5241,26 @@ end
     )
     packet_build_source = packet_build_plan.source
     packet_payload_counts = Dict(packet_build_source.payload_kind_counts)
+    pre_sequence_payload_counts = Dict(pre_sequence_source.payload_kind_counts)
     @test packet_build_plan isa CCP._CartesianPacketBuildPlan3D
     @test packet_build_source isa CCP._CartesianPacketBuildSource3D
     @test packet_build_source.parent_dimension == parent_dim
     @test packet_build_source.contracted_dimension == 313
+    @test pre_sequence_source isa CCP._CartesianPacketBuildSource3D
+    @test pre_sequence_source.parent_dimension == packet_build_source.parent_dimension
+    @test pre_sequence_source.contracted_dimension == packet_build_source.contracted_dimension
+    @test pre_sequence_source.payload_kind_counts == packet_build_source.payload_kind_counts
+    @test pre_sequence_payload_counts[:product_doside] == 6
+    @test pre_sequence_payload_counts[:support_dense] == length(support_rules)
     @test length(packet_build_source.resolved_payloads) == length(resolved_payloads)
+    @test length(pre_sequence_source.resolved_payloads) ==
+          length(packet_build_source.resolved_payloads)
+    @test [payload.payload_kind for payload in pre_sequence_source.resolved_payloads] ==
+          [payload.payload_kind for payload in packet_build_source.resolved_payloads]
+    @test [payload.column_range for payload in pre_sequence_source.resolved_payloads] ==
+          [payload.column_range for payload in packet_build_source.resolved_payloads]
+    @test [payload.support_indices for payload in pre_sequence_source.resolved_payloads] ==
+          [payload.support_indices for payload in packet_build_source.resolved_payloads]
     @test [payload.payload for payload in packet_build_source.resolved_payloads] ==
           [payload.payload for payload in resolved_payloads]
     @test [payload.payload_kind for payload in packet_build_source.resolved_payloads] ==
@@ -5240,6 +5277,22 @@ end
     @test packet_build_source.column_coverage.outside_count == 0
     @test packet_build_source.support_union_summary.parent_dimension == parent_dim
     @test packet_build_source.support_union_summary.outside_count == 0
+    @test pre_sequence_source.column_coverage.entry_count ==
+          packet_build_source.column_coverage.entry_count
+    @test pre_sequence_source.column_coverage.unique_count ==
+          packet_build_source.column_coverage.unique_count
+    @test pre_sequence_source.column_coverage.duplicate_count ==
+          packet_build_source.column_coverage.duplicate_count
+    @test pre_sequence_source.column_coverage.missing_count ==
+          packet_build_source.column_coverage.missing_count
+    @test pre_sequence_source.column_coverage.outside_count ==
+          packet_build_source.column_coverage.outside_count
+    @test pre_sequence_source.support_union_summary.entry_count ==
+          packet_build_source.support_union_summary.entry_count
+    @test pre_sequence_source.support_union_summary.unique_count ==
+          packet_build_source.support_union_summary.unique_count
+    @test pre_sequence_source.support_union_summary.outside_count ==
+          packet_build_source.support_union_summary.outside_count
     @test packet_payload_counts[:product_doside] == 6
     @test packet_payload_counts[:support_dense] == length(support_rules)
     @test packet_build_source.candidate_packet_fields == (
@@ -5273,6 +5326,16 @@ end
     @test packet_build_source.diagnostics.support_union_summary_informational
     @test !packet_build_source.diagnostics.parent_support_complete_required
     @test packet_build_source.diagnostics.overlapping_payload_support_allowed
+    @test pre_sequence_source.candidate_packet_fields ==
+          packet_build_source.candidate_packet_fields
+    @test pre_sequence_source.missing_packet_fields ==
+          packet_build_source.missing_packet_fields
+    @test pre_sequence_source.diagnostics.packet_construction_consumes_source == false
+    @test pre_sequence_source.diagnostics.source_object_builds_packet_matrices == false
+    @test pre_sequence_source.diagnostics.nested_shell_packet_remains_authoritative
+    @test !pre_sequence_source.diagnostics.numerical_packet_matrices_built
+    @test !pre_sequence_source.diagnostics.operator_data_available
+    @test !pre_sequence_source.diagnostics.packet_operator_data_checked
     @test !packet_build_source.diagnostics.full_packet_builder_ready
     @test packet_build_plan.current_builder_authority == :nested_shell_packet
     @test !packet_build_plan.descriptor_drives_builder
@@ -5337,6 +5400,23 @@ end
     @test product_metric_packet.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test product_metric_packet.centers ≈ fixed_block.fixed_centers atol = 1.0e-10 rtol = 1.0e-10
+    pre_sequence_shadow = CCPM._cartesian_packet_build_source_safe_field_shadow(
+        pre_sequence_source,
+        safe_axis_data,
+    )
+    @test pre_sequence_shadow.diagnostics.source_driven_shadow_only
+    @test !pre_sequence_shadow.diagnostics.construction_adoption
+    @test pre_sequence_shadow.diagnostics.current_builder_authority ==
+          :nested_shell_packet
+    @test pre_sequence_shadow.diagnostics.product_unit_count == 6
+    @test pre_sequence_shadow.diagnostics.support_dense_unit_count == length(support_rules)
+    @test pre_sequence_shadow.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.position_x ≈ fixed_block.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.position_y ≈ fixed_block.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.position_z ≈ fixed_block.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.kinetic ≈ fixed_block.kinetic atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.first_moments ≈ product_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
     safe_field_shadow = CCPM._cartesian_packet_build_source_safe_field_shadow(
         packet_build_source,
         safe_axis_data,

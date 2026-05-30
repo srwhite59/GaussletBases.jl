@@ -18,6 +18,7 @@ import ..GaussletBases: _CartesianCoefficientMap,
                          _nested_parent_axis_counts,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _nested_projected_q_shell_staged_unit_descriptor,
+                         _nested_product_staged_generic_unit,
                          _nested_product_staged_unit_from_owned_unit,
                          _nested_staged_by_center_sidecar
 import ..GaussletBases.CartesianParentGaussletBases:
@@ -3288,6 +3289,147 @@ function _cartesian_endcap_panel_pre_packet_build_source(
             packet_construction_consumes_source = false,
             source_object_builds_packet_matrices = false,
             nested_shell_packet_remains_authoritative = true,
+            user_provenance = provenance,
+        ),
+    )
+end
+
+function _cartesian_nested_sequence_pre_packet_build_source(
+    dims::NTuple{3,Int},
+    core_indices::AbstractVector{<:Integer},
+    core_coefficients::AbstractMatrix{<:Real},
+    core_column_range::UnitRange{Int},
+    shell_layers::AbstractVector,
+    layer_column_ranges::AbstractVector{<:UnitRange{Int}},
+    coefficient_matrix::AbstractMatrix{<:Real},
+    support_indices::AbstractVector{<:Integer};
+    atol::Real = 1.0e-14,
+    provenance = (;),
+)
+    length(shell_layers) == length(layer_column_ranges) || throw(
+        ArgumentError("nested sequence pre-packet source layer ranges must match shell layers"),
+    )
+    parent_dimension = prod(dims)
+    size(coefficient_matrix, 1) == parent_dimension || throw(
+        DimensionMismatch("nested sequence pre-packet coefficient rows must match parent dimension"),
+    )
+    size(core_coefficients, 1) == parent_dimension || throw(
+        DimensionMismatch("nested sequence pre-packet core coefficient rows must match parent dimension"),
+    )
+    length(core_column_range) == size(core_coefficients, 2) || throw(
+        ArgumentError("nested sequence pre-packet core column range must match core coefficient columns"),
+    )
+
+    sequence_column_ranges = UnitRange{Int}[core_column_range]
+    append!(
+        sequence_column_ranges,
+        UnitRange{Int}[first(range):last(range) for range in layer_column_ranges],
+    )
+    column_coverage = _packet_build_column_coverage(
+        sequence_column_ranges,
+        size(coefficient_matrix, 2),
+    )
+    column_coverage.missing_count == 0 &&
+        column_coverage.outside_count == 0 &&
+        column_coverage.duplicate_count == 0 || throw(
+            ArgumentError("nested sequence pre-packet source column ranges must exactly cover coefficient columns"),
+        )
+
+    staged_units = _CartesianNestedProductStagedByCenterUnit3D[]
+    product_count = 0
+    generic_count = 0
+
+    core_unit = _nested_product_staged_generic_unit(
+        :core,
+        core_coefficients,
+        core_column_range,
+        dims;
+        atol,
+        provenance = (; source = :sequence_core_pre_packet),
+    )
+    sort(core_unit.support_indices) == sort(Int[index for index in core_indices]) || throw(
+        ArgumentError("nested sequence pre-packet core support must match core indices"),
+    )
+    push!(staged_units, core_unit)
+    generic_count += 1
+
+    for (layer, layer_range) in zip(shell_layers, layer_column_ranges)
+        if hasproperty(layer, :owned_units) &&
+           hasproperty(layer, :unit_column_ranges) &&
+           getproperty(layer, :owned_units).coefficient_contract == :product_doside
+            owned_units = getproperty(layer, :owned_units)
+            unit_column_ranges = getproperty(layer, :unit_column_ranges)
+            length(owned_units.units) == length(unit_column_ranges) || throw(
+                ArgumentError("nested sequence pre-packet product layer unit ranges must match owned units"),
+            )
+            layer_first = first(layer_range)
+            for (owned_unit, unit_range) in zip(owned_units.units, unit_column_ranges)
+                global_range =
+                    (layer_first + first(unit_range) - 1):(layer_first + last(unit_range) - 1)
+                push!(
+                    staged_units,
+                    _nested_product_staged_unit_from_owned_unit(
+                        owned_unit;
+                        column_range = global_range,
+                        dims,
+                    ),
+                )
+                product_count += 1
+            end
+        else
+            push!(
+                staged_units,
+                _nested_product_staged_generic_unit(
+                    Symbol(:layer_, length(staged_units)),
+                    coefficient_matrix[:, layer_range],
+                    layer_range,
+                    dims;
+                    atol,
+                    provenance = (
+                        source = :sequence_layer_pre_packet,
+                        layer_type = nameof(typeof(layer)),
+                    ),
+                ),
+            )
+            generic_count += 1
+        end
+    end
+
+    product_count == 0 && throw(
+        ArgumentError("nested sequence pre-packet source currently requires at least one product_doside layer"),
+    )
+    staged_support = sort(unique(reduce(vcat, (unit.support_indices for unit in staged_units))))
+    sequence_support = sort(unique(Int[Int(index) for index in support_indices]))
+    staged_support == sequence_support || throw(
+        ArgumentError("nested sequence pre-packet staged support must match sequence support indices"),
+    )
+
+    resolved_payloads = [
+        _cartesian_resolved_contraction_payload(unit; parent_dimension)
+        for unit in staged_units
+    ]
+    support_counts = Int[unit.diagnostics.support_count for unit in staged_units]
+    return _cartesian_packet_build_source_from_resolved_payloads(
+        resolved_payloads;
+        parent_dimension,
+        contracted_dimension = size(coefficient_matrix, 2),
+        provenance = (
+            source = :nested_sequence_pre_packet_build_source,
+            parent_dimension = parent_dimension,
+            contracted_dimension = size(coefficient_matrix, 2),
+            unit_count = length(staged_units),
+            product_unit_count = product_count,
+            generic_unit_count = generic_count,
+            support_counts = support_counts,
+            max_support_count = isempty(support_counts) ? 0 : maximum(support_counts),
+            packet_construction_consumes_source = false,
+            source_object_builds_packet_matrices = false,
+            nested_shell_packet_remains_authoritative = true,
+            fixed_block_construction_changed = false,
+            qwhamiltonian_changed = false,
+            backend_policy_changed = false,
+            quadrature_policy_changed = false,
+            cr2_science_status_changed = false,
             user_provenance = provenance,
         ),
     )
