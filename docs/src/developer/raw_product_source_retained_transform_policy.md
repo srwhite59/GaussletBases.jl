@@ -447,6 +447,38 @@ architecture question is whether and how to produce `_CartesianPacketBuildSource
 upstream before `_nested_shell_packet(...)`, rather than reconstructing it from
 a sidecar after packet construction has already happened.
 
+The first pre-packet source checkpoint is recorded by
+`bdea72b Add endcap panel pre-packet source shadow`. The private helper
+`_cartesian_endcap_panel_pre_packet_build_source(...)` consumes endcap/panel
+`owned_units`, `coefficient_matrix`, `unit_column_ranges`, `support_indices`,
+and parent `dims`, and produces a `_CartesianPacketBuildSource3D`-shaped
+source before packet matrix construction. This is diagnostic/layout-only:
+`_nested_shell_packet(...)` remains authoritative.
+
+The helper diagnostics record:
+
+```text
+packet_construction_consumes_source = false
+source_object_builds_packet_matrices = false
+nested_shell_packet_remains_authoritative = true
+```
+
+The helper currently uses `coefficient_matrix` only for dimensions and column
+coverage; coefficient values are not verified by this pre-packet source
+checkpoint, so its effective contract is `coefficient_values_checked = false`.
+The focused test calls the helper after the q4 endcap/panel `layer` object
+exists, but it passes only ingredients that are already available before packet
+construction: owned units, coefficient matrix, unit column ranges, support
+indices, and dimensions.
+
+On the q4 endcap/panel fixture, the pre-packet source matches the corresponding
+post-sidecar source in dimensions, payload kinds and counts, column ranges,
+support indices, and candidate/missing fields. Its safe-field shadow matches
+the authoritative layer packet fields for overlap, position, weights, and
+kinetic, while first moments are compared against the contracted-parent metric
+packet reference. This is not sequence-level source composition and not packet
+construction adoption.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
 transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
