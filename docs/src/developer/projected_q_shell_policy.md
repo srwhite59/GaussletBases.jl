@@ -111,6 +111,58 @@ The missing next design problem is product-staged PQS sidecar and performance
 work. PQS should not be adopted for by-center, supplement, or
 performance-sensitive routes until that sidecar/performance contract exists.
 
+## Fixed-Only Be2 Broad-Parent Diagnostic
+
+A private fixed-only Be2 PQS probe was run from the ignored repo script
+`tmp/work/be2_pqs_fixed_only_mvp_probe.jl`, using the existing output directory
+`tmp/work/be2_pqs_fixed_only_mvp_outputs/`. It must be classified as a
+broad-parent-boundary diagnostic and construction-contract failure relative to
+the intended q=5-local PQS MVP, not as a passed PQS MVP gate. It is not a
+supplement-coupled route, not HF or energy validation, not CR2 science
+validation, and not public/default route adoption.
+
+The target was Be2/cc-pVDZ at `R = 5.0`, all-electron `Z = 4`, `q = 5`, with
+the CR2 parent grid `(13, 13, 25)` and parent dimension `4225`. The probe
+confirmed the z-fast parent ordering and parent grid coordinates/weights
+against the repo-built parent basis. The fixed dimension was `3409`, which is
+near-parent behavior for a parent dimension of `4225`. The resulting
+capture/H1 numbers are therefore not meaningful evidence that the intended q=5
+PQS compression works.
+
+The QW construction used the PGDG backend
+`gausslet_backend = :pgdg_localized_experimental`, did not use numerical
+fallback, and reported `dense_parent_matrix_used = false`. The fixed-only
+capture/H1 readback was:
+
+| spin | fixed capture | worst orbital | max fixed H1 delta |
+|---|---:|---|---:|
+| alpha | `0.999997644256` | `alpha_mo_4` | `0.136217 mHa` |
+| beta | `0.999997644256` | `beta_mo_4` | `0.136217 mHa` |
+
+Those numbers are expected to look good for a near-full-parent fixed object
+and should not be compared as a successful q=5 PQS MVP gate. The timing
+checkpoint was `88.27 s` for fixed-block build, `7.57 s` for parent QW
+construction, and `16.60 s` for PQS fixed QW construction.
+
+The construction audit found that the current shared PQS regions used broad
+region dimensions rather than the selected recipe q. The two regular shared
+regions were constructed as:
+
+- `PQS(13, 23)`, retained count `1346`;
+- `PQS(11, 21)`, retained count `1002`.
+
+The intended q=5-local rectangular shell counts for the same bond-axis lengths
+would be much smaller:
+
+- `PQS(5, 23) = 386`;
+- `PQS(5, 21) = 354`.
+
+The immediate bug is that `raw_q` currently comes from the full shared-region
+transverse size, not from the selected recipe q. The next fix is to make
+shared-shell PQS construction q-local, or to explicitly label broad
+parent-boundary PQS as reference-only and keep it out of MVP/pass gates. Do
+not run supplement-coupled PQS until this construction contract is fixed.
+
 ## Sidecar Prototype Checkpoint
 
 As of 2026-05-28, mainline also has a private descriptor/prototype line for
