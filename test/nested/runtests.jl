@@ -1089,6 +1089,40 @@ end
                ) *
                Matrix{Float64}(product_unit.coefficient_matrix)
     end
+    cubic_pgdg_x = GaussletBases._nested_axis_pgdg(cubic_bundles, :x)
+    cubic_pgdg_y = GaussletBases._nested_axis_pgdg(cubic_bundles, :y)
+    cubic_pgdg_z = GaussletBases._nested_axis_pgdg(cubic_bundles, :z)
+    cubic_kinetic_axis_ops = (
+        x = (overlap = cubic_pgdg_x.overlap, kinetic = cubic_pgdg_x.kinetic),
+        y = (overlap = cubic_pgdg_y.overlap, kinetic = cubic_pgdg_y.kinetic),
+        z = (overlap = cubic_pgdg_z.overlap, kinetic = cubic_pgdg_z.kinetic),
+    )
+    function _pqs_product_expected_kinetic_block()
+        x_term = _pqs_cross_product_matrix(
+            cubic_pqs_payload.support_states,
+            product_unit.support_states,
+            cubic_kinetic_axis_ops.x.kinetic,
+            cubic_kinetic_axis_ops.y.overlap,
+            cubic_kinetic_axis_ops.z.overlap,
+        )
+        y_term = _pqs_cross_product_matrix(
+            cubic_pqs_payload.support_states,
+            product_unit.support_states,
+            cubic_kinetic_axis_ops.x.overlap,
+            cubic_kinetic_axis_ops.y.kinetic,
+            cubic_kinetic_axis_ops.z.overlap,
+        )
+        z_term = _pqs_cross_product_matrix(
+            cubic_pqs_payload.support_states,
+            product_unit.support_states,
+            cubic_kinetic_axis_ops.x.overlap,
+            cubic_kinetic_axis_ops.y.overlap,
+            cubic_kinetic_axis_ops.z.kinetic,
+        )
+        return transpose(pqs_product_support_coefficients) *
+               (x_term + y_term + z_term) *
+               Matrix{Float64}(product_unit.coefficient_matrix)
+    end
     pqs_product_reference_errors = Float64[]
     for term in (:overlap, :position_x, :position_y, :position_z)
         pqs_product_block = CCPM._pqs_product_low_order_reference_block(
@@ -1144,6 +1178,64 @@ end
         product_unit,
         cubic_metrics;
         term = :kinetic,
+    )
+    pqs_product_kinetic_block = CCPM._pqs_product_kinetic_reference_block(
+        cubic_pqs_payload,
+        product_unit,
+        cubic_kinetic_axis_ops,
+    )
+    product_pqs_kinetic_block = CCPM._pqs_product_kinetic_reference_block(
+        product_unit,
+        cubic_pqs_payload,
+        cubic_kinetic_axis_ops,
+    )
+    expected_pqs_product_kinetic = _pqs_product_expected_kinetic_block()
+    @test pqs_product_kinetic_block.path == :pqs_product_kinetic_reference
+    @test pqs_product_kinetic_block.term == :kinetic
+    @test size(pqs_product_kinetic_block.block) == (98, 4)
+    @test pqs_product_kinetic_block.block ≈ pqs_product_kinetic_block.oracle_block atol = 1.0e-12 rtol = 1.0e-12
+    @test pqs_product_kinetic_block.block ≈ expected_pqs_product_kinetic atol = 1.0e-12 rtol = 1.0e-12
+    @test pqs_product_kinetic_block.coefficient_error < 1.0e-12
+    @test pqs_product_kinetic_block.block_error < 1.0e-12
+    @test pqs_product_kinetic_block.diagnostics.fixture_reference_only
+    @test !pqs_product_kinetic_block.diagnostics.production_supported
+    @test pqs_product_kinetic_block.diagnostics.signed_operator_reference
+    @test pqs_product_kinetic_block.diagnostics.retained_weight_semantics == :not_used
+    @test pqs_product_kinetic_block.diagnostics.retained_pqs_weights_role ==
+          :debug_reference_only
+    @test !pqs_product_kinetic_block.diagnostics.retained_pqs_weights_used
+    @test !pqs_product_kinetic_block.diagnostics.retained_pqs_weights_positive_checked
+    @test !pqs_product_kinetic_block.diagnostics.ida_weight_division_allowed
+    @test !pqs_product_kinetic_block.diagnostics.quadrature_weight_semantics_claimed
+    @test !pqs_product_kinetic_block.diagnostics.packet_adoption
+    @test !pqs_product_kinetic_block.diagnostics.fixed_block_sidecar_installation
+    @test !pqs_product_kinetic_block.diagnostics.qwhamiltonian_consumes
+    @test !pqs_product_kinetic_block.diagnostics.public_default_consumes
+    @test !pqs_product_kinetic_block.diagnostics.cr2_science_status_changed
+    @test pqs_product_kinetic_block.diagnostics.factored_pqs_transform_used
+    @test pqs_product_kinetic_block.diagnostics.seed_reconstructed_from_descriptor
+    @test pqs_product_kinetic_block.diagnostics.cleanup_transform_stage_applied
+    @test pqs_product_kinetic_block.diagnostics.support_coefficient_matrix_compared
+    @test pqs_product_kinetic_block.diagnostics.support_local_oracle_used
+    @test !pqs_product_kinetic_block.diagnostics.optimized_pqs_product_path
+    @test pqs_product_kinetic_block.diagnostics.kinetic_factor_form == (
+        (:kinetic, :overlap, :overlap),
+        (:overlap, :kinetic, :overlap),
+        (:overlap, :overlap, :kinetic),
+    )
+    @test product_pqs_kinetic_block.path == :product_pqs_kinetic_reference
+    @test product_pqs_kinetic_block.block ≈ transpose(pqs_product_kinetic_block.block) atol = 1.0e-12 rtol = 1.0e-12
+    @test product_pqs_kinetic_block.oracle_block ≈ transpose(pqs_product_kinetic_block.oracle_block) atol = 1.0e-12 rtol = 1.0e-12
+    @test product_pqs_kinetic_block.diagnostics.transposed_from_pqs_product_reference
+    @test_throws ArgumentError CCPM._pqs_product_kinetic_reference_block(
+        product_unit,
+        product_unit,
+        cubic_kinetic_axis_ops,
+    )
+    @test_throws ArgumentError CCPM._pqs_product_kinetic_reference_block(
+        cubic_pqs_payload,
+        support_dense_unit,
+        cubic_kinetic_axis_ops,
     )
     generic_product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
         product_unit;

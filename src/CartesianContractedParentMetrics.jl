@@ -883,6 +883,37 @@ function _pqs_factored_support_entries(
     return entries
 end
 
+function _pqs_factored_support_coefficients(
+    pqs_payload::_CartesianExecutableProjectedQShellPayload3D;
+    atol::Real,
+    context::AbstractString,
+)
+    seed = _nested_projected_q_shell_descriptor_seed_coefficients(pqs_payload.descriptor)
+    size(seed) == (pqs_payload.descriptor.support_count, pqs_payload.descriptor.mode_count) ||
+        throw(
+            DimensionMismatch("$(context) seed shape does not match descriptor metadata"),
+        )
+    size(pqs_payload.cleanup_transform) ==
+        (pqs_payload.descriptor.mode_count, pqs_payload.descriptor.retained_count) ||
+        throw(
+            DimensionMismatch("$(context) cleanup transform shape is inconsistent"),
+        )
+    factored_coefficients = Matrix{Float64}(seed * pqs_payload.cleanup_transform)
+    stored_coefficients = Matrix{Float64}(pqs_payload.support_coefficient_matrix)
+    size(factored_coefficients) == size(stored_coefficients) || throw(
+        DimensionMismatch("$(context) factored and stored support coefficient shapes differ"),
+    )
+    coefficient_error = LinearAlgebra.norm(factored_coefficients - stored_coefficients, Inf)
+    coefficient_error <= atol || throw(
+        ArgumentError("$(context) factored support coefficients disagree with stored payload coefficients"),
+    )
+    return (
+        factored_coefficients = factored_coefficients,
+        stored_coefficients = stored_coefficients,
+        coefficient_error = coefficient_error,
+    )
+end
+
 function _pqs_product_low_order_reference_block(
     pqs_payload,
     product_unit,
@@ -900,26 +931,13 @@ function _pqs_product_low_order_reference_block(
         ArgumentError("PQS/product low-order reference block requires a product_doside product unit"),
     )
     axis_matrices = _pqs_product_low_order_axis_matrices(metrics, term)
-
-    seed = _nested_projected_q_shell_descriptor_seed_coefficients(pqs_payload.descriptor)
-    size(seed) == (pqs_payload.descriptor.support_count, pqs_payload.descriptor.mode_count) ||
-        throw(
-            DimensionMismatch("PQS/product low-order reference seed shape does not match descriptor metadata"),
-        )
-    size(pqs_payload.cleanup_transform) ==
-        (pqs_payload.descriptor.mode_count, pqs_payload.descriptor.retained_count) ||
-        throw(
-            DimensionMismatch("PQS/product low-order reference cleanup transform shape is inconsistent"),
-        )
-    factored_coefficients = Matrix{Float64}(seed * pqs_payload.cleanup_transform)
-    stored_coefficients = Matrix{Float64}(pqs_payload.support_coefficient_matrix)
-    size(factored_coefficients) == size(stored_coefficients) || throw(
-        DimensionMismatch("PQS/product factored and stored support coefficient shapes differ"),
+    coefficient_check = _pqs_factored_support_coefficients(
+        pqs_payload;
+        atol,
+        context = "PQS/product low-order reference",
     )
-    coefficient_error = LinearAlgebra.norm(factored_coefficients - stored_coefficients, Inf)
-    coefficient_error <= atol || throw(
-        ArgumentError("PQS/product factored support coefficients disagree with stored payload coefficients"),
-    )
+    factored_coefficients = coefficient_check.factored_coefficients
+    coefficient_error = coefficient_check.coefficient_error
 
     factored_entries = _pqs_factored_support_entries(pqs_payload, factored_coefficients)
     product_entries = _staged_unit_entries(product_unit)
@@ -1015,6 +1033,132 @@ function _pqs_product_low_order_reference_block(
                 source = :product_pqs_low_order_reference_block,
                 transposed_from_pqs_product_reference = true,
                 pqs_self_overlap_identity_shortcut_used = false,
+            ),
+        ),
+    )
+end
+
+function _pqs_product_kinetic_reference_block(
+    pqs_payload,
+    product_unit,
+    axis_ops::NamedTuple{(:x,:y,:z)};
+    atol::Real = 1.0e-10,
+)
+    pqs_payload isa _CartesianExecutableProjectedQShellPayload3D || throw(
+        ArgumentError("PQS/product kinetic reference block requires an executable PQS payload"),
+    )
+    product_unit isa _CartesianNestedProductStagedByCenterUnit3D || throw(
+        ArgumentError("PQS/product kinetic reference block requires a staged product unit"),
+    )
+    product_unit.kind == :product_doside || throw(
+        ArgumentError("PQS/product kinetic reference block requires a product_doside product unit"),
+    )
+    coefficient_check = _pqs_factored_support_coefficients(
+        pqs_payload;
+        atol,
+        context = "PQS/product kinetic reference",
+    )
+    factored_entries = _pqs_factored_support_entries(
+        pqs_payload,
+        coefficient_check.factored_coefficients,
+    )
+    product_entries = _staged_unit_entries(product_unit)
+    oracle_entries = _staged_unit_entries(pqs_payload)
+    axis_factor_terms = _product_doside_kinetic_axis_factor_terms(axis_ops)
+    factored_block = _fallback_staged_separable_sum_block(
+        factored_entries,
+        product_entries,
+        axis_factor_terms,
+    )
+    oracle_block = _fallback_staged_separable_sum_block(
+        oracle_entries,
+        product_entries,
+        axis_factor_terms,
+    )
+    block_error = LinearAlgebra.norm(factored_block - oracle_block, Inf)
+    block_error <= atol || throw(
+        ArgumentError("PQS/product factored kinetic block disagrees with support-local oracle"),
+    )
+    return (
+        path = :pqs_product_kinetic_reference,
+        term = :kinetic,
+        block = factored_block,
+        oracle_block = oracle_block,
+        coefficient_error = coefficient_check.coefficient_error,
+        block_error = block_error,
+        diagnostics = (
+            source = :pqs_product_kinetic_reference_block,
+            fixture_reference_only = true,
+            production_supported = false,
+            signed_operator_reference = true,
+            retained_weight_semantics = :not_used,
+            retained_pqs_weights_role = :debug_reference_only,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            ida_weight_division_allowed = false,
+            quadrature_weight_semantics_claimed = false,
+            packet_adoption = false,
+            fixed_block_sidecar_installation = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            factored_pqs_transform_used = true,
+            seed_reconstructed_from_descriptor = true,
+            cleanup_transform_stage_applied = true,
+            support_coefficient_matrix_compared = true,
+            support_local_oracle_used = true,
+            optimized_pqs_product_path = false,
+            kinetic_factor_form = (
+                (:kinetic, :overlap, :overlap),
+                (:overlap, :kinetic, :overlap),
+                (:overlap, :overlap, :kinetic),
+            ),
+            supported_terms = (:kinetic,),
+            unsupported_terms = (
+                :overlap,
+                :position_x,
+                :position_y,
+                :position_z,
+                :weights,
+                :first_moments,
+                :x2,
+                :nuclear_one_body,
+                :local_coulomb_one_body,
+                :local_ecp_one_body,
+                :gaussian_local_terms,
+                :mwg_interaction,
+                :interaction,
+            ),
+            coefficient_error = coefficient_check.coefficient_error,
+            block_error = block_error,
+        ),
+    )
+end
+
+function _pqs_product_kinetic_reference_block(
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    pqs_payload::_CartesianExecutableProjectedQShellPayload3D,
+    axis_ops::NamedTuple{(:x,:y,:z)};
+    atol::Real = 1.0e-10,
+)
+    forward = _pqs_product_kinetic_reference_block(
+        pqs_payload,
+        product_unit,
+        axis_ops;
+        atol,
+    )
+    return (
+        path = :product_pqs_kinetic_reference,
+        term = :kinetic,
+        block = Matrix{Float64}(transpose(forward.block)),
+        oracle_block = Matrix{Float64}(transpose(forward.oracle_block)),
+        coefficient_error = forward.coefficient_error,
+        block_error = forward.block_error,
+        diagnostics = merge(
+            forward.diagnostics,
+            (
+                source = :product_pqs_kinetic_reference_block,
+                transposed_from_pqs_product_reference = true,
             ),
         ),
     )
