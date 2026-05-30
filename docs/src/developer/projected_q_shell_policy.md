@@ -249,6 +249,30 @@ change supplement construction, QW/Hamiltonian assembly, public/default route
 adoption, CR2 artifacts, optimized PQS/product kernels,
 local/ECP/Gaussian/MWG handling, or numerical fallback policy.
 
+The private density-density SCF smoke then used the existing matrix-level
+`_closed_shell_density_density_scf` helper on the final
+`OrdinaryCartesianOperators3D` data: overlap, H1, and `interaction_matrix`.
+Both routes used `interaction_treatment = :mwg`, the PGDG backend, no
+numerical-reference fallback, finite/symmetric H and V matrices, and finite
+positive residual metadata.
+
+| route | final dim | residuals | converged | iterations | SCF energy |
+|---|---:|---:|---:|---:|---:|
+| strict PQS q5 final | `1501` | `18` | `true` | `44` | `-32.338778224290 Eh` |
+| fair q-row q-1 panel final | `1479` | `18` | `true` | `44` | `-32.342180822067 Eh` |
+
+The strict PQS q5 occupied orbital energies in this smoke were
+`(-4.7317411478, -4.7317331742, -0.3803502823, -0.2518522168)`. Strict PQS q5
+and the fair q-row final route both converge in this density-density IDA/MWG
+SCF smoke. The strict PQS q5 final energy is higher than the fair q-row final
+by `+0.003402597777 Eh`, but IDA/MWG is not a variational two-electron model,
+so this is a model-dependent energy difference, not a basis-quality ordering.
+
+This proves private HF-smoke compatibility of the strict PQS q5 final
+operators. It is not production HF validation, does not add a public HF API,
+and does not change QW/Hamiltonian construction, IDA/MWG semantics, CR2
+artifacts, or public/default routes.
+
 ## Sidecar Prototype Checkpoint
 
 As of 2026-05-28, mainline also has a private descriptor/prototype line for
