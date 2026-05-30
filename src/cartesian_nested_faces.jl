@@ -2652,99 +2652,138 @@ function _nested_projected_q_shell_layer(
     cleanup_rtol::Float64 = 1.0e-12,
     verify_factorized_reconstruction::Bool = true,
 )
-    packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
-    packet_kernel == :support_reference || throw(
-        ArgumentError("projected q-shell local diagnostic layer currently supports only packet_kernel = :support_reference"),
-    )
-    isnothing(term_coefficients) || length(term_coefficients) >= 1 || throw(
-        ArgumentError("projected q-shell term_coefficients, when supplied, must be nonempty"),
-    )
-    dims = _nested_axis_lengths(bundles)
-    validation = _nested_projected_q_shell_validate_boxes(
-        dims,
-        current_box,
-        inner_box;
-        bond_axis,
-        q,
-        L,
-        raw_source_dims,
-    )
-    bond_axis_index = validation.bond_axis_index
-    source_mode_dims = validation.source_mode_dims
-    physical_box_lengths = validation.physical_box_lengths
-    selected_q_value = isnothing(selected_q) ? q : selected_q
-    axis_selector_retained_counts_value = isnothing(axis_selector_retained_counts) ?
-        ntuple(axis -> source_mode_dims[axis] - 2, 3) :
-        axis_selector_retained_counts
-    transverse_source_dims =
-        Tuple(source_mode_dims[axis] for axis in 1:3 if axis != bond_axis_index)
-    raw_q_matches_selected_q =
-        all(dim -> dim == selected_q_value, transverse_source_dims)
-    direct_physical_box_modes = isnothing(raw_source_dims)
-    resolved_broad_parent_boundary_reference =
-        broad_parent_boundary_reference ||
-        (direct_physical_box_modes && !isnothing(selected_q) && !raw_q_matches_selected_q)
-    resolved_decomposition_status =
-        resolved_broad_parent_boundary_reference ?
-        :broad_parent_boundary_reference :
-        decomposition_status
-    resolved_excluded_from_mvp_gate =
-        excluded_from_mvp_gate || resolved_broad_parent_boundary_reference
-    support_indices = _nested_projected_q_shell_boundary_support_indices(
-        dims,
-        current_box,
-        inner_box,
-    )
-    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
-    coverage = _nested_projected_q_shell_support_coverage(support_indices, support_indices)
-    coverage.coverage_ok || throw(
-        ArgumentError("projected q-shell raw-boundary support coverage must be exact"),
-    )
+    packet_kernel, dims, validation, bond_axis_index, source_mode_dims,
+    physical_box_lengths, selected_q_value, axis_selector_retained_counts_value,
+    raw_q_matches_selected_q, resolved_broad_parent_boundary_reference,
+    resolved_decomposition_status, resolved_excluded_from_mvp_gate,
+    support_indices, support_states, coverage = @timeg "diatomic.pqs_layer.setup" begin
+        packet_kernel = _nested_normalize_packet_kernel(packet_kernel)
+        packet_kernel == :support_reference || throw(
+            ArgumentError("projected q-shell local diagnostic layer currently supports only packet_kernel = :support_reference"),
+        )
+        isnothing(term_coefficients) || length(term_coefficients) >= 1 || throw(
+            ArgumentError("projected q-shell term_coefficients, when supplied, must be nonempty"),
+        )
+        dims = _nested_axis_lengths(bundles)
+        validation = _nested_projected_q_shell_validate_boxes(
+            dims,
+            current_box,
+            inner_box;
+            bond_axis,
+            q,
+            L,
+            raw_source_dims,
+        )
+        bond_axis_index = validation.bond_axis_index
+        source_mode_dims = validation.source_mode_dims
+        physical_box_lengths = validation.physical_box_lengths
+        selected_q_value = isnothing(selected_q) ? q : selected_q
+        axis_selector_retained_counts_value = isnothing(axis_selector_retained_counts) ?
+            ntuple(axis -> source_mode_dims[axis] - 2, 3) :
+            axis_selector_retained_counts
+        transverse_source_dims =
+            Tuple(source_mode_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+        raw_q_matches_selected_q =
+            all(dim -> dim == selected_q_value, transverse_source_dims)
+        direct_physical_box_modes = isnothing(raw_source_dims)
+        resolved_broad_parent_boundary_reference =
+            broad_parent_boundary_reference ||
+            (direct_physical_box_modes && !isnothing(selected_q) && !raw_q_matches_selected_q)
+        resolved_decomposition_status =
+            resolved_broad_parent_boundary_reference ?
+            :broad_parent_boundary_reference :
+            decomposition_status
+        resolved_excluded_from_mvp_gate =
+            excluded_from_mvp_gate || resolved_broad_parent_boundary_reference
+        support_indices = _nested_projected_q_shell_boundary_support_indices(
+            dims,
+            current_box,
+            inner_box,
+        )
+        support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+        coverage = _nested_projected_q_shell_support_coverage(support_indices, support_indices)
+        coverage.coverage_ok || throw(
+            ArgumentError("projected q-shell raw-boundary support coverage must be exact"),
+        )
+        (
+            packet_kernel,
+            dims,
+            validation,
+            bond_axis_index,
+            source_mode_dims,
+            physical_box_lengths,
+            selected_q_value,
+            axis_selector_retained_counts_value,
+            raw_q_matches_selected_q,
+            resolved_broad_parent_boundary_reference,
+            resolved_decomposition_status,
+            resolved_excluded_from_mvp_gate,
+            support_indices,
+            support_states,
+            coverage,
+        )
+    end
 
-    full_sides = _nested_projected_q_shell_full_sides(
-        bundles,
-        current_box,
-        source_mode_dims,
-    )
-    full_coefficients = _nested_product_coefficients(full_sides..., dims)
-    boundary_modes = _nested_projected_q_shell_boundary_comx_product_modes(source_mode_dims)
-    projected_coefficients = Matrix{Float64}(
-        full_coefficients[support_indices, boundary_modes.column_indices],
-    )
-    boundary_overlap = _nested_support_product_matrix(
-        support_states,
-        _nested_axis_pgdg(bundles, :x).overlap,
-        _nested_axis_pgdg(bundles, :y).overlap,
-        _nested_axis_pgdg(bundles, :z).overlap,
-    )
-    cleanup = _nested_projected_q_shell_cleanup(
-        projected_coefficients,
-        boundary_overlap;
-        cleanup_rtol,
-    )
-    coefficient_matrix = _nested_projected_q_shell_parent_coefficients(
-        cleanup.coefficients,
-        support_indices,
-        prod(dims),
-    )
-    staged_descriptor = _nested_projected_q_shell_make_staged_unit_descriptor(
-        support_indices,
-        support_states,
-        current_box,
-        inner_box,
-        bond_axis,
-        q,
-        L,
-        full_sides,
-        boundary_modes,
-        cleanup,
-        coefficient_matrix,
-    )
-    packet_data = _nested_projected_q_shell_metric_packet(
-        bundles,
-        coefficient_matrix,
-        support_indices,
-    )
+    full_sides = @timeg "diatomic.pqs_layer.source_sides" begin
+        _nested_projected_q_shell_full_sides(
+            bundles,
+            current_box,
+            source_mode_dims,
+        )
+    end
+    full_coefficients, boundary_modes, projected_coefficients =
+        @timeg "diatomic.pqs_layer.boundary_seed_projection" begin
+            full_coefficients = _nested_product_coefficients(full_sides..., dims)
+            boundary_modes = _nested_projected_q_shell_boundary_comx_product_modes(
+                source_mode_dims,
+            )
+            projected_coefficients = Matrix{Float64}(
+                full_coefficients[support_indices, boundary_modes.column_indices],
+            )
+            (full_coefficients, boundary_modes, projected_coefficients)
+        end
+    boundary_overlap, cleanup = @timeg "diatomic.pqs_layer.lowdin_cleanup" begin
+        boundary_overlap = _nested_support_product_matrix(
+            support_states,
+            _nested_axis_pgdg(bundles, :x).overlap,
+            _nested_axis_pgdg(bundles, :y).overlap,
+            _nested_axis_pgdg(bundles, :z).overlap,
+        )
+        cleanup = _nested_projected_q_shell_cleanup(
+            projected_coefficients,
+            boundary_overlap;
+            cleanup_rtol,
+        )
+        (boundary_overlap, cleanup)
+    end
+    coefficient_matrix, staged_descriptor = @timeg "diatomic.pqs_layer.coefficient_assembly" begin
+        coefficient_matrix = _nested_projected_q_shell_parent_coefficients(
+            cleanup.coefficients,
+            support_indices,
+            prod(dims),
+        )
+        staged_descriptor = _nested_projected_q_shell_make_staged_unit_descriptor(
+            support_indices,
+            support_states,
+            current_box,
+            inner_box,
+            bond_axis,
+            q,
+            L,
+            full_sides,
+            boundary_modes,
+            cleanup,
+            coefficient_matrix,
+        )
+        (coefficient_matrix, staged_descriptor)
+    end
+    packet_data = @timeg "diatomic.pqs_layer.metric_packet" begin
+        _nested_projected_q_shell_metric_packet(
+            bundles,
+            coefficient_matrix,
+            support_indices,
+        )
+    end
     diagnostics = (
         support_contract = :projected_q_shell_raw_boundary,
         coefficient_contract = :full_block_boundary_comx_product_mode_projection,
