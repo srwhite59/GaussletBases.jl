@@ -519,16 +519,47 @@ safe-field shadow matches the authoritative fixed-block overlap,
 `position_x`, `position_y`, `position_z`, weights, and kinetic fields. First
 moments compare against the contracted-parent metric packet reference.
 
+The private PQS/product reference checkpoint is recorded by
+`157c35f Add PQS product low-order reference block` and
+`93ddb3b Add PQS product kinetic reference block`. Private reference coverage
+now exists for PQS/product overlap, `position_x`, `position_y`, `position_z`,
+and kinetic retained blocks. These helpers reconstruct PQS support
+coefficients as
+
+```text
+seed * cleanup_transform
+```
+
+where `seed` is derived from the projected q-shell descriptor, then compare
+the reconstructed coefficients to the stored support-local PQS coefficients.
+The factored PQS/product block is then compared against a separately built
+support-local oracle. The kinetic reference is a signed operator check using
+
+```text
+(K, S, S) + (S, K, S) + (S, S, K)
+```
+
+Reverse product/PQS blocks are transpose/reference behavior only for real
+symmetric blocks. They should not be generalized to nonsymmetric
+derivative-like operators without a separate contract and test.
+
+This checkpoint is not an optimized PQS/product kernel, packet or metric
+adoption, fixed-block sidecar installation, QW/Hamiltonian path,
+public/default behavior, CR2 claim, or retained PQS positive-weight/IDA
+semantics. Local Coulomb, local ECP, Gaussian/local terms, MWG/interaction,
+and all-pairs production assembly remain out of scope.
+
 This is a contract checkpoint, not production metric execution. The PQS raw
 overlap packet exists only as raw packet/reference plumbing. PQS retained
-transforms are not applied, and the PQS Lowdin cleanup matrix is not treated
-as the full raw-to-retained transform. PQS/product mixed retained blocks remain
-unsupported. Production support-dense/mixed packets, production
-product/product operator assembly, all-pairs matrix construction, kinetic
-adoption outside the private shadow helpers, nuclear/local, Gaussian, MWG,
-interaction, QW/Hamiltonian, public/default, backend/default,
-PGDG/quadrature, CR2, and science/energy behavior remain unchanged and outside
-this private fixture line.
+transforms are applied only in the explicit private PQS/product reference
+helpers described above, and the PQS Lowdin cleanup matrix is not treated as
+the full raw-to-retained transform. Production/optimized/adopted PQS/product
+mixed retained blocks remain unsupported. Production support-dense/mixed
+packets, production product/product operator assembly, all-pairs matrix
+construction, kinetic adoption outside the private reference/shadow helpers,
+nuclear/local, Gaussian, MWG, interaction, QW/Hamiltonian, public/default,
+backend/default, PGDG/quadrature, CR2, and science/energy behavior remain
+unchanged and outside this private fixture line.
 
 Before any PQS retained-block execution, the code needs an explicit way to
 represent or resolve the full factored PQS transform:
@@ -542,9 +573,9 @@ raw_product_modes
 
 General physical raw source pair operator packets beyond these private
 product/slab fixtures, kinetic adoption into existing real route consumers,
-nuclear, Gaussian/local, interaction/MWG, and mixed product/PQS or
-product/support-dense pairs need separate design. The current checkpoint
-changes no all-pairs matrix construction, QW or Hamiltonian path,
+nuclear, Gaussian/local, interaction/MWG, optimized/adopted product/PQS
+pairs, and product/support-dense pairs need separate design. The current
+checkpoint changes no all-pairs matrix construction, QW or Hamiltonian path,
 public/default route, backend/default policy, PGDG or quadrature policy, CR2
 path, or science status.
 
@@ -563,8 +594,8 @@ The next decision should be a read-only adoption-risk audit before routing any
 real construction through the private shadow helper. Full kinetic adoption
 still requires a deliberate production contract for support-dense and mixed
 blocks, so it should not be inferred from the private full-shadow result.
-Local/Gaussian one-body terms, PQS/product mixed blocks, support-dense mixed
-packet generalization, and all-pairs production assembly remain separate design
-questions. Any adoption pass should remain private until it has explicit
-operator checks, signed-block diagnostics, and a clear production-readiness
-decision.
+Local/Gaussian one-body terms, optimized/adopted PQS/product mixed blocks,
+support-dense mixed packet generalization, and all-pairs production assembly
+remain separate design questions. Any adoption pass should remain private until
+it has explicit operator checks, signed-block diagnostics, and a clear
+production-readiness decision.

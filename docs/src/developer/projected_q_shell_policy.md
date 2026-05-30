@@ -186,15 +186,18 @@ Validated low-order checks are deliberately narrow:
   moments against the existing reference path.
 - PQS/support-dense mixed blocks use the support-local reference path. They do
   not use the identity shortcut for mixed overlap.
-- PQS/product optimized metric blocks remain explicitly unsupported. Any
-  support-local PQS/product reference must be a separately named explicit
-  reference/debug helper, not a silent fallback from the optimized path.
+- PQS/product optimized or adopted metric blocks remain explicitly unsupported.
+  Private reference helpers now exist for overlap, `position_x/y/z`, and
+  kinetic; they are separately named reference/debug paths, not silent
+  fallbacks from the optimized path and not packet adoption.
 
-This is low-order metric readiness only. It does not imply readiness for
-kinetic, `x2`, nuclear/local one-body terms, Gaussian or pair terms,
-interactions, QW/Hamiltonian construction, H1, energy, CR2 validation, or any
-science route. No default builders, public APIs, backend policy,
-PGDG/quadrature policy, or QW/Hamiltonian paths changed.
+This is low-order metric/reference readiness only. The PQS/product kinetic
+helper is a private signed-operator reference using
+`(K,S,S) + (S,K,S) + (S,S,K)`; it does not imply readiness for `x2`,
+nuclear/local one-body terms, Gaussian or pair terms, interactions,
+QW/Hamiltonian construction, H1, energy, CR2 validation, or any science route.
+No default builders, public APIs, backend policy, PGDG/quadrature policy, or
+QW/Hamiltonian paths changed.
 
 If scoped later, the next implementation should still stay in a tiny private
 fixture lane unless a separate design explicitly covers mixed q4 recipe sidecar
