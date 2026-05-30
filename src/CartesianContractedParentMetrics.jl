@@ -705,9 +705,12 @@ function _product_doside_low_order_axis_matrix_kind(term::Symbol, axis::Int)
     term == :position_x && return axis == 1 ? :position : :overlap
     term == :position_y && return axis == 2 ? :position : :overlap
     term == :position_z && return axis == 3 ? :position : :overlap
+    term == :x2_x && return axis == 1 ? :x2 : :overlap
+    term == :x2_y && return axis == 2 ? :x2 : :overlap
+    term == :x2_z && return axis == 3 ? :x2 : :overlap
     throw(
         ArgumentError(
-            "product/doside retained low-order block supports only :overlap and :position_x/y/z",
+            "product/doside retained low-order block supports only :overlap, :position_x/y/z, and :x2_x/y/z",
         ),
     )
 end
@@ -736,8 +739,8 @@ function _product_doside_retained_low_order_block(
     metrics::NamedTuple{(:x,:y,:z)};
     term::Symbol,
 )
-    term in (:overlap, :position_x, :position_y, :position_z) || throw(
-        ArgumentError("product/doside retained low-order block supports only :overlap and :position_x/y/z"),
+    term in (:overlap, :position_x, :position_y, :position_z, :x2_x, :x2_y, :x2_z) || throw(
+        ArgumentError("product/doside retained low-order block supports only :overlap, :position_x/y/z, and :x2_x/y/z"),
     )
     _require_product_doside_retained_block_unit(left_unit; side = :left)
     _require_product_doside_retained_block_unit(right_unit; side = :right)
@@ -1663,6 +1666,30 @@ function _fallback_staged_metric_blocks(
     )
 end
 
+function _fallback_staged_x2_blocks(
+    left_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    right_entries::Vector{Vector{_ParentCoefficientEntry3D}},
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return (
+        x2_x = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.x2, metrics.y.overlap, metrics.z.overlap),
+        ),
+        x2_y = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.overlap, metrics.y.x2, metrics.z.overlap),
+        ),
+        x2_z = _fallback_staged_metric_block(
+            left_entries,
+            right_entries,
+            (metrics.x.overlap, metrics.y.overlap, metrics.z.x2),
+        ),
+    )
+end
+
 function _product_doside_retained_linear_vectors(
     unit::_CartesianNestedProductStagedByCenterUnit3D,
     metrics::NamedTuple{(:x,:y,:z)},
@@ -1706,6 +1733,9 @@ const _PACKET_BUILD_SOURCE_SAFE_FIELDS = (
     :position_x,
     :position_y,
     :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
     :weights,
     :first_moments,
     :kinetic,
@@ -1740,6 +1770,9 @@ function _packet_build_axis_data(axis_data, axis_name::Symbol)
     position = Matrix{Float64}(
         _packet_build_axis_property(axis_data, axis_name, :position),
     )
+    x2 = Matrix{Float64}(
+        _packet_build_axis_property(axis_data, axis_name, :x2),
+    )
     kinetic = Matrix{Float64}(
         _packet_build_axis_property(axis_data, axis_name, :kinetic),
     )
@@ -1757,6 +1790,9 @@ function _packet_build_axis_data(axis_data, axis_name::Symbol)
     size(position) == size(overlap) || throw(
         ArgumentError("packet-build source safe-field shadow $(axis_name) position size must match overlap"),
     )
+    size(x2) == size(overlap) || throw(
+        ArgumentError("packet-build source safe-field shadow $(axis_name) x2 size must match overlap"),
+    )
     size(kinetic) == size(overlap) || throw(
         ArgumentError("packet-build source safe-field shadow $(axis_name) kinetic size must match overlap"),
     )
@@ -1768,6 +1804,7 @@ function _packet_build_axis_data(axis_data, axis_name::Symbol)
     )
     all(isfinite, overlap) &&
         all(isfinite, position) &&
+        all(isfinite, x2) &&
         all(isfinite, kinetic) &&
         all(isfinite, weights) &&
         all(isfinite, centers) || throw(
@@ -1779,6 +1816,7 @@ function _packet_build_axis_data(axis_data, axis_name::Symbol)
     return (
         overlap = overlap,
         position = position,
+        x2 = x2,
         weights = weights,
         centers = centers,
         kinetic = kinetic,
@@ -1867,6 +1905,7 @@ function _cartesian_packet_build_source_safe_field_shadow(
         field -> field in selected_fields,
         (:overlap, :position_x, :position_y, :position_z),
     )
+    build_x2 = any(field -> field in selected_fields, (:x2_x, :x2_y, :x2_z))
     build_linear = any(field -> field in selected_fields, (:weights, :first_moments))
     build_kinetic = :kinetic in selected_fields
 
@@ -1874,6 +1913,9 @@ function _cartesian_packet_build_source_safe_field_shadow(
     position_x = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
     position_y = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
     position_z = build_low_order ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    x2_x = build_x2 ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    x2_y = build_x2 ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
+    x2_z = build_x2 ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
     weights = build_linear ? zeros(Float64, contracted_dimension) : nothing
     first_moments = build_linear ? zeros(Float64, contracted_dimension, 3) : nothing
     kinetic = build_kinetic ? zeros(Float64, contracted_dimension, contracted_dimension) : nothing
@@ -1886,6 +1928,8 @@ function _cartesian_packet_build_source_safe_field_shadow(
 
     low_order_product_block_count = 0
     low_order_fallback_block_count = 0
+    x2_product_block_count = 0
+    x2_fallback_block_count = 0
     kinetic_product_block_count = 0
     kinetic_fallback_block_count = 0
     total_block_count = length(units) * (length(units) + 1) ÷ 2
@@ -1933,6 +1977,40 @@ function _cartesian_packet_build_source_safe_field_shadow(
                     low_order_fallback_block_count += 1
                 end
             end
+            if build_x2
+                if left.kind == :product_doside && right.kind == :product_doside
+                    x2_x_block = _product_doside_retained_low_order_block(
+                        left,
+                        right,
+                        axis_data;
+                        term = :x2_x,
+                    )
+                    x2_y_block = _product_doside_retained_low_order_block(
+                        left,
+                        right,
+                        axis_data;
+                        term = :x2_y,
+                    )
+                    x2_z_block = _product_doside_retained_low_order_block(
+                        left,
+                        right,
+                        axis_data;
+                        term = :x2_z,
+                    )
+                    x2_product_block_count += 1
+                else
+                    left_entries = _cached_staged_unit_entries!(entries_cache, left_index, left)
+                    right_entries = _cached_staged_unit_entries!(entries_cache, right_index, right)
+                    blocks = _fallback_staged_x2_blocks(left_entries, right_entries, axis_data)
+                    x2_x_block = blocks.x2_x
+                    x2_y_block = blocks.x2_y
+                    x2_z_block = blocks.x2_z
+                    x2_fallback_block_count += 1
+                end
+                _packet_build_assign_pair_block!(x2_x, left_range, right_range, x2_x_block)
+                _packet_build_assign_pair_block!(x2_y, left_range, right_range, x2_y_block)
+                _packet_build_assign_pair_block!(x2_z, left_range, right_range, x2_z_block)
+            end
             if build_kinetic
                 if left.kind == :product_doside && right.kind == :product_doside
                     block = _product_doside_retained_kinetic_block(left, right, axis_ops)
@@ -1963,6 +2041,9 @@ function _cartesian_packet_build_source_safe_field_shadow(
         position_x = :position_x in selected_fields ? position_x : nothing,
         position_y = :position_y in selected_fields ? position_y : nothing,
         position_z = :position_z in selected_fields ? position_z : nothing,
+        x2_x = :x2_x in selected_fields ? x2_x : nothing,
+        x2_y = :x2_y in selected_fields ? x2_y : nothing,
+        x2_z = :x2_z in selected_fields ? x2_z : nothing,
         weights = :weights in selected_fields ? weights : nothing,
         first_moments = :first_moments in selected_fields ? first_moments : nothing,
         kinetic = :kinetic in selected_fields ? kinetic : nothing,
@@ -1988,7 +2069,9 @@ function _cartesian_packet_build_source_safe_field_shadow(
             candidate_packet_fields = source.candidate_packet_fields,
             missing_packet_fields = source.missing_packet_fields,
             out_of_scope_fields = source.missing_packet_fields,
-            x2_built = false,
+            x2_built = build_x2,
+            x2_product_block_count = x2_product_block_count,
+            x2_fallback_block_count = x2_fallback_block_count,
             gaussian_terms_built = false,
             nuclear_one_body_built = false,
             local_coulomb_one_body_built = false,

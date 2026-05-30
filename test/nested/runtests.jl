@@ -5211,6 +5211,7 @@ end
         x = (
             overlap = pgdg_x.overlap,
             position = pgdg_x.position,
+            x2 = pgdg_x.x2,
             weights = pgdg_x.weights,
             centers = pgdg_x.centers,
             source = :nested_pgdg_axis,
@@ -5218,6 +5219,7 @@ end
         y = (
             overlap = pgdg_y.overlap,
             position = pgdg_y.position,
+            x2 = pgdg_y.x2,
             weights = pgdg_y.weights,
             centers = pgdg_y.centers,
             source = :nested_pgdg_axis,
@@ -5225,6 +5227,7 @@ end
         z = (
             overlap = pgdg_z.overlap,
             position = pgdg_z.position,
+            x2 = pgdg_z.x2,
             weights = pgdg_z.weights,
             centers = pgdg_z.centers,
             source = :nested_pgdg_axis,
@@ -5310,6 +5313,9 @@ end
     @test pre_packet_shadow.position_x ≈ layer.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.position_y ≈ layer.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.position_z ≈ layer.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.x2_x ≈ layer.packet.x2_x atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.x2_y ≈ layer.packet.x2_y atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_packet_shadow.x2_z ≈ layer.packet.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.weights ≈ layer.packet.weights atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.kinetic ≈ layer.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
     @test pre_packet_shadow.first_moments ≈ layer_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
@@ -5638,11 +5644,16 @@ end
         :position_x,
         :position_y,
         :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
         :weights,
         :first_moments,
         :kinetic,
     )
-    @test :x2_x in packet_build_source.missing_packet_fields
+    @test !(:x2_x in packet_build_source.missing_packet_fields)
+    @test !(:x2_y in packet_build_source.missing_packet_fields)
+    @test !(:x2_z in packet_build_source.missing_packet_fields)
     @test :nuclear_one_body in packet_build_source.missing_packet_fields
     @test :local_coulomb_one_body in packet_build_source.missing_packet_fields
     @test :local_ecp_one_body in packet_build_source.missing_packet_fields
@@ -5752,6 +5763,9 @@ end
     @test pre_sequence_shadow.position_x ≈ fixed_block.position_x atol = 1.0e-10 rtol = 1.0e-10
     @test pre_sequence_shadow.position_y ≈ fixed_block.position_y atol = 1.0e-10 rtol = 1.0e-10
     @test pre_sequence_shadow.position_z ≈ fixed_block.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.x2_x ≈ fixed_block.x2_x atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.x2_y ≈ fixed_block.x2_y atol = 1.0e-10 rtol = 1.0e-10
+    @test pre_sequence_shadow.x2_z ≈ fixed_block.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test pre_sequence_shadow.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test pre_sequence_shadow.kinetic ≈ fixed_block.kinetic atol = 1.0e-10 rtol = 1.0e-10
     @test pre_sequence_shadow.first_moments ≈ product_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
@@ -5779,7 +5793,7 @@ end
           packet_build_source.candidate_packet_fields
     @test safe_field_shadow.diagnostics.missing_packet_fields ==
           packet_build_source.missing_packet_fields
-    @test !safe_field_shadow.diagnostics.x2_built
+    @test safe_field_shadow.diagnostics.x2_built
     @test !safe_field_shadow.diagnostics.gaussian_terms_built
     @test !safe_field_shadow.diagnostics.nuclear_one_body_built
     @test !safe_field_shadow.diagnostics.local_coulomb_one_body_built
@@ -5791,19 +5805,25 @@ end
     @test safe_field_shadow.diagnostics.kinetic_product_block_count == expected_product_blocks
     @test safe_field_shadow.diagnostics.low_order_fallback_block_count ==
           expected_total_blocks - expected_product_blocks
+    @test safe_field_shadow.diagnostics.x2_product_block_count == expected_product_blocks
+    @test safe_field_shadow.diagnostics.x2_fallback_block_count ==
+          expected_total_blocks - expected_product_blocks
     @test safe_field_shadow.diagnostics.kinetic_fallback_block_count ==
           expected_total_blocks - expected_product_blocks
     @test safe_field_shadow.overlap ≈ fixed_block.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.position_x ≈ fixed_block.position_x atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.position_y ≈ fixed_block.position_y atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.position_z ≈ fixed_block.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.x2_x ≈ fixed_block.x2_x atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.x2_y ≈ fixed_block.x2_y atol = 1.0e-10 rtol = 1.0e-10
+    @test safe_field_shadow.x2_z ≈ fixed_block.x2_z atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.weights ≈ fixed_block.weights atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.kinetic ≈ fixed_block.kinetic atol = 1.0e-10 rtol = 1.0e-10
     @test safe_field_shadow.first_moments ≈ product_metric_packet.first_moments atol = 1.0e-10 rtol = 1.0e-10
     @test_throws ArgumentError CCPM._cartesian_packet_build_source_safe_field_shadow(
         packet_build_source,
         safe_axis_data;
-        fields = (:x2_x,),
+        fields = (:gaussian_sum,),
     )
     kinetic_axis_ops = (
         x = (overlap = pgdg_x.overlap, kinetic = pgdg_x.kinetic),

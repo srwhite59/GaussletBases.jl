@@ -3156,14 +3156,14 @@ function _cartesian_packet_build_source_from_resolved_payloads(
         :position_x,
         :position_y,
         :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
         :weights,
         :first_moments,
         :kinetic,
     )
     missing_packet_fields = (
-        :x2_x,
-        :x2_y,
-        :x2_z,
         :nuclear_one_body,
         :local_coulomb_one_body,
         :local_ecp_one_body,
@@ -3176,6 +3176,7 @@ function _cartesian_packet_build_source_from_resolved_payloads(
     axis_operator_requirements = (
         overlap = (:overlap,),
         position = (:position,),
+        x2 = (:x2,),
         weights = (:weights,),
         centers = (:centers,),
         kinetic = (:overlap, :kinetic),
