@@ -2091,17 +2091,71 @@ function _nested_diatomic_validate_shared_shell_realization(realization::Symbol)
     return realization
 end
 
-function _nested_diatomic_projected_q_shell_region_dimensions(
-    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
-    bond_axis::Symbol,
+function _nested_diatomic_projected_q_shell_retained_count(
+    raw_source_dims::NTuple{3,Int},
 )
-    bond_axis_index = _nested_axis_index(bond_axis)
-    lengths = length.(region.box)
-    transverse_lengths = Tuple(lengths[axis] for axis in 1:3 if axis != bond_axis_index)
-    transverse_lengths[1] == transverse_lengths[2] || throw(
-        ArgumentError("projected q-shell shared region requires equal transverse raw side lengths"),
+    all(dim -> dim >= 3, raw_source_dims) || throw(
+        ArgumentError("projected q-shell raw source dimensions must all be at least 3"),
     )
-    return (q = transverse_lengths[1], L = lengths[bond_axis_index])
+    inner_dims = ntuple(axis -> raw_source_dims[axis] - 2, 3)
+    return prod(raw_source_dims) - prod(inner_dims)
+end
+
+function _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    retention::CartesianNestedCompleteShellRetentionContract;
+    bond_axis::Symbol,
+    nside::Int,
+    selected_q::Int,
+    shared_shell_angular_resolution_scale::Float64,
+)
+    isnothing(region.inner_exclusion_box) && throw(
+        ArgumentError("adaptive projected q-shell source dimensions require an inner exclusion box"),
+    )
+    adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+        basis,
+        bundles,
+        region.box,
+        region.inner_exclusion_box,
+        retention;
+        nside = nside,
+        shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
+    )
+    axis_selector_retained_counts = (
+        adaptive_retention.chosen_x.retain,
+        adaptive_retention.chosen_y.retain,
+        adaptive_retention.chosen_z.retain,
+    )
+    raw_source_dims = ntuple(axis -> axis_selector_retained_counts[axis] + 2, 3)
+    bond_axis_index = _nested_axis_index(bond_axis)
+    transverse_raw_dims =
+        Tuple(raw_source_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+    transverse_raw_dims[1] == transverse_raw_dims[2] || throw(
+        ArgumentError("adaptive projected q-shell source dimensions require equal transverse raw dimensions"),
+    )
+    raw_q = transverse_raw_dims[1]
+    raw_L = raw_source_dims[bond_axis_index]
+    raw_q_matches_selected_q = raw_q == selected_q
+    return (
+        adaptive_retention = adaptive_retention,
+        raw_source_dims = raw_source_dims,
+        axis_selector_retained_counts = axis_selector_retained_counts,
+        raw_q = raw_q,
+        raw_L = raw_L,
+        selected_q = selected_q,
+        raw_q_matches_selected_q = raw_q_matches_selected_q,
+        physical_box_lengths = length.(region.box),
+        support_count = length(region.support_indices),
+        pqs_retained_count =
+            _nested_diatomic_projected_q_shell_retained_count(raw_source_dims),
+        decomposition_status = raw_q_matches_selected_q ?
+            :adaptive_broad_support_q_local_modes :
+            :adaptive_raw_q_mismatch,
+        broad_parent_boundary_reference = false,
+        excluded_from_mvp_gate = !raw_q_matches_selected_q,
+    )
 end
 
 function _nested_diatomic_high_order_descriptor_direct_coefficients(
@@ -2182,6 +2236,7 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
     policy::_BondAlignedDiatomicHighOrderRecipePolicy3D;
     nside::Int = 5,
     reference_fudge_factor::Float64 = 1.2,
+    shared_shell_angular_resolution_scale::Float64 = 1.4,
     core_near_nucleus_protect_rows::Union{Symbol,Integer} = :auto,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
@@ -2272,14 +2327,33 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                 )
                 if shared_shell_realization == :projected_q_shell
                     pqs_dimensions =
-                        _nested_diatomic_projected_q_shell_region_dimensions(region, bond_axis)
+                        _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
+                            basis,
+                            bundles,
+                            region,
+                            retention;
+                            bond_axis = bond_axis,
+                            nside = nside,
+                            selected_q = choice.q,
+                            shared_shell_angular_resolution_scale =
+                                shared_shell_angular_resolution_scale,
+                        )
                     layer = _nested_projected_q_shell_layer(
                         bundles,
                         region.box,
                         region.inner_exclusion_box;
                         bond_axis = bond_axis,
-                        q = pqs_dimensions.q,
-                        L = pqs_dimensions.L,
+                        q = pqs_dimensions.raw_q,
+                        L = pqs_dimensions.raw_L,
+                        raw_source_dims = pqs_dimensions.raw_source_dims,
+                        selected_q = pqs_dimensions.selected_q,
+                        axis_selector_retained_counts =
+                            pqs_dimensions.axis_selector_retained_counts,
+                        decomposition_status = pqs_dimensions.decomposition_status,
+                        broad_parent_boundary_reference =
+                            pqs_dimensions.broad_parent_boundary_reference,
+                        excluded_from_mvp_gate =
+                            pqs_dimensions.excluded_from_mvp_gate,
                         packet_kernel = :support_reference,
                         term_coefficients = term_coefficients,
                         verify_factorized_reconstruction = false,
@@ -2294,8 +2368,23 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                         cleanup_contract = :full_rank_symmetric_lowdin,
                         cleanup_method = layer.diagnostics.cleanup_method,
                         packet_kernel = layer.provenance.packet_kernel,
-                        raw_q = pqs_dimensions.q,
-                        raw_L = pqs_dimensions.L,
+                        selected_q = pqs_dimensions.selected_q,
+                        raw_source_dims = pqs_dimensions.raw_source_dims,
+                        source_mode_dims = pqs_dimensions.raw_source_dims,
+                        axis_selector_retained_counts =
+                            pqs_dimensions.axis_selector_retained_counts,
+                        raw_q = pqs_dimensions.raw_q,
+                        raw_L = pqs_dimensions.raw_L,
+                        raw_q_matches_selected_q =
+                            pqs_dimensions.raw_q_matches_selected_q,
+                        physical_box_lengths = pqs_dimensions.physical_box_lengths,
+                        support_count = pqs_dimensions.support_count,
+                        pqs_retained_count = pqs_dimensions.pqs_retained_count,
+                        decomposition_status = pqs_dimensions.decomposition_status,
+                        broad_parent_boundary_reference =
+                            pqs_dimensions.broad_parent_boundary_reference,
+                        excluded_from_mvp_gate =
+                            pqs_dimensions.excluded_from_mvp_gate,
                         policy_q = choice.q,
                         policy_order = choice.order,
                         pqs_staged_unit_descriptor =

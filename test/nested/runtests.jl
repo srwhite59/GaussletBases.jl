@@ -4150,6 +4150,89 @@ end
     @test diagnostics.metadata.shared_shell_realization == :endcap_panel_owned
     @test !diagnostics.metadata.projected_q_shell_opt_in
 
+    be2_basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 5.0,
+        core_spacing = 0.15,
+        xmax_parallel = 10.5,
+        xmax_transverse = 8.0,
+        bond_axis = :z,
+        nuclear_charge = 4.0,
+    )
+    be2_bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(be2_basis, expansion)
+    @test GaussletBases._nested_axis_lengths(be2_bundles) == (15, 15, 27)
+    be2_policy0 = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        be2_basis,
+        be2_bundles;
+        protected_atom_side_count = 5,
+        q_min = 4,
+    )
+    be2_policy = GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_policy(
+        be2_policy0.construction_plan;
+        q_min = 4,
+        atom_q = 4,
+        atom_order = 4,
+        shared_q = 5,
+        shared_order = 5,
+        contact_q = 4,
+        contact_order = 4,
+        outer_mismatch_q = 4,
+        outer_mismatch_order = 4,
+    )
+    be2_retention = GaussletBases._nested_resolve_complete_shell_retention(5)
+    be2_shared_dimensions = [
+        GaussletBases._nested_diatomic_projected_q_shell_adaptive_source_dimensions(
+            be2_basis,
+            be2_bundles,
+            region,
+            be2_retention;
+            bond_axis = :z,
+            nside = 5,
+            selected_q = choice.q,
+            shared_shell_angular_resolution_scale = 1.4,
+        )
+        for (choice, region) in zip(
+            be2_policy.region_choices,
+            be2_policy.construction_plan.regions,
+        )
+        if choice.recipe_family == :shared_endcap_panel_exterior
+    ]
+    be2_shared_regions = [
+        region
+        for (choice, region) in zip(
+            be2_policy.region_choices,
+            be2_policy.construction_plan.regions,
+        )
+        if choice.recipe_family == :shared_endcap_panel_exterior
+    ]
+    @test [length.(region.box) for region in be2_shared_regions] ==
+          [(15, 15, 25), (13, 13, 23), (11, 11, 21)]
+    @test [dims.raw_source_dims for dims in be2_shared_dimensions] ==
+          [(5, 5, 5), (5, 5, 5), (5, 5, 6)]
+    @test [dims.pqs_retained_count for dims in be2_shared_dimensions] ==
+          [98, 98, 114]
+    @test all(
+        dims -> !(:adaptive_retain in propertynames(dims)),
+        be2_shared_dimensions,
+    )
+    @test all(dims -> dims.raw_q == 5, be2_shared_dimensions)
+    @test all(dims -> dims.raw_q_matches_selected_q, be2_shared_dimensions)
+    @test all(
+        dims -> dims.decomposition_status == :adaptive_broad_support_q_local_modes,
+        be2_shared_dimensions,
+    )
+    @test all(dims -> !dims.broad_parent_boundary_reference, be2_shared_dimensions)
+    @test all(dims -> !dims.excluded_from_mvp_gate, be2_shared_dimensions)
+    @test [
+        GaussletBases._nested_diatomic_projected_q_shell_retained_count(length.(region.box))
+        for region in be2_shared_regions
+    ] == [1738, 1346, 1002]
+    @test [
+        dims.pqs_retained_count !=
+        GaussletBases._nested_diatomic_projected_q_shell_retained_count(length.(region.box))
+        for (dims, region) in zip(be2_shared_dimensions, be2_shared_regions)
+    ] == [true, true, true]
+
     pqs_construction =
         GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
             basis,
@@ -4202,8 +4285,23 @@ end
     @test !pqs_diagnostics.region_builds[2].metadata.pqs_product_staged_sidecar_available
     @test !pqs_diagnostics.region_builds[2].metadata.factorized_direct_allowed
     @test !pqs_diagnostics.region_builds[2].metadata.active_default_builder_changed
-    @test pqs_diagnostics.region_builds[2].metadata.raw_q == 7
-    @test pqs_diagnostics.region_builds[2].metadata.raw_L == 13
+    @test pqs_diagnostics.region_builds[2].metadata.selected_q == 4
+    @test pqs_diagnostics.region_builds[2].metadata.raw_source_dims == (5, 5, 6)
+    @test pqs_diagnostics.region_builds[2].metadata.source_mode_dims == (5, 5, 6)
+    @test !(
+        :adaptive_retain in
+        propertynames(pqs_diagnostics.region_builds[2].metadata)
+    )
+    @test pqs_diagnostics.region_builds[2].metadata.raw_q == 5
+    @test pqs_diagnostics.region_builds[2].metadata.raw_L == 6
+    @test !pqs_diagnostics.region_builds[2].metadata.raw_q_matches_selected_q
+    @test pqs_diagnostics.region_builds[2].metadata.physical_box_lengths == (7, 7, 13)
+    @test pqs_diagnostics.region_builds[2].metadata.support_count == 362
+    @test pqs_diagnostics.region_builds[2].metadata.pqs_retained_count == 114
+    @test pqs_diagnostics.region_builds[2].metadata.decomposition_status ==
+          :adaptive_raw_q_mismatch
+    @test !pqs_diagnostics.region_builds[2].metadata.broad_parent_boundary_reference
+    @test pqs_diagnostics.region_builds[2].metadata.excluded_from_mvp_gate
     @test pqs_diagnostics.region_builds[2].metadata.policy_q == 4
     @test pqs_diagnostics.region_builds[2].metadata.policy_order == 4
     pqs_source_descriptor =
@@ -4219,18 +4317,18 @@ end
         1:3,
     )
     @test pqs_source_descriptor.bond_axis == :z
-    @test pqs_source_descriptor.q == 7
-    @test pqs_source_descriptor.L == 13
+    @test pqs_source_descriptor.q == 5
+    @test pqs_source_descriptor.L == 6
     @test pqs_source_descriptor.support_count == 362
-    @test pqs_source_descriptor.mode_count == 362
-    @test pqs_source_descriptor.retained_count == 362
+    @test pqs_source_descriptor.mode_count == 114
+    @test pqs_source_descriptor.retained_count == 114
     @test pqs_source_descriptor.cleanup_method == :projected_boundary_symmetric_lowdin
-    @test pqs_source_descriptor.cleanup_matrix_size == (362, 362)
-    @test pqs_source_descriptor.cleanup_rank_count == 362
+    @test pqs_source_descriptor.cleanup_matrix_size == (114, 114)
+    @test pqs_source_descriptor.cleanup_rank_count == 114
     @test pqs_source_descriptor.cleanup_rank_drop_count == 0
     @test pqs_source_descriptor.selection_rule == :any_axis_mode_index_first_or_last
     @test all(
-        mode -> any(axis -> mode[axis] == 1 || mode[axis] == (7, 7, 13)[axis], 1:3),
+        mode -> any(axis -> mode[axis] == 1 || mode[axis] == (5, 5, 6)[axis], 1:3),
         pqs_source_descriptor.boundary_mode_indices,
     )
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
@@ -4239,8 +4337,8 @@ end
     @test !pqs_source_descriptor.active_consumption.fixed_block_sidecar_installed
     @test !pqs_source_descriptor.active_consumption.metric_packet_consumes
     @test !pqs_source_descriptor.active_consumption.by_center_consumes
-    @test pqs_diagnostics.region_builds[2].retained_count == 362
-    @test pqs_diagnostics.fixed_dimension == 7 * 7 * 15
+    @test pqs_diagnostics.region_builds[2].retained_count == 114
+    @test pqs_diagnostics.fixed_dimension == 487
     @test !isnothing(pqs_construction.sequence.packet)
     @test all(isfinite, pqs_construction.sequence.packet.overlap)
     @test all(isfinite, pqs_construction.sequence.packet.kinetic)
@@ -4252,7 +4350,7 @@ end
         GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(
             pqs_construction,
         )
-    @test size(pqs_fixed_block.coefficient_matrix) == (7 * 7 * 15, 7 * 7 * 15)
+    @test size(pqs_fixed_block.coefficient_matrix) == (7 * 7 * 15, 487)
     @test all(isfinite, pqs_fixed_block.overlap)
     @test all(isfinite, pqs_fixed_block.kinetic)
     @test all(isfinite, pqs_fixed_block.weights)
@@ -4301,18 +4399,18 @@ end
     )
     @test pqs_record_diagnostics.source_parent_dimension == 7 * 7 * 15
     @test pqs_record_diagnostics.sidecar_parent_dimension == 7 * 7 * 15
-    @test pqs_record_diagnostics.source_carried_dimension == 7 * 7 * 15
-    @test pqs_record_diagnostics.sidecar_carried_dimension == 7 * 7 * 15
+    @test pqs_record_diagnostics.source_carried_dimension == 487
+    @test pqs_record_diagnostics.sidecar_carried_dimension == 487
     @test pqs_record_diagnostics.source_carried_space_kind == :nested_fixed_block
     @test pqs_record_diagnostics.sidecar_input_kind == :nested_fixed_block_operator
     @test pqs_operators.gausslet_backend == :pgdg_localized_experimental
     @test pqs_operators.interaction_treatment == :ggt_nearest
     @test pqs_operators.nuclear_term_storage == :total_only
-    @test pqs_operators.gausslet_count == 7 * 7 * 15
+    @test pqs_operators.gausslet_count == 487
     @test pqs_operators.residual_count == 0
-    @test size(pqs_operators.overlap) == (7 * 7 * 15, 7 * 7 * 15)
-    @test size(pqs_operators.one_body_hamiltonian) == (7 * 7 * 15, 7 * 7 * 15)
-    @test size(pqs_operators.interaction_matrix) == (7 * 7 * 15, 7 * 7 * 15)
+    @test size(pqs_operators.overlap) == (487, 487)
+    @test size(pqs_operators.one_body_hamiltonian) == (487, 487)
+    @test size(pqs_operators.interaction_matrix) == (487, 487)
     @test all(isfinite, pqs_operators.overlap)
     @test all(isfinite, pqs_operators.one_body_hamiltonian)
     @test all(isfinite, pqs_operators.interaction_matrix)

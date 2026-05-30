@@ -1781,10 +1781,13 @@ function _nested_projected_q_shell_validate_boxes(
     bond_axis::Symbol,
     q::Int,
     L::Int,
+    raw_source_dims::Union{Nothing,NTuple{3,Int}} = nothing,
 )
     q >= 3 || throw(ArgumentError("projected q-shell construction requires q >= 3"))
     L >= 3 || throw(ArgumentError("projected q-shell construction requires L >= 3"))
     bond_axis_index = _nested_axis_index(bond_axis)
+    physical_box_lengths = length.(current_box)
+    source_mode_dims = isnothing(raw_source_dims) ? physical_box_lengths : raw_source_dims
     for axis in 1:3
         current = current_box[axis]
         inner = inner_box[axis]
@@ -1795,11 +1798,24 @@ function _nested_projected_q_shell_validate_boxes(
             ArgumentError("projected q-shell requires a one-cell raw boundary around a strict inner box"),
         )
         expected_length = axis == bond_axis_index ? L : q
-        length(current) == expected_length || throw(
-            ArgumentError("projected q-shell current box length on axis $axis must match q/L metadata"),
+        source_mode_dims[axis] == expected_length || throw(
+            ArgumentError("projected q-shell raw source-mode dimension on axis $axis must match q/L metadata"),
         )
+        if isnothing(raw_source_dims)
+            length(current) == expected_length || throw(
+                ArgumentError("projected q-shell current box length on axis $axis must match q/L metadata"),
+            )
+        else
+            3 <= source_mode_dims[axis] <= length(current) || throw(
+                ArgumentError("projected q-shell raw source-mode dimensions must fit inside the physical support box"),
+            )
+        end
     end
-    return bond_axis_index
+    return (
+        bond_axis_index = bond_axis_index,
+        physical_box_lengths = physical_box_lengths,
+        source_mode_dims = source_mode_dims,
+    )
 end
 
 function _nested_projected_q_shell_boundary_support_indices(
@@ -1838,6 +1854,7 @@ end
 function _nested_projected_q_shell_full_sides(
     bundles::_CartesianNestedAxisBundles3D,
     current_box::NTuple{3,UnitRange{Int}},
+    source_mode_dims::NTuple{3,Int},
 )
     axis_symbols = (:x, :y, :z)
     return ntuple(axis -> begin
@@ -1845,16 +1862,27 @@ function _nested_projected_q_shell_full_sides(
         _nested_doside_1d(
             _nested_axis_pgdg(bundles, axis_symbols[axis]),
             interval,
-            length(interval);
+            source_mode_dims[axis];
             enforce_symmetric_odd = false,
         )
     end, 3)
 end
 
-function _nested_projected_q_shell_boundary_comx_product_modes(
+function _nested_projected_q_shell_full_sides(
+    bundles::_CartesianNestedAxisBundles3D,
     current_box::NTuple{3,UnitRange{Int}},
 )
-    nx, ny, nz = length.(current_box)
+    return _nested_projected_q_shell_full_sides(
+        bundles,
+        current_box,
+        length.(current_box),
+    )
+end
+
+function _nested_projected_q_shell_boundary_comx_product_modes(
+    source_mode_dims::NTuple{3,Int},
+)
+    nx, ny, nz = source_mode_dims
     mode_indices = NTuple{3,Int}[]
     column_indices = Int[]
     for mode_x in 1:nx, mode_y in 1:ny, mode_z in 1:nz
@@ -1876,6 +1904,12 @@ function _nested_projected_q_shell_boundary_comx_product_modes(
         column_indices = column_indices,
         selection_rule = :any_axis_mode_index_first_or_last,
     )
+end
+
+function _nested_projected_q_shell_boundary_comx_product_modes(
+    current_box::NTuple{3,UnitRange{Int}},
+)
+    return _nested_projected_q_shell_boundary_comx_product_modes(length.(current_box))
 end
 
 function _nested_projected_q_shell_cleanup(
@@ -2607,6 +2641,12 @@ function _nested_projected_q_shell_layer(
     bond_axis::Symbol = :z,
     q::Int,
     L::Int,
+    raw_source_dims::Union{Nothing,NTuple{3,Int}} = nothing,
+    selected_q::Union{Nothing,Int} = nothing,
+    axis_selector_retained_counts::Union{Nothing,NTuple{3,Int}} = nothing,
+    decomposition_status::Symbol = :physical_box_boundary_modes,
+    broad_parent_boundary_reference::Bool = false,
+    excluded_from_mvp_gate::Bool = false,
     packet_kernel::Symbol = :support_reference,
     term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
     cleanup_rtol::Float64 = 1.0e-12,
@@ -2620,14 +2660,36 @@ function _nested_projected_q_shell_layer(
         ArgumentError("projected q-shell term_coefficients, when supplied, must be nonempty"),
     )
     dims = _nested_axis_lengths(bundles)
-    bond_axis_index = _nested_projected_q_shell_validate_boxes(
+    validation = _nested_projected_q_shell_validate_boxes(
         dims,
         current_box,
         inner_box;
         bond_axis,
         q,
         L,
+        raw_source_dims,
     )
+    bond_axis_index = validation.bond_axis_index
+    source_mode_dims = validation.source_mode_dims
+    physical_box_lengths = validation.physical_box_lengths
+    selected_q_value = isnothing(selected_q) ? q : selected_q
+    axis_selector_retained_counts_value = isnothing(axis_selector_retained_counts) ?
+        ntuple(axis -> source_mode_dims[axis] - 2, 3) :
+        axis_selector_retained_counts
+    transverse_source_dims =
+        Tuple(source_mode_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+    raw_q_matches_selected_q =
+        all(dim -> dim == selected_q_value, transverse_source_dims)
+    direct_physical_box_modes = isnothing(raw_source_dims)
+    resolved_broad_parent_boundary_reference =
+        broad_parent_boundary_reference ||
+        (direct_physical_box_modes && !isnothing(selected_q) && !raw_q_matches_selected_q)
+    resolved_decomposition_status =
+        resolved_broad_parent_boundary_reference ?
+        :broad_parent_boundary_reference :
+        decomposition_status
+    resolved_excluded_from_mvp_gate =
+        excluded_from_mvp_gate || resolved_broad_parent_boundary_reference
     support_indices = _nested_projected_q_shell_boundary_support_indices(
         dims,
         current_box,
@@ -2639,9 +2701,13 @@ function _nested_projected_q_shell_layer(
         ArgumentError("projected q-shell raw-boundary support coverage must be exact"),
     )
 
-    full_sides = _nested_projected_q_shell_full_sides(bundles, current_box)
+    full_sides = _nested_projected_q_shell_full_sides(
+        bundles,
+        current_box,
+        source_mode_dims,
+    )
     full_coefficients = _nested_product_coefficients(full_sides..., dims)
-    boundary_modes = _nested_projected_q_shell_boundary_comx_product_modes(current_box)
+    boundary_modes = _nested_projected_q_shell_boundary_comx_product_modes(source_mode_dims)
     projected_coefficients = Matrix{Float64}(
         full_coefficients[support_indices, boundary_modes.column_indices],
     )
@@ -2689,6 +2755,17 @@ function _nested_projected_q_shell_layer(
         bond_axis_index = bond_axis_index,
         q = q,
         L = L,
+        selected_q = selected_q_value,
+        raw_source_dims = source_mode_dims,
+        source_mode_dims = source_mode_dims,
+        axis_selector_retained_counts = axis_selector_retained_counts_value,
+        raw_q_matches_selected_q = raw_q_matches_selected_q,
+        physical_box_lengths = physical_box_lengths,
+        support_count = length(support_indices),
+        pqs_retained_count = size(coefficient_matrix, 2),
+        decomposition_status = resolved_decomposition_status,
+        broad_parent_boundary_reference = resolved_broad_parent_boundary_reference,
+        excluded_from_mvp_gate = resolved_excluded_from_mvp_gate,
         full_block_column_count = size(full_coefficients, 2),
         boundary_comx_product_mode_count = length(boundary_modes.column_indices),
         boundary_comx_product_mode_selection_rule = boundary_modes.selection_rule,
@@ -2738,6 +2815,14 @@ function _nested_projected_q_shell_layer(
         bond_axis = bond_axis,
         q = q,
         L = L,
+        selected_q = selected_q_value,
+        raw_source_dims = source_mode_dims,
+        source_mode_dims = source_mode_dims,
+        axis_selector_retained_counts = axis_selector_retained_counts_value,
+        physical_box_lengths = physical_box_lengths,
+        decomposition_status = resolved_decomposition_status,
+        broad_parent_boundary_reference = resolved_broad_parent_boundary_reference,
+        excluded_from_mvp_gate = resolved_excluded_from_mvp_gate,
         packet_kernel = packet_kernel,
         pqs_staged_unit_descriptor = staged_descriptor,
         public_api = false,
