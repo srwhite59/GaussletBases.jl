@@ -106,11 +106,11 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
     operators::OrdinaryCartesianOperators3D,
     cartesian_parent::CartesianBasisRepresentation3D,
 )
-    factorized_cartesian_parent_basis = _cartesian_factorized_parent_basis(cartesian_parent)
+    factorized_cartesian_parent_basis = _cartesian_optional_factorized_parent_basis(cartesian_parent)
     parent_basis = _cartesian_hybrid_parent_basis(operators)
     parent_basis isa BondAlignedDiatomicQWBasis3D || throw(
         ArgumentError(
-            "factorized bond-aligned diatomic hybrid overlap sidecars currently require a BondAlignedDiatomicQWBasis3D or nested fixed block built from one",
+            "bond-aligned diatomic hybrid overlap sidecars currently require a BondAlignedDiatomicQWBasis3D or nested fixed block built from one",
         ),
     )
     bundles = _qwrg_bond_aligned_axis_bundles(
@@ -129,19 +129,28 @@ function _cartesian_diatomic_hybrid_overlap_sidecars(
         cartesian_parent.coefficient_matrix === nothing ?
         Matrix{Float64}(I, cartesian_parent.metadata.final_dimension, cartesian_parent.metadata.final_dimension) :
         Matrix{Float64}(cartesian_parent.coefficient_matrix)
-    return (
-        hybrid_overlap_kind = :factorized_bond_aligned_diatomic_mixed_raw,
-        factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
-        cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
-            operators,
-            factorized_cartesian_parent_basis,
-            supplement3d,
-            (x = bundles.bundle_x, y = bundles.bundle_y, z = bundles.bundle_z),
-            "bond-aligned diatomic",
-        ),
+    base_sidecars = (
+        hybrid_overlap_kind =
+            isnothing(factorized_cartesian_parent_basis) ?
+            :dense_bond_aligned_diatomic_mixed_raw :
+            :factorized_bond_aligned_diatomic_mixed_raw,
         exact_cartesian_supplement_overlap =
             Matrix{Float64}(transpose(parent_coefficients) * overlap_blocks.overlap_ga),
         exact_supplement_overlap = Matrix{Float64}(overlap_blocks.overlap_aa),
+    )
+    isnothing(factorized_cartesian_parent_basis) && return base_sidecars
+    return merge(
+        base_sidecars,
+        (
+            factorized_cartesian_parent_basis = factorized_cartesian_parent_basis,
+            cartesian_supplement_axis_tables = _cartesian_hybrid_supplement_axis_tables(
+                operators,
+                factorized_cartesian_parent_basis,
+                supplement3d,
+                (x = bundles.bundle_x, y = bundles.bundle_y, z = bundles.bundle_z),
+                "bond-aligned diatomic",
+            ),
+        ),
     )
 end
 
@@ -162,7 +171,7 @@ function _cartesian_hybrid_overlap_sidecars(
     end
     throw(
         ArgumentError(
-            "factorized exact hybrid overlap sidecars currently support atomic and bond-aligned diatomic routes; got parent basis $(typeof(parent_basis)) with supplement $(typeof(operators.gaussian_data))",
+            "exact hybrid overlap sidecars currently support atomic and bond-aligned diatomic routes; got parent basis $(typeof(parent_basis)) with supplement $(typeof(operators.gaussian_data))",
         ),
     )
 end

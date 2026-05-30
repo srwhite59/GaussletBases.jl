@@ -3297,6 +3297,25 @@ end
               q4_direct_supplement.kinetic_one_body
         @test q4_fixture_supplement_ops.nuclear_one_body_by_center ==
               q4_direct_supplement.nuclear_one_body_by_center
+        q4_fixture_supplement_representation = basis_representation(q4_fixture_supplement_ops)
+        @test q4_fixture_supplement_representation.parent_data.hybrid_overlap_kind ==
+              :factorized_bond_aligned_diatomic_mixed_raw
+        @test hasproperty(
+            q4_fixture_supplement_representation.parent_data,
+            :factorized_cartesian_parent_basis,
+        )
+        @test hasproperty(
+            q4_fixture_supplement_representation.parent_data,
+            :cartesian_supplement_axis_tables,
+        )
+        @test hasproperty(
+            q4_fixture_supplement_representation.parent_data,
+            :exact_cartesian_supplement_overlap,
+        )
+        @test hasproperty(
+            q4_fixture_supplement_representation.parent_data,
+            :exact_supplement_overlap,
+        )
         @test_throws ArgumentError QWCS._nested_bond_aligned_homonuclear_high_order_q_row_fixture_supplement_receipt(
             bond_length = 5.0,
             core_spacing = 0.7,
