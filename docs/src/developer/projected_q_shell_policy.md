@@ -207,12 +207,38 @@ passes the q5 endcap/panel fixed threshold, but it is not a promoted policy:
 it changes shared source-mode dimensions to `(6, 6, 5)`, `(5, 5, 6)`, and
 `(5, 5, 7)`.
 
-The next recommended private run is supplement-coupled strict PQS q=5 on the
-same corrected Be2 target. It should report fixed and final capture/H1
-separately: fixed against the q-1 panel compact baseline, final against the
-corrected q-row supplement baseline. Stop if supplement coupling requires
-construction changes, QW/Hamiltonian edits, CR2 artifact mutation, numerical
-fallback, local/ECP/Gaussian/MWG work, or public/default route changes.
+The supplement-coupled strict PQS q=5 probe was then run on the same corrected
+Be2 target: Be2/cc-pVDZ at `R = 5.0`, all-electron `Z = 4`, `d = 0.15`,
+physical box `16 x 16 x 21` bohr, parent axes `(15, 15, 27)`, parent
+dimension `6075`, and strict `q = 5`. It used the PGDG backend, did not use
+numerical-reference fallback, and reported `dense_parent_matrix_used = false`.
+The source diagnostics stayed q-local/adaptive: shared source-mode dimensions
+`(5, 5, 5)`, `(5, 5, 5)`, `(5, 5, 6)` with shared `pqs_retained_count` values
+`98`, `98`, and `114`.
+
+The fair supplement-coupled comparison is against the compact q-row route with
+`5x5` endcaps and `4xL` panels (`protected_atom_side_count = 5`, `q_min = 4`,
+`shared_q = 4`, `shared_order = 4`):
+
+| route | fixed/final/residual dims | fixed capture | final capture | max fixed H1 delta | max final H1 delta |
+|---|---:|---:|---:|---:|---:|
+| fair q-row q-1 panel | `1461 / 1479 / 18` | `0.998655961965` | `0.999980227448` | `4.987085 mHa` | `2.333419 mHa` |
+| strict PQS q=5 | `1483 / 1501 / 18` | `0.999918551122` | `0.999989138049` | `0.125908 mHa` | `2.339571 mHa` |
+
+Strict PQS q=5 clearly beats the fair fixed q-row baseline. In the
+supplement-coupled final basis it also beats the fair final capture, while its
+max final H1 delta is slightly worse by about `0.006152 mHa`. Relative to the
+richer q5 q-row/endcap-panel supplement baseline (`1623 / 1641 / 18`, final
+capture `0.999989372730`, max final H1 delta `1.874443 mHa`), strict PQS q=5
+remains slightly behind in both final capture and final H1. This is therefore a
+competitive private MVP result, not a production/default route adoption.
+
+One audit limitation remains explicit. The final supplement probe used the
+existing direct supplement builder because `final_receipt_audit_available =
+false`: the current receipt-audit path tries to factorize PQS fixed columns as
+product columns. That is a receipt/audit-side limitation, not a new numerical
+construction path. The probe did not change construction, QW/Hamiltonian,
+public/default route, backend/quadrature, or CR2 artifact behavior.
 
 ## Sidecar Prototype Checkpoint
 
