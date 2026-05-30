@@ -863,24 +863,11 @@ function _pqs_factored_support_entries(
     pqs_payload::_CartesianExecutableProjectedQShellPayload3D,
     factored_coefficients::AbstractMatrix{<:Real},
 )
-    size(factored_coefficients) ==
-        (length(pqs_payload.support_states), length(pqs_payload.column_range)) ||
-        throw(
-            DimensionMismatch(
-                "PQS/product factored coefficients must match support states and retained columns",
-            ),
-        )
-    entries = [Vector{_ParentCoefficientEntry3D}() for _ in pqs_payload.column_range]
-    for local_col in axes(factored_coefficients, 2)
-        column_entries = entries[local_col]
-        for local_row in axes(factored_coefficients, 1)
-            value = Float64(factored_coefficients[local_row, local_col])
-            iszero(value) && continue
-            ix, iy, iz = pqs_payload.support_states[local_row]
-            push!(column_entries, _ParentCoefficientEntry3D(ix, iy, iz, value))
-        end
-    end
-    return entries
+    return _support_local_retained_entries(
+        pqs_payload.column_range,
+        pqs_payload.support_states,
+        factored_coefficients,
+    )
 end
 
 function _pqs_factored_support_coefficients(
@@ -1405,34 +1392,44 @@ function _fill_product_staged_metric_blocks!(
     return nothing
 end
 
-function _staged_unit_entries(unit)
-    entries = [Vector{_ParentCoefficientEntry3D}() for _ in unit.column_range]
-    coefficients = unit.coefficient_matrix
+function _support_local_retained_entries(
+    column_range::UnitRange{Int},
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    coefficients,
+)
+    length(column_range) == size(coefficients, 2) || throw(
+        DimensionMismatch("support-local retained entries require one coefficient column per retained column"),
+    )
+    length(support_states) == size(coefficients, 1) || throw(
+        DimensionMismatch("support-local retained entries require one support state per coefficient row"),
+    )
+    entries = [Vector{_ParentCoefficientEntry3D}() for _ in column_range]
     for local_col in axes(coefficients, 2)
         column_entries = entries[local_col]
         for local_row in axes(coefficients, 1)
             value = Float64(coefficients[local_row, local_col])
             iszero(value) && continue
-            ix, iy, iz = unit.support_states[local_row]
+            ix, iy, iz = support_states[local_row]
             push!(column_entries, _ParentCoefficientEntry3D(ix, iy, iz, value))
         end
     end
     return entries
 end
 
+function _staged_unit_entries(unit)
+    return _support_local_retained_entries(
+        unit.column_range,
+        unit.support_states,
+        unit.coefficient_matrix,
+    )
+end
+
 function _staged_unit_entries(unit::_CartesianExecutableProjectedQShellPayload3D)
-    entries = [Vector{_ParentCoefficientEntry3D}() for _ in unit.column_range]
-    coefficients = unit.support_coefficient_matrix
-    for local_col in axes(coefficients, 2)
-        column_entries = entries[local_col]
-        for local_row in axes(coefficients, 1)
-            value = Float64(coefficients[local_row, local_col])
-            iszero(value) && continue
-            ix, iy, iz = unit.support_states[local_row]
-            push!(column_entries, _ParentCoefficientEntry3D(ix, iy, iz, value))
-        end
-    end
-    return entries
+    return _support_local_retained_entries(
+        unit.column_range,
+        unit.support_states,
+        unit.support_coefficient_matrix,
+    )
 end
 
 function _entries_from_resolved_payload(payload)

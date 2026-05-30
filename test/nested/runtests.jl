@@ -574,6 +574,14 @@ end
     @test size(cubic_pqs_payload.support_coefficient_matrix, 1) ==
           length(cubic_pqs_payload.support_indices)
     @test size(cubic_pqs_payload.support_coefficient_matrix, 1) != 5 * 5 * 5
+    cubic_pqs_entries = CCPM._staged_unit_entries(cubic_pqs_payload)
+    @test length(cubic_pqs_entries) == length(cubic_pqs_payload.column_range)
+    @test sum(length, cubic_pqs_entries) ==
+          count(!iszero, Matrix{Float64}(cubic_pqs_payload.support_coefficient_matrix))
+    @test all(
+        entry -> (entry.ix, entry.iy, entry.iz) in cubic_pqs_payload.support_states,
+        Iterators.flatten(cubic_pqs_entries),
+    )
     @test cubic_pqs_payload.diagnostics.fixture_only
     @test !cubic_pqs_payload.diagnostics.production_supported
     @test cubic_pqs_payload.diagnostics.coefficient_scope == :support_local_boundary_rows
@@ -5416,6 +5424,14 @@ end
     @test support_resolved_payload.payload === support_sidecar_unit
     @test isempty(product_resolved_payload.missing_fields)
     @test isempty(support_resolved_payload.missing_fields)
+    product_sidecar_entries = CCPM._staged_unit_entries(product_sidecar_unit)
+    support_sidecar_entries = CCPM._staged_unit_entries(support_sidecar_unit)
+    @test length(product_sidecar_entries) == length(product_sidecar_unit.column_range)
+    @test length(support_sidecar_entries) == length(support_sidecar_unit.column_range)
+    @test sum(length, product_sidecar_entries) ==
+          count(!iszero, Matrix{Float64}(product_sidecar_unit.coefficient_matrix))
+    @test sum(length, support_sidecar_entries) ==
+          count(!iszero, Matrix{Float64}(support_sidecar_unit.coefficient_matrix))
     @test product_resolved_payload.diagnostics.linear_vector_path ==
           :product_staged_axis_projection
     @test support_resolved_payload.diagnostics.linear_vector_path ==
