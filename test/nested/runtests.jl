@@ -1059,6 +1059,92 @@ end
     @test product_source_transform.retained_transform.diagnostics.full_raw_to_retained_matrix_materialized
     @test product_source_transform.retained_transform.diagnostics.fast_product_path_requires_separable_axis_transforms
     @test product_source_transform.retained_transform.diagnostics.separable_axis_transforms_available
+    pqs_product_support_coefficients =
+        Matrix{Float64}(cubic_pqs_payload.support_coefficient_matrix)
+    function _pqs_product_expected_low_order_block(term::Symbol)
+        axis_matrices = term == :overlap ? (
+            cubic_metrics.x.overlap,
+            cubic_metrics.y.overlap,
+            cubic_metrics.z.overlap,
+        ) : term == :position_x ? (
+            cubic_metrics.x.position,
+            cubic_metrics.y.overlap,
+            cubic_metrics.z.overlap,
+        ) : term == :position_y ? (
+            cubic_metrics.x.overlap,
+            cubic_metrics.y.position,
+            cubic_metrics.z.overlap,
+        ) : term == :position_z ? (
+            cubic_metrics.x.overlap,
+            cubic_metrics.y.overlap,
+            cubic_metrics.z.position,
+        ) : throw(ArgumentError("unsupported PQS/product test term"))
+        return transpose(pqs_product_support_coefficients) *
+               _pqs_cross_product_matrix(
+                   cubic_pqs_payload.support_states,
+                   product_unit.support_states,
+                   axis_matrices[1],
+                   axis_matrices[2],
+                   axis_matrices[3],
+               ) *
+               Matrix{Float64}(product_unit.coefficient_matrix)
+    end
+    pqs_product_reference_errors = Float64[]
+    for term in (:overlap, :position_x, :position_y, :position_z)
+        pqs_product_block = CCPM._pqs_product_low_order_reference_block(
+            cubic_pqs_payload,
+            product_unit,
+            cubic_metrics;
+            term,
+        )
+        product_pqs_block = CCPM._pqs_product_low_order_reference_block(
+            product_unit,
+            cubic_pqs_payload,
+            cubic_metrics;
+            term,
+        )
+        expected_pqs_product_block = _pqs_product_expected_low_order_block(term)
+        @test pqs_product_block.path == :pqs_product_low_order_reference
+        @test pqs_product_block.term == term
+        @test size(pqs_product_block.block) == (98, 4)
+        @test pqs_product_block.block ≈ pqs_product_block.oracle_block atol = 1.0e-12 rtol = 1.0e-12
+        @test pqs_product_block.block ≈ expected_pqs_product_block atol = 1.0e-12 rtol = 1.0e-12
+        @test pqs_product_block.coefficient_error < 1.0e-12
+        @test pqs_product_block.block_error < 1.0e-12
+        @test pqs_product_block.diagnostics.fixture_reference_only
+        @test !pqs_product_block.diagnostics.production_supported
+        @test !pqs_product_block.diagnostics.packet_adoption
+        @test !pqs_product_block.diagnostics.fixed_block_sidecar_installation
+        @test !pqs_product_block.diagnostics.qwhamiltonian_consumes
+        @test !pqs_product_block.diagnostics.public_default_consumes
+        @test !pqs_product_block.diagnostics.cr2_science_status_changed
+        @test !pqs_product_block.diagnostics.ida_weight_division_allowed
+        @test pqs_product_block.diagnostics.retained_pqs_weights_role ==
+              :debug_reference_only
+        @test !pqs_product_block.diagnostics.retained_pqs_weights_used
+        @test !pqs_product_block.diagnostics.retained_pqs_weights_positive_checked
+        @test !pqs_product_block.diagnostics.pqs_self_overlap_identity_shortcut_used
+        @test pqs_product_block.diagnostics.factored_pqs_transform_used
+        @test pqs_product_block.diagnostics.seed_reconstructed_from_descriptor
+        @test pqs_product_block.diagnostics.cleanup_transform_stage_applied
+        @test pqs_product_block.diagnostics.support_coefficient_matrix_compared
+        @test pqs_product_block.diagnostics.support_local_oracle_used
+        @test !pqs_product_block.diagnostics.optimized_pqs_product_path
+        @test :kinetic in pqs_product_block.diagnostics.unsupported_terms
+        @test product_pqs_block.path == :product_pqs_low_order_reference
+        @test product_pqs_block.block ≈ transpose(pqs_product_block.block) atol = 1.0e-12 rtol = 1.0e-12
+        @test product_pqs_block.oracle_block ≈ transpose(pqs_product_block.oracle_block) atol = 1.0e-12 rtol = 1.0e-12
+        @test product_pqs_block.diagnostics.transposed_from_pqs_product_reference
+        @test !product_pqs_block.diagnostics.pqs_self_overlap_identity_shortcut_used
+        push!(pqs_product_reference_errors, pqs_product_block.block_error)
+    end
+    @test maximum(pqs_product_reference_errors) < 1.0e-12
+    @test_throws ArgumentError CCPM._pqs_product_low_order_reference_block(
+        cubic_pqs_payload,
+        product_unit,
+        cubic_metrics;
+        term = :kinetic,
+    )
     generic_product_source_transform = CCP._cartesian_raw_product_source_retained_transform(
         product_unit;
         source_id = :generic_product_slab_source,
