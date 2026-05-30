@@ -233,12 +233,21 @@ capture `0.999989372730`, max final H1 delta `1.874443 mHa`), strict PQS q=5
 remains slightly behind in both final capture and final H1. This is therefore a
 competitive private MVP result, not a production/default route adoption.
 
-One audit limitation remains explicit. The final supplement probe used the
-existing direct supplement builder because `final_receipt_audit_available =
-false`: the current receipt-audit path tries to factorize PQS fixed columns as
-product columns. That is a receipt/audit-side limitation, not a new numerical
-construction path. The probe did not change construction, QW/Hamiltonian,
-public/default route, backend/quadrature, or CR2 artifact behavior.
+The receipt-audit compatibility checkpoint is recorded by
+`a47d2bf Add PQS-compatible hybrid overlap fallback`. Diatomic hybrid overlap
+sidecars now support a dense exact fallback for fixed columns that do not have
+product/factorized parent data. PQS fixed columns are therefore not marked as
+product-factorized. Product/q-row fixed columns still keep the existing
+factorized sidecar path and its reconstruction checks.
+
+The strict PQS q5 supplement probe now reports
+`final_receipt_audit_available = true`. Its hybrid overlap sidecar kind is
+`:dense_bond_aligned_diatomic_mixed_raw`, and the receipt-built final
+operators match the direct supplement builder output with max matrix error
+`0.0`. This is an audit/representation compatibility fix only: it does not
+change supplement construction, QW/Hamiltonian assembly, public/default route
+adoption, CR2 artifacts, optimized PQS/product kernels,
+local/ECP/Gaussian/MWG handling, or numerical fallback policy.
 
 ## Sidecar Prototype Checkpoint
 
