@@ -4205,6 +4205,36 @@ end
         )
         if choice.recipe_family == :shared_endcap_panel_exterior
     ]
+    pqs_plan = GaussletBases._nested_projected_q_shell_source_mode_plan(
+        (5, 5, 6);
+        bond_axis = :z,
+        selected_q = 5,
+        physical_box_lengths = (11, 11, 21),
+        support_count = 1002,
+    )
+    @test pqs_plan.raw_source_dims == (5, 5, 6)
+    @test pqs_plan.source_mode_dims == (5, 5, 6)
+    @test pqs_plan.axis_selector_retained_counts == (3, 3, 4)
+    @test pqs_plan.raw_q == 5
+    @test pqs_plan.raw_L == 6
+    @test pqs_plan.raw_q_matches_selected_q
+    @test pqs_plan.physical_box_lengths == (11, 11, 21)
+    @test pqs_plan.support_count == 1002
+    @test pqs_plan.pqs_retained_count == 114
+    @test pqs_plan.decomposition_status == :adaptive_broad_support_q_local_modes
+    @test !pqs_plan.broad_parent_boundary_reference
+    @test !pqs_plan.excluded_from_mvp_gate
+    pqs_mismatch_plan = GaussletBases._nested_projected_q_shell_source_mode_plan(
+        (4, 4, 5);
+        bond_axis = :z,
+        selected_q = 5,
+        physical_box_lengths = (9, 9, 9),
+        support_count = 488,
+    )
+    @test !pqs_mismatch_plan.raw_q_matches_selected_q
+    @test pqs_mismatch_plan.decomposition_status == :adaptive_raw_q_mismatch
+    @test pqs_mismatch_plan.excluded_from_mvp_gate
+    @test !(:adaptive_retain in propertynames(pqs_plan))
     @test [length.(region.box) for region in be2_shared_regions] ==
           [(15, 15, 25), (13, 13, 23), (11, 11, 21)]
     @test [dims.raw_source_dims for dims in be2_shared_dimensions] ==

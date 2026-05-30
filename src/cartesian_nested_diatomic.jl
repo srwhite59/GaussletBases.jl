@@ -2101,6 +2101,59 @@ function _nested_diatomic_projected_q_shell_retained_count(
     return prod(raw_source_dims) - prod(inner_dims)
 end
 
+function _nested_projected_q_shell_source_mode_plan(
+    raw_source_dims::NTuple{3,Int};
+    bond_axis::Symbol,
+    selected_q::Int,
+    physical_box_lengths::NTuple{3,Int},
+    support_count::Int,
+    decomposition_status_match::Symbol = :adaptive_broad_support_q_local_modes,
+    decomposition_status_mismatch::Symbol = :adaptive_raw_q_mismatch,
+    broad_parent_boundary_reference::Bool = false,
+)
+    all(dim -> dim >= 3, raw_source_dims) || throw(
+        ArgumentError("projected q-shell source-mode dimensions must all be at least 3"),
+    )
+    selected_q >= 3 || throw(
+        ArgumentError("projected q-shell selected_q must be at least 3"),
+    )
+    support_count >= 0 || throw(
+        ArgumentError("projected q-shell support_count must be nonnegative"),
+    )
+    all(axis -> raw_source_dims[axis] <= physical_box_lengths[axis], 1:3) || throw(
+        ArgumentError("projected q-shell source-mode dimensions must fit inside the physical support box"),
+    )
+    axis_selector_retained_counts = ntuple(axis -> raw_source_dims[axis] - 2, 3)
+    bond_axis_index = _nested_axis_index(bond_axis)
+    transverse_raw_dims =
+        Tuple(raw_source_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+    transverse_raw_dims[1] == transverse_raw_dims[2] || throw(
+        ArgumentError("projected q-shell source-mode plan requires equal transverse raw dimensions"),
+    )
+    raw_q = transverse_raw_dims[1]
+    raw_L = raw_source_dims[bond_axis_index]
+    raw_q_matches_selected_q = raw_q == selected_q
+    return (
+        raw_source_dims = raw_source_dims,
+        source_mode_dims = raw_source_dims,
+        axis_selector_retained_counts = axis_selector_retained_counts,
+        raw_q = raw_q,
+        raw_L = raw_L,
+        selected_q = selected_q,
+        raw_q_matches_selected_q = raw_q_matches_selected_q,
+        physical_box_lengths = physical_box_lengths,
+        support_count = support_count,
+        pqs_retained_count =
+            _nested_diatomic_projected_q_shell_retained_count(raw_source_dims),
+        decomposition_status = raw_q_matches_selected_q ?
+            decomposition_status_match :
+            decomposition_status_mismatch,
+        broad_parent_boundary_reference = broad_parent_boundary_reference,
+        excluded_from_mvp_gate =
+            broad_parent_boundary_reference || !raw_q_matches_selected_q,
+    )
+end
+
 function _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
     basis,
     bundles::_CartesianNestedAxisBundles3D,
@@ -2129,33 +2182,16 @@ function _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
         adaptive_retention.chosen_z.retain,
     )
     raw_source_dims = ntuple(axis -> axis_selector_retained_counts[axis] + 2, 3)
-    bond_axis_index = _nested_axis_index(bond_axis)
-    transverse_raw_dims =
-        Tuple(raw_source_dims[axis] for axis in 1:3 if axis != bond_axis_index)
-    transverse_raw_dims[1] == transverse_raw_dims[2] || throw(
-        ArgumentError("adaptive projected q-shell source dimensions require equal transverse raw dimensions"),
-    )
-    raw_q = transverse_raw_dims[1]
-    raw_L = raw_source_dims[bond_axis_index]
-    raw_q_matches_selected_q = raw_q == selected_q
-    return (
-        adaptive_retention = adaptive_retention,
-        raw_source_dims = raw_source_dims,
-        axis_selector_retained_counts = axis_selector_retained_counts,
-        raw_q = raw_q,
-        raw_L = raw_L,
-        selected_q = selected_q,
-        raw_q_matches_selected_q = raw_q_matches_selected_q,
+    plan = _nested_projected_q_shell_source_mode_plan(
+        raw_source_dims;
+        bond_axis,
+        selected_q,
         physical_box_lengths = length.(region.box),
         support_count = length(region.support_indices),
-        pqs_retained_count =
-            _nested_diatomic_projected_q_shell_retained_count(raw_source_dims),
-        decomposition_status = raw_q_matches_selected_q ?
-            :adaptive_broad_support_q_local_modes :
-            :adaptive_raw_q_mismatch,
-        broad_parent_boundary_reference = false,
-        excluded_from_mvp_gate = !raw_q_matches_selected_q,
     )
+    return merge((
+        adaptive_retention = adaptive_retention,
+    ), plan)
 end
 
 function _nested_diatomic_high_order_descriptor_direct_coefficients(
