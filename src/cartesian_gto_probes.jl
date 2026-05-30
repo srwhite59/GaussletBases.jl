@@ -286,6 +286,107 @@ function _cartesian_supplement_probe_overlap(
     return _cartesian_supplement_cross_overlap(raw.supplement_representation, probes)
 end
 
+function _cartesian_gto_hybrid_audit_diagnostics(
+    representation::CartesianBasisRepresentation3D,
+)
+    parent_data = representation.parent_data
+    if parent_data !== nothing &&
+            hasproperty(parent_data, :hybrid_overlap_audit_contract)
+        return (
+            dense_audit_materialization_used = true,
+            dense_audit_materialization_contract =
+                parent_data.hybrid_overlap_audit_contract,
+            dense_audit_coefficient_scope =
+                hasproperty(parent_data, :hybrid_overlap_audit_coefficient_scope) ?
+                parent_data.hybrid_overlap_audit_coefficient_scope : nothing,
+            dense_audit_cross_overlap =
+                hasproperty(parent_data, :hybrid_overlap_audit_cross_overlap) ?
+                parent_data.hybrid_overlap_audit_cross_overlap : nothing,
+            dense_audit_parent_parent_operator =
+                hasproperty(parent_data, :hybrid_overlap_audit_parent_parent_operator) ?
+                parent_data.hybrid_overlap_audit_parent_parent_operator : false,
+        )
+    end
+    return (
+        dense_audit_materialization_used = false,
+        dense_audit_materialization_contract = nothing,
+        dense_audit_coefficient_scope = nothing,
+        dense_audit_cross_overlap = nothing,
+        dense_audit_parent_parent_operator = false,
+    )
+end
+
+function _cartesian_final_gto_cross_overlap_handoff(
+    fixed_working,
+    final_supplement,
+    raw_to_final::AbstractMatrix{<:Real},
+    probes;
+    provenance::Symbol = :private_final_gto_cross_overlap_handoff,
+)
+    fixed_representation = _gto_working_representation(fixed_working)
+    supplement_representation = _gto_probe_representation(final_supplement)
+    probe_representation = _gto_probe_representation(probes)
+    raw_to_final_matrix = Matrix{Float64}(raw_to_final)
+    fixed_gto_overlap = Matrix{Float64}(gto_overlap_matrix(fixed_representation, probe_representation))
+    supplement_gto_overlap = Matrix{Float64}(
+        _cartesian_supplement_cross_overlap(
+            supplement_representation,
+            probe_representation,
+        ),
+    )
+    raw_dimension = size(fixed_gto_overlap, 1) + size(supplement_gto_overlap, 1)
+    size(raw_to_final_matrix, 1) == raw_dimension || throw(
+        DimensionMismatch(
+            "final-basis/GTO handoff raw_to_final rows $(size(raw_to_final_matrix, 1)) must match fixed/GTO rows $(size(fixed_gto_overlap, 1)) plus supplement/GTO rows $(size(supplement_gto_overlap, 1))",
+        ),
+    )
+    size(fixed_gto_overlap, 2) == size(supplement_gto_overlap, 2) || throw(
+        DimensionMismatch(
+            "fixed/GTO and supplement/GTO overlaps must have the same GTO dimension; got $(size(fixed_gto_overlap, 2)) and $(size(supplement_gto_overlap, 2))",
+        ),
+    )
+    raw_gto_overlap = [fixed_gto_overlap; supplement_gto_overlap]
+    final_gto_overlap = Matrix{Float64}(transpose(raw_to_final_matrix) * raw_gto_overlap)
+    audit = _cartesian_gto_hybrid_audit_diagnostics(fixed_representation)
+    diagnostics = merge(
+        (
+            cross_overlap_contract = :final_basis_uses_cross_overlap_only,
+            self_overlaps_downstream_data = false,
+            fixed_dimension = size(fixed_gto_overlap, 1),
+            supplement_dimension = size(supplement_gto_overlap, 1),
+            residual_count = size(supplement_gto_overlap, 1),
+            raw_dimension = raw_dimension,
+            final_dimension = size(final_gto_overlap, 1),
+            gto_dimension = size(final_gto_overlap, 2),
+            orientation = :final_by_gto,
+            cross_overlap_label = :S_final_gto,
+            transfer_convention = :C_final_equals_S_final_gto_times_C_gto,
+            raw_piece_order = (:fixed_gto_overlap, :supplement_gto_overlap),
+            final_transform = :transpose_raw_to_final_times_raw_gto_overlap,
+            fixed_overlap_source = :gto_overlap_matrix,
+            supplement_overlap_source = :_cartesian_supplement_cross_overlap,
+            final_self_overlap_used = false,
+            gto_self_overlap_used = false,
+            output_finite = all(isfinite, final_gto_overlap),
+            max_abs_cross_overlap =
+                isempty(final_gto_overlap) ? 0.0 : maximum(abs, final_gto_overlap),
+            provenance = provenance,
+        ),
+        audit,
+    )
+    return (
+        cross_overlap = final_gto_overlap,
+        final_gto_overlap = final_gto_overlap,
+        raw_gto_overlap = raw_gto_overlap,
+        fixed_gto_overlap = fixed_gto_overlap,
+        supplement_gto_overlap = supplement_gto_overlap,
+        fixed_representation = fixed_representation,
+        supplement_representation = supplement_representation,
+        probe_representation = probe_representation,
+        diagnostics = diagnostics,
+    )
+end
+
 function _gto_overlap_matrix(
     working::CartesianBasisRepresentation3D,
     probes::CartesianGaussianShellSupplementRepresentation3D,

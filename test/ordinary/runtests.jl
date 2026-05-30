@@ -4576,8 +4576,37 @@ end
             hybrid_raw.exact_cartesian_supplement_overlap
             hybrid_raw.exact_supplement_overlap
         ]
+        hybrid_handoff = GaussletBases._cartesian_final_gto_cross_overlap_handoff(
+            basis,
+            s_supplement,
+            ordinary_ops.raw_to_final,
+            s_supplement;
+            provenance = :ordinary_gto_overlap_test,
+        )
         @test size(hybrid_overlap, 1) == ordinary_ops.gausslet_count + ordinary_ops.residual_count
         @test norm(hybrid_overlap - hybrid_reference, Inf) < 1.0e-12
+        @test hybrid_handoff.cross_overlap ≈ hybrid_overlap atol = 1.0e-12 rtol = 1.0e-12
+        @test hybrid_handoff.raw_gto_overlap ≈ [
+            gto_overlap_matrix(basis, s_supplement)
+            GaussletBases._cartesian_supplement_cross_overlap(
+                basis_representation(s_supplement),
+                basis_representation(s_supplement),
+            )
+        ] atol = 1.0e-12 rtol = 1.0e-12
+        @test hybrid_handoff.diagnostics.cross_overlap_contract ==
+              :final_basis_uses_cross_overlap_only
+        @test !hybrid_handoff.diagnostics.self_overlaps_downstream_data
+        @test hybrid_handoff.diagnostics.fixed_dimension == length(basis)^3
+        @test hybrid_handoff.diagnostics.supplement_dimension == ordinary_ops.residual_count
+        @test hybrid_handoff.diagnostics.final_dimension == size(ordinary_ops.raw_to_final, 2)
+        @test hybrid_handoff.diagnostics.gto_dimension == length(basis_representation(s_supplement).orbitals)
+        @test hybrid_handoff.diagnostics.orientation == :final_by_gto
+        @test hybrid_handoff.diagnostics.cross_overlap_label == :S_final_gto
+        @test hybrid_handoff.diagnostics.transfer_convention ==
+              :C_final_equals_S_final_gto_times_C_gto
+        @test !hybrid_handoff.diagnostics.final_self_overlap_used
+        @test !hybrid_handoff.diagnostics.gto_self_overlap_used
+        @test hybrid_handoff.diagnostics.output_finite
 
         nuclei = [(0.0, 0.0, -0.7), (0.0, 0.0, 0.7)]
         diatomic_basis = bond_aligned_homonuclear_qw_basis(
