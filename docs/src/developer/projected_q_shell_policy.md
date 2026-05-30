@@ -163,6 +163,57 @@ shared-shell PQS construction q-local, or to explicitly label broad
 parent-boundary PQS as reference-only and keep it out of MVP/pass gates. Do
 not run supplement-coupled PQS until this construction contract is fixed.
 
+## Corrected Be2 Fixed-Only Interpretation
+
+After the q-local shared-shell correction (`7fc94b7`), the fixed-only Be2 PQS
+probe was rerun on the corrected CR2 target: Be2/cc-pVDZ at `R = 5.0`,
+all-electron `Z = 4`, `d = 0.15`, parent axes `(15, 15, 27)`, parent
+dimension `6075`, and `q = 5`. The run remained private/report-only, used the
+PGDG backend, did not use numerical-reference fallback, and reported
+`dense_parent_matrix_used = false`.
+
+The corrected q-local PQS source diagnostics are the important construction
+checkpoint:
+
+- shared physical boxes remain broad: `(15, 15, 25)`, `(13, 13, 23)`,
+  `(11, 11, 21)`;
+- shared source-mode dimensions are q-local/adaptive: `(5, 5, 5)`,
+  `(5, 5, 5)`, `(5, 5, 6)`;
+- shared `pqs_retained_count` values are `98`, `98`, and `114`;
+- broad physical PQS forms such as `PQS(15,25)`, `PQS(13,23)`, and
+  `PQS(11,21)` are not normal MVP PQS routes.
+
+The strict q=5 PQS fixed-only result was:
+
+| route | fixed dim | fixed capture | max fixed H1 delta |
+|---|---:|---:|---:|
+| q-1 panel fixed-only | `1461` | `0.998655961965` | `4.987085 mHa` |
+| strict PQS q=5 fixed-only | `1483` | `0.999918551122` | `0.125908 mHa` |
+| q5 q-row/endcap-panel fixed-only | `1623` | `0.999955518077` | `0.211455 mHa` |
+
+The interpretation is therefore two-sided:
+
+- strict PQS q=5 passes the compact fixed-only comparison against the q-1
+  endcap/panel route;
+- strict PQS q=5 remains below the richer q5 endcap/panel fixed-capture
+  baseline;
+- the q5 endcap/panel route should not be the only fixed-space comparator,
+  because it retains a richer shared boundary object than strict q=5 PQS.
+
+A diagnostic-only broader PQS variant using
+`shared_shell_angular_resolution_scale = 1.1` reached fixed dimension `1549`,
+fixed capture `0.999967462999`, and max fixed H1 delta `0.126753 mHa`. It
+passes the q5 endcap/panel fixed threshold, but it is not a promoted policy:
+it changes shared source-mode dimensions to `(6, 6, 5)`, `(5, 5, 6)`, and
+`(5, 5, 7)`.
+
+The next recommended private run is supplement-coupled strict PQS q=5 on the
+same corrected Be2 target. It should report fixed and final capture/H1
+separately: fixed against the q-1 panel compact baseline, final against the
+corrected q-row supplement baseline. Stop if supplement coupling requires
+construction changes, QW/Hamiltonian edits, CR2 artifact mutation, numerical
+fallback, local/ECP/Gaussian/MWG work, or public/default route changes.
+
 ## Sidecar Prototype Checkpoint
 
 As of 2026-05-28, mainline also has a private descriptor/prototype line for
