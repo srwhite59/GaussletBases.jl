@@ -24,26 +24,16 @@ end
 warm_overlap, warm_overlap_timing = _timed("Cr-map count7 GTO overlap warm") do
     gto_overlap_matrix(operators, diagnostic.supplement)
 end
-reference_overlap, reference_timing = _timed("Cr-map count7 dense overlap ref") do
-    supplement3d = GaussletBases._atomic_cartesian_shell_supplement_3d(diagnostic.supplement)
-    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
-        diagnostic.fixed_block.parent_basis;
-        exponents = operators.expansion.exponents,
-        center = 0.0,
-        backend = operators.gausslet_backend,
-    )
-    raw_blocks = GaussletBases._qwrg_atomic_cartesian_blocks_3d(
-        bundle,
-        supplement3d,
-        operators.expansion,
-    )
-    fixed_cross =
-        transpose(Matrix{Float64}(diagnostic.fixed_block.coefficient_matrix)) * raw_blocks.overlap_ga
-    Matrix{Float64}(
-        transpose(Matrix{Float64}(operators.raw_to_final)) *
-        [fixed_cross; raw_blocks.overlap_aa],
+reference_handoff, reference_timing = _timed("Cr-map count7 handoff overlap ref") do
+    GaussletBases._cartesian_final_gto_cross_overlap_handoff(
+        diagnostic.fixed_block,
+        diagnostic.supplement,
+        operators.raw_to_final,
+        diagnostic.supplement;
+        provenance = :benchmark_high_order_cr_ns7_qw_operator_adapter,
     )
 end
+reference_overlap = reference_handoff.cross_overlap
 overlap_error = maximum(abs.(overlap .- reference_overlap))
 warm_overlap_error = maximum(abs.(warm_overlap .- reference_overlap))
 
@@ -85,6 +75,7 @@ println("same-density route compare      ", fields.same_density_route_comparison
 println("occupied capture status         ", fields.occupied_capture_status)
 println("smallest remaining interface    ", fields.smallest_missing_interface)
 println("GTO overlap shape               ", size(overlap))
+println("GTO handoff contract            ", reference_handoff.diagnostics.cross_overlap_contract)
 @printf("GTO dense fallback max error     %.6e\n", overlap_error)
 @printf("warm GTO fallback max error      %.6e\n", warm_overlap_error)
 @printf("internal smoke time/allocation  %.5f s / %.2f MiB\n",
