@@ -2979,6 +2979,19 @@ end
 const _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS =
     _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS
 
+function _pqs_pqs_product_supported_safe_terms(terms)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS/PQS/product source-box route requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS || throw(
+            ArgumentError("PQS/PQS/product source-box route received unsupported term $(term)"),
+        )
+    end
+    return selected_terms
+end
+
 function _pqs_product_source_box_product_block(
     product_unit::_CartesianNestedProductStagedByCenterUnit3D,
     metrics::NamedTuple{(:x,:y,:z)},
@@ -3383,6 +3396,132 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
     )
 end
 
+const _PQS_PQS_PRODUCT_SAFE_TERM_ROUTE_KINDS = (
+    :pqs_pqs_product_source_box_safe_term_route,
+    :homonuclear_pqs_product_source_box_safe_term_fixture,
+)
+
+function _pqs_pqs_product_safe_term_route_descriptor(
+    left_pqs_plan,
+    right_pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    route_name::Symbol = :pqs_pqs_product_source_box_safe_term_route,
+    parent_dims = nothing,
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    left_raw_plan = _pqs_raw_product_box_plan_view(left_pqs_plan)
+    right_raw_plan = _pqs_raw_product_box_plan_view(right_pqs_plan)
+    left_raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(ArgumentError("PQS/PQS/product route descriptor requires a raw product-box left PQS plan"))
+    right_raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(ArgumentError("PQS/PQS/product route descriptor requires a raw product-box right PQS plan"))
+    _require_product_doside_retained_block_unit(product_unit; side = :product)
+    selected_terms = _pqs_pqs_product_supported_safe_terms(supported_terms)
+    product_retained_unit_plan = _product_doside_retained_unit_plan(product_unit)
+
+    left_count = left_raw_plan.boundary_selector.selected_count
+    right_count = right_raw_plan.boundary_selector.selected_count
+    product_count = product_retained_unit_plan.retained_count
+    ranges = (
+        pqs_left = 1:left_count,
+        pqs_right = (left_count + 1):(left_count + right_count),
+        product = (left_count + right_count + 1):(left_count + right_count + product_count),
+    )
+    retained_dimension = left_count + right_count + product_count
+    unit_summaries = (
+        (
+            unit_key = :pqs_left,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = :boundary_comx_product_mode_selection,
+            retained_range = ranges.pqs_left,
+            source_dimensions = left_raw_plan.source_mode_dims,
+            source_dimension = left_raw_plan.source_mode_count,
+            axis_intervals = left_raw_plan.axis_intervals,
+            source_mode_ordering = left_raw_plan.source_mode_ordering,
+            boundary_mode_count = left_count,
+            retained_count = left_count,
+            supported_safe_terms = selected_terms,
+        ),
+        (
+            unit_key = :pqs_right,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = :boundary_comx_product_mode_selection,
+            retained_range = ranges.pqs_right,
+            source_dimensions = right_raw_plan.source_mode_dims,
+            source_dimension = right_raw_plan.source_mode_count,
+            axis_intervals = right_raw_plan.axis_intervals,
+            source_mode_ordering = right_raw_plan.source_mode_ordering,
+            boundary_mode_count = right_count,
+            retained_count = right_count,
+            supported_safe_terms = selected_terms,
+        ),
+        (
+            unit_key = :product,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            retained_rule_kind = :product_doside,
+            retained_range = ranges.product,
+            source_dimensions = product_retained_unit_plan.source_axis_lengths,
+            source_dimension = product_retained_unit_plan.source_dimension,
+            axis_intervals = product_retained_unit_plan.source_axis_intervals,
+            retained_axis_counts = product_retained_unit_plan.retained_axis_counts,
+            retained_count = product_count,
+            supported_safe_terms = selected_terms,
+        ),
+    )
+    route_metadata = merge((parent_dims = parent_dims, bond_axis = bond_axis), metadata)
+    return (
+        object_kind = :pqs_pqs_product_safe_term_route_descriptor,
+        route_kind = :pqs_pqs_product_source_box_safe_term_route,
+        route_name = route_name,
+        roles = (:pqs_left, :pqs_right, :product),
+        units = (
+            pqs_left = left_pqs_plan,
+            pqs_right = right_pqs_plan,
+            product = product_unit,
+        ),
+        unit_summaries = unit_summaries,
+        expected_ranges = ranges,
+        ranges = ranges,
+        retained_dimension = retained_dimension,
+        retained_unit_count = length(unit_summaries),
+        expected_pair_count = 6,
+        pair_count = 6,
+        supported_terms = selected_terms,
+        metadata = route_metadata,
+        provenance = provenance,
+        diagnostics = (
+            source = :pqs_pqs_product_safe_term_route_descriptor,
+            route_descriptor_only = true,
+            private_shadow_only = true,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+            generic_retained_unit_framework = false,
+            operator_algebra_changed = false,
+            geometry_construction = false,
+            retained_unit_count = length(unit_summaries),
+            expected_pair_count = 6,
+            term_count = length(selected_terms),
+            supported_terms = selected_terms,
+        ),
+    )
+end
+
 function _pqs_pqs_product_source_box_shadow_blocks(
     left_pqs_plan,
     right_pqs_plan,
@@ -3396,15 +3535,7 @@ function _pqs_pqs_product_source_box_shadow_blocks(
         throw(ArgumentError("three-unit source-box shadow requires a raw product-box left PQS plan"))
     right_raw_plan.representation == :orthogonal_raw_product_box ||
         throw(ArgumentError("three-unit source-box shadow requires a raw product-box right PQS plan"))
-    selected_terms = Tuple(Symbol(term) for term in terms)
-    !isempty(selected_terms) || throw(
-        ArgumentError("three-unit source-box shadow requires at least one term"),
-    )
-    for term in selected_terms
-        term in _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS || throw(
-            ArgumentError("three-unit source-box shadow received unsupported term $(term)"),
-        )
-    end
+    selected_terms = _pqs_pqs_product_supported_safe_terms(terms)
     product_unit.kind == :product_doside || throw(
         ArgumentError("three-unit source-box shadow requires a product_doside unit"),
     )
@@ -3587,7 +3718,7 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
         ArgumentError("route-shaped safe-term consumer requires units"),
     )
     route_kind = route_units.route_kind
-    route_kind == :homonuclear_pqs_product_source_box_safe_term_fixture || throw(
+    route_kind in _PQS_PQS_PRODUCT_SAFE_TERM_ROUTE_KINDS || throw(
         ArgumentError("unsupported route-shaped safe-term consumer route_kind $(route_kind)"),
     )
     roles = hasproperty(route_units, :roles) ?
@@ -3638,10 +3769,45 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
     )
     metadata = hasproperty(route_units, :metadata) ? route_units.metadata : (;)
     provenance = hasproperty(route_units, :provenance) ? route_units.provenance : (;)
+    route_name = hasproperty(route_units, :route_name) ? route_units.route_name : route_kind
+    route_descriptor_object_kind =
+        hasproperty(route_units, :object_kind) ? route_units.object_kind : :legacy_route_units
+    descriptor_expected_ranges_checked = false
+    descriptor_retained_dimension_checked = false
+    descriptor_pair_count_checked = false
+    descriptor_supported_terms_checked = false
+    if hasproperty(route_units, :expected_ranges)
+        route_units.expected_ranges == shadow.ranges || throw(
+            ArgumentError("route descriptor expected ranges disagree with source-box shadow ranges"),
+        )
+        descriptor_expected_ranges_checked = true
+    end
+    if hasproperty(route_units, :retained_dimension)
+        route_units.retained_dimension == shadow.retained_dimension || throw(
+            DimensionMismatch("route descriptor retained dimension disagrees with source-box shadow"),
+        )
+        descriptor_retained_dimension_checked = true
+    end
+    if hasproperty(route_units, :expected_pair_count)
+        route_units.expected_pair_count == pair_count || throw(
+            ArgumentError("route descriptor expected pair count disagrees with source-box shadow"),
+        )
+        descriptor_pair_count_checked = true
+    end
+    if hasproperty(route_units, :supported_terms)
+        advertised_terms = Tuple(Symbol(term) for term in route_units.supported_terms)
+        for term in shadow.terms
+            term in advertised_terms || throw(
+                ArgumentError("route descriptor did not advertise requested term $(term)"),
+            )
+        end
+        descriptor_supported_terms_checked = true
+    end
 
     return (
         path = :pqs_pqs_product_route_shaped_safe_term_consumer,
         route_kind = route_kind,
+        route_name = route_name,
         route_units = route_units,
         retained_units = shadow.all_pairs_inventory.retained_units,
         all_pairs_inventory = shadow.all_pairs_inventory,
@@ -3672,7 +3838,16 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
                 source = :pqs_pqs_product_route_shaped_safe_term_consumer,
                 route_shaped_consumer = true,
                 route_kind = route_kind,
+                route_name = route_name,
+                route_descriptor_object_kind = route_descriptor_object_kind,
                 route_roles = roles,
+                descriptor_expected_ranges_checked =
+                    descriptor_expected_ranges_checked,
+                descriptor_retained_dimension_checked =
+                    descriptor_retained_dimension_checked,
+                descriptor_pair_count_checked = descriptor_pair_count_checked,
+                descriptor_supported_terms_checked =
+                    descriptor_supported_terms_checked,
                 private_shadow_only = true,
                 packet_adoption = false,
                 fixed_block_routing = false,

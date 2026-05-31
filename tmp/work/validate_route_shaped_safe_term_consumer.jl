@@ -1,7 +1,19 @@
 using LinearAlgebra
+using Printf
 using GaussletBases
 
 const CCPM = GaussletBases.CartesianContractedParentMetrics
+
+const SAFE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
 
 function pqs_test_bundle(count::Int)
     xmax = 8.0
@@ -60,44 +72,52 @@ function pqs_axis_metrics(bundles)
     )
 end
 
-function route_shaped_fixture()
-    bundle5 = pqs_test_bundle(5)
-    bundle7 = pqs_test_bundle(7)
-    bundles = GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle7)
+function route_fixture(; route_name::Symbol, q::Int, L::Int)
+    parent_dims = (q, q, L + 2)
+    bundles = GaussletBases._CartesianNestedAxisBundles3D(
+        pqs_test_bundle(q),
+        pqs_test_bundle(q),
+        pqs_test_bundle(L + 2),
+    )
     expansion = coulomb_gaussian_expansion(doacc = false)
     term_coefficients = Float64.(expansion.coefficients)
+    left_current = (1:q, 1:q, 1:L)
+    left_inner = (2:(q - 1), 2:(q - 1), 2:(L - 1))
+    right_current = (1:q, 1:q, 3:(L + 2))
+    right_inner = (2:(q - 1), 2:(q - 1), 4:(L + 1))
     left_layer = GaussletBases._nested_projected_q_shell_layer(
         bundles,
-        (1:5, 1:5, 1:5),
-        (2:4, 2:4, 2:4);
+        left_current,
+        left_inner;
         bond_axis = :z,
-        q = 5,
-        L = 5,
+        q,
+        L,
         term_coefficients,
     )
     right_layer = GaussletBases._nested_projected_q_shell_layer(
         bundles,
-        (1:5, 1:5, 3:7),
-        (2:4, 2:4, 4:6);
+        right_current,
+        right_inner;
         bond_axis = :z,
-        q = 5,
-        L = 5,
+        q,
+        L,
         term_coefficients,
     )
     left_descriptor =
         GaussletBases._nested_projected_q_shell_staged_unit_descriptor(left_layer)
     right_descriptor =
         GaussletBases._nested_projected_q_shell_staged_unit_descriptor(right_layer)
+    source_mode_dims = (q, q, L)
     left_shared = GaussletBases._cartesian_raw_product_box_plan(
         bundles,
         left_descriptor.axis_intervals,
-        (5, 5, 5);
+        source_mode_dims;
         enforce_symmetric_odd = false,
     )
     right_shared = GaussletBases._cartesian_raw_product_box_plan(
         bundles,
         right_descriptor.axis_intervals,
-        (5, 5, 5);
+        source_mode_dims;
         enforce_symmetric_odd = false,
     )
     metrics = pqs_axis_metrics(bundles)
@@ -112,83 +132,92 @@ function route_shaped_fixture()
         metrics,
     )
 
-    dims = (5, 5, 7)
+    slab_z = (L + 3) ÷ 2
     product_states = NTuple{3,Int}[
-        (ix, iy, 4) for ix in 1:5 for iy in 1:5
+        (ix, iy, slab_z) for ix in 1:q for iy in 1:q
     ]
     product_indices = [
-        GaussletBases._cartesian_flat_index(state..., dims) for
+        GaussletBases._cartesian_flat_index(state..., parent_dims) for
         state in product_states
     ]
-    identity_axis = Matrix{Float64}(I, 5, 5)
+    identity_axis = Matrix{Float64}(I, q, q)
     product_axes = (
-        GaussletBases._nested_product_staged_active_axis(1:5, identity_axis),
-        GaussletBases._nested_product_staged_active_axis(1:5, identity_axis),
-        GaussletBases._nested_product_staged_fixed_axis(4),
+        GaussletBases._nested_product_staged_active_axis(1:q, identity_axis),
+        GaussletBases._nested_product_staged_active_axis(1:q, identity_axis),
+        GaussletBases._nested_product_staged_fixed_axis(slab_z),
     )
     product_axis_indices =
-        GaussletBases._nested_product_axis_function_indices(3, 1, 5, 2, 5)
+        GaussletBases._nested_product_axis_function_indices(3, 1, q, 2, q)
     product_unit = GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
         :middle_body_product_slab,
         :product_doside,
-        1:25,
+        1:(q * q),
         product_indices,
         product_states,
-        Matrix{Float64}(I, 25, 25),
+        Matrix{Float64}(I, q * q, q * q),
         product_axes,
         product_axis_indices,
-        (source = :route_shaped_safe_term_consumer_probe,),
-        (support_count = 25, retained_count = 25),
+        (source = :route_shaped_safe_term_consumer_scaling_probe,),
+        (support_count = q * q, retained_count = q * q),
     )
-    route_units = (
-        route_kind = :homonuclear_pqs_product_source_box_safe_term_fixture,
-        units = (
-            pqs_left = left_plan,
-            pqs_right = right_plan,
-            product = product_unit,
-        ),
-        roles = (:pqs_left, :pqs_right, :product),
+    route_descriptor = CCPM._pqs_pqs_product_safe_term_route_descriptor(
+        left_plan,
+        right_plan,
+        product_unit;
+        route_name,
+        parent_dims,
+        bond_axis = :z,
         metadata = (
-            parent_dims = dims,
-            bond_axis = :z,
-            pqs_left_box = (1:5, 1:5, 1:5),
-            pqs_right_box = (1:5, 1:5, 3:7),
-            product_slab_fixed_index = 4,
-            pqs_source_mode_dims = (5, 5, 5),
+            q = q,
+            L = L,
+            pqs_left_box = left_current,
+            pqs_right_box = right_current,
+            product_slab_fixed_index = slab_z,
+            pqs_source_mode_dims = source_mode_dims,
         ),
-        provenance = (source = :route_shaped_safe_term_consumer_probe,),
+        provenance = (source = :route_shaped_safe_term_consumer_scaling_probe,),
     )
-    return (route_units = route_units, metrics = metrics)
+    return (
+        route_descriptor = route_descriptor,
+        metrics = metrics,
+        left_plan = left_plan,
+        right_plan = right_plan,
+        product_unit = product_unit,
+    )
 end
 
-function main()
-    fixture = route_shaped_fixture()
-    terms = (
-        :overlap,
-        :position_x,
-        :position_y,
-        :position_z,
-        :x2_x,
-        :x2_y,
-        :x2_z,
-        :kinetic,
-    )
+function unsupported_weights_rejected(route_descriptor, metrics)
+    try
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            route_descriptor,
+            metrics;
+            terms = (:weights,),
+        )
+        return false
+    catch err
+        err isa ArgumentError || rethrow()
+        return true
+    end
+end
+
+function compare_route(; route_name::Symbol, q::Int, L::Int)
+    fixture = route_fixture(; route_name, q, L)
     consumer = CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-        fixture.route_units,
+        fixture.route_descriptor,
         fixture.metrics;
-        terms,
+        terms = SAFE_TERMS,
     )
     shadow = CCPM._pqs_pqs_product_source_box_shadow_blocks(
-        fixture.route_units.units.pqs_left,
-        fixture.route_units.units.pqs_right,
-        fixture.route_units.units.product,
+        fixture.left_plan,
+        fixture.right_plan,
+        fixture.product_unit,
         fixture.metrics;
-        terms,
+        terms = SAFE_TERMS,
     )
 
     max_full_error = 0.0
     max_component_error = 0.0
-    for term in terms
+    for term in SAFE_TERMS
         max_full_error = max(
             max_full_error,
             norm(consumer.blocks[term] - shadow.blocks[term], Inf),
@@ -203,38 +232,108 @@ function main()
                 ),
             )
         end
-        @assert size(consumer.blocks[term]) == (221, 221)
+        @assert size(consumer.blocks[term]) ==
+                (consumer.retained_dimension, consumer.retained_dimension)
         @assert all(isfinite, consumer.blocks[term])
     end
-    @assert consumer.retained_dimension == 221
+    @assert consumer.ranges == shadow.ranges
+    @assert consumer.retained_dimension == shadow.retained_dimension
     @assert consumer.pair_count == 6
-    @assert consumer.term_count == 8
+    @assert consumer.term_count == length(SAFE_TERMS)
+    @assert length(consumer.retained_units) == 3
     @assert max_full_error == 0.0
     @assert max_component_error == 0.0
-    try
-        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
-            fixture.route_units,
-            fixture.metrics;
-            terms = (:weights,),
-        )
-        error("unsupported :weights term did not throw")
-    catch err
-        err isa ArgumentError || rethrow()
-    end
+    @assert !consumer.performance.dense_raw_source_box_pair_matrix_materialized
+    @assert consumer.performance.dense_raw_pair_storage_avoided
+    @assert !consumer.diagnostics.packet_adoption
+    @assert !consumer.diagnostics.qwhamiltonian_consumes
+    @assert consumer.diagnostics.private_shadow_only
 
-    println((
+    return (
+        route_name = route_name,
+        q = q,
+        L = L,
+        parent_dims = fixture.route_descriptor.metadata.parent_dims,
+        pqs_source_mode_dims = fixture.route_descriptor.metadata.pqs_source_mode_dims,
+        pqs_retained_count = fixture.route_descriptor.unit_summaries[1].retained_count,
+        product_retained_count = fixture.route_descriptor.unit_summaries[3].retained_count,
         retained_dimension = consumer.retained_dimension,
+        retained_unit_count = length(consumer.retained_units),
         pair_count = consumer.pair_count,
         term_count = consumer.term_count,
         elapsed_seconds = consumer.performance.elapsed_seconds,
         allocated_bytes = consumer.performance.allocated_bytes,
         gc_time_seconds = consumer.performance.gc_time_seconds,
+        dense_raw_source_box_pair_matrix_materialized =
+            consumer.performance.dense_raw_source_box_pair_matrix_materialized,
+        dense_raw_pair_storage_avoided =
+            consumer.performance.dense_raw_pair_storage_avoided,
         max_full_error = max_full_error,
         max_component_error = max_component_error,
-        private_shadow_only = consumer.diagnostics.private_shadow_only,
-        packet_adoption = consumer.diagnostics.packet_adoption,
-        qwhamiltonian_consumes = consumer.diagnostics.qwhamiltonian_consumes,
-    ))
+        unsupported_weights_rejected =
+            unsupported_weights_rejected(fixture.route_descriptor, fixture.metrics),
+    )
+end
+
+function tsv_value(value)
+    return replace(string(value), '\t' => ' ', '\n' => ' ')
+end
+
+function write_tsv(path::AbstractString, rows)
+    headers = (
+        :route_name,
+        :q,
+        :L,
+        :parent_dims,
+        :pqs_source_mode_dims,
+        :pqs_retained_count,
+        :product_retained_count,
+        :retained_dimension,
+        :retained_unit_count,
+        :pair_count,
+        :term_count,
+        :elapsed_seconds,
+        :allocated_bytes,
+        :gc_time_seconds,
+        :dense_raw_source_box_pair_matrix_materialized,
+        :dense_raw_pair_storage_avoided,
+        :max_full_error,
+        :max_component_error,
+        :unsupported_weights_rejected,
+    )
+    open(path, "w") do io
+        println(io, join(headers, '\t'))
+        for row in rows
+            println(io, join((tsv_value(getproperty(row, header)) for header in headers), '\t'))
+        end
+    end
+    return path
+end
+
+function main()
+    specs = (
+        (route_name = :q5_L5_slab5, q = 5, L = 5),
+        (route_name = :q5_L7_slab5, q = 5, L = 7),
+        (route_name = :q5_L9_slab5, q = 5, L = 9),
+        (route_name = :q7_L7_slab7, q = 7, L = 7),
+    )
+    rows = map(spec -> compare_route(; spec...), specs)
+    for row in rows
+        @printf(
+            "%s dim=%d pairs=%d terms=%d time=%.3fs alloc=%d maxerr=%.3e unsupported_weights_rejected=%s\n",
+            row.route_name,
+            row.retained_dimension,
+            row.pair_count,
+            row.term_count,
+            row.elapsed_seconds,
+            row.allocated_bytes,
+            row.max_full_error,
+            row.unsupported_weights_rejected,
+        )
+    end
+    tsv_path = joinpath(@__DIR__, "route_shaped_safe_term_scaling.tsv")
+    write_tsv(tsv_path, rows)
+    println("wrote $(tsv_path)")
 end
 
 main()

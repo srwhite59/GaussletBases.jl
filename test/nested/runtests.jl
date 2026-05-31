@@ -1898,8 +1898,31 @@ end
 
         @test consumer.path == :pqs_pqs_product_route_shaped_safe_term_consumer
         @test consumer.route_kind ==
-              :homonuclear_pqs_product_source_box_safe_term_fixture
+              :pqs_pqs_product_source_box_safe_term_route
+        @test consumer.route_name == :q5_L5_slab5_test_route
         @test consumer.route_units === route_units
+        @test route_units.object_kind ==
+              :pqs_pqs_product_safe_term_route_descriptor
+        @test route_units.expected_ranges == shadow.ranges
+        @test route_units.retained_dimension == 221
+        @test route_units.retained_unit_count == 3
+        @test route_units.expected_pair_count == 6
+        @test route_units.supported_terms == terms
+        @test length(route_units.unit_summaries) == 3
+        @test route_units.unit_summaries[1].unit_key == :pqs_left
+        @test route_units.unit_summaries[1].source_family ==
+              :mode_selected_raw_product_box
+        @test route_units.unit_summaries[1].source_dimensions == (5, 5, 5)
+        @test route_units.unit_summaries[1].retained_count == 98
+        @test route_units.unit_summaries[1].retained_rule_kind ==
+              :boundary_comx_product_mode_selection
+        @test route_units.unit_summaries[2].unit_key == :pqs_right
+        @test route_units.unit_summaries[2].source_dimensions == (5, 5, 5)
+        @test route_units.unit_summaries[2].retained_count == 98
+        @test route_units.unit_summaries[3].unit_key == :product
+        @test route_units.unit_summaries[3].source_family == :product_doside
+        @test route_units.unit_summaries[3].source_dimensions == (5, 5, 1)
+        @test route_units.unit_summaries[3].retained_count == 25
         @test consumer.terms == terms
         @test consumer.ranges == shadow.ranges
         @test consumer.retained_dimension == 221
@@ -1933,7 +1956,13 @@ end
               :pqs_pqs_product_route_shaped_safe_term_consumer
         @test consumer.diagnostics.route_shaped_consumer
         @test consumer.diagnostics.route_kind ==
-              :homonuclear_pqs_product_source_box_safe_term_fixture
+              :pqs_pqs_product_source_box_safe_term_route
+        @test consumer.diagnostics.route_descriptor_object_kind ==
+              :pqs_pqs_product_safe_term_route_descriptor
+        @test consumer.diagnostics.descriptor_expected_ranges_checked
+        @test consumer.diagnostics.descriptor_retained_dimension_checked
+        @test consumer.diagnostics.descriptor_pair_count_checked
+        @test consumer.diagnostics.descriptor_supported_terms_checked
         @test consumer.diagnostics.route_roles ==
               (:pqs_left, :pqs_right, :product)
         @test consumer.diagnostics.private_shadow_only
@@ -3153,17 +3182,14 @@ end
             (source = :route_shaped_safe_term_consumer_test_fixture,),
             (support_count = 25, retained_count = 25),
         )
-    route_units = (
-        route_kind = :homonuclear_pqs_product_source_box_safe_term_fixture,
-        units = (
-            pqs_left = route_left_pqs_plan,
-            pqs_right = route_right_pqs_plan,
-            product = route_product_unit,
-        ),
-        roles = (:pqs_left, :pqs_right, :product),
+    route_units = CCPM._pqs_pqs_product_safe_term_route_descriptor(
+        route_left_pqs_plan,
+        route_right_pqs_plan,
+        route_product_unit;
+        route_name = :q5_L5_slab5_test_route,
+        parent_dims = route_dims,
+        bond_axis = :z,
         metadata = (
-            parent_dims = route_dims,
-            bond_axis = :z,
             pqs_left_box = route_left_current,
             pqs_right_box = route_right_current,
             product_slab_fixed_index = 4,

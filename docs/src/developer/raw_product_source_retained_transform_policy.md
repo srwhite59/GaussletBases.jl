@@ -345,34 +345,53 @@ same private source-box vocabulary for overlap, position, `x2`, and kinetic.
 This remains a private shadow/reference inventory, not a generic route
 inventory framework and not packet construction adoption.
 
-The first route-shaped private consumer checkpoint adds
-`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`. This helper is a thin
-wrapper over `_pqs_pqs_product_source_box_shadow_blocks(...)`; it introduces a
-route-shaped input and return object, not new operator algebra and not a
-generic retained-unit framework. The focused homonuclear-style fixture uses
-parent/bundle shape `(5,5,7)`, left PQS box `(1:5,1:5,1:5)`, right PQS box
-`(1:5,1:5,3:7)`, and a middle product slab at `z = 4`. Both PQS source boxes
-use source-mode dimensions `(5,5,5)` with retained count `98`; the product
-slab retained count is `25`; the total retained dimension is `221`.
+The route-shaped private consumer checkpoint now has a small descriptor
+normalizer. `_pqs_pqs_product_safe_term_route_descriptor(...)` records an
+already-built route consisting of a left PQS raw plan, a right PQS raw plan,
+and one product/doside unit. It records roles, units, unit summaries, expected
+ranges, retained dimension, retained unit count, expected pair count,
+supported safe terms, metadata/provenance, and no-adoption diagnostics. This
+descriptor is private/shadow-only route metadata: it does not construct route
+geometry and is not a generic retained-unit framework.
 
-The route-shaped consumer builds complete retained-space matrices for overlap,
-`position_x`, `position_y`, `position_z`, `x2_x`, `x2_y`, `x2_z`, and kinetic.
-It forwards the all-pairs inventory, retained units, component block
-provenance, ranges, pair count, term count, route metadata, and timing/
-allocation fields for the consumer call. Probe evidence for the private
-fixture reports retained dimension `221`, pair count `6`, term count `8`,
-elapsed time about `3.11 s`, allocated bytes about `64 MB`, max full-matrix
-error `0.0`, and max component error `0.0`.
+`_pqs_pqs_product_route_shaped_safe_term_consumer(...)` accepts the descriptor
+route kind `:pqs_pqs_product_source_box_safe_term_route` while preserving
+compatibility with the older fixture route kind. The consumer still delegates
+all numerical work to `_pqs_pqs_product_source_box_shadow_blocks(...)`; no new
+operator algebra was added. `_pqs_pqs_product_supported_safe_terms(...)`
+centralizes validation for the current safe set: overlap, `position_x/y/z`,
+`x2_x/y/z`, and kinetic. Unsupported terms such as `:weights` reject before
+being treated as route-supported.
+
+The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
+PQS box `(1:5,1:5,1:5)`, right PQS box `(1:5,1:5,3:7)`, and a middle product
+slab at `z = 4`. Both PQS source boxes use source-mode dimensions `(5,5,5)`
+with retained count `98`; the product slab retained count is `25`; the total
+retained dimension is `221`.
+
+The ignored probe `tmp/work/validate_route_shaped_safe_term_consumer.jl` now
+runs a focused scaling ladder and writes an ignored TSV under `tmp/work/`.
+Each route has three retained units, six upper-triangular pairs, eight safe
+terms, `dense_raw_source_box_pair_matrix_materialized=false`,
+`dense_raw_pair_storage_avoided=true`, unsupported `:weights` rejected, and
+max full/component error `0.0` against the direct shadow helper.
+
+| route | retained dim | pairs | terms | elapsed | allocated bytes | max error |
+|---|---:|---:|---:|---:|---:|---:|
+| `q5_L5_slab5` | 221 | 6 | 8 | about `3.13 s` | about `60 MB` | `0.0` |
+| `q5_L7_slab5` | 285 | 6 | 8 | about `0.002 s` | about `15 MB` | `0.0` |
+| `q5_L9_slab5` | 349 | 6 | 8 | about `0.003 s` | about `22 MB` | `0.0` |
+| `q7_L7_slab7` | 485 | 6 | 8 | about `0.005 s` | about `42 MB` | `0.0` |
+
+The first q5/L5 timing includes compilation/warmup; the later rows are the
+more useful small-fixture steady-state signal.
 
 This checkpoint is still private shadow/reference infrastructure. It does not
 adopt packet or fixed-block construction, QW/Hamiltonian assembly,
 public/default behavior, CR2 status, local/ECP/Gaussian/MWG/interaction terms,
 shell projection, Lowdin in raw-box operators, support-local PQS oracles,
 retained PQS positive-weight semantics, IDA division, or dense raw source-box
-pair matrix storage. The standalone ignored probe passed and covers the
-consumer assertions; an attempted focused in-file nested testset slice did not
-complete because of prolonged LLVM compilation, so broad/in-file test
-validation remains deferred for this private checkpoint.
+pair matrix storage. It is not yet a Be2/Cr2 route benchmark.
 
 A local ignored diagnostic probe records the private performance shape for a
 rectangular `(5,5,7)` PQS source box and a non-identity product retained
