@@ -345,6 +345,35 @@ same private source-box vocabulary for overlap, position, `x2`, and kinetic.
 This remains a private shadow/reference inventory, not a generic route
 inventory framework and not packet construction adoption.
 
+The first route-shaped private consumer checkpoint adds
+`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`. This helper is a thin
+wrapper over `_pqs_pqs_product_source_box_shadow_blocks(...)`; it introduces a
+route-shaped input and return object, not new operator algebra and not a
+generic retained-unit framework. The focused homonuclear-style fixture uses
+parent/bundle shape `(5,5,7)`, left PQS box `(1:5,1:5,1:5)`, right PQS box
+`(1:5,1:5,3:7)`, and a middle product slab at `z = 4`. Both PQS source boxes
+use source-mode dimensions `(5,5,5)` with retained count `98`; the product
+slab retained count is `25`; the total retained dimension is `221`.
+
+The route-shaped consumer builds complete retained-space matrices for overlap,
+`position_x`, `position_y`, `position_z`, `x2_x`, `x2_y`, `x2_z`, and kinetic.
+It forwards the all-pairs inventory, retained units, component block
+provenance, ranges, pair count, term count, route metadata, and timing/
+allocation fields for the consumer call. Probe evidence for the private
+fixture reports retained dimension `221`, pair count `6`, term count `8`,
+elapsed time about `3.11 s`, allocated bytes about `64 MB`, max full-matrix
+error `0.0`, and max component error `0.0`.
+
+This checkpoint is still private shadow/reference infrastructure. It does not
+adopt packet or fixed-block construction, QW/Hamiltonian assembly,
+public/default behavior, CR2 status, local/ECP/Gaussian/MWG/interaction terms,
+shell projection, Lowdin in raw-box operators, support-local PQS oracles,
+retained PQS positive-weight semantics, IDA division, or dense raw source-box
+pair matrix storage. The standalone ignored probe passed and covers the
+consumer assertions; an attempted focused in-file nested testset slice did not
+complete because of prolonged LLVM compilation, so broad/in-file test
+validation remains deferred for this private checkpoint.
+
 A local ignored diagnostic probe records the private performance shape for a
 rectangular `(5,5,7)` PQS source box and a non-identity product retained
 transform. In one run with 100 repetitions, repeated single-term calls took

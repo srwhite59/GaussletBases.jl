@@ -263,6 +263,31 @@ packet or fixed-block construction adoption and changes no QW/Hamiltonian,
 public/default, CR2, local/ECP/Gaussian/MWG/interaction, retained-weight, or
 IDA/MWG behavior.
 
+The first route-shaped private consumer,
+`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`, now wraps that
+three-unit shadow path. It is a route-shaped consumer checkpoint, not new
+operator algebra and not a generic retained-unit framework. The focused
+homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left PQS
+`(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
+`z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained
+count `98` each; the product slab retained count is `25`; the total retained
+dimension is `221`.
+
+The consumer builds complete retained-space matrices for overlap,
+`position_x/y/z`, `x2_x/y/z`, and kinetic, while forwarding retained units,
+the all-pairs inventory, component block provenance, ranges, pair/term counts,
+route metadata, and performance fields. The ignored probe reports retained
+dimension `221`, pair count `6`, term count `8`, elapsed time about `3.11 s`,
+allocated bytes about `64 MB`, and max full/component matrix error `0.0`. It
+remains private shadow/reference infrastructure only: no packet/fixed-block
+construction adoption, no QW/Hamiltonian/public/default/CR2 change, no shell
+projection or Lowdin in raw-box operators, no support-local PQS oracle as the
+main path, no retained PQS positive-weight semantics or IDA division, no
+local/ECP/Gaussian/MWG/interaction work, and no dense raw source-box pair
+matrix storage. The standalone ignored probe passed; an attempted focused
+in-file nested testset slice did not complete because of prolonged LLVM
+compilation, so broad/in-file validation remains deferred for this checkpoint.
+
 A private GTO cross-overlap shadow now extends the same source-box boundary.
 `_pqs_source_box_gto_cross_overlap_shadow(...)` uses
 `_pqs_source_box_gto_axis_projection(...)` to project existing 1D

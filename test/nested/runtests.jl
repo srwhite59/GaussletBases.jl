@@ -1865,6 +1865,145 @@ end
         )
     end
 
+    function _check_pqs_pqs_product_route_shaped_safe_term_consumer(
+        metrics_module,
+        left_descriptor,
+        right_descriptor,
+        route_units,
+        metrics,
+    )
+        terms = (
+            :overlap,
+            :position_x,
+            :position_y,
+            :position_z,
+            :x2_x,
+            :x2_y,
+            :x2_z,
+            :kinetic,
+        )
+        units = route_units.units
+        shadow = metrics_module._pqs_pqs_product_source_box_shadow_blocks(
+            units.pqs_left,
+            units.pqs_right,
+            units.product,
+            metrics;
+            terms,
+        )
+        consumer = metrics_module._pqs_pqs_product_route_shaped_safe_term_consumer(
+            route_units,
+            metrics;
+            terms,
+        )
+
+        @test consumer.path == :pqs_pqs_product_route_shaped_safe_term_consumer
+        @test consumer.route_kind ==
+              :homonuclear_pqs_product_source_box_safe_term_fixture
+        @test consumer.route_units === route_units
+        @test consumer.terms == terms
+        @test consumer.ranges == shadow.ranges
+        @test consumer.retained_dimension == 221
+        @test consumer.retained_dimension == shadow.retained_dimension
+        @test consumer.pair_count == 6
+        @test consumer.term_count == length(terms)
+        @test length(consumer.retained_units) == 3
+        @test length(consumer.all_pairs_inventory.pair_entries) == 6
+        @test consumer.all_pairs_inventory.object_kind ==
+              :pqs_pqs_product_source_box_all_pairs_inventory
+        @test consumer.safe_term_matrices === consumer.blocks
+        @test consumer.complete_retained_space_matrices === consumer.blocks
+        @test consumer.shadow.path == :pqs_pqs_product_source_box_shadow_blocks
+        @test consumer.metadata.parent_dims == (5, 5, 7)
+        @test consumer.metadata.bond_axis == :z
+        @test consumer.metadata.product_slab_fixed_index == 4
+        @test consumer.metadata.pqs_source_mode_dims == (5, 5, 5)
+        @test consumer.provenance.source ==
+              :route_shaped_safe_term_consumer_test_fixture
+
+        @test consumer.performance.elapsed_seconds >= 0.0
+        @test consumer.performance.allocated_bytes >= 0
+        @test consumer.performance.gc_time_seconds >= 0.0
+        @test consumer.performance.retained_dimension == 221
+        @test consumer.performance.pair_count == 6
+        @test consumer.performance.term_count == length(terms)
+        @test !consumer.performance.dense_raw_source_box_pair_matrix_materialized
+        @test consumer.performance.dense_raw_pair_storage_avoided
+
+        @test consumer.diagnostics.source ==
+              :pqs_pqs_product_route_shaped_safe_term_consumer
+        @test consumer.diagnostics.route_shaped_consumer
+        @test consumer.diagnostics.route_kind ==
+              :homonuclear_pqs_product_source_box_safe_term_fixture
+        @test consumer.diagnostics.route_roles ==
+              (:pqs_left, :pqs_right, :product)
+        @test consumer.diagnostics.private_shadow_only
+        @test !consumer.diagnostics.packet_adoption
+        @test !consumer.diagnostics.fixed_block_routing
+        @test !consumer.diagnostics.qwhamiltonian_consumes
+        @test !consumer.diagnostics.public_default_consumes
+        @test !consumer.diagnostics.cr2_science_status_changed
+        @test !consumer.diagnostics.shell_projection_used
+        @test !consumer.diagnostics.lowdin_cleanup_used
+        @test !consumer.diagnostics.support_local_pqs_oracle_used
+        @test consumer.diagnostics.retained_weight_semantics ==
+              :not_positive_quadrature_weights
+        @test !consumer.diagnostics.ida_weight_division_allowed
+        @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test consumer.diagnostics.dense_raw_pair_storage_avoided
+        @test consumer.diagnostics.performance_recorded
+        @test consumer.diagnostics.retained_dimension == 221
+        @test consumer.diagnostics.retained_unit_count == 3
+        @test consumer.diagnostics.pair_count == 6
+        @test consumer.diagnostics.term_count == length(terms)
+        @test consumer.diagnostics.complete_retained_space_matrices_built
+        @test consumer.diagnostics.source_box_shadow_helper ==
+              :_pqs_pqs_product_source_box_shadow_blocks
+
+        max_full_error = 0.0
+        max_cross_pqs_error = 0.0
+        for term in terms
+            @test haskey(consumer.blocks, term)
+            @test haskey(consumer.component_blocks, term)
+            block = consumer.blocks[term]
+            @test size(block) == (221, 221)
+            @test all(isfinite, block)
+            @test block ≈ shadow.blocks[term] atol = 0.0 rtol = 0.0
+            expected_left_right = _pqs_pqs_source_box_explicit_reference(
+                left_descriptor,
+                right_descriptor,
+                metrics;
+                term,
+            )
+            @test consumer.component_blocks[term].pqs_left_pqs_right ≈
+                  expected_left_right atol = 1.0e-10 rtol = 1.0e-10
+            @test consumer.component_blocks[term].pqs_right_pqs_left ≈
+                  transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
+            @test block[consumer.ranges.pqs_left, consumer.ranges.pqs_right] ≈
+                  expected_left_right atol = 1.0e-10 rtol = 1.0e-10
+            @test block[consumer.ranges.pqs_right, consumer.ranges.pqs_left] ≈
+                  transpose(expected_left_right) atol = 1.0e-10 rtol = 1.0e-10
+            max_full_error = max(
+                max_full_error,
+                LinearAlgebra.norm(block - shadow.blocks[term], Inf),
+            )
+            max_cross_pqs_error = max(
+                max_cross_pqs_error,
+                LinearAlgebra.norm(
+                    block[consumer.ranges.pqs_left, consumer.ranges.pqs_right] -
+                    expected_left_right,
+                    Inf,
+                ),
+            )
+        end
+        @test max_full_error == 0.0
+        @test max_cross_pqs_error < 1.0e-10
+        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_safe_term_consumer(
+            route_units,
+            metrics;
+            terms = (:weights,),
+        )
+    end
+
     function _product_staged_comparison_axis_row(axis, state_index::Int)
         axis.kind == :fixed && return 1
         axis.kind == :active && return state_index - first(axis.interval) + 1
@@ -2925,6 +3064,119 @@ end
         shifted_metrics;
         expected_source_mode_dims = (5, 5, 5),
         expected_retained_count = 98,
+    )
+    route_bundles =
+        GaussletBases._CartesianNestedAxisBundles3D(bundle5, bundle5, bundle7)
+    route_left_current = (1:5, 1:5, 1:5)
+    route_left_inner = (2:4, 2:4, 2:4)
+    route_right_current = (1:5, 1:5, 3:7)
+    route_right_inner = (2:4, 2:4, 4:6)
+    route_left = GaussletBases._nested_projected_q_shell_layer(
+        route_bundles,
+        route_left_current,
+        route_left_inner;
+        bond_axis = :z,
+        q = 5,
+        L = 5,
+        term_coefficients,
+    )
+    route_right = GaussletBases._nested_projected_q_shell_layer(
+        route_bundles,
+        route_right_current,
+        route_right_inner;
+        bond_axis = :z,
+        q = 5,
+        L = 5,
+        term_coefficients,
+    )
+    route_left_descriptor =
+        GaussletBases._nested_projected_q_shell_staged_unit_descriptor(route_left)
+    route_right_descriptor =
+        GaussletBases._nested_projected_q_shell_staged_unit_descriptor(route_right)
+    route_left_shared_raw_product_box_plan =
+        GaussletBases._cartesian_raw_product_box_plan(
+            route_bundles,
+            route_left_descriptor.axis_intervals,
+            (5, 5, 5);
+            enforce_symmetric_odd = false,
+        )
+    route_right_shared_raw_product_box_plan =
+        GaussletBases._cartesian_raw_product_box_plan(
+            route_bundles,
+            route_right_descriptor.axis_intervals,
+            (5, 5, 5);
+            enforce_symmetric_odd = false,
+        )
+    route_metrics = _pqs_axis_metrics(route_bundles)
+    route_left_pqs_plan = CCPM._pqs_raw_product_box_plan(
+        route_left_descriptor,
+        route_left_shared_raw_product_box_plan,
+        route_metrics,
+    )
+    route_right_pqs_plan = CCPM._pqs_raw_product_box_plan(
+        route_right_descriptor,
+        route_right_shared_raw_product_box_plan,
+        route_metrics,
+    )
+    route_dims = (5, 5, 7)
+    route_product_states = NTuple{3,Int}[
+        (ix, iy, 4) for ix in 1:5 for iy in 1:5
+    ]
+    route_product_indices = [
+        GaussletBases._cartesian_flat_index(state..., route_dims) for
+        state in route_product_states
+    ]
+    route_identity_axis = Matrix{Float64}(I, 5, 5)
+    route_product_axes = (
+        GaussletBases._nested_product_staged_active_axis(
+            1:5,
+            route_identity_axis,
+        ),
+        GaussletBases._nested_product_staged_active_axis(
+            1:5,
+            route_identity_axis,
+        ),
+        GaussletBases._nested_product_staged_fixed_axis(4),
+    )
+    route_product_axis_indices =
+        GaussletBases._nested_product_axis_function_indices(3, 1, 5, 2, 5)
+    route_product_unit =
+        GaussletBases._CartesianNestedProductStagedByCenterUnit3D(
+            :middle_body_product_slab,
+            :product_doside,
+            1:25,
+            route_product_indices,
+            route_product_states,
+            Matrix{Float64}(I, 25, 25),
+            route_product_axes,
+            route_product_axis_indices,
+            (source = :route_shaped_safe_term_consumer_test_fixture,),
+            (support_count = 25, retained_count = 25),
+        )
+    route_units = (
+        route_kind = :homonuclear_pqs_product_source_box_safe_term_fixture,
+        units = (
+            pqs_left = route_left_pqs_plan,
+            pqs_right = route_right_pqs_plan,
+            product = route_product_unit,
+        ),
+        roles = (:pqs_left, :pqs_right, :product),
+        metadata = (
+            parent_dims = route_dims,
+            bond_axis = :z,
+            pqs_left_box = route_left_current,
+            pqs_right_box = route_right_current,
+            product_slab_fixed_index = 4,
+            pqs_source_mode_dims = (5, 5, 5),
+        ),
+        provenance = (source = :route_shaped_safe_term_consumer_test_fixture,),
+    )
+    _check_pqs_pqs_product_route_shaped_safe_term_consumer(
+        CCPM,
+        route_left_descriptor,
+        route_right_descriptor,
+        route_units,
+        route_metrics,
     )
     nonidentity_product_axes = (
         GaussletBases._nested_product_staged_active_axis(

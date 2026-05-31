@@ -3575,6 +3575,133 @@ function _pqs_pqs_product_source_box_shadow_blocks(
     )
 end
 
+function _pqs_pqs_product_route_shaped_safe_term_consumer(
+    route_units,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    hasproperty(route_units, :route_kind) || throw(
+        ArgumentError("route-shaped safe-term consumer requires route_kind"),
+    )
+    hasproperty(route_units, :units) || throw(
+        ArgumentError("route-shaped safe-term consumer requires units"),
+    )
+    route_kind = route_units.route_kind
+    route_kind == :homonuclear_pqs_product_source_box_safe_term_fixture || throw(
+        ArgumentError("unsupported route-shaped safe-term consumer route_kind $(route_kind)"),
+    )
+    roles = hasproperty(route_units, :roles) ?
+        Tuple(route_units.roles) :
+        (:pqs_left, :pqs_right, :product)
+    roles == (:pqs_left, :pqs_right, :product) || throw(
+        ArgumentError("route-shaped safe-term consumer requires roles (:pqs_left, :pqs_right, :product)"),
+    )
+    units = route_units.units
+    for role in roles
+        hasproperty(units, role) || throw(
+            ArgumentError("route-shaped safe-term consumer missing unit $(role)"),
+        )
+    end
+
+    timed = @timed begin
+        _pqs_pqs_product_source_box_shadow_blocks(
+            units.pqs_left,
+            units.pqs_right,
+            units.product,
+            metrics;
+            terms,
+        )
+    end
+    shadow = timed.value
+    pair_count = length(shadow.all_pairs_inventory.pair_entries)
+    term_count = length(shadow.terms)
+    performance = (
+        elapsed_seconds = Float64(timed.time),
+        allocated_bytes = Int(timed.bytes),
+        gc_time_seconds = Float64(timed.gctime),
+        retained_dimension = shadow.retained_dimension,
+        pair_count = pair_count,
+        term_count = term_count,
+        dense_raw_source_box_pair_matrix_materialized = false,
+        dense_raw_pair_storage_avoided = true,
+    )
+    component_block_provenance = (
+        pqs_left_pqs_left = :pqs_pqs_source_box_reference_blocks,
+        pqs_left_pqs_right = :pqs_pqs_source_box_reference_blocks,
+        pqs_right_pqs_left = :transpose_of_pqs_left_pqs_right,
+        pqs_left_product = :pqs_product_source_box_reference_blocks,
+        product_pqs_left = :transpose_of_pqs_left_product,
+        pqs_right_pqs_right = :pqs_pqs_source_box_reference_blocks,
+        pqs_right_product = :pqs_product_source_box_reference_blocks,
+        product_pqs_right = :transpose_of_pqs_right_product,
+        product_product = :product_doside_retained_block_helpers,
+    )
+    metadata = hasproperty(route_units, :metadata) ? route_units.metadata : (;)
+    provenance = hasproperty(route_units, :provenance) ? route_units.provenance : (;)
+
+    return (
+        path = :pqs_pqs_product_route_shaped_safe_term_consumer,
+        route_kind = route_kind,
+        route_units = route_units,
+        retained_units = shadow.all_pairs_inventory.retained_units,
+        all_pairs_inventory = shadow.all_pairs_inventory,
+        blocks = shadow.blocks,
+        safe_term_matrices = shadow.blocks,
+        complete_retained_space_matrices = shadow.blocks,
+        component_blocks = shadow.component_blocks,
+        component_block_provenance = component_block_provenance,
+        pair_references = (
+            pqs_left_left = shadow.pqs_left_left_reference_blocks,
+            pqs_left_right = shadow.pqs_left_right_reference_blocks,
+            pqs_right_right = shadow.pqs_right_right_reference_blocks,
+            pqs_left_product = shadow.pqs_left_product_reference_blocks,
+            pqs_right_product = shadow.pqs_right_product_reference_blocks,
+        ),
+        ranges = shadow.ranges,
+        terms = shadow.terms,
+        retained_dimension = shadow.retained_dimension,
+        pair_count = pair_count,
+        term_count = term_count,
+        performance = performance,
+        metadata = metadata,
+        provenance = provenance,
+        shadow = shadow,
+        diagnostics = merge(
+            shadow.diagnostics,
+            (
+                source = :pqs_pqs_product_route_shaped_safe_term_consumer,
+                route_shaped_consumer = true,
+                route_kind = route_kind,
+                route_roles = roles,
+                private_shadow_only = true,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                cr2_science_status_changed = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_pqs_oracle_used = false,
+                retained_weight_semantics = :not_positive_quadrature_weights,
+                ida_weight_division_allowed = false,
+                dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_pair_storage_avoided = true,
+                performance_recorded = true,
+                elapsed_seconds = performance.elapsed_seconds,
+                allocated_bytes = performance.allocated_bytes,
+                gc_time_seconds = performance.gc_time_seconds,
+                retained_dimension = shadow.retained_dimension,
+                retained_unit_count = length(shadow.all_pairs_inventory.retained_units),
+                pair_count = pair_count,
+                term_count = term_count,
+                complete_retained_space_matrices_built = true,
+                source_box_shadow_helper =
+                    :_pqs_pqs_product_source_box_shadow_blocks,
+            ),
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,
