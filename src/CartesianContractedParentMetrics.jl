@@ -2558,6 +2558,308 @@ function _pqs_product_source_box_reference_block(
     )
 end
 
+const _PQS_PQS_SOURCE_BOX_REFERENCE_TERMS =
+    _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS
+
+function _same_pqs_raw_product_box_plan(
+    left_raw_plan,
+    right_raw_plan;
+    atol::Real = 1.0e-12,
+)
+    left_raw_plan.representation == :orthogonal_raw_product_box &&
+        right_raw_plan.representation == :orthogonal_raw_product_box || return false
+    left_raw_plan.source_mode_dims == right_raw_plan.source_mode_dims || return false
+    left_raw_plan.source_mode_count == right_raw_plan.source_mode_count || return false
+    left_raw_plan.axis_intervals == right_raw_plan.axis_intervals || return false
+    left_raw_plan.source_mode_indices == right_raw_plan.source_mode_indices || return false
+    left_raw_plan.source_mode_ordering == right_raw_plan.source_mode_ordering || return false
+    left_raw_plan.boundary_selector.mode_indices ==
+        right_raw_plan.boundary_selector.mode_indices || return false
+    left_raw_plan.boundary_selector.column_indices ==
+        right_raw_plan.boundary_selector.column_indices || return false
+    left_raw_plan.boundary_selector.selection_rule ==
+        right_raw_plan.boundary_selector.selection_rule || return false
+    left_raw_plan.boundary_selector.selected_count ==
+        right_raw_plan.boundary_selector.selected_count || return false
+    return all(
+        axis -> isapprox(
+            left_raw_plan.axis_local_coefficients[axis],
+            right_raw_plan.axis_local_coefficients[axis];
+            atol,
+            rtol = atol,
+        ),
+        1:3,
+    )
+end
+
+function _pqs_pqs_source_box_pair_plan(
+    left_pqs_plan,
+    right_pqs_plan,
+    metrics::NamedTuple{(:x,:y,:z)};
+    same_plan_atol::Real = 1.0e-12,
+)
+    left_raw_plan = _pqs_raw_product_box_plan_view(left_pqs_plan)
+    right_raw_plan = _pqs_raw_product_box_plan_view(right_pqs_plan)
+    left_raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(ArgumentError("PQS/PQS source-box pair plan requires a raw product-box left PQS plan"))
+    right_raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(ArgumentError("PQS/PQS source-box pair plan requires a raw product-box right PQS plan"))
+    left_raw_plan.operator_factors_available && right_raw_plan.operator_factors_available ||
+        throw(ArgumentError("PQS/PQS source-box pair plan requires operator-backed raw plans"))
+    _same_pqs_raw_product_box_plan(
+        left_raw_plan,
+        right_raw_plan;
+        atol = same_plan_atol,
+    ) || throw(
+        ArgumentError("PQS/PQS source-box pair plan currently supports only the same raw product-box plan"),
+    )
+    source_product_modes_orthogonal =
+        left_raw_plan.source_product_modes_orthogonal === true &&
+        right_raw_plan.source_product_modes_orthogonal === true
+    source_product_modes_orthogonal || throw(
+        ArgumentError("PQS/PQS source-box pair plan requires orthogonal source product modes"),
+    )
+    axis_centers = ntuple(axis -> begin
+        interval = left_raw_plan.axis_intervals[axis]
+        Float64.(getproperty(getproperty(metrics, (:x, :y, :z)[axis]), :centers)[interval])
+    end, 3)
+    return (
+        pair_kind = :pqs_pqs_source_box,
+        left_source_family = :mode_selected_raw_product_box,
+        right_source_family = :mode_selected_raw_product_box,
+        left_source_dimensions = left_raw_plan.source_mode_dims,
+        right_source_dimensions = right_raw_plan.source_mode_dims,
+        left_source_dimension = left_raw_plan.source_mode_count,
+        right_source_dimension = right_raw_plan.source_mode_count,
+        left_retained_count = left_raw_plan.boundary_selector.selected_count,
+        right_retained_count = right_raw_plan.boundary_selector.selected_count,
+        axis_intervals = (
+            left = left_raw_plan.axis_intervals,
+            right = right_raw_plan.axis_intervals,
+        ),
+        axis_centers = (
+            left = axis_centers,
+            right = axis_centers,
+        ),
+        left_raw_product_box_plan = left_raw_plan,
+        right_raw_product_box_plan = right_raw_plan,
+        left_boundary_mode_selector = left_raw_plan.boundary_selector,
+        right_boundary_mode_selector = right_raw_plan.boundary_selector,
+        one_dimensional_cross_factors =
+            left_raw_plan.one_dimensional_operator_factors,
+        supported_terms = _PQS_PQS_SOURCE_BOX_REFERENCE_TERMS,
+        diagnostics = (
+            source = :pqs_pqs_source_box_pair_plan,
+            pair_kind = :pqs_pqs_source_box,
+            private_shadow_only = true,
+            self_same_plan_only = true,
+            cross_pqs_inputs_supported = false,
+            same_raw_product_box_plan = true,
+            pqs_representation = :mode_selected_raw_product_box,
+            raw_product_box_plan_used = true,
+            source_mode_ordering = left_raw_plan.source_mode_ordering,
+            left_source_mode_dims = left_raw_plan.source_mode_dims,
+            right_source_mode_dims = right_raw_plan.source_mode_dims,
+            left_retained_count =
+                left_raw_plan.boundary_selector.selected_count,
+            right_retained_count =
+                right_raw_plan.boundary_selector.selected_count,
+            left_boundary_mode_selection_used = true,
+            right_boundary_mode_selection_used = true,
+            raw_product_box_operators_use_1d_factors = true,
+            operator_factor_source = :pqs_raw_product_box_plan,
+            operator_metric_sources =
+                _cartesian_source_box_metric_sources(metrics),
+            raw_product_box_numerical_reference_fallback =
+                hasproperty(left_raw_plan.diagnostics, :raw_product_box_numerical_reference_fallback) ?
+                left_raw_plan.diagnostics.raw_product_box_numerical_reference_fallback :
+                nothing,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+            retained_block_assembled_directly_from_1d_factors = true,
+            source_box_pair_storage_scaling =
+                :one_dimensional_factors_plus_retained_block,
+        ),
+    )
+end
+
+function _pqs_pqs_source_box_factor(
+    pair_plan,
+    axis::Int,
+    kind::Symbol,
+)
+    axis_factors = getproperty(pair_plan.one_dimensional_cross_factors, (:x, :y, :z)[axis])
+    return getproperty(axis_factors, kind)
+end
+
+function _pqs_pqs_source_box_block_from_factors(pair_plan, term::Symbol)
+    term in pair_plan.supported_terms || throw(
+        ArgumentError("PQS/PQS source-box reference blocks received unsupported term $(term)"),
+    )
+    block = zeros(
+        Float64,
+        pair_plan.left_retained_count,
+        pair_plan.right_retained_count,
+    )
+    left_modes = pair_plan.left_boundary_mode_selector.mode_indices
+    right_modes = pair_plan.right_boundary_mode_selector.mode_indices
+    @inbounds for factor_kinds in _source_box_separable_term_factor_kinds(term)
+        fx = _pqs_pqs_source_box_factor(pair_plan, 1, factor_kinds[1])
+        fy = _pqs_pqs_source_box_factor(pair_plan, 2, factor_kinds[2])
+        fz = _pqs_pqs_source_box_factor(pair_plan, 3, factor_kinds[3])
+        for col in eachindex(right_modes)
+            rx, ry, rz = right_modes[col]
+            for row in eachindex(left_modes)
+                lx, ly, lz = left_modes[row]
+                block[row, col] += fx[lx, rx] * fy[ly, ry] * fz[lz, rz]
+            end
+        end
+    end
+    return block
+end
+
+function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
+    pair_plan;
+    terms = pair_plan.supported_terms,
+    atol::Real = 1.0e-10,
+)
+    pair_plan.pair_kind == :pqs_pqs_source_box || throw(
+        ArgumentError("PQS/PQS source-box reference blocks require a PQS/PQS pair plan"),
+    )
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS/PQS source-box reference blocks require at least one term"),
+    )
+    for term in selected_terms
+        term in pair_plan.supported_terms || throw(
+            ArgumentError("PQS/PQS source-box reference blocks received unsupported term $(term)"),
+        )
+    end
+    blocks = Dict{Symbol,Matrix{Float64}}()
+    raw_box_reference_blocks = Dict{Symbol,Matrix{Float64}}()
+    block_errors = Dict{Symbol,Float64}()
+    for term in selected_terms
+        block = _pqs_pqs_source_box_block_from_factors(pair_plan, term)
+        raw_reference =
+            _pqs_raw_product_box_reference_block(
+                pair_plan.left_raw_product_box_plan;
+                term,
+            ).block
+        block_error = LinearAlgebra.norm(block - raw_reference, Inf)
+        block_error <= atol || throw(
+            ArgumentError("PQS/PQS source-box reference block disagrees with raw-box self reference"),
+        )
+        all(isfinite, block) || throw(
+            ArgumentError("PQS/PQS source-box reference blocks produced non-finite entries for $(term)"),
+        )
+        blocks[term] = block
+        raw_box_reference_blocks[term] = raw_reference
+        block_errors[term] = block_error
+    end
+    max_block_error =
+        isempty(block_errors) ? 0.0 : maximum(values(block_errors))
+    return (
+        path = :pqs_pqs_source_box_reference_blocks,
+        terms = selected_terms,
+        blocks = blocks,
+        raw_box_reference_blocks = raw_box_reference_blocks,
+        block_errors = block_errors,
+        max_block_error = max_block_error,
+        pair_plan = pair_plan,
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :pqs_pqs_source_box_reference_blocks,
+                pair_plan_reused_for_terms = true,
+                pair_plan_reuse_term_count = length(selected_terms),
+                raw_box_self_reference_compared = true,
+                raw_box_self_reference_helper =
+                    :_pqs_raw_product_box_reference_block,
+                max_block_error = max_block_error,
+                supported_terms = pair_plan.supported_terms,
+                unsupported_terms = (
+                    :weights,
+                    :first_moments,
+                    :nuclear_one_body,
+                    :local_coulomb_one_body,
+                    :local_ecp_one_body,
+                    :gaussian_local_terms,
+                    :gaussian_sum,
+                    :pair_sum,
+                    :mwg_interaction,
+                    :interaction,
+                ),
+                kinetic_factor_form = (
+                    (:kinetic, :overlap, :overlap),
+                    (:overlap, :kinetic, :overlap),
+                    (:overlap, :overlap, :kinetic),
+                ),
+            ),
+        ),
+    )
+end
+
+function _pqs_pqs_source_box_reference_blocks(
+    left_pqs_plan,
+    right_pqs_plan,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_PQS_SOURCE_BOX_REFERENCE_TERMS,
+)
+    pair_plan = _pqs_pqs_source_box_pair_plan(
+        left_pqs_plan,
+        right_pqs_plan,
+        metrics,
+    )
+    return _pqs_pqs_source_box_reference_blocks_from_pair_plan(
+        pair_plan;
+        terms,
+    )
+end
+
+function _pqs_pqs_source_box_reference_block(
+    left_pqs_plan,
+    right_pqs_plan,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+)
+    reference = _pqs_pqs_source_box_reference_blocks(
+        left_pqs_plan,
+        right_pqs_plan,
+        metrics;
+        terms = (term,),
+    )
+    return (
+        path = :pqs_pqs_source_box_reference,
+        term = term,
+        block = reference.blocks[term],
+        raw_box_reference_block = reference.raw_box_reference_blocks[term],
+        block_error = reference.block_errors[term],
+        pair_plan = reference.pair_plan,
+        diagnostics = merge(
+            reference.diagnostics,
+            (
+                source = :pqs_pqs_source_box_reference_block,
+                pair_plan_reused_for_terms = false,
+            ),
+        ),
+    )
+end
+
 const _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS =
     _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS
 
@@ -2576,6 +2878,95 @@ function _pqs_product_source_box_product_block(
         product_unit,
         metrics;
         term,
+    )
+end
+
+function _pqs_product_source_box_all_pairs_inventory(
+    raw_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    pqs_product_pair_plan,
+    pqs_range::UnitRange{Int},
+    product_range::UnitRange{Int},
+    supported_terms::Tuple{Vararg{Symbol}},
+)
+    product_retained_unit_plan = pqs_product_pair_plan.product_retained_unit_plan
+    retained_units = (
+        (
+            unit_key = :pqs,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_range = pqs_range,
+            source_dimensions = raw_plan.source_mode_dims,
+            source_dimension = raw_plan.source_mode_count,
+            retained_count = raw_plan.boundary_selector.selected_count,
+            supported_safe_terms = supported_terms,
+        ),
+        (
+            unit_key = :product,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            retained_range = product_range,
+            source_dimensions = product_retained_unit_plan.source_axis_lengths,
+            source_dimension = product_retained_unit_plan.source_dimension,
+            retained_count = product_retained_unit_plan.retained_count,
+            supported_safe_terms = supported_terms,
+        ),
+    )
+    pair_entries = (
+        (
+            pair_key = (:pqs, :pqs),
+            pair_kind = :pqs_pqs_source_box,
+            block_helper = :_pqs_pqs_source_box_reference_blocks,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+        ),
+        (
+            pair_key = (:pqs, :product),
+            pair_kind = :pqs_product_source_box,
+            block_helper = :_pqs_product_source_box_reference_blocks,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+        ),
+        (
+            pair_key = (:product, :product),
+            pair_kind = :product_doside_source_box_pair,
+            block_helper = :product_doside_retained_block_helpers,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+        ),
+    )
+    return (
+        object_kind = :pqs_product_source_box_all_pairs_inventory,
+        retained_units = retained_units,
+        pair_entries = pair_entries,
+        supported_terms = supported_terms,
+        diagnostics = (
+            source = :pqs_product_source_box_all_pairs_inventory,
+            all_pairs_inventory_private = true,
+            pair_inventory_complete_for_units = (:pqs, :product),
+            retained_unit_count = length(retained_units),
+            upper_triangular_pair_count = length(pair_entries),
+            expected_upper_triangular_pair_count = 3,
+            pair_keys = map(entry -> entry.pair_key, pair_entries),
+            block_helpers = map(entry -> entry.block_helper, pair_entries),
+            private_shadow_only = true,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+            generic_retained_unit_framework = false,
+            product_lower_triangle_transpose_only = true,
+        ),
     )
 end
 
@@ -2611,15 +3002,28 @@ function _pqs_product_source_box_shadow_blocks(
     retained_dimension = pqs_count + product_count
     blocks = Dict{Symbol,Matrix{Float64}}()
     component_blocks = Dict{Symbol,NamedTuple}()
+    pqs_pqs_references = _pqs_pqs_source_box_reference_blocks(
+        raw_plan,
+        raw_plan,
+        metrics;
+        terms = selected_terms,
+    )
     pqs_product_references = _pqs_product_source_box_reference_blocks(
         raw_plan,
         product_unit,
         metrics;
         terms = selected_terms,
     )
+    all_pairs_inventory = _pqs_product_source_box_all_pairs_inventory(
+        raw_plan,
+        product_unit,
+        pqs_product_references.pair_plan,
+        pqs_range,
+        product_range,
+        selected_terms,
+    )
     for term in selected_terms
-        pqs_self =
-            _pqs_raw_product_box_reference_block(raw_plan; term).block
+        pqs_self = pqs_pqs_references.blocks[term]
         pqs_product = pqs_product_references.blocks[term]
         product_self =
             _pqs_product_source_box_product_block(product_unit, metrics, term)
@@ -2646,6 +3050,8 @@ function _pqs_product_source_box_shadow_blocks(
         terms = selected_terms,
         ranges = (pqs = pqs_range, product = product_range),
         retained_dimension = retained_dimension,
+        all_pairs_inventory = all_pairs_inventory,
+        pqs_pqs_reference_blocks = pqs_pqs_references,
         pqs_product_reference_blocks = pqs_product_references,
         diagnostics = (
             source = :pqs_product_source_box_shadow_blocks,
@@ -2653,6 +3059,10 @@ function _pqs_product_source_box_shadow_blocks(
             descriptor_wrapper = false,
             source_box_shadow_only = true,
             private_shadow_only = true,
+            all_pairs_inventory_private = true,
+            pair_inventory_complete_for_units = (:pqs, :product),
+            all_pairs_inventory_pair_count =
+                length(all_pairs_inventory.pair_entries),
             packet_adoption = false,
             fixed_block_routing = false,
             pqs_representation = :mode_selected_raw_product_box,
@@ -2662,7 +3072,9 @@ function _pqs_product_source_box_shadow_blocks(
                 raw_plan.shared_raw_product_box_plan_used,
             source_mode_ordering = raw_plan.source_mode_ordering,
             product_doside_retained_transform_used = true,
-            pqs_pqs_block_source = :pqs_raw_product_box_reference_block,
+            pqs_pqs_block_source = :pqs_pqs_source_box_reference_blocks,
+            pqs_pqs_raw_box_self_reference_compared =
+                pqs_pqs_references.diagnostics.raw_box_self_reference_compared,
             pqs_product_block_source = :pqs_product_source_box_reference_blocks,
             pqs_product_pair_plan_reused_for_terms = true,
             pair_plan_reused_for_terms = true,

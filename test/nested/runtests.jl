@@ -544,6 +544,61 @@ end
         end
         @test shadow.diagnostics.product_doside_retained_transform_used
         @test shadow.diagnostics.reverse_pqs_product_transpose_only
+        @test shadow.diagnostics.all_pairs_inventory_private
+        @test shadow.diagnostics.pair_inventory_complete_for_units ==
+              (:pqs, :product)
+        @test shadow.diagnostics.all_pairs_inventory_pair_count == 3
+        @test shadow.all_pairs_inventory.object_kind ==
+              :pqs_product_source_box_all_pairs_inventory
+        @test shadow.all_pairs_inventory.diagnostics.all_pairs_inventory_private
+        @test shadow.all_pairs_inventory.diagnostics.pair_inventory_complete_for_units ==
+              (:pqs, :product)
+        @test length(shadow.all_pairs_inventory.retained_units) == 2
+        @test length(shadow.all_pairs_inventory.pair_entries) == 3
+        @test shadow.all_pairs_inventory.retained_units[1].unit_key == :pqs
+        @test shadow.all_pairs_inventory.retained_units[1].source_family ==
+              :mode_selected_raw_product_box
+        @test shadow.all_pairs_inventory.retained_units[1].retained_range ==
+              pqs_range
+        @test shadow.all_pairs_inventory.retained_units[1].source_dimensions ==
+              expected_source_mode_dims
+        @test shadow.all_pairs_inventory.retained_units[1].retained_count ==
+              expected_retained_count
+        @test shadow.all_pairs_inventory.retained_units[2].unit_key == :product
+        @test shadow.all_pairs_inventory.retained_units[2].source_family ==
+              :product_doside
+        @test shadow.all_pairs_inventory.retained_units[2].retained_range ==
+              product_range
+        @test shadow.all_pairs_inventory.retained_units[2].source_dimensions ==
+              (2, 2, 1)
+        @test shadow.all_pairs_inventory.retained_units[2].retained_count ==
+              product_count
+        @test map(entry -> entry.pair_key, shadow.all_pairs_inventory.pair_entries) ==
+              ((:pqs, :pqs), (:pqs, :product), (:product, :product))
+        @test map(entry -> entry.pair_kind, shadow.all_pairs_inventory.pair_entries) ==
+              (:pqs_pqs_source_box, :pqs_product_source_box, :product_doside_source_box_pair)
+        @test map(entry -> entry.block_helper, shadow.all_pairs_inventory.pair_entries) ==
+              (
+                  :_pqs_pqs_source_box_reference_blocks,
+                  :_pqs_product_source_box_reference_blocks,
+                  :product_doside_retained_block_helpers,
+              )
+        @test !shadow.all_pairs_inventory.diagnostics.packet_adoption
+        @test !shadow.all_pairs_inventory.diagnostics.fixed_block_routing
+        @test !shadow.all_pairs_inventory.diagnostics.qwhamiltonian_consumes
+        @test !shadow.all_pairs_inventory.diagnostics.public_default_consumes
+        @test !shadow.all_pairs_inventory.diagnostics.shell_projection_used
+        @test !shadow.all_pairs_inventory.diagnostics.lowdin_cleanup_used
+        @test !shadow.all_pairs_inventory.diagnostics.support_local_pqs_oracle_used
+        @test !shadow.all_pairs_inventory.diagnostics.retained_pqs_weights_used
+        @test !shadow.all_pairs_inventory.diagnostics.ida_weight_division_allowed
+        @test !shadow.all_pairs_inventory.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test shadow.all_pairs_inventory.diagnostics.dense_raw_pair_storage_avoided
+        @test shadow.diagnostics.pqs_pqs_block_source ==
+              :pqs_pqs_source_box_reference_blocks
+        @test shadow.diagnostics.pqs_pqs_raw_box_self_reference_compared
+        @test shadow.pqs_pqs_reference_blocks.diagnostics.raw_box_self_reference_compared
+        @test shadow.pqs_pqs_reference_blocks.diagnostics.pair_plan_reused_for_terms
         @test shadow.diagnostics.pqs_product_block_source ==
               :pqs_product_source_box_reference_blocks
         @test shadow.diagnostics.pqs_product_pair_plan_reused_for_terms
@@ -1209,6 +1264,152 @@ end
         )
     end
 
+    function _check_pqs_pqs_source_box_self_blocks(
+        metrics_module,
+        pqs_plan,
+        metrics;
+        expected_source_mode_dims,
+        expected_retained_count,
+    )
+        terms = (
+            :overlap,
+            :position_x,
+            :position_y,
+            :position_z,
+            :x2_x,
+            :x2_y,
+            :x2_z,
+            :kinetic,
+        )
+        pair_plan = metrics_module._pqs_pqs_source_box_pair_plan(
+            pqs_plan,
+            pqs_plan,
+            metrics,
+        )
+        @test pair_plan.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.left_source_family == :mode_selected_raw_product_box
+        @test pair_plan.right_source_family == :mode_selected_raw_product_box
+        @test pair_plan.left_source_dimensions == expected_source_mode_dims
+        @test pair_plan.right_source_dimensions == expected_source_mode_dims
+        @test pair_plan.left_source_dimension == prod(expected_source_mode_dims)
+        @test pair_plan.right_source_dimension == prod(expected_source_mode_dims)
+        @test pair_plan.left_retained_count == expected_retained_count
+        @test pair_plan.right_retained_count == expected_retained_count
+        @test pair_plan.axis_intervals.left == pqs_plan.axis_intervals
+        @test pair_plan.axis_intervals.right == pqs_plan.axis_intervals
+        @test pair_plan.left_raw_product_box_plan.source_mode_dims ==
+              pqs_plan.source_mode_dims
+        @test pair_plan.right_raw_product_box_plan.source_mode_dims ==
+              pqs_plan.source_mode_dims
+        @test pair_plan.left_boundary_mode_selector.mode_indices ==
+              pqs_plan.boundary_selector.mode_indices
+        @test pair_plan.right_boundary_mode_selector.mode_indices ==
+              pqs_plan.boundary_selector.mode_indices
+        @test pair_plan.supported_terms == terms
+        @test size(pair_plan.one_dimensional_cross_factors.x.overlap) ==
+              (expected_source_mode_dims[1], expected_source_mode_dims[1])
+        @test size(pair_plan.one_dimensional_cross_factors.y.position) ==
+              (expected_source_mode_dims[2], expected_source_mode_dims[2])
+        @test size(pair_plan.one_dimensional_cross_factors.z.kinetic) ==
+              (expected_source_mode_dims[3], expected_source_mode_dims[3])
+        @test pair_plan.diagnostics.source == :pqs_pqs_source_box_pair_plan
+        @test pair_plan.diagnostics.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.diagnostics.private_shadow_only
+        @test pair_plan.diagnostics.self_same_plan_only
+        @test !pair_plan.diagnostics.cross_pqs_inputs_supported
+        @test pair_plan.diagnostics.same_raw_product_box_plan
+        @test pair_plan.diagnostics.pqs_representation ==
+              :mode_selected_raw_product_box
+        @test pair_plan.diagnostics.left_boundary_mode_selection_used
+        @test pair_plan.diagnostics.right_boundary_mode_selection_used
+        @test pair_plan.diagnostics.raw_product_box_operators_use_1d_factors
+        @test !pair_plan.diagnostics.shell_projection_used
+        @test !pair_plan.diagnostics.lowdin_cleanup_used
+        @test !pair_plan.diagnostics.support_coefficient_matrix_used
+        @test !pair_plan.diagnostics.support_local_pqs_oracle_used
+        @test !pair_plan.diagnostics.retained_pqs_weights_used
+        @test !pair_plan.diagnostics.retained_pqs_weights_positive_checked
+        @test pair_plan.diagnostics.retained_weight_semantics ==
+              :not_positive_quadrature_weights
+        @test !pair_plan.diagnostics.ida_weight_division_allowed
+        @test !pair_plan.diagnostics.packet_adoption
+        @test !pair_plan.diagnostics.fixed_block_routing
+        @test !pair_plan.diagnostics.qwhamiltonian_consumes
+        @test !pair_plan.diagnostics.public_default_consumes
+        @test !pair_plan.diagnostics.cr2_science_status_changed
+        @test !pair_plan.diagnostics.local_ecp_gaussian_mwg_implemented
+        @test !pair_plan.diagnostics.generic_retained_unit_framework
+        @test !pair_plan.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test pair_plan.diagnostics.dense_raw_pair_storage_avoided
+        @test pair_plan.diagnostics.retained_block_assembled_directly_from_1d_factors
+        @test pair_plan.diagnostics.source_box_pair_storage_scaling ==
+              :one_dimensional_factors_plus_retained_block
+
+        blocks = metrics_module._pqs_pqs_source_box_reference_blocks_from_pair_plan(
+            pair_plan;
+            terms,
+        )
+        wrapper_blocks = metrics_module._pqs_pqs_source_box_reference_blocks(
+            pqs_plan,
+            pqs_plan,
+            metrics;
+            terms,
+        )
+        @test blocks.path == :pqs_pqs_source_box_reference_blocks
+        @test blocks.terms == terms
+        @test wrapper_blocks.terms == terms
+        @test blocks.diagnostics.raw_box_self_reference_compared
+        @test blocks.diagnostics.raw_box_self_reference_helper ==
+              :_pqs_raw_product_box_reference_block
+        @test blocks.diagnostics.pair_plan_reused_for_terms
+        @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
+        @test blocks.diagnostics.max_block_error < 1.0e-10
+        @test !blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test blocks.diagnostics.dense_raw_pair_storage_avoided
+        @test blocks.diagnostics.retained_block_assembled_directly_from_1d_factors
+        @test !blocks.diagnostics.shell_projection_used
+        @test !blocks.diagnostics.lowdin_cleanup_used
+        @test !blocks.diagnostics.support_local_pqs_oracle_used
+        @test !blocks.diagnostics.retained_pqs_weights_used
+        @test !blocks.diagnostics.ida_weight_division_allowed
+        for term in terms
+            expected = metrics_module._pqs_raw_product_box_reference_block(
+                pqs_plan;
+                term,
+            ).block
+            single = metrics_module._pqs_pqs_source_box_reference_block(
+                pqs_plan,
+                pqs_plan,
+                metrics;
+                term,
+            )
+            @test size(blocks.blocks[term]) ==
+                  (expected_retained_count, expected_retained_count)
+            @test blocks.blocks[term] ≈ expected atol = 1.0e-10 rtol = 1.0e-10
+            @test blocks.raw_box_reference_blocks[term] ≈ expected atol = 0.0 rtol = 0.0
+            @test wrapper_blocks.blocks[term] ≈ blocks.blocks[term] atol = 0.0 rtol = 0.0
+            @test blocks.block_errors[term] < 1.0e-10
+            @test single.path == :pqs_pqs_source_box_reference
+            @test single.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
+            @test single.raw_box_reference_block ≈ expected atol = 0.0 rtol = 0.0
+            @test single.block_error < 1.0e-10
+            @test !single.diagnostics.pair_plan_reused_for_terms
+            if term == :overlap
+                @test single.block ≈ Matrix{Float64}(
+                    I,
+                    expected_retained_count,
+                    expected_retained_count,
+                ) atol = 1.0e-10 rtol = 1.0e-10
+            end
+        end
+        @test_throws ArgumentError metrics_module._pqs_pqs_source_box_reference_blocks(
+            pqs_plan,
+            pqs_plan,
+            metrics;
+            terms = (:weights,),
+        )
+    end
+
     function _product_staged_comparison_axis_row(axis, state_index::Int)
         axis.kind == :fixed && return 1
         axis.kind == :active && return state_index - first(axis.interval) + 1
@@ -1724,6 +1925,18 @@ end
         expected_source_mode_dims = (5, 5, 5),
         expected_retained_count = 98,
         shared_raw_product_box_plan = cubic_shared_raw_product_box_plan,
+    )
+    cubic_pqs_pqs_source_box_plan = CCPM._pqs_raw_product_box_plan(
+        cubic_descriptor,
+        cubic_shared_raw_product_box_plan,
+        cubic_metrics,
+    )
+    _check_pqs_pqs_source_box_self_blocks(
+        CCPM,
+        cubic_pqs_pqs_source_box_plan,
+        cubic_metrics;
+        expected_source_mode_dims = (5, 5, 5),
+        expected_retained_count = 98,
     )
     pqs_self_block = CCPM._resolved_payload_low_order_metric_block(
         cubic_pqs_resolved,
@@ -4607,6 +4820,24 @@ end
         expected_source_mode_dims = (5, 5, 7),
         expected_retained_count = 130,
         shared_raw_product_box_plan = rectangular_shared_raw_product_box_plan,
+    )
+    rectangular_pqs_pqs_source_box_plan =
+        CCPM._pqs_raw_product_box_plan(
+            rectangular_descriptor,
+            rectangular_shared_raw_product_box_plan,
+            rectangular_metrics,
+        )
+    _check_pqs_pqs_source_box_self_blocks(
+        CCPM,
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_metrics;
+        expected_source_mode_dims = (5, 5, 7),
+        expected_retained_count = 130,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_pair_plan(
+        cubic_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_metrics,
     )
     rectangular_pqs_product_source_box_plan =
         CCPM._pqs_raw_product_box_plan(

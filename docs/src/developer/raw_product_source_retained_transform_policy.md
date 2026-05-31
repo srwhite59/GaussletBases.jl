@@ -287,16 +287,39 @@ The private multi-term checkpoint adds
 `_pqs_product_source_box_reference_blocks(...)`. These helpers reuse one
 `_pqs_product_source_box_pair_plan(...)` across requested terms and call the
 same direct retained-block assembly for each term. `_pqs_product_source_box_shadow_blocks(...)`
-now uses that multi-term path for its PQS/product component blocks. Diagnostics
-record the cost boundary explicitly:
+now uses that multi-term path for its PQS/product component blocks. The
+self-only PQS/PQS source-box seam is now also explicit:
+`_pqs_pqs_source_box_pair_plan(...)`,
+`_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
+`_pqs_pqs_source_box_reference_blocks(...)`, and
+`_pqs_pqs_source_box_reference_block(...)` build mode-selected PQS/PQS blocks
+from 1D source-box factors and boundary COMX-product mode selectors. In this
+checkpoint the helper accepts only the same raw product-box plan on both sides;
+cross-PQS source boxes are rejected until a distinct cross-source oracle is
+scoped. The supported terms are overlap, `position_x/y/z`, `x2_x/y/z`, and
+kinetic, and self blocks are compared against
+`_pqs_raw_product_box_reference_block(...)`.
+
+`_pqs_product_source_box_shadow_blocks(...)` now carries a tiny private
+all-pairs inventory for its two retained units. The units are `:pqs` with
+source family `:mode_selected_raw_product_box` and `:product` with source
+family `:product_doside`. The upper-triangular entries are `(:pqs, :pqs)` via
+`:_pqs_pqs_source_box_reference_blocks`, `(:pqs, :product)` via
+`:_pqs_product_source_box_reference_blocks`, and
+`(:product, :product)` via existing product/doside retained helpers. The
+shadow layout now uses the PQS/PQS helper for its PQS/PQS component while
+keeping the existing PQS/product and product/product paths. Diagnostics record
+the cost and boundary explicitly:
 `dense_raw_source_box_pair_matrix_materialized = false`,
 `dense_raw_pair_storage_avoided = true`,
 `retained_block_assembled_directly_from_1d_factors = true`,
 `source_box_pair_storage_scaling = :one_dimensional_factors_plus_retained_block`,
-and `pair_plan_reused_for_terms = true` on multi-term paths. Existing
-single-term helpers remain compatibility wrappers and no packet, fixed-block,
-QW/Hamiltonian, IDA/MWG, retained-weight, public/default, or science route is
-adopted.
+`pair_plan_reused_for_terms = true` on multi-term paths, and
+`all_pairs_inventory_private = true` for the two-unit shadow inventory.
+Existing single-term helpers remain compatibility wrappers and no packet,
+fixed-block, QW/Hamiltonian, IDA/MWG, retained-weight, public/default, or
+science route is adopted. The inventory is not a production all-pairs packet
+builder.
 
 A local ignored diagnostic probe records the private performance shape for a
 rectangular `(5,5,7)` PQS source box and a non-identity product retained
@@ -893,14 +916,20 @@ The private `_pqs_product_source_box_shadow_blocks(...)` checkpoint is the
 first block-layout consumer of those references. It builds a small two-block
 shadow layout containing one mode-selected PQS source-box unit and one
 product/doside retained unit, then fills PQS/PQS, PQS/product, product/PQS by
-transpose for symmetric real terms, and product/product blocks. The supported
-terms are `:overlap`, `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. Focused
-tests cover a rectangular PQS source box and a non-identity product/doside
-transform. This is still private/shadow-only layout evidence, not a packet
-builder: it does not use shell-row projection, Lowdin,
-`support_coefficient_matrix` as a PQS oracle, retained PQS weights, or IDA
-division, and it changes no packet construction, QW/Hamiltonian,
-public/default, CR2, local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior.
+transpose for symmetric real terms, and product/product blocks. Its PQS/PQS
+component now uses the self-only `_pqs_pqs_source_box_reference_blocks(...)`
+path; its PQS/product component uses the multi-term PQS/product pair-plan reuse
+path; its product/product component keeps existing product/doside retained
+helpers. The helper records a tiny private all-pairs inventory over units
+`:pqs` and `:product` with upper-triangular entries `(:pqs, :pqs)`,
+`(:pqs, :product)`, and `(:product, :product)`. The supported terms are
+`:overlap`, `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. Focused tests
+cover a rectangular PQS source box and a non-identity product/doside transform.
+This is still private/shadow-only layout evidence, not a packet builder: it
+does not use shell-row projection, Lowdin, `support_coefficient_matrix` as a
+PQS oracle, retained PQS weights, or IDA division, and it changes no packet
+construction, QW/Hamiltonian, public/default, CR2,
+local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior.
 
 The private PQS source-box to GTO cross-overlap checkpoint adds
 `_pqs_source_box_gto_cross_overlap_shadow(...)` and

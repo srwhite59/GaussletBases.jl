@@ -212,17 +212,34 @@ private/shadow-only source-box infrastructure, with no shell projection,
 Lowdin, retained PQS weight division, packet adoption, QW/Hamiltonian route, or
 public/default behavior change.
 
+The corresponding self-only PQS/PQS source-box seam is now private/shadow
+infrastructure too. `_pqs_pqs_source_box_pair_plan(...)`,
+`_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
+`_pqs_pqs_source_box_reference_blocks(...)`, and
+`_pqs_pqs_source_box_reference_block(...)` support only same-raw-plan PQS/PQS
+self blocks for overlap, position, `x2`, and kinetic. Cross-PQS source boxes
+are rejected for now. Each self block is assembled directly from 1D source-box
+factors and boundary COMX-product selectors, then checked against
+`_pqs_raw_product_box_reference_block(...)`. The path does not use shell
+projection, Lowdin, support-local PQS coefficients, retained PQS weights, or
+IDA division.
+
 `_pqs_product_source_box_shadow_blocks(...)` is the private two-block
 layout/reference consumer for this path. It places one mode-selected PQS
 source-box unit and one product/doside retained unit into a shadow layout and
 fills PQS/PQS, PQS/product, product/PQS by transpose for symmetric real terms,
-and product/product blocks. Its mixed PQS/product component blocks now use the
-multi-term pair-plan reuse path. Covered terms are `:overlap`,
-`:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. The tests include a
-rectangular PQS source box and a non-identity product/doside transform. This
-remains private source-box shadow evidence only: no shell-row projection, no
-Lowdin, no `support_coefficient_matrix` PQS oracle, no retained PQS weight
-division, no packet adoption, and no QW/Hamiltonian, public/default, CR2,
+and product/product blocks. Its PQS/PQS component now uses the self-only
+PQS/PQS source-box helper, its mixed PQS/product component blocks use the
+multi-term pair-plan reuse path, and its product/product component keeps the
+existing product/doside retained helpers. The helper also records a tiny
+private all-pairs inventory with two units, `:pqs` and `:product`, and three
+upper-triangular pair entries: `(:pqs, :pqs)`, `(:pqs, :product)`, and
+`(:product, :product)`. Covered terms are `:overlap`, `:position_x/y/z`,
+`:x2_x/y/z`, and `:kinetic`. The tests include a rectangular PQS source box
+and a non-identity product/doside transform. This remains private source-box
+shadow evidence only: no shell-row projection, no Lowdin, no
+`support_coefficient_matrix` PQS oracle, no retained PQS weight division, no
+packet adoption, and no QW/Hamiltonian, public/default, CR2,
 local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior change.
 
 A private GTO cross-overlap shadow now extends the same source-box boundary.
