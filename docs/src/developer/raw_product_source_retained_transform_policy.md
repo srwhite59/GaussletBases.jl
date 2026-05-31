@@ -497,6 +497,28 @@ Validation should be staged and mechanical:
 - Diagnostics must state which stage is active: raw-box reference,
   shell-realization reference, shadow packet/layout, or construction adoption.
 
+The private retained-unit fact audit adds one more diagnostic vocabulary layer
+without changing construction:
+`_pqs_route_retained_unit_fact_audit(construction; include_support_indices=false)`
+classifies existing high-order PQS route regions before any route descriptor
+is emitted. In the focused q4-style construction, contact cap is
+`:product_box_constructible` with an identity-selector `q x q x 1` slab rule;
+outer mismatch is `:product_box_constructible` with boundary slab construction
+rules; left/right atom boxes are `:needs_direct_support_retained_unit_kind`;
+and the regular shared molecular shell is `:out_of_scope` for body vocabulary
+because it is still the current single PQS descriptor.
+
+This audit keeps the contract wording strict.
+`raw_product_box_operator_contract = true` means the active retained unit
+already carries that raw product-box operator contract, currently expected for
+already-built product/doside units.
+Current direct/support pieces that are merely product-box constructible keep
+`raw_product_box_operator_contract = false` and instead report
+`product_box_construction_rule_available = true` when an explicit rule is
+present. Product-box-constructible direct/support pieces are not
+reinterpreted as product/doside, no unit is created, and the current high-order
+PQS route descriptor diagnostic remains `:descriptor_unavailable`.
+
 Non-goals for this migration stage:
 
 - no public API or default-route promotion;

@@ -299,6 +299,27 @@ construction change, no QW/Hamiltonian change, no shell projection/Lowdin, no
 support-local PQS oracle, no retained-weight IDA division, and no
 local/ECP/Gaussian/MWG/interaction changes.
 
+The follow-up retained-unit fact audit,
+`_pqs_route_retained_unit_fact_audit(construction; include_support_indices=false)`,
+is also private diagnostic/read-path infrastructure only. It classifies the
+current high-order PQS region builds without emitting a route descriptor:
+contact cap is `:product_box_constructible` with an explicit identity-selector
+`q x q x 1` slab rule; outer mismatch is `:product_box_constructible` with
+explicit boundary slab rules; left/right atom boxes are
+`:needs_direct_support_retained_unit_kind`; and the regular shared molecular
+shell is `:out_of_scope` for this body vocabulary because it remains the
+current single PQS descriptor. In this audit,
+`raw_product_box_operator_contract = true` means an active retained unit
+already carries that contract. Current direct/support pieces that are merely
+product-box constructible keep `raw_product_box_operator_contract = false` and
+instead report `product_box_construction_rule_available = true`. They are not
+reinterpreted as product/doside units, no product/doside unit is created, and
+the route descriptor diagnostic remains `:descriptor_unavailable` for current
+high-order PQS construction. The audit changes no packet/fixed-block
+construction, QW/Hamiltonian path, sidecar installation or mutation,
+retained-weight IDA division, local/ECP/Gaussian/MWG/interaction behavior, or
+public/default route.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained

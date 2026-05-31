@@ -7064,6 +7064,88 @@ end
             mismatch.reason == :shared_pqs_descriptors_are_not_route_left_right_group,
         pqs_route_fact_diagnostic.mismatches,
     )
+    pqs_retained_unit_audit =
+        CCPM._pqs_route_retained_unit_fact_audit(pqs_construction)
+    @test pqs_retained_unit_audit.object_kind ==
+          :pqs_route_retained_unit_fact_audit
+    @test pqs_retained_unit_audit.status == :audit_only
+    @test length(pqs_retained_unit_audit.unit_facts) == 5
+    @test pqs_retained_unit_audit.summary.classification_counts.product_box_constructible == 2
+    @test pqs_retained_unit_audit.summary.classification_counts.needs_direct_support_retained_unit_kind == 2
+    @test pqs_retained_unit_audit.summary.classification_counts.out_of_scope == 1
+    @test pqs_retained_unit_audit.summary.product_box_constructible_slab_rule_count == 3
+    pqs_retained_facts_by_role =
+        Dict(fact.role => fact for fact in pqs_retained_unit_audit.unit_facts)
+    contact_fact = pqs_retained_facts_by_role[:contact_cap]
+    @test contact_fact.classification == :product_box_constructible
+    @test contact_fact.primitive_family == :contact_cap_owned_slab
+    @test !contact_fact.raw_product_box_operator_contract
+    @test contact_fact.product_box_construction_rule_available
+    @test !contact_fact.product_doside_unit
+    @test contact_fact.safe_term_capability ==
+          :product_box_rule_available_not_instantiated
+    @test contact_fact.coefficient_scope == :support_local_direct_rows
+    @test contact_fact.construction_rule.rule_kind ==
+          :identity_selector_product_doside_slab
+    @test contact_fact.construction_rule.fixed_axis == :z
+    @test contact_fact.construction_rule.fixed_index == 8
+    @test contact_fact.construction_rule.active_axes == (:x, :y)
+    @test contact_fact.construction_rule.active_intervals == (2:6, 2:6)
+    @test contact_fact.construction_rule.retained_count == 25
+    outer_fact =
+        pqs_retained_facts_by_role[:outer_mismatch_shared_molecular_shell]
+    @test outer_fact.classification == :product_box_constructible
+    @test outer_fact.primitive_family == :outer_mismatch_boundary_slab_set
+    @test !outer_fact.raw_product_box_operator_contract
+    @test outer_fact.product_box_construction_rule_available
+    @test !outer_fact.product_doside_unit
+    @test outer_fact.construction_rule.rule_kind ==
+          :identity_selector_product_doside_boundary_slab_set
+    @test outer_fact.construction_rule.boundary_slab_set
+    @test outer_fact.construction_rule.slab_piece_count == 2
+    @test all(
+        piece_rule -> piece_rule.fixed_axis == :z,
+        outer_fact.construction_rule.slab_piece_rules,
+    )
+    @test sum(
+        piece_rule -> piece_rule.support_count,
+        outer_fact.construction_rule.slab_piece_rules,
+    ) == outer_fact.support_count
+    left_atom_fact = pqs_retained_facts_by_role[:left_atom_box]
+    right_atom_fact = pqs_retained_facts_by_role[:right_atom_box]
+    @test left_atom_fact.classification ==
+          :needs_direct_support_retained_unit_kind
+    @test right_atom_fact.classification ==
+          :needs_direct_support_retained_unit_kind
+    @test !left_atom_fact.product_doside_unit
+    @test !right_atom_fact.product_doside_unit
+    @test !left_atom_fact.raw_product_box_operator_contract
+    @test !right_atom_fact.raw_product_box_operator_contract
+    @test !left_atom_fact.product_box_construction_rule_available
+    @test !right_atom_fact.product_box_construction_rule_available
+    @test left_atom_fact.safe_term_capability == :support_local_reference_only
+    @test right_atom_fact.safe_term_capability == :support_local_reference_only
+    shared_pqs_fact =
+        pqs_retained_facts_by_role[:regular_shared_molecular_shell]
+    @test shared_pqs_fact.classification == :out_of_scope
+    @test shared_pqs_fact.primitive_family == :projected_q_shell
+    @test !shared_pqs_fact.product_doside_unit
+    @test !shared_pqs_fact.raw_product_box_operator_contract
+    @test !shared_pqs_fact.product_box_construction_rule_available
+    @test shared_pqs_fact.safe_term_capability == :not_body_retained_unit
+    @test shared_pqs_fact.notes.current_single_pqs_descriptor
+    @test pqs_retained_unit_audit.diagnostics.private_diagnostic_only
+    @test !pqs_retained_unit_audit.diagnostics.descriptor_emitted
+    @test !pqs_retained_unit_audit.diagnostics.packet_adoption
+    @test !pqs_retained_unit_audit.diagnostics.fixed_block_construction_changed
+    @test !pqs_retained_unit_audit.diagnostics.qwhamiltonian_changed
+    @test !pqs_retained_unit_audit.diagnostics.sidecar_mutation
+    @test !pqs_retained_unit_audit.diagnostics.sidecar_installation
+    @test !pqs_retained_unit_audit.diagnostics.direct_support_reinterpreted_as_product_doside
+    @test pqs_retained_unit_audit.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !pqs_retained_unit_audit.diagnostics.ida_weight_division_allowed
+    @test !pqs_retained_unit_audit.diagnostics.local_ecp_gaussian_mwg_interaction_changed
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only

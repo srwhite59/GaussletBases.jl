@@ -3920,6 +3920,247 @@ function _pqs_route_direct_or_support_body_mismatches(
     return Tuple(mismatches)
 end
 
+_pqs_route_axis_symbol(axis::Int) = (:x, :y, :z)[axis]
+
+function _pqs_route_policy_region_for_build(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    build,
+)
+    for region in construction.policy.construction_plan.regions
+        region.order_index == build.region_order_index && return region
+    end
+    return nothing
+end
+
+function _pqs_route_realization_descriptor_for_build(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    build,
+)
+    for realization in construction.realization_audit.region_realizations
+        realization.region_order_index == build.region_order_index &&
+            return realization.realization_descriptor
+    end
+    return nothing
+end
+
+function _pqs_route_retained_unit_classification(build)
+    build.primitive_family == :shared_endcap_panel_shell_layer &&
+        return :already_product_doside
+    build.primitive_family in (
+        :contact_cap_owned_slab,
+        :outer_mismatch_boundary_slab_set,
+    ) && return :product_box_constructible
+    build.primitive_family == :projected_q_shell && return :out_of_scope
+    return :needs_direct_support_retained_unit_kind
+end
+
+function _pqs_route_coefficient_scope(classification::Symbol)
+    classification == :already_product_doside &&
+        return :product_doside_retained_unit
+    classification == :product_box_constructible &&
+        return :support_local_direct_rows
+    classification == :needs_direct_support_retained_unit_kind &&
+        return :support_local_direct_rows
+    return :projected_q_shell_descriptor
+end
+
+function _pqs_route_safe_term_capability(classification::Symbol)
+    classification == :already_product_doside &&
+        return :product_doside_source_box_safe_terms
+    classification == :product_box_constructible &&
+        return :product_box_rule_available_not_instantiated
+    classification == :needs_direct_support_retained_unit_kind &&
+        return :support_local_reference_only
+    return :not_body_retained_unit
+end
+
+function _pqs_route_slab_piece_rule(piece; slab_kind::Symbol, rule_kind::Symbol)
+    fixed_axis_indices = findall(axis -> length(piece.box[axis]) == 1, 1:3)
+    fixed_axis_index = length(fixed_axis_indices) == 1 ? only(fixed_axis_indices) : nothing
+    active_axis_indices = Tuple(
+        axis for axis in 1:3 if isnothing(fixed_axis_index) || axis != fixed_axis_index
+    )
+    return (
+        rule_kind = rule_kind,
+        slab_kind = slab_kind,
+        piece_role = piece.role,
+        piece_index = piece.piece_index,
+        primitive_family = piece.primitive_family,
+        source_box = piece.box,
+        fixed_axis = isnothing(fixed_axis_index) ?
+            nothing : _pqs_route_axis_symbol(fixed_axis_index),
+        fixed_axis_index = fixed_axis_index,
+        fixed_index = isnothing(fixed_axis_index) ?
+            nothing : first(piece.box[fixed_axis_index]),
+        active_axes =
+            Tuple(_pqs_route_axis_symbol(axis) for axis in active_axis_indices),
+        active_axis_indices = active_axis_indices,
+        active_intervals = Tuple(piece.box[axis] for axis in active_axis_indices),
+        active_transform_rule = :identity_selectors_preserve_direct_support,
+        support_count = length(piece.support_indices),
+        retained_count = length(piece.support_indices),
+        product_doside_unit_created = false,
+    )
+end
+
+function _pqs_route_product_box_construction_rule(build, descriptor)
+    isnothing(descriptor) && return nothing
+    piece_rules = Tuple(
+        _pqs_route_slab_piece_rule(
+            piece;
+            slab_kind = build.region_role,
+            rule_kind = build.primitive_family == :contact_cap_owned_slab ?
+                :identity_selector_product_doside_slab :
+                :identity_selector_product_doside_boundary_slab,
+        )
+        for piece in descriptor.pieces
+    )
+    build.primitive_family == :contact_cap_owned_slab && return merge(
+        only(piece_rules),
+        (
+            slab_piece_count = 1,
+            boundary_slab_set = false,
+            product_doside_units_created = false,
+            single_middle_product_body_unit = true,
+        ),
+    )
+    build.primitive_family == :outer_mismatch_boundary_slab_set && return (
+        rule_kind = :identity_selector_product_doside_boundary_slab_set,
+        slab_kind = :outer_mismatch_shared_molecular_shell,
+        boundary_slab_set = true,
+        slab_piece_count = length(piece_rules),
+        slab_piece_rules = piece_rules,
+        product_doside_unit_created = false,
+        product_doside_units_created = false,
+        single_middle_product_body_unit = false,
+        active_transform_rule = :identity_selectors_preserve_direct_support,
+    )
+    return nothing
+end
+
+function _pqs_route_retained_unit_fact(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    build;
+    include_support_indices::Bool,
+)
+    region = _pqs_route_policy_region_for_build(construction, build)
+    descriptor = _pqs_route_realization_descriptor_for_build(construction, build)
+    classification = _pqs_route_retained_unit_classification(build)
+    construction_rule = classification == :product_box_constructible ?
+        _pqs_route_product_box_construction_rule(build, descriptor) :
+        nothing
+    return (
+        object_kind = :pqs_route_retained_unit_fact,
+        role = build.region_role,
+        primitive_family = build.primitive_family,
+        mapped_primitive = build.mapped_primitive,
+        box = isnothing(region) ? nothing : region.box,
+        inner_exclusion_box = isnothing(region) ? nothing : region.inner_exclusion_box,
+        support_count = build.built_support_count,
+        region_support_count = build.region_support_count,
+        retained_count = build.retained_count,
+        column_range = build.column_range,
+        classification = classification,
+        product_doside_unit = classification == :already_product_doside,
+        raw_product_box_operator_contract =
+            classification == :already_product_doside,
+        product_box_construction_rule_available = !isnothing(construction_rule),
+        coefficient_scope = _pqs_route_coefficient_scope(classification),
+        safe_term_capability = _pqs_route_safe_term_capability(classification),
+        construction_rule = construction_rule,
+        support_indices = include_support_indices && !isnothing(region) ?
+            copy(region.support_indices) : nothing,
+        notes = classification == :out_of_scope ? (
+            current_single_pqs_descriptor = true,
+            body_retained_unit_vocabulary = false,
+        ) : classification == :needs_direct_support_retained_unit_kind ? (
+            direct_support_retained_unit_kind_needed = true,
+            fixed_axis = nothing,
+            product_doside_owned_unit_metadata = false,
+        ) : (
+            diagnostic_product_box_rule_only = true,
+            product_doside_unit_created = false,
+        ),
+    )
+end
+
+function _pqs_route_product_box_slab_rule_count(unit_facts)
+    total = 0
+    for fact in unit_facts
+        fact.classification == :product_box_constructible || continue
+        rule = fact.construction_rule
+        isnothing(rule) && continue
+        total += hasproperty(rule, :slab_piece_count) ? rule.slab_piece_count : 1
+    end
+    return total
+end
+
+function _pqs_route_retained_unit_fact_audit(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    include_support_indices::Bool = false,
+)
+    unit_facts = Tuple(
+        _pqs_route_retained_unit_fact(
+            construction,
+            build;
+            include_support_indices,
+        )
+        for build in construction.region_builds
+    )
+    classification_counts = (
+        already_product_doside = count(
+            fact -> fact.classification == :already_product_doside,
+            unit_facts,
+        ),
+        product_box_constructible = count(
+            fact -> fact.classification == :product_box_constructible,
+            unit_facts,
+        ),
+        needs_direct_support_retained_unit_kind = count(
+            fact -> fact.classification == :needs_direct_support_retained_unit_kind,
+            unit_facts,
+        ),
+        out_of_scope = count(
+            fact -> fact.classification == :out_of_scope,
+            unit_facts,
+        ),
+    )
+    summary = (
+        unit_count = length(unit_facts),
+        classification_counts = classification_counts,
+        product_doside_unit_count = classification_counts.already_product_doside,
+        product_box_constructible_region_count =
+            classification_counts.product_box_constructible,
+        product_box_constructible_slab_rule_count =
+            _pqs_route_product_box_slab_rule_count(unit_facts),
+        direct_support_retained_unit_kind_count =
+            classification_counts.needs_direct_support_retained_unit_kind,
+        pqs_descriptor_region_count = classification_counts.out_of_scope,
+    )
+    diagnostics = (
+        source = :pqs_route_retained_unit_fact_audit,
+        private_diagnostic_only = true,
+        descriptor_emitted = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        sidecar_mutation = false,
+        sidecar_installation = false,
+        direct_support_reinterpreted_as_product_doside = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        ida_weight_division_allowed = false,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        include_support_indices = include_support_indices,
+    )
+    return (
+        object_kind = :pqs_route_retained_unit_fact_audit,
+        status = :audit_only,
+        unit_facts = unit_facts,
+        summary = summary,
+        diagnostics = diagnostics,
+    )
+end
+
 function _pqs_pqs_product_route_descriptor_diagnostic(
     construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
     metrics = nothing;
