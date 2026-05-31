@@ -2269,6 +2269,17 @@ function _pqs_product_source_box_cross_factors(
     ), 3)
 end
 
+const _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
 function _pqs_product_source_box_pair_plan(
     pqs_plan,
     product_unit::_CartesianNestedProductStagedByCenterUnit3D,
@@ -2322,16 +2333,7 @@ function _pqs_product_source_box_pair_plan(
             y = cross_factors[2],
             z = cross_factors[3],
         ),
-        supported_terms = (
-            :overlap,
-            :position_x,
-            :position_y,
-            :position_z,
-            :x2_x,
-            :x2_y,
-            :x2_z,
-            :kinetic,
-        ),
+        supported_terms = _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS,
         diagnostics = (
             source = :pqs_product_source_box_pair_plan,
             private_shadow_only = true,
@@ -2368,6 +2370,11 @@ function _pqs_product_source_box_pair_plan(
             cr2_science_status_changed = false,
             local_ecp_gaussian_mwg_implemented = false,
             generic_retained_unit_framework = false,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+            retained_block_assembled_directly_from_1d_factors = true,
+            source_box_pair_storage_scaling =
+                :one_dimensional_factors_plus_retained_block,
         ),
     )
 end
@@ -2423,6 +2430,82 @@ function _pqs_product_source_box_block_from_factors(pair_plan, term::Symbol)
     return block
 end
 
+function _pqs_product_source_box_reference_blocks_from_pair_plan(
+    pair_plan;
+    terms = pair_plan.supported_terms,
+)
+    pair_plan.pair_kind == :pqs_product_source_box || throw(
+        ArgumentError("PQS/product source-box reference blocks require a PQS/product pair plan"),
+    )
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS/product source-box reference blocks require at least one term"),
+    )
+    for term in selected_terms
+        term in pair_plan.supported_terms || throw(
+            ArgumentError("PQS/product source-box reference blocks received unsupported term $(term)"),
+        )
+    end
+    blocks = Dict{Symbol,Matrix{Float64}}()
+    for term in selected_terms
+        block = _pqs_product_source_box_block_from_factors(pair_plan, term)
+        all(isfinite, block) || throw(
+            ArgumentError("PQS/product source-box reference blocks produced non-finite entries for $(term)"),
+        )
+        blocks[term] = block
+    end
+    return (
+        path = :pqs_product_source_box_reference_blocks,
+        terms = selected_terms,
+        blocks = blocks,
+        pair_plan = pair_plan,
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :pqs_product_source_box_reference_blocks,
+                pair_plan_reused_for_terms = true,
+                pair_plan_reuse_term_count = length(selected_terms),
+                dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_pair_storage_avoided = true,
+                retained_block_assembled_directly_from_1d_factors = true,
+                source_box_pair_storage_scaling =
+                    :one_dimensional_factors_plus_retained_block,
+                supported_terms = pair_plan.supported_terms,
+                unsupported_terms = (
+                    :weights,
+                    :first_moments,
+                    :nuclear_one_body,
+                    :local_coulomb_one_body,
+                    :local_ecp_one_body,
+                    :gaussian_local_terms,
+                    :gaussian_sum,
+                    :pair_sum,
+                    :mwg_interaction,
+                    :interaction,
+                ),
+                kinetic_factor_form = (
+                    (:kinetic, :overlap, :overlap),
+                    (:overlap, :kinetic, :overlap),
+                    (:overlap, :overlap, :kinetic),
+                ),
+            ),
+        ),
+    )
+end
+
+function _pqs_product_source_box_reference_blocks(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS,
+)
+    pair_plan = _pqs_product_source_box_pair_plan(pqs_plan, product_unit, metrics)
+    return _pqs_product_source_box_reference_blocks_from_pair_plan(
+        pair_plan;
+        terms,
+    )
+end
+
 function _pqs_product_source_box_reference_block(
     pqs_plan,
     product_unit::_CartesianNestedProductStagedByCenterUnit3D,
@@ -2464,21 +2547,19 @@ function _pqs_product_source_box_reference_block(
                     (:overlap, :kinetic, :overlap),
                     (:overlap, :overlap, :kinetic),
                 ),
+                pair_plan_reused_for_terms = false,
+                dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_pair_storage_avoided = true,
+                retained_block_assembled_directly_from_1d_factors = true,
+                source_box_pair_storage_scaling =
+                    :one_dimensional_factors_plus_retained_block,
             ),
         ),
     )
 end
 
-const _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS = (
-    :overlap,
-    :position_x,
-    :position_y,
-    :position_z,
-    :x2_x,
-    :x2_y,
-    :x2_z,
-    :kinetic,
-)
+const _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS =
+    _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS
 
 function _pqs_product_source_box_product_block(
     product_unit::_CartesianNestedProductStagedByCenterUnit3D,
@@ -2530,16 +2611,16 @@ function _pqs_product_source_box_shadow_blocks(
     retained_dimension = pqs_count + product_count
     blocks = Dict{Symbol,Matrix{Float64}}()
     component_blocks = Dict{Symbol,NamedTuple}()
+    pqs_product_references = _pqs_product_source_box_reference_blocks(
+        raw_plan,
+        product_unit,
+        metrics;
+        terms = selected_terms,
+    )
     for term in selected_terms
         pqs_self =
             _pqs_raw_product_box_reference_block(raw_plan; term).block
-        pqs_product =
-            _pqs_product_source_box_reference_block(
-                pqs_plan,
-                product_unit,
-                metrics;
-                term,
-            ).block
+        pqs_product = pqs_product_references.blocks[term]
         product_self =
             _pqs_product_source_box_product_block(product_unit, metrics, term)
         block = zeros(Float64, retained_dimension, retained_dimension)
@@ -2565,6 +2646,7 @@ function _pqs_product_source_box_shadow_blocks(
         terms = selected_terms,
         ranges = (pqs = pqs_range, product = product_range),
         retained_dimension = retained_dimension,
+        pqs_product_reference_blocks = pqs_product_references,
         diagnostics = (
             source = :pqs_product_source_box_shadow_blocks,
             raw_plan_first_path = true,
@@ -2581,7 +2663,9 @@ function _pqs_product_source_box_shadow_blocks(
             source_mode_ordering = raw_plan.source_mode_ordering,
             product_doside_retained_transform_used = true,
             pqs_pqs_block_source = :pqs_raw_product_box_reference_block,
-            pqs_product_block_source = :pqs_product_source_box_reference_block,
+            pqs_product_block_source = :pqs_product_source_box_reference_blocks,
+            pqs_product_pair_plan_reused_for_terms = true,
+            pair_plan_reused_for_terms = true,
             product_product_block_source = :product_doside_retained_block_helpers,
             reverse_pqs_product_transpose_only = true,
             shell_projection_used = false,
@@ -2598,6 +2682,11 @@ function _pqs_product_source_box_shadow_blocks(
             local_ecp_gaussian_mwg_implemented = false,
             generic_retained_unit_framework = false,
             supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+            retained_block_assembled_directly_from_1d_factors = true,
+            source_box_pair_storage_scaling =
+                :one_dimensional_factors_plus_retained_block,
             unsupported_terms = (
                 :weights,
                 :first_moments,

@@ -271,6 +271,40 @@ product-side metadata through this adapter, so the private pair plan reads as
 raw product-box source plus retained-rule facts on both sides. This is still
 only migration/shadow infrastructure, not a generic retained-unit framework.
 
+The PQS/product source-box path is already the direct 1D-factor retained-block
+path. `_pqs_product_source_box_reference_block(...)` avoids dense 3D raw
+source-box pair matrix materialization: it builds 1D cross-axis factors,
+selects PQS boundary COMX-product modes, applies product/doside retained mode
+metadata, and assembles the retained block directly. The supported terms are
+overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic, with kinetic represented
+as `(K,S,S) + (S,K,S) + (S,S,K)`. The helper consumes explicit axis
+metric/operator data and reports that it did not invoke a numerical fallback;
+PGDG/exact provenance is only claimed when upstream raw-box or fixture
+diagnostics actually check that provenance.
+
+The private multi-term checkpoint adds
+`_pqs_product_source_box_reference_blocks_from_pair_plan(...)` and
+`_pqs_product_source_box_reference_blocks(...)`. These helpers reuse one
+`_pqs_product_source_box_pair_plan(...)` across requested terms and call the
+same direct retained-block assembly for each term. `_pqs_product_source_box_shadow_blocks(...)`
+now uses that multi-term path for its PQS/product component blocks. Diagnostics
+record the cost boundary explicitly:
+`dense_raw_source_box_pair_matrix_materialized = false`,
+`dense_raw_pair_storage_avoided = true`,
+`retained_block_assembled_directly_from_1d_factors = true`,
+`source_box_pair_storage_scaling = :one_dimensional_factors_plus_retained_block`,
+and `pair_plan_reused_for_terms = true` on multi-term paths. Existing
+single-term helpers remain compatibility wrappers and no packet, fixed-block,
+QW/Hamiltonian, IDA/MWG, retained-weight, public/default, or science route is
+adopted.
+
+A local ignored diagnostic probe records the private performance shape for a
+rectangular `(5,5,7)` PQS source box and a non-identity product retained
+transform. In one run with 100 repetitions, repeated single-term calls took
+about `0.0067 s` and allocated about `32.3 MB`, while the multi-term pair-plan
+reuse path took about `0.0014 s` and allocated about `7.9 MB`. This is local
+diagnostic evidence only, not a public benchmark or readiness claim.
+
 Product/product source-box unification is now a completed private/shadow
 checkpoint, not a future design choice. Product/product now uses the same
 private source-box pair vocabulary.

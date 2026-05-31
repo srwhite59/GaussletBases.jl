@@ -544,6 +544,18 @@ end
         end
         @test shadow.diagnostics.product_doside_retained_transform_used
         @test shadow.diagnostics.reverse_pqs_product_transpose_only
+        @test shadow.diagnostics.pqs_product_block_source ==
+              :pqs_product_source_box_reference_blocks
+        @test shadow.diagnostics.pqs_product_pair_plan_reused_for_terms
+        @test shadow.diagnostics.pair_plan_reused_for_terms
+        @test !shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test shadow.diagnostics.dense_raw_pair_storage_avoided
+        @test shadow.diagnostics.retained_block_assembled_directly_from_1d_factors
+        @test shadow.diagnostics.source_box_pair_storage_scaling ==
+              :one_dimensional_factors_plus_retained_block
+        @test shadow.pqs_product_reference_blocks.diagnostics.pair_plan_reused_for_terms
+        @test shadow.pqs_product_reference_blocks.diagnostics.pair_plan_reuse_term_count ==
+              length(terms)
         @test !shadow.diagnostics.shell_projection_used
         @test !shadow.diagnostics.lowdin_cleanup_used
         @test !shadow.diagnostics.support_coefficient_matrix_used
@@ -723,6 +735,43 @@ end
             :x2_z,
             :kinetic,
         )
+        multi_term_blocks =
+            metrics_module._pqs_product_source_box_reference_blocks_from_pair_plan(
+                pair_plan;
+                terms,
+            )
+        wrapper_multi_term_blocks =
+            metrics_module._pqs_product_source_box_reference_blocks(
+                pqs_plan,
+                product_unit,
+                metrics;
+                terms,
+            )
+        @test multi_term_blocks.path == :pqs_product_source_box_reference_blocks
+        @test multi_term_blocks.terms == terms
+        @test wrapper_multi_term_blocks.terms == terms
+        @test multi_term_blocks.pair_plan === pair_plan
+        @test wrapper_multi_term_blocks.pair_plan.pair_kind ==
+              :pqs_product_source_box
+        @test multi_term_blocks.diagnostics.pair_plan_reused_for_terms
+        @test multi_term_blocks.diagnostics.pair_plan_reuse_term_count ==
+              length(terms)
+        @test !multi_term_blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test multi_term_blocks.diagnostics.dense_raw_pair_storage_avoided
+        @test multi_term_blocks.diagnostics.retained_block_assembled_directly_from_1d_factors
+        @test multi_term_blocks.diagnostics.source_box_pair_storage_scaling ==
+              :one_dimensional_factors_plus_retained_block
+        @test !multi_term_blocks.diagnostics.shell_projection_used
+        @test !multi_term_blocks.diagnostics.lowdin_cleanup_used
+        @test !multi_term_blocks.diagnostics.support_coefficient_matrix_used
+        @test !multi_term_blocks.diagnostics.support_local_pqs_oracle_used
+        @test !multi_term_blocks.diagnostics.retained_pqs_weights_used
+        @test !multi_term_blocks.diagnostics.ida_weight_division_allowed
+        @test !multi_term_blocks.diagnostics.packet_adoption
+        @test !multi_term_blocks.diagnostics.fixed_block_routing
+        @test !multi_term_blocks.diagnostics.qwhamiltonian_consumes
+        @test !multi_term_blocks.diagnostics.public_default_consumes
+        @test :weights in multi_term_blocks.diagnostics.unsupported_terms
         for term in terms
             source_box_block =
                 metrics_module._pqs_product_source_box_reference_block(
@@ -742,6 +791,8 @@ end
             @test size(source_box_block.block) ==
                   (expected_retained_count, length(product_unit.column_range))
             @test source_box_block.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
+            @test multi_term_blocks.blocks[term] ≈ source_box_block.block atol = 1.0e-14 rtol = 1.0e-14
+            @test wrapper_multi_term_blocks.blocks[term] ≈ source_box_block.block atol = 1.0e-14 rtol = 1.0e-14
             @test source_box_block.diagnostics.raw_product_box_plan_used
             @test source_box_block.diagnostics.pqs_raw_product_box_plan_used
             if !isnothing(shared_raw_product_box_plan)
@@ -762,8 +813,24 @@ end
             @test !source_box_block.diagnostics.qwhamiltonian_consumes
             @test !source_box_block.diagnostics.public_default_consumes
             @test !source_box_block.diagnostics.cr2_science_status_changed
+            @test !source_box_block.diagnostics.pair_plan_reused_for_terms
+            @test !source_box_block.diagnostics.dense_raw_source_box_pair_matrix_materialized
+            @test source_box_block.diagnostics.dense_raw_pair_storage_avoided
+            @test source_box_block.diagnostics.retained_block_assembled_directly_from_1d_factors
+            @test source_box_block.diagnostics.source_box_pair_storage_scaling ==
+                  :one_dimensional_factors_plus_retained_block
             @test :weights in source_box_block.diagnostics.unsupported_terms
         end
+        @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_blocks_from_pair_plan(
+            pair_plan;
+            terms = (:weights,),
+        )
+        @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_blocks(
+            pqs_plan,
+            product_unit,
+            metrics;
+            terms = (:weights,),
+        )
         @test_throws ArgumentError metrics_module._pqs_product_source_box_reference_block(
             pqs_plan,
             product_unit,
