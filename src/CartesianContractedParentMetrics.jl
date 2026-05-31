@@ -4,7 +4,9 @@ import LinearAlgebra
 import SparseArrays
 
 import ..GaussletBases: _NestedFixedBlock3D,
+                         _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
+                         _cartesian_raw_product_box_source_mode_indices,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _require_analytic_primitive_backend,
                          centers,
@@ -720,6 +722,13 @@ function _product_doside_axis_metric_matrix(metrics::NamedTuple{(:x,:y,:z)}, axi
     return getproperty(getproperty(metrics, axis_name), kind)
 end
 
+function _cartesian_source_box_metric_sources(metrics::NamedTuple{(:x,:y,:z)})
+    return ntuple(axis -> begin
+        axis_data = getproperty(metrics, (:x, :y, :z)[axis])
+        hasproperty(axis_data, :source) ? axis_data.source : :unspecified
+    end, 3)
+end
+
 function _require_product_doside_retained_block_unit(
     unit::_CartesianNestedProductStagedByCenterUnit3D;
     side::Symbol,
@@ -731,6 +740,438 @@ function _require_product_doside_retained_block_unit(
         ArgumentError("product/doside retained low-order block $(side) unit axis metadata does not match its column range"),
     )
     return nothing
+end
+
+function _product_doside_retained_unit_plan(
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+)
+    _require_product_doside_retained_block_unit(product_unit; side = :product)
+    source_axis_intervals =
+        ntuple(axis -> _staged_axis_interval(product_unit.axes[axis]), 3)
+    source_axis_lengths = ntuple(axis -> length(source_axis_intervals[axis]), 3)
+    retained_axis_counts =
+        ntuple(axis -> _staged_axis_count(product_unit.axes[axis]), 3)
+    retained_count = length(product_unit.column_range)
+    return (
+        object_kind = :product_doside_retained_unit_plan,
+        kind = product_unit.kind,
+        retained_rule_kind = :product_doside,
+        source_axis_intervals = source_axis_intervals,
+        axis_intervals = source_axis_intervals,
+        source_axis_lengths = source_axis_lengths,
+        source_dimension = prod(source_axis_lengths),
+        retained_axis_counts = retained_axis_counts,
+        column_range = product_unit.column_range,
+        retained_count = retained_count,
+        axes = product_unit.axes,
+        axis_coefficient_matrices =
+            ntuple(axis -> product_unit.axes[axis].coefficient_matrix, 3),
+        axis_function_indices = product_unit.axis_function_indices,
+        support_indices = product_unit.support_indices,
+        support_states = product_unit.support_states,
+        coefficient_matrix = product_unit.coefficient_matrix,
+        provenance = product_unit.provenance,
+        diagnostics = (
+            source = :product_doside_retained_unit_plan,
+            private_adapter = true,
+            metadata_only = true,
+            coefficients_rebuilt = false,
+            block_math_changed = false,
+            retained_rule_kind = :product_doside,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ida_weight_semantics_changed = false,
+            retained_weight_division_allowed = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+end
+
+const _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
+function _product_doside_source_box_axis_centers(
+    retained_unit_plan,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> begin
+        interval = retained_unit_plan.source_axis_intervals[axis]
+        Float64.(getproperty(getproperty(metrics, (:x, :y, :z)[axis]), :centers)[interval])
+    end, 3)
+end
+
+function _product_doside_source_box_cross_factors(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> (
+        overlap = _project_staged_axis_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _product_doside_axis_metric_matrix(metrics, axis, :overlap),
+        ),
+        position = _project_staged_axis_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _product_doside_axis_metric_matrix(metrics, axis, :position),
+        ),
+        x2 = _project_staged_axis_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _product_doside_axis_metric_matrix(metrics, axis, :x2),
+        ),
+        kinetic = _project_staged_axis_matrix(
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+            _product_doside_axis_metric_matrix(metrics, axis, :kinetic),
+        ),
+    ), 3)
+end
+
+function _product_doside_source_box_pair_plan(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    left_retained_unit_plan = _product_doside_retained_unit_plan(left_unit)
+    right_retained_unit_plan = _product_doside_retained_unit_plan(right_unit)
+    cross_factors =
+        _product_doside_source_box_cross_factors(left_unit, right_unit, metrics)
+    left_axis_centers =
+        _product_doside_source_box_axis_centers(left_retained_unit_plan, metrics)
+    right_axis_centers =
+        _product_doside_source_box_axis_centers(right_retained_unit_plan, metrics)
+    return (
+        pair_kind = :product_doside_source_box_pair,
+        left_source_family = :product_doside,
+        right_source_family = :product_doside,
+        left_retained_rule_kind = left_retained_unit_plan.retained_rule_kind,
+        right_retained_rule_kind = right_retained_unit_plan.retained_rule_kind,
+        left_source_dimensions = left_retained_unit_plan.source_axis_lengths,
+        right_source_dimensions = right_retained_unit_plan.source_axis_lengths,
+        left_source_dimension = left_retained_unit_plan.source_dimension,
+        right_source_dimension = right_retained_unit_plan.source_dimension,
+        left_retained_axis_counts = left_retained_unit_plan.retained_axis_counts,
+        right_retained_axis_counts = right_retained_unit_plan.retained_axis_counts,
+        left_column_range = left_retained_unit_plan.column_range,
+        right_column_range = right_retained_unit_plan.column_range,
+        left_retained_count = left_retained_unit_plan.retained_count,
+        right_retained_count = right_retained_unit_plan.retained_count,
+        axis_intervals = (
+            left = left_retained_unit_plan.source_axis_intervals,
+            right = right_retained_unit_plan.source_axis_intervals,
+        ),
+        axis_centers = (
+            left = left_axis_centers,
+            right = right_axis_centers,
+        ),
+        left_retained_unit_plan = left_retained_unit_plan,
+        right_retained_unit_plan = right_retained_unit_plan,
+        left_retained_transform = left_retained_unit_plan,
+        right_retained_transform = right_retained_unit_plan,
+        one_dimensional_cross_factors = (
+            x = cross_factors[1],
+            y = cross_factors[2],
+            z = cross_factors[3],
+        ),
+        supported_terms = _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS,
+        diagnostics = (
+            source = :product_doside_source_box_pair_plan,
+            private_shadow_only = true,
+            source_box_pair_plan = true,
+            product_doside_retained_unit_plan_used = true,
+            existing_product_staged_retained_helpers_authoritative = true,
+            product_staged_metric_execution_changed = false,
+            product_doside_retained_block_math_changed = false,
+            operator_factor_source = :explicit_metric_operator_data,
+            operator_metric_sources =
+                _cartesian_source_box_metric_sources(metrics),
+            input_metric_operator_data = :caller_supplied_explicit_data,
+            input_metric_operator_data_pgdg_checked = false,
+            pgdg_analytic_operator_provenance_claimed = false,
+            numerical_reference_fallback = false,
+            raw_product_box_operators_use_1d_factors = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            retained_pqs_weights_used = false,
+            ida_weight_division_allowed = false,
+            ida_mwg_semantics_changed = false,
+            retained_weight_semantics_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+end
+
+function _product_doside_source_box_factor(
+    pair_plan,
+    axis::Int,
+    kind::Symbol,
+)
+    axis_factors = getproperty(pair_plan.one_dimensional_cross_factors, (:x, :y, :z)[axis])
+    return getproperty(axis_factors, kind)
+end
+
+function _product_doside_source_box_block_from_factors(
+    pair_plan,
+    term::Symbol,
+)
+    term in pair_plan.supported_terms || throw(
+        ArgumentError("product/doside source-box reference block received unsupported term $(term)"),
+    )
+    left_modes = pair_plan.left_retained_transform.axis_function_indices
+    right_modes = pair_plan.right_retained_transform.axis_function_indices
+    block = zeros(
+        Float64,
+        pair_plan.left_retained_count,
+        pair_plan.right_retained_count,
+    )
+    @inbounds for factor_kinds in _source_box_separable_term_factor_kinds(term)
+        fx = _product_doside_source_box_factor(pair_plan, 1, factor_kinds[1])
+        fy = _product_doside_source_box_factor(pair_plan, 2, factor_kinds[2])
+        fz = _product_doside_source_box_factor(pair_plan, 3, factor_kinds[3])
+        for col in eachindex(right_modes)
+            xj, yj, zj = right_modes[col]
+            for row in eachindex(left_modes)
+                xi, yi, zi = left_modes[row]
+                block[row, col] += fx[xi, xj] * fy[yi, yj] * fz[zi, zj]
+            end
+        end
+    end
+    return block
+end
+
+function _product_doside_source_box_authoritative_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term == :kinetic && return _product_doside_retained_kinetic_block(
+        left_unit,
+        right_unit,
+        metrics,
+    )
+    return _product_doside_retained_low_order_block(
+        left_unit,
+        right_unit,
+        metrics;
+        term,
+    )
+end
+
+function _product_doside_source_box_reference_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+    atol::Real = 1.0e-12,
+)
+    pair_plan = _product_doside_source_box_pair_plan(left_unit, right_unit, metrics)
+    term in pair_plan.supported_terms || throw(
+        ArgumentError("product/doside source-box reference block received unsupported term $(term)"),
+    )
+    block = _product_doside_source_box_block_from_factors(pair_plan, term)
+    authoritative_block =
+        _product_doside_source_box_authoritative_block(
+            left_unit,
+            right_unit,
+            metrics,
+            term,
+        )
+    block_error = LinearAlgebra.norm(block - authoritative_block, Inf)
+    block_error <= atol || throw(
+        ArgumentError("product/doside source-box reference block disagrees with authoritative retained helper"),
+    )
+    return (
+        path = :product_doside_source_box_reference,
+        term = term,
+        block = block,
+        authoritative_block = authoritative_block,
+        block_error = block_error,
+        pair_plan = pair_plan,
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :product_doside_source_box_reference_block,
+                supported_terms = pair_plan.supported_terms,
+                unsupported_terms = (
+                    :weights,
+                    :first_moments,
+                    :nuclear_one_body,
+                    :local_coulomb_one_body,
+                    :local_ecp_one_body,
+                    :gaussian_local_terms,
+                    :gaussian_sum,
+                    :pair_sum,
+                    :mwg_interaction,
+                    :interaction,
+                ),
+                kinetic_factor_form = (
+                    (:kinetic, :overlap, :overlap),
+                    (:overlap, :kinetic, :overlap),
+                    (:overlap, :overlap, :kinetic),
+                ),
+                authoritative_helper =
+                    term == :kinetic ?
+                    :_product_doside_retained_kinetic_block :
+                    :_product_doside_retained_low_order_block,
+                authoritative_block_compared = true,
+                block_error = block_error,
+            ),
+        ),
+    )
+end
+
+const _PRODUCT_DOSIDE_SOURCE_BOX_SHADOW_TERMS =
+    _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS
+
+function _product_doside_source_box_shadow_blocks(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PRODUCT_DOSIDE_SOURCE_BOX_SHADOW_TERMS,
+)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("product/doside source-box shadow requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PRODUCT_DOSIDE_SOURCE_BOX_SHADOW_TERMS || throw(
+            ArgumentError("product/doside source-box shadow received unsupported term $(term)"),
+        )
+    end
+    left_count = length(left_unit.column_range)
+    right_count = length(right_unit.column_range)
+    left_range = 1:left_count
+    right_range = (left_count + 1):(left_count + right_count)
+    retained_dimension = left_count + right_count
+    blocks = Dict{Symbol,Matrix{Float64}}()
+    component_blocks = Dict{Symbol,NamedTuple}()
+    transpose_errors = Dict{Symbol,Float64}()
+    for term in selected_terms
+        left_left =
+            _product_doside_source_box_reference_block(
+                left_unit,
+                left_unit,
+                metrics;
+                term,
+            )
+        left_right =
+            _product_doside_source_box_reference_block(
+                left_unit,
+                right_unit,
+                metrics;
+                term,
+            )
+        right_left =
+            _product_doside_source_box_reference_block(
+                right_unit,
+                left_unit,
+                metrics;
+                term,
+            )
+        right_right =
+            _product_doside_source_box_reference_block(
+                right_unit,
+                right_unit,
+                metrics;
+                term,
+            )
+        transpose_error =
+            LinearAlgebra.norm(right_left.block - transpose(left_right.block), Inf)
+        block = zeros(Float64, retained_dimension, retained_dimension)
+        block[left_range, left_range] .= left_left.block
+        block[left_range, right_range] .= left_right.block
+        block[right_range, left_range] .= right_left.block
+        block[right_range, right_range] .= right_right.block
+        all(isfinite, block) || throw(
+            ArgumentError("product/doside source-box shadow produced non-finite entries"),
+        )
+        blocks[term] = block
+        component_blocks[term] = (
+            left_left = left_left.block,
+            left_right = left_right.block,
+            right_left = right_left.block,
+            right_right = right_right.block,
+            right_left_transpose_error = transpose_error,
+        )
+        transpose_errors[term] = transpose_error
+    end
+    max_transpose_error =
+        isempty(transpose_errors) ? 0.0 : maximum(values(transpose_errors))
+    return (
+        path = :product_doside_source_box_shadow_blocks,
+        blocks = blocks,
+        component_blocks = component_blocks,
+        terms = selected_terms,
+        ranges = (left = left_range, right = right_range),
+        retained_dimension = retained_dimension,
+        transpose_errors = transpose_errors,
+        diagnostics = (
+            source = :product_doside_source_box_shadow_blocks,
+            source_box_shadow_only = true,
+            private_shadow_only = true,
+            product_doside_retained_unit_plan_used = true,
+            existing_product_staged_retained_helpers_authoritative = true,
+            operator_factor_source = :explicit_metric_operator_data,
+            operator_metric_sources =
+                _cartesian_source_box_metric_sources(metrics),
+            input_metric_operator_data = :caller_supplied_explicit_data,
+            input_metric_operator_data_pgdg_checked = false,
+            pgdg_analytic_operator_provenance_claimed = false,
+            numerical_reference_fallback = false,
+            component_reference_helper =
+                :_product_doside_source_box_reference_block,
+            right_left_block_source =
+                :_product_doside_source_box_reference_block,
+            symmetric_real_transpose_checked = true,
+            max_right_left_transpose_error = max_transpose_error,
+            product_staged_metric_execution_changed = false,
+            product_doside_retained_block_math_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ida_mwg_semantics_changed = false,
+            retained_weight_semantics_changed = false,
+            ida_weight_division_allowed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+            supported_terms = _PRODUCT_DOSIDE_SOURCE_BOX_SHADOW_TERMS,
+            unsupported_terms = (
+                :weights,
+                :first_moments,
+                :nuclear_one_body,
+                :local_coulomb_one_body,
+                :local_ecp_one_body,
+                :gaussian_local_terms,
+                :gaussian_sum,
+                :pair_sum,
+                :mwg_interaction,
+                :interaction,
+            ),
+            output_finite = true,
+        ),
+    )
 end
 
 function _product_doside_retained_low_order_block(
@@ -1152,6 +1593,1189 @@ function _pqs_product_kinetic_reference_block(
             ),
         ),
     )
+end
+
+function _pqs_raw_product_box_source_mode_indices(source_mode_dims::NTuple{3,Int})
+    return _cartesian_raw_product_box_source_mode_indices(source_mode_dims)
+end
+
+function _pqs_raw_product_box_mode_matrix(
+    mode_indices::AbstractVector{<:NTuple{3,Int}},
+    axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
+)
+    mode_count = length(mode_indices)
+    block = Matrix{Float64}(undef, mode_count, mode_count)
+    @inbounds for col in 1:mode_count
+        jx, jy, jz = mode_indices[col]
+        for row in 1:mode_count
+            ix, iy, iz = mode_indices[row]
+            block[row, col] =
+                axis_matrices[1][ix, jx] *
+                axis_matrices[2][iy, jy] *
+                axis_matrices[3][iz, jz]
+        end
+    end
+    return block
+end
+
+function _pqs_raw_product_box_low_order_axis_kinds(term::Symbol)
+    term == :overlap && return (:overlap, :overlap, :overlap)
+    term == :position_x && return (:position, :overlap, :overlap)
+    term == :position_y && return (:overlap, :position, :overlap)
+    term == :position_z && return (:overlap, :overlap, :position)
+    term == :x2_x && return (:x2, :overlap, :overlap)
+    term == :x2_y && return (:overlap, :x2, :overlap)
+    term == :x2_z && return (:overlap, :overlap, :x2)
+    throw(
+        ArgumentError(
+            "PQS raw product-box reference block supports only :overlap, :position_x/y/z, :x2_x/y/z, and :kinetic",
+        ),
+    )
+end
+
+function _pqs_raw_product_box_selected_mode_matrix(
+    raw_plan,
+    axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
+)
+    mode_count = length(raw_plan.boundary_selector.mode_indices)
+    mode_count == raw_plan.boundary_selector.selected_count || throw(
+        ArgumentError("PQS raw product-box boundary mode count must match selected count"),
+    )
+    return _pqs_raw_product_box_mode_matrix(
+        raw_plan.boundary_selector.mode_indices,
+        axis_matrices,
+    )
+end
+
+function _pqs_raw_product_box_factor_tuple(raw_plan)
+    raw_plan.operator_factors_available || throw(
+        ArgumentError("PQS raw product-box plan does not carry 1D operator factors"),
+    )
+    factors = raw_plan.one_dimensional_operator_factors
+    return (factors.x, factors.y, factors.z)
+end
+
+function _pqs_raw_product_box_low_order_mode_matrix(raw_plan; term::Symbol)
+    axis_kinds = _pqs_raw_product_box_low_order_axis_kinds(term)
+    factors = _pqs_raw_product_box_factor_tuple(raw_plan)
+    axis_matrices = ntuple(axis -> getproperty(factors[axis], axis_kinds[axis]), 3)
+    return _pqs_raw_product_box_selected_mode_matrix(raw_plan, axis_matrices)
+end
+
+function _pqs_raw_product_box_kinetic_mode_matrix(raw_plan)
+    factors = _pqs_raw_product_box_factor_tuple(raw_plan)
+    overlap_matrices = ntuple(axis -> factors[axis].overlap, 3)
+    kinetic_matrices = ntuple(axis -> factors[axis].kinetic, 3)
+    mode_matrix = zeros(
+        Float64,
+        raw_plan.boundary_selector.selected_count,
+        raw_plan.boundary_selector.selected_count,
+    )
+    for active_axis in 1:3
+        axis_matrices = ntuple(
+            axis -> axis == active_axis ? kinetic_matrices[axis] : overlap_matrices[axis],
+            3,
+        )
+        mode_matrix .+= _pqs_raw_product_box_selected_mode_matrix(
+            raw_plan,
+            axis_matrices,
+        )
+    end
+    return mode_matrix
+end
+
+function _pqs_raw_product_box_overlap_diagnostics(
+    raw_plan,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    axis_overlap_matrices = ntuple(
+        axis -> _pqs_raw_product_box_axis_operator(
+            raw_plan,
+            metrics,
+            axis,
+            :overlap,
+        ),
+        3,
+    )
+    axis_overlap_errors = ntuple(
+        axis -> LinearAlgebra.norm(
+            axis_overlap_matrices[axis] -
+            Matrix{Float64}(LinearAlgebra.I, size(axis_overlap_matrices[axis], 1), size(axis_overlap_matrices[axis], 2)),
+            Inf,
+        ),
+        3,
+    )
+    source_mode_dims = ntuple(axis -> size(axis_overlap_matrices[axis], 1), 3)
+    product_overlap = _pqs_raw_product_box_mode_matrix(
+        raw_plan.source_mode_indices,
+        axis_overlap_matrices,
+    )
+    source_mode_count = size(product_overlap, 1)
+    max_product_overlap_error = LinearAlgebra.norm(
+        product_overlap -
+        Matrix{Float64}(LinearAlgebra.I, source_mode_count, source_mode_count),
+        Inf,
+    )
+    boundary_overlap = _pqs_raw_product_box_selected_mode_matrix(
+        raw_plan,
+        axis_overlap_matrices,
+    )
+    retained_count = size(boundary_overlap, 1)
+    selected_overlap_error = LinearAlgebra.norm(
+        boundary_overlap -
+        Matrix{Float64}(LinearAlgebra.I, retained_count, retained_count),
+        Inf,
+    )
+    return (
+        axis_overlap_errors = axis_overlap_errors,
+        max_1d_source_overlap_error = maximum(axis_overlap_errors),
+        max_product_overlap_error = max_product_overlap_error,
+        selected_overlap_error = selected_overlap_error,
+        overlap_identity_error = selected_overlap_error,
+    )
+end
+
+function _pqs_product_box_one_dimensional_operator_factors(
+    raw_plan,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> (
+        overlap = _pqs_raw_product_box_axis_operator(
+            raw_plan,
+            metrics,
+            axis,
+            :overlap,
+        ),
+        position = _pqs_raw_product_box_axis_operator(
+            raw_plan,
+            metrics,
+            axis,
+            :position,
+        ),
+        x2 = _pqs_raw_product_box_axis_operator(
+            raw_plan,
+            metrics,
+            axis,
+            :x2,
+        ),
+        kinetic = _pqs_raw_product_box_axis_operator(
+            raw_plan,
+            metrics,
+            axis,
+            :kinetic,
+        ),
+    ), 3)
+end
+
+function _pqs_raw_product_box_axis_operator(
+    raw_plan,
+    metrics::NamedTuple{(:x,:y,:z)},
+    axis::Int,
+    kind::Symbol,
+)
+    return _pqs_raw_product_box_axis_operator(
+        raw_plan,
+        getproperty(metrics, (:x, :y, :z)[axis]),
+        axis,
+        kind,
+    )
+end
+
+function _pqs_raw_product_box_axis_operator(
+    raw_plan,
+    axis_data,
+    axis::Int,
+    kind::Symbol,
+)
+    axis_name = (:x, :y, :z)[axis]
+    hasproperty(axis_data, kind) || throw(
+        ArgumentError("PQS raw product-box axis $(axis_name) metric data is missing $(kind)"),
+    )
+    axis_operator = Matrix{Float64}(getproperty(axis_data, kind))
+    interval = raw_plan.axis_intervals[axis]
+    first(interval) >= 1 && last(interval) <= size(axis_operator, 1) || throw(
+        ArgumentError("PQS raw product-box axis $(axis_name) interval exceeds $(kind) matrix"),
+    )
+    coefficients = Matrix{Float64}(raw_plan.axis_local_coefficients[axis])
+    size(coefficients, 1) == length(interval) || throw(
+        DimensionMismatch("PQS raw product-box axis $(axis_name) coefficients must match interval length"),
+    )
+    size(coefficients, 2) >= 1 || throw(
+        ArgumentError("PQS raw product-box axis $(axis_name) must retain at least one source mode"),
+    )
+    @views return Matrix{Float64}(
+        transpose(coefficients) * axis_operator[interval, interval] * coefficients,
+    )
+end
+
+function _pqs_product_box_support_overlap_matrix(
+    support_states::AbstractVector{<:NTuple{3,Int}},
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    overlap_x = metrics.x.overlap
+    overlap_y = metrics.y.overlap
+    overlap_z = metrics.z.overlap
+    support_count = length(support_states)
+    overlap = Matrix{Float64}(undef, support_count, support_count)
+    @inbounds for col in 1:support_count
+        jx, jy, jz = support_states[col]
+        for row in 1:support_count
+            ix, iy, iz = support_states[row]
+            overlap[row, col] =
+                overlap_x[ix, jx] *
+                overlap_y[iy, jy] *
+                overlap_z[iz, jz]
+        end
+    end
+    return overlap
+end
+
+function _pqs_shared_raw_product_box_plan_status(
+    shared_raw_product_box_plan,
+)
+    isnothing(shared_raw_product_box_plan) &&
+        return :unavailable_descriptor_only_path_has_no_axis_bundles
+    return :available
+end
+
+function _pqs_shared_raw_product_box_plan_unavailable_reason(
+    shared_raw_product_box_plan,
+)
+    isnothing(shared_raw_product_box_plan) &&
+        return :descriptor_only_path_has_no_axis_bundles
+    return nothing
+end
+
+function _pqs_validated_shared_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    shared_raw_product_box_plan,
+)
+    isnothing(shared_raw_product_box_plan) && return nothing
+    shared_raw_product_box_plan.object_kind == :cartesian_raw_product_box_plan_3d ||
+        throw(ArgumentError("PQS raw plan requires a cartesian_raw_product_box_plan_3d"))
+    source_mode_dims = ntuple(
+        axis -> size(descriptor.axis_local_coefficients[axis], 2),
+        3,
+    )
+    shared_raw_product_box_plan.axis_intervals == descriptor.axis_intervals ||
+        throw(DimensionMismatch("shared raw product-box plan axis intervals must match PQS descriptor"))
+    shared_raw_product_box_plan.source_mode_dims == source_mode_dims || throw(
+        DimensionMismatch("shared raw product-box plan source dimensions must match PQS descriptor"),
+    )
+    shared_raw_product_box_plan.source_mode_count == prod(source_mode_dims) || throw(
+        DimensionMismatch("shared raw product-box plan source mode count must match dimensions"),
+    )
+    length(shared_raw_product_box_plan.source_mode_indices) ==
+        shared_raw_product_box_plan.source_mode_count || throw(
+            DimensionMismatch("shared raw product-box plan source mode ordering length is inconsistent"),
+        )
+    all(axis -> size(shared_raw_product_box_plan.axis_local_coefficients[axis]) ==
+                size(descriptor.axis_local_coefficients[axis]), 1:3) ||
+        throw(DimensionMismatch("shared raw product-box plan coefficient shapes must match PQS descriptor"))
+    all(axis -> isapprox(
+        shared_raw_product_box_plan.axis_local_coefficients[axis],
+        descriptor.axis_local_coefficients[axis];
+        atol = 1.0e-10,
+        rtol = 1.0e-10,
+    ), 1:3) || throw(
+        ArgumentError("shared raw product-box plan coefficients disagree with PQS descriptor"),
+    )
+    return shared_raw_product_box_plan
+end
+
+function _pqs_raw_product_box_structural_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    shared_raw_product_box_plan = nothing,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("PQS raw product-box plan requires a projected_q_shell descriptor"),
+    )
+    shared_plan =
+        _pqs_validated_shared_raw_product_box_plan(descriptor, shared_raw_product_box_plan)
+    source_mode_dims = isnothing(shared_plan) ?
+                       ntuple(axis -> size(descriptor.axis_local_coefficients[axis], 2), 3) :
+                       shared_plan.source_mode_dims
+    for mode in descriptor.boundary_mode_indices
+        all(axis -> 1 <= mode[axis] <= source_mode_dims[axis], 1:3) || throw(
+            ArgumentError("PQS raw product-box boundary mode index exceeds source-mode dimensions"),
+        )
+    end
+    boundary_selector = (
+        mode_indices = descriptor.boundary_mode_indices,
+        column_indices = descriptor.boundary_column_indices,
+        selection_rule = descriptor.selection_rule,
+        selected_count = descriptor.mode_count,
+        preserves_orthogonality = true,
+    )
+    return (
+        path = :pqs_raw_product_box_plan,
+        representation = :orthogonal_raw_product_box,
+        source_mode_dims = source_mode_dims,
+        source_mode_count = isnothing(shared_plan) ? prod(source_mode_dims) : shared_plan.source_mode_count,
+        axis_intervals = isnothing(shared_plan) ? descriptor.axis_intervals : shared_plan.axis_intervals,
+        axis_local_coefficients =
+            isnothing(shared_plan) ? descriptor.axis_local_coefficients : shared_plan.axis_local_coefficients,
+        source_mode_indices = isnothing(shared_plan) ?
+                              _pqs_raw_product_box_source_mode_indices(source_mode_dims) :
+                              shared_plan.source_mode_indices,
+        source_mode_ordering = isnothing(shared_plan) ?
+                               :x_major_y_major_z_fast :
+                               shared_plan.source_mode_ordering,
+        shared_raw_product_box_plan = shared_plan,
+        shared_raw_product_box_plan_available = !isnothing(shared_plan),
+        shared_raw_product_box_plan_used = !isnothing(shared_plan),
+        boundary_selector = boundary_selector,
+        one_dimensional_operator_factors = nothing,
+        operator_factors_available = false,
+        axis_overlap_errors = nothing,
+        max_1d_source_overlap_error = nothing,
+        max_product_overlap_error = nothing,
+        selected_overlap_error = nothing,
+        overlap_identity_error = nothing,
+        source_product_modes_orthogonal = nothing,
+        row_projected_shell_support = false,
+        lowdin_cleanup_used = false,
+        diagnostics = (
+            source = :pqs_raw_product_box_structural_plan,
+            private_shadow_only = true,
+            pqs_representation = :mode_selected_raw_product_box,
+            source_mode_dims_are_total_lengths = true,
+            source_mode_ordering = :x_major_y_major_z_fast,
+            shared_raw_product_box_plan_available = !isnothing(shared_plan),
+            shared_raw_product_box_plan_used = !isnothing(shared_plan),
+            shared_raw_product_box_plan_status =
+                _pqs_shared_raw_product_box_plan_status(shared_plan),
+            shared_raw_product_box_plan_unavailable_reason =
+                _pqs_shared_raw_product_box_plan_unavailable_reason(shared_plan),
+            boundary_column_selection_only = true,
+            raw_product_box_operators_use_1d_factors = false,
+            operator_factors_available = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+        ),
+    )
+end
+
+function _pqs_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+)
+    return _pqs_raw_product_box_structural_plan(descriptor)
+end
+
+function _pqs_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    shared_raw_product_box_plan,
+)
+    return _pqs_raw_product_box_structural_plan(
+        descriptor,
+        shared_raw_product_box_plan,
+    )
+end
+
+function _pqs_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    orthogonality_atol::Real = 1.0e-8,
+    shared_raw_product_box_plan = nothing,
+)
+    structural_plan = _pqs_raw_product_box_structural_plan(
+        descriptor,
+        shared_raw_product_box_plan,
+    )
+    one_dimensional_operator_factors =
+        _pqs_product_box_one_dimensional_operator_factors(structural_plan, metrics)
+    overlap_diagnostics = _pqs_raw_product_box_overlap_diagnostics(
+        structural_plan,
+        metrics,
+    )
+    source_product_modes_orthogonal =
+        overlap_diagnostics.max_1d_source_overlap_error <= orthogonality_atol &&
+        overlap_diagnostics.max_product_overlap_error <= orthogonality_atol &&
+        overlap_diagnostics.selected_overlap_error <= orthogonality_atol
+    return merge(
+        structural_plan,
+        (
+            one_dimensional_operator_factors = (
+                x = one_dimensional_operator_factors[1],
+                y = one_dimensional_operator_factors[2],
+                z = one_dimensional_operator_factors[3],
+            ),
+            operator_factors_available = true,
+            axis_overlap_errors = overlap_diagnostics.axis_overlap_errors,
+            max_1d_source_overlap_error =
+                overlap_diagnostics.max_1d_source_overlap_error,
+            max_product_overlap_error =
+                overlap_diagnostics.max_product_overlap_error,
+            selected_overlap_error = overlap_diagnostics.selected_overlap_error,
+            overlap_identity_error = overlap_diagnostics.overlap_identity_error,
+            source_product_modes_orthogonal = source_product_modes_orthogonal,
+            diagnostics = merge(
+                structural_plan.diagnostics,
+                (
+                    source = :pqs_raw_product_box_plan,
+                    raw_product_box_operators_use_1d_factors = true,
+                    operator_factors_available = true,
+                    operator_factor_source = :explicit_axis_metric_data,
+                    operator_metric_sources =
+                        _cartesian_source_box_metric_sources(metrics),
+                    raw_product_box_integration_contract =
+                        isnothing(structural_plan.shared_raw_product_box_plan) ?
+                        :unavailable_descriptor_only_path :
+                        structural_plan.shared_raw_product_box_plan.diagnostics.integration_contract,
+                    raw_product_box_numerical_reference_fallback =
+                        isnothing(structural_plan.shared_raw_product_box_plan) ?
+                        nothing :
+                        structural_plan.shared_raw_product_box_plan.diagnostics.numerical_reference_fallback,
+                    source_product_modes_orthogonal =
+                        source_product_modes_orthogonal,
+                    max_1d_source_overlap_error =
+                        overlap_diagnostics.max_1d_source_overlap_error,
+                    max_product_overlap_error =
+                        overlap_diagnostics.max_product_overlap_error,
+                    selected_overlap_error =
+                        overlap_diagnostics.selected_overlap_error,
+                ),
+            ),
+        ),
+    )
+end
+
+function _pqs_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    shared_raw_product_box_plan,
+    metrics::NamedTuple{(:x,:y,:z)};
+    orthogonality_atol::Real = 1.0e-8,
+)
+    return _pqs_raw_product_box_plan(
+        descriptor,
+        metrics;
+        orthogonality_atol,
+        shared_raw_product_box_plan,
+    )
+end
+
+function _pqs_shell_realization_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    isometry_atol::Real = 1.0e-8,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("PQS shell-realization plan requires a projected_q_shell descriptor"),
+    )
+    shell_projection_matrix =
+        _nested_projected_q_shell_descriptor_seed_coefficients(descriptor)
+    size(shell_projection_matrix) == (descriptor.support_count, descriptor.mode_count) ||
+        throw(
+            DimensionMismatch("PQS shell projection matrix must map selected product-box modes to shell support rows"),
+        )
+    lowdin_cleanup = Matrix{Float64}(descriptor.cleanup_transform)
+    size(lowdin_cleanup) == (descriptor.mode_count, descriptor.retained_count) ||
+        throw(
+            DimensionMismatch("PQS shell realization Lowdin cleanup dimensions must match selected/retained counts"),
+        )
+    shell_overlap_matrix = _pqs_product_box_support_overlap_matrix(
+        descriptor.support_states,
+        metrics,
+    )
+    shell_projection_gram =
+        transpose(shell_projection_matrix) * shell_overlap_matrix * shell_projection_matrix
+    shell_isometry_matrix = shell_projection_matrix * lowdin_cleanup
+    realized_overlap =
+        transpose(shell_isometry_matrix) * shell_overlap_matrix * shell_isometry_matrix
+    isometry_error = LinearAlgebra.norm(
+        realized_overlap -
+        Matrix{Float64}(
+            LinearAlgebra.I,
+            descriptor.retained_count,
+            descriptor.retained_count,
+        ),
+        Inf,
+    )
+    isfinite(isometry_error) || throw(
+        ArgumentError("PQS shell-realization plan produced a non-finite isometry error"),
+    )
+    return (
+        path = :pqs_shell_realization_plan,
+        representation = :shell_projection_lowdin_isometry,
+        shell_projection_used = true,
+        lowdin_cleanup_used = true,
+        shell_projection_matrix = shell_projection_matrix,
+        shell_projection_gram = shell_projection_gram,
+        lowdin_cleanup = lowdin_cleanup,
+        cleanup_method = descriptor.cleanup_method,
+        cleanup_matrix_size = descriptor.cleanup_matrix_size,
+        shell_isometry_matrix = shell_isometry_matrix,
+        realized_overlap = realized_overlap,
+        isometry_error = isometry_error,
+        isometric = isometry_error <= isometry_atol,
+        diagnostics = (
+            source = :pqs_shell_realization_plan,
+            private_shadow_only = true,
+            shell_projection_used = true,
+            lowdin_cleanup_used = true,
+            shell_projection_realization_requires_lowdin = true,
+            shell_projection_realization_isometric =
+                isometry_error <= isometry_atol,
+            raw_product_box_operators_use_1d_factors = false,
+            packet_adoption = false,
+        ),
+    )
+end
+
+function _pqs_product_box_realization_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    orthogonality_atol::Real = 1.0e-8,
+    isometry_atol::Real = 1.0e-8,
+    shared_raw_product_box_plan = nothing,
+)
+    raw_plan = _pqs_raw_product_box_plan(
+        descriptor,
+        metrics;
+        orthogonality_atol = orthogonality_atol,
+        shared_raw_product_box_plan = shared_raw_product_box_plan,
+    )
+    shell_plan = _pqs_shell_realization_plan(
+        descriptor,
+        metrics;
+        isometry_atol = isometry_atol,
+    )
+    return (
+        raw_product_box_plan = raw_plan,
+        source_box_plan = raw_plan,
+        boundary_selector = raw_plan.boundary_selector,
+        one_dimensional_operator_factors = raw_plan.one_dimensional_operator_factors,
+        shell_realization_plan = shell_plan,
+        shell_projection_matrix = shell_plan.shell_projection_matrix,
+        lowdin_cleanup = shell_plan.lowdin_cleanup,
+        isometry_error = shell_plan.isometry_error,
+        diagnostics = (
+            source = :pqs_product_box_realization_plan,
+            private_shadow_only = true,
+            raw_product_box_stage_lowdin_cleanup_used = false,
+            raw_product_box_operators_use_1d_factors = true,
+            shell_projection_used_for_raw_box_operators = false,
+            shell_projection_realization_available = true,
+            shell_projection_realization_requires_lowdin = true,
+            shell_projection_realization_isometric =
+                shell_plan.isometry_error <= isometry_atol,
+            retained_functions_live_in_product_box_mode_span = true,
+            shell_realized_functions_live_in_shell_row_support_subspace = true,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_sidecar_installation = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+end
+
+function _pqs_raw_product_box_plan_view(pqs_plan)
+    if hasproperty(pqs_plan, :representation) &&
+       pqs_plan.representation == :orthogonal_raw_product_box
+        return pqs_plan
+    elseif hasproperty(pqs_plan, :raw_product_box_plan)
+        return pqs_plan.raw_product_box_plan
+    elseif hasproperty(pqs_plan, :source_box_plan)
+        return pqs_plan.source_box_plan
+    end
+    throw(ArgumentError("expected a PQS raw product-box plan"))
+end
+
+function _pqs_product_source_box_axis_cross_factor(
+    pqs_plan,
+    product_axis,
+    metrics::NamedTuple{(:x,:y,:z)},
+    axis::Int,
+    kind::Symbol,
+)
+    raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
+    pqs_interval = raw_plan.axis_intervals[axis]
+    product_interval = _staged_axis_interval(product_axis)
+    axis_data = getproperty(metrics, (:x, :y, :z)[axis])
+    hasproperty(axis_data, kind) || throw(
+        ArgumentError("PQS/product source-box axis $(axis) is missing $(kind)"),
+    )
+    axis_operator = Matrix{Float64}(getproperty(axis_data, kind))
+    size(axis_operator, 1) == size(axis_operator, 2) || throw(
+        ArgumentError("PQS/product source-box axis $(axis) $(kind) matrix must be square"),
+    )
+    first(pqs_interval) >= 1 && last(pqs_interval) <= size(axis_operator, 1) ||
+        throw(
+            ArgumentError("PQS/product source-box PQS interval exceeds axis $(axis) $(kind) matrix"),
+        )
+    first(product_interval) >= 1 &&
+        last(product_interval) <= size(axis_operator, 2) ||
+        throw(
+            ArgumentError("PQS/product source-box product interval exceeds axis $(axis) $(kind) matrix"),
+        )
+    pqs_coefficients =
+        Matrix{Float64}(raw_plan.axis_local_coefficients[axis])
+    product_coefficients = Matrix{Float64}(product_axis.coefficient_matrix)
+    size(pqs_coefficients, 1) == length(pqs_interval) || throw(
+        DimensionMismatch("PQS/product source-box PQS axis coefficients must match interval length"),
+    )
+    size(product_coefficients, 1) == length(product_interval) || throw(
+        DimensionMismatch("PQS/product source-box product axis coefficients must match interval length"),
+    )
+    @views return Matrix{Float64}(
+        transpose(pqs_coefficients) *
+        axis_operator[pqs_interval, product_interval] *
+        product_coefficients,
+    )
+end
+
+function _pqs_product_source_box_cross_factors(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> (
+        overlap = _pqs_product_source_box_axis_cross_factor(
+            pqs_plan,
+            product_unit.axes[axis],
+            metrics,
+            axis,
+            :overlap,
+        ),
+        position = _pqs_product_source_box_axis_cross_factor(
+            pqs_plan,
+            product_unit.axes[axis],
+            metrics,
+            axis,
+            :position,
+        ),
+        x2 = _pqs_product_source_box_axis_cross_factor(
+            pqs_plan,
+            product_unit.axes[axis],
+            metrics,
+            axis,
+            :x2,
+        ),
+        kinetic = _pqs_product_source_box_axis_cross_factor(
+            pqs_plan,
+            product_unit.axes[axis],
+            metrics,
+            axis,
+            :kinetic,
+        ),
+    ), 3)
+end
+
+function _pqs_product_source_box_pair_plan(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+)
+    raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
+    raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(
+            ArgumentError("PQS/product source-box pair plan requires a raw product-box PQS plan"),
+        )
+    product_unit.kind == :product_doside || throw(
+        ArgumentError("PQS/product source-box pair plan requires a product_doside unit"),
+    )
+    product_retained_unit_plan =
+        _product_doside_retained_unit_plan(product_unit)
+    cross_factors =
+        _pqs_product_source_box_cross_factors(raw_plan, product_unit, metrics)
+    product_axis_intervals = product_retained_unit_plan.source_axis_intervals
+    product_axis_source_lengths = product_retained_unit_plan.source_axis_lengths
+    pqs_axis_centers = ntuple(axis -> begin
+        interval = raw_plan.axis_intervals[axis]
+        Float64.(getproperty(getproperty(metrics, (:x, :y, :z)[axis]), :centers)[interval])
+    end, 3)
+    product_axis_centers = ntuple(axis -> begin
+        interval = product_axis_intervals[axis]
+        Float64.(getproperty(getproperty(metrics, (:x, :y, :z)[axis]), :centers)[interval])
+    end, 3)
+    return (
+        pair_kind = :pqs_product_source_box,
+        left_source_family = :mode_selected_raw_product_box,
+        right_source_family = :product_doside,
+        left_source_dimensions = raw_plan.source_mode_dims,
+        right_source_dimensions = product_axis_source_lengths,
+        left_source_dimension = raw_plan.source_mode_count,
+        right_source_dimension = prod(product_axis_source_lengths),
+        left_retained_count = raw_plan.boundary_selector.selected_count,
+        right_retained_count = product_retained_unit_plan.retained_count,
+        axis_intervals = (
+            pqs = raw_plan.axis_intervals,
+            product = product_axis_intervals,
+        ),
+        axis_centers = (
+            pqs = pqs_axis_centers,
+            product = product_axis_centers,
+        ),
+        pqs_boundary_mode_selector = raw_plan.boundary_selector,
+        product_retained_unit_plan = product_retained_unit_plan,
+        product_retained_transform = product_retained_unit_plan,
+        one_dimensional_cross_factors = (
+            x = cross_factors[1],
+            y = cross_factors[2],
+            z = cross_factors[3],
+        ),
+        supported_terms = (
+            :overlap,
+            :position_x,
+            :position_y,
+            :position_z,
+            :x2_x,
+            :x2_y,
+            :x2_z,
+            :kinetic,
+        ),
+        diagnostics = (
+            source = :pqs_product_source_box_pair_plan,
+            private_shadow_only = true,
+            pqs_representation = :mode_selected_raw_product_box,
+            raw_product_box_plan_used = true,
+            pqs_raw_product_box_plan_used = true,
+            shared_raw_product_box_plan_available =
+                raw_plan.shared_raw_product_box_plan_available,
+            shared_raw_product_box_plan_used =
+                raw_plan.shared_raw_product_box_plan_used,
+            source_mode_ordering = raw_plan.source_mode_ordering,
+            pqs_boundary_mode_selection_used = true,
+            product_doside_retained_transform_used = true,
+            product_doside_retained_unit_plan_used = true,
+            raw_product_box_operators_use_1d_factors = true,
+            operator_factor_source = :explicit_axis_metric_data,
+            operator_metric_sources =
+                _cartesian_source_box_metric_sources(metrics),
+            raw_product_box_numerical_reference_fallback =
+                hasproperty(raw_plan.diagnostics, :raw_product_box_numerical_reference_fallback) ?
+                raw_plan.diagnostics.raw_product_box_numerical_reference_fallback :
+                nothing,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+end
+
+function _source_box_separable_term_factor_kinds(term::Symbol)
+    term == :overlap && return ((:overlap, :overlap, :overlap),)
+    term == :position_x && return ((:position, :overlap, :overlap),)
+    term == :position_y && return ((:overlap, :position, :overlap),)
+    term == :position_z && return ((:overlap, :overlap, :position),)
+    term == :x2_x && return ((:x2, :overlap, :overlap),)
+    term == :x2_y && return ((:overlap, :x2, :overlap),)
+    term == :x2_z && return ((:overlap, :overlap, :x2),)
+    term == :kinetic && return (
+        (:kinetic, :overlap, :overlap),
+        (:overlap, :kinetic, :overlap),
+        (:overlap, :overlap, :kinetic),
+    )
+    throw(
+        ArgumentError("source-box separable reference block received unsupported term $(term)"),
+    )
+end
+
+function _pqs_product_source_box_factor(
+    pair_plan,
+    axis::Int,
+    kind::Symbol,
+)
+    axis_factors = getproperty(pair_plan.one_dimensional_cross_factors, (:x, :y, :z)[axis])
+    return getproperty(axis_factors, kind)
+end
+
+function _pqs_product_source_box_block_from_factors(pair_plan, term::Symbol)
+    factor_terms = _source_box_separable_term_factor_kinds(term)
+    block = zeros(
+        Float64,
+        pair_plan.left_retained_count,
+        pair_plan.right_retained_count,
+    )
+    pqs_modes = pair_plan.pqs_boundary_mode_selector.mode_indices
+    product_modes = pair_plan.product_retained_transform.axis_function_indices
+    @inbounds for factor_kinds in factor_terms
+        fx = _pqs_product_source_box_factor(pair_plan, 1, factor_kinds[1])
+        fy = _pqs_product_source_box_factor(pair_plan, 2, factor_kinds[2])
+        fz = _pqs_product_source_box_factor(pair_plan, 3, factor_kinds[3])
+        for col in eachindex(product_modes)
+            px, py, pz = product_modes[col]
+            for row in eachindex(pqs_modes)
+                qx, qy, qz = pqs_modes[row]
+                block[row, col] += fx[qx, px] * fy[qy, py] * fz[qz, pz]
+            end
+        end
+    end
+    return block
+end
+
+function _pqs_product_source_box_reference_block(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+)
+    pair_plan = _pqs_product_source_box_pair_plan(pqs_plan, product_unit, metrics)
+    term in pair_plan.supported_terms || throw(
+        ArgumentError("PQS/product source-box reference block received unsupported term $(term)"),
+    )
+    block = _pqs_product_source_box_block_from_factors(pair_plan, term)
+    all(isfinite, block) || throw(
+        ArgumentError("PQS/product source-box reference block produced non-finite entries"),
+    )
+    return (
+        path = :pqs_product_source_box_reference,
+        term = term,
+        block = block,
+        pair_plan = pair_plan,
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :pqs_product_source_box_reference_block,
+                supported_terms = pair_plan.supported_terms,
+                unsupported_terms = (
+                    :weights,
+                    :first_moments,
+                    :nuclear_one_body,
+                    :local_coulomb_one_body,
+                    :local_ecp_one_body,
+                    :gaussian_local_terms,
+                    :gaussian_sum,
+                    :pair_sum,
+                    :mwg_interaction,
+                    :interaction,
+                ),
+                kinetic_factor_form = (
+                    (:kinetic, :overlap, :overlap),
+                    (:overlap, :kinetic, :overlap),
+                    (:overlap, :overlap, :kinetic),
+                ),
+            ),
+        ),
+    )
+end
+
+const _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS = (
+    :overlap,
+    :position_x,
+    :position_y,
+    :position_z,
+    :x2_x,
+    :x2_y,
+    :x2_z,
+    :kinetic,
+)
+
+function _pqs_product_source_box_product_block(
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term == :kinetic && return _product_doside_retained_kinetic_block(
+        product_unit,
+        product_unit,
+        metrics,
+    )
+    return _product_doside_retained_low_order_block(
+        product_unit,
+        product_unit,
+        metrics;
+        term,
+    )
+end
+
+function _pqs_product_source_box_shadow_blocks(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
+    raw_plan.representation == :orthogonal_raw_product_box ||
+        throw(
+            ArgumentError("PQS/product source-box shadow requires a raw product-box PQS plan"),
+        )
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS/product source-box shadow requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS || throw(
+            ArgumentError("PQS/product source-box shadow received unsupported term $(term)"),
+        )
+    end
+    product_unit.kind == :product_doside || throw(
+        ArgumentError("PQS/product source-box shadow requires a product_doside unit"),
+    )
+    _require_product_doside_retained_block_unit(product_unit; side = :right)
+
+    pqs_count = raw_plan.boundary_selector.selected_count
+    product_count = length(product_unit.column_range)
+    pqs_range = 1:pqs_count
+    product_range = (pqs_count + 1):(pqs_count + product_count)
+    retained_dimension = pqs_count + product_count
+    blocks = Dict{Symbol,Matrix{Float64}}()
+    component_blocks = Dict{Symbol,NamedTuple}()
+    for term in selected_terms
+        pqs_self =
+            _pqs_raw_product_box_reference_block(raw_plan; term).block
+        pqs_product =
+            _pqs_product_source_box_reference_block(
+                pqs_plan,
+                product_unit,
+                metrics;
+                term,
+            ).block
+        product_self =
+            _pqs_product_source_box_product_block(product_unit, metrics, term)
+        block = zeros(Float64, retained_dimension, retained_dimension)
+        block[pqs_range, pqs_range] .= pqs_self
+        block[pqs_range, product_range] .= pqs_product
+        block[product_range, pqs_range] .= transpose(pqs_product)
+        block[product_range, product_range] .= product_self
+        all(isfinite, block) || throw(
+            ArgumentError("PQS/product source-box shadow produced non-finite entries"),
+        )
+        blocks[term] = block
+        component_blocks[term] = (
+            pqs_pqs = pqs_self,
+            pqs_product = pqs_product,
+            product_pqs = transpose(pqs_product),
+            product_product = product_self,
+        )
+    end
+    return (
+        path = :pqs_product_source_box_shadow_blocks,
+        blocks = blocks,
+        component_blocks = component_blocks,
+        terms = selected_terms,
+        ranges = (pqs = pqs_range, product = product_range),
+        retained_dimension = retained_dimension,
+        diagnostics = (
+            source = :pqs_product_source_box_shadow_blocks,
+            raw_plan_first_path = true,
+            descriptor_wrapper = false,
+            source_box_shadow_only = true,
+            private_shadow_only = true,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            pqs_representation = :mode_selected_raw_product_box,
+            shared_raw_product_box_plan_available =
+                raw_plan.shared_raw_product_box_plan_available,
+            shared_raw_product_box_plan_used =
+                raw_plan.shared_raw_product_box_plan_used,
+            source_mode_ordering = raw_plan.source_mode_ordering,
+            product_doside_retained_transform_used = true,
+            pqs_pqs_block_source = :pqs_raw_product_box_reference_block,
+            pqs_product_block_source = :pqs_product_source_box_reference_block,
+            product_product_block_source = :product_doside_retained_block_helpers,
+            reverse_pqs_product_transpose_only = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            ida_weight_division_allowed = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+            supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+            unsupported_terms = (
+                :weights,
+                :first_moments,
+                :nuclear_one_body,
+                :local_coulomb_one_body,
+                :local_ecp_one_body,
+                :gaussian_local_terms,
+                :gaussian_sum,
+                :pair_sum,
+                :mwg_interaction,
+                :interaction,
+            ),
+        ),
+    )
+end
+
+function _pqs_product_source_box_shadow_blocks(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("PQS/product source-box shadow requires a projected_q_shell descriptor"),
+    )
+    raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
+    raw_plan.boundary_selector.selected_count == descriptor.mode_count || throw(
+        DimensionMismatch("PQS/product source-box shadow PQS plan count must match descriptor mode count"),
+    )
+    raw_plan.boundary_selector.mode_indices == descriptor.boundary_mode_indices || throw(
+        ArgumentError("PQS/product source-box shadow raw plan boundary modes disagree with descriptor"),
+    )
+    raw_plan.boundary_selector.column_indices == descriptor.boundary_column_indices || throw(
+        ArgumentError("PQS/product source-box shadow raw plan boundary columns disagree with descriptor"),
+    )
+    raw_plan.source_mode_dims ==
+        ntuple(axis -> size(descriptor.axis_local_coefficients[axis], 2), 3) ||
+        throw(
+            DimensionMismatch("PQS/product source-box shadow raw plan source-mode dimensions disagree with descriptor"),
+        )
+    return _pqs_product_source_box_shadow_blocks(
+        pqs_plan,
+        product_unit,
+        metrics;
+        terms = terms,
+    )
+end
+
+function _pqs_raw_product_box_reference_block(
+    raw_product_box_plan;
+    term::Symbol,
+)
+    raw_plan = _pqs_raw_product_box_plan_view(raw_product_box_plan)
+    term in (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    ) || throw(
+        ArgumentError("PQS raw product-box reference block received unsupported term $(term)"),
+    )
+    raw_plan.operator_factors_available || throw(
+        ArgumentError("PQS raw product-box reference block requires an operator-backed raw plan"),
+    )
+    raw_plan.source_product_modes_orthogonal === true || throw(
+        ArgumentError("PQS raw product-box source modes are not orthogonal within tolerance"),
+    )
+    block = term == :kinetic ?
+            _pqs_raw_product_box_kinetic_mode_matrix(raw_plan) :
+            _pqs_raw_product_box_low_order_mode_matrix(raw_plan; term)
+    all(isfinite, block) || throw(
+        ArgumentError("PQS raw product-box reference block produced non-finite entries"),
+    )
+    return (
+        path = :pqs_mode_selected_raw_product_box_reference,
+        term = term,
+        block = block,
+        raw_product_box_plan = raw_plan,
+        diagnostics = (
+            source = :pqs_raw_product_box_reference_block,
+            pqs_representation = :mode_selected_raw_product_box,
+            private_shadow_only = true,
+            production_supported = false,
+            row_projected_shell_support = false,
+            shell_row_projection_used = false,
+            lowdin_cleanup_used = false,
+            raw_product_box_stage_lowdin_cleanup_used = false,
+            shell_projection_realization_stage = :postponed,
+            shell_projection_realization_applied = false,
+            shell_projection_realization_requires_lowdin = true,
+            lowdin_cleanup_scope = :shell_projection_realization_stage_only,
+            descriptor_cleanup_transform_ignored = true,
+            source_product_modes_orthogonal = raw_plan.source_product_modes_orthogonal,
+            operator_factor_source = :pqs_raw_product_box_plan,
+            operator_metric_sources =
+                hasproperty(raw_plan.diagnostics, :operator_metric_sources) ?
+                raw_plan.diagnostics.operator_metric_sources :
+                (:unspecified, :unspecified, :unspecified),
+            raw_product_box_integration_contract =
+                hasproperty(raw_plan.diagnostics, :raw_product_box_integration_contract) ?
+                raw_plan.diagnostics.raw_product_box_integration_contract :
+                :unknown,
+            raw_product_box_numerical_reference_fallback =
+                hasproperty(raw_plan.diagnostics, :raw_product_box_numerical_reference_fallback) ?
+                raw_plan.diagnostics.raw_product_box_numerical_reference_fallback :
+                nothing,
+            axis_overlap_errors = raw_plan.axis_overlap_errors,
+            max_1d_source_overlap_error = raw_plan.max_1d_source_overlap_error,
+            max_product_overlap_error = raw_plan.max_product_overlap_error,
+            selected_overlap_error = raw_plan.selected_overlap_error,
+            overlap_identity_error = raw_plan.overlap_identity_error,
+            boundary_selection_preserves_orthogonality = true,
+            product_box_column_selection_reference = true,
+            boundary_column_selection_only = true,
+            boundary_mode_selection_rule =
+                raw_plan.boundary_selector.selection_rule,
+            source_mode_dims = raw_plan.source_mode_dims,
+            boundary_mode_count = raw_plan.boundary_selector.selected_count,
+            retained_count = raw_plan.boundary_selector.selected_count,
+            retained_functions_live_in_product_box_mode_span = true,
+            retained_functions_live_in_shell_row_support_subspace = false,
+            retained_columns_have_full_product_box_support = true,
+            support_coefficient_matrix_oracle_used = false,
+            shell_row_support_oracle_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_sidecar_installation = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
+            supported_terms = (
+                :overlap,
+                :position_x,
+                :position_y,
+                :position_z,
+                :x2_x,
+                :x2_y,
+                :x2_z,
+                :kinetic,
+            ),
+            unsupported_terms = (
+                :weights,
+                :first_moments,
+                :nuclear_one_body,
+                :local_coulomb_one_body,
+                :local_ecp_one_body,
+                :gaussian_local_terms,
+                :gaussian_sum,
+                :pair_sum,
+                :mwg_interaction,
+                :interaction,
+            ),
+        ),
+    )
+end
+
+function _pqs_raw_product_box_reference_block(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    raw_plan = _pqs_raw_product_box_plan(
+        descriptor,
+        metrics;
+        orthogonality_atol = orthogonality_atol,
+    )
+    return _pqs_raw_product_box_reference_block(raw_plan; term)
 end
 
 function _fallback_staged_separable_sum_block(

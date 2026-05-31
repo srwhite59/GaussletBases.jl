@@ -55,6 +55,160 @@ function _gto_probe_representation(probes)
     return representation
 end
 
+const _PQS_SOURCE_BOX_GTO_CROSS_OVERLAP_UNSUPPORTED_TERMS = (
+    :shell_projection,
+    :lowdin_cleanup,
+    :support_coefficient_matrix,
+    :retained_pqs_weights,
+    :ida_weight_division,
+)
+
+function _pqs_source_box_gto_axis_projection(
+    axis_representation::BasisRepresentation1D,
+    orbital::CartesianGaussianShellOrbitalRepresentation3D,
+    axis::Symbol,
+    interval::UnitRange{Int},
+    coefficients::AbstractMatrix{<:Real},
+)
+    axis_cross = _cartesian_basis_supplement_axis_primitive_cross(
+        axis_representation,
+        orbital,
+        axis,
+    )
+    length(interval) == size(coefficients, 1) || throw(
+        DimensionMismatch(
+            "PQS source-box GTO projection interval length $(length(interval)) does not match local coefficient row count $(size(coefficients, 1)) on axis $(axis)",
+        ),
+    )
+    first(interval) >= 1 && last(interval) <= size(axis_cross, 1) || throw(
+        BoundsError(axes(axis_cross, 1), interval),
+    )
+    return Matrix{Float64}(transpose(Matrix{Float64}(coefficients)) * axis_cross[interval, :])
+end
+
+function _pqs_source_box_gto_cross_overlap_shadow(
+    raw_product_box_plan,
+    parent_representation::CartesianBasisRepresentation3D,
+    probes;
+    provenance = :pqs_source_box_gto_cross_overlap_shadow,
+)
+    raw_product_box_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("PQS source-box GTO shadow requires a raw product-box plan"),
+    )
+    parent_representation.metadata.parent_kind == :cartesian_product_basis || throw(
+        ArgumentError(
+            "PQS source-box GTO shadow requires a Cartesian-product parent representation; got :$(parent_representation.metadata.parent_kind)",
+        ),
+    )
+    probe_representation = _gto_probe_representation(probes)
+    source_mode_dims = raw_product_box_plan.source_mode_dims
+    axis_interval_lengths =
+        ntuple(axis -> length(raw_product_box_plan.axis_intervals[axis]), 3)
+    axis_coefficient_shapes = ntuple(
+        axis -> size(raw_product_box_plan.axis_local_coefficients[axis]),
+        3,
+    )
+    boundary_mode_count =
+        length(raw_product_box_plan.boundary_selector.mode_indices)
+    gto_count = length(probe_representation.orbitals)
+    cross_overlap = zeros(Float64, boundary_mode_count, gto_count)
+    axis_names = (:x, :y, :z)
+    axis_representations = parent_representation.axis_representations
+
+    for (column, orbital) in pairs(probe_representation.orbitals)
+        axis_projections = ntuple(
+            axis -> _pqs_source_box_gto_axis_projection(
+                getproperty(axis_representations, axis_names[axis]),
+                orbital,
+                axis_names[axis],
+                raw_product_box_plan.axis_intervals[axis],
+                raw_product_box_plan.axis_local_coefficients[axis],
+            ),
+            3,
+        )
+        @inbounds for (row, mode) in pairs(raw_product_box_plan.boundary_selector.mode_indices)
+            value = 0.0
+            for primitive in eachindex(orbital.coefficients)
+                value +=
+                    Float64(orbital.coefficients[primitive]) *
+                    axis_projections[1][mode[1], primitive] *
+                    axis_projections[2][mode[2], primitive] *
+                    axis_projections[3][mode[3], primitive]
+            end
+            cross_overlap[row, column] = value
+        end
+    end
+
+    diagnostics = (
+        path = :pqs_source_box_gto_cross_overlap_shadow,
+        raw_plan_first_path = true,
+        descriptor_adapter = false,
+        private_shadow_only = true,
+        pqs_representation = :mode_selected_raw_product_box,
+        source_box_mode_span = true,
+        raw_product_box_plan_used = true,
+        shared_raw_product_box_plan_available =
+            raw_product_box_plan.shared_raw_product_box_plan_available,
+        shared_raw_product_box_plan_used =
+            raw_product_box_plan.shared_raw_product_box_plan_used,
+        source_mode_ordering = raw_product_box_plan.source_mode_ordering,
+        source_mode_dims = source_mode_dims,
+        axis_interval_lengths = axis_interval_lengths,
+        axis_coefficient_shapes = axis_coefficient_shapes,
+        boundary_mode_count = boundary_mode_count,
+        gto_count = gto_count,
+        primitive_axis_overlap_source =
+            :_cartesian_basis_supplement_axis_primitive_cross,
+        projected_1d_axis_tables_used = true,
+        product_box_column_selection_reference = true,
+        numerical_reference_fallback = false,
+        final_basis_handoff_adoption = false,
+        shell_projection_used = false,
+        lowdin_cleanup_used = false,
+        support_coefficient_matrix_used = false,
+        support_local_pqs_oracle_used = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        retained_pqs_weights_used = false,
+        retained_pqs_weights_positive_checked = false,
+        ida_weight_division_allowed = false,
+        packet_adoption = false,
+        fixed_block_routing = false,
+        qwhamiltonian_consumes = false,
+        public_default_consumes = false,
+        cr2_science_status_changed = false,
+        local_ecp_gaussian_mwg_implemented = false,
+        generic_retained_unit_framework = false,
+        unsupported_terms = _PQS_SOURCE_BOX_GTO_CROSS_OVERLAP_UNSUPPORTED_TERMS,
+        output_finite = all(isfinite, cross_overlap),
+        max_abs_cross_overlap =
+            isempty(cross_overlap) ? 0.0 : maximum(abs, cross_overlap),
+        provenance = provenance,
+    )
+    return (
+        path = :pqs_source_box_gto_cross_overlap_shadow,
+        cross_overlap = cross_overlap,
+        probe_representation = probe_representation,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_source_box_gto_cross_overlap_shadow(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    parent_representation::CartesianBasisRepresentation3D,
+    probes;
+    provenance = :pqs_source_box_gto_cross_overlap_shadow,
+)
+    raw_plan = CartesianContractedParentMetrics._pqs_raw_product_box_plan(
+        descriptor,
+    )
+    return _pqs_source_box_gto_cross_overlap_shadow(
+        raw_plan,
+        parent_representation,
+        probes;
+        provenance = provenance,
+    )
+end
+
 function _gto_block_indices(
     final_dimension::Int,
     block_indices::Nothing,

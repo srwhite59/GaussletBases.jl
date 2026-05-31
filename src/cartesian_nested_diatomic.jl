@@ -2154,6 +2154,93 @@ function _nested_projected_q_shell_source_mode_plan(
     )
 end
 
+function _nested_diatomic_source_box_dimension_plan(
+    basis,
+    bundles::_CartesianNestedAxisBundles3D,
+    boundary_box::NTuple{3,UnitRange{Int}},
+    selector_box::NTuple{3,UnitRange{Int}},
+    retention::CartesianNestedCompleteShellRetentionContract;
+    bond_axis::Symbol,
+    nside::Int,
+    selected_q::Union{Nothing,Int} = nothing,
+    shared_shell_angular_resolution_scale::Float64,
+    source_mode_padding::Int = 2,
+    support_count::Union{Nothing,Int} = nothing,
+)
+    source_mode_padding >= 0 || throw(
+        ArgumentError("diatomic source-box dimension padding must be nonnegative"),
+    )
+    adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+        basis,
+        bundles,
+        boundary_box,
+        selector_box,
+        retention;
+        nside = nside,
+        shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
+    )
+    axis_selector_retained_counts = (
+        adaptive_retention.chosen_x.retain,
+        adaptive_retention.chosen_y.retain,
+        adaptive_retention.chosen_z.retain,
+    )
+    source_mode_dims =
+        ntuple(axis -> axis_selector_retained_counts[axis] + source_mode_padding, 3)
+    physical_box_lengths = length.(boundary_box)
+    selector_box_lengths = length.(selector_box)
+    all(axis -> source_mode_dims[axis] <= physical_box_lengths[axis], 1:3) || throw(
+        ArgumentError("diatomic source-box dimensions must fit inside the physical box"),
+    )
+    bond_axis_index = _nested_axis_index(bond_axis)
+    transverse_source_dims =
+        Tuple(source_mode_dims[axis] for axis in 1:3 if axis != bond_axis_index)
+    transverse_source_dims_equal = transverse_source_dims[1] == transverse_source_dims[2]
+    raw_q = transverse_source_dims_equal ? transverse_source_dims[1] : nothing
+    raw_q_matches_selected_q =
+        !isnothing(selected_q) && transverse_source_dims_equal &&
+        transverse_source_dims[1] == selected_q
+    return (
+        dimension_policy = :diatomic_adaptive_angular_source_box,
+        source_mode_dims = source_mode_dims,
+        side_dimensions = source_mode_dims,
+        raw_source_dims = source_mode_dims,
+        source_mode_padding = source_mode_padding,
+        axis_selector_retained_counts = axis_selector_retained_counts,
+        axis_choices = (
+            x = adaptive_retention.chosen_x,
+            y = adaptive_retention.chosen_y,
+            z = adaptive_retention.chosen_z,
+        ),
+        angular_reference = adaptive_retention.reference,
+        adaptive_retention = adaptive_retention,
+        bond_axis = bond_axis,
+        bond_axis_index = bond_axis_index,
+        bond_axis_dimension = source_mode_dims[bond_axis_index],
+        raw_L = source_mode_dims[bond_axis_index],
+        selected_q = selected_q,
+        transverse_source_dims = transverse_source_dims,
+        transverse_source_dims_equal = transverse_source_dims_equal,
+        raw_q = raw_q,
+        raw_q_matches_selected_q = raw_q_matches_selected_q,
+        physical_box_lengths = physical_box_lengths,
+        selector_box_lengths = selector_box_lengths,
+        support_count = isnothing(support_count) ? prod(physical_box_lengths) : support_count,
+        total_source_dimensions_primary = true,
+        diagnostics = (
+            source = :_nested_diatomic_source_box_dimension_plan,
+            dimension_policy = :diatomic_adaptive_angular_source_box,
+            angular_spacing_policy = :shared_shell_reference_band,
+            source_mode_dims_are_total_lengths = true,
+            axis_selector_retained_counts_are_diagnostic = true,
+            source_mode_padding = source_mode_padding,
+            selected_q = selected_q,
+            transverse_source_dims_equal = transverse_source_dims_equal,
+            raw_q_matches_selected_q = raw_q_matches_selected_q,
+            public_api = false,
+        ),
+    )
+end
+
 function _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
     basis,
     bundles::_CartesianNestedAxisBundles3D,
@@ -2167,30 +2254,28 @@ function _nested_diatomic_projected_q_shell_adaptive_source_dimensions(
     isnothing(region.inner_exclusion_box) && throw(
         ArgumentError("adaptive projected q-shell source dimensions require an inner exclusion box"),
     )
-    adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+    source_box_dimension_plan = _nested_diatomic_source_box_dimension_plan(
         basis,
         bundles,
         region.box,
         region.inner_exclusion_box,
         retention;
+        bond_axis = bond_axis,
         nside = nside,
+        selected_q = selected_q,
         shared_shell_angular_resolution_scale = shared_shell_angular_resolution_scale,
-    )
-    axis_selector_retained_counts = (
-        adaptive_retention.chosen_x.retain,
-        adaptive_retention.chosen_y.retain,
-        adaptive_retention.chosen_z.retain,
-    )
-    raw_source_dims = ntuple(axis -> axis_selector_retained_counts[axis] + 2, 3)
-    plan = _nested_projected_q_shell_source_mode_plan(
-        raw_source_dims;
-        bond_axis,
-        selected_q,
-        physical_box_lengths = length.(region.box),
         support_count = length(region.support_indices),
     )
+    plan = _nested_projected_q_shell_source_mode_plan(
+        source_box_dimension_plan.source_mode_dims;
+        bond_axis,
+        selected_q,
+        physical_box_lengths = source_box_dimension_plan.physical_box_lengths,
+        support_count = source_box_dimension_plan.support_count,
+    )
     return merge((
-        adaptive_retention = adaptive_retention,
+        adaptive_retention = source_box_dimension_plan.adaptive_retention,
+        source_box_dimension_plan = source_box_dimension_plan,
     ), plan)
 end
 

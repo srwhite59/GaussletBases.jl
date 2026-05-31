@@ -654,9 +654,9 @@ function _source_build_retention_spec(build::_BondAlignedDiatomicHighOrderRecipe
         )
     elseif family == :projected_q_shell
         return (
-            retention_rule = :boundary_comx_product_modes_raw_boundary_projection,
-            cleanup_rule = :full_rank_symmetric_lowdin,
-            preferred_contraction_rule = :pqs_boundary_projection_from_filled_box,
+            retention_rule = :boundary_comx_product_mode_selection,
+            cleanup_rule = :shell_projection_lowdin,
+            preferred_contraction_rule = :shell_realized_support_local_fixture,
             expected_unit_family = :projected_q_shell_descriptor,
             metric_capability = :pqs_low_order_product_metric_prototype,
             required_payload_fields = (
@@ -673,6 +673,13 @@ function _source_build_retention_spec(build::_BondAlignedDiatomicHighOrderRecipe
                 :product_staged_metric_payload,
             ),
             payload_ready = false,
+            diagnostics = (
+                raw_box_retained_rule = :boundary_comx_product_mode_selection,
+                shell_realization_rule = :shell_projection_lowdin,
+                representation_stage = :shell_realized_support_local_fixture,
+                raw_product_box_operator_contract = false,
+                shell_projection_lowdin_realization = true,
+            ),
         )
     elseif family == :atom_local_complete_shell_sequence
         return (
@@ -741,6 +748,7 @@ function cartesian_shell_region(
         diagnostics = (
             source = :bond_aligned_diatomic_high_order_recipe_region_source_build,
             payload_ready_for_current_metric_execution = spec.payload_ready,
+            get(spec, :diagnostics, (;))...,
         ),
     )
     geometry = (
@@ -974,9 +982,9 @@ function cartesian_shell_region(
     parent_dimension::Union{Nothing,Int} = nothing,
 )
     retention = _shell_region_retention(
-        retention_rule = :boundary_comx_product_modes_raw_boundary_projection,
-        cleanup_rule = :full_rank_symmetric_lowdin,
-        preferred_contraction_rule = :pqs_boundary_projection_from_filled_box,
+        retention_rule = :boundary_comx_product_mode_selection,
+        cleanup_rule = :shell_projection_lowdin,
+        preferred_contraction_rule = :shell_realized_support_local_fixture,
         expected_unit_family = :projected_q_shell_descriptor,
         metric_capability = :pqs_low_order_product_metric_prototype,
         required_payload_fields = (
@@ -996,6 +1004,12 @@ function cartesian_shell_region(
         diagnostics = (
             source = :projected_q_shell_staged_unit_descriptor,
             payload_ready_for_current_metric_execution = false,
+            raw_box_retained_rule = :boundary_comx_product_mode_selection,
+            shell_realization_rule = :shell_projection_lowdin,
+            representation_stage = :shell_realized_support_local_fixture,
+            raw_product_box_operator_contract = false,
+            shell_projection_lowdin_realization = true,
+            raw_box_boundary_selector_transform = true,
         ),
     )
     geometry = (
@@ -1009,6 +1023,11 @@ function cartesian_shell_region(
         axis_intervals = descriptor.axis_intervals,
         boundary_mode_count = descriptor.mode_count,
         boundary_column_count = length(descriptor.boundary_column_indices),
+        raw_box_retained_rule = :boundary_comx_product_mode_selection,
+        shell_realization_rule = :shell_projection_lowdin,
+        representation_stage = :shell_realized_support_local_fixture,
+        raw_product_box_operator_contract = false,
+        shell_projection_lowdin_realization = true,
         cleanup_rank_count = descriptor.cleanup_rank_count,
         cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
     )
@@ -1234,6 +1253,11 @@ function cartesian_contraction_rule(
         boundary_mode_count = descriptor.mode_count,
         retained_count = descriptor.retained_count,
         boundary_column_count = length(descriptor.boundary_column_indices),
+        raw_box_retained_rule = :boundary_comx_product_mode_selection,
+        shell_realization_rule = :shell_projection_lowdin,
+        representation_stage = :shell_realized_support_local_fixture,
+        raw_product_box_operator_contract = false,
+        shell_projection_lowdin_realization = true,
         cleanup_rank_count = descriptor.cleanup_rank_count,
         cleanup_rank_drop_count = descriptor.cleanup_rank_drop_count,
         cleanup_cutoff = descriptor.cleanup_cutoff,
@@ -1267,8 +1291,8 @@ function cartesian_contraction_rule(
         nothing,
         full_block_dimension,
         descriptor.retained_count,
-        :boundary_comx_product_modes_raw_boundary_projection,
-        :full_rank_symmetric_lowdin,
+        :boundary_comx_product_mode_selection,
+        :shell_projection_lowdin,
         :pqs_low_order_product_metric_prototype,
         diagnostics,
         (
@@ -1856,6 +1880,10 @@ function _cartesian_raw_product_source(
         raw_source_contract = :full_local_product_block,
         raw_source_weight_role = :raw_source_positive,
         retained_transform_expected = :boundary_projection_lowdin,
+        retained_transform_expected_stage = :shell_realized_support_local_fixture,
+        raw_product_box_operator_contract = false,
+        shell_projection_lowdin_realization = true,
+        raw_box_boundary_selector_transform = false,
         operator_matrices_built = false,
         q = payload.q,
         L = payload.L,
@@ -1872,6 +1900,9 @@ function _cartesian_raw_product_source(
         :raw_source_positive,
         (
             source = :projected_q_shell_executable_payload_fixture,
+            representation_stage = :shell_realized_support_local_fixture,
+            raw_product_box_operator_contract = false,
+            shell_projection_lowdin_realization = true,
             payload = payload,
             descriptor = payload.descriptor,
         ),
@@ -1887,6 +1918,11 @@ function _cartesian_retained_transform(
         source = :projected_q_shell_retained_transform_adapter,
         fixture_only = true,
         production_supported = false,
+        representation_stage = :shell_realized_support_local_fixture,
+        support_local_fixture_adapter = true,
+        raw_product_box_operator_contract = false,
+        shell_projection_lowdin_realization = true,
+        raw_box_boundary_selector_transform = false,
         transform_contract = :factored_raw_product_to_retained,
         transform_matrix_scope = :factored_raw_product_to_retained,
         full_raw_to_retained_matrix_materialized = false,
@@ -1926,9 +1962,86 @@ function _cartesian_retained_transform(
         :debug_reference_only,
         (
             source = :projected_q_shell_executable_payload_fixture,
+            representation_stage = :shell_realized_support_local_fixture,
+            raw_product_box_operator_contract = false,
+            shell_projection_lowdin_realization = true,
             payload = payload,
             descriptor = payload.descriptor,
             cleanup_stage_matrix = payload.cleanup_transform,
+        ),
+        diagnostics,
+    )
+end
+
+function _cartesian_raw_box_pqs_retained_rule_transform(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    source_id::Symbol = :projected_q_shell_raw_product_source,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("raw-box PQS retained-rule metadata requires a projected q-shell descriptor"),
+    )
+    source_mode_dims = ntuple(
+        axis -> size(descriptor.axis_local_coefficients[axis], 2),
+        3,
+    )
+    raw_source_dimension = prod(source_mode_dims)
+    length(descriptor.boundary_mode_indices) == descriptor.mode_count || throw(
+        DimensionMismatch("PQS boundary mode count must match descriptor mode_count"),
+    )
+    length(descriptor.boundary_column_indices) == descriptor.mode_count || throw(
+        DimensionMismatch("PQS boundary column count must match descriptor mode_count"),
+    )
+    diagnostics = (
+        source = :raw_box_pqs_retained_rule_transform_adapter,
+        private_metadata_only = true,
+        production_supported = false,
+        representation_stage = :mode_selected_raw_product_box,
+        transform_contract = :raw_product_box_boundary_mode_selection,
+        transform_matrix_scope = :boundary_mode_selector_metadata,
+        full_raw_to_retained_matrix_materialized = false,
+        full_raw_to_retained_matrix_available = false,
+        raw_source_dimension = raw_source_dimension,
+        source_mode_dims = source_mode_dims,
+        boundary_mode_indices = copy(descriptor.boundary_mode_indices),
+        boundary_column_indices = copy(descriptor.boundary_column_indices),
+        boundary_mode_count = descriptor.mode_count,
+        retained_count = descriptor.mode_count,
+        shell_projection_used = false,
+        lowdin_cleanup_used = false,
+        shell_projection_lowdin_realization = false,
+        raw_product_box_operator_contract = true,
+        raw_box_boundary_selector_transform = true,
+        support_coefficient_matrix_used = false,
+        support_local_fixture_adapter = false,
+        retained_column_weight_role = :not_positive_quadrature_weights,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        retained_weight_positive_checked = false,
+        ida_weight_division_allowed = false,
+        quadrature_weight_semantics_claimed = false,
+        packet_adoption = false,
+        qwhamiltonian_consumes = false,
+        public_default_consumes = false,
+        cr2_science_status_changed = false,
+    )
+    return _CartesianRetainedTransform3D(
+        source_id,
+        descriptor.mode_count,
+        :boundary_comx_product_mode_selection,
+        nothing,
+        (
+            :raw_product_box_modes,
+            :boundary_comx_product_mode_selection,
+            :retained_columns,
+        ),
+        (
+            method = :none,
+            rank_count = descriptor.mode_count,
+            rank_drop_count = 0,
+        ),
+        :not_positive_quadrature_weights,
+        (
+            source = :projected_q_shell_staged_unit_descriptor,
+            descriptor = descriptor,
         ),
         diagnostics,
     )

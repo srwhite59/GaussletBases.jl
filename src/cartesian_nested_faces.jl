@@ -1386,6 +1386,184 @@ function _nested_doside_1d(
     )
 end
 
+function _cartesian_source_box_axis_transform(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D,
+    interval::UnitRange{Int},
+    source_mode_dim::Int;
+    axis::Union{Nothing,Symbol} = nothing,
+    enforce_symmetric_odd::Bool = false,
+)
+    side = _nested_doside_1d(
+        pgdg,
+        interval,
+        source_mode_dim;
+        enforce_symmetric_odd = enforce_symmetric_odd,
+    )
+    source_mode_dim_resolved = side.retained_count
+    coefficient_overlap_error = norm(
+        transpose(side.coefficient_matrix) * pgdg.overlap * side.coefficient_matrix -
+        Matrix{Float64}(I, source_mode_dim_resolved, source_mode_dim_resolved),
+        Inf,
+    )
+    return (
+        object_kind = :cartesian_source_box_axis_transform_1d,
+        axis = axis,
+        interval = side.interval,
+        source_mode_dim_requested = source_mode_dim,
+        source_mode_dim = source_mode_dim_resolved,
+        source_dim = source_mode_dim_resolved,
+        source_mode_dim_adjusted = source_mode_dim_resolved != source_mode_dim,
+        side = side,
+        local_coefficients = side.local_coefficients,
+        coefficient_matrix = side.coefficient_matrix,
+        localized_centers = side.localized_centers,
+        localized_weights = side.localized_weights,
+        integration_contract = :pgdg_exact,
+        integration_contract_label = "pgdg-exact",
+        diagnostics = (
+            source = :cartesian_source_box_axis_transform,
+            pgdg_backend = pgdg.backend,
+            pgdg_basis_interpretation = :gaussian_proxy_basis,
+            integration_contract = :pgdg_exact,
+            integration_contract_label = "pgdg-exact",
+            source_mode_dims_are_total_lengths = true,
+            enforce_symmetric_odd = enforce_symmetric_odd,
+            coefficient_overlap_error = coefficient_overlap_error,
+            exact_with_respect_to_pgdg_proxy_basis = true,
+            numerical_reference_fallback = pgdg.backend == :numerical_reference,
+            public_api = false,
+        ),
+    )
+end
+
+function _cartesian_source_box_axis_transform(
+    bundle::_MappedOrdinaryGausslet1DBundle,
+    interval::UnitRange{Int},
+    source_mode_dim::Int;
+    axis::Union{Nothing,Symbol} = nothing,
+    enforce_symmetric_odd::Bool = false,
+)
+    return _cartesian_source_box_axis_transform(
+        bundle.pgdg_intermediate,
+        interval,
+        source_mode_dim;
+        axis,
+        enforce_symmetric_odd,
+    )
+end
+
+function _cartesian_source_box_axis_transform_plan(
+    bundles::_CartesianNestedAxisBundles3D,
+    source_box::NTuple{3,UnitRange{Int}},
+    source_mode_dims::NTuple{3,Int};
+    enforce_symmetric_odd::Bool = false,
+)
+    axis_symbols = (:x, :y, :z)
+    axes = ntuple(axis -> begin
+        _cartesian_source_box_axis_transform(
+            _nested_axis_pgdg(bundles, axis_symbols[axis]),
+            source_box[axis],
+            source_mode_dims[axis];
+            axis = axis_symbols[axis],
+            enforce_symmetric_odd = enforce_symmetric_odd,
+        )
+    end, 3)
+    source_mode_dims_resolved =
+        ntuple(axis -> axes[axis].source_mode_dim, 3)
+    return (
+        object_kind = :cartesian_source_box_axis_transform_plan_3d,
+        source_box = source_box,
+        source_mode_dims_requested = source_mode_dims,
+        source_mode_dims = source_mode_dims_resolved,
+        source_mode_count = prod(source_mode_dims_resolved),
+        axes = axes,
+        diagnostics = (
+            source = :cartesian_source_box_axis_transform_plan,
+            integration_contract = :pgdg_exact,
+            integration_contract_label = "pgdg-exact",
+            source_mode_dims_are_total_lengths = true,
+            source_mode_dims_adjusted = source_mode_dims_resolved != source_mode_dims,
+            max_axis_overlap_error =
+                maximum(axis.diagnostics.coefficient_overlap_error for axis in axes),
+            public_api = false,
+        ),
+    )
+end
+
+function _cartesian_raw_product_box_source_mode_indices(
+    source_mode_dims::NTuple{3,Int},
+)
+    all(>(0), source_mode_dims) || throw(
+        ArgumentError("raw product-box source-mode dimensions must be positive"),
+    )
+    nx, ny, nz = source_mode_dims
+    mode_indices = NTuple{3,Int}[]
+    sizehint!(mode_indices, nx * ny * nz)
+    for mode_x in 1:nx, mode_y in 1:ny, mode_z in 1:nz
+        push!(mode_indices, (mode_x, mode_y, mode_z))
+    end
+    return mode_indices
+end
+
+function _cartesian_raw_product_box_plan(
+    bundles::_CartesianNestedAxisBundles3D,
+    source_box::NTuple{3,UnitRange{Int}},
+    source_mode_dims::NTuple{3,Int};
+    enforce_symmetric_odd::Bool = false,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    axis_transform_plan = _cartesian_source_box_axis_transform_plan(
+        bundles,
+        source_box,
+        source_mode_dims;
+        enforce_symmetric_odd,
+    )
+    resolved_source_mode_dims = axis_transform_plan.source_mode_dims
+    source_mode_indices =
+        _cartesian_raw_product_box_source_mode_indices(resolved_source_mode_dims)
+    max_axis_overlap_error =
+        axis_transform_plan.diagnostics.max_axis_overlap_error
+    numerical_reference_fallback = any(
+        axis -> axis.diagnostics.numerical_reference_fallback,
+        axis_transform_plan.axes,
+    )
+    return (
+        object_kind = :cartesian_raw_product_box_plan_3d,
+        source_box = source_box,
+        axis_intervals = source_box,
+        source_mode_dims_requested = source_mode_dims,
+        source_mode_dims = resolved_source_mode_dims,
+        source_mode_count = axis_transform_plan.source_mode_count,
+        axis_transform_plan = axis_transform_plan,
+        axis_transforms = axis_transform_plan.axes,
+        axis_local_coefficients =
+            ntuple(axis -> axis_transform_plan.axes[axis].local_coefficients, 3),
+        source_mode_indices = source_mode_indices,
+        source_mode_column_indices = collect(1:length(source_mode_indices)),
+        source_mode_ordering = :x_major_y_major_z_fast,
+        retained_rule = nothing,
+        diagnostics = (
+            source = :cartesian_raw_product_box_plan,
+            source_mode_dims_are_total_lengths = true,
+            deterministic_given_box_and_dims = true,
+            integration_contract =
+                axis_transform_plan.diagnostics.integration_contract,
+            integration_contract_label =
+                axis_transform_plan.diagnostics.integration_contract_label,
+            numerical_reference_fallback = numerical_reference_fallback,
+            retained_rule_attached = false,
+            packet_adoption = false,
+            source_mode_dims_adjusted =
+                axis_transform_plan.diagnostics.source_mode_dims_adjusted,
+            source_mode_ordering = :x_major_y_major_z_fast,
+            max_axis_overlap_error = max_axis_overlap_error,
+            source_product_modes_orthogonal =
+                max_axis_overlap_error <= orthogonality_atol,
+            public_api = false,
+        ),
+    )
+end
+
 function _cartesian_flat_index(
     ix::Int,
     iy::Int,
@@ -1856,16 +2034,13 @@ function _nested_projected_q_shell_full_sides(
     current_box::NTuple{3,UnitRange{Int}},
     source_mode_dims::NTuple{3,Int},
 )
-    axis_symbols = (:x, :y, :z)
-    return ntuple(axis -> begin
-        interval = current_box[axis]
-        _nested_doside_1d(
-            _nested_axis_pgdg(bundles, axis_symbols[axis]),
-            interval,
-            source_mode_dims[axis];
-            enforce_symmetric_odd = false,
-        )
-    end, 3)
+    plan = _cartesian_source_box_axis_transform_plan(
+        bundles,
+        current_box,
+        source_mode_dims;
+        enforce_symmetric_odd = false,
+    )
+    return ntuple(axis -> plan.axes[axis].side, 3)
 end
 
 function _nested_projected_q_shell_full_sides(

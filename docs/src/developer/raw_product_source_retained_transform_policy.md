@@ -16,6 +16,22 @@ The raw product source space is a small local product block built from the
 parent gausslet axes. The retained-space transform then performs the local
 selection, projection, cleanup, or identity map needed for the construction.
 
+The first reusable sizing object should be the source-box dimension plan:
+
+```text
+box intervals + angular-spacing policy + constraints
+-> source_mode_dims = (nx, ny, nz)
+-> deterministic 1D source transforms
+-> retained rule
+```
+
+The `source_mode_dims` are total source-mode lengths. They are not interior
+lengths and should not be described as "retain plus two" in PQS-facing
+contracts. Route-local selector counts may still exist as diagnostics, but the
+source-box contract should make the total dimensions primary. For bond-aligned
+diatomic boxes, `L` is simply the source-mode dimension on the bond axis after
+the side-dimension policy has been applied.
+
 Operator blocks should be assembled in the raw product source spaces first,
 then finished by small dense transforms:
 
@@ -47,19 +63,28 @@ A projected q-shell, `PQS(q, L)`, starts from the full local product block
 X_q * Y_q * Z_L
 ```
 
-The shell is not defined by subtracting a contracted inner block. The clean
-definition is:
+The shell is not defined by subtracting a contracted inner block. There are two
+separate stages.
+
+The raw product-box stage is:
 
 1. build the full local product transform;
-2. project it onto the raw boundary rows of the shell;
-3. keep the boundary-projected product-mode span;
-4. apply full-rank symmetric Lowdin cleanup.
+2. select boundary COMX-product modes whose local product-mode index is first
+   or last on at least one axis;
+3. build raw-box operator references by selecting those same product-box
+   columns on the left and right.
+
+The shell-realization stage is:
+
+1. project the selected product-box modes onto shell rows;
+2. apply full-rank symmetric Lowdin cleanup;
+3. use the resulting isometric shell-supported representation.
 
 For a rectangular shell this gives the counting picture
 `q*q*L - (q-2)*(q-2)*(L-2)`, but that count is not the construction rule. The
-construction rule is boundary projection of the full product block, followed by
-cleanup. This avoids any dependence on how an interior cube would have been
-contracted.
+construction rule starts with boundary product-mode selection from the full
+product block. Shell-row projection and cleanup are a later realization step.
+This avoids any dependence on how an interior cube would have been contracted.
 
 ## Operator Consequence
 
@@ -127,10 +152,214 @@ RawProductSourcePairOperatorPacket3D
 ```
 
 This is the structure that makes a PQS/product mixed block ordinary. The PQS
-side has a full `q x q x L` product source and a boundary-projection/Lowdin
-retained transform. The product or midpoint-slab side has its own product
-source and usually a simple retained transform. The operator block is built
-between the two raw sources, then transformed on both sides.
+side has a full `q x q x L` product source and a raw-box retained rule that
+selects boundary COMX-product modes. The product or midpoint-slab side has its
+own product source and usually a simple retained transform. The operator block
+is built between the two raw sources, then transformed on both sides.
+
+Shell realization is separate from this raw-box rule. When a PQS object must be
+realized on shell rows, the selected boundary modes are projected to shell rows
+and followed by Lowdin cleanup. PQS/product source-box operators use the
+raw-box boundary-mode rule, not that shell-realization map.
+
+## Private Source-Box Migration Plan
+
+The next implementation line should make the current private helpers converge
+on three explicit records. These are private planning/reference records first,
+not public API.
+
+`CartesianRawProductBox3D` should own the source-box facts:
+
+- parent axis intervals;
+- total source-mode dimensions `(nx, ny, nz)`;
+- 1D COMX/source transforms for each axis;
+- source-mode ordering and product-mode count;
+- optional 1D operator factors for overlap, position, `x2`, and kinetic;
+- coordinate/backend/provenance diagnostics;
+- raw-source quadrature-weight role, when relevant.
+
+It should not own retained column selection, shell projection, Lowdin cleanup,
+packet fields, or QW/Hamiltonian routing. Given intervals and
+`source_mode_dims`, raw product-box construction should be deterministic.
+
+`CartesianRetainedRule3D` or `CartesianRetainedUnit3D` should own the mapping
+from a raw source box to retained columns:
+
+- source-box id or embedded raw-box plan;
+- retained rule kind such as `:identity`, `:product_doside`,
+  `:pqs_boundary_mode_selection`, `:shell_projection_lowdin`, or
+  `:support_dense_fallback`;
+- retained dimension and column range, once assigned;
+- retained transform metadata, including whether the transform is separable,
+  selected columns, dense/materialized, or factored;
+- cleanup/isometry diagnostics when the rule uses projection plus Lowdin;
+- retained-column weight semantics and IDA/MWG division permissions.
+
+For the corrected mode-selected PQS source-box path, the retained rule is
+boundary COMX-product mode selection. Shell-row projection plus Lowdin is a
+separate realization rule, not part of raw-box operator construction.
+
+`CartesianSourceBoxPairOperatorPlan3D` should own pair-level operator facts:
+
+- left/right raw source boxes and retained rules;
+- axis interval compatibility and 1D cross-axis factors;
+- supported terms and symmetry status;
+- raw pair operator provenance and backend diagnostics;
+- whether the retained block can be formed by
+  `T_left' * O_raw_box_pair * T_right`;
+- reference/shadow/adoption status.
+
+This pair plan is the place where product/product, PQS/product,
+support-dense fallback, and future GTO cross-overlap consumers should meet.
+It should not imply all-pairs production assembly or packet adoption.
+
+Current helpers can migrate as adapters:
+
+- `_pqs_raw_product_box_plan(...)` is the present PQS-shaped
+  `CartesianRawProductBox3D` adapter.
+- `_pqs_shell_realization_plan(...)` is the present shell-projection/Lowdin
+  retained-rule adapter.
+- `_pqs_product_box_realization_plan(...)` should remain only a wrapper that
+  returns both plans together for diagnostics and compatibility.
+- `_pqs_raw_product_box_reference_block(...)` should consume the raw-box plan
+  directly for PQS/PQS self references.
+- `_pqs_product_source_box_pair_plan(...)` and
+  `_pqs_product_source_box_reference_block(...)` should consume raw-box and
+  retained-rule facts, not descriptor shell rows.
+- `_product_doside_retained_low_order_block(...)`,
+  `_product_doside_retained_kinetic_block(...)`, and product-staged metric
+  helpers are existing product-side adapters into the same retained-unit
+  vocabulary.
+- `_pqs_source_box_gto_cross_overlap_shadow(...)` should stay a raw-box
+  consumer and not become the final-basis handoff authority.
+
+The shared private helper `_cartesian_raw_product_box_plan(...)` is now the
+current `CartesianRawProductBox3D`-shaped source-box fact owner. It wraps the
+1D source-axis transform planning and records source-box intervals, total
+source-mode dimensions, z-fast source-mode ordering, axis transforms,
+axis-local coefficients, and retained-rule-free diagnostics. PQS raw plans
+wrap and validate this shared plan when it is supplied. Descriptor-only PQS
+plans remain structural adapters and explicitly report the shared plan
+unavailable, because descriptors do not carry axis bundles and should not fake
+bundle-derived source transforms.
+
+Private PQS/product and PQS/GTO source-box shadows now exercise shared-backed
+PQS raw plans where those shared plans are available. This proves consumer
+compatibility with the shared source-box seam while preserving the old
+authority boundary: the shared raw-box plan does not drive packet construction,
+fixed-block construction, QW/Hamiltonian assembly, IDA/MWG semantics,
+shell-realization adoption, or any public/default route.
+
+The latest cleanup moved private source-box consumers closer to that boundary.
+PQS raw-box operator helpers now assemble through raw-plan methods; descriptor
+level PQS raw-box reference remains only a convenience adapter that builds a
+raw plan and delegates. The PQS/product shadow layout is raw-plan-first, with
+the descriptor method kept only as a compatibility wrapper that checks
+descriptor/raw-plan consistency. The PQS/GTO source-box shadow is also
+raw-plan-first, with the descriptor method acting only as an adapter. The
+final-basis GTO handoff remains separate and authoritative.
+
+The product side now has a matching private retained-unit metadata adapter.
+`_product_doside_retained_unit_plan(...)` records product/source axis
+intervals, physical/source axis lengths, retained axis counts, column range and
+retained count, axis coefficient matrices, and `axis_function_indices` for an
+existing product/doside staged unit. It is metadata-only: it does not rebuild
+coefficients, does not change product/doside retained-block math, does not
+adopt packet construction, and does not change IDA or retained-weight
+semantics. `_pqs_product_source_box_pair_plan(...)` now obtains its
+product-side metadata through this adapter, so the private pair plan reads as
+raw product-box source plus retained-rule facts on both sides. This is still
+only migration/shadow infrastructure, not a generic retained-unit framework.
+
+Product/product source-box unification is now a completed private/shadow
+checkpoint, not a future design choice. Product/product now uses the same
+private source-box pair vocabulary.
+`_product_doside_source_box_pair_plan(...)` builds the product/product pair
+metadata from two retained-unit plans, records 1D cross factors, and keeps
+existing product-staged helpers authoritative. `_product_doside_source_box_reference_block(...)`
+supports overlap, position, `x2`, and kinetic; it compares each retained block
+against `_product_doside_retained_low_order_block(...)` or
+`_product_doside_retained_kinetic_block(...)`. `_product_doside_source_box_shadow_blocks(...)`
+builds a small two-block product/product shadow layout from those reference
+blocks and checks transpose consistency for symmetric real terms. The shared
+separable term descriptor is now
+`_source_box_separable_term_factor_kinds(...)`, used by both product/product
+and PQS/product source-box blocks. Existing product-staged helpers remain the
+numerical authority; this checkpoint does not adopt packet construction,
+fixed-block construction, QW/Hamiltonian assembly, IDA/MWG, or public/default
+routes.
+
+A focused provenance checkpoint now keeps fallback reporting separate from
+input-operator provenance. `_cartesian_raw_product_box_plan(...)` records
+`integration_contract = :pgdg_exact` and `numerical_reference_fallback = false`
+for PGDG-backed test fixtures. PQS raw-box self references and PQS/product
+source-box references forward that raw-box fallback status. Product/product
+source-box references report `operator_factor_source = :explicit_metric_operator_data`,
+`input_metric_operator_data = :caller_supplied_explicit_data`,
+`input_metric_operator_data_pgdg_checked = false`, and
+`numerical_reference_fallback = false`. For product/product, the fallback flag
+means only that the helper did not invoke a numerical-reference fallback; it is
+not a claim that the caller-supplied matrices have been proven PGDG analytic
+inside the helper. The PQS/GTO source-box shadow likewise records that it does
+not use a numerical-reference fallback. This is provenance reporting only; it
+does not change backend selection or quadrature policy.
+
+After this raw product-box migration loop, the private state is:
+
+- the shared raw product-box plan exists;
+- PQS raw plans wrap and validate the shared plan when axis bundles are
+  available;
+- PQS self, PQS/product, shadow-layout, and PQS/GTO source-box shadows are
+  raw-plan first;
+- descriptor-level methods are compatibility adapters;
+- product/doside retained metadata is exposed through a retained-unit adapter;
+- product/product source-box pair, reference-block, and two-block shadow
+  helpers exist privately;
+- no packet, fixed-block, QW/Hamiltonian, IDA/MWG, public, or default-route
+  adoption has happened.
+
+Likely next design choices are deliberately separate: clean up
+shell-realization consumers that use projection plus Lowdin, optimize
+PQS/product retained blocks, or extend the vocabulary to support-dense
+fallback. None of those should be folded into this closeout checkpoint.
+
+During migration, these paths remain authoritative:
+
+- `_nested_shell_packet(...)` remains authoritative for active packet matrix
+  construction.
+- Existing fixed-block, QW, Hamiltonian, IDA/MWG, supplement, and public route
+  consumers remain authoritative.
+- Existing final-basis GTO handoff remains authoritative for handoff use.
+- The new raw-box plans and pair plans are private reference/shadow evidence
+  until an explicit adoption pass changes that.
+
+Validation should be staged and mechanical:
+
+- PQS self: raw plan plus boundary selector reproduces overlap, position,
+  `x2`, and kinetic source-box references for cubic and rectangular boxes.
+- PQS/product: raw-box pair factors plus product retained transform reproduce
+  explicit source-box references, including a non-identity product transform.
+- Product/product: source-box reference and shadow helpers compare against
+  existing product/doside retained low-order and kinetic helpers, which
+  continue to match product-staged metric and kinetic references.
+- Support-dense fallback: mixed product/support and support/support paths
+  remain explicit fallback references, not silently optimized kernels.
+- GTO cross overlap: raw-box/GTO shadow matches dense source-box reference and
+  remains separate from final-basis handoff.
+- Diagnostics must state which stage is active: raw-box reference,
+  shell-realization reference, shadow packet/layout, or construction adoption.
+
+Non-goals for this migration stage:
+
+- no public API or default-route promotion;
+- no QW/Hamiltonian construction adoption;
+- no all-pairs production packet builder;
+- no local/ECP/Gaussian/MWG/interaction implementation;
+- no retained PQS weight division or positive retained-weight IDA claim;
+- no assumption that shell-row projection plus Lowdin is part of raw-box
+  operator construction;
+- no broad generic framework layer unless it removes a concrete duplicated
+  helper path.
 
 ## Weight Contract
 
@@ -569,8 +798,8 @@ nuclear/local, Gaussian, MWG, interaction, QW/Hamiltonian, public/default,
 backend/default, PGDG/quadrature, CR2, and science/energy behavior remain
 unchanged and outside this private fixture line.
 
-Before any PQS retained-block execution, the code needs an explicit way to
-represent or resolve the full factored PQS transform:
+The older support-local PQS fixture still needs an explicit way to represent or
+resolve its shell-realized support-row transform:
 
 ```text
 raw_product_modes
@@ -578,6 +807,97 @@ raw_product_modes
 -> full_rank_symmetric_lowdin_cleanup
 -> retained_columns
 ```
+
+That factored projection-plus-Lowdin path is the shell-realized/support-local
+fixture contract. It is not the retained transform used by the newer raw-box
+PQS/product source-box operators, where `T_PQS` is boundary COMX-product mode
+selection only.
+
+The private raw product-box self-block checkpoint corrects the earlier
+contract boundary. `_pqs_raw_product_box_reference_block(...)` stays entirely
+in the mode-selected `q x q x L` product-box space. It supports only overlap,
+`position_x`, `position_y`, `position_z`, `x2_x`, `x2_y`, `x2_z`, and kinetic.
+The reference oracle is explicit product-box column selection:
+
+```text
+O_boundary = P_boundary' * O_product_box * P_boundary
+```
+
+where `P_boundary` selects the boundary COMX-product mode columns. The helper
+records `max_1d_source_overlap_error`, `max_product_overlap_error`, and
+`selected_overlap_error`, and reports that shell projection is postponed. It
+does not use shell-row `support_coefficient_matrix` data, does not apply
+Lowdin at the raw-box stage, and does not assign positive quadrature or IDA
+division semantics to retained PQS columns.
+
+The private `_pqs_product_box_realization_plan(...)` helper now builds the raw
+product-box plan and shell-realization plan at the same setup point while
+keeping them as separate objects. Its raw plan carries 1D operator factors and
+the boundary selector. Its shell plan carries the shell projection matrix,
+Lowdin cleanup, and isometry diagnostics. Operator references still use the
+raw product-box 1D factor path first; shell projection is not part of raw-box
+operator construction.
+
+The raw product-box plan has since been split into the explicit private helper
+`_pqs_raw_product_box_plan(...)`. PQS self blocks, PQS/product source-box
+blocks, and PQS/GTO cross-overlap shadows now take that raw plan directly.
+`_pqs_shell_realization_plan(...)` carries only the later shell-row projection
+and Lowdin isometry, while `_pqs_product_box_realization_plan(...)` remains a
+wrapper for diagnostics and compatibility. This makes the separation concrete
+in code rather than only in prose: source-box pair/operator contractions are
+1D-factor raw-box operations, and shell realization is a distinct consumer.
+
+The first PQS/product source-box mixed-block checkpoint now also covers a
+nontrivial product retained transform. A focused private test uses a
+non-identity product-axis coefficient transform and checks overlap, one
+position block, one `x2` block, and kinetic against the explicit source-box
+reference with that product transform applied. This keeps the contract at
+`T_PQS' * O_raw_box_pair * T_product`; it does not use shell projection,
+Lowdin, support-local PQS coefficients, retained PQS weights, or IDA division.
+
+The private `_pqs_product_source_box_shadow_blocks(...)` checkpoint is the
+first block-layout consumer of those references. It builds a small two-block
+shadow layout containing one mode-selected PQS source-box unit and one
+product/doside retained unit, then fills PQS/PQS, PQS/product, product/PQS by
+transpose for symmetric real terms, and product/product blocks. The supported
+terms are `:overlap`, `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. Focused
+tests cover a rectangular PQS source box and a non-identity product/doside
+transform. This is still private/shadow-only layout evidence, not a packet
+builder: it does not use shell-row projection, Lowdin,
+`support_coefficient_matrix` as a PQS oracle, retained PQS weights, or IDA
+division, and it changes no packet construction, QW/Hamiltonian,
+public/default, CR2, local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior.
+
+The private PQS source-box to GTO cross-overlap checkpoint adds
+`_pqs_source_box_gto_cross_overlap_shadow(...)` and
+`_pqs_source_box_gto_axis_projection(...)`. The helper keeps the
+mode-selected raw product-box contract: it uses PQS source-box intervals,
+source coefficients, and boundary COMX-product mode indices, projects existing
+1D Cartesian/GTO primitive-axis overlap tables through the source-box axis
+coefficients, and returns a boundary-mode by GTO overlap shadow. The
+rectangular `5 x 5 x 7` test compares against an explicit dense source-box
+reference built from parent-row/GTO overlap followed by
+`transpose(C_source_box) * S_parent_gto` and boundary-column selection.
+
+This is not final-basis handoff adoption. The existing final-basis GTO handoff
+remains unchanged and authoritative for handoff use. The shadow helper does
+not use shell-row projection, Lowdin, `support_coefficient_matrix` as a PQS
+oracle, retained PQS weights, retained-weight IDA division, packet
+construction, QW/Hamiltonian paths, public/default routes, CR2 artifacts,
+local/ECP/Gaussian/MWG/interaction paths, or IDA/MWG behavior changes.
+
+When shell rows are needed, the realization consumer should remain separate:
+
+```text
+selected_product_box_modes
+-> project_to_shell_rows
+-> Lowdin_cleanup
+-> isometric_shell_realized_representation
+```
+
+That shell-realization helper should consume the raw-box result or equivalent
+selected product-box modes by conjugation. It should not be folded into the
+raw product-box reference path.
 
 General physical raw source pair operator packets beyond these private
 product/slab fixtures, kinetic adoption into existing real route consumers,
