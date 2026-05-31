@@ -4,9 +4,12 @@ import LinearAlgebra
 import SparseArrays
 
 import ..GaussletBases: _NestedFixedBlock3D,
+                         _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
+                         _cartesian_raw_product_box_plan,
                          _cartesian_raw_product_box_source_mode_indices,
+                         _nested_projected_q_shell_staged_unit_descriptor,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _require_analytic_primitive_backend,
                          centers,
@@ -3519,6 +3522,474 @@ function _pqs_pqs_product_safe_term_route_descriptor(
             term_count = length(selected_terms),
             supported_terms = selected_terms,
         ),
+    )
+end
+
+function _pqs_route_descriptor_diagnostic_common(;
+    source::Symbol,
+    route_kind = nothing,
+    pqs_descriptor_count::Int,
+    pqs_raw_plan_convertible_count::Int,
+    product_doside_unit_count::Int,
+    direct_or_support_body_piece_count::Int,
+    descriptor_emitted::Bool,
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    extra = (;),
+)
+    return merge(
+        (
+            source = source,
+            private_diagnostic_only = true,
+            route_fact_adapter = true,
+            route_kind = route_kind,
+            pqs_descriptor_count = pqs_descriptor_count,
+            pqs_raw_plan_convertible_count = pqs_raw_plan_convertible_count,
+            product_doside_unit_count = product_doside_unit_count,
+            direct_or_support_body_piece_count =
+                direct_or_support_body_piece_count,
+            descriptor_emitted = descriptor_emitted,
+            packet_adoption = false,
+            fixed_block_construction_changed = false,
+            qwhamiltonian_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            sidecar_mutation = false,
+            sidecar_installation = false,
+            direct_support_reinterpreted_as_product_doside = false,
+            local_ecp_gaussian_mwg_interaction_changed = false,
+            public_default_behavior_changed = false,
+            supported_terms =
+                _pqs_pqs_product_supported_safe_terms(supported_terms),
+        ),
+        extra,
+    )
+end
+
+function _pqs_route_descriptor_missing_symbols(
+    pqs_plan_count::Int,
+    product_doside_unit_count::Int,
+)
+    missing = Symbol[]
+    if pqs_plan_count == 0
+        push!(missing, :pqs_raw_plans)
+    elseif pqs_plan_count == 1
+        push!(missing, :second_pqs_raw_plan)
+    end
+    product_doside_unit_count == 0 &&
+        push!(missing, :middle_product_doside_unit)
+    return missing
+end
+
+function _pqs_route_descriptor_unit_mismatch(role::Symbol, unit, reason::Symbol)
+    return (
+        role = role,
+        actual_type = nameof(typeof(unit)),
+        actual_kind = hasproperty(unit, :kind) ? unit.kind : nothing,
+        reason = reason,
+    )
+end
+
+function _pqs_route_descriptor_available_diagnostic(
+    descriptor,
+    metrics = nothing;
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    route_kind = hasproperty(descriptor, :route_kind) ?
+                 descriptor.route_kind : :legacy_route_units
+    diagnostics = _pqs_route_descriptor_diagnostic_common(
+        source = :pqs_pqs_product_route_descriptor_diagnostic,
+        route_kind = route_kind,
+        pqs_descriptor_count = 2,
+        pqs_raw_plan_convertible_count = 2,
+        product_doside_unit_count = 1,
+        direct_or_support_body_piece_count = 0,
+        descriptor_emitted = true,
+        supported_terms = supported_terms,
+        extra = (
+            status = :descriptor_available,
+            descriptor_available = true,
+            descriptor_unavailable = false,
+            metrics_supplied = !isnothing(metrics),
+            descriptor_object_kind =
+                hasproperty(descriptor, :object_kind) ?
+                descriptor.object_kind : :legacy_route_units,
+        ),
+    )
+    return (
+        status = :descriptor_available,
+        descriptor = descriptor,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_pqs_product_route_descriptor_diagnostic(
+    route_like,
+    metrics = nothing;
+    route_name::Symbol = :pqs_pqs_product_source_box_safe_term_route,
+    parent_dims = nothing,
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+)
+    selected_terms = _pqs_pqs_product_supported_safe_terms(supported_terms)
+    missing = Symbol[]
+    mismatches = Any[]
+    pqs_plan_count = 0
+    product_doside_unit_count = 0
+    descriptor = nothing
+    route_kind = hasproperty(route_like, :route_kind) ?
+                 route_like.route_kind : nothing
+
+    if !hasproperty(route_like, :units)
+        push!(missing, :route_units)
+    else
+        units = route_like.units
+        if hasproperty(units, :pqs_left)
+            try
+                left_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_left)
+                left_raw_plan.representation == :orthogonal_raw_product_box ||
+                    push!(
+                        mismatches,
+                        _pqs_route_descriptor_unit_mismatch(
+                            :pqs_left,
+                            units.pqs_left,
+                            :left_pqs_unit_is_not_orthogonal_raw_product_box,
+                        ),
+                    )
+                pqs_plan_count += 1
+            catch err
+                push!(
+                    mismatches,
+                    _pqs_route_descriptor_unit_mismatch(
+                        :pqs_left,
+                        units.pqs_left,
+                        :left_pqs_raw_plan_unavailable,
+                    ),
+                )
+            end
+        else
+            push!(missing, :pqs_left)
+        end
+
+        if hasproperty(units, :pqs_right)
+            try
+                right_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_right)
+                right_raw_plan.representation == :orthogonal_raw_product_box ||
+                    push!(
+                        mismatches,
+                        _pqs_route_descriptor_unit_mismatch(
+                            :pqs_right,
+                            units.pqs_right,
+                            :right_pqs_unit_is_not_orthogonal_raw_product_box,
+                        ),
+                    )
+                pqs_plan_count += 1
+            catch err
+                push!(
+                    mismatches,
+                    _pqs_route_descriptor_unit_mismatch(
+                        :pqs_right,
+                        units.pqs_right,
+                        :right_pqs_raw_plan_unavailable,
+                    ),
+                )
+            end
+        else
+            push!(missing, :pqs_right)
+        end
+
+        if hasproperty(units, :product)
+            if units.product isa _CartesianNestedProductStagedByCenterUnit3D &&
+               units.product.kind == :product_doside
+                try
+                    _require_product_doside_retained_block_unit(
+                        units.product;
+                        side = :product,
+                    )
+                    product_doside_unit_count = 1
+                catch err
+                    push!(
+                        mismatches,
+                        _pqs_route_descriptor_unit_mismatch(
+                            :product,
+                            units.product,
+                            :product_doside_unit_metadata_invalid,
+                        ),
+                    )
+                end
+            else
+                push!(
+                    mismatches,
+                    _pqs_route_descriptor_unit_mismatch(
+                        :product,
+                        units.product,
+                        :product_unit_is_not_explicit_product_doside,
+                    ),
+                )
+            end
+        else
+            push!(missing, :product)
+        end
+    end
+
+    append!(
+        missing,
+        _pqs_route_descriptor_missing_symbols(
+            pqs_plan_count,
+            product_doside_unit_count,
+        ),
+    )
+    unique!(missing)
+
+    if isempty(missing) && isempty(mismatches)
+        if hasproperty(route_like, :object_kind) &&
+           route_like.object_kind == :pqs_pqs_product_safe_term_route_descriptor
+            descriptor = route_like
+        else
+            units = route_like.units
+            descriptor = _pqs_pqs_product_safe_term_route_descriptor(
+                units.pqs_left,
+                units.pqs_right,
+                units.product;
+                route_name,
+                parent_dims,
+                bond_axis,
+                metadata,
+                provenance,
+                supported_terms = selected_terms,
+            )
+        end
+        return _pqs_route_descriptor_available_diagnostic(
+            descriptor,
+            metrics;
+            supported_terms = selected_terms,
+        )
+    end
+
+    diagnostics = _pqs_route_descriptor_diagnostic_common(
+        source = :pqs_pqs_product_route_descriptor_diagnostic,
+        route_kind = route_kind,
+        pqs_descriptor_count = pqs_plan_count,
+        pqs_raw_plan_convertible_count = pqs_plan_count,
+        product_doside_unit_count = product_doside_unit_count,
+        direct_or_support_body_piece_count = 0,
+        descriptor_emitted = false,
+        supported_terms = selected_terms,
+        extra = (
+            status = :descriptor_unavailable,
+            descriptor_available = false,
+            descriptor_unavailable = true,
+            metrics_supplied = !isnothing(metrics),
+            route_has_units = hasproperty(route_like, :units),
+            mismatch_count = length(mismatches),
+            missing_count = length(missing),
+        ),
+    )
+    return (
+        status = :descriptor_unavailable,
+        descriptor = nothing,
+        missing = Tuple(missing),
+        mismatches = Tuple(mismatches),
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_route_staged_descriptor_signature(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+)
+    return (
+        descriptor.current_box,
+        descriptor.inner_box,
+        descriptor.q,
+        descriptor.L,
+        descriptor.support_count,
+        descriptor.mode_count,
+        descriptor.retained_count,
+    )
+end
+
+function _pqs_route_staged_descriptors(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    descriptors = _CartesianNestedProjectedQShellStagedUnitDescriptor3D[]
+    seen = Set{Any}()
+    function maybe_push_descriptor(descriptor)
+        descriptor isa _CartesianNestedProjectedQShellStagedUnitDescriptor3D ||
+            return nothing
+        descriptor.kind == :projected_q_shell || return nothing
+        signature = _pqs_route_staged_descriptor_signature(descriptor)
+        signature in seen && return nothing
+        push!(seen, signature)
+        push!(descriptors, descriptor)
+        return nothing
+    end
+
+    for layer in construction.shared_shell_layers
+        try
+            maybe_push_descriptor(_nested_projected_q_shell_staged_unit_descriptor(layer))
+        catch err
+            nothing
+        end
+    end
+    for build in construction.region_builds
+        metadata = build.metadata
+        hasproperty(metadata, :pqs_staged_unit_descriptor) &&
+            maybe_push_descriptor(metadata.pqs_staged_unit_descriptor)
+    end
+    return descriptors
+end
+
+function _pqs_route_raw_plan_convertibility(
+    descriptors,
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics;
+    orthogonality_atol::Real,
+)
+    checked = !isnothing(metrics)
+    converted = 0
+    failures = Any[]
+    !checked && return (
+        checked = false,
+        converted_count = converted,
+        failures = Tuple(failures),
+    )
+
+    for (index, descriptor) in pairs(descriptors)
+        try
+            source_mode_dims =
+                ntuple(axis -> size(descriptor.axis_local_coefficients[axis], 2), 3)
+            shared_plan = _cartesian_raw_product_box_plan(
+                construction.axis_bundles,
+                descriptor.axis_intervals,
+                source_mode_dims;
+                enforce_symmetric_odd = false,
+            )
+            raw_plan = _pqs_raw_product_box_plan(
+                descriptor,
+                shared_plan,
+                metrics;
+                orthogonality_atol,
+            )
+            _pqs_raw_product_box_plan_view(raw_plan)
+            converted += 1
+        catch err
+            push!(
+                failures,
+                (
+                    descriptor_index = index,
+                    reason = :raw_pqs_plan_conversion_failed,
+                    error_type = nameof(typeof(err)),
+                    message = sprint(showerror, err),
+                ),
+            )
+        end
+    end
+    return (
+        checked = checked,
+        converted_count = converted,
+        failures = Tuple(failures),
+    )
+end
+
+function _pqs_route_direct_or_support_body_mismatches(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+)
+    product_or_pqs_families = (
+        :projected_q_shell,
+        :shared_endcap_panel_shell_layer,
+    )
+    mismatches = Any[]
+    for build in construction.region_builds
+        build.primitive_family in product_or_pqs_families && continue
+        push!(
+            mismatches,
+            (
+                role = build.region_role,
+                primitive_family = build.primitive_family,
+                mapped_primitive = build.mapped_primitive,
+                column_range = build.column_range,
+                retained_count = build.retained_count,
+                reason = :direct_or_support_piece_not_product_doside,
+            ),
+        )
+    end
+    return Tuple(mismatches)
+end
+
+function _pqs_pqs_product_route_descriptor_diagnostic(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics = nothing;
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    selected_terms = _pqs_pqs_product_supported_safe_terms(supported_terms)
+    descriptors = _pqs_route_staged_descriptors(construction)
+    convertibility = _pqs_route_raw_plan_convertibility(
+        descriptors,
+        construction,
+        metrics;
+        orthogonality_atol,
+    )
+    direct_or_support_mismatches =
+        _pqs_route_direct_or_support_body_mismatches(construction)
+    product_doside_unit_count = 0
+
+    missing = _pqs_route_descriptor_missing_symbols(
+        min(length(descriptors), convertibility.converted_count),
+        product_doside_unit_count,
+    )
+    !convertibility.checked && !isempty(descriptors) &&
+        push!(missing, :axis_metrics_for_raw_plan_conversion)
+    convertibility.checked &&
+        convertibility.converted_count < length(descriptors) &&
+        push!(missing, :raw_pqs_plan_conversion)
+    unique!(missing)
+
+    route_shape_mismatches = Any[
+        (
+            reason = :shared_pqs_descriptors_are_not_route_left_right_group,
+            pqs_descriptor_count = length(descriptors),
+        ),
+    ]
+    append!(route_shape_mismatches, direct_or_support_mismatches)
+    append!(route_shape_mismatches, collect(convertibility.failures))
+
+    diagnostics = _pqs_route_descriptor_diagnostic_common(
+        source = :pqs_pqs_product_route_descriptor_diagnostic,
+        route_kind = :bond_aligned_diatomic_high_order_recipe_source_construction,
+        pqs_descriptor_count = length(descriptors),
+        pqs_raw_plan_convertible_count = convertibility.converted_count,
+        product_doside_unit_count = product_doside_unit_count,
+        direct_or_support_body_piece_count =
+            length(direct_or_support_mismatches),
+        descriptor_emitted = false,
+        supported_terms = selected_terms,
+        extra = (
+            status = :descriptor_unavailable,
+            descriptor_available = false,
+            descriptor_unavailable = true,
+            metrics_supplied = !isnothing(metrics),
+            raw_plan_convertibility_checked = convertibility.checked,
+            raw_plan_conversion_failure_count =
+                length(convertibility.failures),
+            shared_shell_layer_count = length(construction.shared_shell_layers),
+            region_build_count = length(construction.region_builds),
+            high_order_recipe_source_construction = true,
+            current_route_contains_pqs_descriptors =
+                !isempty(descriptors),
+            current_route_contains_explicit_product_doside_body_unit = false,
+        ),
+    )
+    return (
+        status = :descriptor_unavailable,
+        descriptor = nothing,
+        missing = Tuple(missing),
+        mismatches = Tuple(route_shape_mismatches),
+        diagnostics = diagnostics,
     )
 end
 

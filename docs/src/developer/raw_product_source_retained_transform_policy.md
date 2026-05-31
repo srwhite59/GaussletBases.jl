@@ -363,6 +363,25 @@ centralizes validation for the current safe set: overlap, `position_x/y/z`,
 `x2_x/y/z`, and kinetic. Unsupported terms such as `:weights` reject before
 being treated as route-supported.
 
+The private route-fact adapter checkpoint adds
+`_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
+This is diagnostic/read-path infrastructure only. It emits
+`status = :descriptor_available` only when the input already supplies a left
+raw-box PQS plan, a right raw-box PQS plan, and an explicit
+`_CartesianNestedProductStagedByCenterUnit3D(kind = :product_doside)`. The
+hand-built descriptor-available route remains consumable by the existing
+private route-shaped safe-term consumer. The current high-order PQS source
+construction returns `status = :descriptor_unavailable`; the focused fixture
+records `pqs_descriptor_count = 1`, `pqs_raw_plan_convertible_count = 1`,
+`product_doside_unit_count = 0`, and
+`direct_or_support_body_piece_count = 4`. Missing facts include the second PQS
+raw plan and the middle product/doside unit. Direct/support pieces, including
+the contact cap, are reported as mismatches and are not reinterpreted as
+product/doside. Diagnostics preserve no packet adoption, no fixed-block
+construction change, no QW/Hamiltonian change, no shell projection/Lowdin, no
+support-local PQS oracle, no retained-weight IDA division, and no
+local/ECP/Gaussian/MWG/interaction changes.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS box `(1:5,1:5,1:5)`, right PQS box `(1:5,1:5,3:7)`, and a middle product
 slab at `z = 4`. Both PQS source boxes use source-mode dimensions `(5,5,5)`

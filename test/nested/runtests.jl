@@ -3204,6 +3204,35 @@ end
         route_units,
         route_metrics,
     )
+    route_fact_diagnostic =
+        CCPM._pqs_pqs_product_route_descriptor_diagnostic(
+            route_units,
+            route_metrics,
+        )
+    @test route_fact_diagnostic.status == :descriptor_available
+    @test route_fact_diagnostic.descriptor === route_units
+    @test route_fact_diagnostic.diagnostics.pqs_descriptor_count == 2
+    @test route_fact_diagnostic.diagnostics.pqs_raw_plan_convertible_count == 2
+    @test route_fact_diagnostic.diagnostics.product_doside_unit_count == 1
+    @test route_fact_diagnostic.diagnostics.direct_or_support_body_piece_count == 0
+    @test route_fact_diagnostic.diagnostics.descriptor_emitted
+    @test !route_fact_diagnostic.diagnostics.packet_adoption
+    @test !route_fact_diagnostic.diagnostics.fixed_block_construction_changed
+    @test !route_fact_diagnostic.diagnostics.qwhamiltonian_changed
+    @test !route_fact_diagnostic.diagnostics.shell_projection_used
+    @test !route_fact_diagnostic.diagnostics.lowdin_cleanup_used
+    @test !route_fact_diagnostic.diagnostics.support_local_pqs_oracle_used
+    @test route_fact_diagnostic.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !route_fact_diagnostic.diagnostics.ida_weight_division_allowed
+    @test !route_fact_diagnostic.diagnostics.direct_support_reinterpreted_as_product_doside
+    route_fact_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            route_fact_diagnostic.descriptor,
+            route_metrics,
+        )
+    @test route_fact_consumer.retained_dimension == route_units.retained_dimension
+    @test route_fact_consumer.pair_count == route_units.expected_pair_count
     nonidentity_product_axes = (
         GaussletBases._nested_product_staged_active_axis(
             1:2,
@@ -6992,6 +7021,48 @@ end
     @test all(
         mode -> any(axis -> mode[axis] == 1 || mode[axis] == (5, 5, 6)[axis], 1:3),
         pqs_source_descriptor.boundary_mode_indices,
+    )
+    pqs_route_fact_diagnostic =
+        CCPM._pqs_pqs_product_route_descriptor_diagnostic(
+            pqs_construction,
+            _pqs_axis_metrics(bundles),
+        )
+    @test pqs_route_fact_diagnostic.status == :descriptor_unavailable
+    @test pqs_route_fact_diagnostic.descriptor === nothing
+    @test :second_pqs_raw_plan in pqs_route_fact_diagnostic.missing
+    @test :middle_product_doside_unit in pqs_route_fact_diagnostic.missing
+    @test pqs_route_fact_diagnostic.diagnostics.pqs_descriptor_count == 1
+    @test pqs_route_fact_diagnostic.diagnostics.pqs_raw_plan_convertible_count == 1
+    @test pqs_route_fact_diagnostic.diagnostics.product_doside_unit_count == 0
+    @test pqs_route_fact_diagnostic.diagnostics.direct_or_support_body_piece_count == 4
+    @test !pqs_route_fact_diagnostic.diagnostics.descriptor_emitted
+    @test pqs_route_fact_diagnostic.diagnostics.raw_plan_convertibility_checked
+    @test pqs_route_fact_diagnostic.diagnostics.raw_plan_conversion_failure_count == 0
+    @test pqs_route_fact_diagnostic.diagnostics.current_route_contains_pqs_descriptors
+    @test !pqs_route_fact_diagnostic.diagnostics.current_route_contains_explicit_product_doside_body_unit
+    @test !pqs_route_fact_diagnostic.diagnostics.packet_adoption
+    @test !pqs_route_fact_diagnostic.diagnostics.fixed_block_construction_changed
+    @test !pqs_route_fact_diagnostic.diagnostics.qwhamiltonian_changed
+    @test !pqs_route_fact_diagnostic.diagnostics.shell_projection_used
+    @test !pqs_route_fact_diagnostic.diagnostics.lowdin_cleanup_used
+    @test !pqs_route_fact_diagnostic.diagnostics.support_local_pqs_oracle_used
+    @test pqs_route_fact_diagnostic.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !pqs_route_fact_diagnostic.diagnostics.ida_weight_division_allowed
+    @test !pqs_route_fact_diagnostic.diagnostics.direct_support_reinterpreted_as_product_doside
+    @test any(
+        mismatch ->
+            hasproperty(mismatch, :reason) &&
+            mismatch.reason == :direct_or_support_piece_not_product_doside &&
+            hasproperty(mismatch, :primitive_family) &&
+            mismatch.primitive_family == :contact_cap_owned_slab,
+        pqs_route_fact_diagnostic.mismatches,
+    )
+    @test any(
+        mismatch ->
+            hasproperty(mismatch, :reason) &&
+            mismatch.reason == :shared_pqs_descriptors_are_not_route_left_right_group,
+        pqs_route_fact_diagnostic.mismatches,
     )
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
