@@ -288,17 +288,23 @@ The private multi-term checkpoint adds
 `_pqs_product_source_box_pair_plan(...)` across requested terms and call the
 same direct retained-block assembly for each term. `_pqs_product_source_box_shadow_blocks(...)`
 now uses that multi-term path for its PQS/product component blocks. The
-self-only PQS/PQS source-box seam is now also explicit:
+PQS/PQS source-box seam is now also explicit:
 `_pqs_pqs_source_box_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks(...)`, and
 `_pqs_pqs_source_box_reference_block(...)` build mode-selected PQS/PQS blocks
-from 1D source-box factors and boundary COMX-product mode selectors. In this
-checkpoint the helper accepts only the same raw product-box plan on both sides;
-cross-PQS source boxes are rejected until a distinct cross-source oracle is
-scoped. The supported terms are overlap, `position_x/y/z`, `x2_x/y/z`, and
-kinetic, and self blocks are compared against
-`_pqs_raw_product_box_reference_block(...)`.
+from 1D source-box factors and boundary COMX-product mode selectors. Self
+blocks still compare against `_pqs_raw_product_box_reference_block(...)`.
+Cross-PQS blocks now accept distinct compatible raw product-box plans when
+source-mode dimensions, source-mode ordering, and boundary selector structure
+match. The cross helper builds 1D cross factors
+`C_left' * M[left_interval, right_interval] * C_right`, then assembles the
+retained block directly from boundary selectors. The first focused cross-PQS
+fixture uses shifted cubic boxes, left `(1:5,1:5,1:5)` and right
+`(3:7,1:5,1:5)`, with source dims `(5,5,5)` and retained count `98`. Its
+explicit source-box oracle agrees to about `5.7e-14`; reverse-orientation
+transpose consistency is about `7.6e-15`. The supported terms remain overlap,
+`position_x/y/z`, `x2_x/y/z`, and kinetic.
 
 `_pqs_product_source_box_shadow_blocks(...)` now carries a tiny private
 all-pairs inventory for its two retained units. The units are `:pqs` with
@@ -320,6 +326,24 @@ Existing single-term helpers remain compatibility wrappers and no packet,
 fixed-block, QW/Hamiltonian, IDA/MWG, retained-weight, public/default, or
 science route is adopted. The inventory is not a production all-pairs packet
 builder.
+
+The next route-like private checkpoint adds
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
+`_pqs_pqs_product_source_box_shadow_blocks(...)`. This hard-coded three-unit
+shadow has retained units `(:pqs_left, :pqs_right, :product)` and exactly six
+upper-triangular pair entries: `(:pqs_left, :pqs_left)`,
+`(:pqs_left, :pqs_right)`, `(:pqs_left, :product)`,
+`(:pqs_right, :pqs_right)`, `(:pqs_right, :product)`, and
+`(:product, :product)`. PQS/PQS entries use
+`:_pqs_pqs_source_box_reference_blocks`, PQS/product entries use
+`:_pqs_product_source_box_reference_blocks`, and the product/product entry
+keeps the existing product/doside retained helpers. The focused fixture uses
+the shifted cubic PQS pair plus a small product/doside slab; the full retained
+dimension is `200`, pair count is `6`, and component max error is about
+`5.7e-14`. Product/product, PQS/product, and PQS/PQS now participate in the
+same private source-box vocabulary for overlap, position, `x2`, and kinetic.
+This remains a private shadow/reference inventory, not a generic route
+inventory framework and not packet construction adoption.
 
 A local ignored diagnostic probe records the private performance shape for a
 rectangular `(5,5,7)` PQS source box and a non-identity product retained
@@ -917,19 +941,43 @@ first block-layout consumer of those references. It builds a small two-block
 shadow layout containing one mode-selected PQS source-box unit and one
 product/doside retained unit, then fills PQS/PQS, PQS/product, product/PQS by
 transpose for symmetric real terms, and product/product blocks. Its PQS/PQS
-component now uses the self-only `_pqs_pqs_source_box_reference_blocks(...)`
-path; its PQS/product component uses the multi-term PQS/product pair-plan reuse
-path; its product/product component keeps existing product/doside retained
-helpers. The helper records a tiny private all-pairs inventory over units
-`:pqs` and `:product` with upper-triangular entries `(:pqs, :pqs)`,
+component uses `_pqs_pqs_source_box_reference_blocks(...)`; its PQS/product
+component uses the multi-term PQS/product pair-plan reuse path; its
+product/product component keeps existing product/doside retained helpers. The
+helper records a tiny private all-pairs inventory over units `:pqs` and
+`:product` with upper-triangular entries `(:pqs, :pqs)`,
 `(:pqs, :product)`, and `(:product, :product)`. The supported terms are
 `:overlap`, `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`. Focused tests
-cover a rectangular PQS source box and a non-identity product/doside transform.
-This is still private/shadow-only layout evidence, not a packet builder: it
-does not use shell-row projection, Lowdin, `support_coefficient_matrix` as a
-PQS oracle, retained PQS weights, or IDA division, and it changes no packet
-construction, QW/Hamiltonian, public/default, CR2,
-local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior.
+cover a rectangular PQS source box and a non-identity product/doside
+transform.
+
+The cross-PQS checkpoint extends the PQS/PQS source-box seam from self-only to
+distinct compatible raw product-box plans. Compatibility currently requires
+matching source-mode dimensions, source-mode ordering, and boundary selector
+structure. Cross-axis factors are built as
+`C_left' * M[left_interval, right_interval] * C_right`, and retained blocks are
+assembled from boundary COMX-product selectors. The focused fixture shifts the
+right cubic PQS box: left `(1:5,1:5,1:5)`, right `(3:7,1:5,1:5)`, source dims
+`(5,5,5)`, retained count `98`. The explicit source-box oracle agrees to about
+`5.7e-14`, and reverse-orientation transpose consistency is about `7.6e-15`.
+
+The three-unit route-like shadow checkpoint then adds
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
+`_pqs_pqs_product_source_box_shadow_blocks(...)`. It has retained units
+`(:pqs_left, :pqs_right, :product)` and six upper-triangular pair entries:
+`(:pqs_left, :pqs_left)`, `(:pqs_left, :pqs_right)`,
+`(:pqs_left, :product)`, `(:pqs_right, :pqs_right)`,
+`(:pqs_right, :product)`, and `(:product, :product)`. The shifted fixture has
+full retained dimension `200`, pair count `6`, and component max error about
+`5.7e-14`. Product/product, PQS/product, and PQS/PQS now share the private
+source-box vocabulary for overlap, position, `x2`, and kinetic.
+
+These checkpoints are still private/shadow-only layout evidence, not a packet
+builder and not a generic route inventory framework: they do not use shell-row
+projection, Lowdin, `support_coefficient_matrix` as a PQS oracle, retained PQS
+weights, or IDA division, and they change no packet construction,
+QW/Hamiltonian, public/default, CR2, local/ECP/Gaussian/MWG/interaction, or
+IDA/MWG behavior.
 
 The private PQS source-box to GTO cross-overlap checkpoint adds
 `_pqs_source_box_gto_cross_overlap_shadow(...)` and

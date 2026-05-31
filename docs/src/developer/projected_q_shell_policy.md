@@ -212,17 +212,22 @@ private/shadow-only source-box infrastructure, with no shell projection,
 Lowdin, retained PQS weight division, packet adoption, QW/Hamiltonian route, or
 public/default behavior change.
 
-The corresponding self-only PQS/PQS source-box seam is now private/shadow
-infrastructure too. `_pqs_pqs_source_box_pair_plan(...)`,
+The corresponding PQS/PQS source-box seam is now private/shadow infrastructure
+too. `_pqs_pqs_source_box_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks(...)`, and
-`_pqs_pqs_source_box_reference_block(...)` support only same-raw-plan PQS/PQS
-self blocks for overlap, position, `x2`, and kinetic. Cross-PQS source boxes
-are rejected for now. Each self block is assembled directly from 1D source-box
-factors and boundary COMX-product selectors, then checked against
-`_pqs_raw_product_box_reference_block(...)`. The path does not use shell
-projection, Lowdin, support-local PQS coefficients, retained PQS weights, or
-IDA division.
+`_pqs_pqs_source_box_reference_block(...)` support overlap, position, `x2`,
+and kinetic. Same-raw-plan self blocks are assembled directly from 1D
+source-box factors and boundary COMX-product selectors, then checked against
+`_pqs_raw_product_box_reference_block(...)`. Distinct cross-PQS boxes are also
+accepted when source-mode dimensions, source-mode ordering, and boundary
+selector structure match. Cross blocks use 1D factors
+`C_left' * M[left_interval, right_interval] * C_right`; the first shifted
+cubic fixture uses left `(1:5,1:5,1:5)` and right `(3:7,1:5,1:5)`, source
+dims `(5,5,5)`, retained count `98`, with explicit source-box oracle error
+about `5.7e-14` and transpose consistency about `7.6e-15`. The path does not
+use shell projection, Lowdin, support-local PQS coefficients, retained PQS
+weights, or IDA division.
 
 `_pqs_product_source_box_shadow_blocks(...)` is the private two-block
 layout/reference consumer for this path. It places one mode-selected PQS
@@ -241,6 +246,22 @@ shadow evidence only: no shell-row projection, no Lowdin, no
 `support_coefficient_matrix` PQS oracle, no retained PQS weight division, no
 packet adoption, and no QW/Hamiltonian, public/default, CR2,
 local/ECP/Gaussian/MWG/interaction, or IDA/MWG behavior change.
+
+The next private route-like shadow adds
+`_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
+`_pqs_pqs_product_source_box_shadow_blocks(...)`. It is still hard-coded
+shadow infrastructure, not a generic route inventory framework. The retained
+units are `(:pqs_left, :pqs_right, :product)` and the six upper-triangular
+pairs are `(:pqs_left, :pqs_left)`, `(:pqs_left, :pqs_right)`,
+`(:pqs_left, :product)`, `(:pqs_right, :pqs_right)`,
+`(:pqs_right, :product)`, and `(:product, :product)`. The shifted cubic
+fixture has full retained dimension `200`, pair count `6`, and component max
+error about `5.7e-14`. Product/product, PQS/product, and PQS/PQS now all use
+the same private source-box vocabulary for overlap, position, `x2`, and
+kinetic. This remains private shadow/reference infrastructure only; it is not
+packet or fixed-block construction adoption and changes no QW/Hamiltonian,
+public/default, CR2, local/ECP/Gaussian/MWG/interaction, retained-weight, or
+IDA/MWG behavior.
 
 A private GTO cross-overlap shadow now extends the same source-box boundary.
 `_pqs_source_box_gto_cross_overlap_shadow(...)` uses
