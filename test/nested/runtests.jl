@@ -7146,6 +7146,58 @@ end
           :not_positive_quadrature_weights
     @test !pqs_retained_unit_audit.diagnostics.ida_weight_division_allowed
     @test !pqs_retained_unit_audit.diagnostics.local_ecp_gaussian_mwg_interaction_changed
+    contact_cap_product_unit =
+        CCPM._pqs_contact_cap_product_doside_unit(pqs_construction)
+    @test contact_cap_product_unit.object_kind ==
+          :pqs_contact_cap_product_doside_unit_fixture
+    @test contact_cap_product_unit.status == :private_diagnostic_only
+    @test contact_cap_product_unit.fact.role == :contact_cap
+    @test contact_cap_product_unit.fact.classification ==
+          :product_box_constructible
+    @test !contact_cap_product_unit.fact.raw_product_box_operator_contract
+    @test contact_cap_product_unit.fact.product_box_construction_rule_available
+    @test contact_cap_product_unit.unit.role == :contact_cap_slab
+    @test contact_cap_product_unit.unit.kind == :product_doside
+    @test contact_cap_product_unit.unit.column_range == 349:373
+    @test contact_cap_product_unit.unit.support_indices ==
+          contact_cap_product_unit.fact.support_indices
+    @test contact_cap_product_unit.unit.support_states == [
+        GaussletBases._cartesian_unflat_index(index, (7, 7, 15))
+        for index in contact_cap_product_unit.unit.support_indices
+    ]
+    @test Matrix(contact_cap_product_unit.unit.coefficient_matrix) ==
+          Matrix{Float64}(I, 25, 25)
+    @test map(axis -> axis.kind, contact_cap_product_unit.unit.axes) ==
+          (:active, :active, :fixed)
+    @test contact_cap_product_unit.unit.axes[1].interval == 2:6
+    @test contact_cap_product_unit.unit.axes[2].interval == 2:6
+    @test contact_cap_product_unit.unit.axes[3].fixed_index == 8
+    @test Matrix(contact_cap_product_unit.unit.axes[1].coefficient_matrix) ==
+          Matrix{Float64}(I, 5, 5)
+    @test Matrix(contact_cap_product_unit.unit.axes[2].coefficient_matrix) ==
+          Matrix{Float64}(I, 5, 5)
+    @test contact_cap_product_unit.unit.axis_function_indices ==
+          GaussletBases._nested_product_axis_function_indices(3, 1, 5, 2, 5)
+    @test contact_cap_product_unit.equivalence.support_indices_match
+    @test contact_cap_product_unit.equivalence.support_states_match
+    @test contact_cap_product_unit.equivalence.retained_count_match
+    @test contact_cap_product_unit.equivalence.column_range_match
+    @test contact_cap_product_unit.equivalence.coefficient_matrix_matches_direct_selector
+    @test contact_cap_product_unit.equivalence.max_parent_coefficient_error == 0.0
+    @test contact_cap_product_unit.diagnostics.contact_cap_only
+    @test contact_cap_product_unit.diagnostics.product_doside_unit_created
+    @test !contact_cap_product_unit.diagnostics.route_descriptor_emitted
+    @test !contact_cap_product_unit.diagnostics.construction_mutated
+    @test !contact_cap_product_unit.diagnostics.sidecar_installation
+    @test !contact_cap_product_unit.diagnostics.packet_adoption
+    @test !contact_cap_product_unit.diagnostics.fixed_block_construction_changed
+    @test !contact_cap_product_unit.diagnostics.qwhamiltonian_changed
+    @test !contact_cap_product_unit.diagnostics.ida_weight_division_allowed
+    @test contact_cap_product_unit.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test contact_cap_product_unit.diagnostics.product_box_construction_rule_available
+    @test !contact_cap_product_unit.diagnostics.input_fact_raw_product_box_operator_contract
+    @test contact_cap_product_unit.diagnostics.created_unit_raw_product_box_operator_contract
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only

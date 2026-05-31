@@ -519,6 +519,26 @@ present. Product-box-constructible direct/support pieces are not
 reinterpreted as product/doside, no unit is created, and the current high-order
 PQS route descriptor diagnostic remains `:descriptor_unavailable`.
 
+The contact-cap product/doside checkpoint adds one private read-path helper:
+`_pqs_contact_cap_product_doside_unit(construction; ...)`. It constructs an
+explicit contact-cap-only
+`_CartesianNestedProductStagedByCenterUnit3D(kind = :product_doside)` from the
+audited `q x q x 1` identity-selector slab rule. The helper proves
+equivalence to the current direct/support contact-cap selector by matching
+support indices and states, retained count, column range, identity
+support-local coefficients, and parent-expanded coefficient error `0.0`.
+Its diagnostics distinguish the old input fact from the helper-created unit:
+`input_fact_raw_product_box_operator_contract = false` and
+`created_unit_raw_product_box_operator_contract = true`.
+
+This contact-cap helper is private diagnostic/read-path infrastructure only.
+It does not install the unit into construction or sidecars, does not emit a
+route descriptor, and does not convert outer mismatch, atom boxes, or PQS
+descriptors. Current route descriptor diagnostics may therefore remain
+`:descriptor_unavailable`. It changes no packet or fixed-block construction,
+QW/Hamiltonian path, public/default behavior, retained-weight IDA division, or
+local/ECP/Gaussian/MWG/interaction behavior.
+
 Non-goals for this migration stage:
 
 - no public API or default-route promotion;

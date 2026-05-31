@@ -320,6 +320,26 @@ construction, QW/Hamiltonian path, sidecar installation or mutation,
 retained-weight IDA division, local/ECP/Gaussian/MWG/interaction behavior, or
 public/default route.
 
+The contact-cap product/doside checkpoint adds a narrow private helper,
+`_pqs_contact_cap_product_doside_unit(construction; ...)`. It constructs a
+contact-cap-only `_CartesianNestedProductStagedByCenterUnit3D(kind =
+:product_doside)` from the audited `q x q x 1` identity-selector slab rule.
+The helper proves equivalence to the current direct/support contact-cap
+selector: support indices and states match, retained count and column range
+match, support-local coefficients are identity, and the parent-expanded
+coefficient error is `0.0`. Its diagnostics explicitly split the contract:
+`input_fact_raw_product_box_operator_contract = false` for the direct/support
+fact, and `created_unit_raw_product_box_operator_contract = true` for the
+helper-created product/doside unit.
+
+This is diagnostic/read-path infrastructure only. It does not install the
+contact-cap unit into construction or sidecars, does not emit a route
+descriptor, and does not convert outer mismatch, atom boxes, or PQS
+descriptors. Current route descriptor diagnostics may still be
+`:descriptor_unavailable`. No packet/fixed-block/QW/Hamiltonian adoption,
+retained-weight IDA division, local/ECP/Gaussian/MWG/interaction behavior, or
+public/default behavior changes are implied.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained

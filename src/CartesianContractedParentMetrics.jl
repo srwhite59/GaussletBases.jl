@@ -7,8 +7,14 @@ import ..GaussletBases: _NestedFixedBlock3D,
                          _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
+                         _cartesian_flat_index,
                          _cartesian_raw_product_box_plan,
                          _cartesian_raw_product_box_source_mode_indices,
+                         _cartesian_unflat_index,
+                         _nested_axis_lengths,
+                         _nested_product_axis_function_indices,
+                         _nested_product_staged_active_axis,
+                         _nested_product_staged_fixed_axis,
                          _nested_projected_q_shell_staged_unit_descriptor,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _require_analytic_primitive_backend,
@@ -4157,6 +4163,229 @@ function _pqs_route_retained_unit_fact_audit(
         status = :audit_only,
         unit_facts = unit_facts,
         summary = summary,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_contact_cap_parent_coefficient_matrix(
+    support_indices::AbstractVector{<:Integer},
+    support_coefficients::AbstractMatrix{<:Real},
+    parent_dimension::Int,
+)
+    nrows, ncols = size(support_coefficients)
+    length(support_indices) == nrows || throw(
+        DimensionMismatch("contact-cap product/doside support rows must match support indices"),
+    )
+    row_indices = Int[]
+    col_indices = Int[]
+    values = Float64[]
+    for col in 1:ncols, row in 1:nrows
+        value = Float64(support_coefficients[row, col])
+        iszero(value) && continue
+        push!(row_indices, Int(support_indices[row]))
+        push!(col_indices, col)
+        push!(values, value)
+    end
+    return SparseArrays.sparse(
+        row_indices,
+        col_indices,
+        values,
+        parent_dimension,
+        ncols,
+    )
+end
+
+function _pqs_contact_cap_product_doside_unit(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    audit = _pqs_route_retained_unit_fact_audit(
+        construction;
+        include_support_indices = true,
+    ),
+)
+    contact_facts = [
+        fact for fact in audit.unit_facts if fact.role == :contact_cap
+    ]
+    length(contact_facts) == 1 || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires exactly one contact-cap fact"),
+    )
+    contact_fact = only(contact_facts)
+    contact_fact.classification == :product_box_constructible || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires a product-box-constructible contact cap"),
+    )
+    rule = contact_fact.construction_rule
+    isnothing(rule) && throw(
+        ArgumentError("PQS contact-cap product/doside helper requires an explicit construction rule"),
+    )
+    rule.rule_kind == :identity_selector_product_doside_slab || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires an identity-selector slab rule"),
+    )
+    rule.slab_piece_count == 1 || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires a single slab rule"),
+    )
+    !isnothing(rule.fixed_axis_index) || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires one fixed axis"),
+    )
+    length(rule.active_axis_indices) == 2 || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires two active axes"),
+    )
+    active_lengths = Tuple(length(interval) for interval in rule.active_intervals)
+    active_lengths[1] == active_lengths[2] || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires a q x q x 1 slab"),
+    )
+
+    contact_builds = [
+        build for build in construction.region_builds if build.region_role == :contact_cap
+    ]
+    length(contact_builds) == 1 || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires exactly one contact-cap build"),
+    )
+    contact_build = only(contact_builds)
+    descriptor =
+        _pqs_route_realization_descriptor_for_build(construction, contact_build)
+    isnothing(descriptor) && throw(
+        ArgumentError("PQS contact-cap product/doside helper requires a realization descriptor"),
+    )
+    length(descriptor.pieces) == 1 || throw(
+        ArgumentError("PQS contact-cap product/doside helper requires a single descriptor piece"),
+    )
+    piece = only(descriptor.pieces)
+    support_indices = isnothing(contact_fact.support_indices) ?
+        copy(piece.support_indices) : copy(contact_fact.support_indices)
+    support_indices == piece.support_indices || throw(
+        ArgumentError("PQS contact-cap audited support indices must match descriptor piece support"),
+    )
+
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    expected_support_indices = Int[
+        _cartesian_flat_index(state[1], state[2], state[3], dims)
+        for state in support_states
+    ]
+    support_indices == expected_support_indices || throw(
+        ArgumentError("PQS contact-cap support states do not round-trip through parent indexing"),
+    )
+
+    retained_count = contact_fact.retained_count
+    length(contact_fact.column_range) == retained_count || throw(
+        ArgumentError("PQS contact-cap column range must match retained count"),
+    )
+    retained_count == prod(active_lengths) || throw(
+        ArgumentError("PQS contact-cap retained count must match active identity selector size"),
+    )
+    support_count = length(support_indices)
+    support_count == retained_count || throw(
+        ArgumentError("PQS contact-cap identity selector requires support count equal retained count"),
+    )
+
+    active_coefficients = ntuple(
+        axis -> Matrix{Float64}(
+            LinearAlgebra.I,
+            active_lengths[axis],
+            active_lengths[axis],
+        ),
+        2,
+    )
+    axes = ntuple(axis -> begin
+        axis == rule.fixed_axis_index &&
+            return _nested_product_staged_fixed_axis(rule.fixed_index)
+        axis == rule.active_axis_indices[1] &&
+            return _nested_product_staged_active_axis(
+                rule.active_intervals[1],
+                active_coefficients[1],
+            )
+        axis == rule.active_axis_indices[2] &&
+            return _nested_product_staged_active_axis(
+                rule.active_intervals[2],
+                active_coefficients[2],
+            )
+        throw(ArgumentError("PQS contact-cap rule has inconsistent active/fixed axes"))
+    end, 3)
+    local_coefficients = Matrix{Float64}(
+        LinearAlgebra.I,
+        support_count,
+        retained_count,
+    )
+    unit = _CartesianNestedProductStagedByCenterUnit3D(
+        rule.piece_role,
+        :product_doside,
+        contact_fact.column_range,
+        support_indices,
+        support_states,
+        local_coefficients,
+        axes,
+        _nested_product_axis_function_indices(
+            rule.fixed_axis_index,
+            rule.active_axis_indices[1],
+            active_lengths[1],
+            rule.active_axis_indices[2],
+            active_lengths[2],
+        ),
+        (
+            source = :pqs_contact_cap_product_doside_unit,
+            fact_role = contact_fact.role,
+            primitive_family = contact_fact.primitive_family,
+            mapped_primitive = contact_fact.mapped_primitive,
+        ),
+        (
+            support_count = support_count,
+            retained_count = retained_count,
+            fixed_axis = rule.fixed_axis_index,
+            fixed_index = rule.fixed_index,
+            active_axes = rule.active_axis_indices,
+            active_retained_counts = active_lengths,
+            contact_cap_only = true,
+            private_diagnostic_only = true,
+        ),
+    )
+
+    parent_coefficients = _pqs_contact_cap_parent_coefficient_matrix(
+        support_indices,
+        local_coefficients,
+        parent_dimension,
+    )
+    direct_coefficients = contact_build.built_object.coefficient_matrix
+    parent_difference =
+        Matrix{Float64}(parent_coefficients) - Matrix{Float64}(direct_coefficients)
+    max_parent_coefficient_error =
+        isempty(parent_difference) ? 0.0 : maximum(abs, parent_difference)
+    equivalence = (
+        support_indices_match =
+            support_indices == contact_build.built_object.support_indices ==
+            piece.support_indices,
+        support_states_match =
+            support_states == [_cartesian_unflat_index(index, dims) for index in support_indices],
+        retained_count_match =
+            retained_count == contact_build.retained_count == length(contact_fact.column_range),
+        column_range_match =
+            contact_fact.column_range == contact_build.column_range,
+        coefficient_matrix_matches_direct_selector =
+            max_parent_coefficient_error == 0.0,
+        max_parent_coefficient_error = max_parent_coefficient_error,
+    )
+    diagnostics = (
+        contact_cap_only = true,
+        product_doside_unit_created = true,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        product_box_construction_rule_available =
+            contact_fact.product_box_construction_rule_available,
+        input_fact_raw_product_box_operator_contract =
+            contact_fact.raw_product_box_operator_contract,
+        created_unit_raw_product_box_operator_contract = true,
+    )
+    return (
+        object_kind = :pqs_contact_cap_product_doside_unit_fixture,
+        status = :private_diagnostic_only,
+        fact = contact_fact,
+        unit = unit,
+        equivalence = equivalence,
         diagnostics = diagnostics,
     )
 end
