@@ -427,6 +427,23 @@ support-local/current-route oracle. Focused q4 evidence was `542 / 542`, max
 matrix error `0.0`, helper elapsed time `28.601491167 s`, and allocation
 `137,976,768` bytes.
 
+The private current-route authority checkpoint adds
+`_pqs_current_route_safe_term_authority_comparison(...)`. It compares the
+private route-wide safe-term matrices against existing current-route authority
+fields only. Candidate authorities are the fixed block first and the sequence
+packet second. A term is compared only when the authority object carries a
+finite retained-space matrix with shape `(retained_dimension,
+retained_dimension)`; missing or wrong-shaped terms are recorded explicitly.
+For this q4 checkpoint, overlap and kinetic are required authorities.
+
+Focused q4 evidence: the helper compared all safe terms against fixed-block
+authority: overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. The focused
+probe passed `591 / 591`; the support-local oracle max error remained `0.0`;
+the fixed-block authority max error was `2.6290081223123707e-13`; authority
+comparison time/allocation were `0.007607708 s` and `15,227,616` bytes. The
+underlying safe-term matrix build in that run took `28.357196959 s` and
+allocated `137,977,696` bytes.
+
 The active shared PQS shell remains `:shell_realized_pqs_fixture`; raw-box PQS
 helpers remain reference/shadow-only for the current route. This is still
 private diagnostic/shadow infrastructure only: no construction behavior

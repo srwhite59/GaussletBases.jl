@@ -7842,6 +7842,52 @@ end
     @test all(isfinite, pqs_fixed_block.pair_sum)
     @test norm(pqs_fixed_block.overlap - I, Inf) < 1.0e-8
     @test pqs_fixed_block.staged_by_center_sidecar[] === nothing
+    current_route_authority_comparison =
+        CCPM._pqs_current_route_safe_term_authority_comparison(
+            pqs_construction,
+            contact_safe_term_metrics;
+            inventory = current_route_inventory,
+            pair_inventory = current_route_pair_inventory,
+            safe_terms = current_route_safe_terms,
+            fixed_block = pqs_fixed_block,
+        )
+    @test current_route_authority_comparison.object_kind ==
+          :pqs_current_route_safe_term_authority_comparison_fixture
+    @test current_route_authority_comparison.status == :private_diagnostic_only
+    @test current_route_authority_comparison.terms == current_route_safe_terms.terms
+    @test current_route_authority_comparison.compared_terms ==
+          current_route_safe_terms.terms
+    @test isempty(current_route_authority_comparison.unavailable_terms)
+    @test current_route_authority_comparison.max_authority_error <= 1.0e-8
+    for term in current_route_authority_comparison.compared_terms
+        @test current_route_authority_comparison.term_errors[term] <= 1.0e-8
+        @test current_route_authority_comparison.authority_sources[term] ==
+              :fixed_block
+        @test current_route_authority_comparison.authority_fields[term] == term
+        @test current_route_authority_comparison.authority_shapes[term] == (487, 487)
+    end
+    @test current_route_authority_comparison.diagnostics.private_diagnostic_only
+    @test current_route_authority_comparison.diagnostics.current_route_safe_term_authority_comparison
+    @test current_route_authority_comparison.diagnostics.authority_fixed_block_or_sequence_packet_only
+    @test current_route_authority_comparison.diagnostics.support_local_oracle_secondary
+    @test current_route_authority_comparison.diagnostics.support_local_oracle_global_max_error <=
+          1.0e-12
+    @test current_route_authority_comparison.diagnostics.compared_term_count ==
+          length(current_route_safe_terms.terms)
+    @test current_route_authority_comparison.diagnostics.unavailable_term_count == 0
+    @test current_route_authority_comparison.diagnostics.max_authority_error <= 1.0e-8
+    @test current_route_authority_comparison.diagnostics.finite_output
+    @test !current_route_authority_comparison.diagnostics.construction_mutated
+    @test !current_route_authority_comparison.diagnostics.sidecar_installation
+    @test !current_route_authority_comparison.diagnostics.packet_adoption
+    @test !current_route_authority_comparison.diagnostics.fixed_block_construction_changed
+    @test !current_route_authority_comparison.diagnostics.qwhamiltonian_changed
+    @test !current_route_authority_comparison.diagnostics.ida_weight_division_allowed
+    @test current_route_authority_comparison.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !current_route_authority_comparison.diagnostics.local_ecp_gaussian_mwg_interaction_changed
+    @test current_route_authority_comparison.diagnostics.elapsed_seconds >= 0.0
+    @test current_route_authority_comparison.diagnostics.allocated_bytes >= 0
     QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces
     pqs_receipt = @test_logs min_level = Logging.Warn QWCS.cartesian_qw_operator_construction_receipt(
         pqs_fixed_block;

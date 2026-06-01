@@ -15,6 +15,7 @@ import ..GaussletBases: _NestedFixedBlock3D,
                          _nested_product_axis_function_indices,
                          _nested_product_staged_active_axis,
                          _nested_product_staged_fixed_axis,
+                         _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block,
                          _nested_projected_q_shell_staged_unit_descriptor,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
                          _require_analytic_primitive_backend,
@@ -6394,6 +6395,282 @@ function _pqs_current_route_safe_term_matrices(
         global_max_error = payload.global_max_error,
         inventory = inventory,
         pair_inventory = pair_inventory,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_current_route_authority_matrix_candidate(
+    source::Symbol,
+    object,
+    term::Symbol,
+    retained_dimension::Int,
+)
+    field = term
+    isnothing(object) && return (
+        available = false,
+        source = source,
+        field = field,
+        matrix = nothing,
+        shape = nothing,
+        failure = (
+            source = source,
+            field = field,
+            reason = :source_unavailable,
+        ),
+    )
+    !hasproperty(object, field) && return (
+        available = false,
+        source = source,
+        field = field,
+        matrix = nothing,
+        shape = nothing,
+        failure = (
+            source = source,
+            field = field,
+            reason = :field_absent,
+        ),
+    )
+
+    matrix = getproperty(object, field)
+    !(matrix isa AbstractMatrix) && return (
+        available = false,
+        source = source,
+        field = field,
+        matrix = nothing,
+        shape = nothing,
+        failure = (
+            source = source,
+            field = field,
+            reason = :field_is_not_matrix,
+            value_type = typeof(matrix),
+        ),
+    )
+
+    shape = size(matrix)
+    expected_shape = (retained_dimension, retained_dimension)
+    shape != expected_shape && return (
+        available = false,
+        source = source,
+        field = field,
+        matrix = nothing,
+        shape = shape,
+        failure = (
+            source = source,
+            field = field,
+            reason = :wrong_retained_shape,
+            shape = shape,
+            expected_shape = expected_shape,
+        ),
+    )
+    !all(isfinite, matrix) && return (
+        available = false,
+        source = source,
+        field = field,
+        matrix = nothing,
+        shape = shape,
+        failure = (
+            source = source,
+            field = field,
+            reason = :nonfinite_authority_matrix,
+            shape = shape,
+        ),
+    )
+    return (
+        available = true,
+        source = source,
+        field = field,
+        matrix = matrix,
+        shape = shape,
+        failure = nothing,
+    )
+end
+
+function _pqs_current_route_authority_matrix(
+    candidates,
+    term::Symbol,
+    retained_dimension::Int,
+)
+    failures = Any[]
+    for candidate in candidates
+        result = _pqs_current_route_authority_matrix_candidate(
+            candidate.source,
+            candidate.object,
+            term,
+            retained_dimension,
+        )
+        result.available && return result
+        push!(failures, result.failure)
+    end
+    return (
+        available = false,
+        source = nothing,
+        field = term,
+        matrix = nothing,
+        shape = nothing,
+        failure = (
+            term = term,
+            reason = :no_authoritative_retained_space_field,
+            checked_sources = Tuple(failures),
+        ),
+    )
+end
+
+function _pqs_current_route_safe_term_authority_comparison_payload(
+    safe_terms,
+    candidates;
+    atol::Real,
+)
+    retained_dimension = safe_terms.diagnostics.retained_dimension
+    term_errors = Dict{Symbol,Float64}()
+    authority_sources = Dict{Symbol,Symbol}()
+    authority_fields = Dict{Symbol,Symbol}()
+    authority_shapes = Dict{Symbol,Tuple{Int,Int}}()
+    unavailable = Any[]
+    compared_terms = Symbol[]
+
+    for term in safe_terms.terms
+        !haskey(safe_terms.matrices, term) && begin
+            push!(
+                unavailable,
+                (
+                    term = term,
+                    reason = :safe_term_matrix_absent,
+                    checked_sources = (),
+                ),
+            )
+            continue
+        end
+        safe_matrix = safe_terms.matrices[term]
+        authority = _pqs_current_route_authority_matrix(
+            candidates,
+            term,
+            retained_dimension,
+        )
+        !authority.available && begin
+            push!(
+                unavailable,
+                (
+                    term = term,
+                    reason = authority.failure.reason,
+                    safe_shape = size(safe_matrix),
+                    checked_sources = authority.failure.checked_sources,
+                ),
+            )
+            continue
+        end
+
+        error = LinearAlgebra.norm(safe_matrix - authority.matrix, Inf)
+        term_errors[term] = error
+        authority_sources[term] = authority.source
+        authority_fields[term] = authority.field
+        authority_shapes[term] = authority.shape
+        push!(compared_terms, term)
+    end
+
+    required_authority_terms = (:overlap, :kinetic)
+    missing_required = Tuple(
+        term for term in required_authority_terms if !(term in compared_terms)
+    )
+    isempty(missing_required) || throw(
+        ArgumentError(
+            "PQS current-route authority comparison could not find authoritative retained-space fields for $(missing_required)",
+        ),
+    )
+
+    max_authority_error = maximum(values(term_errors))
+    max_authority_error <= atol || throw(
+        ArgumentError(
+            "PQS current-route safe-term authority comparison exceeded tolerance: max error $(max_authority_error), tolerance $(atol)",
+        ),
+    )
+    diagnostics = (
+        private_diagnostic_only = true,
+        current_route_safe_term_authority_comparison = true,
+        retained_dimension = retained_dimension,
+        terms_requested = safe_terms.terms,
+        compared_terms = Tuple(compared_terms),
+        compared_term_count = length(compared_terms),
+        unavailable_terms = Tuple(entry.term for entry in unavailable),
+        unavailable_term_count = length(unavailable),
+        authoritative_sources = Tuple(unique(values(authority_sources))),
+        authority_fixed_block_or_sequence_packet_only = true,
+        support_local_oracle_secondary = true,
+        support_local_oracle_global_max_error = safe_terms.global_max_error,
+        max_authority_error = max_authority_error,
+        finite_output = all(
+            term -> all(isfinite, safe_terms.matrices[term]),
+            safe_terms.terms,
+        ),
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+    )
+    return (
+        terms = safe_terms.terms,
+        compared_terms = Tuple(compared_terms),
+        unavailable_terms = Tuple(unavailable),
+        term_errors = term_errors,
+        max_authority_error = max_authority_error,
+        authority_sources = authority_sources,
+        authority_fields = authority_fields,
+        authority_shapes = authority_shapes,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_current_route_safe_term_authority_comparison(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    inventory = _pqs_current_route_retained_unit_inventory(construction),
+    pair_inventory = _pqs_current_route_retained_pair_inventory(inventory),
+    safe_terms = _pqs_current_route_safe_term_matrices(
+        construction,
+        metrics;
+        inventory,
+        pair_inventory,
+    ),
+    fixed_block = nothing,
+    sequence_packet = construction.sequence.packet,
+    atol::Real = 1.0e-8,
+)
+    authoritative_fixed_block = isnothing(fixed_block) ?
+        _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block(construction) :
+        fixed_block
+    candidates = (
+        (source = :fixed_block, object = authoritative_fixed_block),
+        (source = :sequence_packet, object = sequence_packet),
+    )
+    timed = @timed _pqs_current_route_safe_term_authority_comparison_payload(
+        safe_terms,
+        candidates;
+        atol,
+    )
+    payload = timed.value
+    diagnostics = merge(
+        payload.diagnostics,
+        (
+            elapsed_seconds = Float64(timed.time),
+            allocated_bytes = Int(timed.bytes),
+            gc_time_seconds = Float64(timed.gctime),
+        ),
+    )
+    return (
+        object_kind = :pqs_current_route_safe_term_authority_comparison_fixture,
+        status = :private_diagnostic_only,
+        terms = payload.terms,
+        compared_terms = payload.compared_terms,
+        unavailable_terms = payload.unavailable_terms,
+        term_errors = payload.term_errors,
+        max_authority_error = payload.max_authority_error,
+        authority_sources = payload.authority_sources,
+        authority_fields = payload.authority_fields,
+        authority_shapes = payload.authority_shapes,
+        safe_terms = safe_terms,
         diagnostics = diagnostics,
     )
 end
