@@ -3494,6 +3494,38 @@ end
         merge(route_geometry_facts, (parent_dims = (5, 5, 8),)),
         route_metrics,
     )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+        parent_dims = route_dims,
+        bond_axis = :w,
+        q = 5,
+        L = 5,
+        left_start = (1, 1, 1),
+        right_shift = (0, 0, 2),
+        product_slab_fixed_index = 4,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+        parent_dims = route_dims,
+        bond_axis = :z,
+        left_start = (1, 1, 1),
+        right_shift = (0, 0, 2),
+        product_slab_fixed_index = 4,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+        parent_dims = route_dims,
+        bond_axis = :z,
+        source_mode_dims = (5, 5),
+        left_start = (1, 1, 1),
+        right_shift = (0, 0, 2),
+        product_slab_fixed_index = 4,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+        parent_dims = route_dims,
+        bond_axis = :z,
+        source_mode_dims = (5, 1, 5),
+        left_start = (1, 1, 1),
+        right_shift = (0, 0, 2),
+        product_slab_fixed_index = 4,
+    )
     @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
         route_bundles,
         (0:4, 1:5, 1:5),
@@ -3768,6 +3800,114 @@ end
         summary -> summary.max_geometry_consumer_error < 1.0e-10,
         route_producer_sample_summaries,
     )
+    x_axis_route_bundles =
+        GaussletBases._CartesianNestedAxisBundles3D(bundle7, bundle5, bundle5)
+    x_axis_route_metrics = _pqs_axis_metrics(x_axis_route_bundles)
+    x_axis_route_dims = (7, 5, 5)
+    x_axis_left_box = (1:5, 1:5, 1:5)
+    x_axis_right_box = (3:7, 1:5, 1:5)
+    x_axis_product_box = (4:4, 1:5, 1:5)
+    x_axis_explicit_route =
+        CCPM._pqs_pqs_product_raw_box_route_producer(
+            x_axis_route_bundles,
+            x_axis_left_box,
+            x_axis_right_box,
+            x_axis_product_box,
+            x_axis_route_metrics;
+            source_mode_dims = (5, 5, 5),
+            route_name = :x_axis_shifted_cubic_q5_L5,
+            parent_dims = x_axis_route_dims,
+            bond_axis = :x,
+            metadata = (
+                sample_name = :x_axis_shifted_cubic_q5_L5,
+                axis_general_geometry_validation = true,
+            ),
+            provenance = (source = :axis_general_geometry_validation,),
+        )
+    x_axis_geometry_facts =
+        CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+            parent_dims = x_axis_route_dims,
+            bond_axis = :x,
+            q = 5,
+            L = 5,
+            left_start = (1, 1, 1),
+            right_shift = (2, 0, 0),
+            product_slab_fixed_index = 4,
+            route_name = :x_axis_shifted_cubic_q5_L5,
+            metadata = (
+                sample_name = :x_axis_shifted_cubic_q5_L5,
+                axis_general_geometry_validation = true,
+            ),
+            provenance = (source = :axis_general_geometry_validation,),
+        )
+    @test x_axis_geometry_facts.bond_axis == :x
+    @test x_axis_geometry_facts.bond_axis_index == 1
+    @test x_axis_geometry_facts.left_source_box == x_axis_left_box
+    @test x_axis_geometry_facts.right_source_box == x_axis_right_box
+    @test x_axis_geometry_facts.product_source_box == x_axis_product_box
+    @test x_axis_geometry_facts.source_mode_dims == (5, 5, 5)
+    @test x_axis_geometry_facts.diagnostics.product_slab_fixed_axis == 1
+    @test x_axis_geometry_facts.diagnostics.source_boxes_inside_parent_dims
+    @test !x_axis_geometry_facts.diagnostics.shell_projection_used
+    @test !x_axis_geometry_facts.diagnostics.lowdin_cleanup_used
+    @test !x_axis_geometry_facts.diagnostics.support_local_pqs_oracle_used
+    @test !x_axis_geometry_facts.diagnostics.support_coefficient_matrix_used
+    @test !x_axis_geometry_facts.diagnostics.retained_pqs_weights_used
+    @test !x_axis_geometry_facts.diagnostics.ida_weight_division_allowed
+    x_axis_geometry_route =
+        CCPM._pqs_pqs_product_raw_box_route_from_geometry_facts(
+            x_axis_route_bundles,
+            x_axis_geometry_facts,
+            x_axis_route_metrics,
+        )
+    @test x_axis_geometry_route.descriptor.expected_ranges ==
+          x_axis_explicit_route.descriptor.expected_ranges
+    @test x_axis_geometry_route.descriptor.retained_dimension ==
+          x_axis_explicit_route.descriptor.retained_dimension
+    @test x_axis_geometry_route.descriptor.expected_pair_count ==
+          x_axis_explicit_route.descriptor.expected_pair_count
+    @test x_axis_geometry_route.descriptor.supported_terms ==
+          x_axis_explicit_route.descriptor.supported_terms
+    @test map(summary -> summary.source_dimensions,
+              x_axis_geometry_route.descriptor.unit_summaries) ==
+          map(summary -> summary.source_dimensions,
+              x_axis_explicit_route.descriptor.unit_summaries)
+    @test map(summary -> summary.retained_count,
+              x_axis_geometry_route.descriptor.unit_summaries) ==
+          map(summary -> summary.retained_count,
+              x_axis_explicit_route.descriptor.unit_summaries)
+    @test x_axis_geometry_route.all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+    @test x_axis_geometry_route.all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count == 6
+    @test x_axis_geometry_route.diagnostics.geometry_facts_consumed
+    @test !x_axis_geometry_route.diagnostics.shell_projection_used
+    @test !x_axis_geometry_route.diagnostics.lowdin_cleanup_used
+    @test !x_axis_geometry_route.diagnostics.support_local_pqs_oracle_used
+    @test !x_axis_geometry_route.diagnostics.support_coefficient_matrix_used
+    @test !x_axis_geometry_route.diagnostics.retained_pqs_weights_used
+    @test !x_axis_geometry_route.diagnostics.ida_weight_division_allowed
+    x_axis_explicit_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            x_axis_explicit_route.descriptor,
+            x_axis_route_metrics,
+        )
+    x_axis_geometry_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            x_axis_geometry_route.descriptor,
+            x_axis_route_metrics,
+        )
+    x_axis_geometry_error = maximum(
+        norm(
+            x_axis_geometry_consumer.blocks[term] -
+            x_axis_explicit_consumer.blocks[term],
+            Inf,
+        ) for term in x_axis_geometry_consumer.terms
+    )
+    @test x_axis_geometry_error < 1.0e-10
+    @test x_axis_geometry_consumer.pair_count == 6
+    @test !x_axis_geometry_consumer.diagnostics.packet_adoption
+    @test !x_axis_geometry_consumer.diagnostics.fixed_block_routing
+    @test !x_axis_geometry_consumer.diagnostics.qwhamiltonian_consumes
+    @test x_axis_geometry_consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
     route_fact_diagnostic =
         CCPM._pqs_pqs_product_route_descriptor_diagnostic(
             route_units,
