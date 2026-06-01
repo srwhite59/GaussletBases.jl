@@ -1437,8 +1437,14 @@ end
               :_pqs_raw_product_box_reference_block
         @test blocks.diagnostics.validation_reference_contract ==
               :explicit_raw_product_box_boundary_column_selection
+        @test blocks.diagnostics.internal_validation_reference_compared
         @test blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
+        @test blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_helper ==
+              :_pqs_pqs_source_box_explicit_boundary_selection_reference
         @test blocks.diagnostics.explicit_source_box_oracle_tested
+        @test !blocks.diagnostics.cross_box_external_raw_product_oracle_required
+        @test !blocks.diagnostics.cross_box_external_raw_product_oracle_compared_by_helper
+        @test blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
         @test blocks.diagnostics.pair_plan_reused_for_terms
         @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
         @test blocks.diagnostics.max_block_error < 1.0e-10
@@ -1627,15 +1633,18 @@ end
         @test isnothing(blocks.diagnostics.raw_box_self_reference_helper)
         @test blocks.diagnostics.source_box_algorithm_formula_available
         @test blocks.diagnostics.validation_reference_contract ==
-              :external_raw_product_box_boundary_column_selection_required
-        @test !blocks.diagnostics.internal_validation_reference_compared
-        @test !blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
-        @test blocks.diagnostics.cross_box_external_raw_product_oracle_required
-        @test !blocks.diagnostics.cross_box_external_raw_product_oracle_compared_by_helper
+              :explicit_raw_product_box_boundary_column_selection
+        @test blocks.diagnostics.internal_validation_reference_compared
+        @test blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
+        @test blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_helper ==
+              :_pqs_pqs_source_box_explicit_boundary_selection_reference
+        @test !blocks.diagnostics.cross_box_external_raw_product_oracle_required
+        @test blocks.diagnostics.cross_box_external_raw_product_oracle_compared_by_helper
         @test blocks.diagnostics.pair_plan_reused_for_terms
         @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
-        @test isnothing(blocks.diagnostics.max_block_error)
-        @test !blocks.diagnostics.explicit_source_box_oracle_tested
+        @test blocks.diagnostics.max_block_error < 1.0e-10
+        @test blocks.diagnostics.explicit_source_box_oracle_tested
+        @test blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
         @test !blocks.diagnostics.dense_raw_source_box_pair_matrix_materialized
         @test blocks.diagnostics.dense_raw_pair_storage_avoided
         @test blocks.diagnostics.retained_block_assembled_directly_from_1d_factors
@@ -1674,8 +1683,8 @@ end
             @test reverse_blocks.blocks[term] ≈ transpose(blocks.blocks[term]) atol = 1.0e-10 rtol = 1.0e-10
             @test single.path == :pqs_pqs_source_box_reference
             @test single.block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
-            @test isnothing(single.raw_box_reference_block)
-            @test isnothing(single.block_error)
+            @test single.raw_box_reference_block ≈ expected atol = 1.0e-10 rtol = 1.0e-10
+            @test single.block_error < 1.0e-10
             @test !single.diagnostics.pair_plan_reused_for_terms
             max_oracle_error = max(
                 max_oracle_error,

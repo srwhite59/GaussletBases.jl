@@ -1628,6 +1628,25 @@ function _pqs_raw_product_box_mode_matrix(
     return block
 end
 
+function _pqs_raw_product_box_pair_mode_matrix(
+    left_mode_indices::AbstractVector{<:NTuple{3,Int}},
+    right_mode_indices::AbstractVector{<:NTuple{3,Int}},
+    axis_matrices::NTuple{3,AbstractMatrix{<:Real}},
+)
+    block = Matrix{Float64}(undef, length(left_mode_indices), length(right_mode_indices))
+    @inbounds for col in eachindex(right_mode_indices)
+        jx, jy, jz = right_mode_indices[col]
+        for row in eachindex(left_mode_indices)
+            ix, iy, iz = left_mode_indices[row]
+            block[row, col] =
+                axis_matrices[1][ix, jx] *
+                axis_matrices[2][iy, jy] *
+                axis_matrices[3][iz, jz]
+        end
+    end
+    return block
+end
+
 function _pqs_raw_product_box_low_order_axis_kinds(term::Symbol)
     term == :overlap && return (:overlap, :overlap, :overlap)
     term == :position_x && return (:position, :overlap, :overlap)
@@ -2886,10 +2905,40 @@ function _pqs_pqs_source_box_block_from_factors(pair_plan, term::Symbol)
     return block
 end
 
+function _pqs_pqs_source_box_explicit_boundary_selection_reference(
+    pair_plan,
+    term::Symbol,
+)
+    term in pair_plan.supported_terms || throw(
+        ArgumentError("PQS/PQS source-box explicit reference received unsupported term $(term)"),
+    )
+    result = zeros(
+        Float64,
+        pair_plan.left_retained_count,
+        pair_plan.right_retained_count,
+    )
+    left_columns = pair_plan.left_boundary_mode_selector.column_indices
+    right_columns = pair_plan.right_boundary_mode_selector.column_indices
+    @inbounds for factor_kinds in _source_box_separable_term_factor_kinds(term)
+        axis_matrices = ntuple(
+            axis -> _pqs_pqs_source_box_factor(pair_plan, axis, factor_kinds[axis]),
+            3,
+        )
+        raw_pair_matrix = _pqs_raw_product_box_pair_mode_matrix(
+            pair_plan.left_raw_product_box_plan.source_mode_indices,
+            pair_plan.right_raw_product_box_plan.source_mode_indices,
+            axis_matrices,
+        )
+        result .+= raw_pair_matrix[left_columns, right_columns]
+    end
+    return result
+end
+
 function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
     pair_plan;
     terms = pair_plan.supported_terms,
     atol::Real = 1.0e-10,
+    validate_explicit_raw_box_oracle::Bool = true,
 )
     pair_plan.pair_kind == :pqs_pqs_source_box || throw(
         ArgumentError("PQS/PQS source-box reference blocks require a PQS/PQS pair plan"),
@@ -2909,7 +2958,18 @@ function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
     same_raw_product_box_plan = Bool(pair_plan.diagnostics.same_raw_product_box_plan)
     for term in selected_terms
         block = _pqs_pqs_source_box_block_from_factors(pair_plan, term)
-        if same_raw_product_box_plan
+        if validate_explicit_raw_box_oracle
+            raw_reference = _pqs_pqs_source_box_explicit_boundary_selection_reference(
+                pair_plan,
+                term,
+            )
+            block_error = LinearAlgebra.norm(block - raw_reference, Inf)
+            block_error <= atol || throw(
+                ArgumentError("PQS/PQS source-box reference block disagrees with explicit raw product-box boundary-selection reference"),
+            )
+            raw_box_reference_blocks[term] = raw_reference
+            block_errors[term] = block_error
+        elseif same_raw_product_box_plan
             raw_reference =
                 _pqs_raw_product_box_reference_block(
                     pair_plan.left_raw_product_box_plan;
@@ -2949,18 +3009,29 @@ function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
                     :_pqs_raw_product_box_reference_block : nothing,
                 source_box_algorithm_formula_available = true,
                 validation_reference_contract =
-                    same_raw_product_box_plan ?
+                    validate_explicit_raw_box_oracle ?
                     :explicit_raw_product_box_boundary_column_selection :
-                    :external_raw_product_box_boundary_column_selection_required,
+                    (
+                        same_raw_product_box_plan ?
+                        :raw_box_self_reference_helper :
+                        :external_raw_product_box_boundary_column_selection_required
+                    ),
                 internal_validation_reference_compared =
-                    same_raw_product_box_plan,
+                    validate_explicit_raw_box_oracle || same_raw_product_box_plan,
                 explicit_raw_product_box_boundary_column_selection_reference_compared =
-                    same_raw_product_box_plan,
-                explicit_source_box_oracle_tested = same_raw_product_box_plan,
+                    validate_explicit_raw_box_oracle,
+                explicit_raw_product_box_boundary_column_selection_reference_helper =
+                    validate_explicit_raw_box_oracle ?
+                    :_pqs_pqs_source_box_explicit_boundary_selection_reference :
+                    nothing,
+                explicit_source_box_oracle_tested =
+                    validate_explicit_raw_box_oracle,
                 cross_box_external_raw_product_oracle_required =
-                    !same_raw_product_box_plan,
+                    !same_raw_product_box_plan && !validate_explicit_raw_box_oracle,
                 cross_box_external_raw_product_oracle_compared_by_helper =
-                    false,
+                    !same_raw_product_box_plan && validate_explicit_raw_box_oracle,
+                dense_raw_source_box_pair_matrix_materialized_for_validation =
+                    validate_explicit_raw_box_oracle,
                 max_block_error = max_block_error,
                 supported_terms = pair_plan.supported_terms,
                 unsupported_terms = (
