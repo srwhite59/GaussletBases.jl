@@ -181,6 +181,60 @@ function local_gaussian_fixture_terms()
     )
 end
 
+function centered_local_gaussian_probe_expansion()
+    return CoulombGaussianExpansion(
+        [0.7, 0.2],
+        [0.35, 0.9];
+        del = 0.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1.0,
+    )
+end
+
+function centered_local_gaussian_axis_layers()
+    basis = build_basis(MappedUniformBasisSpec(:G10;
+        count = 2,
+        mapping = IdentityMapping(),
+        reference_spacing = 1.0,
+    ))
+    return (x = basis, y = basis, z = basis)
+end
+
+function explicit_centered_axis_terms(axis_layers, expansion, center)
+    return (
+        x = _term_first_axis_array(
+            gaussian_factor_matrices(axis_layers.x;
+                exponents = expansion.exponents,
+                center = center[1],
+            ),
+        ),
+        y = _term_first_axis_array(
+            gaussian_factor_matrices(axis_layers.y;
+                exponents = expansion.exponents,
+                center = center[2],
+            ),
+        ),
+        z = _term_first_axis_array(
+            gaussian_factor_matrices(axis_layers.z;
+                exponents = expansion.exponents,
+                center = center[3],
+            ),
+        ),
+    )
+end
+
+function _term_first_axis_array(matrices)
+    nterms = length(matrices)
+    first_matrix = Matrix{Float64}(matrices[1])
+    terms = Array{Float64,3}(undef, nterms, size(first_matrix, 1), size(first_matrix, 2))
+    terms[1, :, :] .= first_matrix
+    for term in 2:nterms
+        terms[term, :, :] .= Matrix{Float64}(matrices[term])
+    end
+    return terms
+end
+
 function explicit_local_gaussian_support_operator(
     left_unit,
     right_unit,
@@ -276,7 +330,16 @@ pair_plan = CCPM._product_doside_source_box_pair_plan(identity_unit, rotated_uni
 max_errors = Dict{Tuple{Symbol,Symbol,Symbol},Float64}()
 max_explicit_support_errors = Dict{Tuple{Symbol,Symbol,Symbol},Float64}()
 local_gaussian_fixture = local_gaussian_fixture_terms()
+centered_expansion = centered_local_gaussian_probe_expansion()
+centered_axis_layers = centered_local_gaussian_axis_layers()
+centered_center = (0.15, -0.2, 0.5)
+centered_axis_terms = explicit_centered_axis_terms(
+    centered_axis_layers,
+    centered_expansion,
+    centered_center,
+)
 max_local_gaussian_errors = Dict{Tuple{Symbol,Symbol},Float64}()
+max_centered_local_gaussian_errors = Dict{Tuple{Symbol,Symbol},Float64}()
 for (label, left_unit, right_unit) in (
     (:self_identity, identity_unit, identity_unit),
     (:self_rotated, rotated_unit, rotated_unit),
@@ -356,6 +419,49 @@ for (label, left_unit, right_unit) in (
     @assert !local_gaussian.diagnostics.fixed_block_routing
     @assert !local_gaussian.diagnostics.qwhamiltonian_consumes
     @assert local_gaussian.diagnostics.output_finite
+    centered_local_gaussian =
+        CCPM._product_doside_source_box_centered_local_gaussian_sum_block(
+            left_unit,
+            right_unit,
+            centered_axis_layers,
+            centered_expansion;
+            center = centered_center,
+        )
+    explicit_centered_local_gaussian =
+        CCPM._product_doside_source_box_local_gaussian_sum_block(
+            left_unit,
+            right_unit;
+            term_coefficients = centered_expansion.coefficients,
+            axis_gaussian_terms = centered_axis_terms,
+        )
+    centered_local_gaussian_error =
+        norm(centered_local_gaussian.block - explicit_centered_local_gaussian.block, Inf)
+    max_centered_local_gaussian_errors[(label, :gaussian_sum)] =
+        centered_local_gaussian_error
+    @assert centered_local_gaussian.path ==
+            :product_doside_source_box_centered_local_gaussian_sum
+    @assert centered_local_gaussian_error <= 1.0e-12
+    @assert centered_local_gaussian.diagnostics.source_box_first
+    @assert centered_local_gaussian.diagnostics.local_gaussian_source_box_terms
+    @assert centered_local_gaussian.diagnostics.centered_local_gaussian_terms_generated
+    @assert centered_local_gaussian.diagnostics.axis_gaussian_terms_source ==
+            :analytic_gaussian_factor_matrices
+    @assert centered_local_gaussian.diagnostics.analytic_primitive_backend_required
+    @assert centered_local_gaussian.diagnostics.analytic_primitive_backend_checked
+    @assert centered_local_gaussian.diagnostics.positive_gaussian_sum_convention
+    @assert !centered_local_gaussian.diagnostics.nuclear_charge_applied
+    @assert !centered_local_gaussian.diagnostics.nuclear_attraction_sign_applied
+    @assert !centered_local_gaussian.diagnostics.numerical_reference_fallback
+    @assert !centered_local_gaussian.diagnostics.shell_row_algorithm
+    @assert !centered_local_gaussian.diagnostics.support_local_oracle_used
+    @assert !centered_local_gaussian.diagnostics.retained_pqs_weight_division_allowed
+    @assert !centered_local_gaussian.diagnostics.ida_mwg_semantics_changed
+    @assert !centered_local_gaussian.diagnostics.ecp_terms_implemented
+    @assert !centered_local_gaussian.diagnostics.electron_electron_terms_implemented
+    @assert !centered_local_gaussian.diagnostics.packet_adoption
+    @assert !centered_local_gaussian.diagnostics.fixed_block_routing
+    @assert !centered_local_gaussian.diagnostics.qwhamiltonian_consumes
+    @assert centered_local_gaussian.diagnostics.output_finite
 end
 
 shadow = CCPM._product_doside_source_box_shadow_blocks(
@@ -426,6 +532,10 @@ println(
         max_local_gaussian_error = isempty(max_local_gaussian_errors) ?
                                    0.0 :
                                    maximum(values(max_local_gaussian_errors)),
+        max_centered_local_gaussian_error =
+            isempty(max_centered_local_gaussian_errors) ?
+            0.0 :
+            maximum(values(max_centered_local_gaussian_errors)),
         max_transpose_error = shadow.diagnostics.max_right_left_transpose_error,
         numerical_reference_fallback = shadow.diagnostics.numerical_reference_fallback,
     ),

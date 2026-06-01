@@ -3,7 +3,8 @@ module CartesianContractedParentMetrics
 import LinearAlgebra
 import SparseArrays
 
-import ..GaussletBases: _NestedFixedBlock3D,
+import ..GaussletBases: CoulombGaussianExpansion,
+                         _NestedFixedBlock3D,
                          _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
@@ -21,6 +22,7 @@ import ..GaussletBases: _NestedFixedBlock3D,
                          _require_analytic_primitive_backend,
                          centers,
                          contract_primitive_matrix,
+                         gaussian_factor_matrices,
                          integral_weights,
                          overlap_matrix,
                          position_matrix,
@@ -1377,6 +1379,156 @@ function _product_doside_source_box_local_gaussian_sum_block(
                 mwg_interaction_implemented = false,
                 local_gaussian_one_body_implemented = true,
                 product_staged_nuclear_execution_changed = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                cr2_science_status_changed = false,
+                output_finite = true,
+            ),
+        ),
+    )
+end
+
+function _cartesian_source_box_term_first_axis_array(
+    matrices::AbstractVector,
+    nterms::Int,
+    axis_name::Symbol,
+)
+    length(matrices) == nterms || throw(
+        ArgumentError("centered local-Gaussian $(axis_name) axis term matrix count does not match coefficients"),
+    )
+    nterms > 0 || throw(
+        ArgumentError("centered local-Gaussian term arrays require at least one term"),
+    )
+    first_matrix = Matrix{Float64}(matrices[1])
+    size(first_matrix, 1) == size(first_matrix, 2) || throw(
+        ArgumentError("centered local-Gaussian $(axis_name) axis matrix must be square"),
+    )
+    parent_count = size(first_matrix, 1)
+    terms = Array{Float64,3}(undef, nterms, parent_count, parent_count)
+    terms[1, :, :] .= first_matrix
+    @inbounds for term in 2:nterms
+        matrix = Matrix{Float64}(matrices[term])
+        size(matrix) == (parent_count, parent_count) || throw(
+            ArgumentError("centered local-Gaussian $(axis_name) axis term matrices must have a common square size"),
+        )
+        terms[term, :, :] .= matrix
+    end
+    return terms
+end
+
+function _product_doside_source_box_centered_local_gaussian_term_data(
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    center::NTuple{3,<:Real},
+)
+    nterms = length(expansion.coefficients)
+    nterms == length(expansion.exponents) || throw(
+        ArgumentError("centered local-Gaussian expansion has mismatched coefficient/exponent counts"),
+    )
+    nterms > 0 || throw(
+        ArgumentError("centered local-Gaussian expansion requires at least one term"),
+    )
+    center_values = ntuple(axis -> Float64(center[axis]), 3)
+    term_coefficients = Float64[Float64(value) for value in expansion.coefficients]
+    axis_terms = ntuple(axis -> begin
+        axis_name = (:x, :y, :z)[axis]
+        layer = getproperty(axis_layers, axis_name)
+        _require_analytic_primitive_backend(
+            primitive_set(layer),
+            "product/doside source-box centered local-Gaussian $(axis_name) axis terms",
+        )
+        matrices = gaussian_factor_matrices(
+            layer;
+            exponents = expansion.exponents,
+            center = center_values[axis],
+        )
+        _cartesian_source_box_term_first_axis_array(matrices, nterms, axis_name)
+    end, 3)
+    return (
+        term_coefficients = term_coefficients,
+        axis_gaussian_terms = (
+            x = axis_terms[1],
+            y = axis_terms[2],
+            z = axis_terms[3],
+        ),
+        diagnostics = (
+            source = :product_doside_source_box_centered_local_gaussian_term_data,
+            axis_gaussian_terms_source = :analytic_gaussian_factor_matrices,
+            analytic_primitive_backend_required = true,
+            analytic_primitive_backend_checked = true,
+            center = center_values,
+            term_count = nterms,
+            axis_term_dimensions = (
+                x = size(axis_terms[1]),
+                y = size(axis_terms[2]),
+                z = size(axis_terms[3]),
+            ),
+            positive_gaussian_sum_convention = true,
+            nuclear_charge_applied = false,
+            nuclear_attraction_sign_applied = false,
+            input_local_gaussian_data_pgdg_checked = false,
+            pgdg_analytic_operator_provenance_claimed = false,
+            numerical_reference_fallback = false,
+            shell_row_algorithm = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
+function _product_doside_source_box_centered_local_gaussian_sum_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    center::NTuple{3,<:Real},
+)
+    term_data = _product_doside_source_box_centered_local_gaussian_term_data(
+        axis_layers,
+        expansion;
+        center,
+    )
+    explicit_block = _product_doside_source_box_local_gaussian_sum_block(
+        left_unit,
+        right_unit;
+        term_coefficients = term_data.term_coefficients,
+        axis_gaussian_terms = term_data.axis_gaussian_terms,
+    )
+    return (
+        path = :product_doside_source_box_centered_local_gaussian_sum,
+        block = explicit_block.block,
+        explicit_block = explicit_block,
+        term_data = term_data,
+        pair_plan = explicit_block.pair_plan,
+        one_dimensional_gaussian_factors =
+            explicit_block.one_dimensional_gaussian_factors,
+        diagnostics = merge(
+            explicit_block.diagnostics,
+            term_data.diagnostics,
+            (
+                source = :product_doside_source_box_centered_local_gaussian_sum_block,
+                source_box_first = true,
+                local_gaussian_source_box_terms = true,
+                centered_local_gaussian_terms_generated = true,
+                axis_gaussian_terms_source = :analytic_gaussian_factor_matrices,
+                explicit_table_helper_used =
+                    :_product_doside_source_box_local_gaussian_sum_block,
+                positive_gaussian_sum_convention = true,
+                nuclear_charge_applied = false,
+                nuclear_attraction_sign_applied = false,
+                numerical_reference_fallback = false,
+                shell_row_algorithm = false,
+                support_local_oracle_used = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                ida_mwg_semantics_changed = false,
+                ecp_terms_implemented = false,
+                electron_electron_terms_implemented = false,
                 packet_adoption = false,
                 fixed_block_routing = false,
                 qwhamiltonian_consumes = false,
