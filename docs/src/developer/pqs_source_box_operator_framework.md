@@ -266,6 +266,195 @@ Must not own:
 - retained PQS weight semantics;
 - the decision that a shell-row fixture is the algorithmic PQS object.
 
+## Object Contract Sketch
+
+This section makes the private object contract concrete enough that future
+implementation passes can be mechanical. Names may remain private named
+tuples or helper-local records at first, but the field ownership and
+diagnostic boundaries should not drift.
+
+### `RawProductBoxPlan`
+
+Required fields:
+
+- `object_kind`, such as `:cartesian_raw_product_box_plan_3d`;
+- `source_box` and `axis_intervals`;
+- `source_mode_dims` as total source-mode lengths, not interior counts;
+- `source_mode_count = prod(source_mode_dims)`;
+- `axis_transform_plan` and per-axis local coefficient matrices;
+- `source_mode_indices` and source-mode ordering;
+- optional per-axis centers or interval-center views when pair plans need
+  coordinate diagnostics;
+- provenance fields: construction helper, metric/backend source, and whether
+  numerical fallback was invoked by this helper;
+- diagnostics: deterministic under box/dims, PGDG/no-fallback provenance when
+  checked, `retained_rule_attached=false`, `packet_adoption=false`.
+
+Invariants:
+
+- The plan is deterministic for a fixed box, source-mode dimensions, and
+  transform rule.
+- `source_mode_dims` are total source-mode lengths.
+- Axis coefficient matrix row counts match the physical interval lengths.
+- Axis coefficient matrix column counts match `source_mode_dims`.
+- The plan owns no retained rule and no shell-row support coefficients.
+
+Must not own:
+
+- boundary selector semantics as a retained rule;
+- shell projection or Lowdin cleanup;
+- support-local coefficients;
+- retained weights or IDA division semantics;
+- packet, fixed-block, QW/Hamiltonian, or public/default adoption state.
+
+### `RetainedRule`
+
+Required fields:
+
+- `rule_kind`;
+- `source_box_id` or direct reference to the source-box plan;
+- retained dimension and column ordering;
+- transform/selector metadata in source-mode space when algorithmic;
+- compatibility status when the rule is not algorithmic;
+- supported operator families or explicit unsupported fields;
+- retained-weight semantics, always explicit;
+- diagnostics separating algorithmic input from oracle/debug metadata.
+
+Current and anticipated variants:
+
+| Rule variant | Algorithmic status | Required transform facts | Notes |
+|---|---:|---|---|
+| Boundary COMX-product mode selection | Algorithmic for raw-box PQS | Boundary mode indices, boundary column indices, retained count, source-mode ordering | This is the compact mode-selected PQS rule. No shell projection or Lowdin is part of this rule. |
+| Product/doside retained transform | Algorithmic for product/doside units | Axis intervals, axis coefficient matrices, axis function indices, retained count | Used by current private product/product and PQS/product source-box helpers. |
+| Identity/direct source selector | Algorithmic only when the source box itself is the retained space | Source-mode identity or selection, retained count | Useful for simple product slabs or debug fixtures; not a license to reinterpret support-dense rows as product modes. |
+| Support-dense direct rows | Compatibility/fallback, not product-box algorithmic | Support indices/states, support-local coefficients | Existing atom-box/support-dense fallback path. It can be an oracle or fallback, not a source-box rule. |
+| Shell projection plus Lowdin realization | Adapter/compatibility until reviewed otherwise | Shell support rows, projection matrix shape, Lowdin cleanup shape/diagnostics, isometry diagnostics | Current shell-realized PQS fixture exposes this as a transform fact. It reports `source_box_operator_application_ready=false` because no exact compact source-space transform is available yet. |
+
+Anti-invariants:
+
+- Do not use Lowdin cleanup alone as a full raw-to-retained transform.
+- Do not infer an algorithmic retained rule from support-local coefficients.
+- Do not divide by retained PQS weights or mark them positive quadrature
+  weights.
+- Do not use the current shell-realized fixture as the algorithmic PQS rule
+  unless a future framework update explicitly defines that route.
+
+### `SourceBoxPairOperatorPlan`
+
+Required fields:
+
+- left/right source-box plans;
+- left/right retained rules;
+- left/right retained counts and output block shape;
+- pair kind and pair policy;
+- supported terms, initially safe terms only: `:overlap`,
+  `:position_x/y/z`, `:x2_x/y/z`, and `:kinetic`;
+- term-to-factor mapping, for example kinetic as `(K,S,S) + (S,K,S) + (S,S,K)`;
+- per-axis cross factors or enough data to build them from caller-supplied
+  axis operators;
+- factor provenance: explicit metric/operator data, PGDG provenance when
+  checked, and whether numerical fallback was invoked by this helper;
+- storage/cost diagnostics: materialized raw pair matrix or streamed factors,
+  retained-block materialization, expected scaling category;
+- oracle path metadata, if an oracle comparison exists;
+- authority/adoption flags: packet/fixed-block/QW/Hamiltonian/public/default
+  adoption must be false for private plans.
+
+Invariants:
+
+- Pair operators are built in raw source-box spaces first.
+- Retained rules are applied after 1D factor construction.
+- Shell-row support-local contraction may be present only as oracle/debug
+  metadata.
+- Unsupported terms reject rather than silently falling back.
+
+Pair policy labels:
+
+- `:source_box_algorithm_available`: a real source-box rule exists for both
+  sides and the term is supported.
+- `:oracle_only`: the pair can be checked through support rows but does not
+  have an algorithmic source-box retained rule.
+- `:support_local_fallback`: existing support-dense fallback path, not PQS
+  source-box algorithmic policy.
+- `:unsupported`: required source, retained rule, or factor data is missing.
+
+### Shell-Realization / Support-Row Adapter
+
+Required fields:
+
+- representation stage, such as `:shell_realized_pqs_fixture`;
+- shell support indices/states and support count;
+- source-box facts, if known, but not as algorithmic authority;
+- boundary selection metadata when present;
+- shell projection stage label and matrix shape;
+- Lowdin cleanup stage label, method, shape, rank/cutoff/eigenvalue
+  diagnostics;
+- support-local coefficient shape and optional coefficient equality checks;
+- isometry diagnostics when metric data is supplied;
+- compact transform availability and missing reason;
+- oracle/compatibility flags: `support_local_oracle_used`,
+  `shell_row_oracle_only`, `source_box_operator_application_ready`.
+
+Roles:
+
+- compatibility with current shell-supported fixtures;
+- debug/authority comparison against fixed-block or packet fields;
+- isometry and coefficient sanity checks;
+- future adapter boundary if an explicit source-space realization transform is
+  defined.
+
+Anti-patterns:
+
+- Calling the adapter the active PQS algorithm;
+- optimizing shell-row support contraction as the source-box strategy;
+- deriving a compact transform from the fixture just because the operator
+  formula wants one;
+- using adapter-retained weights for IDA or positive quadrature semantics.
+
+## Existing Helper Migration Map
+
+| Existing helper/fact | Object role | Status |
+|---|---|---|
+| `_cartesian_raw_product_box_plan(...)` | `RawProductBoxPlan` | Shared private source-box plan; owns intervals, source dims, 1D transforms, ordering, and provenance. |
+| `_pqs_raw_product_box_plan(...)` | PQS raw-box plan plus boundary selector metadata | Algorithmic for mode-selected raw-box PQS references; no shell projection or Lowdin in raw-box operators. |
+| `_product_doside_retained_unit_plan(...)` | Product/doside `RetainedRule` | Algorithmic product retained rule used by private product/product and PQS/product source-box helpers. |
+| `_product_doside_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for product/product | Private/shadow source-box pair plan for safe terms; current product-staged helpers remain authoritative where applicable. |
+| `_pqs_product_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for PQS/product | Private source-box mixed plan using PQS boundary selection and product/doside retained transform. |
+| `_pqs_pqs_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for compatible raw-box PQS/PQS fixtures | Private reference/shadow plan for compatible raw-box fixtures, not current shell-realized route adoption. |
+| `_pqs_shell_realization_plan(...)` | Shell-realization adapter | Projects selected modes to shell rows and applies Lowdin for isometry checks; not raw-box operator construction. |
+| `_pqs_product_box_realization_plan(...)` | Setup bundle containing raw-box plan plus shell-realization adapter | Useful setup grouping only if the stages remain separate. |
+| `_pqs_current_route_shell_realization_transform_fact(...)` | Shell-realization/support-row adapter fact | Current-route metadata precursor; reports `compact_source_space_transform.available=false` and `source_box_operator_application_ready=false`. |
+| `_pqs_current_route_retained_unit_inventory(...)` | Retained-unit inventory/compatibility map | Diagnostic current-route inventory; not an algorithmic retained-rule authority. |
+| `_pqs_current_route_retained_pair_inventory(...)` | Pair inventory/diagnostic policy map | Labels shell-realized PQS pairs as oracle-only and product/product as source-box-available. |
+| `_pqs_current_route_safe_term_matrices(...)` | Support-local oracle matrix builder | Debug/authority comparison path; must not be optimized as the PQS operator algorithm. |
+| `_pqs_current_route_safe_term_authority_comparison(...)` | Current authority comparison | Confirms agreement with existing fixed-block/packet fields where available; no adoption implied. |
+| `_pqs_atom_box_support_dense_units(...)` | Support-dense adapter/fallback | Direct support-row retained units; not product/doside and not source-box PQS. |
+| `_pqs_contact_cap_product_doside_unit(...)` | Product/doside retained rule adapter for contact cap | Source-box-capable product/doside bridge, still private route vocabulary. |
+
+## Next Implementation Gate
+
+Before implementing any current-route PQS/PQS operator block, the following
+must be true in object-contract terms:
+
+- Each side has a `RawProductBoxPlan` with validated source-mode ordering and
+  axis factor provenance.
+- Each side has an algorithmic `RetainedRule` in source-box space. For current
+  shell-realized fixtures, the existing shell-realization fact is not enough
+  because it reports no exact compact source-space transform.
+- The `SourceBoxPairOperatorPlan` states the supported safe terms, pair policy,
+  factor construction, output shape, cost model, and oracle path.
+- Any shell-realization/support-row adapter is explicitly separate from the
+  retained rule used in `T_left' * O_raw_product * T_right`.
+- The validation plan compares source-box output to support-row contraction
+  only as an oracle and does not route packet/fixed-block construction through
+  the new helper.
+- The pass has a clear answer to whether it targets mode-selected raw-box PQS
+  fixtures, a new explicit shell-realization retained rule, or current-route
+  compatibility only.
+
+If any of those fields are ambiguous, stop for design review instead of
+filling the gap with shell-row support-local contraction.
+
 ## Invariants
 
 These invariants are lane-wide.
@@ -373,12 +562,15 @@ What is established:
   multi-shared-shell route shape.
 - A blockwise timing probe shows that shell-realized PQS/PQS support-local
   oracle contraction is the dominant cost center.
+- The object-contract sketch above defines the intended private roles for
+  raw product boxes, retained rules, source-box pair operator plans, and
+  shell-realization/support-row adapters.
 
 What is not established:
 
 - Production packet or fixed-block adoption of the source-box algorithm.
-- A complete object contract for the next PQS/PQS source-box algorithmic
-  block beyond the existing private fixtures.
+- Which retained-rule variant should be the first current-route PQS/PQS
+  algorithmic consumer.
 - Local/Gaussian one-body terms in the source-box framework.
 - MWG/IDA interaction support through retained PQS source-box transforms.
 - CR2 validation or public/default route readiness.
@@ -417,8 +609,6 @@ Future performance reports should separate:
 
 These questions are intentionally unresolved.
 
-- What is the exact private object contract for the next PQS/PQS source-box
-  algorithmic block?
 - Which retained rule should be the first algorithmic PQS/PQS consumer:
   boundary-selected raw-box PQS, a shell-realization adapter around that rule,
   or another explicitly defined rule?
@@ -455,21 +645,22 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
 
-The next correction is framework/object-contract only unless the object
-contract is already completely clear. It should not optimize support-local
-fallback and should not try to derive an exact compact transform from the
-current shell-realized fixture.
+The next correction should choose the first retained-rule target for a private
+PQS/PQS source-box block. It should use the object contract above rather than
+starting from shell rows. The smallest safe implementation target is likely a
+mode-selected raw-box PQS/PQS fixture, because both sides already have
+algorithmic boundary-selector retained rules. A current-route shell-realized
+PQS/PQS block should wait until an explicit source-space realization rule is
+defined or the pass is scoped as compatibility/oracle-only.
 
-First define the intermediate objects:
+Any implementation blurb should state:
 
-1. `RawProductBoxPlan`;
-2. `RetainedRule` / boundary selection;
-3. `SourceBoxPairOperatorPlan`;
-4. `Shell-realization` or support-row adapter.
-
-Then, only after the object contract is explicit, implement the first private
-PQS/PQS source-box block using those objects and compare against support-local
-shell-row contraction only as an oracle.
+- which `RetainedRule` variant is used on each side;
+- whether raw product-box pair operators are materialized or streamed through
+  separable factors;
+- which safe terms are supported;
+- what support-row oracle is used only for validation;
+- why no packet/fixed-block/QW/Hamiltonian/default behavior changes.
 
 No packet adoption, fixed-block construction adoption, QW/Hamiltonian routing,
 local/ECP/Gaussian/MWG/interaction work, public/default route, or CR2 claim is
