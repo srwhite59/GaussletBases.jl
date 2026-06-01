@@ -1914,12 +1914,18 @@ function _pqs_raw_product_box_structural_plan(
         mode_indices = descriptor.boundary_mode_indices,
         column_indices = descriptor.boundary_column_indices,
         selection_rule = descriptor.selection_rule,
+        retained_rule_contract = :RetainedRule,
+        retained_rule_kind = :boundary_comx_product_mode_selection,
         selected_count = descriptor.mode_count,
         preserves_orthogonality = true,
     )
     return (
         path = :pqs_raw_product_box_plan,
         representation = :orthogonal_raw_product_box,
+        source_box_plan_contract = :RawProductBoxPlan,
+        retained_rule_contract = :RetainedRule,
+        retained_rule_kind = :boundary_comx_product_mode_selection,
+        retained_rule_algorithmic = true,
         source_mode_dims = source_mode_dims,
         source_mode_count = isnothing(shared_plan) ? prod(source_mode_dims) : shared_plan.source_mode_count,
         axis_intervals = isnothing(shared_plan) ? descriptor.axis_intervals : shared_plan.axis_intervals,
@@ -1949,6 +1955,10 @@ function _pqs_raw_product_box_structural_plan(
             source = :pqs_raw_product_box_structural_plan,
             private_shadow_only = true,
             pqs_representation = :mode_selected_raw_product_box,
+            source_box_plan_contract = :RawProductBoxPlan,
+            retained_rule_contract = :RetainedRule,
+            retained_rule_kind = :boundary_comx_product_mode_selection,
+            retained_rule_algorithmic = true,
             source_mode_dims_are_total_lengths = true,
             source_mode_ordering = :x_major_y_major_z_fast,
             shared_raw_product_box_plan_available = !isnothing(shared_plan),
@@ -2742,8 +2752,16 @@ function _pqs_pqs_source_box_pair_plan(
         _pqs_pqs_source_box_cross_factors(left_raw_plan, right_raw_plan, metrics)
     return (
         pair_kind = :pqs_pqs_source_box,
+        object_contract = :SourceBoxPairOperatorPlan,
+        pair_policy = :source_box_algorithm_available,
         left_source_family = :mode_selected_raw_product_box,
         right_source_family = :mode_selected_raw_product_box,
+        left_raw_product_box_plan_contract = :RawProductBoxPlan,
+        right_raw_product_box_plan_contract = :RawProductBoxPlan,
+        left_retained_rule_contract = :RetainedRule,
+        right_retained_rule_contract = :RetainedRule,
+        left_retained_rule_kind = :boundary_comx_product_mode_selection,
+        right_retained_rule_kind = :boundary_comx_product_mode_selection,
         left_source_dimensions = left_raw_plan.source_mode_dims,
         right_source_dimensions = right_raw_plan.source_mode_dims,
         left_source_dimension = left_raw_plan.source_mode_count,
@@ -2771,6 +2789,18 @@ function _pqs_pqs_source_box_pair_plan(
         diagnostics = (
             source = :pqs_pqs_source_box_pair_plan,
             pair_kind = :pqs_pqs_source_box,
+            source_box_pair_operator_plan_contract =
+                :SourceBoxPairOperatorPlan,
+            pair_policy = :source_box_algorithm_available,
+            algorithmic_pair_policy = :source_box_algorithm_available,
+            left_raw_product_box_plan_contract = :RawProductBoxPlan,
+            right_raw_product_box_plan_contract = :RawProductBoxPlan,
+            left_retained_rule_contract = :RetainedRule,
+            right_retained_rule_contract = :RetainedRule,
+            left_retained_rule_kind =
+                :boundary_comx_product_mode_selection,
+            right_retained_rule_kind =
+                :boundary_comx_product_mode_selection,
             private_shadow_only = true,
             self_same_plan_only = same_raw_product_box_plan,
             cross_pqs_inputs_supported = !same_raw_product_box_plan,
@@ -2791,6 +2821,8 @@ function _pqs_pqs_source_box_pair_plan(
             operator_factor_source = :explicit_axis_metric_data,
             operator_metric_sources =
                 _cartesian_source_box_metric_sources(metrics),
+            shell_realization_adapter_used = false,
+            support_row_adapter_used = false,
             raw_product_box_numerical_reference_fallback =
                 hasproperty(left_raw_plan.diagnostics, :raw_product_box_numerical_reference_fallback) ?
                 left_raw_plan.diagnostics.raw_product_box_numerical_reference_fallback :
@@ -2915,7 +2947,13 @@ function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
                 raw_box_self_reference_helper =
                     same_raw_product_box_plan ?
                     :_pqs_raw_product_box_reference_block : nothing,
-                explicit_source_box_oracle_tested = false,
+                validation_reference_contract =
+                    same_raw_product_box_plan ?
+                    :explicit_raw_product_box_boundary_column_selection :
+                    :external_oracle_required_for_cross_box,
+                explicit_raw_product_box_boundary_column_selection_reference_compared =
+                    same_raw_product_box_plan,
+                explicit_source_box_oracle_tested = same_raw_product_box_plan,
                 max_block_error = max_block_error,
                 supported_terms = pair_plan.supported_terms,
                 unsupported_terms = (

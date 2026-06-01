@@ -1251,6 +1251,13 @@ end
             end
             @test raw_box_block.diagnostics.pqs_representation ==
                   :mode_selected_raw_product_box
+            @test raw_box_block.raw_product_box_plan.source_box_plan_contract ==
+                  :RawProductBoxPlan
+            @test raw_box_block.raw_product_box_plan.retained_rule_contract ==
+                  :RetainedRule
+            @test raw_box_block.raw_product_box_plan.retained_rule_kind ==
+                  :boundary_comx_product_mode_selection
+            @test raw_box_block.raw_product_box_plan.retained_rule_algorithmic
             @test raw_box_block.diagnostics.private_shadow_only
             @test !raw_box_block.diagnostics.production_supported
             @test !raw_box_block.diagnostics.row_projected_shell_support
@@ -1323,8 +1330,18 @@ end
             metrics,
         )
         @test pair_plan.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.object_contract == :SourceBoxPairOperatorPlan
+        @test pair_plan.pair_policy == :source_box_algorithm_available
         @test pair_plan.left_source_family == :mode_selected_raw_product_box
         @test pair_plan.right_source_family == :mode_selected_raw_product_box
+        @test pair_plan.left_raw_product_box_plan_contract == :RawProductBoxPlan
+        @test pair_plan.right_raw_product_box_plan_contract == :RawProductBoxPlan
+        @test pair_plan.left_retained_rule_contract == :RetainedRule
+        @test pair_plan.right_retained_rule_contract == :RetainedRule
+        @test pair_plan.left_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
+        @test pair_plan.right_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
         @test pair_plan.left_source_dimensions == expected_source_mode_dims
         @test pair_plan.right_source_dimensions == expected_source_mode_dims
         @test pair_plan.left_source_dimension == prod(expected_source_mode_dims)
@@ -1350,6 +1367,24 @@ end
               (expected_source_mode_dims[3], expected_source_mode_dims[3])
         @test pair_plan.diagnostics.source == :pqs_pqs_source_box_pair_plan
         @test pair_plan.diagnostics.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.diagnostics.source_box_pair_operator_plan_contract ==
+              :SourceBoxPairOperatorPlan
+        @test pair_plan.diagnostics.pair_policy ==
+              :source_box_algorithm_available
+        @test pair_plan.diagnostics.algorithmic_pair_policy ==
+              :source_box_algorithm_available
+        @test pair_plan.diagnostics.left_raw_product_box_plan_contract ==
+              :RawProductBoxPlan
+        @test pair_plan.diagnostics.right_raw_product_box_plan_contract ==
+              :RawProductBoxPlan
+        @test pair_plan.diagnostics.left_retained_rule_contract ==
+              :RetainedRule
+        @test pair_plan.diagnostics.right_retained_rule_contract ==
+              :RetainedRule
+        @test pair_plan.diagnostics.left_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
+        @test pair_plan.diagnostics.right_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
         @test pair_plan.diagnostics.private_shadow_only
         @test pair_plan.diagnostics.self_same_plan_only
         @test !pair_plan.diagnostics.cross_pqs_inputs_supported
@@ -1360,6 +1395,8 @@ end
         @test pair_plan.diagnostics.left_boundary_mode_selection_used
         @test pair_plan.diagnostics.right_boundary_mode_selection_used
         @test pair_plan.diagnostics.raw_product_box_operators_use_1d_factors
+        @test !pair_plan.diagnostics.shell_realization_adapter_used
+        @test !pair_plan.diagnostics.support_row_adapter_used
         @test !pair_plan.diagnostics.shell_projection_used
         @test !pair_plan.diagnostics.lowdin_cleanup_used
         @test !pair_plan.diagnostics.support_coefficient_matrix_used
@@ -1398,6 +1435,10 @@ end
         @test blocks.diagnostics.raw_box_self_reference_compared
         @test blocks.diagnostics.raw_box_self_reference_helper ==
               :_pqs_raw_product_box_reference_block
+        @test blocks.diagnostics.validation_reference_contract ==
+              :explicit_raw_product_box_boundary_column_selection
+        @test blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
+        @test blocks.diagnostics.explicit_source_box_oracle_tested
         @test blocks.diagnostics.pair_plan_reused_for_terms
         @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
         @test blocks.diagnostics.max_block_error < 1.0e-10
@@ -1473,8 +1514,18 @@ end
             metrics,
         )
         @test pair_plan.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.object_contract == :SourceBoxPairOperatorPlan
+        @test pair_plan.pair_policy == :source_box_algorithm_available
         @test pair_plan.left_source_family == :mode_selected_raw_product_box
         @test pair_plan.right_source_family == :mode_selected_raw_product_box
+        @test pair_plan.left_raw_product_box_plan_contract == :RawProductBoxPlan
+        @test pair_plan.right_raw_product_box_plan_contract == :RawProductBoxPlan
+        @test pair_plan.left_retained_rule_contract == :RetainedRule
+        @test pair_plan.right_retained_rule_contract == :RetainedRule
+        @test pair_plan.left_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
+        @test pair_plan.right_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
         @test pair_plan.left_source_dimensions == expected_source_mode_dims
         @test pair_plan.right_source_dimensions == expected_source_mode_dims
         @test pair_plan.left_source_dimension == prod(expected_source_mode_dims)
@@ -1500,6 +1551,24 @@ end
               (expected_source_mode_dims[3], expected_source_mode_dims[3])
         @test pair_plan.diagnostics.source == :pqs_pqs_source_box_pair_plan
         @test pair_plan.diagnostics.pair_kind == :pqs_pqs_source_box
+        @test pair_plan.diagnostics.source_box_pair_operator_plan_contract ==
+              :SourceBoxPairOperatorPlan
+        @test pair_plan.diagnostics.pair_policy ==
+              :source_box_algorithm_available
+        @test pair_plan.diagnostics.algorithmic_pair_policy ==
+              :source_box_algorithm_available
+        @test pair_plan.diagnostics.left_raw_product_box_plan_contract ==
+              :RawProductBoxPlan
+        @test pair_plan.diagnostics.right_raw_product_box_plan_contract ==
+              :RawProductBoxPlan
+        @test pair_plan.diagnostics.left_retained_rule_contract ==
+              :RetainedRule
+        @test pair_plan.diagnostics.right_retained_rule_contract ==
+              :RetainedRule
+        @test pair_plan.diagnostics.left_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
+        @test pair_plan.diagnostics.right_retained_rule_kind ==
+              :boundary_comx_product_mode_selection
         @test pair_plan.diagnostics.private_shadow_only
         @test !pair_plan.diagnostics.self_same_plan_only
         @test pair_plan.diagnostics.cross_pqs_inputs_supported
@@ -1510,6 +1579,8 @@ end
         @test pair_plan.diagnostics.left_boundary_mode_selection_used
         @test pair_plan.diagnostics.right_boundary_mode_selection_used
         @test pair_plan.diagnostics.raw_product_box_operators_use_1d_factors
+        @test !pair_plan.diagnostics.shell_realization_adapter_used
+        @test !pair_plan.diagnostics.support_row_adapter_used
         @test !pair_plan.diagnostics.shell_projection_used
         @test !pair_plan.diagnostics.lowdin_cleanup_used
         @test !pair_plan.diagnostics.support_coefficient_matrix_used
@@ -1554,6 +1625,9 @@ end
         @test reverse_blocks.terms == terms
         @test !blocks.diagnostics.raw_box_self_reference_compared
         @test isnothing(blocks.diagnostics.raw_box_self_reference_helper)
+        @test blocks.diagnostics.validation_reference_contract ==
+              :external_oracle_required_for_cross_box
+        @test !blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
         @test blocks.diagnostics.pair_plan_reused_for_terms
         @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
         @test isnothing(blocks.diagnostics.max_block_error)
