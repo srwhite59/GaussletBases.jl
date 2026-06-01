@@ -386,6 +386,25 @@ The route consumer remains source-box-first and avoids shell projection,
 Lowdin cleanup, support-local fallback, support coefficient matrices,
 retained PQS weight semantics, and IDA division.
 
+The private raw-box route producer checkpoint is recorded by commits
+`95d7b11` and `804bdd9`. It starts from explicit fixture facts and produces
+the same descriptor through
+`RawProductBoxPlan -> RetainedRule -> route descriptor`. The producer uses
+left/right mode-selected raw-box PQS retained rules plus an identity
+product/doside slab retained rule, then feeds the produced descriptor into
+`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`. Sampled validation
+covers a shifted cubic `q5/L5` fixture and a rectangular `q5/L7` fixture with
+`L != q`; consumer output matches the source-box shadow or hand-built route
+path to roundoff. Timing and allocation summaries are captured as diagnostic
+evidence only, not as performance thresholds. Dense raw source-box matrices
+remain validation-only.
+
+This producer checkpoint remains private/shadow-only. It adds no shell
+projection, Lowdin cleanup, support-local PQS oracle, support coefficient
+matrix use, retained PQS weights, IDA division, packet or fixed-block
+adoption, QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/
+MWG/interaction terms, IDA/MWG change, or CR2 science claim.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 This is diagnostic/read-path infrastructure only. It emits

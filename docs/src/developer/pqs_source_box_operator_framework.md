@@ -675,6 +675,17 @@ What is established:
   labeled `:source_box_algorithm_available`. Product/product blocks go through
   `_product_doside_source_box_reference_block(...)`, which still compares to
   the existing product-staged retained helpers as authority.
+- Commits `95d7b11` and `804bdd9` add the first private raw-box route
+  producer checkpoint. Explicit fixture facts now produce the same route
+  descriptor through `RawProductBoxPlan -> RetainedRule -> route descriptor`.
+  The producer uses left/right mode-selected raw-box PQS retained rules and an
+  identity product/doside slab retained rule, then feeds the produced
+  descriptor into `_pqs_pqs_product_route_shaped_safe_term_consumer(...)`.
+  Sampled validation covers the shifted cubic `q5/L5` fixture and a
+  rectangular `q5/L7` fixture with `L != q`; consumer output matches the
+  source-box shadow or hand-built route path to roundoff. Timing and
+  allocation summaries are captured as diagnostic evidence only, not as
+  performance thresholds.
 - A private q4 current-route retained-unit inventory covers all retained
   columns and has a route-wide safe-term authority comparison.
 - A Be2-like strict PQS q5 inventory-shape check pins the 8-unit, 36-pair,
@@ -789,6 +800,23 @@ blocks; dense raw product-box pair matrices are materialized only for explicit
 small-fixture validation oracles. A current-route shell-realized PQS/PQS block
 should still wait until an explicit source-space realization rule is defined
 or the pass is scoped as compatibility/oracle-only.
+
+The private raw-box route producer checkpoint is commits `95d7b11` and
+`804bdd9`. It is the first producer-side complement to the route-shaped
+consumer. It starts from explicit fixture facts, builds left/right
+`RawProductBoxPlan` objects, attaches boundary COMX-product mode-selection
+`RetainedRule` facts for the two PQS units, creates an identity
+product/doside slab retained rule for the middle unit, and emits the existing
+route descriptor shape consumed by
+`_pqs_pqs_product_route_shaped_safe_term_consumer(...)`.
+
+This producer is still private/shadow-only. The sampled validation matrix
+covers the shifted cubic `q5/L5` fixture and a rectangular `q5/L7` fixture
+with `L != q`. The produced descriptor output matches the source-box shadow
+and hand-built descriptor paths to roundoff. Producer and consumer timing plus
+allocation summaries are recorded only as diagnostics; they are not readiness
+thresholds. Dense raw source-box matrices remain validation-only and are not
+the producer algorithm.
 
 Any next implementation blurb should state:
 
