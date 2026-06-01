@@ -1386,19 +1386,73 @@ retained rules are applied. The covered pair families are:
 The centered wrappers reuse the existing `CoulombGaussianExpansion` and
 `gaussian_factor_matrices(...)` machinery and require the analytic primitive
 backend. They generate per-axis local-Gaussian term tables, then delegate to
-the explicit source-box helpers. The convention is positive `gaussian_sum`
-only: nuclear charge multiplication and the negative nuclear-attraction sign
-are outside these helpers.
+the explicit source-box helpers. These helpers intentionally remain positive
+`gaussian_sum` components.
+
+Commit `549ae2f` adds the private physical all-electron non-ECP wrapper layer.
+The wrapper applies the physical center-by-center sign and charge:
+
+```text
+V_nuc,A = -Z_A * gaussian_sum(center_A)
+```
+
+Per-center physical blocks are the primary result because counterpoise
+workflows need to preserve center identity. A summed total block may be
+reported only as a derived convenience. The positive `gaussian_sum` component
+is still retained in wrapper metadata so the physical sign/charge assembly
+does not hide the underlying analytic source-box factorization.
 
 Focused validation remains private: small fixtures and ignored probes compare
 the source-box blocks against explicit source-box references or explicit-table
 helper output, including rectangular PQS/PQS and shifted cross-PQS fixtures.
-This is not broad route adoption and not CR2 science evidence. It changes no
-ECP path, electron-electron path, MWG/IDA semantics, retained PQS
-positive-weight or IDA-division semantics, shell-row support-local algorithm,
-packet/fixed-block construction, QW/Hamiltonian path, or public/default route.
+The physical wrapper checks sign, charge scaling, by-center preservation, and
+malformed center/charge rejection. This is not broad route adoption and not
+CR2 science evidence. It changes no ECP path, electron-electron path,
+MWG/IDA semantics, retained PQS positive-weight or IDA-division semantics,
+shell-row support-local algorithm, packet/fixed-block construction,
+QW/Hamiltonian path, or public/default route.
+
+### Electron-Electron Source-Box Object Contract
+
 Electron-electron interaction work should be treated as a separate semantic
-lane, not slipped in as a continuation of this one-body checkpoint.
+lane, not slipped in as a continuation of the one-body Gaussian or nuclear
+checkpoint.
+
+The current repo electron-electron convention is a two-index density-density
+IDA/MWG interaction matrix assembled from Coulomb-Gaussian pair factors, not a
+Galerkin four-index Coulomb tensor. Existing raw paths distinguish:
+
+- raw pair-factor terms at the auxiliary/raw quadrature level;
+- raw/source weights from the same auxiliary layer;
+- density-normalized pair factors produced by dividing raw pair terms by raw
+  source weights.
+
+For a future source-box interaction lane, the source object should therefore
+carry pair-factor provenance explicitly:
+
+- expansion coefficients and per-axis pair-factor term tensors;
+- whether terms are raw-weighted or density-normalized;
+- the raw/source weights that own any IDA/MWG normalization;
+- left/right raw product-box plans and retained rules;
+- output representation, initially a two-index retained density-density block
+  or matrix in the existing IDA/MWG convention;
+- diagnostics that retained PQS weights are not positive quadrature weights
+  and `retained_weight_division_allowed = false`.
+
+The first tiny fixture should be product/product, where product/doside
+source-box retained transforms already exist and current product-staged or
+fixed-block interaction data can serve as a validation oracle. PQS/product and
+PQS/PQS should wait until the product/product fixture proves the factor shape,
+the raw-weight versus density-normalized distinction, and the final two-index
+output convention. Support-local or current fixed-block paths remain
+validation-only unless a later pass explicitly promotes a source-box
+interaction object.
+
+Stop implementation if the pass cannot answer where IDA/MWG weights live, if
+it needs retained PQS columns to carry positive quadrature weights, if it
+confuses one-body nuclear sign/charge with electron-electron pair factors, or
+if it requires packet/fixed-block/QW/Hamiltonian, MWG/IDA semantic, public
+route, ECP, or CR2 changes.
 
 When shell rows are needed, the realization consumer should remain separate:
 
@@ -1414,12 +1468,11 @@ selected product-box modes by conjugation. It should not be folded into the
 raw product-box reference path.
 
 General physical raw source pair operator packets beyond these private
-product/slab/PQS fixtures, nuclear charge/sign assembly, ECP/local-potential
-terms, interaction/MWG, optimized/adopted product/PQS pairs, and
-product/support-dense pairs need separate design. The current checkpoint
-changes no all-pairs matrix construction, QW or Hamiltonian path,
-public/default route, backend/default policy, PGDG or quadrature policy, CR2
-path, or science status.
+product/slab/PQS fixtures, ECP/local-potential terms, interaction/MWG,
+optimized/adopted product/PQS pairs, and product/support-dense pairs need
+separate design. The current checkpoint changes no all-pairs matrix
+construction, QW or Hamiltonian path, public/default route, backend/default
+policy, PGDG or quadrature policy, CR2 path, or science status.
 
 ## Non-Goals
 
