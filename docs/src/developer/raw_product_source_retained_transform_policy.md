@@ -405,6 +405,24 @@ matrix use, retained PQS weights, IDA division, packet or fixed-block
 adoption, QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/
 MWG/interaction terms, IDA/MWG change, or CR2 science claim.
 
+Commit `047af1d` adds the private geometry/recipe facts producer checkpoint
+for this same lane. The geometry facts helper accepts `parent_dims`,
+`bond_axis`, `q`/`L` or explicit `source_mode_dims`, `left_start`,
+`right_shift`, and a product slab fixed index/rule. It emits the explicit
+left/right PQS source boxes, product/doside slab source box, source-mode
+dimensions, metadata, provenance, and diagnostics consumed by the raw-box
+route producer.
+
+This is private fixture infrastructure only. It is not a general diatomic
+route geometry policy, public builder, packet-adoption seam, or operator
+authority. The shifted cubic `q5/L5` and rectangular `q5/L7` samples match the
+explicit-fixture producer and safe-term consumer path to roundoff. The
+negative boundary remains unchanged: no shell projection, Lowdin cleanup,
+support-local fallback as an algorithm, support coefficient matrices,
+retained PQS weights, IDA division, packet or fixed-block adoption,
+QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
+interaction terms, IDA/MWG change, or CR2 science claim.
+
 Commit `28c3dbc` records the corresponding private input-gate checkpoint. The
 gates protect private fixture construction from accidental misuse: source
 boxes must be nonempty and inside `parent_dims`; `parent_dims` must be a

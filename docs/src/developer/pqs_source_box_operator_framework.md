@@ -686,6 +686,16 @@ What is established:
   source-box shadow or hand-built route path to roundoff. Timing and
   allocation summaries are captured as diagnostic evidence only, not as
   performance thresholds.
+- Commit `047af1d` adds the first private geometry/recipe facts producer for
+  that route lane. The helper turns small homonuclear-style fixture facts into
+  explicit source-box inputs for the raw-box route producer: `parent_dims`,
+  `bond_axis`, `q`/`L` or explicit `source_mode_dims`, `left_start`,
+  `right_shift`, and a product-slab fixed index/rule become left/right PQS
+  source boxes, a product/doside slab source box, source-mode dimensions,
+  metadata, provenance, and diagnostics. This is private fixture
+  infrastructure, not a general diatomic route geometry policy or public
+  builder. The shifted `q5/L5` and rectangular `q5/L7` samples match the
+  explicit-fixture producer and safe-term consumer path to roundoff.
 - A private q4 current-route retained-unit inventory covers all retained
   columns and has a route-wide safe-term authority comparison.
 - A Be2-like strict PQS q5 inventory-shape check pins the 8-unit, 36-pair,
@@ -817,6 +827,25 @@ and hand-built descriptor paths to roundoff. Producer and consumer timing plus
 allocation summaries are recorded only as diagnostics; they are not readiness
 thresholds. Dense raw source-box matrices remain validation-only and are not
 the producer algorithm.
+
+Commit `047af1d` records the first geometry/recipe facts producer checkpoint
+for this lane. `_pqs_pqs_product_raw_box_homonuclear_geometry_facts(...)`
+accepts `parent_dims`, `bond_axis`, `q`/`L` or explicit `source_mode_dims`,
+`left_start`, `right_shift`, and a product slab fixed index/rule. It emits the
+explicit left/right PQS source boxes, product/doside slab source box,
+source-mode dimensions, metadata, provenance, and diagnostics consumed by
+`_pqs_pqs_product_raw_box_route_from_geometry_facts(...)`, which then calls
+the existing raw-box route producer. This is a private fixture geometry
+producer only: it is not a broad diatomic geometry policy, public builder, or
+operator-algebra authority.
+
+The geometry checkpoint validates the shifted `q5/L5` and rectangular
+`q5/L7` samples against the explicit-fixture route producer and safe-term
+consumer path to roundoff. It adds no shell projection, Lowdin cleanup,
+support-local fallback as an algorithm, support coefficient matrices,
+retained PQS weights, IDA division, packet or fixed-block adoption,
+QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
+interaction terms, IDA/MWG change, or CR2 science claim.
 
 Commit `28c3dbc` records the private input-gate checkpoint for this producer.
 The gates are misuse protection for private fixture work, not a public route
