@@ -3347,6 +3347,182 @@ function _pqs_product_source_box_local_gaussian_sum_block(
     )
 end
 
+function _source_box_nuclear_attraction_center_values(centers)
+    center_items = collect(centers)
+    !isempty(center_items) || throw(
+        ArgumentError("source-box nuclear attraction requires at least one center"),
+    )
+    return map(center_items) do center
+        value = try
+            ntuple(axis -> Float64(center[axis]), 3)
+        catch err
+            throw(
+                ArgumentError("source-box nuclear attraction centers must be 3-coordinate tuples"),
+            )
+        end
+        all(isfinite, value) || throw(
+            ArgumentError("source-box nuclear attraction centers must be finite"),
+        )
+        value
+    end
+end
+
+function _source_box_nuclear_attraction_charge_values(nuclear_charges)
+    charges = Float64[Float64(charge) for charge in nuclear_charges]
+    !isempty(charges) || throw(
+        ArgumentError("source-box nuclear attraction requires at least one nuclear charge"),
+    )
+    all(isfinite, charges) || throw(
+        ArgumentError("source-box nuclear attraction charges must be finite"),
+    )
+    all(>=(0.0), charges) || throw(
+        ArgumentError("source-box nuclear attraction charges must be nonnegative"),
+    )
+    return charges
+end
+
+function _source_box_nuclear_attraction_by_center(
+    centered_positive_block_builder;
+    centers,
+    nuclear_charges,
+    path::Symbol,
+    source::Symbol,
+)
+    center_values = _source_box_nuclear_attraction_center_values(centers)
+    charge_values = _source_box_nuclear_attraction_charge_values(nuclear_charges)
+    length(center_values) == length(charge_values) || throw(
+        ArgumentError("source-box nuclear attraction center and charge counts must match"),
+    )
+    contributions = map(eachindex(center_values)) do center_index
+        positive_block = centered_positive_block_builder(center_values[center_index])
+        hasproperty(positive_block, :block) || throw(
+            ArgumentError("source-box nuclear attraction positive helper must return a block"),
+        )
+        charge = charge_values[center_index]
+        block = Matrix{Float64}((-charge) .* positive_block.block)
+        all(isfinite, block) || throw(
+            ArgumentError("source-box nuclear attraction block produced non-finite entries"),
+        )
+        (
+            center_index = center_index,
+            center = center_values[center_index],
+            nuclear_charge = charge,
+            sign_charge_scale = -charge,
+            gaussian_sum_block = positive_block.block,
+            block = block,
+            positive_gaussian_sum = positive_block,
+            diagnostics = merge(
+                positive_block.diagnostics,
+                (
+                    source = source,
+                    physical_operator = :electron_nuclear_attraction,
+                    positive_gaussian_sum_component = true,
+                    gaussian_sum_path = positive_block.path,
+                    nuclear_charge_applied = true,
+                    nuclear_attraction_sign_applied = true,
+                    nuclear_charge_sign_applied = true,
+                    nuclear_charge = charge,
+                    sign_charge_scale = -charge,
+                    center = center_values[center_index],
+                    center_index = center_index,
+                    center_contribution = true,
+                    center_contributions_preserved = true,
+                    counterpoise_center_identity_preserved = true,
+                    ecp = false,
+                    ecp_terms_implemented = false,
+                    electron_electron_terms_implemented = false,
+                    mwg_interaction_implemented = false,
+                    packet_adoption = false,
+                    fixed_block_routing = false,
+                    qwhamiltonian_consumes = false,
+                    public_default_consumes = false,
+                    cr2_science_status_changed = false,
+                    output_finite = true,
+                ),
+            ),
+        )
+    end
+    total_block = zeros(Float64, size(first(contributions).block))
+    for contribution in contributions
+        size(contribution.block) == size(total_block) || throw(
+            DimensionMismatch("source-box nuclear attraction center blocks must have matching sizes"),
+        )
+        total_block .+= contribution.block
+    end
+    all(isfinite, total_block) || throw(
+        ArgumentError("source-box nuclear attraction total block produced non-finite entries"),
+    )
+    return (
+        path = path,
+        physical_operator = :electron_nuclear_attraction,
+        blocks_by_center = contributions,
+        center_blocks = contributions,
+        total_block = total_block,
+        block = total_block,
+        centers = Tuple(center_values),
+        nuclear_charges = Tuple(charge_values),
+        diagnostics = (
+            source = source,
+            private_shadow_only = true,
+            source_box_first = true,
+            local_gaussian_source_box_terms = true,
+            physical_operator = :electron_nuclear_attraction,
+            positive_gaussian_sum_component = true,
+            positive_gaussian_sum_paths =
+                Tuple(contribution.positive_gaussian_sum.path for contribution in contributions),
+            nuclear_charge_applied = true,
+            nuclear_attraction_sign_applied = true,
+            nuclear_charge_sign_applied = true,
+            center_contributions_preserved = true,
+            counterpoise_center_identity_preserved = true,
+            primary_result = :blocks_by_center,
+            total_block_is_derived_convenience = true,
+            block_field_is_derived_total = true,
+            center_count = length(center_values),
+            block_shape = size(total_block),
+            positive_gaussian_sum_convention = true,
+            ecp = false,
+            ecp_terms_implemented = false,
+            electron_electron_terms_implemented = false,
+            mwg_interaction_implemented = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            ida_mwg_semantics_changed = false,
+            numerical_reference_fallback = false,
+            shell_row_algorithm = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            output_finite = true,
+        ),
+    )
+end
+
+function _product_doside_source_box_nuclear_attraction_by_center(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    centers,
+    nuclear_charges,
+)
+    return _source_box_nuclear_attraction_by_center(
+        center -> _product_doside_source_box_centered_local_gaussian_sum_block(
+            left_unit,
+            right_unit,
+            axis_layers,
+            expansion;
+            center,
+        );
+        centers,
+        nuclear_charges,
+        path = :product_doside_source_box_nuclear_attraction_by_center,
+        source = :product_doside_source_box_nuclear_attraction_by_center,
+    )
+end
+
 function _pqs_product_source_box_centered_local_gaussian_sum_block(
     pqs_plan,
     product_unit::_CartesianNestedProductStagedByCenterUnit3D,
@@ -3430,6 +3606,29 @@ function _pqs_product_source_box_centered_local_gaussian_sum_block(
                 output_finite = true,
             ),
         ),
+    )
+end
+
+function _pqs_product_source_box_nuclear_attraction_by_center(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    centers,
+    nuclear_charges,
+)
+    return _source_box_nuclear_attraction_by_center(
+        center -> _pqs_product_source_box_centered_local_gaussian_sum_block(
+            pqs_plan,
+            product_unit,
+            axis_layers,
+            expansion;
+            center,
+        );
+        centers,
+        nuclear_charges,
+        path = :pqs_product_source_box_nuclear_attraction_by_center,
+        source = :pqs_product_source_box_nuclear_attraction_by_center,
     )
 end
 
@@ -3903,6 +4102,29 @@ function _pqs_pqs_source_box_centered_local_gaussian_sum_block(
                 output_finite = true,
             ),
         ),
+    )
+end
+
+function _pqs_pqs_source_box_nuclear_attraction_by_center(
+    left_pqs_plan,
+    right_pqs_plan,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    centers,
+    nuclear_charges,
+)
+    return _source_box_nuclear_attraction_by_center(
+        center -> _pqs_pqs_source_box_centered_local_gaussian_sum_block(
+            left_pqs_plan,
+            right_pqs_plan,
+            axis_layers,
+            expansion;
+            center,
+        );
+        centers,
+        nuclear_charges,
+        path = :pqs_pqs_source_box_nuclear_attraction_by_center,
+        source = :pqs_pqs_source_box_nuclear_attraction_by_center,
     )
 end
 

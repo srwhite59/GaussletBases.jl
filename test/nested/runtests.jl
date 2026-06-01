@@ -6411,6 +6411,173 @@ end
         expected_retained_count = 130,
         shared_raw_product_box_plan = rectangular_shared_raw_product_box_plan,
     )
+    nuclear_axis_layers = (
+        x = bundle5.basis,
+        y = bundle5.basis,
+        z = bundle7.basis,
+    )
+    nuclear_probe_expansion = CoulombGaussianExpansion(
+        [0.65, 0.18],
+        [0.35, 0.9];
+        del = 0.0,
+        s = 1.0,
+        c = 1.0,
+        maxu = 1.0,
+    )
+    nuclear_probe_centers = (
+        (0.15, -0.2, 0.35),
+        (-0.4, 0.1, -0.15),
+    )
+    nuclear_probe_charges = (2.0, 0.5)
+    function _check_source_box_nuclear_attraction_by_center(
+        result,
+        positive_builder,
+        expected_path::Symbol,
+    )
+        @test result.path == expected_path
+        @test result.physical_operator == :electron_nuclear_attraction
+        @test length(result.blocks_by_center) == length(nuclear_probe_centers)
+        @test result.center_blocks === result.blocks_by_center
+        expected_total = zeros(Float64, size(result.total_block))
+        for center_index in eachindex(nuclear_probe_centers)
+            contribution = result.blocks_by_center[center_index]
+            positive = positive_builder(nuclear_probe_centers[center_index])
+            @test contribution.center_index == center_index
+            @test contribution.center == nuclear_probe_centers[center_index]
+            @test contribution.nuclear_charge == nuclear_probe_charges[center_index]
+            @test contribution.sign_charge_scale == -nuclear_probe_charges[center_index]
+            @test contribution.gaussian_sum_block ≈ positive.block atol = 0.0 rtol = 0.0
+            @test contribution.block ≈
+                  (-nuclear_probe_charges[center_index]) .* positive.block atol = 1.0e-14 rtol = 1.0e-14
+            @test !positive.diagnostics.nuclear_charge_applied
+            @test !positive.diagnostics.nuclear_attraction_sign_applied
+            @test contribution.positive_gaussian_sum.path == positive.path
+            @test contribution.diagnostics.physical_operator ==
+                  :electron_nuclear_attraction
+            @test contribution.diagnostics.positive_gaussian_sum_component
+            @test contribution.diagnostics.nuclear_charge_applied
+            @test contribution.diagnostics.nuclear_attraction_sign_applied
+            @test contribution.diagnostics.nuclear_charge_sign_applied
+            @test contribution.diagnostics.center_contributions_preserved
+            @test contribution.diagnostics.counterpoise_center_identity_preserved
+            @test !contribution.diagnostics.ecp
+            @test !contribution.diagnostics.packet_adoption
+            @test !contribution.diagnostics.fixed_block_routing
+            @test !contribution.diagnostics.qwhamiltonian_consumes
+            @test !contribution.diagnostics.public_default_consumes
+            @test !contribution.diagnostics.cr2_science_status_changed
+            expected_total .+= contribution.block
+        end
+        @test result.total_block ≈ expected_total atol = 1.0e-14 rtol = 1.0e-14
+        @test result.block ≈ result.total_block atol = 0.0 rtol = 0.0
+        @test result.centers == nuclear_probe_centers
+        @test result.nuclear_charges == nuclear_probe_charges
+        @test result.diagnostics.source_box_first
+        @test result.diagnostics.local_gaussian_source_box_terms
+        @test result.diagnostics.physical_operator ==
+              :electron_nuclear_attraction
+        @test result.diagnostics.positive_gaussian_sum_component
+        @test result.diagnostics.nuclear_charge_applied
+        @test result.diagnostics.nuclear_attraction_sign_applied
+        @test result.diagnostics.nuclear_charge_sign_applied
+        @test result.diagnostics.center_contributions_preserved
+        @test result.diagnostics.counterpoise_center_identity_preserved
+        @test result.diagnostics.primary_result == :blocks_by_center
+        @test result.diagnostics.total_block_is_derived_convenience
+        @test result.diagnostics.block_field_is_derived_total
+        @test result.diagnostics.center_count == length(nuclear_probe_centers)
+        @test result.diagnostics.positive_gaussian_sum_convention
+        @test !result.diagnostics.ecp
+        @test !result.diagnostics.ecp_terms_implemented
+        @test !result.diagnostics.electron_electron_terms_implemented
+        @test !result.diagnostics.mwg_interaction_implemented
+        @test !result.diagnostics.retained_pqs_weight_division_allowed
+        @test !result.diagnostics.ida_weight_division_allowed
+        @test !result.diagnostics.numerical_reference_fallback
+        @test !result.diagnostics.shell_row_algorithm
+        @test !result.diagnostics.packet_adoption
+        @test !result.diagnostics.fixed_block_routing
+        @test !result.diagnostics.qwhamiltonian_consumes
+        @test !result.diagnostics.public_default_consumes
+        @test !result.diagnostics.cr2_science_status_changed
+        @test result.diagnostics.output_finite
+    end
+    product_nuclear_attraction =
+        CCPM._product_doside_source_box_nuclear_attraction_by_center(
+            product_unit,
+            product_unit,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            centers = nuclear_probe_centers,
+            nuclear_charges = nuclear_probe_charges,
+        )
+    _check_source_box_nuclear_attraction_by_center(
+        product_nuclear_attraction,
+        center -> CCPM._product_doside_source_box_centered_local_gaussian_sum_block(
+            product_unit,
+            product_unit,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            center,
+        ),
+        :product_doside_source_box_nuclear_attraction_by_center,
+    )
+    pqs_product_nuclear_attraction =
+        CCPM._pqs_product_source_box_nuclear_attraction_by_center(
+            rectangular_pqs_product_source_box_plan,
+            product_unit,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            centers = nuclear_probe_centers,
+            nuclear_charges = nuclear_probe_charges,
+        )
+    _check_source_box_nuclear_attraction_by_center(
+        pqs_product_nuclear_attraction,
+        center -> CCPM._pqs_product_source_box_centered_local_gaussian_sum_block(
+            rectangular_pqs_product_source_box_plan,
+            product_unit,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            center,
+        ),
+        :pqs_product_source_box_nuclear_attraction_by_center,
+    )
+    pqs_pqs_nuclear_attraction =
+        CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
+            rectangular_pqs_pqs_source_box_plan,
+            rectangular_pqs_pqs_source_box_plan,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            centers = nuclear_probe_centers,
+            nuclear_charges = nuclear_probe_charges,
+        )
+    _check_source_box_nuclear_attraction_by_center(
+        pqs_pqs_nuclear_attraction,
+        center -> CCPM._pqs_pqs_source_box_centered_local_gaussian_sum_block(
+            rectangular_pqs_pqs_source_box_plan,
+            rectangular_pqs_pqs_source_box_plan,
+            nuclear_axis_layers,
+            nuclear_probe_expansion;
+            center,
+        ),
+        :pqs_pqs_source_box_nuclear_attraction_by_center,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan,
+        nuclear_axis_layers,
+        nuclear_probe_expansion;
+        centers = nuclear_probe_centers,
+        nuclear_charges = (1.0,),
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan,
+        nuclear_axis_layers,
+        nuclear_probe_expansion;
+        centers = nuclear_probe_centers,
+        nuclear_charges = (1.0, -0.5),
+    )
     rectangular_parent_representation = GaussletBases._cartesian_direct_product_representation(
         (
             x = GaussletBases._cartesian_axis_representation(bundle5.basis),
