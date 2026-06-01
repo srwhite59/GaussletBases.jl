@@ -669,6 +669,14 @@ What is established:
   same-box plus compatible cross-box blocks are now validated inside the
   private helper against explicit raw product-box boundary-column selection
   references.
+- The private all-electron local-Gaussian one-body lane now covers the
+  positive Coulomb `gaussian_sum` component used for nuclear attraction.
+  Product/product, PQS/product, and PQS/PQS pair families have explicit
+  term-table helpers and centered analytic wrappers. The centered wrappers
+  generate per-axis factors with the existing `CoulombGaussianExpansion` and
+  `gaussian_factor_matrices(...)` machinery, require the analytic primitive
+  backend, and then feed the explicit source-box helpers. Nuclear charge and
+  attraction sign application remain outside these helpers.
 - Commit `770b7be` adds the first private route-shaped safe-term consumer.
   It composes PQS/PQS, PQS/product, and product/product source-box blocks for
   overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. Every route pair is
@@ -721,7 +729,10 @@ What is not established:
 
 - Production packet or fixed-block adoption of the source-box algorithm.
 - Current-route shell-realized PQS/PQS source-box adoption.
-- Local/Gaussian one-body terms in the source-box framework.
+- Nuclear-attraction assembly adoption: the private source-box helpers produce
+  positive local-Gaussian `gaussian_sum` blocks only, with no nuclear
+  charge/sign application and no route integration.
+- ECP or other local-potential production paths.
 - MWG/IDA interaction support through retained PQS source-box transforms.
 - CR2 validation or public/default route readiness.
 - That dense retained or raw product-box pair validation matrices scale to
@@ -768,7 +779,9 @@ These questions are intentionally unresolved.
   cross-shell PQS/PQS blocks without running a full route-wide oracle?
 - How should support-dense atom-box fallback enter the broader retained-unit
   vocabulary without pretending to be product/doside?
-- When should local/Gaussian one-body terms be introduced after safe terms?
+- What is the next semantic lane after positive local-Gaussian one-body
+  factors: nuclear charge/sign assembly, current-route authority comparison,
+  or electron-electron design? Electron-electron should be scoped separately.
 - What evidence is required before any packet/fixed-block adoption discussion?
 
 ## Framework Update Rule
@@ -886,6 +899,38 @@ shell projection, Lowdin cleanup, support-local PQS oracle, support
 coefficient matrix use, retained PQS weights, IDA division, packet or
 fixed-block adoption, QW/Hamiltonian routing, public/default behavior,
 local/ECP/Gaussian/MWG/interaction terms, IDA/MWG change, or CR2 claim.
+
+The private source-box local-Gaussian one-body checkpoint is commits
+`b12f1b4`, `7608264`, `d948d51`, `c262d40`, `5dc0642`, and `dea7feb`.
+It covers the positive Coulomb `gaussian_sum` component used by all-electron
+non-ECP nuclear attraction:
+
+```text
+sum_t c_t * Gx_t * Gy_t * Gz_t
+```
+
+The pair families covered are product/product, PQS/product, and PQS/PQS. Each
+family has a caller-supplied explicit term-table helper, and each has a
+centered analytic wrapper where the per-axis term tables are generated from
+the existing `CoulombGaussianExpansion` and
+`gaussian_factor_matrices(...)` machinery. These wrappers require the
+analytic primitive backend and then delegate to the explicit source-box
+helpers.
+
+This checkpoint is still private/source-box/reference infrastructure. It
+builds positive `gaussian_sum` blocks only: nuclear charge multiplication and
+the negative attraction sign are not applied by these helpers. Focused
+validation uses small fixtures and ignored probes covering product/product,
+PQS/product, same-box PQS/PQS, rectangular PQS/PQS, and shifted/cross-box
+PQS/PQS comparisons against explicit source-box references or explicit-table
+helper output.
+
+The checkpoint adds no ECP terms, electron-electron terms, MWG/IDA change,
+retained PQS positive-weight semantics, retained-weight IDA division,
+shell-row support-local contraction as an algorithm, packet or fixed-block
+adoption, QW/Hamiltonian routing, public/default behavior, or CR2 science
+claim. Starting electron-electron interactions is a separate semantic lane and
+should wait for explicit review.
 
 Any next implementation blurb should state:
 

@@ -1365,6 +1365,41 @@ oracle, retained PQS weights, retained-weight IDA division, packet
 construction, QW/Hamiltonian paths, public/default routes, CR2 artifacts,
 local/ECP/Gaussian/MWG/interaction paths, or IDA/MWG behavior changes.
 
+The private source-box local-Gaussian one-body checkpoint adds the positive
+Coulomb `gaussian_sum` component needed before all-electron non-ECP nuclear
+attraction assembly. The source-box factor form is:
+
+```text
+sum_t c_t * Gx_t * Gy_t * Gz_t
+```
+
+where each axis factor is built in the raw product source spaces before the
+retained rules are applied. The covered pair families are:
+
+- product/product, with explicit term-table blocks and centered analytic term
+  generation;
+- PQS/product, with explicit term-table blocks and centered analytic term
+  generation;
+- PQS/PQS, with explicit term-table blocks and centered analytic term
+  generation.
+
+The centered wrappers reuse the existing `CoulombGaussianExpansion` and
+`gaussian_factor_matrices(...)` machinery and require the analytic primitive
+backend. They generate per-axis local-Gaussian term tables, then delegate to
+the explicit source-box helpers. The convention is positive `gaussian_sum`
+only: nuclear charge multiplication and the negative nuclear-attraction sign
+are outside these helpers.
+
+Focused validation remains private: small fixtures and ignored probes compare
+the source-box blocks against explicit source-box references or explicit-table
+helper output, including rectangular PQS/PQS and shifted cross-PQS fixtures.
+This is not broad route adoption and not CR2 science evidence. It changes no
+ECP path, electron-electron path, MWG/IDA semantics, retained PQS
+positive-weight or IDA-division semantics, shell-row support-local algorithm,
+packet/fixed-block construction, QW/Hamiltonian path, or public/default route.
+Electron-electron interaction work should be treated as a separate semantic
+lane, not slipped in as a continuation of this one-body checkpoint.
+
 When shell rows are needed, the realization consumer should remain separate:
 
 ```text
@@ -1379,10 +1414,10 @@ selected product-box modes by conjugation. It should not be folded into the
 raw product-box reference path.
 
 General physical raw source pair operator packets beyond these private
-product/slab fixtures, kinetic adoption into existing real route consumers,
-nuclear, Gaussian/local, interaction/MWG, optimized/adopted product/PQS
-pairs, and product/support-dense pairs need separate design. The current
-checkpoint changes no all-pairs matrix construction, QW or Hamiltonian path,
+product/slab/PQS fixtures, nuclear charge/sign assembly, ECP/local-potential
+terms, interaction/MWG, optimized/adopted product/PQS pairs, and
+product/support-dense pairs need separate design. The current checkpoint
+changes no all-pairs matrix construction, QW or Hamiltonian path,
 public/default route, backend/default policy, PGDG or quadrature policy, CR2
 path, or science status.
 
