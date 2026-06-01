@@ -3418,6 +3418,108 @@ end
     @test max_produced_route_error < 1.0e-10
     @test produced_route_consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
     @test produced_route_consumer.diagnostics.source_box_algorithmic_pair_count == 6
+    route_producer_sample_specs = (
+        (
+            name = :shifted_cubic_q5_L5,
+            left_box = route_left_current,
+            right_box = route_right_current,
+            product_box = (1:5, 1:5, 4:4),
+            source_mode_dims = (5, 5, 5),
+        ),
+        (
+            name = :same_box_rectangular_q5_L7,
+            left_box = (1:5, 1:5, 1:7),
+            right_box = (1:5, 1:5, 1:7),
+            product_box = (1:5, 1:5, 4:4),
+            source_mode_dims = (5, 5, 7),
+        ),
+    )
+    route_producer_sample_summaries = Any[]
+    for sample in route_producer_sample_specs
+        sample_producer_timed = @timed CCPM._pqs_pqs_product_raw_box_route_producer(
+            route_bundles,
+            sample.left_box,
+            sample.right_box,
+            sample.product_box,
+            route_metrics;
+            source_mode_dims = sample.source_mode_dims,
+            route_name = sample.name,
+            parent_dims = route_dims,
+            bond_axis = :z,
+            metadata = (
+                sample_name = sample.name,
+                sampled_route_producer_validation = true,
+            ),
+            provenance = (source = :sampled_route_producer_validation,),
+        )
+        sample_producer = sample_producer_timed.value
+        sample_consumer_timed =
+            @timed CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+                sample_producer.descriptor,
+                route_metrics,
+            )
+        sample_consumer = sample_consumer_timed.value
+        sample_shadow = CCPM._pqs_pqs_product_source_box_shadow_blocks(
+            sample_producer.raw_pqs_plans.pqs_left,
+            sample_producer.raw_pqs_plans.pqs_right,
+            sample_producer.product_unit,
+            route_metrics,
+        )
+        sample_error = maximum(
+            norm(
+                sample_consumer.blocks[term] - sample_shadow.blocks[term],
+                Inf,
+            ) for term in sample_consumer.terms
+        )
+        @test sample_error < 1.0e-10
+        @test sample_producer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test sample_consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test sample_consumer.pair_count == 6
+        @test !sample_producer.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test !sample_producer.diagnostics.shell_projection_used
+        @test !sample_producer.diagnostics.lowdin_cleanup_used
+        @test !sample_producer.diagnostics.support_local_pqs_oracle_used
+        @test !sample_producer.diagnostics.support_coefficient_matrix_used
+        @test !sample_producer.diagnostics.retained_pqs_weights_used
+        @test !sample_producer.diagnostics.ida_weight_division_allowed
+        @test !sample_consumer.diagnostics.packet_adoption
+        @test !sample_consumer.diagnostics.fixed_block_routing
+        @test !sample_consumer.diagnostics.qwhamiltonian_consumes
+        push!(
+            route_producer_sample_summaries,
+            (
+                name = sample.name,
+                source_mode_dims = sample.source_mode_dims,
+                left_box_lengths = ntuple(axis -> length(sample.left_box[axis]), 3),
+                right_box_lengths = ntuple(axis -> length(sample.right_box[axis]), 3),
+                product_box_lengths = ntuple(axis -> length(sample.product_box[axis]), 3),
+                retained_dimension = sample_consumer.retained_dimension,
+                pair_count = sample_consumer.pair_count,
+                producer_elapsed_seconds = Float64(sample_producer_timed.time),
+                producer_allocated_bytes = Int(sample_producer_timed.bytes),
+                consumer_elapsed_seconds = Float64(sample_consumer_timed.time),
+                consumer_allocated_bytes = Int(sample_consumer_timed.bytes),
+                dense_raw_source_box_pair_matrix_validation_only =
+                    sample_consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
+                max_consumer_shadow_error = sample_error,
+            ),
+        )
+    end
+    @test length(route_producer_sample_summaries) == 2
+    @test any(
+        summary -> summary.source_mode_dims[3] != summary.source_mode_dims[1],
+        route_producer_sample_summaries,
+    )
+    @test all(summary -> summary.pair_count == 6, route_producer_sample_summaries)
+    @test all(
+        summary -> summary.producer_allocated_bytes > 0 &&
+                   summary.consumer_allocated_bytes > 0,
+        route_producer_sample_summaries,
+    )
+    @test all(
+        summary -> summary.max_consumer_shadow_error < 1.0e-10,
+        route_producer_sample_summaries,
+    )
     route_fact_diagnostic =
         CCPM._pqs_pqs_product_route_descriptor_diagnostic(
             route_units,
