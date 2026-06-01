@@ -423,6 +423,23 @@ retained PQS weights, IDA division, packet or fixed-block adoption,
 QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
 interaction terms, IDA/MWG change, or CR2 science claim.
 
+Commit `17dd86d` validates the same private geometry facts helper for `:z` and
+`:x` fixture bond axes. The `:x` sample emits the expected left/right PQS
+source boxes, product/doside slab source box, product slab fixed-axis
+metadata, source-mode dimensions, retained dimension, pair count, pair policy,
+and safe-term consumer output matching the explicit route-producer path to
+roundoff. This is only mechanical axis-label coverage for explicit fixture
+facts; it is not a general atom-centered, shell-realized current-route, or CR2
+geometry builder.
+
+The `17dd86d` checkpoint also records focused guard coverage for invalid
+`bond_axis`, missing `q` when `source_mode_dims` is absent, malformed
+source-mode dimensions, and source-mode axis lengths below two. The intended
+flow remains:
+`geometry/recipe facts -> explicit source boxes/source-mode dimensions ->
+RawProductBoxPlan -> RetainedRule -> route descriptor -> source-box safe-term
+consumer`.
+
 Commit `28c3dbc` records the corresponding private input-gate checkpoint. The
 gates protect private fixture construction from accidental misuse: source
 boxes must be nonempty and inside `parent_dims`; `parent_dims` must be a

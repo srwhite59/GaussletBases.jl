@@ -696,6 +696,15 @@ What is established:
   infrastructure, not a general diatomic route geometry policy or public
   builder. The shifted `q5/L5` and rectangular `q5/L7` samples match the
   explicit-fixture producer and safe-term consumer path to roundoff.
+- Commit `17dd86d` validates that this geometry facts producer is mechanically
+  axis-general over fixture bond-axis labels. A non-`:z` `:x` fixture emits
+  source boxes, source-mode dimensions, product slab fixed-axis metadata,
+  retained dimension, pair count, and safe-term consumer output matching the
+  explicit route-producer path to roundoff. The same checkpoint adds focused
+  guards for invalid bond axes, missing `q` when `source_mode_dims` is absent,
+  malformed source-mode dimensions, and source-mode axis lengths below two.
+  This is still explicit fixture/recipe infrastructure, not an atom-centered
+  or CR2 geometry builder.
 - A private q4 current-route retained-unit inventory covers all retained
   columns and has a route-wide safe-term authority comparison.
 - A Be2-like strict PQS q5 inventory-shape check pins the 8-unit, 36-pair,
@@ -846,6 +855,23 @@ support-local fallback as an algorithm, support coefficient matrices,
 retained PQS weights, IDA division, packet or fixed-block adoption,
 QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
 interaction terms, IDA/MWG change, or CR2 science claim.
+
+Commit `17dd86d` records the focused axis-general validation checkpoint for
+the same helper. The helper is now validated for `:z` and `:x` fixture bond
+axes: the `:x` sample emits the expected left/right PQS source boxes,
+product/doside slab source box with fixed axis `1`, source-mode dimensions,
+retained dimension, pair count, pair policy, and safe-term consumer output
+matching the explicit route-producer path to roundoff. This axis check is
+mechanical; it does not add center inference, atom boxes, shell-realized
+current-route PQS, or broad diatomic route geometry policy.
+
+The same checkpoint adds high-level guard coverage for invalid `bond_axis`,
+missing `q` when `source_mode_dims` is absent, malformed source-mode
+dimensions, and source-mode axis lengths below two. Those guards keep the
+private geometry facts lane explicit:
+`geometry/recipe facts -> explicit source boxes/source-mode dimensions ->
+RawProductBoxPlan -> RetainedRule -> route descriptor -> source-box safe-term
+consumer`.
 
 Commit `28c3dbc` records the private input-gate checkpoint for this producer.
 The gates are misuse protection for private fixture work, not a public route
