@@ -3347,6 +3347,92 @@ function _pqs_product_source_box_local_gaussian_sum_block(
     )
 end
 
+function _pqs_product_source_box_centered_local_gaussian_sum_block(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    center::NTuple{3,<:Real},
+)
+    term_data = _product_doside_source_box_centered_local_gaussian_term_data(
+        axis_layers,
+        expansion;
+        center,
+    )
+    pqs_term_data = merge(
+        term_data,
+        (
+            diagnostics = merge(
+                term_data.diagnostics,
+                (
+                    source =
+                        :pqs_product_source_box_centered_local_gaussian_term_data,
+                    centered_term_data_helper_reused =
+                        :_product_doside_source_box_centered_local_gaussian_term_data,
+                ),
+            ),
+        ),
+    )
+    explicit_block = _pqs_product_source_box_local_gaussian_sum_block(
+        pqs_plan,
+        product_unit;
+        term_coefficients = pqs_term_data.term_coefficients,
+        axis_gaussian_terms = pqs_term_data.axis_gaussian_terms,
+    )
+    return (
+        path = :pqs_product_source_box_centered_local_gaussian_sum,
+        block = explicit_block.block,
+        explicit_block = explicit_block,
+        term_data = pqs_term_data,
+        pair_plan = explicit_block.pair_plan,
+        one_dimensional_gaussian_factors =
+            explicit_block.one_dimensional_gaussian_factors,
+        diagnostics = merge(
+            explicit_block.diagnostics,
+            pqs_term_data.diagnostics,
+            (
+                source =
+                    :pqs_product_source_box_centered_local_gaussian_sum_block,
+                source_box_first = true,
+                local_gaussian_source_box_terms = true,
+                centered_local_gaussian_terms_generated = true,
+                centered_term_data_helper_reused =
+                    :_product_doside_source_box_centered_local_gaussian_term_data,
+                explicit_table_helper_used =
+                    :_pqs_product_source_box_local_gaussian_sum_block,
+                axis_gaussian_terms_source = :analytic_gaussian_factor_matrices,
+                analytic_primitive_backend_required = true,
+                analytic_primitive_backend_checked = true,
+                pqs_representation = :mode_selected_raw_product_box,
+                positive_gaussian_sum_convention = true,
+                nuclear_charge_applied = false,
+                nuclear_attraction_sign_applied = false,
+                numerical_reference_fallback = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_coefficient_matrix_used = false,
+                shell_row_algorithm = false,
+                support_local_oracle_used = false,
+                support_local_pqs_oracle_used = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                ida_mwg_semantics_changed = false,
+                ecp_terms_implemented = false,
+                electron_electron_terms_implemented = false,
+                mwg_interaction_implemented = false,
+                local_gaussian_one_body_implemented = true,
+                product_staged_nuclear_execution_changed = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                cr2_science_status_changed = false,
+                output_finite = true,
+            ),
+        ),
+    )
+end
+
 const _PQS_PQS_SOURCE_BOX_REFERENCE_TERMS =
     _PQS_PRODUCT_SOURCE_BOX_REFERENCE_TERMS
 
