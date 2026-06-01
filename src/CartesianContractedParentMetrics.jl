@@ -3938,6 +3938,222 @@ function _pqs_product_doside_identity_slab_unit(
     )
 end
 
+function _pqs_route_axis_index(axis::Symbol)
+    axis == :x && return 1
+    axis == :y && return 2
+    axis == :z && return 3
+    throw(ArgumentError("PQS raw-box geometry producer requires bond_axis = :x, :y, or :z"))
+end
+
+function _pqs_geometry_int3(value, label::Symbol)
+    value_tuple = Tuple(value)
+    length(value_tuple) == 3 || throw(
+        ArgumentError("$(label) must contain exactly three entries"),
+    )
+    return ntuple(axis -> Int(value_tuple[axis]), 3)
+end
+
+function _pqs_geometry_source_mode_dims(;
+    q = nothing,
+    L = nothing,
+    source_mode_dims = nothing,
+    bond_axis_index::Int,
+)
+    if isnothing(source_mode_dims)
+        !isnothing(q) || throw(
+            ArgumentError("raw-box geometry facts require q when source_mode_dims is not supplied"),
+        )
+        q_int = Int(q)
+        l_int = isnothing(L) ? q_int : Int(L)
+        return ntuple(axis -> axis == bond_axis_index ? l_int : q_int, 3)
+    end
+    return _pqs_geometry_int3(source_mode_dims, :source_mode_dims)
+end
+
+function _pqs_pqs_product_raw_box_homonuclear_geometry_facts(;
+    parent_dims::NTuple{3,Int},
+    bond_axis::Symbol = :z,
+    q = nothing,
+    L = nothing,
+    source_mode_dims = nothing,
+    left_start = (1, 1, 1),
+    right_shift,
+    product_slab_fixed_index,
+    route_name::Symbol = :homonuclear_pqs_product_source_box_geometry_fixture,
+    metadata = (;),
+    provenance = (;),
+)
+    all(dim -> dim > 0, parent_dims) || throw(
+        ArgumentError("raw-box geometry facts parent dimensions must be positive"),
+    )
+    bond_axis_index = _pqs_route_axis_index(bond_axis)
+    resolved_source_mode_dims = _pqs_geometry_source_mode_dims(
+        q = q,
+        L = L,
+        source_mode_dims = source_mode_dims,
+        bond_axis_index = bond_axis_index,
+    )
+    all(dim -> dim >= 2, resolved_source_mode_dims) || throw(
+        ArgumentError("raw-box geometry facts source-mode dimensions must be total lengths of at least two per axis"),
+    )
+    left_start_tuple = _pqs_geometry_int3(left_start, :left_start)
+    right_shift_tuple = _pqs_geometry_int3(right_shift, :right_shift)
+    product_fixed_index = Int(product_slab_fixed_index)
+    left_source_box = ntuple(
+        axis -> left_start_tuple[axis]:(left_start_tuple[axis] + resolved_source_mode_dims[axis] - 1),
+        3,
+    )
+    right_source_box = ntuple(
+        axis -> (left_start_tuple[axis] + right_shift_tuple[axis]):
+                (left_start_tuple[axis] + right_shift_tuple[axis] +
+                 resolved_source_mode_dims[axis] - 1),
+        3,
+    )
+    product_source_box = ntuple(
+        axis -> axis == bond_axis_index ?
+                (product_fixed_index:product_fixed_index) :
+                left_source_box[axis],
+        3,
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        left_source_box,
+        parent_dims;
+        role = :pqs_left_geometry,
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        right_source_box,
+        parent_dims;
+        role = :pqs_right_geometry,
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        product_source_box,
+        parent_dims;
+        role = :product_geometry,
+    )
+    return (
+        object_kind = :pqs_pqs_product_raw_box_homonuclear_geometry_facts,
+        status = :private_fixture_geometry_producer,
+        parent_dims = parent_dims,
+        bond_axis = bond_axis,
+        bond_axis_index = bond_axis_index,
+        q = isnothing(q) ? nothing : Int(q),
+        L = isnothing(L) ? nothing : Int(L),
+        source_mode_dims = resolved_source_mode_dims,
+        left_start = left_start_tuple,
+        right_shift = right_shift_tuple,
+        product_slab_fixed_index = product_fixed_index,
+        left_source_box = left_source_box,
+        right_source_box = right_source_box,
+        product_source_box = product_source_box,
+        route_name = route_name,
+        metadata = merge(
+            (
+                parent_dims = parent_dims,
+                bond_axis = bond_axis,
+                pqs_left_box = left_source_box,
+                pqs_right_box = right_source_box,
+                product_source_box = product_source_box,
+                pqs_source_mode_dims = resolved_source_mode_dims,
+                geometry_producer =
+                    :pqs_pqs_product_raw_box_homonuclear_geometry_facts,
+            ),
+            metadata,
+        ),
+        provenance = merge(
+            (source = :pqs_pqs_product_raw_box_homonuclear_geometry_facts,),
+            provenance,
+        ),
+        diagnostics = (
+            source = :pqs_pqs_product_raw_box_homonuclear_geometry_facts,
+            private_fixture_geometry_producer = true,
+            public_route_builder = false,
+            emits_explicit_source_box_inputs = true,
+            geometry_policy = :small_homonuclear_fixture_offsets,
+            source_mode_dims_are_total_lengths = true,
+            source_boxes_inside_parent_dims = true,
+            product_slab_fixed_axis = bond_axis_index,
+            product_slab_has_exactly_one_fixed_axis = true,
+            raw_box_route_producer_consumes = true,
+            operator_algebra_defined = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
+function _pqs_pqs_product_raw_box_route_from_geometry_facts(
+    bundles,
+    geometry_facts,
+    metrics::NamedTuple{(:x,:y,:z)};
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    hasproperty(geometry_facts, :object_kind) &&
+        geometry_facts.object_kind ==
+            :pqs_pqs_product_raw_box_homonuclear_geometry_facts || throw(
+                ArgumentError("raw-box geometry route producer requires homonuclear geometry facts"),
+            )
+    _nested_axis_lengths(bundles) == geometry_facts.parent_dims || throw(
+        ArgumentError("raw-box geometry facts parent dimensions must match axis bundles"),
+    )
+    produced_route = _pqs_pqs_product_raw_box_route_producer(
+        bundles,
+        geometry_facts.left_source_box,
+        geometry_facts.right_source_box,
+        geometry_facts.product_source_box,
+        metrics;
+        source_mode_dims = geometry_facts.source_mode_dims,
+        route_name = geometry_facts.route_name,
+        parent_dims = geometry_facts.parent_dims,
+        bond_axis = geometry_facts.bond_axis,
+        metadata = geometry_facts.metadata,
+        provenance = geometry_facts.provenance,
+        supported_terms = supported_terms,
+        orthogonality_atol = orthogonality_atol,
+    )
+    return merge(
+        produced_route,
+        (
+            object_kind = :pqs_pqs_product_raw_box_geometry_route_producer,
+            geometry_facts = geometry_facts,
+            produced_route = produced_route,
+            diagnostics = merge(
+                produced_route.diagnostics,
+                (
+                    source = :pqs_pqs_product_raw_box_route_from_geometry_facts,
+                    private_fixture_geometry_producer = true,
+                    geometry_facts_consumed = true,
+                    emits_explicit_source_box_inputs = true,
+                    public_route_builder = false,
+                    operator_algebra_defined = false,
+                    shell_projection_used = false,
+                    lowdin_cleanup_used = false,
+                    support_local_pqs_oracle_used = false,
+                    support_coefficient_matrix_used = false,
+                    retained_pqs_weights_used = false,
+                    retained_weight_semantics = :not_positive_quadrature_weights,
+                    ida_weight_division_allowed = false,
+                    packet_adoption = false,
+                    fixed_block_routing = false,
+                    qwhamiltonian_consumes = false,
+                    public_default_consumes = false,
+                    cr2_science_status_changed = false,
+                ),
+            ),
+        ),
+    )
+end
+
 function _pqs_pqs_product_raw_box_route_producer(
     bundles,
     left_source_box::NTuple{3,UnitRange{Int}},

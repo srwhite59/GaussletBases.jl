@@ -3391,6 +3391,109 @@ end
     @test !produced_route.diagnostics.ida_weight_division_allowed
     @test !produced_route.diagnostics.packet_adoption
     @test !produced_route.diagnostics.qwhamiltonian_consumes
+    route_geometry_facts =
+        CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+            parent_dims = route_dims,
+            bond_axis = :z,
+            q = 5,
+            L = 5,
+            left_start = (1, 1, 1),
+            right_shift = (0, 0, 2),
+            product_slab_fixed_index = 4,
+            route_name = :q5_L5_slab5_test_route,
+            metadata = (
+                pqs_left_box = route_left_current,
+                pqs_right_box = route_right_current,
+                product_slab_fixed_index = 4,
+                pqs_source_mode_dims = (5, 5, 5),
+            ),
+            provenance = (source = :route_shaped_safe_term_consumer_test_fixture,),
+        )
+    @test route_geometry_facts.object_kind ==
+          :pqs_pqs_product_raw_box_homonuclear_geometry_facts
+    @test route_geometry_facts.status == :private_fixture_geometry_producer
+    @test route_geometry_facts.left_source_box == route_left_current
+    @test route_geometry_facts.right_source_box == route_right_current
+    @test route_geometry_facts.product_source_box == (1:5, 1:5, 4:4)
+    @test route_geometry_facts.source_mode_dims == (5, 5, 5)
+    @test route_geometry_facts.diagnostics.emits_explicit_source_box_inputs
+    @test route_geometry_facts.diagnostics.source_boxes_inside_parent_dims
+    @test route_geometry_facts.diagnostics.raw_box_route_producer_consumes
+    @test !route_geometry_facts.diagnostics.shell_projection_used
+    @test !route_geometry_facts.diagnostics.lowdin_cleanup_used
+    @test !route_geometry_facts.diagnostics.support_local_pqs_oracle_used
+    @test !route_geometry_facts.diagnostics.support_coefficient_matrix_used
+    @test !route_geometry_facts.diagnostics.retained_pqs_weights_used
+    @test !route_geometry_facts.diagnostics.ida_weight_division_allowed
+    @test !route_geometry_facts.diagnostics.packet_adoption
+    geometry_route = CCPM._pqs_pqs_product_raw_box_route_from_geometry_facts(
+        route_bundles,
+        route_geometry_facts,
+        route_metrics,
+    )
+    @test geometry_route.object_kind ==
+          :pqs_pqs_product_raw_box_geometry_route_producer
+    @test geometry_route.geometry_facts === route_geometry_facts
+    @test geometry_route.produced_route.object_kind ==
+          :pqs_pqs_product_raw_box_route_producer
+    @test geometry_route.descriptor.expected_ranges ==
+          produced_route.descriptor.expected_ranges
+    @test geometry_route.descriptor.retained_dimension ==
+          produced_route.descriptor.retained_dimension
+    @test geometry_route.descriptor.expected_pair_count ==
+          produced_route.descriptor.expected_pair_count
+    @test geometry_route.descriptor.supported_terms ==
+          produced_route.descriptor.supported_terms
+    @test map(summary -> summary.source_dimensions,
+              geometry_route.descriptor.unit_summaries) ==
+          map(summary -> summary.source_dimensions,
+              produced_route.descriptor.unit_summaries)
+    @test map(summary -> summary.retained_count,
+              geometry_route.descriptor.unit_summaries) ==
+          map(summary -> summary.retained_count,
+              produced_route.descriptor.unit_summaries)
+    @test geometry_route.all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count == 6
+    @test geometry_route.diagnostics.geometry_facts_consumed
+    @test geometry_route.diagnostics.private_fixture_geometry_producer
+    @test !geometry_route.diagnostics.shell_projection_used
+    @test !geometry_route.diagnostics.lowdin_cleanup_used
+    @test !geometry_route.diagnostics.support_local_pqs_oracle_used
+    @test !geometry_route.diagnostics.support_coefficient_matrix_used
+    @test !geometry_route.diagnostics.retained_pqs_weights_used
+    @test !geometry_route.diagnostics.ida_weight_division_allowed
+    @test !geometry_route.diagnostics.packet_adoption
+    geometry_route_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            geometry_route.descriptor,
+            route_metrics,
+        )
+    produced_route_consumer_for_geometry =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            produced_route.descriptor,
+            route_metrics,
+        )
+    max_geometry_route_error = maximum(
+        norm(
+            geometry_route_consumer.blocks[term] -
+            produced_route_consumer_for_geometry.blocks[term],
+            Inf,
+        ) for term in geometry_route_consumer.terms
+    )
+    @test max_geometry_route_error < 1.0e-10
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+        parent_dims = route_dims,
+        bond_axis = :z,
+        q = 5,
+        L = 5,
+        left_start = (1, 1, 1),
+        right_shift = (0, 0, 2),
+        product_slab_fixed_index = 8,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_from_geometry_facts(
+        route_bundles,
+        merge(route_geometry_facts, (parent_dims = (5, 5, 8),)),
+        route_metrics,
+    )
     @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
         route_bundles,
         (0:4, 1:5, 1:5),
@@ -3555,6 +3658,76 @@ end
         @test !sample_consumer.diagnostics.packet_adoption
         @test !sample_consumer.diagnostics.fixed_block_routing
         @test !sample_consumer.diagnostics.qwhamiltonian_consumes
+        sample_left_start = ntuple(axis -> first(sample.left_box[axis]), 3)
+        sample_right_shift = ntuple(
+            axis -> first(sample.right_box[axis]) - first(sample.left_box[axis]),
+            3,
+        )
+        sample_geometry_facts =
+            CCPM._pqs_pqs_product_raw_box_homonuclear_geometry_facts(
+                parent_dims = route_dims,
+                bond_axis = :z,
+                source_mode_dims = sample.source_mode_dims,
+                left_start = sample_left_start,
+                right_shift = sample_right_shift,
+                product_slab_fixed_index = first(sample.product_box[3]),
+                route_name = sample.name,
+                metadata = (
+                    sample_name = sample.name,
+                    sampled_geometry_producer_validation = true,
+                ),
+                provenance = (source = :sampled_geometry_producer_validation,),
+            )
+        @test sample_geometry_facts.left_source_box == sample.left_box
+        @test sample_geometry_facts.right_source_box == sample.right_box
+        @test sample_geometry_facts.product_source_box == sample.product_box
+        @test sample_geometry_facts.source_mode_dims == sample.source_mode_dims
+        @test !sample_geometry_facts.diagnostics.shell_projection_used
+        @test !sample_geometry_facts.diagnostics.lowdin_cleanup_used
+        @test !sample_geometry_facts.diagnostics.support_local_pqs_oracle_used
+        @test !sample_geometry_facts.diagnostics.retained_pqs_weights_used
+        @test !sample_geometry_facts.diagnostics.ida_weight_division_allowed
+        sample_geometry_route =
+            CCPM._pqs_pqs_product_raw_box_route_from_geometry_facts(
+                route_bundles,
+                sample_geometry_facts,
+                route_metrics,
+            )
+        @test sample_geometry_route.descriptor.expected_ranges ==
+              sample_producer.descriptor.expected_ranges
+        @test sample_geometry_route.descriptor.retained_dimension ==
+              sample_producer.descriptor.retained_dimension
+        @test sample_geometry_route.descriptor.expected_pair_count ==
+              sample_producer.descriptor.expected_pair_count
+        @test sample_geometry_route.descriptor.supported_terms ==
+              sample_producer.descriptor.supported_terms
+        @test map(summary -> summary.source_dimensions,
+                  sample_geometry_route.descriptor.unit_summaries) ==
+              map(summary -> summary.source_dimensions,
+                  sample_producer.descriptor.unit_summaries)
+        @test map(summary -> summary.retained_count,
+                  sample_geometry_route.descriptor.unit_summaries) ==
+              map(summary -> summary.retained_count,
+                  sample_producer.descriptor.unit_summaries)
+        sample_geometry_consumer =
+            CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+                sample_geometry_route.descriptor,
+                route_metrics,
+            )
+        sample_geometry_error = maximum(
+            norm(
+                sample_geometry_consumer.blocks[term] -
+                sample_consumer.blocks[term],
+                Inf,
+            ) for term in sample_geometry_consumer.terms
+        )
+        @test sample_geometry_error < 1.0e-10
+        @test sample_geometry_route.diagnostics.geometry_facts_consumed
+        @test !sample_geometry_route.diagnostics.shell_projection_used
+        @test !sample_geometry_route.diagnostics.lowdin_cleanup_used
+        @test !sample_geometry_route.diagnostics.support_local_pqs_oracle_used
+        @test !sample_geometry_route.diagnostics.retained_pqs_weights_used
+        @test !sample_geometry_route.diagnostics.ida_weight_division_allowed
         push!(
             route_producer_sample_summaries,
             (
@@ -3572,6 +3745,7 @@ end
                 dense_raw_source_box_pair_matrix_validation_only =
                     sample_consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
                 max_consumer_shadow_error = sample_error,
+                max_geometry_consumer_error = sample_geometry_error,
             ),
         )
     end
@@ -3588,6 +3762,10 @@ end
     )
     @test all(
         summary -> summary.max_consumer_shadow_error < 1.0e-10,
+        route_producer_sample_summaries,
+    )
+    @test all(
+        summary -> summary.max_geometry_consumer_error < 1.0e-10,
         route_producer_sample_summaries,
     )
     route_fact_diagnostic =
