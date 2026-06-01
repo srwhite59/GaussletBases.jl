@@ -38,10 +38,20 @@ notes:
 - `docs/src/developer/raw_product_source_retained_transform_policy.md`
 - `docs/src/developer/projected_q_shell_policy.md`
 - `docs/src/developer/performance_review_contracts.md`
+- external agent background memo:
+  `/Users/srw/Dropbox/chatarchive/handoff/external_analysis/pqs_source_box_manuscript_packet_2026-06-01/agent_oriented_background_2026-06-01.md`
 
 If those documents and this one disagree, stop and update the framework or
 policy explicitly before continuing implementation. Do not resolve the conflict
 silently in code.
+
+The external memo is drift-control background, not a public API contract. It
+is especially useful for keeping the high-level PQS picture straight: PQS is a
+single product-shell object built from a full raw source box and boundary
+product modes, not a stitched panel/endcap route; edge and corner modes are
+part of the structured shell; shell realization/support-local contraction are
+compatibility/oracle paths; structured PQS rank loss is a construction
+diagnostic rather than silent compression.
 
 ## Key Spaces
 
