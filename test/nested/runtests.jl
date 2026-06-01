@@ -7635,12 +7635,48 @@ end
           :shell_realized_pqs_fixture
     @test !current_route_inventory.by_role[:regular_shared_molecular_shell].raw_product_box_operator_contract
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].safe_term_capability ==
-          :support_local_fallback_current_route
+          :support_local_oracle_for_shell_realization
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].support_count == 362
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].retained_count == 114
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.available
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.reference_only
     @test !current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.active_current_route_contract
+    shared_pqs_unit = current_route_inventory.by_role[:regular_shared_molecular_shell]
+    shared_transform_fact = shared_pqs_unit.shell_realization_transform_fact
+    @test shared_transform_fact.object_kind ==
+          :pqs_current_route_shell_realization_transform_fact
+    @test shared_transform_fact.status == :metadata_precursor
+    @test shared_transform_fact.representation_stage == :shell_realized_pqs_fixture
+    @test shared_transform_fact.source_box.source_mode_dims ==
+          shared_pqs_unit.raw_box_auxiliary_metadata.source_mode_dims
+    @test shared_transform_fact.source_box.source_mode_count ==
+          prod(shared_transform_fact.source_box.source_mode_dims)
+    @test shared_transform_fact.boundary_selection.mode_count == shared_pqs_unit.retained_count
+    @test shared_transform_fact.shell_projection.support_count == shared_pqs_unit.support_count
+    @test shared_transform_fact.shell_projection.matrix_shape ==
+          (shared_pqs_unit.support_count, shared_pqs_unit.retained_count)
+    @test shared_transform_fact.lowdin_cleanup.transform_shape ==
+          (shared_pqs_unit.retained_count, shared_pqs_unit.retained_count)
+    @test shared_transform_fact.retained_columns.support_local_coefficient_shape ==
+          size(shared_pqs_unit.support_local_coefficient_matrix)
+    @test shared_transform_fact.retained_columns.coefficient_matches_descriptor_realization
+    @test shared_transform_fact.retained_columns.max_support_local_coefficient_error <=
+          1.0e-12
+    @test shared_transform_fact.shell_realization.shell_projection_used
+    @test shared_transform_fact.shell_realization.lowdin_cleanup_used
+    @test !shared_transform_fact.compact_source_space_transform.available
+    @test !shared_transform_fact.source_box_operator_application_ready
+    @test shared_transform_fact.diagnostics.support_local_oracle_used
+    @test shared_transform_fact.diagnostics.shell_row_oracle_only
+    @test shared_transform_fact.diagnostics.metadata_precursor
+    shared_transform_fact_checked =
+        CCPM._pqs_current_route_shell_realization_transform_fact(
+            shared_pqs_unit;
+            metrics = contact_safe_term_metrics,
+        )
+    @test shared_transform_fact_checked.shell_realization.isometry_checked
+    @test shared_transform_fact_checked.shell_realization.isometry_error <= 1.0e-8
+    @test shared_transform_fact_checked.shell_realization.isometric
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].equivalence.coefficient_matrix_matches_active_shell
     @test current_route_inventory.by_role[:regular_shared_molecular_shell].equivalence.max_parent_coefficient_error == 0.0
     @test current_route_inventory.by_role[:left_atom_box].category == :support_dense
@@ -7661,7 +7697,12 @@ end
     @test current_route_inventory.pair_policies[1].policy ==
           :product_doside_source_box_path
     @test current_route_inventory.pair_policies[4].policy ==
-          :support_local_fallback_current_route
+          :support_local_oracle_for_shell_realization
+    @test !current_route_inventory.pair_policies[4].active_current_route
+    @test !current_route_inventory.pair_policies[4].active_algorithmic_policy
+    @test !current_route_inventory.pair_policies[4].source_box_algorithm_available
+    @test current_route_inventory.pair_policies[4].support_local_oracle_used
+    @test current_route_inventory.pair_policies[4].shell_row_oracle_only
     @test !current_route_inventory.pair_policies[end].active_current_route
     @test current_route_inventory.diagnostics.private_diagnostic_only
     @test current_route_inventory.diagnostics.current_route_inventory
@@ -7678,6 +7719,8 @@ end
     @test current_route_inventory.diagnostics.shared_pqs_active_representation ==
           :shell_realized_pqs_fixture
     @test !current_route_inventory.diagnostics.shared_pqs_raw_box_operator_contract
+    @test current_route_inventory.diagnostics.shared_pqs_shell_realization_transform_fact_count == 1
+    @test current_route_inventory.diagnostics.shared_pqs_source_box_operator_application_ready_count == 0
     @test current_route_inventory.diagnostics.raw_box_pqs_auxiliary_reference_available
     @test !current_route_inventory.diagnostics.whole_route_safe_term_matrix_consumer
     @test current_route_inventory.diagnostics.fixed_dimension == 487
@@ -7715,9 +7758,13 @@ end
     @test current_route_pair_inventory.counts.shell_realized_pqs_support == 2
     @test current_route_pair_inventory.counts.shell_realized_pqs_pqs == 1
     @test current_route_pair_inventory.counts.raw_box_pqs_active == 0
+    @test current_route_pair_inventory.counts.active_algorithmic_policy == 15
+    @test current_route_pair_inventory.counts.source_box_algorithm_available == 6
     @test current_route_pair_inventory.counts.product_doside_source_box_path == 6
-    @test current_route_pair_inventory.counts.support_local_fallback == 11
-    @test current_route_pair_inventory.counts.support_local_fallback_current_route == 4
+    @test current_route_pair_inventory.counts.support_local_fallback == 9
+    @test current_route_pair_inventory.counts.support_local_oracle_for_shell_realization == 6
+    @test current_route_pair_inventory.counts.support_local_oracle_pair_count == 6
+    @test current_route_pair_inventory.counts.shell_row_oracle_pair_count == 6
     @test current_route_pair_inventory.pairs[1].pair_group == :product_product
     @test current_route_pair_inventory.pairs[1].policy ==
           :product_doside_source_box_path
@@ -7726,14 +7773,24 @@ end
     @test current_route_pair_inventory.pairs[6].pair_group ==
           :shell_realized_pqs_product
     @test current_route_pair_inventory.pairs[6].policy ==
-          :support_local_fallback_current_route
+          :support_local_oracle_for_shell_realization
+    @test current_route_pair_inventory.pairs[6].shell_row_oracle_only
+    @test current_route_pair_inventory.pairs[6].support_local_oracle_used
+    @test !current_route_pair_inventory.pairs[6].active_algorithmic_policy
+    @test !current_route_pair_inventory.pairs[6].source_box_algorithm_available
     @test current_route_pair_inventory.pairs[15].pair_group ==
           :shell_realized_pqs_support
+    @test current_route_pair_inventory.pairs[15].policy ==
+          :support_local_oracle_for_shell_realization
     @test current_route_pair_inventory.pairs[end].pair_group ==
           :shell_realized_pqs_pqs
     @test current_route_pair_inventory.pairs[end].policy ==
-          :support_local_fallback_current_route
-    @test all(pair -> pair.active_current_route, current_route_pair_inventory.pairs)
+          :support_local_oracle_for_shell_realization
+    @test current_route_pair_inventory.pairs[end].shell_row_oracle_only
+    @test current_route_pair_inventory.pairs[end].support_local_oracle_used
+    @test count(pair -> pair.active_current_route, current_route_pair_inventory.pairs) == 15
+    @test count(pair -> pair.active_algorithmic_policy, current_route_pair_inventory.pairs) == 15
+    @test count(pair -> pair.shell_row_oracle_only, current_route_pair_inventory.pairs) == 6
     @test all(
         pair -> !pair.raw_box_pqs_active_pair_policy,
         current_route_pair_inventory.pairs,
@@ -7744,6 +7801,11 @@ end
     @test current_route_pair_inventory.diagnostics.upper_triangular_pairs
     @test current_route_pair_inventory.diagnostics.pair_count == 21
     @test current_route_pair_inventory.diagnostics.raw_box_pqs_active_pair_policy_count == 0
+    @test current_route_pair_inventory.diagnostics.active_algorithmic_policy_pair_count == 15
+    @test current_route_pair_inventory.diagnostics.source_box_algorithm_available_pair_count == 6
+    @test current_route_pair_inventory.diagnostics.support_local_oracle_for_shell_realization_pair_count == 6
+    @test current_route_pair_inventory.diagnostics.shell_row_oracle_pair_count == 6
+    @test current_route_pair_inventory.diagnostics.shell_realized_pqs_pairs_are_oracle_only
     @test !current_route_pair_inventory.diagnostics.route_descriptor_emitted
     @test !current_route_pair_inventory.diagnostics.construction_mutated
     @test !current_route_pair_inventory.diagnostics.sidecar_installation
@@ -7815,6 +7877,8 @@ end
           (1174:1271, 1272:1369, 1370:1483)
     @test be2_current_route_inventory.diagnostics.shared_pqs_original_column_ranges ==
           (1174:1271, 1272:1369, 1370:1483)
+    @test be2_current_route_inventory.diagnostics.shared_pqs_shell_realization_transform_fact_count == 3
+    @test be2_current_route_inventory.diagnostics.shared_pqs_source_box_operator_application_ready_count == 0
     @test be2_current_route_inventory.coverage.first_column == 1
     @test be2_current_route_inventory.coverage.last_column == 1483
     @test be2_current_route_inventory.coverage.represented_count == 1483
@@ -7827,7 +7891,7 @@ end
         be2_shared_pqs_units,
     )
     @test all(
-        unit -> unit.safe_term_capability == :support_local_fallback_current_route,
+        unit -> unit.safe_term_capability == :support_local_oracle_for_shell_realization,
         be2_shared_pqs_units,
     )
     @test all(unit -> !unit.raw_product_box_operator_contract, be2_shared_pqs_units)
@@ -7876,10 +7940,16 @@ end
     @test be2_current_route_pair_inventory.diagnostics.unit_count == 8
     @test be2_current_route_pair_inventory.counts.raw_box_pqs_active == 0
     @test be2_current_route_pair_inventory.diagnostics.raw_box_pqs_active_pair_policy_count == 0
+    @test be2_current_route_pair_inventory.counts.support_local_oracle_for_shell_realization == 21
+    @test be2_current_route_pair_inventory.diagnostics.support_local_oracle_for_shell_realization_pair_count == 21
+    @test be2_current_route_pair_inventory.diagnostics.shell_row_oracle_pair_count == 21
+    @test be2_current_route_pair_inventory.diagnostics.shell_realized_pqs_pairs_are_oracle_only
     @test all(
         pair -> !pair.raw_box_pqs_active_pair_policy,
         be2_current_route_pair_inventory.pairs,
     )
+    @test count(pair -> pair.shell_row_oracle_only, be2_current_route_pair_inventory.pairs) == 21
+    @test count(pair -> pair.active_algorithmic_policy, be2_current_route_pair_inventory.pairs) == 15
     @test !be2_current_route_pair_inventory.diagnostics.whole_route_safe_term_matrix_consumer
     current_route_safe_terms = CCPM._pqs_current_route_safe_term_matrices(
         pqs_construction,
@@ -7916,7 +7986,10 @@ end
     @test current_route_safe_terms.diagnostics.pair_count == 21
     @test current_route_safe_terms.diagnostics.product_source_box_pair_count == 6
     @test current_route_safe_terms.diagnostics.support_local_fallback_pair_count == 15
-    @test current_route_safe_terms.diagnostics.shell_realized_pqs_fallback_pair_count == 6
+    @test current_route_safe_terms.diagnostics.support_local_oracle_for_shell_realization_pair_count == 6
+    @test current_route_safe_terms.diagnostics.support_local_oracle_is_debug_validation
+    @test current_route_safe_terms.diagnostics.shell_realized_pqs_pairs_use_oracle_not_algorithm
+    @test !current_route_safe_terms.diagnostics.source_box_algorithm_available_for_shell_realized_pqs
     @test current_route_safe_terms.diagnostics.raw_box_pqs_active_pair_policy_count == 0
     @test current_route_safe_terms.diagnostics.global_max_error <= 1.0e-12
     @test current_route_safe_terms.diagnostics.finite_output

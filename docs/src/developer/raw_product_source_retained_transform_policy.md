@@ -412,6 +412,18 @@ PQS/PQS support-local contractions are labeled
 `:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
 validation paths, not active algorithmic pair policies.
 
+The shell-realization transform fact checkpoint exposes the missing bridge
+explicitly for each `:shell_realized_pqs_fixture`. It records the source-box
+axis intervals and total source-mode dimensions, boundary COMX-product mode
+selection, shell-row projection stage, full-rank symmetric Lowdin cleanup
+stage, cleanup/support-local coefficient shapes, and support/retained counts.
+It checks that descriptor projection plus Lowdin reproduces the stored
+support-local coefficients. It deliberately reports
+`compact_source_space_transform.available = false` and
+`source_box_operator_application_ready = false`: the fact is a metadata
+precursor for future `T_left' * O_raw_product * T_right` blocks, not an
+adopted PQS/PQS source-box operator implementation.
+
 The checkpoint is metadata/diagnostic only: no construction mutation, sidecar
 installation, packet or fixed-block adoption, QW/Hamiltonian change, IDA/MWG
 semantic change, local/ECP/Gaussian/interaction work, public/default route

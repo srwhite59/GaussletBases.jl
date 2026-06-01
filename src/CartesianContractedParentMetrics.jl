@@ -5737,6 +5737,18 @@ function _pqs_shared_shell_realized_fixture(
         !isempty(descriptor.axis_intervals) &&
         !isempty(descriptor.axis_local_coefficients) &&
         descriptor.mode_count == length(descriptor.boundary_mode_indices)
+    shell_realization_transform_fact =
+        _pqs_current_route_shell_realization_transform_fact(
+            descriptor;
+            role = shared_shell_count == 1 ?
+                   fact.role :
+                   Symbol(string(fact.role), "_", string(shared_shell_index)),
+            original_role = fact.role,
+            column_range = build.column_range,
+            support_indices = support_indices,
+            support_states = support_states,
+            support_local_coefficient_matrix = local_coefficients,
+        )
     unique_role =
         shared_shell_count == 1 ?
         fact.role :
@@ -5756,8 +5768,9 @@ function _pqs_shared_shell_realized_fixture(
         support_states = support_states,
         support_local_coefficient_matrix = local_coefficients,
         descriptor = descriptor,
+        shell_realization_transform_fact = shell_realization_transform_fact,
         support_source_semantics = :shell_realized_support_local_coefficients,
-        safe_term_capability = :support_local_fallback_current_route,
+        safe_term_capability = :support_local_oracle_for_shell_realization,
         active_representation_stage = :shell_realized_pqs_fixture,
         raw_product_box_operator_contract = false,
         raw_box_auxiliary_metadata = (
@@ -5807,11 +5820,219 @@ function _pqs_shared_shell_realized_fixture(
             representation_stage = :shell_realized_pqs_fixture,
             shell_projection_lowdin_realization = true,
             raw_product_box_operator_contract = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
+            shell_realization_transform_fact_available = true,
+            source_box_operator_application_ready =
+                shell_realization_transform_fact.source_box_operator_application_ready,
+            compact_source_space_transform_available =
+                shell_realization_transform_fact.compact_source_space_transform.available,
             raw_box_auxiliary_reference_available =
                 raw_box_auxiliary_reference_available,
             retained_weight_semantics = :not_positive_quadrature_weights,
             ida_weight_division_allowed = false,
         ),
+    )
+end
+
+function _pqs_current_route_shell_realization_transform_fact(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D;
+    role = descriptor.role,
+    original_role = descriptor.role,
+    column_range = nothing,
+    support_indices = descriptor.support_indices,
+    support_states = descriptor.support_states,
+    support_local_coefficient_matrix = nothing,
+    metrics = nothing,
+    coefficient_atol::Real = 1.0e-12,
+    isometry_atol::Real = 1.0e-8,
+)
+    descriptor.kind == :projected_q_shell || throw(
+        ArgumentError("PQS shell-realization transform fact requires a projected q-shell descriptor"),
+    )
+    length(support_indices) == descriptor.support_count || throw(
+        ArgumentError("PQS shell-realization transform fact support index count mismatch"),
+    )
+    length(support_states) == descriptor.support_count || throw(
+        ArgumentError("PQS shell-realization transform fact support state count mismatch"),
+    )
+    source_mode_dims =
+        ntuple(axis -> size(descriptor.axis_local_coefficients[axis], 2), 3)
+    source_mode_count = prod(source_mode_dims)
+    boundary_mode_count = length(descriptor.boundary_mode_indices)
+    boundary_mode_count == descriptor.mode_count || throw(
+        DimensionMismatch("PQS shell-realization boundary mode count must match descriptor mode_count"),
+    )
+    length(descriptor.boundary_column_indices) == descriptor.mode_count || throw(
+        DimensionMismatch("PQS shell-realization boundary column count must match descriptor mode_count"),
+    )
+    cleanup_transform = Matrix{Float64}(descriptor.cleanup_transform)
+    size(cleanup_transform) == (descriptor.mode_count, descriptor.retained_count) ||
+        throw(
+            DimensionMismatch("PQS shell-realization cleanup transform shape mismatch"),
+        )
+    shell_projection_matrix =
+        _nested_projected_q_shell_descriptor_seed_coefficients(descriptor)
+    size(shell_projection_matrix) == (descriptor.support_count, descriptor.mode_count) ||
+        throw(
+            DimensionMismatch("PQS shell-realization projection shape mismatch"),
+        )
+
+    stored_shape = isnothing(support_local_coefficient_matrix) ?
+                   descriptor.support_local_coefficient_shape :
+                   size(support_local_coefficient_matrix)
+    stored_shape == descriptor.support_local_coefficient_shape || throw(
+        DimensionMismatch("PQS shell-realization support-local coefficient shape mismatch"),
+    )
+    realized_support_coefficients = shell_projection_matrix * cleanup_transform
+    size(realized_support_coefficients) == descriptor.support_local_coefficient_shape ||
+        throw(
+            DimensionMismatch("PQS shell-realization realized support coefficient shape mismatch"),
+        )
+    max_support_local_coefficient_error = nothing
+    coefficient_matches_descriptor_realization = nothing
+    if !isnothing(support_local_coefficient_matrix)
+        stored_coefficients = Matrix{Float64}(support_local_coefficient_matrix)
+        difference = realized_support_coefficients - stored_coefficients
+        max_support_local_coefficient_error =
+            isempty(difference) ? 0.0 : maximum(abs, difference)
+        coefficient_matches_descriptor_realization =
+            max_support_local_coefficient_error <= coefficient_atol
+    end
+
+    isometry_checked = false
+    isometry_error = nothing
+    isometric = nothing
+    if !isnothing(metrics)
+        shell_plan = _pqs_shell_realization_plan(
+            descriptor,
+            metrics;
+            isometry_atol = isometry_atol,
+        )
+        isometry_checked = true
+        isometry_error = shell_plan.isometry_error
+        isometric = shell_plan.isometric
+    end
+
+    compact_missing_reason =
+        :shell_projection_maps_selected_modes_to_shell_rows_not_compact_raw_mode_space
+    return (
+        object_kind = :pqs_current_route_shell_realization_transform_fact,
+        status = :metadata_precursor,
+        role = role,
+        original_role = original_role,
+        column_range = column_range,
+        representation_stage = :shell_realized_pqs_fixture,
+        transform_contract = :raw_box_boundary_selection_shell_projection_lowdin,
+        source_box = (
+            source_mode_dims = source_mode_dims,
+            source_mode_count = source_mode_count,
+            axis_intervals = descriptor.axis_intervals,
+            axis_local_coefficient_shapes =
+                ntuple(axis -> size(descriptor.axis_local_coefficients[axis]), 3),
+            source_mode_dims_are_total_lengths = true,
+        ),
+        boundary_selection = (
+            stage = :boundary_source_mode_selection,
+            mode_indices = copy(descriptor.boundary_mode_indices),
+            column_indices = copy(descriptor.boundary_column_indices),
+            mode_count = descriptor.mode_count,
+            retained_mode_count = boundary_mode_count,
+            selector_matrix_shape = (source_mode_count, descriptor.mode_count),
+            selector_matrix_materialized = false,
+        ),
+        shell_projection = (
+            stage = :shell_projection_to_shell_rows,
+            support_indices = copy(support_indices),
+            support_states = copy(support_states),
+            support_count = descriptor.support_count,
+            matrix_shape = size(shell_projection_matrix),
+            matrix_available_from_descriptor = true,
+            matrix_materialized_in_fact = false,
+        ),
+        lowdin_cleanup = (
+            stage = :full_rank_symmetric_lowdin_cleanup,
+            method = descriptor.cleanup_method,
+            transform_shape = size(cleanup_transform),
+            rank_count = descriptor.cleanup_rank_count,
+            rank_drop_count = descriptor.cleanup_rank_drop_count,
+            cutoff = descriptor.cleanup_cutoff,
+            eigenvalue_count = length(descriptor.cleanup_eigenvalues),
+        ),
+        retained_columns = (
+            retained_count = descriptor.retained_count,
+            support_local_coefficient_shape = descriptor.support_local_coefficient_shape,
+            coefficient_matches_descriptor_realization =
+                coefficient_matches_descriptor_realization,
+            max_support_local_coefficient_error =
+                max_support_local_coefficient_error,
+        ),
+        shell_realization = (
+            shell_projection_used = true,
+            lowdin_cleanup_used = true,
+            shell_projection_lowdin_realization = true,
+            isometry_checked = isometry_checked,
+            isometry_error = isometry_error,
+            isometric = isometric,
+        ),
+        compact_source_space_transform = (
+            available = false,
+            materialized = false,
+            shape = nothing,
+            missing_reason = compact_missing_reason,
+            boundary_selector_cleanup_shape =
+                (source_mode_count, descriptor.retained_count),
+            boundary_selector_cleanup_is_not_shell_realization = true,
+        ),
+        source_box_operator_application_ready = false,
+        missing_for_source_box_operator_application = (
+            :exact_compact_source_space_shell_realization_transform,
+        ),
+        diagnostics = (
+            source = :pqs_current_route_shell_realization_transform_fact,
+            private_metadata_only = true,
+            metadata_precursor = true,
+            representation_stage = :shell_realized_pqs_fixture,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
+            shell_projection_used = true,
+            lowdin_cleanup_used = true,
+            compact_source_space_transform_available = false,
+            compact_source_space_transform_missing_reason =
+                compact_missing_reason,
+            source_box_operator_application_ready = false,
+            raw_product_box_operator_contract = false,
+            packet_adoption = false,
+            fixed_block_construction_changed = false,
+            qwhamiltonian_changed = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+        ),
+    )
+end
+
+function _pqs_current_route_shell_realization_transform_fact(
+    unit;
+    metrics = nothing,
+    coefficient_atol::Real = 1.0e-12,
+    isometry_atol::Real = 1.0e-8,
+)
+    hasproperty(unit, :category) && unit.category == :shell_realized_pqs_fixture ||
+        throw(
+            ArgumentError("PQS shell-realization transform fact requires a shell-realized PQS fixture unit"),
+        )
+    return _pqs_current_route_shell_realization_transform_fact(
+        unit.descriptor;
+        role = unit.role,
+        original_role = hasproperty(unit, :original_role) ? unit.original_role : unit.role,
+        column_range = unit.column_range,
+        support_indices = unit.support_indices,
+        support_states = unit.support_states,
+        support_local_coefficient_matrix = unit.support_local_coefficient_matrix,
+        metrics = metrics,
+        coefficient_atol = coefficient_atol,
+        isometry_atol = isometry_atol,
     )
 end
 
@@ -5857,37 +6078,65 @@ function _pqs_current_route_inventory_pair_policies()
             pair_type = :product_product,
             policy = :product_doside_source_box_path,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = true,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
         ),
         (
             pair_type = :support_support,
             policy = :support_local_fallback,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
         ),
         (
             pair_type = :support_product,
             policy = :support_local_fallback_unless_both_product_doside,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
         ),
         (
             pair_type = :shell_realized_pqs_product,
-            policy = :support_local_fallback_current_route,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
             raw_box_pqs_helper_status = :reference_shadow_only,
         ),
         (
             pair_type = :shell_realized_pqs_support,
-            policy = :support_local_fallback,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
         ),
         (
             pair_type = :shell_realized_pqs_pqs,
-            policy = :support_local_fallback_current_route,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
         ),
         (
             pair_type = :raw_box_pqs_helpers,
             policy = :reference_shadow_only_not_active_current_route,
             active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = true,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
         ),
     )
 end
@@ -6025,6 +6274,17 @@ function _pqs_current_route_retained_unit_inventory(
             Tuple(fixture.original_column_range for fixture in shared_fixtures),
         shared_pqs_active_representation = :shell_realized_pqs_fixture,
         shared_pqs_raw_box_operator_contract = false,
+        shared_pqs_shell_realization_transform_fact_count =
+            count(
+                fixture -> hasproperty(fixture, :shell_realization_transform_fact),
+                shared_fixtures,
+            ),
+        shared_pqs_source_box_operator_application_ready_count =
+            count(
+                fixture ->
+                    fixture.shell_realization_transform_fact.source_box_operator_application_ready,
+                shared_fixtures,
+            ),
         raw_box_pqs_auxiliary_reference_available = raw_box_available,
         raw_box_pqs_auxiliary_reference_unavailable_reason =
             raw_box_available ? nothing : :shared_pqs_descriptor_missing_raw_plan_facts,
@@ -6059,6 +6319,10 @@ function _pqs_current_route_retained_pair_policy(left, right)
             pair_group = :product_product,
             policy = :product_doside_source_box_path,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = true,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
             raw_box_pqs_active_pair_policy = false,
         )
     elseif categories == (:support_dense, :support_dense)
@@ -6066,6 +6330,10 @@ function _pqs_current_route_retained_pair_policy(left, right)
             pair_group = :support_support,
             policy = :support_local_fallback,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
             raw_box_pqs_active_pair_policy = false,
         )
     elseif (:support_dense in categories) && (:product_doside in categories)
@@ -6073,29 +6341,45 @@ function _pqs_current_route_retained_pair_policy(left, right)
             pair_group = :support_product,
             policy = :support_local_fallback,
             active_current_route = true,
+            active_algorithmic_policy = true,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = false,
+            shell_row_oracle_only = false,
             raw_box_pqs_active_pair_policy = false,
         )
     elseif (:shell_realized_pqs_fixture in categories) &&
            (:product_doside in categories)
         return (
             pair_group = :shell_realized_pqs_product,
-            policy = :support_local_fallback_current_route,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
             raw_box_pqs_active_pair_policy = false,
         )
     elseif (:shell_realized_pqs_fixture in categories) &&
            (:support_dense in categories)
         return (
             pair_group = :shell_realized_pqs_support,
-            policy = :support_local_fallback,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
             raw_box_pqs_active_pair_policy = false,
         )
     elseif categories == (:shell_realized_pqs_fixture, :shell_realized_pqs_fixture)
         return (
             pair_group = :shell_realized_pqs_pqs,
-            policy = :support_local_fallback_current_route,
-            active_current_route = true,
+            policy = :support_local_oracle_for_shell_realization,
+            active_current_route = false,
+            active_algorithmic_policy = false,
+            source_box_algorithm_available = false,
+            support_local_oracle_used = true,
+            shell_row_oracle_only = true,
             raw_box_pqs_active_pair_policy = false,
         )
     end
@@ -6110,11 +6394,20 @@ function _pqs_current_route_retained_pair_counts(pairs)
     group_counts = Dict{Symbol,Int}()
     policy_counts = Dict{Symbol,Int}()
     raw_box_pqs_active_pair_policy_count = 0
+    algorithmic_policy_count = 0
+    source_box_algorithm_available_count = 0
+    support_local_oracle_pair_count = 0
+    shell_row_oracle_pair_count = 0
     for pair in pairs
         group_counts[pair.pair_group] = get(group_counts, pair.pair_group, 0) + 1
         policy_counts[pair.policy] = get(policy_counts, pair.policy, 0) + 1
         pair.raw_box_pqs_active_pair_policy &&
             (raw_box_pqs_active_pair_policy_count += 1)
+        pair.active_algorithmic_policy && (algorithmic_policy_count += 1)
+        pair.source_box_algorithm_available &&
+            (source_box_algorithm_available_count += 1)
+        pair.support_local_oracle_used && (support_local_oracle_pair_count += 1)
+        pair.shell_row_oracle_only && (shell_row_oracle_pair_count += 1)
     end
     return (
         pair_count = length(pairs),
@@ -6127,11 +6420,15 @@ function _pqs_current_route_retained_pair_counts(pairs)
             get(group_counts, :shell_realized_pqs_support, 0),
         shell_realized_pqs_pqs = get(group_counts, :shell_realized_pqs_pqs, 0),
         raw_box_pqs_active = raw_box_pqs_active_pair_policy_count,
+        active_algorithmic_policy = algorithmic_policy_count,
+        source_box_algorithm_available = source_box_algorithm_available_count,
+        support_local_oracle_for_shell_realization =
+            get(policy_counts, :support_local_oracle_for_shell_realization, 0),
+        support_local_oracle_pair_count = support_local_oracle_pair_count,
+        shell_row_oracle_pair_count = shell_row_oracle_pair_count,
         product_doside_source_box_path =
             get(policy_counts, :product_doside_source_box_path, 0),
         support_local_fallback = get(policy_counts, :support_local_fallback, 0),
-        support_local_fallback_current_route =
-            get(policy_counts, :support_local_fallback_current_route, 0),
     )
 end
 
@@ -6179,6 +6476,11 @@ function _pqs_current_route_retained_pair_inventory(inventory)
                     pair_group = policy.pair_group,
                     policy = policy.policy,
                     active_current_route = policy.active_current_route,
+                    active_algorithmic_policy = policy.active_algorithmic_policy,
+                    source_box_algorithm_available =
+                        policy.source_box_algorithm_available,
+                    support_local_oracle_used = policy.support_local_oracle_used,
+                    shell_row_oracle_only = policy.shell_row_oracle_only,
                     raw_box_pqs_active_pair_policy =
                         policy.raw_box_pqs_active_pair_policy,
                 ),
@@ -6204,6 +6506,17 @@ function _pqs_current_route_retained_pair_inventory(inventory)
         expected_pair_count = expected_pair_count,
         unit_count = length(units),
         raw_box_pqs_active_pair_policy_count = counts.raw_box_pqs_active,
+        active_algorithmic_policy_pair_count = counts.active_algorithmic_policy,
+        source_box_algorithm_available_pair_count =
+            counts.source_box_algorithm_available,
+        support_local_oracle_for_shell_realization_pair_count =
+            counts.support_local_oracle_for_shell_realization,
+        shell_row_oracle_pair_count = counts.shell_row_oracle_pair_count,
+        shell_realized_pqs_pairs_are_oracle_only =
+            counts.shell_row_oracle_pair_count ==
+            counts.shell_realized_pqs_product +
+            counts.shell_realized_pqs_support +
+            counts.shell_realized_pqs_pqs,
         route_descriptor_emitted = false,
         construction_mutated = false,
         sidecar_installation = false,
@@ -6298,7 +6611,7 @@ function _pqs_current_route_safe_term_matrices_payload(
     output_finite = true
     product_source_box_pair_count = 0
     support_local_fallback_pair_count = 0
-    shell_realized_pqs_fallback_pair_count = 0
+    shell_realized_pqs_oracle_pair_count = 0
 
     for term in selected_terms
         axis_factor_terms =
@@ -6336,7 +6649,7 @@ function _pqs_current_route_safe_term_matrices_payload(
                 )
                 support_local_fallback_pair_count += 1
                 (:shell_realized_pqs_fixture in (pair.left_category, pair.right_category)) &&
-                    (shell_realized_pqs_fallback_pair_count += 1)
+                    (shell_realized_pqs_oracle_pair_count += 1)
             end
 
             left_entries = _pqs_current_route_cached_unit_entries!(
@@ -6414,16 +6727,21 @@ function _pqs_current_route_safe_term_matrices_payload(
             support_local_fallback_pair_count,
             length(selected_terms),
         ),
-        shell_realized_pqs_fallback_pair_count = div(
-            shell_realized_pqs_fallback_pair_count,
+        support_local_oracle_for_shell_realization_pair_count = div(
+            shell_realized_pqs_oracle_pair_count,
             length(selected_terms),
         ),
+        shell_row_oracle_only = true,
+        source_box_algorithm_available_for_shell_realized_pqs = false,
+        support_local_oracle_used = true,
         raw_box_pqs_active_pair_policy_count =
             pair_inventory.counts.raw_box_pqs_active,
         term_errors = term_errors,
         global_max_error = global_max_error,
         finite_output = output_finite,
         support_local_oracle_compared = true,
+        support_local_oracle_is_debug_validation = true,
+        shell_realized_pqs_pairs_use_oracle_not_algorithm = true,
         raw_box_pqs_active_policy_used = false,
         route_descriptor_emitted = false,
         construction_mutated = false,

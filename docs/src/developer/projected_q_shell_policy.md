@@ -437,6 +437,16 @@ PQS/product, PQS/support, and PQS/PQS support-local contractions are labeled
 `:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
 validation paths, not active algorithmic pair policies.
 
+Each shell-realized PQS fixture also exposes a private shell-realization
+transform fact. That fact records the raw source-box dimensions and axis
+intervals, boundary mode selector, shell projection stage, Lowdin cleanup
+stage, cleanup/support-local coefficient shapes, and support/retained counts.
+It checks that descriptor projection plus Lowdin reproduces the stored
+support-local fixture coefficients. It intentionally reports
+`compact_source_space_transform.available = false` and
+`source_box_operator_application_ready = false` until an exact source-space
+realization transform is defined for `T_left' * O_raw_product * T_right`.
+
 This inventory emits no route descriptor, mutates no construction, installs no
 sidecar, adopts no packet or whole-route safe-term matrix consumer, and
 changes no fixed-block, QW/Hamiltonian, IDA/MWG, local/ECP/Gaussian/
