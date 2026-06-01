@@ -404,25 +404,26 @@ This inventory keeps the shared PQS boundary honest. The shared shell is
 labeled `:shell_realized_pqs_fixture`: support-local/shell-realized
 coefficients describe the current shell-supported fixture representation, not
 the intended operator algorithm. Raw product-box and source-box metadata remain
-auxiliary reference metadata until an explicit realization-transform block
-consumes them. Product/product pairs use the product/doside source-box path.
-Support/support and support/product pairs use support-local fallback unless
-both sides are product/doside. Shell-realized PQS/product, PQS/support, and
-PQS/PQS support-local contractions are labeled
+auxiliary compatibility metadata. A future source-box operator block must start
+from an explicit object contract, not from deriving an algorithmic transform
+out of this fixture. Product/product pairs use the product/doside source-box
+path. Support/support and support/product pairs use support-local fallback
+unless both sides are product/doside. Shell-realized PQS/product, PQS/support,
+and PQS/PQS support-local contractions are labeled
 `:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
 validation paths, not active algorithmic pair policies.
 
-The shell-realization transform fact checkpoint exposes the missing bridge
-explicitly for each `:shell_realized_pqs_fixture`. It records the source-box
-axis intervals and total source-mode dimensions, boundary COMX-product mode
-selection, shell-row projection stage, full-rank symmetric Lowdin cleanup
-stage, cleanup/support-local coefficient shapes, and support/retained counts.
-It checks that descriptor projection plus Lowdin reproduces the stored
+The shell-realization fact checkpoint records compatibility evidence for each
+`:shell_realized_pqs_fixture`. It records the source-box axis intervals and
+total source-mode dimensions, boundary COMX-product mode selection, shell-row
+projection stage, full-rank symmetric Lowdin cleanup stage,
+cleanup/support-local coefficient shapes, and support/retained counts. It
+checks that descriptor projection plus Lowdin reproduces the stored
 support-local coefficients. It deliberately reports
 `compact_source_space_transform.available = false` and
-`source_box_operator_application_ready = false`: the fact is a metadata
-precursor for future `T_left' * O_raw_product * T_right` blocks, not an
-adopted PQS/PQS source-box operator implementation.
+`source_box_operator_application_ready = false`: the fixture is validation and
+compatibility metadata, not the object that defines the source-box-first PQS
+operator algorithm.
 
 The checkpoint is metadata/diagnostic only: no construction mutation, sidecar
 installation, packet or fixed-block adoption, QW/Hamiltonian change, IDA/MWG

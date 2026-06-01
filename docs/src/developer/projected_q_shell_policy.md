@@ -429,23 +429,26 @@ every current-route column.
 The shared PQS entry remains labeled `:shell_realized_pqs_fixture`: its
 support-local/shell-realized coefficients describe the current shell-supported
 fixture representation, not the intended operator algorithm. Raw
-product-box/source-box metadata remains auxiliary until an explicit
-realization-transform block consumes it. Product/product pairs use the
-product/doside source-box path. Support/support and support/product pairs use
-support-local fallback unless both sides are product/doside. Shell-realized
-PQS/product, PQS/support, and PQS/PQS support-local contractions are labeled
+product-box/source-box metadata remains auxiliary compatibility evidence. A
+future source-box operator block must start from an explicit object contract,
+not from deriving an algorithmic transform out of this fixture.
+Product/product pairs use the product/doside source-box path. Support/support
+and support/product pairs use support-local fallback unless both sides are
+product/doside. Shell-realized PQS/product, PQS/support, and PQS/PQS
+support-local contractions are labeled
 `:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
 validation paths, not active algorithmic pair policies.
 
-Each shell-realized PQS fixture also exposes a private shell-realization
-transform fact. That fact records the raw source-box dimensions and axis
-intervals, boundary mode selector, shell projection stage, Lowdin cleanup
-stage, cleanup/support-local coefficient shapes, and support/retained counts.
-It checks that descriptor projection plus Lowdin reproduces the stored
-support-local fixture coefficients. It intentionally reports
+Each shell-realized PQS fixture also exposes a private compatibility fact. That
+fact records the raw source-box dimensions and axis intervals, boundary mode
+selector, shell projection stage, Lowdin cleanup stage, cleanup/support-local
+coefficient shapes, and support/retained counts. It checks that descriptor
+projection plus Lowdin reproduces the stored support-local fixture
+coefficients. It intentionally reports
 `compact_source_space_transform.available = false` and
-`source_box_operator_application_ready = false` until an exact source-space
-realization transform is defined for `T_left' * O_raw_product * T_right`.
+`source_box_operator_application_ready = false`: the fixture is validation and
+compatibility metadata, not the object that defines the source-box-first PQS
+operator algorithm.
 
 This inventory emits no route descriptor, mutates no construction, installs no
 sidecar, adopts no packet or whole-route safe-term matrix consumer, and

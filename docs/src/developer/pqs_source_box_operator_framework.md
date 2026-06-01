@@ -18,7 +18,9 @@ The practical goal is:
 ```text
 small raw product boxes
 -> one-dimensional operator factors
--> retained transforms / realization transforms
+-> retained rules
+-> source-box pair operator plans
+-> optional shell-realization or support-row adapters
 -> retained operator blocks
 ```
 
@@ -80,16 +82,20 @@ K_raw =
 where each factor is a 1D cross-axis factor between the left and right source
 boxes.
 
-### Retained Transform
+### Retained Rule
 
-A retained transform maps raw source modes to retained columns. In the compact
-mode-selected PQS reference path, this can be boundary COMX-product mode
-selection.
+A retained rule defines what source-box subspace or source-box columns are kept
+before any compatibility adapter is considered. In the compact mode-selected
+PQS reference path, this can be boundary COMX-product mode selection.
 
 For product/doside units, this is the product/doside retained transform or an
 identity selector over a source box.
 
-The retained transform is the object used in the operator formula:
+The retained rule is an algorithmic object. It is not derived by asking the
+current shell-realized fixture what transform it happens to expose.
+
+When a retained rule has an explicit source-mode transform, it can be used in
+the operator formula:
 
 ```text
 O_retained = T_left' * O_raw_product * T_right
@@ -108,9 +114,24 @@ selected product-box modes
 ```
 
 If the active current-route object is shell-realized, the realization transform
-must be represented as part of the retained transform from source-box space to
-retained columns. It must not force the operator algorithm to loop over shell
-rows except as an oracle.
+is a compatibility/validation object unless a separate framework update makes
+it an algorithmic source-box object. It must not force the operator algorithm
+to loop over shell rows except as an oracle.
+
+If the current fixture lacks a compact source-space transform, that does not by
+itself mean one should be forced out of the fixture. It may mean the current
+fixture is not the algorithmic object. In that case, define the algorithmic
+raw-box plan, retained rule, and pair operator plan first, then add an adapter
+that compares or realizes that object against shell rows.
+
+### Support-Row Adapter
+
+A support-row adapter maps between retained/source-box facts and explicit
+parent or shell support rows for compatibility, diagnostics, and current-route
+authority checks.
+
+The adapter owns support indices, support-local coefficients, and shell-row
+oracle behavior. It must not define the source-box-first algorithm.
 
 ## Intended Data Flow
 
@@ -121,7 +142,8 @@ left raw product source box
 right raw product source box
 -> 1D cross-axis factors
 -> raw product-box pair operator
--> left/right retained or realization transforms
+-> left/right retained-rule transforms
+-> optional realization adapters only after explicit framework review
 -> retained operator block
 ```
 
@@ -131,6 +153,10 @@ For any pair of retained units that have raw product source boxes:
 O_block = T_left' * O_raw(left_source, right_source) * T_right
 ```
 
+That formula is applied only after the participating retained rules have been
+defined as source-box objects. Do not start from a shell-row fixture and try to
+derive an algorithmic `T` merely because the formula wants one.
+
 This is the organizing principle for:
 
 - PQS/PQS blocks;
@@ -139,7 +165,7 @@ This is the organizing principle for:
 - future local/Gaussian one-body source-box blocks;
 - future GTO/source-box transfer helpers where applicable.
 
-Support-local contraction may still be used to verify the result:
+Support-local contraction may still be used to verify or adapt the result:
 
 ```text
 support rows + explicit retained coefficients -> oracle block
@@ -152,6 +178,11 @@ the algorithmic target for PQS.
 
 Future implementation should keep these objects conceptually separate even if
 the initial code uses private named tuples or adapters.
+
+The object contract is primary. Define these objects first, then implement
+helpers that consume them. Current shell-realized fixtures are validation and
+compatibility evidence; they are not the authority for inventing the
+source-box algorithm.
 
 ### Raw Product Box Plan
 
@@ -171,19 +202,23 @@ Must not own:
 - packet construction;
 - retained weight semantics.
 
-### Retained Rule Or Transform
+### Retained Rule
 
 Owns:
 
 - source-box identity;
 - retained dimension;
-- transform from source modes to retained columns;
 - rule kind, such as boundary selector, product/doside transform, identity
-  selector, or shell-realization transform;
+  selector, or direct support adapter;
+- source-mode selector/transform when the rule is algorithmic in source-box
+  space;
 - diagnostics describing whether the transform is intended algorithmic input
   or oracle-only.
 
 Must not pretend retained PQS weights are positive quadrature weights.
+
+Must not use the current shell-realized fixture as the algorithmic retained
+rule merely because it carries support-local coefficients.
 
 ### Retained Unit
 
@@ -199,7 +234,7 @@ The unit may carry support-local coefficients for debug, current-route
 compatibility, or authority comparison. Those coefficients do not by
 themselves define the intended PQS operator algorithm.
 
-### Pair Plan
+### Source Box Pair Operator Plan
 
 Owns:
 
@@ -213,6 +248,23 @@ Owns:
 
 The pair plan is the place to say whether a pair has a source-box algorithm
 available, is oracle-only, or is unsupported.
+
+### Shell-Realization Or Support-Row Adapter
+
+Owns:
+
+- shell support rows and states;
+- shell projection and Lowdin cleanup metadata, when present;
+- support-local coefficients for compatibility;
+- oracle comparison hooks;
+- current-route authority comparison metadata.
+
+Must not own:
+
+- source-box operator policy;
+- packet adoption;
+- retained PQS weight semantics;
+- the decision that a shell-row fixture is the algorithmic PQS object.
 
 ## Invariants
 
@@ -233,6 +285,9 @@ These invariants are lane-wide.
 - Private source-box helpers do not imply public/default route adoption.
 - A full retained matrix diagnostic is allowed for small fixtures, but it is
   not the intended scaling pattern.
+- Object contracts come first. If a fixture does not expose the object needed
+  by the source-box algorithm, define the object contract rather than forcing
+  the fixture to act as that object.
 
 ## Must-Not-Become Patterns
 
@@ -241,6 +296,10 @@ The lane should stop if it starts drifting into any of these patterns.
 - "Optimize support-local fallback" as the PQS operator strategy.
 - Labeling shell-row contractions as the active PQS algorithm.
 - Treating Lowdin cleanup alone as the full source-to-retained transform.
+- Treating a current shell-realized fixture as the source-box algorithmic
+  object.
+- Forcing a compact source-space transform out of a compatibility fixture when
+  the object contract has not been defined.
 - Mixing shell-row realization into raw product-box operator construction.
 - Claiming PQS/product or PQS/PQS production support from oracle-only evidence.
 - Treating retained PQS weights as IDA-safe weights.
@@ -261,13 +320,15 @@ Algorithmic source-box path:
 - applies retained transforms;
 - avoids shell-row loops except for verification.
 
-Shell-realization transform path:
+Shell-realization/support-row adapter path:
 
-- starts from source-box modes;
+- may record source-box facts;
 - projects selected modes to shell rows;
 - applies Lowdin cleanup;
-- returns an isometric retained transform or equivalent retained columns;
-- can be used in `T_left' * O_raw * T_right`.
+- returns or checks shell-supported retained columns;
+- can validate a source-box retained rule;
+- is not automatically the retained rule used in
+  `T_left' * O_raw * T_right`.
 
 Support-local oracle path:
 
@@ -316,8 +377,8 @@ What is established:
 What is not established:
 
 - Production packet or fixed-block adoption of the source-box algorithm.
-- A complete shell-realized PQS/PQS source-box realization-transform block for
-  the current route.
+- A complete object contract for the next PQS/PQS source-box algorithmic
+  block beyond the existing private fixtures.
 - Local/Gaussian one-body terms in the source-box framework.
 - MWG/IDA interaction support through retained PQS source-box transforms.
 - CR2 validation or public/default route readiness.
@@ -356,8 +417,11 @@ Future performance reports should separate:
 
 These questions are intentionally unresolved.
 
-- What is the exact private representation of a shell-realization transform
-  suitable for `T_left' * O_raw * T_right`?
+- What is the exact private object contract for the next PQS/PQS source-box
+  algorithmic block?
+- Which retained rule should be the first algorithmic PQS/PQS consumer:
+  boundary-selected raw-box PQS, a shell-realization adapter around that rule,
+  or another explicitly defined rule?
 - Should the first shell-realized PQS/PQS implementation materialize the raw
   source-box pair operator or stream separable factors directly through the
   transforms?
@@ -391,16 +455,21 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
 
-The next source-box algorithmic correction should not optimize support-local
-fallback. It should implement a private shell-realized PQS/PQS safe-term block
-that:
+The next correction is framework/object-contract only unless the object
+contract is already completely clear. It should not optimize support-local
+fallback and should not try to derive an exact compact transform from the
+current shell-realized fixture.
 
-1. builds overlap and kinetic in raw product-box space from 1D factors;
-2. applies exact shell-realization transforms to retained columns;
-3. compares against support-local shell-row contraction only as an oracle;
-4. starts with same-shell fixtures;
-5. then extends to cross-shell fixtures if the same-shell result is exact and
-   inexpensive.
+First define the intermediate objects:
+
+1. `RawProductBoxPlan`;
+2. `RetainedRule` / boundary selection;
+3. `SourceBoxPairOperatorPlan`;
+4. `Shell-realization` or support-row adapter.
+
+Then, only after the object contract is explicit, implement the first private
+PQS/PQS source-box block using those objects and compare against support-local
+shell-row contraction only as an oracle.
 
 No packet adoption, fixed-block construction adoption, QW/Hamiltonian routing,
 local/ECP/Gaussian/MWG/interaction work, public/default route, or CR2 claim is
