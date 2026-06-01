@@ -7755,6 +7755,132 @@ end
           :not_positive_quadrature_weights
     @test !current_route_pair_inventory.diagnostics.local_ecp_gaussian_mwg_interaction_changed
     @test !current_route_pair_inventory.diagnostics.whole_route_safe_term_matrix_consumer
+    be2_inventory_timed = @timed begin
+        be2_pqs_construction =
+            GaussletBases._nested_bond_aligned_diatomic_high_order_recipe_source_construction(
+                be2_basis,
+                be2_bundles,
+                be2_policy;
+                nside = 5,
+                term_coefficients = Float64.(expansion.coefficients),
+                packet_kernel = :support_reference,
+                shared_shell_realization = :projected_q_shell,
+            )
+        be2_current_route_inventory =
+            CCPM._pqs_current_route_retained_unit_inventory(be2_pqs_construction)
+        be2_current_route_pair_inventory =
+            CCPM._pqs_current_route_retained_pair_inventory(
+                be2_current_route_inventory,
+            )
+        (
+            construction = be2_pqs_construction,
+            inventory = be2_current_route_inventory,
+            pair_inventory = be2_current_route_pair_inventory,
+        )
+    end
+    be2_inventory_payload = be2_inventory_timed.value
+    be2_current_route_inventory = be2_inventory_payload.inventory
+    be2_current_route_pair_inventory = be2_inventory_payload.pair_inventory
+    be2_shared_pqs_units = Tuple(
+        unit for unit in be2_current_route_inventory.units
+        if unit.category == :shell_realized_pqs_fixture
+    )
+    @test be2_inventory_timed.time >= 0.0
+    @test be2_inventory_timed.bytes >= 0
+    @test be2_current_route_inventory.object_kind ==
+          :pqs_current_route_retained_unit_inventory_fixture
+    @test be2_current_route_inventory.status == :private_diagnostic_only
+    @test length(be2_current_route_inventory.units) == 8
+    @test be2_current_route_inventory.diagnostics.unit_count == 8
+    @test be2_current_route_inventory.diagnostics.shared_pqs_unit_count == 3
+    @test be2_current_route_inventory.diagnostics.shared_pqs_roles == (
+        :regular_shared_molecular_shell_1,
+        :regular_shared_molecular_shell_2,
+        :regular_shared_molecular_shell_3,
+    )
+    @test be2_current_route_inventory.diagnostics.shared_pqs_original_roles ==
+          (:regular_shared_molecular_shell, :regular_shared_molecular_shell, :regular_shared_molecular_shell)
+    @test map(unit -> unit.role, be2_shared_pqs_units) ==
+          be2_current_route_inventory.diagnostics.shared_pqs_roles
+    @test map(unit -> unit.original_role, be2_shared_pqs_units) ==
+          be2_current_route_inventory.diagnostics.shared_pqs_original_roles
+    @test map(unit -> unit.retained_count, be2_shared_pqs_units) == (98, 98, 114)
+    @test map(unit -> unit.support_count, be2_shared_pqs_units) ==
+          (1738, 1346, 1002)
+    @test map(unit -> unit.column_range, be2_shared_pqs_units) ==
+          (1174:1271, 1272:1369, 1370:1483)
+    @test map(unit -> unit.original_column_range, be2_shared_pqs_units) ==
+          (1174:1271, 1272:1369, 1370:1483)
+    @test be2_current_route_inventory.diagnostics.shared_pqs_column_ranges ==
+          (1174:1271, 1272:1369, 1370:1483)
+    @test be2_current_route_inventory.diagnostics.shared_pqs_original_column_ranges ==
+          (1174:1271, 1272:1369, 1370:1483)
+    @test be2_current_route_inventory.coverage.first_column == 1
+    @test be2_current_route_inventory.coverage.last_column == 1483
+    @test be2_current_route_inventory.coverage.represented_count == 1483
+    @test be2_current_route_inventory.coverage.covers_every_column_once
+    @test be2_current_route_inventory.diagnostics.fixed_dimension == 1483
+    @test be2_current_route_inventory.diagnostics.coverage_complete
+    @test !be2_current_route_inventory.diagnostics.q4_single_shared_role_order_preserved
+    @test all(
+        unit -> unit.active_representation_stage == :shell_realized_pqs_fixture,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> unit.safe_term_capability == :support_local_fallback_current_route,
+        be2_shared_pqs_units,
+    )
+    @test all(unit -> !unit.raw_product_box_operator_contract, be2_shared_pqs_units)
+    @test all(
+        unit -> unit.raw_box_auxiliary_metadata.available,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> unit.raw_box_auxiliary_metadata.reference_only,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> !unit.raw_box_auxiliary_metadata.active_current_route_contract,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> unit.diagnostics.representation_stage == :shell_realized_pqs_fixture,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> unit.diagnostics.shell_projection_lowdin_realization,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> !unit.diagnostics.raw_product_box_operator_contract,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> !unit.diagnostics.ida_weight_division_allowed,
+        be2_shared_pqs_units,
+    )
+    @test all(
+        unit -> unit.diagnostics.retained_weight_semantics ==
+                :not_positive_quadrature_weights,
+        be2_shared_pqs_units,
+    )
+    @test length(be2_current_route_inventory.source_fixtures.shared_pqs) == 3
+    @test be2_current_route_pair_inventory.object_kind ==
+          :pqs_current_route_retained_pair_inventory_fixture
+    @test be2_current_route_pair_inventory.unit_inventory ===
+          be2_current_route_inventory
+    @test length(be2_current_route_pair_inventory.pairs) == 36
+    @test be2_current_route_pair_inventory.counts.pair_count == 36
+    @test be2_current_route_pair_inventory.diagnostics.pair_count == 36
+    @test be2_current_route_pair_inventory.diagnostics.expected_pair_count == 36
+    @test be2_current_route_pair_inventory.diagnostics.unit_count == 8
+    @test be2_current_route_pair_inventory.counts.raw_box_pqs_active == 0
+    @test be2_current_route_pair_inventory.diagnostics.raw_box_pqs_active_pair_policy_count == 0
+    @test all(
+        pair -> !pair.raw_box_pqs_active_pair_policy,
+        be2_current_route_pair_inventory.pairs,
+    )
+    @test !be2_current_route_pair_inventory.diagnostics.whole_route_safe_term_matrix_consumer
     current_route_safe_terms = CCPM._pqs_current_route_safe_term_matrices(
         pqs_construction,
         contact_safe_term_metrics;
