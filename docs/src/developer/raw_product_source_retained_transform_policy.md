@@ -322,7 +322,10 @@ source family `:mode_selected_raw_product_box` and `:product` with source
 family `:product_doside`. The upper-triangular entries are `(:pqs, :pqs)` via
 `:_pqs_pqs_source_box_reference_blocks`, `(:pqs, :product)` via
 `:_pqs_product_source_box_reference_blocks`, and
-`(:product, :product)` via existing product/doside retained helpers. The
+`(:product, :product)` via
+`_product_doside_source_box_reference_block(...)`. That product/product path
+uses source-box vocabulary while still comparing to the existing
+product-staged retained helpers as authority. The
 shadow layout now uses the PQS/PQS helper for its PQS/PQS component while
 keeping the existing PQS/product and product/product paths. Diagnostics record
 the cost and boundary explicitly:
@@ -347,13 +350,14 @@ upper-triangular pair entries: `(:pqs_left, :pqs_left)`,
 `(:product, :product)`. PQS/PQS entries use
 `:_pqs_pqs_source_box_reference_blocks`, PQS/product entries use
 `:_pqs_product_source_box_reference_blocks`, and the product/product entry
-keeps the existing product/doside retained helpers. The focused fixture uses
-the shifted cubic PQS pair plus a small product/doside slab; the full retained
-dimension is `200`, pair count is `6`, and component max error is about
-`5.7e-14`. Product/product, PQS/product, and PQS/PQS now participate in the
-same private source-box vocabulary for overlap, position, `x2`, and kinetic.
-This remains a private shadow/reference inventory, not a generic route
-inventory framework and not packet construction adoption.
+uses `_product_doside_source_box_reference_block(...)`, which still compares
+to the existing product-staged retained helpers as authority. The focused
+fixture uses the shifted cubic PQS pair plus a small product/doside slab; the
+full retained dimension is `200`, pair count is `6`, and component max error
+is about `5.7e-14`. Product/product, PQS/product, and PQS/PQS now participate
+in the same private source-box vocabulary for overlap, position, `x2`, and
+kinetic. This remains a private shadow/reference inventory, not a generic
+route inventory framework and not packet construction adoption.
 
 The route-shaped private consumer checkpoint now has a small descriptor
 normalizer. `_pqs_pqs_product_safe_term_route_descriptor(...)` records an
@@ -372,6 +376,15 @@ operator algebra was added. `_pqs_pqs_product_supported_safe_terms(...)`
 centralizes validation for the current safe set: overlap, `position_x/y/z`,
 `x2_x/y/z`, and kinetic. Unsupported terms such as `:weights` reject before
 being treated as route-supported.
+
+Commit `770b7be` records this route-shaped raw-box consumer as a private
+checkpoint. Every route pair is explicitly labeled
+`:source_box_algorithm_available`. Cross-PQS/PQS uses the helper-internal
+explicit raw product-box boundary-selection oracle for validation. Dense raw
+source-box pair matrices remain validation-only, not the algorithmic path.
+The route consumer remains source-box-first and avoids shell projection,
+Lowdin cleanup, support-local fallback, support coefficient matrices,
+retained PQS weight semantics, and IDA division.
 
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
@@ -1226,8 +1239,9 @@ transpose for symmetric real terms, and product/product blocks. Its PQS/PQS
 component uses `_pqs_pqs_source_box_reference_blocks(...)` with helper-internal
 explicit boundary-column validation for supported compatible raw-box fixtures;
 its PQS/product component uses the multi-term PQS/product pair-plan reuse path;
-and its product/product component keeps existing product/doside retained
-helpers. The
+and its product/product component uses
+`_product_doside_source_box_reference_block(...)`, which still compares to the
+existing product-staged retained helpers as authority. The
 helper records a tiny private all-pairs inventory over units `:pqs` and
 `:product` with upper-triangular entries `(:pqs, :pqs)`,
 `(:pqs, :product)`, and `(:product, :product)`. The supported terms are
@@ -1256,7 +1270,9 @@ The three-unit route-like shadow checkpoint then adds
 `(:pqs_right, :product)`, and `(:product, :product)`. The shifted fixture has
 full retained dimension `200`, pair count `6`, and component max error about
 `5.7e-14`. Product/product, PQS/product, and PQS/PQS now share the private
-source-box vocabulary for overlap, position, `x2`, and kinetic.
+source-box vocabulary for overlap, position, `x2`, and kinetic; the
+product/product leg is source-box-labeled while retaining the existing
+product-staged helper comparison as authority.
 
 These checkpoints are still private/shadow-only layout evidence, not a packet
 builder and not a generic route inventory framework: they do not use shell-row

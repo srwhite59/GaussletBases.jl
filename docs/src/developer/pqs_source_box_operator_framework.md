@@ -669,6 +669,12 @@ What is established:
   same-box plus compatible cross-box blocks are now validated inside the
   private helper against explicit raw product-box boundary-column selection
   references.
+- Commit `770b7be` adds the first private route-shaped safe-term consumer.
+  It composes PQS/PQS, PQS/product, and product/product source-box blocks for
+  overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. Every route pair is
+  labeled `:source_box_algorithm_available`. Product/product blocks go through
+  `_product_doside_source_box_reference_block(...)`, which still compares to
+  the existing product-staged retained helpers as authority.
 - A private q4 current-route retained-unit inventory covers all retained
   columns and has a route-wide safe-term authority comparison.
 - A Be2-like strict PQS q5 inventory-shape check pins the 8-unit, 36-pair,
@@ -757,6 +763,24 @@ the loop-local invariants file. If implementation pressure suggests the
 framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
+
+The private route-shaped raw-box safe-term consumer checkpoint is commit
+`770b7be`. It is a route-shaped consumer, not route adoption: it takes an
+already-built private descriptor with left PQS raw plan, right PQS raw plan,
+and product/doside unit, then delegates numerical blocks to the source-box
+helpers. PQS/PQS uses `_pqs_pqs_source_box_reference_blocks(...)` with
+helper-internal explicit raw product-box boundary-selection validation.
+PQS/product uses `_pqs_product_source_box_reference_blocks(...)`.
+Product/product uses `_product_doside_source_box_reference_block(...)`, so it
+is labeled as source-box vocabulary while still checking against the existing
+product-staged retained helpers.
+
+The algorithmic path remains source-box first. Dense raw source-box pair
+matrices are validation-only. The consumer does not use shell projection,
+Lowdin cleanup, support-local fallback, support coefficient matrices, retained
+PQS weight semantics, or IDA division, and it does not change packet,
+fixed-block, QW/Hamiltonian, public/default, local/ECP/Gaussian/MWG/
+interaction, IDA/MWG, or CR2 behavior.
 
 The private mode-selected raw-box PQS/PQS safe-term target now has helper
 coverage for same-box cubic, same-box rectangular, and compatible shifted

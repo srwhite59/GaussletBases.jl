@@ -244,9 +244,11 @@ source-box unit and one product/doside retained unit into a shadow layout and
 fills PQS/PQS, PQS/product, product/PQS by transpose for symmetric real terms,
 and product/product blocks. Its PQS/PQS component now uses the PQS/PQS
 source-box helper with same-box and compatible cross-box validation support;
-its mixed PQS/product component blocks use the
-multi-term pair-plan reuse path, and its product/product component keeps the
-existing product/doside retained helpers. The helper also records a tiny
+its mixed PQS/product component blocks use the multi-term pair-plan reuse
+path, and its product/product component now uses
+`_product_doside_source_box_reference_block(...)`,
+which still compares to the existing product-staged retained helpers as
+authority. The helper also records a tiny
 private all-pairs inventory with two units, `:pqs` and `:product`, and three
 upper-triangular pair entries: `(:pqs, :pqs)`, `(:pqs, :product)`, and
 `(:product, :product)`. Covered terms are `:overlap`, `:position_x/y/z`,
@@ -268,10 +270,11 @@ pairs are `(:pqs_left, :pqs_left)`, `(:pqs_left, :pqs_right)`,
 fixture has full retained dimension `200`, pair count `6`, and component max
 error about `5.7e-14`. Product/product, PQS/product, and PQS/PQS now all use
 the same private source-box vocabulary for overlap, position, `x2`, and
-kinetic. This remains private shadow/reference infrastructure only; it is not
-packet or fixed-block construction adoption and changes no QW/Hamiltonian,
-public/default, CR2, local/ECP/Gaussian/MWG/interaction, retained-weight, or
-IDA/MWG behavior.
+kinetic; product/product is source-box-labeled while preserving the existing
+product-staged helper comparison as authority. This remains private
+shadow/reference infrastructure only; it is not packet or fixed-block
+construction adoption and changes no QW/Hamiltonian, public/default, CR2,
+local/ECP/Gaussian/MWG/interaction, retained-weight, or IDA/MWG behavior.
 
 The first route-shaped private consumer now has a descriptor normalizer.
 `_pqs_pqs_product_safe_term_route_descriptor(...)` describes an already-built
@@ -289,6 +292,15 @@ older fixture route kind. It still delegates numerical work to
 added. `_pqs_pqs_product_supported_safe_terms(...)` centralizes validation for
 overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. Unsupported terms such as
 `:weights` reject.
+
+Commit `770b7be` records the route-shaped raw-box safe-term consumer
+checkpoint. Every route pair is labeled
+`:source_box_algorithm_available`. Cross-PQS/PQS uses the helper-internal
+explicit raw product-box boundary-selection oracle for validation. Dense raw
+source-box pair matrices are validation-only, not the algorithmic path. The
+consumer remains source-box-first and avoids shell projection, Lowdin cleanup,
+support-local fallback, support coefficient matrices, retained PQS weight
+semantics, and IDA division.
 
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
