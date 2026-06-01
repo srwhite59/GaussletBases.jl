@@ -4167,14 +4167,14 @@ function _pqs_route_retained_unit_fact_audit(
     )
 end
 
-function _pqs_contact_cap_parent_coefficient_matrix(
+function _pqs_support_local_parent_coefficient_matrix(
     support_indices::AbstractVector{<:Integer},
     support_coefficients::AbstractMatrix{<:Real},
     parent_dimension::Int,
 )
     nrows, ncols = size(support_coefficients)
     length(support_indices) == nrows || throw(
-        DimensionMismatch("contact-cap product/doside support rows must match support indices"),
+        DimensionMismatch("PQS support-local product/doside support rows must match support indices"),
     )
     row_indices = Int[]
     col_indices = Int[]
@@ -4192,6 +4192,18 @@ function _pqs_contact_cap_parent_coefficient_matrix(
         values,
         parent_dimension,
         ncols,
+    )
+end
+
+function _pqs_contact_cap_parent_coefficient_matrix(
+    support_indices::AbstractVector{<:Integer},
+    support_coefficients::AbstractMatrix{<:Real},
+    parent_dimension::Int,
+)
+    return _pqs_support_local_parent_coefficient_matrix(
+        support_indices,
+        support_coefficients,
+        parent_dimension,
     )
 end
 
@@ -4339,7 +4351,7 @@ function _pqs_contact_cap_product_doside_unit(
         ),
     )
 
-    parent_coefficients = _pqs_contact_cap_parent_coefficient_matrix(
+    parent_coefficients = _pqs_support_local_parent_coefficient_matrix(
         support_indices,
         local_coefficients,
         parent_dimension,
@@ -4386,6 +4398,1194 @@ function _pqs_contact_cap_product_doside_unit(
         fact = contact_fact,
         unit = unit,
         equivalence = equivalence,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_outer_mismatch_product_doside_units(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    audit = _pqs_route_retained_unit_fact_audit(
+        construction;
+        include_support_indices = true,
+    ),
+)
+    outer_facts = [
+        fact for fact in audit.unit_facts if fact.role == :outer_mismatch_shared_molecular_shell
+    ]
+    length(outer_facts) == 1 || throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires exactly one outer-mismatch fact"),
+    )
+    outer_fact = only(outer_facts)
+    outer_fact.classification == :product_box_constructible || throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires a product-box-constructible outer mismatch"),
+    )
+    rule = outer_fact.construction_rule
+    isnothing(rule) && throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires an explicit construction rule"),
+    )
+    rule.rule_kind == :identity_selector_product_doside_boundary_slab_set || throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires a boundary slab-set rule"),
+    )
+    rule.boundary_slab_set || throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires boundary_slab_set = true"),
+    )
+    rule.slab_piece_count == length(rule.slab_piece_rules) || throw(
+        ArgumentError("PQS outer-mismatch slab-piece count must match its piece rules"),
+    )
+
+    outer_builds = [
+        build for build in construction.region_builds if build.region_role == :outer_mismatch_shared_molecular_shell
+    ]
+    length(outer_builds) == 1 || throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires exactly one outer-mismatch build"),
+    )
+    outer_build = only(outer_builds)
+    descriptor =
+        _pqs_route_realization_descriptor_for_build(construction, outer_build)
+    isnothing(descriptor) && throw(
+        ArgumentError("PQS outer-mismatch product/doside helper requires a realization descriptor"),
+    )
+    length(descriptor.pieces) == rule.slab_piece_count || throw(
+        ArgumentError("PQS outer-mismatch descriptor piece count must match slab-piece count"),
+    )
+
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+    direct = outer_build.built_object
+    size(direct.coefficient_matrix, 1) == parent_dimension || throw(
+        ArgumentError("PQS outer-mismatch direct/support coefficient matrix has inconsistent parent dimension"),
+    )
+    size(direct.coefficient_matrix, 2) == outer_fact.retained_count || throw(
+        ArgumentError("PQS outer-mismatch direct/support coefficient matrix has inconsistent retained dimension"),
+    )
+
+    units = _CartesianNestedProductStagedByCenterUnit3D[]
+    piece_equivalences = NamedTuple[]
+    parent_coefficient_pieces = SparseArrays.SparseMatrixCSC{Float64,Int}[]
+    concatenated_support_indices = Int[]
+    next_column = first(outer_fact.column_range)
+    local_column_start = 1
+    for (piece_rule, piece) in zip(rule.slab_piece_rules, descriptor.pieces)
+        piece_rule.piece_index == piece.piece_index || throw(
+            ArgumentError("PQS outer-mismatch slab rule order must match descriptor piece order"),
+        )
+        piece_rule.piece_role == piece.role || throw(
+            ArgumentError("PQS outer-mismatch slab rule role must match descriptor piece role"),
+        )
+        piece_rule.primitive_family == piece.primitive_family || throw(
+            ArgumentError("PQS outer-mismatch slab rule primitive must match descriptor piece primitive"),
+        )
+        !isnothing(piece_rule.fixed_axis_index) || throw(
+            ArgumentError("PQS outer-mismatch product/doside slab requires one fixed axis"),
+        )
+        !isnothing(piece_rule.fixed_index) || throw(
+            ArgumentError("PQS outer-mismatch product/doside slab requires one fixed index"),
+        )
+        length(piece_rule.active_axis_indices) == 2 || throw(
+            ArgumentError("PQS outer-mismatch product/doside slab requires two active axes"),
+        )
+        length(piece_rule.active_intervals) == 2 || throw(
+            ArgumentError("PQS outer-mismatch product/doside slab requires two active intervals"),
+        )
+        active_lengths = Tuple(length(interval) for interval in piece_rule.active_intervals)
+        support_indices = copy(piece.support_indices)
+        support_count = length(support_indices)
+        support_count == piece_rule.support_count || throw(
+            ArgumentError("PQS outer-mismatch slab support count must match its rule"),
+        )
+        support_count == piece_rule.retained_count || throw(
+            ArgumentError("PQS outer-mismatch slab retained count must match support count"),
+        )
+        support_count == prod(active_lengths) || throw(
+            ArgumentError("PQS outer-mismatch slab support count must equal active-axis product"),
+        )
+        piece_column_range = next_column:(next_column + support_count - 1)
+        last(piece_column_range) <= last(outer_fact.column_range) || throw(
+            ArgumentError("PQS outer-mismatch piece column range exceeds outer range"),
+        )
+        next_column = last(piece_column_range) + 1
+        local_column_range = local_column_start:(local_column_start + support_count - 1)
+        local_column_start = last(local_column_range) + 1
+
+        support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+        expected_support_indices = Int[
+            _cartesian_flat_index(state[1], state[2], state[3], dims)
+            for state in support_states
+        ]
+        support_indices == expected_support_indices || throw(
+            ArgumentError("PQS outer-mismatch support states do not round-trip through parent indexing"),
+        )
+        active_coefficients = ntuple(
+            axis -> Matrix{Float64}(
+                LinearAlgebra.I,
+                active_lengths[axis],
+                active_lengths[axis],
+            ),
+            2,
+        )
+        axes = ntuple(axis -> begin
+            axis == piece_rule.fixed_axis_index &&
+                return _nested_product_staged_fixed_axis(piece_rule.fixed_index)
+            axis == piece_rule.active_axis_indices[1] &&
+                return _nested_product_staged_active_axis(
+                    piece_rule.active_intervals[1],
+                    active_coefficients[1],
+                )
+            axis == piece_rule.active_axis_indices[2] &&
+                return _nested_product_staged_active_axis(
+                    piece_rule.active_intervals[2],
+                    active_coefficients[2],
+                )
+            throw(ArgumentError("PQS outer-mismatch slab rule has inconsistent active/fixed axes"))
+        end, 3)
+        local_coefficients = Matrix{Float64}(
+            LinearAlgebra.I,
+            support_count,
+            support_count,
+        )
+        unit = _CartesianNestedProductStagedByCenterUnit3D(
+            piece_rule.piece_role,
+            :product_doside,
+            piece_column_range,
+            support_indices,
+            support_states,
+            local_coefficients,
+            axes,
+            _nested_product_axis_function_indices(
+                piece_rule.fixed_axis_index,
+                piece_rule.active_axis_indices[1],
+                active_lengths[1],
+                piece_rule.active_axis_indices[2],
+                active_lengths[2],
+            ),
+            (
+                source = :pqs_outer_mismatch_product_doside_units,
+                fact_role = outer_fact.role,
+                primitive_family = outer_fact.primitive_family,
+                piece_role = piece_rule.piece_role,
+            ),
+            (
+                support_count = support_count,
+                retained_count = support_count,
+                fixed_axis = piece_rule.fixed_axis_index,
+                fixed_index = piece_rule.fixed_index,
+                active_axes = piece_rule.active_axis_indices,
+                active_retained_counts = active_lengths,
+                outer_mismatch_piece = true,
+                private_diagnostic_only = true,
+            ),
+        )
+        parent_coefficients = _pqs_support_local_parent_coefficient_matrix(
+            support_indices,
+            local_coefficients,
+            parent_dimension,
+        )
+        direct_piece_coefficients =
+            Matrix{Float64}(direct.coefficient_matrix[:, local_column_range])
+        parent_difference =
+            Matrix{Float64}(parent_coefficients) - direct_piece_coefficients
+        max_parent_coefficient_error =
+            isempty(parent_difference) ? 0.0 : maximum(abs, parent_difference)
+        push!(units, unit)
+        push!(parent_coefficient_pieces, parent_coefficients)
+        append!(concatenated_support_indices, support_indices)
+        push!(
+            piece_equivalences,
+            (
+                piece_role = piece_rule.piece_role,
+                support_indices_match =
+                    support_indices == direct.support_indices[local_column_range],
+                retained_count_match = length(piece_column_range) == support_count,
+                column_range = piece_column_range,
+                local_column_range = local_column_range,
+                coefficient_matrix_matches_direct_selector =
+                    max_parent_coefficient_error == 0.0,
+                max_parent_coefficient_error = max_parent_coefficient_error,
+            ),
+        )
+    end
+    next_column == last(outer_fact.column_range) + 1 || throw(
+        ArgumentError("PQS outer-mismatch piece column ranges do not partition outer range"),
+    )
+    local_column_start == outer_fact.retained_count + 1 || throw(
+        ArgumentError("PQS outer-mismatch local column ranges do not partition direct coefficients"),
+    )
+    concatenated_support_indices == direct.support_indices || throw(
+        ArgumentError("PQS outer-mismatch concatenated support indices must match direct/support build"),
+    )
+    audited_support_set_match =
+        isnothing(outer_fact.support_indices) ||
+        sort(concatenated_support_indices) == sort(outer_fact.support_indices)
+    audited_support_set_match || throw(
+        ArgumentError("PQS outer-mismatch concatenated support indices must cover audited support"),
+    )
+    parent_coefficients = hcat(parent_coefficient_pieces...)
+    parent_difference =
+        Matrix{Float64}(parent_coefficients) -
+        Matrix{Float64}(direct.coefficient_matrix)
+    max_parent_coefficient_error =
+        isempty(parent_difference) ? 0.0 : maximum(abs, parent_difference)
+    aggregate_equivalence = (
+        support_indices_match = concatenated_support_indices == direct.support_indices,
+        audited_support_set_match = audited_support_set_match,
+        retained_count_match =
+            sum(length(unit.column_range) for unit in units) ==
+            outer_build.retained_count == outer_fact.retained_count,
+        column_range_partition =
+            first(first(units).column_range) == first(outer_fact.column_range) &&
+            last(last(units).column_range) == last(outer_fact.column_range) &&
+            sum(length(unit.column_range) for unit in units) == length(outer_fact.column_range),
+        coefficient_matrix_matches_direct_selector =
+            max_parent_coefficient_error == 0.0,
+        max_parent_coefficient_error = max_parent_coefficient_error,
+    )
+    diagnostics = (
+        outer_mismatch_only = true,
+        boundary_slab_set = true,
+        product_doside_units_created = true,
+        unit_count = length(units),
+        slab_piece_count = rule.slab_piece_count,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        input_fact_raw_product_box_operator_contract =
+            outer_fact.raw_product_box_operator_contract,
+        created_units_raw_product_box_operator_contract = true,
+        descriptor_piece_order_defines_columns = true,
+        audited_support_checked_as_set = true,
+        product_box_construction_rule_available =
+            outer_fact.product_box_construction_rule_available,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+    )
+    return (
+        object_kind = :pqs_outer_mismatch_product_doside_units_fixture,
+        status = :private_diagnostic_only,
+        fact = outer_fact,
+        units = Tuple(units),
+        piece_equivalences = Tuple(piece_equivalences),
+        aggregate_equivalence = aggregate_equivalence,
+        diagnostics = diagnostics,
+    )
+end
+
+const _PQS_CONTACT_CAP_SAFE_TERM_OPERATOR_TERMS =
+    _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS
+
+const _PQS_CONTACT_CAP_UNSUPPORTED_OPERATOR_TERMS = (
+    :weights,
+    :first_moments,
+    :nuclear_one_body,
+    :local_coulomb_one_body,
+    :local_ecp_one_body,
+    :gaussian_local_terms,
+    :gaussian_sum,
+    :pair_sum,
+    :mwg_interaction,
+    :interaction,
+)
+
+function _pqs_contact_cap_axis_factor_terms(
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term in _PQS_CONTACT_CAP_SAFE_TERM_OPERATOR_TERMS || throw(
+        ArgumentError("PQS contact-cap safe-term comparison received unsupported term $(term)"),
+    )
+    return Tuple(
+        ntuple(
+            axis -> _product_doside_axis_metric_matrix(metrics, axis, factor_kinds[axis]),
+            3,
+        )
+        for factor_kinds in _source_box_separable_term_factor_kinds(term)
+    )
+end
+
+function _pqs_contact_cap_direct_support_oracle_entries(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    fixture,
+)
+    contact_builds = [
+        build for build in construction.region_builds if build.region_role == :contact_cap
+    ]
+    length(contact_builds) == 1 || throw(
+        ArgumentError("PQS contact-cap safe-term comparison requires exactly one contact-cap build"),
+    )
+    contact_build = only(contact_builds)
+    direct = contact_build.built_object
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+    support_indices = copy(direct.support_indices)
+    support_indices == fixture.unit.support_indices || throw(
+        ArgumentError("PQS contact-cap direct/support oracle support does not match product fixture"),
+    )
+    size(direct.coefficient_matrix, 1) == parent_dimension || throw(
+        ArgumentError("PQS contact-cap direct/support coefficient matrix has inconsistent parent dimension"),
+    )
+    size(direct.coefficient_matrix, 2) == length(contact_build.column_range) || throw(
+        ArgumentError("PQS contact-cap direct/support coefficient matrix has inconsistent retained dimension"),
+    )
+    contact_build.column_range == fixture.unit.column_range || throw(
+        ArgumentError("PQS contact-cap direct/support column range does not match product fixture"),
+    )
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    local_direct_coefficients =
+        Matrix{Float64}(direct.coefficient_matrix[support_indices, :])
+    entries = _support_local_retained_entries(
+        contact_build.column_range,
+        support_states,
+        local_direct_coefficients,
+    )
+    return (
+        contact_build = contact_build,
+        direct = direct,
+        support_indices = support_indices,
+        support_states = support_states,
+        local_direct_coefficients = local_direct_coefficients,
+        entries = entries,
+    )
+end
+
+function _pqs_contact_cap_direct_support_oracle_block(
+    direct_oracle,
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    return _fallback_staged_separable_sum_block(
+        direct_oracle.entries,
+        direct_oracle.entries,
+        _pqs_contact_cap_axis_factor_terms(metrics, term),
+    )
+end
+
+function _pqs_contact_cap_safe_term_operator_comparison(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_CONTACT_CAP_SAFE_TERM_OPERATOR_TERMS,
+    atol::Real = 1.0e-12,
+)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS contact-cap safe-term comparison requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PQS_CONTACT_CAP_SAFE_TERM_OPERATOR_TERMS || throw(
+            ArgumentError("PQS contact-cap safe-term comparison received unsupported term $(term)"),
+        )
+    end
+    fixture = _pqs_contact_cap_product_doside_unit(construction)
+    product_unit = fixture.unit
+    direct_oracle =
+        _pqs_contact_cap_direct_support_oracle_entries(construction, fixture)
+
+    product_blocks = Dict{Symbol,Matrix{Float64}}()
+    direct_oracle_blocks = Dict{Symbol,Matrix{Float64}}()
+    term_errors = Dict{Symbol,Float64}()
+    product_references = Dict{Symbol,Any}()
+    output_finite = true
+    shape_matches = true
+    for term in selected_terms
+        product_reference = _product_doside_source_box_reference_block(
+            product_unit,
+            product_unit,
+            metrics;
+            term,
+            atol,
+        )
+        product_block = product_reference.block
+        direct_block =
+            _pqs_contact_cap_direct_support_oracle_block(direct_oracle, metrics, term)
+        size(product_block) == size(direct_block) || (shape_matches = false)
+        all(isfinite, product_block) || (output_finite = false)
+        all(isfinite, direct_block) || (output_finite = false)
+        block_error = LinearAlgebra.norm(product_block - direct_block, Inf)
+        product_blocks[term] = product_block
+        direct_oracle_blocks[term] = direct_block
+        term_errors[term] = block_error
+        product_references[term] = product_reference
+    end
+    shape_matches || throw(
+        ArgumentError("PQS contact-cap safe-term comparison produced mismatched block shapes"),
+    )
+    output_finite || throw(
+        ArgumentError("PQS contact-cap safe-term comparison produced non-finite entries"),
+    )
+    max_block_error = maximum(values(term_errors))
+    max_block_error <= Float64(atol) || throw(
+        ArgumentError("PQS contact-cap safe-term product and direct/support blocks disagree"),
+    )
+
+    diagnostics = (
+        source = :pqs_contact_cap_safe_term_operator_comparison,
+        contact_cap_only = true,
+        private_diagnostic_only = true,
+        terms_checked = selected_terms,
+        supported_terms = _PQS_CONTACT_CAP_SAFE_TERM_OPERATOR_TERMS,
+        unsupported_terms = _PQS_CONTACT_CAP_UNSUPPORTED_OPERATOR_TERMS,
+        product_path = :_product_doside_source_box_reference_block,
+        direct_oracle_path = :support_local_direct_selector_contract_pair_block,
+        current_direct_support_selector_compared = true,
+        product_doside_unit_created =
+            fixture.diagnostics.product_doside_unit_created,
+        input_fact_raw_product_box_operator_contract =
+            fixture.diagnostics.input_fact_raw_product_box_operator_contract,
+        created_unit_raw_product_box_operator_contract =
+            fixture.diagnostics.created_unit_raw_product_box_operator_contract,
+        product_box_construction_rule_available =
+            fixture.diagnostics.product_box_construction_rule_available,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        operator_factor_source = :explicit_metric_operator_data,
+        operator_metric_sources = _cartesian_source_box_metric_sources(metrics),
+        input_metric_operator_data = :caller_supplied_explicit_data,
+        input_metric_operator_data_pgdg_checked = false,
+        pgdg_analytic_operator_provenance_claimed = false,
+        numerical_reference_fallback = false,
+        product_source_box_reference_compared = true,
+        direct_support_oracle_entries_built = true,
+        direct_support_local_coefficient_shape =
+            size(direct_oracle.local_direct_coefficients),
+        retained_count = length(product_unit.column_range),
+        support_count = length(product_unit.support_indices),
+        column_range = product_unit.column_range,
+        atol = Float64(atol),
+        max_block_error = max_block_error,
+        term_errors = term_errors,
+        output_finite = output_finite,
+    )
+    return (
+        object_kind = :pqs_contact_cap_safe_term_operator_comparison,
+        status = :private_diagnostic_only,
+        terms = selected_terms,
+        fixture = fixture,
+        product_blocks = product_blocks,
+        direct_oracle_blocks = direct_oracle_blocks,
+        product_references = product_references,
+        term_errors = term_errors,
+        max_block_error = max_block_error,
+        diagnostics = diagnostics,
+    )
+end
+
+const _PQS_OUTER_MISMATCH_SAFE_TERM_OPERATOR_TERMS =
+    _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS
+
+const _PQS_OUTER_MISMATCH_UNSUPPORTED_OPERATOR_TERMS =
+    _PQS_CONTACT_CAP_UNSUPPORTED_OPERATOR_TERMS
+
+function _pqs_outer_mismatch_axis_factor_terms(
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term in _PQS_OUTER_MISMATCH_SAFE_TERM_OPERATOR_TERMS || throw(
+        ArgumentError("PQS outer-mismatch safe-term comparison received unsupported term $(term)"),
+    )
+    return Tuple(
+        ntuple(
+            axis -> _product_doside_axis_metric_matrix(metrics, axis, factor_kinds[axis]),
+            3,
+        )
+        for factor_kinds in _source_box_separable_term_factor_kinds(term)
+    )
+end
+
+function _pqs_outer_mismatch_direct_support_oracle_entries(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    fixture,
+)
+    outer_builds = [
+        build for build in construction.region_builds if build.region_role == :outer_mismatch_shared_molecular_shell
+    ]
+    length(outer_builds) == 1 || throw(
+        ArgumentError("PQS outer-mismatch safe-term comparison requires exactly one outer-mismatch build"),
+    )
+    outer_build = only(outer_builds)
+    direct = outer_build.built_object
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+    support_indices = copy(direct.support_indices)
+    concatenated_support_indices =
+        reduce(vcat, (unit.support_indices for unit in fixture.units); init = Int[])
+    support_indices == concatenated_support_indices || throw(
+        ArgumentError("PQS outer-mismatch direct/support oracle support does not match product fixtures"),
+    )
+    size(direct.coefficient_matrix, 1) == parent_dimension || throw(
+        ArgumentError("PQS outer-mismatch direct/support coefficient matrix has inconsistent parent dimension"),
+    )
+    size(direct.coefficient_matrix, 2) == length(outer_build.column_range) || throw(
+        ArgumentError("PQS outer-mismatch direct/support coefficient matrix has inconsistent retained dimension"),
+    )
+    outer_build.column_range == fixture.fact.column_range || throw(
+        ArgumentError("PQS outer-mismatch direct/support column range does not match product fixture"),
+    )
+    support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+    local_direct_coefficients =
+        Matrix{Float64}(direct.coefficient_matrix[support_indices, :])
+    entries = _support_local_retained_entries(
+        outer_build.column_range,
+        support_states,
+        local_direct_coefficients,
+    )
+    return (
+        outer_build = outer_build,
+        direct = direct,
+        support_indices = support_indices,
+        support_states = support_states,
+        local_direct_coefficients = local_direct_coefficients,
+        entries = entries,
+    )
+end
+
+function _pqs_outer_mismatch_direct_support_oracle_block(
+    direct_oracle,
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    return _fallback_staged_separable_sum_block(
+        direct_oracle.entries,
+        direct_oracle.entries,
+        _pqs_outer_mismatch_axis_factor_terms(metrics, term),
+    )
+end
+
+function _pqs_outer_mismatch_local_column_range(
+    column_range::UnitRange{Int},
+    full_range::UnitRange{Int},
+)
+    first(column_range) >= first(full_range) &&
+        last(column_range) <= last(full_range) || throw(
+            ArgumentError("PQS outer-mismatch unit column range must lie inside full range"),
+        )
+    return (first(column_range) - first(full_range) + 1):(
+        last(column_range) - first(full_range) + 1
+    )
+end
+
+function _pqs_outer_mismatch_product_block(
+    fixture,
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+    atol::Real,
+)
+    retained_dimension = length(fixture.fact.column_range)
+    product_block = zeros(Float64, retained_dimension, retained_dimension)
+    pair_references = NamedTuple[]
+    cross_slab_pair_count = 0
+    for left_unit in fixture.units
+        left_range = _pqs_outer_mismatch_local_column_range(
+            left_unit.column_range,
+            fixture.fact.column_range,
+        )
+        for right_unit in fixture.units
+            right_range = _pqs_outer_mismatch_local_column_range(
+                right_unit.column_range,
+                fixture.fact.column_range,
+            )
+            product_reference = _product_doside_source_box_reference_block(
+                left_unit,
+                right_unit,
+                metrics;
+                term,
+                atol,
+            )
+            product_block[left_range, right_range] .= product_reference.block
+            left_unit.role != right_unit.role && (cross_slab_pair_count += 1)
+            push!(
+                pair_references,
+                (
+                    left_role = left_unit.role,
+                    right_role = right_unit.role,
+                    left_column_range = left_unit.column_range,
+                    right_column_range = right_unit.column_range,
+                    local_left_range = left_range,
+                    local_right_range = right_range,
+                    block_shape = size(product_reference.block),
+                    reference = product_reference,
+                ),
+            )
+        end
+    end
+    return (
+        block = product_block,
+        pair_references = Tuple(pair_references),
+        pair_block_count = length(pair_references),
+        cross_slab_pair_count = cross_slab_pair_count,
+    )
+end
+
+function _pqs_outer_mismatch_safe_term_operator_comparison(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_OUTER_MISMATCH_SAFE_TERM_OPERATOR_TERMS,
+    atol::Real = 1.0e-12,
+)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS outer-mismatch safe-term comparison requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PQS_OUTER_MISMATCH_SAFE_TERM_OPERATOR_TERMS || throw(
+            ArgumentError("PQS outer-mismatch safe-term comparison received unsupported term $(term)"),
+        )
+    end
+    fixture = _pqs_outer_mismatch_product_doside_units(construction)
+    direct_oracle =
+        _pqs_outer_mismatch_direct_support_oracle_entries(construction, fixture)
+
+    product_blocks = Dict{Symbol,Matrix{Float64}}()
+    direct_oracle_blocks = Dict{Symbol,Matrix{Float64}}()
+    product_references = Dict{Symbol,Any}()
+    term_errors = Dict{Symbol,Float64}()
+    pair_block_counts = Dict{Symbol,Int}()
+    cross_slab_pair_counts = Dict{Symbol,Int}()
+    output_finite = true
+    shape_matches = true
+    retained_dimension = length(fixture.fact.column_range)
+    for term in selected_terms
+        product_result = _pqs_outer_mismatch_product_block(
+            fixture,
+            metrics;
+            term,
+            atol,
+        )
+        product_block = product_result.block
+        direct_block =
+            _pqs_outer_mismatch_direct_support_oracle_block(direct_oracle, metrics, term)
+        size(product_block) == size(direct_block) || (shape_matches = false)
+        size(product_block) == (retained_dimension, retained_dimension) ||
+            (shape_matches = false)
+        all(isfinite, product_block) || (output_finite = false)
+        all(isfinite, direct_block) || (output_finite = false)
+        block_error = LinearAlgebra.norm(product_block - direct_block, Inf)
+        product_blocks[term] = product_block
+        direct_oracle_blocks[term] = direct_block
+        product_references[term] = product_result
+        term_errors[term] = block_error
+        pair_block_counts[term] = product_result.pair_block_count
+        cross_slab_pair_counts[term] = product_result.cross_slab_pair_count
+    end
+    shape_matches || throw(
+        ArgumentError("PQS outer-mismatch safe-term comparison produced mismatched block shapes"),
+    )
+    output_finite || throw(
+        ArgumentError("PQS outer-mismatch safe-term comparison produced non-finite entries"),
+    )
+    max_block_error = maximum(values(term_errors))
+    max_block_error <= Float64(atol) || throw(
+        ArgumentError("PQS outer-mismatch safe-term product and direct/support blocks disagree"),
+    )
+    cross_slab_blocks_included =
+        all(count -> count > 0, values(cross_slab_pair_counts))
+
+    diagnostics = (
+        source = :pqs_outer_mismatch_safe_term_operator_comparison,
+        outer_mismatch_only = true,
+        boundary_slab_set = true,
+        private_diagnostic_only = true,
+        terms_checked = selected_terms,
+        supported_terms = _PQS_OUTER_MISMATCH_SAFE_TERM_OPERATOR_TERMS,
+        unsupported_terms = _PQS_OUTER_MISMATCH_UNSUPPORTED_OPERATOR_TERMS,
+        product_path = :_product_doside_source_box_reference_block,
+        direct_oracle_path = :support_local_direct_selector_contract_pair_block,
+        product_doside_units_created =
+            fixture.diagnostics.product_doside_units_created,
+        complete_slab_set_block_assembled = true,
+        cross_slab_blocks_included = cross_slab_blocks_included,
+        direct_support_oracle_compared = true,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        operator_factor_source = :explicit_metric_operator_data,
+        operator_metric_sources = _cartesian_source_box_metric_sources(metrics),
+        input_metric_operator_data = :caller_supplied_explicit_data,
+        input_metric_operator_data_pgdg_checked = false,
+        pgdg_analytic_operator_provenance_claimed = false,
+        numerical_reference_fallback = false,
+        product_source_box_reference_compared = true,
+        direct_support_oracle_entries_built = true,
+        direct_support_local_coefficient_shape =
+            size(direct_oracle.local_direct_coefficients),
+        retained_count = retained_dimension,
+        support_count = length(direct_oracle.support_indices),
+        unit_count = length(fixture.units),
+        pair_block_counts = pair_block_counts,
+        cross_slab_pair_counts = cross_slab_pair_counts,
+        atol = Float64(atol),
+        max_block_error = max_block_error,
+        term_errors = term_errors,
+        output_finite = output_finite,
+    )
+    return (
+        object_kind = :pqs_outer_mismatch_safe_term_operator_comparison,
+        status = :private_diagnostic_only,
+        terms = selected_terms,
+        fixture = fixture,
+        product_blocks = product_blocks,
+        direct_oracle_blocks = direct_oracle_blocks,
+        product_references = product_references,
+        term_errors = term_errors,
+        max_block_error = max_block_error,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_atom_box_support_dense_units(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    audit = _pqs_route_retained_unit_fact_audit(
+        construction;
+        include_support_indices = true,
+    ),
+)
+    atom_roles = (:left_atom_box, :right_atom_box)
+    facts_by_role = Dict(fact.role => fact for fact in audit.unit_facts)
+    builds_by_role = Dict(build.region_role => build for build in construction.region_builds)
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+
+    units = _CartesianNestedProductStagedByCenterUnit3D[]
+    equivalences = NamedTuple[]
+    local_identity_errors = Dict{Symbol,Float64}()
+    max_parent_coefficient_error = 0.0
+    for role in atom_roles
+        haskey(facts_by_role, role) || throw(
+            ArgumentError("PQS atom-box support-dense helper requires $(role) fact"),
+        )
+        haskey(builds_by_role, role) || throw(
+            ArgumentError("PQS atom-box support-dense helper requires $(role) build"),
+        )
+        fact = facts_by_role[role]
+        build = builds_by_role[role]
+        fact.primitive_family == :atom_local_complete_shell_sequence || throw(
+            ArgumentError("PQS atom-box support-dense helper requires atom-local complete-shell sequence facts"),
+        )
+        build.primitive_family == :atom_local_complete_shell_sequence || throw(
+            ArgumentError("PQS atom-box support-dense helper requires atom-local complete-shell sequence builds"),
+        )
+        fact.classification == :needs_direct_support_retained_unit_kind || throw(
+            ArgumentError("PQS atom-box support-dense helper requires direct/support atom-box classification"),
+        )
+        fact.safe_term_capability == :support_local_reference_only || throw(
+            ArgumentError("PQS atom-box support-dense helper requires support-local reference capability"),
+        )
+        direct = build.built_object
+        size(direct.coefficient_matrix, 1) == parent_dimension || throw(
+            ArgumentError("PQS atom-box direct/support coefficient matrix has inconsistent parent dimension"),
+        )
+        size(direct.coefficient_matrix, 2) == build.retained_count || throw(
+            ArgumentError("PQS atom-box direct/support coefficient matrix has inconsistent retained dimension"),
+        )
+        support_indices = copy(direct.support_indices)
+        support_count = length(support_indices)
+        support_count == build.built_support_count == fact.support_count || throw(
+            ArgumentError("PQS atom-box support count mismatch"),
+        )
+        support_count == build.retained_count == fact.retained_count || throw(
+            ArgumentError("PQS atom-box retained count mismatch"),
+        )
+        build.column_range == fact.column_range || throw(
+            ArgumentError("PQS atom-box column range mismatch"),
+        )
+        audited_support_set_match =
+            isnothing(fact.support_indices) ||
+            sort(support_indices) == sort(fact.support_indices)
+        audited_support_set_match || throw(
+            ArgumentError("PQS atom-box support indices must cover audited support"),
+        )
+        support_states = [_cartesian_unflat_index(index, dims) for index in support_indices]
+        local_coefficients =
+            Matrix{Float64}(direct.coefficient_matrix[support_indices, :])
+        identity_matrix = Matrix{Float64}(
+            LinearAlgebra.I,
+            size(local_coefficients, 1),
+            size(local_coefficients, 2),
+        )
+        local_identity_error =
+            LinearAlgebra.norm(local_coefficients - identity_matrix, Inf)
+        local_identity_errors[role] = local_identity_error
+        axes = ntuple(_axis -> _nested_product_staged_fixed_axis(1), 3)
+        axis_function_indices = fill((1, 1, 1), length(build.column_range))
+        unit = _CartesianNestedProductStagedByCenterUnit3D(
+            role,
+            :support_dense,
+            build.column_range,
+            support_indices,
+            support_states,
+            local_coefficients,
+            axes,
+            axis_function_indices,
+            (
+                source = :pqs_atom_box_support_dense_units,
+                fact_role = fact.role,
+                primitive_family = fact.primitive_family,
+                mapped_primitive = fact.mapped_primitive,
+            ),
+            (
+                atom_box_only = true,
+                support_count = support_count,
+                retained_count = build.retained_count,
+                support_dense_direct_support_unit = true,
+                support_local_reference_only = true,
+                product_doside_unit = false,
+                raw_product_box_operator_contract = false,
+                local_identity_error = local_identity_error,
+                private_diagnostic_only = true,
+            ),
+        )
+        parent_coefficients = _pqs_support_local_parent_coefficient_matrix(
+            support_indices,
+            local_coefficients,
+            parent_dimension,
+        )
+        parent_difference =
+            Matrix{Float64}(parent_coefficients) -
+            Matrix{Float64}(direct.coefficient_matrix)
+        parent_coefficient_error =
+            isempty(parent_difference) ? 0.0 : maximum(abs, parent_difference)
+        max_parent_coefficient_error =
+            max(max_parent_coefficient_error, parent_coefficient_error)
+        push!(units, unit)
+        push!(
+            equivalences,
+            (
+                role = role,
+                primitive_family = fact.primitive_family,
+                support_indices_match = support_indices == direct.support_indices,
+                audited_support_set_match = audited_support_set_match,
+                support_states_match =
+                    support_states == [_cartesian_unflat_index(index, dims) for index in support_indices],
+                retained_count_match = length(build.column_range) == support_count,
+                column_range = build.column_range,
+                coefficient_matrix_matches_direct_support =
+                    parent_coefficient_error == 0.0,
+                max_parent_coefficient_error = parent_coefficient_error,
+                local_identity_error = local_identity_error,
+                local_support_coefficient_shape = size(local_coefficients),
+            ),
+        )
+    end
+
+    diagnostics = (
+        source = :pqs_atom_box_support_dense_units,
+        atom_box_only = true,
+        support_dense_direct_support_units_created = true,
+        product_doside_units_created = false,
+        raw_product_box_operator_contract = false,
+        support_local_reference_only = true,
+        product_box_construction_rule_available = false,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        unit_count = length(units),
+        roles = atom_roles,
+        max_parent_coefficient_error = max_parent_coefficient_error,
+        local_identity_errors = local_identity_errors,
+        local_identity_is_product_box_claim = false,
+        safe_term_operator_comparison_added = false,
+    )
+    return (
+        object_kind = :pqs_atom_box_support_dense_units_fixture,
+        status = :private_diagnostic_only,
+        units = Tuple(units),
+        equivalences = Tuple(equivalences),
+        diagnostics = diagnostics,
+    )
+end
+
+const _PQS_ATOM_BOX_SAFE_TERM_OPERATOR_TERMS =
+    _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS
+
+const _PQS_ATOM_BOX_UNSUPPORTED_OPERATOR_TERMS =
+    _PQS_CONTACT_CAP_UNSUPPORTED_OPERATOR_TERMS
+
+function _pqs_atom_box_axis_factor_terms(
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term in _PQS_ATOM_BOX_SAFE_TERM_OPERATOR_TERMS || throw(
+        ArgumentError("PQS atom-box safe-term comparison received unsupported term $(term)"),
+    )
+    return Tuple(
+        ntuple(
+            axis -> _product_doside_axis_metric_matrix(metrics, axis, factor_kinds[axis]),
+            3,
+        )
+        for factor_kinds in _source_box_separable_term_factor_kinds(term)
+    )
+end
+
+function _pqs_atom_box_local_column_range(
+    column_range::UnitRange{Int},
+    full_range::UnitRange{Int},
+)
+    first(column_range) >= first(full_range) &&
+        last(column_range) <= last(full_range) || throw(
+            ArgumentError("PQS atom-box unit column range must lie inside full range"),
+        )
+    return (first(column_range) - first(full_range) + 1):(
+        last(column_range) - first(full_range) + 1
+    )
+end
+
+function _pqs_atom_box_support_dense_unit_entries(fixture)
+    return Dict(
+        unit.role => _support_local_retained_entries(
+            unit.column_range,
+            unit.support_states,
+            unit.coefficient_matrix,
+        )
+        for unit in fixture.units
+    )
+end
+
+function _pqs_atom_box_direct_support_oracle_entries(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    fixture,
+)
+    atom_roles = Tuple(unit.role for unit in fixture.units)
+    builds_by_role = Dict(build.region_role => build for build in construction.region_builds)
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    role_entries = Dict{Symbol,Vector{Vector{_ParentCoefficientEntry3D}}}()
+    direct_support_shapes = Dict{Symbol,Tuple{Int,Int}}()
+    for unit in fixture.units
+        role = unit.role
+        haskey(builds_by_role, role) || throw(
+            ArgumentError("PQS atom-box direct/support oracle requires $(role) build"),
+        )
+        build = builds_by_role[role]
+        build.primitive_family == :atom_local_complete_shell_sequence || throw(
+            ArgumentError("PQS atom-box direct/support oracle requires atom-local complete-shell builds"),
+        )
+        direct = build.built_object
+        direct.support_indices == unit.support_indices || throw(
+            ArgumentError("PQS atom-box direct/support oracle support does not match support-dense fixture"),
+        )
+        build.column_range == unit.column_range || throw(
+            ArgumentError("PQS atom-box direct/support oracle column range does not match support-dense fixture"),
+        )
+        support_states = [_cartesian_unflat_index(index, dims) for index in direct.support_indices]
+        support_states == unit.support_states || throw(
+            ArgumentError("PQS atom-box direct/support oracle support states do not match support-dense fixture"),
+        )
+        local_direct_coefficients =
+            Matrix{Float64}(direct.coefficient_matrix[direct.support_indices, :])
+        role_entries[role] = _support_local_retained_entries(
+            build.column_range,
+            support_states,
+            local_direct_coefficients,
+        )
+        direct_support_shapes[role] = size(local_direct_coefficients)
+    end
+    return (
+        atom_roles = atom_roles,
+        entries_by_role = role_entries,
+        direct_support_shapes = direct_support_shapes,
+    )
+end
+
+function _pqs_atom_box_support_local_block(
+    units,
+    entries_by_role,
+    full_range::UnitRange{Int},
+    metrics::NamedTuple{(:x,:y,:z)};
+    term::Symbol,
+)
+    retained_dimension = length(full_range)
+    block = zeros(Float64, retained_dimension, retained_dimension)
+    pair_blocks = NamedTuple[]
+    cross_atom_pair_count = 0
+    axis_factor_terms = _pqs_atom_box_axis_factor_terms(metrics, term)
+    for left_unit in units
+        left_range =
+            _pqs_atom_box_local_column_range(left_unit.column_range, full_range)
+        for right_unit in units
+            right_range =
+                _pqs_atom_box_local_column_range(right_unit.column_range, full_range)
+            pair_block = _fallback_staged_separable_sum_block(
+                entries_by_role[left_unit.role],
+                entries_by_role[right_unit.role],
+                axis_factor_terms,
+            )
+            block[left_range, right_range] .= pair_block
+            left_unit.role != right_unit.role && (cross_atom_pair_count += 1)
+            push!(
+                pair_blocks,
+                (
+                    left_role = left_unit.role,
+                    right_role = right_unit.role,
+                    left_column_range = left_unit.column_range,
+                    right_column_range = right_unit.column_range,
+                    local_left_range = left_range,
+                    local_right_range = right_range,
+                    block_shape = size(pair_block),
+                ),
+            )
+        end
+    end
+    return (
+        block = block,
+        pair_blocks = Tuple(pair_blocks),
+        pair_block_count = length(pair_blocks),
+        cross_atom_pair_count = cross_atom_pair_count,
+    )
+end
+
+function _pqs_atom_box_safe_term_operator_comparison(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    terms = _PQS_ATOM_BOX_SAFE_TERM_OPERATOR_TERMS,
+    atol::Real = 1.0e-12,
+)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS atom-box safe-term comparison requires at least one term"),
+    )
+    for term in selected_terms
+        term in _PQS_ATOM_BOX_SAFE_TERM_OPERATOR_TERMS || throw(
+            ArgumentError("PQS atom-box safe-term comparison received unsupported term $(term)"),
+        )
+    end
+    fixture = _pqs_atom_box_support_dense_units(construction)
+    units = fixture.units
+    first(first(units).column_range) <= last(last(units).column_range) || throw(
+        ArgumentError("PQS atom-box safe-term comparison requires ordered atom-box unit ranges"),
+    )
+    full_range = first(first(units).column_range):last(last(units).column_range)
+    sum(length(unit.column_range) for unit in units) == length(full_range) || throw(
+        ArgumentError("PQS atom-box safe-term comparison requires contiguous atom-box ranges"),
+    )
+    unit_entries = _pqs_atom_box_support_dense_unit_entries(fixture)
+    direct_oracle =
+        _pqs_atom_box_direct_support_oracle_entries(construction, fixture)
+
+    support_dense_blocks = Dict{Symbol,Matrix{Float64}}()
+    direct_oracle_blocks = Dict{Symbol,Matrix{Float64}}()
+    support_dense_references = Dict{Symbol,Any}()
+    direct_oracle_references = Dict{Symbol,Any}()
+    term_errors = Dict{Symbol,Float64}()
+    pair_block_counts = Dict{Symbol,Int}()
+    cross_atom_pair_counts = Dict{Symbol,Int}()
+    output_finite = true
+    shape_matches = true
+    retained_dimension = length(full_range)
+    for term in selected_terms
+        support_dense_result = _pqs_atom_box_support_local_block(
+            units,
+            unit_entries,
+            full_range,
+            metrics;
+            term,
+        )
+        direct_result = _pqs_atom_box_support_local_block(
+            units,
+            direct_oracle.entries_by_role,
+            full_range,
+            metrics;
+            term,
+        )
+        support_dense_block = support_dense_result.block
+        direct_block = direct_result.block
+        size(support_dense_block) == size(direct_block) || (shape_matches = false)
+        size(support_dense_block) == (retained_dimension, retained_dimension) ||
+            (shape_matches = false)
+        all(isfinite, support_dense_block) || (output_finite = false)
+        all(isfinite, direct_block) || (output_finite = false)
+        block_error = LinearAlgebra.norm(support_dense_block - direct_block, Inf)
+        support_dense_blocks[term] = support_dense_block
+        direct_oracle_blocks[term] = direct_block
+        support_dense_references[term] = support_dense_result
+        direct_oracle_references[term] = direct_result
+        term_errors[term] = block_error
+        pair_block_counts[term] = support_dense_result.pair_block_count
+        cross_atom_pair_counts[term] = support_dense_result.cross_atom_pair_count
+    end
+    shape_matches || throw(
+        ArgumentError("PQS atom-box safe-term comparison produced mismatched block shapes"),
+    )
+    output_finite || throw(
+        ArgumentError("PQS atom-box safe-term comparison produced non-finite entries"),
+    )
+    max_block_error = maximum(values(term_errors))
+    max_block_error <= Float64(atol) || throw(
+        ArgumentError("PQS atom-box support-dense and direct/support blocks disagree"),
+    )
+    cross_atom_blocks_included =
+        all(count -> count > 0, values(cross_atom_pair_counts))
+
+    diagnostics = (
+        source = :pqs_atom_box_safe_term_operator_comparison,
+        atom_box_only = true,
+        support_dense_direct_support_units_created =
+            fixture.diagnostics.support_dense_direct_support_units_created,
+        support_local_fallback_operator_comparison = true,
+        product_doside_units_created = false,
+        raw_product_box_operator_contract = false,
+        product_box_construction_rule_available = false,
+        complete_atom_box_block_assembled = true,
+        cross_atom_blocks_included = cross_atom_blocks_included,
+        direct_support_oracle_compared = true,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        operator_factor_source = :explicit_metric_operator_data,
+        operator_metric_sources = _cartesian_source_box_metric_sources(metrics),
+        input_metric_operator_data = :caller_supplied_explicit_data,
+        input_metric_operator_data_pgdg_checked = false,
+        pgdg_analytic_operator_provenance_claimed = false,
+        numerical_reference_fallback = false,
+        supported_terms = _PQS_ATOM_BOX_SAFE_TERM_OPERATOR_TERMS,
+        unsupported_terms = _PQS_ATOM_BOX_UNSUPPORTED_OPERATOR_TERMS,
+        terms_checked = selected_terms,
+        retained_count = retained_dimension,
+        support_count = sum(length(unit.support_indices) for unit in units),
+        unit_count = length(units),
+        pair_block_counts = pair_block_counts,
+        cross_atom_pair_counts = cross_atom_pair_counts,
+        direct_support_shapes = direct_oracle.direct_support_shapes,
+        atol = Float64(atol),
+        max_block_error = max_block_error,
+        term_errors = term_errors,
+        output_finite = output_finite,
+    )
+    return (
+        object_kind = :pqs_atom_box_safe_term_operator_comparison,
+        status = :private_diagnostic_only,
+        terms = selected_terms,
+        fixture = fixture,
+        support_dense_blocks = support_dense_blocks,
+        direct_oracle_blocks = direct_oracle_blocks,
+        support_dense_references = support_dense_references,
+        direct_oracle_references = direct_oracle_references,
+        term_errors = term_errors,
+        max_block_error = max_block_error,
         diagnostics = diagnostics,
     )
 end

@@ -539,6 +539,79 @@ descriptors. Current route descriptor diagnostics may therefore remain
 QW/Hamiltonian path, public/default behavior, retained-weight IDA division, or
 local/ECP/Gaussian/MWG/interaction behavior.
 
+The contact-cap safe-term operator checkpoint adds
+`_pqs_contact_cap_safe_term_operator_comparison(construction, metrics; ...)`,
+also as private diagnostic/read-path infrastructure only. It compares
+contact-cap product/doside self blocks from the helper-created unit against
+the current direct/support contact-cap selector oracle. The product path uses
+`_product_doside_source_box_reference_block(...)`; the direct/support oracle
+uses the current contact-cap build, support indices/states, and support-local
+direct selector entries.
+
+The covered safe terms are overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic.
+Kinetic is the signed separable sum `(K,S,S) + (S,K,S) + (S,S,K)`. The focused
+q4 fixture checks all eight terms as `25 x 25` blocks, finite outputs, and max
+product-vs-direct/support error `<= 1.0e-12`; unsupported terms such as
+`:weights` reject. The helper consumes caller-supplied explicit axis
+metric/operator data and does not claim new PGDG analytic provenance inside
+the helper. It emits no route descriptor, mutates no construction, installs no
+sidecar, and changes no packet/fixed-block/QW/Hamiltonian/IDA/MWG/local/
+Gaussian/public behavior.
+
+The outer-mismatch bridge now has the analogous private diagnostic checkpoint.
+`_pqs_outer_mismatch_product_doside_units(construction; ...)` maps the current
+boundary slab-set direct/support piece to one product/doside unit per slab
+piece, not one unit for the whole slab set. In the q4 fixture the two z slabs
+have column ranges `1:49` and `50:98`; each uses identity support-local
+coefficients and the structural parent-expanded selector error is `0.0`.
+Descriptor-piece order defines the coefficient columns, while the audited
+region support is checked as an order-independent coverage set.
+
+`_pqs_outer_mismatch_safe_term_operator_comparison(construction, metrics; ...)`
+then assembles the complete `98 x 98` retained outer-mismatch block from all
+four slab-pair product/doside blocks: low/low, low/high, high/low, and
+high/high. The comparison target is the current direct/support outer-mismatch
+selector oracle. The covered safe terms are the same eight terms as contact
+cap: overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. The q4 focused
+fixture checks finite product/direct outputs and max product-vs-direct/support
+error `<= 1.0e-12`; unsupported terms such as `:weights` reject.
+
+Both contact-cap and outer-mismatch bridges are private diagnostic bridges from
+current direct/support route pieces into product-box retained units. They are
+not installed into construction, do not emit route descriptors, and do not
+change sidecars, packets, fixed blocks, QW/Hamiltonian, IDA/MWG,
+local/ECP/Gaussian/interaction, public/default routes, or CR2 artifacts. Their
+operator inputs are caller-supplied explicit axis data; the helpers do not
+independently prove PGDG analytic provenance.
+
+Atom boxes are now recorded through a different private diagnostic bridge:
+support-dense/direct-support retained units, not product/doside units.
+`_pqs_atom_box_support_dense_units(construction; ...)` emits exactly two q4
+units, `:left_atom_box` and `:right_atom_box`. Both are `:support_dense`,
+with column ranges `99:223` and `224:348`, retained/support count `125` each,
+and local support coefficient shape `(125, 125)`. Parent-expanded coefficient
+error against the current direct/support atom-box builds is `0.0`. The local
+identity/direct-row error is recorded near roundoff, but it is not treated as
+a product-box construction rule or raw product-box operator claim.
+
+`_pqs_atom_box_safe_term_operator_comparison(construction, metrics; ...)`
+validates those support-dense atom-box units as operator inputs using
+support-local fallback. It does not use product/doside algebra or raw
+product-box factorization for atom boxes. The q4 comparison assembles the full
+`250 x 250` retained atom-box block from left/left, left/right, right/left,
+and right/right pair blocks, including cross-atom blocks. The covered safe
+terms are overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic. The focused q4
+fixture checks max error against the current direct/support oracle
+`<= 1.0e-12`; unsupported terms such as `:weights` reject.
+
+Atom boxes therefore remain support-local/direct-support retained units in the
+private route vocabulary. No product-box construction rule is claimed for
+them, and no route descriptor emission, construction mutation, sidecar
+installation, packet/fixed-block/QW/Hamiltonian/IDA/MWG/local/ECP/Gaussian/
+interaction, public/default route, or CR2 artifact change is implied. As with
+the product-box bridge helpers, metric/operator inputs are caller-supplied
+explicit axis data, not a new independent PGDG analytic provenance proof.
+
 Non-goals for this migration stage:
 
 - no public API or default-route promotion;
