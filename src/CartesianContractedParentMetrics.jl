@@ -3440,34 +3440,35 @@ function _pqs_product_source_box_reference_block(
     )
 end
 
-function _pqs_product_source_box_project_local_gaussian_axis_terms(
+function _pqs_product_source_box_project_axis_terms(
     operator_terms::AbstractArray{<:Real,3},
     pqs_plan,
     product_axis,
-    axis::Int,
+    axis::Int;
+    label::AbstractString,
 )
     raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
     nterms = size(operator_terms, 1)
     nterms > 0 || throw(
-        ArgumentError("PQS/product source-box local-Gaussian terms require at least one term"),
+        ArgumentError("$(label) requires at least one term"),
     )
     pqs_interval = raw_plan.axis_intervals[axis]
     product_interval = _staged_axis_interval(product_axis)
     first(pqs_interval) >= 1 && last(pqs_interval) <= size(operator_terms, 2) ||
         throw(
-            ArgumentError("PQS/product source-box local-Gaussian PQS interval exceeds axis $(axis) term table"),
+            ArgumentError("$(label) PQS interval exceeds axis $(axis) term table"),
         )
     first(product_interval) >= 1 && last(product_interval) <= size(operator_terms, 3) ||
         throw(
-            ArgumentError("PQS/product source-box local-Gaussian product interval exceeds axis $(axis) term table"),
+            ArgumentError("$(label) product interval exceeds axis $(axis) term table"),
         )
     pqs_coefficients = Matrix{Float64}(raw_plan.axis_local_coefficients[axis])
     product_coefficients = Matrix{Float64}(product_axis.coefficient_matrix)
     size(pqs_coefficients, 1) == length(pqs_interval) || throw(
-        DimensionMismatch("PQS/product source-box local-Gaussian PQS axis coefficients must match interval length"),
+        DimensionMismatch("$(label) PQS axis coefficients must match interval length"),
     )
     size(product_coefficients, 1) == length(product_interval) || throw(
-        DimensionMismatch("PQS/product source-box local-Gaussian product axis coefficients must match interval length"),
+        DimensionMismatch("$(label) product axis coefficients must match interval length"),
     )
     projected = Array{Float64,3}(
         undef,
@@ -3481,6 +3482,21 @@ function _pqs_product_source_box_project_local_gaussian_axis_terms(
             transpose(pqs_coefficients) * term_matrix * product_coefficients
     end
     return projected
+end
+
+function _pqs_product_source_box_project_local_gaussian_axis_terms(
+    operator_terms::AbstractArray{<:Real,3},
+    pqs_plan,
+    product_axis,
+    axis::Int,
+)
+    return _pqs_product_source_box_project_axis_terms(
+        operator_terms,
+        pqs_plan,
+        product_axis,
+        axis;
+        label = "PQS/product source-box local-Gaussian terms",
+    )
 end
 
 function _pqs_product_source_box_local_gaussian_axis_factors(
@@ -3497,6 +3513,223 @@ function _pqs_product_source_box_local_gaussian_axis_factors(
             axis,
         )
     end, 3)
+end
+
+function _pqs_product_source_box_density_density_axis_factors(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> begin
+        terms = getproperty(axis_pair_factor_terms, (:x, :y, :z)[axis])
+        _pqs_product_source_box_project_axis_terms(
+            terms,
+            pqs_plan,
+            product_unit.axes[axis],
+            axis;
+            label = "PQS/product source-box density-density pair-factor terms",
+        )
+    end, 3)
+end
+
+function _pqs_product_source_box_density_density_weight_views(
+    raw_plan,
+    product_retained_unit_plan,
+    axis_weights::NamedTuple{(:x,:y,:z)},
+)
+    return (
+        pqs = ntuple(axis -> _source_box_axis_positive_weights(
+            getproperty(axis_weights, (:x, :y, :z)[axis]),
+            raw_plan.axis_intervals[axis];
+            axis_name = (:x, :y, :z)[axis],
+            side = :pqs,
+        ), 3),
+        product = ntuple(axis -> _source_box_axis_positive_weights(
+            getproperty(axis_weights, (:x, :y, :z)[axis]),
+            product_retained_unit_plan.source_axis_intervals[axis];
+            axis_name = (:x, :y, :z)[axis],
+            side = :product,
+        ), 3),
+    )
+end
+
+function _pqs_product_source_box_density_density_interaction_block(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    term_coefficients::AbstractVector{<:Real},
+    axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+    pair_factor_normalization::Symbol = :density_normalized,
+)
+    pair_factor_normalization == :density_normalized || throw(
+        ArgumentError(
+            "PQS/product source-box density-density fixture currently requires density-normalized pair factors",
+        ),
+    )
+    raw_plan = _pqs_raw_product_box_plan_view(pqs_plan)
+    raw_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("PQS/product source-box density-density block requires a raw product-box PQS plan"),
+    )
+    product_unit.kind == :product_doside || throw(
+        ArgumentError("PQS/product source-box density-density block requires a product_doside unit"),
+    )
+    length(product_unit.axis_function_indices) == length(product_unit.column_range) ||
+        throw(
+            ArgumentError("PQS/product source-box density-density product unit axis metadata does not match its column range"),
+        )
+    nterms = length(term_coefficients)
+    nterms > 0 || throw(
+        ArgumentError("PQS/product source-box density-density block requires at least one term coefficient"),
+    )
+    for axis_name in (:x, :y, :z)
+        size(getproperty(axis_pair_factor_terms, axis_name), 1) == nterms || throw(
+            ArgumentError("PQS/product source-box density-density pair-factor term count mismatch on $(axis_name)"),
+        )
+    end
+    product_retained_unit_plan = _product_doside_retained_unit_plan(product_unit)
+    source_weights = _pqs_product_source_box_density_density_weight_views(
+        raw_plan,
+        product_retained_unit_plan,
+        axis_weights,
+    )
+    projected_terms = _pqs_product_source_box_density_density_axis_factors(
+        raw_plan,
+        product_unit,
+        axis_pair_factor_terms,
+    )
+    coeffs = Float64[Float64(value) for value in term_coefficients]
+    pqs_modes = raw_plan.boundary_selector.mode_indices
+    product_modes = product_unit.axis_function_indices
+    length(pqs_modes) == raw_plan.boundary_selector.selected_count || throw(
+        ArgumentError("PQS/product source-box density-density boundary mode count must match selected count"),
+    )
+    block = zeros(Float64, length(pqs_modes), length(product_modes))
+    projected_x, projected_y, projected_z = projected_terms
+    @inbounds for col in eachindex(product_modes)
+        px, py, pz = product_modes[col]
+        for row in eachindex(pqs_modes)
+            qx, qy, qz = pqs_modes[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    coeffs[term] *
+                    projected_x[term, qx, px] *
+                    projected_y[term, qy, py] *
+                    projected_z[term, qz, pz]
+            end
+            block[row, col] = value
+        end
+    end
+    all(isfinite, block) || throw(
+        ArgumentError("PQS/product source-box density-density block produced non-finite entries"),
+    )
+    pair_plan = (
+        pair_kind = :pqs_product_source_box_density_density_pair,
+        left_source_family = :mode_selected_raw_product_box,
+        right_source_family = :product_doside,
+        left_retained_rule_kind = raw_plan.retained_rule_kind,
+        right_retained_rule_kind = product_retained_unit_plan.retained_rule_kind,
+        left_source_dimensions = raw_plan.source_mode_dims,
+        right_source_dimensions = product_retained_unit_plan.source_axis_lengths,
+        left_source_dimension = raw_plan.source_mode_count,
+        right_source_dimension = product_retained_unit_plan.source_dimension,
+        left_retained_count = raw_plan.boundary_selector.selected_count,
+        right_retained_count = product_retained_unit_plan.retained_count,
+        left_column_range = nothing,
+        right_column_range = product_retained_unit_plan.column_range,
+        axis_intervals = (
+            pqs = raw_plan.axis_intervals,
+            product = product_retained_unit_plan.source_axis_intervals,
+        ),
+        pqs_boundary_mode_selector = raw_plan.boundary_selector,
+        product_retained_unit_plan = product_retained_unit_plan,
+        product_retained_transform = product_retained_unit_plan,
+        source_weights = source_weights,
+        supported_terms = (:pair_sum,),
+        diagnostics = (
+            source = :pqs_product_source_box_density_density_pair_plan,
+            private_shadow_only = true,
+            source_box_pair_plan = true,
+            interaction_operator = :electron_electron_density_density,
+            output_representation = :two_index_density_density,
+            four_index_galerkin_tensor = false,
+            pqs_representation = :mode_selected_raw_product_box,
+            product_representation = :product_doside,
+            pqs_boundary_mode_selection_used = true,
+            product_doside_retained_transform_used = true,
+            product_doside_retained_unit_plan_used = true,
+            shared_raw_product_box_plan_available =
+                raw_plan.shared_raw_product_box_plan_available,
+            shared_raw_product_box_plan_used =
+                raw_plan.shared_raw_product_box_plan_used,
+            source_mode_ordering = raw_plan.source_mode_ordering,
+            operator_factor_source = :explicit_density_normalized_pair_factor_terms,
+            input_pair_factor_data = :caller_supplied_explicit_data,
+            input_pair_factor_data_pgdg_checked = false,
+            raw_source_weights_available = true,
+            density_normalized_pair_factors = true,
+            raw_weighted_pair_factors = false,
+            pair_factor_normalization = pair_factor_normalization,
+            source_weight_division_owner = :caller_supplied_density_normalized_pair_factors,
+            source_weight_division_applied_by_helper = false,
+            raw_product_box_operators_use_1d_factors = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            shell_row_algorithm = false,
+            support_local_oracle_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            retained_weight_semantics_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            numerical_reference_fallback = false,
+            ecp_terms_implemented = false,
+            local_gaussian_one_body_implemented = false,
+            mwg_interaction_implemented = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+    return (
+        path = :pqs_product_source_box_density_density_interaction,
+        interaction_operator = :electron_electron_density_density,
+        block = block,
+        pair_plan = pair_plan,
+        one_dimensional_pair_factors = (
+            x = projected_x,
+            y = projected_y,
+            z = projected_z,
+        ),
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :pqs_product_source_box_density_density_interaction_block,
+                source_box_first = true,
+                output_finite = true,
+                electron_electron_terms_implemented = true,
+                term_count = nterms,
+                axis_term_dimensions = (
+                    x = size(axis_pair_factor_terms.x),
+                    y = size(axis_pair_factor_terms.y),
+                    z = size(axis_pair_factor_terms.z),
+                ),
+                projected_axis_term_dimensions = (
+                    x = size(projected_x),
+                    y = size(projected_y),
+                    z = size(projected_z),
+                ),
+            ),
+        ),
+    )
 end
 
 function _pqs_product_source_box_local_gaussian_sum_block(

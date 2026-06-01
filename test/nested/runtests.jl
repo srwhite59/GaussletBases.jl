@@ -485,6 +485,31 @@ end
         return result
     end
 
+    function _pqs_product_density_density_explicit_reference(
+        descriptor,
+        product_unit,
+        term_coefficients,
+        axis_pair_factor_terms,
+    )
+        raw = _pqs_product_box_column_selection_coefficients(descriptor)
+        selected = descriptor.boundary_column_indices
+        product_coefficients = Matrix{Float64}(product_unit.coefficient_matrix)
+        result = zeros(Float64, length(selected), size(product_coefficients, 2))
+        for term in eachindex(term_coefficients)
+            parent_block = _pqs_cross_product_matrix(
+                raw.states,
+                product_unit.support_states,
+                @view(axis_pair_factor_terms.x[term, :, :]),
+                @view(axis_pair_factor_terms.y[term, :, :]),
+                @view(axis_pair_factor_terms.z[term, :, :]),
+            )
+            source_block =
+                transpose(raw.coefficients) * parent_block * product_coefficients
+            result .+= term_coefficients[term] .* source_block[selected, :]
+        end
+        return result
+    end
+
     function _product_source_box_explicit_reference(product_unit, metrics; term::Symbol)
         product_coefficients = Matrix{Float64}(product_unit.coefficient_matrix)
         result = zeros(Float64, size(product_coefficients, 2), size(product_coefficients, 2))
@@ -6761,6 +6786,120 @@ end
             center,
         ),
         :pqs_product_source_box_nuclear_attraction_by_center,
+    )
+    pqs_product_density_coefficients = [0.55, 0.21]
+    function _pqs_product_density_term_tensor(source_count::Int, axis_scale::Float64)
+        terms = Array{Float64,3}(undef, 2, source_count, source_count)
+        for term in 1:2, col in 1:source_count, row in 1:source_count
+            terms[term, row, col] =
+                axis_scale / (1.0 + abs(row - col)) +
+                0.03 * term +
+                0.007 * row -
+                0.005 * col
+        end
+        return terms
+    end
+    pqs_product_density_terms = (
+        x = _pqs_product_density_term_tensor(5, 0.42),
+        y = _pqs_product_density_term_tensor(5, 0.37),
+        z = _pqs_product_density_term_tensor(7, 0.31),
+    )
+    pqs_product_density_weights = (
+        x = [1.0 + 0.04 * index for index in 1:5],
+        y = [0.9 + 0.03 * index for index in 1:5],
+        z = [1.2 + 0.02 * index for index in 1:7],
+    )
+    pqs_product_density =
+        CCPM._pqs_product_source_box_density_density_interaction_block(
+            rectangular_pqs_product_source_box_plan,
+            nonidentity_axis_product_unit;
+            term_coefficients = pqs_product_density_coefficients,
+            axis_pair_factor_terms = pqs_product_density_terms,
+            axis_weights = pqs_product_density_weights,
+        )
+    pqs_product_density_reference =
+        _pqs_product_density_density_explicit_reference(
+            rectangular_descriptor,
+            nonidentity_axis_product_unit,
+            pqs_product_density_coefficients,
+            pqs_product_density_terms,
+        )
+    @test pqs_product_density.path ==
+          :pqs_product_source_box_density_density_interaction
+    @test pqs_product_density.interaction_operator ==
+          :electron_electron_density_density
+    @test pqs_product_density.block ≈
+          pqs_product_density_reference atol = 1.0e-13 rtol = 1.0e-13
+    @test pqs_product_density.pair_plan.pair_kind ==
+          :pqs_product_source_box_density_density_pair
+    @test pqs_product_density.pair_plan.left_source_family ==
+          :mode_selected_raw_product_box
+    @test pqs_product_density.pair_plan.right_source_family == :product_doside
+    @test pqs_product_density.pair_plan.left_source_dimensions == (5, 5, 7)
+    @test pqs_product_density.pair_plan.right_source_dimensions == (2, 2, 1)
+    @test pqs_product_density.pair_plan.left_retained_count == 130
+    @test pqs_product_density.pair_plan.right_retained_count == 4
+    @test pqs_product_density.pair_plan.supported_terms == (:pair_sum,)
+    @test pqs_product_density.pair_plan.source_weights.pqs[3] ==
+          pqs_product_density_weights.z
+    @test pqs_product_density.pair_plan.source_weights.product[1] ==
+          pqs_product_density_weights.x[1:2]
+    @test pqs_product_density.pair_plan.product_retained_unit_plan.axis_coefficient_matrices[1] ==
+          nonidentity_axis_product_unit.axes[1].coefficient_matrix
+    @test pqs_product_density.diagnostics.interaction_operator ==
+          :electron_electron_density_density
+    @test pqs_product_density.diagnostics.output_representation ==
+          :two_index_density_density
+    @test !pqs_product_density.diagnostics.four_index_galerkin_tensor
+    @test pqs_product_density.diagnostics.pqs_representation ==
+          :mode_selected_raw_product_box
+    @test pqs_product_density.diagnostics.product_representation ==
+          :product_doside
+    @test pqs_product_density.diagnostics.density_normalized_pair_factors
+    @test !pqs_product_density.diagnostics.raw_weighted_pair_factors
+    @test pqs_product_density.diagnostics.source_weight_division_owner ==
+          :caller_supplied_density_normalized_pair_factors
+    @test !pqs_product_density.diagnostics.source_weight_division_applied_by_helper
+    @test !pqs_product_density.diagnostics.retained_pqs_weights_used
+    @test !pqs_product_density.diagnostics.retained_weight_division_allowed
+    @test !pqs_product_density.diagnostics.retained_pqs_weight_division_allowed
+    @test !pqs_product_density.diagnostics.ida_weight_division_allowed
+    @test !pqs_product_density.diagnostics.shell_projection_used
+    @test !pqs_product_density.diagnostics.lowdin_cleanup_used
+    @test !pqs_product_density.diagnostics.support_coefficient_matrix_used
+    @test !pqs_product_density.diagnostics.support_local_pqs_oracle_used
+    @test !pqs_product_density.diagnostics.packet_adoption
+    @test !pqs_product_density.diagnostics.qwhamiltonian_consumes
+    @test !pqs_product_density.diagnostics.mwg_ida_semantics_changed
+    @test !pqs_product_density.diagnostics.numerical_reference_fallback
+    @test pqs_product_density.diagnostics.electron_electron_terms_implemented
+    @test pqs_product_density.diagnostics.projected_axis_term_dimensions.x == (2, 5, 2)
+    @test pqs_product_density.diagnostics.projected_axis_term_dimensions.z == (2, 7, 1)
+    @test_throws ArgumentError CCPM._pqs_product_source_box_density_density_interaction_block(
+        rectangular_pqs_product_source_box_plan,
+        nonidentity_axis_product_unit;
+        term_coefficients = pqs_product_density_coefficients,
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = pqs_product_density_weights,
+        pair_factor_normalization = :raw_weighted,
+    )
+    @test_throws ArgumentError CCPM._pqs_product_source_box_density_density_interaction_block(
+        rectangular_pqs_product_source_box_plan,
+        nonidentity_axis_product_unit;
+        term_coefficients = pqs_product_density_coefficients,
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = (
+            x = [1.0, 1.1, 0.0, 1.3, 1.4],
+            y = pqs_product_density_weights.y,
+            z = pqs_product_density_weights.z,
+        ),
+    )
+    @test_throws ArgumentError CCPM._pqs_product_source_box_density_density_interaction_block(
+        rectangular_pqs_product_source_box_plan,
+        nonidentity_axis_product_unit;
+        term_coefficients = pqs_product_density_coefficients[1:1],
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = pqs_product_density_weights,
     )
     pqs_pqs_nuclear_attraction =
         CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
