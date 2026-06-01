@@ -1186,14 +1186,15 @@ function _product_doside_source_box_shadow_blocks(
     )
 end
 
-function _product_doside_source_box_project_local_gaussian_axis_terms(
+function _product_doside_source_box_project_axis_terms(
     operator_terms::AbstractArray{<:Real,3},
     left_axis,
-    right_axis,
+    right_axis;
+    label::AbstractString,
 )
     nterms = size(operator_terms, 1)
     nterms > 0 || throw(
-        ArgumentError("product/doside source-box local-Gaussian terms require at least one term"),
+        ArgumentError("$(label) requires at least one term"),
     )
     projected = Array{Float64,3}(
         undef,
@@ -1210,6 +1211,19 @@ function _product_doside_source_box_project_local_gaussian_axis_terms(
         )
     end
     return projected
+end
+
+function _product_doside_source_box_project_local_gaussian_axis_terms(
+    operator_terms::AbstractArray{<:Real,3},
+    left_axis,
+    right_axis,
+)
+    return _product_doside_source_box_project_axis_terms(
+        operator_terms,
+        left_axis,
+        right_axis;
+        label = "product/doside source-box local-Gaussian terms",
+    )
 end
 
 function _product_doside_source_box_local_gaussian_axis_factors(
@@ -1385,6 +1399,228 @@ function _product_doside_source_box_local_gaussian_sum_block(
                 public_default_consumes = false,
                 cr2_science_status_changed = false,
                 output_finite = true,
+            ),
+        ),
+    )
+end
+
+function _source_box_axis_positive_weights(
+    axis_weights::AbstractVector{<:Real},
+    interval::UnitRange{Int};
+    axis_name::Symbol,
+    side::Symbol,
+)
+    length(axis_weights) >= last(interval) || throw(
+        DimensionMismatch("$(side) $(axis_name) source weights do not cover the source interval"),
+    )
+    values = Float64[Float64(value) for value in axis_weights[interval]]
+    all(isfinite, values) || throw(
+        ArgumentError("$(side) $(axis_name) source weights must be finite"),
+    )
+    all(>(0.0), values) || throw(
+        ArgumentError("$(side) $(axis_name) source weights must be positive"),
+    )
+    return values
+end
+
+function _product_doside_source_box_pair_factor_axis_terms(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> begin
+        terms = getproperty(axis_pair_factor_terms, (:x, :y, :z)[axis])
+        _product_doside_source_box_project_axis_terms(
+            terms,
+            left_unit.axes[axis],
+            right_unit.axes[axis];
+            label = "product/doside source-box density-density pair-factor terms",
+        )
+    end, 3)
+end
+
+function _product_doside_source_box_density_density_weight_views(
+    left_retained_unit_plan,
+    right_retained_unit_plan,
+    axis_weights::NamedTuple{(:x,:y,:z)},
+)
+    return (
+        left = ntuple(axis -> _source_box_axis_positive_weights(
+            getproperty(axis_weights, (:x, :y, :z)[axis]),
+            left_retained_unit_plan.source_axis_intervals[axis];
+            axis_name = (:x, :y, :z)[axis],
+            side = :left,
+        ), 3),
+        right = ntuple(axis -> _source_box_axis_positive_weights(
+            getproperty(axis_weights, (:x, :y, :z)[axis]),
+            right_retained_unit_plan.source_axis_intervals[axis];
+            axis_name = (:x, :y, :z)[axis],
+            side = :right,
+        ), 3),
+    )
+end
+
+function _product_doside_source_box_density_density_interaction_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    term_coefficients::AbstractVector{<:Real},
+    axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+    pair_factor_normalization::Symbol = :density_normalized,
+)
+    pair_factor_normalization == :density_normalized || throw(
+        ArgumentError(
+            "product/doside source-box density-density fixture currently requires density-normalized pair factors",
+        ),
+    )
+    left_unit.kind == :product_doside && right_unit.kind == :product_doside || throw(
+        ArgumentError("product/doside source-box density-density block requires product_doside units"),
+    )
+    length(left_unit.axis_function_indices) == length(left_unit.column_range) || throw(
+        ArgumentError("product/doside source-box density-density left unit axis metadata does not match its column range"),
+    )
+    length(right_unit.axis_function_indices) == length(right_unit.column_range) || throw(
+        ArgumentError("product/doside source-box density-density right unit axis metadata does not match its column range"),
+    )
+    nterms = length(term_coefficients)
+    nterms > 0 || throw(
+        ArgumentError("product/doside source-box density-density block requires at least one term coefficient"),
+    )
+    for axis_name in (:x, :y, :z)
+        size(getproperty(axis_pair_factor_terms, axis_name), 1) == nterms || throw(
+            ArgumentError("product/doside source-box density-density pair-factor term count mismatch on $(axis_name)"),
+        )
+    end
+    left_retained_unit_plan = _product_doside_retained_unit_plan(left_unit)
+    right_retained_unit_plan = _product_doside_retained_unit_plan(right_unit)
+    source_weights = _product_doside_source_box_density_density_weight_views(
+        left_retained_unit_plan,
+        right_retained_unit_plan,
+        axis_weights,
+    )
+    projected_terms =
+        _product_doside_source_box_pair_factor_axis_terms(
+            left_unit,
+            right_unit,
+            axis_pair_factor_terms,
+        )
+    coeffs = Float64[Float64(value) for value in term_coefficients]
+    left_modes = left_unit.axis_function_indices
+    right_modes = right_unit.axis_function_indices
+    block = zeros(Float64, length(left_modes), length(right_modes))
+    projected_x, projected_y, projected_z = projected_terms
+    @inbounds for col in eachindex(right_modes)
+        xj, yj, zj = right_modes[col]
+        for row in eachindex(left_modes)
+            xi, yi, zi = left_modes[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    coeffs[term] *
+                    projected_x[term, xi, xj] *
+                    projected_y[term, yi, yj] *
+                    projected_z[term, zi, zj]
+            end
+            block[row, col] = value
+        end
+    end
+    all(isfinite, block) || throw(
+        ArgumentError("product/doside source-box density-density block produced non-finite entries"),
+    )
+    pair_plan = (
+        pair_kind = :product_doside_source_box_density_density_pair,
+        left_source_family = :product_doside,
+        right_source_family = :product_doside,
+        left_retained_rule_kind = left_retained_unit_plan.retained_rule_kind,
+        right_retained_rule_kind = right_retained_unit_plan.retained_rule_kind,
+        left_source_dimensions = left_retained_unit_plan.source_axis_lengths,
+        right_source_dimensions = right_retained_unit_plan.source_axis_lengths,
+        left_source_dimension = left_retained_unit_plan.source_dimension,
+        right_source_dimension = right_retained_unit_plan.source_dimension,
+        left_retained_axis_counts = left_retained_unit_plan.retained_axis_counts,
+        right_retained_axis_counts = right_retained_unit_plan.retained_axis_counts,
+        left_column_range = left_retained_unit_plan.column_range,
+        right_column_range = right_retained_unit_plan.column_range,
+        left_retained_count = left_retained_unit_plan.retained_count,
+        right_retained_count = right_retained_unit_plan.retained_count,
+        axis_intervals = (
+            left = left_retained_unit_plan.source_axis_intervals,
+            right = right_retained_unit_plan.source_axis_intervals,
+        ),
+        left_retained_unit_plan = left_retained_unit_plan,
+        right_retained_unit_plan = right_retained_unit_plan,
+        left_retained_transform = left_retained_unit_plan,
+        right_retained_transform = right_retained_unit_plan,
+        source_weights = source_weights,
+        supported_terms = (:pair_sum,),
+        diagnostics = (
+            source = :product_doside_source_box_density_density_pair_plan,
+            private_shadow_only = true,
+            source_box_pair_plan = true,
+            product_doside_retained_unit_plan_used = true,
+            interaction_operator = :electron_electron_density_density,
+            output_representation = :two_index_density_density,
+            four_index_galerkin_tensor = false,
+            operator_factor_source = :explicit_density_normalized_pair_factor_terms,
+            input_pair_factor_data = :caller_supplied_explicit_data,
+            input_pair_factor_data_pgdg_checked = false,
+            raw_source_weights_available = true,
+            density_normalized_pair_factors = true,
+            raw_weighted_pair_factors = false,
+            pair_factor_normalization = pair_factor_normalization,
+            source_weight_division_owner = :caller_supplied_density_normalized_pair_factors,
+            source_weight_division_applied_by_helper = false,
+            raw_product_box_operators_use_1d_factors = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            numerical_reference_fallback = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+    return (
+        path = :product_doside_source_box_density_density_interaction,
+        interaction_operator = :electron_electron_density_density,
+        block = block,
+        pair_plan = pair_plan,
+        one_dimensional_pair_factors = (
+            x = projected_x,
+            y = projected_y,
+            z = projected_z,
+        ),
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :product_doside_source_box_density_density_interaction_block,
+                source_box_first = true,
+                output_finite = true,
+                electron_electron_terms_implemented = true,
+                local_gaussian_one_body_implemented = false,
+                ecp_terms_implemented = false,
+                mwg_interaction_implemented = false,
+                support_local_oracle_used = false,
+                shell_row_algorithm = false,
+                term_count = nterms,
+                axis_term_dimensions = (
+                    x = size(axis_pair_factor_terms.x),
+                    y = size(axis_pair_factor_terms.y),
+                    z = size(axis_pair_factor_terms.z),
+                ),
+                projected_axis_term_dimensions = (
+                    x = size(projected_x),
+                    y = size(projected_y),
+                    z = size(projected_z),
+                ),
             ),
         ),
     )

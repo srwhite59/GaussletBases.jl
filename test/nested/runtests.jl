@@ -4870,6 +4870,166 @@ end
         @test components.right_left_transpose_error <= 1.0e-14
         @test product_source_box_shadow.transpose_errors[term] <= 1.0e-14
     end
+    density_density_term_coefficients = [0.6, 0.25]
+    function _test_pair_term_tensor(first_term, second_term)
+        first_matrix = Matrix{Float64}(first_term)
+        second_matrix = Matrix{Float64}(second_term)
+        terms = Array{Float64,3}(undef, 2, size(first_matrix, 1), size(first_matrix, 2))
+        terms[1, :, :] .= first_matrix
+        terms[2, :, :] .= second_matrix
+        return terms
+    end
+    density_normalized_pair_terms = (
+        x = _test_pair_term_tensor(
+            [1.0 0.2; 0.2 1.5],
+            [0.7 -0.1; -0.1 0.9],
+        ),
+        y = _test_pair_term_tensor(
+            [0.8 0.05; 0.05 1.1],
+            [1.2 0.15; 0.15 0.6],
+        ),
+        z = reshape([1.3, 0.4], 2, 1, 1),
+    )
+    density_source_weights = (
+        x = [1.25, 0.75],
+        y = [0.9, 1.1],
+        z = [2.0],
+    )
+    function _product_source_box_density_density_explicit_reference(
+        left_unit,
+        right_unit,
+        term_coefficients,
+        axis_pair_factor_terms,
+    )
+        projected_terms = ntuple(axis -> begin
+            axis_name = (:x, :y, :z)[axis]
+            terms = getproperty(axis_pair_factor_terms, axis_name)
+            left_axis = left_unit.axes[axis]
+            right_axis = right_unit.axes[axis]
+            left_interval = CCPM._staged_axis_interval(left_axis)
+            right_interval = CCPM._staged_axis_interval(right_axis)
+            projected = Array{Float64,3}(
+                undef,
+                size(terms, 1),
+                size(left_axis.coefficient_matrix, 2),
+                size(right_axis.coefficient_matrix, 2),
+            )
+            for term_index in axes(terms, 1)
+                local_terms = Matrix{Float64}(
+                    @view terms[term_index, left_interval, right_interval],
+                )
+                projected[term_index, :, :] .=
+                    transpose(left_axis.coefficient_matrix) *
+                    local_terms *
+                    right_axis.coefficient_matrix
+            end
+            projected
+        end, 3)
+        projected_x, projected_y, projected_z = projected_terms
+        left_modes = left_unit.axis_function_indices
+        right_modes = right_unit.axis_function_indices
+        reference = zeros(Float64, length(left_modes), length(right_modes))
+        for col in eachindex(right_modes)
+            xj, yj, zj = right_modes[col]
+            for row in eachindex(left_modes)
+                xi, yi, zi = left_modes[row]
+                reference[row, col] = sum(
+                    term_coefficients[term] *
+                    projected_x[term, xi, xj] *
+                    projected_y[term, yi, yj] *
+                    projected_z[term, zi, zj]
+                    for term in eachindex(term_coefficients)
+                )
+            end
+        end
+        return reference
+    end
+    product_density_density =
+        CCPM._product_doside_source_box_density_density_interaction_block(
+            product_unit,
+            product_unit;
+            term_coefficients = density_density_term_coefficients,
+            axis_pair_factor_terms = density_normalized_pair_terms,
+            axis_weights = density_source_weights,
+        )
+    product_density_reference =
+        _product_source_box_density_density_explicit_reference(
+            product_unit,
+            product_unit,
+            density_density_term_coefficients,
+            density_normalized_pair_terms,
+        )
+    @test product_density_density.path ==
+          :product_doside_source_box_density_density_interaction
+    @test product_density_density.interaction_operator ==
+          :electron_electron_density_density
+    @test product_density_density.block ≈ product_density_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test product_density_density.pair_plan.pair_kind ==
+          :product_doside_source_box_density_density_pair
+    @test product_density_density.pair_plan.supported_terms == (:pair_sum,)
+    @test product_density_density.pair_plan.source_weights.left[1] == [1.25, 0.75]
+    @test product_density_density.pair_plan.source_weights.right[2] == [0.9, 1.1]
+    @test product_density_density.diagnostics.interaction_operator ==
+          :electron_electron_density_density
+    @test product_density_density.diagnostics.output_representation ==
+          :two_index_density_density
+    @test !product_density_density.diagnostics.four_index_galerkin_tensor
+    @test product_density_density.diagnostics.raw_source_weights_available
+    @test product_density_density.diagnostics.density_normalized_pair_factors
+    @test !product_density_density.diagnostics.raw_weighted_pair_factors
+    @test product_density_density.diagnostics.source_weight_division_owner ==
+          :caller_supplied_density_normalized_pair_factors
+    @test !product_density_density.diagnostics.source_weight_division_applied_by_helper
+    @test !product_density_density.diagnostics.retained_weight_division_allowed
+    @test !product_density_density.diagnostics.retained_pqs_weight_division_allowed
+    @test !product_density_density.diagnostics.ida_weight_division_allowed
+    @test !product_density_density.diagnostics.packet_adoption
+    @test !product_density_density.diagnostics.fixed_block_routing
+    @test !product_density_density.diagnostics.qwhamiltonian_consumes
+    @test !product_density_density.diagnostics.public_default_consumes
+    @test !product_density_density.diagnostics.mwg_ida_semantics_changed
+    @test !product_density_density.diagnostics.numerical_reference_fallback
+    @test product_density_density.diagnostics.electron_electron_terms_implemented
+    nonidentity_density_density =
+        CCPM._product_doside_source_box_density_density_interaction_block(
+            nonidentity_axis_product_unit,
+            product_unit;
+            term_coefficients = density_density_term_coefficients,
+            axis_pair_factor_terms = density_normalized_pair_terms,
+            axis_weights = density_source_weights,
+        )
+    nonidentity_density_reference =
+        _product_source_box_density_density_explicit_reference(
+            nonidentity_axis_product_unit,
+            product_unit,
+            density_density_term_coefficients,
+            density_normalized_pair_terms,
+        )
+    @test nonidentity_density_density.block ≈
+          nonidentity_density_reference atol = 1.0e-14 rtol = 1.0e-14
+    @test !nonidentity_density_density.diagnostics.source_weight_division_applied_by_helper
+    @test_throws ArgumentError CCPM._product_doside_source_box_density_density_interaction_block(
+        product_unit,
+        product_unit;
+        term_coefficients = density_density_term_coefficients,
+        axis_pair_factor_terms = density_normalized_pair_terms,
+        axis_weights = density_source_weights,
+        pair_factor_normalization = :raw_weighted,
+    )
+    @test_throws ArgumentError CCPM._product_doside_source_box_density_density_interaction_block(
+        product_unit,
+        product_unit;
+        term_coefficients = density_density_term_coefficients,
+        axis_pair_factor_terms = density_normalized_pair_terms,
+        axis_weights = (x = [1.25, -0.75], y = [0.9, 1.1], z = [2.0]),
+    )
+    @test_throws ArgumentError CCPM._product_doside_source_box_density_density_interaction_block(
+        product_unit,
+        product_unit;
+        term_coefficients = density_density_term_coefficients[1:1],
+        axis_pair_factor_terms = density_normalized_pair_terms,
+        axis_weights = density_source_weights,
+    )
     @test_throws ArgumentError CCPM._product_doside_source_box_shadow_blocks(
         product_unit,
         product_unit,
