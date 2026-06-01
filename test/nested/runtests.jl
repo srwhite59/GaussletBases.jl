@@ -1625,9 +1625,13 @@ end
         @test reverse_blocks.terms == terms
         @test !blocks.diagnostics.raw_box_self_reference_compared
         @test isnothing(blocks.diagnostics.raw_box_self_reference_helper)
+        @test blocks.diagnostics.source_box_algorithm_formula_available
         @test blocks.diagnostics.validation_reference_contract ==
-              :external_oracle_required_for_cross_box
+              :external_raw_product_box_boundary_column_selection_required
+        @test !blocks.diagnostics.internal_validation_reference_compared
         @test !blocks.diagnostics.explicit_raw_product_box_boundary_column_selection_reference_compared
+        @test blocks.diagnostics.cross_box_external_raw_product_oracle_required
+        @test !blocks.diagnostics.cross_box_external_raw_product_oracle_compared_by_helper
         @test blocks.diagnostics.pair_plan_reused_for_terms
         @test blocks.diagnostics.pair_plan_reuse_term_count == length(terms)
         @test isnothing(blocks.diagnostics.max_block_error)

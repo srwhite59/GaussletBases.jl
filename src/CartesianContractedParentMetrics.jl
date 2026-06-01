@@ -2947,13 +2947,20 @@ function _pqs_pqs_source_box_reference_blocks_from_pair_plan(
                 raw_box_self_reference_helper =
                     same_raw_product_box_plan ?
                     :_pqs_raw_product_box_reference_block : nothing,
+                source_box_algorithm_formula_available = true,
                 validation_reference_contract =
                     same_raw_product_box_plan ?
                     :explicit_raw_product_box_boundary_column_selection :
-                    :external_oracle_required_for_cross_box,
+                    :external_raw_product_box_boundary_column_selection_required,
+                internal_validation_reference_compared =
+                    same_raw_product_box_plan,
                 explicit_raw_product_box_boundary_column_selection_reference_compared =
                     same_raw_product_box_plan,
                 explicit_source_box_oracle_tested = same_raw_product_box_plan,
+                cross_box_external_raw_product_oracle_required =
+                    !same_raw_product_box_plan,
+                cross_box_external_raw_product_oracle_compared_by_helper =
+                    false,
                 max_block_error = max_block_error,
                 supported_terms = pair_plan.supported_terms,
                 unsupported_terms = (

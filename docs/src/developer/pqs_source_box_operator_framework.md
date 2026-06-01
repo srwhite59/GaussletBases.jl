@@ -710,9 +710,9 @@ Future performance reports should separate:
 
 These questions are intentionally unresolved.
 
-- Should the first shell-realized PQS/PQS implementation materialize the raw
+- Should future PQS/PQS source-box implementations materialize the raw
   source-box pair operator or stream separable factors directly through the
-  transforms?
+  retained-rule transforms?
 - What is the smallest Be2-like sampled validation that proves same-shell and
   cross-shell PQS/PQS blocks without running a full route-wide oracle?
 - How should support-dense atom-box fallback enter the broader retained-unit
