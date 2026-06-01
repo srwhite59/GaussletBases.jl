@@ -3123,17 +3123,12 @@ function _pqs_product_source_box_product_block(
     metrics::NamedTuple{(:x,:y,:z)},
     term::Symbol,
 )
-    term == :kinetic && return _product_doside_retained_kinetic_block(
-        product_unit,
-        product_unit,
-        metrics,
-    )
-    return _product_doside_retained_low_order_block(
+    return _product_doside_source_box_reference_block(
         product_unit,
         product_unit,
         metrics;
         term,
-    )
+    ).block
 end
 
 function _pqs_product_source_box_all_pairs_inventory(
@@ -3174,6 +3169,8 @@ function _pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_pqs_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:pqs, :product),
@@ -3181,13 +3178,17 @@ function _pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_product_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:product, :product),
             pair_kind = :product_doside_source_box_pair,
-            block_helper = :product_doside_retained_block_helpers,
+            block_helper = :_product_doside_source_box_reference_block,
             upper_triangular = true,
             transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
     )
     return (
@@ -3204,6 +3205,13 @@ function _pqs_product_source_box_all_pairs_inventory(
             expected_upper_triangular_pair_count = 3,
             pair_keys = map(entry -> entry.pair_key, pair_entries),
             block_helpers = map(entry -> entry.block_helper, pair_entries),
+            pair_policies = map(entry -> entry.pair_policy, pair_entries),
+            every_pair_uses_source_box_algorithmic_policy = all(
+                entry -> entry.source_box_algorithmic,
+                pair_entries,
+            ),
+            source_box_algorithmic_pair_count =
+                count(entry -> entry.source_box_algorithmic, pair_entries),
             private_shadow_only = true,
             packet_adoption = false,
             fixed_block_routing = false,
@@ -3333,7 +3341,13 @@ function _pqs_product_source_box_shadow_blocks(
             pqs_product_block_source = :pqs_product_source_box_reference_blocks,
             pqs_product_pair_plan_reused_for_terms = true,
             pair_plan_reused_for_terms = true,
-            product_product_block_source = :product_doside_retained_block_helpers,
+            product_product_block_source =
+                :_product_doside_source_box_reference_block,
+            every_pair_uses_source_box_algorithmic_policy =
+                all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+            source_box_algorithmic_pair_count =
+                all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count,
+            pair_policies = all_pairs_inventory.diagnostics.pair_policies,
             reverse_pqs_product_transpose_only = true,
             shell_projection_used = false,
             lowdin_cleanup_used = false,
@@ -3450,6 +3464,8 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_pqs_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:pqs_left, :pqs_right),
@@ -3457,6 +3473,8 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_pqs_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:pqs_left, :product),
@@ -3464,6 +3482,8 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_product_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:pqs_right, :pqs_right),
@@ -3471,6 +3491,8 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_pqs_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:pqs_right, :product),
@@ -3478,13 +3500,17 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             block_helper = :_pqs_product_source_box_reference_blocks,
             upper_triangular = true,
             transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
         (
             pair_key = (:product, :product),
             pair_kind = :product_doside_source_box_pair,
-            block_helper = :product_doside_retained_block_helpers,
+            block_helper = :_product_doside_source_box_reference_block,
             upper_triangular = true,
             transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
         ),
     )
     return (
@@ -3501,6 +3527,13 @@ function _pqs_pqs_product_source_box_all_pairs_inventory(
             expected_upper_triangular_pair_count = 6,
             pair_keys = map(entry -> entry.pair_key, pair_entries),
             block_helpers = map(entry -> entry.block_helper, pair_entries),
+            pair_policies = map(entry -> entry.pair_policy, pair_entries),
+            every_pair_uses_source_box_algorithmic_policy = all(
+                entry -> entry.source_box_algorithmic,
+                pair_entries,
+            ),
+            source_box_algorithmic_pair_count =
+                count(entry -> entry.source_box_algorithmic, pair_entries),
             private_shadow_only = true,
             packet_adoption = false,
             fixed_block_routing = false,
@@ -7414,16 +7447,35 @@ function _pqs_pqs_product_source_box_shadow_blocks(
             pqs_self_block_source = :pqs_pqs_source_box_reference_blocks,
             cross_pqs_block_source = :pqs_pqs_source_box_reference_blocks,
             pqs_product_block_source = :pqs_product_source_box_reference_blocks,
-            product_product_block_source = :product_doside_retained_block_helpers,
+            product_product_block_source =
+                :_product_doside_source_box_reference_block,
             pqs_left_right_raw_box_self_reference_compared =
                 pqs_left_right_references.diagnostics.raw_box_self_reference_compared,
             pqs_left_left_raw_box_self_reference_compared =
                 pqs_left_left_references.diagnostics.raw_box_self_reference_compared,
             pqs_right_right_raw_box_self_reference_compared =
                 pqs_right_right_references.diagnostics.raw_box_self_reference_compared,
+            pqs_left_left_explicit_source_box_oracle_tested =
+                pqs_left_left_references.diagnostics.explicit_source_box_oracle_tested,
+            pqs_left_right_explicit_source_box_oracle_tested =
+                pqs_left_right_references.diagnostics.explicit_source_box_oracle_tested,
+            pqs_right_right_explicit_source_box_oracle_tested =
+                pqs_right_right_references.diagnostics.explicit_source_box_oracle_tested,
             pair_plan_reused_for_terms = true,
             lower_triangular_cross_blocks_transpose_only = true,
-            explicit_source_box_oracle_tested = false,
+            explicit_source_box_oracle_tested =
+                pqs_left_left_references.diagnostics.explicit_source_box_oracle_tested &&
+                pqs_left_right_references.diagnostics.explicit_source_box_oracle_tested &&
+                pqs_right_right_references.diagnostics.explicit_source_box_oracle_tested,
+            pqs_cross_box_external_raw_product_oracle_required =
+                pqs_left_right_references.diagnostics.cross_box_external_raw_product_oracle_required,
+            pqs_cross_box_internal_raw_product_oracle_compared =
+                pqs_left_right_references.diagnostics.cross_box_external_raw_product_oracle_compared_by_helper,
+            every_pair_uses_source_box_algorithmic_policy =
+                all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+            source_box_algorithmic_pair_count =
+                all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count,
+            pair_policies = all_pairs_inventory.diagnostics.pair_policies,
             shell_projection_used = false,
             lowdin_cleanup_used = false,
             support_coefficient_matrix_used = false,
@@ -7439,6 +7491,10 @@ function _pqs_pqs_product_source_box_shadow_blocks(
             generic_retained_unit_framework = false,
             supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
             dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_source_box_pair_matrix_materialized_for_validation =
+                pqs_left_left_references.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation ||
+                pqs_left_right_references.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation ||
+                pqs_right_right_references.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
             dense_raw_pair_storage_avoided = true,
             retained_block_assembled_directly_from_1d_factors = true,
             source_box_pair_storage_scaling =
@@ -7507,6 +7563,8 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
         pair_count = pair_count,
         term_count = term_count,
         dense_raw_source_box_pair_matrix_materialized = false,
+        dense_raw_source_box_pair_matrix_materialized_for_validation =
+            shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
         dense_raw_pair_storage_avoided = true,
     )
     component_block_provenance = (
@@ -7518,7 +7576,7 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
         pqs_right_pqs_right = :pqs_pqs_source_box_reference_blocks,
         pqs_right_product = :pqs_product_source_box_reference_blocks,
         product_pqs_right = :transpose_of_pqs_right_product,
-        product_product = :product_doside_retained_block_helpers,
+        product_product = :_product_doside_source_box_reference_block,
     )
     metadata = hasproperty(route_units, :metadata) ? route_units.metadata : (;)
     provenance = hasproperty(route_units, :provenance) ? route_units.provenance : (;)
@@ -7613,7 +7671,18 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
                 retained_weight_semantics = :not_positive_quadrature_weights,
                 ida_weight_division_allowed = false,
                 dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_source_box_pair_matrix_materialized_for_validation =
+                    shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation,
                 dense_raw_pair_storage_avoided = true,
+                every_pair_uses_source_box_algorithmic_policy =
+                    shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+                source_box_algorithmic_pair_count =
+                    shadow.diagnostics.source_box_algorithmic_pair_count,
+                pair_policies = shadow.diagnostics.pair_policies,
+                pqs_cross_box_external_raw_product_oracle_required =
+                    shadow.diagnostics.pqs_cross_box_external_raw_product_oracle_required,
+                pqs_cross_box_internal_raw_product_oracle_compared =
+                    shadow.diagnostics.pqs_cross_box_internal_raw_product_oracle_compared,
                 performance_recorded = true,
                 elapsed_seconds = performance.elapsed_seconds,
                 allocated_bytes = performance.allocated_bytes,

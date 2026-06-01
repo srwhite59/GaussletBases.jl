@@ -617,8 +617,20 @@ end
               (
                   :_pqs_pqs_source_box_reference_blocks,
                   :_pqs_product_source_box_reference_blocks,
-                  :product_doside_retained_block_helpers,
+                  :_product_doside_source_box_reference_block,
               )
+        @test map(entry -> entry.pair_policy, shadow.all_pairs_inventory.pair_entries) ==
+              (
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+              )
+        @test all(
+            entry -> entry.source_box_algorithmic,
+            shadow.all_pairs_inventory.pair_entries,
+        )
+        @test shadow.all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test shadow.all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count == 3
         @test !shadow.all_pairs_inventory.diagnostics.packet_adoption
         @test !shadow.all_pairs_inventory.diagnostics.fixed_block_routing
         @test !shadow.all_pairs_inventory.diagnostics.qwhamiltonian_consumes
@@ -639,6 +651,10 @@ end
               :pqs_product_source_box_reference_blocks
         @test shadow.diagnostics.pqs_product_pair_plan_reused_for_terms
         @test shadow.diagnostics.pair_plan_reused_for_terms
+        @test shadow.diagnostics.product_product_block_source ==
+              :_product_doside_source_box_reference_block
+        @test shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test shadow.diagnostics.source_box_algorithmic_pair_count == 3
         @test !shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized
         @test shadow.diagnostics.dense_raw_pair_storage_avoided
         @test shadow.diagnostics.retained_block_assembled_directly_from_1d_factors
@@ -1768,13 +1784,20 @@ end
         @test shadow.diagnostics.pqs_product_block_source ==
               :pqs_product_source_box_reference_blocks
         @test shadow.diagnostics.product_product_block_source ==
-              :product_doside_retained_block_helpers
+              :_product_doside_source_box_reference_block
         @test !shadow.diagnostics.pqs_left_right_raw_box_self_reference_compared
         @test shadow.diagnostics.pqs_left_left_raw_box_self_reference_compared
         @test shadow.diagnostics.pqs_right_right_raw_box_self_reference_compared
+        @test shadow.diagnostics.pqs_left_left_explicit_source_box_oracle_tested
+        @test shadow.diagnostics.pqs_left_right_explicit_source_box_oracle_tested
+        @test shadow.diagnostics.pqs_right_right_explicit_source_box_oracle_tested
         @test shadow.diagnostics.lower_triangular_cross_blocks_transpose_only
         @test shadow.diagnostics.pair_plan_reused_for_terms
-        @test !shadow.diagnostics.explicit_source_box_oracle_tested
+        @test shadow.diagnostics.explicit_source_box_oracle_tested
+        @test !shadow.diagnostics.pqs_cross_box_external_raw_product_oracle_required
+        @test shadow.diagnostics.pqs_cross_box_internal_raw_product_oracle_compared
+        @test shadow.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test shadow.diagnostics.source_box_algorithmic_pair_count == 6
         @test !shadow.diagnostics.shell_projection_used
         @test !shadow.diagnostics.lowdin_cleanup_used
         @test !shadow.diagnostics.support_coefficient_matrix_used
@@ -1790,6 +1813,7 @@ end
         @test !shadow.diagnostics.local_ecp_gaussian_mwg_implemented
         @test !shadow.diagnostics.generic_retained_unit_framework
         @test !shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test shadow.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
         @test shadow.diagnostics.dense_raw_pair_storage_avoided
         @test shadow.diagnostics.retained_block_assembled_directly_from_1d_factors
         @test shadow.diagnostics.source_box_pair_storage_scaling ==
@@ -1845,8 +1869,20 @@ end
                   :_pqs_product_source_box_reference_blocks,
                   :_pqs_pqs_source_box_reference_blocks,
                   :_pqs_product_source_box_reference_blocks,
-                  :product_doside_retained_block_helpers,
+                  :_product_doside_source_box_reference_block,
               )
+        @test map(entry -> entry.pair_policy, inventory.pair_entries) ==
+              (
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+              )
+        @test all(entry -> entry.source_box_algorithmic, inventory.pair_entries)
+        @test inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test inventory.diagnostics.source_box_algorithmic_pair_count == 6
         @test !inventory.diagnostics.packet_adoption
         @test !inventory.diagnostics.fixed_block_routing
         @test !inventory.diagnostics.qwhamiltonian_consumes
@@ -1862,6 +1898,9 @@ end
         @test shadow.pqs_left_left_reference_blocks.diagnostics.raw_box_self_reference_compared
         @test !shadow.pqs_left_right_reference_blocks.diagnostics.raw_box_self_reference_compared
         @test shadow.pqs_right_right_reference_blocks.diagnostics.raw_box_self_reference_compared
+        @test shadow.pqs_left_left_reference_blocks.diagnostics.explicit_source_box_oracle_tested
+        @test shadow.pqs_left_right_reference_blocks.diagnostics.explicit_source_box_oracle_tested
+        @test shadow.pqs_right_right_reference_blocks.diagnostics.explicit_source_box_oracle_tested
         @test shadow.pqs_left_product_reference_blocks.diagnostics.pair_plan_reused_for_terms
         @test shadow.pqs_right_product_reference_blocks.diagnostics.pair_plan_reused_for_terms
 
@@ -2037,6 +2076,7 @@ end
         @test consumer.performance.pair_count == 6
         @test consumer.performance.term_count == length(terms)
         @test !consumer.performance.dense_raw_source_box_pair_matrix_materialized
+        @test consumer.performance.dense_raw_source_box_pair_matrix_materialized_for_validation
         @test consumer.performance.dense_raw_pair_storage_avoided
 
         @test consumer.diagnostics.source ==
@@ -2065,7 +2105,22 @@ end
               :not_positive_quadrature_weights
         @test !consumer.diagnostics.ida_weight_division_allowed
         @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized_for_validation
         @test consumer.diagnostics.dense_raw_pair_storage_avoided
+        @test consumer.diagnostics.explicit_source_box_oracle_tested
+        @test !consumer.diagnostics.pqs_cross_box_external_raw_product_oracle_required
+        @test consumer.diagnostics.pqs_cross_box_internal_raw_product_oracle_compared
+        @test consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test consumer.diagnostics.source_box_algorithmic_pair_count == 6
+        @test consumer.diagnostics.pair_policies ==
+              (
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+                  :source_box_algorithm_available,
+              )
         @test consumer.diagnostics.performance_recorded
         @test consumer.diagnostics.retained_dimension == 221
         @test consumer.diagnostics.retained_unit_count == 3
