@@ -405,6 +405,18 @@ matrix use, retained PQS weights, IDA division, packet or fixed-block
 adoption, QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/
 MWG/interaction terms, IDA/MWG change, or CR2 science claim.
 
+Commit `28c3dbc` records the corresponding private input-gate checkpoint. The
+gates protect private fixture construction from accidental misuse: source
+boxes must be nonempty and inside `parent_dims`; `parent_dims` must be a
+positive 3D integer tuple; PQS source-mode dimensions are total source-mode
+lengths with at least two modes per axis for boundary selection; the identity
+product/doside slab requires exactly one fixed axis; and unsupported safe
+terms reject before source-box construction. These gates are not a public
+route contract and do not add shell projection, Lowdin cleanup, support-local
+PQS oracle behavior, support coefficient matrices, retained PQS weights, IDA
+division, packet/fixed-block/QW/Hamiltonian adoption, public/default routing,
+local/ECP/Gaussian/MWG/interaction terms, IDA/MWG changes, or CR2 claims.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 This is diagnostic/read-path infrastructure only. It emits

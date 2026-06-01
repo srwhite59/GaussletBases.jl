@@ -818,6 +818,20 @@ allocation summaries are recorded only as diagnostics; they are not readiness
 thresholds. Dense raw source-box matrices remain validation-only and are not
 the producer algorithm.
 
+Commit `28c3dbc` records the private input-gate checkpoint for this producer.
+The gates are misuse protection for private fixture work, not a public route
+contract. Source boxes must be nonempty and inside `parent_dims`; `parent_dims`
+must be a positive 3D integer tuple; PQS source-mode dimensions are total
+source-mode lengths and must have at least two modes per axis for boundary
+selection; the identity product/doside slab requires exactly one fixed axis;
+and unsupported safe terms reject before source-box construction.
+
+These producer gates do not change the source-box-first boundary. They add no
+shell projection, Lowdin cleanup, support-local PQS oracle, support
+coefficient matrix use, retained PQS weights, IDA division, packet or
+fixed-block adoption, QW/Hamiltonian routing, public/default behavior,
+local/ECP/Gaussian/MWG/interaction terms, IDA/MWG change, or CR2 claim.
+
 Any next implementation blurb should state:
 
 - which `RetainedRule` variant is used on each side;
