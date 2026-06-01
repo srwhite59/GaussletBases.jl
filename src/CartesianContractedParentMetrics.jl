@@ -1626,6 +1626,115 @@ function _product_doside_source_box_density_density_interaction_block(
     )
 end
 
+function _source_box_density_normalized_axis_pair_terms(
+    raw_axis_pair_terms::AbstractArray{<:Real,3},
+    axis_weights::AbstractVector{<:Real};
+    axis_name::Symbol,
+)
+    nterms = size(raw_axis_pair_terms, 1)
+    nterms > 0 || throw(
+        ArgumentError("$(axis_name) raw pair-factor terms require at least one term"),
+    )
+    parent_count = size(raw_axis_pair_terms, 2)
+    size(raw_axis_pair_terms, 3) == parent_count || throw(
+        DimensionMismatch("$(axis_name) raw pair-factor terms must be square per term"),
+    )
+    length(axis_weights) >= parent_count || throw(
+        DimensionMismatch("$(axis_name) source weights do not cover raw pair-factor dimensions"),
+    )
+    weights = Float64[Float64(value) for value in axis_weights[1:parent_count]]
+    all(isfinite, weights) || throw(
+        ArgumentError("$(axis_name) source weights must be finite"),
+    )
+    all(>(0.0), weights) || throw(
+        ArgumentError("$(axis_name) source weights must be positive"),
+    )
+    weight_outer = weights * transpose(weights)
+    normalized = Array{Float64,3}(undef, size(raw_axis_pair_terms))
+    @inbounds for term in 1:nterms
+        normalized[term, :, :] .= raw_axis_pair_terms[term, :, :] ./ weight_outer
+    end
+    return normalized
+end
+
+function _source_box_density_normalized_axis_pair_terms(
+    raw_axis_pair_terms::NamedTuple{(:x,:y,:z)},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+)
+    return (
+        x = _source_box_density_normalized_axis_pair_terms(
+            raw_axis_pair_terms.x,
+            axis_weights.x;
+            axis_name = :x,
+        ),
+        y = _source_box_density_normalized_axis_pair_terms(
+            raw_axis_pair_terms.y,
+            axis_weights.y;
+            axis_name = :y,
+        ),
+        z = _source_box_density_normalized_axis_pair_terms(
+            raw_axis_pair_terms.z,
+            axis_weights.z;
+            axis_name = :z,
+        ),
+    )
+end
+
+function _product_doside_source_box_raw_weighted_density_density_interaction_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    term_coefficients::AbstractVector{<:Real},
+    raw_axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+)
+    density_normalized_terms = _source_box_density_normalized_axis_pair_terms(
+        raw_axis_pair_factor_terms,
+        axis_weights,
+    )
+    density_normalized_core =
+        _product_doside_source_box_density_density_interaction_block(
+            left_unit,
+            right_unit;
+            term_coefficients,
+            axis_pair_factor_terms = density_normalized_terms,
+            axis_weights,
+            pair_factor_normalization = :density_normalized,
+        )
+    return (
+        path = :product_doside_source_box_raw_weighted_density_density_interaction,
+        interaction_operator = :electron_electron_density_density,
+        block = density_normalized_core.block,
+        density_normalized_core = density_normalized_core,
+        normalized_axis_pair_factor_terms = density_normalized_terms,
+        raw_axis_pair_factor_terms = raw_axis_pair_factor_terms,
+        pair_plan = density_normalized_core.pair_plan,
+        diagnostics = merge(
+            density_normalized_core.diagnostics,
+            (
+                source = :product_doside_source_box_raw_weighted_density_density_interaction_block,
+                path = :product_doside_source_box_raw_weighted_density_density_interaction,
+                pair_factor_normalization = :raw_weighted,
+                raw_weighted_pair_factors = true,
+                density_normalized_pair_factors = false,
+                density_normalized_pair_factors_generated = true,
+                source_weight_division_owner = :source_box_raw_weights,
+                source_weight_division_applied_by_helper = true,
+                source_weight_division_shape = :axis_pair_weight_outer,
+                density_normalized_core_helper =
+                    :_product_doside_source_box_density_density_interaction_block,
+                retained_weight_division_allowed = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                ida_mwg_semantics_changed = false,
+                mwg_ida_semantics_changed = false,
+                packet_adoption = false,
+                qwhamiltonian_consumes = false,
+                numerical_reference_fallback = false,
+            ),
+        ),
+    )
+end
+
 function _cartesian_source_box_term_first_axis_array(
     matrices::AbstractVector,
     nterms::Int,

@@ -1448,6 +1448,30 @@ output convention. Support-local or current fixed-block paths remain
 validation-only unless a later pass explicitly promotes a source-box
 interaction object.
 
+Commit `9bed286` adds the first private product/product source-box
+electron-electron fixture. It consumes caller-supplied density-normalized
+pair-factor terms, requires raw/source weights as provenance, does not divide
+again, and returns a retained two-index density-density block. The output is
+not a four-index Galerkin Coulomb tensor. The checkpoint changes no
+packet/fixed-block/QW/Hamiltonian route, public/default route, MWG/IDA
+semantics, ECP path, CR2 artifact, or retained PQS weight semantics.
+
+The raw-weighted conversion boundary is mechanical for product/product when
+the input has the same shape as the existing ordinary IDA/MWG raw pair-factor
+terms. Each per-axis raw term matrix is divided by the raw source-weight outer
+product on that axis:
+
+```text
+F_density[t][i,j] = F_raw[t][i,j] / (w[i] * w[j])
+```
+
+This is axis-wise and term-wise, matching the existing construction of
+`pair_factor_terms` from `pair_factor_terms_raw`. The density-normalized
+helper remains the core; the raw-weighted wrapper only performs this
+conversion and records `pair_factor_normalization = :raw_weighted`,
+`source_weight_division_owner = :source_box_raw_weights`, and
+`source_weight_division_applied_by_helper = true`.
+
 Stop implementation if the pass cannot answer where IDA/MWG weights live, if
 it needs retained PQS columns to carry positive quadrature weights, if it
 confuses one-body nuclear sign/charge with electron-electron pair factors, or

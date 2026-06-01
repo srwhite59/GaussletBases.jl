@@ -987,6 +987,28 @@ without relying on retained PQS weights. Current support-local or fixed-block
 interaction paths may be used only as validation/oracle comparisons until an
 explicit source-box pair object matches the intended IDA/MWG convention.
 
+Commit `9bed286` adds that first tiny product/product fixture. It consumes
+caller-supplied density-normalized pair factors, requires raw/source weights
+as provenance, does not divide by weights again, and returns a two-index
+density-density block. Raw-weighted inputs intentionally rejected at that
+checkpoint rather than guessing the convention.
+
+The raw-weighted conversion boundary is now explicit for product/product:
+per-axis raw pair-factor terms are converted to the density-normalized
+convention by dividing each term matrix by the raw source weight outer product
+on that axis:
+
+```text
+F_density[t][i,j] = F_raw[t][i,j] / (w[i] * w[j])
+```
+
+The conversion is axis-wise and term-wise, matching the existing ordinary
+IDA/MWG construction of `pair_factor_terms` from `pair_factor_terms_raw`.
+After conversion, the density-normalized helper remains the low-risk core.
+Diagnostics distinguish `pair_factor_normalization = :raw_weighted`,
+`source_weight_division_owner = :source_box_raw_weights`, and
+`source_weight_division_applied_by_helper = true`.
+
 Stop implementation if any of these are unclear:
 
 - whether a candidate factor tensor is raw-weighted or density-normalized;

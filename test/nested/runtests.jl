@@ -5008,6 +5008,66 @@ end
     @test nonidentity_density_density.block ≈
           nonidentity_density_reference atol = 1.0e-14 rtol = 1.0e-14
     @test !nonidentity_density_density.diagnostics.source_weight_division_applied_by_helper
+    function _raw_pair_terms_from_density_normalized(normalized_terms, weights)
+        raw_terms = similar(normalized_terms)
+        weight_outer = weights * transpose(weights)
+        for term in axes(normalized_terms, 1)
+            raw_terms[term, :, :] .= normalized_terms[term, :, :] .* weight_outer
+        end
+        return raw_terms
+    end
+    raw_weighted_pair_terms = (
+        x = _raw_pair_terms_from_density_normalized(
+            density_normalized_pair_terms.x,
+            density_source_weights.x,
+        ),
+        y = _raw_pair_terms_from_density_normalized(
+            density_normalized_pair_terms.y,
+            density_source_weights.y,
+        ),
+        z = _raw_pair_terms_from_density_normalized(
+            density_normalized_pair_terms.z,
+            density_source_weights.z,
+        ),
+    )
+    raw_weighted_density_density =
+        CCPM._product_doside_source_box_raw_weighted_density_density_interaction_block(
+            product_unit,
+            product_unit;
+            term_coefficients = density_density_term_coefficients,
+            raw_axis_pair_factor_terms = raw_weighted_pair_terms,
+            axis_weights = density_source_weights,
+        )
+    @test raw_weighted_density_density.path ==
+          :product_doside_source_box_raw_weighted_density_density_interaction
+    @test raw_weighted_density_density.block ≈
+          product_density_density.block atol = 1.0e-14 rtol = 1.0e-14
+    @test raw_weighted_density_density.normalized_axis_pair_factor_terms.x ≈
+          density_normalized_pair_terms.x atol = 1.0e-14 rtol = 1.0e-14
+    @test raw_weighted_density_density.diagnostics.pair_factor_normalization ==
+          :raw_weighted
+    @test raw_weighted_density_density.diagnostics.raw_weighted_pair_factors
+    @test !raw_weighted_density_density.diagnostics.density_normalized_pair_factors
+    @test raw_weighted_density_density.diagnostics.density_normalized_pair_factors_generated
+    @test raw_weighted_density_density.diagnostics.source_weight_division_owner ==
+          :source_box_raw_weights
+    @test raw_weighted_density_density.diagnostics.source_weight_division_applied_by_helper
+    @test raw_weighted_density_density.diagnostics.source_weight_division_shape ==
+          :axis_pair_weight_outer
+    @test !raw_weighted_density_density.diagnostics.retained_weight_division_allowed
+    @test !raw_weighted_density_density.diagnostics.retained_pqs_weight_division_allowed
+    @test !raw_weighted_density_density.diagnostics.ida_weight_division_allowed
+    @test !raw_weighted_density_density.diagnostics.mwg_ida_semantics_changed
+    @test !raw_weighted_density_density.diagnostics.packet_adoption
+    @test !raw_weighted_density_density.diagnostics.qwhamiltonian_consumes
+    @test !raw_weighted_density_density.diagnostics.numerical_reference_fallback
+    @test_throws ArgumentError CCPM._product_doside_source_box_raw_weighted_density_density_interaction_block(
+        product_unit,
+        product_unit;
+        term_coefficients = density_density_term_coefficients,
+        raw_axis_pair_factor_terms = raw_weighted_pair_terms,
+        axis_weights = (x = [1.25, 0.0], y = [0.9, 1.1], z = [2.0]),
+    )
     @test_throws ArgumentError CCPM._product_doside_source_box_density_density_interaction_block(
         product_unit,
         product_unit;
