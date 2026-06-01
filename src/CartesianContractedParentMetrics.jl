@@ -3823,12 +3823,37 @@ function _pqs_pqs_product_safe_term_route_descriptor(
     )
 end
 
+function _pqs_validate_source_box_inside_parent_dims(
+    source_box::NTuple{3,UnitRange{Int}},
+    parent_dims::NTuple{3,Int};
+    role::Symbol,
+)
+    all(dim -> dim > 0, parent_dims) || throw(
+        ArgumentError("$(role) parent dimensions must be positive"),
+    )
+    for axis in 1:3
+        interval = source_box[axis]
+        !isempty(interval) || throw(
+            ArgumentError("$(role) source-box axis $(axis) must be nonempty"),
+        )
+        first(interval) >= 1 && last(interval) <= parent_dims[axis] || throw(
+            ArgumentError("$(role) source-box axis $(axis) lies outside parent dimensions"),
+        )
+    end
+    return source_box
+end
+
 function _pqs_product_doside_identity_slab_unit(
     product_source_box::NTuple{3,UnitRange{Int}},
     parent_dims::NTuple{3,Int};
     role::Symbol = :middle_body_product_slab,
     provenance = (;),
 )
+    _pqs_validate_source_box_inside_parent_dims(
+        product_source_box,
+        parent_dims;
+        role,
+    )
     fixed_axes = findall(axis -> length(product_source_box[axis]) == 1, 1:3)
     length(fixed_axes) == 1 || throw(
         ArgumentError("identity product/doside slab requires exactly one fixed source-box axis"),
@@ -3929,6 +3954,27 @@ function _pqs_pqs_product_raw_box_route_producer(
     orthogonality_atol::Real = 1.0e-8,
 )
     selected_terms = _pqs_pqs_product_supported_safe_terms(supported_terms)
+    parent_dims isa NTuple{3,Int} || throw(
+        ArgumentError("raw-box route producer parent_dims must be a 3-tuple of Int"),
+    )
+    all(dim -> dim >= 2, source_mode_dims) || throw(
+        ArgumentError("raw-box route producer PQS source-mode dimensions must be total lengths of at least two per axis"),
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        left_source_box,
+        parent_dims;
+        role = :pqs_left,
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        right_source_box,
+        parent_dims;
+        role = :pqs_right,
+    )
+    _pqs_validate_source_box_inside_parent_dims(
+        product_source_box,
+        parent_dims;
+        role = :product,
+    )
     left_raw_product_box_plan = _cartesian_raw_product_box_plan(
         bundles,
         left_source_box,

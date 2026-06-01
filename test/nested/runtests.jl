@@ -3391,6 +3391,76 @@ end
     @test !produced_route.diagnostics.ida_weight_division_allowed
     @test !produced_route.diagnostics.packet_adoption
     @test !produced_route.diagnostics.qwhamiltonian_consumes
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        (0:4, 1:5, 1:5),
+        route_right_current,
+        (1:5, 1:5, 4:4),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        (1:5, 1:5, 4:8),
+        (1:5, 1:5, 4:4),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 8:8),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 4:4),
+        route_metrics;
+        source_mode_dims = (1, 5, 5),
+        parent_dims = route_dims,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 1:5),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        route_right_current,
+        (1:5, 4:4, 4:4),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+    )
+    try
+        CCPM._pqs_pqs_product_raw_box_route_producer(
+            route_bundles,
+            (0:4, 1:5, 1:5),
+            route_right_current,
+            (1:5, 1:5, 4:4),
+            route_metrics;
+            source_mode_dims = (5, 5, 5),
+            parent_dims = route_dims,
+            supported_terms = (:weights,),
+        )
+        error("unsupported route-producer term was accepted")
+    catch err
+        @test err isa ArgumentError
+        @test occursin("unsupported term", sprint(showerror, err))
+    end
     _check_pqs_pqs_product_route_shaped_safe_term_consumer(
         CCPM,
         route_left_descriptor,
