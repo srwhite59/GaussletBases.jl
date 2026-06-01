@@ -1912,6 +1912,49 @@ function _pqs_validated_shared_raw_product_box_plan(
     return shared_raw_product_box_plan
 end
 
+function _pqs_validated_raw_product_box_plan(raw_product_box_plan)
+    raw_product_box_plan.object_kind == :cartesian_raw_product_box_plan_3d ||
+        throw(ArgumentError("PQS raw-box retained rule requires a cartesian_raw_product_box_plan_3d"))
+    raw_product_box_plan.source_mode_count == prod(raw_product_box_plan.source_mode_dims) ||
+        throw(DimensionMismatch("raw product-box plan source mode count must match dimensions"))
+    length(raw_product_box_plan.source_mode_indices) ==
+        raw_product_box_plan.source_mode_count || throw(
+            DimensionMismatch("raw product-box plan source mode ordering length is inconsistent"),
+        )
+    length(raw_product_box_plan.axis_local_coefficients) == 3 ||
+        throw(DimensionMismatch("raw product-box plan must carry three axis transforms"))
+    all(axis -> size(raw_product_box_plan.axis_local_coefficients[axis]) ==
+                (length(raw_product_box_plan.axis_intervals[axis]),
+                 raw_product_box_plan.source_mode_dims[axis]), 1:3) ||
+        throw(DimensionMismatch("raw product-box plan coefficient shapes must match intervals and source dimensions"))
+    return raw_product_box_plan
+end
+
+function _pqs_raw_product_box_boundary_selector(source_mode_dims::NTuple{3,Int})
+    all(dim -> dim >= 2, source_mode_dims) || throw(
+        ArgumentError("PQS raw-box boundary selector requires at least two source modes per axis"),
+    )
+    source_mode_indices = _pqs_raw_product_box_source_mode_indices(source_mode_dims)
+    mode_indices = NTuple{3,Int}[]
+    column_indices = Int[]
+    for (column_index, mode_index) in pairs(source_mode_indices)
+        if any(axis -> mode_index[axis] == 1 ||
+                       mode_index[axis] == source_mode_dims[axis], 1:3)
+            push!(mode_indices, mode_index)
+            push!(column_indices, column_index)
+        end
+    end
+    return (
+        mode_indices = mode_indices,
+        column_indices = column_indices,
+        selection_rule = :any_axis_mode_index_first_or_last,
+        retained_rule_contract = :RetainedRule,
+        retained_rule_kind = :boundary_comx_product_mode_selection,
+        selected_count = length(mode_indices),
+        preserves_orthogonality = true,
+    )
+end
+
 function _pqs_raw_product_box_structural_plan(
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
     shared_raw_product_box_plan = nothing,
@@ -1999,6 +2042,71 @@ function _pqs_raw_product_box_structural_plan(
     )
 end
 
+function _pqs_raw_product_box_structural_plan_from_raw_product_box_plan(
+    raw_product_box_plan,
+)
+    raw_plan = _pqs_validated_raw_product_box_plan(raw_product_box_plan)
+    source_mode_dims = raw_plan.source_mode_dims
+    boundary_selector = _pqs_raw_product_box_boundary_selector(source_mode_dims)
+    return (
+        path = :pqs_raw_product_box_plan,
+        representation = :orthogonal_raw_product_box,
+        source_box_plan_contract = :RawProductBoxPlan,
+        retained_rule_contract = :RetainedRule,
+        retained_rule_kind = :boundary_comx_product_mode_selection,
+        retained_rule_algorithmic = true,
+        source_mode_dims = source_mode_dims,
+        source_mode_count = raw_plan.source_mode_count,
+        axis_intervals = raw_plan.axis_intervals,
+        axis_local_coefficients = raw_plan.axis_local_coefficients,
+        source_mode_indices = raw_plan.source_mode_indices,
+        source_mode_ordering = raw_plan.source_mode_ordering,
+        shared_raw_product_box_plan = raw_plan,
+        shared_raw_product_box_plan_available = true,
+        shared_raw_product_box_plan_used = true,
+        boundary_selector = boundary_selector,
+        one_dimensional_operator_factors = nothing,
+        operator_factors_available = false,
+        axis_overlap_errors = nothing,
+        max_1d_source_overlap_error = nothing,
+        max_product_overlap_error = nothing,
+        selected_overlap_error = nothing,
+        overlap_identity_error = nothing,
+        source_product_modes_orthogonal = nothing,
+        row_projected_shell_support = false,
+        lowdin_cleanup_used = false,
+        diagnostics = (
+            source = :pqs_raw_product_box_structural_plan_from_raw_product_box_plan,
+            private_shadow_only = true,
+            pqs_representation = :mode_selected_raw_product_box,
+            source_box_plan_contract = :RawProductBoxPlan,
+            retained_rule_contract = :RetainedRule,
+            retained_rule_kind = :boundary_comx_product_mode_selection,
+            retained_rule_algorithmic = true,
+            source_mode_dims_are_total_lengths = true,
+            source_mode_ordering = raw_plan.source_mode_ordering,
+            shared_raw_product_box_plan_available = true,
+            shared_raw_product_box_plan_used = true,
+            shared_raw_product_box_plan_status = :available,
+            shared_raw_product_box_plan_unavailable_reason = nothing,
+            descriptor_required = false,
+            boundary_column_selection_only = true,
+            raw_product_box_operators_use_1d_factors = false,
+            operator_factors_available = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_coefficient_matrix_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
 function _pqs_raw_product_box_plan(
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
 )
@@ -2015,15 +2123,14 @@ function _pqs_raw_product_box_plan(
     )
 end
 
-function _pqs_raw_product_box_plan(
-    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+function _pqs_raw_product_box_operator_plan_from_structural_plan(
+    structural_plan,
     metrics::NamedTuple{(:x,:y,:z)};
     orthogonality_atol::Real = 1.0e-8,
-    shared_raw_product_box_plan = nothing,
+    source::Symbol = :pqs_raw_product_box_plan,
 )
-    structural_plan = _pqs_raw_product_box_structural_plan(
-        descriptor,
-        shared_raw_product_box_plan,
+    structural_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("PQS raw product-box operator plan requires an orthogonal raw product-box structural plan"),
     )
     one_dimensional_operator_factors =
         _pqs_product_box_one_dimensional_operator_factors(structural_plan, metrics)
@@ -2055,7 +2162,7 @@ function _pqs_raw_product_box_plan(
             diagnostics = merge(
                 structural_plan.diagnostics,
                 (
-                    source = :pqs_raw_product_box_plan,
+                    source = source,
                     raw_product_box_operators_use_1d_factors = true,
                     operator_factors_available = true,
                     operator_factor_source = :explicit_axis_metric_data,
@@ -2085,6 +2192,24 @@ end
 
 function _pqs_raw_product_box_plan(
     descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    orthogonality_atol::Real = 1.0e-8,
+    shared_raw_product_box_plan = nothing,
+)
+    structural_plan = _pqs_raw_product_box_structural_plan(
+        descriptor,
+        shared_raw_product_box_plan,
+    )
+    return _pqs_raw_product_box_operator_plan_from_structural_plan(
+        structural_plan,
+        metrics;
+        orthogonality_atol,
+        source = :pqs_raw_product_box_plan,
+    )
+end
+
+function _pqs_raw_product_box_plan(
+    descriptor::_CartesianNestedProjectedQShellStagedUnitDescriptor3D,
     shared_raw_product_box_plan,
     metrics::NamedTuple{(:x,:y,:z)};
     orthogonality_atol::Real = 1.0e-8,
@@ -2094,6 +2219,23 @@ function _pqs_raw_product_box_plan(
         metrics;
         orthogonality_atol,
         shared_raw_product_box_plan,
+    )
+end
+
+function _pqs_raw_product_box_plan_from_raw_product_box_plan(
+    raw_product_box_plan,
+    metrics::NamedTuple{(:x,:y,:z)};
+    orthogonality_atol::Real = 1.0e-8,
+)
+    structural_plan =
+        _pqs_raw_product_box_structural_plan_from_raw_product_box_plan(
+            raw_product_box_plan,
+        )
+    return _pqs_raw_product_box_operator_plan_from_structural_plan(
+        structural_plan,
+        metrics;
+        orthogonality_atol,
+        source = :pqs_raw_product_box_plan_from_raw_product_box_plan,
     )
 end
 
@@ -3677,6 +3819,241 @@ function _pqs_pqs_product_safe_term_route_descriptor(
             expected_pair_count = 6,
             term_count = length(selected_terms),
             supported_terms = selected_terms,
+        ),
+    )
+end
+
+function _pqs_product_doside_identity_slab_unit(
+    product_source_box::NTuple{3,UnitRange{Int}},
+    parent_dims::NTuple{3,Int};
+    role::Symbol = :middle_body_product_slab,
+    provenance = (;),
+)
+    fixed_axes = findall(axis -> length(product_source_box[axis]) == 1, 1:3)
+    length(fixed_axes) == 1 || throw(
+        ArgumentError("identity product/doside slab requires exactly one fixed source-box axis"),
+    )
+    fixed_axis = only(fixed_axes)
+    active_axes = Tuple(axis for axis in 1:3 if axis != fixed_axis)
+    first_axis, second_axis = active_axes
+    first_interval = product_source_box[first_axis]
+    second_interval = product_source_box[second_axis]
+    fixed_index = only(product_source_box[fixed_axis])
+    first_count = length(first_interval)
+    second_count = length(second_interval)
+    retained_count = first_count * second_count
+
+    support_states = NTuple{3,Int}[]
+    for first_state in first_interval, second_state in second_interval
+        push!(
+            support_states,
+            ntuple(axis -> axis == fixed_axis ? fixed_index :
+                            axis == first_axis ? first_state : second_state, 3),
+        )
+    end
+    support_indices = [
+        _cartesian_flat_index(state[1], state[2], state[3], parent_dims) for
+        state in support_states
+    ]
+    axes = ntuple(axis -> begin
+        if axis == fixed_axis
+            _nested_product_staged_fixed_axis(fixed_index)
+        elseif axis == first_axis
+            _nested_product_staged_active_axis(
+                first_interval,
+                Matrix{Float64}(LinearAlgebra.I, first_count, first_count),
+            )
+        elseif axis == second_axis
+            _nested_product_staged_active_axis(
+                second_interval,
+                Matrix{Float64}(LinearAlgebra.I, second_count, second_count),
+            )
+        else
+            throw(ArgumentError("identity product/doside slab has inconsistent axes"))
+        end
+    end, 3)
+    axis_function_indices = _nested_product_axis_function_indices(
+        fixed_axis,
+        first_axis,
+        first_count,
+        second_axis,
+        second_count,
+    )
+    return _CartesianNestedProductStagedByCenterUnit3D(
+        role,
+        :product_doside,
+        1:retained_count,
+        support_indices,
+        support_states,
+        Matrix{Float64}(LinearAlgebra.I, retained_count, retained_count),
+        axes,
+        axis_function_indices,
+        merge(
+            (
+                source = :pqs_product_doside_identity_slab_unit,
+                product_source_box = product_source_box,
+                product_retained_rule = :identity_product_doside_slab,
+            ),
+            provenance,
+        ),
+        (
+            support_count = length(support_indices),
+            retained_count = retained_count,
+            source_axis_lengths = ntuple(axis -> length(product_source_box[axis]), 3),
+            fixed_axis = fixed_axis,
+            fixed_index = fixed_index,
+            active_axes = active_axes,
+            raw_product_box_plan_required = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+        ),
+    )
+end
+
+function _pqs_pqs_product_raw_box_route_producer(
+    bundles,
+    left_source_box::NTuple{3,UnitRange{Int}},
+    right_source_box::NTuple{3,UnitRange{Int}},
+    product_source_box::NTuple{3,UnitRange{Int}},
+    metrics::NamedTuple{(:x,:y,:z)};
+    source_mode_dims::NTuple{3,Int},
+    route_name::Symbol = :homonuclear_pqs_product_source_box_safe_term_fixture,
+    parent_dims = _nested_axis_lengths(bundles),
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    selected_terms = _pqs_pqs_product_supported_safe_terms(supported_terms)
+    left_raw_product_box_plan = _cartesian_raw_product_box_plan(
+        bundles,
+        left_source_box,
+        source_mode_dims;
+        enforce_symmetric_odd = false,
+        orthogonality_atol,
+    )
+    right_raw_product_box_plan = _cartesian_raw_product_box_plan(
+        bundles,
+        right_source_box,
+        source_mode_dims;
+        enforce_symmetric_odd = false,
+        orthogonality_atol,
+    )
+    left_pqs_plan = _pqs_raw_product_box_plan_from_raw_product_box_plan(
+        left_raw_product_box_plan,
+        metrics;
+        orthogonality_atol,
+    )
+    right_pqs_plan = _pqs_raw_product_box_plan_from_raw_product_box_plan(
+        right_raw_product_box_plan,
+        metrics;
+        orthogonality_atol,
+    )
+    product_unit = _pqs_product_doside_identity_slab_unit(
+        product_source_box,
+        parent_dims;
+        role = :middle_body_product_slab,
+        provenance = merge(
+            (source = :pqs_pqs_product_raw_box_route_producer,),
+            provenance,
+        ),
+    )
+    route_metadata = merge(
+        (
+            parent_dims = parent_dims,
+            bond_axis = bond_axis,
+            pqs_left_box = left_source_box,
+            pqs_right_box = right_source_box,
+            product_source_box = product_source_box,
+            pqs_source_mode_dims = source_mode_dims,
+            route_producer = :pqs_pqs_product_raw_box_route_producer,
+        ),
+        metadata,
+    )
+    route_provenance = merge(
+        (source = :pqs_pqs_product_raw_box_route_producer,),
+        provenance,
+    )
+    descriptor = _pqs_pqs_product_safe_term_route_descriptor(
+        left_pqs_plan,
+        right_pqs_plan,
+        product_unit;
+        route_name,
+        parent_dims,
+        bond_axis,
+        metadata = route_metadata,
+        provenance = route_provenance,
+        supported_terms = selected_terms,
+    )
+    all_pairs_inventory = _pqs_pqs_product_source_box_all_pairs_inventory(
+        _pqs_raw_product_box_plan_view(left_pqs_plan),
+        _pqs_raw_product_box_plan_view(right_pqs_plan),
+        product_unit,
+        descriptor.expected_ranges,
+        selected_terms,
+    )
+    all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy ||
+        throw(ArgumentError("raw-box route producer requires all pairs to use source-box algorithms"))
+    return (
+        object_kind = :pqs_pqs_product_raw_box_route_producer,
+        status = :private_shadow_only,
+        descriptor = descriptor,
+        route_descriptor = descriptor,
+        raw_product_box_plans = (
+            pqs_left = left_raw_product_box_plan,
+            pqs_right = right_raw_product_box_plan,
+        ),
+        raw_pqs_plans = (
+            pqs_left = left_pqs_plan,
+            pqs_right = right_pqs_plan,
+        ),
+        product_unit = product_unit,
+        retained_rules = (
+            pqs_left = :boundary_comx_product_mode_selection,
+            pqs_right = :boundary_comx_product_mode_selection,
+            product = :identity_product_doside_slab,
+        ),
+        all_pairs_inventory = all_pairs_inventory,
+        supported_terms = selected_terms,
+        diagnostics = (
+            source = :pqs_pqs_product_raw_box_route_producer,
+            private_shadow_only = true,
+            raw_product_box_plan_built = true,
+            retained_rule_built = true,
+            route_descriptor_emitted = true,
+            route_descriptor_object_kind = descriptor.object_kind,
+            source_box_plan_contract = :RawProductBoxPlan,
+            retained_rule_contract = :RetainedRule,
+            pqs_retained_rule_kind = :boundary_comx_product_mode_selection,
+            product_retained_rule_kind = :identity_product_doside_slab,
+            source_mode_dims_are_total_lengths = true,
+            every_pair_uses_source_box_algorithmic_policy =
+                all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+            source_box_algorithmic_pair_count =
+                all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count,
+            pair_policies = all_pairs_inventory.diagnostics.pair_policies,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_source_box_pair_matrix_materialized_by_producer = false,
+            dense_raw_source_box_pair_matrices_validation_only = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_pqs_oracle_used = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            local_ecp_gaussian_mwg_implemented = false,
+            generic_retained_unit_framework = false,
         ),
     )
 end

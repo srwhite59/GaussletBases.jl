@@ -3339,6 +3339,58 @@ end
         ),
         provenance = (source = :route_shaped_safe_term_consumer_test_fixture,),
     )
+    produced_route = CCPM._pqs_pqs_product_raw_box_route_producer(
+        route_bundles,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 4:4),
+        route_metrics;
+        source_mode_dims = (5, 5, 5),
+        route_name = :q5_L5_slab5_test_route,
+        parent_dims = route_dims,
+        bond_axis = :z,
+        metadata = (
+            pqs_left_box = route_left_current,
+            pqs_right_box = route_right_current,
+            product_slab_fixed_index = 4,
+            pqs_source_mode_dims = (5, 5, 5),
+        ),
+        provenance = (source = :route_shaped_safe_term_consumer_test_fixture,),
+    )
+    @test produced_route.object_kind == :pqs_pqs_product_raw_box_route_producer
+    @test produced_route.status == :private_shadow_only
+    @test produced_route.descriptor.object_kind ==
+          :pqs_pqs_product_safe_term_route_descriptor
+    @test produced_route.descriptor.expected_ranges == route_units.expected_ranges
+    @test produced_route.descriptor.retained_dimension == route_units.retained_dimension
+    @test produced_route.descriptor.expected_pair_count == route_units.expected_pair_count
+    @test produced_route.descriptor.supported_terms == route_units.supported_terms
+    @test map(summary -> summary.source_dimensions,
+              produced_route.descriptor.unit_summaries) ==
+          map(summary -> summary.source_dimensions, route_units.unit_summaries)
+    @test map(summary -> summary.retained_count,
+              produced_route.descriptor.unit_summaries) ==
+          map(summary -> summary.retained_count, route_units.unit_summaries)
+    @test produced_route.all_pairs_inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy
+    @test produced_route.all_pairs_inventory.diagnostics.source_box_algorithmic_pair_count == 6
+    @test produced_route.diagnostics.raw_product_box_plan_built
+    @test produced_route.diagnostics.retained_rule_built
+    @test produced_route.diagnostics.route_descriptor_emitted
+    @test produced_route.diagnostics.every_pair_uses_source_box_algorithmic_policy
+    @test produced_route.diagnostics.source_box_algorithmic_pair_count == 6
+    @test !produced_route.diagnostics.dense_raw_source_box_pair_matrix_materialized
+    @test !produced_route.diagnostics.dense_raw_source_box_pair_matrix_materialized_by_producer
+    @test produced_route.diagnostics.dense_raw_source_box_pair_matrices_validation_only
+    @test !produced_route.diagnostics.shell_projection_used
+    @test !produced_route.diagnostics.lowdin_cleanup_used
+    @test !produced_route.diagnostics.support_local_pqs_oracle_used
+    @test !produced_route.diagnostics.support_coefficient_matrix_used
+    @test !produced_route.diagnostics.retained_pqs_weights_used
+    @test produced_route.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !produced_route.diagnostics.ida_weight_division_allowed
+    @test !produced_route.diagnostics.packet_adoption
+    @test !produced_route.diagnostics.qwhamiltonian_consumes
     _check_pqs_pqs_product_route_shaped_safe_term_consumer(
         CCPM,
         route_left_descriptor,
@@ -3346,6 +3398,26 @@ end
         route_units,
         route_metrics,
     )
+    produced_route_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            produced_route.descriptor,
+            route_metrics,
+        )
+    hand_built_route_consumer =
+        CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
+            route_units,
+            route_metrics,
+        )
+    max_produced_route_error = maximum(
+        norm(
+            produced_route_consumer.blocks[term] -
+            hand_built_route_consumer.blocks[term],
+            Inf,
+        ) for term in produced_route_consumer.terms
+    )
+    @test max_produced_route_error < 1.0e-10
+    @test produced_route_consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+    @test produced_route_consumer.diagnostics.source_box_algorithmic_pair_count == 6
     route_fact_diagnostic =
         CCPM._pqs_pqs_product_route_descriptor_diagnostic(
             route_units,
