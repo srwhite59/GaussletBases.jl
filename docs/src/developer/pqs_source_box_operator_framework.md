@@ -455,6 +455,106 @@ must be true in object-contract terms:
 If any of those fields are ambiguous, stop for design review instead of
 filling the gap with shell-row support-local contraction.
 
+## First PQS/PQS Implementation Target
+
+The first PQS/PQS implementation target should be a private
+mode-selected raw-box PQS/PQS safe-term block. It should not target the
+current-route shell-realized fixture. The reason is object-contract clarity:
+mode-selected raw-box PQS has an algorithmic `RetainedRule` on both sides
+(boundary COMX-product mode selection), while the shell-realized current-route
+fixture is still a shell-realization/support-row adapter with
+`source_box_operator_application_ready=false`.
+
+Target object setup:
+
+- Left and right `RawProductBoxPlan` objects must provide axis intervals,
+  total source-mode dimensions, source-mode ordering, per-axis source
+  transforms, and factor provenance.
+- Left and right `RetainedRule` objects must be boundary COMX-product mode
+  selection rules over their respective source boxes.
+- The retained rule must provide boundary mode indices, boundary column
+  indices, retained count, and source-mode ordering.
+- No shell projection, Lowdin cleanup, support-local coefficient matrix, or
+  retained PQS weight may participate in the algorithmic retained rule.
+- Any support-row data used for comparison must be attached through a separate
+  adapter/oracle object.
+
+In-scope fixtures:
+
+- Same-box cubic raw-box PQS/PQS fixture.
+- Same-box rectangular `q x q x L` fixture.
+- Compatible shifted/cross-box fixture only if existing raw-box metadata
+  already proves interval compatibility and source-mode ordering.
+- Small private fixtures only; no current-route Be2 shell-realized adoption in
+  this first implementation.
+
+In-scope safe terms:
+
+- `:overlap`;
+- `:position_x`, `:position_y`, `:position_z`;
+- `:x2_x`, `:x2_y`, `:x2_z`;
+- `:kinetic`.
+
+Raw product-box pair construction:
+
+- Build per-axis cross factors from caller-supplied axis operator data.
+- Use overlap factors for `:overlap`.
+- Use one position or `x2` factor and overlap factors on the other axes for
+  position and `x2` terms.
+- Use `(K,S,S) + (S,K,S) + (S,S,K)` for kinetic.
+- Prefer streaming separable factor products directly to the retained block
+  for the implementation path. A fully materialized raw product-box matrix is
+  acceptable only as an explicit small-fixture oracle.
+
+Retained block formula:
+
+```text
+O_boundary = B_left' * O_raw_product(left_box, right_box) * B_right
+```
+
+where `B_left` and `B_right` are boundary mode selection rules. This is the
+mode-selected raw-box specialization of:
+
+```text
+O_retained = T_left' * O_raw_product * T_right
+```
+
+Validation ladder:
+
+- Same-box cubic fixture: compare overlap to identity and all safe terms to an
+  explicit product-box boundary-column selection reference.
+- Same-box rectangular fixture: repeat the safe-term comparison with
+  `q x q x L` where `L != q`.
+- Compatible shifted/cross-box fixture: compare to explicit raw product-box
+  pair selection only if the existing raw-box metadata already supports the
+  cross intervals.
+- Unsupported terms must reject.
+- Support-row contraction may be used only as an optional debug/oracle
+  comparison through a separate adapter, never as the reference that defines
+  the source-box algorithm.
+
+Explicit exclusions:
+
+- No shell-realized fixture compact-transform extraction.
+- No shell projection or Lowdin in the raw-box operator path.
+- No support-local shell-row contraction as algorithm.
+- No support-local fallback optimization.
+- No retained PQS weights, positive quadrature semantics, or IDA division.
+- No packet/fixed-block adoption.
+- No QW/Hamiltonian, local/ECP/Gaussian/MWG/interaction, public/default, CR2,
+  or science-status change.
+
+Future implementation stop conditions:
+
+- Stop if the helper needs a current-route shell-realized compact transform.
+- Stop if the helper needs shell rows or support-local coefficients to define
+  the retained rule.
+- Stop if retained PQS weights become necessary for any operator term.
+- Stop if the fixture would require packet/fixed-block/QW/Hamiltonian/public
+  behavior changes.
+- Stop if cross-box compatibility is ambiguous; keep the first pass to
+  same-box fixtures.
+
 ## Invariants
 
 These invariants are lane-wide.
@@ -565,12 +665,13 @@ What is established:
 - The object-contract sketch above defines the intended private roles for
   raw product boxes, retained rules, source-box pair operator plans, and
   shell-realization/support-row adapters.
+- The first PQS/PQS implementation target is narrowed to private
+  mode-selected raw-box PQS/PQS safe-term fixtures.
 
 What is not established:
 
 - Production packet or fixed-block adoption of the source-box algorithm.
-- Which retained-rule variant should be the first current-route PQS/PQS
-  algorithmic consumer.
+- Current-route shell-realized PQS/PQS source-box adoption.
 - Local/Gaussian one-body terms in the source-box framework.
 - MWG/IDA interaction support through retained PQS source-box transforms.
 - CR2 validation or public/default route readiness.
@@ -609,9 +710,6 @@ Future performance reports should separate:
 
 These questions are intentionally unresolved.
 
-- Which retained rule should be the first algorithmic PQS/PQS consumer:
-  boundary-selected raw-box PQS, a shell-realization adapter around that rule,
-  or another explicitly defined rule?
 - Should the first shell-realized PQS/PQS implementation materialize the raw
   source-box pair operator or stream separable factors directly through the
   transforms?
@@ -645,13 +743,12 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
 
-The next correction should choose the first retained-rule target for a private
-PQS/PQS source-box block. It should use the object contract above rather than
-starting from shell rows. The smallest safe implementation target is likely a
-mode-selected raw-box PQS/PQS fixture, because both sides already have
-algorithmic boundary-selector retained rules. A current-route shell-realized
-PQS/PQS block should wait until an explicit source-space realization rule is
-defined or the pass is scoped as compatibility/oracle-only.
+The next correction can implement the private mode-selected raw-box PQS/PQS
+safe-term target described above, if the blurb explicitly scopes that work. It
+should use the object contract above rather than starting from shell rows. A
+current-route shell-realized PQS/PQS block should wait until an explicit
+source-space realization rule is defined or the pass is scoped as
+compatibility/oracle-only.
 
 Any implementation blurb should state:
 
