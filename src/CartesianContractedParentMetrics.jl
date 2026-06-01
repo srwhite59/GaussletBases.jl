@@ -5609,6 +5609,7 @@ function _pqs_inventory_wrapped_staged_unit(
         support_indices = copy(unit.support_indices),
         support_states = copy(unit.support_states),
         coefficient_matrix = unit.coefficient_matrix,
+        staged_unit = unit,
         support_source_semantics = support_source_semantics,
         safe_term_capability = safe_term_capability,
         active_representation_stage = active_representation_stage,
@@ -5959,6 +5960,440 @@ function _pqs_current_route_retained_unit_inventory(
             contact_cap = contact_fixture,
             shared_pqs = shared_fixture,
         ),
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_current_route_retained_pair_policy(left, right)
+    categories = (left.category, right.category)
+    if categories == (:product_doside, :product_doside)
+        return (
+            pair_group = :product_product,
+            policy = :product_doside_source_box_path,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    elseif categories == (:support_dense, :support_dense)
+        return (
+            pair_group = :support_support,
+            policy = :support_local_fallback,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    elseif (:support_dense in categories) && (:product_doside in categories)
+        return (
+            pair_group = :support_product,
+            policy = :support_local_fallback,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    elseif (:shell_realized_pqs_fixture in categories) &&
+           (:product_doside in categories)
+        return (
+            pair_group = :shell_realized_pqs_product,
+            policy = :support_local_fallback_current_route,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    elseif (:shell_realized_pqs_fixture in categories) &&
+           (:support_dense in categories)
+        return (
+            pair_group = :shell_realized_pqs_support,
+            policy = :support_local_fallback,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    elseif categories == (:shell_realized_pqs_fixture, :shell_realized_pqs_fixture)
+        return (
+            pair_group = :shell_realized_pqs_pqs,
+            policy = :support_local_fallback_current_route,
+            active_current_route = true,
+            raw_box_pqs_active_pair_policy = false,
+        )
+    end
+    throw(
+        ArgumentError(
+            "unsupported PQS current-route retained pair categories $(categories)",
+        ),
+    )
+end
+
+function _pqs_current_route_retained_pair_counts(pairs)
+    group_counts = Dict{Symbol,Int}()
+    policy_counts = Dict{Symbol,Int}()
+    raw_box_pqs_active_pair_policy_count = 0
+    for pair in pairs
+        group_counts[pair.pair_group] = get(group_counts, pair.pair_group, 0) + 1
+        policy_counts[pair.policy] = get(policy_counts, pair.policy, 0) + 1
+        pair.raw_box_pqs_active_pair_policy &&
+            (raw_box_pqs_active_pair_policy_count += 1)
+    end
+    return (
+        pair_count = length(pairs),
+        product_product = get(group_counts, :product_product, 0),
+        support_support = get(group_counts, :support_support, 0),
+        support_product = get(group_counts, :support_product, 0),
+        shell_realized_pqs_product =
+            get(group_counts, :shell_realized_pqs_product, 0),
+        shell_realized_pqs_support =
+            get(group_counts, :shell_realized_pqs_support, 0),
+        shell_realized_pqs_pqs = get(group_counts, :shell_realized_pqs_pqs, 0),
+        raw_box_pqs_active = raw_box_pqs_active_pair_policy_count,
+        product_doside_source_box_path =
+            get(policy_counts, :product_doside_source_box_path, 0),
+        support_local_fallback = get(policy_counts, :support_local_fallback, 0),
+        support_local_fallback_current_route =
+            get(policy_counts, :support_local_fallback_current_route, 0),
+    )
+end
+
+function _pqs_current_route_retained_pair_inventory(inventory)
+    inventory.object_kind == :pqs_current_route_retained_unit_inventory_fixture ||
+        throw(
+            ArgumentError("PQS current-route pair inventory requires unit inventory fixture"),
+        )
+    inventory.status == :private_diagnostic_only || throw(
+        ArgumentError("PQS current-route pair inventory requires private diagnostic inventory"),
+    )
+    inventory.coverage.covers_every_column_once || throw(
+        ArgumentError("PQS current-route pair inventory requires complete unit coverage"),
+    )
+    units = inventory.units
+    length(units) == 6 || throw(
+        ArgumentError("PQS current-route pair inventory expects six retained units"),
+    )
+
+    pairs = Any[]
+    pair_index = 0
+    for left_index in eachindex(units)
+        left = units[left_index]
+        for right_index in left_index:length(units)
+            right = units[right_index]
+            pair_index += 1
+            policy = _pqs_current_route_retained_pair_policy(left, right)
+            push!(
+                pairs,
+                (
+                    pair_index = pair_index,
+                    left_unit_index = left_index,
+                    right_unit_index = right_index,
+                    left_role = left.role,
+                    right_role = right.role,
+                    left_category = left.category,
+                    right_category = right.category,
+                    left_kind = left.kind,
+                    right_kind = right.kind,
+                    left_column_range = left.column_range,
+                    right_column_range = right.column_range,
+                    left_retained_count = left.retained_count,
+                    right_retained_count = right.retained_count,
+                    pair_shape = (left.retained_count, right.retained_count),
+                    pair_group = policy.pair_group,
+                    policy = policy.policy,
+                    active_current_route = policy.active_current_route,
+                    raw_box_pqs_active_pair_policy =
+                        policy.raw_box_pqs_active_pair_policy,
+                ),
+            )
+        end
+    end
+    pair_tuple = Tuple(pairs)
+    counts = _pqs_current_route_retained_pair_counts(pair_tuple)
+    counts.pair_count == 21 || throw(
+        ArgumentError("PQS current-route pair inventory must have 21 pairs"),
+    )
+    counts.raw_box_pqs_active == 0 || throw(
+        ArgumentError("PQS current-route pair inventory must not activate raw-box PQS policy"),
+    )
+    diagnostics = (
+        source = :pqs_current_route_retained_pair_inventory,
+        private_diagnostic_only = true,
+        current_route_pair_inventory = true,
+        unit_inventory_complete = inventory.coverage.covers_every_column_once,
+        upper_triangular_pairs = true,
+        pair_count = counts.pair_count,
+        raw_box_pqs_active_pair_policy_count = counts.raw_box_pqs_active,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        whole_route_safe_term_matrix_consumer = false,
+    )
+    return (
+        object_kind = :pqs_current_route_retained_pair_inventory_fixture,
+        status = :private_diagnostic_only,
+        unit_inventory = inventory,
+        pairs = pair_tuple,
+        counts = counts,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_current_route_retained_pair_inventory(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    inventory = _pqs_current_route_retained_unit_inventory(construction),
+)
+    return _pqs_current_route_retained_pair_inventory(inventory)
+end
+
+function _pqs_current_route_safe_term_axis_factor_terms(
+    metrics::NamedTuple{(:x,:y,:z)},
+    term::Symbol,
+)
+    term in _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS || throw(
+        ArgumentError("PQS current-route safe-term matrix received unsupported term $(term)"),
+    )
+    return Tuple(
+        ntuple(
+            axis -> _product_doside_axis_metric_matrix(metrics, axis, factor_kinds[axis]),
+            3,
+        )
+        for factor_kinds in _source_box_separable_term_factor_kinds(term)
+    )
+end
+
+function _pqs_current_route_inventory_unit_entries(unit)
+    coefficients =
+        unit.category == :shell_realized_pqs_fixture ?
+        unit.support_local_coefficient_matrix :
+        unit.coefficient_matrix
+    return _support_local_retained_entries(
+        unit.column_range,
+        unit.support_states,
+        coefficients,
+    )
+end
+
+function _pqs_current_route_cached_unit_entries!(entries_cache, unit_index::Int, unit)
+    cached = entries_cache[unit_index]
+    !isnothing(cached) && return cached
+    entries = _pqs_current_route_inventory_unit_entries(unit)
+    entries_cache[unit_index] = entries
+    return entries
+end
+
+function _pqs_current_route_safe_term_matrices_payload(
+    inventory,
+    pair_inventory,
+    metrics::NamedTuple{(:x,:y,:z)},
+    selected_terms::Tuple;
+    atol::Real,
+)
+    pair_inventory.unit_inventory === inventory || throw(
+        ArgumentError("PQS current-route safe-term matrices require matching pair inventory"),
+    )
+    retained_dimension = inventory.coverage.last_column
+    retained_dimension == inventory.coverage.represented_count || throw(
+        ArgumentError("PQS current-route safe-term matrices require complete one-based coverage"),
+    )
+    pair_inventory.counts.pair_count == 21 || throw(
+        ArgumentError("PQS current-route safe-term matrices require 21 retained-unit pairs"),
+    )
+    pair_inventory.counts.raw_box_pqs_active == 0 || throw(
+        ArgumentError("PQS current-route safe-term matrices cannot use active raw-box PQS pair policy"),
+    )
+
+    matrices = Dict{Symbol,Matrix{Float64}}()
+    oracle_matrices = Dict{Symbol,Matrix{Float64}}()
+    term_errors = Dict{Symbol,Float64}()
+    entries_cache = Vector{Any}(undef, length(inventory.units))
+    fill!(entries_cache, nothing)
+    output_finite = true
+    product_source_box_pair_count = 0
+    support_local_fallback_pair_count = 0
+    shell_realized_pqs_fallback_pair_count = 0
+
+    for term in selected_terms
+        axis_factor_terms =
+            _pqs_current_route_safe_term_axis_factor_terms(metrics, term)
+        matrix = zeros(Float64, retained_dimension, retained_dimension)
+        oracle_matrix = zeros(Float64, retained_dimension, retained_dimension)
+        for pair in pair_inventory.pairs
+            left_unit = inventory.units[pair.left_unit_index]
+            right_unit = inventory.units[pair.right_unit_index]
+            if pair.pair_group == :product_product
+                product_reference = _product_doside_source_box_reference_block(
+                    left_unit.staged_unit,
+                    right_unit.staged_unit,
+                    metrics;
+                    term,
+                    atol,
+                )
+                block = product_reference.block
+                product_source_box_pair_count += 1
+            else
+                left_entries = _pqs_current_route_cached_unit_entries!(
+                    entries_cache,
+                    pair.left_unit_index,
+                    left_unit,
+                )
+                right_entries = _pqs_current_route_cached_unit_entries!(
+                    entries_cache,
+                    pair.right_unit_index,
+                    right_unit,
+                )
+                block = _fallback_staged_separable_sum_block(
+                    left_entries,
+                    right_entries,
+                    axis_factor_terms,
+                )
+                support_local_fallback_pair_count += 1
+                (:shell_realized_pqs_fixture in (pair.left_category, pair.right_category)) &&
+                    (shell_realized_pqs_fallback_pair_count += 1)
+            end
+
+            left_entries = _pqs_current_route_cached_unit_entries!(
+                entries_cache,
+                pair.left_unit_index,
+                left_unit,
+            )
+            right_entries = _pqs_current_route_cached_unit_entries!(
+                entries_cache,
+                pair.right_unit_index,
+                right_unit,
+            )
+            oracle_block = _fallback_staged_separable_sum_block(
+                left_entries,
+                right_entries,
+                axis_factor_terms,
+            )
+            size(block) == pair.pair_shape || throw(
+                DimensionMismatch("PQS current-route safe-term block shape mismatch"),
+            )
+            size(oracle_block) == pair.pair_shape || throw(
+                DimensionMismatch("PQS current-route safe-term oracle block shape mismatch"),
+            )
+            all(isfinite, block) || (output_finite = false)
+            all(isfinite, oracle_block) || (output_finite = false)
+            matrix[pair.left_column_range, pair.right_column_range] .= block
+            oracle_matrix[pair.left_column_range, pair.right_column_range] .=
+                oracle_block
+            if pair.left_unit_index != pair.right_unit_index
+                matrix[pair.right_column_range, pair.left_column_range] .=
+                    transpose(block)
+                oracle_matrix[pair.right_column_range, pair.left_column_range] .=
+                    transpose(oracle_block)
+            end
+        end
+        all(isfinite, matrix) || (output_finite = false)
+        all(isfinite, oracle_matrix) || (output_finite = false)
+        term_error = LinearAlgebra.norm(matrix - oracle_matrix, Inf)
+        term_errors[term] = term_error
+        matrices[term] = matrix
+        oracle_matrices[term] = oracle_matrix
+    end
+
+    output_finite || throw(
+        ArgumentError("PQS current-route safe-term matrices produced non-finite entries"),
+    )
+    global_max_error = maximum(values(term_errors))
+    global_max_error <= Float64(atol) || throw(
+        ArgumentError("PQS current-route safe-term matrices disagree with support-local oracle"),
+    )
+
+    diagnostics = (
+        source = :pqs_current_route_safe_term_matrices,
+        private_diagnostic_only = true,
+        whole_route_safe_term_matrix_consumer = true,
+        retained_dimension = retained_dimension,
+        terms_checked = selected_terms,
+        pair_count = pair_inventory.counts.pair_count,
+        product_product_pair_count = pair_inventory.counts.product_product,
+        support_support_pair_count = pair_inventory.counts.support_support,
+        support_product_pair_count = pair_inventory.counts.support_product,
+        shell_realized_pqs_product_pair_count =
+            pair_inventory.counts.shell_realized_pqs_product,
+        shell_realized_pqs_support_pair_count =
+            pair_inventory.counts.shell_realized_pqs_support,
+        shell_realized_pqs_pqs_pair_count =
+            pair_inventory.counts.shell_realized_pqs_pqs,
+        product_source_box_pair_count = div(
+            product_source_box_pair_count,
+            length(selected_terms),
+        ),
+        support_local_fallback_pair_count = div(
+            support_local_fallback_pair_count,
+            length(selected_terms),
+        ),
+        shell_realized_pqs_fallback_pair_count = div(
+            shell_realized_pqs_fallback_pair_count,
+            length(selected_terms),
+        ),
+        raw_box_pqs_active_pair_policy_count =
+            pair_inventory.counts.raw_box_pqs_active,
+        term_errors = term_errors,
+        global_max_error = global_max_error,
+        finite_output = output_finite,
+        support_local_oracle_compared = true,
+        raw_box_pqs_active_policy_used = false,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+    )
+    return (
+        matrices = matrices,
+        oracle_matrices = oracle_matrices,
+        term_errors = term_errors,
+        global_max_error = global_max_error,
+        diagnostics = diagnostics,
+    )
+end
+
+function _pqs_current_route_safe_term_matrices(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    metrics::NamedTuple{(:x,:y,:z)};
+    inventory = _pqs_current_route_retained_unit_inventory(construction),
+    pair_inventory = _pqs_current_route_retained_pair_inventory(inventory),
+    terms = _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS,
+    atol::Real = 1.0e-12,
+)
+    selected_terms = Tuple(Symbol(term) for term in terms)
+    !isempty(selected_terms) || throw(
+        ArgumentError("PQS current-route safe-term matrices require at least one term"),
+    )
+    for term in selected_terms
+        term in _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS || throw(
+            ArgumentError("PQS current-route safe-term matrix received unsupported term $(term)"),
+        )
+    end
+
+    timed = @timed _pqs_current_route_safe_term_matrices_payload(
+        inventory,
+        pair_inventory,
+        metrics,
+        selected_terms;
+        atol,
+    )
+    payload = timed.value
+    diagnostics = merge(
+        payload.diagnostics,
+        (
+            elapsed_seconds = Float64(timed.time),
+            allocated_bytes = Int(timed.bytes),
+            gc_time_seconds = Float64(timed.gctime),
+        ),
+    )
+    return (
+        object_kind = :pqs_current_route_safe_term_matrices_fixture,
+        status = :private_diagnostic_only,
+        terms = selected_terms,
+        matrices = payload.matrices,
+        oracle_matrices = payload.oracle_matrices,
+        term_errors = payload.term_errors,
+        global_max_error = payload.global_max_error,
+        inventory = inventory,
+        pair_inventory = pair_inventory,
         diagnostics = diagnostics,
     )
 end

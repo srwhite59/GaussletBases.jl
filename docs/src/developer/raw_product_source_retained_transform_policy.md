@@ -410,6 +410,32 @@ semantic change, local/ECP/Gaussian/interaction work, public/default route
 change, CR2 status change, retained PQS positive-weight semantics, or retained
 PQS IDA division is implied.
 
+The all-pairs route checkpoint expands that q4 retained-unit inventory into 21
+upper-triangular retained pairs through
+`_pqs_current_route_retained_pair_inventory(...)`. Pair-policy counts are:
+product/product `6`, support/support `3`, support/product `6`,
+shell-realized PQS/product `3`, shell-realized PQS/support `2`,
+shell-realized PQS/PQS `1`, and active raw-box PQS pairs `0`. Product/product
+pairs use the product/doside source-box path. Support-dense pairs and
+shell-realized PQS pairs use support-local fallback for the current active
+route.
+
+`_pqs_current_route_safe_term_matrices(...)` consumes that pair inventory and
+builds full private diagnostic `487 x 487` matrices for overlap,
+`position_x/y/z`, `x2_x/y/z`, and kinetic. Every pair is compared against a
+support-local/current-route oracle. Focused q4 evidence was `542 / 542`, max
+matrix error `0.0`, helper elapsed time `28.601491167 s`, and allocation
+`137,976,768` bytes.
+
+The active shared PQS shell remains `:shell_realized_pqs_fixture`; raw-box PQS
+helpers remain reference/shadow-only for the current route. This is still
+private diagnostic/shadow infrastructure only: no construction behavior
+change, sidecar installation, packet/fixed-block adoption,
+`_nested_shell_packet(...)` authority change, QW/Hamiltonian behavior change,
+IDA/MWG behavior change, retained PQS weight division or positive
+quadrature-weight claim, local/ECP/Gaussian/MWG/interaction implementation,
+public/default route change, or Be2/Cr2 science claim is implied.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS box `(1:5,1:5,1:5)`, right PQS box `(1:5,1:5,3:7)`, and a middle product
 slab at `z = 4`. Both PQS source boxes use source-mode dimensions `(5,5,5)`

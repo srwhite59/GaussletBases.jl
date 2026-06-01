@@ -7682,6 +7682,139 @@ end
     @test !current_route_inventory.diagnostics.whole_route_safe_term_matrix_consumer
     @test current_route_inventory.diagnostics.fixed_dimension == 487
     @test current_route_inventory.diagnostics.coverage_complete
+    current_route_pair_inventory =
+        CCPM._pqs_current_route_retained_pair_inventory(current_route_inventory)
+    @test current_route_pair_inventory.object_kind ==
+          :pqs_current_route_retained_pair_inventory_fixture
+    @test current_route_pair_inventory.status == :private_diagnostic_only
+    @test current_route_pair_inventory.unit_inventory === current_route_inventory
+    @test length(current_route_pair_inventory.pairs) == 21
+    expected_pair_roles = Tuple(
+        (current_route_inventory.units[left].role, current_route_inventory.units[right].role)
+        for left in 1:length(current_route_inventory.units)
+        for right in left:length(current_route_inventory.units)
+    )
+    expected_pair_shapes = Tuple(
+        (
+            current_route_inventory.units[left].retained_count,
+            current_route_inventory.units[right].retained_count,
+        ) for left in 1:length(current_route_inventory.units)
+        for right in left:length(current_route_inventory.units)
+    )
+    @test map(
+        pair -> (pair.left_role, pair.right_role),
+        current_route_pair_inventory.pairs,
+    ) == expected_pair_roles
+    @test map(pair -> pair.pair_shape, current_route_pair_inventory.pairs) ==
+          expected_pair_shapes
+    @test current_route_pair_inventory.counts.pair_count == 21
+    @test current_route_pair_inventory.counts.product_product == 6
+    @test current_route_pair_inventory.counts.support_support == 3
+    @test current_route_pair_inventory.counts.support_product == 6
+    @test current_route_pair_inventory.counts.shell_realized_pqs_product == 3
+    @test current_route_pair_inventory.counts.shell_realized_pqs_support == 2
+    @test current_route_pair_inventory.counts.shell_realized_pqs_pqs == 1
+    @test current_route_pair_inventory.counts.raw_box_pqs_active == 0
+    @test current_route_pair_inventory.counts.product_doside_source_box_path == 6
+    @test current_route_pair_inventory.counts.support_local_fallback == 11
+    @test current_route_pair_inventory.counts.support_local_fallback_current_route == 4
+    @test current_route_pair_inventory.pairs[1].pair_group == :product_product
+    @test current_route_pair_inventory.pairs[1].policy ==
+          :product_doside_source_box_path
+    @test current_route_pair_inventory.pairs[3].pair_group == :support_product
+    @test current_route_pair_inventory.pairs[3].policy == :support_local_fallback
+    @test current_route_pair_inventory.pairs[6].pair_group ==
+          :shell_realized_pqs_product
+    @test current_route_pair_inventory.pairs[6].policy ==
+          :support_local_fallback_current_route
+    @test current_route_pair_inventory.pairs[15].pair_group ==
+          :shell_realized_pqs_support
+    @test current_route_pair_inventory.pairs[end].pair_group ==
+          :shell_realized_pqs_pqs
+    @test current_route_pair_inventory.pairs[end].policy ==
+          :support_local_fallback_current_route
+    @test all(pair -> pair.active_current_route, current_route_pair_inventory.pairs)
+    @test all(
+        pair -> !pair.raw_box_pqs_active_pair_policy,
+        current_route_pair_inventory.pairs,
+    )
+    @test current_route_pair_inventory.diagnostics.private_diagnostic_only
+    @test current_route_pair_inventory.diagnostics.current_route_pair_inventory
+    @test current_route_pair_inventory.diagnostics.unit_inventory_complete
+    @test current_route_pair_inventory.diagnostics.upper_triangular_pairs
+    @test current_route_pair_inventory.diagnostics.pair_count == 21
+    @test current_route_pair_inventory.diagnostics.raw_box_pqs_active_pair_policy_count == 0
+    @test !current_route_pair_inventory.diagnostics.route_descriptor_emitted
+    @test !current_route_pair_inventory.diagnostics.construction_mutated
+    @test !current_route_pair_inventory.diagnostics.sidecar_installation
+    @test !current_route_pair_inventory.diagnostics.packet_adoption
+    @test !current_route_pair_inventory.diagnostics.fixed_block_construction_changed
+    @test !current_route_pair_inventory.diagnostics.qwhamiltonian_changed
+    @test !current_route_pair_inventory.diagnostics.ida_weight_division_allowed
+    @test current_route_pair_inventory.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !current_route_pair_inventory.diagnostics.local_ecp_gaussian_mwg_interaction_changed
+    @test !current_route_pair_inventory.diagnostics.whole_route_safe_term_matrix_consumer
+    current_route_safe_terms = CCPM._pqs_current_route_safe_term_matrices(
+        pqs_construction,
+        contact_safe_term_metrics;
+        inventory = current_route_inventory,
+        pair_inventory = current_route_pair_inventory,
+    )
+    @test current_route_safe_terms.object_kind ==
+          :pqs_current_route_safe_term_matrices_fixture
+    @test current_route_safe_terms.status == :private_diagnostic_only
+    @test current_route_safe_terms.terms == (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    @test current_route_safe_terms.global_max_error <= 1.0e-12
+    for term in current_route_safe_terms.terms
+        @test size(current_route_safe_terms.matrices[term]) == (487, 487)
+        @test size(current_route_safe_terms.oracle_matrices[term]) == (487, 487)
+        @test all(isfinite, current_route_safe_terms.matrices[term])
+        @test all(isfinite, current_route_safe_terms.oracle_matrices[term])
+        @test current_route_safe_terms.matrices[term] ≈
+              current_route_safe_terms.oracle_matrices[term] atol = 1.0e-12 rtol = 0.0
+        @test current_route_safe_terms.term_errors[term] <= 1.0e-12
+    end
+    @test current_route_safe_terms.diagnostics.private_diagnostic_only
+    @test current_route_safe_terms.diagnostics.whole_route_safe_term_matrix_consumer
+    @test current_route_safe_terms.diagnostics.retained_dimension == 487
+    @test current_route_safe_terms.diagnostics.pair_count == 21
+    @test current_route_safe_terms.diagnostics.product_source_box_pair_count == 6
+    @test current_route_safe_terms.diagnostics.support_local_fallback_pair_count == 15
+    @test current_route_safe_terms.diagnostics.shell_realized_pqs_fallback_pair_count == 6
+    @test current_route_safe_terms.diagnostics.raw_box_pqs_active_pair_policy_count == 0
+    @test current_route_safe_terms.diagnostics.global_max_error <= 1.0e-12
+    @test current_route_safe_terms.diagnostics.finite_output
+    @test current_route_safe_terms.diagnostics.support_local_oracle_compared
+    @test !current_route_safe_terms.diagnostics.raw_box_pqs_active_policy_used
+    @test !current_route_safe_terms.diagnostics.route_descriptor_emitted
+    @test !current_route_safe_terms.diagnostics.construction_mutated
+    @test !current_route_safe_terms.diagnostics.sidecar_installation
+    @test !current_route_safe_terms.diagnostics.packet_adoption
+    @test !current_route_safe_terms.diagnostics.fixed_block_construction_changed
+    @test !current_route_safe_terms.diagnostics.qwhamiltonian_changed
+    @test !current_route_safe_terms.diagnostics.ida_weight_division_allowed
+    @test current_route_safe_terms.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !current_route_safe_terms.diagnostics.local_ecp_gaussian_mwg_interaction_changed
+    @test current_route_safe_terms.diagnostics.elapsed_seconds >= 0.0
+    @test current_route_safe_terms.diagnostics.allocated_bytes >= 0
+    @test_throws ArgumentError CCPM._pqs_current_route_safe_term_matrices(
+        pqs_construction,
+        contact_safe_term_metrics;
+        inventory = current_route_inventory,
+        pair_inventory = current_route_pair_inventory,
+        terms = (:weights,),
+    )
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only
