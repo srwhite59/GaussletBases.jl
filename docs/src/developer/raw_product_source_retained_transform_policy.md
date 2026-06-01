@@ -1439,14 +1439,15 @@ carry pair-factor provenance explicitly:
 - diagnostics that retained PQS weights are not positive quadrature weights
   and `retained_weight_division_allowed = false`.
 
-The first tiny fixture should be product/product, where product/doside
-source-box retained transforms already exist and current product-staged or
-fixed-block interaction data can serve as a validation oracle. PQS/product and
-PQS/PQS should wait until the product/product fixture proves the factor shape,
-the raw-weight versus density-normalized distinction, and the final two-index
-output convention. Support-local or current fixed-block paths remain
-validation-only unless a later pass explicitly promotes a source-box
-interaction object.
+The first tiny fixture was product/product, where product/doside source-box
+retained transforms already exist and current product-staged or fixed-block
+interaction data can serve as a validation oracle. PQS/product now has a
+private density-normalized source-box block using the same output convention.
+PQS/PQS should wait until the product/product and PQS/product checkpoints prove
+the factor shape, the raw-weight versus density-normalized distinction, and
+the final two-index output convention without relying on retained PQS weights.
+Support-local or current fixed-block paths remain validation-only unless a
+later pass explicitly promotes a source-box interaction object.
 
 Commit `9bed286` adds the first private product/product source-box
 electron-electron fixture. It consumes caller-supplied density-normalized
@@ -1471,6 +1472,26 @@ helper remains the core; the raw-weighted wrapper only performs this
 conversion and records `pair_factor_normalization = :raw_weighted`,
 `source_weight_division_owner = :source_box_raw_weights`, and
 `source_weight_division_applied_by_helper = true`.
+
+Commit `27d15dd` adds the private PQS/product source-box
+electron-electron block for caller-supplied density-normalized factors. The
+PQS side is the mode-selected raw product-box retained rule, and the product
+side is the product/doside retained transform. Raw/source weights are required
+only as provenance and positivity checks; the helper does not divide by them.
+It also does not use shell projection, Lowdin cleanup, support coefficient
+matrices, or support-local PQS contraction as the algorithm.
+
+Current boundaries:
+
+- product/product has both density-normalized input and the `ad74d3c`
+  raw-weighted conversion wrapper;
+- PQS/product is density-normalized only;
+- output remains the repo two-index density-density interaction convention,
+  not a four-index Galerkin tensor;
+- retained PQS columns have no positive-weight or IDA-division semantics;
+- PQS/PQS electron-electron, ECP, packet/fixed-block/QW/Hamiltonian adoption,
+  MWG/IDA semantic changes, public/default behavior, and CR2 science claims
+  remain out of scope.
 
 Stop implementation if the pass cannot answer where IDA/MWG weights live, if
 it needs retained PQS columns to carry positive quadrature weights, if it

@@ -979,13 +979,14 @@ The first electron-electron object contract should describe:
 - explicit diagnostics for where source weights live and for
   `retained_weight_division_allowed = false`.
 
-The smallest first fixture should be product/product, because product/doside
-units already have source-box retained transforms and current product-staged
-helpers can provide comparison data. PQS/product and PQS/PQS should wait until
-the product/product object proves the factor shape and density-density output
-without relying on retained PQS weights. Current support-local or fixed-block
-interaction paths may be used only as validation/oracle comparisons until an
-explicit source-box pair object matches the intended IDA/MWG convention.
+The smallest first fixture was product/product, because product/doside units
+already have source-box retained transforms and current product-staged helpers
+can provide comparison data. PQS/product now has the corresponding
+density-normalized source-box block. PQS/PQS should still wait until the
+retained-weight ownership and source-box projection contracts are reviewed in
+that pair family. Current support-local or fixed-block interaction paths may
+be used only as validation/oracle comparisons until an explicit source-box
+pair object matches the intended IDA/MWG convention.
 
 Commit `9bed286` adds that first tiny product/product fixture. It consumes
 caller-supplied density-normalized pair factors, requires raw/source weights
@@ -1008,6 +1009,26 @@ After conversion, the density-normalized helper remains the low-risk core.
 Diagnostics distinguish `pair_factor_normalization = :raw_weighted`,
 `source_weight_division_owner = :source_box_raw_weights`, and
 `source_weight_division_applied_by_helper = true`.
+
+Commit `27d15dd` adds the private PQS/product density-normalized source-box
+density-density block. It uses mode-selected raw product-box PQS on the PQS
+side and the product/doside retained transform on the product side. Inputs are
+caller-supplied density-normalized per-axis pair factors; raw/source weights
+are checked and carried as provenance only. The helper does not divide by
+weights and does not assign retained PQS columns positive quadrature or
+IDA-safe weight semantics.
+
+The current electron-electron source-box checkpoint is therefore:
+
+- product/product accepts caller-supplied density-normalized factors;
+- product/product also has a raw-weighted conversion wrapper from commit
+  `ad74d3c`;
+- PQS/product accepts density-normalized factors only;
+- all current outputs are retained two-index density-density blocks, not
+  four-index Galerkin Coulomb tensors;
+- PQS/product uses no shell projection, Lowdin cleanup, support coefficient
+  matrix, or support-local oracle as the algorithm;
+- PQS/PQS electron-electron blocks remain unimplemented.
 
 Stop implementation if any of these are unclear:
 
