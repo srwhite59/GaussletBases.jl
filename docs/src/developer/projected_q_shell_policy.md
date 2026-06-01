@@ -231,16 +231,20 @@ selector structure match. Cross blocks use 1D factors
 `C_left' * M[left_interval, right_interval] * C_right`; the first shifted
 cubic fixture uses left `(1:5,1:5,1:5)` and right `(3:7,1:5,1:5)`, source
 dims `(5,5,5)`, retained count `98`, with explicit source-box oracle error
-about `5.7e-14` and transpose consistency about `7.6e-15`. The path does not
-use shell projection, Lowdin, support-local PQS coefficients, retained PQS
-weights, or IDA division.
+about `5.7e-14` and transpose consistency about `7.6e-15`. The explicit
+source-box oracle is now internal to the private helper for supported
+compatible fixtures; dense raw product-box pair matrices are materialized only
+for validation, while the algorithmic block path streams 1D factors. The path
+does not use shell projection, Lowdin, support-local PQS coefficients,
+retained PQS weights, or IDA division.
 
 `_pqs_product_source_box_shadow_blocks(...)` is the private two-block
 layout/reference consumer for this path. It places one mode-selected PQS
 source-box unit and one product/doside retained unit into a shadow layout and
 fills PQS/PQS, PQS/product, product/PQS by transpose for symmetric real terms,
-and product/product blocks. Its PQS/PQS component now uses the self-only
-PQS/PQS source-box helper, its mixed PQS/product component blocks use the
+and product/product blocks. Its PQS/PQS component now uses the PQS/PQS
+source-box helper with same-box and compatible cross-box validation support;
+its mixed PQS/product component blocks use the
 multi-term pair-plan reuse path, and its product/product component keeps the
 existing product/doside retained helpers. The helper also records a tiny
 private all-pairs inventory with two units, `:pqs` and `:product`, and three

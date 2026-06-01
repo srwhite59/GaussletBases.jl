@@ -420,7 +420,7 @@ Anti-patterns:
 | `_product_doside_retained_unit_plan(...)` | Product/doside `RetainedRule` | Algorithmic product retained rule used by private product/product and PQS/product source-box helpers. |
 | `_product_doside_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for product/product | Private/shadow source-box pair plan for safe terms; current product-staged helpers remain authoritative where applicable. |
 | `_pqs_product_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for PQS/product | Private source-box mixed plan using PQS boundary selection and product/doside retained transform. |
-| `_pqs_pqs_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for compatible raw-box PQS/PQS fixtures | Private reference/shadow plan for compatible raw-box fixtures, not current shell-realized route adoption. |
+| `_pqs_pqs_source_box_pair_plan(...)` | `SourceBoxPairOperatorPlan` for compatible raw-box PQS/PQS fixtures | Private reference/shadow plan for same-box and compatible cross-box raw-box fixtures, not current shell-realized route adoption. |
 | `_pqs_shell_realization_plan(...)` | Shell-realization adapter | Projects selected modes to shell rows and applies Lowdin for isometry checks; not raw-box operator construction. |
 | `_pqs_product_box_realization_plan(...)` | Setup bundle containing raw-box plan plus shell-realization adapter | Useful setup grouping only if the stages remain separate. |
 | `_pqs_current_route_shell_realization_transform_fact(...)` | Shell-realization/support-row adapter fact | Current-route metadata precursor; reports `compact_source_space_transform.available=false` and `source_box_operator_application_ready=false`. |
@@ -525,9 +525,9 @@ Validation ladder:
   explicit product-box boundary-column selection reference.
 - Same-box rectangular fixture: repeat the safe-term comparison with
   `q x q x L` where `L != q`.
-- Compatible shifted/cross-box fixture: compare to explicit raw product-box
-  pair selection only if the existing raw-box metadata already supports the
-  cross intervals.
+- Compatible shifted/cross-box fixture: compare inside the private helper to
+  explicit raw product-box pair boundary-column selection only if the existing
+  raw-box metadata already supports the cross intervals.
 - Unsupported terms must reject.
 - Support-row contraction may be used only as an optional debug/oracle
   comparison through a separate adapter, never as the reference that defines
@@ -655,7 +655,10 @@ What is established:
   kinetic, including nontrivial product retained transforms.
 - Product/product source-box shadow blocks exist, showing the vocabulary is not
   PQS-only.
-- Cross-PQS source-box references exist for compatible raw-box fixtures.
+- Cross-PQS source-box references exist for compatible raw-box fixtures, and
+  same-box plus compatible cross-box blocks are now validated inside the
+  private helper against explicit raw product-box boundary-column selection
+  references.
 - A private q4 current-route retained-unit inventory covers all retained
   columns and has a route-wide safe-term authority comparison.
 - A Be2-like strict PQS q5 inventory-shape check pins the 8-unit, 36-pair,
@@ -675,7 +678,8 @@ What is not established:
 - Local/Gaussian one-body terms in the source-box framework.
 - MWG/IDA interaction support through retained PQS source-box transforms.
 - CR2 validation or public/default route readiness.
-- That dense retained full-matrix diagnostics scale to larger routes.
+- That dense retained or raw product-box pair validation matrices scale to
+  larger routes.
 
 ## Performance Expectations
 
@@ -710,9 +714,10 @@ Future performance reports should separate:
 
 These questions are intentionally unresolved.
 
-- Should future PQS/PQS source-box implementations materialize the raw
-  source-box pair operator or stream separable factors directly through the
-  retained-rule transforms?
+- How much route-scale validation should materialize dense raw source-box pair
+  oracle matrices versus relying on sampled checks? The private helper streams
+  separable factors for the algorithmic block and materializes dense raw
+  source-box pair matrices only as small-fixture validation oracles.
 - What is the smallest Be2-like sampled validation that proves same-shell and
   cross-shell PQS/PQS blocks without running a full route-wide oracle?
 - How should support-dense atom-box fallback enter the broader retained-unit
@@ -743,14 +748,15 @@ framework is wrong or incomplete, stop and make the framework update explicit.
 
 ## Next Intended Correction
 
-The next correction can implement the private mode-selected raw-box PQS/PQS
-safe-term target described above, if the blurb explicitly scopes that work. It
-should use the object contract above rather than starting from shell rows. A
-current-route shell-realized PQS/PQS block should wait until an explicit
-source-space realization rule is defined or the pass is scoped as
-compatibility/oracle-only.
+The private mode-selected raw-box PQS/PQS safe-term target now has helper
+coverage for same-box cubic, same-box rectangular, and compatible shifted
+cross-box fixtures. The helper streams 1D factor products into retained
+blocks; dense raw product-box pair matrices are materialized only for explicit
+small-fixture validation oracles. A current-route shell-realized PQS/PQS block
+should still wait until an explicit source-space realization rule is defined
+or the pass is scoped as compatibility/oracle-only.
 
-Any implementation blurb should state:
+Any next implementation blurb should state:
 
 - which `RetainedRule` variant is used on each side;
 - whether raw product-box pair operators are materialized or streamed through

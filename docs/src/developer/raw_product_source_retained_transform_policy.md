@@ -299,8 +299,10 @@ PQS/PQS source-box seam is now also explicit:
 `_pqs_pqs_source_box_reference_blocks_from_pair_plan(...)`,
 `_pqs_pqs_source_box_reference_blocks(...)`, and
 `_pqs_pqs_source_box_reference_block(...)` build mode-selected PQS/PQS blocks
-from 1D source-box factors and boundary COMX-product mode selectors. Self
-blocks still compare against `_pqs_raw_product_box_reference_block(...)`.
+from 1D source-box factors and boundary COMX-product mode selectors. Self and
+compatible cross blocks now use the helper-internal explicit raw product-box
+boundary-column selection oracle; the older raw-box self helper remains a
+reference/debug path when that explicit validation is disabled.
 Cross-PQS blocks now accept distinct compatible raw product-box plans when
 source-mode dimensions, source-mode ordering, and boundary selector structure
 match. The cross helper builds 1D cross factors
@@ -308,9 +310,11 @@ match. The cross helper builds 1D cross factors
 retained block directly from boundary selectors. The first focused cross-PQS
 fixture uses shifted cubic boxes, left `(1:5,1:5,1:5)` and right
 `(3:7,1:5,1:5)`, with source dims `(5,5,5)` and retained count `98`. Its
-explicit source-box oracle agrees to about `5.7e-14`; reverse-orientation
-transpose consistency is about `7.6e-15`. The supported terms remain overlap,
-`position_x/y/z`, `x2_x/y/z`, and kinetic.
+explicit source-box oracle is now internal to the private helper and agrees to
+about `5.7e-14`; reverse-orientation transpose consistency is about
+`7.6e-15`. Dense raw product-box pair matrices are materialized only for that
+validation oracle, not for the streamed 1D-factor algorithmic block. The
+supported terms remain overlap, `position_x/y/z`, `x2_x/y/z`, and kinetic.
 
 `_pqs_product_source_box_shadow_blocks(...)` now carries a tiny private
 all-pairs inventory for its two retained units. The units are `:pqs` with
@@ -1219,9 +1223,11 @@ first block-layout consumer of those references. It builds a small two-block
 shadow layout containing one mode-selected PQS source-box unit and one
 product/doside retained unit, then fills PQS/PQS, PQS/product, product/PQS by
 transpose for symmetric real terms, and product/product blocks. Its PQS/PQS
-component uses `_pqs_pqs_source_box_reference_blocks(...)`; its PQS/product
-component uses the multi-term PQS/product pair-plan reuse path; its
-product/product component keeps existing product/doside retained helpers. The
+component uses `_pqs_pqs_source_box_reference_blocks(...)` with helper-internal
+explicit boundary-column validation for supported compatible raw-box fixtures;
+its PQS/product component uses the multi-term PQS/product pair-plan reuse path;
+and its product/product component keeps existing product/doside retained
+helpers. The
 helper records a tiny private all-pairs inventory over units `:pqs` and
 `:product` with upper-triangular entries `(:pqs, :pqs)`,
 `(:pqs, :product)`, and `(:product, :product)`. The supported terms are
@@ -1237,7 +1243,9 @@ structure. Cross-axis factors are built as
 assembled from boundary COMX-product selectors. The focused fixture shifts the
 right cubic PQS box: left `(1:5,1:5,1:5)`, right `(3:7,1:5,1:5)`, source dims
 `(5,5,5)`, retained count `98`. The explicit source-box oracle agrees to about
-`5.7e-14`, and reverse-orientation transpose consistency is about `7.6e-15`.
+`5.7e-14` inside the helper, and reverse-orientation transpose consistency is
+about `7.6e-15`. Dense raw product-box pair matrices are validation-only; the
+retained block path still streams 1D factors and boundary selectors.
 
 The three-unit route-like shadow checkpoint then adds
 `_pqs_pqs_product_source_box_all_pairs_inventory(...)` and
