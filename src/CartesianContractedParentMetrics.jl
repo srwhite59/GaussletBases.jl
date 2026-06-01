@@ -1184,6 +1184,210 @@ function _product_doside_source_box_shadow_blocks(
     )
 end
 
+function _product_doside_source_box_project_local_gaussian_axis_terms(
+    operator_terms::AbstractArray{<:Real,3},
+    left_axis,
+    right_axis,
+)
+    nterms = size(operator_terms, 1)
+    nterms > 0 || throw(
+        ArgumentError("product/doside source-box local-Gaussian terms require at least one term"),
+    )
+    projected = Array{Float64,3}(
+        undef,
+        nterms,
+        _staged_axis_count(left_axis),
+        _staged_axis_count(right_axis),
+    )
+    @inbounds for term in 1:nterms
+        term_matrix = @view operator_terms[term, :, :]
+        projected[term, :, :] .= _project_staged_axis_matrix(
+            left_axis,
+            right_axis,
+            term_matrix,
+        )
+    end
+    return projected
+end
+
+function _product_doside_source_box_local_gaussian_axis_factors(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    axis_gaussian_terms::NamedTuple{(:x,:y,:z)},
+)
+    return ntuple(axis -> begin
+        terms = getproperty(axis_gaussian_terms, (:x, :y, :z)[axis])
+        _product_doside_source_box_project_local_gaussian_axis_terms(
+            terms,
+            left_unit.axes[axis],
+            right_unit.axes[axis],
+        )
+    end, 3)
+end
+
+function _product_doside_source_box_local_gaussian_sum_block(
+    left_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    right_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    term_coefficients::AbstractVector{<:Real},
+    axis_gaussian_terms::NamedTuple{(:x,:y,:z)},
+)
+    left_unit.kind == :product_doside && right_unit.kind == :product_doside || throw(
+        ArgumentError("product/doside source-box local-Gaussian block requires product_doside units"),
+    )
+    length(left_unit.axis_function_indices) == length(left_unit.column_range) || throw(
+        ArgumentError("product/doside source-box local-Gaussian left unit axis metadata does not match its column range"),
+    )
+    length(right_unit.axis_function_indices) == length(right_unit.column_range) || throw(
+        ArgumentError("product/doside source-box local-Gaussian right unit axis metadata does not match its column range"),
+    )
+    nterms = length(term_coefficients)
+    nterms > 0 || throw(
+        ArgumentError("product/doside source-box local-Gaussian block requires at least one term coefficient"),
+    )
+    for axis_name in (:x, :y, :z)
+        size(getproperty(axis_gaussian_terms, axis_name), 1) == nterms || throw(
+            ArgumentError("product/doside source-box local-Gaussian axis term count mismatch on $(axis_name)"),
+        )
+    end
+    left_retained_unit_plan = _product_doside_retained_unit_plan(left_unit)
+    right_retained_unit_plan = _product_doside_retained_unit_plan(right_unit)
+    pair_plan = (
+        pair_kind = :product_doside_source_box_local_gaussian_pair,
+        left_source_family = :product_doside,
+        right_source_family = :product_doside,
+        left_retained_rule_kind = left_retained_unit_plan.retained_rule_kind,
+        right_retained_rule_kind = right_retained_unit_plan.retained_rule_kind,
+        left_source_dimensions = left_retained_unit_plan.source_axis_lengths,
+        right_source_dimensions = right_retained_unit_plan.source_axis_lengths,
+        left_source_dimension = left_retained_unit_plan.source_dimension,
+        right_source_dimension = right_retained_unit_plan.source_dimension,
+        left_retained_axis_counts = left_retained_unit_plan.retained_axis_counts,
+        right_retained_axis_counts = right_retained_unit_plan.retained_axis_counts,
+        left_column_range = left_retained_unit_plan.column_range,
+        right_column_range = right_retained_unit_plan.column_range,
+        left_retained_count = left_retained_unit_plan.retained_count,
+        right_retained_count = right_retained_unit_plan.retained_count,
+        axis_intervals = (
+            left = left_retained_unit_plan.source_axis_intervals,
+            right = right_retained_unit_plan.source_axis_intervals,
+        ),
+        left_retained_unit_plan = left_retained_unit_plan,
+        right_retained_unit_plan = right_retained_unit_plan,
+        left_retained_transform = left_retained_unit_plan,
+        right_retained_transform = right_retained_unit_plan,
+        supported_terms = (:gaussian_sum,),
+        diagnostics = (
+            source = :product_doside_source_box_local_gaussian_pair_plan,
+            private_shadow_only = true,
+            source_box_pair_plan = true,
+            product_doside_retained_unit_plan_used = true,
+            operator_factor_source = :explicit_local_gaussian_axis_terms,
+            input_local_gaussian_data = :caller_supplied_explicit_data,
+            input_local_gaussian_data_pgdg_checked = false,
+            pgdg_analytic_operator_provenance_claimed = false,
+            numerical_reference_fallback = false,
+            raw_product_box_operators_use_1d_factors = true,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            ida_mwg_semantics_changed = false,
+            retained_weight_semantics_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            generic_retained_unit_framework = false,
+        ),
+    )
+    projected_terms =
+        _product_doside_source_box_local_gaussian_axis_factors(
+            left_unit,
+            right_unit,
+            axis_gaussian_terms,
+        )
+    coeffs = Float64[Float64(value) for value in term_coefficients]
+    left_modes = left_unit.axis_function_indices
+    right_modes = right_unit.axis_function_indices
+    block = zeros(Float64, length(left_modes), length(right_modes))
+    projected_x, projected_y, projected_z = projected_terms
+    @inbounds for col in eachindex(right_modes)
+        xj, yj, zj = right_modes[col]
+        for row in eachindex(left_modes)
+            xi, yi, zi = left_modes[row]
+            value = 0.0
+            @simd for term in 1:nterms
+                value +=
+                    coeffs[term] *
+                    projected_x[term, xi, xj] *
+                    projected_y[term, yi, yj] *
+                    projected_z[term, zi, zj]
+            end
+            block[row, col] = value
+        end
+    end
+    all(isfinite, block) || throw(
+        ArgumentError("product/doside source-box local-Gaussian block produced non-finite entries"),
+    )
+    return (
+        path = :product_doside_source_box_local_gaussian_sum,
+        block = block,
+        pair_plan = pair_plan,
+        one_dimensional_gaussian_factors = (
+            x = projected_x,
+            y = projected_y,
+            z = projected_z,
+        ),
+        diagnostics = merge(
+            pair_plan.diagnostics,
+            (
+                source = :product_doside_source_box_local_gaussian_sum_block,
+                source_box_first = true,
+                local_gaussian_source_box_terms = true,
+                positive_gaussian_sum_convention = true,
+                nuclear_charge_applied = false,
+                nuclear_attraction_sign_applied = false,
+                term_coefficients_source = :caller_supplied_explicit_data,
+                axis_gaussian_terms_source = :caller_supplied_explicit_data,
+                input_local_gaussian_data_pgdg_checked = false,
+                pgdg_analytic_operator_provenance_claimed = false,
+                numerical_reference_fallback = false,
+                term_count = nterms,
+                axis_term_dimensions = (
+                    x = size(axis_gaussian_terms.x),
+                    y = size(axis_gaussian_terms.y),
+                    z = size(axis_gaussian_terms.z),
+                ),
+                projected_axis_term_dimensions = (
+                    x = size(projected_x),
+                    y = size(projected_y),
+                    z = size(projected_z),
+                ),
+                operator_factor_source = :explicit_local_gaussian_axis_terms,
+                shell_row_algorithm = false,
+                support_local_oracle_used = false,
+                support_local_oracle_only = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                ida_mwg_semantics_changed = false,
+                ecp_terms_implemented = false,
+                electron_electron_terms_implemented = false,
+                mwg_interaction_implemented = false,
+                local_gaussian_one_body_implemented = true,
+                product_staged_nuclear_execution_changed = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                cr2_science_status_changed = false,
+                output_finite = true,
+            ),
+        ),
+    )
+end
+
 function _product_doside_retained_low_order_block(
     left_unit::_CartesianNestedProductStagedByCenterUnit3D,
     right_unit::_CartesianNestedProductStagedByCenterUnit3D,

@@ -149,6 +149,84 @@ function explicit_support_reference_block(left_unit, right_unit, metrics, term::
            right_unit.coefficient_matrix
 end
 
+function local_gaussian_fixture_terms()
+    axis_terms_x = Array{Float64,3}(undef, 2, 2, 2)
+    axis_terms_x[1, :, :] .= [
+        1.0 0.125
+        0.125 0.75
+    ]
+    axis_terms_x[2, :, :] .= [
+        0.35 -0.05
+        -0.05 0.45
+    ]
+    axis_terms_y = Array{Float64,3}(undef, 2, 2, 2)
+    axis_terms_y[1, :, :] .= [
+        0.9 -0.1
+        -0.1 0.8
+    ]
+    axis_terms_y[2, :, :] .= [
+        0.4 0.075
+        0.075 0.5
+    ]
+    axis_terms_z = Array{Float64,3}(undef, 2, 1, 1)
+    axis_terms_z[1, 1, 1] = 1.25
+    axis_terms_z[2, 1, 1] = 0.6
+    return (
+        term_coefficients = [0.7, 0.2],
+        axis_gaussian_terms = (
+            x = axis_terms_x,
+            y = axis_terms_y,
+            z = axis_terms_z,
+        ),
+    )
+end
+
+function explicit_local_gaussian_support_operator(
+    left_unit,
+    right_unit,
+    term_coefficients,
+    axis_gaussian_terms,
+)
+    operator = zeros(
+        Float64,
+        length(left_unit.support_states),
+        length(right_unit.support_states),
+    )
+    for col in eachindex(right_unit.support_states)
+        xj, yj, zj = right_unit.support_states[col]
+        for row in eachindex(left_unit.support_states)
+            xi, yi, zi = left_unit.support_states[row]
+            value = 0.0
+            for term in eachindex(term_coefficients)
+                value +=
+                    term_coefficients[term] *
+                    axis_gaussian_terms.x[term, xi, xj] *
+                    axis_gaussian_terms.y[term, yi, yj] *
+                    axis_gaussian_terms.z[term, zi, zj]
+            end
+            operator[row, col] = value
+        end
+    end
+    return operator
+end
+
+function explicit_local_gaussian_reference_block(
+    left_unit,
+    right_unit,
+    term_coefficients,
+    axis_gaussian_terms,
+)
+    support_operator = explicit_local_gaussian_support_operator(
+        left_unit,
+        right_unit,
+        term_coefficients,
+        axis_gaussian_terms,
+    )
+    return transpose(left_unit.coefficient_matrix) *
+           support_operator *
+           right_unit.coefficient_matrix
+end
+
 identity_axis = Matrix{Float64}(I, 2, 2)
 rotation_axis = [
     inv(sqrt(2.0)) inv(sqrt(2.0))
@@ -197,6 +275,8 @@ pair_plan = CCPM._product_doside_source_box_pair_plan(identity_unit, rotated_uni
 
 max_errors = Dict{Tuple{Symbol,Symbol,Symbol},Float64}()
 max_explicit_support_errors = Dict{Tuple{Symbol,Symbol,Symbol},Float64}()
+local_gaussian_fixture = local_gaussian_fixture_terms()
+max_local_gaussian_errors = Dict{Tuple{Symbol,Symbol},Float64}()
 for (label, left_unit, right_unit) in (
     (:self_identity, identity_unit, identity_unit),
     (:self_rotated, rotated_unit, rotated_unit),
@@ -237,6 +317,45 @@ for (label, left_unit, right_unit) in (
         @assert !reference.diagnostics.qwhamiltonian_consumes
         @assert !reference.diagnostics.public_default_consumes
     end
+    local_gaussian = CCPM._product_doside_source_box_local_gaussian_sum_block(
+        left_unit,
+        right_unit;
+        term_coefficients = local_gaussian_fixture.term_coefficients,
+        axis_gaussian_terms = local_gaussian_fixture.axis_gaussian_terms,
+    )
+    explicit_local_gaussian = explicit_local_gaussian_reference_block(
+        left_unit,
+        right_unit,
+        local_gaussian_fixture.term_coefficients,
+        local_gaussian_fixture.axis_gaussian_terms,
+    )
+    local_gaussian_error = norm(local_gaussian.block - explicit_local_gaussian, Inf)
+    max_local_gaussian_errors[(label, :gaussian_sum)] = local_gaussian_error
+    @assert local_gaussian.path == :product_doside_source_box_local_gaussian_sum
+    @assert local_gaussian.pair_plan.pair_kind ==
+            :product_doside_source_box_local_gaussian_pair
+    @assert local_gaussian.pair_plan.supported_terms == (:gaussian_sum,)
+    @assert local_gaussian_error <= 1.0e-12
+    @assert local_gaussian.diagnostics.source_box_first
+    @assert local_gaussian.diagnostics.local_gaussian_source_box_terms
+    @assert local_gaussian.diagnostics.positive_gaussian_sum_convention
+    @assert !local_gaussian.diagnostics.nuclear_charge_applied
+    @assert !local_gaussian.diagnostics.nuclear_attraction_sign_applied
+    @assert local_gaussian.diagnostics.axis_gaussian_terms_source ==
+            :caller_supplied_explicit_data
+    @assert !local_gaussian.diagnostics.input_local_gaussian_data_pgdg_checked
+    @assert !local_gaussian.diagnostics.pgdg_analytic_operator_provenance_claimed
+    @assert !local_gaussian.diagnostics.numerical_reference_fallback
+    @assert !local_gaussian.diagnostics.shell_row_algorithm
+    @assert !local_gaussian.diagnostics.support_local_oracle_used
+    @assert !local_gaussian.diagnostics.retained_pqs_weight_division_allowed
+    @assert !local_gaussian.diagnostics.ida_mwg_semantics_changed
+    @assert !local_gaussian.diagnostics.ecp_terms_implemented
+    @assert !local_gaussian.diagnostics.electron_electron_terms_implemented
+    @assert !local_gaussian.diagnostics.packet_adoption
+    @assert !local_gaussian.diagnostics.fixed_block_routing
+    @assert !local_gaussian.diagnostics.qwhamiltonian_consumes
+    @assert local_gaussian.diagnostics.output_finite
 end
 
 shadow = CCPM._product_doside_source_box_shadow_blocks(
@@ -283,6 +402,18 @@ catch err
     err isa ArgumentError || rethrow()
 end
 
+try
+    CCPM._product_doside_source_box_local_gaussian_sum_block(
+        identity_unit,
+        identity_unit;
+        term_coefficients = [1.0],
+        axis_gaussian_terms = local_gaussian_fixture.axis_gaussian_terms,
+    )
+    error("mismatched local-Gaussian term counts were accepted")
+catch err
+    err isa ArgumentError || rethrow()
+end
+
 println(
     "product/doside source-box probe ",
     (
@@ -292,6 +423,9 @@ println(
         max_explicit_support_error = isempty(max_explicit_support_errors) ?
                                      0.0 :
                                      maximum(values(max_explicit_support_errors)),
+        max_local_gaussian_error = isempty(max_local_gaussian_errors) ?
+                                   0.0 :
+                                   maximum(values(max_local_gaussian_errors)),
         max_transpose_error = shadow.diagnostics.max_right_left_transpose_error,
         numerical_reference_fallback = shadow.diagnostics.numerical_reference_fallback,
     ),
