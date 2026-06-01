@@ -7591,6 +7591,97 @@ end
         contact_safe_term_metrics;
         terms = (:weights,),
     )
+    current_route_inventory =
+        CCPM._pqs_current_route_retained_unit_inventory(pqs_construction)
+    @test current_route_inventory.object_kind ==
+          :pqs_current_route_retained_unit_inventory_fixture
+    @test current_route_inventory.status == :private_diagnostic_only
+    @test length(current_route_inventory.units) == 6
+    @test current_route_inventory.coverage.ordered_roles == (
+        :outer_mismatch_z_low_slab,
+        :outer_mismatch_z_high_slab,
+        :left_atom_box,
+        :right_atom_box,
+        :contact_cap_slab,
+        :regular_shared_molecular_shell,
+    )
+    @test current_route_inventory.coverage.ordered_column_ranges == (
+        1:49,
+        50:98,
+        99:223,
+        224:348,
+        349:373,
+        374:487,
+    )
+    @test current_route_inventory.coverage.first_column == 1
+    @test current_route_inventory.coverage.last_column == 487
+    @test current_route_inventory.coverage.represented_count == 487
+    @test current_route_inventory.coverage.contiguous
+    @test current_route_inventory.coverage.non_overlapping
+    @test current_route_inventory.coverage.covers_every_column_once
+    @test map(unit -> unit.category, current_route_inventory.units) == (
+        :product_doside,
+        :product_doside,
+        :support_dense,
+        :support_dense,
+        :product_doside,
+        :shell_realized_pqs_fixture,
+    )
+    @test map(unit -> unit.retained_count, current_route_inventory.units) ==
+          (49, 49, 125, 125, 25, 114)
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].kind ==
+          :projected_q_shell
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].active_representation_stage ==
+          :shell_realized_pqs_fixture
+    @test !current_route_inventory.by_role[:regular_shared_molecular_shell].raw_product_box_operator_contract
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].safe_term_capability ==
+          :support_local_fallback_current_route
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].support_count == 362
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].retained_count == 114
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.available
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.reference_only
+    @test !current_route_inventory.by_role[:regular_shared_molecular_shell].raw_box_auxiliary_metadata.active_current_route_contract
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].equivalence.coefficient_matrix_matches_active_shell
+    @test current_route_inventory.by_role[:regular_shared_molecular_shell].equivalence.max_parent_coefficient_error == 0.0
+    @test current_route_inventory.by_role[:left_atom_box].category == :support_dense
+    @test current_route_inventory.by_role[:left_atom_box].safe_term_capability ==
+          :support_local_fallback_safe_terms
+    @test current_route_inventory.by_role[:contact_cap_slab].category == :product_doside
+    @test current_route_inventory.by_role[:outer_mismatch_z_low_slab].category ==
+          :product_doside
+    @test map(policy -> policy.pair_type, current_route_inventory.pair_policies) == (
+        :product_product,
+        :support_support,
+        :support_product,
+        :shell_realized_pqs_product,
+        :shell_realized_pqs_support,
+        :shell_realized_pqs_pqs,
+        :raw_box_pqs_helpers,
+    )
+    @test current_route_inventory.pair_policies[1].policy ==
+          :product_doside_source_box_path
+    @test current_route_inventory.pair_policies[4].policy ==
+          :support_local_fallback_current_route
+    @test !current_route_inventory.pair_policies[end].active_current_route
+    @test current_route_inventory.diagnostics.private_diagnostic_only
+    @test current_route_inventory.diagnostics.current_route_inventory
+    @test !current_route_inventory.diagnostics.route_descriptor_emitted
+    @test !current_route_inventory.diagnostics.construction_mutated
+    @test !current_route_inventory.diagnostics.sidecar_installation
+    @test !current_route_inventory.diagnostics.packet_adoption
+    @test !current_route_inventory.diagnostics.fixed_block_construction_changed
+    @test !current_route_inventory.diagnostics.qwhamiltonian_changed
+    @test !current_route_inventory.diagnostics.ida_weight_division_allowed
+    @test current_route_inventory.diagnostics.retained_weight_semantics ==
+          :not_positive_quadrature_weights
+    @test !current_route_inventory.diagnostics.local_ecp_gaussian_mwg_interaction_changed
+    @test current_route_inventory.diagnostics.shared_pqs_active_representation ==
+          :shell_realized_pqs_fixture
+    @test !current_route_inventory.diagnostics.shared_pqs_raw_box_operator_contract
+    @test current_route_inventory.diagnostics.raw_box_pqs_auxiliary_reference_available
+    @test !current_route_inventory.diagnostics.whole_route_safe_term_matrix_consumer
+    @test current_route_inventory.diagnostics.fixed_dimension == 487
+    @test current_route_inventory.diagnostics.coverage_complete
     @test :product_doside_unit in pqs_source_descriptor.non_contracts
     @test :dense_full_parent_fallback in pqs_source_descriptor.non_contracts
     @test pqs_source_descriptor.diagnostics.metadata_only

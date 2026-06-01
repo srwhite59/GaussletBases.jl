@@ -409,6 +409,33 @@ IDA/MWG/local/ECP/Gaussian/interaction, public/default route, or CR2 artifact
 change is implied. The metric/operator inputs are caller-supplied explicit
 axis data, not a new independent PGDG analytic provenance proof.
 
+The private current-route retained-unit inventory checkpoint adds
+`_pqs_current_route_retained_unit_inventory(...)` as diagnostic/read-path
+infrastructure only. For the focused q4 route it reports six ordered units
+covering columns `1:487`: outer mismatch low/high product/doside bridge slabs
+at `1:49` and `50:98`; left/right atom-box support-dense direct-support units
+at `99:223` and `224:348`; the contact-cap product/doside bridge at
+`349:373`; and the regular shared molecular shell as a shell-realized PQS
+fixture at `374:487`. The coverage audit checks column order, contiguity,
+non-overlap, first column `1`, last column `487`, and one representation for
+every current-route column.
+
+The shared PQS entry deliberately remains the active
+`:shell_realized_pqs_fixture`: its support-local/shell-realized coefficients
+are the current route representation, while raw product-box/source-box metadata
+is auxiliary reference metadata only. Raw-box PQS helpers are therefore not an
+active current-route pair policy. Product/product pairs use the
+product/doside source-box path; support/support and support/product pairs use
+support-local fallback unless both sides are product/doside; shell-realized
+PQS/product, PQS/support, and PQS/PQS pairs use support-local fallback for the
+current route.
+
+This inventory emits no route descriptor, mutates no construction, installs no
+sidecar, adopts no packet or whole-route safe-term matrix consumer, and
+changes no fixed-block, QW/Hamiltonian, IDA/MWG, local/ECP/Gaussian/
+interaction, public/default, or CR2 behavior. It also assigns no retained PQS
+positive-weight or IDA-division semantics.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained

@@ -5590,6 +5590,379 @@ function _pqs_atom_box_safe_term_operator_comparison(
     )
 end
 
+function _pqs_inventory_wrapped_staged_unit(
+    unit::_CartesianNestedProductStagedByCenterUnit3D;
+    category::Symbol,
+    support_source_semantics::Symbol,
+    safe_term_capability::Symbol,
+    active_representation_stage::Symbol,
+    source_helper::Symbol,
+    raw_box_auxiliary_metadata = nothing,
+)
+    return (
+        role = unit.role,
+        category = category,
+        kind = unit.kind,
+        column_range = unit.column_range,
+        retained_count = length(unit.column_range),
+        support_count = length(unit.support_indices),
+        support_indices = copy(unit.support_indices),
+        support_states = copy(unit.support_states),
+        coefficient_matrix = unit.coefficient_matrix,
+        support_source_semantics = support_source_semantics,
+        safe_term_capability = safe_term_capability,
+        active_representation_stage = active_representation_stage,
+        raw_box_auxiliary_metadata = raw_box_auxiliary_metadata,
+        raw_product_box_operator_contract =
+            category == :product_doside && active_representation_stage == :product_doside_bridge,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        provenance = (
+            source = source_helper,
+            original_provenance = unit.provenance,
+        ),
+        diagnostics = (
+            source = :pqs_current_route_retained_unit_inventory_unit,
+            original_diagnostics = unit.diagnostics,
+            private_diagnostic_only = true,
+            active_current_route_unit = true,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+        ),
+    )
+end
+
+function _pqs_shared_shell_realized_fixture(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    audit,
+)
+    shared_facts = [
+        fact for fact in audit.unit_facts if fact.role == :regular_shared_molecular_shell
+    ]
+    length(shared_facts) == 1 || throw(
+        ArgumentError("PQS current-route inventory requires exactly one shared PQS shell fact"),
+    )
+    fact = only(shared_facts)
+    fact.primitive_family == :projected_q_shell || throw(
+        ArgumentError("PQS current-route inventory shared shell must be projected_q_shell"),
+    )
+    fact.classification == :out_of_scope || throw(
+        ArgumentError("PQS current-route inventory shared shell must remain out-of-scope for body units"),
+    )
+    builds = [
+        build for build in construction.region_builds if build.region_role == :regular_shared_molecular_shell
+    ]
+    length(builds) == 1 || throw(
+        ArgumentError("PQS current-route inventory requires exactly one shared PQS shell build"),
+    )
+    build = only(builds)
+    build.primitive_family == :projected_q_shell || throw(
+        ArgumentError("PQS current-route inventory shared shell build must be projected_q_shell"),
+    )
+    layer = build.built_object
+    descriptor = hasproperty(build.metadata, :pqs_staged_unit_descriptor) ?
+        build.metadata.pqs_staged_unit_descriptor :
+        _nested_projected_q_shell_staged_unit_descriptor(layer)
+    descriptor isa _CartesianNestedProjectedQShellStagedUnitDescriptor3D || throw(
+        ArgumentError("PQS current-route inventory shared shell requires a staged descriptor"),
+    )
+    dims = _nested_axis_lengths(construction.axis_bundles)
+    parent_dimension = prod(dims)
+    size(layer.coefficient_matrix, 1) == parent_dimension || throw(
+        ArgumentError("PQS current-route inventory shared shell coefficient matrix has inconsistent parent dimension"),
+    )
+    size(layer.coefficient_matrix, 2) == build.retained_count == fact.retained_count ||
+        throw(
+            ArgumentError("PQS current-route inventory shared shell retained count mismatch"),
+        )
+    support_indices = copy(layer.support_indices)
+    support_states = copy(layer.support_states)
+    support_indices == descriptor.support_indices || throw(
+        ArgumentError("PQS current-route inventory shared shell support indices do not match descriptor"),
+    )
+    support_states == descriptor.support_states || throw(
+        ArgumentError("PQS current-route inventory shared shell support states do not match descriptor"),
+    )
+    support_count = length(support_indices)
+    support_count == build.built_support_count == fact.support_count == descriptor.support_count ||
+        throw(
+            ArgumentError("PQS current-route inventory shared shell support count mismatch"),
+        )
+    build.column_range == fact.column_range || throw(
+        ArgumentError("PQS current-route inventory shared shell column range mismatch"),
+    )
+    local_coefficients =
+        Matrix{Float64}(layer.coefficient_matrix[support_indices, :])
+    size(local_coefficients) == descriptor.support_local_coefficient_shape || throw(
+        ArgumentError("PQS current-route inventory shared shell local coefficient shape mismatch"),
+    )
+    parent_coefficients = _pqs_support_local_parent_coefficient_matrix(
+        support_indices,
+        local_coefficients,
+        parent_dimension,
+    )
+    parent_difference =
+        Matrix{Float64}(parent_coefficients) -
+        Matrix{Float64}(layer.coefficient_matrix)
+    max_parent_coefficient_error =
+        isempty(parent_difference) ? 0.0 : maximum(abs, parent_difference)
+    raw_box_auxiliary_reference_available =
+        !isempty(descriptor.axis_intervals) &&
+        !isempty(descriptor.axis_local_coefficients) &&
+        descriptor.mode_count == length(descriptor.boundary_mode_indices)
+    return (
+        role = :regular_shared_molecular_shell,
+        category = :shell_realized_pqs_fixture,
+        kind = :projected_q_shell,
+        column_range = build.column_range,
+        retained_count = build.retained_count,
+        support_count = support_count,
+        support_indices = support_indices,
+        support_states = support_states,
+        support_local_coefficient_matrix = local_coefficients,
+        descriptor = descriptor,
+        support_source_semantics = :shell_realized_support_local_coefficients,
+        safe_term_capability = :support_local_fallback_current_route,
+        active_representation_stage = :shell_realized_pqs_fixture,
+        raw_product_box_operator_contract = false,
+        raw_box_auxiliary_metadata = (
+            available = raw_box_auxiliary_reference_available,
+            source_mode_dims = (descriptor.q, descriptor.q, descriptor.L),
+            raw_q = descriptor.q,
+            raw_L = descriptor.L,
+            mode_count = descriptor.mode_count,
+            boundary_mode_count = length(descriptor.boundary_mode_indices),
+            reference_only = true,
+            active_current_route_contract = false,
+        ),
+        equivalence = (
+            support_indices_match = support_indices == descriptor.support_indices,
+            support_states_match = support_states == descriptor.support_states,
+            retained_count_match =
+                build.retained_count == fact.retained_count == descriptor.retained_count,
+            column_range_match = build.column_range == fact.column_range,
+            coefficient_matrix_matches_active_shell =
+                max_parent_coefficient_error == 0.0,
+            max_parent_coefficient_error = max_parent_coefficient_error,
+            local_support_coefficient_shape = size(local_coefficients),
+        ),
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        provenance = (
+            source = :pqs_current_route_shared_shell_realized_fixture,
+            primitive_family = build.primitive_family,
+            mapped_primitive = build.mapped_primitive,
+        ),
+        diagnostics = (
+            source = :pqs_current_route_shared_shell_realized_fixture,
+            private_diagnostic_only = true,
+            active_current_route_unit = true,
+            representation_stage = :shell_realized_pqs_fixture,
+            shell_projection_lowdin_realization = true,
+            raw_product_box_operator_contract = false,
+            raw_box_auxiliary_reference_available =
+                raw_box_auxiliary_reference_available,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            ida_weight_division_allowed = false,
+        ),
+    )
+end
+
+function _pqs_current_route_inventory_pair_policies()
+    return (
+        (
+            pair_type = :product_product,
+            policy = :product_doside_source_box_path,
+            active_current_route = true,
+        ),
+        (
+            pair_type = :support_support,
+            policy = :support_local_fallback,
+            active_current_route = true,
+        ),
+        (
+            pair_type = :support_product,
+            policy = :support_local_fallback_unless_both_product_doside,
+            active_current_route = true,
+        ),
+        (
+            pair_type = :shell_realized_pqs_product,
+            policy = :support_local_fallback_current_route,
+            active_current_route = true,
+            raw_box_pqs_helper_status = :reference_shadow_only,
+        ),
+        (
+            pair_type = :shell_realized_pqs_support,
+            policy = :support_local_fallback,
+            active_current_route = true,
+        ),
+        (
+            pair_type = :shell_realized_pqs_pqs,
+            policy = :support_local_fallback_current_route,
+            active_current_route = true,
+        ),
+        (
+            pair_type = :raw_box_pqs_helpers,
+            policy = :reference_shadow_only_not_active_current_route,
+            active_current_route = false,
+        ),
+    )
+end
+
+function _pqs_current_route_inventory_coverage(units)
+    ordered_units = sort(collect(units); by = unit -> first(unit.column_range))
+    non_overlapping = true
+    contiguous = true
+    expected_first = first(first(ordered_units).column_range)
+    represented_count = 0
+    for unit in ordered_units
+        first(unit.column_range) == expected_first || (contiguous = false)
+        represented_count += length(unit.column_range)
+        expected_first = last(unit.column_range) + 1
+    end
+    for index in 1:(length(ordered_units) - 1)
+        last(ordered_units[index].column_range) < first(ordered_units[index + 1].column_range) ||
+            (non_overlapping = false)
+    end
+    return (
+        first_column = first(first(ordered_units).column_range),
+        last_column = last(last(ordered_units).column_range),
+        represented_count = represented_count,
+        unit_count = length(ordered_units),
+        contiguous = contiguous,
+        non_overlapping = non_overlapping,
+        covers_every_column_once = contiguous && non_overlapping,
+        ordered_roles = Tuple(unit.role for unit in ordered_units),
+        ordered_column_ranges = Tuple(unit.column_range for unit in ordered_units),
+    )
+end
+
+function _pqs_current_route_retained_unit_inventory(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D;
+    audit = _pqs_route_retained_unit_fact_audit(
+        construction;
+        include_support_indices = true,
+    ),
+)
+    outer_fixture =
+        _pqs_outer_mismatch_product_doside_units(construction; audit = audit)
+    atom_fixture =
+        _pqs_atom_box_support_dense_units(construction; audit = audit)
+    contact_fixture =
+        _pqs_contact_cap_product_doside_unit(construction; audit = audit)
+    shared_fixture =
+        _pqs_shared_shell_realized_fixture(construction, audit)
+
+    units = Any[]
+    append!(
+        units,
+        _pqs_inventory_wrapped_staged_unit(
+            unit;
+            category = :product_doside,
+            support_source_semantics = :identity_selector_boundary_slab,
+            safe_term_capability = :product_doside_source_box_safe_terms,
+            active_representation_stage = :product_doside_bridge,
+            source_helper = :_pqs_outer_mismatch_product_doside_units,
+        ) for unit in outer_fixture.units
+    )
+    append!(
+        units,
+        _pqs_inventory_wrapped_staged_unit(
+            unit;
+            category = :support_dense,
+            support_source_semantics = :support_local_direct_rows,
+            safe_term_capability = :support_local_fallback_safe_terms,
+            active_representation_stage = :support_dense_direct_support,
+            source_helper = :_pqs_atom_box_support_dense_units,
+        ) for unit in atom_fixture.units
+    )
+    push!(
+        units,
+        _pqs_inventory_wrapped_staged_unit(
+            contact_fixture.unit;
+            category = :product_doside,
+            support_source_semantics = :identity_selector_contact_cap_slab,
+            safe_term_capability = :product_doside_source_box_safe_terms,
+            active_representation_stage = :product_doside_bridge,
+            source_helper = :_pqs_contact_cap_product_doside_unit,
+        ),
+    )
+    push!(units, shared_fixture)
+    ordered_units = Tuple(sort(units; by = unit -> first(unit.column_range)))
+    by_role = Dict(unit.role => unit for unit in ordered_units)
+    length(by_role) == length(ordered_units) || throw(
+        ArgumentError("PQS current-route retained-unit inventory requires unique unit roles"),
+    )
+    coverage = _pqs_current_route_inventory_coverage(ordered_units)
+    expected_roles = (
+        :outer_mismatch_z_low_slab,
+        :outer_mismatch_z_high_slab,
+        :left_atom_box,
+        :right_atom_box,
+        :contact_cap_slab,
+        :regular_shared_molecular_shell,
+    )
+    coverage.ordered_roles == expected_roles || throw(
+        ArgumentError("PQS current-route retained-unit inventory has unexpected unit order"),
+    )
+    fixed_dimension = sum(build.retained_count for build in construction.region_builds)
+    coverage.first_column == 1 || throw(
+        ArgumentError("PQS current-route retained-unit inventory must start at column 1"),
+    )
+    coverage.last_column == fixed_dimension || throw(
+        ArgumentError("PQS current-route retained-unit inventory must end at fixed dimension"),
+    )
+    coverage.represented_count == fixed_dimension || throw(
+        ArgumentError("PQS current-route retained-unit inventory represented count mismatch"),
+    )
+    coverage.covers_every_column_once || throw(
+        ArgumentError("PQS current-route retained-unit inventory must cover every column once"),
+    )
+    raw_box_available = shared_fixture.raw_box_auxiliary_metadata.available
+    diagnostics = (
+        source = :pqs_current_route_retained_unit_inventory,
+        private_diagnostic_only = true,
+        current_route_inventory = true,
+        route_descriptor_emitted = false,
+        construction_mutated = false,
+        sidecar_installation = false,
+        packet_adoption = false,
+        fixed_block_construction_changed = false,
+        qwhamiltonian_changed = false,
+        ida_weight_division_allowed = false,
+        retained_weight_semantics = :not_positive_quadrature_weights,
+        local_ecp_gaussian_mwg_interaction_changed = false,
+        shared_pqs_active_representation = :shell_realized_pqs_fixture,
+        shared_pqs_raw_box_operator_contract = false,
+        raw_box_pqs_auxiliary_reference_available = raw_box_available,
+        raw_box_pqs_auxiliary_reference_unavailable_reason =
+            raw_box_available ? nothing : :shared_pqs_descriptor_missing_raw_plan_facts,
+        whole_route_safe_term_matrix_consumer = false,
+        fixed_dimension = fixed_dimension,
+        unit_count = length(ordered_units),
+        coverage_complete = coverage.covers_every_column_once,
+    )
+    return (
+        object_kind = :pqs_current_route_retained_unit_inventory_fixture,
+        status = :private_diagnostic_only,
+        units = ordered_units,
+        by_role = by_role,
+        coverage = coverage,
+        pair_policies = _pqs_current_route_inventory_pair_policies(),
+        source_fixtures = (
+            outer_mismatch = outer_fixture,
+            atom_boxes = atom_fixture,
+            contact_cap = contact_fixture,
+            shared_pqs = shared_fixture,
+        ),
+        diagnostics = diagnostics,
+    )
+end
+
 function _pqs_pqs_product_route_descriptor_diagnostic(
     construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
     metrics = nothing;

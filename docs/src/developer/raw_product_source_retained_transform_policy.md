@@ -382,6 +382,34 @@ construction change, no QW/Hamiltonian change, no shell projection/Lowdin, no
 support-local PQS oracle, no retained-weight IDA division, and no
 local/ECP/Gaussian/MWG/interaction changes.
 
+The private current-route retained-unit inventory checkpoint adds
+`_pqs_current_route_retained_unit_inventory(...)` as diagnostic/read-path
+infrastructure only. It does not emit a route descriptor or whole-route
+safe-term matrix consumer. For the focused q4 route, it represents all current
+columns `1:487` exactly once as six ordered retained units: outer mismatch
+low/high product/doside bridge slabs at `1:49` and `50:98`; left/right
+atom-box support-dense direct-support units at `99:223` and `224:348`; the
+contact-cap product/doside bridge at `349:373`; and the regular shared
+molecular shell as a shell-realized PQS fixture at `374:487`. Coverage checks
+record ordering by column range, contiguity, non-overlap, first column `1`,
+last column `487`, and complete current-route representation.
+
+This inventory keeps the shared PQS boundary honest. The active shared shell
+is labeled `:shell_realized_pqs_fixture`: support-local/shell-realized
+coefficients are the current route representation, while raw product-box and
+source-box metadata are auxiliary reference metadata only. Raw-box PQS helpers
+remain reference/shadow-only and are not active current-route pair policy.
+Product/product pairs use the product/doside source-box path; support/support
+and support/product pairs use support-local fallback unless both sides are
+product/doside; shell-realized PQS/product, PQS/support, and PQS/PQS pairs use
+support-local fallback for the current active route.
+
+The checkpoint is metadata/diagnostic only: no construction mutation, sidecar
+installation, packet or fixed-block adoption, QW/Hamiltonian change, IDA/MWG
+semantic change, local/ECP/Gaussian/interaction work, public/default route
+change, CR2 status change, retained PQS positive-weight semantics, or retained
+PQS IDA division is implied.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS box `(1:5,1:5,1:5)`, right PQS box `(1:5,1:5,3:7)`, and a middle product
 slab at `z = 4`. Both PQS source boxes use source-mode dimensions `(5,5,5)`
