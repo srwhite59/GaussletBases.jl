@@ -1,5 +1,11 @@
 # Raw Product Source And Retained Transform Policy
 
+For PQS operator work, the active governing framework is
+[`pqs_source_box_operator_framework.md`](pqs_source_box_operator_framework.md).
+Read that framework before using this note for implementation. If the two
+notes appear to disagree, stop and update the framework/policy explicitly
+instead of resolving the conflict silently in code.
+
 This note records the intended next abstraction for high-order Cartesian
 construction. It is a design contract, not a claim that all routes already use
 this machinery.
@@ -394,15 +400,17 @@ molecular shell as a shell-realized PQS fixture at `374:487`. Coverage checks
 record ordering by column range, contiguity, non-overlap, first column `1`,
 last column `487`, and complete current-route representation.
 
-This inventory keeps the shared PQS boundary honest. The active shared shell
-is labeled `:shell_realized_pqs_fixture`: support-local/shell-realized
-coefficients are the current route representation, while raw product-box and
-source-box metadata are auxiliary reference metadata only. Raw-box PQS helpers
-remain reference/shadow-only and are not active current-route pair policy.
-Product/product pairs use the product/doside source-box path; support/support
-and support/product pairs use support-local fallback unless both sides are
-product/doside; shell-realized PQS/product, PQS/support, and PQS/PQS pairs use
-support-local fallback for the current active route.
+This inventory keeps the shared PQS boundary honest. The shared shell is
+labeled `:shell_realized_pqs_fixture`: support-local/shell-realized
+coefficients describe the current shell-supported fixture representation, not
+the intended operator algorithm. Raw product-box and source-box metadata remain
+auxiliary reference metadata until an explicit realization-transform block
+consumes them. Product/product pairs use the product/doside source-box path.
+Support/support and support/product pairs use support-local fallback unless
+both sides are product/doside. Shell-realized PQS/product, PQS/support, and
+PQS/PQS support-local contractions are labeled
+`:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
+validation paths, not active algorithmic pair policies.
 
 The checkpoint is metadata/diagnostic only: no construction mutation, sidecar
 installation, packet or fixed-block adoption, QW/Hamiltonian change, IDA/MWG
@@ -415,17 +423,21 @@ upper-triangular retained pairs through
 `_pqs_current_route_retained_pair_inventory(...)`. Pair-policy counts are:
 product/product `6`, support/support `3`, support/product `6`,
 shell-realized PQS/product `3`, shell-realized PQS/support `2`,
-shell-realized PQS/PQS `1`, and active raw-box PQS pairs `0`. Product/product
-pairs use the product/doside source-box path. Support-dense pairs and
-shell-realized PQS pairs use support-local fallback for the current active
-route.
+shell-realized PQS/PQS `1`, and raw-box PQS active pair policies `0`.
+Product/product pairs use the product/doside source-box path. Support-dense
+pairs use the support-local fallback path. Shell-realized PQS pairs are
+counted separately as support-local oracles for shell realization. In the q4
+checkpoint, 15 pairs remain active algorithmic/read-path pairs, 6
+product/product pairs have a source-box algorithm available, and 6
+shell-realized PQS pairs are oracle-only shell-row contractions.
 
 `_pqs_current_route_safe_term_matrices(...)` consumes that pair inventory and
 builds full private diagnostic `487 x 487` matrices for overlap,
 `position_x/y/z`, `x2_x/y/z`, and kinetic. Every pair is compared against a
-support-local/current-route oracle. Focused q4 evidence was `542 / 542`, max
-matrix error `0.0`, helper elapsed time `28.601491167 s`, and allocation
-`137,976,768` bytes.
+support-local oracle. For shell-realized PQS pairs, that oracle is debug
+validation only; it is not the intended route algorithm. Focused q4 evidence
+was `542 / 542`, max matrix error `0.0`, helper elapsed time
+`28.601491167 s`, and allocation `137,976,768` bytes.
 
 The private current-route authority checkpoint adds
 `_pqs_current_route_safe_term_authority_comparison(...)`. It compares the

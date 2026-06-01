@@ -1,5 +1,11 @@
 # Projected q-Shell Policy
 
+For PQS operator work, the active governing framework is
+[`pqs_source_box_operator_framework.md`](pqs_source_box_operator_framework.md).
+Read that framework before using this note for implementation. If the two
+notes appear to disagree, stop and update the framework/policy explicitly
+instead of resolving the conflict silently in code.
+
 ## Purpose
 
 Projected q-Shell (PQS) is the intended high-order shell abstraction for
@@ -420,15 +426,16 @@ fixture at `374:487`. The coverage audit checks column order, contiguity,
 non-overlap, first column `1`, last column `487`, and one representation for
 every current-route column.
 
-The shared PQS entry deliberately remains the active
-`:shell_realized_pqs_fixture`: its support-local/shell-realized coefficients
-are the current route representation, while raw product-box/source-box metadata
-is auxiliary reference metadata only. Raw-box PQS helpers are therefore not an
-active current-route pair policy. Product/product pairs use the
-product/doside source-box path; support/support and support/product pairs use
-support-local fallback unless both sides are product/doside; shell-realized
-PQS/product, PQS/support, and PQS/PQS pairs use support-local fallback for the
-current route.
+The shared PQS entry remains labeled `:shell_realized_pqs_fixture`: its
+support-local/shell-realized coefficients describe the current shell-supported
+fixture representation, not the intended operator algorithm. Raw
+product-box/source-box metadata remains auxiliary until an explicit
+realization-transform block consumes it. Product/product pairs use the
+product/doside source-box path. Support/support and support/product pairs use
+support-local fallback unless both sides are product/doside. Shell-realized
+PQS/product, PQS/support, and PQS/PQS support-local contractions are labeled
+`:support_local_oracle_for_shell_realization`: they are shell-row oracle/debug
+validation paths, not active algorithmic pair policies.
 
 This inventory emits no route descriptor, mutates no construction, installs no
 sidecar, adopts no packet or whole-route safe-term matrix consumer, and
@@ -441,15 +448,21 @@ upper-triangular retained pairs with
 `_pqs_current_route_retained_pair_inventory(...)`. Pair-policy counts are:
 product/product `6`, support/support `3`, support/product `6`,
 shell-realized PQS/product `3`, shell-realized PQS/support `2`,
-shell-realized PQS/PQS `1`, and active raw-box PQS pairs `0`. Product/product
-pairs use the product/doside source-box path. Support-dense pairs and all
-shell-realized PQS pairs use support-local fallback for the current route.
+shell-realized PQS/PQS `1`, and raw-box PQS active pair policies `0`.
+Product/product pairs use the product/doside source-box path. Support-dense
+pairs use the support-local fallback path. Shell-realized PQS pairs are counted
+separately as support-local oracles for shell realization. In the q4
+checkpoint, 15 pairs remain active algorithmic/read-path pairs, 6
+product/product pairs have a source-box algorithm available, and 6
+shell-realized PQS pairs are oracle-only shell-row contractions.
 
 `_pqs_current_route_safe_term_matrices(...)` then builds full private
 diagnostic `487 x 487` matrices for overlap, `position_x/y/z`, `x2_x/y/z`,
-and kinetic. It compares every pair against a support-local/current-route
-oracle. Focused q4 evidence was `542 / 542`, max matrix error `0.0`, helper
-elapsed time `28.601491167 s`, and allocation `137,976,768` bytes.
+and kinetic. It compares every pair against a support-local oracle. For
+shell-realized PQS pairs, that oracle is debug validation only; it is not the
+intended route algorithm. Focused q4 evidence was `542 / 542`, max matrix
+error `0.0`, helper elapsed time `28.601491167 s`, and allocation
+`137,976,768` bytes.
 
 The private authority-comparison checkpoint adds
 `_pqs_current_route_safe_term_authority_comparison(...)`. It compares those
@@ -468,10 +481,12 @@ time/allocation were `0.007607708 s` and `15,227,616` bytes. The underlying
 safe-term matrix build in that run took `28.357196959 s` and allocated
 `137,977,696` bytes.
 
-This remains private diagnostic/shadow infrastructure only. The active shared
-PQS shell is still `:shell_realized_pqs_fixture`; raw-box PQS helpers remain
-reference/shadow-only for the current route. There is still no construction
-behavior change, sidecar installation, packet/fixed-block adoption,
+This remains private diagnostic/shadow infrastructure only. The shared PQS
+shell-realized fixture remains a representation/realization fact; its
+support-local pair contractions are oracle-only. Raw-box PQS helpers remain the
+source-box-first direction for future algorithmic blocks, not a current
+construction route. There is still no construction behavior change, sidecar
+installation, packet/fixed-block adoption,
 `_nested_shell_packet(...)` authority change, QW/Hamiltonian behavior change,
 IDA/MWG behavior change, retained PQS weight division or positive
 quadrature-weight claim, local/ECP/Gaussian/MWG/interaction implementation,
