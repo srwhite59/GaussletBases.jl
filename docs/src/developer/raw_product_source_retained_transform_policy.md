@@ -1481,11 +1481,19 @@ only as provenance and positivity checks; the helper does not divide by them.
 It also does not use shell projection, Lowdin cleanup, support coefficient
 matrices, or support-local PQS contraction as the algorithm.
 
+Commit `b1ee2a5` adds the private PQS/product raw-weighted conversion wrapper.
+It accepts raw-weighted per-axis pair factors plus explicit positive source
+weights, applies the same source-weight outer-product normalization rule as
+the product/product wrapper, and delegates to the PQS/product
+density-normalized core. This is source-box raw/support weight normalization,
+not retained PQS positive-weight semantics.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
   raw-weighted conversion wrapper;
-- PQS/product is density-normalized only;
+- PQS/product has both density-normalized input and the `b1ee2a5`
+  raw-weighted conversion wrapper;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
 - retained PQS columns have no positive-weight or IDA-division semantics;

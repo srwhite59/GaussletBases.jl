@@ -1018,12 +1018,19 @@ are checked and carried as provenance only. The helper does not divide by
 weights and does not assign retained PQS columns positive quadrature or
 IDA-safe weight semantics.
 
+Commit `b1ee2a5` adds the matching private PQS/product raw-weighted
+conversion wrapper. It accepts raw-weighted per-axis pair factors plus
+explicit positive source weights, divides by the source-weight outer product,
+then delegates to the PQS/product density-normalized core. This is raw/source
+quadrature-weight normalization only; retained PQS columns still do not carry
+positive quadrature weights and are not IDA-division weights.
+
 The current electron-electron source-box checkpoint is therefore:
 
-- product/product accepts caller-supplied density-normalized factors;
-- product/product also has a raw-weighted conversion wrapper from commit
-  `ad74d3c`;
-- PQS/product accepts density-normalized factors only;
+- product/product accepts caller-supplied density-normalized factors and has a
+  raw-weighted conversion wrapper from commit `ad74d3c`;
+- PQS/product accepts caller-supplied density-normalized factors and has a
+  raw-weighted conversion wrapper from commit `b1ee2a5`;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - PQS/product uses no shell projection, Lowdin cleanup, support coefficient
