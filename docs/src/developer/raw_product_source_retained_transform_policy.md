@@ -1635,17 +1635,19 @@ artifacts `report.txt` and `summary.tsv` under
 `tmp/work/pqs_component_route_smoke_report_outputs/`. Its first small
 route-size signal is:
 
-| route variant | retained dim | modes | no-go status | dense authority | timing signal |
+| route variant | retained dim | modes | no-go status | dense authority | density-row timing/allocation signal |
 |---|---:|---|---|---|---|
-| `q5_L5_parent5x5x7_slab_z4` | `221` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0016 s` electron-electron |
-| `q5_L7_parent5x5x9_slab_z5` | `285` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0021 s` electron-electron |
+| `q5_L5_parent5x5x7_slab_z4` | `221` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.87 s` / `394 MB` nuclear and `0.0016 s` / `1.6 MB` electron-electron |
+| `q5_L7_parent5x5x9_slab_z5` | `285` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.79 s` / `416 MB` nuclear and `0.0025 s` / `2.1 MB` electron-electron |
+| `q5_L9_parent5x5x11_slab_z6` | `349` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.80 s` / `421 MB` nuclear and `0.0028 s` / `2.8 MB` electron-electron |
 
-Both variants keep six nuclear pairs, six electron-electron pairs, IDA term
-count `45`, finite output, and clear no-go diagnostics. These timings are
-single-run ignored-probe evidence only. They do not make a production
-benchmark and do not adopt packet/fixed-block/QW/Hamiltonian behavior,
-public/default routing, MWG supplement/residual adaptation, ECP behavior, or
-CR2 science status.
+All three variants keep six nuclear pairs, six electron-electron pairs, IDA
+term count `45`, finite output, and clear no-go diagnostics. In the same run
+the largest raw-weighted electron-electron row is the `349` dimension variant
+at about `0.0045 s` and `3.8 MB`. These timings are single-run ignored-probe
+evidence only. They do not make a production benchmark and do not adopt
+packet/fixed-block/QW/Hamiltonian behavior, public/default routing, MWG
+supplement/residual adaptation, ECP behavior, or CR2 science status.
 
 Current boundaries:
 
