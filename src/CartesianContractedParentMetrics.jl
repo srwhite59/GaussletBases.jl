@@ -11789,6 +11789,275 @@ function _pqs_pqs_product_raw_box_density_density_route_producer_from_ida_proven
     )
 end
 
+function _pqs_route_parent_dims(route_units, parent_dims)
+    !isnothing(parent_dims) && return _pqs_geometry_int3(parent_dims, :parent_dims)
+    hasproperty(route_units, :metadata) &&
+        hasproperty(route_units.metadata, :parent_dims) ||
+        throw(ArgumentError("route parent coefficient projection requires parent_dims"))
+    metadata_parent_dims = route_units.metadata.parent_dims
+    !isnothing(metadata_parent_dims) ||
+        throw(ArgumentError("route parent coefficient projection requires non-nothing parent_dims"))
+    return _pqs_geometry_int3(metadata_parent_dims, :parent_dims)
+end
+
+function _pqs_parent_coefficient_matrix_from_raw_plan(raw_plan, parent_dims::NTuple{3,Int})
+    plan = _pqs_raw_product_box_plan_view(raw_plan)
+    plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("PQS parent coefficient projection requires a raw product-box plan"),
+    )
+    intervals = plan.axis_intervals
+    axis_coefficients =
+        ntuple(axis -> Matrix{Float64}(plan.axis_local_coefficients[axis]), 3)
+    for axis in 1:3
+        interval = intervals[axis]
+        first(interval) >= 1 && last(interval) <= parent_dims[axis] || throw(
+            ArgumentError("PQS parent coefficient projection interval exceeds parent dimensions"),
+        )
+        size(axis_coefficients[axis], 1) == length(interval) || throw(
+            DimensionMismatch("PQS parent coefficient projection axis rows must match source interval length"),
+        )
+        size(axis_coefficients[axis], 2) == plan.source_mode_dims[axis] || throw(
+            DimensionMismatch("PQS parent coefficient projection axis columns must match source modes"),
+        )
+    end
+    modes = plan.boundary_selector.mode_indices
+    retained_count = plan.boundary_selector.selected_count
+    length(modes) == retained_count || throw(
+        DimensionMismatch("PQS parent coefficient projection boundary mode count must match retained count"),
+    )
+    coefficients = zeros(Float64, prod(parent_dims), retained_count)
+    x_interval, y_interval, z_interval = intervals
+    cx, cy, cz = axis_coefficients
+    @inbounds for (column, mode) in pairs(modes)
+        mx, my, mz = mode
+        for (local_x, parent_x) in enumerate(x_interval)
+            x_value = cx[local_x, mx]
+            iszero(x_value) && continue
+            for (local_y, parent_y) in enumerate(y_interval)
+                xy_value = x_value * cy[local_y, my]
+                iszero(xy_value) && continue
+                for (local_z, parent_z) in enumerate(z_interval)
+                    value = xy_value * cz[local_z, mz]
+                    iszero(value) && continue
+                    row = _cartesian_flat_index(
+                        parent_x,
+                        parent_y,
+                        parent_z,
+                        parent_dims,
+                    )
+                    coefficients[row, column] += value
+                end
+            end
+        end
+    end
+    return coefficients
+end
+
+function _product_doside_parent_coefficient_matrix(
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    parent_dims::NTuple{3,Int},
+)
+    _require_product_doside_retained_block_unit(product_unit; side = :product)
+    parent_dimension = prod(parent_dims)
+    local_coefficients = Matrix{Float64}(product_unit.coefficient_matrix)
+    size(local_coefficients, 1) == length(product_unit.support_indices) || throw(
+        DimensionMismatch("product/doside parent coefficient projection support rows must match coefficient rows"),
+    )
+    size(local_coefficients, 2) == length(product_unit.column_range) || throw(
+        DimensionMismatch("product/doside parent coefficient projection retained columns must match column range"),
+    )
+    coefficients = zeros(Float64, parent_dimension, size(local_coefficients, 2))
+    @inbounds for (local_row, parent_row) in pairs(product_unit.support_indices)
+        1 <= parent_row <= parent_dimension || throw(
+            ArgumentError("product/doside parent coefficient projection support index exceeds parent dimension"),
+        )
+        for column in axes(local_coefficients, 2)
+            value = local_coefficients[local_row, column]
+            iszero(value) && continue
+            coefficients[parent_row, column] += value
+        end
+    end
+    return coefficients
+end
+
+function _pqs_pqs_product_route_parent_coefficient_matrix(route_units; parent_dims = nothing)
+    hasproperty(route_units, :object_kind) &&
+        route_units.object_kind == :pqs_pqs_product_safe_term_route_descriptor ||
+        throw(ArgumentError("parent coefficient projection requires a PQS/PQS/product route descriptor"))
+    parent_dims_value = _pqs_route_parent_dims(route_units, parent_dims)
+    roles = hasproperty(route_units, :roles) ?
+        Tuple(route_units.roles) :
+        (:pqs_left, :pqs_right, :product)
+    roles == (:pqs_left, :pqs_right, :product) || throw(
+        ArgumentError("parent coefficient projection requires roles (:pqs_left, :pqs_right, :product)"),
+    )
+    hasproperty(route_units, :units) || throw(
+        ArgumentError("parent coefficient projection requires route units"),
+    )
+    units = route_units.units
+    ranges = hasproperty(route_units, :expected_ranges) ?
+        route_units.expected_ranges : route_units.ranges
+    retained_dimension = route_units.retained_dimension
+    parent_dimension = prod(parent_dims_value)
+    coefficients = zeros(Float64, parent_dimension, retained_dimension)
+    unit_coefficients = (
+        pqs_left = _pqs_parent_coefficient_matrix_from_raw_plan(
+            units.pqs_left,
+            parent_dims_value,
+        ),
+        pqs_right = _pqs_parent_coefficient_matrix_from_raw_plan(
+            units.pqs_right,
+            parent_dims_value,
+        ),
+        product = _product_doside_parent_coefficient_matrix(
+            units.product,
+            parent_dims_value,
+        ),
+    )
+    size(unit_coefficients.pqs_left, 2) == length(ranges.pqs_left) ||
+        throw(DimensionMismatch("left PQS coefficient columns must match route range"))
+    size(unit_coefficients.pqs_right, 2) == length(ranges.pqs_right) ||
+        throw(DimensionMismatch("right PQS coefficient columns must match route range"))
+    size(unit_coefficients.product, 2) == length(ranges.product) ||
+        throw(DimensionMismatch("product coefficient columns must match route range"))
+    coefficients[:, ranges.pqs_left] .= unit_coefficients.pqs_left
+    coefficients[:, ranges.pqs_right] .= unit_coefficients.pqs_right
+    coefficients[:, ranges.product] .= unit_coefficients.product
+    return (
+        object_kind = :pqs_pqs_product_route_parent_coefficient_matrix,
+        coefficient_matrix = coefficients,
+        parent_dims = parent_dims_value,
+        parent_dimension = parent_dimension,
+        retained_dimension = retained_dimension,
+        ranges = ranges,
+        unit_coefficient_shapes = (
+            pqs_left = size(unit_coefficients.pqs_left),
+            pqs_right = size(unit_coefficients.pqs_right),
+            product = size(unit_coefficients.product),
+        ),
+        diagnostics = (
+            source = :pqs_pqs_product_route_parent_coefficient_matrix,
+            route_parent_projection_private = true,
+            source_box_algorithm_changed = false,
+            support_local_algorithm_used = false,
+            support_coefficient_matrix_used = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            retained_pqs_weights_used = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+        ),
+    )
+end
+
+function _pqs_pqs_product_dense_parent_ida_authority_comparison(
+    route_result,
+    dense_parent_ida_matrix::AbstractMatrix{<:Real};
+    parent_dims = nothing,
+    dense_parent_matrix_source::Symbol = :caller_supplied_dense_parent_ida_matrix,
+    comparison_atol::Real = 1.0e-10,
+)
+    hasproperty(route_result, :route_descriptor) || throw(
+        ArgumentError("dense-parent IDA authority comparison requires a route_result with route_descriptor"),
+    )
+    hasproperty(route_result, :block) || throw(
+        ArgumentError("dense-parent IDA authority comparison requires a route_result block"),
+    )
+    hasproperty(route_result, :diagnostics) || throw(
+        ArgumentError("dense-parent IDA authority comparison requires route diagnostics"),
+    )
+    route_result.diagnostics.input_pair_factor_data ==
+        :ida_gausslet_source_box_provenance || throw(
+            ArgumentError("dense-parent IDA authority comparison requires IDA source-box provenance route output"),
+        )
+    route_result.diagnostics.interaction_path == :ida_gausslet_source_box || throw(
+        ArgumentError("dense-parent IDA authority comparison requires IDA gausslet/source-box interaction path"),
+    )
+    !route_result.diagnostics.mwg_supplement_residual_path || throw(
+        ArgumentError("dense-parent IDA authority comparison cannot consume MWG supplement/residual provenance"),
+    )
+    route_result.pair_factor_normalization == :density_normalized || throw(
+        ArgumentError("dense-parent IDA authority comparison currently covers density-normalized route output"),
+    )
+    projection = _pqs_pqs_product_route_parent_coefficient_matrix(
+        route_result.route_descriptor;
+        parent_dims,
+    )
+    parent_matrix = Matrix{Float64}(dense_parent_ida_matrix)
+    size(parent_matrix) == (projection.parent_dimension, projection.parent_dimension) ||
+        throw(DimensionMismatch("dense-parent IDA authority matrix must match route parent dimension"))
+    route_block = Matrix{Float64}(route_result.block)
+    size(route_block) ==
+        (projection.retained_dimension, projection.retained_dimension) ||
+        throw(DimensionMismatch("route density-density block must match retained projection dimension"))
+    coefficients = projection.coefficient_matrix
+    projected_block = Matrix{Float64}(
+        transpose(coefficients) * parent_matrix * coefficients,
+    )
+    max_error = LinearAlgebra.norm(projected_block - route_block, Inf)
+    symmetry_error =
+        LinearAlgebra.norm(projected_block - transpose(projected_block), Inf)
+    output_finite =
+        all(isfinite, projected_block) && all(isfinite, route_block) &&
+        isfinite(max_error) && isfinite(symmetry_error)
+    comparison_atol_value = Float64(comparison_atol)
+    return (
+        object_kind = :pqs_pqs_product_dense_parent_ida_authority_comparison,
+        status = :private_validation_only,
+        authority_kind = :dense_parent_ida_projection,
+        route_result = route_result,
+        parent_projection = projection,
+        coefficient_matrix = coefficients,
+        dense_parent_ida_matrix = parent_matrix,
+        projected_block = projected_block,
+        route_block = route_block,
+        max_error = max_error,
+        symmetry_error = symmetry_error,
+        output_finite = output_finite,
+        within_tolerance = output_finite && max_error <= comparison_atol_value,
+        comparison_atol = comparison_atol_value,
+        retained_dimension = projection.retained_dimension,
+        parent_dimension = projection.parent_dimension,
+        diagnostics = (
+            source = :pqs_pqs_product_dense_parent_ida_authority_comparison,
+            authority_kind = :dense_parent_ida_projection,
+            dense_parent_matrix_source = dense_parent_matrix_source,
+            dense_parent_matrix_used_for_validation = true,
+            dense_parent_matrix_algorithmic = false,
+            source_box_algorithm_changed = false,
+            support_local_algorithm_used = false,
+            support_local_oracle_used = false,
+            support_coefficient_matrix_used = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            mwg_supplement_residual_path = false,
+            mwg_supplement_residual_provenance_adapted = false,
+            output_representation = :two_index_density_density,
+            four_index_galerkin_tensor = false,
+            parent_projection_shape = size(coefficients),
+            route_block_shape = size(route_block),
+            max_error = max_error,
+            symmetry_error = symmetry_error,
+            output_finite = output_finite,
+            within_tolerance = output_finite && max_error <= comparison_atol_value,
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,

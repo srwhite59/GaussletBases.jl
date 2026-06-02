@@ -2550,6 +2550,7 @@ end
         parent_dims::NTuple{3,Int},
         bond_axis::Symbol,
         ida_term_coefficients::AbstractVector{<:Real},
+        ida_dense_parent_matrix::AbstractMatrix{<:Real},
     )
         density_fixture = _density_density_route_factor_fixture(parent_dims)
         direct_consumer =
@@ -2807,6 +2808,55 @@ end
         @test !ida_adapter.diagnostics.public_default_consumes
         @test !ida_adapter.diagnostics.ecp_terms_implemented
         @test !ida_adapter.diagnostics.cr2_science_status_changed
+
+        ida_parent_authority =
+            metrics_module._pqs_pqs_product_dense_parent_ida_authority_comparison(
+                ida_adapter,
+                ida_dense_parent_matrix;
+                parent_dims,
+                dense_parent_matrix_source = :qwrg_diatomic_interaction_matrix,
+                comparison_atol = 1.0e-10,
+            )
+        @test ida_parent_authority.object_kind ==
+              :pqs_pqs_product_dense_parent_ida_authority_comparison
+        @test ida_parent_authority.status == :private_validation_only
+        @test ida_parent_authority.authority_kind ==
+              :dense_parent_ida_projection
+        @test size(ida_parent_authority.coefficient_matrix) ==
+              (prod(parent_dims), ida_adapter.retained_dimension)
+        @test size(ida_parent_authority.projected_block) ==
+              size(ida_adapter.block)
+        @test ida_parent_authority.output_finite
+        @test ida_parent_authority.within_tolerance
+        @test ida_parent_authority.max_error <= 1.0e-10
+        @test ida_parent_authority.diagnostics.authority_kind ==
+              :dense_parent_ida_projection
+        @test ida_parent_authority.diagnostics.dense_parent_matrix_source ==
+              :qwrg_diatomic_interaction_matrix
+        @test ida_parent_authority.diagnostics.dense_parent_matrix_used_for_validation
+        @test !ida_parent_authority.diagnostics.dense_parent_matrix_algorithmic
+        @test !ida_parent_authority.diagnostics.source_box_algorithm_changed
+        @test !ida_parent_authority.diagnostics.support_local_algorithm_used
+        @test !ida_parent_authority.diagnostics.support_local_oracle_used
+        @test !ida_parent_authority.diagnostics.support_coefficient_matrix_used
+        @test !ida_parent_authority.diagnostics.shell_projection_used
+        @test !ida_parent_authority.diagnostics.lowdin_cleanup_used
+        @test !ida_parent_authority.diagnostics.retained_pqs_weights_used
+        @test !ida_parent_authority.diagnostics.retained_pqs_weights_positive_checked
+        @test !ida_parent_authority.diagnostics.retained_weight_division_allowed
+        @test !ida_parent_authority.diagnostics.retained_pqs_weight_division_allowed
+        @test !ida_parent_authority.diagnostics.ida_weight_division_allowed
+        @test !ida_parent_authority.diagnostics.packet_adoption
+        @test !ida_parent_authority.diagnostics.fixed_block_routing
+        @test !ida_parent_authority.diagnostics.qwhamiltonian_consumes
+        @test !ida_parent_authority.diagnostics.public_default_consumes
+        @test !ida_parent_authority.diagnostics.ecp_terms_implemented
+        @test !ida_parent_authority.diagnostics.cr2_science_status_changed
+        @test !ida_parent_authority.diagnostics.mwg_supplement_residual_path
+        @test !ida_parent_authority.diagnostics.mwg_supplement_residual_provenance_adapted
+        @test ida_parent_authority.diagnostics.output_representation ==
+              :two_index_density_density
+        @test !ida_parent_authority.diagnostics.four_index_galerkin_tensor
 
         explicit_raw_ida_producer =
             metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
@@ -4323,6 +4373,12 @@ end
         parent_dims = route_dims,
         bond_axis = :z,
         ida_term_coefficients = term_coefficients,
+        ida_dense_parent_matrix = GaussletBases._qwrg_diatomic_interaction_matrix(
+            route_bundles.bundle_x,
+            route_bundles.bundle_y,
+            route_bundles.bundle_z,
+            expansion,
+        ),
     )
     produced_route_consumer =
         CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
