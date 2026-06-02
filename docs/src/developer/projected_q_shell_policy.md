@@ -362,6 +362,22 @@ is validation-only; it is not the source-box algorithm and does not adopt
 packet/fixed-block/QW/Hamiltonian, public/default, ECP, MWG supplement/
 residual, retained-weight/IDA, or CR2 behavior.
 
+Commits `33a76ed` and `30fd052` add the private component route smoke helper
+`_pqs_pqs_product_source_box_component_route_smoke(...)` for the same
+left-PQS/middle-product/right-PQS source-box fixture. Nuclear attraction is
+kept as separate by-center retained matrices for counterpoise reporting, and
+the total nuclear-attraction matrix is an explicit sum of those pieces. The
+electron-electron component is the IDA gausslet/source-box retained two-index
+density-density block, with `:density_normalized` and `:raw_weighted` modes.
+Raw-weighted mode delegates normalization to the existing raw-weighted route
+producer path, where explicit raw/source quadrature weights own the division.
+The dense parent IDA authority check remains validation-only and
+density-normalized-only. MWG supplement/residual coupling remains separate
+and unadapted, and this checkpoint adds no retained PQS weights,
+retained-weight/IDA division, shell/support-local algorithm, packet/fixed-
+block/QW/Hamiltonian adoption, public/default route, ECP behavior, or CR2
+science claim.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

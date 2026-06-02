@@ -1148,6 +1148,35 @@ QW/Hamiltonian/public/default behavior. MWG supplement/residual coupling
 remains separate and unadapted, and retained PQS columns remain non-
 quadrature retained columns with no retained-weight/IDA division.
 
+Commits `33a76ed` and `30fd052` add the private component route smoke helper
+`_pqs_pqs_product_source_box_component_route_smoke(...)` for the same small
+source-box layout:
+
+```text
+left mode-selected raw-box PQS
+middle product/doside slab
+right mode-selected raw-box PQS
+```
+
+The component smoke combines the already-private one-body and two-body
+source-box pieces without becoming a Hamiltonian route. Nuclear attraction is
+reported as one retained matrix per nucleus/center, preserving by-center
+identity for counterpoise workflows, and the total nuclear-attraction matrix
+is only an explicit sum of those per-center pieces. The electron-electron
+component remains an IDA gausslet/source-box retained two-index
+density-density block, not a four-index Galerkin Coulomb tensor.
+
+The component smoke supports both `:density_normalized` and `:raw_weighted`
+electron-electron factor modes. Raw-weighted mode is mechanical: it delegates
+to the existing raw-weighted IDA route producer path, where explicit
+raw/source quadrature weights own the normalization before the
+density-normalized cores are used. Dense parent IDA authority is still
+validation-only and, at this checkpoint, density-normalized-only. MWG
+supplement/residual coupling remains separate and unadapted. The helper adds
+no retained PQS weights, retained-weight/IDA division, shell/support-local
+algorithm, packet/fixed-block/QW/Hamiltonian adoption, public/default route,
+ECP behavior, or CR2 science claim.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
@@ -1172,6 +1201,10 @@ The current electron-electron source-box checkpoint is therefore:
 - the private dense-parent authority check at `c443af2` validates the small
   route against `C_route' * V_parent_ida * C_route` to roundoff while keeping
   dense parent projection validation-only;
+- the private component smoke at `33a76ed` and `30fd052` combines by-center
+  nuclear-attraction component matrices with the IDA source-box retained
+  two-index density-density route, including density-normalized and
+  raw-weighted electron-electron modes;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - explicit route calls may still use synthetic or caller-supplied data, and

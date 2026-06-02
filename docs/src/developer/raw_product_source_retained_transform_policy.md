@@ -1606,6 +1606,29 @@ public/default behavior, does not consume MWG supplement/residual coupling,
 and does not assign retained PQS columns positive quadrature or retained-
 weight/IDA division semantics.
 
+Commits `33a76ed` and `30fd052` add the private component route smoke helper
+`_pqs_pqs_product_source_box_component_route_smoke(...)`. It uses the same
+route shape as the private route producer, with a left mode-selected raw-box
+PQS unit, a middle product/doside slab unit, and a right mode-selected
+raw-box PQS unit. This is component reporting and validation infrastructure
+only, not packet, fixed-block, QW, Hamiltonian, or public/default route
+adoption.
+
+The helper preserves one all-electron nuclear-attraction retained matrix per
+nucleus/center for counterpoise bookkeeping. The reported total
+nuclear-attraction matrix is an explicit sum of those per-center pieces, not a
+replacement for the center records. Its electron-electron component is the
+IDA gausslet/source-box retained two-index density-density block produced by
+the existing private route adapter. It supports `:density_normalized` and
+`:raw_weighted` electron-electron modes; raw-weighted mode delegates to the
+existing raw-weighted route producer path, where explicit raw/source
+quadrature weights own the normalization before delegation to the
+density-normalized cores. Dense parent IDA authority remains validation-only
+and density-normalized-only in this checkpoint. MWG supplement/residual
+coupling remains separate and unadapted, retained PQS weights are not used,
+retained-weight/IDA division remains forbidden, and no shell/support-local
+algorithm, ECP behavior, or CR2 science claim is added.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
@@ -1625,6 +1648,10 @@ Current boundaries:
   explicit route producer without adopting MWG supplement/residual coupling;
 - the `c443af2` dense-parent authority comparison validates the small route by
   projecting an existing dense parent IDA matrix and remains validation-only;
+- the `33a76ed`/`30fd052` component smoke combines by-center nuclear
+  attraction matrices with the IDA source-box retained two-index
+  density-density route for both density-normalized and raw-weighted
+  electron-electron modes;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
 - explicit route calls may still use synthetic/caller-supplied data, and the
