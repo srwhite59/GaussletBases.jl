@@ -426,6 +426,25 @@ residual owner metadata, zero final-residual MWG authority error, no owner
 inference from `raw_to_final`, no raw GTO/GTO or fixed/raw-GTO MWG blocks, and
 no retained/source-box/final-residual weight or IDA division.
 
+The next private CR2-facing sidecar checkpoint adds
+`_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(...)` on top of
+that report object and regenerates
+`tmp/work/be2_pqs_component_route_smoke_cr2_sidecar_schema_report.txt` from
+the ignored Be2/PQS smoke probe. The sidecar is a reporting aid for CR2
+consumers, not a unified Hamiltonian route. It keeps the source-box/PQS IDA
+lane separate from the ordinary final-residual MWG supplement lane while
+making the available facts explicit: source-unit labels and retained ranges
+from route-descriptor unit keys, fixed/residual/final dimensions and ranges,
+explicit residual owners, component block shapes, authority errors, and
+provenance. It also records that shell labels are not reconstructed from
+centers, no nearest-grid or nearest-center label heuristic is used, raw
+GTO/GTO and fixed/raw-GTO MWG blocks remain absent, owners are not inferred
+from `raw_to_final`, retained/source-box/final-residual weight or IDA division
+is absent, and packet/fixed-block/QW/Hamiltonian/public/ECP/SCF/HF/CR2
+science adoption remains out of scope. Full Be2 q5/CR2 shell/source-unit
+labels still need explicit repo export before shell-start contraction becomes
+a contract.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

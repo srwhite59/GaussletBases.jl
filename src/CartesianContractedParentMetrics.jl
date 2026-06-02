@@ -12963,6 +12963,8 @@ function _pqs_pqs_product_component_route_smoke_summary(component)
         component_object_kind = component.object_kind,
         component_status = component.status,
         route_shape = component.route_shape,
+        retained_units = component.retained_units,
+        ranges = component.ranges,
         retained_dimension = component.retained_dimension,
         center_labels = component.center_labels,
         nuclear_charges = component.nuclear_charges,
@@ -12972,6 +12974,10 @@ function _pqs_pqs_product_component_route_smoke_summary(component)
         electron_electron_pair_count = electron_electron.pair_count,
         electron_electron_pair_family_counts =
             electron_electron.pair_family_counts,
+        helper_used_for_nuclear_pair_families =
+            diagnostics.helper_used_for_nuclear_pair_families,
+        helper_used_for_electron_electron_pair_families =
+            diagnostics.helper_used_for_electron_electron_pair_families,
         pair_factor_normalization = component.pair_factor_normalization,
         source_weight_division_owner =
             diagnostics.source_weight_division_owner,
@@ -13087,9 +13093,23 @@ function _pqs_pqs_product_component_route_smoke_report_row(summary)
         )
     return (
         mode = summary.pair_factor_normalization,
+        route_shape = summary.route_shape,
+        retained_units = hasproperty(summary, :retained_units) ?
+            summary.retained_units : (),
+        ranges = hasproperty(summary, :ranges) ? summary.ranges : nothing,
         retained_dimension = summary.retained_dimension,
         nuclear_pair_count = summary.nuclear_pair_count,
+        nuclear_pair_family_counts =
+            summary.nuclear_pair_family_counts,
         electron_electron_pair_count = summary.electron_electron_pair_count,
+        electron_electron_pair_family_counts =
+            summary.electron_electron_pair_family_counts,
+        helper_used_for_nuclear_pair_families =
+            hasproperty(summary, :helper_used_for_nuclear_pair_families) ?
+            summary.helper_used_for_nuclear_pair_families : nothing,
+        helper_used_for_electron_electron_pair_families =
+            hasproperty(summary, :helper_used_for_electron_electron_pair_families) ?
+            summary.helper_used_for_electron_electron_pair_families : nothing,
         ida_term_count = summary.ida_term_count,
         output_finite = summary.finite_checks.output_finite,
         nuclear_symmetry_error = summary.symmetry_errors.nuclear,
@@ -13107,6 +13127,9 @@ function _pqs_pqs_product_component_route_smoke_report_row(summary)
             summary.source_weight_division_owner,
         source_weight_division_applied_by_helper =
             summary.source_weight_division_applied_by_helper,
+        source_weight_division_shape =
+            hasproperty(summary, :source_weight_division_shape) ?
+            summary.source_weight_division_shape : nothing,
         no_go_clear =
             _pqs_pqs_product_component_route_smoke_no_go_clear(
                 summary.no_go_diagnostics,
@@ -13141,6 +13164,87 @@ function _pqs_component_route_smoke_fact_zero(value)
     return !isnothing(parsed) && iszero(parsed)
 end
 
+function _pqs_component_route_smoke_parse_int_tuple(value, field::Symbol)
+    value isa AbstractVector && return Tuple(Int(index) for index in value)
+    text = strip(_pqs_component_route_smoke_fact_string(value))
+    isempty(text) && throw(
+        ArgumentError("component route smoke sidecar requires $(field)"),
+    )
+    values = Int[
+        parse(Int, match.match) for
+        match in eachmatch(r"-?\d+", text)
+    ]
+    isempty(values) && throw(
+        ArgumentError("component route smoke sidecar could not parse integer values for $(field)"),
+    )
+    return Tuple(values)
+end
+
+function _pqs_component_route_smoke_parse_shape(value, field::Symbol)
+    values = _pqs_component_route_smoke_parse_int_tuple(value, field)
+    length(values) == 2 || throw(
+        ArgumentError("component route smoke sidecar requires a two-dimensional shape for $(field)"),
+    )
+    all(dimension -> dimension >= 0, values) || throw(
+        ArgumentError("component route smoke sidecar requires nonnegative shape entries for $(field)"),
+    )
+    return values
+end
+
+function _pqs_component_route_smoke_unit_key(unit)
+    hasproperty(unit, :unit_key) || throw(
+        ArgumentError("component route smoke sidecar source-box unit requires unit_key"),
+    )
+    return unit.unit_key
+end
+
+function _pqs_component_route_smoke_unit_records(units)
+    return Tuple(
+        (
+            unit_key = _pqs_component_route_smoke_unit_key(unit),
+            retained_unit_kind = hasproperty(unit, :retained_unit_kind) ?
+                unit.retained_unit_kind : :unknown,
+            source_family = hasproperty(unit, :source_family) ?
+                unit.source_family : :unknown,
+            retained_rule_kind = hasproperty(unit, :retained_rule_kind) ?
+                unit.retained_rule_kind : :unknown,
+            retained_range = hasproperty(unit, :retained_range) ?
+                unit.retained_range : nothing,
+            retained_count = hasproperty(unit, :retained_count) ?
+                Int(unit.retained_count) : (
+                    hasproperty(unit, :retained_range) ?
+                    length(unit.retained_range) : 0
+                ),
+            source_dimensions = hasproperty(unit, :source_dimensions) ?
+                unit.source_dimensions : nothing,
+            source_dimension = hasproperty(unit, :source_dimension) ?
+                unit.source_dimension : nothing,
+        ) for unit in units
+    )
+end
+
+function _pqs_component_route_smoke_rows_units(rows)
+    unit_rows = Tuple(row for row in rows if hasproperty(row, :retained_units) && !isempty(row.retained_units))
+    isempty(unit_rows) && return ()
+    records = _pqs_component_route_smoke_unit_records(first(unit_rows).retained_units)
+    for row in unit_rows
+        _pqs_component_route_smoke_unit_records(row.retained_units) == records || throw(
+            ArgumentError("component route smoke report rows disagree on source-box retained-unit records"),
+        )
+    end
+    return records
+end
+
+function _pqs_component_route_smoke_rows_ranges(rows)
+    range_rows = Tuple(row for row in rows if hasproperty(row, :ranges) && !isnothing(row.ranges))
+    isempty(range_rows) && return nothing
+    ranges = first(range_rows).ranges
+    all(row -> row.ranges == ranges, range_rows) || throw(
+        ArgumentError("component route smoke report rows disagree on source-box retained ranges"),
+    )
+    return ranges
+end
+
 function _pqs_pqs_product_component_route_smoke_report_adapter(
     summaries,
     final_residual_mwg_facts;
@@ -13169,6 +13273,8 @@ function _pqs_pqs_product_component_route_smoke_report_adapter(
     density_authority =
         isempty(density_rows) ? nothing :
         first(density_rows).dense_parent_ida_authority_max_error
+    source_retained_units = _pqs_component_route_smoke_rows_units(rows)
+    source_retained_ranges = _pqs_component_route_smoke_rows_ranges(rows)
 
     residual_owner_vector = _pqs_component_route_smoke_fact(
         final_residual_mwg_facts,
@@ -13241,6 +13347,14 @@ function _pqs_pqs_product_component_route_smoke_report_adapter(
         electron_electron_representation =
             "retained two-index density-density",
         mwg_supplement_residual_adapted_in_source_box_smoke = false,
+        retained_units = source_retained_units,
+        retained_ranges = source_retained_ranges,
+        retained_unit_count = length(source_retained_units),
+        source_unit_label_status =
+            isempty(source_retained_units) ? :unavailable :
+            :explicit_route_descriptor_unit_keys,
+        source_unit_labels =
+            Tuple(unit.unit_key for unit in source_retained_units),
         rows = rows,
     )
     final_residual = (
@@ -13366,6 +13480,261 @@ function _pqs_pqs_product_component_route_smoke_report_adapter(
     )
 end
 
+function _pqs_component_route_smoke_source_box_sidecar_components(row)
+    retained_shape = (row.retained_dimension, row.retained_dimension)
+    return (
+        mode = row.mode,
+        pair_factor_normalization = row.mode,
+        retained_matrix_shape = retained_shape,
+        nuclear_attraction_by_center = (
+            available = true,
+            pair_count = row.nuclear_pair_count,
+            pair_family_counts = row.nuclear_pair_family_counts,
+            helper_by_family = row.helper_used_for_nuclear_pair_families,
+            authority_error = row.nuclear_total_from_center_error,
+            symmetry_error = row.nuclear_symmetry_error,
+        ),
+        electron_electron_density_density = (
+            available = true,
+            representation = :retained_two_index_density_density,
+            not_four_index_galerkin_tensor = true,
+            pair_count = row.electron_electron_pair_count,
+            pair_family_counts = row.electron_electron_pair_family_counts,
+            helper_by_family =
+                row.helper_used_for_electron_electron_pair_families,
+            dense_parent_authority_available =
+                row.dense_parent_ida_authority_available,
+            dense_parent_authority_max_error =
+                row.dense_parent_ida_authority_max_error,
+            dense_parent_authority_skip_reason =
+                row.dense_parent_ida_authority_skip_reason,
+            symmetry_error = row.electron_electron_symmetry_error,
+        ),
+        source_weight_division_owner = row.source_weight_division_owner,
+        source_weight_division_applied_by_helper =
+            row.source_weight_division_applied_by_helper,
+        source_weight_division_shape = row.source_weight_division_shape,
+        output_finite = row.output_finite,
+        no_go_clear = row.no_go_clear,
+    )
+end
+
+function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+    report;
+    provenance = (;),
+    strict::Bool = true,
+)
+    report.object_kind == :pqs_pqs_product_component_route_smoke_report_adapter ||
+        throw(
+            ArgumentError("CR2 sidecar schema requires _pqs_pqs_product_component_route_smoke_report_adapter output"),
+        )
+    source_box = report.source_box_pqs_ida_component_smoke
+    final_residual = report.final_residual_mwg_supplement_component_facts
+
+    fixed_fixed_shape = _pqs_component_route_smoke_parse_shape(
+        final_residual.fixed_fixed_shape,
+        :fixed_fixed_shape,
+    )
+    fixed_residual_shape = _pqs_component_route_smoke_parse_shape(
+        final_residual.fixed_residual_shape,
+        :fixed_residual_shape,
+    )
+    residual_residual_shape = _pqs_component_route_smoke_parse_shape(
+        final_residual.residual_residual_shape,
+        :residual_residual_shape,
+    )
+    final_interaction_shape = _pqs_component_route_smoke_parse_shape(
+        final_residual.final_interaction_shape,
+        :final_interaction_shape,
+    )
+    fixed_dimension = fixed_fixed_shape[1]
+    residual_dimension = residual_residual_shape[1]
+    final_dimension = final_interaction_shape[1]
+    residual_owner_indices = _pqs_component_route_smoke_parse_int_tuple(
+        final_residual.residual_nucleus_indices,
+        :residual_nucleus_indices,
+    )
+    fixed_range = fixed_dimension == 0 ? (1:0) : (1:fixed_dimension)
+    residual_range = residual_dimension == 0 ?
+        ((fixed_dimension + 1):fixed_dimension) :
+        ((fixed_dimension + 1):(fixed_dimension + residual_dimension))
+    final_range = final_dimension == 0 ? (1:0) : (1:final_dimension)
+    residual_owner_rows_match =
+        length(residual_owner_indices) == residual_dimension
+    shape_consistent =
+        fixed_fixed_shape == (fixed_dimension, fixed_dimension) &&
+        fixed_residual_shape == (fixed_dimension, residual_dimension) &&
+        residual_residual_shape == (residual_dimension, residual_dimension) &&
+        final_interaction_shape == (final_dimension, final_dimension) &&
+        final_dimension == fixed_dimension + residual_dimension
+
+    if strict
+        shape_consistent || throw(
+            DimensionMismatch("CR2 sidecar schema final-residual MWG component shapes are inconsistent"),
+        )
+        residual_owner_rows_match || throw(
+            DimensionMismatch("CR2 sidecar schema residual owner count does not match residual rows"),
+        )
+        report.lane_boundaries.no_owner_inference_from_raw_to_final_support ||
+            throw(ArgumentError("CR2 sidecar schema cannot infer owners from raw_to_final support"))
+        report.lane_boundaries.no_raw_gto_gto_mwg_blocks ||
+            throw(ArgumentError("CR2 sidecar schema cannot include raw GTO/GTO MWG blocks"))
+        report.lane_boundaries.no_fixed_raw_gto_mwg_blocks ||
+            throw(ArgumentError("CR2 sidecar schema cannot include fixed/raw-GTO MWG blocks"))
+        report.lane_boundaries.no_retained_weight_or_ida_division ||
+            throw(ArgumentError("CR2 sidecar schema cannot include retained-weight or IDA division"))
+    end
+
+    source_unit_records = source_box.retained_units
+    source_unit_label_status = isempty(source_unit_records) ?
+        :unavailable : :explicit_route_descriptor_unit_keys
+    component_rows = Tuple(
+        _pqs_component_route_smoke_source_box_sidecar_components(row)
+        for row in source_box.rows
+    )
+
+    return (
+        object_kind =
+            :pqs_pqs_product_component_route_smoke_cr2_sidecar_schema,
+        status = :private_cr2_sidecar_schema,
+        schema_version = :pqs_component_cr2_sidecar_private_v1,
+        report_object_kind = report.object_kind,
+        lanes = (
+            source_box_pqs_ida_fixed_side = (
+                status = :private_source_box_component_smoke,
+                algorithm_lane = :source_box_pqs_ida,
+                route_shape = source_box.route_shape,
+                parent_dims = source_box.parent_dims,
+                source_mode_dims = source_box.source_mode_dims,
+                left_source_box = source_box.left_source_box,
+                right_source_box = source_box.right_source_box,
+                product_source_box = source_box.product_source_box,
+                retained_dimension = first(source_box.rows).retained_dimension,
+                retained_units = source_unit_records,
+                retained_ranges = source_box.retained_ranges,
+                source_unit_label_status = source_unit_label_status,
+                source_unit_labels =
+                    Tuple(unit.unit_key for unit in source_unit_records),
+                components = component_rows,
+            ),
+            final_residual_mwg_supplement = (
+                status = :ordinary_final_residual_component_facts,
+                algorithm_lane = :final_residual_mwg_supplement,
+                source_report = final_residual.source_report,
+                route = final_residual.route,
+                component_helper = final_residual.component_helper,
+                fixed_dimension = fixed_dimension,
+                residual_dimension = residual_dimension,
+                final_dimension = final_dimension,
+                fixed_column_range = fixed_range,
+                residual_column_range = residual_range,
+                final_column_range = final_range,
+                residual_owner_metadata = (
+                    status = :explicit,
+                    residual_nucleus_indices = residual_owner_indices,
+                    residual_owner_counts =
+                        final_residual.residual_owner_counts,
+                    owner_metadata_source =
+                        final_residual.owner_metadata_source,
+                    owner_semantics_inferred_from_raw_to_final_support =
+                        false,
+                    owner_count_matches_residual_rows =
+                        residual_owner_rows_match,
+                ),
+                components = (
+                    fixed_fixed = (
+                        available = true,
+                        shape = fixed_fixed_shape,
+                        authority_error = final_residual.max_authority_error,
+                        provenance = final_residual.component_helper,
+                    ),
+                    fixed_residual = (
+                        available = true,
+                        shape = fixed_residual_shape,
+                        authority_error = final_residual.max_authority_error,
+                        provenance = final_residual.component_helper,
+                    ),
+                    residual_residual = (
+                        available = true,
+                        shape = residual_residual_shape,
+                        authority_error = final_residual.max_authority_error,
+                        provenance = final_residual.component_helper,
+                    ),
+                    final_interaction = (
+                        available = true,
+                        shape = final_interaction_shape,
+                        authority_error = final_residual.max_authority_error,
+                        provenance = final_residual.component_helper,
+                    ),
+                ),
+            ),
+        ),
+        labels = (
+            source_unit_label_status = source_unit_label_status,
+            source_unit_labels =
+                Tuple(unit.unit_key for unit in source_unit_records),
+            shell_label_status = :unavailable,
+            shell_labels = (),
+            label_reconstruction_from_centers = false,
+            nearest_grid_or_center_label_heuristic = false,
+        ),
+        absences_by_contract = (
+            raw_gto_gto_mwg_interaction_blocks = true,
+            fixed_raw_gto_mwg_interaction_blocks = true,
+            owner_inference_from_raw_to_final_support = true,
+            retained_source_box_final_residual_weight_division = true,
+            retained_weight_ida_division = true,
+            packet_fixed_block_qw_hamiltonian_adoption = true,
+            public_default_route = true,
+            ecp_scf_hf_cr2_science_claim = true,
+            mwg_ida_semantic_change = true,
+        ),
+        provenance = merge(
+            (
+                source = :pqs_pqs_product_component_route_smoke_cr2_sidecar_schema,
+                report_adapter = report.object_kind,
+                generated_at = report.generated_at,
+            ),
+            provenance,
+        ),
+        diagnostics = (
+            source =
+                :pqs_pqs_product_component_route_smoke_cr2_sidecar_schema,
+            private_shadow_only = true,
+            source_box_pqs_ida_and_mwg_residual_same_algorithm = false,
+            lanes_remain_separate = true,
+            source_box_unit_records_available =
+                !isempty(source_unit_records),
+            source_unit_label_status = source_unit_label_status,
+            shell_label_status = :unavailable,
+            label_reconstruction_from_centers = false,
+            nearest_grid_or_center_label_heuristic = false,
+            fixed_dimension = fixed_dimension,
+            residual_dimension = residual_dimension,
+            final_dimension = final_dimension,
+            final_residual_shape_consistent = shape_consistent,
+            residual_owner_rows_match = residual_owner_rows_match,
+            no_owner_inference_from_raw_to_final_support =
+                report.lane_boundaries.no_owner_inference_from_raw_to_final_support,
+            no_raw_gto_gto_mwg_blocks =
+                report.lane_boundaries.no_raw_gto_gto_mwg_blocks,
+            no_fixed_raw_gto_mwg_blocks =
+                report.lane_boundaries.no_fixed_raw_gto_mwg_blocks,
+            no_retained_weight_or_ida_division =
+                report.lane_boundaries.no_retained_weight_or_ida_division,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            scf_hf_validation_claim = false,
+            cr2_science_status_changed = false,
+            mwg_ida_semantics_changed = false,
+        ),
+    )
+end
+
 function _pqs_component_route_smoke_print_kv(io, key, value)
     println(io, key, "\t", value)
 end
@@ -13421,6 +13790,10 @@ function _write_pqs_pqs_product_component_route_smoke_report(io::IO, report)
             :ida_source_box_electron_electron_available,
             :electron_electron_representation,
             :mwg_supplement_residual_adapted_in_source_box_smoke,
+            :retained_unit_count,
+            :source_unit_label_status,
+            :source_unit_labels,
+            :retained_ranges,
         ),
     )
 

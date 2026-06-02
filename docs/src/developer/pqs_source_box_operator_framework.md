@@ -1213,6 +1213,26 @@ owner metadata, zero final-residual MWG authority error, no owner inference
 from `raw_to_final`, no raw GTO/GTO or fixed/raw-GTO MWG blocks, and no
 retained/source-box/final-residual weight or IDA division.
 
+The follow-up private CR2 sidecar schema checkpoint adds
+`_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(...)` as
+sidecar/reporting infrastructure. The ignored Be2/PQS smoke probe writes the
+generated sidecar summary at
+`tmp/work/be2_pqs_component_route_smoke_cr2_sidecar_schema_report.txt`.
+The sidecar collects adjacent facts for CR2-facing consumers; it does not
+define one unified Hamiltonian route and does not merge the source-box/PQS
+IDA lane with the ordinary final-residual MWG supplement lane. The sidecar
+makes explicit the source-unit labels and retained ranges from route
+descriptor unit keys, fixed/residual/final dimensions and ranges, explicit
+residual owners, component block shapes, authority errors, and provenance. It
+also records the absences: no shell-label reconstruction from centers, no
+nearest-grid or nearest-center label heuristic, no raw GTO/GTO or fixed/raw-
+GTO MWG blocks, no owner inference from `raw_to_final`, no retained/source-
+box/final-residual weight or IDA division, and no packet/fixed-block/
+QW/Hamiltonian/public/default/ECP/SCF/HF/CR2 science adoption. Shell labels
+for full Be2 q5/CR2 artifacts are still `:unavailable` in this checkpoint;
+full shell/source-unit labels need explicit repo export before shell-start
+contraction becomes a contract.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
