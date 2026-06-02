@@ -1537,6 +1537,29 @@ public/default route, ECP behavior, or CR2 science claim. Its timing and
 allocation fields are private route-consumer diagnostics for complete
 retained-matrix assembly, not production readiness thresholds.
 
+Commit `e868f49` adds the private density-density route producer wrapper,
+`_pqs_pqs_product_raw_box_density_density_route_producer(...)`, for the same
+small source-box layout. The producer consumes explicit fixture facts for the
+left mode-selected raw-box PQS unit, right mode-selected raw-box PQS unit, and
+middle product/doside slab, builds the route descriptor through the existing
+private raw-box route producer machinery, and then calls
+`_pqs_pqs_product_route_shaped_density_density_consumer(...)`. It returns the
+descriptor and the density-density consumer result together so the explicit
+fixture path can be compared with the descriptor-only consumer path.
+
+This producer is private/reference infrastructure only. Its electron-electron
+output remains the retained two-index density-density matrix returned by the
+consumer; it is not a four-index Coulomb tensor and does not adopt any
+production interaction route. Density-normalized pair factors are
+caller-supplied as already normalized. Raw-weighted pair factors are
+normalized only by explicit raw/source quadrature-weight outer products in the
+existing wrappers before delegation to density-normalized helpers. Retained
+PQS columns remain non-quadrature retained columns, not positive weights and
+not retained-weight/IDA division weights. Every pair still uses the
+source-box algorithmic path, shell/support-local contraction is not the
+algorithm, dense raw product-box matrices are validation-only when mentioned,
+and real MWG/IDA pair-factor provenance remains out of scope.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
@@ -1547,6 +1570,8 @@ Current boundaries:
   conversion wrapper;
 - the `93a9af8` route-shaped consumer composes those helpers for a private
   left-PQS/right-PQS/product-slab retained matrix;
+- the `e868f49` route producer builds that route descriptor from explicit
+  source-box fixture facts and returns the descriptor plus consumer result;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
 - pair factors remain synthetic/caller-supplied explicit data at this
@@ -1583,11 +1608,9 @@ separate design. The current checkpoint changes no all-pairs matrix
 construction, QW or Hamiltonian path, public/default route, backend/default
 policy, PGDG or quadrature policy, CR2 path, or science status.
 
-The next likely private step is a density-density route producer wrapper
-analogous to the safe-term raw-box route producer. It should still start from
-explicit fixture facts and synthetic/caller-supplied source-box pair factors,
-and it should stop before adapting real MWG/IDA pair factors or moving toward
-packet, fixed-block, QW/Hamiltonian, or public/default consumption.
+Any next private implementation should still stop before adapting real
+MWG/IDA pair factors or moving toward packet, fixed-block, QW/Hamiltonian, or
+public/default consumption.
 
 ## Non-Goals
 

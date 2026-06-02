@@ -314,6 +314,22 @@ private/reference infrastructure only and implies no packet/fixed-block/
 QW/Hamiltonian adoption, no public/default route, no ECP behavior, and no CR2
 science claim.
 
+Commit `e868f49` adds the corresponding private density-density route
+producer, `_pqs_pqs_product_raw_box_density_density_route_producer(...)`. It
+starts from explicit source-box fixture facts, builds the route descriptor for
+the same left-PQS/right-PQS/product layout, and returns that descriptor
+together with the route-shaped density-density consumer result. The producer
+supports density-normalized and raw-weighted synthetic/caller-supplied
+pair-factor inputs only. Raw-weighted input is normalized by explicit
+raw/source quadrature-weight outer products before delegation to the
+density-normalized helpers; retained PQS columns are not positive quadrature
+weights and are not retained-weight/IDA division weights. Every pair remains
+source-box-first. Shell/support-local contraction, dense raw product-box
+matrices, and shell-row realization remain validation/oracle paths only when
+mentioned; they are not the algorithm. Real MWG/IDA pair-factor provenance,
+packet/fixed-block/QW/Hamiltonian routing, public/default behavior, ECP
+behavior, and CR2 science status remain unchanged.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns
