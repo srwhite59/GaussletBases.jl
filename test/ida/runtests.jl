@@ -1,3 +1,97 @@
+@testset "PQS source-box IDA PGDG factor provenance" begin
+    function _tiny_pgdg_source_box_ida_basis(count::Int)
+        xmax = 3.0
+        tail_spacing = 10.0
+        a = 0.25
+        endpoint = (count - 1) / 2
+        s = asinh(xmax / a) / (endpoint - xmax / tail_spacing)
+        return build_basis(MappedUniformBasisSpec(:G10;
+            count,
+            mapping = AsinhMapping(; a, s, tail_spacing),
+            reference_spacing = 1.0,
+        ))
+    end
+
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
+        _tiny_pgdg_source_box_ida_basis(7);
+        exponents = expansion.exponents,
+        backend = :pgdg_localized_experimental,
+        refinement_levels = 0,
+    )
+    expected_term_count = length(expansion.coefficients)
+    metrics_module = GaussletBases.CartesianContractedParentMetrics
+    axis_provenance =
+        metrics_module._pqs_source_box_ida_axis_factor_provenance(
+            bundle;
+            axis = :x,
+            expected_term_count,
+        )
+
+    density_terms = axis_provenance.density_normalized_pair_factor_terms
+    raw_terms = axis_provenance.raw_pair_factor_terms
+    weights = axis_provenance.source_weights
+    n = length(weights)
+
+    @test axis_provenance.object_kind == :pqs_source_box_ida_axis_factor_provenance
+    @test axis_provenance.interaction_path == :ida_gausslet_source_box
+    @test axis_provenance.term_count == expected_term_count
+    @test axis_provenance.factor_dimensions == (n, n)
+    @test size(density_terms) == (expected_term_count, n, n)
+    @test size(raw_terms) == (expected_term_count, n, n)
+    @test density_terms === bundle.pgdg_intermediate.pair_factor_terms
+    @test raw_terms === bundle.pgdg_intermediate.pair_factor_terms_raw
+    @test weights == bundle.pgdg_intermediate.weights
+    @test axis_provenance.centers == bundle.pgdg_intermediate.centers
+    @test all(isfinite, weights)
+    @test all(weight -> abs(weight) > 1.0e-12, weights)
+
+    reconstructed = similar(density_terms)
+    weight_outer = weights * transpose(weights)
+    for term in 1:expected_term_count
+        reconstructed[term, :, :] .= raw_terms[term, :, :] ./ weight_outer
+    end
+    @test reconstructed ≈ density_terms atol = 1.0e-12 rtol = 1.0e-12
+    @test axis_provenance.diagnostics.density_normalized_reconstruction_error <
+          1.0e-12
+    @test axis_provenance.diagnostics.interaction_path ==
+          :ida_gausslet_source_box
+    @test !axis_provenance.diagnostics.mwg_supplement_residual_path
+    @test !axis_provenance.diagnostics.retained_pqs_weights_used
+    @test !axis_provenance.diagnostics.retained_weight_division_allowed
+    @test !axis_provenance.diagnostics.packet_adoption
+    @test !axis_provenance.diagnostics.qwhamiltonian_consumes
+    @test !axis_provenance.diagnostics.public_default_consumes
+    @test !axis_provenance.diagnostics.route_adapter_connected
+
+    all_axis_provenance = metrics_module._pqs_source_box_ida_factor_provenance(
+        bundle,
+        bundle,
+        bundle;
+        expected_term_count,
+    )
+    @test all_axis_provenance.object_kind == :pqs_source_box_ida_factor_provenance
+    @test all_axis_provenance.term_count == expected_term_count
+    @test all_axis_provenance.axis_pair_factor_terms.x === density_terms
+    @test all_axis_provenance.raw_axis_pair_factor_terms.x === raw_terms
+    @test all_axis_provenance.axis_weights.x == weights
+    @test all_axis_provenance.factor_dimensions.x == (n, n)
+    @test all_axis_provenance.diagnostics.interaction_path ==
+          :ida_gausslet_source_box
+    @test !all_axis_provenance.diagnostics.mwg_supplement_residual_path
+    @test !all_axis_provenance.diagnostics.retained_pqs_weights_used
+    @test !all_axis_provenance.diagnostics.retained_weight_division_allowed
+    @test !all_axis_provenance.diagnostics.packet_adoption
+    @test !all_axis_provenance.diagnostics.qwhamiltonian_consumes
+    @test !all_axis_provenance.diagnostics.public_default_consumes
+    @test !all_axis_provenance.diagnostics.route_adapter_connected
+    @test_throws ArgumentError metrics_module._pqs_source_box_ida_axis_factor_provenance(
+        bundle;
+        axis = :bad,
+        expected_term_count,
+    )
+end
+
 @testset "Atomic IDA ingredients" begin
     rb, grid, radial_ops, channels, atom, ida = _quick_radial_atomic_fixture()
     nchannels = length(channels)

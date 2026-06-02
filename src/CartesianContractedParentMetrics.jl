@@ -6,12 +6,16 @@ import SparseArrays
 import ..GaussletBases: CoulombGaussianExpansion,
                          _NestedFixedBlock3D,
                          _BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+                         _CartesianNestedAxisBundles3D,
                          _CartesianNestedProjectedQShellStagedUnitDescriptor3D,
                          _CartesianNestedProductStagedByCenterUnit3D,
+                         _MappedOrdinaryGausslet1DBundle,
+                         _MappedOrdinaryPGDGIntermediate1D,
                          _cartesian_flat_index,
                          _cartesian_raw_product_box_plan,
                          _cartesian_raw_product_box_source_mode_indices,
                          _cartesian_unflat_index,
+                         _nested_axis_bundle,
                          _nested_axis_lengths,
                          _nested_product_axis_function_indices,
                          _nested_product_staged_active_axis,
@@ -1677,6 +1681,263 @@ function _source_box_density_normalized_axis_pair_terms(
             axis_weights.z;
             axis_name = :z,
         ),
+    )
+end
+
+function _pqs_source_box_ida_expected_term_count(expected_term_count)
+    isnothing(expected_term_count) && return nothing
+    term_count = Int(expected_term_count)
+    term_count == expected_term_count || throw(
+        ArgumentError("expected IDA pair-factor term count must be an integer"),
+    )
+    term_count > 0 || throw(
+        ArgumentError("expected IDA pair-factor term count must be positive"),
+    )
+    return term_count
+end
+
+function _pqs_source_box_ida_axis_factor_provenance(
+    pgdg::_MappedOrdinaryPGDGIntermediate1D;
+    axis::Symbol = :x,
+    expected_term_count = nothing,
+    bundle_backend = nothing,
+    provenance_source::Symbol = :mapped_ordinary_pgdg_intermediate,
+)
+    axis in (:x, :y, :z) || throw(
+        ArgumentError("PQS source-box IDA axis provenance requires axis :x, :y, or :z"),
+    )
+    density_terms = pgdg.pair_factor_terms
+    raw_terms = pgdg.pair_factor_terms_raw
+    size(density_terms) == size(raw_terms) || throw(
+        DimensionMismatch("PQS source-box IDA raw and density-normalized pair-factor terms must have the same shape"),
+    )
+    term_count = size(density_terms, 1)
+    term_count > 0 || throw(
+        ArgumentError("PQS source-box IDA provenance requires at least one pair-factor term"),
+    )
+    nrow = size(density_terms, 2)
+    ncol = size(density_terms, 3)
+    nrow == ncol || throw(
+        DimensionMismatch("PQS source-box IDA pair-factor terms must be square per axis"),
+    )
+    nrow > 0 || throw(
+        ArgumentError("PQS source-box IDA pair-factor dimension must be positive"),
+    )
+    expected_value = _pqs_source_box_ida_expected_term_count(expected_term_count)
+    if !isnothing(expected_value)
+        term_count == expected_value || throw(
+            DimensionMismatch("PQS source-box IDA pair-factor term count does not match expected term count"),
+        )
+    end
+    all(isfinite, density_terms) || throw(
+        ArgumentError("PQS source-box IDA density-normalized pair-factor terms must be finite"),
+    )
+    all(isfinite, raw_terms) || throw(
+        ArgumentError("PQS source-box IDA raw pair-factor terms must be finite"),
+    )
+    weights = Float64[Float64(weight) for weight in pgdg.weights]
+    length(weights) == nrow || throw(
+        DimensionMismatch("PQS source-box IDA source weights must match pair-factor dimension"),
+    )
+    all(isfinite, weights) || throw(
+        ArgumentError("PQS source-box IDA source weights must be finite"),
+    )
+    all(weight -> abs(weight) > 1.0e-12, weights) || throw(
+        ArgumentError("PQS source-box IDA source weights must be nonzero"),
+    )
+    center_values = Float64[Float64(point) for point in pgdg.centers]
+    length(center_values) == nrow || throw(
+        DimensionMismatch("PQS source-box IDA centers must match pair-factor dimension"),
+    )
+    all(isfinite, center_values) || throw(
+        ArgumentError("PQS source-box IDA centers must be finite"),
+    )
+
+    weight_outer = weights * transpose(weights)
+    reconstruction_error = 0.0
+    @inbounds for term in 1:term_count
+        for column in 1:nrow, row in 1:nrow
+            reconstructed = Float64(raw_terms[term, row, column]) / weight_outer[row, column]
+            reconstruction_error = max(
+                reconstruction_error,
+                abs(Float64(density_terms[term, row, column]) - reconstructed),
+            )
+        end
+    end
+
+    return (
+        object_kind = :pqs_source_box_ida_axis_factor_provenance,
+        axis = axis,
+        interaction_path = :ida_gausslet_source_box,
+        density_normalized_pair_factor_terms = density_terms,
+        raw_pair_factor_terms = raw_terms,
+        source_raw_quadrature_weights = weights,
+        source_weights = weights,
+        centers = center_values,
+        term_count = term_count,
+        factor_dimensions = (nrow, ncol),
+        factor_shape = size(density_terms),
+        backend = pgdg.backend,
+        bundle_backend = bundle_backend,
+        provenance_metadata = (
+            source = provenance_source,
+            pgdg_backend = pgdg.backend,
+            bundle_backend = bundle_backend,
+            raw_pair_factor_terms_field = :pair_factor_terms_raw,
+            density_normalized_pair_factor_terms_field = :pair_factor_terms,
+            source_weights_field = :weights,
+            centers_field = :centers,
+        ),
+        diagnostics = (
+            source = :pqs_source_box_ida_axis_factor_provenance,
+            private_diagnostic_only = true,
+            interaction_path = :ida_gausslet_source_box,
+            mwg_supplement_residual_path = false,
+            density_normalized_pair_factors = true,
+            raw_weighted_pair_factors_available = true,
+            density_normalized_from_raw_weights = true,
+            source_weight_division_owner = :pgdg_auxiliary_source_weights,
+            source_weight_division_shape = :axis_pair_weight_outer,
+            raw_terms_field = :pair_factor_terms_raw,
+            density_normalized_terms_field = :pair_factor_terms,
+            source_weights_field = :weights,
+            source_centers_field = :centers,
+            source_weights_finite = true,
+            source_weights_nonzero = true,
+            source_weights_positive = all(>(0.0), weights),
+            term_count = term_count,
+            factor_dimensions = (nrow, ncol),
+            density_normalized_reconstruction_error = reconstruction_error,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            mwg_ida_semantics_changed = false,
+            ida_mwg_semantics_changed = false,
+            route_adapter_connected = false,
+        ),
+    )
+end
+
+function _pqs_source_box_ida_axis_factor_provenance(
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    axis::Symbol = :x,
+    expected_term_count = nothing,
+)
+    return _pqs_source_box_ida_axis_factor_provenance(
+        bundle.pgdg_intermediate;
+        axis,
+        expected_term_count,
+        bundle_backend = bundle.backend,
+        provenance_source = :mapped_ordinary_gausslet_1d_bundle,
+    )
+end
+
+function _pqs_source_box_ida_factor_provenance(
+    bundles::_CartesianNestedAxisBundles3D;
+    expected_term_count = nothing,
+)
+    axis_data = (
+        x = _pqs_source_box_ida_axis_factor_provenance(
+            _nested_axis_bundle(bundles, :x);
+            axis = :x,
+            expected_term_count,
+        ),
+        y = _pqs_source_box_ida_axis_factor_provenance(
+            _nested_axis_bundle(bundles, :y);
+            axis = :y,
+            expected_term_count,
+        ),
+        z = _pqs_source_box_ida_axis_factor_provenance(
+            _nested_axis_bundle(bundles, :z);
+            axis = :z,
+            expected_term_count,
+        ),
+    )
+    term_count = axis_data.x.term_count
+    term_count == axis_data.y.term_count == axis_data.z.term_count || throw(
+        DimensionMismatch("PQS source-box IDA axis provenance requires matching x/y/z term counts"),
+    )
+    return (
+        object_kind = :pqs_source_box_ida_factor_provenance,
+        interaction_path = :ida_gausslet_source_box,
+        axes = axis_data,
+        axis_pair_factor_terms = (
+            x = axis_data.x.density_normalized_pair_factor_terms,
+            y = axis_data.y.density_normalized_pair_factor_terms,
+            z = axis_data.z.density_normalized_pair_factor_terms,
+        ),
+        raw_axis_pair_factor_terms = (
+            x = axis_data.x.raw_pair_factor_terms,
+            y = axis_data.y.raw_pair_factor_terms,
+            z = axis_data.z.raw_pair_factor_terms,
+        ),
+        axis_weights = (
+            x = axis_data.x.source_weights,
+            y = axis_data.y.source_weights,
+            z = axis_data.z.source_weights,
+        ),
+        axis_centers = (
+            x = axis_data.x.centers,
+            y = axis_data.y.centers,
+            z = axis_data.z.centers,
+        ),
+        term_count = term_count,
+        factor_dimensions = (
+            x = axis_data.x.factor_dimensions,
+            y = axis_data.y.factor_dimensions,
+            z = axis_data.z.factor_dimensions,
+        ),
+        diagnostics = (
+            source = :pqs_source_box_ida_factor_provenance,
+            private_diagnostic_only = true,
+            interaction_path = :ida_gausslet_source_box,
+            mwg_supplement_residual_path = false,
+            axis_count = 3,
+            term_count = term_count,
+            factor_dimensions = (
+                x = axis_data.x.factor_dimensions,
+                y = axis_data.y.factor_dimensions,
+                z = axis_data.z.factor_dimensions,
+            ),
+            source_weight_division_owner = :pgdg_auxiliary_source_weights,
+            source_weight_division_shape = :axis_pair_weight_outer,
+            density_normalized_pair_factors = true,
+            raw_weighted_pair_factors_available = true,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            mwg_ida_semantics_changed = false,
+            ida_mwg_semantics_changed = false,
+            route_adapter_connected = false,
+        ),
+    )
+end
+
+function _pqs_source_box_ida_factor_provenance(
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle;
+    expected_term_count = nothing,
+)
+    return _pqs_source_box_ida_factor_provenance(
+        _CartesianNestedAxisBundles3D(bundle_x, bundle_y, bundle_z);
+        expected_term_count,
     )
 end
 
