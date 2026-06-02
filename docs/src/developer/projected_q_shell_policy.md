@@ -302,6 +302,18 @@ consumer remains source-box-first and avoids shell projection, Lowdin cleanup,
 support-local fallback, support coefficient matrices, retained PQS weight
 semantics, and IDA division.
 
+Commit `93a9af8` adds the analogous private route-shaped source-box
+density-density consumer for the left-PQS/right-PQS/product-slab fixture. It
+assembles a complete retained two-index density-density matrix by composing
+the existing product/product, PQS/product, and PQS/PQS source-box helpers.
+Pair factors remain synthetic or caller-supplied explicit data; real MWG/IDA
+pair-factor provenance has not been adapted. Raw-weighted route mode uses
+raw/source weight outer-product normalization only, and retained PQS columns
+still have no positive quadrature-weight or IDA-division semantics. This is
+private/reference infrastructure only and implies no packet/fixed-block/
+QW/Hamiltonian adoption, no public/default route, no ECP behavior, and no CR2
+science claim.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

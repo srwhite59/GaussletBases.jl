@@ -1501,6 +1501,42 @@ the product/product and PQS/product wrappers, and delegates to the PQS/PQS
 density-normalized core. This is source-box raw/support weight normalization,
 not retained PQS positive-weight semantics.
 
+Commit `93a9af8` adds the private route-shaped source-box density-density
+consumer for the first small PQS/PQS/product layout:
+
+```text
+left mode-selected raw-box PQS
+right mode-selected raw-box PQS
+middle product/doside slab
+```
+
+The consumer expands the six upper-triangular route pairs and dispatches to
+the existing source-box pair-family helpers: three PQS/PQS blocks, two
+PQS/product blocks, and one product/product block. Product/PQS and other
+lower-triangular cross blocks are transpose-only, and only for the symmetric
+synthetic/caller-supplied pair-factor fixtures where that transpose is
+explicitly valid. The assembled output is a complete retained two-index
+density-density matrix in the current repo convention. It is not a four-index
+Galerkin Coulomb tensor.
+
+Both supported route modes still use explicit synthetic or caller-supplied
+pair factors. In density-normalized mode, the consumer does not divide by
+weights again. In raw-weighted mode, the existing raw-weighted wrappers divide
+raw per-axis factor matrices by raw/source quadrature-weight outer products
+and then delegate to the density-normalized cores. Real repo MWG/IDA
+pair-factor provenance, backend ownership, and scaling choices have not been
+adapted into this route-shaped consumer.
+
+The route consumer keeps the same weight boundary as the pair-family helpers:
+raw/source weights own raw-weight normalization; retained PQS columns are not
+positive quadrature weights; retained PQS weights are not used; retained-
+weight/IDA division remains forbidden. It adds no shell projection, Lowdin
+cleanup, support-local or shell-row algorithm, support coefficient matrix,
+packet/fixed-block/QW/Hamiltonian adoption, MWG/IDA semantic change,
+public/default route, ECP behavior, or CR2 science claim. Its timing and
+allocation fields are private route-consumer diagnostics for complete
+retained-matrix assembly, not production readiness thresholds.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
@@ -1509,8 +1545,12 @@ Current boundaries:
   raw-weighted conversion wrapper;
 - PQS/PQS has both density-normalized input and the `3b64e91` raw-weighted
   conversion wrapper;
+- the `93a9af8` route-shaped consumer composes those helpers for a private
+  left-PQS/right-PQS/product-slab retained matrix;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
+- pair factors remain synthetic/caller-supplied explicit data at this
+  checkpoint; real MWG/IDA provenance is not yet connected;
 - source weights are provenance/positivity checks for density-normalized
   input, or the raw/source owner of normalization in raw-weighted wrappers;
 - retained PQS columns have no positive-weight or IDA-division semantics;
@@ -1542,6 +1582,12 @@ optimized/adopted product/PQS pairs, and product/support-dense pairs need
 separate design. The current checkpoint changes no all-pairs matrix
 construction, QW or Hamiltonian path, public/default route, backend/default
 policy, PGDG or quadrature policy, CR2 path, or science status.
+
+The next likely private step is a density-density route producer wrapper
+analogous to the safe-term raw-box route producer. It should still start from
+explicit fixture facts and synthetic/caller-supplied source-box pair factors,
+and it should stop before adapting real MWG/IDA pair factors or moving toward
+packet, fixed-block, QW/Hamiltonian, or public/default consumption.
 
 ## Non-Goals
 

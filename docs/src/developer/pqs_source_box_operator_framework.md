@@ -1042,6 +1042,40 @@ This closes the private pair-family symmetry for product/product,
 PQS/product, and PQS/PQS without assigning positive quadrature or IDA-division
 semantics to retained PQS columns.
 
+Commit `93a9af8` adds the private route-shaped source-box density-density
+consumer:
+
+```text
+left mode-selected raw-box PQS
+right mode-selected raw-box PQS
+middle product/doside slab
+-> six upper-triangular source-box pair blocks
+-> complete retained two-index density-density matrix
+```
+
+This consumer is private/reference infrastructure only. It composes the
+already-proven pair-family helpers: three PQS/PQS pairs, two PQS/product
+pairs, and one product/product pair. Product/PQS and other lower-triangular
+cross blocks are filled by transpose only after the synthetic/caller-supplied
+pair-factor terms are checked as symmetric. The output remains the repo's
+retained two-index density-density convention, not a four-index Galerkin
+Coulomb tensor. Inputs are still explicit synthetic or caller-supplied
+per-axis pair-factor terms; real repo MWG/IDA pair-factor provenance has not
+been adapted.
+
+The route consumer supports both density-normalized input and a raw-weighted
+route mode. In raw-weighted mode, normalization is still source-box
+normalization only: raw per-axis pair factors are divided by explicit
+raw/source quadrature-weight outer products through the existing raw-weighted
+wrappers, then the density-normalized cores are used. Retained PQS columns
+still do not carry positive quadrature weights, retained PQS weights are not
+used, and retained-weight/IDA division remains forbidden. The consumer adds no
+shell projection, Lowdin cleanup, support-local/shell-row algorithm, support
+coefficient matrix, packet/fixed-block adoption, QW/Hamiltonian routing,
+MWG/IDA semantic change, public/default route, ECP behavior, or CR2 science
+claim. It records timing/allocation diagnostics for complete retained-matrix
+assembly only as private route-consumer diagnostics.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
@@ -1050,13 +1084,21 @@ The current electron-electron source-box checkpoint is therefore:
   `b1ee2a5` raw-weighted conversion wrapper;
 - PQS/PQS accepts caller-supplied density-normalized factors and has the
   `3b64e91` raw-weighted conversion wrapper;
+- the private route-shaped consumer at `93a9af8` assembles the
+  left-PQS/right-PQS/product-slab retained matrix from the existing
+  source-box pair-family helpers;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
+- pair factors are still synthetic or caller-supplied explicit data; real
+  MWG/IDA factor provenance is not yet connected;
 - source weights are provenance/positivity checks for density-normalized
   input, or the owner of raw-weight normalization inside the raw-weighted
   wrappers;
+- raw-weighted route input divides only by explicit raw/source weight outer
+  products and then delegates to density-normalized cores;
 - PQS/product and PQS/PQS use no shell projection, Lowdin cleanup, support
-  coefficient matrix, or support-local oracle as the algorithm;
+  coefficient matrix, or support-local oracle as the algorithm, and the route
+  consumer preserves the same boundary;
 - retained PQS columns have no positive quadrature-weight or IDA-division
   semantics.
 
@@ -1084,3 +1126,10 @@ No packet adoption, fixed-block construction adoption, QW/Hamiltonian routing,
 ECP, MWG/interaction implementation, public/default route, or CR2 claim is
 part of that correction. Additional local/Gaussian work beyond the private
 one-body checkpoint remains separately scoped.
+
+The next likely private implementation step, if reviewed, is a small
+density-density route producer wrapper analogous to the safe-term raw-box
+route producer. That producer should still consume explicit fixture facts and
+synthetic/caller-supplied source-box pair factors only; it must stop before
+real MWG/IDA factor provenance, packet/fixed-block/Hamiltonian adoption, or
+public/default route behavior.
