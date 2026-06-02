@@ -163,6 +163,111 @@ using GaussletBases
         return facts
     end
 
+    function _synthetic_fixed_side_inventory_unit(
+        role::Symbol,
+        category::Symbol,
+        kind::Symbol,
+        column_range::UnitRange{Int};
+        support_count::Int,
+        primitive_family = nothing,
+        representation_kind = category,
+        raw_box_auxiliary_metadata = nothing,
+        shell_transform = nothing,
+        shell_row_oracle_only::Bool = false,
+        support_local_oracle_used::Bool = false,
+    )
+        return (
+            role = role,
+            category = category,
+            kind = kind,
+            column_range = column_range,
+            retained_count = length(column_range),
+            support_count = support_count,
+            support_source_semantics = category == :support_dense ?
+                :support_local_direct_rows : :synthetic_source_semantics,
+            safe_term_capability = category == :shell_realized_pqs_fixture ?
+                :support_local_oracle_for_shell_realization :
+                :synthetic_safe_terms,
+            active_representation_stage = representation_kind,
+            raw_box_auxiliary_metadata = raw_box_auxiliary_metadata,
+            shell_realization_transform_fact = shell_transform,
+            raw_product_box_operator_contract = category == :product_doside,
+            route_descriptor_emitted = false,
+            construction_mutated = false,
+            sidecar_installation = false,
+            packet_adoption = false,
+            provenance = (
+                source = :synthetic_fixed_side_inventory_unit,
+                primitive_family = primitive_family,
+            ),
+            diagnostics = (
+                retained_weight_semantics = :not_positive_quadrature_weights,
+                ida_weight_division_allowed = false,
+                shell_row_oracle_only = shell_row_oracle_only,
+                support_local_oracle_used = support_local_oracle_used,
+            ),
+        )
+    end
+
+    function _synthetic_fixed_side_inventory()
+        units = (
+            _synthetic_fixed_side_inventory_unit(
+                :outer_mismatch_z_low_slab,
+                :product_doside,
+                :product_doside,
+                1:4;
+                support_count = 4,
+                primitive_family = :outer_mismatch_boundary_slab_set,
+                representation_kind = :product_doside_bridge,
+            ),
+            _synthetic_fixed_side_inventory_unit(
+                :left_atom_box,
+                :support_dense,
+                :atom_core_cube,
+                5:8;
+                support_count = 27,
+                primitive_family = :atom_local_complete_shell_sequence,
+                representation_kind = :support_dense_direct_support,
+            ),
+            _synthetic_fixed_side_inventory_unit(
+                :regular_shared_molecular_shell_1,
+                :shell_realized_pqs_fixture,
+                :projected_q_shell,
+                9:15;
+                support_count = 50,
+                primitive_family = :projected_q_shell,
+                representation_kind = :shell_realized_pqs_fixture,
+                raw_box_auxiliary_metadata = (
+                    available = true,
+                    source_mode_dims = (5, 5, 5),
+                    reference_only = true,
+                    active_current_route_contract = false,
+                ),
+                shell_transform = (
+                    source_box_operator_application_ready = false,
+                    compact_source_space_transform = (available = false,),
+                ),
+                shell_row_oracle_only = true,
+                support_local_oracle_used = true,
+            ),
+        )
+        return (
+            object_kind = :pqs_current_route_retained_unit_inventory_fixture,
+            status = :private_diagnostic_only,
+            units = units,
+            coverage = (
+                first_column = 1,
+                last_column = 15,
+                represented_count = 15,
+                covers_every_column_once = true,
+            ),
+            diagnostics = (
+                fixed_dimension = 15,
+                coverage_complete = true,
+            ),
+        )
+    end
+
     summaries = (
         _synthetic_summary(:density_normalized),
         _synthetic_summary(:raw_weighted),
@@ -338,6 +443,86 @@ using GaussletBases
     @test occursin("status\tprivate_summary_only", text)
     @test occursin("source_unit_label_status\texplicit_route_descriptor_unit_keys", text)
     @test occursin("residual_nucleus_indices\t[1, 1, 1, 2, 2, 2]", text)
+
+    fixed_side_metadata =
+        metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+            _synthetic_fixed_side_inventory();
+            provenance = (source = :synthetic_fixed_side_metadata_test,),
+        )
+    @test fixed_side_metadata.object_kind ==
+          :pqs_current_route_fixed_side_retained_unit_metadata
+    @test fixed_side_metadata.status == :private_fixed_side_retained_unit_metadata
+    @test fixed_side_metadata.fixed_dimension == 15
+    @test fixed_side_metadata.unit_count == 3
+    @test fixed_side_metadata.labels.source_unit_label_status ==
+          :explicit_inventory_unit_keys
+    @test fixed_side_metadata.labels.source_unit_labels == (
+        :outer_mismatch_z_low_slab,
+        :left_atom_box,
+        :regular_shared_molecular_shell_1,
+    )
+    @test fixed_side_metadata.labels.shell_label_status == :unavailable
+    @test isempty(fixed_side_metadata.labels.shell_labels)
+    @test !fixed_side_metadata.labels.label_reconstruction_from_centers
+    @test !fixed_side_metadata.labels.nearest_grid_or_center_label_heuristic
+    @test map(record -> record.retained_range, fixed_side_metadata.retained_units) ==
+          (1:4, 5:8, 9:15)
+    @test map(record -> record.retained_count, fixed_side_metadata.retained_units) ==
+          (4, 4, 7)
+    @test fixed_side_metadata.retained_units[1].is_product_doside
+    @test fixed_side_metadata.retained_units[2].is_support_dense_direct_support
+    @test fixed_side_metadata.retained_units[3].is_shell_realized_pqs_fixture
+    @test fixed_side_metadata.retained_units[3].source_mode_dims == (5, 5, 5)
+    @test fixed_side_metadata.retained_units[3].source_dimension == 125
+    @test fixed_side_metadata.retained_units[3].primitive_family ==
+          :projected_q_shell
+    @test fixed_side_metadata.retained_units[3].representation_kind ==
+          :shell_realized_pqs_fixture
+    @test fixed_side_metadata.retained_units[3].shell_realized_pqs_metadata_oracle_fixture
+    @test !fixed_side_metadata.retained_units[3].shell_realized_pqs_source_box_operator_ready
+    @test !fixed_side_metadata.retained_units[3].compact_source_space_transform_available
+    @test fixed_side_metadata.retained_units[3].shell_row_oracle_only
+    @test fixed_side_metadata.retained_units[3].support_local_oracle_used
+    @test !fixed_side_metadata.retained_units[3].ida_weight_division_allowed
+    @test fixed_side_metadata.absences_by_contract.packet_fixed_block_qw_hamiltonian_adoption
+    @test fixed_side_metadata.absences_by_contract.retained_weight_ida_division
+    @test fixed_side_metadata.absences_by_contract.shell_label_reconstruction_from_centers
+    @test fixed_side_metadata.diagnostics.fixed_side_records_are_explicit_metadata
+    @test fixed_side_metadata.diagnostics.coverage_complete
+    @test fixed_side_metadata.diagnostics.shell_realized_pqs_fixture_count == 1
+    @test fixed_side_metadata.diagnostics.shell_realized_pqs_source_box_operator_ready_count ==
+          0
+    @test fixed_side_metadata.diagnostics.shell_realized_pqs_fixtures_are_metadata_oracle_only
+    @test !fixed_side_metadata.diagnostics.route_construction_changed
+    @test !fixed_side_metadata.diagnostics.packet_adoption
+    @test !fixed_side_metadata.diagnostics.fixed_block_routing
+    @test !fixed_side_metadata.diagnostics.qwhamiltonian_changed
+    @test !fixed_side_metadata.diagnostics.hamiltonian_matrix_built
+    @test !fixed_side_metadata.diagnostics.public_default_consumes
+    @test !fixed_side_metadata.diagnostics.mwg_ida_semantics_changed
+    @test !fixed_side_metadata.diagnostics.ecp_terms_implemented
+    @test !fixed_side_metadata.diagnostics.scf_hf_validation_claim
+    @test !fixed_side_metadata.diagnostics.cr2_science_status_changed
+    @test !fixed_side_metadata.diagnostics.retained_weight_or_ida_division
+    bad_inventory = merge(
+        _synthetic_fixed_side_inventory(),
+        (object_kind = :not_current_route_inventory,),
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+        bad_inventory,
+    )
+    bad_coverage = merge(
+        _synthetic_fixed_side_inventory(),
+        (
+            coverage = merge(
+                _synthetic_fixed_side_inventory().coverage,
+                (covers_every_column_once = false,),
+            ),
+        ),
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+        bad_coverage,
+    )
 
     missing_owner_facts = _synthetic_mwg_facts()
     delete!(missing_owner_facts, "residual_nucleus_indices")

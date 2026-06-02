@@ -676,6 +676,31 @@ IDA/MWG behavior change, retained PQS weight division or positive
 quadrature-weight claim, local/ECP/Gaussian/MWG/interaction implementation,
 public/default route change, or Be2/Cr2 science claim.
 
+The follow-up fixed-side retained-unit metadata checkpoint adds
+`_pqs_current_route_fixed_side_retained_unit_metadata(...)` as a private
+reporting-only view of that inventory. It exports explicit inventory unit
+labels, categories, retained ranges, retained counts, support counts,
+representation kinds, available source-mode dimensions, and shell-realized PQS
+oracle/readiness flags without changing the inventory or route behavior.
+
+The ignored full Be2 q5 report at
+`tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
+records fixed dimension `1483`, retained-unit count `8`, complete coverage
+`1:1483`, product/doside count `3`, support-dense/direct-support count `2`,
+shell-realized PQS count `3`, and source-box-ready shell-realized PQS count
+`0`. Its explicit shared PQS inventory labels are
+`:regular_shared_molecular_shell_1`, `:regular_shared_molecular_shell_2`,
+and `:regular_shared_molecular_shell_3`; their retained counts are
+`(98, 98, 114)`, support counts are `(1738, 1346, 1002)`, and ranges are
+`(1174:1271, 1272:1369, 1370:1483)`.
+
+This is still not a shell-start label contract. True shell labels remain
+unavailable, center/grid reconstruction and nearest-grid heuristics remain
+disabled, and shell-realized PQS fixtures remain metadata/oracle-only with
+`source_box_operator_application_ready = false`. The ignored run spent about
+`32.6 s` in construction, `14.1 s` building the current-route inventory, and
+`3.4 s` extracting metadata.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained

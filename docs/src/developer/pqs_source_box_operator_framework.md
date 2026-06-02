@@ -1246,6 +1246,38 @@ Hamiltonian route, shell-label reconstruction, raw GTO/GTO or fixed/raw-GTO
 MWG blocks, retained-weight/IDA division, or packet/fixed-block/
 QW/Hamiltonian/public/default adoption.
 
+The private fixed-side retained-unit metadata checkpoint adds
+`_pqs_current_route_fixed_side_retained_unit_metadata(...)` as a reporting-only
+view of `_pqs_current_route_retained_unit_inventory(...)`. It normalizes the
+explicit inventory unit keys, roles, categories, retained ranges, retained
+counts, support counts, representation kinds, available source-mode
+dimensions, and shell-realized PQS oracle flags into sidecar-adjacent metadata
+records. It does not construct a route, install a sidecar, thread data into
+the CR2 sidecar schema, or change packet/fixed-block/QW/Hamiltonian behavior.
+
+The ignored full Be2 q5 report
+`tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
+exercises that extractor on the current-route inventory. It records fixed
+dimension `1483`, retained-unit count `8`, complete coverage `1:1483`,
+product/doside count `3`, support-dense/direct-support count `2`,
+shell-realized PQS count `3`, and source-box-ready shell-realized PQS count
+`0`. The explicit inventory labels are
+`:outer_mismatch_z_low_slab`, `:outer_mismatch_z_high_slab`, `:left_atom_box`,
+`:right_atom_box`, `:contact_cap_slab`,
+`:regular_shared_molecular_shell_1`, `:regular_shared_molecular_shell_2`,
+and `:regular_shared_molecular_shell_3`. The three shared PQS retained counts
+are `(98, 98, 114)`, support counts are `(1738, 1346, 1002)`, and retained
+ranges are `(1174:1271, 1272:1369, 1370:1483)`.
+
+This report makes fixed-side retained-unit labels explicit. It does not make
+true shell-start labels available and does not make shell-start contraction a
+stable contract. `shell_label_status` remains `:unavailable`; center/grid
+label reconstruction and nearest-grid heuristics remain disabled. The
+shell-realized PQS fixtures remain metadata/oracle-only and not
+source-box-operator-ready. Coarse timings for the ignored run were about
+`32.6 s` for construction, `14.1 s` for current-route inventory, and `3.4 s`
+for metadata extraction.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has

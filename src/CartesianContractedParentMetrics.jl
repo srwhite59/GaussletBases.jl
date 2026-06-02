@@ -9543,6 +9543,271 @@ function _pqs_current_route_retained_unit_inventory(
     )
 end
 
+function _pqs_fixed_side_unit_get(object, field::Symbol, default = nothing)
+    return hasproperty(object, field) ? getproperty(object, field) : default
+end
+
+function _pqs_fixed_side_unit_provenance_get(unit, field::Symbol, default = nothing)
+    provenance = _pqs_fixed_side_unit_get(unit, :provenance, (;))
+    return hasproperty(provenance, field) ? getproperty(provenance, field) : default
+end
+
+function _pqs_fixed_side_unit_diagnostic_get(unit, field::Symbol, default = nothing)
+    diagnostics = _pqs_fixed_side_unit_get(unit, :diagnostics, (;))
+    return hasproperty(diagnostics, field) ? getproperty(diagnostics, field) : default
+end
+
+function _pqs_fixed_side_unit_raw_box_auxiliary_metadata(unit)
+    raw_box = _pqs_fixed_side_unit_get(unit, :raw_box_auxiliary_metadata, nothing)
+    return isnothing(raw_box) ? nothing : raw_box
+end
+
+function _pqs_fixed_side_unit_source_mode_dims(unit)
+    raw_box = _pqs_fixed_side_unit_raw_box_auxiliary_metadata(unit)
+    !isnothing(raw_box) && hasproperty(raw_box, :source_mode_dims) &&
+        return raw_box.source_mode_dims
+    transform_fact =
+        _pqs_fixed_side_unit_get(unit, :shell_realization_transform_fact, nothing)
+    if !isnothing(transform_fact) &&
+       hasproperty(transform_fact, :source_box) &&
+       hasproperty(transform_fact.source_box, :source_mode_dims)
+        return transform_fact.source_box.source_mode_dims
+    end
+    return nothing
+end
+
+function _pqs_fixed_side_unit_source_dimension(unit)
+    source_mode_dims = _pqs_fixed_side_unit_source_mode_dims(unit)
+    isnothing(source_mode_dims) || return prod(source_mode_dims)
+    return _pqs_fixed_side_unit_get(unit, :source_dimension, nothing)
+end
+
+function _pqs_fixed_side_unit_class(category::Symbol)
+    category == :product_doside && return :product_doside
+    category == :support_dense && return :support_dense_direct_support
+    category == :shell_realized_pqs_fixture &&
+        return :shell_realized_pqs_fixture
+    return :unknown
+end
+
+function _pqs_fixed_side_retained_unit_metadata_record(unit)
+    category = _pqs_fixed_side_unit_get(unit, :category, :unknown)
+    role = _pqs_fixed_side_unit_get(unit, :role, :unknown)
+    column_range = _pqs_fixed_side_unit_get(unit, :column_range, 1:0)
+    support_count = _pqs_fixed_side_unit_get(
+        unit,
+        :support_count,
+        hasproperty(unit, :support_indices) ? length(unit.support_indices) : nothing,
+    )
+    source_mode_dims = _pqs_fixed_side_unit_source_mode_dims(unit)
+    shell_transform =
+        _pqs_fixed_side_unit_get(unit, :shell_realization_transform_fact, nothing)
+    source_box_operator_application_ready =
+        !isnothing(shell_transform) &&
+        hasproperty(shell_transform, :source_box_operator_application_ready) ?
+        Bool(shell_transform.source_box_operator_application_ready) : false
+    compact_source_space_transform_available =
+        !isnothing(shell_transform) &&
+        hasproperty(shell_transform, :compact_source_space_transform) &&
+        hasproperty(shell_transform.compact_source_space_transform, :available) ?
+        Bool(shell_transform.compact_source_space_transform.available) : false
+    is_shell_realized = category == :shell_realized_pqs_fixture
+
+    return (
+        unit_key = role,
+        stable_unit_label = role,
+        role = role,
+        original_role = _pqs_fixed_side_unit_get(unit, :original_role, role),
+        category = category,
+        kind = _pqs_fixed_side_unit_get(unit, :kind, :unknown),
+        unit_class = _pqs_fixed_side_unit_class(category),
+        retained_range = column_range,
+        retained_count = _pqs_fixed_side_unit_get(
+            unit,
+            :retained_count,
+            length(column_range),
+        ),
+        support_count = support_count,
+        source_dimensions = source_mode_dims,
+        source_mode_dims = source_mode_dims,
+        source_dimension = _pqs_fixed_side_unit_source_dimension(unit),
+        primitive_family =
+            _pqs_fixed_side_unit_provenance_get(unit, :primitive_family, nothing),
+        representation_kind =
+            _pqs_fixed_side_unit_get(unit, :active_representation_stage, nothing),
+        support_source_semantics =
+            _pqs_fixed_side_unit_get(unit, :support_source_semantics, nothing),
+        safe_term_capability =
+            _pqs_fixed_side_unit_get(unit, :safe_term_capability, nothing),
+        is_product_doside = category == :product_doside,
+        is_support_dense_direct_support = category == :support_dense,
+        is_shell_realized_pqs_fixture = is_shell_realized,
+        shell_realized_pqs_metadata_oracle_fixture = is_shell_realized,
+        shell_realized_pqs_source_box_operator_ready =
+            source_box_operator_application_ready,
+        compact_source_space_transform_available =
+            compact_source_space_transform_available,
+        shell_row_oracle_only =
+            _pqs_fixed_side_unit_diagnostic_get(
+                unit,
+                :shell_row_oracle_only,
+                false,
+            ),
+        support_local_oracle_used =
+            _pqs_fixed_side_unit_diagnostic_get(
+                unit,
+                :support_local_oracle_used,
+                false,
+            ),
+        raw_product_box_operator_contract =
+            _pqs_fixed_side_unit_get(
+                unit,
+                :raw_product_box_operator_contract,
+                false,
+            ),
+        retained_weight_semantics =
+            _pqs_fixed_side_unit_diagnostic_get(
+                unit,
+                :retained_weight_semantics,
+                :not_positive_quadrature_weights,
+            ),
+        ida_weight_division_allowed =
+            _pqs_fixed_side_unit_diagnostic_get(
+                unit,
+                :ida_weight_division_allowed,
+                false,
+            ),
+        route_descriptor_emitted =
+            _pqs_fixed_side_unit_get(unit, :route_descriptor_emitted, false),
+        construction_mutated =
+            _pqs_fixed_side_unit_get(unit, :construction_mutated, false),
+        sidecar_installation =
+            _pqs_fixed_side_unit_get(unit, :sidecar_installation, false),
+        packet_adoption =
+            _pqs_fixed_side_unit_get(unit, :packet_adoption, false),
+    )
+end
+
+function _pqs_current_route_fixed_side_retained_unit_metadata(
+    inventory;
+    provenance = (;),
+    strict::Bool = true,
+)
+    inventory.object_kind == :pqs_current_route_retained_unit_inventory_fixture ||
+        throw(
+            ArgumentError("fixed-side retained-unit metadata requires _pqs_current_route_retained_unit_inventory output"),
+        )
+    units = Tuple(inventory.units)
+    isempty(units) && throw(
+        ArgumentError("fixed-side retained-unit metadata requires at least one retained unit"),
+    )
+    records = Tuple(_pqs_fixed_side_retained_unit_metadata_record(unit) for unit in units)
+    labels = Tuple(record.unit_key for record in records)
+    coverage = inventory.coverage
+    diagnostics = inventory.diagnostics
+    fixed_dimension = hasproperty(diagnostics, :fixed_dimension) ?
+        Int(diagnostics.fixed_dimension) : Int(coverage.last_column)
+    coverage_complete = hasproperty(coverage, :covers_every_column_once) ?
+        Bool(coverage.covers_every_column_once) : false
+
+    if strict
+        coverage_complete || throw(
+            ArgumentError("fixed-side retained-unit metadata requires complete fixed-side column coverage"),
+        )
+        all(record -> !record.route_descriptor_emitted, records) || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot include route descriptor emission"),
+        )
+        all(record -> !record.construction_mutated, records) || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot include construction mutation"),
+        )
+        all(record -> !record.sidecar_installation, records) || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot include sidecar installation"),
+        )
+        all(record -> !record.packet_adoption, records) || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot include packet adoption"),
+        )
+        all(record -> !record.ida_weight_division_allowed, records) || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot include retained-weight/IDA division"),
+        )
+    end
+
+    shell_records = Tuple(
+        record for record in records if record.is_shell_realized_pqs_fixture
+    )
+    source_box_ready_count = count(
+        record -> record.shell_realized_pqs_source_box_operator_ready,
+        shell_records,
+    )
+    return (
+        object_kind = :pqs_current_route_fixed_side_retained_unit_metadata,
+        status = :private_fixed_side_retained_unit_metadata,
+        schema_version = :pqs_fixed_side_retained_units_private_v1,
+        inventory_object_kind = inventory.object_kind,
+        fixed_dimension = fixed_dimension,
+        unit_count = length(records),
+        retained_units = records,
+        labels = (
+            source_unit_label_status = :explicit_inventory_unit_keys,
+            source_unit_labels = labels,
+            shell_label_status = :unavailable,
+            shell_labels = (),
+            label_reconstruction_from_centers = false,
+            nearest_grid_or_center_label_heuristic = false,
+        ),
+        absences_by_contract = (
+            route_construction = true,
+            packet_fixed_block_qw_hamiltonian_adoption = true,
+            mwg_ida_semantic_change = true,
+            ecp_scf_hf_cr2_science_claim = true,
+            retained_weight_ida_division = true,
+            shell_label_reconstruction_from_centers = true,
+            nearest_grid_or_center_label_heuristic = true,
+        ),
+        provenance = merge(
+            (
+                source = :pqs_current_route_fixed_side_retained_unit_metadata,
+                inventory_object_kind = inventory.object_kind,
+            ),
+            provenance,
+        ),
+        diagnostics = (
+            source = :pqs_current_route_fixed_side_retained_unit_metadata,
+            private_reporting_only = true,
+            fixed_side_records_are_explicit_metadata = true,
+            unit_count = length(records),
+            fixed_dimension = fixed_dimension,
+            coverage_complete = coverage_complete,
+            first_column = coverage.first_column,
+            last_column = coverage.last_column,
+            represented_count = coverage.represented_count,
+            source_unit_label_status = :explicit_inventory_unit_keys,
+            shell_label_status = :unavailable,
+            label_reconstruction_from_centers = false,
+            nearest_grid_or_center_label_heuristic = false,
+            shell_realized_pqs_fixture_count = length(shell_records),
+            shell_realized_pqs_source_box_operator_ready_count =
+                source_box_ready_count,
+            shell_realized_pqs_fixtures_are_metadata_oracle_only =
+                all(
+                    record -> record.shell_realized_pqs_metadata_oracle_fixture &&
+                              !record.shell_realized_pqs_source_box_operator_ready,
+                    shell_records,
+                ),
+            route_construction_changed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_changed = false,
+            hamiltonian_matrix_built = false,
+            public_default_consumes = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            scf_hf_validation_claim = false,
+            cr2_science_status_changed = false,
+            retained_weight_or_ida_division = false,
+        ),
+    )
+end
+
 function _pqs_current_route_retained_pair_policy(left, right)
     categories = (left.category, right.category)
     if categories == (:product_doside, :product_doside)
