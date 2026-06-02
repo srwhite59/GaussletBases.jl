@@ -981,12 +981,11 @@ The first electron-electron object contract should describe:
 
 The smallest first fixture was product/product, because product/doside units
 already have source-box retained transforms and current product-staged helpers
-can provide comparison data. PQS/product now has the corresponding
-density-normalized source-box block. PQS/PQS should still wait until the
-retained-weight ownership and source-box projection contracts are reviewed in
-that pair family. Current support-local or fixed-block interaction paths may
-be used only as validation/oracle comparisons until an explicit source-box
-pair object matches the intended IDA/MWG convention.
+can provide comparison data. PQS/product and PQS/PQS now have corresponding
+private density-normalized source-box blocks. Current support-local or
+fixed-block interaction paths may be used only as validation/oracle
+comparisons until an explicit source-box pair object is promoted into a real
+route. No promotion has happened in this lane.
 
 Commit `9bed286` adds that first tiny product/product fixture. It consumes
 caller-supplied density-normalized pair factors, requires raw/source weights
@@ -1025,17 +1024,34 @@ then delegates to the PQS/product density-normalized core. This is raw/source
 quadrature-weight normalization only; retained PQS columns still do not carry
 positive quadrature weights and are not IDA-division weights.
 
+Commit `653d35d` adds the private PQS/PQS density-normalized source-box
+density-density block. It uses mode-selected raw product-box PQS on both
+sides, applies boundary COMX-product mode selection on both retained rules,
+and returns a retained two-index density-density block. Inputs are
+caller-supplied density-normalized per-axis pair factors; explicit positive
+source weights are required only as provenance and positivity checks. The
+helper does not use shell projection, Lowdin cleanup, support coefficient
+matrices, support-local/shell-row contraction as the algorithm, retained PQS
+weights, or retained-weight/IDA division.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has a
   raw-weighted conversion wrapper from commit `ad74d3c`;
 - PQS/product accepts caller-supplied density-normalized factors and has a
   raw-weighted conversion wrapper from commit `b1ee2a5`;
+- PQS/PQS accepts caller-supplied density-normalized factors from commit
+  `653d35d`;
+- PQS/PQS raw-weighted conversion remains future work;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
-- PQS/product uses no shell projection, Lowdin cleanup, support coefficient
-  matrix, or support-local oracle as the algorithm;
-- PQS/PQS electron-electron blocks remain unimplemented.
+- source weights are provenance/positivity checks for density-normalized
+  input, or the owner of raw-weight normalization inside the product/product
+  and PQS/product raw-weighted wrappers;
+- PQS/product and PQS/PQS use no shell projection, Lowdin cleanup, support
+  coefficient matrix, or support-local oracle as the algorithm;
+- retained PQS columns have no positive quadrature-weight or IDA-division
+  semantics.
 
 Stop implementation if any of these are unclear:
 
