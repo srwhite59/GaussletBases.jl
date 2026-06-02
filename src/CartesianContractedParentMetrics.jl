@@ -10520,6 +10520,645 @@ function _pqs_pqs_product_route_shaped_safe_term_consumer(
     )
 end
 
+const _PQS_PQS_PRODUCT_DENSITY_DENSITY_ROUTE_KINDS =
+    _PQS_PQS_PRODUCT_SAFE_TERM_ROUTE_KINDS
+
+function _source_box_axis_pair_terms_symmetric(
+    axis_pair_factor_terms::AbstractArray{<:Real,3};
+    axis_name::Symbol,
+    atol::Real = 0.0,
+)
+    nterms = size(axis_pair_factor_terms, 1)
+    nterms > 0 || throw(
+        ArgumentError("$(axis_name) pair-factor terms require at least one term"),
+    )
+    size(axis_pair_factor_terms, 2) == size(axis_pair_factor_terms, 3) || throw(
+        DimensionMismatch("$(axis_name) pair-factor terms must be square per term"),
+    )
+    atol_value = Float64(atol)
+    for term in axes(axis_pair_factor_terms, 1)
+        term_matrix = @view axis_pair_factor_terms[term, :, :]
+        all(isfinite, term_matrix) || throw(
+            ArgumentError("$(axis_name) pair-factor terms must be finite"),
+        )
+        isapprox(
+            term_matrix,
+            transpose(term_matrix);
+            atol = atol_value,
+            rtol = atol_value,
+        ) || return false
+    end
+    return true
+end
+
+function _source_box_axis_pair_terms_symmetric(
+    axis_pair_factor_terms::NamedTuple{(:x,:y,:z)};
+    atol::Real = 0.0,
+)
+    return all(axis -> _source_box_axis_pair_terms_symmetric(
+        getproperty(axis_pair_factor_terms, (:x, :y, :z)[axis]);
+        axis_name = (:x, :y, :z)[axis],
+        atol,
+    ), 1:3)
+end
+
+function _pqs_pqs_product_density_density_route_ranges(
+    left_raw_plan,
+    right_raw_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+)
+    product_retained_unit_plan = _product_doside_retained_unit_plan(product_unit)
+    left_count = left_raw_plan.boundary_selector.selected_count
+    right_count = right_raw_plan.boundary_selector.selected_count
+    product_count = product_retained_unit_plan.retained_count
+    ranges = (
+        pqs_left = 1:left_count,
+        pqs_right = (left_count + 1):(left_count + right_count),
+        product = (left_count + right_count + 1):
+                  (left_count + right_count + product_count),
+    )
+    return (
+        ranges = ranges,
+        retained_dimension = left_count + right_count + product_count,
+    )
+end
+
+function _pqs_pqs_product_density_density_all_pairs_inventory(
+    left_raw_plan,
+    right_raw_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    ranges,
+    pair_factor_normalization::Symbol,
+)
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("density-density route requires density_normalized or raw_weighted pair factors"),
+    )
+    product_retained_unit_plan = _product_doside_retained_unit_plan(product_unit)
+    pqs_pqs_helper =
+        pair_factor_normalization == :raw_weighted ?
+        :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block :
+        :_pqs_pqs_source_box_density_density_interaction_block
+    pqs_product_helper =
+        pair_factor_normalization == :raw_weighted ?
+        :_pqs_product_source_box_raw_weighted_density_density_interaction_block :
+        :_pqs_product_source_box_density_density_interaction_block
+    product_product_helper =
+        pair_factor_normalization == :raw_weighted ?
+        :_product_doside_source_box_raw_weighted_density_density_interaction_block :
+        :_product_doside_source_box_density_density_interaction_block
+    retained_units = (
+        (
+            unit_key = :pqs_left,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = left_raw_plan.retained_rule_kind,
+            retained_range = ranges.pqs_left,
+            source_dimensions = left_raw_plan.source_mode_dims,
+            source_dimension = left_raw_plan.source_mode_count,
+            retained_count = left_raw_plan.boundary_selector.selected_count,
+            supported_interaction_terms = (:pair_sum,),
+        ),
+        (
+            unit_key = :pqs_right,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = right_raw_plan.retained_rule_kind,
+            retained_range = ranges.pqs_right,
+            source_dimensions = right_raw_plan.source_mode_dims,
+            source_dimension = right_raw_plan.source_mode_count,
+            retained_count = right_raw_plan.boundary_selector.selected_count,
+            supported_interaction_terms = (:pair_sum,),
+        ),
+        (
+            unit_key = :product,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            retained_rule_kind = product_retained_unit_plan.retained_rule_kind,
+            retained_range = ranges.product,
+            source_dimensions = product_retained_unit_plan.source_axis_lengths,
+            source_dimension = product_retained_unit_plan.source_dimension,
+            retained_count = product_retained_unit_plan.retained_count,
+            supported_interaction_terms = (:pair_sum,),
+        ),
+    )
+    pair_entries = (
+        (
+            pair_key = (:pqs_left, :pqs_left),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_density_density_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_left, :pqs_right),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_density_density_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_left, :product),
+            pair_family = :pqs_product,
+            pair_kind = :pqs_product_source_box_density_density_pair,
+            block_helper = pqs_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_right, :pqs_right),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_density_density_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_right, :product),
+            pair_family = :pqs_product,
+            pair_kind = :pqs_product_source_box_density_density_pair,
+            block_helper = pqs_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:product, :product),
+            pair_family = :product_product,
+            pair_kind = :product_doside_source_box_density_density_pair,
+            block_helper = product_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+    )
+    pair_family_counts = (
+        pqs_pqs = count(entry -> entry.pair_family == :pqs_pqs, pair_entries),
+        pqs_product = count(entry -> entry.pair_family == :pqs_product, pair_entries),
+        product_product =
+            count(entry -> entry.pair_family == :product_product, pair_entries),
+    )
+    return (
+        object_kind = :pqs_pqs_product_density_density_all_pairs_inventory,
+        retained_units = retained_units,
+        pair_entries = pair_entries,
+        pair_family_counts = pair_family_counts,
+        supported_interaction_terms = (:pair_sum,),
+        diagnostics = (
+            source = :pqs_pqs_product_density_density_all_pairs_inventory,
+            all_pairs_inventory_private = true,
+            pair_inventory_complete_for_units = (:pqs_left, :pqs_right, :product),
+            retained_unit_count = length(retained_units),
+            upper_triangular_pair_count = length(pair_entries),
+            expected_upper_triangular_pair_count = 6,
+            pair_family_counts = pair_family_counts,
+            pair_keys = map(entry -> entry.pair_key, pair_entries),
+            pair_families = map(entry -> entry.pair_family, pair_entries),
+            block_helpers = map(entry -> entry.block_helper, pair_entries),
+            block_helper_by_family = (
+                pqs_pqs = pqs_pqs_helper,
+                pqs_product = pqs_product_helper,
+                product_product = product_product_helper,
+            ),
+            pair_policies = map(entry -> entry.pair_policy, pair_entries),
+            every_pair_uses_source_box_algorithmic_policy = all(
+                entry -> entry.source_box_algorithmic,
+                pair_entries,
+            ),
+            source_box_algorithmic_pair_count =
+                count(entry -> entry.source_box_algorithmic, pair_entries),
+            pair_factor_normalization = pair_factor_normalization,
+            private_shadow_only = true,
+            output_representation = :two_index_density_density,
+            four_index_galerkin_tensor = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            ecp_terms_implemented = false,
+            mwg_interaction_implemented = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_oracle_used = false,
+            support_local_pqs_oracle_used = false,
+            support_coefficient_matrix_used = false,
+            shell_row_algorithm = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            lower_triangular_cross_blocks_transpose_only = true,
+            product_pqs_blocks_transpose_only = true,
+            product_pqs_explicit_helper_used = false,
+            real_mwg_ida_pair_factor_provenance_adapted = false,
+        ),
+    )
+end
+
+function _pqs_pqs_product_density_density_pair_block(
+    entry,
+    units;
+    term_coefficients::AbstractVector{<:Real},
+    axis_pair_factor_terms,
+    raw_axis_pair_factor_terms,
+    axis_weights::NamedTuple{(:x,:y,:z)},
+    pair_factor_normalization::Symbol,
+)
+    left_role, right_role = entry.pair_key
+    if entry.pair_family == :pqs_pqs
+        left_unit = getproperty(units, left_role)
+        right_unit = getproperty(units, right_role)
+        if pair_factor_normalization == :raw_weighted
+            return _pqs_pqs_source_box_raw_weighted_density_density_interaction_block(
+                left_unit,
+                right_unit;
+                term_coefficients,
+                raw_axis_pair_factor_terms,
+                axis_weights,
+            )
+        end
+        return _pqs_pqs_source_box_density_density_interaction_block(
+            left_unit,
+            right_unit;
+            term_coefficients,
+            axis_pair_factor_terms,
+            axis_weights,
+        )
+    elseif entry.pair_family == :pqs_product
+        right_role == :product || throw(
+            ArgumentError("density-density route only uses product/PQS as transpose of PQS/product"),
+        )
+        pqs_unit = getproperty(units, left_role)
+        product_unit = getproperty(units, right_role)
+        if pair_factor_normalization == :raw_weighted
+            return _pqs_product_source_box_raw_weighted_density_density_interaction_block(
+                pqs_unit,
+                product_unit;
+                term_coefficients,
+                raw_axis_pair_factor_terms,
+                axis_weights,
+            )
+        end
+        return _pqs_product_source_box_density_density_interaction_block(
+            pqs_unit,
+            product_unit;
+            term_coefficients,
+            axis_pair_factor_terms,
+            axis_weights,
+        )
+    elseif entry.pair_family == :product_product
+        left_role == :product && right_role == :product || throw(
+            ArgumentError("density-density route product/product entry must use the product unit on both sides"),
+        )
+        product_unit = getproperty(units, :product)
+        if pair_factor_normalization == :raw_weighted
+            return _product_doside_source_box_raw_weighted_density_density_interaction_block(
+                product_unit,
+                product_unit;
+                term_coefficients,
+                raw_axis_pair_factor_terms,
+                axis_weights,
+            )
+        end
+        return _product_doside_source_box_density_density_interaction_block(
+            product_unit,
+            product_unit;
+            term_coefficients,
+            axis_pair_factor_terms,
+            axis_weights,
+        )
+    end
+    throw(ArgumentError("unsupported density-density route pair family $(entry.pair_family)"))
+end
+
+function _pqs_pqs_product_route_shaped_density_density_consumer(
+    route_units;
+    term_coefficients::AbstractVector{<:Real},
+    axis_pair_factor_terms = nothing,
+    raw_axis_pair_factor_terms = nothing,
+    axis_weights::NamedTuple{(:x,:y,:z)},
+    pair_factor_normalization::Symbol = :density_normalized,
+    pair_factor_symmetry_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+)
+    hasproperty(route_units, :route_kind) || throw(
+        ArgumentError("route-shaped density-density consumer requires route_kind"),
+    )
+    hasproperty(route_units, :units) || throw(
+        ArgumentError("route-shaped density-density consumer requires units"),
+    )
+    route_kind = route_units.route_kind
+    route_kind in _PQS_PQS_PRODUCT_DENSITY_DENSITY_ROUTE_KINDS || throw(
+        ArgumentError("unsupported route-shaped density-density consumer route_kind $(route_kind)"),
+    )
+    roles = hasproperty(route_units, :roles) ?
+        Tuple(route_units.roles) :
+        (:pqs_left, :pqs_right, :product)
+    roles == (:pqs_left, :pqs_right, :product) || throw(
+        ArgumentError("route-shaped density-density consumer requires roles (:pqs_left, :pqs_right, :product)"),
+    )
+    units = route_units.units
+    for role in roles
+        hasproperty(units, role) || throw(
+            ArgumentError("route-shaped density-density consumer missing unit $(role)"),
+        )
+    end
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("route-shaped density-density consumer requires density_normalized or raw_weighted pair factors"),
+    )
+    !isempty(term_coefficients) || throw(
+        ArgumentError("route-shaped density-density consumer requires at least one pair-factor coefficient"),
+    )
+    coeffs = Float64[Float64(value) for value in term_coefficients]
+    all(isfinite, coeffs) || throw(
+        ArgumentError("route-shaped density-density term coefficients must be finite"),
+    )
+    selected_axis_pair_factor_terms =
+        pair_factor_normalization == :raw_weighted ?
+        raw_axis_pair_factor_terms : axis_pair_factor_terms
+    selected_axis_pair_factor_terms isa NamedTuple{(:x,:y,:z)} || throw(
+        ArgumentError("route-shaped density-density consumer requires caller-supplied $(pair_factor_normalization) pair factors"),
+    )
+    pair_factor_terms_symmetric = _source_box_axis_pair_terms_symmetric(
+        selected_axis_pair_factor_terms;
+        atol = pair_factor_symmetry_atol,
+    )
+    pair_factor_terms_symmetric || throw(
+        ArgumentError("route-shaped density-density consumer requires symmetric pair-factor terms before transpose-only lower blocks are valid"),
+    )
+
+    left_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_left)
+    right_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_right)
+    left_raw_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("route-shaped density-density consumer requires a raw product-box left PQS plan"),
+    )
+    right_raw_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("route-shaped density-density consumer requires a raw product-box right PQS plan"),
+    )
+    units.product.kind == :product_doside || throw(
+        ArgumentError("route-shaped density-density consumer requires a product_doside middle unit"),
+    )
+
+    range_info = _pqs_pqs_product_density_density_route_ranges(
+        left_raw_plan,
+        right_raw_plan,
+        units.product,
+    )
+    ranges = range_info.ranges
+    retained_dimension = range_info.retained_dimension
+    inventory = _pqs_pqs_product_density_density_all_pairs_inventory(
+        left_raw_plan,
+        right_raw_plan,
+        units.product,
+        ranges,
+        pair_factor_normalization,
+    )
+    inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy ||
+        throw(ArgumentError("density-density route requires all pairs to use source-box algorithms"))
+
+    descriptor_expected_ranges_checked = false
+    descriptor_retained_dimension_checked = false
+    descriptor_pair_count_checked = false
+    if hasproperty(route_units, :expected_ranges)
+        route_units.expected_ranges == ranges || throw(
+            ArgumentError("route descriptor expected ranges disagree with density-density route ranges"),
+        )
+        descriptor_expected_ranges_checked = true
+    end
+    if hasproperty(route_units, :retained_dimension)
+        route_units.retained_dimension == retained_dimension || throw(
+            DimensionMismatch("route descriptor retained dimension disagrees with density-density route"),
+        )
+        descriptor_retained_dimension_checked = true
+    end
+    if hasproperty(route_units, :expected_pair_count)
+        route_units.expected_pair_count == length(inventory.pair_entries) || throw(
+            ArgumentError("route descriptor expected pair count disagrees with density-density route"),
+        )
+        descriptor_pair_count_checked = true
+    end
+
+    timed = @timed begin
+        block = zeros(Float64, retained_dimension, retained_dimension)
+        pair_block_results = Dict{Tuple{Symbol,Symbol},Any}()
+        for entry in inventory.pair_entries
+            pair_result = _pqs_pqs_product_density_density_pair_block(
+                entry,
+                units;
+                term_coefficients = coeffs,
+                axis_pair_factor_terms,
+                raw_axis_pair_factor_terms,
+                axis_weights,
+                pair_factor_normalization,
+            )
+            left_role, right_role = entry.pair_key
+            left_range = getproperty(ranges, left_role)
+            right_range = getproperty(ranges, right_role)
+            block[left_range, right_range] .= pair_result.block
+            if left_role != right_role
+                entry.transpose_only_lower_block || throw(
+                    ArgumentError("density-density route lower block requires transpose-only policy"),
+                )
+                block[right_range, left_range] .= transpose(pair_result.block)
+            end
+            pair_block_results[entry.pair_key] = pair_result
+        end
+        (block = block, pair_block_results = pair_block_results)
+    end
+    assembled = timed.value
+    block = assembled.block
+    pair_block_results = assembled.pair_block_results
+    all(isfinite, block) || throw(
+        ArgumentError("route-shaped density-density consumer produced non-finite entries"),
+    )
+    symmetry_error = LinearAlgebra.norm(block - transpose(block), Inf)
+    symmetry_error <= symmetry_atol || throw(
+        ArgumentError("route-shaped density-density consumer symmetry error exceeded tolerance"),
+    )
+
+    component_blocks = (
+        pqs_left_pqs_left = pair_block_results[(:pqs_left, :pqs_left)].block,
+        pqs_left_pqs_right = pair_block_results[(:pqs_left, :pqs_right)].block,
+        pqs_right_pqs_left =
+            transpose(pair_block_results[(:pqs_left, :pqs_right)].block),
+        pqs_left_product = pair_block_results[(:pqs_left, :product)].block,
+        product_pqs_left =
+            transpose(pair_block_results[(:pqs_left, :product)].block),
+        pqs_right_pqs_right = pair_block_results[(:pqs_right, :pqs_right)].block,
+        pqs_right_product = pair_block_results[(:pqs_right, :product)].block,
+        product_pqs_right =
+            transpose(pair_block_results[(:pqs_right, :product)].block),
+        product_product = pair_block_results[(:product, :product)].block,
+    )
+    component_block_provenance = (
+        pqs_left_pqs_left =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_left_pqs_right =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_right_pqs_left = :transpose_of_pqs_left_pqs_right,
+        pqs_left_product =
+            inventory.diagnostics.block_helper_by_family.pqs_product,
+        product_pqs_left = :transpose_of_pqs_left_product,
+        pqs_right_pqs_right =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_right_product =
+            inventory.diagnostics.block_helper_by_family.pqs_product,
+        product_pqs_right = :transpose_of_pqs_right_product,
+        product_product =
+            inventory.diagnostics.block_helper_by_family.product_product,
+    )
+    metadata = hasproperty(route_units, :metadata) ? route_units.metadata : (;)
+    provenance = hasproperty(route_units, :provenance) ? route_units.provenance : (;)
+    route_name = hasproperty(route_units, :route_name) ? route_units.route_name : route_kind
+    route_descriptor_object_kind =
+        hasproperty(route_units, :object_kind) ? route_units.object_kind : :legacy_route_units
+    performance = (
+        elapsed_seconds = Float64(timed.time),
+        allocated_bytes = Int(timed.bytes),
+        gc_time_seconds = Float64(timed.gctime),
+        retained_dimension = retained_dimension,
+        pair_count = length(inventory.pair_entries),
+        term_count = length(coeffs),
+        dense_raw_source_box_pair_matrix_materialized = false,
+        dense_raw_pair_storage_avoided = true,
+    )
+    return (
+        path = :pqs_pqs_product_route_shaped_density_density_consumer,
+        route_kind = route_kind,
+        route_name = route_name,
+        route_units = route_units,
+        retained_units = inventory.retained_units,
+        all_pairs_inventory = inventory,
+        block = block,
+        density_density_matrix = block,
+        complete_retained_space_matrix = block,
+        component_blocks = component_blocks,
+        component_block_provenance = component_block_provenance,
+        pair_block_results = pair_block_results,
+        ranges = ranges,
+        retained_dimension = retained_dimension,
+        pair_count = length(inventory.pair_entries),
+        pair_family_counts = inventory.pair_family_counts,
+        term_coefficients = coeffs,
+        term_count = length(coeffs),
+        pair_factor_normalization = pair_factor_normalization,
+        output_finite = true,
+        symmetry_error = symmetry_error,
+        performance = performance,
+        metadata = metadata,
+        provenance = provenance,
+        diagnostics = merge(
+            inventory.diagnostics,
+            (
+                source = :pqs_pqs_product_route_shaped_density_density_consumer,
+                route_shaped_consumer = true,
+                route_shape = (:pqs_left, :pqs_right, :product),
+                route_kind = route_kind,
+                route_name = route_name,
+                route_descriptor_object_kind = route_descriptor_object_kind,
+                route_roles = roles,
+                retained_ranges = ranges,
+                retained_dimension = retained_dimension,
+                retained_unit_count = length(inventory.retained_units),
+                pair_count = length(inventory.pair_entries),
+                pair_family_counts = inventory.pair_family_counts,
+                term_count = length(coeffs),
+                pair_factor_normalization = pair_factor_normalization,
+                density_normalized_pair_factors =
+                    pair_factor_normalization == :density_normalized,
+                raw_weighted_pair_factors =
+                    pair_factor_normalization == :raw_weighted,
+                density_normalized_pair_factors_generated =
+                    pair_factor_normalization == :raw_weighted,
+                source_weight_division_owner =
+                    pair_factor_normalization == :raw_weighted ?
+                    :source_box_raw_weights :
+                    :caller_supplied_density_normalized_pair_factors,
+                source_weight_division_applied_by_helper =
+                    pair_factor_normalization == :raw_weighted,
+                source_weight_division_shape =
+                    pair_factor_normalization == :raw_weighted ?
+                    :axis_pair_weight_outer : nothing,
+                output_representation = :two_index_density_density,
+                four_index_galerkin_tensor = false,
+                interaction_operator = :electron_electron_density_density,
+                source_box_first = true,
+                source_box_algorithmic_path_true_for_every_pair = true,
+                every_pair_uses_source_box_algorithmic_policy =
+                    inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+                source_box_algorithmic_pair_count =
+                    inventory.diagnostics.source_box_algorithmic_pair_count,
+                helper_used_for_pair_families =
+                    inventory.diagnostics.block_helper_by_family,
+                block_helpers = inventory.diagnostics.block_helpers,
+                product_pqs_blocks_transpose_only = true,
+                lower_triangular_cross_blocks_transpose_only = true,
+                pair_factor_terms_symmetric = pair_factor_terms_symmetric,
+                pair_factor_symmetry_atol = Float64(pair_factor_symmetry_atol),
+                symmetric_same_route_input = true,
+                output_finite = true,
+                symmetry_error = symmetry_error,
+                symmetry_atol = Float64(symmetry_atol),
+                descriptor_expected_ranges_checked =
+                    descriptor_expected_ranges_checked,
+                descriptor_retained_dimension_checked =
+                    descriptor_retained_dimension_checked,
+                descriptor_pair_count_checked = descriptor_pair_count_checked,
+                private_shadow_only = true,
+                input_pair_factor_data = :caller_supplied_explicit_data,
+                input_pair_factor_data_pgdg_checked = false,
+                real_mwg_ida_pair_factor_provenance_adapted = false,
+                source_weights_are_raw_source_weights = true,
+                retained_pqs_weights_used = false,
+                retained_pqs_weights_positive_checked = false,
+                retained_weight_division_allowed = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                retained_weight_semantics = :not_positive_quadrature_weights,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_oracle_used = false,
+                support_local_pqs_oracle_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                shell_row_algorithm = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+                ida_mwg_semantics_changed = false,
+                mwg_ida_semantics_changed = false,
+                mwg_interaction_implemented = false,
+                complete_retained_space_matrix_built = true,
+                dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_pair_storage_avoided = true,
+                performance_recorded = true,
+                elapsed_seconds = performance.elapsed_seconds,
+                allocated_bytes = performance.allocated_bytes,
+                gc_time_seconds = performance.gc_time_seconds,
+            ),
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,

@@ -2226,6 +2226,304 @@ end
         )
     end
 
+    function _check_pqs_pqs_product_route_shaped_density_density_consumer(
+        metrics_module,
+        route_units,
+    )
+        term_coefficients = [0.47, 0.19]
+        parent_dims = route_units.metadata.parent_dims
+        function _symmetric_pair_term_tensor(source_count::Int, axis_scale::Float64)
+            terms = Array{Float64,3}(undef, 2, source_count, source_count)
+            for term in 1:2, col in 1:source_count, row in 1:source_count
+                terms[term, row, col] =
+                    axis_scale / (1.0 + abs(row - col)) +
+                    0.025 * term +
+                    0.004 * (row + col)
+            end
+            return terms
+        end
+        function _raw_terms_from_density_normalized(normalized_terms, weights)
+            raw_terms = similar(normalized_terms)
+            weight_outer = weights * transpose(weights)
+            for term in axes(normalized_terms, 1)
+                raw_terms[term, :, :] .= normalized_terms[term, :, :] .* weight_outer
+            end
+            return raw_terms
+        end
+        density_pair_terms = (
+            x = _symmetric_pair_term_tensor(parent_dims[1], 0.41),
+            y = _symmetric_pair_term_tensor(parent_dims[2], 0.37),
+            z = _symmetric_pair_term_tensor(parent_dims[3], 0.31),
+        )
+        density_source_weights = (
+            x = [1.0 + 0.03 * index for index in 1:parent_dims[1]],
+            y = [0.9 + 0.04 * index for index in 1:parent_dims[2]],
+            z = [1.2 + 0.02 * index for index in 1:parent_dims[3]],
+        )
+        consumer =
+            metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
+                route_units;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        units = route_units.units
+        ranges = consumer.ranges
+        left_left =
+            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
+                units.pqs_left,
+                units.pqs_left;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        left_right =
+            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
+                units.pqs_left,
+                units.pqs_right;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        right_right =
+            metrics_module._pqs_pqs_source_box_density_density_interaction_block(
+                units.pqs_right,
+                units.pqs_right;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        left_product =
+            metrics_module._pqs_product_source_box_density_density_interaction_block(
+                units.pqs_left,
+                units.product;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        right_product =
+            metrics_module._pqs_product_source_box_density_density_interaction_block(
+                units.pqs_right,
+                units.product;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        product_product =
+            metrics_module._product_doside_source_box_density_density_interaction_block(
+                units.product,
+                units.product;
+                term_coefficients,
+                axis_pair_factor_terms = density_pair_terms,
+                axis_weights = density_source_weights,
+            )
+        explicit = zeros(Float64, consumer.retained_dimension, consumer.retained_dimension)
+        explicit[ranges.pqs_left, ranges.pqs_left] .= left_left.block
+        explicit[ranges.pqs_left, ranges.pqs_right] .= left_right.block
+        explicit[ranges.pqs_right, ranges.pqs_left] .= transpose(left_right.block)
+        explicit[ranges.pqs_left, ranges.product] .= left_product.block
+        explicit[ranges.product, ranges.pqs_left] .= transpose(left_product.block)
+        explicit[ranges.pqs_right, ranges.pqs_right] .= right_right.block
+        explicit[ranges.pqs_right, ranges.product] .= right_product.block
+        explicit[ranges.product, ranges.pqs_right] .= transpose(right_product.block)
+        explicit[ranges.product, ranges.product] .= product_product.block
+
+        @test consumer.path ==
+              :pqs_pqs_product_route_shaped_density_density_consumer
+        @test consumer.route_kind ==
+              :pqs_pqs_product_source_box_safe_term_route
+        @test consumer.route_units === route_units
+        @test consumer.retained_dimension == route_units.retained_dimension
+        @test consumer.retained_dimension == 221
+        @test consumer.pair_count == 6
+        @test consumer.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test consumer.term_count == length(term_coefficients)
+        @test consumer.pair_factor_normalization == :density_normalized
+        @test consumer.output_finite
+        @test all(isfinite, consumer.block)
+        @test consumer.symmetry_error <= 1.0e-10
+        @test consumer.block ≈ explicit atol = 1.0e-12 rtol = 1.0e-12
+        @test consumer.component_blocks.pqs_left_pqs_left ≈
+              left_left.block atol = 0.0 rtol = 0.0
+        @test consumer.component_blocks.pqs_left_pqs_right ≈
+              left_right.block atol = 0.0 rtol = 0.0
+        @test consumer.component_blocks.pqs_right_pqs_left ≈
+              transpose(left_right.block) atol = 0.0 rtol = 0.0
+        @test consumer.component_blocks.pqs_left_product ≈
+              left_product.block atol = 0.0 rtol = 0.0
+        @test consumer.component_blocks.product_pqs_left ≈
+              transpose(left_product.block) atol = 0.0 rtol = 0.0
+        @test consumer.component_blocks.product_product ≈
+              product_product.block atol = 0.0 rtol = 0.0
+        @test length(consumer.retained_units) == 3
+        @test map(unit -> unit.unit_key, consumer.retained_units) ==
+              (:pqs_left, :pqs_right, :product)
+        @test map(unit -> unit.retained_range, consumer.retained_units) ==
+              (ranges.pqs_left, ranges.pqs_right, ranges.product)
+        @test consumer.all_pairs_inventory.object_kind ==
+              :pqs_pqs_product_density_density_all_pairs_inventory
+        @test length(consumer.all_pairs_inventory.pair_entries) == 6
+        @test consumer.all_pairs_inventory.diagnostics.pair_family_counts ==
+              consumer.pair_family_counts
+        @test consumer.all_pairs_inventory.diagnostics.block_helper_by_family ==
+              (
+                  pqs_pqs =
+                      :_pqs_pqs_source_box_density_density_interaction_block,
+                  pqs_product =
+                      :_pqs_product_source_box_density_density_interaction_block,
+                  product_product =
+                      :_product_doside_source_box_density_density_interaction_block,
+              )
+
+        @test consumer.diagnostics.source ==
+              :pqs_pqs_product_route_shaped_density_density_consumer
+        @test consumer.diagnostics.route_shaped_consumer
+        @test consumer.diagnostics.route_shape ==
+              (:pqs_left, :pqs_right, :product)
+        @test consumer.diagnostics.retained_dimension == 221
+        @test consumer.diagnostics.retained_unit_count == 3
+        @test consumer.diagnostics.pair_count == 6
+        @test consumer.diagnostics.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test consumer.diagnostics.pair_factor_normalization ==
+              :density_normalized
+        @test consumer.diagnostics.density_normalized_pair_factors
+        @test !consumer.diagnostics.raw_weighted_pair_factors
+        @test !consumer.diagnostics.source_weight_division_applied_by_helper
+        @test consumer.diagnostics.source_weight_division_owner ==
+              :caller_supplied_density_normalized_pair_factors
+        @test consumer.diagnostics.output_representation ==
+              :two_index_density_density
+        @test !consumer.diagnostics.four_index_galerkin_tensor
+        @test consumer.diagnostics.interaction_operator ==
+              :electron_electron_density_density
+        @test consumer.diagnostics.source_box_first
+        @test consumer.diagnostics.source_box_algorithmic_path_true_for_every_pair
+        @test consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test consumer.diagnostics.source_box_algorithmic_pair_count == 6
+        @test consumer.diagnostics.helper_used_for_pair_families ==
+              consumer.all_pairs_inventory.diagnostics.block_helper_by_family
+        @test consumer.diagnostics.product_pqs_blocks_transpose_only
+        @test consumer.diagnostics.lower_triangular_cross_blocks_transpose_only
+        @test consumer.diagnostics.pair_factor_terms_symmetric
+        @test consumer.diagnostics.symmetric_same_route_input
+        @test consumer.diagnostics.output_finite
+        @test consumer.diagnostics.symmetry_error <= 1.0e-10
+        @test consumer.diagnostics.descriptor_expected_ranges_checked
+        @test consumer.diagnostics.descriptor_retained_dimension_checked
+        @test consumer.diagnostics.descriptor_pair_count_checked
+        @test consumer.diagnostics.private_shadow_only
+        @test consumer.diagnostics.input_pair_factor_data ==
+              :caller_supplied_explicit_data
+        @test !consumer.diagnostics.input_pair_factor_data_pgdg_checked
+        @test !consumer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test consumer.diagnostics.source_weights_are_raw_source_weights
+        @test !consumer.diagnostics.retained_pqs_weights_used
+        @test !consumer.diagnostics.retained_pqs_weights_positive_checked
+        @test !consumer.diagnostics.retained_weight_division_allowed
+        @test !consumer.diagnostics.retained_pqs_weight_division_allowed
+        @test !consumer.diagnostics.ida_weight_division_allowed
+        @test consumer.diagnostics.retained_weight_semantics ==
+              :not_positive_quadrature_weights
+        @test !consumer.diagnostics.shell_projection_used
+        @test !consumer.diagnostics.lowdin_cleanup_used
+        @test !consumer.diagnostics.support_local_oracle_used
+        @test !consumer.diagnostics.support_local_pqs_oracle_used
+        @test !consumer.diagnostics.support_local_shell_row_algorithm
+        @test !consumer.diagnostics.support_coefficient_matrix_used
+        @test !consumer.diagnostics.shell_row_algorithm
+        @test !consumer.diagnostics.packet_adoption
+        @test !consumer.diagnostics.fixed_block_routing
+        @test !consumer.diagnostics.qwhamiltonian_consumes
+        @test !consumer.diagnostics.public_default_consumes
+        @test !consumer.diagnostics.ecp_terms_implemented
+        @test !consumer.diagnostics.cr2_science_status_changed
+        @test !consumer.diagnostics.ida_mwg_semantics_changed
+        @test !consumer.diagnostics.mwg_ida_semantics_changed
+        @test !consumer.diagnostics.mwg_interaction_implemented
+        @test consumer.diagnostics.complete_retained_space_matrix_built
+        @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
+        @test consumer.diagnostics.dense_raw_pair_storage_avoided
+
+        raw_pair_terms = (
+            x = _raw_terms_from_density_normalized(
+                density_pair_terms.x,
+                density_source_weights.x,
+            ),
+            y = _raw_terms_from_density_normalized(
+                density_pair_terms.y,
+                density_source_weights.y,
+            ),
+            z = _raw_terms_from_density_normalized(
+                density_pair_terms.z,
+                density_source_weights.z,
+            ),
+        )
+        raw_consumer =
+            metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
+                route_units;
+                term_coefficients,
+                raw_axis_pair_factor_terms = raw_pair_terms,
+                axis_weights = density_source_weights,
+                pair_factor_normalization = :raw_weighted,
+            )
+        @test raw_consumer.block ≈ consumer.block atol = 1.0e-12 rtol = 1.0e-12
+        @test raw_consumer.diagnostics.pair_factor_normalization ==
+              :raw_weighted
+        @test raw_consumer.diagnostics.raw_weighted_pair_factors
+        @test !raw_consumer.diagnostics.density_normalized_pair_factors
+        @test raw_consumer.diagnostics.density_normalized_pair_factors_generated
+        @test raw_consumer.diagnostics.source_weight_division_owner ==
+              :source_box_raw_weights
+        @test raw_consumer.diagnostics.source_weight_division_applied_by_helper
+        @test raw_consumer.diagnostics.source_weight_division_shape ==
+              :axis_pair_weight_outer
+        @test raw_consumer.all_pairs_inventory.diagnostics.block_helper_by_family ==
+              (
+                  pqs_pqs =
+                      :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block,
+                  pqs_product =
+                      :_pqs_product_source_box_raw_weighted_density_density_interaction_block,
+                  product_product =
+                      :_product_doside_source_box_raw_weighted_density_density_interaction_block,
+              )
+        @test !raw_consumer.diagnostics.retained_pqs_weights_used
+        @test !raw_consumer.diagnostics.retained_weight_division_allowed
+        @test !raw_consumer.diagnostics.retained_pqs_weight_division_allowed
+        @test !raw_consumer.diagnostics.ida_weight_division_allowed
+        @test !raw_consumer.diagnostics.packet_adoption
+        @test !raw_consumer.diagnostics.fixed_block_routing
+        @test !raw_consumer.diagnostics.qwhamiltonian_consumes
+        @test !raw_consumer.diagnostics.public_default_consumes
+        @test !raw_consumer.diagnostics.ida_mwg_semantics_changed
+        @test !raw_consumer.diagnostics.mwg_ida_semantics_changed
+        @test !raw_consumer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+
+        nonsymmetric_terms = (
+            x = copy(density_pair_terms.x),
+            y = density_pair_terms.y,
+            z = density_pair_terms.z,
+        )
+        nonsymmetric_terms.x[1, 1, 2] += 0.125
+        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
+            route_units;
+            term_coefficients,
+            axis_pair_factor_terms = nonsymmetric_terms,
+            axis_weights = density_source_weights,
+        )
+        @test_throws ArgumentError metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
+            route_units;
+            term_coefficients,
+            axis_pair_factor_terms = density_pair_terms,
+            axis_weights = (
+                x = density_source_weights.x,
+                y = density_source_weights.y,
+                z = [1.22, 1.24, 1.26, 0.0, 1.3, 1.32, 1.34],
+            ),
+        )
+    end
+
     function _product_staged_comparison_axis_row(axis, state_index::Int)
         axis.kind == :fixed && return 1
         axis.kind == :active && return state_index - first(axis.interval) + 1
@@ -3654,6 +3952,10 @@ end
         route_units,
         route_metrics,
     )
+    _check_pqs_pqs_product_route_shaped_density_density_consumer(
+        CCPM,
+        route_units,
+    )
     produced_route_consumer =
         CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
             produced_route.descriptor,
@@ -4967,7 +5269,7 @@ end
             )
             for term_index in axes(terms, 1)
                 local_terms = Matrix{Float64}(
-                    @view terms[term_index, left_interval, right_interval],
+                    @view terms[term_index, left_interval, right_interval]
                 )
                 projected[term_index, :, :] .=
                     transpose(left_axis.coefficient_matrix) *
