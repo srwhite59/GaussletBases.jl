@@ -1586,6 +1586,26 @@ tensor. Its diagnostics name the input data as
 `real_ida_gausslet_source_box_provenance_adapted` flag true; the generic mixed
 MWG/IDA-adapted flag remains false.
 
+Commit `c443af2` adds the private validation-only dense-parent IDA authority
+comparison. `_pqs_pqs_product_route_parent_coefficient_matrix(...)` builds
+the small route's retained-to-parent coefficient map from source-box route
+facts: mode-selected raw product-box PQS coefficients for the two PQS units
+and product/doside retained coefficients for the slab. The companion helper
+`_pqs_pqs_product_dense_parent_ida_authority_comparison(...)` checks the
+source-box IDA adapter block against:
+
+```text
+C_route' * V_parent_ida * C_route
+```
+
+where `V_parent_ida` is the existing dense parent IDA authority matrix. The
+focused `q5/q5/q7` fixture agrees to roundoff, with max error about
+`1.8e-15`. This dense projection is validation-only and does not become the
+source-box algorithm. It does not change packet/fixed-block/QW/Hamiltonian or
+public/default behavior, does not consume MWG supplement/residual coupling,
+and does not assign retained PQS columns positive quadrature or retained-
+weight/IDA division semantics.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
@@ -1603,6 +1623,8 @@ Current boundaries:
   and diagnostics;
 - the `5de13b1` adapter feeds that IDA provenance object into the existing
   explicit route producer without adopting MWG supplement/residual coupling;
+- the `c443af2` dense-parent authority comparison validates the small route by
+  projecting an existing dense parent IDA matrix and remains validation-only;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
 - explicit route calls may still use synthetic/caller-supplied data, and the
@@ -1610,6 +1632,8 @@ Current boundaries:
   supplement/residual provenance is not connected;
 - source weights are provenance/positivity checks for density-normalized
   input, or the raw/source owner of normalization in raw-weighted wrappers;
+- dense parent IDA projection is diagnostic authority evidence only, not a
+  source-box algorithm replacement;
 - retained PQS columns have no positive-weight or IDA-division semantics;
 - ECP, packet/fixed-block/QW/Hamiltonian adoption, MWG/IDA semantic changes,
   public/default behavior, and CR2 science claims remain out of scope.

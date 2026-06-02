@@ -1127,6 +1127,27 @@ tensor. Diagnostics record
 `mwg_supplement_residual_path = false`. The generic mixed
 MWG/IDA-adapted flag stays false to preserve the IDA/MWG split.
 
+Commit `c443af2` adds a private validation-only dense-parent IDA authority
+comparison for the same small route. `_pqs_pqs_product_route_parent_coefficient_matrix(...)`
+builds a retained-to-parent coefficient map from the source-box route facts:
+left/right PQS columns are embedded from mode-selected raw product-box axis
+coefficients and the product slab uses its product/doside retained
+coefficients. `_pqs_pqs_product_dense_parent_ida_authority_comparison(...)`
+then compares the source-box IDA adapter block with
+
+```text
+C_route' * V_parent_ida * C_route
+```
+
+where `V_parent_ida` is the existing dense parent IDA matrix, such as the
+matrix from `_qwrg_diatomic_interaction_matrix(...)`. The focused `q5/q5/q7`
+fixture agrees to roundoff, with dense-parent projection max error about
+`1.8e-15`. This is an authority comparison only. Dense parent projection is
+not the source-box algorithm, and it does not adopt packet/fixed-block/
+QW/Hamiltonian/public/default behavior. MWG supplement/residual coupling
+remains separate and unadapted, and retained PQS columns remain non-
+quadrature retained columns with no retained-weight/IDA division.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
@@ -1148,6 +1169,9 @@ The current electron-electron source-box checkpoint is therefore:
 - the private adapter at `5de13b1` feeds that IDA provenance object into the
   existing explicit route producer while preserving the same private
   source-box route and retained two-index output convention;
+- the private dense-parent authority check at `c443af2` validates the small
+  route against `C_route' * V_parent_ida * C_route` to roundoff while keeping
+  dense parent projection validation-only;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - explicit route calls may still use synthetic or caller-supplied data, and
@@ -1158,6 +1182,8 @@ The current electron-electron source-box checkpoint is therefore:
   wrappers;
 - raw-weighted route input divides only by explicit raw/source weight outer
   products and then delegates to density-normalized cores;
+- dense parent IDA projection is a diagnostic authority comparison only and
+  does not replace the source-box-first route;
 - PQS/product and PQS/PQS use no shell projection, Lowdin cleanup, support
   coefficient matrix, or support-local oracle as the algorithm, and the route
   consumer preserves the same boundary;

@@ -350,6 +350,18 @@ retained two-index density-density matrix. It does not consume MWG
 supplement/residual provenance and does not adopt packet/fixed-block/
 QW/Hamiltonian, public/default, ECP, or CR2 behavior.
 
+Commit `c443af2` adds a private validation-only dense-parent IDA authority
+comparison for that route. `_pqs_pqs_product_route_parent_coefficient_matrix(...)`
+constructs the route retained-to-parent coefficient map from mode-selected
+raw-box PQS coefficients plus the product/doside slab coefficients.
+`_pqs_pqs_product_dense_parent_ida_authority_comparison(...)` compares the
+source-box IDA route block with `C_route' * V_parent_ida * C_route`, using the
+existing dense parent IDA matrix as authority. The focused `q5/q5/q7` fixture
+matches to roundoff, with max error about `1.8e-15`. Dense parent projection
+is validation-only; it is not the source-box algorithm and does not adopt
+packet/fixed-block/QW/Hamiltonian, public/default, ECP, MWG supplement/
+residual, retained-weight/IDA, or CR2 behavior.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns
