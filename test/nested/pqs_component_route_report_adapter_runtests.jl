@@ -286,6 +286,44 @@ using GaussletBases
     @test !sidecar.diagnostics.cr2_science_status_changed
     @test !sidecar.diagnostics.mwg_ida_semantics_changed
 
+    sidecar_io = IOBuffer()
+    metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+        sidecar_io,
+        sidecar,
+    )
+    sidecar_text = String(take!(sidecar_io))
+    @test occursin("[source_box_pqs_ida_fixed_side]", sidecar_text)
+    @test occursin("[final_residual_mwg_supplement]", sidecar_text)
+    @test occursin("[labels]", sidecar_text)
+    @test occursin("[boundaries]", sidecar_text)
+    @test occursin(
+        "source_unit_label_status\texplicit_route_descriptor_unit_keys",
+        sidecar_text,
+    )
+    @test occursin("source_unit_labels\t(:pqs_left, :pqs_right, :product)", sidecar_text)
+    @test occursin("shell_label_status\tunavailable", sidecar_text)
+    @test occursin("label_reconstruction_from_centers\tfalse", sidecar_text)
+    @test occursin("nearest_grid_or_center_label_heuristic\tfalse", sidecar_text)
+    @test occursin("fixed_dimension\t125", sidecar_text)
+    @test occursin("residual_dimension\t6", sidecar_text)
+    @test occursin("final_dimension\t131", sidecar_text)
+    @test occursin("fixed_column_range\t1:125", sidecar_text)
+    @test occursin("residual_column_range\t126:131", sidecar_text)
+    @test occursin("residual_nucleus_indices\t(1, 1, 1, 2, 2, 2)", sidecar_text)
+    @test occursin("owner_count_matches_residual_rows\ttrue", sidecar_text)
+    @test occursin("component.fixed_residual.shape\t(125, 6)", sidecar_text)
+    @test occursin(
+        "raw_gto_gto_mwg_interaction_blocks_absent_by_contract\ttrue",
+        sidecar_text,
+    )
+    @test occursin(
+        "owner_inference_from_raw_to_final_support_absent_by_contract\ttrue",
+        sidecar_text,
+    )
+    @test occursin("packet_adoption\tfalse", sidecar_text)
+    @test occursin("qwhamiltonian_consumes\tfalse", sidecar_text)
+    @test occursin("cr2_science_status_changed\tfalse", sidecar_text)
+
     io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_report(io, report)
     text = String(take!(io))

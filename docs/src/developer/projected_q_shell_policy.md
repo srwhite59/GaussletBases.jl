@@ -445,6 +445,18 @@ science adoption remains out of scope. Full Be2 q5/CR2 shell/source-unit
 labels still need explicit repo export before shell-start contraction becomes
 a contract.
 
+The sidecar text format is now repo-owned too:
+`_write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(...)`
+emits the CR2 sidecar schema report, and the ignored Be2/PQS smoke probe no
+longer carries a duplicate local writer. Tracked synthetic coverage checks the
+writer sections and key fields, including source-unit labels, unavailable
+shell labels, disabled center/nearest-grid heuristics, residual owners,
+fixed/residual/final dimensions and ranges, component block shapes, and
+lane-boundary no-go records. This remains private/reporting-only and adds no
+unified Hamiltonian route, shell-label reconstruction, raw GTO/GTO or
+fixed/raw-GTO MWG blocks, retained-weight/IDA division, or route/adoption
+behavior.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

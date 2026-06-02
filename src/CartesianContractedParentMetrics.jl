@@ -13735,6 +13735,235 @@ function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
     )
 end
 
+function _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+    io::IO,
+    sidecar,
+)
+    sidecar.object_kind ==
+        :pqs_pqs_product_component_route_smoke_cr2_sidecar_schema || throw(
+        ArgumentError("CR2 sidecar schema report writer requires _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema output"),
+    )
+    source_lane = sidecar.lanes.source_box_pqs_ida_fixed_side
+    mwg_lane = sidecar.lanes.final_residual_mwg_supplement
+
+    println(io, "Be2/PQS CR2 sidecar schema summary")
+    _pqs_component_route_smoke_print_kv(io, "schema_version", sidecar.schema_version)
+    _pqs_component_route_smoke_print_kv(io, "status", sidecar.status)
+    _pqs_component_route_smoke_print_kv(io, "source_report", mwg_lane.source_report)
+    _pqs_component_route_smoke_print_kv(io, "single_algorithmic_operator", false)
+    _pqs_component_route_smoke_print_kv(io, "production_route_adoption", false)
+    _pqs_component_route_smoke_print_kv(io, "public_default_route", false)
+    println(io)
+
+    println(io, "[source_box_pqs_ida_fixed_side]")
+    _pqs_component_route_smoke_print_kv(io, "algorithm_lane", source_lane.algorithm_lane)
+    _pqs_component_route_smoke_print_kv(io, "route_shape", source_lane.route_shape)
+    _pqs_component_route_smoke_print_kv(io, "parent_dims", source_lane.parent_dims)
+    _pqs_component_route_smoke_print_kv(io, "source_mode_dims", source_lane.source_mode_dims)
+    _pqs_component_route_smoke_print_kv(io, "left_source_box", source_lane.left_source_box)
+    _pqs_component_route_smoke_print_kv(io, "right_source_box", source_lane.right_source_box)
+    _pqs_component_route_smoke_print_kv(io, "product_source_box", source_lane.product_source_box)
+    _pqs_component_route_smoke_print_kv(io, "retained_dimension", source_lane.retained_dimension)
+    _pqs_component_route_smoke_print_kv(io, "retained_ranges", source_lane.retained_ranges)
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "source_unit_label_status",
+        source_lane.source_unit_label_status,
+    )
+    _pqs_component_route_smoke_print_kv(io, "source_unit_labels", source_lane.source_unit_labels)
+    for unit in source_lane.retained_units
+        prefix = "unit.$(unit.unit_key)"
+        _pqs_component_route_smoke_print_kv(io, "$prefix.kind", unit.retained_unit_kind)
+        _pqs_component_route_smoke_print_kv(io, "$prefix.source_family", unit.source_family)
+        _pqs_component_route_smoke_print_kv(io, "$prefix.retained_range", unit.retained_range)
+        _pqs_component_route_smoke_print_kv(io, "$prefix.retained_count", unit.retained_count)
+        _pqs_component_route_smoke_print_kv(io, "$prefix.source_dimensions", unit.source_dimensions)
+    end
+    for component in source_lane.components
+        prefix = "component.$(component.mode)"
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.retained_matrix_shape",
+            component.retained_matrix_shape,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.nuclear_available",
+            component.nuclear_attraction_by_center.available,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.nuclear_pair_count",
+            component.nuclear_attraction_by_center.pair_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.nuclear_pair_family_counts",
+            component.nuclear_attraction_by_center.pair_family_counts,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.nuclear_authority_error",
+            component.nuclear_attraction_by_center.authority_error,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.electron_electron_available",
+            component.electron_electron_density_density.available,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.electron_electron_representation",
+            component.electron_electron_density_density.representation,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.electron_electron_pair_count",
+            component.electron_electron_density_density.pair_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.electron_electron_pair_family_counts",
+            component.electron_electron_density_density.pair_family_counts,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.electron_electron_dense_parent_error",
+            component.electron_electron_density_density.dense_parent_authority_max_error,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.source_weight_division_owner",
+            component.source_weight_division_owner,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "$prefix.source_weight_division_applied_by_helper",
+            component.source_weight_division_applied_by_helper,
+        )
+        _pqs_component_route_smoke_print_kv(io, "$prefix.no_go_clear", component.no_go_clear)
+    end
+    println(io)
+
+    println(io, "[final_residual_mwg_supplement]")
+    _pqs_component_route_smoke_print_kv(io, "algorithm_lane", mwg_lane.algorithm_lane)
+    _pqs_component_route_smoke_print_kv(io, "component_helper", mwg_lane.component_helper)
+    _pqs_component_route_smoke_print_kv(io, "fixed_dimension", mwg_lane.fixed_dimension)
+    _pqs_component_route_smoke_print_kv(io, "residual_dimension", mwg_lane.residual_dimension)
+    _pqs_component_route_smoke_print_kv(io, "final_dimension", mwg_lane.final_dimension)
+    _pqs_component_route_smoke_print_kv(io, "fixed_column_range", mwg_lane.fixed_column_range)
+    _pqs_component_route_smoke_print_kv(io, "residual_column_range", mwg_lane.residual_column_range)
+    _pqs_component_route_smoke_print_kv(io, "final_column_range", mwg_lane.final_column_range)
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "residual_nucleus_indices",
+        mwg_lane.residual_owner_metadata.residual_nucleus_indices,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "residual_owner_counts",
+        mwg_lane.residual_owner_metadata.residual_owner_counts,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "owner_metadata_source",
+        mwg_lane.residual_owner_metadata.owner_metadata_source,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "owner_count_matches_residual_rows",
+        mwg_lane.residual_owner_metadata.owner_count_matches_residual_rows,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "owner_semantics_inferred_from_raw_to_final_support",
+        mwg_lane.residual_owner_metadata.owner_semantics_inferred_from_raw_to_final_support,
+    )
+    for name in (:fixed_fixed, :fixed_residual, :residual_residual, :final_interaction)
+        component = getproperty(mwg_lane.components, name)
+        _pqs_component_route_smoke_print_kv(io, "component.$name.available", component.available)
+        _pqs_component_route_smoke_print_kv(io, "component.$name.shape", component.shape)
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "component.$name.authority_error",
+            component.authority_error,
+        )
+        _pqs_component_route_smoke_print_kv(io, "component.$name.provenance", component.provenance)
+    end
+    println(io)
+
+    println(io, "[labels]")
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "source_unit_label_status",
+        sidecar.labels.source_unit_label_status,
+    )
+    _pqs_component_route_smoke_print_kv(io, "source_unit_labels", sidecar.labels.source_unit_labels)
+    _pqs_component_route_smoke_print_kv(io, "shell_label_status", sidecar.labels.shell_label_status)
+    _pqs_component_route_smoke_print_kv(io, "shell_labels", sidecar.labels.shell_labels)
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "label_reconstruction_from_centers",
+        sidecar.labels.label_reconstruction_from_centers,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "nearest_grid_or_center_label_heuristic",
+        sidecar.labels.nearest_grid_or_center_label_heuristic,
+    )
+    println(io)
+
+    println(io, "[boundaries]")
+    for key in keys(sidecar.absences_by_contract)
+        _pqs_component_route_smoke_print_kv(
+            io,
+            string(key, "_absent_by_contract"),
+            getproperty(sidecar.absences_by_contract, key),
+        )
+    end
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "lanes_remain_separate",
+        sidecar.diagnostics.lanes_remain_separate,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "final_residual_shape_consistent",
+        sidecar.diagnostics.final_residual_shape_consistent,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "residual_owner_rows_match",
+        sidecar.diagnostics.residual_owner_rows_match,
+    )
+    _pqs_component_route_smoke_print_kv(io, "packet_adoption", sidecar.diagnostics.packet_adoption)
+    _pqs_component_route_smoke_print_kv(io, "qwhamiltonian_consumes", sidecar.diagnostics.qwhamiltonian_consumes)
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "hamiltonian_matrix_built",
+        sidecar.diagnostics.hamiltonian_matrix_built,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "cr2_science_status_changed",
+        sidecar.diagnostics.cr2_science_status_changed,
+    )
+    return sidecar
+end
+
+function _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+    path::AbstractString,
+    sidecar,
+)
+    open(path, "w") do io
+        _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+            io,
+            sidecar,
+        )
+    end
+    return path
+end
+
 function _pqs_component_route_smoke_print_kv(io, key, value)
     println(io, key, "\t", value)
 end

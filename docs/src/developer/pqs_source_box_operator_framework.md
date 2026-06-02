@@ -1233,6 +1233,19 @@ for full Be2 q5/CR2 artifacts are still `:unavailable` in this checkpoint;
 full shell/source-unit labels need explicit repo export before shell-start
 contraction becomes a contract.
 
+The repo-owned private writer
+`_write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(...)`
+now emits that CR2 sidecar schema text report. The ignored Be2/PQS smoke
+probe calls this writer instead of carrying a duplicate local text format.
+Focused synthetic coverage checks the writer sections and key fields,
+including source-unit labels, unavailable shell labels, disabled center/
+nearest-grid label heuristics, residual owners, fixed/residual/final
+dimensions and ranges, component block shapes, and lane-boundary no-go
+records. This writer is still private/reporting-only and adds no unified
+Hamiltonian route, shell-label reconstruction, raw GTO/GTO or fixed/raw-GTO
+MWG blocks, retained-weight/IDA division, or packet/fixed-block/
+QW/Hamiltonian/public/default adoption.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
