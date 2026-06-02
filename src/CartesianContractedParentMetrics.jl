@@ -3732,6 +3732,62 @@ function _pqs_product_source_box_density_density_interaction_block(
     )
 end
 
+function _pqs_product_source_box_raw_weighted_density_density_interaction_block(
+    pqs_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D;
+    term_coefficients::AbstractVector{<:Real},
+    raw_axis_pair_factor_terms::NamedTuple{(:x,:y,:z)},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+)
+    density_normalized_terms = _source_box_density_normalized_axis_pair_terms(
+        raw_axis_pair_factor_terms,
+        axis_weights,
+    )
+    density_normalized_core =
+        _pqs_product_source_box_density_density_interaction_block(
+            pqs_plan,
+            product_unit;
+            term_coefficients,
+            axis_pair_factor_terms = density_normalized_terms,
+            axis_weights,
+            pair_factor_normalization = :density_normalized,
+        )
+    return (
+        path = :pqs_product_source_box_raw_weighted_density_density_interaction,
+        interaction_operator = :electron_electron_density_density,
+        block = density_normalized_core.block,
+        density_normalized_core = density_normalized_core,
+        normalized_axis_pair_factor_terms = density_normalized_terms,
+        raw_axis_pair_factor_terms = raw_axis_pair_factor_terms,
+        pair_plan = density_normalized_core.pair_plan,
+        diagnostics = merge(
+            density_normalized_core.diagnostics,
+            (
+                source = :pqs_product_source_box_raw_weighted_density_density_interaction_block,
+                path = :pqs_product_source_box_raw_weighted_density_density_interaction,
+                pair_factor_normalization = :raw_weighted,
+                raw_weighted_pair_factors = true,
+                density_normalized_pair_factors = false,
+                density_normalized_pair_factors_generated = true,
+                source_weight_division_owner = :source_box_raw_weights,
+                source_weight_division_applied_by_helper = true,
+                source_weight_division_shape = :axis_pair_weight_outer,
+                density_normalized_core_helper =
+                    :_pqs_product_source_box_density_density_interaction_block,
+                retained_pqs_weights_used = false,
+                retained_weight_division_allowed = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                ida_mwg_semantics_changed = false,
+                mwg_ida_semantics_changed = false,
+                packet_adoption = false,
+                qwhamiltonian_consumes = false,
+                numerical_reference_fallback = false,
+            ),
+        ),
+    )
+end
+
 function _pqs_product_source_box_local_gaussian_sum_block(
     pqs_plan,
     product_unit::_CartesianNestedProductStagedByCenterUnit3D;

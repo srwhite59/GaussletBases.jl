@@ -6875,6 +6875,54 @@ end
     @test pqs_product_density.diagnostics.electron_electron_terms_implemented
     @test pqs_product_density.diagnostics.projected_axis_term_dimensions.x == (2, 5, 2)
     @test pqs_product_density.diagnostics.projected_axis_term_dimensions.z == (2, 7, 1)
+    pqs_product_raw_weighted_terms = (
+        x = _raw_pair_terms_from_density_normalized(
+            pqs_product_density_terms.x,
+            pqs_product_density_weights.x,
+        ),
+        y = _raw_pair_terms_from_density_normalized(
+            pqs_product_density_terms.y,
+            pqs_product_density_weights.y,
+        ),
+        z = _raw_pair_terms_from_density_normalized(
+            pqs_product_density_terms.z,
+            pqs_product_density_weights.z,
+        ),
+    )
+    pqs_product_raw_weighted_density =
+        CCPM._pqs_product_source_box_raw_weighted_density_density_interaction_block(
+            rectangular_pqs_product_source_box_plan,
+            nonidentity_axis_product_unit;
+            term_coefficients = pqs_product_density_coefficients,
+            raw_axis_pair_factor_terms = pqs_product_raw_weighted_terms,
+            axis_weights = pqs_product_density_weights,
+        )
+    @test pqs_product_raw_weighted_density.path ==
+          :pqs_product_source_box_raw_weighted_density_density_interaction
+    @test pqs_product_raw_weighted_density.block ≈
+          pqs_product_density.block atol = 1.0e-13 rtol = 1.0e-13
+    @test pqs_product_raw_weighted_density.normalized_axis_pair_factor_terms.x ≈
+          pqs_product_density_terms.x atol = 1.0e-14 rtol = 1.0e-14
+    @test pqs_product_raw_weighted_density.normalized_axis_pair_factor_terms.z ≈
+          pqs_product_density_terms.z atol = 1.0e-14 rtol = 1.0e-14
+    @test pqs_product_raw_weighted_density.diagnostics.pair_factor_normalization ==
+          :raw_weighted
+    @test pqs_product_raw_weighted_density.diagnostics.raw_weighted_pair_factors
+    @test !pqs_product_raw_weighted_density.diagnostics.density_normalized_pair_factors
+    @test pqs_product_raw_weighted_density.diagnostics.density_normalized_pair_factors_generated
+    @test pqs_product_raw_weighted_density.diagnostics.source_weight_division_owner ==
+          :source_box_raw_weights
+    @test pqs_product_raw_weighted_density.diagnostics.source_weight_division_applied_by_helper
+    @test pqs_product_raw_weighted_density.diagnostics.source_weight_division_shape ==
+          :axis_pair_weight_outer
+    @test !pqs_product_raw_weighted_density.diagnostics.retained_pqs_weights_used
+    @test !pqs_product_raw_weighted_density.diagnostics.retained_weight_division_allowed
+    @test !pqs_product_raw_weighted_density.diagnostics.retained_pqs_weight_division_allowed
+    @test !pqs_product_raw_weighted_density.diagnostics.ida_weight_division_allowed
+    @test !pqs_product_raw_weighted_density.diagnostics.packet_adoption
+    @test !pqs_product_raw_weighted_density.diagnostics.qwhamiltonian_consumes
+    @test !pqs_product_raw_weighted_density.diagnostics.mwg_ida_semantics_changed
+    @test !pqs_product_raw_weighted_density.diagnostics.numerical_reference_fallback
     @test_throws ArgumentError CCPM._pqs_product_source_box_density_density_interaction_block(
         rectangular_pqs_product_source_box_plan,
         nonidentity_axis_product_unit;
@@ -6900,6 +6948,17 @@ end
         term_coefficients = pqs_product_density_coefficients[1:1],
         axis_pair_factor_terms = pqs_product_density_terms,
         axis_weights = pqs_product_density_weights,
+    )
+    @test_throws ArgumentError CCPM._pqs_product_source_box_raw_weighted_density_density_interaction_block(
+        rectangular_pqs_product_source_box_plan,
+        nonidentity_axis_product_unit;
+        term_coefficients = pqs_product_density_coefficients,
+        raw_axis_pair_factor_terms = pqs_product_raw_weighted_terms,
+        axis_weights = (
+            x = pqs_product_density_weights.x,
+            y = [0.93, 0.96, 0.0, 1.02, 1.05],
+            z = pqs_product_density_weights.z,
+        ),
     )
     pqs_pqs_nuclear_attraction =
         CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
