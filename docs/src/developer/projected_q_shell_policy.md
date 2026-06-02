@@ -710,6 +710,28 @@ disabled, and shell-realized PQS fixtures remain metadata/oracle-only with
 `32.6 s` in construction, `14.1 s` building the current-route inventory, and
 `3.4 s` extracting metadata.
 
+The private Be2 strict-PQS q5 CR2 handoff exporter
+`tmp/work/be2_pqs_cr2_postprocess_export.jl` now writes the machine-readable
+sidecar into
+`tmp/work/be2_strict_pqs_q5_cr2_postprocess_artifact/be2_strict_pqs_q5_final_operators_cr2_handoff.jld2`
+and companion TSVs
+`be2_strict_pqs_q5_cr2_sidecar_fixed_side_units.tsv`,
+`be2_strict_pqs_q5_cr2_sidecar_final_residual_components.tsv`, and
+`be2_strict_pqs_q5_cr2_sidecar_schema_keys.tsv`. The CR2-style reader smoke
+`tmp/work/be2_pqs_cr2_sidecar_reader_smoke.jl` reads only those exported
+files. The exported facts record fixed/residual/final dimensions
+`1483 / 18 / 1501`, fixed-side unit count `8`, complete fixed-side coverage,
+shared PQS retained counts `(98, 98, 114)`, support counts
+`(1738, 1346, 1002)`, source-mode dimensions
+`((5,5,5), (5,5,5), (5,5,6))`, unavailable shell labels, no center/grid label
+reconstruction, explicit residual owner metadata, sidecar provenance keys, and
+no-go boundary booleans. This remains private CR2-facing metadata, not a
+public API. Source-box/PQS IDA fixed-side facts and ordinary final-residual MWG
+supplement facts remain separate lanes; no raw GTO/GTO or fixed/raw-GTO MWG
+blocks, retained-weight/IDA division, construction, QW/Hamiltonian,
+packet/fixed-block, public/default, ECP/SCF/HF, or CR2 science behavior is
+added.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained
