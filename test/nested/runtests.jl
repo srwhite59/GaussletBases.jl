@@ -2549,6 +2549,7 @@ end
         source_mode_dims::NTuple{3,Int},
         parent_dims::NTuple{3,Int},
         bond_axis::Symbol,
+        ida_term_coefficients::AbstractVector{<:Real},
     )
         density_fixture = _density_density_route_factor_fixture(parent_dims)
         direct_consumer =
@@ -2722,6 +2723,160 @@ end
         @test !raw_producer.diagnostics.fixed_block_routing
         @test !raw_producer.diagnostics.qwhamiltonian_consumes
         @test !raw_producer.diagnostics.public_default_consumes
+
+        ida_provenance = metrics_module._pqs_source_box_ida_factor_provenance(
+            bundles;
+            expected_term_count = length(ida_term_coefficients),
+        )
+        explicit_ida_producer =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    density_density_ida_explicit_route_producer_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_ida_provenance_test_fixture,
+                ),
+                term_coefficients = ida_term_coefficients,
+                axis_pair_factor_terms = ida_provenance.axis_pair_factor_terms,
+                axis_weights = ida_provenance.axis_weights,
+            )
+        ida_adapter =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics,
+                ida_provenance;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    density_density_ida_provenance_adapter_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_ida_provenance_test_fixture,
+                ),
+                term_coefficients = ida_term_coefficients,
+            )
+        @test ida_adapter.object_kind ==
+              :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance
+        @test ida_adapter.status ==
+              :private_ida_provenance_density_density_reference_only
+        @test ida_adapter.explicit_input_route_producer.block ≈
+              explicit_ida_producer.block atol = 0.0 rtol = 0.0
+        @test ida_adapter.block ≈ explicit_ida_producer.block atol = 1.0e-12 rtol = 1.0e-12
+        @test ida_adapter.pair_factor_normalization == :density_normalized
+        @test ida_adapter.term_count == length(ida_term_coefficients)
+        @test ida_adapter.diagnostics.input_pair_factor_data ==
+              :ida_gausslet_source_box_provenance
+        @test ida_adapter.diagnostics.input_pair_factor_data_pgdg_checked
+        @test ida_adapter.diagnostics.interaction_path ==
+              :ida_gausslet_source_box
+        @test !ida_adapter.diagnostics.mwg_supplement_residual_path
+        @test !ida_adapter.diagnostics.mwg_supplement_residual_provenance_adapted
+        @test ida_adapter.diagnostics.real_ida_gausslet_source_box_provenance_adapted
+        @test !ida_adapter.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test !ida_adapter.diagnostics.synthetic_or_caller_supplied_pair_factors
+        @test !ida_adapter.diagnostics.retained_pqs_weights_used
+        @test !ida_adapter.diagnostics.retained_weight_division_allowed
+        @test !ida_adapter.diagnostics.retained_pqs_weight_division_allowed
+        @test !ida_adapter.diagnostics.ida_weight_division_allowed
+        @test !ida_adapter.diagnostics.shell_projection_used
+        @test !ida_adapter.diagnostics.lowdin_cleanup_used
+        @test !ida_adapter.diagnostics.support_local_oracle_used
+        @test !ida_adapter.diagnostics.support_local_pqs_oracle_used
+        @test !ida_adapter.diagnostics.support_local_shell_row_algorithm
+        @test !ida_adapter.diagnostics.support_coefficient_matrix_used
+        @test !ida_adapter.diagnostics.shell_row_algorithm
+        @test !ida_adapter.diagnostics.packet_adoption
+        @test !ida_adapter.diagnostics.fixed_block_routing
+        @test !ida_adapter.diagnostics.qwhamiltonian_consumes
+        @test !ida_adapter.diagnostics.public_default_consumes
+        @test !ida_adapter.diagnostics.ecp_terms_implemented
+        @test !ida_adapter.diagnostics.cr2_science_status_changed
+
+        explicit_raw_ida_producer =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    density_density_ida_raw_explicit_route_producer_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_ida_provenance_test_fixture,
+                ),
+                term_coefficients = ida_term_coefficients,
+                raw_axis_pair_factor_terms =
+                    ida_provenance.raw_axis_pair_factor_terms,
+                axis_weights = ida_provenance.axis_weights,
+                pair_factor_normalization = :raw_weighted,
+            )
+        raw_ida_adapter =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics,
+                ida_provenance;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    density_density_ida_raw_provenance_adapter_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_ida_provenance_test_fixture,
+                ),
+                term_coefficients = ida_term_coefficients,
+                pair_factor_normalization = :raw_weighted,
+            )
+        @test raw_ida_adapter.block ≈ explicit_raw_ida_producer.block atol = 1.0e-12 rtol = 1.0e-12
+        @test raw_ida_adapter.block ≈ ida_adapter.block atol = 1.0e-12 rtol = 1.0e-12
+        @test raw_ida_adapter.pair_factor_normalization == :raw_weighted
+        @test raw_ida_adapter.diagnostics.input_pair_factor_data ==
+              :ida_gausslet_source_box_provenance
+        @test raw_ida_adapter.diagnostics.interaction_path ==
+              :ida_gausslet_source_box
+        @test !raw_ida_adapter.diagnostics.mwg_supplement_residual_path
+        @test raw_ida_adapter.diagnostics.source_weight_division_owner ==
+              :pgdg_auxiliary_source_weights
+        @test raw_ida_adapter.diagnostics.source_weight_division_shape ==
+              :axis_pair_weight_outer
+        @test raw_ida_adapter.diagnostics.real_ida_gausslet_source_box_provenance_adapted
+        @test !raw_ida_adapter.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test !raw_ida_adapter.diagnostics.synthetic_or_caller_supplied_pair_factors
+        @test !raw_ida_adapter.diagnostics.retained_pqs_weights_used
+        @test !raw_ida_adapter.diagnostics.retained_weight_division_allowed
+        @test !raw_ida_adapter.diagnostics.retained_pqs_weight_division_allowed
+        @test !raw_ida_adapter.diagnostics.ida_weight_division_allowed
+        @test !raw_ida_adapter.diagnostics.packet_adoption
+        @test !raw_ida_adapter.diagnostics.fixed_block_routing
+        @test !raw_ida_adapter.diagnostics.qwhamiltonian_consumes
+        @test !raw_ida_adapter.diagnostics.public_default_consumes
     end
 
     function _product_staged_comparison_axis_row(axis, state_index::Int)
@@ -4167,6 +4322,7 @@ end
         source_mode_dims = (5, 5, 5),
         parent_dims = route_dims,
         bond_axis = :z,
+        ida_term_coefficients = term_coefficients,
     )
     produced_route_consumer =
         CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(

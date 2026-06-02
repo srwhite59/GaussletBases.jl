@@ -11580,6 +11580,215 @@ function _pqs_pqs_product_raw_box_density_density_route_producer(
     )
 end
 
+function _pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(
+    bundles,
+    left_source_box::NTuple{3,UnitRange{Int}},
+    right_source_box::NTuple{3,UnitRange{Int}},
+    product_source_box::NTuple{3,UnitRange{Int}},
+    metrics::NamedTuple{(:x,:y,:z)},
+    ida_provenance;
+    source_mode_dims::NTuple{3,Int},
+    term_coefficients::AbstractVector{<:Real},
+    pair_factor_normalization::Symbol = :density_normalized,
+    pair_factor_symmetry_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+    route_name::Symbol =
+        :homonuclear_pqs_product_source_box_density_density_ida_provenance_fixture,
+    parent_dims = _nested_axis_lengths(bundles),
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    route_supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("IDA provenance density-density route producer requires density_normalized or raw_weighted pair factors"),
+    )
+    hasproperty(ida_provenance, :object_kind) &&
+        ida_provenance.object_kind == :pqs_source_box_ida_factor_provenance || throw(
+            ArgumentError("density-density IDA provenance route producer requires _pqs_source_box_ida_factor_provenance output"),
+        )
+    hasproperty(ida_provenance, :axis_pair_factor_terms) &&
+        ida_provenance.axis_pair_factor_terms isa NamedTuple{(:x,:y,:z)} || throw(
+            ArgumentError("density-density IDA provenance route producer requires density-normalized x/y/z pair-factor terms"),
+        )
+    hasproperty(ida_provenance, :raw_axis_pair_factor_terms) &&
+        ida_provenance.raw_axis_pair_factor_terms isa NamedTuple{(:x,:y,:z)} || throw(
+            ArgumentError("density-density IDA provenance route producer requires raw x/y/z pair-factor terms"),
+        )
+    hasproperty(ida_provenance, :axis_weights) &&
+        ida_provenance.axis_weights isa NamedTuple{(:x,:y,:z)} || throw(
+            ArgumentError("density-density IDA provenance route producer requires x/y/z source weights"),
+        )
+    hasproperty(ida_provenance, :diagnostics) || throw(
+        ArgumentError("density-density IDA provenance route producer requires provenance diagnostics"),
+    )
+    ida_provenance.diagnostics.interaction_path == :ida_gausslet_source_box || throw(
+        ArgumentError("density-density IDA provenance route producer requires IDA gausslet/source-box provenance"),
+    )
+    !ida_provenance.diagnostics.mwg_supplement_residual_path || throw(
+        ArgumentError("density-density IDA provenance route producer cannot consume MWG supplement/residual provenance"),
+    )
+    coeffs = Float64[Float64(value) for value in term_coefficients]
+    length(coeffs) == ida_provenance.term_count || throw(
+        DimensionMismatch("density-density IDA provenance route producer term coefficients must match provenance term count"),
+    )
+    all(isfinite, coeffs) || throw(
+        ArgumentError("density-density IDA provenance route producer term coefficients must be finite"),
+    )
+
+    axis_names = (:x, :y, :z)
+    parent_dims_value = Int.(parent_dims)
+    for axis in 1:3
+        axis_name = axis_names[axis]
+        density_terms = getproperty(ida_provenance.axis_pair_factor_terms, axis_name)
+        raw_terms = getproperty(ida_provenance.raw_axis_pair_factor_terms, axis_name)
+        weights = getproperty(ida_provenance.axis_weights, axis_name)
+        size(density_terms) == size(raw_terms) || throw(
+            DimensionMismatch("density-density IDA provenance raw and density-normalized $(axis_name) terms must have matching shapes"),
+        )
+        size(density_terms, 1) == length(coeffs) || throw(
+            DimensionMismatch("density-density IDA provenance $(axis_name) term count must match coefficients"),
+        )
+        size(density_terms, 2) == size(density_terms, 3) || throw(
+            DimensionMismatch("density-density IDA provenance $(axis_name) pair-factor terms must be square"),
+        )
+        size(density_terms, 2) == parent_dims_value[axis] || throw(
+            DimensionMismatch("density-density IDA provenance $(axis_name) factor dimension must match parent_dims"),
+        )
+        length(weights) == parent_dims_value[axis] || throw(
+            DimensionMismatch("density-density IDA provenance $(axis_name) weights must match parent_dims"),
+        )
+        all(isfinite, weights) || throw(
+            ArgumentError("density-density IDA provenance $(axis_name) weights must be finite"),
+        )
+        all(weight -> abs(weight) > 1.0e-12, weights) || throw(
+            ArgumentError("density-density IDA provenance $(axis_name) weights must be nonzero"),
+        )
+        for source_box in (left_source_box, right_source_box, product_source_box)
+            first(source_box[axis]) >= 1 &&
+                last(source_box[axis]) <= parent_dims_value[axis] || throw(
+                    ArgumentError("density-density IDA provenance route source boxes must fit pair-factor dimensions"),
+                )
+        end
+    end
+
+    selected_axis_pair_factor_terms =
+        pair_factor_normalization == :density_normalized ?
+        ida_provenance.axis_pair_factor_terms : nothing
+    selected_raw_axis_pair_factor_terms =
+        pair_factor_normalization == :raw_weighted ?
+        ida_provenance.raw_axis_pair_factor_terms : nothing
+    adapter_metadata = merge(
+        (
+            input_pair_factor_data = :ida_gausslet_source_box_provenance,
+            interaction_path = :ida_gausslet_source_box,
+            mwg_supplement_residual_path = false,
+            ida_provenance_object_kind = ida_provenance.object_kind,
+            ida_provenance_term_count = ida_provenance.term_count,
+            ida_provenance_factor_dimensions = ida_provenance.factor_dimensions,
+            density_density_ida_provenance_route_adapter = true,
+        ),
+        metadata,
+    )
+    adapter_provenance = merge(
+        (
+            source =
+                :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance,
+            ida_provenance_object_kind = ida_provenance.object_kind,
+            ida_provenance_diagnostics = ida_provenance.diagnostics,
+        ),
+        provenance,
+    )
+    explicit_route =
+        _pqs_pqs_product_raw_box_density_density_route_producer(
+            bundles,
+            left_source_box,
+            right_source_box,
+            product_source_box,
+            metrics;
+            source_mode_dims,
+            term_coefficients = coeffs,
+            axis_weights = ida_provenance.axis_weights,
+            axis_pair_factor_terms = selected_axis_pair_factor_terms,
+            raw_axis_pair_factor_terms = selected_raw_axis_pair_factor_terms,
+            pair_factor_normalization,
+            pair_factor_symmetry_atol,
+            symmetry_atol,
+            route_name,
+            parent_dims = parent_dims_value,
+            bond_axis,
+            metadata = adapter_metadata,
+            provenance = adapter_provenance,
+            route_supported_terms,
+            orthogonality_atol,
+        )
+    adapter_diagnostics = merge(
+        explicit_route.diagnostics,
+        (
+            source =
+                :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance,
+            private_density_density_reference_only = true,
+            private_shadow_only = true,
+            density_density_ida_provenance_route_adapter = true,
+            explicit_input_route_producer_delegate =
+                :_pqs_pqs_product_raw_box_density_density_route_producer,
+            input_pair_factor_data = :ida_gausslet_source_box_provenance,
+            input_pair_factor_data_pgdg_checked = true,
+            ida_provenance_object_kind = ida_provenance.object_kind,
+            ida_provenance_term_count = ida_provenance.term_count,
+            ida_provenance_factor_dimensions = ida_provenance.factor_dimensions,
+            interaction_path = :ida_gausslet_source_box,
+            mwg_supplement_residual_path = false,
+            mwg_supplement_residual_provenance_adapted = false,
+            real_ida_gausslet_source_box_provenance_adapted = true,
+            real_mwg_ida_pair_factor_provenance_adapted = false,
+            synthetic_or_caller_supplied_pair_factors = false,
+            source_weight_division_owner =
+                pair_factor_normalization == :raw_weighted ?
+                :pgdg_auxiliary_source_weights :
+                :caller_supplied_density_normalized_pair_factors,
+            source_weights_are_raw_source_weights = true,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_oracle_used = false,
+            support_local_pqs_oracle_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            shell_row_algorithm = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            mwg_interaction_implemented = false,
+        ),
+    )
+    return merge(
+        explicit_route,
+        (
+            object_kind =
+                :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance,
+            path =
+                :pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance,
+            status = :private_ida_provenance_density_density_reference_only,
+            explicit_input_route_producer = explicit_route,
+            ida_provenance = ida_provenance,
+            metadata = adapter_metadata,
+            provenance = adapter_provenance,
+            diagnostics = adapter_diagnostics,
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,
