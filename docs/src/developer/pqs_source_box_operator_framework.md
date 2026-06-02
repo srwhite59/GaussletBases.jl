@@ -1034,20 +1034,27 @@ helper does not use shell projection, Lowdin cleanup, support coefficient
 matrices, support-local/shell-row contraction as the algorithm, retained PQS
 weights, or retained-weight/IDA division.
 
+Commit `3b64e91` adds the matching private PQS/PQS raw-weighted conversion
+wrapper. It accepts raw-weighted per-axis pair factors plus explicit positive
+source weights, divides each raw term matrix by the source-weight outer
+product on that axis, and delegates to the PQS/PQS density-normalized core.
+This closes the private pair-family symmetry for product/product,
+PQS/product, and PQS/PQS without assigning positive quadrature or IDA-division
+semantics to retained PQS columns.
+
 The current electron-electron source-box checkpoint is therefore:
 
-- product/product accepts caller-supplied density-normalized factors and has a
-  raw-weighted conversion wrapper from commit `ad74d3c`;
-- PQS/product accepts caller-supplied density-normalized factors and has a
-  raw-weighted conversion wrapper from commit `b1ee2a5`;
-- PQS/PQS accepts caller-supplied density-normalized factors from commit
-  `653d35d`;
-- PQS/PQS raw-weighted conversion remains future work;
+- product/product accepts caller-supplied density-normalized factors and has
+  the `ad74d3c` raw-weighted conversion wrapper;
+- PQS/product accepts caller-supplied density-normalized factors and has the
+  `b1ee2a5` raw-weighted conversion wrapper;
+- PQS/PQS accepts caller-supplied density-normalized factors and has the
+  `3b64e91` raw-weighted conversion wrapper;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - source weights are provenance/positivity checks for density-normalized
-  input, or the owner of raw-weight normalization inside the product/product
-  and PQS/product raw-weighted wrappers;
+  input, or the owner of raw-weight normalization inside the raw-weighted
+  wrappers;
 - PQS/product and PQS/PQS use no shell projection, Lowdin cleanup, support
   coefficient matrix, or support-local oracle as the algorithm;
 - retained PQS columns have no positive quadrature-weight or IDA-division

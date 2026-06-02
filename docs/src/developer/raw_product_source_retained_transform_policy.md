@@ -1494,14 +1494,21 @@ divide by them. It does not use shell projection, Lowdin cleanup, support
 coefficient matrices, support-local/shell-row contraction as the algorithm,
 retained PQS weights, or retained-weight/IDA division.
 
+Commit `3b64e91` adds the private PQS/PQS raw-weighted conversion wrapper. It
+accepts raw-weighted per-axis pair factors plus explicit positive source
+weights, applies the same source-weight outer-product normalization rule as
+the product/product and PQS/product wrappers, and delegates to the PQS/PQS
+density-normalized core. This is source-box raw/support weight normalization,
+not retained PQS positive-weight semantics.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
   raw-weighted conversion wrapper;
 - PQS/product has both density-normalized input and the `b1ee2a5`
   raw-weighted conversion wrapper;
-- PQS/PQS has density-normalized input from commit `653d35d`;
-- PQS/PQS raw-weighted conversion is still future work;
+- PQS/PQS has both density-normalized input and the `3b64e91` raw-weighted
+  conversion wrapper;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
 - source weights are provenance/positivity checks for density-normalized
