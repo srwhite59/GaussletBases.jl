@@ -165,8 +165,57 @@ were:
 | 5 | `0.004464307` | `17563968` | `0.068722806` | `40143328` |
 | 6 | `0.094632635` | `156434752` | `0.177662453` | `374143456` |
 
-Supplement electron-electron/MWG coupling remains the next design gate. It
-was not adapted in this loop.
+### Final-Residual MWG Interaction Component Diagnostic
+
+The final-residual MWG interaction diagnostic follows the existing ordinary
+MWG authority shape: raw GTO supplement rows are residual-construction inputs,
+not final interaction rows. The fixed/fixed block is taken from the existing
+fixed IDA path, and fixed/residual plus residual/residual blocks are built
+from effective residual Gaussian centers and widths through
+`_qwrg_mwg_interaction_components`.
+
+The comparison authority is the existing final interaction matrix from
+`ordinary_cartesian_qiu_white_operators(fixed_block, supplement;
+interaction_treatment = :mwg)`. The component assembly matches that authority
+exactly on the private q4/q5/q6 probe.
+
+| q | fixed dim | raw GTO dim | residual count | final dim | raw-to-final shape | fixed/fixed | fixed/residual | residual/residual | authority error |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 4 | 615 | 126 | 125 | 740 | `(741, 740)` | `(615, 615)` | `(615, 125)` | `(125, 125)` | `0.0` |
+| 5 | 615 | 126 | 125 | 740 | `(741, 740)` | `(615, 615)` | `(615, 125)` | `(125, 125)` | `0.0` |
+| 6 | 2087 | 126 | 122 | 2209 | `(2213, 2209)` | `(2087, 2087)` | `(2087, 122)` | `(122, 122)` | `0.0` |
+
+The q7 row remains shape-only: expected fixed dimension `2087`, expected raw
+GTO dimension `126`, and expected raw dimension `2213`.
+
+Residual center and width checks passed for q4/q5/q6:
+
+- residual centers are finite;
+- residual widths are finite;
+- residual widths are positive;
+- final interaction symmetry error is `0.0`.
+
+Owner-index caveat: the current one-center atomic authority reports owner
+index `0` for residual rows. The private component diagnostic may separately
+record logical one-center owner `1` metadata for reporting, but that is
+report-only and must not be generalized to multi-center owner semantics.
+
+The diagnostic explicitly does not build raw GTO/GTO or fixed/raw-GTO MWG
+interaction blocks. Raw GTO rows remain residual-construction inputs only.
+
+Observed q6 final-residual MWG interaction timing/allocation rows were:
+
+| q | phase | elapsed seconds | allocated bytes |
+|---:|---|---:|---:|
+| 6 | `existing_final_mwg_authority` | `9.003502754` | `9226055184` |
+| 6 | `raw_cartesian_gto_blocks` | `4.056610367` | `5980174752` |
+| 6 | `residual_space` | `0.498724446` | `582154288` |
+| 6 | `residual_mwg_provenance` | `1.289357810` | `505031696` |
+| 6 | `mwg_component_extraction` | `0.827999912` | `1089336624` |
+| 6 | `final_residual_mwg_assembly` | `0.054681351` | `117117168` |
+
+These timings are private diagnostic scale signals, not production readiness
+or public-route performance claims.
 
 ## Timing And Allocation Caution
 
@@ -189,6 +238,7 @@ This checkpoint does not:
 
 - build QW operators;
 - build a Hamiltonian or SCF target;
+- build raw GTO/GTO or fixed/raw-GTO MWG interaction blocks;
 - adopt packet/fixed-block/QW/Hamiltonian routing for source-box work;
 - change public/default route behavior;
 - introduce ECP behavior;
@@ -198,7 +248,8 @@ This checkpoint does not:
 - assign retained PQS/source-box columns positive quadrature weights;
 - use retained-weight or IDA division.
 
-MWG supplement/residual coupling remains separate from the IDA source-box
-electron-electron lane. The current facts only show that the Be atom
-supplement source inputs and residual-space dimensions are mechanically
-available for private follow-up work.
+The final-residual MWG component diagnostic is now mechanically available for
+one-center Be q4/q5/q6 as a private authority-matched probe. It remains
+separate from the IDA source-box electron-electron lane and does not promote
+MWG supplement/residual coupling to a public/default, Hamiltonian, QW, packet,
+fixed-block, or multi-center production route.
