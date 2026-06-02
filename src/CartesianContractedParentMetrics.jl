@@ -12688,8 +12688,8 @@ function _pqs_pqs_product_source_box_component_route_smoke(
     route_supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
     orthogonality_atol::Real = 1.0e-8,
 )
-    pair_factor_normalization == :density_normalized || throw(
-        ArgumentError("component route smoke currently supports density-normalized IDA route output"),
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("component route smoke requires density_normalized or raw_weighted IDA route output"),
     )
     center_values = _source_box_nuclear_attraction_center_values(centers)
     charge_values = _source_box_nuclear_attraction_charge_values(nuclear_charges)
@@ -12743,7 +12743,13 @@ function _pqs_pqs_product_source_box_component_route_smoke(
         center_labels = labels,
         symmetry_atol = nuclear_symmetry_atol,
     )
-    dense_parent_authority = isnothing(dense_parent_ida_matrix) ? nothing :
+    dense_parent_authority_supported =
+        pair_factor_normalization == :density_normalized
+    dense_parent_authority_skipped_reason =
+        isnothing(dense_parent_ida_matrix) || dense_parent_authority_supported ?
+        nothing : :density_normalized_authority_only
+    dense_parent_authority =
+        isnothing(dense_parent_ida_matrix) || !dense_parent_authority_supported ? nothing :
         _pqs_pqs_product_dense_parent_ida_authority_comparison(
             ida_route,
             dense_parent_ida_matrix;
@@ -12822,6 +12828,20 @@ function _pqs_pqs_product_source_box_component_route_smoke(
             ida_term_count = ida_route.term_count,
             ida_provenance_term_count = ida_provenance.term_count,
             pair_factor_normalization = pair_factor_normalization,
+            density_normalized_pair_factors =
+                pair_factor_normalization == :density_normalized,
+            raw_weighted_pair_factors =
+                pair_factor_normalization == :raw_weighted,
+            density_normalized_pair_factors_generated =
+                pair_factor_normalization == :raw_weighted,
+            source_weight_division_owner =
+                ida_route.diagnostics.source_weight_division_owner,
+            source_weight_division_applied_by_helper =
+                ida_route.diagnostics.source_weight_division_applied_by_helper,
+            source_weight_division_shape =
+                ida_route.diagnostics.source_weight_division_shape,
+            source_weights_are_raw_source_weights =
+                ida_route.diagnostics.source_weights_are_raw_source_weights,
             input_pair_factor_data = :ida_gausslet_source_box_provenance,
             interaction_path = :ida_gausslet_source_box,
             mwg_supplement_residual_path = false,
@@ -12839,6 +12859,10 @@ function _pqs_pqs_product_source_box_component_route_smoke(
             nuclear_symmetry_error = nuclear_route.symmetry_error,
             electron_electron_symmetry_error = ida_route.symmetry_error,
             dense_parent_ida_authority_available = !isnothing(dense_parent_authority),
+            dense_parent_ida_authority_supported_for_pair_factor_normalization =
+                dense_parent_authority_supported,
+            dense_parent_ida_authority_skipped_reason =
+                dense_parent_authority_skipped_reason,
             dense_parent_ida_authority_max_error =
                 isnothing(dense_parent_authority) ? nothing :
                 dense_parent_authority.max_error,
