@@ -683,6 +683,15 @@ labels, categories, retained ranges, retained counts, support counts,
 representation kinds, available source-mode dimensions, and shell-realized PQS
 oracle/readiness flags without changing the inventory or route behavior.
 
+The private CR2 sidecar schema can now carry this fixed-side metadata when
+called with `fixed_side_retained_unit_metadata`; old calls that omit the
+keyword keep existing caller behavior and report output. The writer emits an
+optional `[fixed_side_retained_unit_metadata]` section only for supplied
+metadata. This is still reporting-only: shell labels remain unavailable,
+center/grid label reconstruction and nearest-grid heuristics remain disabled,
+and no retained-weight/IDA division, sidecar installation, route adoption,
+packet/fixed-block/QW/Hamiltonian path, or public behavior is introduced.
+
 The ignored full Be2 q5 report at
 `tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
 records fixed dimension `1483`, retained-unit count `8`, complete coverage

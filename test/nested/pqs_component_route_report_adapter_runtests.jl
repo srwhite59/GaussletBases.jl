@@ -354,6 +354,7 @@ using GaussletBases
     @test sidecar.lanes.source_box_pqs_ida_fixed_side.components[1].electron_electron_density_density.not_four_index_galerkin_tensor
     @test sidecar.lanes.source_box_pqs_ida_fixed_side.components[1].nuclear_attraction_by_center.helper_by_family.pqs_pqs ==
           :_pqs_pqs_source_box_nuclear_attraction_by_center
+    @test isnothing(sidecar.fixed_side_retained_unit_metadata)
     @test sidecar.lanes.final_residual_mwg_supplement.fixed_dimension == 125
     @test sidecar.lanes.final_residual_mwg_supplement.residual_dimension == 6
     @test sidecar.lanes.final_residual_mwg_supplement.final_dimension == 131
@@ -379,6 +380,7 @@ using GaussletBases
     @test sidecar.absences_by_contract.packet_fixed_block_qw_hamiltonian_adoption
     @test sidecar.diagnostics.lanes_remain_separate
     @test sidecar.diagnostics.source_box_unit_records_available
+    @test !sidecar.diagnostics.fixed_side_retained_unit_metadata_available
     @test sidecar.diagnostics.final_residual_shape_consistent
     @test sidecar.diagnostics.residual_owner_rows_match
     @test !sidecar.diagnostics.packet_adoption
@@ -428,6 +430,7 @@ using GaussletBases
     @test occursin("packet_adoption\tfalse", sidecar_text)
     @test occursin("qwhamiltonian_consumes\tfalse", sidecar_text)
     @test occursin("cr2_science_status_changed\tfalse", sidecar_text)
+    @test !occursin("[fixed_side_retained_unit_metadata]", sidecar_text)
 
     io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_report(io, report)
@@ -504,6 +507,61 @@ using GaussletBases
     @test !fixed_side_metadata.diagnostics.scf_hf_validation_claim
     @test !fixed_side_metadata.diagnostics.cr2_science_status_changed
     @test !fixed_side_metadata.diagnostics.retained_weight_or_ida_division
+
+    sidecar_with_fixed =
+        metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+            report;
+            fixed_side_retained_unit_metadata = fixed_side_metadata,
+            provenance = (source = :synthetic_sidecar_fixed_metadata_test,),
+        )
+    @test sidecar_with_fixed.fixed_side_retained_unit_metadata ===
+          fixed_side_metadata
+    @test sidecar_with_fixed.diagnostics.fixed_side_retained_unit_metadata_available
+    @test sidecar_with_fixed.fixed_side_retained_unit_metadata.labels.shell_label_status ==
+          :unavailable
+    @test !sidecar_with_fixed.fixed_side_retained_unit_metadata.labels.label_reconstruction_from_centers
+    @test !sidecar_with_fixed.fixed_side_retained_unit_metadata.labels.nearest_grid_or_center_label_heuristic
+    @test !sidecar_with_fixed.fixed_side_retained_unit_metadata.diagnostics.retained_weight_or_ida_division
+
+    sidecar_with_fixed_io = IOBuffer()
+    metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+        sidecar_with_fixed_io,
+        sidecar_with_fixed,
+    )
+    sidecar_with_fixed_text = String(take!(sidecar_with_fixed_io))
+    @test occursin("[fixed_side_retained_unit_metadata]", sidecar_with_fixed_text)
+    @test occursin("fixed_dimension\t15", sidecar_with_fixed_text)
+    @test occursin("unit_count\t3", sidecar_with_fixed_text)
+    @test occursin(
+        "source_unit_label_status\texplicit_inventory_unit_keys",
+        sidecar_with_fixed_text,
+    )
+    @test occursin(
+        "source_unit_labels\t(:outer_mismatch_z_low_slab, :left_atom_box, :regular_shared_molecular_shell_1)",
+        sidecar_with_fixed_text,
+    )
+    @test occursin("shell_label_status\tunavailable", sidecar_with_fixed_text)
+    @test occursin(
+        "label_reconstruction_from_centers\tfalse",
+        sidecar_with_fixed_text,
+    )
+    @test occursin(
+        "nearest_grid_or_center_label_heuristic\tfalse",
+        sidecar_with_fixed_text,
+    )
+    @test occursin(
+        "unit.regular_shared_molecular_shell_1.retained_range\t9:15",
+        sidecar_with_fixed_text,
+    )
+    @test occursin(
+        "unit.regular_shared_molecular_shell_1.shell_realized_pqs_metadata_oracle_fixture\ttrue",
+        sidecar_with_fixed_text,
+    )
+    @test occursin(
+        "unit.regular_shared_molecular_shell_1.shell_realized_pqs_source_box_operator_ready\tfalse",
+        sidecar_with_fixed_text,
+    )
+
     bad_inventory = merge(
         _synthetic_fixed_side_inventory(),
         (object_kind = :not_current_route_inventory,),

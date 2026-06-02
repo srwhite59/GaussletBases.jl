@@ -13786,6 +13786,7 @@ end
 
 function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
     report;
+    fixed_side_retained_unit_metadata = nothing,
     provenance = (;),
     strict::Bool = true,
 )
@@ -13857,6 +13858,32 @@ function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
         _pqs_component_route_smoke_source_box_sidecar_components(row)
         for row in source_box.rows
     )
+    fixed_side_metadata_available =
+        !isnothing(fixed_side_retained_unit_metadata)
+    if fixed_side_metadata_available
+        fixed_side_retained_unit_metadata.object_kind ==
+            :pqs_current_route_fixed_side_retained_unit_metadata || throw(
+            ArgumentError("CR2 sidecar schema fixed-side metadata requires _pqs_current_route_fixed_side_retained_unit_metadata output"),
+        )
+        if strict
+            fixed_side_retained_unit_metadata.labels.shell_label_status ==
+                :unavailable || throw(
+                ArgumentError("CR2 sidecar schema fixed-side metadata cannot provide shell labels"),
+            )
+            !fixed_side_retained_unit_metadata.labels.label_reconstruction_from_centers ||
+                throw(
+                    ArgumentError("CR2 sidecar schema fixed-side metadata cannot reconstruct labels from centers"),
+                )
+            !fixed_side_retained_unit_metadata.labels.nearest_grid_or_center_label_heuristic ||
+                throw(
+                    ArgumentError("CR2 sidecar schema fixed-side metadata cannot use nearest-grid label heuristics"),
+                )
+            !fixed_side_retained_unit_metadata.diagnostics.retained_weight_or_ida_division ||
+                throw(
+                    ArgumentError("CR2 sidecar schema fixed-side metadata cannot include retained-weight or IDA division"),
+                )
+        end
+    end
 
     return (
         object_kind =
@@ -13934,6 +13961,8 @@ function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
                 ),
             ),
         ),
+        fixed_side_retained_unit_metadata =
+            fixed_side_retained_unit_metadata,
         labels = (
             source_unit_label_status = source_unit_label_status,
             source_unit_labels =
@@ -13970,6 +13999,8 @@ function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
             lanes_remain_separate = true,
             source_box_unit_records_available =
                 !isempty(source_unit_records),
+            fixed_side_retained_unit_metadata_available =
+                fixed_side_metadata_available,
             source_unit_label_status = source_unit_label_status,
             shell_label_status = :unavailable,
             label_reconstruction_from_centers = false,
@@ -14156,6 +14187,81 @@ function _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
         _pqs_component_route_smoke_print_kv(io, "component.$name.provenance", component.provenance)
     end
     println(io)
+
+    if !isnothing(sidecar.fixed_side_retained_unit_metadata)
+        fixed_side = sidecar.fixed_side_retained_unit_metadata
+        println(io, "[fixed_side_retained_unit_metadata]")
+        _pqs_component_route_smoke_print_kv(io, "status", fixed_side.status)
+        _pqs_component_route_smoke_print_kv(io, "schema_version", fixed_side.schema_version)
+        _pqs_component_route_smoke_print_kv(io, "fixed_dimension", fixed_side.fixed_dimension)
+        _pqs_component_route_smoke_print_kv(io, "unit_count", fixed_side.unit_count)
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "source_unit_label_status",
+            fixed_side.labels.source_unit_label_status,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "source_unit_labels",
+            fixed_side.labels.source_unit_labels,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "shell_label_status",
+            fixed_side.labels.shell_label_status,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "label_reconstruction_from_centers",
+            fixed_side.labels.label_reconstruction_from_centers,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "nearest_grid_or_center_label_heuristic",
+            fixed_side.labels.nearest_grid_or_center_label_heuristic,
+        )
+        for unit in fixed_side.retained_units
+            prefix = "unit.$(unit.unit_key)"
+            _pqs_component_route_smoke_print_kv(io, "$prefix.category", unit.category)
+            _pqs_component_route_smoke_print_kv(io, "$prefix.kind", unit.kind)
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.retained_range",
+                unit.retained_range,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.retained_count",
+                unit.retained_count,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.support_count",
+                unit.support_count,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.source_mode_dims",
+                unit.source_mode_dims,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.representation_kind",
+                unit.representation_kind,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.shell_realized_pqs_metadata_oracle_fixture",
+                unit.shell_realized_pqs_metadata_oracle_fixture,
+            )
+            _pqs_component_route_smoke_print_kv(
+                io,
+                "$prefix.shell_realized_pqs_source_box_operator_ready",
+                unit.shell_realized_pqs_source_box_operator_ready,
+            )
+        end
+        println(io)
+    end
 
     println(io, "[labels]")
     _pqs_component_route_smoke_print_kv(

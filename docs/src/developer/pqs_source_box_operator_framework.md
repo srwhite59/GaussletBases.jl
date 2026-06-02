@@ -1253,7 +1253,17 @@ explicit inventory unit keys, roles, categories, retained ranges, retained
 counts, support counts, representation kinds, available source-mode
 dimensions, and shell-realized PQS oracle flags into sidecar-adjacent metadata
 records. It does not construct a route, install a sidecar, thread data into
-the CR2 sidecar schema, or change packet/fixed-block/QW/Hamiltonian behavior.
+the CR2 sidecar schema by itself, or change packet/fixed-block/QW/Hamiltonian
+behavior.
+
+The private CR2 sidecar schema can optionally carry this fixed-side metadata
+when callers pass `fixed_side_retained_unit_metadata` explicitly. Omitted
+metadata preserves existing caller behavior and leaves the text report without
+the optional section. When present, the repo-owned writer emits a
+`[fixed_side_retained_unit_metadata]` section with the same reporting facts and
+the same no-go records: shell labels remain unavailable, center/grid label
+reconstruction and nearest-grid heuristics remain disabled, and no
+retained-weight/IDA division or route/adoption behavior is introduced.
 
 The ignored full Be2 q5 report
 `tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
