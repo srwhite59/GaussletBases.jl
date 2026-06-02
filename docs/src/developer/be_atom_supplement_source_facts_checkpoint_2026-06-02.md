@@ -220,6 +220,37 @@ blocks, raw GTO rows as residual-construction inputs only, and no public,
 default, packet, fixed-block, QW/Hamiltonian, Be2/CR2, ECP, SCF/HF, or
 MWG/IDA semantic adoption.
 
+### Be2-Shaped Owner And Component Checkpoint
+
+An ignored private Be2-shaped probe extends the owner/component audit to a
+small direct-product ordinary MWG fixture. The fixture uses homonuclear Be2 at
+`R = 5.0` bohr on the `:z` axis, `bond_aligned_homonuclear_qw_basis` with
+dimensions `(5, 5, 5)`, nuclear charges `[4.0, 4.0]`, and a
+`legacy_bond_aligned_diatomic_gaussian_supplement("Be", "cc-pVDZ"; lmax = 0,
+basisfile = "/Users/srw/BasisSets")` supplement. The machine-local
+`basisfile` dependency keeps this as private ignored probe evidence, not a
+tracked test dependency.
+
+The existing ordinary path exposes explicit residual owner metadata:
+`residual_nucleus_indices = [1, 1, 1, 2, 2, 2]`, with residual owner counts
+`{1=>3, 2=>3}` and matching residual orbital owner fields. The residual
+coefficient block in `raw_to_final` is dense across raw supplement owner
+groups after stabilization, so owner semantics must come from the explicit
+residual metadata and must not be inferred from coefficient support.
+
+For the same fixture, `_qwrg_final_residual_mwg_component_blocks(...)` matches
+the existing final MWG authority from `ordinary_cartesian_qiu_white_operators`
+with max error `0.0`. The component block shapes are fixed/fixed `(125, 125)`,
+fixed/residual `(125, 6)`, residual/residual `(6, 6)`, and final `(131, 131)`.
+The component and authority symmetry errors are `0.0`, residual centers and
+widths are finite, and residual widths are positive.
+
+This Be2-shaped checkpoint remains private direct-product evidence only. It
+does not build raw GTO/GTO or fixed/raw-GTO MWG interaction blocks, does not
+infer owner semantics from raw-to-final support, and does not adopt
+public/default, packet/fixed-block, QW/Hamiltonian, ECP, SCF/HF, CR2, or
+MWG/IDA semantic behavior.
+
 Observed q6 final-residual MWG interaction timing/allocation rows were:
 
 | q | phase | elapsed seconds | allocated bytes |
