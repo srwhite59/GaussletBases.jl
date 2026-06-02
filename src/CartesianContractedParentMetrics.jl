@@ -12903,6 +12903,155 @@ function _pqs_pqs_product_source_box_component_route_smoke(
     )
 end
 
+function _pqs_pqs_product_component_route_smoke_summary(component)
+    hasproperty(component, :object_kind) &&
+        component.object_kind == :pqs_pqs_product_source_box_component_route_smoke ||
+        throw(
+            ArgumentError("component route smoke summary requires _pqs_pqs_product_source_box_component_route_smoke output"),
+        )
+    hasproperty(component, :nuclear_attraction_by_center) || throw(
+        ArgumentError("component route smoke summary requires nuclear_attraction_by_center"),
+    )
+    hasproperty(component, :electron_electron_density_density) || throw(
+        ArgumentError("component route smoke summary requires electron_electron_density_density"),
+    )
+    hasproperty(component, :diagnostics) || throw(
+        ArgumentError("component route smoke summary requires diagnostics"),
+    )
+    nuclear = component.nuclear_attraction_by_center
+    electron_electron = component.electron_electron_density_density
+    diagnostics = component.diagnostics
+    no_go_diagnostics = (
+        source_box_first = diagnostics.source_box_first,
+        source_box_algorithmic_path_true_for_every_pair =
+            diagnostics.source_box_algorithmic_path_true_for_every_pair,
+        shell_projection_used = diagnostics.shell_projection_used,
+        lowdin_cleanup_used = diagnostics.lowdin_cleanup_used,
+        support_local_oracle_used = diagnostics.support_local_oracle_used,
+        support_local_pqs_oracle_used =
+            diagnostics.support_local_pqs_oracle_used,
+        support_local_shell_row_algorithm =
+            diagnostics.support_local_shell_row_algorithm,
+        support_coefficient_matrix_used =
+            diagnostics.support_coefficient_matrix_used,
+        shell_row_algorithm = diagnostics.shell_row_algorithm,
+        retained_pqs_weights_used = diagnostics.retained_pqs_weights_used,
+        retained_pqs_weights_positive_checked =
+            diagnostics.retained_pqs_weights_positive_checked,
+        retained_weight_division_allowed =
+            diagnostics.retained_weight_division_allowed,
+        retained_pqs_weight_division_allowed =
+            diagnostics.retained_pqs_weight_division_allowed,
+        ida_weight_division_allowed = diagnostics.ida_weight_division_allowed,
+        packet_adoption = diagnostics.packet_adoption,
+        fixed_block_routing = diagnostics.fixed_block_routing,
+        qwhamiltonian_consumes = diagnostics.qwhamiltonian_consumes,
+        hamiltonian_matrix_built = diagnostics.hamiltonian_matrix_built,
+        public_default_consumes = diagnostics.public_default_consumes,
+        mwg_supplement_residual_path =
+            diagnostics.mwg_supplement_residual_path,
+        mwg_supplement_residual_provenance_adapted =
+            diagnostics.mwg_supplement_residual_provenance_adapted,
+        ecp_terms_implemented = diagnostics.ecp_terms_implemented,
+        cr2_science_status_changed = diagnostics.cr2_science_status_changed,
+        dense_parent_projection_algorithmic =
+            diagnostics.dense_parent_projection_algorithmic,
+    )
+    return (
+        object_kind = :pqs_pqs_product_component_route_smoke_summary,
+        status = :private_component_route_smoke_summary,
+        component_object_kind = component.object_kind,
+        component_status = component.status,
+        route_shape = component.route_shape,
+        retained_dimension = component.retained_dimension,
+        center_labels = component.center_labels,
+        nuclear_charges = component.nuclear_charges,
+        center_count = length(component.center_labels),
+        nuclear_pair_count = nuclear.pair_count,
+        nuclear_pair_family_counts = nuclear.pair_family_counts,
+        electron_electron_pair_count = electron_electron.pair_count,
+        electron_electron_pair_family_counts =
+            electron_electron.pair_family_counts,
+        pair_factor_normalization = component.pair_factor_normalization,
+        source_weight_division_owner =
+            diagnostics.source_weight_division_owner,
+        source_weight_division_applied_by_helper =
+            diagnostics.source_weight_division_applied_by_helper,
+        source_weight_division_shape =
+            diagnostics.source_weight_division_shape,
+        ida_term_count = component.ida_term_count,
+        finite_checks = (
+            output_finite = component.output_finite,
+            nuclear_output_finite = nuclear.output_finite,
+            electron_electron_output_finite = electron_electron.output_finite,
+        ),
+        symmetry_errors = (
+            nuclear = component.nuclear_symmetry_error,
+            electron_electron = component.electron_electron_symmetry_error,
+        ),
+        nuclear_total_from_center_error =
+            nuclear.total_from_center_error,
+        dense_parent_ida_authority = (
+            available =
+                diagnostics.dense_parent_ida_authority_available,
+            max_error =
+                diagnostics.dense_parent_ida_authority_max_error,
+            within_tolerance =
+                diagnostics.dense_parent_ida_authority_within_tolerance,
+            skip_reason =
+                diagnostics.dense_parent_ida_authority_skipped_reason,
+            validation_only =
+                diagnostics.dense_parent_projection_validation_only,
+        ),
+        no_go_diagnostics = no_go_diagnostics,
+        performance = (
+            nuclear = (
+                elapsed_seconds = nuclear.performance.elapsed_seconds,
+                allocated_bytes = nuclear.performance.allocated_bytes,
+                gc_time_seconds = nuclear.performance.gc_time_seconds,
+            ),
+            electron_electron = (
+                elapsed_seconds =
+                    electron_electron.performance.elapsed_seconds,
+                allocated_bytes =
+                    electron_electron.performance.allocated_bytes,
+                gc_time_seconds =
+                    electron_electron.performance.gc_time_seconds,
+            ),
+        ),
+        diagnostics = (
+            source = :pqs_pqs_product_component_route_smoke_summary,
+            private_component_route_smoke_summary = true,
+            component_object_kind = component.object_kind,
+            component_status = component.status,
+            route_shape = component.route_shape,
+            retained_dimension = component.retained_dimension,
+            center_count = length(component.center_labels),
+            pair_factor_normalization = component.pair_factor_normalization,
+            output_finite = component.output_finite,
+            source_box_first = no_go_diagnostics.source_box_first,
+            source_box_algorithmic_path_true_for_every_pair =
+                no_go_diagnostics.source_box_algorithmic_path_true_for_every_pair,
+            retained_pqs_weights_used =
+                no_go_diagnostics.retained_pqs_weights_used,
+            retained_weight_division_allowed =
+                no_go_diagnostics.retained_weight_division_allowed,
+            ida_weight_division_allowed =
+                no_go_diagnostics.ida_weight_division_allowed,
+            packet_adoption = no_go_diagnostics.packet_adoption,
+            fixed_block_routing = no_go_diagnostics.fixed_block_routing,
+            qwhamiltonian_consumes = no_go_diagnostics.qwhamiltonian_consumes,
+            public_default_consumes =
+                no_go_diagnostics.public_default_consumes,
+            mwg_supplement_residual_provenance_adapted =
+                no_go_diagnostics.mwg_supplement_residual_provenance_adapted,
+            ecp_terms_implemented = no_go_diagnostics.ecp_terms_implemented,
+            cr2_science_status_changed =
+                no_go_diagnostics.cr2_science_status_changed,
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,

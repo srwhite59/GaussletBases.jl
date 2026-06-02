@@ -3056,6 +3056,14 @@ end
                     (component_route_smoke_direct_raw_weighted_ida_test = true,),
                 provenance = (source = :component_route_smoke_test_fixture,),
             )
+        component_summary =
+            metrics_module._pqs_pqs_product_component_route_smoke_summary(
+                component,
+            )
+        raw_component_summary =
+            metrics_module._pqs_pqs_product_component_route_smoke_summary(
+                raw_component,
+            )
 
         units = component.route_descriptor.units
         ranges = component.ranges
@@ -3164,12 +3172,29 @@ end
               :pqs_pqs_product_source_box_component_route_smoke
         @test raw_component.object_kind ==
               :pqs_pqs_product_source_box_component_route_smoke
+        @test component_summary.object_kind ==
+              :pqs_pqs_product_component_route_smoke_summary
+        @test raw_component_summary.object_kind ==
+              :pqs_pqs_product_component_route_smoke_summary
         @test component.status == :private_component_route_smoke
         @test raw_component.status == :private_component_route_smoke
+        @test component_summary.status ==
+              :private_component_route_smoke_summary
+        @test raw_component_summary.status ==
+              :private_component_route_smoke_summary
+        @test component_summary.component_object_kind == component.object_kind
+        @test raw_component_summary.component_object_kind ==
+              raw_component.object_kind
+        @test component_summary.component_status == component.status
+        @test raw_component_summary.component_status == raw_component.status
         @test component.route_shape == (:pqs_left, :pqs_right, :product)
         @test raw_component.route_shape == (:pqs_left, :pqs_right, :product)
+        @test component_summary.route_shape == component.route_shape
+        @test raw_component_summary.route_shape == raw_component.route_shape
         @test component.retained_dimension == 221
         @test raw_component.retained_dimension == 221
+        @test component_summary.retained_dimension == 221
+        @test raw_component_summary.retained_dimension == 221
         @test component.route_descriptor.retained_dimension == 221
         @test raw_component.route_descriptor.retained_dimension == 221
         @test component.route_descriptor.expected_pair_count == 6
@@ -3187,16 +3212,34 @@ end
               length(nuclear_centers)
         @test component.center_labels == center_labels
         @test raw_component.center_labels == center_labels
+        @test component_summary.center_labels == center_labels
+        @test raw_component_summary.center_labels == center_labels
         @test component.centers == nuclear_centers
         @test raw_component.centers == nuclear_centers
         @test component.nuclear_charges == nuclear_charges
         @test raw_component.nuclear_charges == nuclear_charges
+        @test component_summary.nuclear_charges == nuclear_charges
+        @test raw_component_summary.nuclear_charges == nuclear_charges
+        @test component_summary.center_count == length(nuclear_centers)
+        @test raw_component_summary.center_count == length(nuclear_centers)
         @test component.ida_term_count == length(term_coefficients)
         @test raw_component.ida_term_count == length(term_coefficients)
+        @test component_summary.ida_term_count == length(term_coefficients)
+        @test raw_component_summary.ida_term_count == length(term_coefficients)
         @test component.pair_factor_normalization == :density_normalized
         @test raw_component.pair_factor_normalization == :raw_weighted
+        @test component_summary.pair_factor_normalization ==
+              :density_normalized
+        @test raw_component_summary.pair_factor_normalization ==
+              :raw_weighted
         @test component.output_finite
         @test raw_component.output_finite
+        @test component_summary.finite_checks.output_finite
+        @test component_summary.finite_checks.nuclear_output_finite
+        @test component_summary.finite_checks.electron_electron_output_finite
+        @test raw_component_summary.finite_checks.output_finite
+        @test raw_component_summary.finite_checks.nuclear_output_finite
+        @test raw_component_summary.finite_checks.electron_electron_output_finite
         @test all(isfinite, component.nuclear_total_matrix)
         @test all(isfinite, raw_component.nuclear_total_matrix)
         @test all(isfinite, component.electron_electron_matrix)
@@ -3206,16 +3249,39 @@ end
         @test raw_component.nuclear_total_matrix ≈ component.nuclear_total_matrix atol = 1.0e-12 rtol = 1.0e-12
         @test component.nuclear_symmetry_error <= 1.0e-10
         @test raw_component.nuclear_symmetry_error <= 1.0e-10
+        @test component_summary.symmetry_errors.nuclear ==
+              component.nuclear_symmetry_error
+        @test raw_component_summary.symmetry_errors.nuclear ==
+              raw_component.nuclear_symmetry_error
         @test component.electron_electron_matrix ≈ direct_ida.block atol = 1.0e-12 rtol = 1.0e-12
         @test raw_component.electron_electron_matrix ≈ raw_direct_ida.block atol = 1.0e-12 rtol = 1.0e-12
         @test raw_component.electron_electron_matrix ≈ component.electron_electron_matrix atol = 1.0e-12 rtol = 1.0e-12
         @test component.electron_electron_symmetry_error <= 1.0e-10
         @test raw_component.electron_electron_symmetry_error <= 1.0e-10
+        @test component_summary.symmetry_errors.electron_electron ==
+              component.electron_electron_symmetry_error
+        @test raw_component_summary.symmetry_errors.electron_electron ==
+              raw_component.electron_electron_symmetry_error
         @test component.dense_parent_ida_authority.object_kind ==
               :pqs_pqs_product_dense_parent_ida_authority_comparison
         @test component.dense_parent_ida_authority.within_tolerance
         @test component.dense_parent_ida_authority.max_error <= 1.0e-10
         @test raw_component.dense_parent_ida_authority === nothing
+        @test component_summary.dense_parent_ida_authority.available
+        @test component_summary.dense_parent_ida_authority.max_error <=
+              1.0e-10
+        @test component_summary.dense_parent_ida_authority.within_tolerance
+        @test component_summary.dense_parent_ida_authority.skip_reason ===
+              nothing
+        @test component_summary.dense_parent_ida_authority.validation_only
+        @test !raw_component_summary.dense_parent_ida_authority.available
+        @test raw_component_summary.dense_parent_ida_authority.max_error ===
+              nothing
+        @test raw_component_summary.dense_parent_ida_authority.within_tolerance ===
+              nothing
+        @test raw_component_summary.dense_parent_ida_authority.skip_reason ==
+              :density_normalized_authority_only
+        @test !raw_component_summary.dense_parent_ida_authority.validation_only
         @test component.authority_max_errors.electron_electron_dense_parent <=
               1.0e-10
         @test raw_component.authority_max_errors.electron_electron_dense_parent ===
@@ -3224,12 +3290,20 @@ end
               1.0e-14
         @test raw_component.authority_max_errors.nuclear_total_from_center_sum <=
               1.0e-14
+        @test component_summary.nuclear_total_from_center_error <= 1.0e-14
+        @test raw_component_summary.nuclear_total_from_center_error <= 1.0e-14
 
         @test component.nuclear_attraction_by_center.pair_count == 6
         @test raw_component.nuclear_attraction_by_center.pair_count == 6
+        @test component_summary.nuclear_pair_count == 6
+        @test raw_component_summary.nuclear_pair_count == 6
         @test component.nuclear_attraction_by_center.pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
         @test raw_component.nuclear_attraction_by_center.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test component_summary.nuclear_pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test raw_component_summary.nuclear_pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
         @test component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families ==
               (
@@ -3242,9 +3316,15 @@ end
               component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families
         @test component.electron_electron_density_density.pair_count == 6
         @test raw_component.electron_electron_density_density.pair_count == 6
+        @test component_summary.electron_electron_pair_count == 6
+        @test raw_component_summary.electron_electron_pair_count == 6
         @test component.electron_electron_density_density.pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
         @test raw_component.electron_electron_density_density.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test component_summary.electron_electron_pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test raw_component_summary.electron_electron_pair_family_counts ==
               (pqs_pqs = 3, pqs_product = 2, product_product = 1)
         @test component.electron_electron_density_density.diagnostics.helper_used_for_pair_families ==
               (
@@ -3263,6 +3343,15 @@ end
               :pgdg_auxiliary_source_weights
         @test raw_component.electron_electron_density_density.diagnostics.source_weight_division_applied_by_helper
         @test raw_component.electron_electron_density_density.diagnostics.source_weight_division_shape ==
+              :axis_pair_weight_outer
+        @test component_summary.source_weight_division_owner ==
+              :caller_supplied_density_normalized_pair_factors
+        @test !component_summary.source_weight_division_applied_by_helper
+        @test component_summary.source_weight_division_shape === nothing
+        @test raw_component_summary.source_weight_division_owner ==
+              :pgdg_auxiliary_source_weights
+        @test raw_component_summary.source_weight_division_applied_by_helper
+        @test raw_component_summary.source_weight_division_shape ==
               :axis_pair_weight_outer
 
         @test component.diagnostics.private_component_route_smoke
@@ -3394,6 +3483,51 @@ end
         @test !raw_component.diagnostics.support_coefficient_matrix_used
         @test !component.diagnostics.shell_row_algorithm
         @test !raw_component.diagnostics.shell_row_algorithm
+        for summary in (component_summary, raw_component_summary)
+            @test summary.no_go_diagnostics.source_box_first
+            @test summary.no_go_diagnostics.source_box_algorithmic_path_true_for_every_pair
+            @test !summary.no_go_diagnostics.shell_projection_used
+            @test !summary.no_go_diagnostics.lowdin_cleanup_used
+            @test !summary.no_go_diagnostics.support_local_oracle_used
+            @test !summary.no_go_diagnostics.support_local_pqs_oracle_used
+            @test !summary.no_go_diagnostics.support_local_shell_row_algorithm
+            @test !summary.no_go_diagnostics.support_coefficient_matrix_used
+            @test !summary.no_go_diagnostics.shell_row_algorithm
+            @test !summary.no_go_diagnostics.retained_pqs_weights_used
+            @test !summary.no_go_diagnostics.retained_pqs_weights_positive_checked
+            @test !summary.no_go_diagnostics.retained_weight_division_allowed
+            @test !summary.no_go_diagnostics.retained_pqs_weight_division_allowed
+            @test !summary.no_go_diagnostics.ida_weight_division_allowed
+            @test !summary.no_go_diagnostics.packet_adoption
+            @test !summary.no_go_diagnostics.fixed_block_routing
+            @test !summary.no_go_diagnostics.qwhamiltonian_consumes
+            @test !summary.no_go_diagnostics.hamiltonian_matrix_built
+            @test !summary.no_go_diagnostics.public_default_consumes
+            @test !summary.no_go_diagnostics.mwg_supplement_residual_path
+            @test !summary.no_go_diagnostics.mwg_supplement_residual_provenance_adapted
+            @test !summary.no_go_diagnostics.ecp_terms_implemented
+            @test !summary.no_go_diagnostics.cr2_science_status_changed
+            @test !summary.no_go_diagnostics.dense_parent_projection_algorithmic
+            @test summary.performance.nuclear.elapsed_seconds >= 0.0
+            @test summary.performance.nuclear.allocated_bytes >= 0
+            @test summary.performance.nuclear.gc_time_seconds >= 0.0
+            @test summary.performance.electron_electron.elapsed_seconds >= 0.0
+            @test summary.performance.electron_electron.allocated_bytes >= 0
+            @test summary.performance.electron_electron.gc_time_seconds >= 0.0
+            @test summary.diagnostics.private_component_route_smoke_summary
+            @test summary.diagnostics.source_box_first
+            @test summary.diagnostics.source_box_algorithmic_path_true_for_every_pair
+            @test !summary.diagnostics.retained_pqs_weights_used
+            @test !summary.diagnostics.retained_weight_division_allowed
+            @test !summary.diagnostics.ida_weight_division_allowed
+            @test !summary.diagnostics.packet_adoption
+            @test !summary.diagnostics.fixed_block_routing
+            @test !summary.diagnostics.qwhamiltonian_consumes
+            @test !summary.diagnostics.public_default_consumes
+            @test !summary.diagnostics.mwg_supplement_residual_provenance_adapted
+            @test !summary.diagnostics.ecp_terms_implemented
+            @test !summary.diagnostics.cr2_science_status_changed
+        end
     end
 
     function _product_staged_comparison_axis_row(axis, state_index::Int)
