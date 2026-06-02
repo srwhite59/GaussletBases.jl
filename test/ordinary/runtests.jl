@@ -187,6 +187,8 @@ end
     @test length(by_center.nuclear_one_body_by_center) == 2
 end
 
+include(joinpath(@__DIR__, "mwg_residual_component_helper_runtests.jl"))
+
 @testset "Molecular supplement final packaging helper preserves constructor shape" begin
     if !_legacy_basisfile_available()
         @test true

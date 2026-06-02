@@ -179,6 +179,13 @@ The comparison authority is the existing final interaction matrix from
 interaction_treatment = :mwg)`. The component assembly matches that authority
 exactly on the private q4/q5/q6 probe.
 
+The component extraction is also available as the private helper
+`_qwrg_final_residual_mwg_component_blocks(...)`. It returns the fixed/fixed,
+fixed/residual, residual/residual, and assembled final interaction blocks plus
+diagnostics. The older full-matrix helper,
+`_qwrg_fixed_block_interaction_matrix_mwg(...)`, delegates to this component
+helper and preserves its existing final-matrix authority behavior.
+
 | q | fixed dim | raw GTO dim | residual count | final dim | raw-to-final shape | fixed/fixed | fixed/residual | residual/residual | authority error |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 4 | 615 | 126 | 125 | 740 | `(741, 740)` | `(615, 615)` | `(615, 125)` | `(125, 125)` | `0.0` |
@@ -202,6 +209,16 @@ report-only and must not be generalized to multi-center owner semantics.
 
 The diagnostic explicitly does not build raw GTO/GTO or fixed/raw-GTO MWG
 interaction blocks. Raw GTO rows remain residual-construction inputs only.
+
+Durable tracked ordinary coverage now lives in
+`test/ordinary/mwg_residual_component_helper_runtests.jl`. That test uses a
+small in-repo one-center fixture, checks the helper output against both the
+delegating full-matrix helper and the existing ordinary final MWG authority,
+and asserts the same private-route boundaries: caller-owned residual metadata
+without generalized owner semantics, no raw GTO/GTO or fixed/raw-GTO MWG
+blocks, raw GTO rows as residual-construction inputs only, and no public,
+default, packet, fixed-block, QW/Hamiltonian, Be2/CR2, ECP, SCF/HF, or
+MWG/IDA semantic adoption.
 
 Observed q6 final-residual MWG interaction timing/allocation rows were:
 

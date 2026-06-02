@@ -1260,6 +1260,93 @@ function _qwrg_diatomic_interaction_matrix_mwg(
     return interaction
 end
 
+function _qwrg_final_residual_mwg_component_blocks(
+    fixed_interaction::AbstractMatrix{<:Real},
+    contraction::AbstractMatrix{<:Real},
+    bundle_x::_MappedOrdinaryGausslet1DBundle,
+    bundle_y::_MappedOrdinaryGausslet1DBundle,
+    bundle_z::_MappedOrdinaryGausslet1DBundle,
+    expansion::CoulombGaussianExpansion,
+    residual_centers::AbstractMatrix{<:Real},
+    residual_widths::AbstractMatrix{<:Real},
+)
+    fixed_fixed = Matrix{Float64}(fixed_interaction)
+    nfixed = size(fixed_fixed, 1)
+    size(fixed_fixed) == (nfixed, nfixed) || throw(
+        DimensionMismatch("final-residual MWG component extraction requires a square fixed/fixed block"),
+    )
+    size(residual_centers, 2) == 3 || throw(
+        DimensionMismatch("final-residual MWG component extraction requires residual centers with three columns"),
+    )
+    size(residual_widths) == size(residual_centers) || throw(
+        DimensionMismatch("final-residual MWG component extraction requires residual widths to match residual centers"),
+    )
+    residual_centers_finite = all(isfinite, residual_centers)
+    residual_widths_finite = all(isfinite, residual_widths)
+    residual_widths_positive = all(>(0.0), residual_widths)
+    residual_centers_finite || throw(
+        ArgumentError("final-residual MWG component extraction requires finite residual centers"),
+    )
+    residual_widths_finite || throw(
+        ArgumentError("final-residual MWG component extraction requires finite residual widths"),
+    )
+    residual_widths_positive || throw(
+        ArgumentError("final-residual MWG component extraction requires positive residual widths"),
+    )
+
+    components = _qwrg_mwg_interaction_components(
+        bundle_x,
+        bundle_y,
+        bundle_z,
+        expansion,
+        residual_centers,
+        residual_widths,
+    )
+    fixed_residual = Matrix{Float64}(transpose(contraction) * components.gausslet_residual)
+    nresidual = size(residual_centers, 1)
+    size(fixed_residual) == (nfixed, nresidual) || throw(
+        DimensionMismatch("nested MWG residual coupling requires contracted parent columns to match fixed block size"),
+    )
+    residual_residual = Matrix{Float64}(components.residual_residual)
+    size(residual_residual) == (nresidual, nresidual) || throw(
+        DimensionMismatch("final-residual MWG component extraction requires a square residual/residual block"),
+    )
+    interaction = zeros(Float64, nfixed + nresidual, nfixed + nresidual)
+    interaction[1:nfixed, 1:nfixed] .= fixed_fixed
+    residual_range = (nfixed + 1):(nfixed + nresidual)
+    interaction[1:nfixed, residual_range] .= fixed_residual
+    interaction[residual_range, 1:nfixed] .= transpose(fixed_residual)
+    interaction[residual_range, residual_range] .= residual_residual
+
+    diagnostics = (
+        fixed_fixed_block_source = :existing_fixed_gausslet_ida_path,
+        fixed_residual_component_source = :_qwrg_mwg_interaction_components,
+        residual_residual_component_source = :_qwrg_mwg_interaction_components,
+        residual_centers_finite = residual_centers_finite,
+        residual_widths_finite = residual_widths_finite,
+        residual_widths_positive = residual_widths_positive,
+        raw_gto_rows_role = :residual_construction_inputs_only,
+        raw_gto_gto_mwg_interaction_blocks_used = false,
+        fixed_raw_gto_mwg_interaction_blocks_used = false,
+        raw_gto_interaction_blocks_used = false,
+        owner_semantics_source = :caller_residual_metadata,
+        owner_semantics_generalized_by_helper = false,
+        production_route_adoption = false,
+        packet_fixed_block_qw_hamiltonian_adoption = false,
+        public_default_route = false,
+        ecp = false,
+        be2_cr2_science_claim = false,
+        mwg_ida_semantic_change = false,
+    )
+    return (
+        fixed_fixed = fixed_fixed,
+        fixed_residual = fixed_residual,
+        residual_residual = residual_residual,
+        final_interaction = interaction,
+        diagnostics = diagnostics,
+    )
+end
+
 function _qwrg_fixed_block_interaction_matrix_mwg(
     fixed_interaction::AbstractMatrix{<:Real},
     contraction::AbstractMatrix{<:Real},
@@ -1270,27 +1357,16 @@ function _qwrg_fixed_block_interaction_matrix_mwg(
     residual_centers::AbstractMatrix{<:Real},
     residual_widths::AbstractMatrix{<:Real},
 )
-    components = _qwrg_mwg_interaction_components(
+    return _qwrg_final_residual_mwg_component_blocks(
+        fixed_interaction,
+        contraction,
         bundle_x,
         bundle_y,
         bundle_z,
         expansion,
         residual_centers,
         residual_widths,
-    )
-    fixed_residual = Matrix{Float64}(transpose(contraction) * components.gausslet_residual)
-    nfixed = size(fixed_interaction, 1)
-    nresidual = size(residual_centers, 1)
-    size(fixed_residual) == (nfixed, nresidual) || throw(
-        DimensionMismatch("nested MWG residual coupling requires contracted parent columns to match fixed block size"),
-    )
-    interaction = zeros(Float64, nfixed + nresidual, nfixed + nresidual)
-    interaction[1:nfixed, 1:nfixed] .= Matrix{Float64}(fixed_interaction)
-    residual_range = (nfixed + 1):(nfixed + nresidual)
-    interaction[1:nfixed, residual_range] .= fixed_residual
-    interaction[residual_range, 1:nfixed] .= transpose(fixed_residual)
-    interaction[residual_range, residual_range] .= components.residual_residual
-    return interaction
+    ).final_interaction
 end
 
 function _qwrg_validate_residual_mwg_metadata(
