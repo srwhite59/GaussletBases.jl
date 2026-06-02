@@ -13052,6 +13052,432 @@ function _pqs_pqs_product_component_route_smoke_summary(component)
     )
 end
 
+function _pqs_pqs_product_component_route_smoke_no_go_clear(no_go)
+    return no_go.source_box_first &&
+        no_go.source_box_algorithmic_path_true_for_every_pair &&
+        !no_go.shell_projection_used &&
+        !no_go.lowdin_cleanup_used &&
+        !no_go.support_local_oracle_used &&
+        !no_go.support_local_pqs_oracle_used &&
+        !no_go.support_local_shell_row_algorithm &&
+        !no_go.support_coefficient_matrix_used &&
+        !no_go.shell_row_algorithm &&
+        !no_go.retained_pqs_weights_used &&
+        !no_go.retained_pqs_weights_positive_checked &&
+        !no_go.retained_weight_division_allowed &&
+        !no_go.retained_pqs_weight_division_allowed &&
+        !no_go.ida_weight_division_allowed &&
+        !no_go.packet_adoption &&
+        !no_go.fixed_block_routing &&
+        !no_go.qwhamiltonian_consumes &&
+        !no_go.hamiltonian_matrix_built &&
+        !no_go.public_default_consumes &&
+        !no_go.mwg_supplement_residual_path &&
+        !no_go.mwg_supplement_residual_provenance_adapted &&
+        !no_go.ecp_terms_implemented &&
+        !no_go.cr2_science_status_changed &&
+        !no_go.dense_parent_projection_algorithmic
+end
+
+function _pqs_pqs_product_component_route_smoke_report_row(summary)
+    hasproperty(summary, :object_kind) &&
+        summary.object_kind == :pqs_pqs_product_component_route_smoke_summary ||
+        throw(
+            ArgumentError("component route smoke report row requires _pqs_pqs_product_component_route_smoke_summary output"),
+        )
+    return (
+        mode = summary.pair_factor_normalization,
+        retained_dimension = summary.retained_dimension,
+        nuclear_pair_count = summary.nuclear_pair_count,
+        electron_electron_pair_count = summary.electron_electron_pair_count,
+        ida_term_count = summary.ida_term_count,
+        output_finite = summary.finite_checks.output_finite,
+        nuclear_symmetry_error = summary.symmetry_errors.nuclear,
+        electron_electron_symmetry_error =
+            summary.symmetry_errors.electron_electron,
+        nuclear_total_from_center_error =
+            summary.nuclear_total_from_center_error,
+        dense_parent_ida_authority_available =
+            summary.dense_parent_ida_authority.available,
+        dense_parent_ida_authority_max_error =
+            summary.dense_parent_ida_authority.max_error,
+        dense_parent_ida_authority_skip_reason =
+            summary.dense_parent_ida_authority.skip_reason,
+        source_weight_division_owner =
+            summary.source_weight_division_owner,
+        source_weight_division_applied_by_helper =
+            summary.source_weight_division_applied_by_helper,
+        no_go_clear =
+            _pqs_pqs_product_component_route_smoke_no_go_clear(
+                summary.no_go_diagnostics,
+            ),
+        mwg_supplement_residual_path =
+            summary.no_go_diagnostics.mwg_supplement_residual_path,
+    )
+end
+
+function _pqs_component_route_smoke_fact(facts, key::AbstractString, default = "")
+    if facts isa AbstractDict
+        return get(facts, String(key), default)
+    end
+    symbol_key = Symbol(key)
+    hasproperty(facts, symbol_key) && return getproperty(facts, symbol_key)
+    return default
+end
+
+function _pqs_component_route_smoke_fact_string(value)
+    return value === nothing ? "" : string(value)
+end
+
+function _pqs_component_route_smoke_fact_false(facts, key::AbstractString)
+    value = _pqs_component_route_smoke_fact(facts, key, nothing)
+    value === false && return true
+    return lowercase(_pqs_component_route_smoke_fact_string(value)) == "false"
+end
+
+function _pqs_component_route_smoke_fact_zero(value)
+    value isa Real && return iszero(value)
+    parsed = tryparse(Float64, _pqs_component_route_smoke_fact_string(value))
+    return !isnothing(parsed) && iszero(parsed)
+end
+
+function _pqs_pqs_product_component_route_smoke_report_adapter(
+    summaries,
+    final_residual_mwg_facts;
+    generated_at = nothing,
+    source_report = nothing,
+    route_shape =
+        "left raw-box PQS | product/doside slab | right raw-box PQS",
+    parent_dims = nothing,
+    source_mode_dims = nothing,
+    left_source_box = nothing,
+    right_source_box = nothing,
+    product_source_box = nothing,
+    nuclear_centers = nothing,
+    nuclear_charges = nothing,
+    strict::Bool = true,
+)
+    rows = Tuple(
+        _pqs_pqs_product_component_route_smoke_report_row(summary)
+        for summary in summaries
+    )
+    isempty(rows) && throw(
+        ArgumentError("component route smoke report adapter requires at least one source-box summary"),
+    )
+    source_rows_clear = all(row -> row.output_finite && row.no_go_clear, rows)
+    density_rows = filter(row -> row.mode == :density_normalized, rows)
+    density_authority =
+        isempty(density_rows) ? nothing :
+        first(density_rows).dense_parent_ida_authority_max_error
+
+    residual_owner_vector = _pqs_component_route_smoke_fact(
+        final_residual_mwg_facts,
+        "residual_nucleus_indices",
+        "",
+    )
+    owner_inferred = _pqs_component_route_smoke_fact(
+        final_residual_mwg_facts,
+        "owner_semantics_inferred_from_raw_to_final_support",
+        "",
+    )
+    mwg_authority_error = _pqs_component_route_smoke_fact(
+        final_residual_mwg_facts,
+        "max_authority_error",
+        "",
+    )
+    no_owner_inference =
+        _pqs_component_route_smoke_fact_false(
+            final_residual_mwg_facts,
+            "owner_semantics_inferred_from_raw_to_final_support",
+        )
+    no_raw_gto_gto_mwg_blocks =
+        _pqs_component_route_smoke_fact_false(
+            final_residual_mwg_facts,
+            "diagnostics.raw_gto_gto_mwg_interaction_blocks_used",
+        )
+    no_fixed_raw_gto_mwg_blocks =
+        _pqs_component_route_smoke_fact_false(
+            final_residual_mwg_facts,
+            "diagnostics.fixed_raw_gto_mwg_interaction_blocks_used",
+        )
+    mwg_authority_zero =
+        _pqs_component_route_smoke_fact_zero(mwg_authority_error)
+    owner_vector_available =
+        !isempty(_pqs_component_route_smoke_fact_string(residual_owner_vector))
+
+    if strict
+        source_rows_clear || throw(
+            ArgumentError("component route smoke report adapter requires finite source-box rows with clear no-go diagnostics"),
+        )
+        owner_vector_available || throw(
+            ArgumentError("component route smoke report adapter requires explicit residual owner metadata"),
+        )
+        mwg_authority_zero || throw(
+            ArgumentError("component route smoke report adapter requires zero final-residual MWG authority error"),
+        )
+        no_owner_inference || throw(
+            ArgumentError("component route smoke report adapter must not infer owners from raw_to_final support"),
+        )
+        no_raw_gto_gto_mwg_blocks || throw(
+            ArgumentError("component route smoke report adapter must not use raw GTO/GTO MWG blocks"),
+        )
+        no_fixed_raw_gto_mwg_blocks || throw(
+            ArgumentError("component route smoke report adapter must not use fixed/raw-GTO MWG blocks"),
+        )
+    end
+
+    source_box_smoke = (
+        route_shape = route_shape,
+        parent_dims = parent_dims,
+        source_mode_dims = source_mode_dims,
+        left_source_box = left_source_box,
+        right_source_box = right_source_box,
+        product_source_box = product_source_box,
+        nuclear_centers = nuclear_centers,
+        nuclear_charges = nuclear_charges,
+        pqs_source_box_fixed_side_facts_available = true,
+        by_center_nuclear_attraction_available = true,
+        ida_source_box_electron_electron_available = true,
+        electron_electron_representation =
+            "retained two-index density-density",
+        mwg_supplement_residual_adapted_in_source_box_smoke = false,
+        rows = rows,
+    )
+    final_residual = (
+        source_report = source_report,
+        route = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "route",
+            "",
+        ),
+        residual_owner_metadata_available = owner_vector_available,
+        residual_nucleus_indices = residual_owner_vector,
+        residual_owner_counts = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "residual_owner_counts",
+            "",
+        ),
+        owner_metadata_source = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "owner_metadata_source",
+            "",
+        ),
+        owner_semantics_inferred_from_raw_to_final_support = owner_inferred,
+        component_helper = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "component_helper",
+            "",
+        ),
+        max_authority_error = mwg_authority_error,
+        fixed_fixed_shape = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "fixed_fixed_shape",
+            "",
+        ),
+        fixed_residual_shape = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "fixed_residual_shape",
+            "",
+        ),
+        residual_residual_shape = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "residual_residual_shape",
+            "",
+        ),
+        final_interaction_shape = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "final_interaction_shape",
+            "",
+        ),
+        raw_gto_rows_role = _pqs_component_route_smoke_fact(
+            final_residual_mwg_facts,
+            "diagnostics.raw_gto_rows_role",
+            "",
+        ),
+        raw_gto_gto_mwg_interaction_blocks_used =
+            _pqs_component_route_smoke_fact(
+                final_residual_mwg_facts,
+                "diagnostics.raw_gto_gto_mwg_interaction_blocks_used",
+                "",
+            ),
+        fixed_raw_gto_mwg_interaction_blocks_used =
+            _pqs_component_route_smoke_fact(
+                final_residual_mwg_facts,
+                "diagnostics.fixed_raw_gto_mwg_interaction_blocks_used",
+                "",
+            ),
+    )
+    lane_boundaries = (
+        can_share_private_smoke_report = true,
+        pqs_source_box_ida_and_mwg_residual_same_algorithm = false,
+        source_box_ida_lane =
+            "fixed/PQS source-box retained two-index density-density",
+        mwg_residual_lane =
+            "ordinary final-residual MWG supplement coupling with explicit owners",
+        must_remain_separate_until_reviewed = true,
+        no_owner_inference_from_raw_to_final_support = no_owner_inference,
+        no_raw_gto_gto_mwg_blocks = no_raw_gto_gto_mwg_blocks,
+        no_fixed_raw_gto_mwg_blocks = no_fixed_raw_gto_mwg_blocks,
+        no_retained_weight_or_ida_division = true,
+        no_packet_fixed_block_qw_hamiltonian_public_adoption = true,
+        no_ecp_scf_hf_cr2_science_claim = true,
+        no_mwg_ida_semantic_change = true,
+    )
+
+    return (
+        object_kind = :pqs_pqs_product_component_route_smoke_report_adapter,
+        status = :private_component_route_smoke_report,
+        report_status = "private_summary_only",
+        title = "Be2/PQS component-route smoke summary",
+        generated_at = generated_at,
+        smallest_honest_smoke = "adjacent_component_facts_in_one_report",
+        single_algorithmic_operator = false,
+        hamiltonian_built = false,
+        production_route_adoption = false,
+        public_default_route = false,
+        source_box_pqs_ida_component_smoke = source_box_smoke,
+        final_residual_mwg_supplement_component_facts = final_residual,
+        lane_boundaries = lane_boundaries,
+        diagnostics = (
+            source = :pqs_pqs_product_component_route_smoke_report_adapter,
+            private_component_route_smoke_report_adapter = true,
+            source_box_rows_all_finite_and_no_go_clear = source_rows_clear,
+            density_normalized_ida_dense_parent_authority_max_error =
+                density_authority,
+            final_residual_mwg_authority_error_zero = mwg_authority_zero,
+            final_residual_mwg_owner_vector_available =
+                owner_vector_available,
+            source_box_pqs_ida_and_mwg_residual_same_algorithm = false,
+            no_owner_inference_from_raw_to_final_support = no_owner_inference,
+            no_raw_gto_gto_mwg_blocks = no_raw_gto_gto_mwg_blocks,
+            no_fixed_raw_gto_mwg_blocks = no_fixed_raw_gto_mwg_blocks,
+            no_retained_weight_or_ida_division = true,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            scf_hf_validation_claim = false,
+            cr2_science_status_changed = false,
+            science_route_adoption = false,
+            mwg_ida_semantics_changed = false,
+        ),
+    )
+end
+
+function _pqs_component_route_smoke_print_kv(io, key, value)
+    println(io, key, "\t", value)
+end
+
+function _pqs_component_route_smoke_print_fields(io, record, fields)
+    for key in fields
+        _pqs_component_route_smoke_print_kv(
+            io,
+            string(key),
+            getproperty(record, key),
+        )
+    end
+end
+
+function _write_pqs_pqs_product_component_route_smoke_report(io::IO, report)
+    report.object_kind == :pqs_pqs_product_component_route_smoke_report_adapter ||
+        throw(
+            ArgumentError("component route smoke report writer requires _pqs_pqs_product_component_route_smoke_report_adapter output"),
+        )
+    source_box = report.source_box_pqs_ida_component_smoke
+
+    println(io, report.title)
+    _pqs_component_route_smoke_print_kv(io, "generated_at", report.generated_at)
+    _pqs_component_route_smoke_print_kv(io, "status", report.report_status)
+    _pqs_component_route_smoke_print_fields(
+        io,
+        report,
+        (
+            :smallest_honest_smoke,
+            :single_algorithmic_operator,
+            :hamiltonian_built,
+            :production_route_adoption,
+            :public_default_route,
+        ),
+    )
+    println(io)
+
+    println(io, "[source_box_pqs_ida_component_smoke]")
+    _pqs_component_route_smoke_print_fields(
+        io,
+        source_box,
+        (
+            :route_shape,
+            :parent_dims,
+            :source_mode_dims,
+            :left_source_box,
+            :right_source_box,
+            :product_source_box,
+            :nuclear_centers,
+            :nuclear_charges,
+            :pqs_source_box_fixed_side_facts_available,
+            :by_center_nuclear_attraction_available,
+            :ida_source_box_electron_electron_available,
+            :electron_electron_representation,
+            :mwg_supplement_residual_adapted_in_source_box_smoke,
+        ),
+    )
+
+    for row in source_box.rows
+        println(io)
+        println(io, "[source_box_pqs_ida_component_smoke.", row.mode, "]")
+        _pqs_component_route_smoke_print_fields(
+            io,
+            row,
+            (
+                :retained_dimension,
+                :nuclear_pair_count,
+                :electron_electron_pair_count,
+                :ida_term_count,
+                :output_finite,
+                :nuclear_symmetry_error,
+                :electron_electron_symmetry_error,
+                :nuclear_total_from_center_error,
+                :dense_parent_ida_authority_available,
+                :dense_parent_ida_authority_max_error,
+                :dense_parent_ida_authority_skip_reason,
+                :source_weight_division_owner,
+                :source_weight_division_applied_by_helper,
+                :no_go_clear,
+                :mwg_supplement_residual_path,
+            ),
+        )
+    end
+    println(io)
+
+    println(io, "[final_residual_mwg_supplement_component_facts]")
+    _pqs_component_route_smoke_print_fields(
+        io,
+        report.final_residual_mwg_supplement_component_facts,
+        keys(report.final_residual_mwg_supplement_component_facts),
+    )
+    println(io)
+
+    println(io, "[lane_boundaries]")
+    _pqs_component_route_smoke_print_fields(
+        io,
+        report.lane_boundaries,
+        keys(report.lane_boundaries),
+    )
+    return report
+end
+
+function _write_pqs_pqs_product_component_route_smoke_report(
+    path::AbstractString,
+    report,
+)
+    open(path, "w") do io
+        _write_pqs_pqs_product_component_route_smoke_report(io, report)
+    end
+    return path
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,

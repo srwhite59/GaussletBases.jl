@@ -1197,6 +1197,22 @@ dimension variant at about `0.0045 s` and `3.8 MB`. The probe does not adopt
 packet/fixed-block/QW/Hamiltonian behavior, public/default routing, MWG
 supplement/residual coupling, ECP behavior, or CR2 science status.
 
+The private component-route report adapter checkpoint extracts the Be2/PQS
+summary shape from script-local report assembly into
+`_pqs_pqs_product_component_route_smoke_report_adapter(...)` and
+`_write_pqs_pqs_product_component_route_smoke_report(...)`. The ignored
+Be2/PQS smoke probe now feeds existing source-box/PQS component summaries and
+caller-supplied final-residual MWG component facts into that structured report
+object. This remains reporting infrastructure only: it records the
+source-box/PQS IDA lane and the ordinary final-residual MWG supplement lane
+side by side without merging them into one algorithm. The focused tracked
+test `test/nested/pqs_component_route_report_adapter_runtests.jl` uses only
+synthetic summary/fact objects, so it avoids `/Users/srw/BasisSets` and other
+machine-local basis files. Its strict-mode checks require explicit residual
+owner metadata, zero final-residual MWG authority error, no owner inference
+from `raw_to_final`, no raw GTO/GTO or fixed/raw-GTO MWG blocks, and no
+retained/source-box/final-residual weight or IDA division.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
@@ -1225,6 +1241,10 @@ The current electron-electron source-box checkpoint is therefore:
   nuclear-attraction component matrices with the IDA source-box retained
   two-index density-density route, including density-normalized and
   raw-weighted electron-electron modes;
+- the private component-route report adapter consumes those source-box/PQS
+  summaries plus final-residual MWG supplement facts as adjacent report lanes,
+  with tracked synthetic coverage for owner, authority-error, raw/fixed-GTO
+  MWG-block, and retained-weight/IDA-division gates;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - explicit route calls may still use synthetic or caller-supplied data, and

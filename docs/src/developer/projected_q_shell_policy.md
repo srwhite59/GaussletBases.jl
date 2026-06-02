@@ -412,6 +412,20 @@ columns are not retained-weight or IDA division weights, and there is no
 public/default, packet/fixed-block, QW/Hamiltonian, ECP, SCF/HF, CR2, science
 route, or MWG/IDA semantic adoption.
 
+The follow-up private adapter/report checkpoint moves that ignored Be2/PQS
+summary out of one-off script-local report assembly:
+`_pqs_pqs_product_component_route_smoke_report_adapter(...)` accepts existing
+source-box/PQS component summaries plus caller-supplied final-residual MWG
+facts, and `_write_pqs_pqs_product_component_route_smoke_report(...)` emits the
+same high-level report sections. The adapter is reporting infrastructure only;
+it keeps the source-box/PQS IDA lane and the final-residual MWG supplement
+lane separate. Focused tracked coverage in
+`test/nested/pqs_component_route_report_adapter_runtests.jl` uses synthetic
+objects only, with no machine-local basis files. Strict mode requires explicit
+residual owner metadata, zero final-residual MWG authority error, no owner
+inference from `raw_to_final`, no raw GTO/GTO or fixed/raw-GTO MWG blocks, and
+no retained/source-box/final-residual weight or IDA division.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

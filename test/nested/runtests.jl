@@ -1,3 +1,5 @@
+include("pqs_component_route_report_adapter_runtests.jl")
+
 @testset "Cartesian nested face first primitive" begin
     function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
         endpoint = (count - 1) / 2
