@@ -11159,6 +11159,166 @@ function _pqs_pqs_product_route_shaped_density_density_consumer(
     )
 end
 
+function _pqs_pqs_product_raw_box_density_density_route_producer(
+    bundles,
+    left_source_box::NTuple{3,UnitRange{Int}},
+    right_source_box::NTuple{3,UnitRange{Int}},
+    product_source_box::NTuple{3,UnitRange{Int}},
+    metrics::NamedTuple{(:x,:y,:z)};
+    source_mode_dims::NTuple{3,Int},
+    term_coefficients::AbstractVector{<:Real},
+    axis_weights::NamedTuple{(:x,:y,:z)},
+    axis_pair_factor_terms = nothing,
+    raw_axis_pair_factor_terms = nothing,
+    pair_factor_normalization::Symbol = :density_normalized,
+    pair_factor_symmetry_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+    route_name::Symbol =
+        :homonuclear_pqs_product_source_box_density_density_fixture,
+    parent_dims = _nested_axis_lengths(bundles),
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    route_supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("density-density route producer requires density_normalized or raw_weighted pair factors"),
+    )
+    producer_metadata = merge(
+        (
+            parent_dims = parent_dims,
+            bond_axis = bond_axis,
+            pqs_left_box = left_source_box,
+            pqs_right_box = right_source_box,
+            product_source_box = product_source_box,
+            pqs_source_mode_dims = source_mode_dims,
+            route_producer =
+                :pqs_pqs_product_raw_box_density_density_route_producer,
+            density_density_route_producer =
+                :pqs_pqs_product_raw_box_density_density_route_producer,
+            pair_factor_normalization = pair_factor_normalization,
+            input_pair_factor_data = :caller_supplied_explicit_data,
+            real_mwg_ida_pair_factor_provenance_adapted = false,
+        ),
+        metadata,
+    )
+    producer_provenance = merge(
+        (source = :pqs_pqs_product_raw_box_density_density_route_producer,),
+        provenance,
+    )
+    route = _pqs_pqs_product_raw_box_route_producer(
+        bundles,
+        left_source_box,
+        right_source_box,
+        product_source_box,
+        metrics;
+        source_mode_dims,
+        route_name,
+        parent_dims,
+        bond_axis,
+        metadata = producer_metadata,
+        provenance = producer_provenance,
+        supported_terms = route_supported_terms,
+        orthogonality_atol,
+    )
+    consumer = _pqs_pqs_product_route_shaped_density_density_consumer(
+        route.descriptor;
+        term_coefficients,
+        axis_pair_factor_terms,
+        raw_axis_pair_factor_terms,
+        axis_weights,
+        pair_factor_normalization,
+        pair_factor_symmetry_atol,
+        symmetry_atol,
+    )
+    return (
+        object_kind =
+            :pqs_pqs_product_raw_box_density_density_route_producer,
+        status = :private_density_density_reference_only,
+        descriptor = route.descriptor,
+        route_descriptor = route.descriptor,
+        raw_box_route_producer = route,
+        raw_product_box_plans = route.raw_product_box_plans,
+        raw_pqs_plans = route.raw_pqs_plans,
+        product_unit = route.product_unit,
+        retained_rules = route.retained_rules,
+        consumer = consumer,
+        density_density_consumer = consumer,
+        block = consumer.block,
+        density_density_matrix = consumer.density_density_matrix,
+        complete_retained_space_matrix = consumer.complete_retained_space_matrix,
+        all_pairs_inventory = consumer.all_pairs_inventory,
+        pair_block_results = consumer.pair_block_results,
+        ranges = consumer.ranges,
+        retained_dimension = consumer.retained_dimension,
+        pair_count = consumer.pair_count,
+        pair_family_counts = consumer.pair_family_counts,
+        term_coefficients = consumer.term_coefficients,
+        term_count = consumer.term_count,
+        pair_factor_normalization = consumer.pair_factor_normalization,
+        output_finite = consumer.output_finite,
+        symmetry_error = consumer.symmetry_error,
+        performance = consumer.performance,
+        metadata = producer_metadata,
+        provenance = producer_provenance,
+        diagnostics = merge(
+            route.diagnostics,
+            consumer.diagnostics,
+            (
+                source =
+                    :pqs_pqs_product_raw_box_density_density_route_producer,
+                private_density_density_reference_only = true,
+                private_shadow_only = true,
+                raw_box_route_producer_called = true,
+                route_descriptor_emitted = true,
+                route_descriptor_source = route.diagnostics.source,
+                route_descriptor_object_kind = route.descriptor.object_kind,
+                route_descriptor_provenance = route.descriptor.provenance,
+                route_descriptor_built_from_explicit_fixture_facts = true,
+                density_density_consumer_called = true,
+                density_density_consumer_path = consumer.path,
+                returns_descriptor_and_density_density_consumer_result = true,
+                retained_dimension = consumer.retained_dimension,
+                pair_count = consumer.pair_count,
+                pair_family_counts = consumer.pair_family_counts,
+                pair_factor_normalization = consumer.pair_factor_normalization,
+                input_pair_factor_data = :caller_supplied_explicit_data,
+                synthetic_or_caller_supplied_pair_factors = true,
+                real_mwg_ida_pair_factor_provenance_adapted = false,
+                source_box_first = true,
+                source_box_algorithmic_path_true_for_every_pair = true,
+                every_pair_uses_source_box_algorithmic_policy =
+                    consumer.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+                source_box_algorithmic_pair_count =
+                    consumer.diagnostics.source_box_algorithmic_pair_count,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_oracle_used = false,
+                support_local_pqs_oracle_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                shell_row_algorithm = false,
+                retained_pqs_weights_used = false,
+                retained_pqs_weights_positive_checked = false,
+                retained_weight_division_allowed = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                retained_weight_semantics = :not_positive_quadrature_weights,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+                ida_mwg_semantics_changed = false,
+                mwg_ida_semantics_changed = false,
+                mwg_interaction_implemented = false,
+            ),
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,

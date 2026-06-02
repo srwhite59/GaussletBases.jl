@@ -2226,12 +2226,8 @@ end
         )
     end
 
-    function _check_pqs_pqs_product_route_shaped_density_density_consumer(
-        metrics_module,
-        route_units,
-    )
+    function _density_density_route_factor_fixture(parent_dims::NTuple{3,Int})
         term_coefficients = [0.47, 0.19]
-        parent_dims = route_units.metadata.parent_dims
         function _symmetric_pair_term_tensor(source_count::Int, axis_scale::Float64)
             terms = Array{Float64,3}(undef, 2, source_count, source_count)
             for term in 1:2, col in 1:source_count, row in 1:source_count
@@ -2260,6 +2256,37 @@ end
             y = [0.9 + 0.04 * index for index in 1:parent_dims[2]],
             z = [1.2 + 0.02 * index for index in 1:parent_dims[3]],
         )
+        raw_pair_terms = (
+            x = _raw_terms_from_density_normalized(
+                density_pair_terms.x,
+                density_source_weights.x,
+            ),
+            y = _raw_terms_from_density_normalized(
+                density_pair_terms.y,
+                density_source_weights.y,
+            ),
+            z = _raw_terms_from_density_normalized(
+                density_pair_terms.z,
+                density_source_weights.z,
+            ),
+        )
+        return (
+            term_coefficients = term_coefficients,
+            axis_pair_factor_terms = density_pair_terms,
+            axis_weights = density_source_weights,
+            raw_axis_pair_factor_terms = raw_pair_terms,
+        )
+    end
+
+    function _check_pqs_pqs_product_route_shaped_density_density_consumer(
+        metrics_module,
+        route_units,
+    )
+        density_fixture =
+            _density_density_route_factor_fixture(route_units.metadata.parent_dims)
+        term_coefficients = density_fixture.term_coefficients
+        density_pair_terms = density_fixture.axis_pair_factor_terms
+        density_source_weights = density_fixture.axis_weights
         consumer =
             metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
                 route_units;
@@ -2446,20 +2473,7 @@ end
         @test !consumer.diagnostics.dense_raw_source_box_pair_matrix_materialized
         @test consumer.diagnostics.dense_raw_pair_storage_avoided
 
-        raw_pair_terms = (
-            x = _raw_terms_from_density_normalized(
-                density_pair_terms.x,
-                density_source_weights.x,
-            ),
-            y = _raw_terms_from_density_normalized(
-                density_pair_terms.y,
-                density_source_weights.y,
-            ),
-            z = _raw_terms_from_density_normalized(
-                density_pair_terms.z,
-                density_source_weights.z,
-            ),
-        )
+        raw_pair_terms = density_fixture.raw_axis_pair_factor_terms
         raw_consumer =
             metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
                 route_units;
@@ -2522,6 +2536,192 @@ end
                 z = [1.22, 1.24, 1.26, 0.0, 1.3, 1.32, 1.34],
             ),
         )
+    end
+
+    function _check_pqs_pqs_product_raw_box_density_density_route_producer(
+        metrics_module,
+        bundles,
+        route_units,
+        metrics,
+        left_source_box::NTuple{3,UnitRange{Int}},
+        right_source_box::NTuple{3,UnitRange{Int}},
+        product_source_box::NTuple{3,UnitRange{Int}};
+        source_mode_dims::NTuple{3,Int},
+        parent_dims::NTuple{3,Int},
+        bond_axis::Symbol,
+    )
+        density_fixture = _density_density_route_factor_fixture(parent_dims)
+        direct_consumer =
+            metrics_module._pqs_pqs_product_route_shaped_density_density_consumer(
+                route_units;
+                term_coefficients = density_fixture.term_coefficients,
+                axis_pair_factor_terms = density_fixture.axis_pair_factor_terms,
+                axis_weights = density_fixture.axis_weights,
+            )
+        producer =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    pqs_left_box = left_source_box,
+                    pqs_right_box = right_source_box,
+                    product_slab_fixed_index =
+                        only(product_source_box[findfirst(
+                            axis -> length(product_source_box[axis]) == 1,
+                            1:3,
+                        )]),
+                    pqs_source_mode_dims = source_mode_dims,
+                    density_density_route_producer_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_route_producer_test_fixture,
+                ),
+                term_coefficients = density_fixture.term_coefficients,
+                axis_pair_factor_terms = density_fixture.axis_pair_factor_terms,
+                axis_weights = density_fixture.axis_weights,
+            )
+
+        @test producer.object_kind ==
+              :pqs_pqs_product_raw_box_density_density_route_producer
+        @test producer.status == :private_density_density_reference_only
+        @test producer.raw_box_route_producer.object_kind ==
+              :pqs_pqs_product_raw_box_route_producer
+        @test producer.descriptor === producer.raw_box_route_producer.descriptor
+        @test producer.route_descriptor === producer.descriptor
+        @test producer.consumer === producer.density_density_consumer
+        @test producer.descriptor.object_kind ==
+              :pqs_pqs_product_safe_term_route_descriptor
+        @test producer.descriptor.expected_ranges == route_units.expected_ranges
+        @test producer.descriptor.retained_dimension == route_units.retained_dimension
+        @test producer.descriptor.retained_dimension == 221
+        @test producer.descriptor.expected_pair_count == 6
+        @test producer.retained_dimension == 221
+        @test producer.pair_count == 6
+        @test producer.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test producer.term_count == length(density_fixture.term_coefficients)
+        @test producer.pair_factor_normalization == :density_normalized
+        @test producer.output_finite
+        @test all(isfinite, producer.block)
+        @test producer.symmetry_error <= 1.0e-10
+        @test producer.block ≈ direct_consumer.block atol = 1.0e-12 rtol = 1.0e-12
+        @test producer.density_density_matrix ===
+              producer.density_density_consumer.density_density_matrix
+        @test producer.complete_retained_space_matrix ===
+              producer.density_density_consumer.complete_retained_space_matrix
+        @test producer.all_pairs_inventory.object_kind ==
+              :pqs_pqs_product_density_density_all_pairs_inventory
+        @test producer.all_pairs_inventory.diagnostics.pair_family_counts ==
+              producer.pair_family_counts
+
+        @test producer.diagnostics.source ==
+              :pqs_pqs_product_raw_box_density_density_route_producer
+        @test producer.diagnostics.private_density_density_reference_only
+        @test producer.diagnostics.private_shadow_only
+        @test producer.diagnostics.raw_box_route_producer_called
+        @test producer.diagnostics.route_descriptor_emitted
+        @test producer.diagnostics.route_descriptor_source ==
+              :pqs_pqs_product_raw_box_route_producer
+        @test producer.diagnostics.route_descriptor_object_kind ==
+              :pqs_pqs_product_safe_term_route_descriptor
+        @test producer.diagnostics.route_descriptor_provenance.source ==
+              :route_shaped_density_density_route_producer_test_fixture
+        @test producer.diagnostics.route_descriptor_built_from_explicit_fixture_facts
+        @test producer.diagnostics.density_density_consumer_called
+        @test producer.diagnostics.density_density_consumer_path ==
+              :pqs_pqs_product_route_shaped_density_density_consumer
+        @test producer.diagnostics.returns_descriptor_and_density_density_consumer_result
+        @test producer.diagnostics.retained_dimension == 221
+        @test producer.diagnostics.pair_count == 6
+        @test producer.diagnostics.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test producer.diagnostics.pair_factor_normalization ==
+              :density_normalized
+        @test producer.diagnostics.input_pair_factor_data ==
+              :caller_supplied_explicit_data
+        @test producer.diagnostics.synthetic_or_caller_supplied_pair_factors
+        @test !producer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test producer.diagnostics.source_box_first
+        @test producer.diagnostics.source_box_algorithmic_path_true_for_every_pair
+        @test producer.diagnostics.every_pair_uses_source_box_algorithmic_policy
+        @test producer.diagnostics.source_box_algorithmic_pair_count == 6
+        @test !producer.diagnostics.shell_projection_used
+        @test !producer.diagnostics.lowdin_cleanup_used
+        @test !producer.diagnostics.support_local_oracle_used
+        @test !producer.diagnostics.support_local_pqs_oracle_used
+        @test !producer.diagnostics.support_local_shell_row_algorithm
+        @test !producer.diagnostics.support_coefficient_matrix_used
+        @test !producer.diagnostics.shell_row_algorithm
+        @test !producer.diagnostics.retained_pqs_weights_used
+        @test !producer.diagnostics.retained_pqs_weights_positive_checked
+        @test !producer.diagnostics.retained_weight_division_allowed
+        @test !producer.diagnostics.retained_pqs_weight_division_allowed
+        @test !producer.diagnostics.ida_weight_division_allowed
+        @test producer.diagnostics.retained_weight_semantics ==
+              :not_positive_quadrature_weights
+        @test !producer.diagnostics.packet_adoption
+        @test !producer.diagnostics.fixed_block_routing
+        @test !producer.diagnostics.qwhamiltonian_consumes
+        @test !producer.diagnostics.public_default_consumes
+        @test !producer.diagnostics.ecp_terms_implemented
+        @test !producer.diagnostics.cr2_science_status_changed
+        @test !producer.diagnostics.ida_mwg_semantics_changed
+        @test !producer.diagnostics.mwg_ida_semantics_changed
+        @test !producer.diagnostics.mwg_interaction_implemented
+
+        raw_producer =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics;
+                source_mode_dims,
+                route_name = route_units.route_name,
+                parent_dims,
+                bond_axis,
+                metadata = (
+                    density_density_raw_weighted_route_producer_test = true,
+                ),
+                provenance = (
+                    source =
+                        :route_shaped_density_density_route_producer_test_fixture,
+                ),
+                term_coefficients = density_fixture.term_coefficients,
+                raw_axis_pair_factor_terms =
+                    density_fixture.raw_axis_pair_factor_terms,
+                axis_weights = density_fixture.axis_weights,
+                pair_factor_normalization = :raw_weighted,
+            )
+        @test raw_producer.block ≈ producer.block atol = 1.0e-12 rtol = 1.0e-12
+        @test raw_producer.diagnostics.pair_factor_normalization ==
+              :raw_weighted
+        @test raw_producer.diagnostics.raw_weighted_pair_factors
+        @test !raw_producer.diagnostics.density_normalized_pair_factors
+        @test raw_producer.diagnostics.density_normalized_pair_factors_generated
+        @test raw_producer.diagnostics.source_weight_division_owner ==
+              :source_box_raw_weights
+        @test raw_producer.diagnostics.source_weight_division_applied_by_helper
+        @test raw_producer.diagnostics.source_weight_division_shape ==
+              :axis_pair_weight_outer
+        @test raw_producer.diagnostics.synthetic_or_caller_supplied_pair_factors
+        @test !raw_producer.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test !raw_producer.diagnostics.retained_pqs_weights_used
+        @test !raw_producer.diagnostics.retained_weight_division_allowed
+        @test !raw_producer.diagnostics.retained_pqs_weight_division_allowed
+        @test !raw_producer.diagnostics.ida_weight_division_allowed
+        @test !raw_producer.diagnostics.packet_adoption
+        @test !raw_producer.diagnostics.fixed_block_routing
+        @test !raw_producer.diagnostics.qwhamiltonian_consumes
+        @test !raw_producer.diagnostics.public_default_consumes
     end
 
     function _product_staged_comparison_axis_row(axis, state_index::Int)
@@ -3955,6 +4155,18 @@ end
     _check_pqs_pqs_product_route_shaped_density_density_consumer(
         CCPM,
         route_units,
+    )
+    _check_pqs_pqs_product_raw_box_density_density_route_producer(
+        CCPM,
+        route_bundles,
+        route_units,
+        route_metrics,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 4:4);
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+        bond_axis = :z,
     )
     produced_route_consumer =
         CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(
