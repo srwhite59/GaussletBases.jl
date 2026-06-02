@@ -378,6 +378,22 @@ retained-weight/IDA division, shell/support-local algorithm, packet/fixed-
 block/QW/Hamiltonian adoption, public/default route, ECP behavior, or CR2
 science claim.
 
+The ignored private probe `tmp/work/pqs_component_route_smoke_report.jl`
+writes `report.txt` and `summary.tsv` under
+`tmp/work/pqs_component_route_smoke_report_outputs/`. It currently records
+two small route variants:
+
+| route variant | retained dim | modes | no-go status | dense authority | timing signal |
+|---|---:|---|---|---|---|
+| `q5_L5_parent5x5x7_slab_z4` | `221` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0016 s` electron-electron |
+| `q5_L7_parent5x5x9_slab_z5` | `285` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0021 s` electron-electron |
+
+Both variants report six nuclear pairs, six electron-electron pairs, IDA term
+count `45`, finite output, and clear no-go diagnostics. This is ignored
+private report evidence only, not a production benchmark, packet/fixed-block/
+QW/Hamiltonian adoption, MWG supplement/residual adaptation, ECP behavior, or
+CR2 science claim.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns

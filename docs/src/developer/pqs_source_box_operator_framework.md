@@ -1177,6 +1177,24 @@ no retained PQS weights, retained-weight/IDA division, shell/support-local
 algorithm, packet/fixed-block/QW/Hamiltonian adoption, public/default route,
 ECP behavior, or CR2 science claim.
 
+The ignored private report probe
+`tmp/work/pqs_component_route_smoke_report.jl` records this component route
+checkpoint in generated artifacts under
+`tmp/work/pqs_component_route_smoke_report_outputs/`: `report.txt` and
+`summary.tsv`. The first two route-size rows are deliberately small and are
+only a private scaling signal, not a production benchmark:
+
+| route variant | retained dim | modes | no-go status | dense authority | timing signal |
+|---|---:|---|---|---|---|
+| `q5_L5_parent5x5x7_slab_z4` | `221` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0016 s` electron-electron |
+| `q5_L7_parent5x5x9_slab_z5` | `285` | density-normalized and raw-weighted | clear for both rows | density row available; raw row skips with `density_normalized_authority_only` | about `0.77 s` nuclear and `0.0021 s` electron-electron |
+
+Both variants report six nuclear pairs, six electron-electron pairs, IDA term
+count `45`, finite output, and source-box-first no-go diagnostics. The probe
+does not adopt packet/fixed-block/QW/Hamiltonian behavior, public/default
+routing, MWG supplement/residual coupling, ECP behavior, or CR2 science
+status.
+
 The current electron-electron source-box checkpoint is therefore:
 
 - product/product accepts caller-supplied density-normalized factors and has
