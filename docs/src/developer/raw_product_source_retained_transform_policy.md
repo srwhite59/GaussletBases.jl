@@ -1560,6 +1560,32 @@ source-box algorithmic path, shell/support-local contraction is not the
 algorithm, dense raw product-box matrices are validation-only when mentioned,
 and real MWG/IDA pair-factor provenance remains out of scope.
 
+Commit `3028556` adds a private diagnostic extractor,
+`_pqs_source_box_ida_factor_provenance(...)`, for the IDA gausslet/source-box
+part of the existing repo interaction provenance. The extractor reads the PGDG
+intermediates and records density-normalized `pair_factor_terms`, raw
+`pair_factor_terms_raw`, explicit source/raw quadrature `weights`, centers,
+backend metadata, and shape/term-count diagnostics. This is not an MWG
+supplement/residual adapter: MWG remains separate supplement/residual
+coupling, and retained PQS columns still are not positive quadrature weights
+or IDA-division weights.
+
+Commit `5de13b1` adds the private diagnostic adapter
+`_pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(...)`.
+It takes that IDA provenance object plus the same explicit source-box fixture
+facts used by the existing route producer, then delegates to
+`_pqs_pqs_product_raw_box_density_density_route_producer(...)`. In
+density-normalized mode it uses `pair_factor_terms`; in raw-weighted mode it
+uses `pair_factor_terms_raw` and the explicit PGDG source/raw weights through
+the existing raw-weighted wrappers. The adapter does not duplicate pair
+assembly and does not change the output representation: the result remains a
+retained two-index density-density matrix, not a four-index Galerkin Coulomb
+tensor. Its diagnostics name the input data as
+`:ida_gausslet_source_box_provenance`, keep
+`mwg_supplement_residual_path = false`, and set only the specific
+`real_ida_gausslet_source_box_provenance_adapted` flag true; the generic mixed
+MWG/IDA-adapted flag remains false.
+
 Current boundaries:
 
 - product/product has both density-normalized input and the `ad74d3c`
@@ -1572,10 +1598,16 @@ Current boundaries:
   left-PQS/right-PQS/product-slab retained matrix;
 - the `e868f49` route producer builds that route descriptor from explicit
   source-box fixture facts and returns the descriptor plus consumer result;
+- the `3028556` IDA provenance extractor records PGDG source-box
+  `pair_factor_terms`, `pair_factor_terms_raw`, source/raw weights, centers,
+  and diagnostics;
+- the `5de13b1` adapter feeds that IDA provenance object into the existing
+  explicit route producer without adopting MWG supplement/residual coupling;
 - output remains the repo two-index density-density interaction convention,
   not a four-index Galerkin tensor;
-- pair factors remain synthetic/caller-supplied explicit data at this
-  checkpoint; real MWG/IDA provenance is not yet connected;
+- explicit route calls may still use synthetic/caller-supplied data, and the
+  private adapter can now use IDA gausslet/source-box PGDG provenance; MWG
+  supplement/residual provenance is not connected;
 - source weights are provenance/positivity checks for density-normalized
   input, or the raw/source owner of normalization in raw-weighted wrappers;
 - retained PQS columns have no positive-weight or IDA-division semantics;
@@ -1585,8 +1617,8 @@ Current boundaries:
 Stop implementation if the pass cannot answer where IDA/MWG weights live, if
 it needs retained PQS columns to carry positive quadrature weights, if it
 confuses one-body nuclear sign/charge with electron-electron pair factors, or
-if it requires packet/fixed-block/QW/Hamiltonian, MWG/IDA semantic, public
-route, ECP, or CR2 changes.
+if it requires MWG supplement/residual adaptation, packet/fixed-block/
+QW/Hamiltonian, MWG/IDA semantic, public route, ECP, or CR2 changes.
 
 When shell rows are needed, the realization consumer should remain separate:
 

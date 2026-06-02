@@ -330,6 +330,26 @@ mentioned; they are not the algorithm. Real MWG/IDA pair-factor provenance,
 packet/fixed-block/QW/Hamiltonian routing, public/default behavior, ECP
 behavior, and CR2 science status remain unchanged.
 
+Commit `3028556` records the first private real-provenance checkpoint for this
+electron-electron lane: `_pqs_source_box_ida_factor_provenance(...)` extracts
+the IDA gausslet/source-box data from PGDG intermediates. It carries
+density-normalized `pair_factor_terms`, raw `pair_factor_terms_raw`, explicit
+source/raw quadrature `weights`, centers, and shape/term-count diagnostics.
+This is IDA source-box provenance only; MWG remains separate
+supplement/residual coupling, and retained PQS columns are still not positive
+quadrature weights or IDA-division weights.
+
+Commit `5de13b1` adds the private diagnostic adapter from that provenance
+object into the existing route producer:
+`_pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(...)`.
+The adapter delegates to the explicit-input producer for the
+left-PQS/right-PQS/product route, supports both density-normalized and
+raw-weighted modes, and keeps raw normalization owned by explicit PGDG
+source/raw weights through the existing wrappers. The output remains the
+retained two-index density-density matrix. It does not consume MWG
+supplement/residual provenance and does not adopt packet/fixed-block/
+QW/Hamiltonian, public/default, ECP, or CR2 behavior.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns
