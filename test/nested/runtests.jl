@@ -510,6 +510,32 @@ end
         return result
     end
 
+    function _pqs_pqs_density_density_explicit_reference(
+        left_descriptor,
+        right_descriptor,
+        term_coefficients,
+        axis_pair_factor_terms,
+    )
+        left_raw = _pqs_product_box_column_selection_coefficients(left_descriptor)
+        right_raw = _pqs_product_box_column_selection_coefficients(right_descriptor)
+        left_selected = left_descriptor.boundary_column_indices
+        right_selected = right_descriptor.boundary_column_indices
+        result = zeros(Float64, length(left_selected), length(right_selected))
+        for term in eachindex(term_coefficients)
+            parent_block = _pqs_cross_product_matrix(
+                left_raw.states,
+                right_raw.states,
+                @view(axis_pair_factor_terms.x[term, :, :]),
+                @view(axis_pair_factor_terms.y[term, :, :]),
+                @view(axis_pair_factor_terms.z[term, :, :]),
+            )
+            source_block =
+                transpose(left_raw.coefficients) * parent_block * right_raw.coefficients
+            result .+= term_coefficients[term] .* source_block[left_selected, right_selected]
+        end
+        return result
+    end
+
     function _product_source_box_explicit_reference(product_unit, metrics; term::Symbol)
         product_coefficients = Matrix{Float64}(product_unit.coefficient_matrix)
         result = zeros(Float64, size(product_coefficients, 2), size(product_coefficients, 2))
@@ -6959,6 +6985,98 @@ end
             y = [0.93, 0.96, 0.0, 1.02, 1.05],
             z = pqs_product_density_weights.z,
         ),
+    )
+    pqs_pqs_density =
+        CCPM._pqs_pqs_source_box_density_density_interaction_block(
+            rectangular_pqs_pqs_source_box_plan,
+            rectangular_pqs_pqs_source_box_plan;
+            term_coefficients = pqs_product_density_coefficients,
+            axis_pair_factor_terms = pqs_product_density_terms,
+            axis_weights = pqs_product_density_weights,
+        )
+    pqs_pqs_density_reference =
+        _pqs_pqs_density_density_explicit_reference(
+            rectangular_descriptor,
+            rectangular_descriptor,
+            pqs_product_density_coefficients,
+            pqs_product_density_terms,
+        )
+    @test pqs_pqs_density.path ==
+          :pqs_pqs_source_box_density_density_interaction
+    @test pqs_pqs_density.interaction_operator ==
+          :electron_electron_density_density
+    @test pqs_pqs_density.block ≈
+          pqs_pqs_density_reference atol = 1.0e-13 rtol = 1.0e-13
+    @test pqs_pqs_density.pair_plan.pair_kind ==
+          :pqs_pqs_source_box_density_density_pair
+    @test pqs_pqs_density.pair_plan.pair_family == :pqs_pqs
+    @test pqs_pqs_density.pair_plan.left_source_family ==
+          :mode_selected_raw_product_box
+    @test pqs_pqs_density.pair_plan.right_source_family ==
+          :mode_selected_raw_product_box
+    @test pqs_pqs_density.pair_plan.left_source_dimensions == (5, 5, 7)
+    @test pqs_pqs_density.pair_plan.right_source_dimensions == (5, 5, 7)
+    @test pqs_pqs_density.pair_plan.left_retained_count == 130
+    @test pqs_pqs_density.pair_plan.right_retained_count == 130
+    @test pqs_pqs_density.pair_plan.supported_terms == (:pair_sum,)
+    @test pqs_pqs_density.pair_plan.source_weights.left[3] ==
+          pqs_product_density_weights.z
+    @test pqs_pqs_density.pair_plan.source_weights.right[1] ==
+          pqs_product_density_weights.x
+    @test pqs_pqs_density.diagnostics.pair_family == :pqs_pqs
+    @test pqs_pqs_density.diagnostics.interaction_operator ==
+          :electron_electron_density_density
+    @test pqs_pqs_density.diagnostics.output_representation ==
+          :two_index_density_density
+    @test !pqs_pqs_density.diagnostics.four_index_galerkin_tensor
+    @test pqs_pqs_density.diagnostics.pqs_representation ==
+          :mode_selected_raw_product_box
+    @test pqs_pqs_density.diagnostics.density_normalized_pair_factors
+    @test !pqs_pqs_density.diagnostics.raw_weighted_pair_factors
+    @test pqs_pqs_density.diagnostics.source_weight_division_owner ==
+          :caller_supplied_density_normalized_pair_factors
+    @test !pqs_pqs_density.diagnostics.source_weight_division_applied_by_helper
+    @test !pqs_pqs_density.diagnostics.retained_pqs_weights_used
+    @test !pqs_pqs_density.diagnostics.retained_pqs_weights_positive_checked
+    @test !pqs_pqs_density.diagnostics.retained_weight_division_allowed
+    @test !pqs_pqs_density.diagnostics.retained_pqs_weight_division_allowed
+    @test !pqs_pqs_density.diagnostics.ida_weight_division_allowed
+    @test !pqs_pqs_density.diagnostics.shell_projection_used
+    @test !pqs_pqs_density.diagnostics.lowdin_cleanup_used
+    @test !pqs_pqs_density.diagnostics.support_coefficient_matrix_used
+    @test !pqs_pqs_density.diagnostics.support_local_pqs_oracle_used
+    @test !pqs_pqs_density.diagnostics.packet_adoption
+    @test !pqs_pqs_density.diagnostics.qwhamiltonian_consumes
+    @test !pqs_pqs_density.diagnostics.mwg_ida_semantics_changed
+    @test !pqs_pqs_density.diagnostics.numerical_reference_fallback
+    @test pqs_pqs_density.diagnostics.electron_electron_terms_implemented
+    @test pqs_pqs_density.diagnostics.projected_axis_term_dimensions.x == (2, 5, 5)
+    @test pqs_pqs_density.diagnostics.projected_axis_term_dimensions.z == (2, 7, 7)
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_density_density_interaction_block(
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan;
+        term_coefficients = pqs_product_density_coefficients,
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = pqs_product_density_weights,
+        pair_factor_normalization = :raw_weighted,
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_density_density_interaction_block(
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan;
+        term_coefficients = pqs_product_density_coefficients,
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = (
+            x = pqs_product_density_weights.x,
+            y = pqs_product_density_weights.y,
+            z = [1.22, 1.24, 1.26, 0.0, 1.3, 1.32, 1.34],
+        ),
+    )
+    @test_throws ArgumentError CCPM._pqs_pqs_source_box_density_density_interaction_block(
+        rectangular_pqs_pqs_source_box_plan,
+        rectangular_pqs_pqs_source_box_plan;
+        term_coefficients = pqs_product_density_coefficients[1:1],
+        axis_pair_factor_terms = pqs_product_density_terms,
+        axis_weights = pqs_product_density_weights,
     )
     pqs_pqs_nuclear_attraction =
         CCPM._pqs_pqs_source_box_nuclear_attraction_by_center(
