@@ -396,6 +396,22 @@ at about `0.0045 s` and `3.8 MB`. This is ignored private report evidence
 only, not a production benchmark, packet/fixed-block/QW/Hamiltonian adoption,
 MWG supplement/residual adaptation, ECP behavior, or CR2 science claim.
 
+The ignored private Be2/PQS summary probe
+`tmp/work/be2_pqs_component_route_smoke_summary_probe.jl` records the smallest
+honest adjacent component smoke for the same source-box/PQS lane together with
+the separate final-residual MWG supplement lane. The source-box/PQS side is the
+left-PQS/product-slab/right-PQS retained two-index density-density route with
+retained dimension `221`; the density-normalized IDA dense-parent authority
+error is about `1.33e-15`. The final-residual MWG supplement facts come from
+the Be2-shaped ordinary MWG component report, where the final-residual
+authority error is `0` and the explicit residual owner vector is
+`[1, 1, 1, 2, 2, 2]`. These facts may be reported side by side, but they remain
+separate lanes: no raw GTO/GTO or fixed/raw-GTO MWG blocks are built, owner
+semantics are not inferred from `raw_to_final` support, retained/source-box
+columns are not retained-weight or IDA division weights, and there is no
+public/default, packet/fixed-block, QW/Hamiltonian, ECP, SCF/HF, CR2, science
+route, or MWG/IDA semantic adoption.
+
 The private route-fact adapter checkpoint adds
 `_pqs_pqs_product_route_descriptor_diagnostic(route_like, metrics = nothing; ...)`.
 It is diagnostic/read-path infrastructure only. It returns
