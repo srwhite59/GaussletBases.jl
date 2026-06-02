@@ -2929,6 +2929,290 @@ end
         @test !raw_ida_adapter.diagnostics.public_default_consumes
     end
 
+    function _check_pqs_pqs_product_source_box_component_route_smoke(
+        metrics_module,
+        bundles,
+        metrics,
+        left_source_box::NTuple{3,UnitRange{Int}},
+        right_source_box::NTuple{3,UnitRange{Int}},
+        product_source_box::NTuple{3,UnitRange{Int}};
+        source_mode_dims::NTuple{3,Int},
+        parent_dims::NTuple{3,Int},
+        bond_axis::Symbol,
+        term_coefficients::AbstractVector{<:Real},
+        ida_dense_parent_matrix::AbstractMatrix{<:Real},
+        nuclear_expansion::CoulombGaussianExpansion,
+    )
+        ida_provenance = metrics_module._pqs_source_box_ida_factor_provenance(
+            bundles;
+            expected_term_count = length(term_coefficients),
+        )
+        nuclear_axis_layers = (
+            x = build_basis(UniformBasisSpec(
+                :G10;
+                xmin = -2.0,
+                xmax = 2.0,
+                spacing = 1.0,
+            )),
+            y = build_basis(UniformBasisSpec(
+                :G10;
+                xmin = -2.0,
+                xmax = 2.0,
+                spacing = 1.0,
+            )),
+            z = build_basis(UniformBasisSpec(
+                :G10;
+                xmin = -3.0,
+                xmax = 3.0,
+                spacing = 1.0,
+            )),
+        )
+        nuclear_centers = (
+            (0.0, 0.0, -0.45),
+            (0.0, 0.0, 0.55),
+        )
+        nuclear_charges = (2.0, 2.0)
+        center_labels = (:left_center, :right_center)
+        component =
+            metrics_module._pqs_pqs_product_source_box_component_route_smoke(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics,
+                ida_provenance,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                source_mode_dims,
+                centers = nuclear_centers,
+                nuclear_charges,
+                center_labels,
+                term_coefficients,
+                route_name = :q5_L5_slab5_component_route_smoke_test,
+                parent_dims,
+                bond_axis,
+                metadata = (component_route_smoke_test = true,),
+                provenance = (source = :component_route_smoke_test_fixture,),
+                dense_parent_ida_matrix = ida_dense_parent_matrix,
+                dense_parent_matrix_source = :qwrg_diatomic_interaction_matrix,
+            )
+        direct_ida =
+            metrics_module._pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(
+                bundles,
+                left_source_box,
+                right_source_box,
+                product_source_box,
+                metrics,
+                ida_provenance;
+                source_mode_dims,
+                term_coefficients,
+                route_name = :q5_L5_slab5_component_route_smoke_test,
+                parent_dims,
+                bond_axis,
+                metadata = (component_route_smoke_direct_ida_test = true,),
+                provenance = (source = :component_route_smoke_test_fixture,),
+            )
+
+        units = component.route_descriptor.units
+        ranges = component.ranges
+        pqs_left_left =
+            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
+                units.pqs_left,
+                units.pqs_left,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        pqs_left_right =
+            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
+                units.pqs_left,
+                units.pqs_right,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        pqs_right_right =
+            metrics_module._pqs_pqs_source_box_nuclear_attraction_by_center(
+                units.pqs_right,
+                units.pqs_right,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        pqs_left_product =
+            metrics_module._pqs_product_source_box_nuclear_attraction_by_center(
+                units.pqs_left,
+                units.product,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        pqs_right_product =
+            metrics_module._pqs_product_source_box_nuclear_attraction_by_center(
+                units.pqs_right,
+                units.product,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        product_product =
+            metrics_module._product_doside_source_box_nuclear_attraction_by_center(
+                units.product,
+                units.product,
+                nuclear_axis_layers,
+                nuclear_expansion;
+                centers = nuclear_centers,
+                nuclear_charges,
+            )
+        expected_total =
+            zeros(Float64, component.retained_dimension, component.retained_dimension)
+        for center_index in eachindex(nuclear_centers)
+            explicit =
+                zeros(Float64, component.retained_dimension, component.retained_dimension)
+            explicit[ranges.pqs_left, ranges.pqs_left] .=
+                pqs_left_left.blocks_by_center[center_index].block
+            explicit[ranges.pqs_left, ranges.pqs_right] .=
+                pqs_left_right.blocks_by_center[center_index].block
+            explicit[ranges.pqs_right, ranges.pqs_left] .=
+                transpose(pqs_left_right.blocks_by_center[center_index].block)
+            explicit[ranges.pqs_left, ranges.product] .=
+                pqs_left_product.blocks_by_center[center_index].block
+            explicit[ranges.product, ranges.pqs_left] .=
+                transpose(pqs_left_product.blocks_by_center[center_index].block)
+            explicit[ranges.pqs_right, ranges.pqs_right] .=
+                pqs_right_right.blocks_by_center[center_index].block
+            explicit[ranges.pqs_right, ranges.product] .=
+                pqs_right_product.blocks_by_center[center_index].block
+            explicit[ranges.product, ranges.pqs_right] .=
+                transpose(pqs_right_product.blocks_by_center[center_index].block)
+            explicit[ranges.product, ranges.product] .=
+                product_product.blocks_by_center[center_index].block
+            expected_total .+= explicit
+
+            @test component.per_center_nuclear_matrices[center_index].center_label ==
+                  center_labels[center_index]
+            @test component.per_center_nuclear_matrices[center_index].center ==
+                  nuclear_centers[center_index]
+            @test component.per_center_nuclear_matrices[center_index].nuclear_charge ==
+                  nuclear_charges[center_index]
+            @test component.per_center_nuclear_matrices[center_index].block ≈
+                  explicit atol = 1.0e-12 rtol = 1.0e-12
+            @test component.per_center_nuclear_matrices[center_index].symmetry_error <=
+                  1.0e-10
+        end
+
+        @test component.object_kind ==
+              :pqs_pqs_product_source_box_component_route_smoke
+        @test component.status == :private_component_route_smoke
+        @test component.route_shape == (:pqs_left, :pqs_right, :product)
+        @test component.retained_dimension == 221
+        @test component.route_descriptor.retained_dimension == 221
+        @test component.route_descriptor.expected_pair_count == 6
+        @test map(unit -> unit.unit_key, component.route_descriptor.unit_summaries) ==
+              (:pqs_left, :pqs_right, :product)
+        @test map(unit -> unit.retained_range, component.route_descriptor.unit_summaries) ==
+              (ranges.pqs_left, ranges.pqs_right, ranges.product)
+        @test length(component.per_center_nuclear_matrices) == length(nuclear_centers)
+        @test component.center_labels == center_labels
+        @test component.centers == nuclear_centers
+        @test component.nuclear_charges == nuclear_charges
+        @test component.ida_term_count == length(term_coefficients)
+        @test component.pair_factor_normalization == :density_normalized
+        @test component.output_finite
+        @test all(isfinite, component.nuclear_total_matrix)
+        @test all(isfinite, component.electron_electron_matrix)
+        @test component.nuclear_total_matrix ≈ expected_total atol = 1.0e-12 rtol = 1.0e-12
+        @test component.nuclear_symmetry_error <= 1.0e-10
+        @test component.electron_electron_matrix ≈ direct_ida.block atol = 1.0e-12 rtol = 1.0e-12
+        @test component.electron_electron_symmetry_error <= 1.0e-10
+        @test component.dense_parent_ida_authority.object_kind ==
+              :pqs_pqs_product_dense_parent_ida_authority_comparison
+        @test component.dense_parent_ida_authority.within_tolerance
+        @test component.dense_parent_ida_authority.max_error <= 1.0e-10
+        @test component.authority_max_errors.electron_electron_dense_parent <=
+              1.0e-10
+        @test component.authority_max_errors.nuclear_total_from_center_sum <=
+              1.0e-14
+
+        @test component.nuclear_attraction_by_center.pair_count == 6
+        @test component.nuclear_attraction_by_center.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test component.nuclear_attraction_by_center.diagnostics.helper_used_for_pair_families ==
+              (
+                  pqs_pqs = :_pqs_pqs_source_box_nuclear_attraction_by_center,
+                  pqs_product = :_pqs_product_source_box_nuclear_attraction_by_center,
+                  product_product =
+                      :_product_doside_source_box_nuclear_attraction_by_center,
+              )
+        @test component.electron_electron_density_density.pair_count == 6
+        @test component.electron_electron_density_density.pair_family_counts ==
+              (pqs_pqs = 3, pqs_product = 2, product_product = 1)
+        @test component.electron_electron_density_density.diagnostics.helper_used_for_pair_families ==
+              (
+                  pqs_pqs =
+                      :_pqs_pqs_source_box_density_density_interaction_block,
+                  pqs_product =
+                      :_pqs_product_source_box_density_density_interaction_block,
+                  product_product =
+                      :_product_doside_source_box_density_density_interaction_block,
+              )
+
+        @test component.diagnostics.private_component_route_smoke
+        @test component.diagnostics.route_shape == (:pqs_left, :pqs_right, :product)
+        @test component.diagnostics.retained_dimension == 221
+        @test component.diagnostics.unit_roles == (:pqs_left, :pqs_right, :product)
+        @test component.diagnostics.center_labels == center_labels
+        @test component.diagnostics.nuclear_charges == nuclear_charges
+        @test component.diagnostics.by_center_nuclear_terms_preserved
+        @test component.diagnostics.nuclear_total_is_explicit_sum_of_center_pieces
+        @test component.diagnostics.ida_term_count == length(term_coefficients)
+        @test component.diagnostics.input_pair_factor_data ==
+              :ida_gausslet_source_box_provenance
+        @test component.diagnostics.interaction_path == :ida_gausslet_source_box
+        @test !component.diagnostics.mwg_supplement_residual_path
+        @test component.diagnostics.real_ida_gausslet_source_box_provenance_adapted
+        @test !component.diagnostics.real_mwg_ida_pair_factor_provenance_adapted
+        @test component.diagnostics.source_box_first
+        @test component.diagnostics.source_box_algorithmic_path_true_for_every_pair
+        @test component.diagnostics.nuclear_source_box_algorithmic_pair_count == 6
+        @test component.diagnostics.electron_electron_source_box_algorithmic_pair_count == 6
+        @test component.diagnostics.dense_parent_projection_validation_only
+        @test !component.diagnostics.dense_parent_projection_algorithmic
+        @test component.diagnostics.electron_electron_output_representation ==
+              :two_index_density_density
+        @test !component.diagnostics.electron_electron_four_index_galerkin_tensor
+        @test !component.diagnostics.hamiltonian_matrix_built
+        @test !component.diagnostics.packet_adoption
+        @test !component.diagnostics.fixed_block_routing
+        @test !component.diagnostics.qwhamiltonian_consumes
+        @test !component.diagnostics.public_default_consumes
+        @test !component.diagnostics.ecp_terms_implemented
+        @test !component.diagnostics.cr2_science_status_changed
+        @test !component.diagnostics.mwg_interaction_implemented
+        @test !component.diagnostics.mwg_supplement_residual_provenance_adapted
+        @test !component.diagnostics.ida_mwg_semantics_changed
+        @test !component.diagnostics.mwg_ida_semantics_changed
+        @test !component.diagnostics.retained_pqs_weights_used
+        @test !component.diagnostics.retained_pqs_weights_positive_checked
+        @test !component.diagnostics.retained_weight_division_allowed
+        @test !component.diagnostics.retained_pqs_weight_division_allowed
+        @test !component.diagnostics.ida_weight_division_allowed
+        @test component.diagnostics.retained_weight_semantics ==
+              :not_positive_quadrature_weights
+        @test !component.diagnostics.shell_projection_used
+        @test !component.diagnostics.lowdin_cleanup_used
+        @test !component.diagnostics.support_local_oracle_used
+        @test !component.diagnostics.support_local_pqs_oracle_used
+        @test !component.diagnostics.support_local_shell_row_algorithm
+        @test !component.diagnostics.support_coefficient_matrix_used
+        @test !component.diagnostics.shell_row_algorithm
+    end
+
     function _product_staged_comparison_axis_row(axis, state_index::Int)
         axis.kind == :fixed && return 1
         axis.kind == :active && return state_index - first(axis.interval) + 1
@@ -4379,6 +4663,25 @@ end
             route_bundles.bundle_z,
             expansion,
         ),
+    )
+    _check_pqs_pqs_product_source_box_component_route_smoke(
+        CCPM,
+        route_bundles,
+        route_metrics,
+        route_left_current,
+        route_right_current,
+        (1:5, 1:5, 4:4);
+        source_mode_dims = (5, 5, 5),
+        parent_dims = route_dims,
+        bond_axis = :z,
+        term_coefficients,
+        ida_dense_parent_matrix = GaussletBases._qwrg_diatomic_interaction_matrix(
+            route_bundles.bundle_x,
+            route_bundles.bundle_y,
+            route_bundles.bundle_z,
+            expansion,
+        ),
+        nuclear_expansion = expansion,
     )
     produced_route_consumer =
         CCPM._pqs_pqs_product_route_shaped_safe_term_consumer(

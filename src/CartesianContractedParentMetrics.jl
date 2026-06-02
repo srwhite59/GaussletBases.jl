@@ -12058,6 +12058,827 @@ function _pqs_pqs_product_dense_parent_ida_authority_comparison(
     )
 end
 
+function _source_box_nuclear_attraction_center_labels(center_count::Int, center_labels)
+    center_count > 0 || throw(
+        ArgumentError("source-box nuclear attraction center labels require a positive center count"),
+    )
+    if isnothing(center_labels)
+        return ntuple(index -> Symbol("center_", index), center_count)
+    end
+    labels = Tuple(Symbol(label) for label in center_labels)
+    length(labels) == center_count || throw(
+        ArgumentError("source-box nuclear attraction center label count must match center count"),
+    )
+    length(unique(labels)) == center_count || throw(
+        ArgumentError("source-box nuclear attraction center labels must be unique"),
+    )
+    return labels
+end
+
+function _pqs_pqs_product_nuclear_attraction_all_pairs_inventory(
+    left_raw_plan,
+    right_raw_plan,
+    product_unit::_CartesianNestedProductStagedByCenterUnit3D,
+    ranges,
+)
+    product_retained_unit_plan = _product_doside_retained_unit_plan(product_unit)
+    retained_units = (
+        (
+            unit_key = :pqs_left,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = left_raw_plan.retained_rule_kind,
+            retained_range = ranges.pqs_left,
+            source_dimensions = left_raw_plan.source_mode_dims,
+            source_dimension = left_raw_plan.source_mode_count,
+            retained_count = left_raw_plan.boundary_selector.selected_count,
+            supported_one_body_terms = (:electron_nuclear_attraction,),
+        ),
+        (
+            unit_key = :pqs_right,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            retained_rule_kind = right_raw_plan.retained_rule_kind,
+            retained_range = ranges.pqs_right,
+            source_dimensions = right_raw_plan.source_mode_dims,
+            source_dimension = right_raw_plan.source_mode_count,
+            retained_count = right_raw_plan.boundary_selector.selected_count,
+            supported_one_body_terms = (:electron_nuclear_attraction,),
+        ),
+        (
+            unit_key = :product,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            retained_rule_kind = product_retained_unit_plan.retained_rule_kind,
+            retained_range = ranges.product,
+            source_dimensions = product_retained_unit_plan.source_axis_lengths,
+            source_dimension = product_retained_unit_plan.source_dimension,
+            retained_count = product_retained_unit_plan.retained_count,
+            supported_one_body_terms = (:electron_nuclear_attraction,),
+        ),
+    )
+    pqs_pqs_helper = :_pqs_pqs_source_box_nuclear_attraction_by_center
+    pqs_product_helper = :_pqs_product_source_box_nuclear_attraction_by_center
+    product_product_helper = :_product_doside_source_box_nuclear_attraction_by_center
+    pair_entries = (
+        (
+            pair_key = (:pqs_left, :pqs_left),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_nuclear_attraction_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_left, :pqs_right),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_nuclear_attraction_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_left, :product),
+            pair_family = :pqs_product,
+            pair_kind = :pqs_product_source_box_nuclear_attraction_pair,
+            block_helper = pqs_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_right, :pqs_right),
+            pair_family = :pqs_pqs,
+            pair_kind = :pqs_pqs_source_box_nuclear_attraction_pair,
+            block_helper = pqs_pqs_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:pqs_right, :product),
+            pair_family = :pqs_product,
+            pair_kind = :pqs_product_source_box_nuclear_attraction_pair,
+            block_helper = pqs_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = true,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+        (
+            pair_key = (:product, :product),
+            pair_family = :product_product,
+            pair_kind = :product_doside_source_box_nuclear_attraction_pair,
+            block_helper = product_product_helper,
+            upper_triangular = true,
+            transpose_only_lower_block = false,
+            pair_policy = :source_box_algorithm_available,
+            source_box_algorithmic = true,
+        ),
+    )
+    pair_family_counts = (
+        pqs_pqs = count(entry -> entry.pair_family == :pqs_pqs, pair_entries),
+        pqs_product = count(entry -> entry.pair_family == :pqs_product, pair_entries),
+        product_product =
+            count(entry -> entry.pair_family == :product_product, pair_entries),
+    )
+    return (
+        object_kind = :pqs_pqs_product_nuclear_attraction_all_pairs_inventory,
+        retained_units = retained_units,
+        pair_entries = pair_entries,
+        pair_family_counts = pair_family_counts,
+        supported_one_body_terms = (:electron_nuclear_attraction,),
+        diagnostics = (
+            source = :pqs_pqs_product_nuclear_attraction_all_pairs_inventory,
+            all_pairs_inventory_private = true,
+            pair_inventory_complete_for_units = (:pqs_left, :pqs_right, :product),
+            retained_unit_count = length(retained_units),
+            upper_triangular_pair_count = length(pair_entries),
+            expected_upper_triangular_pair_count = 6,
+            pair_family_counts = pair_family_counts,
+            pair_keys = map(entry -> entry.pair_key, pair_entries),
+            pair_families = map(entry -> entry.pair_family, pair_entries),
+            block_helpers = map(entry -> entry.block_helper, pair_entries),
+            block_helper_by_family = (
+                pqs_pqs = pqs_pqs_helper,
+                pqs_product = pqs_product_helper,
+                product_product = product_product_helper,
+            ),
+            pair_policies = map(entry -> entry.pair_policy, pair_entries),
+            every_pair_uses_source_box_algorithmic_policy = all(
+                entry -> entry.source_box_algorithmic,
+                pair_entries,
+            ),
+            source_box_algorithmic_pair_count =
+                count(entry -> entry.source_box_algorithmic, pair_entries),
+            private_shadow_only = true,
+            physical_operator = :electron_nuclear_attraction,
+            positive_gaussian_sum_component = true,
+            center_contributions_preserved = true,
+            counterpoise_center_identity_preserved = true,
+            lower_triangular_cross_blocks_transpose_only = true,
+            product_pqs_blocks_transpose_only = true,
+            product_pqs_explicit_helper_used = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            cr2_science_status_changed = false,
+            ecp_terms_implemented = false,
+            electron_electron_terms_implemented = false,
+            mwg_interaction_implemented = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_oracle_used = false,
+            support_local_pqs_oracle_used = false,
+            support_coefficient_matrix_used = false,
+            shell_row_algorithm = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            dense_raw_source_box_pair_matrix_materialized = false,
+            dense_raw_pair_storage_avoided = true,
+        ),
+    )
+end
+
+function _pqs_pqs_product_nuclear_attraction_pair_block(
+    entry,
+    units;
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion,
+    centers,
+    nuclear_charges,
+)
+    left_role, right_role = entry.pair_key
+    if entry.pair_family == :pqs_pqs
+        left_unit = getproperty(units, left_role)
+        right_unit = getproperty(units, right_role)
+        return _pqs_pqs_source_box_nuclear_attraction_by_center(
+            left_unit,
+            right_unit,
+            axis_layers,
+            expansion;
+            centers,
+            nuclear_charges,
+        )
+    elseif entry.pair_family == :pqs_product
+        right_role == :product || throw(
+            ArgumentError("nuclear-attraction route only uses product/PQS as transpose of PQS/product"),
+        )
+        pqs_unit = getproperty(units, left_role)
+        product_unit = getproperty(units, right_role)
+        return _pqs_product_source_box_nuclear_attraction_by_center(
+            pqs_unit,
+            product_unit,
+            axis_layers,
+            expansion;
+            centers,
+            nuclear_charges,
+        )
+    elseif entry.pair_family == :product_product
+        left_role == :product && right_role == :product || throw(
+            ArgumentError("nuclear-attraction route product/product entry must use the product unit on both sides"),
+        )
+        product_unit = getproperty(units, :product)
+        return _product_doside_source_box_nuclear_attraction_by_center(
+            product_unit,
+            product_unit,
+            axis_layers,
+            expansion;
+            centers,
+            nuclear_charges,
+        )
+    end
+    throw(ArgumentError("unsupported nuclear-attraction route pair family $(entry.pair_family)"))
+end
+
+function _pqs_pqs_product_route_shaped_nuclear_attraction_by_center(
+    route_units,
+    axis_layers::NamedTuple{(:x,:y,:z)},
+    expansion::CoulombGaussianExpansion;
+    centers,
+    nuclear_charges,
+    center_labels = nothing,
+    symmetry_atol::Real = 1.0e-10,
+)
+    hasproperty(route_units, :route_kind) || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires route_kind"),
+    )
+    hasproperty(route_units, :units) || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires units"),
+    )
+    route_kind = route_units.route_kind
+    route_kind in _PQS_PQS_PRODUCT_SAFE_TERM_ROUTE_KINDS || throw(
+        ArgumentError("unsupported route-shaped nuclear-attraction consumer route_kind $(route_kind)"),
+    )
+    roles = hasproperty(route_units, :roles) ?
+        Tuple(route_units.roles) :
+        (:pqs_left, :pqs_right, :product)
+    roles == (:pqs_left, :pqs_right, :product) || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires roles (:pqs_left, :pqs_right, :product)"),
+    )
+    units = route_units.units
+    for role in roles
+        hasproperty(units, role) || throw(
+            ArgumentError("route-shaped nuclear-attraction consumer missing unit $(role)"),
+        )
+    end
+    center_values = _source_box_nuclear_attraction_center_values(centers)
+    charge_values = _source_box_nuclear_attraction_charge_values(nuclear_charges)
+    length(center_values) == length(charge_values) || throw(
+        ArgumentError("route-shaped nuclear-attraction center and charge counts must match"),
+    )
+    labels = _source_box_nuclear_attraction_center_labels(
+        length(center_values),
+        center_labels,
+    )
+
+    left_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_left)
+    right_raw_plan = _pqs_raw_product_box_plan_view(units.pqs_right)
+    left_raw_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires a raw product-box left PQS plan"),
+    )
+    right_raw_plan.representation == :orthogonal_raw_product_box || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires a raw product-box right PQS plan"),
+    )
+    units.product.kind == :product_doside || throw(
+        ArgumentError("route-shaped nuclear-attraction consumer requires a product_doside middle unit"),
+    )
+
+    product_retained_unit_plan = _product_doside_retained_unit_plan(units.product)
+    left_count = left_raw_plan.boundary_selector.selected_count
+    right_count = right_raw_plan.boundary_selector.selected_count
+    product_count = product_retained_unit_plan.retained_count
+    ranges = (
+        pqs_left = 1:left_count,
+        pqs_right = (left_count + 1):(left_count + right_count),
+        product = (left_count + right_count + 1):
+                  (left_count + right_count + product_count),
+    )
+    retained_dimension = left_count + right_count + product_count
+    inventory = _pqs_pqs_product_nuclear_attraction_all_pairs_inventory(
+        left_raw_plan,
+        right_raw_plan,
+        units.product,
+        ranges,
+    )
+    inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy ||
+        throw(ArgumentError("nuclear-attraction route requires all pairs to use source-box algorithms"))
+
+    descriptor_expected_ranges_checked = false
+    descriptor_retained_dimension_checked = false
+    descriptor_pair_count_checked = false
+    if hasproperty(route_units, :expected_ranges)
+        route_units.expected_ranges == ranges || throw(
+            ArgumentError("route descriptor expected ranges disagree with nuclear-attraction route ranges"),
+        )
+        descriptor_expected_ranges_checked = true
+    end
+    if hasproperty(route_units, :retained_dimension)
+        route_units.retained_dimension == retained_dimension || throw(
+            DimensionMismatch("route descriptor retained dimension disagrees with nuclear-attraction route"),
+        )
+        descriptor_retained_dimension_checked = true
+    end
+    if hasproperty(route_units, :expected_pair_count)
+        route_units.expected_pair_count == length(inventory.pair_entries) || throw(
+            ArgumentError("route descriptor expected pair count disagrees with nuclear-attraction route"),
+        )
+        descriptor_pair_count_checked = true
+    end
+
+    timed = @timed begin
+        center_blocks = [
+            zeros(Float64, retained_dimension, retained_dimension) for
+            _ in eachindex(center_values)
+        ]
+        pair_block_results = Dict{Tuple{Symbol,Symbol},Any}()
+        for entry in inventory.pair_entries
+            pair_result = _pqs_pqs_product_nuclear_attraction_pair_block(
+                entry,
+                units;
+                axis_layers,
+                expansion,
+                centers = center_values,
+                nuclear_charges = charge_values,
+            )
+            length(pair_result.blocks_by_center) == length(center_values) || throw(
+                DimensionMismatch("nuclear-attraction route pair center count mismatch"),
+            )
+            left_role, right_role = entry.pair_key
+            left_range = getproperty(ranges, left_role)
+            right_range = getproperty(ranges, right_role)
+            for center_index in eachindex(center_values)
+                center_block =
+                    pair_result.blocks_by_center[center_index].block
+                center_blocks[center_index][left_range, right_range] .=
+                    center_block
+                if left_role != right_role
+                    entry.transpose_only_lower_block || throw(
+                        ArgumentError("nuclear-attraction route lower block requires transpose-only policy"),
+                    )
+                    center_blocks[center_index][right_range, left_range] .=
+                        transpose(center_block)
+                end
+            end
+            pair_block_results[entry.pair_key] = pair_result
+        end
+        (center_blocks = center_blocks, pair_block_results = pair_block_results)
+    end
+    assembled = timed.value
+    center_blocks = assembled.center_blocks
+    pair_block_results = assembled.pair_block_results
+    total_block = zeros(Float64, retained_dimension, retained_dimension)
+    for center_block in center_blocks
+        all(isfinite, center_block) || throw(
+            ArgumentError("route-shaped nuclear-attraction center block produced non-finite entries"),
+        )
+        total_block .+= center_block
+    end
+    all(isfinite, total_block) || throw(
+        ArgumentError("route-shaped nuclear-attraction total block produced non-finite entries"),
+    )
+    center_symmetry_errors = ntuple(
+        center_index -> LinearAlgebra.norm(
+            center_blocks[center_index] - transpose(center_blocks[center_index]),
+            Inf,
+        ),
+        length(center_values),
+    )
+    symmetry_error = LinearAlgebra.norm(total_block - transpose(total_block), Inf)
+    symmetry_atol_value = Float64(symmetry_atol)
+    all(error -> error <= symmetry_atol_value, center_symmetry_errors) || throw(
+        ArgumentError("route-shaped nuclear-attraction center symmetry error exceeded tolerance"),
+    )
+    symmetry_error <= symmetry_atol_value || throw(
+        ArgumentError("route-shaped nuclear-attraction total symmetry error exceeded tolerance"),
+    )
+    total_from_center_blocks = zeros(Float64, retained_dimension, retained_dimension)
+    for center_block in center_blocks
+        total_from_center_blocks .+= center_block
+    end
+    total_from_center_error =
+        LinearAlgebra.norm(total_block - total_from_center_blocks, Inf)
+
+    center_component_blocks = ntuple(center_index -> (
+        pqs_left_pqs_left =
+            pair_block_results[(:pqs_left, :pqs_left)].blocks_by_center[center_index].block,
+        pqs_left_pqs_right =
+            pair_block_results[(:pqs_left, :pqs_right)].blocks_by_center[center_index].block,
+        pqs_right_pqs_left =
+            transpose(pair_block_results[(:pqs_left, :pqs_right)].blocks_by_center[center_index].block),
+        pqs_left_product =
+            pair_block_results[(:pqs_left, :product)].blocks_by_center[center_index].block,
+        product_pqs_left =
+            transpose(pair_block_results[(:pqs_left, :product)].blocks_by_center[center_index].block),
+        pqs_right_pqs_right =
+            pair_block_results[(:pqs_right, :pqs_right)].blocks_by_center[center_index].block,
+        pqs_right_product =
+            pair_block_results[(:pqs_right, :product)].blocks_by_center[center_index].block,
+        product_pqs_right =
+            transpose(pair_block_results[(:pqs_right, :product)].blocks_by_center[center_index].block),
+        product_product =
+            pair_block_results[(:product, :product)].blocks_by_center[center_index].block,
+    ), length(center_values))
+    blocks_by_center = ntuple(center_index -> (
+        center_index = center_index,
+        center_label = labels[center_index],
+        center = center_values[center_index],
+        nuclear_charge = charge_values[center_index],
+        sign_charge_scale = -charge_values[center_index],
+        block = center_blocks[center_index],
+        component_blocks = center_component_blocks[center_index],
+        symmetry_error = center_symmetry_errors[center_index],
+    ), length(center_values))
+    component_block_provenance = (
+        pqs_left_pqs_left =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_left_pqs_right =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_right_pqs_left = :transpose_of_pqs_left_pqs_right,
+        pqs_left_product =
+            inventory.diagnostics.block_helper_by_family.pqs_product,
+        product_pqs_left = :transpose_of_pqs_left_product,
+        pqs_right_pqs_right =
+            inventory.diagnostics.block_helper_by_family.pqs_pqs,
+        pqs_right_product =
+            inventory.diagnostics.block_helper_by_family.pqs_product,
+        product_pqs_right = :transpose_of_pqs_right_product,
+        product_product =
+            inventory.diagnostics.block_helper_by_family.product_product,
+    )
+    metadata = hasproperty(route_units, :metadata) ? route_units.metadata : (;)
+    provenance = hasproperty(route_units, :provenance) ? route_units.provenance : (;)
+    route_name = hasproperty(route_units, :route_name) ? route_units.route_name : route_kind
+    route_descriptor_object_kind =
+        hasproperty(route_units, :object_kind) ? route_units.object_kind : :legacy_route_units
+    performance = (
+        elapsed_seconds = Float64(timed.time),
+        allocated_bytes = Int(timed.bytes),
+        gc_time_seconds = Float64(timed.gctime),
+        retained_dimension = retained_dimension,
+        pair_count = length(inventory.pair_entries),
+        center_count = length(center_values),
+        dense_raw_source_box_pair_matrix_materialized = false,
+        dense_raw_pair_storage_avoided = true,
+    )
+    return (
+        path = :pqs_pqs_product_route_shaped_nuclear_attraction_by_center,
+        route_kind = route_kind,
+        route_name = route_name,
+        route_units = route_units,
+        physical_operator = :electron_nuclear_attraction,
+        retained_units = inventory.retained_units,
+        all_pairs_inventory = inventory,
+        blocks_by_center = blocks_by_center,
+        center_blocks = blocks_by_center,
+        per_center_matrices = blocks_by_center,
+        total_block = total_block,
+        block = total_block,
+        complete_retained_space_matrix = total_block,
+        component_blocks_by_center = center_component_blocks,
+        component_block_provenance = component_block_provenance,
+        pair_block_results = pair_block_results,
+        ranges = ranges,
+        retained_dimension = retained_dimension,
+        pair_count = length(inventory.pair_entries),
+        pair_family_counts = inventory.pair_family_counts,
+        centers = Tuple(center_values),
+        center_labels = labels,
+        nuclear_charges = Tuple(charge_values),
+        output_finite = true,
+        symmetry_error = symmetry_error,
+        center_symmetry_errors = center_symmetry_errors,
+        total_from_center_error = total_from_center_error,
+        performance = performance,
+        metadata = metadata,
+        provenance = provenance,
+        diagnostics = merge(
+            inventory.diagnostics,
+            (
+                source = :pqs_pqs_product_route_shaped_nuclear_attraction_by_center,
+                route_shaped_consumer = true,
+                route_shape = (:pqs_left, :pqs_right, :product),
+                route_kind = route_kind,
+                route_name = route_name,
+                route_descriptor_object_kind = route_descriptor_object_kind,
+                route_roles = roles,
+                retained_ranges = ranges,
+                retained_dimension = retained_dimension,
+                retained_unit_count = length(inventory.retained_units),
+                pair_count = length(inventory.pair_entries),
+                pair_family_counts = inventory.pair_family_counts,
+                physical_operator = :electron_nuclear_attraction,
+                one_body_operator = true,
+                electron_electron_terms_implemented = false,
+                helper_used_for_pair_families =
+                    inventory.diagnostics.block_helper_by_family,
+                block_helpers = inventory.diagnostics.block_helpers,
+                source_box_first = true,
+                source_box_algorithmic_path_true_for_every_pair = true,
+                every_pair_uses_source_box_algorithmic_policy =
+                    inventory.diagnostics.every_pair_uses_source_box_algorithmic_policy,
+                source_box_algorithmic_pair_count =
+                    inventory.diagnostics.source_box_algorithmic_pair_count,
+                centers = Tuple(center_values),
+                center_labels = labels,
+                nuclear_charges = Tuple(charge_values),
+                center_records = ntuple(
+                    center_index -> (
+                        label = labels[center_index],
+                        center = center_values[center_index],
+                        nuclear_charge = charge_values[center_index],
+                    ),
+                    length(center_values),
+                ),
+                center_count = length(center_values),
+                center_contributions_preserved = true,
+                counterpoise_center_identity_preserved = true,
+                total_block_is_explicit_sum_of_center_pieces = true,
+                total_from_center_error = total_from_center_error,
+                lower_triangular_cross_blocks_transpose_only = true,
+                product_pqs_blocks_transpose_only = true,
+                output_finite = true,
+                symmetry_error = symmetry_error,
+                center_symmetry_errors = center_symmetry_errors,
+                symmetry_atol = symmetry_atol_value,
+                descriptor_expected_ranges_checked =
+                    descriptor_expected_ranges_checked,
+                descriptor_retained_dimension_checked =
+                    descriptor_retained_dimension_checked,
+                descriptor_pair_count_checked = descriptor_pair_count_checked,
+                positive_gaussian_sum_component = true,
+                positive_gaussian_sum_convention = true,
+                nuclear_charge_applied = true,
+                nuclear_attraction_sign_applied = true,
+                nuclear_charge_sign_applied = true,
+                local_gaussian_source_box_terms = true,
+                ecp = false,
+                ecp_terms_implemented = false,
+                mwg_interaction_implemented = false,
+                ida_mwg_semantics_changed = false,
+                mwg_ida_semantics_changed = false,
+                retained_pqs_weights_used = false,
+                retained_pqs_weights_positive_checked = false,
+                retained_weight_division_allowed = false,
+                retained_pqs_weight_division_allowed = false,
+                ida_weight_division_allowed = false,
+                retained_weight_semantics = :not_positive_quadrature_weights,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_oracle_used = false,
+                support_local_pqs_oracle_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                shell_row_algorithm = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                public_default_consumes = false,
+                cr2_science_status_changed = false,
+                dense_raw_source_box_pair_matrix_materialized = false,
+                dense_raw_pair_storage_avoided = true,
+                performance_recorded = true,
+                elapsed_seconds = performance.elapsed_seconds,
+                allocated_bytes = performance.allocated_bytes,
+                gc_time_seconds = performance.gc_time_seconds,
+            ),
+        ),
+    )
+end
+
+function _pqs_pqs_product_source_box_component_route_smoke(
+    bundles,
+    left_source_box::NTuple{3,UnitRange{Int}},
+    right_source_box::NTuple{3,UnitRange{Int}},
+    product_source_box::NTuple{3,UnitRange{Int}},
+    metrics::NamedTuple{(:x,:y,:z)},
+    ida_provenance,
+    nuclear_axis_layers::NamedTuple{(:x,:y,:z)},
+    nuclear_expansion::CoulombGaussianExpansion;
+    source_mode_dims::NTuple{3,Int},
+    centers,
+    nuclear_charges,
+    center_labels = nothing,
+    term_coefficients::AbstractVector{<:Real},
+    pair_factor_normalization::Symbol = :density_normalized,
+    pair_factor_symmetry_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+    nuclear_symmetry_atol::Real = 1.0e-10,
+    route_name::Symbol = :pqs_pqs_product_source_box_component_route_smoke,
+    parent_dims = _nested_axis_lengths(bundles),
+    bond_axis = nothing,
+    metadata = (;),
+    provenance = (;),
+    dense_parent_ida_matrix = nothing,
+    dense_parent_matrix_source::Symbol = :caller_supplied_dense_parent_ida_matrix,
+    dense_parent_comparison_atol::Real = 1.0e-10,
+    route_supported_terms = _PQS_PRODUCT_SOURCE_BOX_SHADOW_TERMS,
+    orthogonality_atol::Real = 1.0e-8,
+)
+    pair_factor_normalization == :density_normalized || throw(
+        ArgumentError("component route smoke currently supports density-normalized IDA route output"),
+    )
+    center_values = _source_box_nuclear_attraction_center_values(centers)
+    charge_values = _source_box_nuclear_attraction_charge_values(nuclear_charges)
+    length(center_values) == length(charge_values) || throw(
+        ArgumentError("component route smoke center and charge counts must match"),
+    )
+    labels = _source_box_nuclear_attraction_center_labels(
+        length(center_values),
+        center_labels,
+    )
+    component_metadata = merge(
+        (
+            component_route_smoke = true,
+            nuclear_center_labels = labels,
+            nuclear_center_count = length(center_values),
+            electron_electron_source = :ida_gausslet_source_box,
+        ),
+        metadata,
+    )
+    component_provenance = merge(
+        (source = :pqs_pqs_product_source_box_component_route_smoke,),
+        provenance,
+    )
+    ida_route =
+        _pqs_pqs_product_raw_box_density_density_route_producer_from_ida_provenance(
+            bundles,
+            left_source_box,
+            right_source_box,
+            product_source_box,
+            metrics,
+            ida_provenance;
+            source_mode_dims,
+            term_coefficients,
+            pair_factor_normalization,
+            pair_factor_symmetry_atol,
+            symmetry_atol,
+            route_name,
+            parent_dims,
+            bond_axis,
+            metadata = component_metadata,
+            provenance = component_provenance,
+            route_supported_terms,
+            orthogonality_atol,
+        )
+    nuclear_route = _pqs_pqs_product_route_shaped_nuclear_attraction_by_center(
+        ida_route.route_descriptor,
+        nuclear_axis_layers,
+        nuclear_expansion;
+        centers = center_values,
+        nuclear_charges = charge_values,
+        center_labels = labels,
+        symmetry_atol = nuclear_symmetry_atol,
+    )
+    dense_parent_authority = isnothing(dense_parent_ida_matrix) ? nothing :
+        _pqs_pqs_product_dense_parent_ida_authority_comparison(
+            ida_route,
+            dense_parent_ida_matrix;
+            parent_dims,
+            dense_parent_matrix_source,
+            comparison_atol = dense_parent_comparison_atol,
+        )
+    output_finite =
+        nuclear_route.output_finite &&
+        ida_route.output_finite &&
+        (isnothing(dense_parent_authority) || dense_parent_authority.output_finite)
+    authority_max_errors = (
+        electron_electron_dense_parent =
+            isnothing(dense_parent_authority) ? nothing :
+            dense_parent_authority.max_error,
+        nuclear_total_from_center_sum = nuclear_route.total_from_center_error,
+    )
+    return (
+        object_kind = :pqs_pqs_product_source_box_component_route_smoke,
+        path = :pqs_pqs_product_source_box_component_route_smoke,
+        status = :private_component_route_smoke,
+        descriptor = ida_route.route_descriptor,
+        route_descriptor = ida_route.route_descriptor,
+        raw_box_route_producer = ida_route.raw_box_route_producer,
+        route_shape = (:pqs_left, :pqs_right, :product),
+        retained_units = ida_route.route_descriptor.unit_summaries,
+        ranges = ida_route.ranges,
+        retained_dimension = ida_route.retained_dimension,
+        nuclear_attraction_by_center = nuclear_route,
+        per_center_nuclear_matrices = nuclear_route.blocks_by_center,
+        nuclear_total_matrix = nuclear_route.total_block,
+        electron_electron_density_density = ida_route,
+        electron_electron_matrix = ida_route.block,
+        dense_parent_ida_authority = dense_parent_authority,
+        center_labels = labels,
+        centers = Tuple(center_values),
+        nuclear_charges = Tuple(charge_values),
+        ida_term_count = ida_route.term_count,
+        pair_factor_normalization = pair_factor_normalization,
+        output_finite = output_finite,
+        nuclear_symmetry_error = nuclear_route.symmetry_error,
+        electron_electron_symmetry_error = ida_route.symmetry_error,
+        authority_max_errors = authority_max_errors,
+        metadata = component_metadata,
+        provenance = component_provenance,
+        diagnostics = (
+            source = :pqs_pqs_product_source_box_component_route_smoke,
+            private_component_route_smoke = true,
+            private_shadow_only = true,
+            route_shape = (:pqs_left, :pqs_right, :product),
+            route_name = ida_route.route_descriptor.route_name,
+            route_descriptor_object_kind = ida_route.route_descriptor.object_kind,
+            route_roles = ida_route.route_descriptor.roles,
+            retained_ranges = ida_route.ranges,
+            retained_dimension = ida_route.retained_dimension,
+            retained_unit_count = ida_route.route_descriptor.retained_unit_count,
+            unit_roles = map(unit -> unit.unit_key, ida_route.route_descriptor.unit_summaries),
+            unit_retained_ranges =
+                map(unit -> unit.retained_range, ida_route.route_descriptor.unit_summaries),
+            nuclear_pair_count = nuclear_route.pair_count,
+            nuclear_pair_family_counts = nuclear_route.pair_family_counts,
+            electron_electron_pair_count = ida_route.pair_count,
+            electron_electron_pair_family_counts = ida_route.pair_family_counts,
+            helper_used_for_nuclear_pair_families =
+                nuclear_route.diagnostics.helper_used_for_pair_families,
+            helper_used_for_electron_electron_pair_families =
+                ida_route.diagnostics.helper_used_for_pair_families,
+            center_labels = labels,
+            centers = Tuple(center_values),
+            nuclear_charges = Tuple(charge_values),
+            center_records = nuclear_route.diagnostics.center_records,
+            center_count = length(center_values),
+            by_center_nuclear_terms_preserved = true,
+            nuclear_total_is_explicit_sum_of_center_pieces = true,
+            nuclear_total_from_center_error = nuclear_route.total_from_center_error,
+            ida_term_count = ida_route.term_count,
+            ida_provenance_term_count = ida_provenance.term_count,
+            pair_factor_normalization = pair_factor_normalization,
+            input_pair_factor_data = :ida_gausslet_source_box_provenance,
+            interaction_path = :ida_gausslet_source_box,
+            mwg_supplement_residual_path = false,
+            real_ida_gausslet_source_box_provenance_adapted = true,
+            real_mwg_ida_pair_factor_provenance_adapted = false,
+            source_box_first = true,
+            source_box_algorithmic_path_true_for_every_pair =
+                nuclear_route.diagnostics.source_box_algorithmic_path_true_for_every_pair &&
+                ida_route.diagnostics.source_box_algorithmic_path_true_for_every_pair,
+            nuclear_source_box_algorithmic_pair_count =
+                nuclear_route.diagnostics.source_box_algorithmic_pair_count,
+            electron_electron_source_box_algorithmic_pair_count =
+                ida_route.diagnostics.source_box_algorithmic_pair_count,
+            output_finite = output_finite,
+            nuclear_symmetry_error = nuclear_route.symmetry_error,
+            electron_electron_symmetry_error = ida_route.symmetry_error,
+            dense_parent_ida_authority_available = !isnothing(dense_parent_authority),
+            dense_parent_ida_authority_max_error =
+                isnothing(dense_parent_authority) ? nothing :
+                dense_parent_authority.max_error,
+            dense_parent_ida_authority_within_tolerance =
+                isnothing(dense_parent_authority) ? nothing :
+                dense_parent_authority.within_tolerance,
+            dense_parent_projection_validation_only =
+                !isnothing(dense_parent_authority),
+            dense_parent_projection_algorithmic = false,
+            output_representation = :component_matrices,
+            electron_electron_output_representation = :two_index_density_density,
+            electron_electron_four_index_galerkin_tensor = false,
+            hamiltonian_matrix_built = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            mwg_interaction_implemented = false,
+            mwg_supplement_residual_provenance_adapted = false,
+            ida_mwg_semantics_changed = false,
+            mwg_ida_semantics_changed = false,
+            retained_pqs_weights_used = false,
+            retained_pqs_weights_positive_checked = false,
+            retained_weight_division_allowed = false,
+            retained_pqs_weight_division_allowed = false,
+            ida_weight_division_allowed = false,
+            retained_weight_semantics = :not_positive_quadrature_weights,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_oracle_used = false,
+            support_local_pqs_oracle_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            shell_row_algorithm = false,
+        ),
+    )
+end
+
 function _pqs_raw_product_box_reference_block(
     raw_product_box_plan;
     term::Symbol,
