@@ -176,7 +176,12 @@ using GaussletBases
         shell_transform = nothing,
         shell_row_oracle_only::Bool = false,
         support_local_oracle_used::Bool = false,
+        source_axis_center_vectors = nothing,
     )
+        source_center_convention =
+            isnothing(source_axis_center_vectors) ? :unavailable : :comx_construction
+        source_center_status =
+            isnothing(source_axis_center_vectors) ? :unavailable : :native_representative
         return (
             role = role,
             category = category,
@@ -193,6 +198,9 @@ using GaussletBases
             active_representation_stage = representation_kind,
             raw_box_auxiliary_metadata = raw_box_auxiliary_metadata,
             shell_realization_transform_fact = shell_transform,
+            source_axis_center_vectors = source_axis_center_vectors,
+            source_center_convention = source_center_convention,
+            source_center_status = source_center_status,
             raw_product_box_operator_contract = category == :product_doside,
             route_descriptor_emitted = false,
             construction_mutated = false,
@@ -232,6 +240,7 @@ using GaussletBases
 
     function _synthetic_fixed_side_inventory(;
         shell_source_box_operator_ready::Bool = false,
+        product_source_axis_center_vectors = nothing,
     )
         units = (
             _synthetic_fixed_side_inventory_unit(
@@ -243,6 +252,7 @@ using GaussletBases
                 primitive_family = :outer_mismatch_boundary_slab_set,
                 representation_kind = :product_doside_bridge,
                 staged_unit = _synthetic_product_staged_unit(),
+                source_axis_center_vectors = product_source_axis_center_vectors,
             ),
             _synthetic_fixed_side_inventory_unit(
                 :left_atom_box,
@@ -768,6 +778,52 @@ using GaussletBases
     @test !source_shell_mode_inventory.diagnostics.packet_adoption
     @test !source_shell_mode_inventory.diagnostics.qwhamiltonian_changed
     @test !source_shell_mode_inventory.diagnostics.public_default_consumes
+
+    centered_source_shell_mode_inventory =
+        metrics_module._pqs_current_route_source_shell_mode_inventory(
+            _synthetic_fixed_side_inventory(;
+                product_source_axis_center_vectors = (
+                    [10.0],
+                    [20.0, 21.0],
+                    [30.0, 31.0],
+                ),
+            );
+            provenance = (source = :synthetic_native_source_center_test,),
+        )
+    @test centered_source_shell_mode_inventory.center_status ==
+          :native_representative
+    @test centered_source_shell_mode_inventory.source_shells.center_definitions ==
+          [:comx_construction]
+    @test centered_source_shell_mode_inventory.source_shells.center_statuses ==
+          [:native_representative]
+    @test centered_source_shell_mode_inventory.source_modes.center_coordinates == [
+        10.0 20.0 30.0
+        10.0 21.0 30.0
+        10.0 20.0 31.0
+        10.0 21.0 31.0
+    ]
+    @test all(
+        ==(:comx_construction),
+        centered_source_shell_mode_inventory.source_modes.center_definitions,
+    )
+    @test all(
+        ==(:native_representative),
+        centered_source_shell_mode_inventory.source_modes.center_statuses,
+    )
+    @test centered_source_shell_mode_inventory.diagnostics.center_status ==
+          :native_representative
+    @test centered_source_shell_mode_inventory.diagnostics.center_definition ==
+          :comx_construction
+    @test centered_source_shell_mode_inventory.diagnostics.native_center_shell_count == 1
+    @test centered_source_shell_mode_inventory.diagnostics.native_center_mode_count == 4
+    @test !centered_source_shell_mode_inventory.absences_by_contract.native_comx_centers
+    @test !any(centered_source_shell_mode_inventory.source_modes.inferred_from_centers)
+    @test !centered_source_shell_mode_inventory.diagnostics.retained_weight_or_ida_division
+    @test_throws DimensionMismatch metrics_module._pqs_current_route_source_shell_mode_inventory(
+        _synthetic_fixed_side_inventory(;
+            product_source_axis_center_vectors = ([10.0], [20.0], [30.0, 31.0]),
+        ),
+    )
 
     source_relation_inventory =
         metrics_module._pqs_current_route_fixed_column_source_relation_inventory(

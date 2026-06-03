@@ -841,6 +841,11 @@ slab units from `_pqs_outer_mismatch_product_doside_units(...)` and
 staged axes, fixed/active-axis intervals, and `axis_function_indices`; those
 facts now support the private product-axis tuple rows described above. These
 rows are not rays and must not be interpreted as ray-tail memberships.
+Their product/doside source-mode representative centers are native
+COMX/source-transform metadata carried from construction-side
+`localized_centers`, exported as `:comx_construction` /
+`:native_representative`, and kept separate from identity labels. Non-product
+source-mode centers remain unavailable.
 Support-dense/direct-support atom boxes from
 `_pqs_atom_box_support_dense_units(...)` carry support states and coefficient
 columns, but they do not currently carry native shell/ray/cone/radial ids;

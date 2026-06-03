@@ -805,6 +805,32 @@ function _product_doside_retained_unit_plan(
     )
 end
 
+function _product_doside_source_axis_center_metadata(
+    construction::_BondAlignedDiatomicHighOrderRecipeSourceConstruction3D,
+    axes::Tuple,
+)
+    source_axis_intervals = ntuple(axis -> _staged_axis_interval(axes[axis]), 3)
+    source_mode_dims = ntuple(axis -> _staged_axis_count(axes[axis]), 3)
+    raw_product_box_plan = _cartesian_raw_product_box_plan(
+        construction.axis_bundles,
+        source_axis_intervals,
+        source_mode_dims;
+        enforce_symmetric_odd = false,
+    )
+    return (
+        source_axis_center_vectors = ntuple(
+            axis -> Float64.(raw_product_box_plan.axis_transform_plan.axes[axis].localized_centers),
+            3,
+        ),
+        source_center_convention = :comx_construction,
+        source_center_status = :native_representative,
+        source_center_source = :cartesian_raw_product_box_plan_axis_transform_localized_centers,
+        raw_product_box_plan_object_kind = raw_product_box_plan.object_kind,
+        source_axis_intervals = source_axis_intervals,
+        source_mode_dims = source_mode_dims,
+    )
+end
+
 const _PRODUCT_DOSIDE_SOURCE_BOX_REFERENCE_TERMS = (
     :overlap,
     :position_x,
@@ -7545,6 +7571,8 @@ function _pqs_contact_cap_product_doside_unit(
             )
         throw(ArgumentError("PQS contact-cap rule has inconsistent active/fixed axes"))
     end, 3)
+    source_center_metadata =
+        _product_doside_source_axis_center_metadata(construction, axes)
     local_coefficients = Matrix{Float64}(
         LinearAlgebra.I,
         support_count,
@@ -7570,6 +7598,14 @@ function _pqs_contact_cap_product_doside_unit(
             fact_role = contact_fact.role,
             primitive_family = contact_fact.primitive_family,
             mapped_primitive = contact_fact.mapped_primitive,
+            source_axis_center_vectors =
+                source_center_metadata.source_axis_center_vectors,
+            source_center_convention =
+                source_center_metadata.source_center_convention,
+            source_center_status =
+                source_center_metadata.source_center_status,
+            source_center_source =
+                source_center_metadata.source_center_source,
         ),
         (
             support_count = support_count,
@@ -7580,6 +7616,10 @@ function _pqs_contact_cap_product_doside_unit(
             active_retained_counts = active_lengths,
             contact_cap_only = true,
             private_diagnostic_only = true,
+            source_center_convention =
+                source_center_metadata.source_center_convention,
+            source_center_status =
+                source_center_metadata.source_center_status,
         ),
     )
 
@@ -7770,6 +7810,8 @@ function _pqs_outer_mismatch_product_doside_units(
                 )
             throw(ArgumentError("PQS outer-mismatch slab rule has inconsistent active/fixed axes"))
         end, 3)
+        source_center_metadata =
+            _product_doside_source_axis_center_metadata(construction, axes)
         local_coefficients = Matrix{Float64}(
             LinearAlgebra.I,
             support_count,
@@ -7795,6 +7837,14 @@ function _pqs_outer_mismatch_product_doside_units(
                 fact_role = outer_fact.role,
                 primitive_family = outer_fact.primitive_family,
                 piece_role = piece_rule.piece_role,
+                source_axis_center_vectors =
+                    source_center_metadata.source_axis_center_vectors,
+                source_center_convention =
+                    source_center_metadata.source_center_convention,
+                source_center_status =
+                    source_center_metadata.source_center_status,
+                source_center_source =
+                    source_center_metadata.source_center_source,
             ),
             (
                 support_count = support_count,
@@ -7805,6 +7855,10 @@ function _pqs_outer_mismatch_product_doside_units(
                 active_retained_counts = active_lengths,
                 outer_mismatch_piece = true,
                 private_diagnostic_only = true,
+                source_center_convention =
+                    source_center_metadata.source_center_convention,
+                source_center_status =
+                    source_center_metadata.source_center_status,
             ),
         )
         parent_coefficients = _pqs_support_local_parent_coefficient_matrix(
@@ -8862,6 +8916,15 @@ function _pqs_inventory_wrapped_staged_unit(
     source_helper::Symbol,
     raw_box_auxiliary_metadata = nothing,
 )
+    source_axis_center_vectors =
+        hasproperty(unit.provenance, :source_axis_center_vectors) ?
+        unit.provenance.source_axis_center_vectors : nothing
+    source_center_convention =
+        hasproperty(unit.provenance, :source_center_convention) ?
+        unit.provenance.source_center_convention : :unavailable
+    source_center_status =
+        hasproperty(unit.provenance, :source_center_status) ?
+        unit.provenance.source_center_status : :unavailable
     return (
         role = unit.role,
         category = category,
@@ -8877,6 +8940,9 @@ function _pqs_inventory_wrapped_staged_unit(
         safe_term_capability = safe_term_capability,
         active_representation_stage = active_representation_stage,
         raw_box_auxiliary_metadata = raw_box_auxiliary_metadata,
+        source_axis_center_vectors = source_axis_center_vectors,
+        source_center_convention = source_center_convention,
+        source_center_status = source_center_status,
         raw_product_box_operator_contract =
             category == :product_doside && active_representation_stage == :product_doside_bridge,
         route_descriptor_emitted = false,
@@ -9557,6 +9623,38 @@ function _pqs_fixed_side_unit_diagnostic_get(unit, field::Symbol, default = noth
     return hasproperty(diagnostics, field) ? getproperty(diagnostics, field) : default
 end
 
+function _pqs_fixed_side_unit_source_axis_center_vectors(unit, local_dims::NTuple{3,Int})
+    source_axis_center_vectors =
+        _pqs_fixed_side_unit_get(unit, :source_axis_center_vectors, nothing)
+    isnothing(source_axis_center_vectors) && return nothing
+    length(source_axis_center_vectors) == 3 || throw(
+        ArgumentError("product/doside source center metadata requires three axis center vectors"),
+    )
+    return ntuple(axis -> begin
+        centers = Float64.(source_axis_center_vectors[axis])
+        length(centers) == local_dims[axis] || throw(
+            DimensionMismatch("product/doside source center vector length does not match local axis dimension"),
+        )
+        centers
+    end, 3)
+end
+
+function _pqs_fixed_side_unit_source_center_convention(unit)
+    return _pqs_fixed_side_unit_get(
+        unit,
+        :source_center_convention,
+        :unavailable,
+    )
+end
+
+function _pqs_fixed_side_unit_source_center_status(unit)
+    return _pqs_fixed_side_unit_get(
+        unit,
+        :source_center_status,
+        :unavailable,
+    )
+end
+
 function _pqs_fixed_side_unit_raw_box_auxiliary_metadata(unit)
     raw_box = _pqs_fixed_side_unit_get(unit, :raw_box_auxiliary_metadata, nothing)
     return isnothing(raw_box) ? nothing : raw_box
@@ -9732,6 +9830,8 @@ function _pqs_current_route_source_shell_mode_inventory(
     inferred_from_support_indices = falses(product_mode_count)
     inferred_from_raw_to_final_support = falses(product_mode_count)
 
+    native_center_shell_count = 0
+    native_center_mode_count = 0
     mode_row = 1
     for (shell_id, entry) in enumerate(product_unit_entries)
         unit = entry.unit
@@ -9741,6 +9841,25 @@ function _pqs_current_route_source_shell_mode_inventory(
             throw(
                 ArgumentError("product/doside source mode count must match unit retained range"),
             )
+        source_axis_center_vectors =
+            _pqs_fixed_side_unit_source_axis_center_vectors(unit, local_dims)
+        source_center_convention =
+            _pqs_fixed_side_unit_source_center_convention(unit)
+        source_center_status =
+            _pqs_fixed_side_unit_source_center_status(unit)
+        source_centers_available = !isnothing(source_axis_center_vectors)
+        if source_centers_available
+            source_center_convention == :comx_construction || throw(
+                ArgumentError("product/doside source center metadata must use :comx_construction"),
+            )
+            source_center_status == :native_representative || throw(
+                ArgumentError("product/doside source center metadata must use :native_representative status"),
+            )
+            native_center_shell_count += 1
+            native_center_mode_count += length(staged_unit.axis_function_indices)
+            source_shell_center_definitions[shell_id] = source_center_convention
+            source_shell_center_statuses[shell_id] = source_center_status
+        end
         source_shell_unit_indices[shell_id] = entry.unit_index
         source_shell_unit_labels[shell_id] = unit.role
         source_shell_unit_categories[shell_id] = unit.category
@@ -9783,6 +9902,14 @@ function _pqs_current_route_source_shell_mode_inventory(
             )
             local_axis_function_indices[mode_row, :] .= collect(local_tuple)
             source_axis_indices[mode_row, :] .= collect(source_tuple)
+            if source_centers_available
+                for axis in 1:3
+                    mode_center_coordinates[mode_row, axis] =
+                        source_axis_center_vectors[axis][local_tuple[axis]]
+                end
+                mode_center_definitions[mode_row] = source_center_convention
+                mode_center_statuses[mode_row] = source_center_status
+            end
             mode_row += 1
         end
     end
@@ -9797,6 +9924,22 @@ function _pqs_current_route_source_shell_mode_inventory(
         support_dense_unavailable_column_count +
         shell_realized_unavailable_column_count +
         other_unavailable_column_count
+    center_status =
+        native_center_mode_count == 0 ?
+        :unavailable_missing_native_comx_center_facts :
+        native_center_mode_count == product_mode_count ?
+        :native_representative :
+        :partial_native_representative_product_doside
+    center_definition =
+        native_center_mode_count == 0 ? :unavailable : :comx_construction
+    available_native_facts =
+        native_center_mode_count == 0 ?
+        "product/doside retained ranges, staged axes, fixed/active-axis intervals, and axis_function_indices" :
+        "product/doside retained ranges, staged axes, fixed/active-axis intervals, axis_function_indices, and native COMX/source-transform representative center vectors"
+    unavailable_native_facts =
+        native_center_mode_count == 0 ?
+        "native COMX representative centers, support-dense atom-box source modes, shell-realized PQS compact source relations, and relation weights or spans" :
+        "support-dense atom-box source modes, shell-realized PQS compact source relations, and relation weights or spans"
     return (
         object_kind = :pqs_current_route_source_shell_mode_inventory,
         status = :product_doside_source_shell_modes_only,
@@ -9854,21 +9997,19 @@ function _pqs_current_route_source_shell_mode_inventory(
             inferred_from_raw_to_final_support =
                 inferred_from_raw_to_final_support,
         ),
-        center_status = :unavailable_missing_native_comx_center_facts,
+        center_status = center_status,
         covered_unit_categories = (:product_doside,),
         non_product_source_mode_status =
             :unavailable_missing_native_non_product_source_mode_producer,
         source_mode_label_status =
             :native_product_doside_source_mode_indices_only,
-        available_native_facts =
-            "product/doside retained ranges, staged axes, fixed/active-axis intervals, and axis_function_indices",
-        unavailable_native_facts =
-            "native COMX representative centers, support-dense atom-box source modes, shell-realized PQS compact source relations, and relation weights or spans",
+        available_native_facts = available_native_facts,
+        unavailable_native_facts = unavailable_native_facts,
         absences_by_contract = (
             repo_ray_grouping_policy = true,
             product_axis_tuples_not_interpreted_as_ray_labels = true,
             representative_centers_as_identity_labels = true,
-            native_comx_centers = true,
+            native_comx_centers = center_status != :native_representative,
             support_dense_source_shell_modes = true,
             shell_realized_pqs_source_relations = true,
             lowdin_mixture_weights_or_spans = true,
@@ -9895,6 +10036,8 @@ function _pqs_current_route_source_shell_mode_inventory(
             source_mode_count = product_mode_count,
             product_doside_source_shell_count = product_shell_count,
             product_doside_source_mode_count = product_mode_count,
+            native_center_shell_count = native_center_shell_count,
+            native_center_mode_count = native_center_mode_count,
             support_dense_unavailable_unit_count =
                 support_dense_unavailable_unit_count,
             support_dense_unavailable_column_count =
@@ -9910,8 +10053,8 @@ function _pqs_current_route_source_shell_mode_inventory(
             coverage_complete = coverage_complete,
             source_mode_label_status =
                 :native_product_doside_source_mode_indices_only,
-            center_status = :unavailable_missing_native_comx_center_facts,
-            center_definition = :unavailable,
+            center_status = center_status,
+            center_definition = center_definition,
             lowdin_correction_applied = false,
             shell_label_status = :unavailable,
             ray_label_status = :unavailable,
