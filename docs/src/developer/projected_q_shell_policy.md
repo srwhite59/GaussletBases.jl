@@ -764,6 +764,20 @@ dims `(nx, ny, nz)`, geometry-based matching from representative centers when
 dims differ, or coarser cone/sector groupings when a contraction diagnostic
 needs that. Representative centers are metadata for those downstream choices;
 they are not identity labels and must not be used by repo code to infer labels.
+Ray or cone ownership is always a consumer-side construction from exported
+facts; repo sidecars should not export a `ray_id` unless a later reviewed
+producer explicitly defines one.
+
+The source-shell/source-mode labels are identifiers only. A label such as
+`(shell_id, ix, iy, iz)` says which construction-native function or retained
+column is being referred to in that source shell. It does not assert that the
+function is equal to one parent grid row, lives on one support site, has
+positive quadrature weight, or is sufficient to reconstruct the basis
+transform. The parent-to-final or source-to-final coefficient maps remain
+separate mathematical objects. They may be dense or local/sparse depending on
+the construction, and they are not replaced by labels. For operator work the
+repo should keep constructing the needed small-small matrices directly instead
+of asking CR2 to reconstruct operators from a large parent-basis map.
 
 The sidecar/provenance shape for that layer has three tables. `source_shells`
 has one row per construction-native source box or shell, with a sidecar-stable
@@ -772,7 +786,8 @@ limits/axis intervals, contracted dims `(nx, ny, nz)`, construction kind,
 source-mode ordering, and center convention/provenance. `source_modes` has one
 row per native source function inside a shell. Its native source-function
 identity is `(shell_id, ix, iy, iz)`, where the axis indices are in that
-shell's source-mode ordering. It may carry representative COMX/source
+shell's source-mode ordering. That identity is a label, not a locality or
+coefficient claim. It may carry representative COMX/source
 construction centers with explicit fields such as
 `center_definition = :comx_construction`,
 `center_status = :native_representative`, and
@@ -792,10 +807,12 @@ ray/cone, and radial-order fields must be status-bearing: for example
 `shell_label_status`, `ray_label_status`, and `radial_order_status` with values
 such as `:native`, `:mixed`, or `:unavailable`. The associated `shell_index`,
 `ray_id`, `ray_family_label`, `radial_order`, and owner fields may be populated
-only when those labels are native construction facts. For product/doside slabs,
-support-dense atom boxes, or Lowdin/projected PQS columns where a single native
-shell/ray is not honest, the row should say `:mixed` or `:unavailable` rather
-than inventing a label.
+only when those labels are native construction facts. Construction-native
+source-shell labels may be exported for product/doside slabs, support-dense
+atom boxes, and shell-realized PQS columns even when the corresponding function
+is not an identity selector on parent rows. If a `ray_id`, radial order, or
+many-mode relation is not construction-native, those fields should remain
+`:unavailable` rather than being inferred from the label.
 
 An optional second table, `fixed_column_source_relations`, may add many-row
 relations from fixed retained columns to contributing native source modes,
@@ -806,7 +823,9 @@ reviewed repo-native vocabulary. Coefficients, weights, span bounds, or
 normalization fields should appear only when the construction producer can
 define them unambiguously. If relation weights or spans are not well-defined,
 the relation should omit them and the column-level status should remain
-`:mixed` or `:unavailable`.
+`:mixed` or `:unavailable`. The relation table is not required just to export
+a label; it is needed only when a consumer needs a relation beyond the
+construction-native source-mode identity.
 
 The current Be2 strict-PQS q5 sidecar has a narrow first
 `fixed_column_source_relations` producer for product/doside retained columns
@@ -848,32 +867,45 @@ COMX/source-transform metadata carried from construction-side
 source-mode centers remain unavailable.
 Support-dense/direct-support atom boxes from
 `_pqs_atom_box_support_dense_units(...)` carry support states and coefficient
-columns, but they do not currently carry native shell/ray/cone/radial ids;
-treating support rows or support indices as ray labels remains unavailable.
+columns. The intended label contract for these units is still simple: treat
+each atom box as a construction-native source shell with owner, parent lattice
+limits, contracted dims, and local source coordinates `(ix, iy, iz)` in the
+box's construction order. This label remains valid even when the atom-box
+coefficient matrix is non-identity. It is not a statement that the retained
+column equals one support row, and it is not enough to reconstruct operator
+matrices. Treating support rows or support indices as ray labels remains
+unavailable unless a reviewed producer explicitly defines such a relation.
 Shell-realized PQS fixtures carry
 `_CartesianNestedProjectedQShellStagedUnitDescriptor3D` facts, including
 source-mode dimensions, boundary mode indices, boundary column indices, axis
 intervals, shell projection, and Lowdin cleanup. Those are metadata/oracle
-facts only for this sidecar: a retained PQS column after Lowdin cleanup may mix
-boundary modes, and no compact retained-column-to-source relation with reviewed
-weights or spans is currently available.
+facts for this sidecar. The intended label contract is the construction-native
+PQS source shell plus local source-mode coordinates `(ix, iy, iz)`. That label
+is an identifier for grouping and diagnostics; it does not claim that a
+Lowdin-cleaned retained column has support on only one source mode or one
+parent site. A retained PQS column after shell projection and Lowdin cleanup
+may mix boundary modes. Any weights, spans, or compact retained-column-to-
+source relation for that mixture are separate data and should be exported only
+after a reviewed producer defines them.
 
 The current labels `:regular_shared_molecular_shell_1`,
 `:regular_shared_molecular_shell_2`, and
 `:regular_shared_molecular_shell_3` identify shell-realized PQS retained units
 only. They are not shell-start rays, per-source-mode ray labels, or support-row
 shell memberships, and they do not make the shell-row oracle the algorithm.
-Per-source-mode shell/ray labels may be exported only when the repo has an
-explicit source-box label producer; support-row selectors, support indices,
-compact transforms, and shell-row oracle facts remain diagnostic-only. No
-fixed-column label field or relation may be inferred from retained-column
-centers, nearest-grid searches, support-row order, or `raw_to_final` support.
-Until an explicit producer exists, `shell_label_status`, `ray_label_status`,
-and any aggregate `shell_ray_label_status` must remain `:unavailable`, while
-center/grid reconstruction and nearest-grid heuristics stay disabled. This
-preserves no coordinate/nearest-grid reconstruction, no owner inference from
-`raw_to_final`, no retained-weight/IDA division, no route/Hamiltonian adoption,
-no public API, and no CR2 science claim.
+Per-source-mode labels may be exported only when the repo has an explicit
+source-box label producer, and those labels remain identifiers rather than
+operator data. Support-row selectors, support indices, compact transforms, and
+shell-row oracle facts remain diagnostic-only unless promoted by a reviewed
+producer. No fixed-column label field or relation may be inferred from
+retained-column centers, nearest-grid searches, support-row order, or
+`raw_to_final` support. Until an explicit producer exists for a given field,
+`ray_label_status`, radial-order status, and any aggregate
+`shell_ray_label_status` must remain `:unavailable`, while center/grid
+reconstruction and nearest-grid heuristics stay disabled. This preserves no
+coordinate/nearest-grid reconstruction, no owner inference from `raw_to_final`,
+no retained-weight/IDA division, no route/Hamiltonian adoption, no public API,
+and no CR2 science claim.
 
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at

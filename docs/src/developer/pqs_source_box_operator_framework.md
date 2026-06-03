@@ -1265,6 +1265,18 @@ the same no-go records: shell labels remain unavailable, center/grid label
 reconstruction and nearest-grid heuristics remain disabled, and no
 retained-weight/IDA division or route/adoption behavior is introduced.
 
+The source-shell/source-mode label lane is provenance metadata, not operator
+data. A label such as `(shell_id, ix, iy, iz)` identifies a
+construction-native function or retained column in a source shell. It does not
+assert support locality, does not define a ray, does not imply a positive
+quadrature weight, and is not enough to reconstruct parent-to-final or
+source-to-final coefficient maps. Consumers such as CR2 may build ray/cone or
+tail-contraction groupings from exported labels, dimensions, and representative
+centers, but repo exports facts rather than choosing the grouping policy.
+Needed operator matrices should continue to be built in repo as small-small
+blocks; labels are not a substitute for exporting a large parent-basis
+coefficient map.
+
 The ignored full Be2 q5 report
 `tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
 exercises that extractor on the current-route inventory. It records fixed
