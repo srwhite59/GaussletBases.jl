@@ -177,6 +177,7 @@ using GaussletBases
         shell_row_oracle_only::Bool = false,
         support_local_oracle_used::Bool = false,
         source_axis_center_vectors = nothing,
+        support_states = nothing,
     )
         source_center_convention =
             isnothing(source_axis_center_vectors) ? :unavailable : :comx_construction
@@ -189,6 +190,9 @@ using GaussletBases
             column_range = column_range,
             retained_count = length(column_range),
             support_count = support_count,
+            support_states = isnothing(support_states) ?
+                NTuple{3,Int}[] :
+                NTuple{3,Int}[state for state in support_states],
             staged_unit = staged_unit,
             support_source_semantics = category == :support_dense ?
                 :support_local_direct_rows : :synthetic_source_semantics,
@@ -217,6 +221,24 @@ using GaussletBases
                 support_local_oracle_used = support_local_oracle_used,
             ),
         )
+    end
+
+    function _synthetic_support_dense_source_states()
+        return NTuple{3,Int}[
+            (ix, iy, iz) for iz in 1:3 for iy in 1:3 for ix in 1:3
+        ]
+    end
+
+    function _synthetic_shell_realized_boundary_modes()
+        return NTuple{3,Int}[
+            (1, 1, 1),
+            (1, 1, 5),
+            (1, 5, 1),
+            (5, 1, 1),
+            (5, 5, 1),
+            (5, 1, 5),
+            (1, 5, 5),
+        ]
     end
 
     function _synthetic_product_axis(kind::Symbol, fixed_index, interval)
@@ -262,6 +284,7 @@ using GaussletBases
                 support_count = 27,
                 primitive_family = :atom_local_complete_shell_sequence,
                 representation_kind = :support_dense_direct_support,
+                support_states = _synthetic_support_dense_source_states(),
             ),
             _synthetic_fixed_side_inventory_unit(
                 :regular_shared_molecular_shell_1,
@@ -274,6 +297,10 @@ using GaussletBases
                 raw_box_auxiliary_metadata = (
                     available = true,
                     source_mode_dims = (5, 5, 5),
+                    axis_intervals = (1:5, 1:5, 1:5),
+                    boundary_mode_indices =
+                        _synthetic_shell_realized_boundary_modes(),
+                    selection_rule = :synthetic_boundary_fixture,
                     reference_only = true,
                     active_current_route_contract = false,
                 ),
@@ -656,41 +683,81 @@ using GaussletBases
     @test source_shell_mode_inventory.object_kind ==
           :pqs_current_route_source_shell_mode_inventory
     @test source_shell_mode_inventory.status ==
-          :product_doside_source_shell_modes_only
+          :native_current_route_source_shell_modes
     @test source_shell_mode_inventory.schema_version ==
           :pqs_source_shell_modes_private_v1
     @test source_shell_mode_inventory.fixed_dimension == 15
-    @test source_shell_mode_inventory.source_shell_count == 1
-    @test source_shell_mode_inventory.source_mode_count == 4
-    @test source_shell_mode_inventory.source_shells.source_shell_ids == [1]
-    @test source_shell_mode_inventory.source_shells.unit_indices == [1]
+    @test source_shell_mode_inventory.source_shell_count == 3
+    @test source_shell_mode_inventory.source_mode_count == 38
+    @test source_shell_mode_inventory.source_shells.source_shell_ids == [1, 2, 3]
+    @test source_shell_mode_inventory.source_shells.unit_indices == [1, 2, 3]
     @test source_shell_mode_inventory.source_shells.unit_labels ==
-          [:outer_mismatch_z_low_slab]
+          [
+              :outer_mismatch_z_low_slab,
+              :left_atom_box,
+              :regular_shared_molecular_shell_1,
+          ]
     @test source_shell_mode_inventory.source_shells.unit_categories ==
-          [:product_doside]
+          [:product_doside, :support_dense, :shell_realized_pqs_fixture]
     @test source_shell_mode_inventory.source_shells.unit_kinds ==
-          [:product_doside]
-    @test source_shell_mode_inventory.source_shells.retained_starts == [1]
-    @test source_shell_mode_inventory.source_shells.retained_stops == [4]
+          [:product_doside, :atom_core_cube, :projected_q_shell]
+    @test source_shell_mode_inventory.source_shells.retained_starts == [1, 5, 9]
+    @test source_shell_mode_inventory.source_shells.retained_stops == [4, 8, 15]
     @test source_shell_mode_inventory.source_shells.source_shell_labels ==
-          [:outer_mismatch_z_low_slab]
+          [
+              :outer_mismatch_z_low_slab,
+              :left_atom_box,
+              :regular_shared_molecular_shell_1,
+          ]
     @test source_shell_mode_inventory.source_shells.source_shell_statuses ==
-          [:native_product_doside_source_box]
+          [
+              :native_product_doside_source_box,
+              :native_support_dense_source_support_states,
+              :native_shell_realized_boundary_source_box,
+          ]
     @test source_shell_mode_inventory.source_shells.construction_kinds ==
-          [:product_doside]
+          [
+              :product_doside,
+              :support_dense_direct_support,
+              :shell_realized_pqs_fixture,
+          ]
     @test source_shell_mode_inventory.source_shells.axis_kinds ==
-          [:fixed :active :active]
+          [
+              :fixed :active :active
+              :parent_lattice_support_state :parent_lattice_support_state :parent_lattice_support_state
+              :raw_box_axis :raw_box_axis :raw_box_axis
+          ]
     @test source_shell_mode_inventory.source_shells.axis_starts ==
-          [1 1 3]
+          [
+              1 1 3
+              1 1 1
+              1 1 1
+          ]
     @test source_shell_mode_inventory.source_shells.axis_stops ==
-          [1 2 4]
+          [
+              1 2 4
+              3 3 3
+              5 5 5
+          ]
     @test source_shell_mode_inventory.source_shells.fixed_axis_indices ==
-          [1 0 0]
+          [
+              1 0 0
+              0 0 0
+              0 0 0
+          ]
     @test source_shell_mode_inventory.source_shells.contracted_dims ==
-          [1 2 2]
-    @test source_shell_mode_inventory.source_shells.source_mode_counts == [4]
+          [
+              1 2 2
+              3 3 3
+              5 5 5
+          ]
+    @test source_shell_mode_inventory.source_shells.source_mode_counts == [4, 27, 7]
     @test source_shell_mode_inventory.source_shells.source_mode_orderings ==
-          [:axis_function_indices_order]
+          [
+              :axis_function_indices_order,
+              :construction_support_state_order,
+              :boundary_mode_indices_order,
+          ]
     @test all(==(:unavailable), source_shell_mode_inventory.source_shells.center_definitions)
     @test all(==(:unavailable), source_shell_mode_inventory.source_shells.center_statuses)
     @test !any(source_shell_mode_inventory.source_shells.lowdin_correction_applied)
@@ -698,35 +765,88 @@ using GaussletBases
     @test all(==(:unavailable), source_shell_mode_inventory.source_shells.ray_label_statuses)
     @test all(==(:unavailable), source_shell_mode_inventory.source_shells.radial_order_statuses)
     @test source_shell_mode_inventory.source_modes.source_shell_ids ==
-          fill(1, 4)
-    @test source_shell_mode_inventory.source_modes.mode_indices == collect(1:4)
+          [fill(1, 4); fill(2, 27); fill(3, 7)]
+    @test source_shell_mode_inventory.source_modes.mode_indices ==
+          [collect(1:4); collect(1:27); collect(1:7)]
     @test source_shell_mode_inventory.source_modes.unit_labels ==
-          fill(:outer_mismatch_z_low_slab, 4)
-    @test source_shell_mode_inventory.source_modes.native_source_id_labels == [
+          [
+              fill(:outer_mismatch_z_low_slab, 4);
+              fill(:left_atom_box, 27);
+              fill(:regular_shared_molecular_shell_1, 7)
+          ]
+    @test source_shell_mode_inventory.source_modes.native_source_id_labels[1:4] == [
         "source_mode:1:1,1,1",
         "source_mode:1:1,2,1",
         "source_mode:1:1,1,2",
         "source_mode:1:1,2,2",
     ]
-    @test source_shell_mode_inventory.source_modes.local_axis_function_indices == [
+    @test source_shell_mode_inventory.source_modes.native_source_id_labels[5] ==
+          "source_mode:2:1,1,1"
+    @test source_shell_mode_inventory.source_modes.native_source_id_labels[31] ==
+          "source_mode:2:3,3,3"
+    @test source_shell_mode_inventory.source_modes.native_source_id_labels[32:38] == [
+        "source_mode:3:1,1,1",
+        "source_mode:3:1,1,5",
+        "source_mode:3:1,5,1",
+        "source_mode:3:5,1,1",
+        "source_mode:3:5,5,1",
+        "source_mode:3:5,1,5",
+        "source_mode:3:1,5,5",
+    ]
+    @test source_shell_mode_inventory.source_modes.local_axis_function_indices[1:4, :] == [
         1 1 1
         1 2 1
         1 1 2
         1 2 2
     ]
-    @test source_shell_mode_inventory.source_modes.source_axis_indices == [
+    @test source_shell_mode_inventory.source_modes.local_axis_function_indices[5, :] ==
+          [1, 1, 1]
+    @test source_shell_mode_inventory.source_modes.local_axis_function_indices[31, :] ==
+          [3, 3, 3]
+    @test source_shell_mode_inventory.source_modes.local_axis_function_indices[32:38, :] == [
+        1 1 1
+        1 1 5
+        1 5 1
+        5 1 1
+        5 5 1
+        5 1 5
+        1 5 5
+    ]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[1:4, :] == [
         1 1 3
         1 2 3
         1 1 4
         1 2 4
     ]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[5, :] ==
+          [1, 1, 1]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[31, :] ==
+          [3, 3, 3]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[32:38, :] ==
+          source_shell_mode_inventory.source_modes.local_axis_function_indices[32:38, :]
     @test all(
         ==(:native_product_doside_source_mode),
-        source_shell_mode_inventory.source_modes.source_mode_statuses,
+        source_shell_mode_inventory.source_modes.source_mode_statuses[1:4],
+    )
+    @test all(
+        ==(:native_support_dense_source_support_state),
+        source_shell_mode_inventory.source_modes.source_mode_statuses[5:31],
+    )
+    @test all(
+        ==(:native_shell_realized_boundary_source_mode),
+        source_shell_mode_inventory.source_modes.source_mode_statuses[32:38],
     )
     @test all(
         ==(:native_product_axis_tuple),
-        source_shell_mode_inventory.source_modes.source_axis_tuple_statuses,
+        source_shell_mode_inventory.source_modes.source_axis_tuple_statuses[1:4],
+    )
+    @test all(
+        ==(:native_parent_lattice_support_state),
+        source_shell_mode_inventory.source_modes.source_axis_tuple_statuses[5:31],
+    )
+    @test all(
+        ==(:native_boundary_source_mode_tuple),
+        source_shell_mode_inventory.source_modes.source_axis_tuple_statuses[32:38],
     )
     @test all(isnan, source_shell_mode_inventory.source_modes.center_coordinates)
     @test all(==(:unavailable), source_shell_mode_inventory.source_modes.center_definitions)
@@ -743,27 +863,36 @@ using GaussletBases
     @test source_shell_mode_inventory.center_status ==
           :unavailable_missing_native_comx_center_facts
     @test source_shell_mode_inventory.covered_unit_categories ==
-          (:product_doside,)
+          (:product_doside, :support_dense, :shell_realized_pqs_fixture)
     @test source_shell_mode_inventory.non_product_source_mode_status ==
-          :unavailable_missing_native_non_product_source_mode_producer
+          :native_non_product_source_shell_mode_labels
     @test source_shell_mode_inventory.source_mode_label_status ==
-          :native_product_doside_source_mode_indices_only
+          :native_source_mode_tuple_labels_shell_ray_radial_unavailable
     @test source_shell_mode_inventory.absences_by_contract.repo_ray_grouping_policy
     @test source_shell_mode_inventory.absences_by_contract.product_axis_tuples_not_interpreted_as_ray_labels
     @test source_shell_mode_inventory.absences_by_contract.representative_centers_as_identity_labels
     @test source_shell_mode_inventory.absences_by_contract.native_comx_centers
-    @test source_shell_mode_inventory.absences_by_contract.support_dense_source_shell_modes
+    @test !source_shell_mode_inventory.absences_by_contract.support_dense_source_shell_modes
     @test source_shell_mode_inventory.absences_by_contract.shell_realized_pqs_source_relations
     @test source_shell_mode_inventory.absences_by_contract.lowdin_mixture_weights_or_spans
+    @test source_shell_mode_inventory.diagnostics.source_shell_count == 3
+    @test source_shell_mode_inventory.diagnostics.source_mode_count == 38
     @test source_shell_mode_inventory.diagnostics.product_doside_source_shell_count == 1
     @test source_shell_mode_inventory.diagnostics.product_doside_source_mode_count == 4
-    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_unit_count == 1
-    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_column_count == 4
-    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_unit_count == 1
-    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_column_count ==
+    @test source_shell_mode_inventory.diagnostics.support_dense_source_shell_count == 1
+    @test source_shell_mode_inventory.diagnostics.support_dense_source_mode_count == 27
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_source_shell_count ==
+          1
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_source_mode_count ==
           7
-    @test source_shell_mode_inventory.diagnostics.total_unavailable_unit_count == 2
-    @test source_shell_mode_inventory.diagnostics.total_unavailable_column_count == 11
+    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_unit_count == 0
+    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_column_count == 0
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_unit_count == 0
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_column_count ==
+          0
+    @test source_shell_mode_inventory.diagnostics.total_unavailable_unit_count == 0
+    @test source_shell_mode_inventory.diagnostics.total_unavailable_column_count == 0
+    @test !source_shell_mode_inventory.diagnostics.product_doside_source_shell_modes_only
     @test source_shell_mode_inventory.diagnostics.repo_exports_native_facts_not_ray_policy
     @test source_shell_mode_inventory.diagnostics.product_axis_tuples_not_interpreted_as_ray_labels
     @test !source_shell_mode_inventory.diagnostics.product_axis_tuples_are_ray_labels
@@ -791,32 +920,44 @@ using GaussletBases
             provenance = (source = :synthetic_native_source_center_test,),
         )
     @test centered_source_shell_mode_inventory.center_status ==
-          :native_representative
+          :partial_native_representative_product_doside
     @test centered_source_shell_mode_inventory.source_shells.center_definitions ==
-          [:comx_construction]
+          [:comx_construction, :unavailable, :unavailable]
     @test centered_source_shell_mode_inventory.source_shells.center_statuses ==
-          [:native_representative]
-    @test centered_source_shell_mode_inventory.source_modes.center_coordinates == [
+          [:native_representative, :unavailable, :unavailable]
+    @test centered_source_shell_mode_inventory.source_modes.center_coordinates[1:4, :] == [
         10.0 20.0 30.0
         10.0 21.0 30.0
         10.0 20.0 31.0
         10.0 21.0 31.0
     ]
     @test all(
+        isnan,
+        centered_source_shell_mode_inventory.source_modes.center_coordinates[5:38, :],
+    )
+    @test all(
         ==(:comx_construction),
-        centered_source_shell_mode_inventory.source_modes.center_definitions,
+        centered_source_shell_mode_inventory.source_modes.center_definitions[1:4],
+    )
+    @test all(
+        ==(:unavailable),
+        centered_source_shell_mode_inventory.source_modes.center_definitions[5:38],
     )
     @test all(
         ==(:native_representative),
-        centered_source_shell_mode_inventory.source_modes.center_statuses,
+        centered_source_shell_mode_inventory.source_modes.center_statuses[1:4],
+    )
+    @test all(
+        ==(:unavailable),
+        centered_source_shell_mode_inventory.source_modes.center_statuses[5:38],
     )
     @test centered_source_shell_mode_inventory.diagnostics.center_status ==
-          :native_representative
+          :partial_native_representative_product_doside
     @test centered_source_shell_mode_inventory.diagnostics.center_definition ==
           :comx_construction
     @test centered_source_shell_mode_inventory.diagnostics.native_center_shell_count == 1
     @test centered_source_shell_mode_inventory.diagnostics.native_center_mode_count == 4
-    @test !centered_source_shell_mode_inventory.absences_by_contract.native_comx_centers
+    @test centered_source_shell_mode_inventory.absences_by_contract.native_comx_centers
     @test !any(centered_source_shell_mode_inventory.source_modes.inferred_from_centers)
     @test !centered_source_shell_mode_inventory.diagnostics.retained_weight_or_ida_division
     @test_throws DimensionMismatch metrics_module._pqs_current_route_source_shell_mode_inventory(
@@ -927,15 +1068,15 @@ using GaussletBases
     @test sidecar_with_source_shell_modes.source_shell_mode_inventory ===
           source_shell_mode_inventory
     @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_inventory_available
-    @test sidecar_with_source_shell_modes.diagnostics.source_shell_count == 1
-    @test sidecar_with_source_shell_modes.diagnostics.source_mode_count == 4
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_count == 3
+    @test sidecar_with_source_shell_modes.diagnostics.source_mode_count == 38
     @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_center_status ==
           :unavailable_missing_native_comx_center_facts
-    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_product_doside_only
+    @test !sidecar_with_source_shell_modes.diagnostics.source_shell_mode_product_doside_only
     @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_support_dense_unavailable_column_count ==
-          4
+          0
     @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_shell_realized_pqs_unavailable_column_count ==
-          7
+          0
 
     source_shell_mode_io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
@@ -945,17 +1086,17 @@ using GaussletBases
     source_shell_mode_text = String(take!(source_shell_mode_io))
     @test occursin("[source_shell_mode_inventory]", source_shell_mode_text)
     @test occursin("schema_version\tpqs_source_shell_modes_private_v1", source_shell_mode_text)
-    @test occursin("status\tproduct_doside_source_shell_modes_only", source_shell_mode_text)
-    @test occursin("source_shell_count\t1", source_shell_mode_text)
-    @test occursin("source_mode_count\t4", source_shell_mode_text)
+    @test occursin("status\tnative_current_route_source_shell_modes", source_shell_mode_text)
+    @test occursin("source_shell_count\t3", source_shell_mode_text)
+    @test occursin("source_mode_count\t38", source_shell_mode_text)
     @test occursin(
         "center_status\tunavailable_missing_native_comx_center_facts",
         source_shell_mode_text,
     )
-    @test occursin("product_doside_only\ttrue", source_shell_mode_text)
-    @test occursin("support_dense_unavailable_column_count\t4", source_shell_mode_text)
+    @test occursin("product_doside_only\tfalse", source_shell_mode_text)
+    @test occursin("support_dense_unavailable_column_count\t0", source_shell_mode_text)
     @test occursin(
-        "shell_realized_pqs_unavailable_column_count\t7",
+        "shell_realized_pqs_unavailable_column_count\t0",
         source_shell_mode_text,
     )
     @test occursin("inferred_from_centers\tfalse", source_shell_mode_text)

@@ -9655,6 +9655,147 @@ function _pqs_fixed_side_unit_source_center_status(unit)
     )
 end
 
+function _pqs_source_mode_tuple3(value, context::AbstractString)
+    length(value) == 3 || throw(
+        ArgumentError("$(context) must be a three-axis source-mode tuple"),
+    )
+    return (Int(value[1]), Int(value[2]), Int(value[3]))
+end
+
+function _pqs_source_mode_tuple_label(shell_id::Int, mode_tuple::NTuple{3,Int})
+    return string(
+        "source_mode:",
+        shell_id,
+        ":",
+        mode_tuple[1],
+        ",",
+        mode_tuple[2],
+        ",",
+        mode_tuple[3],
+    )
+end
+
+function _pqs_current_route_unit_support_states(unit)
+    raw_states = _pqs_fixed_side_unit_get(unit, :support_states, nothing)
+    isnothing(raw_states) && return nothing
+    states = NTuple{3,Int}[
+        _pqs_source_mode_tuple3(state, "support-dense source support state")
+        for state in raw_states
+    ]
+    isempty(states) && return nothing
+    return states
+end
+
+function _pqs_source_mode_axis_bounds(states::AbstractVector{<:NTuple{3,Int}})
+    isempty(states) && throw(
+        ArgumentError("source-mode axis bounds require at least one source state"),
+    )
+    starts = ntuple(axis -> minimum(state[axis] for state in states), 3)
+    stops = ntuple(axis -> maximum(state[axis] for state in states), 3)
+    dims = ntuple(axis -> stops[axis] - starts[axis] + 1, 3)
+    return (starts = starts, stops = stops, dims = dims)
+end
+
+function _pqs_current_route_shell_realized_source_mode_metadata(unit)
+    if _pqs_fixed_side_unit_get(unit, :descriptor, nothing) isa
+       _CartesianNestedProjectedQShellStagedUnitDescriptor3D
+        descriptor = unit.descriptor
+        source_mode_dims =
+            ntuple(axis -> size(descriptor.axis_local_coefficients[axis], 2), 3)
+        mode_indices = NTuple{3,Int}[
+            _pqs_source_mode_tuple3(
+                mode,
+                "shell-realized PQS boundary source mode",
+            )
+            for mode in descriptor.boundary_mode_indices
+        ]
+        axis_intervals = descriptor.axis_intervals
+        selection_rule = descriptor.selection_rule
+        source = :pqs_projected_q_shell_descriptor
+    else
+        fact =
+            _pqs_fixed_side_unit_get(unit, :shell_realization_transform_fact, nothing)
+        raw_metadata =
+            _pqs_fixed_side_unit_get(unit, :raw_box_auxiliary_metadata, nothing)
+        if !isnothing(fact) &&
+           hasproperty(fact, :source_box) &&
+           hasproperty(fact, :boundary_selection)
+            source_mode_dims =
+                _pqs_source_mode_tuple3(
+                    fact.source_box.source_mode_dims,
+                    "shell-realized PQS source-mode dimensions",
+                )
+            mode_indices = NTuple{3,Int}[
+                _pqs_source_mode_tuple3(
+                    mode,
+                    "shell-realized PQS boundary source mode",
+                )
+                for mode in fact.boundary_selection.mode_indices
+            ]
+            axis_intervals = hasproperty(fact.source_box, :axis_intervals) ?
+                fact.source_box.axis_intervals :
+                ntuple(axis -> 1:source_mode_dims[axis], 3)
+            selection_rule =
+                hasproperty(fact.boundary_selection, :selection_rule) ?
+                fact.boundary_selection.selection_rule :
+                :boundary_source_mode_selection
+            source = :pqs_shell_realization_transform_fact
+        elseif !isnothing(raw_metadata) &&
+               hasproperty(raw_metadata, :available) &&
+               Bool(raw_metadata.available) &&
+               hasproperty(raw_metadata, :source_mode_dims) &&
+               hasproperty(raw_metadata, :boundary_mode_indices)
+            source_mode_dims =
+                _pqs_source_mode_tuple3(
+                    raw_metadata.source_mode_dims,
+                    "shell-realized PQS source-mode dimensions",
+                )
+            mode_indices = NTuple{3,Int}[
+                _pqs_source_mode_tuple3(
+                    mode,
+                    "shell-realized PQS boundary source mode",
+                )
+                for mode in raw_metadata.boundary_mode_indices
+            ]
+            axis_intervals =
+                hasproperty(raw_metadata, :axis_intervals) ?
+                raw_metadata.axis_intervals :
+                ntuple(axis -> 1:source_mode_dims[axis], 3)
+            selection_rule =
+                hasproperty(raw_metadata, :selection_rule) ?
+                raw_metadata.selection_rule :
+                :boundary_source_mode_selection
+            source = :pqs_raw_box_auxiliary_metadata
+        else
+            return nothing
+        end
+    end
+
+    isempty(mode_indices) && return nothing
+    length(axis_intervals) == 3 || throw(
+        ArgumentError("shell-realized PQS source-box axis intervals must be three-dimensional"),
+    )
+    axis_intervals = (axis_intervals[1], axis_intervals[2], axis_intervals[3])
+    for axis in 1:3
+        length(axis_intervals[axis]) == source_mode_dims[axis] || throw(
+            DimensionMismatch("shell-realized PQS source-box axis interval length must match source-mode dimensions"),
+        )
+    end
+    for mode in mode_indices
+        all(axis -> 1 <= mode[axis] <= source_mode_dims[axis], 1:3) ||
+            throw(
+                ArgumentError("shell-realized PQS boundary source mode exceeds source-mode dimensions"),
+            )
+    end
+    return (
+        source = source,
+        source_mode_dims = source_mode_dims,
+        axis_intervals = axis_intervals,
+        mode_indices = mode_indices,
+        selection_rule = selection_rule,
+    )
+end
+
 function _pqs_fixed_side_unit_raw_box_auxiliary_metadata(unit)
     raw_box = _pqs_fixed_side_unit_get(unit, :raw_box_auxiliary_metadata, nothing)
     return isnothing(raw_box) ? nothing : raw_box
@@ -9752,15 +9893,21 @@ function _pqs_current_route_source_shell_mode_inventory(
         for (unit_index, unit) in enumerate(units)
         if unit.category == :product_doside && unit.kind == :product_doside
     )
+    support_dense_unit_entries = NamedTuple[]
+    shell_realized_unit_entries = NamedTuple[]
     product_shell_count = length(product_unit_entries)
     product_mode_count = 0
+    support_dense_source_shell_count = 0
+    support_dense_source_mode_count = 0
+    shell_realized_source_shell_count = 0
+    shell_realized_source_mode_count = 0
     support_dense_unavailable_unit_count = 0
     support_dense_unavailable_column_count = 0
     shell_realized_unavailable_unit_count = 0
     shell_realized_unavailable_column_count = 0
     other_unavailable_unit_count = 0
     other_unavailable_column_count = 0
-    for unit in units
+    for (unit_index, unit) in enumerate(units)
         unit_count = length(unit.column_range)
         if unit.category == :product_doside && unit.kind == :product_doside
             hasproperty(unit, :staged_unit) && !isnothing(unit.staged_unit) ||
@@ -9769,66 +9916,104 @@ function _pqs_current_route_source_shell_mode_inventory(
                 )
             product_mode_count += length(unit.staged_unit.axis_function_indices)
         elseif unit.category == :support_dense
-            support_dense_unavailable_unit_count += 1
-            support_dense_unavailable_column_count += unit_count
+            support_states = _pqs_current_route_unit_support_states(unit)
+            if isnothing(support_states)
+                support_dense_unavailable_unit_count += 1
+                support_dense_unavailable_column_count += unit_count
+            else
+                length(support_states) == Int(unit.support_count) || throw(
+                    DimensionMismatch("support-dense source-mode labels require support_states to match support_count"),
+                )
+                push!(
+                    support_dense_unit_entries,
+                    (
+                        unit_index = unit_index,
+                        unit = unit,
+                        support_states = support_states,
+                    ),
+                )
+                support_dense_source_shell_count += 1
+                support_dense_source_mode_count += length(support_states)
+            end
         elseif unit.category == :shell_realized_pqs_fixture
-            shell_realized_unavailable_unit_count += 1
-            shell_realized_unavailable_column_count += unit_count
+            shell_metadata =
+                _pqs_current_route_shell_realized_source_mode_metadata(unit)
+            if isnothing(shell_metadata)
+                shell_realized_unavailable_unit_count += 1
+                shell_realized_unavailable_column_count += unit_count
+            else
+                push!(
+                    shell_realized_unit_entries,
+                    (
+                        unit_index = unit_index,
+                        unit = unit,
+                        metadata = shell_metadata,
+                    ),
+                )
+                shell_realized_source_shell_count += 1
+                shell_realized_source_mode_count +=
+                    length(shell_metadata.mode_indices)
+            end
         else
             other_unavailable_unit_count += 1
             other_unavailable_column_count += unit_count
         end
     end
 
-    source_shell_ids = collect(1:product_shell_count)
-    source_shell_unit_indices = Vector{Int}(undef, product_shell_count)
-    source_shell_unit_labels = Vector{Symbol}(undef, product_shell_count)
-    source_shell_unit_categories = Vector{Symbol}(undef, product_shell_count)
-    source_shell_unit_kinds = Vector{Symbol}(undef, product_shell_count)
-    source_shell_retained_starts = Vector{Int}(undef, product_shell_count)
-    source_shell_retained_stops = Vector{Int}(undef, product_shell_count)
-    source_shell_labels = Vector{Symbol}(undef, product_shell_count)
-    source_shell_statuses =
-        fill(:native_product_doside_source_box, product_shell_count)
-    source_shell_construction_kinds = fill(:product_doside, product_shell_count)
-    source_shell_axis_kinds = Matrix{Symbol}(undef, product_shell_count, 3)
-    source_shell_axis_starts = zeros(Int, product_shell_count, 3)
-    source_shell_axis_stops = zeros(Int, product_shell_count, 3)
-    source_shell_fixed_axis_indices = zeros(Int, product_shell_count, 3)
-    source_shell_contracted_dims = zeros(Int, product_shell_count, 3)
-    source_shell_mode_counts = zeros(Int, product_shell_count)
-    source_shell_mode_orderings =
-        fill(:axis_function_indices_order, product_shell_count)
-    source_shell_center_definitions = fill(:unavailable, product_shell_count)
-    source_shell_center_statuses = fill(:unavailable, product_shell_count)
-    source_shell_lowdin_correction_applied = falses(product_shell_count)
-    source_shell_shell_label_statuses = fill(:unavailable, product_shell_count)
-    source_shell_ray_label_statuses = fill(:unavailable, product_shell_count)
-    source_shell_radial_order_statuses =
-        fill(:unavailable, product_shell_count)
+    source_shell_count =
+        product_shell_count +
+        support_dense_source_shell_count +
+        shell_realized_source_shell_count
+    source_mode_count =
+        product_mode_count +
+        support_dense_source_mode_count +
+        shell_realized_source_mode_count
 
-    mode_source_shell_ids = Vector{Int}(undef, product_mode_count)
-    mode_indices = Vector{Int}(undef, product_mode_count)
-    mode_unit_labels = Vector{Symbol}(undef, product_mode_count)
-    native_source_id_labels = Vector{String}(undef, product_mode_count)
-    local_axis_function_indices = zeros(Int, product_mode_count, 3)
-    source_axis_indices = zeros(Int, product_mode_count, 3)
-    source_mode_statuses =
-        fill(:native_product_doside_source_mode, product_mode_count)
-    source_axis_tuple_statuses =
-        fill(:native_product_axis_tuple, product_mode_count)
-    mode_center_coordinates = fill(NaN, product_mode_count, 3)
-    mode_center_definitions = fill(:unavailable, product_mode_count)
-    mode_center_statuses = fill(:unavailable, product_mode_count)
-    mode_lowdin_correction_applied = falses(product_mode_count)
-    mode_shell_label_statuses = fill(:unavailable, product_mode_count)
-    mode_ray_label_statuses = fill(:unavailable, product_mode_count)
-    mode_radial_order_statuses = fill(:unavailable, product_mode_count)
-    inferred_from_centers = falses(product_mode_count)
-    inferred_from_nearest_grid = falses(product_mode_count)
-    inferred_from_support_order = falses(product_mode_count)
-    inferred_from_support_indices = falses(product_mode_count)
-    inferred_from_raw_to_final_support = falses(product_mode_count)
+    source_shell_ids = collect(1:source_shell_count)
+    source_shell_unit_indices = Vector{Int}(undef, source_shell_count)
+    source_shell_unit_labels = Vector{Symbol}(undef, source_shell_count)
+    source_shell_unit_categories = Vector{Symbol}(undef, source_shell_count)
+    source_shell_unit_kinds = Vector{Symbol}(undef, source_shell_count)
+    source_shell_retained_starts = Vector{Int}(undef, source_shell_count)
+    source_shell_retained_stops = Vector{Int}(undef, source_shell_count)
+    source_shell_labels = Vector{Symbol}(undef, source_shell_count)
+    source_shell_statuses = Vector{Symbol}(undef, source_shell_count)
+    source_shell_construction_kinds = Vector{Symbol}(undef, source_shell_count)
+    source_shell_axis_kinds = Matrix{Symbol}(undef, source_shell_count, 3)
+    source_shell_axis_starts = zeros(Int, source_shell_count, 3)
+    source_shell_axis_stops = zeros(Int, source_shell_count, 3)
+    source_shell_fixed_axis_indices = zeros(Int, source_shell_count, 3)
+    source_shell_contracted_dims = zeros(Int, source_shell_count, 3)
+    source_shell_mode_counts = zeros(Int, source_shell_count)
+    source_shell_mode_orderings = Vector{Symbol}(undef, source_shell_count)
+    source_shell_center_definitions = fill(:unavailable, source_shell_count)
+    source_shell_center_statuses = fill(:unavailable, source_shell_count)
+    source_shell_lowdin_correction_applied = falses(source_shell_count)
+    source_shell_shell_label_statuses = fill(:unavailable, source_shell_count)
+    source_shell_ray_label_statuses = fill(:unavailable, source_shell_count)
+    source_shell_radial_order_statuses =
+        fill(:unavailable, source_shell_count)
+
+    mode_source_shell_ids = Vector{Int}(undef, source_mode_count)
+    mode_indices = Vector{Int}(undef, source_mode_count)
+    mode_unit_labels = Vector{Symbol}(undef, source_mode_count)
+    native_source_id_labels = Vector{String}(undef, source_mode_count)
+    local_axis_function_indices = zeros(Int, source_mode_count, 3)
+    source_axis_indices = zeros(Int, source_mode_count, 3)
+    source_mode_statuses = Vector{Symbol}(undef, source_mode_count)
+    source_axis_tuple_statuses = Vector{Symbol}(undef, source_mode_count)
+    mode_center_coordinates = fill(NaN, source_mode_count, 3)
+    mode_center_definitions = fill(:unavailable, source_mode_count)
+    mode_center_statuses = fill(:unavailable, source_mode_count)
+    mode_lowdin_correction_applied = falses(source_mode_count)
+    mode_shell_label_statuses = fill(:unavailable, source_mode_count)
+    mode_ray_label_statuses = fill(:unavailable, source_mode_count)
+    mode_radial_order_statuses = fill(:unavailable, source_mode_count)
+    inferred_from_centers = falses(source_mode_count)
+    inferred_from_nearest_grid = falses(source_mode_count)
+    inferred_from_support_order = falses(source_mode_count)
+    inferred_from_support_indices = falses(source_mode_count)
+    inferred_from_raw_to_final_support = falses(source_mode_count)
 
     native_center_shell_count = 0
     native_center_mode_count = 0
@@ -9867,8 +10052,11 @@ function _pqs_current_route_source_shell_mode_inventory(
         source_shell_retained_starts[shell_id] = first(unit.column_range)
         source_shell_retained_stops[shell_id] = last(unit.column_range)
         source_shell_labels[shell_id] = unit.role
+        source_shell_statuses[shell_id] = :native_product_doside_source_box
+        source_shell_construction_kinds[shell_id] = :product_doside
         source_shell_mode_counts[shell_id] =
             length(staged_unit.axis_function_indices)
+        source_shell_mode_orderings[shell_id] = :axis_function_indices_order
         for axis in 1:3
             staged_axis = staged_unit.axes[axis]
             interval = _staged_axis_interval(staged_axis)
@@ -9890,18 +10078,14 @@ function _pqs_current_route_source_shell_mode_inventory(
             mode_source_shell_ids[mode_row] = shell_id
             mode_indices[mode_row] = local_col
             mode_unit_labels[mode_row] = unit.role
-            native_source_id_labels[mode_row] = string(
-                "source_mode:",
-                shell_id,
-                ":",
-                local_tuple[1],
-                ",",
-                local_tuple[2],
-                ",",
-                local_tuple[3],
-            )
+            native_source_id_labels[mode_row] =
+                _pqs_source_mode_tuple_label(shell_id, local_tuple)
             local_axis_function_indices[mode_row, :] .= collect(local_tuple)
             source_axis_indices[mode_row, :] .= collect(source_tuple)
+            source_mode_statuses[mode_row] =
+                :native_product_doside_source_mode
+            source_axis_tuple_statuses[mode_row] =
+                :native_product_axis_tuple
             if source_centers_available
                 for axis in 1:3
                     mode_center_coordinates[mode_row, axis] =
@@ -9913,6 +10097,105 @@ function _pqs_current_route_source_shell_mode_inventory(
             mode_row += 1
         end
     end
+
+    shell_row = product_shell_count + 1
+    for entry in support_dense_unit_entries
+        unit = entry.unit
+        shell_id = shell_row
+        support_states = entry.support_states
+        bounds = _pqs_source_mode_axis_bounds(support_states)
+
+        source_shell_unit_indices[shell_id] = entry.unit_index
+        source_shell_unit_labels[shell_id] = unit.role
+        source_shell_unit_categories[shell_id] = unit.category
+        source_shell_unit_kinds[shell_id] = unit.kind
+        source_shell_retained_starts[shell_id] = first(unit.column_range)
+        source_shell_retained_stops[shell_id] = last(unit.column_range)
+        source_shell_labels[shell_id] = unit.role
+        source_shell_statuses[shell_id] =
+            :native_support_dense_source_support_states
+        source_shell_construction_kinds[shell_id] =
+            :support_dense_direct_support
+        source_shell_mode_counts[shell_id] = length(support_states)
+        source_shell_mode_orderings[shell_id] =
+            :construction_support_state_order
+        for axis in 1:3
+            source_shell_axis_kinds[shell_id, axis] =
+                :parent_lattice_support_state
+            source_shell_axis_starts[shell_id, axis] = bounds.starts[axis]
+            source_shell_axis_stops[shell_id, axis] = bounds.stops[axis]
+            source_shell_fixed_axis_indices[shell_id, axis] = 0
+            source_shell_contracted_dims[shell_id, axis] = bounds.dims[axis]
+        end
+        for (local_col, support_state) in enumerate(support_states)
+            mode_source_shell_ids[mode_row] = shell_id
+            mode_indices[mode_row] = local_col
+            mode_unit_labels[mode_row] = unit.role
+            native_source_id_labels[mode_row] =
+                _pqs_source_mode_tuple_label(shell_id, support_state)
+            local_axis_function_indices[mode_row, :] .= collect(support_state)
+            source_axis_indices[mode_row, :] .= collect(support_state)
+            source_mode_statuses[mode_row] =
+                :native_support_dense_source_support_state
+            source_axis_tuple_statuses[mode_row] =
+                :native_parent_lattice_support_state
+            mode_row += 1
+        end
+        shell_row += 1
+    end
+
+    for entry in shell_realized_unit_entries
+        unit = entry.unit
+        metadata = entry.metadata
+        shell_id = shell_row
+
+        source_shell_unit_indices[shell_id] = entry.unit_index
+        source_shell_unit_labels[shell_id] = unit.role
+        source_shell_unit_categories[shell_id] = unit.category
+        source_shell_unit_kinds[shell_id] = unit.kind
+        source_shell_retained_starts[shell_id] = first(unit.column_range)
+        source_shell_retained_stops[shell_id] = last(unit.column_range)
+        source_shell_labels[shell_id] = unit.role
+        source_shell_statuses[shell_id] =
+            :native_shell_realized_boundary_source_box
+        source_shell_construction_kinds[shell_id] =
+            :shell_realized_pqs_fixture
+        source_shell_mode_counts[shell_id] = length(metadata.mode_indices)
+        source_shell_mode_orderings[shell_id] = :boundary_mode_indices_order
+        for axis in 1:3
+            interval = metadata.axis_intervals[axis]
+            source_shell_axis_kinds[shell_id, axis] = :raw_box_axis
+            source_shell_axis_starts[shell_id, axis] = first(interval)
+            source_shell_axis_stops[shell_id, axis] = last(interval)
+            source_shell_fixed_axis_indices[shell_id, axis] = 0
+            source_shell_contracted_dims[shell_id, axis] =
+                metadata.source_mode_dims[axis]
+        end
+        for (local_col, mode_tuple) in enumerate(metadata.mode_indices)
+            source_tuple =
+                ntuple(axis -> metadata.axis_intervals[axis][mode_tuple[axis]], 3)
+            mode_source_shell_ids[mode_row] = shell_id
+            mode_indices[mode_row] = local_col
+            mode_unit_labels[mode_row] = unit.role
+            native_source_id_labels[mode_row] =
+                _pqs_source_mode_tuple_label(shell_id, mode_tuple)
+            local_axis_function_indices[mode_row, :] .= collect(mode_tuple)
+            source_axis_indices[mode_row, :] .= collect(source_tuple)
+            source_mode_statuses[mode_row] =
+                :native_shell_realized_boundary_source_mode
+            source_axis_tuple_statuses[mode_row] =
+                :native_boundary_source_mode_tuple
+            mode_row += 1
+        end
+        shell_row += 1
+    end
+
+    shell_row == source_shell_count + 1 || throw(
+        AssertionError("source-shell inventory did not fill every source shell"),
+    )
+    mode_row == source_mode_count + 1 || throw(
+        AssertionError("source-shell inventory did not fill every source mode"),
+    )
 
     fixed_dimension = hasproperty(inventory.diagnostics, :fixed_dimension) ?
         Int(inventory.diagnostics.fixed_dimension) : Int(coverage.last_column)
@@ -9927,27 +10210,53 @@ function _pqs_current_route_source_shell_mode_inventory(
     center_status =
         native_center_mode_count == 0 ?
         :unavailable_missing_native_comx_center_facts :
-        native_center_mode_count == product_mode_count ?
+        native_center_mode_count == source_mode_count ?
         :native_representative :
         :partial_native_representative_product_doside
     center_definition =
         native_center_mode_count == 0 ? :unavailable : :comx_construction
+    non_product_source_shell_count =
+        support_dense_source_shell_count + shell_realized_source_shell_count
+    inventory_status =
+        non_product_source_shell_count > 0 ?
+        (
+            total_unavailable_unit_count == 0 ?
+            :native_current_route_source_shell_modes :
+            :partial_current_route_source_shell_modes
+        ) :
+        :product_doside_source_shell_modes_only
+    covered_categories = Symbol[]
+    product_shell_count > 0 && push!(covered_categories, :product_doside)
+    support_dense_source_shell_count > 0 &&
+        push!(covered_categories, :support_dense)
+    shell_realized_source_shell_count > 0 &&
+        push!(covered_categories, :shell_realized_pqs_fixture)
+    non_product_source_mode_status =
+        non_product_source_shell_count == 0 ?
+        :unavailable_missing_native_non_product_source_mode_producer :
+        total_unavailable_unit_count == 0 ?
+        :native_non_product_source_shell_mode_labels :
+        :partial_native_non_product_source_shell_mode_labels
+    source_mode_label_status =
+        non_product_source_shell_count == 0 ?
+        :native_product_doside_source_mode_indices_only :
+        :native_source_mode_tuple_labels_shell_ray_radial_unavailable
     available_native_facts =
         native_center_mode_count == 0 ?
-        "product/doside retained ranges, staged axes, fixed/active-axis intervals, and axis_function_indices" :
-        "product/doside retained ranges, staged axes, fixed/active-axis intervals, axis_function_indices, and native COMX/source-transform representative center vectors"
+        "product/doside retained ranges, staged axes, fixed/active-axis intervals, axis_function_indices, support-dense support-state source tuples when present, and shell-realized PQS boundary source-mode tuples when present" :
+        "product/doside retained ranges, staged axes, fixed/active-axis intervals, axis_function_indices, native COMX/source-transform representative center vectors, support-dense support-state source tuples when present, and shell-realized PQS boundary source-mode tuples when present"
     unavailable_native_facts =
         native_center_mode_count == 0 ?
-        "native COMX representative centers, support-dense atom-box source modes, shell-realized PQS compact source relations, and relation weights or spans" :
-        "support-dense atom-box source modes, shell-realized PQS compact source relations, and relation weights or spans"
+        "native COMX representative centers, shell-realized PQS compact source relations, and relation weights or spans" :
+        "native representative centers for non-product source modes, shell-realized PQS compact source relations, and relation weights or spans"
     return (
         object_kind = :pqs_current_route_source_shell_mode_inventory,
-        status = :product_doside_source_shell_modes_only,
+        status = inventory_status,
         schema_version = :pqs_source_shell_modes_private_v1,
         inventory_object_kind = inventory.object_kind,
         fixed_dimension = fixed_dimension,
-        source_shell_count = product_shell_count,
-        source_mode_count = product_mode_count,
+        source_shell_count = source_shell_count,
+        source_mode_count = source_mode_count,
         source_shells = (
             source_shell_ids = source_shell_ids,
             unit_indices = source_shell_unit_indices,
@@ -9998,11 +10307,9 @@ function _pqs_current_route_source_shell_mode_inventory(
                 inferred_from_raw_to_final_support,
         ),
         center_status = center_status,
-        covered_unit_categories = (:product_doside,),
-        non_product_source_mode_status =
-            :unavailable_missing_native_non_product_source_mode_producer,
-        source_mode_label_status =
-            :native_product_doside_source_mode_indices_only,
+        covered_unit_categories = Tuple(covered_categories),
+        non_product_source_mode_status = non_product_source_mode_status,
+        source_mode_label_status = source_mode_label_status,
         available_native_facts = available_native_facts,
         unavailable_native_facts = unavailable_native_facts,
         absences_by_contract = (
@@ -10010,7 +10317,8 @@ function _pqs_current_route_source_shell_mode_inventory(
             product_axis_tuples_not_interpreted_as_ray_labels = true,
             representative_centers_as_identity_labels = true,
             native_comx_centers = center_status != :native_representative,
-            support_dense_source_shell_modes = true,
+            support_dense_source_shell_modes =
+                support_dense_unavailable_unit_count > 0,
             shell_realized_pqs_source_relations = true,
             lowdin_mixture_weights_or_spans = true,
             coordinate_or_nearest_grid_reconstruction = true,
@@ -10029,13 +10337,20 @@ function _pqs_current_route_source_shell_mode_inventory(
         diagnostics = (
             source = :pqs_current_route_source_shell_mode_inventory,
             private_reporting_only = true,
-            product_doside_source_shell_modes_only = true,
+            product_doside_source_shell_modes_only =
+                inventory_status == :product_doside_source_shell_modes_only,
             repo_exports_native_facts_not_ray_policy = true,
             fixed_dimension = fixed_dimension,
-            source_shell_count = product_shell_count,
-            source_mode_count = product_mode_count,
+            source_shell_count = source_shell_count,
+            source_mode_count = source_mode_count,
             product_doside_source_shell_count = product_shell_count,
             product_doside_source_mode_count = product_mode_count,
+            support_dense_source_shell_count = support_dense_source_shell_count,
+            support_dense_source_mode_count = support_dense_source_mode_count,
+            shell_realized_pqs_source_shell_count =
+                shell_realized_source_shell_count,
+            shell_realized_pqs_source_mode_count =
+                shell_realized_source_mode_count,
             native_center_shell_count = native_center_shell_count,
             native_center_mode_count = native_center_mode_count,
             support_dense_unavailable_unit_count =
@@ -10051,8 +10366,8 @@ function _pqs_current_route_source_shell_mode_inventory(
             total_unavailable_unit_count = total_unavailable_unit_count,
             total_unavailable_column_count = total_unavailable_column_count,
             coverage_complete = coverage_complete,
-            source_mode_label_status =
-                :native_product_doside_source_mode_indices_only,
+            non_product_source_mode_status = non_product_source_mode_status,
+            source_mode_label_status = source_mode_label_status,
             center_status = center_status,
             center_definition = center_definition,
             lowdin_correction_applied = false,
