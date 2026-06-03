@@ -297,7 +297,7 @@ using GaussletBases
                 raw_box_auxiliary_metadata = (
                     available = true,
                     source_mode_dims = (5, 5, 5),
-                    axis_intervals = (1:5, 1:5, 1:5),
+                    axis_intervals = (10:24, 20:34, 30:54),
                     boundary_mode_indices =
                         _synthetic_shell_realized_boundary_modes(),
                     selection_rule = :synthetic_boundary_fixture,
@@ -731,13 +731,13 @@ using GaussletBases
           [
               1 1 3
               1 1 1
-              1 1 1
+              10 20 30
           ]
     @test source_shell_mode_inventory.source_shells.axis_stops ==
           [
               1 2 4
               3 3 3
-              5 5 5
+              24 34 54
           ]
     @test source_shell_mode_inventory.source_shells.fixed_axis_indices ==
           [

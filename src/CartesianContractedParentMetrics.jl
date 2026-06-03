@@ -9777,8 +9777,8 @@ function _pqs_current_route_shell_realized_source_mode_metadata(unit)
     )
     axis_intervals = (axis_intervals[1], axis_intervals[2], axis_intervals[3])
     for axis in 1:3
-        length(axis_intervals[axis]) == source_mode_dims[axis] || throw(
-            DimensionMismatch("shell-realized PQS source-box axis interval length must match source-mode dimensions"),
+        isempty(axis_intervals[axis]) && throw(
+            ArgumentError("shell-realized PQS source-box axis intervals must be nonempty"),
         )
     end
     for mode in mode_indices
@@ -10172,15 +10172,13 @@ function _pqs_current_route_source_shell_mode_inventory(
                 metadata.source_mode_dims[axis]
         end
         for (local_col, mode_tuple) in enumerate(metadata.mode_indices)
-            source_tuple =
-                ntuple(axis -> metadata.axis_intervals[axis][mode_tuple[axis]], 3)
             mode_source_shell_ids[mode_row] = shell_id
             mode_indices[mode_row] = local_col
             mode_unit_labels[mode_row] = unit.role
             native_source_id_labels[mode_row] =
                 _pqs_source_mode_tuple_label(shell_id, mode_tuple)
             local_axis_function_indices[mode_row, :] .= collect(mode_tuple)
-            source_axis_indices[mode_row, :] .= collect(source_tuple)
+            source_axis_indices[mode_row, :] .= collect(mode_tuple)
             source_mode_statuses[mode_row] =
                 :native_shell_realized_boundary_source_mode
             source_axis_tuple_statuses[mode_row] =
