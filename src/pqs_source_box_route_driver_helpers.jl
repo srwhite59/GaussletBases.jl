@@ -322,7 +322,7 @@ function _pqs_source_box_route_driver_dry_run(;
 
     return (;
         object_kind = :pqs_source_box_route_driver_skeleton_report,
-        generated_at = string(time()),
+        generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
         standard_setup,
         parent_axis_readiness,
         parent_axis_probe,
