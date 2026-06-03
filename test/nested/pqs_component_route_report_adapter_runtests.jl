@@ -618,6 +618,62 @@ using GaussletBases
     @test occursin("no_go.owner_shell_ray_inference\tfalse", text)
     @test occursin("no_go.cr2_science_status_changed\tfalse", text)
 
+    missing_owner_report = merge(
+        report,
+        (
+            final_residual_mwg_supplement_component_facts = merge(
+                report.final_residual_mwg_supplement_component_facts,
+                (residual_owner_metadata_available = false,),
+            ),
+        ),
+    )
+    missing_owner_readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            missing_owner_report,
+        )
+    @test missing_owner_readiness.status ==
+          :private_route_adapter_inputs_incomplete
+    @test !missing_owner_readiness.ready_for_next_private_adapter_pass
+    @test missing_owner_readiness.missing_required_pieces ==
+          (:final_residual_mwg_owner_metadata,)
+    @test isempty(missing_owner_readiness.no_go_violations)
+
+    missing_owner_io = IOBuffer()
+    metrics_module._write_pqs_pqs_product_component_route_smoke_report(
+        missing_owner_io,
+        missing_owner_report,
+    )
+    missing_owner_text = String(take!(missing_owner_io))
+    @test occursin("[private_route_adapter_readiness]", missing_owner_text)
+    @test occursin(
+        "status\tprivate_route_adapter_inputs_incomplete",
+        missing_owner_text,
+    )
+    @test occursin(
+        "missing_required_pieces\t(:final_residual_mwg_owner_metadata,)",
+        missing_owner_text,
+    )
+
+    no_go_report = merge(
+        report,
+        (
+            diagnostics = merge(
+                report.diagnostics,
+                (public_default_consumes = true,),
+            ),
+        ),
+    )
+    no_go_readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            no_go_report,
+        )
+    @test no_go_readiness.status ==
+          :private_route_adapter_inputs_incomplete
+    @test !no_go_readiness.ready_for_next_private_adapter_pass
+    @test isempty(no_go_readiness.missing_required_pieces)
+    @test no_go_readiness.no_go_violations == (:public_default_behavior,)
+    @test no_go_readiness.no_go_flags.public_default_behavior
+
     fixed_side_metadata =
         metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
             _synthetic_fixed_side_inventory();
