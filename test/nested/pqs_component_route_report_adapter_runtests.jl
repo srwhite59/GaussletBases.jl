@@ -225,7 +225,7 @@ using GaussletBases
 
     function _synthetic_support_dense_source_states()
         return NTuple{3,Int}[
-            (ix, iy, iz) for iz in 1:3 for iy in 1:3 for ix in 1:3
+            (ix, iy, iz) for iz in 2:4 for iy in 5:7 for ix in 4:6
         ]
     end
 
@@ -730,13 +730,13 @@ using GaussletBases
     @test source_shell_mode_inventory.source_shells.axis_starts ==
           [
               1 1 3
-              1 1 1
+              4 5 2
               10 20 30
           ]
     @test source_shell_mode_inventory.source_shells.axis_stops ==
           [
               1 2 4
-              3 3 3
+              6 7 4
               24 34 54
           ]
     @test source_shell_mode_inventory.source_shells.axis_starts[3, :] == [10, 20, 30]
@@ -814,6 +814,21 @@ using GaussletBases
         5 1 5
         1 5 5
     ]
+    @test all(1:source_shell_mode_inventory.source_mode_count) do row
+        shell_id = source_shell_mode_inventory.source_modes.source_shell_ids[row]
+        all(1:3) do axis
+            local_axis =
+                source_shell_mode_inventory.source_modes.local_axis_function_indices[
+                    row,
+                    axis,
+                ]
+            local_axis >= 1 &&
+                local_axis <= source_shell_mode_inventory.source_shells.contracted_dims[
+                    shell_id,
+                    axis,
+                ]
+        end
+    end
     @test source_shell_mode_inventory.source_modes.source_axis_indices[1:4, :] == [
         1 1 3
         1 2 3
@@ -821,9 +836,9 @@ using GaussletBases
         1 2 4
     ]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[5, :] ==
-          [1, 1, 1]
+          [4, 5, 2]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[31, :] ==
-          [3, 3, 3]
+          [6, 7, 4]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[32:38, :] ==
           source_shell_mode_inventory.source_modes.local_axis_function_indices[32:38, :]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[32, :] ==
@@ -832,6 +847,16 @@ using GaussletBases
           [1, 1, 5]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[32, :] !=
           source_shell_mode_inventory.source_shells.axis_starts[3, :]
+    @test source_shell_mode_inventory.source_modes.parent_lattice_axis_indices[1:4, :] ==
+          source_shell_mode_inventory.source_modes.source_axis_indices[1:4, :]
+    @test source_shell_mode_inventory.source_modes.parent_lattice_axis_indices[5, :] ==
+          [4, 5, 2]
+    @test source_shell_mode_inventory.source_modes.parent_lattice_axis_indices[31, :] ==
+          [6, 7, 4]
+    @test all(
+        ==(0),
+        source_shell_mode_inventory.source_modes.parent_lattice_axis_indices[32:38, :],
+    )
     @test all(
         ==(:native_product_doside_source_mode),
         source_shell_mode_inventory.source_modes.source_mode_statuses[1:4],
@@ -855,6 +880,18 @@ using GaussletBases
     @test all(
         ==(:native_boundary_source_mode_tuple),
         source_shell_mode_inventory.source_modes.source_axis_tuple_statuses[32:38],
+    )
+    @test all(
+        ==(:native_product_parent_lattice_axis_tuple),
+        source_shell_mode_inventory.source_modes.parent_lattice_axis_statuses[1:4],
+    )
+    @test all(
+        ==(:native_parent_lattice_support_state),
+        source_shell_mode_inventory.source_modes.parent_lattice_axis_statuses[5:31],
+    )
+    @test all(
+        ==(:unavailable),
+        source_shell_mode_inventory.source_modes.parent_lattice_axis_statuses[32:38],
     )
     @test all(isnan, source_shell_mode_inventory.source_modes.center_coordinates)
     @test all(==(:unavailable), source_shell_mode_inventory.source_modes.center_definitions)
@@ -922,6 +959,10 @@ using GaussletBases
           :pqs_source_shell_modes_private_v1
     @test source_metadata_contract.label_semantics ==
           :construction_native_identifiers_not_relations
+    @test source_metadata_contract.source_mode_local_axis_semantics ==
+          :normalized_source_shell_local_coordinates
+    @test source_metadata_contract.parent_lattice_axis_coordinate_policy ==
+          :explicit_columns_when_native_available
     @test source_metadata_contract.shell_realized_pqs_source_axis_indices ==
           :local_native_source_mode_coordinates
     @test source_metadata_contract.repo_ray_id_policy == :not_exported
@@ -965,20 +1006,23 @@ using GaussletBases
     @test split(source_mode_table_lines[1], '\t') ==
           collect(source_metadata_contract.source_modes_header)
     @test !occursin("ray_id", source_mode_table_lines[1])
+    @test occursin("parent_lattice_axis_x", source_mode_table_lines[1])
     shell_realized_source_mode_fields =
         split(source_mode_table_lines[33], '\t')
     @test shell_realized_source_mode_fields[1:4] ==
           ["3", "1", "regular_shared_molecular_shell_1", "source_mode:3:1,1,1"]
     @test shell_realized_source_mode_fields[5:7] == ["1", "1", "1"]
     @test shell_realized_source_mode_fields[8:10] == ["1", "1", "1"]
-    @test shell_realized_source_mode_fields[8:10] != ["10", "20", "30"]
-    @test shell_realized_source_mode_fields[11] ==
+    @test shell_realized_source_mode_fields[11:13] == ["0", "0", "0"]
+    @test shell_realized_source_mode_fields[8:13] != ["10", "20", "30"]
+    @test shell_realized_source_mode_fields[14] ==
           "native_shell_realized_boundary_source_mode"
-    @test shell_realized_source_mode_fields[12] ==
+    @test shell_realized_source_mode_fields[15] ==
           "native_boundary_source_mode_tuple"
-    @test shell_realized_source_mode_fields[19:21] ==
+    @test shell_realized_source_mode_fields[16] == "unavailable"
+    @test shell_realized_source_mode_fields[23:25] ==
           ["unavailable", "unavailable", "unavailable"]
-    @test shell_realized_source_mode_fields[22:26] ==
+    @test shell_realized_source_mode_fields[26:30] ==
           ["false", "false", "false", "false", "false"]
 
     centered_source_shell_mode_inventory =

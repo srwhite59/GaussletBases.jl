@@ -235,6 +235,83 @@ function _pqs_source_metadata_acceptance_all_records_false(
     return all(record -> lowercase(get(record, key, "")) == "false", records)
 end
 
+function _pqs_source_metadata_acceptance_record_int(
+    record,
+    key::AbstractString,
+)
+    haskey(record, key) || error("TSV record missing required key $(key)")
+    return parse(Int, record[key])
+end
+
+function _pqs_source_metadata_acceptance_local_axes_in_range(
+    source_shell_records,
+    source_mode_records,
+)
+    dims_by_shell = Dict{Int,NTuple{3,Int}}()
+    for record in source_shell_records
+        shell_id =
+            _pqs_source_metadata_acceptance_record_int(record, "source_shell_id")
+        dims_by_shell[shell_id] = (
+            _pqs_source_metadata_acceptance_record_int(
+                record,
+                "contracted_dim_x",
+            ),
+            _pqs_source_metadata_acceptance_record_int(
+                record,
+                "contracted_dim_y",
+            ),
+            _pqs_source_metadata_acceptance_record_int(
+                record,
+                "contracted_dim_z",
+            ),
+        )
+    end
+    return all(source_mode_records) do record
+        shell_id =
+            _pqs_source_metadata_acceptance_record_int(record, "source_shell_id")
+        haskey(dims_by_shell, shell_id) || return false
+        local_axes = (
+            _pqs_source_metadata_acceptance_record_int(record, "local_axis_x"),
+            _pqs_source_metadata_acceptance_record_int(record, "local_axis_y"),
+            _pqs_source_metadata_acceptance_record_int(record, "local_axis_z"),
+        )
+        dims = dims_by_shell[shell_id]
+        return all(axis -> 1 <= local_axes[axis] <= dims[axis], 1:3)
+    end
+end
+
+function _pqs_source_metadata_acceptance_parent_lattice_columns_present(
+    source_mode_header,
+)
+    return all(
+        in(source_mode_header),
+        (
+            "parent_lattice_axis_x",
+            "parent_lattice_axis_y",
+            "parent_lattice_axis_z",
+            "parent_lattice_axis_status",
+        ),
+    )
+end
+
+function _pqs_source_metadata_acceptance_explicit_parent_lattice_statuses(
+    source_mode_records,
+)
+    status_by_source_mode_status = Dict(
+        "native_product_doside_source_mode" =>
+            "native_product_parent_lattice_axis_tuple",
+        "native_support_dense_source_support_state" =>
+            "native_parent_lattice_support_state",
+        "native_shell_realized_boundary_source_mode" => "unavailable",
+    )
+    return all(source_mode_records) do record
+        source_mode_status = get(record, "source_mode_status", "")
+        expected = get(status_by_source_mode_status, source_mode_status, nothing)
+        isnothing(expected) && return false
+        return get(record, "parent_lattice_axis_status", "") == expected
+    end
+end
+
 function _be2_pqs_q5_source_metadata_acceptance(
     artifact_dir::AbstractString;
     source_shells_table_path = nothing,
@@ -316,6 +393,9 @@ function _be2_pqs_q5_source_metadata_acceptance(
         require(checks, "source_mode_header_matches_contract", source_mode_header == collect(contract.source_modes_header))
         require(checks, "source_shell_header_has_no_ray_id", !("ray_id" in source_shell_header))
         require(checks, "source_mode_header_has_no_ray_id", !("ray_id" in source_mode_header))
+        require(checks, "source_mode_header_has_explicit_parent_lattice_axes", _pqs_source_metadata_acceptance_parent_lattice_columns_present(source_mode_header))
+        require(checks, "source_mode_local_axes_in_contracted_range", _pqs_source_metadata_acceptance_local_axes_in_range(source_shell_records, source_mode_records))
+        require(checks, "source_mode_parent_lattice_axis_statuses_explicit", _pqs_source_metadata_acceptance_explicit_parent_lattice_statuses(source_mode_records))
         require(checks, "source_shell_count_is_8", source_inventory.source_shell_count == 8)
         require(checks, "source_mode_count_is_2299", source_inventory.source_mode_count == 2299)
         require(checks, "source_shell_table_row_count_is_8", length(source_shell_records) == 8)

@@ -799,6 +799,19 @@ mode, support span, or Lowdin mixture only when the construction producer
 defines that relation honestly. Relation weights or spans appear only when
 construction defines them unambiguously.
 
+For the private source-mode TSV, `local_axis_x`, `local_axis_y`, and
+`local_axis_z` are normalized source-shell-local identity labels. They run
+from `1:nx`, `1:ny`, and `1:nz` for the row's source shell contracted
+dimensions, including support-dense atom boxes whose native parent/support
+states start away from one. Parent-lattice coordinates, when the construction
+has them, are exported separately as explicit `parent_lattice_axis_*` fields
+with a status field. Shell-realized PQS source-mode labels remain local
+source-mode coordinates; their parent-lattice coordinate fields stay
+unavailable unless a reviewed native producer defines such facts. The older
+`source_axis_*` columns are private compatibility/native-tuple columns; CR2
+and other diagnostics should prefer `local_axis_*` for identity labels and
+`parent_lattice_axis_*` for parent/support coordinates.
+
 The `fixed_column_labels` table contract is one row per fixed retained column.
 Each row should include the one-based fixed column id, the retained-unit label,
 unit kind/category, unit retained range, and, where the producer has explicit

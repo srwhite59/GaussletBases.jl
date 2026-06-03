@@ -1277,6 +1277,15 @@ Needed operator matrices should continue to be built in repo as small-small
 blocks; labels are not a substitute for exporting a large parent-basis
 coefficient map.
 
+The `source_modes.local_axis_*` fields are normalized identity labels in the
+row's source shell. They run from `1:nx`, `1:ny`, and `1:nz` for that shell's
+contracted dimensions. Parent/support-state coordinates are separate optional
+metadata, exported only under explicit parent-lattice field names when the
+construction has native facts. They must not be read back as local labels or
+as repo-defined rays. The private `source_axis_*` columns are compatibility
+native-tuple fields; diagnostics should treat `local_axis_*` and
+`parent_lattice_axis_*` as the clarified contract fields.
+
 The ignored full Be2 q5 report
 `tmp/work/be2_pqs_fixed_side_retained_unit_metadata/be2_pqs_fixed_side_retained_unit_metadata_report.txt`
 exercises that extractor on the current-route inventory. It records fixed

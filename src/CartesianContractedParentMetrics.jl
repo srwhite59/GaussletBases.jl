@@ -10000,8 +10000,10 @@ function _pqs_current_route_source_shell_mode_inventory(
     native_source_id_labels = Vector{String}(undef, source_mode_count)
     local_axis_function_indices = zeros(Int, source_mode_count, 3)
     source_axis_indices = zeros(Int, source_mode_count, 3)
+    parent_lattice_axis_indices = zeros(Int, source_mode_count, 3)
     source_mode_statuses = Vector{Symbol}(undef, source_mode_count)
     source_axis_tuple_statuses = Vector{Symbol}(undef, source_mode_count)
+    parent_lattice_axis_statuses = fill(:unavailable, source_mode_count)
     mode_center_coordinates = fill(NaN, source_mode_count, 3)
     mode_center_definitions = fill(:unavailable, source_mode_count)
     mode_center_statuses = fill(:unavailable, source_mode_count)
@@ -10082,10 +10084,13 @@ function _pqs_current_route_source_shell_mode_inventory(
                 _pqs_source_mode_tuple_label(shell_id, local_tuple)
             local_axis_function_indices[mode_row, :] .= collect(local_tuple)
             source_axis_indices[mode_row, :] .= collect(source_tuple)
+            parent_lattice_axis_indices[mode_row, :] .= collect(source_tuple)
             source_mode_statuses[mode_row] =
                 :native_product_doside_source_mode
             source_axis_tuple_statuses[mode_row] =
                 :native_product_axis_tuple
+            parent_lattice_axis_statuses[mode_row] =
+                :native_product_parent_lattice_axis_tuple
             if source_centers_available
                 for axis in 1:3
                     mode_center_coordinates[mode_row, axis] =
@@ -10128,16 +10133,23 @@ function _pqs_current_route_source_shell_mode_inventory(
             source_shell_contracted_dims[shell_id, axis] = bounds.dims[axis]
         end
         for (local_col, support_state) in enumerate(support_states)
+            local_tuple = ntuple(
+                axis -> support_state[axis] - bounds.starts[axis] + 1,
+                3,
+            )
             mode_source_shell_ids[mode_row] = shell_id
             mode_indices[mode_row] = local_col
             mode_unit_labels[mode_row] = unit.role
             native_source_id_labels[mode_row] =
-                _pqs_source_mode_tuple_label(shell_id, support_state)
-            local_axis_function_indices[mode_row, :] .= collect(support_state)
+                _pqs_source_mode_tuple_label(shell_id, local_tuple)
+            local_axis_function_indices[mode_row, :] .= collect(local_tuple)
             source_axis_indices[mode_row, :] .= collect(support_state)
+            parent_lattice_axis_indices[mode_row, :] .= collect(support_state)
             source_mode_statuses[mode_row] =
                 :native_support_dense_source_support_state
             source_axis_tuple_statuses[mode_row] =
+                :native_parent_lattice_support_state
+            parent_lattice_axis_statuses[mode_row] =
                 :native_parent_lattice_support_state
             mode_row += 1
         end
@@ -10194,6 +10206,18 @@ function _pqs_current_route_source_shell_mode_inventory(
     mode_row == source_mode_count + 1 || throw(
         AssertionError("source-shell inventory did not fill every source mode"),
     )
+    for row in 1:source_mode_count
+        shell_id = mode_source_shell_ids[row]
+        all(
+            axis -> begin
+                local_axis = local_axis_function_indices[row, axis]
+                1 <= local_axis <= source_shell_contracted_dims[shell_id, axis]
+            end,
+            1:3,
+        ) || throw(
+            ArgumentError("source-mode local labels must be within source-shell contracted dimensions"),
+        )
+    end
 
     fixed_dimension = hasproperty(inventory.diagnostics, :fixed_dimension) ?
         Int(inventory.diagnostics.fixed_dimension) : Int(coverage.last_column)
@@ -10288,8 +10312,10 @@ function _pqs_current_route_source_shell_mode_inventory(
             native_source_id_labels = native_source_id_labels,
             local_axis_function_indices = local_axis_function_indices,
             source_axis_indices = source_axis_indices,
+            parent_lattice_axis_indices = parent_lattice_axis_indices,
             source_mode_statuses = source_mode_statuses,
             source_axis_tuple_statuses = source_axis_tuple_statuses,
+            parent_lattice_axis_statuses = parent_lattice_axis_statuses,
             center_coordinates = mode_center_coordinates,
             center_definitions = mode_center_definitions,
             center_statuses = mode_center_statuses,
@@ -10366,6 +10392,8 @@ function _pqs_current_route_source_shell_mode_inventory(
             coverage_complete = coverage_complete,
             non_product_source_mode_status = non_product_source_mode_status,
             source_mode_label_status = source_mode_label_status,
+            normalized_local_axis_labels = true,
+            parent_lattice_axis_coordinates_explicit = true,
             center_status = center_status,
             center_definition = center_definition,
             lowdin_correction_applied = false,
@@ -10418,11 +10446,17 @@ Private source metadata sidecar contract for `source_shells` and
 
 The tables export construction-native provenance only. `source_shells` rows
 identify source boxes/shells and their source-axis metadata. `source_modes`
-rows identify native source functions by `(source_shell_id, ix, iy, iz)`. For
-shell-realized PQS, `source_axis_indices` are those local native source-mode
-coordinates, not parent lattice coordinates. These labels are not
-fixed-column-to-source-mode decomposition relations, do not define `ray_id`,
-and do not carry relation weights or spans.
+rows identify native source functions by `(source_shell_id, ix, iy, iz)`,
+where `local_axis_*` is normalized to `1:nx`, `1:ny`, and `1:nz` for that
+source shell's contracted dimensions. Parent-lattice coordinates are exported
+only in the explicit `parent_lattice_axis_*` fields when native facts exist.
+The older `source_axis_*` fields are retained as private native-tuple
+compatibility columns; consumers should use `local_axis_*` for identity labels
+and `parent_lattice_axis_*` for parent/support coordinates.
+For shell-realized PQS those parent-lattice fields remain unavailable because
+the local labels are source-mode coordinates, not parent lattice coordinates.
+These labels are not fixed-column-to-source-mode decomposition relations, do
+not define `ray_id`, and do not carry relation weights or spans.
 """
 function _pqs_source_metadata_export_contract()
     return (
@@ -10474,8 +10508,12 @@ function _pqs_source_metadata_export_contract()
             "source_axis_x",
             "source_axis_y",
             "source_axis_z",
+            "parent_lattice_axis_x",
+            "parent_lattice_axis_y",
+            "parent_lattice_axis_z",
             "source_mode_status",
             "source_axis_tuple_status",
+            "parent_lattice_axis_status",
             "center_x",
             "center_y",
             "center_z",
@@ -10492,6 +10530,10 @@ function _pqs_source_metadata_export_contract()
             "inferred_from_raw_to_final_support",
         ),
         label_semantics = :construction_native_identifiers_not_relations,
+        source_mode_local_axis_semantics =
+            :normalized_source_shell_local_coordinates,
+        parent_lattice_axis_coordinate_policy =
+            :explicit_columns_when_native_available,
         shell_realized_pqs_source_axis_indices =
             :local_native_source_mode_coordinates,
         repo_ray_id_policy = :not_exported,
@@ -10626,8 +10668,12 @@ function _write_pqs_source_modes_table(io::IO, source_shell_mode_inventory)
                 source_modes.source_axis_indices[index, 1],
                 source_modes.source_axis_indices[index, 2],
                 source_modes.source_axis_indices[index, 3],
+                source_modes.parent_lattice_axis_indices[index, 1],
+                source_modes.parent_lattice_axis_indices[index, 2],
+                source_modes.parent_lattice_axis_indices[index, 3],
                 source_modes.source_mode_statuses[index],
                 source_modes.source_axis_tuple_statuses[index],
+                source_modes.parent_lattice_axis_statuses[index],
                 source_modes.center_coordinates[index, 1],
                 source_modes.center_coordinates[index, 2],
                 source_modes.center_coordinates[index, 3],
