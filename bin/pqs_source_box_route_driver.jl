@@ -6,16 +6,14 @@ using GaussletBases
 route_kind = :be2_pqs_source_box_development_spine
 atom_symbols = ("Be", "Be")
 nuclear_charges = (4, 4)
-atom_locations = ((-1.15, 0.0, 0.0), (1.15, 0.0, 0.0))
+atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
 parent_axis_counts = (x = 9, y = 7, z = 9)
-parent_box = (x = (-8.0, 8.0), y = (-6.0, 6.0), z = (-8.0, 8.0))
+parent_box = (x = (-15.0, 15.0), y = (-15.0, 15.0), z = (-17.0, 17.0))
 map_backend = :pgdg_localized_experimental
 
 q = 5
-L = 7
-product_doside = 1
-pqs_retained_count = 98
-product_retained_count = 25
+route_shape = (:pqs_left, :product, :pqs_right)
+product_body_rule = :centered_single_z_slab
 pqs_retained_rule = :boundary_comx_product_mode_selection
 product_retained_rule = :product_doside_retained_unit
 terms = (
@@ -52,53 +50,6 @@ if length(ARGS) > 0
 end
 eval.(Meta.parse.(inputs))
 
-function _pqs_driver_product(values)
-    result = 1
-    for value in values
-        result *= value
-    end
-    return result
-end
-
-function _pqs_driver_source_box_dimension(box)
-    return _pqs_driver_product(length(getproperty(box, axis)) for axis in (:x, :y, :z))
-end
-
-function _pqs_driver_range(offset::Int, count::Int)
-    count > 0 || throw(ArgumentError("retained counts must be positive"))
-    return (offset + 1):(offset + count)
-end
-
-function _pqs_driver_pair_family(left_kind::Symbol, right_kind::Symbol)
-    if left_kind == :product_doside && right_kind == :product_doside
-        return :product_product
-    elseif left_kind == :pqs && right_kind == :pqs
-        return :pqs_pqs
-    elseif left_kind == :pqs && right_kind == :product_doside
-        return :pqs_product
-    elseif left_kind == :product_doside && right_kind == :pqs
-        return :product_pqs
-    end
-    throw(ArgumentError("unsupported unit pair kinds $(left_kind), $(right_kind)"))
-end
-
-function _pqs_driver_density_density_helper(pair_family::Symbol, mode::Symbol)
-    if pair_family == :pqs_pqs
-        return mode == :raw_weighted ?
-            :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block :
-            :_pqs_pqs_source_box_density_density_interaction_block
-    elseif pair_family in (:pqs_product, :product_pqs)
-        return mode == :raw_weighted ?
-            :_pqs_product_source_box_raw_weighted_density_density_interaction_block :
-            :_pqs_product_source_box_density_density_interaction_block
-    elseif pair_family == :product_product
-        return mode == :raw_weighted ?
-            :_product_doside_source_box_raw_weighted_density_density_interaction_block :
-            :_product_doside_source_box_density_density_interaction_block
-    end
-    throw(ArgumentError("unsupported density-density pair family $(pair_family)"))
-end
-
 function _pqs_driver_print_section(title)
     println()
     println("[", title, "]")
@@ -118,33 +69,8 @@ end
 pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
     ArgumentError("pair_factor_normalization must be :density_normalized or :raw_weighted"),
 )
-parent_axis_counts.x >= q || throw(ArgumentError("parent_axis_counts.x must be at least q"))
-parent_axis_counts.y >= q || throw(ArgumentError("parent_axis_counts.y must be at least q"))
-parent_axis_counts.z >= q || throw(ArgumentError("parent_axis_counts.z must be at least q"))
-parent_axis_counts.z >= product_doside ||
-    throw(ArgumentError("parent_axis_counts.z must be at least product_doside"))
 
-source_mode_dims = (q, q, q)
-product_z_start = div(parent_axis_counts.z - product_doside, 2) + 1
-source_boxes = (
-    pqs_left = (x = 1:q, y = 1:q, z = 1:q),
-    pqs_right = (
-        x = 1:q,
-        y = 1:q,
-        z = (parent_axis_counts.z - q + 1):parent_axis_counts.z,
-    ),
-    product = (
-        x = 1:q,
-        y = 1:q,
-        z = product_z_start:(product_z_start + product_doside - 1),
-    ),
-)
-
-pqs_left_range = _pqs_driver_range(0, pqs_retained_count)
-pqs_right_range = _pqs_driver_range(last(pqs_left_range), pqs_retained_count)
-product_range = _pqs_driver_range(last(pqs_right_range), product_retained_count)
-retained_dimension = last(product_range)
-
+# 1. System metadata: physical labels and the parent box description.
 system_metadata = (
     atom_symbols = atom_symbols,
     nuclear_charges = nuclear_charges,
@@ -153,12 +79,14 @@ system_metadata = (
     parent_box = parent_box,
     map_backend = map_backend,
 )
+
+# 2. Recipe metadata: route recipe inputs, not already-derived route facts.
 recipe_metadata = (
     route_kind = route_kind,
     q = q,
-    L = L,
+    route_shape = route_shape,
+    product_body_rule = product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
-    product_body_rule = :middle_product_doside_slab,
     pqs_retained_rule = pqs_retained_rule,
     product_retained_rule = product_retained_rule,
     terms = terms,
@@ -166,105 +94,46 @@ recipe_metadata = (
     support_dense_direct_allowed = support_dense_direct_allowed,
     reference_only_authorities = reference_only_authorities,
 )
+
+route_skeleton =
+    GaussletBases.CartesianContractedParentMetrics._pqs_pqs_product_source_box_route_skeleton(
+        ;
+        q,
+        parent_axis_counts,
+        route_shape,
+        product_body_rule,
+        pqs_retained_rule,
+        product_retained_rule,
+        pair_factor_normalization,
+    )
+
+# 3. Parent description/construction: still described, not materialized here.
 parent_description = (
     status = :described_not_constructed,
     axis_transform_status = :pending_repo_parent_constructor,
     one_dimensional_transforms = (:x_axis_transform, :y_axis_transform, :z_axis_transform),
     parent_lattice = :raw_product_box_parent_lattice,
-    source_boxes = source_boxes,
+    parent_axis_counts = route_skeleton.parent_axis_counts,
+    source_boxes = route_skeleton.source_boxes,
+    pending_facts = route_skeleton.pending_facts,
 )
-retained_units = (
-    (
-        unit_key = :pqs_left,
-        unit_role = :left_mode_selected_raw_box_pqs_unit,
-        retained_unit_kind = :pqs,
-        source_family = :mode_selected_raw_product_box,
-        source_box = source_boxes.pqs_left,
-        source_dimensions = source_mode_dims,
-        source_dimension = _pqs_driver_source_box_dimension(source_boxes.pqs_left),
-        retained_rule_kind = pqs_retained_rule,
-        retained_range = pqs_left_range,
-        retained_count = length(pqs_left_range),
-        provenance_label = :pqs_left_source_modes,
-        weight_semantics = :retained_columns_not_positive_quadrature_weights,
-    ),
-    (
-        unit_key = :pqs_right,
-        unit_role = :right_mode_selected_raw_box_pqs_unit,
-        retained_unit_kind = :pqs,
-        source_family = :mode_selected_raw_product_box,
-        source_box = source_boxes.pqs_right,
-        source_dimensions = source_mode_dims,
-        source_dimension = _pqs_driver_source_box_dimension(source_boxes.pqs_right),
-        retained_rule_kind = pqs_retained_rule,
-        retained_range = pqs_right_range,
-        retained_count = length(pqs_right_range),
-        provenance_label = :pqs_right_source_modes,
-        weight_semantics = :retained_columns_not_positive_quadrature_weights,
-    ),
-    (
-        unit_key = :product,
-        unit_role = :middle_product_doside_slab_unit,
-        retained_unit_kind = :product_doside,
-        source_family = :product_doside,
-        source_box = source_boxes.product,
-        source_dimensions = (q, q, product_doside),
-        source_dimension = _pqs_driver_source_box_dimension(source_boxes.product),
-        retained_rule_kind = product_retained_rule,
-        retained_range = product_range,
-        retained_count = length(product_range),
-        provenance_label = :product_doside_source_modes,
-        weight_semantics = :product_source_weights_owned_by_source_box_helpers,
-    ),
-)
-unit_by_key = Dict(unit.unit_key => unit for unit in retained_units)
-route_shape = (:pqs_left, :pqs_right, :product)
 
-pair_entries = Any[]
-for i in eachindex(route_shape), j in i:length(route_shape)
-    left_key = route_shape[i]
-    right_key = route_shape[j]
-    left_unit = unit_by_key[left_key]
-    right_unit = unit_by_key[right_key]
-    pair_family = _pqs_driver_pair_family(
-        left_unit.retained_unit_kind,
-        right_unit.retained_unit_kind,
-    )
-    helper = _pqs_driver_density_density_helper(pair_family, pair_factor_normalization)
-    transpose_policy =
-        left_key == right_key ? :none :
-        pair_family == :product_pqs ?
-        :product_pqs_uses_transpose_of_pqs_product_when_pair_factors_are_symmetric :
-        :lower_block_uses_transpose_when_pair_factors_are_symmetric
-    push!(
-        pair_entries,
-        (
-            pair_key = (left_key, right_key),
-            pair_family = pair_family,
-            density_density_helper = helper,
-            source_box_algorithmic_path = true,
-            fallback_oracle_path = false,
-            transpose_policy = transpose_policy,
-            output_representation = :retained_two_index_density_density,
-        ),
-    )
-end
-pair_entries = Tuple(pair_entries)
-pair_family_counts = (
-    pqs_pqs = count(entry -> entry.pair_family == :pqs_pqs, pair_entries),
-    pqs_product = count(entry -> entry.pair_family == :pqs_product, pair_entries),
-    product_pqs = count(entry -> entry.pair_family == :product_pqs, pair_entries),
-    product_product =
-        count(entry -> entry.pair_family == :product_product, pair_entries),
-)
-helper_by_pair_family = (
-    pqs_pqs = _pqs_driver_density_density_helper(:pqs_pqs, pair_factor_normalization),
-    pqs_product =
-        _pqs_driver_density_density_helper(:pqs_product, pair_factor_normalization),
-    product_pqs = :transpose_of_pqs_product_helper_for_lower_blocks_only,
-    product_product =
-        _pqs_driver_density_density_helper(:product_product, pair_factor_normalization),
-)
+# 4. Product-type unit split: source boxes and source dimensions from the helper.
+source_boxes = route_skeleton.source_boxes
+source_dimensions = route_skeleton.source_dimensions
+
+# 5. Retained-unit definitions: retained counts and ranges from the helper.
+retained_units = route_skeleton.retained_units
+retained_counts = route_skeleton.retained_counts
+ranges = route_skeleton.ranges
+retained_dimension = route_skeleton.retained_dimension
+
+# 6. Pair inventory: upper-triangular source-box pair plan from the helper.
+pair_entries = route_skeleton.pair_entries
+pair_family_counts = route_skeleton.pair_family_counts
+helper_by_pair_family = route_skeleton.helper_by_pair_family
+
+# 7. Final linear algebra plan: the intended retained operator assembly.
 linear_algebra_plan = (
     retained_block_formula = "O_final[i,j] = T_i' * O_source_box_pair * T_j",
     assemble_complete_retained_matrix = true,
@@ -288,13 +157,15 @@ no_go_flags = (
     support_local_shell_row_algorithm = false,
     support_coefficient_matrix = false,
 )
+
+# 8. Validation/save: this dry-run validates route metadata, not operators.
 stage_table = (
     (stage = 1, name = :collect_system_metadata, status = :represented),
     (stage = 2, name = :collect_recipe_metadata, status = :represented),
     (stage = 3, name = :construct_parent_object, status = :described_not_constructed),
-    (stage = 4, name = :split_parent_into_product_type_units, status = :represented),
-    (stage = 5, name = :define_each_unit, status = :represented),
-    (stage = 6, name = :loop_over_unit_pairs, status = :represented),
+    (stage = 4, name = :split_parent_into_product_type_units, status = :derived_by_helper),
+    (stage = 5, name = :define_each_unit, status = :derived_by_helper),
+    (stage = 6, name = :loop_over_unit_pairs, status = :derived_by_helper),
     (stage = 7, name = :apply_final_linear_algebra, status = :plan_reported),
     (stage = 8, name = :validate_report_save, status = :metadata_dry_run),
 )
@@ -306,29 +177,17 @@ dry_run_validation = (
     reference_error = :unavailable_metadata_only,
     timing_allocation = :placeholder_only,
 )
-diagnostics = (
-    source = :pqs_source_box_route_driver_skeleton,
-    source_box_first = true,
-    source_box_algorithmic_path_true_for_every_pair =
-        all(entry -> entry.source_box_algorithmic_path, pair_entries),
-    retained_dimension = retained_dimension,
-    retained_unit_count = length(retained_units),
-    pair_count = length(pair_entries),
-    pair_family_counts = pair_family_counts,
-    pair_factor_normalization = pair_factor_normalization,
-    helper_by_pair_family = helper_by_pair_family,
-    output_representation = :retained_two_index_density_density,
-    four_index_galerkin_tensor = false,
-    raw_weight_division_owner =
-        pair_factor_normalization == :raw_weighted ?
-        :explicit_source_quadrature_weight_outer_products :
-        :caller_supplied_density_normalized_pair_factors,
-    retained_weight_division_allowed = false,
-    product_pqs_explicit_helper_required = false,
-    product_pqs_transpose_requires_symmetric_pair_factors = true,
-    product_pqs_lower_block_count = 2,
-    product_pqs_lower_block_helper = :transpose_of_pqs_product_helper,
-    no_go_flags = no_go_flags,
+diagnostics = merge(
+    route_skeleton.diagnostics,
+    (
+        source = :pqs_source_box_route_driver_skeleton,
+        route_skeleton_helper =
+            :_pqs_pqs_product_source_box_route_skeleton,
+        output_representation = :retained_two_index_density_density,
+        no_go_flags = no_go_flags,
+        driver_builds_real_hamiltonian = false,
+        driver_builds_route_matrices = false,
+    ),
 )
 report = (
     object_kind = :pqs_source_box_route_driver_skeleton_report,
@@ -336,8 +195,15 @@ report = (
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
-    route_shape = route_shape,
+    route_skeleton = route_skeleton,
+    route_shape = route_skeleton.route_shape,
+    retained_unit_order = route_skeleton.retained_unit_order,
+    source_boxes = source_boxes,
+    source_dimensions = source_dimensions,
     retained_units = retained_units,
+    retained_counts = retained_counts,
+    ranges = ranges,
+    retained_dimension = retained_dimension,
     pair_entries = pair_entries,
     pair_family_counts = pair_family_counts,
     helper_by_pair_family = helper_by_pair_family,
@@ -349,8 +215,11 @@ report = (
 
 println("PQS source-box route driver skeleton")
 @show route_kind
-@show q L product_doside
+@show q
+@show route_shape
+@show product_body_rule
 @show pair_factor_normalization
+@show retained_counts
 @show retained_dimension
 
 _pqs_driver_print_section("system_metadata")
@@ -368,6 +237,11 @@ for field in keys(parent_description)
     _pqs_driver_print_kv(field, getproperty(parent_description, field))
 end
 
+_pqs_driver_print_section("source_boxes")
+for field in keys(source_boxes)
+    _pqs_driver_print_kv(field, getproperty(source_boxes, field))
+end
+
 _pqs_driver_print_section("retained_units")
 for unit in retained_units
     println(
@@ -375,11 +249,13 @@ for unit in retained_units
         '\t',
         unit.unit_role,
         '\t',
+        unit.retained_count,
+        '\t',
         unit.retained_range,
         '\t',
         unit.source_box,
         '\t',
-        unit.weight_semantics,
+        unit.retained_rule_derivation,
     )
 end
 

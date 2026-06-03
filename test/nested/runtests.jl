@@ -1,5 +1,6 @@
 include("pqs_source_metadata_real_artifact_acceptance_runtests.jl")
 include("pqs_component_route_report_adapter_runtests.jl")
+include("pqs_source_box_route_skeleton_runtests.jl")
 
 @testset "Cartesian nested face first primitive" begin
     function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)

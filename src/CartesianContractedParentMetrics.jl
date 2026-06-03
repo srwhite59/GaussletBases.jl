@@ -12655,6 +12655,399 @@ function _source_box_axis_pair_terms_symmetric(
     ), 1:3)
 end
 
+function _pqs_source_box_route_skeleton_axis_counts(parent_axis_counts)
+    if parent_axis_counts isa NamedTuple
+        all(axis -> hasproperty(parent_axis_counts, axis), (:x, :y, :z)) || throw(
+            ArgumentError("PQS source-box route skeleton requires x/y/z parent axis counts"),
+        )
+        counts = (
+            x = Int(parent_axis_counts.x),
+            y = Int(parent_axis_counts.y),
+            z = Int(parent_axis_counts.z),
+        )
+    elseif parent_axis_counts isa Tuple && length(parent_axis_counts) == 3
+        counts = (
+            x = Int(parent_axis_counts[1]),
+            y = Int(parent_axis_counts[2]),
+            z = Int(parent_axis_counts[3]),
+        )
+    else
+        throw(
+            ArgumentError(
+                "PQS source-box route skeleton requires a NamedTuple x/y/z or a 3-tuple of parent axis counts",
+            ),
+        )
+    end
+    all(axis -> getproperty(counts, axis) > 0, (:x, :y, :z)) || throw(
+        ArgumentError("PQS source-box route skeleton parent axis counts must be positive"),
+    )
+    return counts
+end
+
+function _pqs_source_box_route_skeleton_source_dimension(box)
+    return prod(length(getproperty(box, axis)) for axis in (:x, :y, :z))
+end
+
+function _pqs_source_box_route_skeleton_range(offset::Int, count::Int)
+    count > 0 || throw(ArgumentError("PQS source-box route skeleton counts must be positive"))
+    return (offset + 1):(offset + count)
+end
+
+function _pqs_source_box_route_skeleton_product_slab(
+    parent_axis_counts,
+    q::Int,
+    product_body_rule,
+)
+    length_value = nothing
+    derivation = :pending_helper
+    if product_body_rule == :centered_single_z_slab
+        length_value = 1
+        derivation = :derived_from_centered_single_z_slab_rule
+    elseif product_body_rule isa NamedTuple &&
+           get(product_body_rule, :kind, nothing) == :centered_z_slab
+        rule_length = get(product_body_rule, :length, :single_plane)
+        if rule_length == :single_plane
+            length_value = 1
+            derivation = :derived_from_named_centered_z_slab_single_plane_rule
+        elseif rule_length isa Integer
+            length_value = Int(rule_length)
+            derivation = :manual_fixture_named_rule_length
+        else
+            throw(
+                ArgumentError(
+                    "unsupported centered_z_slab length rule $(rule_length)",
+                ),
+            )
+        end
+    else
+        throw(ArgumentError("unsupported product/body slab rule $(product_body_rule)"))
+    end
+
+    length_value > 0 || throw(
+        ArgumentError("product/body slab length must be positive"),
+    )
+    parent_axis_counts.z >= length_value || throw(
+        ArgumentError("product/body slab length exceeds parent z axis count"),
+    )
+    parent_axis_counts.x >= q && parent_axis_counts.y >= q || throw(
+        ArgumentError("product/body slab transverse source dimensions require parent x/y counts >= q"),
+    )
+    start_z = div(parent_axis_counts.z - length_value, 2) + 1
+    z_range = start_z:(start_z + length_value - 1)
+    return (
+        source_box = (x = 1:q, y = 1:q, z = z_range),
+        source_dimensions = (q, q, length_value),
+        length = length_value,
+        axis = :z,
+        placement = :centered,
+        derivation = derivation,
+    )
+end
+
+function _pqs_source_box_route_skeleton_pair_family(
+    left_kind::Symbol,
+    right_kind::Symbol,
+)
+    if left_kind == :product_doside && right_kind == :product_doside
+        return :product_product
+    elseif left_kind == :pqs && right_kind == :pqs
+        return :pqs_pqs
+    elseif left_kind == :pqs && right_kind == :product_doside
+        return :pqs_product
+    elseif left_kind == :product_doside && right_kind == :pqs
+        return :product_pqs
+    end
+    throw(ArgumentError("unsupported source-box route unit pair $(left_kind), $(right_kind)"))
+end
+
+function _pqs_source_box_route_skeleton_density_density_helper(
+    pair_family::Symbol,
+    pair_factor_normalization::Symbol,
+)
+    if pair_family == :pqs_pqs
+        return pair_factor_normalization == :raw_weighted ?
+            :_pqs_pqs_source_box_raw_weighted_density_density_interaction_block :
+            :_pqs_pqs_source_box_density_density_interaction_block
+    elseif pair_family in (:pqs_product, :product_pqs)
+        return pair_factor_normalization == :raw_weighted ?
+            :_pqs_product_source_box_raw_weighted_density_density_interaction_block :
+            :_pqs_product_source_box_density_density_interaction_block
+    elseif pair_family == :product_product
+        return pair_factor_normalization == :raw_weighted ?
+            :_product_doside_source_box_raw_weighted_density_density_interaction_block :
+            :_product_doside_source_box_density_density_interaction_block
+    end
+    throw(ArgumentError("unsupported density-density pair family $(pair_family)"))
+end
+
+function _pqs_pqs_product_source_box_route_skeleton(;
+    q::Integer,
+    parent_axis_counts,
+    route_shape = (:pqs_left, :product, :pqs_right),
+    retained_unit_order = (:pqs_left, :pqs_right, :product),
+    product_body_rule = :centered_single_z_slab,
+    pqs_retained_rule = :boundary_comx_product_mode_selection,
+    product_retained_rule = :product_doside_retained_unit,
+    pair_factor_normalization::Symbol = :density_normalized,
+)
+    q_value = Int(q)
+    q_value >= 2 || throw(
+        ArgumentError("PQS source-box route skeleton requires q >= 2"),
+    )
+    pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
+        ArgumentError("PQS source-box route skeleton requires density_normalized or raw_weighted pair-factor mode"),
+    )
+    route_shape == (:pqs_left, :product, :pqs_right) || throw(
+        ArgumentError("PQS source-box route skeleton currently supports route shape (:pqs_left, :product, :pqs_right)"),
+    )
+    retained_unit_order == (:pqs_left, :pqs_right, :product) || throw(
+        ArgumentError("PQS source-box route skeleton currently supports retained unit order (:pqs_left, :pqs_right, :product)"),
+    )
+    pqs_retained_rule == :boundary_comx_product_mode_selection || throw(
+        ArgumentError("PQS source-box route skeleton currently derives only boundary COMX-product retained counts"),
+    )
+    product_retained_rule == :product_doside_retained_unit || throw(
+        ArgumentError("PQS source-box route skeleton currently derives only product/doside retained counts"),
+    )
+
+    counts = _pqs_source_box_route_skeleton_axis_counts(parent_axis_counts)
+    counts.x >= q_value && counts.y >= q_value && counts.z >= q_value || throw(
+        ArgumentError("PQS source-box route skeleton parent axis counts must be >= q"),
+    )
+    pqs_source_mode_dims = (q_value, q_value, q_value)
+    pqs_boundary_selector =
+        _pqs_raw_product_box_boundary_selector(pqs_source_mode_dims)
+    pqs_count = pqs_boundary_selector.selected_count
+    product_slab = _pqs_source_box_route_skeleton_product_slab(
+        counts,
+        q_value,
+        product_body_rule,
+    )
+    product_count = prod(product_slab.source_dimensions)
+
+    source_boxes = (
+        pqs_left = (x = 1:q_value, y = 1:q_value, z = 1:q_value),
+        product = product_slab.source_box,
+        pqs_right = (
+            x = 1:q_value,
+            y = 1:q_value,
+            z = (counts.z - q_value + 1):counts.z,
+        ),
+    )
+    source_dimensions = (
+        pqs_left = pqs_source_mode_dims,
+        pqs_right = pqs_source_mode_dims,
+        product = product_slab.source_dimensions,
+    )
+    retained_counts = (
+        pqs_left = pqs_count,
+        pqs_right = pqs_count,
+        product = product_count,
+    )
+    ranges = (
+        pqs_left = _pqs_source_box_route_skeleton_range(0, retained_counts.pqs_left),
+        pqs_right = _pqs_source_box_route_skeleton_range(
+            retained_counts.pqs_left,
+            retained_counts.pqs_right,
+        ),
+        product = _pqs_source_box_route_skeleton_range(
+            retained_counts.pqs_left + retained_counts.pqs_right,
+            retained_counts.product,
+        ),
+    )
+    retained_dimension = last(ranges.product)
+
+    retained_units = (
+        (
+            unit_key = :pqs_left,
+            unit_role = :left_mode_selected_raw_box_pqs_unit,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            source_box = source_boxes.pqs_left,
+            source_dimensions = source_dimensions.pqs_left,
+            source_dimension =
+                _pqs_source_box_route_skeleton_source_dimension(source_boxes.pqs_left),
+            retained_rule_kind = pqs_retained_rule,
+            retained_rule_derivation =
+                :derived_from_boundary_comx_product_mode_selector,
+            retained_range = ranges.pqs_left,
+            retained_count = retained_counts.pqs_left,
+            provenance_label = :pqs_left_source_modes,
+            weight_semantics = :retained_columns_not_positive_quadrature_weights,
+        ),
+        (
+            unit_key = :pqs_right,
+            unit_role = :right_mode_selected_raw_box_pqs_unit,
+            retained_unit_kind = :pqs,
+            source_family = :mode_selected_raw_product_box,
+            source_box = source_boxes.pqs_right,
+            source_dimensions = source_dimensions.pqs_right,
+            source_dimension =
+                _pqs_source_box_route_skeleton_source_dimension(source_boxes.pqs_right),
+            retained_rule_kind = pqs_retained_rule,
+            retained_rule_derivation =
+                :derived_from_boundary_comx_product_mode_selector,
+            retained_range = ranges.pqs_right,
+            retained_count = retained_counts.pqs_right,
+            provenance_label = :pqs_right_source_modes,
+            weight_semantics = :retained_columns_not_positive_quadrature_weights,
+        ),
+        (
+            unit_key = :product,
+            unit_role = :middle_product_doside_slab_unit,
+            retained_unit_kind = :product_doside,
+            source_family = :product_doside,
+            source_box = source_boxes.product,
+            source_dimensions = source_dimensions.product,
+            source_dimension =
+                _pqs_source_box_route_skeleton_source_dimension(source_boxes.product),
+            retained_rule_kind = product_retained_rule,
+            retained_rule_derivation =
+                :derived_from_product_source_dimension,
+            retained_range = ranges.product,
+            retained_count = retained_counts.product,
+            provenance_label = :product_doside_source_modes,
+            weight_semantics = :product_source_weights_owned_by_source_box_helpers,
+        ),
+    )
+    unit_by_key = Dict(unit.unit_key => unit for unit in retained_units)
+    pair_entries = Any[]
+    for i in eachindex(retained_unit_order), j in i:length(retained_unit_order)
+        left_key = retained_unit_order[i]
+        right_key = retained_unit_order[j]
+        left_unit = unit_by_key[left_key]
+        right_unit = unit_by_key[right_key]
+        pair_family = _pqs_source_box_route_skeleton_pair_family(
+            left_unit.retained_unit_kind,
+            right_unit.retained_unit_kind,
+        )
+        push!(
+            pair_entries,
+            (
+                pair_key = (left_key, right_key),
+                pair_family = pair_family,
+                pair_kind =
+                    pair_family == :pqs_pqs ?
+                    :pqs_pqs_source_box_density_density_pair :
+                    pair_family == :pqs_product ?
+                    :pqs_product_source_box_density_density_pair :
+                    :product_doside_source_box_density_density_pair,
+                density_density_helper =
+                    _pqs_source_box_route_skeleton_density_density_helper(
+                        pair_family,
+                        pair_factor_normalization,
+                    ),
+                source_box_algorithmic_path = true,
+                fallback_oracle_path = false,
+                transpose_policy = left_key == right_key ? :none :
+                    :lower_block_uses_transpose_when_pair_factors_are_symmetric,
+                output_representation = :retained_two_index_density_density,
+            ),
+        )
+    end
+    pair_entries = Tuple(pair_entries)
+    pair_family_counts = (
+        pqs_pqs = count(entry -> entry.pair_family == :pqs_pqs, pair_entries),
+        pqs_product = count(entry -> entry.pair_family == :pqs_product, pair_entries),
+        product_pqs = count(entry -> entry.pair_family == :product_pqs, pair_entries),
+        product_product =
+            count(entry -> entry.pair_family == :product_product, pair_entries),
+    )
+    helper_by_pair_family = (
+        pqs_pqs = _pqs_source_box_route_skeleton_density_density_helper(
+            :pqs_pqs,
+            pair_factor_normalization,
+        ),
+        pqs_product = _pqs_source_box_route_skeleton_density_density_helper(
+            :pqs_product,
+            pair_factor_normalization,
+        ),
+        product_pqs = :transpose_of_pqs_product_helper_for_lower_blocks_only,
+        product_product = _pqs_source_box_route_skeleton_density_density_helper(
+            :product_product,
+            pair_factor_normalization,
+        ),
+    )
+    pending_facts = (
+        :parent_axis_transform_objects,
+        :raw_product_box_plan_objects,
+        :operator_pair_factor_data,
+        :materialized_retained_operator_blocks,
+    )
+    return (
+        object_kind = :pqs_pqs_product_source_box_route_skeleton,
+        status = :private_development_skeleton,
+        route_shape = route_shape,
+        retained_unit_order = retained_unit_order,
+        q = q_value,
+        parent_axis_counts = counts,
+        source_boxes = source_boxes,
+        source_dimensions = source_dimensions,
+        retained_units = retained_units,
+        retained_counts = retained_counts,
+        ranges = ranges,
+        retained_dimension = retained_dimension,
+        pair_entries = pair_entries,
+        pair_family_counts = pair_family_counts,
+        helper_by_pair_family = helper_by_pair_family,
+        product_body = product_slab,
+        pqs_boundary_selector = pqs_boundary_selector,
+        pending_facts = pending_facts,
+        diagnostics = (
+            source = :pqs_pqs_product_source_box_route_skeleton,
+            private_development_only = true,
+            production_route = false,
+            route_shape = route_shape,
+            retained_unit_order = retained_unit_order,
+            pqs_retained_count_derivation =
+                :boundary_comx_product_mode_selection,
+            pqs_boundary_selection_rule = pqs_boundary_selector.selection_rule,
+            pqs_boundary_column_count = pqs_count,
+            product_retained_count_derivation =
+                :product_source_dimension_under_product_doside_rule,
+            product_body_rule = product_body_rule,
+            product_slab_length = product_slab.length,
+            product_slab_length_derivation = product_slab.derivation,
+            product_slab_placement = product_slab.placement,
+            derived_retained_counts = true,
+            derived_retained_ranges = true,
+            derived_pair_inventory = true,
+            pending_facts = pending_facts,
+            pair_factor_normalization = pair_factor_normalization,
+            raw_weight_division_owner =
+                pair_factor_normalization == :raw_weighted ?
+                :explicit_source_quadrature_weight_outer_products :
+                :caller_supplied_density_normalized_pair_factors,
+            source_box_first = true,
+            source_box_algorithmic_path_true_for_every_pair =
+                all(entry -> entry.source_box_algorithmic_path, pair_entries),
+            pair_count = length(pair_entries),
+            pair_family_counts = pair_family_counts,
+            retained_dimension = retained_dimension,
+            retained_unit_count = length(retained_units),
+            output_representation = :retained_two_index_density_density,
+            four_index_galerkin_tensor = false,
+            product_pqs_explicit_helper_required = false,
+            product_pqs_transpose_requires_symmetric_pair_factors = true,
+            product_pqs_lower_block_count = 2,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            public_default_consumes = false,
+            mwg_ida_semantics_changed = false,
+            repo_side_ray_id = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+        ),
+    )
+end
+
 function _pqs_pqs_product_density_density_route_ranges(
     left_raw_plan,
     right_raw_plan,
