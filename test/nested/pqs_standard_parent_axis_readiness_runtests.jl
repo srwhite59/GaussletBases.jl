@@ -17,9 +17,11 @@ using GaussletBases
     @test default_readiness.object_kind ==
           :pqs_standard_parent_axis_construction_readiness
     @test default_readiness.status == :not_ready_pending_facts
-    @test !default_readiness.core_spacing_available
-    @test !default_readiness.d_available
-    @test !default_readiness.white_lindsey_spacing_facts_available
+    @test default_readiness.core_spacing_available
+    @test default_readiness.d_available
+    @test default_readiness.white_lindsey_spacing_facts_available
+    @test default_readiness.core_spacing == 0.15
+    @test default_readiness.d == 0.15
     @test default_readiness.charge_family == :homonuclear
     @test default_readiness.homonuclear
     @test !default_readiness.heteronuclear
@@ -35,11 +37,11 @@ using GaussletBases
           :pending_helper_or_documented_rule
     @test !default_readiness.parent_axis_counts_manual_fixture
     @test !default_readiness.parent_axis_counts_derived
-    @test !default_readiness.existing_parent_api_appears_applicable
+    @test default_readiness.existing_parent_api_appears_applicable
     @test !default_readiness.standard_parent_axis_rule_ready
     @test !default_readiness.parent_axis_construction_ready
     @test !default_readiness.parent_axis_metadata_constructed
-    @test :explicit_core_spacing_or_documented_q_to_core_spacing_rule in
+    @test :explicit_core_spacing_or_documented_q_to_core_spacing_rule ∉
           default_readiness.pending_facts
     @test :parent_axis_counts_or_documented_axis_count_rule in
           default_readiness.pending_facts

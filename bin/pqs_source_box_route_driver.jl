@@ -12,6 +12,7 @@ parent_axis_counts = (x = 9, y = 7, z = 9)
 map_backend = :pgdg_localized_experimental
 
 q = 5
+n_s = q
 reference_spacing = 1.0
 tail_spacing = 10.0
 q_to_core_spacing_rule = :standard_pqs_ns_equals_q
@@ -107,6 +108,7 @@ standard_setup =
         tail_spacing,
         q_to_core_spacing_rule,
         core_spacing,
+        n_s,
     )
 
 parent_axis_readiness =
@@ -116,7 +118,7 @@ parent_axis_readiness =
     )
 
 parent_axis_probe_requested =
-    _pqs_driver_probe_requested(probe_parent_axis_construction, core_spacing)
+    _pqs_driver_probe_requested(probe_parent_axis_construction, standard_setup.core_spacing)
 parent_axis_probe = parent_axis_probe_requested ?
     GaussletBases.CartesianContractedParentMetrics._pqs_explicit_core_spacing_parent_axis_probe(
         standard_setup;
@@ -188,11 +190,13 @@ recipe_metadata = (
     route_kind = route_kind,
     q = q,
     n_s = standard_setup.n_s,
+    n_s_source = standard_setup.n_s_source,
     core_cube_side = standard_setup.core_cube_side,
     reference_spacing = standard_setup.reference_spacing,
     tail_spacing = standard_setup.tail_spacing,
     q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
     core_spacing = standard_setup.core_spacing,
+    core_spacing_source = standard_setup.spacing.core_spacing_source,
     q_to_core_spacing_rule_status =
         standard_setup.spacing.q_to_core_spacing_rule_status,
     probe_parent_axis_construction = probe_parent_axis_construction,
@@ -314,6 +318,7 @@ diagnostics = merge(
         route_skeleton_helper =
             :_pqs_pqs_product_source_box_route_skeleton,
         n_s = standard_setup.n_s,
+        n_s_source = standard_setup.n_s_source,
         core_cube_side = standard_setup.core_cube_side,
         core_cube_side_rule = standard_setup.core_cube_side_rule,
         parent_box_rule = standard_setup.parent_box_rule,
@@ -324,6 +329,9 @@ diagnostics = merge(
         q_to_core_spacing_rule_status =
             standard_setup.spacing.q_to_core_spacing_rule_status,
         q_to_core_spacing_provenance = standard_setup.spacing.provenance,
+        core_spacing_source = standard_setup.spacing.core_spacing_source,
+        core_spacing_default_formula =
+            standard_setup.spacing.core_spacing_default_formula,
         q_to_core_spacing_non_optimality_claim =
             standard_setup.spacing.non_optimality_claim,
         parent_axis_counts_status =
@@ -438,6 +446,7 @@ _pqs_driver_print_section("standard_setup")
 for field in (
     :status,
     :n_s,
+    :n_s_source,
     :core_cube_side,
     :parent_box,
     :core_spacing,
@@ -450,6 +459,8 @@ end
 for field in (
     :q_to_core_spacing_rule_status,
     :q_to_core_spacing_provenance,
+    :core_spacing_source,
+    :core_spacing_default_formula,
     :q_to_core_spacing_non_optimality_claim,
 )
     _pqs_driver_print_kv(field, getproperty(standard_setup.diagnostics, field))

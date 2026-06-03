@@ -4,22 +4,41 @@ using GaussletBases
 @testset "PQS explicit-core-spacing parent-axis probe" begin
     metrics_module = GaussletBases.CartesianContractedParentMetrics
 
-    default_setup =
+    unavailable_setup =
+        metrics_module._pqs_standard_source_box_route_setup(
+            nuclear_charges = (4, 4),
+            atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+            q = 5,
+            radius = 3.0,
+            q_to_core_spacing_rule = :explicit_core_spacing_only,
+        )
+    unavailable_probe =
+        metrics_module._pqs_explicit_core_spacing_parent_axis_probe(unavailable_setup)
+    @test unavailable_probe.object_kind == :pqs_explicit_core_spacing_parent_axis_probe
+    @test unavailable_probe.status == :not_constructed_pending_facts
+    @test unavailable_probe.axis_lengths === nothing
+    @test !unavailable_probe.parent_axis_metadata_constructed
+    @test :explicit_core_spacing in unavailable_probe.pending_facts
+    @test !unavailable_probe.diagnostics.explicit_spacing_probe_only
+    @test !unavailable_probe.diagnostics.default_standard_rule
+    @test unavailable_probe.core_spacing_source == :unavailable
+
+    standard_setup =
         metrics_module._pqs_standard_source_box_route_setup(
             nuclear_charges = (4, 4),
             atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
             q = 5,
             radius = 3.0,
         )
-    default_probe =
-        metrics_module._pqs_explicit_core_spacing_parent_axis_probe(default_setup)
-    @test default_probe.object_kind == :pqs_explicit_core_spacing_parent_axis_probe
-    @test default_probe.status == :not_constructed_pending_facts
-    @test default_probe.axis_lengths === nothing
-    @test !default_probe.parent_axis_metadata_constructed
-    @test :explicit_core_spacing in default_probe.pending_facts
-    @test default_probe.diagnostics.explicit_spacing_probe_only
-    @test !default_probe.diagnostics.default_standard_rule
+    standard_probe =
+        metrics_module._pqs_explicit_core_spacing_parent_axis_probe(standard_setup)
+    @test standard_probe.status ==
+          :constructed_explicit_core_spacing_parent_axis_metadata
+    @test standard_probe.parent_axis_metadata_constructed
+    @test standard_probe.core_spacing == 0.15
+    @test standard_probe.core_spacing_source == :standard_n_s_default
+    @test !standard_probe.explicit_spacing_probe_only
+    @test standard_probe.default_standard_rule
 
     explicit_setup =
         metrics_module._pqs_standard_source_box_route_setup(
@@ -56,6 +75,7 @@ using GaussletBases
     @test explicit_probe.diagnostics.axis_lengths == explicit_probe.axis_lengths
     @test explicit_probe.explicit_spacing_probe_only
     @test !explicit_probe.default_standard_rule
+    @test explicit_probe.core_spacing_source == :explicit_core_spacing_override
 
     numerical_probe =
         metrics_module._pqs_explicit_core_spacing_parent_axis_probe(
@@ -91,15 +111,14 @@ using GaussletBases
     @test :homonuclear_setup in heteronuclear_probe.pending_facts
 
     for diagnostics in (
-        default_probe.diagnostics,
+        unavailable_probe.diagnostics,
+        standard_probe.diagnostics,
         explicit_probe.diagnostics,
         disabled_probe.diagnostics,
         heteronuclear_probe.diagnostics,
     )
         @test diagnostics.private_development_only
         @test !diagnostics.production_route
-        @test diagnostics.explicit_spacing_probe_only
-        @test !diagnostics.default_standard_rule
         @test !diagnostics.public_default_consumes
         @test !diagnostics.packet_adoption
         @test !diagnostics.fixed_block_routing

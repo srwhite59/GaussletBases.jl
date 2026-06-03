@@ -12709,51 +12709,103 @@ function _pqs_standard_setup_physical_parent_box(atom_locations, radius::Float64
     )
 end
 
+function _pqs_standard_n_s_core_spacing_default(n_s::Integer, q_to_core_spacing_rule::Symbol)
+    q_to_core_spacing_rule == :explicit_core_spacing_only && return nothing
+    _pqs_standard_validate_q_to_core_spacing_rule(q_to_core_spacing_rule)
+    n_s_value = Int(n_s)
+    n_s_value > 3 || throw(
+        ArgumentError(
+            "standard PQS n_s core-spacing default requires n_s > 3",
+        ),
+    )
+    return (
+        core_spacing = 1.2 / (4.0 * (n_s_value - 3)),
+        q_to_core_spacing_rule_status = :standard_n_s_core_spacing_default,
+        provenance =
+            :white_lindsey_shared_shell_policy_core_spacing_1p2_over_4_ns_minus_3,
+        formula = :core_spacing_equals_1p2_over_4_times_n_s_minus_3,
+    )
+end
+
+function _pqs_standard_validate_q_to_core_spacing_rule(q_to_core_spacing_rule::Symbol)
+    q_to_core_spacing_rule in (
+        :explicit_core_spacing_only,
+        :standard_pqs_ns_equals_q,
+        :standard_pqs_n_s_default,
+    ) || throw(
+        ArgumentError(
+            "unsupported PQS q-to-core-spacing rule $(q_to_core_spacing_rule)",
+        ),
+    )
+    return nothing
+end
+
 function _pqs_standard_setup_spacing(
     nuclear_charges;
     core_spacing,
+    n_s::Integer,
     reference_spacing::Float64,
     tail_spacing::Float64,
     q_to_core_spacing_rule::Symbol,
 )
-    if isnothing(core_spacing)
+    _pqs_standard_validate_q_to_core_spacing_rule(q_to_core_spacing_rule)
+    default_spacing = isnothing(core_spacing) ?
+        _pqs_standard_n_s_core_spacing_default(n_s, q_to_core_spacing_rule) :
+        nothing
+    if isnothing(core_spacing) && isnothing(default_spacing)
         return (
             core_spacing = nothing,
             d = nothing,
             mapping_s = nothing,
             mapping_s_by_atom = nothing,
             core_range_by_atom = nothing,
+            n_s = Int(n_s),
             reference_spacing = reference_spacing,
             tail_spacing = tail_spacing,
             q_to_core_spacing_rule = q_to_core_spacing_rule,
             q_to_core_spacing_rule_status =
-                :unavailable_no_documented_q_to_core_spacing_formula,
-            provenance = :pending_documented_standard_rule_or_explicit_override,
+                :explicit_core_spacing_required,
+            provenance = :explicit_core_spacing_only_rule_selected,
+            core_spacing_source = :unavailable,
+            core_spacing_default_formula = nothing,
             white_lindsey_formula_available_when_d_is_explicit = true,
             non_optimality_claim = :not_claimed,
             replaceable = true,
         )
     end
 
-    d_value = Float64(core_spacing)
+    d_value = isnothing(core_spacing) ?
+        Float64(default_spacing.core_spacing) :
+        Float64(core_spacing)
     isfinite(d_value) && d_value > 0.0 || throw(
         ArgumentError("PQS standard source-box route setup core_spacing must be positive when provided"),
     )
     s_by_atom = Tuple(sqrt(d_value * charge) for charge in nuclear_charges)
     core_ranges = Tuple(sqrt(d_value / charge) for charge in nuclear_charges)
     same_charge = all(charge -> charge == first(nuclear_charges), nuclear_charges)
+    explicit_override = !isnothing(core_spacing)
     return (
         core_spacing = d_value,
         d = d_value,
         mapping_s = same_charge ? first(s_by_atom) : nothing,
         mapping_s_by_atom = s_by_atom,
         core_range_by_atom = core_ranges,
+        n_s = Int(n_s),
         reference_spacing = reference_spacing,
         tail_spacing = tail_spacing,
         q_to_core_spacing_rule = q_to_core_spacing_rule,
-        q_to_core_spacing_rule_status = :explicit_core_spacing_override,
-        provenance =
-            :explicit_core_spacing_with_white_lindsey_mapping_s_sqrt_dZ,
+        q_to_core_spacing_rule_status = explicit_override ?
+            :explicit_core_spacing_override :
+            default_spacing.q_to_core_spacing_rule_status,
+        provenance = explicit_override ?
+            :explicit_core_spacing_with_white_lindsey_mapping_s_sqrt_dZ :
+            default_spacing.provenance,
+        core_spacing_source = explicit_override ?
+            :explicit_core_spacing_override :
+            :standard_n_s_default,
+        core_spacing_default_formula = explicit_override ?
+            nothing :
+            default_spacing.formula,
         white_lindsey_formula_available_when_d_is_explicit = true,
         non_optimality_claim = :not_claimed,
         replaceable = true,
@@ -12769,10 +12821,15 @@ function _pqs_standard_source_box_route_setup(;
     tail_spacing::Real = 10.0,
     q_to_core_spacing_rule::Symbol = :standard_pqs_ns_equals_q,
     core_spacing = nothing,
+    n_s::Integer = q,
 )
     q_value = Int(q)
     q_value >= 2 || throw(
         ArgumentError("PQS standard source-box route setup requires q >= 2"),
+    )
+    n_s_value = Int(n_s)
+    n_s_value >= 2 || throw(
+        ArgumentError("PQS standard source-box route setup requires n_s >= 2"),
     )
     radius_value = Float64(radius)
     isfinite(radius_value) && radius_value > 0.0 || throw(
@@ -12793,7 +12850,6 @@ function _pqs_standard_source_box_route_setup(;
         DimensionMismatch("PQS standard source-box route setup charge and atom-location counts must match"),
     )
 
-    n_s = q_value
     core_cube_side = isodd(q_value) ? q_value : q_value + 1
     parent_box = _pqs_standard_setup_physical_parent_box(
         locations,
@@ -12807,6 +12863,7 @@ function _pqs_standard_source_box_route_setup(;
     spacing = _pqs_standard_setup_spacing(
         charges;
         core_spacing,
+        n_s = n_s_value,
         reference_spacing = reference_spacing_value,
         tail_spacing = tail_spacing_value,
         q_to_core_spacing_rule,
@@ -12818,7 +12875,8 @@ function _pqs_standard_source_box_route_setup(;
         atom_locations = locations,
         atom_count = length(locations),
         q = q_value,
-        n_s = n_s,
+        n_s = n_s_value,
+        n_s_source = n_s_value == q_value ? :q_default : :explicit_override,
         radius = radius_value,
         core_cube_side = core_cube_side,
         core_cube_side_rule =
@@ -12839,9 +12897,10 @@ function _pqs_standard_source_box_route_setup(;
             source = :pqs_standard_source_box_route_setup,
             private_development_only = true,
             production_route = false,
-            n_s_equals_q = true,
+            n_s_equals_q = n_s_value == q_value,
+            n_s_source = n_s_value == q_value ? :q_default : :explicit_override,
             q = q_value,
-            n_s = n_s,
+            n_s = n_s_value,
             core_cube_side = core_cube_side,
             core_cube_side_rule =
                 :q_for_odd_q_q_plus_one_for_even_q,
@@ -12856,10 +12915,14 @@ function _pqs_standard_source_box_route_setup(;
             q_to_core_spacing_rule_status =
                 spacing.q_to_core_spacing_rule_status,
             q_to_core_spacing_provenance = spacing.provenance,
+            core_spacing_source = spacing.core_spacing_source,
+            core_spacing_default_formula = spacing.core_spacing_default_formula,
             q_to_core_spacing_non_optimality_claim =
                 spacing.non_optimality_claim,
             q_to_core_spacing_replaceable = spacing.replaceable,
             explicit_core_spacing_override_used = !isnothing(core_spacing),
+            standard_n_s_default_core_spacing_used =
+                spacing.core_spacing_source == :standard_n_s_default,
             public_default_consumes = false,
             packet_adoption = false,
             fixed_block_routing = false,
@@ -13190,6 +13253,11 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
     construct_axis_bundles::Bool = true,
 )
     readiness = _pqs_standard_parent_axis_construction_readiness(setup)
+    spacing_source = setup.spacing.core_spacing_source
+    explicit_spacing_probe_only =
+        spacing_source == :explicit_core_spacing_override
+    default_standard_rule =
+        spacing_source == :standard_n_s_default
     pending_facts = _pqs_explicit_core_spacing_parent_axis_probe_pending_facts(
         readiness;
         construct_axis_bundles,
@@ -13216,16 +13284,18 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
             gausslet_backend_role =
                 _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
             expansion_source = isnothing(expansion) ? :not_used : :explicit,
-            explicit_spacing_probe_only = true,
-            default_standard_rule = false,
+            explicit_spacing_probe_only = explicit_spacing_probe_only,
+            default_standard_rule = default_standard_rule,
+            core_spacing_source = spacing_source,
             parent_axis_metadata_constructed = false,
             pending_facts = pending_facts,
             diagnostics = (
                 source = :pqs_explicit_core_spacing_parent_axis_probe,
                 private_development_only = true,
                 production_route = false,
-                explicit_spacing_probe_only = true,
-                default_standard_rule = false,
+                explicit_spacing_probe_only = explicit_spacing_probe_only,
+                default_standard_rule = default_standard_rule,
+                core_spacing_source = spacing_source,
                 parent_axis_metadata_constructed = false,
                 gausslet_backend = gausslet_backend,
                 gausslet_backend_role =
@@ -13322,16 +13392,18 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
         gausslet_backend_role =
             _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
         expansion_source = expansion_source,
-        explicit_spacing_probe_only = true,
-        default_standard_rule = false,
+        explicit_spacing_probe_only = explicit_spacing_probe_only,
+        default_standard_rule = default_standard_rule,
+        core_spacing_source = spacing_source,
         parent_axis_metadata_constructed = true,
         pending_facts = (),
         diagnostics = (
             source = :pqs_explicit_core_spacing_parent_axis_probe,
             private_development_only = true,
             production_route = false,
-            explicit_spacing_probe_only = true,
-            default_standard_rule = false,
+            explicit_spacing_probe_only = explicit_spacing_probe_only,
+            default_standard_rule = default_standard_rule,
+            core_spacing_source = spacing_source,
             parent_axis_metadata_constructed = true,
             gausslet_backend = gausslet_backend,
             gausslet_backend_role =

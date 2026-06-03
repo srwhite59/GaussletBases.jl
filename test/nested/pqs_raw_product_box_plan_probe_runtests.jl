@@ -5,12 +5,13 @@ using GaussletBases
     metrics_module = GaussletBases.CartesianContractedParentMetrics
 
     manual_counts = (x = 9, y = 7, z = 9)
-    default_setup =
+    unavailable_setup =
         metrics_module._pqs_standard_source_box_route_setup(
             nuclear_charges = (4, 4),
             atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
             q = 5,
             radius = 3.0,
+            q_to_core_spacing_rule = :explicit_core_spacing_only,
         )
     default_skeleton =
         metrics_module._pqs_pqs_product_source_box_route_skeleton(
@@ -19,7 +20,7 @@ using GaussletBases
         )
     default_probe =
         metrics_module._pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
-            default_setup,
+            unavailable_setup,
             default_skeleton,
         )
     @test default_probe.status == :not_constructed_pending_facts
