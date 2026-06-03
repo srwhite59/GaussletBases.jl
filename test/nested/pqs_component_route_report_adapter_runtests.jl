@@ -171,6 +171,7 @@ using GaussletBases
         support_count::Int,
         primitive_family = nothing,
         representation_kind = category,
+        staged_unit = nothing,
         raw_box_auxiliary_metadata = nothing,
         shell_transform = nothing,
         shell_row_oracle_only::Bool = false,
@@ -183,6 +184,7 @@ using GaussletBases
             column_range = column_range,
             retained_count = length(column_range),
             support_count = support_count,
+            staged_unit = staged_unit,
             support_source_semantics = category == :support_dense ?
                 :support_local_direct_rows : :synthetic_source_semantics,
             safe_term_capability = category == :shell_realized_pqs_fixture ?
@@ -209,6 +211,25 @@ using GaussletBases
         )
     end
 
+    function _synthetic_product_axis(kind::Symbol, fixed_index, interval)
+        return (
+            kind = kind,
+            fixed_index = fixed_index,
+            interval = interval,
+        )
+    end
+
+    function _synthetic_product_staged_unit()
+        return (
+            axes = (
+                _synthetic_product_axis(:fixed, 1, nothing),
+                _synthetic_product_axis(:active, nothing, 1:2),
+                _synthetic_product_axis(:active, nothing, 3:4),
+            ),
+            axis_function_indices = ((1, 1, 1), (1, 2, 1), (1, 1, 2), (1, 2, 2)),
+        )
+    end
+
     function _synthetic_fixed_side_inventory(;
         shell_source_box_operator_ready::Bool = false,
     )
@@ -221,6 +242,7 @@ using GaussletBases
                 support_count = 4,
                 primitive_family = :outer_mismatch_boundary_slab_set,
                 representation_kind = :product_doside_bridge,
+                staged_unit = _synthetic_product_staged_unit(),
             ),
             _synthetic_fixed_side_inventory_unit(
                 :left_atom_box,
@@ -358,6 +380,7 @@ using GaussletBases
     @test sidecar.lanes.source_box_pqs_ida_fixed_side.components[1].nuclear_attraction_by_center.helper_by_family.pqs_pqs ==
           :_pqs_pqs_source_box_nuclear_attraction_by_center
     @test isnothing(sidecar.fixed_side_retained_unit_metadata)
+    @test isnothing(sidecar.source_shell_mode_inventory)
     @test sidecar.lanes.final_residual_mwg_supplement.fixed_dimension == 125
     @test sidecar.lanes.final_residual_mwg_supplement.residual_dimension == 6
     @test sidecar.lanes.final_residual_mwg_supplement.final_dimension == 131
@@ -384,6 +407,11 @@ using GaussletBases
     @test sidecar.diagnostics.lanes_remain_separate
     @test sidecar.diagnostics.source_box_unit_records_available
     @test !sidecar.diagnostics.fixed_side_retained_unit_metadata_available
+    @test !sidecar.diagnostics.source_shell_mode_inventory_available
+    @test sidecar.diagnostics.source_shell_count == 0
+    @test sidecar.diagnostics.source_mode_count == 0
+    @test sidecar.diagnostics.source_shell_mode_center_status == :unavailable
+    @test !sidecar.diagnostics.source_shell_mode_product_doside_only
     @test sidecar.diagnostics.final_residual_shape_consistent
     @test sidecar.diagnostics.residual_owner_rows_match
     @test !sidecar.diagnostics.packet_adoption
@@ -434,6 +462,7 @@ using GaussletBases
     @test occursin("qwhamiltonian_consumes\tfalse", sidecar_text)
     @test occursin("cr2_science_status_changed\tfalse", sidecar_text)
     @test !occursin("[fixed_side_retained_unit_metadata]", sidecar_text)
+    @test !occursin("[source_shell_mode_inventory]", sidecar_text)
 
     io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_report(io, report)
@@ -511,6 +540,397 @@ using GaussletBases
     @test !fixed_side_metadata.diagnostics.cr2_science_status_changed
     @test !fixed_side_metadata.diagnostics.retained_weight_or_ida_division
 
+    fixed_column_label_inventory =
+        metrics_module._pqs_current_route_fixed_column_label_inventory(
+            _synthetic_fixed_side_inventory();
+            provenance = (source = :synthetic_fixed_column_label_inventory_test,),
+        )
+    @test fixed_column_label_inventory.object_kind ==
+          :pqs_current_route_fixed_column_label_inventory
+    @test fixed_column_label_inventory.status ==
+          :private_fixed_column_label_inventory
+    @test fixed_column_label_inventory.schema_version ==
+          :pqs_fixed_column_labels_private_v1
+    @test fixed_column_label_inventory.fixed_dimension == 15
+    @test fixed_column_label_inventory.row_count == 15
+    @test fixed_column_label_inventory.fixed_cols == collect(1:15)
+    @test fixed_column_label_inventory.unit_indices ==
+          [fill(1, 4); fill(2, 4); fill(3, 7)]
+    @test fixed_column_label_inventory.unit_labels ==
+          [
+              fill(:outer_mismatch_z_low_slab, 4);
+              fill(:left_atom_box, 4);
+              fill(:regular_shared_molecular_shell_1, 7)
+          ]
+    @test fixed_column_label_inventory.unit_categories ==
+          [
+              fill(:product_doside, 4);
+              fill(:support_dense, 4);
+              fill(:shell_realized_pqs_fixture, 7)
+          ]
+    @test fixed_column_label_inventory.unit_kinds ==
+          [
+              fill(:product_doside, 4);
+              fill(:atom_core_cube, 4);
+              fill(:projected_q_shell, 7)
+          ]
+    @test fixed_column_label_inventory.unit_retained_starts ==
+          [fill(1, 4); fill(5, 4); fill(9, 7)]
+    @test fixed_column_label_inventory.unit_retained_stops ==
+          [fill(4, 4); fill(8, 4); fill(15, 7)]
+    @test fixed_column_label_inventory.source_region_labels ==
+          fixed_column_label_inventory.unit_labels
+    @test all(
+        ==(:retained_unit_region_label),
+        fixed_column_label_inventory.source_region_label_statuses,
+    )
+    @test all(isnothing, fixed_column_label_inventory.source_box_labels)
+    @test all(==(:unavailable), fixed_column_label_inventory.source_box_label_statuses)
+    @test all(isnothing, fixed_column_label_inventory.owner_labels)
+    @test all(==(:unavailable), fixed_column_label_inventory.owner_label_statuses)
+    @test all(==(:unavailable), fixed_column_label_inventory.shell_label_statuses)
+    @test all(==(0), fixed_column_label_inventory.shell_indices)
+    @test all(==(:unavailable), fixed_column_label_inventory.ray_label_statuses)
+    @test all(isnothing, fixed_column_label_inventory.ray_ids)
+    @test all(isnothing, fixed_column_label_inventory.ray_family_labels)
+    @test all(==(:unavailable), fixed_column_label_inventory.radial_order_statuses)
+    @test all(==(0), fixed_column_label_inventory.radial_orders)
+    @test !any(fixed_column_label_inventory.inferred_from_centers)
+    @test !any(fixed_column_label_inventory.inferred_from_nearest_grid)
+    @test !any(fixed_column_label_inventory.inferred_from_support_order)
+    @test !any(fixed_column_label_inventory.inferred_from_support_indices)
+    @test !any(fixed_column_label_inventory.inferred_from_raw_to_final_support)
+    @test fixed_column_label_inventory.label_status.source_region_label_status ==
+          :retained_unit_region_label
+    @test fixed_column_label_inventory.label_status.source_box_label_status ==
+          :unavailable
+    @test fixed_column_label_inventory.label_status.owner_label_status ==
+          :unavailable
+    @test fixed_column_label_inventory.label_status.shell_label_status ==
+          :unavailable
+    @test fixed_column_label_inventory.label_status.ray_label_status ==
+          :unavailable
+    @test fixed_column_label_inventory.label_status.radial_order_status ==
+          :unavailable
+    @test fixed_column_label_inventory.absences_by_contract.source_box_labels
+    @test fixed_column_label_inventory.absences_by_contract.owner_labels
+    @test fixed_column_label_inventory.absences_by_contract.shell_labels
+    @test fixed_column_label_inventory.absences_by_contract.ray_labels
+    @test fixed_column_label_inventory.absences_by_contract.radial_order_labels
+    @test fixed_column_label_inventory.absences_by_contract.coordinate_or_nearest_grid_reconstruction
+    @test fixed_column_label_inventory.absences_by_contract.support_row_order_or_support_index_inference
+    @test fixed_column_label_inventory.absences_by_contract.raw_to_final_support_inference
+    @test fixed_column_label_inventory.diagnostics.fixed_cols_cover_1_to_fixed_dimension
+    @test fixed_column_label_inventory.diagnostics.unit_ranges_match_inventory
+    @test fixed_column_label_inventory.diagnostics.source_region_labels_match_unit_labels
+    @test fixed_column_label_inventory.diagnostics.product_doside_row_count == 4
+    @test fixed_column_label_inventory.diagnostics.support_dense_row_count == 4
+    @test fixed_column_label_inventory.diagnostics.shell_realized_pqs_row_count == 7
+    @test fixed_column_label_inventory.diagnostics.shell_realized_pqs_shell_ray_radial_unavailable
+    @test !fixed_column_label_inventory.diagnostics.inferred_from_centers
+    @test !fixed_column_label_inventory.diagnostics.inferred_from_nearest_grid
+    @test !fixed_column_label_inventory.diagnostics.inferred_from_support_order
+    @test !fixed_column_label_inventory.diagnostics.inferred_from_support_indices
+    @test !fixed_column_label_inventory.diagnostics.inferred_from_raw_to_final_support
+    @test !fixed_column_label_inventory.diagnostics.retained_weight_or_ida_division
+    @test !fixed_column_label_inventory.diagnostics.route_construction_changed
+    @test !fixed_column_label_inventory.diagnostics.packet_adoption
+    @test !fixed_column_label_inventory.diagnostics.qwhamiltonian_changed
+    @test !fixed_column_label_inventory.diagnostics.public_default_consumes
+
+    source_shell_mode_inventory =
+        metrics_module._pqs_current_route_source_shell_mode_inventory(
+            _synthetic_fixed_side_inventory();
+            provenance = (source = :synthetic_source_shell_mode_inventory_test,),
+        )
+    @test source_shell_mode_inventory.object_kind ==
+          :pqs_current_route_source_shell_mode_inventory
+    @test source_shell_mode_inventory.status ==
+          :product_doside_source_shell_modes_only
+    @test source_shell_mode_inventory.schema_version ==
+          :pqs_source_shell_modes_private_v1
+    @test source_shell_mode_inventory.fixed_dimension == 15
+    @test source_shell_mode_inventory.source_shell_count == 1
+    @test source_shell_mode_inventory.source_mode_count == 4
+    @test source_shell_mode_inventory.source_shells.source_shell_ids == [1]
+    @test source_shell_mode_inventory.source_shells.unit_indices == [1]
+    @test source_shell_mode_inventory.source_shells.unit_labels ==
+          [:outer_mismatch_z_low_slab]
+    @test source_shell_mode_inventory.source_shells.unit_categories ==
+          [:product_doside]
+    @test source_shell_mode_inventory.source_shells.unit_kinds ==
+          [:product_doside]
+    @test source_shell_mode_inventory.source_shells.retained_starts == [1]
+    @test source_shell_mode_inventory.source_shells.retained_stops == [4]
+    @test source_shell_mode_inventory.source_shells.source_shell_labels ==
+          [:outer_mismatch_z_low_slab]
+    @test source_shell_mode_inventory.source_shells.source_shell_statuses ==
+          [:native_product_doside_source_box]
+    @test source_shell_mode_inventory.source_shells.construction_kinds ==
+          [:product_doside]
+    @test source_shell_mode_inventory.source_shells.axis_kinds ==
+          [:fixed :active :active]
+    @test source_shell_mode_inventory.source_shells.axis_starts ==
+          [1 1 3]
+    @test source_shell_mode_inventory.source_shells.axis_stops ==
+          [1 2 4]
+    @test source_shell_mode_inventory.source_shells.fixed_axis_indices ==
+          [1 0 0]
+    @test source_shell_mode_inventory.source_shells.contracted_dims ==
+          [1 2 2]
+    @test source_shell_mode_inventory.source_shells.source_mode_counts == [4]
+    @test source_shell_mode_inventory.source_shells.source_mode_orderings ==
+          [:axis_function_indices_order]
+    @test all(==(:unavailable), source_shell_mode_inventory.source_shells.center_definitions)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_shells.center_statuses)
+    @test !any(source_shell_mode_inventory.source_shells.lowdin_correction_applied)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_shells.shell_label_statuses)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_shells.ray_label_statuses)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_shells.radial_order_statuses)
+    @test source_shell_mode_inventory.source_modes.source_shell_ids ==
+          fill(1, 4)
+    @test source_shell_mode_inventory.source_modes.mode_indices == collect(1:4)
+    @test source_shell_mode_inventory.source_modes.unit_labels ==
+          fill(:outer_mismatch_z_low_slab, 4)
+    @test source_shell_mode_inventory.source_modes.native_source_id_labels == [
+        "source_mode:1:1,1,1",
+        "source_mode:1:1,2,1",
+        "source_mode:1:1,1,2",
+        "source_mode:1:1,2,2",
+    ]
+    @test source_shell_mode_inventory.source_modes.local_axis_function_indices == [
+        1 1 1
+        1 2 1
+        1 1 2
+        1 2 2
+    ]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices == [
+        1 1 3
+        1 2 3
+        1 1 4
+        1 2 4
+    ]
+    @test all(
+        ==(:native_product_doside_source_mode),
+        source_shell_mode_inventory.source_modes.source_mode_statuses,
+    )
+    @test all(
+        ==(:native_product_axis_tuple),
+        source_shell_mode_inventory.source_modes.source_axis_tuple_statuses,
+    )
+    @test all(isnan, source_shell_mode_inventory.source_modes.center_coordinates)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_modes.center_definitions)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_modes.center_statuses)
+    @test !any(source_shell_mode_inventory.source_modes.lowdin_correction_applied)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_modes.shell_label_statuses)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_modes.ray_label_statuses)
+    @test all(==(:unavailable), source_shell_mode_inventory.source_modes.radial_order_statuses)
+    @test !any(source_shell_mode_inventory.source_modes.inferred_from_centers)
+    @test !any(source_shell_mode_inventory.source_modes.inferred_from_nearest_grid)
+    @test !any(source_shell_mode_inventory.source_modes.inferred_from_support_order)
+    @test !any(source_shell_mode_inventory.source_modes.inferred_from_support_indices)
+    @test !any(source_shell_mode_inventory.source_modes.inferred_from_raw_to_final_support)
+    @test source_shell_mode_inventory.center_status ==
+          :unavailable_missing_native_comx_center_facts
+    @test source_shell_mode_inventory.covered_unit_categories ==
+          (:product_doside,)
+    @test source_shell_mode_inventory.non_product_source_mode_status ==
+          :unavailable_missing_native_non_product_source_mode_producer
+    @test source_shell_mode_inventory.source_mode_label_status ==
+          :native_product_doside_source_mode_indices_only
+    @test source_shell_mode_inventory.absences_by_contract.repo_ray_grouping_policy
+    @test source_shell_mode_inventory.absences_by_contract.product_axis_tuples_not_interpreted_as_ray_labels
+    @test source_shell_mode_inventory.absences_by_contract.representative_centers_as_identity_labels
+    @test source_shell_mode_inventory.absences_by_contract.native_comx_centers
+    @test source_shell_mode_inventory.absences_by_contract.support_dense_source_shell_modes
+    @test source_shell_mode_inventory.absences_by_contract.shell_realized_pqs_source_relations
+    @test source_shell_mode_inventory.absences_by_contract.lowdin_mixture_weights_or_spans
+    @test source_shell_mode_inventory.diagnostics.product_doside_source_shell_count == 1
+    @test source_shell_mode_inventory.diagnostics.product_doside_source_mode_count == 4
+    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_unit_count == 1
+    @test source_shell_mode_inventory.diagnostics.support_dense_unavailable_column_count == 4
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_unit_count == 1
+    @test source_shell_mode_inventory.diagnostics.shell_realized_pqs_unavailable_column_count ==
+          7
+    @test source_shell_mode_inventory.diagnostics.total_unavailable_unit_count == 2
+    @test source_shell_mode_inventory.diagnostics.total_unavailable_column_count == 11
+    @test source_shell_mode_inventory.diagnostics.repo_exports_native_facts_not_ray_policy
+    @test source_shell_mode_inventory.diagnostics.product_axis_tuples_not_interpreted_as_ray_labels
+    @test !source_shell_mode_inventory.diagnostics.product_axis_tuples_are_ray_labels
+    @test !source_shell_mode_inventory.diagnostics.representative_centers_are_identity_labels
+    @test !source_shell_mode_inventory.diagnostics.inferred_from_centers
+    @test !source_shell_mode_inventory.diagnostics.inferred_from_nearest_grid
+    @test !source_shell_mode_inventory.diagnostics.inferred_from_support_order
+    @test !source_shell_mode_inventory.diagnostics.inferred_from_support_indices
+    @test !source_shell_mode_inventory.diagnostics.inferred_from_raw_to_final_support
+    @test !source_shell_mode_inventory.diagnostics.retained_weight_or_ida_division
+    @test !source_shell_mode_inventory.diagnostics.route_construction_changed
+    @test !source_shell_mode_inventory.diagnostics.packet_adoption
+    @test !source_shell_mode_inventory.diagnostics.qwhamiltonian_changed
+    @test !source_shell_mode_inventory.diagnostics.public_default_consumes
+
+    source_relation_inventory =
+        metrics_module._pqs_current_route_fixed_column_source_relation_inventory(
+            _synthetic_fixed_side_inventory();
+            provenance = (source = :synthetic_source_relation_inventory_test,),
+        )
+    @test source_relation_inventory.object_kind ==
+          :pqs_current_route_fixed_column_source_relation_inventory
+    @test source_relation_inventory.status ==
+          :product_doside_axis_tuple_relations_only
+    @test source_relation_inventory.schema_version ==
+          :pqs_fixed_column_source_relations_private_v1
+    @test source_relation_inventory.fixed_dimension == 15
+    @test source_relation_inventory.row_count == 4
+    @test source_relation_inventory.relation_rows_available
+    @test source_relation_inventory.fixed_cols == [1, 2, 3, 4]
+    @test source_relation_inventory.relation_indices == ones(Int, 4)
+    @test source_relation_inventory.relation_kinds ==
+          fill(:product_axis_tuple, 4)
+    @test source_relation_inventory.source_unit_labels ==
+          fill(:outer_mismatch_z_low_slab, 4)
+    @test source_relation_inventory.source_mode_labels == [
+        "product_axis_tuple:1,1,3",
+        "product_axis_tuple:1,2,3",
+        "product_axis_tuple:1,1,4",
+        "product_axis_tuple:1,2,4",
+    ]
+    @test source_relation_inventory.source_axis_indices == [
+        1 1 3
+        1 2 3
+        1 1 4
+        1 2 4
+    ]
+    @test source_relation_inventory.local_axis_function_indices == [
+        1 1 1
+        1 2 1
+        1 1 2
+        1 2 2
+    ]
+    @test all(==(:native_product_axis_tuple), source_relation_inventory.relation_statuses)
+    @test all(==(:unavailable), source_relation_inventory.shell_label_statuses)
+    @test all(==(:unavailable), source_relation_inventory.ray_label_statuses)
+    @test all(==(:unavailable), source_relation_inventory.radial_order_statuses)
+    @test all(==(:unavailable), source_relation_inventory.coefficient_statuses)
+    @test all(==(:unavailable), source_relation_inventory.weight_statuses)
+    @test all(==(:unavailable), source_relation_inventory.span_statuses)
+    @test !any(source_relation_inventory.inferred_from_centers)
+    @test !any(source_relation_inventory.inferred_from_nearest_grid)
+    @test !any(source_relation_inventory.inferred_from_support_order)
+    @test !any(source_relation_inventory.inferred_from_support_indices)
+    @test !any(source_relation_inventory.inferred_from_raw_to_final_support)
+    @test source_relation_inventory.covered_unit_categories ==
+          (:product_doside,)
+    @test source_relation_inventory.non_product_relation_status ==
+          :unavailable_missing_native_non_product_relation_producer
+    @test source_relation_inventory.relation_label_status ==
+          :native_product_axis_tuple_only_shell_ray_radial_unavailable
+    @test source_relation_inventory.relation_weight_status == :unavailable
+    @test source_relation_inventory.relation_span_status == :unavailable
+    @test source_relation_inventory.missing_producer ==
+          :construction_native_non_product_shell_ray_relation_producer
+    @test source_relation_inventory.absences_by_contract.product_axis_tuples_not_interpreted_as_ray_labels
+    @test source_relation_inventory.absences_by_contract.support_dense_relation_rows
+    @test source_relation_inventory.absences_by_contract.shell_realized_pqs_relation_rows
+    @test source_relation_inventory.absences_by_contract.relation_weights_or_spans
+    @test source_relation_inventory.diagnostics.product_doside_row_count == 4
+    @test source_relation_inventory.diagnostics.support_dense_unavailable_column_count == 4
+    @test source_relation_inventory.diagnostics.shell_realized_pqs_unavailable_column_count ==
+          7
+    @test source_relation_inventory.diagnostics.total_unavailable_column_count == 11
+    @test source_relation_inventory.diagnostics.product_axis_tuples_not_interpreted_as_ray_labels
+    @test !source_relation_inventory.diagnostics.product_axis_tuples_are_ray_labels
+    @test !source_relation_inventory.diagnostics.inferred_from_centers
+    @test !source_relation_inventory.diagnostics.inferred_from_nearest_grid
+    @test !source_relation_inventory.diagnostics.inferred_from_support_order
+    @test !source_relation_inventory.diagnostics.inferred_from_support_indices
+    @test !source_relation_inventory.diagnostics.inferred_from_raw_to_final_support
+    @test !source_relation_inventory.diagnostics.retained_weight_or_ida_division
+    @test !source_relation_inventory.diagnostics.route_construction_changed
+    @test !source_relation_inventory.diagnostics.packet_adoption
+    @test !source_relation_inventory.diagnostics.qwhamiltonian_changed
+    @test !source_relation_inventory.diagnostics.public_default_consumes
+
+    source_shell_report =
+        metrics_module._pqs_pqs_product_component_route_smoke_report_adapter(
+            summaries,
+            _synthetic_mwg_facts(;
+                overrides = Dict(
+                    "fixed_fixed_shape" => "(15, 15)",
+                    "fixed_residual_shape" => "(15, 6)",
+                    "final_interaction_shape" => "(21, 21)",
+                ),
+            ),
+        )
+    sidecar_with_source_shell_modes =
+        metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+            source_shell_report;
+            source_shell_mode_inventory = source_shell_mode_inventory,
+            provenance = (source = :synthetic_sidecar_source_shell_mode_test,),
+        )
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory ===
+          source_shell_mode_inventory
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_inventory_available
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_count == 1
+    @test sidecar_with_source_shell_modes.diagnostics.source_mode_count == 4
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_center_status ==
+          :unavailable_missing_native_comx_center_facts
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_product_doside_only
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_support_dense_unavailable_column_count ==
+          4
+    @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_shell_realized_pqs_unavailable_column_count ==
+          7
+
+    source_shell_mode_io = IOBuffer()
+    metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
+        source_shell_mode_io,
+        sidecar_with_source_shell_modes,
+    )
+    source_shell_mode_text = String(take!(source_shell_mode_io))
+    @test occursin("[source_shell_mode_inventory]", source_shell_mode_text)
+    @test occursin("schema_version\tpqs_source_shell_modes_private_v1", source_shell_mode_text)
+    @test occursin("status\tproduct_doside_source_shell_modes_only", source_shell_mode_text)
+    @test occursin("source_shell_count\t1", source_shell_mode_text)
+    @test occursin("source_mode_count\t4", source_shell_mode_text)
+    @test occursin(
+        "center_status\tunavailable_missing_native_comx_center_facts",
+        source_shell_mode_text,
+    )
+    @test occursin("product_doside_only\ttrue", source_shell_mode_text)
+    @test occursin("support_dense_unavailable_column_count\t4", source_shell_mode_text)
+    @test occursin(
+        "shell_realized_pqs_unavailable_column_count\t7",
+        source_shell_mode_text,
+    )
+    @test occursin("inferred_from_centers\tfalse", source_shell_mode_text)
+    @test occursin("inferred_from_nearest_grid\tfalse", source_shell_mode_text)
+    @test occursin("inferred_from_support_order\tfalse", source_shell_mode_text)
+    @test occursin("inferred_from_support_indices\tfalse", source_shell_mode_text)
+    @test occursin("inferred_from_raw_to_final_support\tfalse", source_shell_mode_text)
+
+    @test_throws ArgumentError metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+        source_shell_report;
+        source_shell_mode_inventory =
+            merge(source_shell_mode_inventory, (object_kind = :not_source_shell_modes,)),
+    )
+    @test_throws DimensionMismatch metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+        source_shell_report;
+        source_shell_mode_inventory =
+            merge(source_shell_mode_inventory, (fixed_dimension = 14,)),
+    )
+    @test_throws ArgumentError metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+        source_shell_report;
+        source_shell_mode_inventory = merge(
+            source_shell_mode_inventory,
+            (
+                diagnostics = merge(
+                    source_shell_mode_inventory.diagnostics,
+                    (inferred_from_centers = true,),
+                ),
+            ),
+        ),
+    )
+
     sidecar_with_fixed =
         metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
             report;
@@ -572,6 +992,15 @@ using GaussletBases
     @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
         bad_inventory,
     )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_column_label_inventory(
+        bad_inventory,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_source_shell_mode_inventory(
+        bad_inventory,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_column_source_relation_inventory(
+        bad_inventory,
+    )
     bad_coverage = merge(
         _synthetic_fixed_side_inventory(),
         (
@@ -582,6 +1011,15 @@ using GaussletBases
         ),
     )
     @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+        bad_coverage,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_column_label_inventory(
+        bad_coverage,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_source_shell_mode_inventory(
+        bad_coverage,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_column_source_relation_inventory(
         bad_coverage,
     )
     bad_ready_inventory = _synthetic_fixed_side_inventory(;

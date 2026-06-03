@@ -732,6 +732,144 @@ blocks, retained-weight/IDA division, construction, QW/Hamiltonian,
 packet/fixed-block, public/default, ECP/SCF/HF, or CR2 science behavior is
 added.
 
+The fixed-column shell/ray/box label contract for this private Be2/PQS sidecar
+has two layers. The base layer remains column-to-retained-unit membership:
+every fixed retained column belongs to exactly one explicit retained-unit
+record through the repo-exported retained range. The stable unit labels are the
+retained-unit labels and their exported ranges, counts, categories,
+representation kinds, and available source-mode dimensions. The current
+machine-readable sidecar also has a first `fixed_column_labels` skeleton table:
+one row per fixed retained column, derived only from this explicit unit-range
+partition. CR2 may use those rows for coarse unit grouping and lifting, but not
+for native ray-tail contraction claims.
+
+The base `fixed_column_labels` producer is now tracked private repo source:
+`_pqs_current_route_fixed_column_label_inventory(...)`, beside
+`_pqs_current_route_fixed_side_retained_unit_metadata(...)` and consuming the
+same `_pqs_current_route_retained_unit_inventory(...)` facts. It emits one row
+per fixed retained column from explicit retained-unit ranges only, with the
+retained-unit label as the honest source-region label and status-bearing
+unavailable fields for source-box, owner, shell, ray/cone, ray-family, and
+radial-order labels unless a future construction-native producer supplies
+those facts. The ignored Be2/PQS CR2 exporter
+`tmp/work/be2_pqs_cr2_postprocess_export.jl` consumes this helper and
+stringifies at the JLD2/TSV boundary; it must not rebuild labels from exported
+coordinates, support order, support indices, or `raw_to_final`.
+
+The next CR2-facing provenance layer should be source-shell/source-mode
+metadata, not a repo-chosen ray grouping policy. Repo should export stable
+native construction facts; CR2 may then choose its diagnostic grouping policy:
+exact `(ix, iy, iz)` matching across comparable shells with the same contracted
+dims `(nx, ny, nz)`, geometry-based matching from representative centers when
+dims differ, or coarser cone/sector groupings when a contraction diagnostic
+needs that. Representative centers are metadata for those downstream choices;
+they are not identity labels and must not be used by repo code to infer labels.
+
+The sidecar/provenance shape for that layer has three tables. `source_shells`
+has one row per construction-native source box or shell, with a sidecar-stable
+`shell_id`, retained-unit link, owner/role when native, parent lattice
+limits/axis intervals, contracted dims `(nx, ny, nz)`, construction kind,
+source-mode ordering, and center convention/provenance. `source_modes` has one
+row per native source function inside a shell. Its native source-function
+identity is `(shell_id, ix, iy, iz)`, where the axis indices are in that
+shell's source-mode ordering. It may carry representative COMX/source
+construction centers with explicit fields such as
+`center_definition = :comx_construction`,
+`center_status = :native_representative`, and
+`lowdin_correction_applied = false`; later `:f_expectation` or
+`:f2_expectation` centers can be added only if an actual diagnostic needs
+them. `fixed_column_source_relations` then maps fixed retained columns to one
+or more source modes, with relation kinds such as product-axis tuple, boundary
+mode, support span, or Lowdin mixture only when the construction producer
+defines that relation honestly. Relation weights or spans appear only when
+construction defines them unambiguously.
+
+The `fixed_column_labels` table contract is one row per fixed retained column.
+Each row should include the one-based fixed column id, the retained-unit label,
+unit kind/category, unit retained range, and, where the producer has explicit
+construction metadata, source-box or region label and owner label. Shell,
+ray/cone, and radial-order fields must be status-bearing: for example
+`shell_label_status`, `ray_label_status`, and `radial_order_status` with values
+such as `:native`, `:mixed`, or `:unavailable`. The associated `shell_index`,
+`ray_id`, `ray_family_label`, `radial_order`, and owner fields may be populated
+only when those labels are native construction facts. For product/doside slabs,
+support-dense atom boxes, or Lowdin/projected PQS columns where a single native
+shell/ray is not honest, the row should say `:mixed` or `:unavailable` rather
+than inventing a label.
+
+An optional second table, `fixed_column_source_relations`, may add many-row
+relations from fixed retained columns to contributing native source modes,
+rays, shells, or support spans. This table is the place for mixed columns: one
+retained column can have several relation rows with an explicit relation kind
+such as `:boundary_mode`, `:support_span`, `:lowdin_mixture`, or another
+reviewed repo-native vocabulary. Coefficients, weights, span bounds, or
+normalization fields should appear only when the construction producer can
+define them unambiguously. If relation weights or spans are not well-defined,
+the relation should omit them and the column-level status should remain
+`:mixed` or `:unavailable`.
+
+The current Be2 strict-PQS q5 sidecar has a narrow first
+`fixed_column_source_relations` producer for product/doside retained columns
+only. It emits one row for each product/doside fixed retained column whose
+construction payload has a single staged product-axis tuple. Those rows record
+the product/doside retained-unit label, the local staged-axis tuple, and the
+resolved source-axis tuple. They do not assign shell indices, ray/cone ids,
+radial orders, coefficients, weights, or spans, and their status says they are
+native product-axis tuple relations rather than shell/ray labels. Support-dense
+atom boxes and shell-realized PQS units still have unavailable source-relation
+rows; the sidecar names the missing producer as a construction-native
+non-product shell/ray relation producer. The current sidecar/export path still
+does not have per-fixed-column native source-box ids, shell/ray/cone/radial
+labels, or Lowdin/source-mode relation weights or spans for those non-product
+units.
+
+The current construction-side private producer seam for
+`fixed_column_source_relations` is the tracked private helper
+`_pqs_current_route_fixed_column_source_relation_inventory(...)`, beside the
+fixed-side metadata and fixed-column label producers, and consuming the same
+`_pqs_current_route_retained_unit_inventory(...)` facts. That inventory still
+carries `source_fixtures` and wrapped unit payloads before the CR2 exporter has
+reduced them to labels and ranges. The private source-relation helper consumes
+those inventory units and emits status-bearing product/doside relation rows.
+It must not be implemented in the CR2 exporter by reverse-engineering exported
+centers, support order, support indices, or `raw_to_final`.
+
+By unit class, the available construction facts are uneven. Product/doside
+slab units from `_pqs_outer_mismatch_product_doside_units(...)` and
+`_pqs_contact_cap_product_doside_unit(...)` are
+`_CartesianNestedProductStagedByCenterUnit3D` payloads with retained ranges,
+staged axes, fixed/active-axis intervals, and `axis_function_indices`; those
+facts now support the private product-axis tuple rows described above. These
+rows are not rays and must not be interpreted as ray-tail memberships.
+Support-dense/direct-support atom boxes from
+`_pqs_atom_box_support_dense_units(...)` carry support states and coefficient
+columns, but they do not currently carry native shell/ray/cone/radial ids;
+treating support rows or support indices as ray labels remains unavailable.
+Shell-realized PQS fixtures carry
+`_CartesianNestedProjectedQShellStagedUnitDescriptor3D` facts, including
+source-mode dimensions, boundary mode indices, boundary column indices, axis
+intervals, shell projection, and Lowdin cleanup. Those are metadata/oracle
+facts only for this sidecar: a retained PQS column after Lowdin cleanup may mix
+boundary modes, and no compact retained-column-to-source relation with reviewed
+weights or spans is currently available.
+
+The current labels `:regular_shared_molecular_shell_1`,
+`:regular_shared_molecular_shell_2`, and
+`:regular_shared_molecular_shell_3` identify shell-realized PQS retained units
+only. They are not shell-start rays, per-source-mode ray labels, or support-row
+shell memberships, and they do not make the shell-row oracle the algorithm.
+Per-source-mode shell/ray labels may be exported only when the repo has an
+explicit source-box label producer; support-row selectors, support indices,
+compact transforms, and shell-row oracle facts remain diagnostic-only. No
+fixed-column label field or relation may be inferred from retained-column
+centers, nearest-grid searches, support-row order, or `raw_to_final` support.
+Until an explicit producer exists, `shell_label_status`, `ray_label_status`,
+and any aggregate `shell_ray_label_status` must remain `:unavailable`, while
+center/grid reconstruction and nearest-grid heuristics stay disabled. This
+preserves no coordinate/nearest-grid reconstruction, no owner inference from
+`raw_to_final`, no retained-weight/IDA division, no route/Hamiltonian adoption,
+no public API, and no CR2 science claim.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained
