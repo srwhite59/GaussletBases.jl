@@ -23,9 +23,12 @@ import ..GaussletBases: CoulombGaussianExpansion,
                          _nested_bond_aligned_diatomic_high_order_recipe_source_fixed_block,
                          _nested_projected_q_shell_staged_unit_descriptor,
                          _nested_projected_q_shell_descriptor_seed_coefficients,
+                         _qwrg_bond_aligned_axis_bundles,
                          _require_analytic_primitive_backend,
+                         bond_aligned_homonuclear_qw_basis,
                          centers,
                          contract_primitive_matrix,
+                         coulomb_gaussian_expansion,
                          gaussian_factor_matrices,
                          integral_weights,
                          overlap_matrix,
@@ -13128,6 +13131,194 @@ function _pqs_standard_parent_axis_construction_readiness(
             standard_parent_axis_rule_ready = standard_parent_axis_rule_ready,
             parent_axis_metadata_constructed = false,
             pending_facts = pending_facts,
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
+function _pqs_explicit_core_spacing_parent_axis_probe_pending_facts(
+    readiness;
+    construct_axis_bundles::Bool,
+    gausslet_backend::Symbol,
+)
+    pending = Symbol[]
+    readiness.core_spacing_available || push!(pending, :explicit_core_spacing)
+    readiness.homonuclear || push!(pending, :homonuclear_setup)
+    readiness.geometry.existing_bond_aligned_api_geometry_ready || push!(
+        pending,
+        :origin_centered_axis_aligned_diatomic_geometry,
+    )
+    readiness.extent_candidates.available || push!(
+        pending,
+        :physical_extent_inputs_for_bond_aligned_qw_basis,
+    )
+    construct_axis_bundles || push!(pending, :probe_parent_axis_construction_flag)
+    gausslet_backend == :numerical_reference || push!(
+        pending,
+        :safe_numerical_reference_backend_or_explicit_review,
+    )
+    return Tuple(pending)
+end
+
+function _pqs_explicit_core_spacing_parent_axis_probe(
+    setup;
+    expansion = nothing,
+    gausslet_backend::Symbol = :numerical_reference,
+    family = :G10,
+    construct_axis_bundles::Bool = true,
+)
+    readiness = _pqs_standard_parent_axis_construction_readiness(setup)
+    pending_facts = _pqs_explicit_core_spacing_parent_axis_probe_pending_facts(
+        readiness;
+        construct_axis_bundles,
+        gausslet_backend,
+    )
+    construction_safe = isempty(pending_facts)
+    if !construction_safe
+        return (
+            object_kind = :pqs_explicit_core_spacing_parent_axis_probe,
+            status = :not_constructed_pending_facts,
+            readiness = readiness,
+            basis_metadata = nothing,
+            axis_bundle_metadata = (
+                object_kind = nothing,
+                status = :not_constructed,
+                axis_lengths = nothing,
+            ),
+            axis_lengths = nothing,
+            physical_extent_inputs = readiness.extent_candidates,
+            core_spacing = setup.core_spacing,
+            reference_spacing = setup.reference_spacing,
+            tail_spacing = setup.tail_spacing,
+            gausslet_backend = gausslet_backend,
+            expansion_source = isnothing(expansion) ? :not_used : :explicit,
+            explicit_spacing_probe_only = true,
+            default_standard_rule = false,
+            parent_axis_metadata_constructed = false,
+            pending_facts = pending_facts,
+            diagnostics = (
+                source = :pqs_explicit_core_spacing_parent_axis_probe,
+                private_development_only = true,
+                production_route = false,
+                explicit_spacing_probe_only = true,
+                default_standard_rule = false,
+                parent_axis_metadata_constructed = false,
+                pending_facts = pending_facts,
+                public_default_consumes = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                hamiltonian_matrix_built = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                retained_pqs_weights_used = false,
+                retained_weight_division_allowed = false,
+                repo_side_ray_id = false,
+                mwg_ida_semantics_changed = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+            ),
+        )
+    end
+
+    expansion_value = if isnothing(expansion)
+        coulomb_gaussian_expansion(doacc = false)
+    elseif expansion isa CoulombGaussianExpansion
+        expansion
+    else
+        throw(ArgumentError("explicit-core-spacing parent-axis probe expansion must be a CoulombGaussianExpansion"))
+    end
+    expansion_source = isnothing(expansion) ?
+        :default_coulomb_gaussian_expansion_doacc_false :
+        :explicit
+    geometry = readiness.geometry
+    extents = readiness.extent_candidates
+    basis = bond_aligned_homonuclear_qw_basis(
+        ;
+        family,
+        bond_length = geometry.bond_length,
+        core_spacing = setup.core_spacing,
+        xmax_parallel = extents.xmax_parallel,
+        xmax_transverse = extents.xmax_transverse,
+        bond_axis = geometry.bond_axis,
+        nuclear_charge = first(setup.nuclear_charges),
+        reference_spacing = setup.reference_spacing,
+        tail_spacing = setup.tail_spacing,
+    )
+    axis_bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion_value;
+        gausslet_backend,
+    )
+    axis_lengths = _nested_axis_lengths(axis_bundles)
+    basis_axis_lengths = (
+        x = length(basis.basis_x),
+        y = length(basis.basis_y),
+        z = length(basis.basis_z),
+    )
+    return (
+        object_kind = :pqs_explicit_core_spacing_parent_axis_probe,
+        status = :constructed_explicit_core_spacing_parent_axis_metadata,
+        readiness = readiness,
+        basis_metadata = (
+            object_kind = :BondAlignedDiatomicQWBasis3D,
+            constructor = :bond_aligned_homonuclear_qw_basis,
+            family = family,
+            bond_axis = basis.bond_axis,
+            bond_length = geometry.bond_length,
+            nuclear_charge = first(setup.nuclear_charges),
+            nuclei = Tuple(basis.nuclei),
+            nuclear_charges = Tuple(basis.nuclear_charges),
+            target_core_spacing = basis.target_core_spacing,
+            axis_lengths = basis_axis_lengths,
+        ),
+        axis_bundle_metadata = (
+            object_kind = :_CartesianNestedAxisBundles3D,
+            constructor = :_qwrg_bond_aligned_axis_bundles,
+            status = :constructed,
+            axis_lengths = axis_lengths,
+            gausslet_backend = gausslet_backend,
+            expansion_source = expansion_source,
+        ),
+        axis_lengths = axis_lengths,
+        physical_extent_inputs = (
+            xmax_parallel = extents.xmax_parallel,
+            xmax_transverse = extents.xmax_transverse,
+            derivation = extents.derivation,
+        ),
+        core_spacing = setup.core_spacing,
+        reference_spacing = setup.reference_spacing,
+        tail_spacing = setup.tail_spacing,
+        gausslet_backend = gausslet_backend,
+        expansion_source = expansion_source,
+        explicit_spacing_probe_only = true,
+        default_standard_rule = false,
+        parent_axis_metadata_constructed = true,
+        pending_facts = (),
+        diagnostics = (
+            source = :pqs_explicit_core_spacing_parent_axis_probe,
+            private_development_only = true,
+            production_route = false,
+            explicit_spacing_probe_only = true,
+            default_standard_rule = false,
+            parent_axis_metadata_constructed = true,
+            axis_lengths = axis_lengths,
             public_default_consumes = false,
             packet_adoption = false,
             fixed_block_routing = false,

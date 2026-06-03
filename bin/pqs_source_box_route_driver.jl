@@ -16,6 +16,9 @@ reference_spacing = 1.0
 tail_spacing = 10.0
 q_to_core_spacing_rule = :standard_pqs_ns_equals_q
 core_spacing = nothing
+probe_parent_axis_construction = :auto
+parent_axis_probe_backend = :numerical_reference
+parent_axis_probe_family = :G10
 route_shape = (:pqs_left, :product, :pqs_right)
 product_body_rule = :centered_single_z_slab
 pqs_retained_rule = :boundary_comx_product_mode_selection
@@ -70,6 +73,12 @@ function _pqs_driver_write_tsv_row(io, section, key, value)
     return nothing
 end
 
+function _pqs_driver_probe_requested(value, core_spacing)
+    value == :auto && return !isnothing(core_spacing)
+    value isa Bool && return value
+    throw(ArgumentError("probe_parent_axis_construction must be :auto, true, or false"))
+end
+
 pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
     ArgumentError("pair_factor_normalization must be :density_normalized or :raw_weighted"),
 )
@@ -92,6 +101,22 @@ parent_axis_readiness =
         standard_setup;
         parent_axis_counts,
     )
+
+parent_axis_probe_requested =
+    _pqs_driver_probe_requested(probe_parent_axis_construction, core_spacing)
+parent_axis_probe = parent_axis_probe_requested ?
+    GaussletBases.CartesianContractedParentMetrics._pqs_explicit_core_spacing_parent_axis_probe(
+        standard_setup;
+        gausslet_backend = parent_axis_probe_backend,
+        family = parent_axis_probe_family,
+        construct_axis_bundles = true,
+    ) : nothing
+parent_axis_probe_status =
+    isnothing(parent_axis_probe) ? :not_requested : parent_axis_probe.status
+parent_axis_probe_constructed =
+    isnothing(parent_axis_probe) ? false : parent_axis_probe.parent_axis_metadata_constructed
+parent_axis_probe_pending_facts =
+    isnothing(parent_axis_probe) ? () : parent_axis_probe.pending_facts
 
 # 1. System metadata: physical labels and the parent box description.
 system_metadata = (
@@ -119,6 +144,8 @@ recipe_metadata = (
     core_spacing = standard_setup.core_spacing,
     q_to_core_spacing_rule_status =
         standard_setup.spacing.q_to_core_spacing_rule_status,
+    probe_parent_axis_construction = probe_parent_axis_construction,
+    parent_axis_probe_requested = parent_axis_probe_requested,
     route_shape = route_shape,
     product_body_rule = product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
@@ -147,6 +174,7 @@ parent_description = (
     status = :described_not_constructed,
     standard_setup = standard_setup,
     parent_axis_readiness = parent_axis_readiness,
+    parent_axis_probe = parent_axis_probe,
     physical_parent_box = standard_setup.parent_box,
     physical_parent_box_rule = standard_setup.parent_box_rule,
     axis_transform_status = parent_axis_readiness.status,
@@ -258,8 +286,11 @@ diagnostics = merge(
             parent_axis_readiness.existing_parent_api_appears_applicable,
         standard_parent_axis_rule_ready =
             parent_axis_readiness.standard_parent_axis_rule_ready,
+        parent_axis_probe_requested = parent_axis_probe_requested,
+        parent_axis_probe_status = parent_axis_probe_status,
         parent_axis_metadata_constructed =
-            parent_axis_readiness.parent_axis_metadata_constructed,
+            parent_axis_probe_constructed,
+        parent_axis_probe_pending_facts = parent_axis_probe_pending_facts,
         parent_axis_pending_facts = parent_axis_readiness.pending_facts,
         output_representation = :retained_two_index_density_density,
         no_go_flags = no_go_flags,
@@ -272,6 +303,7 @@ report = (
     generated_at = string(now()),
     standard_setup = standard_setup,
     parent_axis_readiness = parent_axis_readiness,
+    parent_axis_probe = parent_axis_probe,
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
@@ -305,6 +337,8 @@ println("PQS source-box route driver skeleton")
 @show standard_setup.spacing.q_to_core_spacing_rule_status
 @show parent_axis_readiness.status
 @show parent_axis_readiness.parent_axis_counts_status
+@show parent_axis_probe_requested
+@show parent_axis_probe_status
 @show retained_counts
 @show retained_dimension
 
@@ -358,6 +392,28 @@ for field in (
     :pending_facts,
 )
     _pqs_driver_print_kv(field, getproperty(parent_axis_readiness, field))
+end
+
+if !isnothing(parent_axis_probe)
+    _pqs_driver_print_section("parent_axis_probe")
+    for field in (
+        :status,
+        :basis_metadata,
+        :axis_bundle_metadata,
+        :axis_lengths,
+        :physical_extent_inputs,
+        :core_spacing,
+        :reference_spacing,
+        :tail_spacing,
+        :gausslet_backend,
+        :expansion_source,
+        :explicit_spacing_probe_only,
+        :default_standard_rule,
+        :parent_axis_metadata_constructed,
+        :pending_facts,
+    )
+        _pqs_driver_print_kv(field, getproperty(parent_axis_probe, field))
+    end
 end
 
 _pqs_driver_print_section("parent_description")
@@ -452,6 +508,16 @@ if save_tsv
                 field,
                 getproperty(parent_axis_readiness.diagnostics, field),
             )
+        end
+        if !isnothing(parent_axis_probe)
+            for field in keys(parent_axis_probe.diagnostics)
+                _pqs_driver_write_tsv_row(
+                    io,
+                    "parent_axis_probe_diagnostics",
+                    field,
+                    getproperty(parent_axis_probe.diagnostics, field),
+                )
+            end
         end
         for unit in retained_units
             _pqs_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)
