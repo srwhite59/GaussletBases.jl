@@ -60,6 +60,8 @@ if length(ARGS) > 0
 end
 eval.(Meta.parse.(inputs))
 
+driver_metrics = GaussletBases.CartesianContractedParentMetrics
+
 function _pqs_driver_print_section(title)
     println()
     println("[", title, "]")
@@ -73,6 +75,21 @@ end
 
 function _pqs_driver_write_tsv_row(io, section, key, value)
     println(io, section, '\t', key, '\t', repr(value))
+    return nothing
+end
+
+function _pqs_driver_print_named_tuple(title, values)
+    _pqs_driver_print_section(title)
+    for field in keys(values)
+        _pqs_driver_print_kv(field, getproperty(values, field))
+    end
+    return nothing
+end
+
+function _pqs_driver_write_named_tuple_tsv(io, section, values)
+    for field in keys(values)
+        _pqs_driver_write_tsv_row(io, section, field, getproperty(values, field))
+    end
     return nothing
 end
 
@@ -98,7 +115,7 @@ pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
 )
 
 standard_setup =
-    GaussletBases.CartesianContractedParentMetrics._pqs_standard_source_box_route_setup(
+    driver_metrics._pqs_standard_source_box_route_setup(
         ;
         nuclear_charges,
         atom_locations,
@@ -112,7 +129,7 @@ standard_setup =
     )
 
 parent_axis_readiness =
-    GaussletBases.CartesianContractedParentMetrics._pqs_standard_parent_axis_construction_readiness(
+    driver_metrics._pqs_standard_parent_axis_construction_readiness(
         standard_setup;
         parent_axis_counts,
     )
@@ -120,7 +137,7 @@ parent_axis_readiness =
 parent_axis_probe_requested =
     _pqs_driver_probe_requested(probe_parent_axis_construction, standard_setup.core_spacing)
 parent_axis_probe = parent_axis_probe_requested ?
-    GaussletBases.CartesianContractedParentMetrics._pqs_explicit_core_spacing_parent_axis_probe(
+    driver_metrics._pqs_explicit_core_spacing_parent_axis_probe(
         standard_setup;
         gausslet_backend = parent_axis_probe_backend,
         family = parent_axis_probe_family,
@@ -133,7 +150,7 @@ parent_axis_probe_constructed =
 parent_axis_probe_pending_facts =
     isnothing(parent_axis_probe) ? () : parent_axis_probe.pending_facts
 route_axis_counts =
-    GaussletBases.CartesianContractedParentMetrics._pqs_source_box_route_parent_axis_counts_for_skeleton(
+    driver_metrics._pqs_source_box_route_parent_axis_counts_for_skeleton(
         standard_setup,
         parent_axis_readiness,
         parent_axis_probe;
@@ -141,8 +158,8 @@ route_axis_counts =
     )
 
 # 1. System metadata: physical labels and the parent box description.
-system_metadata = (
-    atom_symbols = atom_symbols,
+system_metadata = (;
+    atom_symbols,
     nuclear_charges = standard_setup.nuclear_charges,
     atom_locations = standard_setup.atom_locations,
     radius = standard_setup.radius,
@@ -154,11 +171,11 @@ system_metadata = (
         route_axis_counts.parent_axis_counts_source,
     parent_box = standard_setup.parent_box,
     parent_box_rule = standard_setup.parent_box_rule,
-    map_backend = map_backend,
+    map_backend,
 )
 
 route_skeleton =
-    GaussletBases.CartesianContractedParentMetrics._pqs_pqs_product_source_box_route_skeleton(
+    driver_metrics._pqs_pqs_product_source_box_route_skeleton(
         ;
         q,
         parent_axis_counts = route_axis_counts.parent_axis_counts,
@@ -175,7 +192,7 @@ raw_product_box_probe_requested =
         route_axis_counts,
     )
 raw_product_box_probe = raw_product_box_probe_requested ?
-    GaussletBases.CartesianContractedParentMetrics._pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
+    driver_metrics._pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
         standard_setup,
         route_skeleton;
         gausslet_backend = raw_product_box_probe_backend,
@@ -186,9 +203,9 @@ raw_product_box_probe_pending_facts =
     isnothing(raw_product_box_probe) ? () : raw_product_box_probe.pending_facts
 
 # 2. Recipe metadata: route recipe inputs, not already-derived route facts.
-recipe_metadata = (
-    route_kind = route_kind,
-    q = q,
+recipe_metadata = (;
+    route_kind,
+    q,
     n_s = standard_setup.n_s,
     n_s_source = standard_setup.n_s_source,
     core_cube_side = standard_setup.core_cube_side,
@@ -199,32 +216,32 @@ recipe_metadata = (
     core_spacing_source = standard_setup.spacing.core_spacing_source,
     q_to_core_spacing_rule_status =
         standard_setup.spacing.q_to_core_spacing_rule_status,
-    probe_parent_axis_construction = probe_parent_axis_construction,
-    parent_axis_probe_requested = parent_axis_probe_requested,
-    parent_axis_probe_backend = parent_axis_probe_backend,
+    probe_parent_axis_construction,
+    parent_axis_probe_requested,
+    parent_axis_probe_backend,
     route_axis_counts_source = route_axis_counts.parent_axis_counts_source,
-    probe_raw_product_box_plans = probe_raw_product_box_plans,
-    raw_product_box_probe_requested = raw_product_box_probe_requested,
-    raw_product_box_probe_backend = raw_product_box_probe_backend,
-    route_shape = route_shape,
-    product_body_rule = product_body_rule,
+    probe_raw_product_box_plans,
+    raw_product_box_probe_requested,
+    raw_product_box_probe_backend,
+    route_shape,
+    product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
-    pqs_retained_rule = pqs_retained_rule,
-    product_retained_rule = product_retained_rule,
-    terms = terms,
-    pair_factor_normalization = pair_factor_normalization,
-    support_dense_direct_allowed = support_dense_direct_allowed,
-    reference_only_authorities = reference_only_authorities,
+    pqs_retained_rule,
+    product_retained_rule,
+    terms,
+    pair_factor_normalization,
+    support_dense_direct_allowed,
+    reference_only_authorities,
 )
 
 # 3. Parent description/construction: still described, not materialized here.
-parent_description = (
+parent_description = (;
     status = :described_not_constructed,
-    standard_setup = standard_setup,
-    parent_axis_readiness = parent_axis_readiness,
-    parent_axis_probe = parent_axis_probe,
-    route_axis_counts = route_axis_counts,
-    raw_product_box_probe = raw_product_box_probe,
+    standard_setup,
+    parent_axis_readiness,
+    parent_axis_probe,
+    route_axis_counts,
+    raw_product_box_probe,
     physical_parent_box = standard_setup.parent_box,
     physical_parent_box_rule = standard_setup.parent_box_rule,
     axis_transform_status = parent_axis_readiness.status,
@@ -259,7 +276,7 @@ pair_family_counts = route_skeleton.pair_family_counts
 helper_by_pair_family = route_skeleton.helper_by_pair_family
 
 # 7. Final linear algebra plan: the intended retained operator assembly.
-linear_algebra_plan = (
+linear_algebra_plan = (;
     retained_block_formula = "O_final[i,j] = T_i' * O_source_box_pair * T_j",
     assemble_complete_retained_matrix = true,
     dense_parent_matrix_required = false,
@@ -294,7 +311,7 @@ stage_table = (
     (stage = 7, name = :apply_final_linear_algebra, status = :plan_reported),
     (stage = 8, name = :validate_report_save, status = :metadata_dry_run),
 )
-dry_run_validation = (
+dry_run_validation = (;
     builds_real_hamiltonian = false,
     builds_route_matrices = false,
     finite_output = :not_run_metadata_only,
@@ -354,13 +371,13 @@ diagnostics = merge(
         route_axis_counts_manual_fixture =
             route_axis_counts.parent_axis_counts_manual_fixture,
         route_axis_counts_diagnostics = route_axis_counts.diagnostics,
-        parent_axis_probe_requested = parent_axis_probe_requested,
-        parent_axis_probe_status = parent_axis_probe_status,
+        parent_axis_probe_requested,
+        parent_axis_probe_status,
         parent_axis_metadata_constructed =
             parent_axis_probe_constructed,
-        parent_axis_probe_pending_facts = parent_axis_probe_pending_facts,
-        raw_product_box_probe_requested = raw_product_box_probe_requested,
-        raw_product_box_probe_status = raw_product_box_probe_status,
+        parent_axis_probe_pending_facts,
+        raw_product_box_probe_requested,
+        raw_product_box_probe_status,
         raw_product_box_probe_pending_facts =
             raw_product_box_probe_pending_facts,
         raw_product_box_plan_count =
@@ -377,38 +394,38 @@ diagnostics = merge(
             raw_product_box_probe.any_numerical_reference_fallback,
         parent_axis_pending_facts = parent_axis_readiness.pending_facts,
         output_representation = :retained_two_index_density_density,
-        no_go_flags = no_go_flags,
+        no_go_flags,
         driver_builds_real_hamiltonian = false,
         driver_builds_route_matrices = false,
     ),
 )
-report = (
+report = (;
     object_kind = :pqs_source_box_route_driver_skeleton_report,
     generated_at = string(now()),
-    standard_setup = standard_setup,
-    parent_axis_readiness = parent_axis_readiness,
-    parent_axis_probe = parent_axis_probe,
-    route_axis_counts = route_axis_counts,
-    raw_product_box_probe = raw_product_box_probe,
-    system_metadata = system_metadata,
-    recipe_metadata = recipe_metadata,
-    parent_description = parent_description,
-    route_skeleton = route_skeleton,
+    standard_setup,
+    parent_axis_readiness,
+    parent_axis_probe,
+    route_axis_counts,
+    raw_product_box_probe,
+    system_metadata,
+    recipe_metadata,
+    parent_description,
+    route_skeleton,
     route_shape = route_skeleton.route_shape,
     retained_unit_order = route_skeleton.retained_unit_order,
-    source_boxes = source_boxes,
-    source_dimensions = source_dimensions,
-    retained_units = retained_units,
-    retained_counts = retained_counts,
-    ranges = ranges,
-    retained_dimension = retained_dimension,
-    pair_entries = pair_entries,
-    pair_family_counts = pair_family_counts,
-    helper_by_pair_family = helper_by_pair_family,
-    linear_algebra_plan = linear_algebra_plan,
-    stage_table = stage_table,
-    dry_run_validation = dry_run_validation,
-    diagnostics = diagnostics,
+    source_boxes,
+    source_dimensions,
+    retained_units,
+    retained_counts,
+    ranges,
+    retained_dimension,
+    pair_entries,
+    pair_family_counts,
+    helper_by_pair_family,
+    linear_algebra_plan,
+    stage_table,
+    dry_run_validation,
+    diagnostics,
 )
 
 println("PQS source-box route driver skeleton")
@@ -432,15 +449,9 @@ println("PQS source-box route driver skeleton")
 @show retained_counts
 @show retained_dimension
 
-_pqs_driver_print_section("system_metadata")
-for field in keys(system_metadata)
-    _pqs_driver_print_kv(field, getproperty(system_metadata, field))
-end
+_pqs_driver_print_named_tuple("system_metadata", system_metadata)
 
-_pqs_driver_print_section("recipe_metadata")
-for field in keys(recipe_metadata)
-    _pqs_driver_print_kv(field, getproperty(recipe_metadata, field))
-end
+_pqs_driver_print_named_tuple("recipe_metadata", recipe_metadata)
 
 _pqs_driver_print_section("standard_setup")
 for field in (
@@ -558,15 +569,9 @@ if !isnothing(raw_product_box_probe)
     end
 end
 
-_pqs_driver_print_section("parent_description")
-for field in keys(parent_description)
-    _pqs_driver_print_kv(field, getproperty(parent_description, field))
-end
+_pqs_driver_print_named_tuple("parent_description", parent_description)
 
-_pqs_driver_print_section("source_boxes")
-for field in keys(source_boxes)
-    _pqs_driver_print_kv(field, getproperty(source_boxes, field))
-end
+_pqs_driver_print_named_tuple("source_boxes", source_boxes)
 
 _pqs_driver_print_section("retained_units")
 for unit in retained_units
@@ -600,15 +605,9 @@ for entry in pair_entries
     )
 end
 
-_pqs_driver_print_section("linear_algebra_plan")
-for field in keys(linear_algebra_plan)
-    _pqs_driver_print_kv(field, getproperty(linear_algebra_plan, field))
-end
+_pqs_driver_print_named_tuple("linear_algebra_plan", linear_algebra_plan)
 
-_pqs_driver_print_section("diagnostics")
-for field in keys(diagnostics)
-    _pqs_driver_print_kv(field, getproperty(diagnostics, field))
-end
+_pqs_driver_print_named_tuple("diagnostics", diagnostics)
 
 if save_artifact
     println("saving JLD2 report ", outfile)
@@ -619,65 +618,36 @@ if save_tsv
     println("saving TSV report ", tsvfile)
     open(tsvfile, "w") do io
         println(io, "section\tkey\tvalue")
-        for field in keys(system_metadata)
-            _pqs_driver_write_tsv_row(
-                io,
-                "system_metadata",
-                field,
-                getproperty(system_metadata, field),
-            )
-        end
-        for field in keys(recipe_metadata)
-            _pqs_driver_write_tsv_row(
-                io,
-                "recipe_metadata",
-                field,
-                getproperty(recipe_metadata, field),
-            )
-        end
-        for field in keys(standard_setup.diagnostics)
-            _pqs_driver_write_tsv_row(
-                io,
-                "standard_setup_diagnostics",
-                field,
-                getproperty(standard_setup.diagnostics, field),
-            )
-        end
-        for field in keys(parent_axis_readiness.diagnostics)
-            _pqs_driver_write_tsv_row(
-                io,
-                "parent_axis_readiness_diagnostics",
-                field,
-                getproperty(parent_axis_readiness.diagnostics, field),
-            )
-        end
+        _pqs_driver_write_named_tuple_tsv(io, "system_metadata", system_metadata)
+        _pqs_driver_write_named_tuple_tsv(io, "recipe_metadata", recipe_metadata)
+        _pqs_driver_write_named_tuple_tsv(
+            io,
+            "standard_setup_diagnostics",
+            standard_setup.diagnostics,
+        )
+        _pqs_driver_write_named_tuple_tsv(
+            io,
+            "parent_axis_readiness_diagnostics",
+            parent_axis_readiness.diagnostics,
+        )
         if !isnothing(parent_axis_probe)
-            for field in keys(parent_axis_probe.diagnostics)
-                _pqs_driver_write_tsv_row(
-                    io,
-                    "parent_axis_probe_diagnostics",
-                    field,
-                    getproperty(parent_axis_probe.diagnostics, field),
-                )
-            end
-        end
-        for field in keys(route_axis_counts.diagnostics)
-            _pqs_driver_write_tsv_row(
+            _pqs_driver_write_named_tuple_tsv(
                 io,
-                "route_axis_counts_diagnostics",
-                field,
-                getproperty(route_axis_counts.diagnostics, field),
+                "parent_axis_probe_diagnostics",
+                parent_axis_probe.diagnostics,
             )
         end
+        _pqs_driver_write_named_tuple_tsv(
+            io,
+            "route_axis_counts_diagnostics",
+            route_axis_counts.diagnostics,
+        )
         if !isnothing(raw_product_box_probe)
-            for field in keys(raw_product_box_probe.diagnostics)
-                _pqs_driver_write_tsv_row(
-                    io,
-                    "raw_product_box_probe_diagnostics",
-                    field,
-                    getproperty(raw_product_box_probe.diagnostics, field),
-                )
-            end
+            _pqs_driver_write_named_tuple_tsv(
+                io,
+                "raw_product_box_probe_diagnostics",
+                raw_product_box_probe.diagnostics,
+            )
         end
         for unit in retained_units
             _pqs_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)
@@ -685,14 +655,7 @@ if save_tsv
         for entry in pair_entries
             _pqs_driver_write_tsv_row(io, "pair_entry", entry.pair_key, entry)
         end
-        for field in keys(diagnostics)
-            _pqs_driver_write_tsv_row(
-                io,
-                "diagnostics",
-                field,
-                getproperty(diagnostics, field),
-            )
-        end
+        _pqs_driver_write_named_tuple_tsv(io, "diagnostics", diagnostics)
     end
 end
 
