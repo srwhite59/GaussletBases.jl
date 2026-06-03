@@ -87,6 +87,12 @@ standard_setup =
         core_spacing,
     )
 
+parent_axis_readiness =
+    GaussletBases.CartesianContractedParentMetrics._pqs_standard_parent_axis_construction_readiness(
+        standard_setup;
+        parent_axis_counts,
+    )
+
 # 1. System metadata: physical labels and the parent box description.
 system_metadata = (
     atom_symbols = atom_symbols,
@@ -94,6 +100,8 @@ system_metadata = (
     atom_locations = standard_setup.atom_locations,
     radius = standard_setup.radius,
     parent_axis_counts = parent_axis_counts,
+    parent_axis_counts_status =
+        parent_axis_readiness.parent_axis_counts_status,
     parent_box = standard_setup.parent_box,
     parent_box_rule = standard_setup.parent_box_rule,
     map_backend = map_backend,
@@ -138,9 +146,10 @@ route_skeleton =
 parent_description = (
     status = :described_not_constructed,
     standard_setup = standard_setup,
+    parent_axis_readiness = parent_axis_readiness,
     physical_parent_box = standard_setup.parent_box,
     physical_parent_box_rule = standard_setup.parent_box_rule,
-    axis_transform_status = :pending_repo_parent_constructor,
+    axis_transform_status = parent_axis_readiness.status,
     one_dimensional_transforms = (:x_axis_transform, :y_axis_transform, :z_axis_transform),
     parent_lattice = :raw_product_box_parent_lattice,
     parent_axis_counts = route_skeleton.parent_axis_counts,
@@ -148,6 +157,7 @@ parent_description = (
     pending_facts = (
         route_skeleton.pending_facts...,
         :parent_axis_counts_from_standard_parent_constructor,
+        parent_axis_readiness.pending_facts...,
     ),
 )
 
@@ -218,6 +228,11 @@ diagnostics = merge(
             :_pqs_standard_source_box_route_setup,
         standard_setup_status = standard_setup.status,
         standard_setup_diagnostics = standard_setup.diagnostics,
+        parent_axis_readiness_helper =
+            :_pqs_standard_parent_axis_construction_readiness,
+        parent_axis_readiness_status = parent_axis_readiness.status,
+        parent_axis_readiness_diagnostics =
+            parent_axis_readiness.diagnostics,
         route_skeleton_helper =
             :_pqs_pqs_product_source_box_route_skeleton,
         n_s = standard_setup.n_s,
@@ -234,7 +249,18 @@ diagnostics = merge(
         q_to_core_spacing_non_optimality_claim =
             standard_setup.spacing.non_optimality_claim,
         parent_axis_counts_status =
-            :manual_fixture_pending_standard_parent_constructor,
+            parent_axis_readiness.parent_axis_counts_status,
+        parent_axis_counts_manual_fixture =
+            parent_axis_readiness.parent_axis_counts_manual_fixture,
+        parent_axis_counts_derived =
+            parent_axis_readiness.parent_axis_counts_derived,
+        existing_parent_api_appears_applicable =
+            parent_axis_readiness.existing_parent_api_appears_applicable,
+        standard_parent_axis_rule_ready =
+            parent_axis_readiness.standard_parent_axis_rule_ready,
+        parent_axis_metadata_constructed =
+            parent_axis_readiness.parent_axis_metadata_constructed,
+        parent_axis_pending_facts = parent_axis_readiness.pending_facts,
         output_representation = :retained_two_index_density_density,
         no_go_flags = no_go_flags,
         driver_builds_real_hamiltonian = false,
@@ -245,6 +271,7 @@ report = (
     object_kind = :pqs_source_box_route_driver_skeleton_report,
     generated_at = string(now()),
     standard_setup = standard_setup,
+    parent_axis_readiness = parent_axis_readiness,
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
@@ -276,6 +303,8 @@ println("PQS source-box route driver skeleton")
 @show standard_setup.n_s
 @show standard_setup.core_cube_side
 @show standard_setup.spacing.q_to_core_spacing_rule_status
+@show parent_axis_readiness.status
+@show parent_axis_readiness.parent_axis_counts_status
 @show retained_counts
 @show retained_dimension
 
@@ -308,6 +337,27 @@ for field in (
     :q_to_core_spacing_non_optimality_claim,
 )
     _pqs_driver_print_kv(field, getproperty(standard_setup.diagnostics, field))
+end
+
+_pqs_driver_print_section("parent_axis_readiness")
+for field in (
+    :status,
+    :core_spacing_available,
+    :white_lindsey_spacing_facts_available,
+    :charge_family,
+    :geometry,
+    :extent_candidates,
+    :parent_axis_counts,
+    :parent_axis_counts_status,
+    :parent_axis_counts_manual_fixture,
+    :parent_axis_counts_derived,
+    :existing_parent_api_appears_applicable,
+    :standard_parent_axis_rule_ready,
+    :parent_axis_metadata_constructed,
+    :construction_decision,
+    :pending_facts,
+)
+    _pqs_driver_print_kv(field, getproperty(parent_axis_readiness, field))
 end
 
 _pqs_driver_print_section("parent_description")
@@ -393,6 +443,14 @@ if save_tsv
                 "standard_setup_diagnostics",
                 field,
                 getproperty(standard_setup.diagnostics, field),
+            )
+        end
+        for field in keys(parent_axis_readiness.diagnostics)
+            _pqs_driver_write_tsv_row(
+                io,
+                "parent_axis_readiness_diagnostics",
+                field,
+                getproperty(parent_axis_readiness.diagnostics, field),
             )
         end
         for unit in retained_units

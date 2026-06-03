@@ -12905,6 +12905,248 @@ function _pqs_source_box_route_skeleton_axis_counts(parent_axis_counts)
     return counts
 end
 
+function _pqs_standard_axis_aligned_diatomic_geometry(atom_locations; atol::Real = 1.0e-12)
+    axis_names = (:x, :y, :z)
+    length(atom_locations) == 2 || return (
+        status = :not_diatomic,
+        atom_count = length(atom_locations),
+        bond_axis = nothing,
+        bond_length = nothing,
+        origin_centered_on_bond_axis = false,
+        transverse_coordinates_zero = false,
+        existing_bond_aligned_api_geometry_ready = false,
+    )
+
+    atol_value = Float64(atol)
+    left = atom_locations[1]
+    right = atom_locations[2]
+    deltas = ntuple(index -> right[index] - left[index], 3)
+    nonzero_indices = Tuple(index for index in 1:3 if abs(deltas[index]) > atol_value)
+    length(nonzero_indices) == 1 || return (
+        status = isempty(nonzero_indices) ?
+            :coincident_or_degenerate_diatomic :
+            :not_axis_aligned_diatomic,
+        atom_count = 2,
+        bond_axis = nothing,
+        bond_length = nothing,
+        origin_centered_on_bond_axis = false,
+        transverse_coordinates_zero = false,
+        existing_bond_aligned_api_geometry_ready = false,
+    )
+
+    bond_index = first(nonzero_indices)
+    origin_centered_on_bond_axis = abs(left[bond_index] + right[bond_index]) <= atol_value
+    transverse_coordinates_zero = all(
+        index -> index == bond_index ||
+                 (abs(left[index]) <= atol_value && abs(right[index]) <= atol_value),
+        1:3,
+    )
+    return (
+        status = :axis_aligned_diatomic,
+        atom_count = 2,
+        bond_axis = axis_names[bond_index],
+        bond_length = abs(deltas[bond_index]),
+        origin_centered_on_bond_axis = origin_centered_on_bond_axis,
+        transverse_coordinates_zero = transverse_coordinates_zero,
+        existing_bond_aligned_api_geometry_ready =
+            origin_centered_on_bond_axis && transverse_coordinates_zero,
+    )
+end
+
+function _pqs_standard_parent_axis_extent_candidates(setup, geometry)
+    geometry.existing_bond_aligned_api_geometry_ready || return (
+        available = false,
+        xmax_parallel = nothing,
+        xmax_transverse = nothing,
+        derivation = :unavailable_without_origin_centered_axis_aligned_diatomic_geometry,
+    )
+
+    bond_axis = geometry.bond_axis
+    parent_box = setup.parent_box
+    parallel_interval = getproperty(parent_box, bond_axis)
+    transverse_axes = Tuple(axis for axis in (:x, :y, :z) if axis != bond_axis)
+    transverse_extent = maximum(
+        begin
+            interval = getproperty(parent_box, axis)
+            max(abs(interval[1]), abs(interval[2]))
+        end for axis in transverse_axes
+    )
+    return (
+        available = true,
+        xmax_parallel = max(abs(parallel_interval[1]), abs(parallel_interval[2])),
+        xmax_transverse = transverse_extent,
+        derivation = :from_radius_parent_box_symmetric_extent_candidates,
+    )
+end
+
+function _pqs_standard_parent_axis_counts_readiness(parent_axis_counts)
+    isnothing(parent_axis_counts) && return (
+        parent_axis_counts = nothing,
+        status = :pending_helper_or_documented_rule,
+        manual_fixture = false,
+        derived = false,
+        derivation = :unavailable,
+    )
+    counts = _pqs_source_box_route_skeleton_axis_counts(parent_axis_counts)
+    return (
+        parent_axis_counts = counts,
+        status = :manual_fixture,
+        manual_fixture = true,
+        derived = false,
+        derivation = :manual_driver_fixture_not_standard_setup_derivation,
+    )
+end
+
+function _pqs_standard_parent_axis_pending_facts(
+    setup,
+    geometry,
+    axis_counts,
+    homonuclear::Bool,
+)
+    pending = Symbol[]
+    isnothing(setup.core_spacing) && push!(
+        pending,
+        :explicit_core_spacing_or_documented_q_to_core_spacing_rule,
+    )
+    axis_counts.derived || push!(
+        pending,
+        axis_counts.manual_fixture ?
+        :standard_parent_axis_count_rule_replacing_manual_fixture :
+        :parent_axis_counts_or_documented_axis_count_rule,
+    )
+    geometry.existing_bond_aligned_api_geometry_ready || push!(
+        pending,
+        :axis_aligned_origin_centered_diatomic_geometry_or_general_parent_api,
+    )
+    homonuclear || push!(pending, :atom_symbol_labels_for_heteronuclear_parent_api)
+    push!(pending, :reviewed_parent_axis_constructor_call)
+    return Tuple(pending)
+end
+
+function _pqs_standard_parent_axis_construction_readiness(
+    setup;
+    parent_axis_counts = nothing,
+)
+    charges = setup.nuclear_charges
+    homonuclear = all(charge -> charge == first(charges), charges)
+    charge_family = homonuclear ? :homonuclear : :heteronuclear
+    core_spacing_available = !isnothing(setup.core_spacing)
+    d_available = !isnothing(setup.d)
+    white_lindsey_spacing_facts_available =
+        core_spacing_available &&
+        d_available &&
+        !isnothing(setup.spacing.mapping_s_by_atom)
+    geometry = _pqs_standard_axis_aligned_diatomic_geometry(setup.atom_locations)
+    extent_candidates = _pqs_standard_parent_axis_extent_candidates(setup, geometry)
+    axis_counts = _pqs_standard_parent_axis_counts_readiness(parent_axis_counts)
+    homonuclear_api_appears_applicable =
+        homonuclear &&
+        core_spacing_available &&
+        geometry.existing_bond_aligned_api_geometry_ready &&
+        extent_candidates.available
+    heteronuclear_api_appears_applicable =
+        !homonuclear &&
+        core_spacing_available &&
+        geometry.existing_bond_aligned_api_geometry_ready &&
+        extent_candidates.available
+    existing_parent_api_appears_applicable =
+        homonuclear_api_appears_applicable || heteronuclear_api_appears_applicable
+    pending_facts = _pqs_standard_parent_axis_pending_facts(
+        setup,
+        geometry,
+        axis_counts,
+        homonuclear,
+    )
+    standard_parent_axis_rule_ready =
+        core_spacing_available &&
+        axis_counts.derived &&
+        geometry.existing_bond_aligned_api_geometry_ready
+    return (
+        object_kind = :pqs_standard_parent_axis_construction_readiness,
+        status = standard_parent_axis_rule_ready ?
+            :standard_parent_axis_rule_ready :
+            :not_ready_pending_facts,
+        setup_object_kind = setup.object_kind,
+        core_spacing_available = core_spacing_available,
+        d_available = d_available,
+        white_lindsey_spacing_facts_available =
+            white_lindsey_spacing_facts_available,
+        core_spacing = setup.core_spacing,
+        d = setup.d,
+        mapping_s = setup.mapping_s,
+        mapping_s_by_atom = setup.mapping_s_by_atom,
+        charge_family = charge_family,
+        homonuclear = homonuclear,
+        heteronuclear = !homonuclear,
+        geometry = geometry,
+        extent_candidates = extent_candidates,
+        parent_axis_counts = axis_counts.parent_axis_counts,
+        parent_axis_counts_status = axis_counts.status,
+        parent_axis_counts_manual_fixture = axis_counts.manual_fixture,
+        parent_axis_counts_derived = axis_counts.derived,
+        parent_axis_counts_derivation = axis_counts.derivation,
+        existing_parent_api_candidates = (
+            bond_aligned_homonuclear_qw_basis = (
+                appears_applicable = homonuclear_api_appears_applicable,
+                requires_core_spacing = true,
+                requires_extent_inputs = true,
+                requires_homonuclear_two_center_axis_aligned_geometry = true,
+                constructor_builds_axis_counts_from_mapped_extents = true,
+            ),
+            bond_aligned_heteronuclear_qw_basis = (
+                appears_applicable = heteronuclear_api_appears_applicable,
+                requires_core_spacings = true,
+                requires_extent_inputs = true,
+                requires_atom_symbol_labels = true,
+                constructor_builds_axis_counts_from_mapped_extents = true,
+            ),
+            cartesian_parent_gausslet_basis = (
+                appears_applicable_after_qw_basis = existing_parent_api_appears_applicable,
+                wraps_existing_axis_bases = true,
+            ),
+        ),
+        existing_parent_api_appears_applicable =
+            existing_parent_api_appears_applicable,
+        standard_parent_axis_rule_ready = standard_parent_axis_rule_ready,
+        parent_axis_construction_ready = standard_parent_axis_rule_ready,
+        parent_axis_metadata_constructed = false,
+        construction_decision =
+            :readiness_only_no_parent_axis_construction_added,
+        pending_facts = pending_facts,
+        diagnostics = (
+            source = :pqs_standard_parent_axis_construction_readiness,
+            private_development_only = true,
+            production_route = false,
+            core_spacing_available = core_spacing_available,
+            white_lindsey_spacing_facts_available =
+                white_lindsey_spacing_facts_available,
+            existing_parent_api_appears_applicable =
+                existing_parent_api_appears_applicable,
+            parent_axis_counts_status = axis_counts.status,
+            parent_axis_counts_manual_fixture = axis_counts.manual_fixture,
+            parent_axis_counts_derived = axis_counts.derived,
+            standard_parent_axis_rule_ready = standard_parent_axis_rule_ready,
+            parent_axis_metadata_constructed = false,
+            pending_facts = pending_facts,
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
 function _pqs_source_box_route_skeleton_source_dimension(box)
     return prod(length(getproperty(box, axis)) for axis in (:x, :y, :z))
 end
