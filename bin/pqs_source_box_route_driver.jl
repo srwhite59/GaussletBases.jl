@@ -17,8 +17,10 @@ tail_spacing = 10.0
 q_to_core_spacing_rule = :standard_pqs_ns_equals_q
 core_spacing = nothing
 probe_parent_axis_construction = :auto
-parent_axis_probe_backend = :numerical_reference
+parent_axis_probe_backend = :pgdg_localized_experimental
 parent_axis_probe_family = :G10
+probe_raw_product_box_plans = :auto
+raw_product_box_probe_backend = :pgdg_localized_experimental
 route_shape = (:pqs_left, :product, :pqs_right)
 product_body_rule = :centered_single_z_slab
 pqs_retained_rule = :boundary_comx_product_mode_selection
@@ -77,6 +79,17 @@ function _pqs_driver_probe_requested(value, core_spacing)
     value == :auto && return !isnothing(core_spacing)
     value isa Bool && return value
     throw(ArgumentError("probe_parent_axis_construction must be :auto, true, or false"))
+end
+
+function _pqs_driver_raw_box_probe_requested(value, parent_axis_probe, route_axis_counts)
+    if value == :auto
+        return !isnothing(parent_axis_probe) &&
+               parent_axis_probe.parent_axis_metadata_constructed &&
+               route_axis_counts.parent_axis_counts_source == :constructed_parent_axis_probe
+    elseif value isa Bool
+        return value
+    end
+    throw(ArgumentError("probe_raw_product_box_plans must be :auto, true, or false"))
 end
 
 pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
@@ -142,6 +155,34 @@ system_metadata = (
     map_backend = map_backend,
 )
 
+route_skeleton =
+    GaussletBases.CartesianContractedParentMetrics._pqs_pqs_product_source_box_route_skeleton(
+        ;
+        q,
+        parent_axis_counts = route_axis_counts.parent_axis_counts,
+        route_shape,
+        product_body_rule,
+        pqs_retained_rule,
+        product_retained_rule,
+        pair_factor_normalization,
+    )
+raw_product_box_probe_requested =
+    _pqs_driver_raw_box_probe_requested(
+        probe_raw_product_box_plans,
+        parent_axis_probe,
+        route_axis_counts,
+    )
+raw_product_box_probe = raw_product_box_probe_requested ?
+    GaussletBases.CartesianContractedParentMetrics._pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
+        standard_setup,
+        route_skeleton;
+        gausslet_backend = raw_product_box_probe_backend,
+    ) : nothing
+raw_product_box_probe_status =
+    isnothing(raw_product_box_probe) ? :not_requested : raw_product_box_probe.status
+raw_product_box_probe_pending_facts =
+    isnothing(raw_product_box_probe) ? () : raw_product_box_probe.pending_facts
+
 # 2. Recipe metadata: route recipe inputs, not already-derived route facts.
 recipe_metadata = (
     route_kind = route_kind,
@@ -156,7 +197,11 @@ recipe_metadata = (
         standard_setup.spacing.q_to_core_spacing_rule_status,
     probe_parent_axis_construction = probe_parent_axis_construction,
     parent_axis_probe_requested = parent_axis_probe_requested,
+    parent_axis_probe_backend = parent_axis_probe_backend,
     route_axis_counts_source = route_axis_counts.parent_axis_counts_source,
+    probe_raw_product_box_plans = probe_raw_product_box_plans,
+    raw_product_box_probe_requested = raw_product_box_probe_requested,
+    raw_product_box_probe_backend = raw_product_box_probe_backend,
     route_shape = route_shape,
     product_body_rule = product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
@@ -168,18 +213,6 @@ recipe_metadata = (
     reference_only_authorities = reference_only_authorities,
 )
 
-route_skeleton =
-    GaussletBases.CartesianContractedParentMetrics._pqs_pqs_product_source_box_route_skeleton(
-        ;
-        q,
-        parent_axis_counts = route_axis_counts.parent_axis_counts,
-        route_shape,
-        product_body_rule,
-        pqs_retained_rule,
-        product_retained_rule,
-        pair_factor_normalization,
-    )
-
 # 3. Parent description/construction: still described, not materialized here.
 parent_description = (
     status = :described_not_constructed,
@@ -187,6 +220,7 @@ parent_description = (
     parent_axis_readiness = parent_axis_readiness,
     parent_axis_probe = parent_axis_probe,
     route_axis_counts = route_axis_counts,
+    raw_product_box_probe = raw_product_box_probe,
     physical_parent_box = standard_setup.parent_box,
     physical_parent_box_rule = standard_setup.parent_box_rule,
     axis_transform_status = parent_axis_readiness.status,
@@ -195,11 +229,13 @@ parent_description = (
     parent_axis_counts = route_skeleton.parent_axis_counts,
     parent_axis_counts_source = route_axis_counts.parent_axis_counts_source,
     source_boxes = route_skeleton.source_boxes,
+    raw_product_box_plan_status = raw_product_box_probe_status,
     pending_facts = (
         route_skeleton.pending_facts...,
         :parent_axis_counts_from_standard_parent_constructor,
         parent_axis_readiness.pending_facts...,
         route_axis_counts.pending_facts...,
+        raw_product_box_probe_pending_facts...,
     ),
 )
 
@@ -315,6 +351,22 @@ diagnostics = merge(
         parent_axis_metadata_constructed =
             parent_axis_probe_constructed,
         parent_axis_probe_pending_facts = parent_axis_probe_pending_facts,
+        raw_product_box_probe_requested = raw_product_box_probe_requested,
+        raw_product_box_probe_status = raw_product_box_probe_status,
+        raw_product_box_probe_pending_facts =
+            raw_product_box_probe_pending_facts,
+        raw_product_box_plan_count =
+            isnothing(raw_product_box_probe) ?
+            0 :
+            raw_product_box_probe.raw_product_box_plan_count,
+        raw_product_box_all_pgdg_exact =
+            isnothing(raw_product_box_probe) ?
+            false :
+            raw_product_box_probe.all_pgdg_exact,
+        raw_product_box_any_numerical_reference_fallback =
+            isnothing(raw_product_box_probe) ?
+            false :
+            raw_product_box_probe.any_numerical_reference_fallback,
         parent_axis_pending_facts = parent_axis_readiness.pending_facts,
         output_representation = :retained_two_index_density_density,
         no_go_flags = no_go_flags,
@@ -329,6 +381,7 @@ report = (
     parent_axis_readiness = parent_axis_readiness,
     parent_axis_probe = parent_axis_probe,
     route_axis_counts = route_axis_counts,
+    raw_product_box_probe = raw_product_box_probe,
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
@@ -366,6 +419,8 @@ println("PQS source-box route driver skeleton")
 @show parent_axis_probe_status
 @show route_axis_counts.parent_axis_counts_source
 @show route_axis_counts.parent_axis_counts
+@show raw_product_box_probe_requested
+@show raw_product_box_probe_status
 @show retained_counts
 @show retained_dimension
 
@@ -433,6 +488,7 @@ if !isnothing(parent_axis_probe)
         :reference_spacing,
         :tail_spacing,
         :gausslet_backend,
+        :gausslet_backend_role,
         :expansion_source,
         :explicit_spacing_probe_only,
         :default_standard_rule,
@@ -456,6 +512,39 @@ for field in (
     :pending_facts,
 )
     _pqs_driver_print_kv(field, getproperty(route_axis_counts, field))
+end
+
+if !isnothing(raw_product_box_probe)
+    _pqs_driver_print_section("raw_product_box_probe")
+    for field in (
+        :status,
+        :raw_product_box_plan_count,
+        :all_pgdg_exact,
+        :any_numerical_reference_fallback,
+        :max_axis_overlap_error,
+        :gausslet_backend,
+        :gausslet_backend_role,
+        :pending_facts,
+    )
+        _pqs_driver_print_kv(field, getproperty(raw_product_box_probe, field))
+    end
+    for metadata in raw_product_box_probe.unit_plan_metadata
+        println(
+            metadata.unit_key,
+            '\t',
+            metadata.source_box,
+            '\t',
+            metadata.source_mode_dims,
+            '\t',
+            metadata.source_mode_count,
+            '\t',
+            metadata.integration_contract,
+            '\t',
+            metadata.numerical_reference_fallback,
+            '\t',
+            metadata.max_axis_overlap_error,
+        )
+    end
 end
 
 _pqs_driver_print_section("parent_description")
@@ -568,6 +657,16 @@ if save_tsv
                 field,
                 getproperty(route_axis_counts.diagnostics, field),
             )
+        end
+        if !isnothing(raw_product_box_probe)
+            for field in keys(raw_product_box_probe.diagnostics)
+                _pqs_driver_write_tsv_row(
+                    io,
+                    "raw_product_box_probe_diagnostics",
+                    field,
+                    getproperty(raw_product_box_probe.diagnostics, field),
+                )
+            end
         end
         for unit in retained_units
             _pqs_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)

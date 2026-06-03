@@ -4,6 +4,7 @@ include("pqs_standard_source_box_route_setup_runtests.jl")
 include("pqs_standard_parent_axis_readiness_runtests.jl")
 include("pqs_explicit_core_spacing_parent_axis_probe_runtests.jl")
 include("pqs_route_axis_count_selection_runtests.jl")
+include("pqs_raw_product_box_plan_probe_runtests.jl")
 include("pqs_source_box_route_skeleton_runtests.jl")
 
 @testset "Cartesian nested face first primitive" begin

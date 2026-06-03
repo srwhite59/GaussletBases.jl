@@ -13150,6 +13150,14 @@ function _pqs_standard_parent_axis_construction_readiness(
     )
 end
 
+function _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend::Symbol)
+    gausslet_backend == :pgdg_localized_experimental &&
+        return :default_development_pgdg_localized
+    gausslet_backend == :numerical_reference &&
+        return :explicit_non_default_numerical_reference
+    return :unsupported_backend
+end
+
 function _pqs_explicit_core_spacing_parent_axis_probe_pending_facts(
     readiness;
     construct_axis_bundles::Bool,
@@ -13167,9 +13175,9 @@ function _pqs_explicit_core_spacing_parent_axis_probe_pending_facts(
         :physical_extent_inputs_for_bond_aligned_qw_basis,
     )
     construct_axis_bundles || push!(pending, :probe_parent_axis_construction_flag)
-    gausslet_backend == :numerical_reference || push!(
+    gausslet_backend in (:pgdg_localized_experimental, :numerical_reference) || push!(
         pending,
-        :safe_numerical_reference_backend_or_explicit_review,
+        :pgdg_localized_or_explicit_numerical_reference_backend,
     )
     return Tuple(pending)
 end
@@ -13177,7 +13185,7 @@ end
 function _pqs_explicit_core_spacing_parent_axis_probe(
     setup;
     expansion = nothing,
-    gausslet_backend::Symbol = :numerical_reference,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
     family = :G10,
     construct_axis_bundles::Bool = true,
 )
@@ -13205,6 +13213,8 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
             reference_spacing = setup.reference_spacing,
             tail_spacing = setup.tail_spacing,
             gausslet_backend = gausslet_backend,
+            gausslet_backend_role =
+                _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
             expansion_source = isnothing(expansion) ? :not_used : :explicit,
             explicit_spacing_probe_only = true,
             default_standard_rule = false,
@@ -13217,6 +13227,9 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
                 explicit_spacing_probe_only = true,
                 default_standard_rule = false,
                 parent_axis_metadata_constructed = false,
+                gausslet_backend = gausslet_backend,
+                gausslet_backend_role =
+                    _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
                 pending_facts = pending_facts,
                 public_default_consumes = false,
                 packet_adoption = false,
@@ -13306,6 +13319,8 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
         reference_spacing = setup.reference_spacing,
         tail_spacing = setup.tail_spacing,
         gausslet_backend = gausslet_backend,
+        gausslet_backend_role =
+            _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
         expansion_source = expansion_source,
         explicit_spacing_probe_only = true,
         default_standard_rule = false,
@@ -13318,6 +13333,9 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
             explicit_spacing_probe_only = true,
             default_standard_rule = false,
             parent_axis_metadata_constructed = true,
+            gausslet_backend = gausslet_backend,
+            gausslet_backend_role =
+                _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
             axis_lengths = axis_lengths,
             public_default_consumes = false,
             packet_adoption = false,
@@ -13458,6 +13476,231 @@ function _pqs_source_box_route_parent_axis_counts_for_skeleton(
             parent_axis_counts_derived = false,
             parent_axis_counts_manual_fixture = false,
             pending_facts = pending_facts,
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_named_box_tuple(box)
+    return (box.x, box.y, box.z)
+end
+
+function _pqs_raw_product_box_plan_probe_metadata(unit_key::Symbol, source_box, plan)
+    return (
+        unit_key = unit_key,
+        source_box = source_box,
+        source_box_tuple = plan.source_box,
+        source_dimensions = Tuple(length(interval) for interval in plan.source_box),
+        source_mode_dims = plan.source_mode_dims,
+        source_mode_count = plan.source_mode_count,
+        integration_contract = plan.diagnostics.integration_contract,
+        integration_contract_label = plan.diagnostics.integration_contract_label,
+        numerical_reference_fallback = plan.diagnostics.numerical_reference_fallback,
+        max_axis_overlap_error = plan.diagnostics.max_axis_overlap_error,
+        source_product_modes_orthogonal =
+            plan.diagnostics.source_product_modes_orthogonal,
+        retained_rule_attached = plan.diagnostics.retained_rule_attached,
+        packet_adoption = plan.diagnostics.packet_adoption,
+    )
+end
+
+function _pqs_explicit_core_spacing_route_raw_product_box_plan_probe(
+    setup,
+    route_skeleton;
+    expansion = nothing,
+    gausslet_backend::Symbol = :pgdg_localized_experimental,
+    family = :G10,
+    construct_raw_product_box_plans::Bool = true,
+)
+    construct_raw_product_box_plans || return (
+        object_kind = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+        status = :not_constructed_pending_facts,
+        parent_axis_probe = nothing,
+        unit_plan_metadata = (),
+        raw_product_box_plan_count = 0,
+        all_pgdg_exact = false,
+        any_numerical_reference_fallback = false,
+        max_axis_overlap_error = nothing,
+        gausslet_backend = gausslet_backend,
+        gausslet_backend_role =
+            _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
+        pending_facts = (:probe_raw_product_box_plans_flag,),
+        diagnostics = (
+            source = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+            private_development_only = true,
+            production_route = false,
+            raw_product_box_plans_constructed = false,
+            pending_facts = (:probe_raw_product_box_plans_flag,),
+            gausslet_backend = gausslet_backend,
+            gausslet_backend_role =
+                _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+
+    parent_axis_probe = _pqs_explicit_core_spacing_parent_axis_probe(
+        setup;
+        expansion,
+        gausslet_backend,
+        family,
+        construct_axis_bundles = true,
+    )
+    pending = Symbol[]
+    parent_axis_probe.parent_axis_metadata_constructed || append!(
+        pending,
+        parent_axis_probe.pending_facts,
+    )
+    if parent_axis_probe.parent_axis_metadata_constructed
+        expected_counts =
+            _pqs_source_box_route_skeleton_axis_counts(parent_axis_probe.axis_lengths)
+        route_counts =
+            _pqs_source_box_route_skeleton_axis_counts(route_skeleton.parent_axis_counts)
+        route_counts == expected_counts || push!(
+            pending,
+            :route_skeleton_parent_axis_counts_from_constructed_probe,
+        )
+    end
+    if !isempty(pending)
+        pending_facts = Tuple(pending)
+        return (
+            object_kind = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+            status = :not_constructed_pending_facts,
+            parent_axis_probe = parent_axis_probe,
+            unit_plan_metadata = (),
+            raw_product_box_plan_count = 0,
+            all_pgdg_exact = false,
+            any_numerical_reference_fallback = false,
+            max_axis_overlap_error = nothing,
+            gausslet_backend = gausslet_backend,
+            gausslet_backend_role =
+                _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
+            pending_facts = pending_facts,
+            diagnostics = (
+                source = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+                private_development_only = true,
+                production_route = false,
+                raw_product_box_plans_constructed = false,
+                pending_facts = pending_facts,
+                gausslet_backend = gausslet_backend,
+                gausslet_backend_role =
+                    _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
+                public_default_consumes = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                hamiltonian_matrix_built = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                retained_pqs_weights_used = false,
+                retained_weight_division_allowed = false,
+                repo_side_ray_id = false,
+                mwg_ida_semantics_changed = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+            ),
+        )
+    end
+
+    expansion_value = if isnothing(expansion)
+        coulomb_gaussian_expansion(doacc = false)
+    elseif expansion isa CoulombGaussianExpansion
+        expansion
+    else
+        throw(ArgumentError("raw product-box plan probe expansion must be a CoulombGaussianExpansion"))
+    end
+    readiness = parent_axis_probe.readiness
+    geometry = readiness.geometry
+    extents = readiness.extent_candidates
+    basis = bond_aligned_homonuclear_qw_basis(
+        ;
+        family,
+        bond_length = geometry.bond_length,
+        core_spacing = setup.core_spacing,
+        xmax_parallel = extents.xmax_parallel,
+        xmax_transverse = extents.xmax_transverse,
+        bond_axis = geometry.bond_axis,
+        nuclear_charge = first(setup.nuclear_charges),
+        reference_spacing = setup.reference_spacing,
+        tail_spacing = setup.tail_spacing,
+    )
+    axis_bundles = _qwrg_bond_aligned_axis_bundles(
+        basis,
+        expansion_value;
+        gausslet_backend,
+    )
+    unit_keys = (:pqs_left, :pqs_right, :product)
+    unit_plan_metadata = map(unit_keys) do unit_key
+        source_box = getproperty(route_skeleton.source_boxes, unit_key)
+        source_dimensions = getproperty(route_skeleton.source_dimensions, unit_key)
+        plan = _cartesian_raw_product_box_plan(
+            axis_bundles,
+            _pqs_source_box_route_named_box_tuple(source_box),
+            source_dimensions;
+            enforce_symmetric_odd = false,
+        )
+        _pqs_raw_product_box_plan_probe_metadata(unit_key, source_box, plan)
+    end
+    all_pgdg_exact =
+        all(metadata -> metadata.integration_contract == :pgdg_exact, unit_plan_metadata)
+    any_numerical_reference_fallback =
+        any(metadata -> metadata.numerical_reference_fallback, unit_plan_metadata)
+    max_axis_overlap_error =
+        maximum(metadata.max_axis_overlap_error for metadata in unit_plan_metadata)
+    return (
+        object_kind = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+        status = :constructed_raw_product_box_plan_metadata,
+        parent_axis_probe = parent_axis_probe,
+        unit_plan_metadata = unit_plan_metadata,
+        raw_product_box_plan_count = length(unit_plan_metadata),
+        all_pgdg_exact = all_pgdg_exact,
+        any_numerical_reference_fallback = any_numerical_reference_fallback,
+        max_axis_overlap_error = max_axis_overlap_error,
+        gausslet_backend = gausslet_backend,
+        gausslet_backend_role =
+            _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
+        pending_facts = (),
+        diagnostics = (
+            source = :pqs_explicit_core_spacing_route_raw_product_box_plan_probe,
+            private_development_only = true,
+            production_route = false,
+            raw_product_box_plans_constructed = true,
+            raw_product_box_plan_count = length(unit_plan_metadata),
+            all_pgdg_exact = all_pgdg_exact,
+            any_numerical_reference_fallback = any_numerical_reference_fallback,
+            max_axis_overlap_error = max_axis_overlap_error,
+            gausslet_backend = gausslet_backend,
+            gausslet_backend_role =
+                _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
             public_default_consumes = false,
             packet_adoption = false,
             fixed_block_routing = false,

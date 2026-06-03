@@ -46,7 +46,8 @@ using GaussletBases
     @test explicit_probe.core_spacing == 0.15
     @test explicit_probe.reference_spacing == 1.0
     @test explicit_probe.tail_spacing == 10.0
-    @test explicit_probe.gausslet_backend == :numerical_reference
+    @test explicit_probe.gausslet_backend == :pgdg_localized_experimental
+    @test explicit_probe.gausslet_backend_role == :default_development_pgdg_localized
     @test explicit_probe.expansion_source ==
           :default_coulomb_gaussian_expansion_doacc_false
     @test explicit_probe.axis_lengths isa NTuple{3,Int}
@@ -55,6 +56,16 @@ using GaussletBases
     @test explicit_probe.diagnostics.axis_lengths == explicit_probe.axis_lengths
     @test explicit_probe.explicit_spacing_probe_only
     @test !explicit_probe.default_standard_rule
+
+    numerical_probe =
+        metrics_module._pqs_explicit_core_spacing_parent_axis_probe(
+            explicit_setup;
+            gausslet_backend = :numerical_reference,
+        )
+    @test numerical_probe.parent_axis_metadata_constructed
+    @test numerical_probe.gausslet_backend == :numerical_reference
+    @test numerical_probe.gausslet_backend_role ==
+          :explicit_non_default_numerical_reference
 
     disabled_probe =
         metrics_module._pqs_explicit_core_spacing_parent_axis_probe(
