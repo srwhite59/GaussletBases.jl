@@ -1359,6 +1359,115 @@ The current electron-electron source-box checkpoint is therefore:
 - retained PQS columns have no positive quadrature-weight or IDA-division
   semantics.
 
+## Private Route-Adapter Migration Contract
+
+The next repo-side migration object should be a private Be/Be2-shaped route
+adapter/report, not a public route and not a packet or Hamiltonian builder.
+Its job is to collect the adjacent component facts that already exist, check
+their boundaries, and state whether the private route is ready for the next
+implementation pass.
+
+The intended inputs are:
+
+- explicit source-box retained-unit facts for the fixed/PQS lane: route
+  descriptor unit keys, retained ranges, source boxes, source-mode dimensions,
+  retained-rule kinds, and supported source-box pair families;
+- by-center nuclear-attraction data: source-box nuclear axis layers, Gaussian
+  expansion, center coordinates, nuclear charges, and stable center labels;
+- IDA electron-electron data: `_pqs_source_box_ida_factor_provenance(...)`,
+  term coefficients, pair-factor normalization mode, raw/source weights for
+  raw-weighted input, and the source-box route descriptor;
+- optional dense-parent IDA authority data for validation only, currently for
+  density-normalized rows;
+- ordinary final-residual MWG supplement facts from
+  `_qwrg_final_residual_mwg_component_blocks(...)` or a report carrying the
+  same explicit residual-owner metadata, component shapes, and authority
+  errors;
+- optional reporting sidecars such as fixed-side retained-unit metadata,
+  source-shell/source-mode metadata, and fixed-column/source-relation labels.
+
+The intended output is a private route-adapter record plus a text or TSV
+report. It should include:
+
+- route shape, retained dimension, retained-unit records, retained ranges, and
+  source-mode dimensions;
+- one by-center nuclear retained matrix per nucleus/center, plus a total that
+  is explicitly the sum of those center pieces;
+- the source-box IDA retained two-index density-density block, with pair
+  counts, pair-family counts, helper names, term count, finite/symmetry
+  checks, and pair-factor normalization mode;
+- final-residual MWG supplement component facts as a separate lane: fixed,
+  fixed-residual, residual-residual, and final shapes, explicit residual
+  owners, authority error, and raw-GTO/fixed-raw-GTO block absence flags;
+- authority-comparison facts and skip reasons;
+- timing/allocation facts for component assembly and report adaptation;
+- no-go diagnostics for public/default behavior, packet/fixed-block/
+  QW/Hamiltonian adoption, MWG/IDA semantic changes, retained-weight/IDA
+  division, owner/shell/ray inference, ECP behavior, and CR2 science status.
+
+The fixed/PQS source-box lane and the final-residual MWG lane stay adjacent,
+not merged, until a later reviewed adapter explicitly composes them. By-center
+nuclear attraction stays separately attributed by center so counterpoise and
+center-level diagnostics can inspect the pieces. Source-box IDA output remains
+the retained two-index density-density convention, not a four-index Galerkin
+Coulomb tensor. Raw-weighted IDA input may be accepted only through the
+existing raw/source quadrature-weight normalization wrappers; retained PQS,
+source-box, or final-residual columns must not acquire positive quadrature
+weight or IDA-division semantics.
+
+Available authority comparisons today are limited:
+
+- source-box safe-term and component smokes can compare against current
+  fixed-block or sequence-packet retained fields where those fields exist;
+- product/product low-order and kinetic source-box blocks can compare to
+  existing product-staged retained kernels;
+- density-normalized source-box IDA rows can compare to dense-parent IDA
+  projection, `C_route' * V_parent_ida * C_route`, as validation only;
+- final-residual MWG supplement facts can require zero reported authority
+  error and explicit residual owner metadata from the ordinary MWG lane;
+- shell-realized PQS support-local paths remain oracle/debug comparisons and
+  are not the source-box algorithm.
+
+Performance reporting is part of the private adapter contract. A complete
+smoke should record retained dimensions, source/residual/final dimensions,
+unit counts, upper-triangular pair counts, IDA term count, center count,
+whether dense diagnostic matrices were used, wall time, allocations, and
+GC time when practical. The performance category remains
+`diagnostic/prototype` until representative Be/Be2-sized timings show that the
+adapter can run without accidental dense-parent or support-row scaling.
+
+A complete private Be/Be2 component-route smoke requires all of the following:
+
+- fixed/PQS source-box retained-unit records are present for the route under
+  test;
+- by-center nuclear source-box matrices are finite and their explicit sum
+  matches the reported total;
+- IDA source-box electron-electron rows run for density-normalized input, and
+  raw-weighted rows run or report a clear unsupported reason;
+- source-box IDA pair counts and pair-family counts cover the intended
+  upper-triangular route pairs;
+- available authority comparisons pass or record explicit skip reasons;
+- final-residual MWG component facts have consistent fixed/residual/final
+  dimensions and explicit residual owner metadata;
+- no owner, shell, ray, or source label is inferred from centers,
+  nearest-grid reconstruction, support order, support indices, or
+  `raw_to_final`;
+- raw GTO/GTO and fixed/raw-GTO MWG blocks remain absent;
+- no retained/source-box/final-residual weight division is introduced;
+- the report states that no public/default route, packet/fixed-block/
+  QW/Hamiltonian path, ECP behavior, MWG/IDA semantics, or CR2 science status
+  changed.
+
+The explicit gate before public/default or packet/QW/Hamiltonian adoption is a
+separate review. That review must have a private adapter report at
+representative Be/Be2 scale, passing authority comparisons, documented
+performance, complete no-go diagnostics, and a manager-approved decision about
+how the source-box fixed/PQS lane composes with the ordinary final-residual
+MWG supplement lane. Until then, the correct implementation seam is private
+report/adaptation around `_pqs_pqs_product_source_box_component_route_smoke(...)`,
+`_pqs_pqs_product_component_route_smoke_report_adapter(...)`, and the CR2
+sidecar/report writers, not construction or public-route adoption.
+
 Stop implementation if any of these are unclear:
 
 - whether a candidate factor tensor is raw-weighted or density-normalized;
