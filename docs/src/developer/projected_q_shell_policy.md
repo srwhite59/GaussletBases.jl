@@ -907,6 +907,20 @@ coordinate/nearest-grid reconstruction, no owner inference from `raw_to_final`,
 no retained-weight/IDA division, no route/Hamiltonian adoption, no public API,
 and no CR2 science claim.
 
+The source-shell/source-mode export contract is covered by a small opt-in
+real-artifact acceptance test. Set `BE2_PQS_Q5_ARTIFACT_DIR` to the Be2
+strict-PQS q5 CR2 artifact directory and run
+`test/nested/pqs_source_metadata_real_artifact_acceptance_runtests.jl` to check
+the current metadata surface. With the environment variable absent, normal
+test runs report this test as skipped/broken and do not require the artifact.
+When enabled, the test checks source-shell/source-mode table headers, counts,
+category counts, inference flags, shell/ray/radial status fields, and the
+product/doside fixed-column source-relation fact that those relations are
+product-axis tuples rather than rays. It does not validate an operator,
+Hamiltonian, energy, CR2 science result, public/default route, retained-weight
+or IDA semantics, shell-realized relation weights/spans, or repo-side
+ray/cone/tail grouping.
+
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
 `z = 4`. The two PQS source boxes use source-mode dims `(5,5,5)` and retained
