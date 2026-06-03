@@ -1,41 +1,18 @@
 using Test
 
+include("pqs_source_metadata_real_artifact_acceptance_support.jl")
+
 @testset "Be2 strict-PQS q5 source metadata acceptance opt-in" begin
     artifact_dir = strip(get(ENV, "BE2_PQS_Q5_ARTIFACT_DIR", ""))
     if isempty(artifact_dir)
         @test_skip "set BE2_PQS_Q5_ARTIFACT_DIR to run the real-artifact source metadata acceptance probe"
     else
-        probe_path = normpath(
-            joinpath(
-                @__DIR__,
-                "..",
-                "..",
-                "tmp",
-                "work",
-                "be2_pqs_source_metadata_acceptance_probe.jl",
-            ),
-        )
-        @test isfile(probe_path)
         @test isdir(artifact_dir)
-        if isfile(probe_path) && isdir(artifact_dir)
-            probe_module =
-                Module(:Be2PQSQ5SourceMetadataAcceptanceOptInProbe)
-            Core.eval(
-                probe_module,
-                :(include(path::AbstractString) = Base.include(@__MODULE__, path)),
-            )
-            Base.include(probe_module, probe_path)
-            probe_result = Core.eval(
-                probe_module,
-                quote
-                    checks = run_acceptance($artifact_dir)
-                    write_report(ACCEPTANCE_REPORT_PATH, checks)
-                    write_summary(ACCEPTANCE_SUMMARY_PATH, checks)
-                    (failures = copy(checks.failures), rows = Dict(checks.rows))
-                end,
-            )
+        if isdir(artifact_dir)
+            probe_result =
+                _be2_pqs_q5_source_metadata_acceptance(artifact_dir)
             @test isempty(probe_result.failures)
-            rows = probe_result.rows
+            rows = probe_result.row_dict
             required_true_checks = (
                 "fixed_dimension_is_1483",
                 "source_shells_table_present",
