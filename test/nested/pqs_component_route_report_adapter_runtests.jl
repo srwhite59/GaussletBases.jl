@@ -916,6 +916,71 @@ using GaussletBases
     @test !source_shell_mode_inventory.diagnostics.qwhamiltonian_changed
     @test !source_shell_mode_inventory.diagnostics.public_default_consumes
 
+    source_metadata_contract =
+        metrics_module._pqs_source_metadata_export_contract()
+    @test source_metadata_contract.schema_version ==
+          :pqs_source_shell_modes_private_v1
+    @test source_metadata_contract.label_semantics ==
+          :construction_native_identifiers_not_relations
+    @test source_metadata_contract.shell_realized_pqs_source_axis_indices ==
+          :local_native_source_mode_coordinates
+    @test source_metadata_contract.repo_ray_id_policy == :not_exported
+    @test source_metadata_contract.relation_weight_span_policy ==
+          :not_in_source_metadata_tables
+    @test !("ray_id" in source_metadata_contract.source_shells_header)
+    @test !("ray_id" in source_metadata_contract.source_modes_header)
+
+    source_shell_table_io = IOBuffer()
+    metrics_module._write_pqs_source_shells_table(
+        source_shell_table_io,
+        source_shell_mode_inventory,
+    )
+    source_shell_table_lines =
+        split(chomp(String(take!(source_shell_table_io))), '\n')
+    @test length(source_shell_table_lines) ==
+          source_shell_mode_inventory.source_shell_count + 1
+    @test split(source_shell_table_lines[1], '\t') ==
+          collect(source_metadata_contract.source_shells_header)
+    @test !occursin("ray_id", source_shell_table_lines[1])
+    shell_realized_source_shell_fields =
+        split(source_shell_table_lines[4], '\t')
+    @test shell_realized_source_shell_fields[4] == "shell_realized_pqs_fixture"
+    @test shell_realized_source_shell_fields[11:13] ==
+          ["raw_box_axis", "raw_box_axis", "raw_box_axis"]
+    @test shell_realized_source_shell_fields[14:16] == ["10", "20", "30"]
+    @test shell_realized_source_shell_fields[17:19] == ["24", "34", "54"]
+    @test shell_realized_source_shell_fields[23:25] == ["5", "5", "5"]
+    @test shell_realized_source_shell_fields[31:33] ==
+          ["unavailable", "unavailable", "unavailable"]
+
+    source_mode_table_io = IOBuffer()
+    metrics_module._write_pqs_source_modes_table(
+        source_mode_table_io,
+        source_shell_mode_inventory,
+    )
+    source_mode_table_lines =
+        split(chomp(String(take!(source_mode_table_io))), '\n')
+    @test length(source_mode_table_lines) ==
+          source_shell_mode_inventory.source_mode_count + 1
+    @test split(source_mode_table_lines[1], '\t') ==
+          collect(source_metadata_contract.source_modes_header)
+    @test !occursin("ray_id", source_mode_table_lines[1])
+    shell_realized_source_mode_fields =
+        split(source_mode_table_lines[33], '\t')
+    @test shell_realized_source_mode_fields[1:4] ==
+          ["3", "1", "regular_shared_molecular_shell_1", "source_mode:3:1,1,1"]
+    @test shell_realized_source_mode_fields[5:7] == ["1", "1", "1"]
+    @test shell_realized_source_mode_fields[8:10] == ["1", "1", "1"]
+    @test shell_realized_source_mode_fields[8:10] != ["10", "20", "30"]
+    @test shell_realized_source_mode_fields[11] ==
+          "native_shell_realized_boundary_source_mode"
+    @test shell_realized_source_mode_fields[12] ==
+          "native_boundary_source_mode_tuple"
+    @test shell_realized_source_mode_fields[19:21] ==
+          ["unavailable", "unavailable", "unavailable"]
+    @test shell_realized_source_mode_fields[22:26] ==
+          ["false", "false", "false", "false", "false"]
+
     centered_source_shell_mode_inventory =
         metrics_module._pqs_current_route_source_shell_mode_inventory(
             _synthetic_fixed_side_inventory(;

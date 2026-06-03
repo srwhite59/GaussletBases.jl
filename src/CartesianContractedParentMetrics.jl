@@ -10410,6 +10410,254 @@ function _pqs_current_route_source_shell_mode_inventory(
     )
 end
 
+"""
+    _pqs_source_metadata_export_contract()
+
+Private source metadata sidecar contract for `source_shells` and
+`source_modes`.
+
+The tables export construction-native provenance only. `source_shells` rows
+identify source boxes/shells and their source-axis metadata. `source_modes`
+rows identify native source functions by `(source_shell_id, ix, iy, iz)`. For
+shell-realized PQS, `source_axis_indices` are those local native source-mode
+coordinates, not parent lattice coordinates. These labels are not
+fixed-column-to-source-mode decomposition relations, do not define `ray_id`,
+and do not carry relation weights or spans.
+"""
+function _pqs_source_metadata_export_contract()
+    return (
+        schema_version = :pqs_source_shell_modes_private_v1,
+        status = :private_source_metadata_export_contract,
+        source_shells_header = (
+            "source_shell_id",
+            "unit_index",
+            "unit_label",
+            "unit_category",
+            "unit_kind",
+            "retained_start",
+            "retained_stop",
+            "source_shell_label",
+            "source_shell_status",
+            "construction_kind",
+            "axis_kind_x",
+            "axis_kind_y",
+            "axis_kind_z",
+            "axis_start_x",
+            "axis_start_y",
+            "axis_start_z",
+            "axis_stop_x",
+            "axis_stop_y",
+            "axis_stop_z",
+            "fixed_axis_index_x",
+            "fixed_axis_index_y",
+            "fixed_axis_index_z",
+            "contracted_dim_x",
+            "contracted_dim_y",
+            "contracted_dim_z",
+            "source_mode_count",
+            "source_mode_ordering",
+            "center_definition",
+            "center_status",
+            "lowdin_correction_applied",
+            "shell_label_status",
+            "ray_label_status",
+            "radial_order_status",
+        ),
+        source_modes_header = (
+            "source_shell_id",
+            "mode_index",
+            "unit_label",
+            "native_source_id_label",
+            "local_axis_x",
+            "local_axis_y",
+            "local_axis_z",
+            "source_axis_x",
+            "source_axis_y",
+            "source_axis_z",
+            "source_mode_status",
+            "source_axis_tuple_status",
+            "center_x",
+            "center_y",
+            "center_z",
+            "center_definition",
+            "center_status",
+            "lowdin_correction_applied",
+            "shell_label_status",
+            "ray_label_status",
+            "radial_order_status",
+            "inferred_from_centers",
+            "inferred_from_nearest_grid",
+            "inferred_from_support_order",
+            "inferred_from_support_indices",
+            "inferred_from_raw_to_final_support",
+        ),
+        label_semantics = :construction_native_identifiers_not_relations,
+        shell_realized_pqs_source_axis_indices =
+            :local_native_source_mode_coordinates,
+        repo_ray_id_policy = :not_exported,
+        relation_weight_span_policy = :not_in_source_metadata_tables,
+        retained_weight_ida_division = :forbidden,
+        route_operator_public_adoption = :forbidden,
+    )
+end
+
+function _pqs_source_metadata_export_string(value)
+    return isnothing(value) ? "" : string(value)
+end
+
+function _pqs_source_metadata_export_tsv_row(io, values)
+    println(io, join(_pqs_source_metadata_export_string.(values), '\t'))
+    return nothing
+end
+
+function _pqs_source_metadata_export_validate_inventory(source_shell_mode_inventory)
+    source_shell_mode_inventory.object_kind ==
+        :pqs_current_route_source_shell_mode_inventory || throw(
+        ArgumentError("source metadata export requires _pqs_current_route_source_shell_mode_inventory output"),
+    )
+    diagnostics = source_shell_mode_inventory.diagnostics
+    !diagnostics.inferred_from_centers || throw(
+        ArgumentError("source metadata export cannot include center-inferred labels"),
+    )
+    !diagnostics.inferred_from_nearest_grid || throw(
+        ArgumentError("source metadata export cannot include nearest-grid-inferred labels"),
+    )
+    !diagnostics.inferred_from_support_order || throw(
+        ArgumentError("source metadata export cannot include support-order-inferred labels"),
+    )
+    !diagnostics.inferred_from_support_indices || throw(
+        ArgumentError("source metadata export cannot include support-index-inferred labels"),
+    )
+    !diagnostics.inferred_from_raw_to_final_support || throw(
+        ArgumentError("source metadata export cannot include raw_to_final-inferred labels"),
+    )
+    !diagnostics.retained_weight_or_ida_division || throw(
+        ArgumentError("source metadata export cannot include retained-weight or IDA division"),
+    )
+    !diagnostics.route_construction_changed || throw(
+        ArgumentError("source metadata export cannot change route construction"),
+    )
+    !diagnostics.packet_adoption || throw(
+        ArgumentError("source metadata export cannot adopt packet/fixed-block behavior"),
+    )
+    !diagnostics.qwhamiltonian_changed || throw(
+        ArgumentError("source metadata export cannot change QW/Hamiltonian behavior"),
+    )
+    !diagnostics.public_default_consumes || throw(
+        ArgumentError("source metadata export cannot change public/default routing"),
+    )
+    return nothing
+end
+
+function _write_pqs_source_shells_table(io::IO, source_shell_mode_inventory)
+    _pqs_source_metadata_export_validate_inventory(source_shell_mode_inventory)
+    contract = _pqs_source_metadata_export_contract()
+    source_shells = source_shell_mode_inventory.source_shells
+    _pqs_source_metadata_export_tsv_row(io, contract.source_shells_header)
+    for index in eachindex(source_shells.source_shell_ids)
+        _pqs_source_metadata_export_tsv_row(
+            io,
+            (
+                source_shells.source_shell_ids[index],
+                source_shells.unit_indices[index],
+                source_shells.unit_labels[index],
+                source_shells.unit_categories[index],
+                source_shells.unit_kinds[index],
+                source_shells.retained_starts[index],
+                source_shells.retained_stops[index],
+                source_shells.source_shell_labels[index],
+                source_shells.source_shell_statuses[index],
+                source_shells.construction_kinds[index],
+                source_shells.axis_kinds[index, 1],
+                source_shells.axis_kinds[index, 2],
+                source_shells.axis_kinds[index, 3],
+                source_shells.axis_starts[index, 1],
+                source_shells.axis_starts[index, 2],
+                source_shells.axis_starts[index, 3],
+                source_shells.axis_stops[index, 1],
+                source_shells.axis_stops[index, 2],
+                source_shells.axis_stops[index, 3],
+                source_shells.fixed_axis_indices[index, 1],
+                source_shells.fixed_axis_indices[index, 2],
+                source_shells.fixed_axis_indices[index, 3],
+                source_shells.contracted_dims[index, 1],
+                source_shells.contracted_dims[index, 2],
+                source_shells.contracted_dims[index, 3],
+                source_shells.source_mode_counts[index],
+                source_shells.source_mode_orderings[index],
+                source_shells.center_definitions[index],
+                source_shells.center_statuses[index],
+                source_shells.lowdin_correction_applied[index],
+                source_shells.shell_label_statuses[index],
+                source_shells.ray_label_statuses[index],
+                source_shells.radial_order_statuses[index],
+            ),
+        )
+    end
+    return nothing
+end
+
+function _write_pqs_source_shells_table(
+    path::AbstractString,
+    source_shell_mode_inventory,
+)
+    open(path, "w") do io
+        _write_pqs_source_shells_table(io, source_shell_mode_inventory)
+    end
+    return nothing
+end
+
+function _write_pqs_source_modes_table(io::IO, source_shell_mode_inventory)
+    _pqs_source_metadata_export_validate_inventory(source_shell_mode_inventory)
+    contract = _pqs_source_metadata_export_contract()
+    source_modes = source_shell_mode_inventory.source_modes
+    _pqs_source_metadata_export_tsv_row(io, contract.source_modes_header)
+    for index in eachindex(source_modes.source_shell_ids)
+        _pqs_source_metadata_export_tsv_row(
+            io,
+            (
+                source_modes.source_shell_ids[index],
+                source_modes.mode_indices[index],
+                source_modes.unit_labels[index],
+                source_modes.native_source_id_labels[index],
+                source_modes.local_axis_function_indices[index, 1],
+                source_modes.local_axis_function_indices[index, 2],
+                source_modes.local_axis_function_indices[index, 3],
+                source_modes.source_axis_indices[index, 1],
+                source_modes.source_axis_indices[index, 2],
+                source_modes.source_axis_indices[index, 3],
+                source_modes.source_mode_statuses[index],
+                source_modes.source_axis_tuple_statuses[index],
+                source_modes.center_coordinates[index, 1],
+                source_modes.center_coordinates[index, 2],
+                source_modes.center_coordinates[index, 3],
+                source_modes.center_definitions[index],
+                source_modes.center_statuses[index],
+                source_modes.lowdin_correction_applied[index],
+                source_modes.shell_label_statuses[index],
+                source_modes.ray_label_statuses[index],
+                source_modes.radial_order_statuses[index],
+                source_modes.inferred_from_centers[index],
+                source_modes.inferred_from_nearest_grid[index],
+                source_modes.inferred_from_support_order[index],
+                source_modes.inferred_from_support_indices[index],
+                source_modes.inferred_from_raw_to_final_support[index],
+            ),
+        )
+    end
+    return nothing
+end
+
+function _write_pqs_source_modes_table(
+    path::AbstractString,
+    source_shell_mode_inventory,
+)
+    open(path, "w") do io
+        _write_pqs_source_modes_table(io, source_shell_mode_inventory)
+    end
+    return nothing
+end
+
 function _pqs_current_route_fixed_column_source_relation_inventory(
     inventory;
     provenance = (;),
