@@ -16454,6 +16454,79 @@ function _pqs_component_route_smoke_print_fields(io, record, fields)
     end
 end
 
+function _write_pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+    io::IO,
+    readiness,
+)
+    readiness.object_kind ==
+        :pqs_pqs_product_private_source_box_route_adapter_readiness_summary ||
+        throw(
+            ArgumentError("private route-adapter readiness writer requires _pqs_pqs_product_private_source_box_route_adapter_readiness_summary output"),
+        )
+
+    println(io, "[private_route_adapter_readiness]")
+    _pqs_component_route_smoke_print_fields(
+        io,
+        readiness,
+        (
+            :status,
+            :ready_for_next_private_adapter_pass,
+            :missing_required_pieces,
+            :missing_optional_pieces,
+            :no_go_violations,
+            :pair_factor_normalization_modes,
+        ),
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "authority_available_modes",
+        readiness.ida_source_box_electron_electron.authority_comparison.available_modes,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "authority_skip_reasons",
+        readiness.ida_source_box_electron_electron.authority_comparison.skip_reasons,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "authority_comparison_accounted_for",
+        readiness.ida_source_box_electron_electron.authority_comparison.accounted_for,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "timing_allocation_available",
+        readiness.timing_allocation.available,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "lanes_remain_separate",
+        readiness.diagnostics.lanes_remain_separate,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "source_box_ida_and_mwg_residual_same_algorithm",
+        readiness.diagnostics.source_box_ida_and_mwg_residual_same_algorithm,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "public_default_consumes",
+        readiness.diagnostics.public_default_consumes,
+    )
+    _pqs_component_route_smoke_print_kv(
+        io,
+        "construction_behavior_changed",
+        readiness.diagnostics.construction_behavior_changed,
+    )
+    for key in keys(readiness.no_go_flags)
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "no_go.$key",
+            getproperty(readiness.no_go_flags, key),
+        )
+    end
+    return readiness
+end
+
 function _write_pqs_pqs_product_component_route_smoke_report(io::IO, report)
     report.object_kind == :pqs_pqs_product_component_route_smoke_report_adapter ||
         throw(
@@ -16542,6 +16615,16 @@ function _write_pqs_pqs_product_component_route_smoke_report(io::IO, report)
         io,
         report.lane_boundaries,
         keys(report.lane_boundaries),
+    )
+    println(io)
+
+    readiness =
+        _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            report,
+        )
+    _write_pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+        io,
+        readiness,
     )
     return report
 end

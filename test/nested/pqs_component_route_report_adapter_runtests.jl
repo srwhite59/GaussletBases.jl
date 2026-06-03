@@ -583,9 +583,40 @@ using GaussletBases
     @test occursin("[source_box_pqs_ida_component_smoke.raw_weighted]", text)
     @test occursin("[final_residual_mwg_supplement_component_facts]", text)
     @test occursin("[lane_boundaries]", text)
+    @test occursin("[private_route_adapter_readiness]", text)
     @test occursin("status\tprivate_summary_only", text)
     @test occursin("source_unit_label_status\texplicit_route_descriptor_unit_keys", text)
     @test occursin("residual_nucleus_indices\t[1, 1, 1, 2, 2, 2]", text)
+    @test occursin("ready_for_next_private_adapter_pass\ttrue", text)
+    @test occursin("missing_required_pieces\t()", text)
+    @test occursin("missing_optional_pieces\t(:cr2_sidecar_schema,)", text)
+    @test occursin("no_go_violations\t()", text)
+    @test occursin(
+        "pair_factor_normalization_modes\t(:density_normalized, :raw_weighted)",
+        text,
+    )
+    @test occursin("authority_available_modes\t(:density_normalized,)", text)
+    @test occursin(
+        "authority_skip_reasons\t(:density_normalized_authority_only,)",
+        text,
+    )
+    @test occursin("authority_comparison_accounted_for\ttrue", text)
+    @test occursin("timing_allocation_available\ttrue", text)
+    @test occursin("lanes_remain_separate\ttrue", text)
+    @test occursin(
+        "source_box_ida_and_mwg_residual_same_algorithm\tfalse",
+        text,
+    )
+    @test occursin("public_default_consumes\tfalse", text)
+    @test occursin("construction_behavior_changed\tfalse", text)
+    @test occursin("no_go.public_default_behavior\tfalse", text)
+    @test occursin(
+        "no_go.packet_fixed_block_qw_hamiltonian_adoption\tfalse",
+        text,
+    )
+    @test occursin("no_go.retained_weight_division\tfalse", text)
+    @test occursin("no_go.owner_shell_ray_inference\tfalse", text)
+    @test occursin("no_go.cr2_science_status_changed\tfalse", text)
 
     fixed_side_metadata =
         metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
