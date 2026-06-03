@@ -739,6 +739,8 @@ using GaussletBases
               3 3 3
               24 34 54
           ]
+    @test source_shell_mode_inventory.source_shells.axis_starts[3, :] == [10, 20, 30]
+    @test source_shell_mode_inventory.source_shells.axis_stops[3, :] == [24, 34, 54]
     @test source_shell_mode_inventory.source_shells.fixed_axis_indices ==
           [
               1 0 0
@@ -824,6 +826,12 @@ using GaussletBases
           [3, 3, 3]
     @test source_shell_mode_inventory.source_modes.source_axis_indices[32:38, :] ==
           source_shell_mode_inventory.source_modes.local_axis_function_indices[32:38, :]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[32, :] ==
+          [1, 1, 1]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[33, :] ==
+          [1, 1, 5]
+    @test source_shell_mode_inventory.source_modes.source_axis_indices[32, :] !=
+          source_shell_mode_inventory.source_shells.axis_starts[3, :]
     @test all(
         ==(:native_product_doside_source_mode),
         source_shell_mode_inventory.source_modes.source_mode_statuses[1:4],
@@ -1077,6 +1085,18 @@ using GaussletBases
           0
     @test sidecar_with_source_shell_modes.diagnostics.source_shell_mode_shell_realized_pqs_unavailable_column_count ==
           0
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.source_shells.unit_categories ==
+          [:product_doside, :support_dense, :shell_realized_pqs_fixture]
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.covered_unit_categories ==
+          (:product_doside, :support_dense, :shell_realized_pqs_fixture)
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.diagnostics.product_doside_source_mode_count ==
+          4
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.diagnostics.support_dense_source_mode_count ==
+          27
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.diagnostics.shell_realized_pqs_source_mode_count ==
+          7
+    @test sidecar_with_source_shell_modes.source_shell_mode_inventory.diagnostics.total_unavailable_column_count ==
+          0
 
     source_shell_mode_io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
@@ -1093,12 +1113,32 @@ using GaussletBases
         "center_status\tunavailable_missing_native_comx_center_facts",
         source_shell_mode_text,
     )
+    @test occursin(
+        "covered_unit_categories\t(:product_doside, :support_dense, :shell_realized_pqs_fixture)",
+        source_shell_mode_text,
+    )
+    @test occursin(
+        "non_product_source_mode_status\tnative_non_product_source_shell_mode_labels",
+        source_shell_mode_text,
+    )
+    @test occursin(
+        "source_mode_label_status\tnative_source_mode_tuple_labels_shell_ray_radial_unavailable",
+        source_shell_mode_text,
+    )
     @test occursin("product_doside_only\tfalse", source_shell_mode_text)
+    @test occursin("product_doside_source_shell_count\t1", source_shell_mode_text)
+    @test occursin("product_doside_source_mode_count\t4", source_shell_mode_text)
+    @test occursin("support_dense_source_shell_count\t1", source_shell_mode_text)
+    @test occursin("support_dense_source_mode_count\t27", source_shell_mode_text)
     @test occursin("support_dense_unavailable_column_count\t0", source_shell_mode_text)
+    @test occursin("shell_realized_pqs_source_shell_count\t1", source_shell_mode_text)
+    @test occursin("shell_realized_pqs_source_mode_count\t7", source_shell_mode_text)
     @test occursin(
         "shell_realized_pqs_unavailable_column_count\t0",
         source_shell_mode_text,
     )
+    @test occursin("total_unavailable_unit_count\t0", source_shell_mode_text)
+    @test occursin("total_unavailable_column_count\t0", source_shell_mode_text)
     @test occursin("inferred_from_centers\tfalse", source_shell_mode_text)
     @test occursin("inferred_from_nearest_grid\tfalse", source_shell_mode_text)
     @test occursin("inferred_from_support_order\tfalse", source_shell_mode_text)

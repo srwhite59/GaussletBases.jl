@@ -15662,8 +15662,43 @@ function _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
         )
         _pqs_component_route_smoke_print_kv(
             io,
+            "covered_unit_categories",
+            source_shell_modes.covered_unit_categories,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "non_product_source_mode_status",
+            source_shell_modes.non_product_source_mode_status,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "source_mode_label_status",
+            source_shell_modes.source_mode_label_status,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
             "product_doside_only",
             source_shell_modes.status == :product_doside_source_shell_modes_only,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "product_doside_source_shell_count",
+            source_shell_modes.diagnostics.product_doside_source_shell_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "product_doside_source_mode_count",
+            source_shell_modes.diagnostics.product_doside_source_mode_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "support_dense_source_shell_count",
+            source_shell_modes.diagnostics.support_dense_source_shell_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "support_dense_source_mode_count",
+            source_shell_modes.diagnostics.support_dense_source_mode_count,
         )
         _pqs_component_route_smoke_print_kv(
             io,
@@ -15672,8 +15707,28 @@ function _write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
         )
         _pqs_component_route_smoke_print_kv(
             io,
+            "shell_realized_pqs_source_shell_count",
+            source_shell_modes.diagnostics.shell_realized_pqs_source_shell_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "shell_realized_pqs_source_mode_count",
+            source_shell_modes.diagnostics.shell_realized_pqs_source_mode_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
             "shell_realized_pqs_unavailable_column_count",
             source_shell_modes.diagnostics.shell_realized_pqs_unavailable_column_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "total_unavailable_unit_count",
+            source_shell_modes.diagnostics.total_unavailable_unit_count,
+        )
+        _pqs_component_route_smoke_print_kv(
+            io,
+            "total_unavailable_column_count",
+            source_shell_modes.diagnostics.total_unavailable_column_count,
         )
         _pqs_component_route_smoke_print_kv(
             io,
