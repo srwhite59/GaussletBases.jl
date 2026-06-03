@@ -474,6 +474,7 @@ function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end
 function write_bond_aligned_diatomic_points3d end
 function write_bond_aligned_diatomic_plane_projection end
+function _qwrg_bond_aligned_axis_bundles end
 function mapped_ordinary_one_body_operators end
 function mapped_cartesian_hydrogen_energy end
 function ordinary_sho_hamiltonian end
