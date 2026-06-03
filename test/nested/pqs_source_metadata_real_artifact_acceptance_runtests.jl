@@ -54,3 +54,39 @@ include("pqs_source_metadata_real_artifact_acceptance_support.jl")
         end
     end
 end
+
+@testset "Be2 strict-PQS q5 source metadata explicit export wrapper" begin
+    mktempdir() do output_dir
+        @test_throws ArgumentError _be2_pqs_q5_source_metadata_export_tables(
+            "",
+            output_dir,
+        )
+        @test_throws ArgumentError _be2_pqs_q5_source_metadata_export_tables(
+            joinpath(output_dir, "missing_artifact"),
+            "",
+        )
+        @test_throws ArgumentError _be2_pqs_q5_source_metadata_export_tables(
+            joinpath(output_dir, "missing_artifact"),
+            output_dir;
+            table_prefix = "",
+        )
+
+        result = _be2_pqs_q5_source_metadata_export_tables(
+            joinpath(output_dir, "missing_artifact"),
+            output_dir,
+        )
+        @test result.output_dir == abspath(output_dir)
+        @test result.source_shells_table_path ==
+              joinpath(abspath(output_dir), "be2_strict_pqs_q5_source_shells.tsv")
+        @test result.source_modes_table_path ==
+              joinpath(abspath(output_dir), "be2_strict_pqs_q5_source_modes.tsv")
+        @test "source_artifact_available" in result.failures
+        @test get(result.row_dict, "source_artifact_available", true) === false
+        @test !isfile(result.source_shells_table_path)
+        @test !isfile(result.source_modes_table_path)
+        @test !occursin("/Users/srw", result.source_shells_table_path)
+        @test !occursin("/Users/srwhite", result.source_shells_table_path)
+        @test !occursin("/Users/srw", result.source_modes_table_path)
+        @test !occursin("/Users/srwhite", result.source_modes_table_path)
+    end
+end

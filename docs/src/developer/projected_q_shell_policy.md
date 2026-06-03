@@ -929,6 +929,11 @@ repo contract; durable source-metadata tests and probes should not grow
 machine-specific defaults such as `/Users/srw/...` or `/Users/srwhite/...`.
 With the environment variable absent, normal test runs report this test as
 skipped/broken and do not require the artifact.
+The tracked helper
+`_be2_pqs_q5_source_metadata_export_tables(artifact_dir, output_dir)` in the
+same acceptance support file is the current explicit-argument export wrapper
+for source-shell/source-mode TSV tables. It delegates to the repo-owned table
+writers and requires caller-supplied artifact and output directories.
 When enabled, the test checks source-shell/source-mode table headers, counts,
 category counts, inference flags, shell/ray/radial status fields, and the
 product/doside fixed-column source-relation fact that those relations are

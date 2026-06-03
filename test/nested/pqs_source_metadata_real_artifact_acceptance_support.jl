@@ -485,3 +485,44 @@ function _be2_pqs_q5_source_metadata_acceptance(
         failures = copy(checks.failures),
     )
 end
+
+function _be2_pqs_q5_source_metadata_export_tables(
+    artifact_dir::AbstractString,
+    output_dir::AbstractString;
+    table_prefix::AbstractString = "be2_strict_pqs_q5",
+)
+    artifact_dir_text = strip(String(artifact_dir))
+    output_dir_text = strip(String(output_dir))
+    table_prefix_text = strip(String(table_prefix))
+    isempty(artifact_dir_text) && throw(
+        ArgumentError("source metadata export wrapper requires an explicit artifact_dir"),
+    )
+    isempty(output_dir_text) && throw(
+        ArgumentError("source metadata export wrapper requires an explicit output_dir"),
+    )
+    isempty(table_prefix_text) && throw(
+        ArgumentError("source metadata export wrapper requires a nonempty table_prefix"),
+    )
+
+    output_dir_abs = abspath(output_dir_text)
+    mkpath(output_dir_abs)
+    source_shells_table_path =
+        joinpath(output_dir_abs, "$(table_prefix_text)_source_shells.tsv")
+    source_modes_table_path =
+        joinpath(output_dir_abs, "$(table_prefix_text)_source_modes.tsv")
+    acceptance = _be2_pqs_q5_source_metadata_acceptance(
+        artifact_dir_text;
+        source_shells_table_path,
+        source_modes_table_path,
+    )
+    return (
+        artifact_dir = abspath(artifact_dir_text),
+        output_dir = output_dir_abs,
+        source_shells_table_path = source_shells_table_path,
+        source_modes_table_path = source_modes_table_path,
+        rows = acceptance.rows,
+        row_dict = acceptance.row_dict,
+        failures = acceptance.failures,
+        acceptance = acceptance,
+    )
+end
