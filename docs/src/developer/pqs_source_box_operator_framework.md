@@ -1233,6 +1233,24 @@ for full Be2 q5/CR2 artifacts are still `:unavailable` in this checkpoint;
 full shell/source-unit labels need explicit repo export before shell-start
 contraction becomes a contract.
 
+The tracked private driver `bin/pqs_source_box_route_driver.jl` is an
+old-style development spine for the second migration. It follows the simple
+`nestpgg.jl` pattern: plain `using` statements, top-level defaults, optional
+config include, simple `name=value` overrides, and straight-line printed
+diagnostics. Its first checkpoint is metadata/reporting only. It names the
+intended stages from system metadata and recipe metadata through parent
+description, retained-unit partitioning, pair inventory, and final retained
+linear-algebra plan, but it does not build a Hamiltonian or adopt a public
+route. The default dry run writes no artifact; optional JLD2/TSV output is a
+compact report of the same metadata.
+
+The driver is deliberately private scaffolding. It records the source-box-first
+route shape, retained ranges, pair-family helper names, density-normalized or
+raw-weighted pair-factor mode, and no-go diagnostics. It must not be treated as
+packet/fixed-block/QW/Hamiltonian adoption, MWG/IDA semantic change,
+retained-weight division, repo-side `ray_id`, ECP behavior, CR2 science status,
+or a shell/support-local algorithm.
+
 The repo-owned private writer
 `_write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(...)`
 now emits that CR2 sidecar schema text report. The ignored Be2/PQS smoke
