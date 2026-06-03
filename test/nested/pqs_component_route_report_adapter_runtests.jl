@@ -496,6 +496,7 @@ using GaussletBases
     @test readiness.required_input_availability.final_residual_mwg_owner_metadata
     @test readiness.required_input_availability.final_residual_mwg_authority
     @test readiness.required_input_availability.authority_comparison_accounted_for
+    @test readiness.required_input_availability.cr2_source_metadata_sidecar
     @test readiness.optional_input_availability.timing_allocation_fields
     @test readiness.optional_input_availability.dense_parent_ida_authority_comparison
     @test readiness.ida_source_box_electron_electron.authority_comparison.available_modes ==
@@ -517,6 +518,8 @@ using GaussletBases
     @test !readiness.diagnostics.builds_route_matrices
     @test !readiness.diagnostics.construction_behavior_changed
     @test readiness.diagnostics.lanes_remain_separate
+    @test !readiness.diagnostics.cr2_source_metadata_sidecar_required
+    @test !readiness.diagnostics.cr2_source_metadata_sidecar_available
 
     readiness_with_sidecar =
         metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
@@ -531,6 +534,35 @@ using GaussletBases
     )
     @test isempty(readiness_with_sidecar.no_go_violations)
     @test readiness_with_sidecar.ready_for_next_private_adapter_pass
+    @test !readiness_with_sidecar.diagnostics.cr2_source_metadata_sidecar_required
+    @test !readiness_with_sidecar.diagnostics.cr2_source_metadata_sidecar_available
+
+    cr2_required_readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            report;
+            require_source_metadata_sidecar = true,
+        )
+    @test cr2_required_readiness.status ==
+          :private_route_adapter_inputs_incomplete
+    @test !cr2_required_readiness.ready_for_next_private_adapter_pass
+    @test cr2_required_readiness.missing_required_pieces ==
+          (:cr2_source_metadata_sidecar,)
+    @test cr2_required_readiness.cr2_sidecar.source_metadata_sidecar_required
+    @test !cr2_required_readiness.cr2_sidecar.source_metadata_sidecar_available
+
+    cr2_required_schema_only_readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            report;
+            cr2_sidecar = sidecar,
+            require_source_metadata_sidecar = true,
+        )
+    @test cr2_required_schema_only_readiness.status ==
+          :private_route_adapter_inputs_incomplete
+    @test !cr2_required_schema_only_readiness.ready_for_next_private_adapter_pass
+    @test cr2_required_schema_only_readiness.missing_required_pieces ==
+          (:cr2_source_metadata_sidecar,)
+    @test cr2_required_schema_only_readiness.cr2_sidecar.available
+    @test !cr2_required_schema_only_readiness.cr2_sidecar.source_metadata_sidecar_available
 
     sidecar_io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(
@@ -1364,6 +1396,21 @@ using GaussletBases
           7
     @test sidecar_with_source_shell_modes.source_shell_mode_inventory.diagnostics.total_unavailable_column_count ==
           0
+
+    cr2_required_with_source_metadata_readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            source_shell_report;
+            cr2_sidecar = sidecar_with_source_shell_modes,
+            require_source_metadata_sidecar = true,
+        )
+    @test cr2_required_with_source_metadata_readiness.status ==
+          :private_route_adapter_inputs_ready
+    @test cr2_required_with_source_metadata_readiness.ready_for_next_private_adapter_pass
+    @test isempty(cr2_required_with_source_metadata_readiness.missing_required_pieces)
+    @test cr2_required_with_source_metadata_readiness.required_input_availability.cr2_source_metadata_sidecar
+    @test cr2_required_with_source_metadata_readiness.cr2_sidecar.source_metadata_sidecar_required
+    @test cr2_required_with_source_metadata_readiness.cr2_sidecar.source_metadata_sidecar_available
+    @test cr2_required_with_source_metadata_readiness.cr2_sidecar.source_shell_mode_inventory_available
 
     source_shell_mode_io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(

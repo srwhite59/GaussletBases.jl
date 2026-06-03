@@ -15386,6 +15386,8 @@ end
 function _pqs_component_route_smoke_sidecar_inference_flags(cr2_sidecar)
     isnothing(cr2_sidecar) && return (
         available = false,
+        source_metadata_sidecar_available = false,
+        source_shell_mode_inventory_available = false,
         label_reconstruction_from_centers = false,
         nearest_grid_or_center_label_heuristic = false,
         source_shell_mode_inference = false,
@@ -15410,6 +15412,7 @@ function _pqs_component_route_smoke_sidecar_inference_flags(cr2_sidecar)
         fixed_side.diagnostics.retained_weight_or_ida_division
 
     source_shell_modes = cr2_sidecar.source_shell_mode_inventory
+    source_shell_mode_inventory_available = !isnothing(source_shell_modes)
     source_shell_mode_inference =
         !isnothing(source_shell_modes) &&
         (
@@ -15428,6 +15431,10 @@ function _pqs_component_route_smoke_sidecar_inference_flags(cr2_sidecar)
 
     return (
         available = true,
+        source_metadata_sidecar_available =
+            source_shell_mode_inventory_available,
+        source_shell_mode_inventory_available =
+            source_shell_mode_inventory_available,
         label_reconstruction_from_centers =
             cr2_sidecar.labels.label_reconstruction_from_centers ||
             fixed_side_label_reconstruction,
@@ -15445,6 +15452,7 @@ end
 function _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
     report;
     cr2_sidecar = nothing,
+    require_source_metadata_sidecar::Bool = false,
 )
     report.object_kind ==
         :pqs_pqs_product_component_route_smoke_report_adapter || throw(
@@ -15505,6 +15513,9 @@ function _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
             report.diagnostics.final_residual_mwg_authority_error_zero,
         authority_comparison_accounted_for =
             authority_comparison_accounted_for,
+        cr2_source_metadata_sidecar =
+            !require_source_metadata_sidecar ||
+            sidecar_flags.source_metadata_sidecar_available,
     )
     optional_input_availability = (
         cr2_sidecar_schema = !isnothing(cr2_sidecar),
@@ -15618,6 +15629,12 @@ function _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
         ),
         cr2_sidecar = (
             available = !isnothing(cr2_sidecar),
+            source_metadata_sidecar_required =
+                require_source_metadata_sidecar,
+            source_metadata_sidecar_available =
+                sidecar_flags.source_metadata_sidecar_available,
+            source_shell_mode_inventory_available =
+                sidecar_flags.source_shell_mode_inventory_available,
             inference_flags = sidecar_flags,
         ),
         timing_allocation = (
@@ -15640,6 +15657,10 @@ function _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
                 report.diagnostics.source_box_rows_all_finite_and_no_go_clear,
             source_box_algorithmic_path =
                 required_input_availability.source_box_algorithmic_path,
+            cr2_source_metadata_sidecar_required =
+                require_source_metadata_sidecar,
+            cr2_source_metadata_sidecar_available =
+                sidecar_flags.source_metadata_sidecar_available,
             authority_comparison_accounted_for =
                 authority_comparison_accounted_for,
             timing_allocation_fields_available =

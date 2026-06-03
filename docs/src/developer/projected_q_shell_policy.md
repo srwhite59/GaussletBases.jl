@@ -924,8 +924,11 @@ The source-shell/source-mode export contract is covered by a small opt-in
 real-artifact acceptance test. Set `BE2_PQS_Q5_ARTIFACT_DIR` to the Be2
 strict-PQS q5 CR2 artifact directory and run
 `test/nested/pqs_source_metadata_real_artifact_acceptance_runtests.jl` to check
-the current metadata surface. With the environment variable absent, normal
-test runs report this test as skipped/broken and do not require the artifact.
+the current metadata surface. This explicit artifact-dir input is the tracked
+repo contract; durable source-metadata tests and probes should not grow
+machine-specific defaults such as `/Users/srw/...` or `/Users/srwhite/...`.
+With the environment variable absent, normal test runs report this test as
+skipped/broken and do not require the artifact.
 When enabled, the test checks source-shell/source-mode table headers, counts,
 category counts, inference flags, shell/ray/radial status fields, and the
 product/doside fixed-column source-relation fact that those relations are
@@ -933,6 +936,17 @@ product-axis tuples rather than rays. It does not validate an operator,
 Hamiltonian, energy, CR2 science result, public/default route, retained-weight
 or IDA semantics, shell-realized relation weights/spans, or repo-side
 ray/cone/tail grouping.
+
+CR2-facing readiness may require this source metadata sidecar explicitly. The
+private route-adapter readiness helper keeps ordinary repo diagnostics
+optional by default, but callers that are preparing CR2-facing handoffs can
+request `require_source_metadata_sidecar = true`; in that mode, readiness
+fails closed unless the CR2 sidecar carries the source-shell/source-mode
+inventory. This requirement checks metadata availability only. It does not
+turn source metadata into final-column coefficient data and does not add
+repo-side `ray_id`, shell-realized relation weights or spans, route adoption,
+Hamiltonian behavior, public/default behavior, MWG/IDA changes, or a CR2
+science claim.
 
 The focused homonuclear-style fixture uses parent/bundle shape `(5,5,7)`, left
 PQS `(1:5,1:5,1:5)`, right PQS `(1:5,1:5,3:7)`, and a middle product slab at
