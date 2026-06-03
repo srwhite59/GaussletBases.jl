@@ -7,11 +7,15 @@ route_kind = :be2_pqs_source_box_development_spine
 atom_symbols = ("Be", "Be")
 nuclear_charges = (4, 4)
 atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
+radius = 15.0
 parent_axis_counts = (x = 9, y = 7, z = 9)
-parent_box = (x = (-15.0, 15.0), y = (-15.0, 15.0), z = (-17.0, 17.0))
 map_backend = :pgdg_localized_experimental
 
 q = 5
+reference_spacing = 1.0
+tail_spacing = 10.0
+q_to_core_spacing_rule = :standard_pqs_ns_equals_q
+core_spacing = nothing
 route_shape = (:pqs_left, :product, :pqs_right)
 product_body_rule = :centered_single_z_slab
 pqs_retained_rule = :boundary_comx_product_mode_selection
@@ -70,13 +74,28 @@ pair_factor_normalization in (:density_normalized, :raw_weighted) || throw(
     ArgumentError("pair_factor_normalization must be :density_normalized or :raw_weighted"),
 )
 
+standard_setup =
+    GaussletBases.CartesianContractedParentMetrics._pqs_standard_source_box_route_setup(
+        ;
+        nuclear_charges,
+        atom_locations,
+        q,
+        radius,
+        reference_spacing,
+        tail_spacing,
+        q_to_core_spacing_rule,
+        core_spacing,
+    )
+
 # 1. System metadata: physical labels and the parent box description.
 system_metadata = (
     atom_symbols = atom_symbols,
-    nuclear_charges = nuclear_charges,
-    atom_locations = atom_locations,
+    nuclear_charges = standard_setup.nuclear_charges,
+    atom_locations = standard_setup.atom_locations,
+    radius = standard_setup.radius,
     parent_axis_counts = parent_axis_counts,
-    parent_box = parent_box,
+    parent_box = standard_setup.parent_box,
+    parent_box_rule = standard_setup.parent_box_rule,
     map_backend = map_backend,
 )
 
@@ -84,6 +103,14 @@ system_metadata = (
 recipe_metadata = (
     route_kind = route_kind,
     q = q,
+    n_s = standard_setup.n_s,
+    core_cube_side = standard_setup.core_cube_side,
+    reference_spacing = standard_setup.reference_spacing,
+    tail_spacing = standard_setup.tail_spacing,
+    q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
+    core_spacing = standard_setup.core_spacing,
+    q_to_core_spacing_rule_status =
+        standard_setup.spacing.q_to_core_spacing_rule_status,
     route_shape = route_shape,
     product_body_rule = product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
@@ -110,12 +137,18 @@ route_skeleton =
 # 3. Parent description/construction: still described, not materialized here.
 parent_description = (
     status = :described_not_constructed,
+    standard_setup = standard_setup,
+    physical_parent_box = standard_setup.parent_box,
+    physical_parent_box_rule = standard_setup.parent_box_rule,
     axis_transform_status = :pending_repo_parent_constructor,
     one_dimensional_transforms = (:x_axis_transform, :y_axis_transform, :z_axis_transform),
     parent_lattice = :raw_product_box_parent_lattice,
     parent_axis_counts = route_skeleton.parent_axis_counts,
     source_boxes = route_skeleton.source_boxes,
-    pending_facts = route_skeleton.pending_facts,
+    pending_facts = (
+        route_skeleton.pending_facts...,
+        :parent_axis_counts_from_standard_parent_constructor,
+    ),
 )
 
 # 4. Product-type unit split: source boxes and source dimensions from the helper.
@@ -181,8 +214,27 @@ diagnostics = merge(
     route_skeleton.diagnostics,
     (
         source = :pqs_source_box_route_driver_skeleton,
+        standard_setup_helper =
+            :_pqs_standard_source_box_route_setup,
+        standard_setup_status = standard_setup.status,
+        standard_setup_diagnostics = standard_setup.diagnostics,
         route_skeleton_helper =
             :_pqs_pqs_product_source_box_route_skeleton,
+        n_s = standard_setup.n_s,
+        core_cube_side = standard_setup.core_cube_side,
+        core_cube_side_rule = standard_setup.core_cube_side_rule,
+        parent_box_rule = standard_setup.parent_box_rule,
+        parent_box = standard_setup.parent_box,
+        core_spacing = standard_setup.core_spacing,
+        mapping_s = standard_setup.mapping_s,
+        q_to_core_spacing_rule = standard_setup.q_to_core_spacing_rule,
+        q_to_core_spacing_rule_status =
+            standard_setup.spacing.q_to_core_spacing_rule_status,
+        q_to_core_spacing_provenance = standard_setup.spacing.provenance,
+        q_to_core_spacing_non_optimality_claim =
+            standard_setup.spacing.non_optimality_claim,
+        parent_axis_counts_status =
+            :manual_fixture_pending_standard_parent_constructor,
         output_representation = :retained_two_index_density_density,
         no_go_flags = no_go_flags,
         driver_builds_real_hamiltonian = false,
@@ -192,6 +244,7 @@ diagnostics = merge(
 report = (
     object_kind = :pqs_source_box_route_driver_skeleton_report,
     generated_at = string(now()),
+    standard_setup = standard_setup,
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
@@ -216,9 +269,13 @@ report = (
 println("PQS source-box route driver skeleton")
 @show route_kind
 @show q
+@show radius
 @show route_shape
 @show product_body_rule
 @show pair_factor_normalization
+@show standard_setup.n_s
+@show standard_setup.core_cube_side
+@show standard_setup.spacing.q_to_core_spacing_rule_status
 @show retained_counts
 @show retained_dimension
 
@@ -230,6 +287,27 @@ end
 _pqs_driver_print_section("recipe_metadata")
 for field in keys(recipe_metadata)
     _pqs_driver_print_kv(field, getproperty(recipe_metadata, field))
+end
+
+_pqs_driver_print_section("standard_setup")
+for field in (
+    :status,
+    :n_s,
+    :core_cube_side,
+    :parent_box,
+    :core_spacing,
+    :mapping_s,
+    :mapping_s_by_atom,
+    :q_to_core_spacing_rule,
+)
+    _pqs_driver_print_kv(field, getproperty(standard_setup, field))
+end
+for field in (
+    :q_to_core_spacing_rule_status,
+    :q_to_core_spacing_provenance,
+    :q_to_core_spacing_non_optimality_claim,
+)
+    _pqs_driver_print_kv(field, getproperty(standard_setup.diagnostics, field))
 end
 
 _pqs_driver_print_section("parent_description")
@@ -307,6 +385,14 @@ if save_tsv
                 "recipe_metadata",
                 field,
                 getproperty(recipe_metadata, field),
+            )
+        end
+        for field in keys(standard_setup.diagnostics)
+            _pqs_driver_write_tsv_row(
+                io,
+                "standard_setup_diagnostics",
+                field,
+                getproperty(standard_setup.diagnostics, field),
             )
         end
         for unit in retained_units

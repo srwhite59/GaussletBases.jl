@@ -1,5 +1,6 @@
 include("pqs_source_metadata_real_artifact_acceptance_runtests.jl")
 include("pqs_component_route_report_adapter_runtests.jl")
+include("pqs_standard_source_box_route_setup_runtests.jl")
 include("pqs_source_box_route_skeleton_runtests.jl")
 
 @testset "Cartesian nested face first primitive" begin

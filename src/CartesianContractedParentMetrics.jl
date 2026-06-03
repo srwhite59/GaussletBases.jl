@@ -12655,6 +12655,227 @@ function _source_box_axis_pair_terms_symmetric(
     ), 1:3)
 end
 
+function _pqs_standard_setup_charges(nuclear_charges)
+    charges = nuclear_charges isa Real ?
+        (Float64(nuclear_charges),) :
+        Tuple(Float64(charge) for charge in nuclear_charges)
+    !isempty(charges) || throw(
+        ArgumentError("PQS standard source-box route setup requires at least one nuclear charge"),
+    )
+    all(isfinite, charges) || throw(
+        ArgumentError("PQS standard source-box route setup nuclear charges must be finite"),
+    )
+    all(charge -> charge > 0.0, charges) || throw(
+        ArgumentError("PQS standard source-box route setup nuclear charges must be positive"),
+    )
+    return charges
+end
+
+function _pqs_standard_setup_atom_locations(atom_locations)
+    locations = Tuple(
+        begin
+            length(location) == 3 || throw(
+                ArgumentError("PQS standard source-box route setup atom locations must be 3-vectors"),
+            )
+            (Float64(location[1]), Float64(location[2]), Float64(location[3]))
+        end for location in atom_locations
+    )
+    !isempty(locations) || throw(
+        ArgumentError("PQS standard source-box route setup requires at least one atom location"),
+    )
+    all(location -> all(isfinite, location), locations) || throw(
+        ArgumentError("PQS standard source-box route setup atom locations must be finite"),
+    )
+    return locations
+end
+
+function _pqs_standard_setup_physical_parent_box(atom_locations, radius::Float64)
+    return (
+        x = (
+            minimum(location -> location[1], atom_locations) - radius,
+            maximum(location -> location[1], atom_locations) + radius,
+        ),
+        y = (
+            minimum(location -> location[2], atom_locations) - radius,
+            maximum(location -> location[2], atom_locations) + radius,
+        ),
+        z = (
+            minimum(location -> location[3], atom_locations) - radius,
+            maximum(location -> location[3], atom_locations) + radius,
+        ),
+    )
+end
+
+function _pqs_standard_setup_spacing(
+    nuclear_charges;
+    core_spacing,
+    reference_spacing::Float64,
+    tail_spacing::Float64,
+    q_to_core_spacing_rule::Symbol,
+)
+    if isnothing(core_spacing)
+        return (
+            core_spacing = nothing,
+            d = nothing,
+            mapping_s = nothing,
+            mapping_s_by_atom = nothing,
+            core_range_by_atom = nothing,
+            reference_spacing = reference_spacing,
+            tail_spacing = tail_spacing,
+            q_to_core_spacing_rule = q_to_core_spacing_rule,
+            q_to_core_spacing_rule_status =
+                :unavailable_no_documented_q_to_core_spacing_formula,
+            provenance = :pending_documented_standard_rule_or_explicit_override,
+            white_lindsey_formula_available_when_d_is_explicit = true,
+            non_optimality_claim = :not_claimed,
+            replaceable = true,
+        )
+    end
+
+    d_value = Float64(core_spacing)
+    isfinite(d_value) && d_value > 0.0 || throw(
+        ArgumentError("PQS standard source-box route setup core_spacing must be positive when provided"),
+    )
+    s_by_atom = Tuple(sqrt(d_value * charge) for charge in nuclear_charges)
+    core_ranges = Tuple(sqrt(d_value / charge) for charge in nuclear_charges)
+    same_charge = all(charge -> charge == first(nuclear_charges), nuclear_charges)
+    return (
+        core_spacing = d_value,
+        d = d_value,
+        mapping_s = same_charge ? first(s_by_atom) : nothing,
+        mapping_s_by_atom = s_by_atom,
+        core_range_by_atom = core_ranges,
+        reference_spacing = reference_spacing,
+        tail_spacing = tail_spacing,
+        q_to_core_spacing_rule = q_to_core_spacing_rule,
+        q_to_core_spacing_rule_status = :explicit_core_spacing_override,
+        provenance =
+            :explicit_core_spacing_with_white_lindsey_mapping_s_sqrt_dZ,
+        white_lindsey_formula_available_when_d_is_explicit = true,
+        non_optimality_claim = :not_claimed,
+        replaceable = true,
+    )
+end
+
+function _pqs_standard_source_box_route_setup(;
+    nuclear_charges,
+    atom_locations,
+    q::Integer,
+    radius,
+    reference_spacing::Real = 1.0,
+    tail_spacing::Real = 10.0,
+    q_to_core_spacing_rule::Symbol = :standard_pqs_ns_equals_q,
+    core_spacing = nothing,
+)
+    q_value = Int(q)
+    q_value >= 2 || throw(
+        ArgumentError("PQS standard source-box route setup requires q >= 2"),
+    )
+    radius_value = Float64(radius)
+    isfinite(radius_value) && radius_value > 0.0 || throw(
+        ArgumentError("PQS standard source-box route setup requires radius > 0"),
+    )
+    reference_spacing_value = Float64(reference_spacing)
+    isfinite(reference_spacing_value) && reference_spacing_value > 0.0 || throw(
+        ArgumentError("PQS standard source-box route setup requires reference_spacing > 0"),
+    )
+    tail_spacing_value = Float64(tail_spacing)
+    isfinite(tail_spacing_value) && tail_spacing_value > 0.0 || throw(
+        ArgumentError("PQS standard source-box route setup requires tail_spacing > 0"),
+    )
+
+    charges = _pqs_standard_setup_charges(nuclear_charges)
+    locations = _pqs_standard_setup_atom_locations(atom_locations)
+    length(charges) == length(locations) || throw(
+        DimensionMismatch("PQS standard source-box route setup charge and atom-location counts must match"),
+    )
+
+    n_s = q_value
+    core_cube_side = isodd(q_value) ? q_value : q_value + 1
+    parent_box = _pqs_standard_setup_physical_parent_box(
+        locations,
+        radius_value,
+    )
+    parent_box_lengths = (
+        x = parent_box.x[2] - parent_box.x[1],
+        y = parent_box.y[2] - parent_box.y[1],
+        z = parent_box.z[2] - parent_box.z[1],
+    )
+    spacing = _pqs_standard_setup_spacing(
+        charges;
+        core_spacing,
+        reference_spacing = reference_spacing_value,
+        tail_spacing = tail_spacing_value,
+        q_to_core_spacing_rule,
+    )
+    return (
+        object_kind = :pqs_standard_source_box_route_setup,
+        status = :private_development_setup,
+        nuclear_charges = charges,
+        atom_locations = locations,
+        atom_count = length(locations),
+        q = q_value,
+        n_s = n_s,
+        radius = radius_value,
+        core_cube_side = core_cube_side,
+        core_cube_side_rule =
+            :q_for_odd_q_q_plus_one_for_even_q,
+        parent_box = parent_box,
+        parent_box_lengths = parent_box_lengths,
+        parent_box_rule =
+            :minimal_axis_aligned_box_enclosing_radius_pads_around_atoms,
+        spacing = spacing,
+        core_spacing = spacing.core_spacing,
+        d = spacing.d,
+        mapping_s = spacing.mapping_s,
+        mapping_s_by_atom = spacing.mapping_s_by_atom,
+        reference_spacing = reference_spacing_value,
+        tail_spacing = tail_spacing_value,
+        q_to_core_spacing_rule = q_to_core_spacing_rule,
+        diagnostics = (
+            source = :pqs_standard_source_box_route_setup,
+            private_development_only = true,
+            production_route = false,
+            n_s_equals_q = true,
+            q = q_value,
+            n_s = n_s,
+            core_cube_side = core_cube_side,
+            core_cube_side_rule =
+                :q_for_odd_q_q_plus_one_for_even_q,
+            physical_parent_box_minimal_radius_pad = true,
+            parent_box_rule =
+                :minimal_axis_aligned_box_enclosing_radius_pads_around_atoms,
+            radius = radius_value,
+            atom_count = length(locations),
+            charges_positive = true,
+            atom_locations_finite = true,
+            q_to_core_spacing_rule = q_to_core_spacing_rule,
+            q_to_core_spacing_rule_status =
+                spacing.q_to_core_spacing_rule_status,
+            q_to_core_spacing_provenance = spacing.provenance,
+            q_to_core_spacing_non_optimality_claim =
+                spacing.non_optimality_claim,
+            q_to_core_spacing_replaceable = spacing.replaceable,
+            explicit_core_spacing_override_used = !isnothing(core_spacing),
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
 function _pqs_source_box_route_skeleton_axis_counts(parent_axis_counts)
     if parent_axis_counts isa NamedTuple
         all(axis -> hasproperty(parent_axis_counts, axis), (:x, :y, :z)) || throw(
