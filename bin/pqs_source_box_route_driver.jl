@@ -117,6 +117,13 @@ parent_axis_probe_constructed =
     isnothing(parent_axis_probe) ? false : parent_axis_probe.parent_axis_metadata_constructed
 parent_axis_probe_pending_facts =
     isnothing(parent_axis_probe) ? () : parent_axis_probe.pending_facts
+route_axis_counts =
+    GaussletBases.CartesianContractedParentMetrics._pqs_source_box_route_parent_axis_counts_for_skeleton(
+        standard_setup,
+        parent_axis_readiness,
+        parent_axis_probe;
+        manual_parent_axis_counts = parent_axis_counts,
+    )
 
 # 1. System metadata: physical labels and the parent box description.
 system_metadata = (
@@ -124,9 +131,12 @@ system_metadata = (
     nuclear_charges = standard_setup.nuclear_charges,
     atom_locations = standard_setup.atom_locations,
     radius = standard_setup.radius,
-    parent_axis_counts = parent_axis_counts,
+    manual_parent_axis_counts = parent_axis_counts,
+    parent_axis_counts = route_axis_counts.parent_axis_counts,
     parent_axis_counts_status =
-        parent_axis_readiness.parent_axis_counts_status,
+        route_axis_counts.status,
+    parent_axis_counts_source =
+        route_axis_counts.parent_axis_counts_source,
     parent_box = standard_setup.parent_box,
     parent_box_rule = standard_setup.parent_box_rule,
     map_backend = map_backend,
@@ -146,6 +156,7 @@ recipe_metadata = (
         standard_setup.spacing.q_to_core_spacing_rule_status,
     probe_parent_axis_construction = probe_parent_axis_construction,
     parent_axis_probe_requested = parent_axis_probe_requested,
+    route_axis_counts_source = route_axis_counts.parent_axis_counts_source,
     route_shape = route_shape,
     product_body_rule = product_body_rule,
     pqs_source_box_rule = :mode_selected_raw_box_pqs,
@@ -161,7 +172,7 @@ route_skeleton =
     GaussletBases.CartesianContractedParentMetrics._pqs_pqs_product_source_box_route_skeleton(
         ;
         q,
-        parent_axis_counts,
+        parent_axis_counts = route_axis_counts.parent_axis_counts,
         route_shape,
         product_body_rule,
         pqs_retained_rule,
@@ -175,17 +186,20 @@ parent_description = (
     standard_setup = standard_setup,
     parent_axis_readiness = parent_axis_readiness,
     parent_axis_probe = parent_axis_probe,
+    route_axis_counts = route_axis_counts,
     physical_parent_box = standard_setup.parent_box,
     physical_parent_box_rule = standard_setup.parent_box_rule,
     axis_transform_status = parent_axis_readiness.status,
     one_dimensional_transforms = (:x_axis_transform, :y_axis_transform, :z_axis_transform),
     parent_lattice = :raw_product_box_parent_lattice,
     parent_axis_counts = route_skeleton.parent_axis_counts,
+    parent_axis_counts_source = route_axis_counts.parent_axis_counts_source,
     source_boxes = route_skeleton.source_boxes,
     pending_facts = (
         route_skeleton.pending_facts...,
         :parent_axis_counts_from_standard_parent_constructor,
         parent_axis_readiness.pending_facts...,
+        route_axis_counts.pending_facts...,
     ),
 )
 
@@ -286,6 +300,16 @@ diagnostics = merge(
             parent_axis_readiness.existing_parent_api_appears_applicable,
         standard_parent_axis_rule_ready =
             parent_axis_readiness.standard_parent_axis_rule_ready,
+        route_axis_counts_helper =
+            :_pqs_source_box_route_parent_axis_counts_for_skeleton,
+        route_axis_counts_status = route_axis_counts.status,
+        route_axis_counts_source =
+            route_axis_counts.parent_axis_counts_source,
+        route_axis_counts_derived =
+            route_axis_counts.parent_axis_counts_derived,
+        route_axis_counts_manual_fixture =
+            route_axis_counts.parent_axis_counts_manual_fixture,
+        route_axis_counts_diagnostics = route_axis_counts.diagnostics,
         parent_axis_probe_requested = parent_axis_probe_requested,
         parent_axis_probe_status = parent_axis_probe_status,
         parent_axis_metadata_constructed =
@@ -304,6 +328,7 @@ report = (
     standard_setup = standard_setup,
     parent_axis_readiness = parent_axis_readiness,
     parent_axis_probe = parent_axis_probe,
+    route_axis_counts = route_axis_counts,
     system_metadata = system_metadata,
     recipe_metadata = recipe_metadata,
     parent_description = parent_description,
@@ -339,6 +364,8 @@ println("PQS source-box route driver skeleton")
 @show parent_axis_readiness.parent_axis_counts_status
 @show parent_axis_probe_requested
 @show parent_axis_probe_status
+@show route_axis_counts.parent_axis_counts_source
+@show route_axis_counts.parent_axis_counts
 @show retained_counts
 @show retained_dimension
 
@@ -414,6 +441,21 @@ if !isnothing(parent_axis_probe)
     )
         _pqs_driver_print_kv(field, getproperty(parent_axis_probe, field))
     end
+end
+
+_pqs_driver_print_section("route_axis_counts")
+for field in (
+    :status,
+    :parent_axis_counts,
+    :parent_axis_counts_source,
+    :parent_axis_counts_derived,
+    :parent_axis_counts_manual_fixture,
+    :parent_axis_probe_status,
+    :parent_axis_readiness_status,
+    :q_minimum_satisfied,
+    :pending_facts,
+)
+    _pqs_driver_print_kv(field, getproperty(route_axis_counts, field))
 end
 
 _pqs_driver_print_section("parent_description")
@@ -518,6 +560,14 @@ if save_tsv
                     getproperty(parent_axis_probe.diagnostics, field),
                 )
             end
+        end
+        for field in keys(route_axis_counts.diagnostics)
+            _pqs_driver_write_tsv_row(
+                io,
+                "route_axis_counts_diagnostics",
+                field,
+                getproperty(route_axis_counts.diagnostics, field),
+            )
         end
         for unit in retained_units
             _pqs_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)

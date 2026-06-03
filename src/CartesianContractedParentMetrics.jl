@@ -13338,6 +13338,145 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
     )
 end
 
+function _pqs_source_box_route_parent_axis_counts_for_skeleton(
+    setup,
+    parent_axis_readiness,
+    parent_axis_probe;
+    manual_parent_axis_counts = nothing,
+)
+    probe_constructed =
+        !isnothing(parent_axis_probe) &&
+        hasproperty(parent_axis_probe, :parent_axis_metadata_constructed) &&
+        parent_axis_probe.parent_axis_metadata_constructed
+    if probe_constructed
+        counts = _pqs_source_box_route_skeleton_axis_counts(parent_axis_probe.axis_lengths)
+        return (
+            object_kind = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+            status = :available,
+            parent_axis_counts = counts,
+            parent_axis_counts_source = :constructed_parent_axis_probe,
+            parent_axis_counts_derived = true,
+            parent_axis_counts_manual_fixture = false,
+            parent_axis_probe_status = parent_axis_probe.status,
+            parent_axis_readiness_status = parent_axis_readiness.status,
+            setup_object_kind = setup.object_kind,
+            q = setup.q,
+            q_minimum_satisfied =
+                counts.x >= setup.q && counts.y >= setup.q && counts.z >= setup.q,
+            pending_facts = (),
+            diagnostics = (
+                source = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+                private_development_only = true,
+                production_route = false,
+                parent_axis_counts_source = :constructed_parent_axis_probe,
+                parent_axis_counts_derived = true,
+                parent_axis_counts_manual_fixture = false,
+                public_default_consumes = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                hamiltonian_matrix_built = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                retained_pqs_weights_used = false,
+                retained_weight_division_allowed = false,
+                repo_side_ray_id = false,
+                mwg_ida_semantics_changed = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+            ),
+        )
+    elseif !isnothing(manual_parent_axis_counts)
+        counts = _pqs_source_box_route_skeleton_axis_counts(manual_parent_axis_counts)
+        return (
+            object_kind = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+            status = :available,
+            parent_axis_counts = counts,
+            parent_axis_counts_source = :manual_fixture,
+            parent_axis_counts_derived = false,
+            parent_axis_counts_manual_fixture = true,
+            parent_axis_probe_status =
+                isnothing(parent_axis_probe) ? :not_requested : parent_axis_probe.status,
+            parent_axis_readiness_status = parent_axis_readiness.status,
+            setup_object_kind = setup.object_kind,
+            q = setup.q,
+            q_minimum_satisfied =
+                counts.x >= setup.q && counts.y >= setup.q && counts.z >= setup.q,
+            pending_facts = (),
+            diagnostics = (
+                source = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+                private_development_only = true,
+                production_route = false,
+                parent_axis_counts_source = :manual_fixture,
+                parent_axis_counts_derived = false,
+                parent_axis_counts_manual_fixture = true,
+                public_default_consumes = false,
+                packet_adoption = false,
+                fixed_block_routing = false,
+                qwhamiltonian_consumes = false,
+                hamiltonian_matrix_built = false,
+                shell_projection_used = false,
+                lowdin_cleanup_used = false,
+                support_local_shell_row_algorithm = false,
+                support_coefficient_matrix_used = false,
+                retained_pqs_weights_used = false,
+                retained_weight_division_allowed = false,
+                repo_side_ray_id = false,
+                mwg_ida_semantics_changed = false,
+                ecp_terms_implemented = false,
+                cr2_science_status_changed = false,
+            ),
+        )
+    end
+
+    probe_pending = isnothing(parent_axis_probe) ? () : parent_axis_probe.pending_facts
+    pending_facts = (
+        :manual_parent_axis_counts_or_constructed_parent_axis_probe,
+        probe_pending...,
+    )
+    return (
+        object_kind = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+        status = :not_available_pending_facts,
+        parent_axis_counts = nothing,
+        parent_axis_counts_source = :unavailable,
+        parent_axis_counts_derived = false,
+        parent_axis_counts_manual_fixture = false,
+        parent_axis_probe_status =
+            isnothing(parent_axis_probe) ? :not_requested : parent_axis_probe.status,
+        parent_axis_readiness_status = parent_axis_readiness.status,
+        setup_object_kind = setup.object_kind,
+        q = setup.q,
+        q_minimum_satisfied = false,
+        pending_facts = pending_facts,
+        diagnostics = (
+            source = :pqs_source_box_route_parent_axis_counts_for_skeleton,
+            private_development_only = true,
+            production_route = false,
+            parent_axis_counts_source = :unavailable,
+            parent_axis_counts_derived = false,
+            parent_axis_counts_manual_fixture = false,
+            pending_facts = pending_facts,
+            public_default_consumes = false,
+            packet_adoption = false,
+            fixed_block_routing = false,
+            qwhamiltonian_consumes = false,
+            hamiltonian_matrix_built = false,
+            shell_projection_used = false,
+            lowdin_cleanup_used = false,
+            support_local_shell_row_algorithm = false,
+            support_coefficient_matrix_used = false,
+            retained_pqs_weights_used = false,
+            retained_weight_division_allowed = false,
+            repo_side_ray_id = false,
+            mwg_ida_semantics_changed = false,
+            ecp_terms_implemented = false,
+            cr2_science_status_changed = false,
+        ),
+    )
+end
+
 function _pqs_source_box_route_skeleton_source_dimension(box)
     return prod(length(getproperty(box, axis)) for axis in (:x, :y, :z))
 end
