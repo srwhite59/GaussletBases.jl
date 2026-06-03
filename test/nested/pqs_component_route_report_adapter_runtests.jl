@@ -137,6 +137,18 @@ using GaussletBases
             source_weight_division_shape =
                 dense_mode ? nothing : :axis_pair_weight_outer,
             no_go_diagnostics = _synthetic_no_go(),
+            performance = (
+                nuclear = (
+                    elapsed_seconds = dense_mode ? 0.011 : 0.012,
+                    allocated_bytes = dense_mode ? 1100 : 1200,
+                    gc_time_seconds = 0.0,
+                ),
+                electron_electron = (
+                    elapsed_seconds = dense_mode ? 0.021 : 0.022,
+                    allocated_bytes = dense_mode ? 2100 : 2200,
+                    gc_time_seconds = 0.0,
+                ),
+            ),
         )
     end
 
@@ -460,6 +472,65 @@ using GaussletBases
     @test !sidecar.diagnostics.scf_hf_validation_claim
     @test !sidecar.diagnostics.cr2_science_status_changed
     @test !sidecar.diagnostics.mwg_ida_semantics_changed
+
+    readiness =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            report,
+        )
+    @test readiness.object_kind ==
+          :pqs_pqs_product_private_source_box_route_adapter_readiness_summary
+    @test readiness.status == :private_route_adapter_inputs_ready
+    @test readiness.route_shape ==
+          "left raw-box PQS | product/doside slab | right raw-box PQS"
+    @test readiness.retained_dimension == 221
+    @test readiness.retained_unit_count == 3
+    @test readiness.pair_factor_normalization_modes ==
+          (:density_normalized, :raw_weighted)
+    @test isempty(readiness.missing_required_pieces)
+    @test :cr2_sidecar_schema in readiness.missing_optional_pieces
+    @test readiness.required_input_availability.source_box_fixed_side_facts
+    @test readiness.required_input_availability.by_center_nuclear_attraction
+    @test readiness.required_input_availability.ida_source_box_electron_electron
+    @test readiness.required_input_availability.source_box_algorithmic_path
+    @test readiness.required_input_availability.final_residual_mwg_component_facts
+    @test readiness.required_input_availability.final_residual_mwg_owner_metadata
+    @test readiness.required_input_availability.final_residual_mwg_authority
+    @test readiness.required_input_availability.authority_comparison_accounted_for
+    @test readiness.optional_input_availability.timing_allocation_fields
+    @test readiness.optional_input_availability.dense_parent_ida_authority_comparison
+    @test readiness.ida_source_box_electron_electron.authority_comparison.available_modes ==
+          (:density_normalized,)
+    @test readiness.ida_source_box_electron_electron.authority_comparison.skip_reasons ==
+          (:density_normalized_authority_only,)
+    @test readiness.timing_allocation.available
+    @test readiness.timing_allocation.rows[1].nuclear_allocated_bytes == 1100
+    @test isempty(readiness.no_go_violations)
+    @test !readiness.no_go_flags.public_default_behavior
+    @test !readiness.no_go_flags.packet_fixed_block_qw_hamiltonian_adoption
+    @test !readiness.no_go_flags.mwg_ida_semantic_change
+    @test !readiness.no_go_flags.retained_weight_division
+    @test !readiness.no_go_flags.raw_gto_gto_mwg_blocks
+    @test !readiness.no_go_flags.fixed_raw_gto_mwg_blocks
+    @test !readiness.no_go_flags.owner_shell_ray_inference
+    @test !readiness.no_go_flags.cr2_science_status_changed
+    @test readiness.ready_for_next_private_adapter_pass
+    @test !readiness.diagnostics.builds_route_matrices
+    @test !readiness.diagnostics.construction_behavior_changed
+    @test readiness.diagnostics.lanes_remain_separate
+
+    readiness_with_sidecar =
+        metrics_module._pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+            report;
+            cr2_sidecar = sidecar,
+    )
+    @test readiness_with_sidecar.cr2_sidecar.available
+    @test readiness_with_sidecar.optional_input_availability.cr2_sidecar_schema
+    @test !in(
+        :cr2_sidecar_schema,
+        readiness_with_sidecar.missing_optional_pieces,
+    )
+    @test isempty(readiness_with_sidecar.no_go_violations)
+    @test readiness_with_sidecar.ready_for_next_private_adapter_pass
 
     sidecar_io = IOBuffer()
     metrics_module._write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(

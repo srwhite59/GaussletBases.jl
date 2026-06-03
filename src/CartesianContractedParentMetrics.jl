@@ -14966,6 +14966,9 @@ function _pqs_pqs_product_component_route_smoke_report_row(summary)
             _pqs_pqs_product_component_route_smoke_no_go_clear(
                 summary.no_go_diagnostics,
             ),
+        no_go_diagnostics = summary.no_go_diagnostics,
+        performance = hasproperty(summary, :performance) ?
+            summary.performance : nothing,
         mwg_supplement_residual_path =
             summary.no_go_diagnostics.mwg_supplement_residual_path,
     )
@@ -15348,6 +15351,319 @@ function _pqs_component_route_smoke_source_box_sidecar_components(row)
         source_weight_division_shape = row.source_weight_division_shape,
         output_finite = row.output_finite,
         no_go_clear = row.no_go_clear,
+    )
+end
+
+function _pqs_component_route_smoke_false_keys(flags)
+    return Tuple(key for key in keys(flags) if !getproperty(flags, key))
+end
+
+function _pqs_component_route_smoke_true_keys(flags)
+    return Tuple(key for key in keys(flags) if getproperty(flags, key))
+end
+
+function _pqs_component_route_smoke_row_performance(row)
+    performance = hasproperty(row, :performance) ? row.performance : nothing
+    available = !isnothing(performance)
+    return (
+        mode = row.mode,
+        available = available,
+        nuclear_elapsed_seconds =
+            available ? performance.nuclear.elapsed_seconds : nothing,
+        nuclear_allocated_bytes =
+            available ? performance.nuclear.allocated_bytes : nothing,
+        nuclear_gc_time_seconds =
+            available ? performance.nuclear.gc_time_seconds : nothing,
+        electron_electron_elapsed_seconds =
+            available ? performance.electron_electron.elapsed_seconds : nothing,
+        electron_electron_allocated_bytes =
+            available ? performance.electron_electron.allocated_bytes : nothing,
+        electron_electron_gc_time_seconds =
+            available ? performance.electron_electron.gc_time_seconds : nothing,
+    )
+end
+
+function _pqs_component_route_smoke_sidecar_inference_flags(cr2_sidecar)
+    isnothing(cr2_sidecar) && return (
+        available = false,
+        label_reconstruction_from_centers = false,
+        nearest_grid_or_center_label_heuristic = false,
+        source_shell_mode_inference = false,
+        retained_weight_or_ida_division = false,
+        route_construction_changed = false,
+    )
+
+    cr2_sidecar.object_kind ==
+        :pqs_pqs_product_component_route_smoke_cr2_sidecar_schema || throw(
+        ArgumentError("private route-adapter readiness requires _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema output when a CR2 sidecar is supplied"),
+    )
+
+    fixed_side = cr2_sidecar.fixed_side_retained_unit_metadata
+    fixed_side_label_reconstruction =
+        !isnothing(fixed_side) &&
+        fixed_side.labels.label_reconstruction_from_centers
+    fixed_side_nearest_grid =
+        !isnothing(fixed_side) &&
+        fixed_side.labels.nearest_grid_or_center_label_heuristic
+    fixed_side_retained_weight_division =
+        !isnothing(fixed_side) &&
+        fixed_side.diagnostics.retained_weight_or_ida_division
+
+    source_shell_modes = cr2_sidecar.source_shell_mode_inventory
+    source_shell_mode_inference =
+        !isnothing(source_shell_modes) &&
+        (
+            source_shell_modes.diagnostics.inferred_from_centers ||
+            source_shell_modes.diagnostics.inferred_from_nearest_grid ||
+            source_shell_modes.diagnostics.inferred_from_support_order ||
+            source_shell_modes.diagnostics.inferred_from_support_indices ||
+            source_shell_modes.diagnostics.inferred_from_raw_to_final_support
+        )
+    source_shell_mode_retained_weight_division =
+        !isnothing(source_shell_modes) &&
+        source_shell_modes.diagnostics.retained_weight_or_ida_division
+    source_shell_mode_route_changed =
+        !isnothing(source_shell_modes) &&
+        source_shell_modes.diagnostics.route_construction_changed
+
+    return (
+        available = true,
+        label_reconstruction_from_centers =
+            cr2_sidecar.labels.label_reconstruction_from_centers ||
+            fixed_side_label_reconstruction,
+        nearest_grid_or_center_label_heuristic =
+            cr2_sidecar.labels.nearest_grid_or_center_label_heuristic ||
+            fixed_side_nearest_grid,
+        source_shell_mode_inference = source_shell_mode_inference,
+        retained_weight_or_ida_division =
+            fixed_side_retained_weight_division ||
+            source_shell_mode_retained_weight_division,
+        route_construction_changed = source_shell_mode_route_changed,
+    )
+end
+
+function _pqs_pqs_product_private_source_box_route_adapter_readiness_summary(
+    report;
+    cr2_sidecar = nothing,
+)
+    report.object_kind ==
+        :pqs_pqs_product_component_route_smoke_report_adapter || throw(
+        ArgumentError("private route-adapter readiness requires _pqs_pqs_product_component_route_smoke_report_adapter output"),
+    )
+    source_box = report.source_box_pqs_ida_component_smoke
+    rows = source_box.rows
+    isempty(rows) && throw(
+        ArgumentError("private route-adapter readiness requires at least one source-box row"),
+    )
+    final_residual = report.final_residual_mwg_supplement_component_facts
+    sidecar_flags =
+        _pqs_component_route_smoke_sidecar_inference_flags(cr2_sidecar)
+    row_performance = Tuple(_pqs_component_route_smoke_row_performance(row) for row in rows)
+    timing_allocation_fields_available =
+        all(row -> row.available, row_performance)
+    authority_available_modes = Tuple(
+        row.mode for row in rows
+        if row.dense_parent_ida_authority_available
+    )
+    authority_skip_reasons = Tuple(
+        row.dense_parent_ida_authority_skip_reason for row in rows
+        if !isnothing(row.dense_parent_ida_authority_skip_reason)
+    )
+    authority_comparison_accounted_for =
+        all(
+            row ->
+                row.dense_parent_ida_authority_available ||
+                !isnothing(row.dense_parent_ida_authority_skip_reason),
+            rows,
+        )
+    source_box_algorithmic_rows_clear = all(
+        row ->
+            row.no_go_clear &&
+            row.no_go_diagnostics.source_box_first &&
+            row.no_go_diagnostics.source_box_algorithmic_path_true_for_every_pair,
+        rows,
+    )
+    pair_factor_normalization_modes = Tuple(row.mode for row in rows)
+
+    required_input_availability = (
+        source_box_report = true,
+        source_box_fixed_side_facts =
+            source_box.pqs_source_box_fixed_side_facts_available,
+        by_center_nuclear_attraction =
+            source_box.by_center_nuclear_attraction_available &&
+            all(row -> row.nuclear_pair_count > 0, rows),
+        ida_source_box_electron_electron =
+            source_box.ida_source_box_electron_electron_available &&
+            all(row -> row.electron_electron_pair_count > 0, rows),
+        source_box_algorithmic_path =
+            source_box_algorithmic_rows_clear,
+        final_residual_mwg_component_facts =
+            hasproperty(report, :final_residual_mwg_supplement_component_facts),
+        final_residual_mwg_owner_metadata =
+            final_residual.residual_owner_metadata_available,
+        final_residual_mwg_authority =
+            report.diagnostics.final_residual_mwg_authority_error_zero,
+        authority_comparison_accounted_for =
+            authority_comparison_accounted_for,
+    )
+    optional_input_availability = (
+        cr2_sidecar_schema = !isnothing(cr2_sidecar),
+        timing_allocation_fields = timing_allocation_fields_available,
+        dense_parent_ida_authority_comparison =
+            !isempty(authority_available_modes),
+    )
+    no_go_flags = (
+        public_default_behavior = report.diagnostics.public_default_consumes,
+        packet_fixed_block_qw_hamiltonian_adoption =
+            report.diagnostics.packet_adoption ||
+            report.diagnostics.fixed_block_routing ||
+            report.diagnostics.qwhamiltonian_consumes ||
+            report.diagnostics.hamiltonian_matrix_built,
+        mwg_ida_semantic_change =
+            report.diagnostics.mwg_ida_semantics_changed,
+        retained_weight_division =
+            !report.lane_boundaries.no_retained_weight_or_ida_division ||
+            sidecar_flags.retained_weight_or_ida_division,
+        raw_gto_gto_mwg_blocks =
+            !report.lane_boundaries.no_raw_gto_gto_mwg_blocks,
+        fixed_raw_gto_mwg_blocks =
+            !report.lane_boundaries.no_fixed_raw_gto_mwg_blocks,
+        owner_shell_ray_inference =
+            !report.lane_boundaries.no_owner_inference_from_raw_to_final_support ||
+            sidecar_flags.label_reconstruction_from_centers ||
+            sidecar_flags.nearest_grid_or_center_label_heuristic ||
+            sidecar_flags.source_shell_mode_inference,
+        route_construction_changed = sidecar_flags.route_construction_changed,
+        cr2_science_status_changed =
+            report.diagnostics.cr2_science_status_changed ||
+            report.diagnostics.scf_hf_validation_claim,
+    )
+    no_go_violations =
+        _pqs_component_route_smoke_true_keys(no_go_flags)
+    missing_required_pieces =
+        _pqs_component_route_smoke_false_keys(required_input_availability)
+    missing_optional_pieces =
+        _pqs_component_route_smoke_false_keys(optional_input_availability)
+    ready_for_next_private_adapter_pass =
+        isempty(missing_required_pieces) &&
+        isempty(no_go_violations) &&
+        report.diagnostics.source_box_rows_all_finite_and_no_go_clear
+
+    return (
+        object_kind =
+            :pqs_pqs_product_private_source_box_route_adapter_readiness_summary,
+        status = ready_for_next_private_adapter_pass ?
+            :private_route_adapter_inputs_ready :
+            :private_route_adapter_inputs_incomplete,
+        report_object_kind = report.object_kind,
+        report_status = report.status,
+        route_shape = source_box.route_shape,
+        retained_dimension = first(rows).retained_dimension,
+        retained_unit_count = source_box.retained_unit_count,
+        retained_units = source_box.retained_units,
+        retained_ranges = source_box.retained_ranges,
+        pair_factor_normalization_modes = pair_factor_normalization_modes,
+        required_input_availability = required_input_availability,
+        optional_input_availability = optional_input_availability,
+        missing_required_pieces = missing_required_pieces,
+        missing_optional_pieces = missing_optional_pieces,
+        by_center_nuclear_attraction = (
+            available =
+                required_input_availability.by_center_nuclear_attraction,
+            pair_counts = Tuple(row.nuclear_pair_count for row in rows),
+            pair_family_counts =
+                Tuple(row.nuclear_pair_family_counts for row in rows),
+            helper_by_family = Tuple(
+                row.helper_used_for_nuclear_pair_families for row in rows
+            ),
+            total_from_center_errors =
+                Tuple(row.nuclear_total_from_center_error for row in rows),
+        ),
+        ida_source_box_electron_electron = (
+            available =
+                required_input_availability.ida_source_box_electron_electron,
+            normalization_modes = pair_factor_normalization_modes,
+            representation = source_box.electron_electron_representation,
+            pair_counts =
+                Tuple(row.electron_electron_pair_count for row in rows),
+            pair_family_counts =
+                Tuple(row.electron_electron_pair_family_counts for row in rows),
+            helper_by_family = Tuple(
+                row.helper_used_for_electron_electron_pair_families
+                for row in rows
+            ),
+            source_weight_division_owner =
+                Tuple(row.source_weight_division_owner for row in rows),
+            source_weight_division_applied_by_helper = Tuple(
+                row.source_weight_division_applied_by_helper for row in rows
+            ),
+            authority_comparison = (
+                available_modes = authority_available_modes,
+                skip_reasons = authority_skip_reasons,
+                accounted_for = authority_comparison_accounted_for,
+            ),
+        ),
+        final_residual_mwg_component_facts = (
+            available =
+                required_input_availability.final_residual_mwg_component_facts,
+            residual_owner_metadata_available =
+                final_residual.residual_owner_metadata_available,
+            component_helper = final_residual.component_helper,
+            max_authority_error = final_residual.max_authority_error,
+            raw_gto_rows_role = final_residual.raw_gto_rows_role,
+            raw_gto_gto_mwg_interaction_blocks_used =
+                final_residual.raw_gto_gto_mwg_interaction_blocks_used,
+            fixed_raw_gto_mwg_interaction_blocks_used =
+                final_residual.fixed_raw_gto_mwg_interaction_blocks_used,
+        ),
+        cr2_sidecar = (
+            available = !isnothing(cr2_sidecar),
+            inference_flags = sidecar_flags,
+        ),
+        timing_allocation = (
+            available = timing_allocation_fields_available,
+            rows = row_performance,
+        ),
+        no_go_flags = no_go_flags,
+        no_go_violations = no_go_violations,
+        ready_for_next_private_adapter_pass =
+            ready_for_next_private_adapter_pass,
+        diagnostics = (
+            source =
+                :pqs_pqs_product_private_source_box_route_adapter_readiness_summary,
+            private_shadow_only = true,
+            builds_route_matrices = false,
+            construction_behavior_changed = false,
+            source_box_ida_and_mwg_residual_same_algorithm = false,
+            lanes_remain_separate = true,
+            source_box_rows_all_finite_and_no_go_clear =
+                report.diagnostics.source_box_rows_all_finite_and_no_go_clear,
+            source_box_algorithmic_path =
+                required_input_availability.source_box_algorithmic_path,
+            authority_comparison_accounted_for =
+                authority_comparison_accounted_for,
+            timing_allocation_fields_available =
+                timing_allocation_fields_available,
+            public_default_consumes =
+                report.diagnostics.public_default_consumes,
+            packet_adoption = report.diagnostics.packet_adoption,
+            fixed_block_routing = report.diagnostics.fixed_block_routing,
+            qwhamiltonian_consumes = report.diagnostics.qwhamiltonian_consumes,
+            hamiltonian_matrix_built =
+                report.diagnostics.hamiltonian_matrix_built,
+            mwg_ida_semantics_changed =
+                report.diagnostics.mwg_ida_semantics_changed,
+            retained_weight_or_ida_division =
+                no_go_flags.retained_weight_division,
+            raw_gto_gto_mwg_blocks =
+                no_go_flags.raw_gto_gto_mwg_blocks,
+            fixed_raw_gto_mwg_blocks =
+                no_go_flags.fixed_raw_gto_mwg_blocks,
+            owner_shell_ray_inference =
+                no_go_flags.owner_shell_ray_inference,
+            cr2_science_status_changed =
+                no_go_flags.cr2_science_status_changed,
+        ),
     )
 end
 
