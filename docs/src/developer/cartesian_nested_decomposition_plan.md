@@ -120,6 +120,58 @@ production story:
 The problem is not that these exist. The problem is that they currently live in
 the same files as the hot production kernels and the primary public front ends.
 
+## Translation Classification For Cartesian Construction Routes
+
+The new source-box/retained-unit framework should not translate every
+historical Cartesian nesting route wholesale. It should translate durable object
+contracts and reusable kernels. A historical geometry route needs a concrete
+consumer before it is promoted into the new framework.
+
+Use these tags when deciding what to carry forward:
+
+- `:active_target`: current intended development direction.
+- `:paper_benchmark`: important published or paper-described comparison even
+  if it is not the preferred route.
+- `:transitional_bridge`: useful compatibility or migration piece, but not the
+  final abstraction.
+- `:oracle_reference`: validation/debug path only.
+- `:experimental_quarantine`: exploratory route with no current CR2/PQS
+  consumer; do not translate without a new design review.
+- `:legacy_compat`: keep enough behavior for compatibility, but do not expand
+  as a design target.
+
+| Route or facility | Tag | Recommendation |
+|---|---|---|
+| Raw product-box PQS source-box path | `:active_target` | Keep building. This is the preferred PQS operator direction. |
+| Product/doside source-box blocks | `:active_target` | Keep as a core reusable primitive and shared kernel. |
+| One-center atomic full-parent fixed block | `:active_target` / `:legacy_compat` | Preserve for Be/Cr-style validation and translate only useful contracts. |
+| Low-order complete rectangular nesting | `:paper_benchmark` | Preserve, test, and document. Do not optimize as the future high-order design. |
+| Current shell-realized/support-local PQS fixture | `:oracle_reference` | Keep for compatibility and validation only. Do not make shell-row contraction the algorithm. |
+| Endcap/panel owned shells | `:transitional_bridge` | Salvage product/doside pieces and comparison fixtures; do not preserve the stitching route as the final abstraction. |
+| Contact cap and outer mismatch bridges | `:transitional_bridge` | Keep as route-inventory bridges or product-box units when explicitly constructed. Do not let them define PQS. |
+| Atom-growth plus outer-shrink middle-resolution route | `:experimental_quarantine` | Preserve historical diagnostics and useful pieces, but do not translate the route-selection idea wholesale. |
+| Transverse annulus / true-annulus variants | `:experimental_quarantine` | Keep as historical/policy evidence unless a concrete consumer needs them. PQS supersedes the annulus mental model for active work. |
+| High-order doside experimental stack | `:experimental_quarantine` | Do not port the full route wholesale. Reuse factor or source-box ideas only after a scoped review. |
+| Chain and square recursive Cartesian paths | `:experimental_quarantine` | Keep separate from CR2/PQS work. Translate only if a real consumer appears. |
+
+The especially risky class is "grow from protected cores while shrinking from
+the outer box and resolve the middle." That idea produced useful facts, such as
+contact-cap and outer-mismatch bridge objects, but the route-selection policy
+itself is not an active framework rule. Do not let it drive new source-box
+operator design.
+
+For CR2/PQS work, the allowed center of gravity is narrower:
+
+- raw product-box PQS;
+- product/doside source-box operators;
+- support-dense atom-box adapters where they are explicit retained units;
+- final-residual MWG supplement facts;
+- machine-readable sidecar/export metadata.
+
+Any route tagged `:experimental_quarantine` needs an explicit consumer and a
+fresh manager/auditor review before translation into the source-box retained
+unit framework.
+
 ## Suspected Bloat Vs Justified Complexity
 
 ### Suspected Bloat
