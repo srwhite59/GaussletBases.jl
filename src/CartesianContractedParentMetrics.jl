@@ -9709,6 +9709,13 @@ function _pqs_current_route_fixed_side_retained_unit_metadata(
         Int(diagnostics.fixed_dimension) : Int(coverage.last_column)
     coverage_complete = hasproperty(coverage, :covers_every_column_once) ?
         Bool(coverage.covers_every_column_once) : false
+    shell_records = Tuple(
+        record for record in records if record.is_shell_realized_pqs_fixture
+    )
+    source_box_ready_count = count(
+        record -> record.shell_realized_pqs_source_box_operator_ready,
+        shell_records,
+    )
 
     if strict
         coverage_complete || throw(
@@ -9729,15 +9736,11 @@ function _pqs_current_route_fixed_side_retained_unit_metadata(
         all(record -> !record.ida_weight_division_allowed, records) || throw(
             ArgumentError("fixed-side retained-unit metadata cannot include retained-weight/IDA division"),
         )
+        source_box_ready_count == 0 || throw(
+            ArgumentError("fixed-side retained-unit metadata cannot mark shell-realized PQS fixtures as source-box-operator-ready without an explicit framework update"),
+        )
     end
 
-    shell_records = Tuple(
-        record for record in records if record.is_shell_realized_pqs_fixture
-    )
-    source_box_ready_count = count(
-        record -> record.shell_realized_pqs_source_box_operator_ready,
-        shell_records,
-    )
     return (
         object_kind = :pqs_current_route_fixed_side_retained_unit_metadata,
         status = :private_fixed_side_retained_unit_metadata,
@@ -13881,6 +13884,14 @@ function _pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
             !fixed_side_retained_unit_metadata.diagnostics.retained_weight_or_ida_division ||
                 throw(
                     ArgumentError("CR2 sidecar schema fixed-side metadata cannot include retained-weight or IDA division"),
+                )
+            fixed_side_retained_unit_metadata.diagnostics.shell_realized_pqs_source_box_operator_ready_count ==
+                0 || throw(
+                ArgumentError("CR2 sidecar schema fixed-side metadata cannot mark shell-realized PQS fixtures as source-box-operator-ready without an explicit framework update"),
+            )
+            fixed_side_retained_unit_metadata.diagnostics.shell_realized_pqs_fixtures_are_metadata_oracle_only ||
+                throw(
+                    ArgumentError("CR2 sidecar schema fixed-side metadata requires shell-realized PQS fixtures to remain metadata/oracle-only"),
                 )
         end
     end

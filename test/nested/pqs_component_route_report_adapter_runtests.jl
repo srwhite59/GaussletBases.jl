@@ -209,7 +209,9 @@ using GaussletBases
         )
     end
 
-    function _synthetic_fixed_side_inventory()
+    function _synthetic_fixed_side_inventory(;
+        shell_source_box_operator_ready::Bool = false,
+    )
         units = (
             _synthetic_fixed_side_inventory_unit(
                 :outer_mismatch_z_low_slab,
@@ -244,7 +246,8 @@ using GaussletBases
                     active_current_route_contract = false,
                 ),
                 shell_transform = (
-                    source_box_operator_application_ready = false,
+                    source_box_operator_application_ready =
+                        shell_source_box_operator_ready,
                     compact_source_space_transform = (available = false,),
                 ),
                 shell_row_oracle_only = true,
@@ -580,6 +583,24 @@ using GaussletBases
     )
     @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
         bad_coverage,
+    )
+    bad_ready_inventory = _synthetic_fixed_side_inventory(;
+        shell_source_box_operator_ready = true,
+    )
+    @test_throws ArgumentError metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+        bad_ready_inventory,
+    )
+    bad_ready_metadata =
+        metrics_module._pqs_current_route_fixed_side_retained_unit_metadata(
+            bad_ready_inventory;
+            strict = false,
+        )
+    @test bad_ready_metadata.diagnostics.shell_realized_pqs_source_box_operator_ready_count ==
+          1
+    @test !bad_ready_metadata.diagnostics.shell_realized_pqs_fixtures_are_metadata_oracle_only
+    @test_throws ArgumentError metrics_module._pqs_pqs_product_component_route_smoke_cr2_sidecar_schema(
+        report;
+        fixed_side_retained_unit_metadata = bad_ready_metadata,
     )
 
     missing_owner_facts = _synthetic_mwg_facts()
