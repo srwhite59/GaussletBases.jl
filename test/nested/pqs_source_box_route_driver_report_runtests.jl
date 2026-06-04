@@ -615,6 +615,40 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :route_configured_one_center_low_order
     @test !route_configured_materialization.public_default_behavior_changed
 
+    one_center_materialized =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            basisfile = "unused_basis.jld2",
+            hamfile = "unused.jld2",
+            white_lindsey_expansion = density_expansion,
+        )
+    @test one_center_materialized.status ==
+          :materialized_route_configured_one_center_report_available
+    @test one_center_materialized.materialized_report.object_kind ==
+          :white_lindsey_low_order_route_configured_one_center_report
+    @test one_center_materialized.materialized_report_kind ==
+          :white_lindsey_low_order_route_configured_one_center_report
+    @test one_center_materialized.shellization_source ==
+          :route_configured_one_center_low_order
+    @test one_center_materialized.route_configured_shellization_consumed
+    @test one_center_materialized.seed_materialization_status ==
+          :not_seed_route_configured_materialization
+    @test one_center_materialized.retained_dimension == 223
+    @test one_center_materialized.route_configured_one_center_materializer_probe_requested
+    @test one_center_materialized.route_configured_one_center_materializer_probe_materialized
+    @test one_center_materialized.route_configured_one_center_materializer_probe_consumed
+    @test one_center_materialized.materialized_report.shellization_summary.source_kind ==
+          :route_configured_one_center_low_order
+    @test one_center_materialized.materialized_report.weight_semantics ==
+          :retained_basis_integral_weights
+    @test one_center_materialized.basis_bundle_export_status ==
+          :not_wired_route_configured_one_center_basis_export
+    @test one_center_materialized.basis_artifact_status == :not_requested
+    @test one_center_materialized.ham_artifact_status == :not_requested
+
     mktempdir() do dir
         pqs_hamfile = joinpath(dir, "pqs_pending_ham.jld2")
         pqs_ham_status = GaussletBases._pqs_source_box_route_driver_materialization(

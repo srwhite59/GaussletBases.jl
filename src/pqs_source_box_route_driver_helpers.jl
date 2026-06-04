@@ -1929,6 +1929,43 @@ function _pqs_source_box_route_driver_one_center_materializer_probe(
     end
 end
 
+function _pqs_source_box_route_driver_route_configured_one_center_report(
+    materialization,
+)
+    fixture = materialization.fixture
+    inventory = fixture.inventory
+    route_units = _white_lindsey_low_order_materialized_seed_route_units(fixture)
+    operator_inventory =
+        _white_lindsey_low_order_materialized_seed_operator_inventory(fixture)
+    operator_pairs_materialized =
+        route_units.operator_pairs_materialized ||
+        operator_inventory.operator_pairs_materialized
+    shellization_summary = materialization.shellization_summary
+
+    return (;
+        object_kind = :white_lindsey_low_order_route_configured_one_center_report,
+        route_family = :white_lindsey_low_order,
+        status = :private_development_route_configured,
+        private_development_only = true,
+        materialization,
+        fixture,
+        inventory,
+        route_units,
+        operator_inventory,
+        shellization_summary,
+        shellization_summary_available = true,
+        shellization_source = :route_configured_one_center_low_order,
+        route_configured_shellization_consumed = true,
+        materialized_shellization_stage = shellization_summary.shellization_stage,
+        seed_materialization_status = :not_seed_route_configured_materialization,
+        packet_kernel = fixture.packet_kernel,
+        retained_dimension = route_units.retained_dimension,
+        operator_pairs_materialized,
+        electron_electron_materialized = operator_inventory.electron_electron_materialized,
+        weight_semantics = :retained_basis_integral_weights,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
@@ -1996,10 +2033,18 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_materializer_config.planning_family
     route_configured_materializer_config_pending_input_count =
         route_configured_materializer_config.pending_input_count
+    route_configured_one_center_materializer_requested =
+        probe_route_configured_one_center_materializer ||
+        (
+            materialize_route &&
+            route_family == :white_lindsey_low_order &&
+            route_configured_system_classification == :one_center
+        )
     route_configured_one_center_materializer_probe =
         _pqs_source_box_route_driver_one_center_materializer_probe(
             route_configured_materializer_config;
-            probe_route_configured_one_center_materializer,
+            probe_route_configured_one_center_materializer =
+                route_configured_one_center_materializer_requested,
             white_lindsey_expansion,
         )
     route_configured_one_center_materializer_probe_requested =
@@ -2106,8 +2151,20 @@ function _pqs_source_box_route_driver_materialization(
     end
 
     if route_family == :white_lindsey_low_order
-        materialized_report = _white_lindsey_low_order_materialized_seed_report()
-        basis_export_status = :supported_basis_only_fixed_block
+        use_route_configured_one_center_report =
+            materialize_route &&
+            route_configured_system_classification == :one_center &&
+            route_configured_one_center_materializer_probe_materialized
+        materialized_report =
+            use_route_configured_one_center_report ?
+            _pqs_source_box_route_driver_route_configured_one_center_report(
+                route_configured_one_center_materializer_probe.materialization,
+            ) :
+            _white_lindsey_low_order_materialized_seed_report()
+        basis_export_status =
+            use_route_configured_one_center_report ?
+            :not_wired_route_configured_one_center_basis_export :
+            :supported_basis_only_fixed_block
         shellization_summary = materialized_report.shellization_summary
         shellization_summary_available = materialized_report.shellization_summary_available
         shellization_source = materialized_report.shellization_source
@@ -2116,7 +2173,7 @@ function _pqs_source_box_route_driver_materialization(
         materialized_shellization_stage = materialized_report.materialized_shellization_stage
         seed_materialization_status = materialized_report.seed_materialization_status
         ham_bundle_adapter = nothing
-        if save_ham_artifact
+        if save_ham_artifact && !use_route_configured_one_center_report
             isnothing(white_lindsey_expansion) && throw(
                 ArgumentError(
                     "White-Lindsey Ham artifact export requires explicit white_lindsey_expansion",
@@ -2142,11 +2199,20 @@ function _pqs_source_box_route_driver_materialization(
         ham_operator_payload_status = ham_preflight.ham_operator_payload_status
         ham_interaction_status = ham_preflight.ham_interaction_status
         ham_bundle_export_status = ham_preflight.ham_bundle_export_status
-        ham_export_blocker = ham_preflight.missing_builder
+        ham_export_blocker =
+            save_ham_artifact && use_route_configured_one_center_report ?
+            :route_configured_one_center_ham_export_not_wired :
+            ham_preflight.missing_builder
         basis_artifact_written = false
         basis_artifact_status =
-            save_basis_artifact ? :written_basis_only_bundle : :not_requested
-        if save_basis_artifact
+            save_basis_artifact ?
+            (
+                use_route_configured_one_center_report ?
+                :not_written_route_configured_one_center_basis_export_not_wired :
+                :written_basis_only_bundle
+            ) :
+            :not_requested
+        if save_basis_artifact && !use_route_configured_one_center_report
             write_cartesian_basis_bundle_jld2(
                 basisfile,
                 materialized_report.fixture.fixed_block;
@@ -2201,9 +2267,15 @@ function _pqs_source_box_route_driver_materialization(
         ham_artifact_written = false
         ham_artifact_status =
             save_ham_artifact ?
-            :not_written_private_white_lindsey_ham_adapter_not_ready :
+            (
+                use_route_configured_one_center_report ?
+                :not_written_route_configured_one_center_ham_export_not_wired :
+                :not_written_private_white_lindsey_ham_adapter_not_ready
+            ) :
             :not_requested
-        if save_ham_artifact && ham_preflight.full_ham_export_ready
+        if save_ham_artifact &&
+           !use_route_configured_one_center_report &&
+           ham_preflight.full_ham_export_ready
             write_cartesian_basis_bundle_jld2(
                 hamfile,
                 ham_bundle_adapter;
@@ -2267,7 +2339,10 @@ function _pqs_source_box_route_driver_materialization(
             materialize_route_requested = true,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
-            status = :materialized_seed_report_available,
+            status =
+                use_route_configured_one_center_report ?
+                :materialized_route_configured_one_center_report_available :
+                :materialized_seed_report_available,
             materialized_report,
             materialized_report_kind = materialized_report.object_kind,
             route_configured_shellization_request,
@@ -2325,7 +2400,10 @@ function _pqs_source_box_route_driver_materialization(
             basis_artifact_written,
             basisfile,
             basis_artifact_path = basis_artifact_written ? basisfile : nothing,
-            basis_export_blocker = nothing,
+            basis_export_blocker =
+                save_basis_artifact && use_route_configured_one_center_report ?
+                :route_configured_one_center_basis_export_not_wired :
+                nothing,
             ham_preflight_status = ham_preflight.status,
             ham_missing_builder = ham_preflight.missing_builder,
             ham_operator_payload_status,
