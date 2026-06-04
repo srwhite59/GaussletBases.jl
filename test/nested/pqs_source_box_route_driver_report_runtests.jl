@@ -170,6 +170,8 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test default_status.status == :not_requested_metadata_only
     @test default_status.materialized_report === nothing
     @test default_status.ham_bundle_export_status == :not_requested
+    @test default_status.ham_operator_payload_status == :not_checked_metadata_only
+    @test default_status.ham_interaction_status == :not_checked_metadata_only
     @test default_status.basis_artifact_status == :not_requested
     @test !default_status.basis_artifact_written
     @test !default_status.ham_artifact_written
@@ -187,6 +189,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
     @test pqs_status.basis_bundle_export_status == :pending_final_retained_basis
     @test pqs_status.basis_artifact_status == :not_requested
+    @test pqs_status.ham_operator_payload_status ==
+          :pending_source_box_retained_operator_payload
+    @test pqs_status.ham_interaction_status ==
+          :pending_source_box_retained_density_density_blocks
     @test pqs_status.ham_bundle_export_status == :pending_source_box_retained_route
     @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
 
@@ -212,9 +218,15 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :supported_basis_only_fixed_block
     @test white_lindsey_status.basis_artifact_status == :not_requested
     @test !white_lindsey_status.basis_artifact_written
+    @test white_lindsey_status.ham_operator_payload_status ==
+          :pending_low_order_operator_payload
+    @test white_lindsey_status.ham_interaction_status ==
+          :pending_low_order_density_density_interaction_matrix
     @test white_lindsey_status.ham_bundle_export_status ==
-          :pending_real_interaction_matrix
+          :pending_low_order_density_density_interaction_matrix
     @test white_lindsey_status.ham_artifact_status == :not_requested
+    @test white_lindsey_status.ham_export_blocker ==
+          :missing_pure_low_order_fixed_block_density_density_interaction_builder
     @test !white_lindsey_status.ham_artifact_written
 
     mktempdir() do dir
@@ -228,8 +240,9 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             hamfile,
         )
         @test save_status.ham_artifact_status ==
-              :not_written_pending_real_interaction_matrix
-        @test save_status.ham_export_blocker == :pending_real_interaction_matrix
+              :not_written_pending_low_order_density_density_interaction_matrix
+        @test save_status.ham_export_blocker ==
+              :missing_pure_low_order_fixed_block_density_density_interaction_builder
         @test !save_status.ham_artifact_written
         @test !isfile(hamfile)
     end
@@ -268,8 +281,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/export_status"]) == "basis_only"
             @test String(file["meta/basis_export_status"]) ==
                   "supported_basis_only_fixed_block"
+            @test String(file["meta/ham_operator_payload_status"]) ==
+                  "pending_low_order_operator_payload"
+            @test String(file["meta/ham_interaction_status"]) ==
+                  "pending_low_order_density_density_interaction_matrix"
             @test String(file["meta/ham_export_status"]) ==
-                  "pending_real_interaction_matrix"
+                  "pending_low_order_density_density_interaction_matrix"
+            @test String(file["meta/ham_export_blocker"]) ==
+                  "missing_pure_low_order_fixed_block_density_density_interaction_builder"
         end
     end
     return nothing
@@ -315,14 +334,35 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             saved_materialization = file["materialization"]
             @test saved_materialization.status == :materialized_seed_report_available
             @test saved_materialization.basis_artifact_status == :written_basis_only_bundle
+            @test saved_materialization.ham_operator_payload_status ==
+                  :pending_low_order_operator_payload
+            @test saved_materialization.ham_interaction_status ==
+                  :pending_low_order_density_density_interaction_matrix
             @test saved_materialization.ham_bundle_export_status ==
-                  :pending_real_interaction_matrix
+                  :pending_low_order_density_density_interaction_matrix
+            @test saved_materialization.ham_export_blocker ==
+                  :missing_pure_low_order_fixed_block_density_density_interaction_builder
         end
 
         tsv = read(tsvfile, String)
         @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
         @test occursin("route_materialization\tbasis_artifact_status\t:written_basis_only_bundle", tsv)
-        @test occursin("route_materialization\tham_bundle_export_status\t:pending_real_interaction_matrix", tsv)
+        @test occursin(
+            "route_materialization\tham_operator_payload_status\t:pending_low_order_operator_payload",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tham_interaction_status\t:pending_low_order_density_density_interaction_matrix",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tham_bundle_export_status\t:pending_low_order_density_density_interaction_matrix",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tham_export_blocker\t:missing_pure_low_order_fixed_block_density_density_interaction_builder",
+            tsv,
+        )
         @test !occursin("route_materialization\tmaterialized_report\t", tsv)
     end
     return nothing

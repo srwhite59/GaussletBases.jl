@@ -191,6 +191,8 @@ function _pqs_source_box_route_driver_materialization_status_fields()
         :basisfile,
         :basis_artifact_path,
         :basis_export_blocker,
+        :ham_operator_payload_status,
+        :ham_interaction_status,
         :ham_bundle_export_status,
         :ham_artifact_status,
         :ham_artifact_written,

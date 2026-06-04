@@ -896,6 +896,8 @@ function _pqs_source_box_route_driver_materialization(
             basis_artifact_path = nothing,
             basis_export_blocker =
                 save_basis_artifact ? :materialize_route_false : nothing,
+            ham_operator_payload_status = :not_checked_metadata_only,
+            ham_interaction_status = :not_checked_metadata_only,
             ham_bundle_export_status = :not_requested,
             ham_artifact_status =
                 save_ham_artifact ?
@@ -915,6 +917,10 @@ function _pqs_source_box_route_driver_materialization(
     if route_family == :white_lindsey_low_order
         materialized_report = _white_lindsey_low_order_materialized_seed_report()
         basis_export_status = :supported_basis_only_fixed_block
+        ham_operator_payload_status = :pending_low_order_operator_payload
+        ham_interaction_status = :pending_low_order_density_density_interaction_matrix
+        ham_bundle_export_status = :pending_low_order_density_density_interaction_matrix
+        ham_export_blocker = :missing_pure_low_order_fixed_block_density_density_interaction_builder
         basis_artifact_written = false
         basis_artifact_status =
             save_basis_artifact ? :written_basis_only_bundle : :not_requested
@@ -930,13 +936,15 @@ function _pqs_source_box_route_driver_materialization(
                     materialized_report_kind = materialized_report.object_kind,
                     export_status = :basis_only,
                     basis_export_status,
-                    ham_export_status = :pending_real_interaction_matrix,
+                    ham_operator_payload_status,
+                    ham_interaction_status,
+                    ham_export_status = ham_bundle_export_status,
+                    ham_export_blocker,
                     private_development_only = true,
                 ),
             )
             basis_artifact_written = true
         end
-        ham_export_blocker = :pending_real_interaction_matrix
         return (;
             object_kind = :cartesian_nesting_route_driver_materialization,
             route_family,
@@ -962,10 +970,12 @@ function _pqs_source_box_route_driver_materialization(
             basisfile,
             basis_artifact_path = basis_artifact_written ? basisfile : nothing,
             basis_export_blocker = nothing,
-            ham_bundle_export_status = :pending_real_interaction_matrix,
+            ham_operator_payload_status,
+            ham_interaction_status,
+            ham_bundle_export_status,
             ham_artifact_status =
                 save_ham_artifact ?
-                :not_written_pending_real_interaction_matrix :
+                :not_written_pending_low_order_density_density_interaction_matrix :
                 :not_requested,
             ham_artifact_written = false,
             hamfile,
@@ -998,6 +1008,8 @@ function _pqs_source_box_route_driver_materialization(
         basis_artifact_path = nothing,
         basis_export_blocker =
             save_basis_artifact ? :pending_final_retained_basis : nothing,
+        ham_operator_payload_status = :pending_source_box_retained_operator_payload,
+        ham_interaction_status = :pending_source_box_retained_density_density_blocks,
         ham_bundle_export_status = :pending_source_box_retained_route,
         ham_artifact_status =
             save_ham_artifact ?
