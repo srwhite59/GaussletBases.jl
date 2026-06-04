@@ -328,6 +328,95 @@ function _white_lindsey_low_order_materialized_seed_operator_inventory(seed)
     )
 end
 
+function _white_lindsey_low_order_materialized_seed_fixed_block(seed_or_block)
+    if hasproperty(seed_or_block, :fixed_block)
+        return seed_or_block.fixed_block
+    elseif hasproperty(seed_or_block, :fixture) &&
+           hasproperty(seed_or_block.fixture, :fixed_block)
+        return seed_or_block.fixture.fixed_block
+    end
+    seed_or_block isa _NestedFixedBlock3D || throw(
+        ArgumentError(
+            "White-Lindsey Ham payload candidate requires a materialized seed/report or nested fixed block",
+        ),
+    )
+    return seed_or_block
+end
+
+function _white_lindsey_low_order_materialized_seed_ham_payload_candidate(
+    seed_or_block;
+    expansion::CoulombGaussianExpansion,
+    Z::Real,
+    symmetry_tolerance::Float64 = 1.0e-10,
+)
+    fixed_block = _white_lindsey_low_order_materialized_seed_fixed_block(seed_or_block)
+    packet_kernel = _white_lindsey_low_order_materialized_seed_packet_kernel(seed_or_block)
+    overlap = Matrix{Float64}(fixed_block.overlap)
+    one_body_hamiltonian =
+        _qwrg_fixed_block_one_body_matrix(fixed_block, expansion; Z = Z)
+    interaction_matrix = _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+    final_integral_weights = Float64[Float64(weight) for weight in fixed_block.weights]
+    retained_dimension = size(overlap, 1)
+    matrices = (;
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+    )
+    matrix_sizes = _white_lindsey_low_order_operator_matrix_sizes(matrices)
+    finite_ready = _white_lindsey_low_order_operator_finite_ready(matrices)
+    symmetry_errors = _white_lindsey_low_order_operator_symmetry_errors(matrices)
+    symmetric_ready = _white_lindsey_low_order_operator_symmetric_ready(
+        symmetry_errors;
+        atol = symmetry_tolerance,
+    )
+    expected_matrix_size = (retained_dimension, retained_dimension)
+    weight_length_ready = length(final_integral_weights) == retained_dimension
+    weights_finite = all(isfinite, final_integral_weights)
+
+    return (;
+        object_kind = :white_lindsey_low_order_ham_payload_candidate,
+        route_family = :white_lindsey_low_order,
+        status = :private_payload_candidate_not_writer_adapted,
+        private_development_only = true,
+        public_api = false,
+        writer_ready = false,
+        export_ready = false,
+        export_status = :private_payload_candidate_not_writer_adapted,
+        ham_bundle_export_status = :blocked_private_payload_candidate_not_writer_adapted,
+        packet_kernel,
+        retained_dimension,
+        overlap,
+        one_body_hamiltonian,
+        interaction_matrix,
+        final_integral_weights,
+        weight_semantics = :retained_basis_integral_weights,
+        one_body_source = :fixed_block_kinetic_minus_Z_gaussian_sum,
+        interaction_source = :fixed_block_pair_sum,
+        expansion_term_count = length(expansion.exponents),
+        nuclear_charge = Float64(Z),
+        checks = (;
+            matrix_sizes,
+            expected_matrix_size,
+            matrix_size_ready =
+                all(matrix_size -> matrix_size == expected_matrix_size, values(matrix_sizes)),
+            finite_ready,
+            all_finite = all(values(finite_ready)),
+            symmetry_errors,
+            symmetry_tolerance,
+            symmetric_ready,
+            all_symmetric = all(values(symmetric_ready)),
+            weight_length_ready,
+            weights_finite,
+            weights_ready = weight_length_ready && weights_finite,
+            gaussian_sum_available = !isnothing(fixed_block.gaussian_sum),
+            pair_sum_available = !isnothing(fixed_block.pair_sum),
+            writer_ready = false,
+            export_ready = false,
+            export_status = :private_payload_candidate_not_writer_adapted,
+        ),
+    )
+end
+
 function _white_lindsey_low_order_materialized_seed_report(; kwargs...)
     fixture = _white_lindsey_low_order_materialized_seed_fixture(; kwargs...)
     inventory = fixture.inventory

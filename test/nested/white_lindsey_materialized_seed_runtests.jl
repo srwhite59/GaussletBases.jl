@@ -305,6 +305,79 @@ using GaussletBases
     )
     @test density_interaction_comparison_error <= 1.0e-10
 
+    ham_candidate =
+        GaussletBases._white_lindsey_low_order_materialized_seed_ham_payload_candidate(
+            fixture;
+            expansion = density_expansion,
+            Z = 2.0,
+        )
+    expected_one_body = GaussletBases._qwrg_fixed_block_one_body_matrix(
+        fixed_block,
+        density_expansion;
+        Z = 2.0,
+    )
+    @test ham_candidate.object_kind == :white_lindsey_low_order_ham_payload_candidate
+    @test ham_candidate.route_family == :white_lindsey_low_order
+    @test ham_candidate.status == :private_payload_candidate_not_writer_adapted
+    @test ham_candidate.private_development_only
+    @test !ham_candidate.public_api
+    @test !ham_candidate.writer_ready
+    @test !ham_candidate.export_ready
+    @test ham_candidate.export_status == :private_payload_candidate_not_writer_adapted
+    @test ham_candidate.ham_bundle_export_status ==
+          :blocked_private_payload_candidate_not_writer_adapted
+    @test ham_candidate.packet_kernel == :factorized_direct
+    @test ham_candidate.retained_dimension == total_retained_dimension
+    @test ham_candidate.weight_semantics == :retained_basis_integral_weights
+    @test ham_candidate.one_body_source == :fixed_block_kinetic_minus_Z_gaussian_sum
+    @test ham_candidate.interaction_source == :fixed_block_pair_sum
+    @test ham_candidate.expansion_term_count == length(density_expansion.exponents)
+    @test ham_candidate.nuclear_charge == 2.0
+    @test ham_candidate.overlap == Matrix{Float64}(fixed_block.overlap)
+    @test ham_candidate.one_body_hamiltonian == expected_one_body
+    @test ham_candidate.interaction_matrix == direct_interaction
+    @test ham_candidate.final_integral_weights == Float64[Float64(w) for w in fixed_block.weights]
+    @test size(ham_candidate.overlap) == (total_retained_dimension, total_retained_dimension)
+    @test size(ham_candidate.one_body_hamiltonian) ==
+          (total_retained_dimension, total_retained_dimension)
+    @test size(ham_candidate.interaction_matrix) ==
+          (total_retained_dimension, total_retained_dimension)
+    @test length(ham_candidate.final_integral_weights) == total_retained_dimension
+    @test ham_candidate.checks.matrix_sizes == (
+        overlap = (223, 223),
+        one_body_hamiltonian = (223, 223),
+        interaction_matrix = (223, 223),
+    )
+    @test ham_candidate.checks.expected_matrix_size == (223, 223)
+    @test ham_candidate.checks.matrix_size_ready
+    @test all(values(ham_candidate.checks.finite_ready))
+    @test ham_candidate.checks.all_finite
+    @test all(values(ham_candidate.checks.symmetric_ready))
+    @test ham_candidate.checks.all_symmetric
+    @test ham_candidate.checks.symmetry_errors.overlap <= 1.0e-12
+    @test ham_candidate.checks.symmetry_errors.one_body_hamiltonian <= 1.0e-12
+    @test ham_candidate.checks.symmetry_errors.interaction_matrix <= 1.0e-12
+    @test ham_candidate.checks.weight_length_ready
+    @test ham_candidate.checks.weights_finite
+    @test ham_candidate.checks.weights_ready
+    @test ham_candidate.checks.gaussian_sum_available
+    @test ham_candidate.checks.pair_sum_available
+    @test !ham_candidate.checks.writer_ready
+    @test !ham_candidate.checks.export_ready
+    @test ham_candidate.checks.export_status ==
+          :private_payload_candidate_not_writer_adapted
+
+    fixed_block_candidate =
+        GaussletBases._white_lindsey_low_order_materialized_seed_ham_payload_candidate(
+            fixed_block;
+            expansion = density_expansion,
+            Z = 2.0,
+        )
+    @test fixed_block_candidate.packet_kernel === nothing
+    @test fixed_block_candidate.one_body_hamiltonian == expected_one_body
+    @test fixed_block_candidate.interaction_matrix == direct_interaction
+    @test !fixed_block_candidate.export_ready
+
     direct_matrices =
         GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
     support_matrices =
