@@ -83,6 +83,136 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
     )
 end
 
+function _cartesian_parent_symbol_tuple(atom_symbols)
+    atom_symbols isa AbstractString && return (atom_symbols,)
+    atom_symbols isa Symbol && return (atom_symbols,)
+    return Tuple(atom_symbols)
+end
+
+function _cartesian_parent_center_table(system, standard_setup)
+    atom_symbols = _cartesian_parent_symbol_tuple(system.atom_symbols)
+    nuclear_charges = Tuple(standard_setup.nuclear_charges)
+    atom_locations = Tuple(standard_setup.atom_locations)
+    length(atom_symbols) == length(nuclear_charges) == length(atom_locations) || throw(
+        ArgumentError("cartesian parent requires matching atom symbols, charges, and locations"),
+    )
+    return Tuple(
+        (
+            center_index = index,
+            center_key = Symbol(:center_, index),
+            atom_symbol = atom_symbols[index],
+            nuclear_charge = nuclear_charges[index],
+            location = _cartesian_shellization_route_location_tuple(atom_locations[index]),
+        ) for index in eachindex(atom_symbols)
+    )
+end
+
+function _cartesian_parent_axis_metadata(center_table; atol::Float64 = 1.0e-12)
+    isempty(center_table) && throw(
+        ArgumentError("cartesian parent requires at least one center"),
+    )
+    reference_location = first(center_table).location
+    active_axes = Tuple(
+        axis for (axis, axis_index) in zip((:x, :y, :z), 1:3)
+        if any(
+            center ->
+                abs(center.location[axis_index] - reference_location[axis_index]) > atol,
+            center_table,
+        )
+    )
+    axis_aligned = length(active_axes) <= 1
+    chain_axis = axis_aligned && !isempty(active_axes) ? only(active_axes) : nothing
+    axis_index_by_symbol = (x = 1, y = 2, z = 3)
+    center_axis_coordinates =
+        isnothing(chain_axis) ?
+        () :
+        Tuple(center.location[getproperty(axis_index_by_symbol, chain_axis)] for center in center_table)
+
+    return (
+        object_kind = :cartesian_parent_axis_metadata,
+        status =
+            axis_aligned ?
+            :axis_aligned_or_one_center :
+            :not_axis_aligned,
+        active_axes,
+        axis_aligned,
+        bond_axis = length(center_table) == 2 ? chain_axis : nothing,
+        chain_axis,
+        center_axis_coordinates,
+        center_axis_order = isempty(center_axis_coordinates) ?
+            () :
+            Tuple(sortperm(collect(center_axis_coordinates))),
+    )
+end
+
+function _cartesian_parent_system_classification(center_table, axis_metadata)
+    atom_count = length(center_table)
+    if atom_count == 1
+        return (
+            system_classification = :one_center,
+            system_classification_status = :explicit_atom_count_one,
+            bond_axis = nothing,
+            chain_axis = nothing,
+        )
+    elseif atom_count == 2 && !isnothing(axis_metadata.bond_axis)
+        return (
+            system_classification = :bond_aligned_diatomic,
+            system_classification_status = :explicit_two_atom_single_axis_separation,
+            bond_axis = axis_metadata.bond_axis,
+            chain_axis = axis_metadata.chain_axis,
+        )
+    elseif atom_count == 2
+        return (
+            system_classification = :pending_system_classification,
+            system_classification_status = :diatomic_not_axis_aligned_by_metadata,
+            bond_axis = nothing,
+            chain_axis = nothing,
+        )
+    elseif !isnothing(axis_metadata.chain_axis)
+        return (
+            system_classification = :axis_aligned_chain_metadata_only,
+            system_classification_status = :multi_center_single_axis_chain_not_materialized,
+            bond_axis = nothing,
+            chain_axis = axis_metadata.chain_axis,
+        )
+    end
+    return (
+        system_classification = :unsupported_general_multi_atom,
+        system_classification_status = :general_multi_atom_parent_materializer_not_planned,
+        bond_axis = nothing,
+        chain_axis = nothing,
+    )
+end
+
+function _cartesian_parent_materialization_status(parent_axis)
+    parent_axis_probe = parent_axis.parent_axis_probe
+    parent_axis_metadata_constructed = parent_axis.parent_axis_probe_constructed
+    axis_bundle_status =
+        isnothing(parent_axis_probe) ?
+        :not_requested :
+        parent_axis_probe.axis_bundle_metadata.status
+
+    return (
+        object_kind = :cartesian_parent_materialization_status,
+        status =
+            parent_axis_metadata_constructed ?
+            :metadata_constructed_probe_only :
+            :metadata_only_not_materialized,
+        parent_axis_metadata_constructed,
+        parent_basis_materialized = false,
+        parent_basis_object_available = false,
+        parent_basis_metadata_available =
+            !isnothing(parent_axis_probe) && !isnothing(parent_axis_probe.basis_metadata),
+        axis_bundle_materialized = false,
+        axis_bundle_object_available = false,
+        axis_bundle_metadata_status = axis_bundle_status,
+        axis_bundle_metadata_available =
+            !isnothing(parent_axis_probe) &&
+            axis_bundle_status == :constructed,
+        materialization_scope = :metadata_only_parent_contract,
+    )
+end
+
 
 # Parent-axis readiness/probe.
 
@@ -1580,12 +1710,17 @@ end
 function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     standard_setup =
         _pqs_source_box_route_driver_standard_setup(system, spacing_inputs)
+    center_table = _cartesian_parent_center_table(system, standard_setup)
+    center_axis_metadata = _cartesian_parent_axis_metadata(center_table)
+    classification =
+        _cartesian_parent_system_classification(center_table, center_axis_metadata)
     parent_axis =
         _pqs_source_box_route_driver_parent_axis(
             standard_setup, system, parent_inputs)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
             standard_setup, parent_axis, system, recipe)
+    materialization_status = _cartesian_parent_materialization_status(parent_axis)
 
     return (;
         object_kind = :cartesian_route_parent,
@@ -1598,10 +1733,28 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         parent_axis_readiness = parent_axis.parent_axis_readiness,
         parent_axis_probe = parent_axis.parent_axis_probe,
         route_axis_counts,
+        atom_count = length(center_table),
+        atom_symbols = Tuple(center.atom_symbol for center in center_table),
+        nuclear_charges = Tuple(center.nuclear_charge for center in center_table),
+        atom_locations = Tuple(center.location for center in center_table),
+        center_table,
+        center_count = length(center_table),
+        center_axis_metadata,
+        system_classification = classification.system_classification,
+        system_classification_status = classification.system_classification_status,
+        bond_axis = classification.bond_axis,
+        chain_axis = classification.chain_axis,
         axis_counts = route_axis_counts.parent_axis_counts,
         axis_counts_source = route_axis_counts.parent_axis_counts_source,
+        axis_counts_status = route_axis_counts.status,
         physical_box = standard_setup.parent_box,
         physical_box_rule = standard_setup.parent_box_rule,
+        parent_basis_materialization = materialization_status,
+        parent_basis_materialization_status = materialization_status.status,
+        parent_basis_materialized = materialization_status.parent_basis_materialized,
+        parent_axis_metadata_constructed =
+            materialization_status.parent_axis_metadata_constructed,
+        axis_bundle_materialized = materialization_status.axis_bundle_materialized,
     )
 end
 
