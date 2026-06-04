@@ -215,3 +215,26 @@ downward:
 The desired end state is one clear Cartesian nesting driver shape that can
 describe multiple route families without making single atoms, diatomics, and
 larger systems feel like unrelated architectures.
+
+## Shared Unit Inventory Report
+
+Route reports now carry a compact `standard_unit_inventory` field. This is an
+additive summary, not a replacement for the raw `retained_units`,
+`pair_entries`, or route-specific diagnostics. The detailed records remain the
+authority when a reviewer needs exact source boxes, retained ranges, source
+dimensions, pair helper names, transpose policy, or route-specific provenance.
+
+The summary is derived from route facts after the retained-unit and pair-entry
+field shapes have been checked. Its job is to provide a top-level shared
+unit/box bridge between the PQS/source-box route and the White-Lindsey
+low-order benchmark route. It should stay small and route-visible: unit keys,
+retained unit kinds, source families, source dimensions, retained counts,
+retained count/range materialization flags, retained dimension, pair counts,
+pair families, and output representations.
+
+This common summary should not erase route distinctions. For PQS, the summary
+sits above source-box-first retained two-index density-density route records.
+For White-Lindsey, it summarizes benchmark metadata whose low-order transforms
+and operator blocks are still pending. It must not imply that White-Lindsey
+uses PQS retained weights, PQS source-box transforms, or materialized PQS
+operator helpers.
