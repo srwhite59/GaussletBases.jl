@@ -273,6 +273,74 @@ using JLD2
     @test direct_route_units.packet_kernel === nothing
     @test direct_operator_inventory.packet_kernel === nothing
 
+    one_center_report = (
+        route_family = :white_lindsey_low_order,
+        system_metadata = (
+            atom_symbols = ("Be",),
+            nuclear_charges = (4,),
+            atom_locations = ((0.0, 0.0, 0.0),),
+            parent_axis_counts = (x = 7, y = 7, z = 7),
+            parent_axis_counts_source = :manual_fixture,
+            parent_box = (x = -3.0:3.0, y = -3.0:3.0, z = -3.0:3.0),
+        ),
+        recipe_metadata = (
+            route_kind = :one_center_low_order_probe,
+            route_shape = (:low_order_units,),
+        ),
+    )
+    one_center_request =
+        GaussletBases._cartesian_shellization_route_configured_request(one_center_report)
+    one_center_plan =
+        GaussletBases._cartesian_shellization_route_planning_stub(one_center_request)
+    one_center_helper_map =
+        GaussletBases._cartesian_shellization_route_planning_helper_map(one_center_plan)
+    one_center_readiness =
+        GaussletBases._cartesian_shellization_route_materializer_input_readiness(
+            one_center_request,
+            one_center_plan,
+            one_center_helper_map,
+        )
+    one_center_config =
+        GaussletBases._cartesian_shellization_route_materializer_config(
+            one_center_request,
+            one_center_plan,
+            one_center_helper_map,
+            one_center_readiness,
+        )
+    one_center_materialization =
+        GaussletBases._cartesian_shellization_route_materialize_one_center_low_order(
+            one_center_config;
+            expansion = density_expansion,
+        )
+
+    @test one_center_materialization.object_kind ==
+          :cartesian_shellization_route_one_center_materialization
+    @test one_center_materialization.status ==
+          :materialized_route_configured_one_center_low_order
+    @test one_center_materialization.private_development_only
+    @test one_center_materialization.route_family == :white_lindsey_low_order
+    @test one_center_materialization.route_kind == :one_center_low_order_probe
+    @test one_center_materialization.planning_family == :one_center_atomic_shellization
+    @test one_center_materialization.route_configured_shellization_consumed
+    @test one_center_materialization.calls_white_lindsey_seed_fixture
+    @test !one_center_materialization.calls_lower_level_one_center_helpers_directly
+    @test !one_center_materialization.public_default_behavior_changed
+    @test one_center_materialization.materializer_options.parent_side_count == 7
+    @test one_center_materialization.materializer_options.nside == 5
+    @test one_center_materialization.materializer_options.Z == 4.0
+    @test one_center_materialization.fixture.parent_side_count == 7
+    @test one_center_materialization.fixture.nside == 5
+    @test one_center_materialization.sequence === one_center_materialization.fixture.sequence
+    @test one_center_materialization.fixed_block ===
+          one_center_materialization.fixture.fixed_block
+    @test one_center_materialization.retained_dimension == total_retained_dimension
+    @test one_center_materialization.shellization_summary.source_kind ==
+          :route_configured_one_center_low_order
+    @test one_center_materialization.shellization_summary.shellization_role ==
+          :route_configured_one_center_full_parent_shellization
+    @test one_center_materialization.shellization_summary.retained_dimension ==
+          total_retained_dimension
+
     support_fixture =
         GaussletBases._white_lindsey_low_order_materialized_seed_fixture(
             expansion = density_expansion,

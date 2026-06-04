@@ -475,3 +475,114 @@ function _cartesian_shellization_route_materializer_config(
         constructs_fixed_block = false,
     )
 end
+
+function _cartesian_shellization_route_axis_count_values(parent_axis_counts)
+    if hasproperty(parent_axis_counts, :x)
+        return (Int(parent_axis_counts.x), Int(parent_axis_counts.y), Int(parent_axis_counts.z))
+    end
+    length(parent_axis_counts) == 3 || throw(
+        ArgumentError("one-center shellization materializer requires three parent axis counts"),
+    )
+    return (Int(parent_axis_counts[1]), Int(parent_axis_counts[2]), Int(parent_axis_counts[3]))
+end
+
+function _cartesian_shellization_route_origin_centered(location; atol::Float64 = 1.0e-12)
+    coords = _cartesian_shellization_route_location_tuple(location)
+    return all(coord -> isapprox(coord, 0.0; atol = atol, rtol = 0.0), coords)
+end
+
+function _cartesian_shellization_route_materialize_one_center_low_order(
+    config;
+    nside::Int = 5,
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+    packet_kernel::Symbol = :factorized_direct,
+    d::Real = 0.2,
+    tail_spacing::Real = 10.0,
+    basis_family::Symbol = :G10,
+    reference_spacing::Real = 1.0,
+)
+    config.system_classification == :one_center || throw(
+        ArgumentError("one-center shellization materializer requires config.system_classification = :one_center"),
+    )
+    config.route_family == :white_lindsey_low_order || throw(
+        ArgumentError("one-center shellization materializer is private for :white_lindsey_low_order configs"),
+    )
+    length(config.nuclear_charges) == 1 || throw(
+        ArgumentError("one-center shellization materializer requires exactly one nuclear charge"),
+    )
+    length(config.atom_locations) == 1 || throw(
+        ArgumentError("one-center shellization materializer requires exactly one atom location"),
+    )
+    _cartesian_shellization_route_origin_centered(only(config.atom_locations)) || throw(
+        ArgumentError("one-center shellization materializer currently requires an origin-centered atom"),
+    )
+    axis_counts = _cartesian_shellization_route_axis_count_values(config.parent_axis_counts)
+    axis_counts[1] == axis_counts[2] == axis_counts[3] || throw(
+        ArgumentError("one-center shellization materializer currently requires cubic parent axis counts"),
+    )
+
+    parent_side_count = axis_counts[1]
+    Z = Float64(only(config.nuclear_charges))
+    fixture = _white_lindsey_low_order_materialized_seed_fixture(
+        parent_side_count = parent_side_count,
+        nside = nside,
+        Z = Z,
+        d = d,
+        tail_spacing = tail_spacing,
+        basis_family = basis_family,
+        reference_spacing = reference_spacing,
+        expansion = expansion,
+        gausslet_backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+        packet_kernel = packet_kernel,
+    )
+    shellization_summary = _cartesian_shellization_route_summary(
+        fixture.sequence;
+        route_family = config.route_family,
+        source_kind = :route_configured_one_center_low_order,
+        shellization_role = :route_configured_one_center_full_parent_shellization,
+    )
+
+    return (
+        object_kind = :cartesian_shellization_route_one_center_materialization,
+        status = :materialized_route_configured_one_center_low_order,
+        private_development_only = true,
+        route_family = config.route_family,
+        route_kind = config.route_kind,
+        planning_family = config.planning_family,
+        consumed_config_fields = (
+            :route_family,
+            :route_kind,
+            :system_classification,
+            :atom_locations,
+            :nuclear_charges,
+            :parent_axis_counts,
+            :planning_family,
+            :primary_planned_helper,
+            :helper_chain,
+        ),
+        materializer_options = (
+            parent_side_count = parent_side_count,
+            nside = nside,
+            Z = Z,
+            d = Float64(d),
+            tail_spacing = Float64(tail_spacing),
+            basis_family = basis_family,
+            reference_spacing = Float64(reference_spacing),
+            gausslet_backend = gausslet_backend,
+            refinement_levels = Int(refinement_levels),
+            packet_kernel = packet_kernel,
+        ),
+        fixture,
+        sequence = fixture.sequence,
+        fixed_block = fixture.fixed_block,
+        shellization_summary,
+        retained_dimension = size(fixture.sequence.coefficient_matrix, 2),
+        route_configured_shellization_consumed = true,
+        calls_white_lindsey_seed_fixture = true,
+        calls_lower_level_one_center_helpers_directly = false,
+        public_default_behavior_changed = false,
+    )
+end
