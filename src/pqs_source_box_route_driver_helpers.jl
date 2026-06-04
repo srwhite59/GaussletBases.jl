@@ -213,6 +213,298 @@ function _cartesian_parent_materialization_status(parent_axis)
     )
 end
 
+function _cartesian_parent_materialization_plan_available_inputs(
+    standard_setup,
+    parent_axis,
+    route_axis_counts,
+)
+    inputs = Symbol[
+        :center_table,
+        :center_axis_metadata,
+        :system_classification,
+        :standard_setup,
+        :parent_axis_readiness,
+        :route_axis_counts,
+    ]
+    isnothing(standard_setup.core_spacing) || push!(inputs, :core_spacing)
+    isnothing(route_axis_counts.parent_axis_counts) ||
+        push!(inputs, :parent_axis_counts)
+    parent_axis.parent_axis_probe_constructed &&
+        push!(inputs, :parent_axis_probe_metadata)
+    return Tuple(inputs)
+end
+
+function _cartesian_parent_materialization_plan(
+    center_table,
+    center_axis_metadata,
+    classification,
+    standard_setup,
+    parent_axis,
+    route_axis_counts,
+)
+    atom_count = length(center_table)
+    basis_metadata_available =
+        !isnothing(parent_axis.parent_axis_probe) &&
+        !isnothing(parent_axis.parent_axis_probe.basis_metadata)
+    axis_bundle_metadata_available =
+        !isnothing(parent_axis.parent_axis_probe) &&
+        parent_axis.parent_axis_probe.axis_bundle_metadata.status == :constructed
+    available_inputs =
+        _cartesian_parent_materialization_plan_available_inputs(
+            standard_setup, parent_axis, route_axis_counts)
+    route_axis_pending = route_axis_counts.pending_facts
+
+    family = classification.system_classification
+    if family == :one_center
+        missing_inputs = (
+            route_axis_pending...,
+            :reviewed_one_center_parent_axis_builder,
+            :one_center_parent_basis_or_axis_bundle_metadata_probe,
+        )
+        return (;
+            object_kind = :cartesian_parent_materialization_plan,
+            status = :metadata_only_pending_one_center_parent_axis_builder,
+            planning_family = :one_center_parent_lattice,
+            system_classification = family,
+            system_classification_status =
+                classification.system_classification_status,
+            atom_count,
+            center_count = atom_count,
+            bond_axis = nothing,
+            chain_axis = nothing,
+            intended_parent_constructor = :CartesianParentGaussletBasis3D,
+            intended_axis_basis_helper = :pending_one_center_mapped_axis_builder,
+            intended_axis_bundle_helper = :pending_one_center_axis_bundle_builder,
+            route_neutral_parent_wrapper = :cartesian_parent_gausslet_basis,
+            one_center_compatible = true,
+            bond_aligned_diatomic_compatible = false,
+            axis_aligned_chain_compatible = false,
+            metadata_only = true,
+            constructs_basis_now = false,
+            constructs_axis_bundle_now = false,
+            basis_metadata_available,
+            axis_bundle_metadata_available,
+            required_inputs_available = available_inputs,
+            available_input_count = length(available_inputs),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            pending_facts = missing_inputs,
+            blocked = true,
+            blocker = :pending_one_center_parent_axis_builder,
+            diagnostics = (
+                source = :cartesian_parent_materialization_plan,
+                private_development_only = true,
+                materialization_scope = :metadata_only_parent_planning,
+                public_default_behavior_changed = false,
+                shellification_restructured = false,
+                hamiltonian_export = false,
+            ),
+        )
+    elseif family == :bond_aligned_diatomic
+        homonuclear = parent_axis.parent_axis_readiness.homonuclear
+        constructor =
+            homonuclear ?
+            :bond_aligned_homonuclear_qw_basis :
+            :bond_aligned_heteronuclear_qw_basis
+        probe_constructed = parent_axis.parent_axis_probe_constructed
+        missing_inputs =
+            probe_constructed ?
+            (:real_parent_basis_object_carry_or_reviewed_materializer_handoff,) :
+            (
+                route_axis_pending...,
+                parent_axis.parent_axis_readiness.pending_facts...,
+                :parent_axis_metadata_probe_or_real_parent_basis_object,
+            )
+        return (;
+            object_kind = :cartesian_parent_materialization_plan,
+            status =
+                probe_constructed ?
+                :metadata_probe_available_pending_parent_basis_carry :
+                :metadata_only_diatomic_parent_api_candidate,
+            planning_family = :bond_aligned_diatomic_parent_lattice,
+            system_classification = family,
+            system_classification_status =
+                classification.system_classification_status,
+            atom_count,
+            center_count = atom_count,
+            bond_axis = classification.bond_axis,
+            chain_axis = classification.chain_axis,
+            intended_parent_constructor = constructor,
+            intended_axis_basis_helper = constructor,
+            intended_axis_bundle_helper = :_qwrg_bond_aligned_axis_bundles,
+            route_neutral_parent_wrapper = :cartesian_parent_gausslet_basis,
+            one_center_compatible = false,
+            bond_aligned_diatomic_compatible = true,
+            axis_aligned_chain_compatible = false,
+            metadata_only = true,
+            constructs_basis_now = false,
+            constructs_axis_bundle_now = false,
+            basis_metadata_available,
+            axis_bundle_metadata_available,
+            required_inputs_available = available_inputs,
+            available_input_count = length(available_inputs),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            pending_facts = missing_inputs,
+            blocked = true,
+            blocker =
+                probe_constructed ?
+                :pending_real_parent_basis_carry :
+                :pending_reviewed_diatomic_parent_materializer,
+            diagnostics = (
+                source = :cartesian_parent_materialization_plan,
+                private_development_only = true,
+                materialization_scope = :metadata_only_parent_planning,
+                public_default_behavior_changed = false,
+                shellification_restructured = false,
+                hamiltonian_export = false,
+            ),
+        )
+    elseif family == :axis_aligned_chain_metadata_only
+        homonuclear = parent_axis.parent_axis_readiness.homonuclear
+        constructor =
+            homonuclear ? :bond_aligned_homonuclear_chain_qw_basis : nothing
+        missing_inputs = (
+            route_axis_pending...,
+            homonuclear ?
+            :reviewed_chain_parent_axis_constructor_call :
+            :heteronuclear_chain_parent_materializer_design,
+            homonuclear ?
+            :chain_parent_axis_bundle_metadata_probe :
+            :heteronuclear_chain_axis_bundle_design,
+        )
+        return (;
+            object_kind = :cartesian_parent_materialization_plan,
+            status =
+                homonuclear ?
+                :metadata_only_chain_parent_constructor_candidate :
+                :blocked_unsupported_heteronuclear_chain_parent_materializer,
+            planning_family = :axis_aligned_chain_parent_lattice,
+            system_classification = family,
+            system_classification_status =
+                classification.system_classification_status,
+            atom_count,
+            center_count = atom_count,
+            bond_axis = nothing,
+            chain_axis = classification.chain_axis,
+            intended_parent_constructor = constructor,
+            intended_axis_basis_helper = constructor,
+            intended_axis_bundle_helper =
+                homonuclear ?
+                :pending_homonuclear_chain_axis_bundle_builder :
+                nothing,
+            route_neutral_parent_wrapper = :cartesian_parent_gausslet_basis,
+            one_center_compatible = false,
+            bond_aligned_diatomic_compatible = false,
+            axis_aligned_chain_compatible = true,
+            metadata_only = true,
+            constructs_basis_now = false,
+            constructs_axis_bundle_now = false,
+            basis_metadata_available,
+            axis_bundle_metadata_available,
+            required_inputs_available = available_inputs,
+            available_input_count = length(available_inputs),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            pending_facts = missing_inputs,
+            blocked = true,
+            blocker =
+                homonuclear ?
+                :chain_parent_materializer_not_connected :
+                :heteronuclear_chain_parent_materializer_not_available,
+            diagnostics = (
+                source = :cartesian_parent_materialization_plan,
+                private_development_only = true,
+                materialization_scope = :metadata_only_parent_planning,
+                public_default_behavior_changed = false,
+                shellification_restructured = false,
+                hamiltonian_export = false,
+            ),
+        )
+    elseif family == :pending_system_classification
+        missing_inputs = (:axis_aligned_or_supported_parent_geometry_classification,)
+        return (;
+            object_kind = :cartesian_parent_materialization_plan,
+            status = :blocked_pending_system_classification,
+            planning_family = :pending_system_classification_parent_lattice,
+            system_classification = family,
+            system_classification_status =
+                classification.system_classification_status,
+            atom_count,
+            center_count = atom_count,
+            bond_axis = nothing,
+            chain_axis = nothing,
+            intended_parent_constructor = nothing,
+            intended_axis_basis_helper = nothing,
+            intended_axis_bundle_helper = nothing,
+            route_neutral_parent_wrapper = :cartesian_parent_gausslet_basis,
+            one_center_compatible = false,
+            bond_aligned_diatomic_compatible = false,
+            axis_aligned_chain_compatible = false,
+            metadata_only = true,
+            constructs_basis_now = false,
+            constructs_axis_bundle_now = false,
+            basis_metadata_available,
+            axis_bundle_metadata_available,
+            required_inputs_available = available_inputs,
+            available_input_count = length(available_inputs),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            pending_facts = missing_inputs,
+            blocked = true,
+            blocker = :pending_system_classification,
+            diagnostics = (
+                source = :cartesian_parent_materialization_plan,
+                private_development_only = true,
+                materialization_scope = :metadata_only_parent_planning,
+                public_default_behavior_changed = false,
+                shellification_restructured = false,
+                hamiltonian_export = false,
+            ),
+        )
+    end
+
+    missing_inputs = (:general_multi_atom_parent_materializer_design,)
+    return (;
+        object_kind = :cartesian_parent_materialization_plan,
+        status = :blocked_unsupported_parent_materializer,
+        planning_family = :unsupported_parent_lattice,
+        system_classification = family,
+        system_classification_status = classification.system_classification_status,
+        atom_count,
+        center_count = atom_count,
+        bond_axis = nothing,
+        chain_axis = nothing,
+        intended_parent_constructor = nothing,
+        intended_axis_basis_helper = nothing,
+        intended_axis_bundle_helper = nothing,
+        route_neutral_parent_wrapper = :cartesian_parent_gausslet_basis,
+        one_center_compatible = false,
+        bond_aligned_diatomic_compatible = false,
+        axis_aligned_chain_compatible = false,
+        metadata_only = true,
+        constructs_basis_now = false,
+        constructs_axis_bundle_now = false,
+        basis_metadata_available,
+        axis_bundle_metadata_available,
+        required_inputs_available = available_inputs,
+        available_input_count = length(available_inputs),
+        missing_inputs,
+        missing_input_count = length(missing_inputs),
+        pending_facts = missing_inputs,
+        blocked = true,
+        blocker = :unsupported_general_multi_atom_parent_materializer,
+        diagnostics = (
+            source = :cartesian_parent_materialization_plan,
+            private_development_only = true,
+            materialization_scope = :metadata_only_parent_planning,
+            public_default_behavior_changed = false,
+            shellification_restructured = false,
+            hamiltonian_export = false,
+        ),
+    )
+end
+
 
 # Parent-axis readiness/probe.
 
@@ -440,6 +732,12 @@ function _pqs_source_box_route_driver_parent_contract(parent)
         parent_axis_counts_status = parent.axis_counts_status,
         parent_box = parent.physical_box,
         parent_box_rule = parent.physical_box_rule,
+        parent_materialization_plan = parent.parent_materialization_plan,
+        parent_materialization_plan_status =
+            parent.parent_materialization_plan_status,
+        parent_materialization_planning_family =
+            parent.parent_materialization_planning_family,
+        parent_materialization_blocker = parent.parent_materialization_blocker,
         parent_basis_materialization_status =
             parent.parent_basis_materialization_status,
         parent_basis_materialization = parent.parent_basis_materialization,
@@ -552,6 +850,12 @@ function _pqs_source_box_route_driver_parent_description(
             parent_contract.system_classification_status,
         bond_axis = parent_contract.bond_axis,
         chain_axis = parent_contract.chain_axis,
+        parent_materialization_plan_status =
+            parent_contract.parent_materialization_plan_status,
+        parent_materialization_planning_family =
+            parent_contract.parent_materialization_planning_family,
+        parent_materialization_blocker =
+            parent_contract.parent_materialization_blocker,
         parent_basis_materialization_status =
             parent_contract.parent_basis_materialization_status,
         parent_basis_materialized = parent_contract.parent_basis_materialized,
@@ -1774,6 +2078,10 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
             standard_setup, parent_axis, system, recipe)
+    materialization_plan =
+        _cartesian_parent_materialization_plan(
+            center_table, center_axis_metadata, classification,
+            standard_setup, parent_axis, route_axis_counts)
     materialization_status = _cartesian_parent_materialization_status(parent_axis)
 
     return (;
@@ -1803,6 +2111,11 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         axis_counts_status = route_axis_counts.status,
         physical_box = standard_setup.parent_box,
         physical_box_rule = standard_setup.parent_box_rule,
+        parent_materialization_plan = materialization_plan,
+        parent_materialization_plan_status = materialization_plan.status,
+        parent_materialization_planning_family =
+            materialization_plan.planning_family,
+        parent_materialization_blocker = materialization_plan.blocker,
         parent_basis_materialization = materialization_status,
         parent_basis_materialization_status = materialization_status.status,
         parent_basis_materialized = materialization_status.parent_basis_materialized,

@@ -28,6 +28,10 @@ const _CARTESIAN_PARENT_CONTRACT_FIELDS = (
     :axis_counts_status,
     :physical_box,
     :physical_box_rule,
+    :parent_materialization_plan,
+    :parent_materialization_plan_status,
+    :parent_materialization_planning_family,
+    :parent_materialization_blocker,
     :parent_basis_materialization,
     :parent_basis_materialization_status,
     :parent_basis_materialized,
@@ -122,26 +126,48 @@ end
         atom_locations = ((-4.0, 0.0, 0.0), (0.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
         parent_axis_counts = (x = 11, y = 7, z = 7),
     )
+    heteronuclear_chain = _cartesian_parent_contract_parent(
+        atom_symbols = ("Li", "Be", "B"),
+        nuclear_charges = (3, 4, 5),
+        atom_locations = ((-4.0, 0.0, 0.0), (0.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
+        parent_axis_counts = (x = 11, y = 7, z = 7),
+    )
+    non_axis_aligned = _cartesian_parent_contract_parent(
+        atom_symbols = ("Be", "Be"),
+        nuclear_charges = (4, 4),
+        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 1.0, 0.0)),
+        parent_axis_counts = (x = 9, y = 7, z = 9),
+    )
 
     @test Tuple(propertynames(one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(scalar_one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(be2)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(chain)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
+    @test Tuple(propertynames(heteronuclear_chain)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
+    @test Tuple(propertynames(non_axis_aligned)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
 
     @test one_center.object_kind == :cartesian_route_parent
     @test scalar_one_center.object_kind == :cartesian_route_parent
     @test be2.object_kind == :cartesian_route_parent
     @test chain.object_kind == :cartesian_route_parent
+    @test heteronuclear_chain.object_kind == :cartesian_route_parent
+    @test non_axis_aligned.object_kind == :cartesian_route_parent
 
     @test one_center.axis_counts == (x = 7, y = 7, z = 7)
     @test be2.axis_counts == (x = 9, y = 7, z = 9)
     @test chain.axis_counts == (x = 11, y = 7, z = 7)
+    @test heteronuclear_chain.axis_counts == (x = 11, y = 7, z = 7)
+    @test non_axis_aligned.axis_counts == (x = 9, y = 7, z = 9)
     @test one_center.axis_counts_source == :manual_fixture
     @test be2.axis_counts_source == :manual_fixture
     @test chain.axis_counts_source == :manual_fixture
+    @test heteronuclear_chain.axis_counts_source == :manual_fixture
+    @test non_axis_aligned.axis_counts_source == :manual_fixture
     @test one_center.axis_counts_status == :available
     @test be2.axis_counts_status == :available
     @test chain.axis_counts_status == :available
+    @test heteronuclear_chain.axis_counts_status == :available
+    @test non_axis_aligned.axis_counts_status == :available
 
     @test one_center.atom_count == 1
     @test scalar_one_center.atom_count == 1
@@ -149,9 +175,13 @@ end
     @test scalar_one_center.nuclear_charges == (4.0,)
     @test be2.atom_count == 2
     @test chain.atom_count == 3
+    @test heteronuclear_chain.atom_count == 3
+    @test non_axis_aligned.atom_count == 2
     @test one_center.center_count == one_center.atom_count
     @test be2.center_count == be2.atom_count
     @test chain.center_count == chain.atom_count
+    @test heteronuclear_chain.center_count == heteronuclear_chain.atom_count
+    @test non_axis_aligned.center_count == non_axis_aligned.atom_count
     @test Tuple(center.center_index for center in be2.center_table) == (1, 2)
     @test Tuple(center.atom_symbol for center in be2.center_table) == ("Be", "Be")
     @test Tuple(center.nuclear_charge for center in be2.center_table) == (4, 4)
@@ -178,19 +208,96 @@ end
     @test chain.center_axis_metadata.axis_aligned
     @test chain.center_axis_metadata.center_axis_coordinates == (-4.0, 0.0, 4.0)
 
+    @test heteronuclear_chain.system_classification == :axis_aligned_chain_metadata_only
+    @test heteronuclear_chain.chain_axis == :x
+    @test heteronuclear_chain.center_axis_metadata.axis_aligned
+
+    @test non_axis_aligned.system_classification == :pending_system_classification
+    @test non_axis_aligned.system_classification_status ==
+          :diatomic_not_axis_aligned_by_metadata
+    @test non_axis_aligned.bond_axis === nothing
+    @test non_axis_aligned.chain_axis === nothing
+    @test !non_axis_aligned.center_axis_metadata.axis_aligned
+    @test non_axis_aligned.center_axis_metadata.active_axes == (:x, :y)
+
     @test one_center.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
     @test be2.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
     @test chain.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
+    @test heteronuclear_chain.parent_axis_readiness.parent_axis_counts_status ==
+          :manual_fixture
+    @test non_axis_aligned.parent_axis_readiness.parent_axis_counts_status ==
+          :manual_fixture
+
+    @test one_center.parent_materialization_plan.object_kind ==
+          :cartesian_parent_materialization_plan
+    @test one_center.parent_materialization_plan_status ==
+          :metadata_only_pending_one_center_parent_axis_builder
+    @test one_center.parent_materialization_planning_family ==
+          :one_center_parent_lattice
+    @test one_center.parent_materialization_blocker ==
+          :pending_one_center_parent_axis_builder
+    @test one_center.parent_materialization_plan.one_center_compatible
+    @test !one_center.parent_materialization_plan.constructs_basis_now
+    @test !one_center.parent_materialization_plan.constructs_axis_bundle_now
+
+    @test be2.parent_materialization_plan_status ==
+          :metadata_only_diatomic_parent_api_candidate
+    @test be2.parent_materialization_planning_family ==
+          :bond_aligned_diatomic_parent_lattice
+    @test be2.parent_materialization_plan.intended_parent_constructor ==
+          :bond_aligned_homonuclear_qw_basis
+    @test be2.parent_materialization_plan.intended_axis_bundle_helper ==
+          :_qwrg_bond_aligned_axis_bundles
+    @test be2.parent_materialization_plan.bond_aligned_diatomic_compatible
+    @test !be2.parent_materialization_plan.constructs_basis_now
+    @test !be2.parent_materialization_plan.constructs_axis_bundle_now
+
+    @test chain.parent_materialization_plan_status ==
+          :metadata_only_chain_parent_constructor_candidate
+    @test chain.parent_materialization_planning_family ==
+          :axis_aligned_chain_parent_lattice
+    @test chain.parent_materialization_plan.intended_parent_constructor ==
+          :bond_aligned_homonuclear_chain_qw_basis
+    @test chain.parent_materialization_plan.axis_aligned_chain_compatible
+    @test chain.parent_materialization_blocker ==
+          :chain_parent_materializer_not_connected
+
+    @test heteronuclear_chain.parent_materialization_plan_status ==
+          :blocked_unsupported_heteronuclear_chain_parent_materializer
+    @test heteronuclear_chain.parent_materialization_planning_family ==
+          :axis_aligned_chain_parent_lattice
+    @test heteronuclear_chain.parent_materialization_plan.intended_parent_constructor ===
+          nothing
+    @test heteronuclear_chain.parent_materialization_plan.axis_aligned_chain_compatible
+    @test heteronuclear_chain.parent_materialization_blocker ==
+          :heteronuclear_chain_parent_materializer_not_available
+
+    @test non_axis_aligned.parent_materialization_plan_status ==
+          :blocked_pending_system_classification
+    @test non_axis_aligned.parent_materialization_planning_family ==
+          :pending_system_classification_parent_lattice
+    @test non_axis_aligned.parent_materialization_blocker ==
+          :pending_system_classification
+    @test non_axis_aligned.parent_materialization_plan.blocked
+
     @test one_center.parent_basis_materialization_status ==
           :metadata_only_not_materialized
     @test be2.parent_basis_materialization_status ==
           :metadata_only_not_materialized
     @test chain.parent_basis_materialization_status ==
           :metadata_only_not_materialized
+    @test heteronuclear_chain.parent_basis_materialization_status ==
+          :metadata_only_not_materialized
+    @test non_axis_aligned.parent_basis_materialization_status ==
+          :metadata_only_not_materialized
     @test !one_center.parent_basis_materialized
     @test !be2.parent_basis_materialized
     @test !chain.parent_basis_materialized
+    @test !heteronuclear_chain.parent_basis_materialized
+    @test !non_axis_aligned.parent_basis_materialized
     @test !one_center.axis_bundle_materialized
     @test !be2.axis_bundle_materialized
     @test !chain.axis_bundle_materialized
+    @test !heteronuclear_chain.axis_bundle_materialized
+    @test !non_axis_aligned.axis_bundle_materialized
 end

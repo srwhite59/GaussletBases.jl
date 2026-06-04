@@ -36,6 +36,10 @@ const _ROUTE_DRIVER_PARENT_CONTRACT_KEYS = (
     :parent_axis_counts_status,
     :parent_box,
     :parent_box_rule,
+    :parent_materialization_plan,
+    :parent_materialization_plan_status,
+    :parent_materialization_planning_family,
+    :parent_materialization_blocker,
     :parent_basis_materialization_status,
     :parent_basis_materialization,
     :parent_basis_materialized,
@@ -171,6 +175,7 @@ function _pqs_route_driver_check_parent_contract(
     system_classification_status,
     bond_axis,
     chain_axis,
+    parent_materialization_planning_family,
 )
     @test hasproperty(report, :parent_contract)
     parent_contract = report.parent_contract
@@ -182,6 +187,16 @@ function _pqs_route_driver_check_parent_contract(
     @test parent_contract.system_classification_status == system_classification_status
     @test parent_contract.bond_axis == bond_axis
     @test parent_contract.chain_axis == chain_axis
+    @test parent_contract.parent_materialization_plan.object_kind ==
+          :cartesian_parent_materialization_plan
+    @test parent_contract.parent_materialization_planning_family ==
+          parent_materialization_planning_family
+    @test parent_contract.parent_materialization_plan_status ==
+          parent_contract.parent_materialization_plan.status
+    @test parent_contract.parent_materialization_blocker ==
+          parent_contract.parent_materialization_plan.blocker
+    @test !parent_contract.parent_materialization_plan.constructs_basis_now
+    @test !parent_contract.parent_materialization_plan.constructs_axis_bundle_now
     @test parent_contract.parent_axis_counts == report.system_metadata.parent_axis_counts
     @test parent_contract.parent_axis_counts_source ==
           report.system_metadata.parent_axis_counts_source
@@ -199,6 +214,12 @@ function _pqs_route_driver_check_parent_contract(
           system_classification_status
     @test report.parent_description.bond_axis == bond_axis
     @test report.parent_description.chain_axis == chain_axis
+    @test report.parent_description.parent_materialization_plan_status ==
+          parent_contract.parent_materialization_plan_status
+    @test report.parent_description.parent_materialization_planning_family ==
+          parent_materialization_planning_family
+    @test report.parent_description.parent_materialization_blocker ==
+          parent_contract.parent_materialization_blocker
     @test report.parent_description.parent_basis_materialization_status ==
           parent_contract.parent_basis_materialization_status
     return nothing
@@ -254,6 +275,7 @@ function _pqs_route_driver_check_report_output_sections(report)
         end
         tsv = read(tsvfile, String)
         @test occursin("parent_contract\tsystem_classification", tsv)
+        @test occursin("parent_contract\tparent_materialization_plan_status", tsv)
         @test occursin("parent_contract\tparent_basis_materialization_status", tsv)
         @test occursin("standard_unit_inventory\tunit_count", tsv)
         @test occursin("retained_unit\t", tsv)
@@ -1141,6 +1163,8 @@ end
             :explicit_two_atom_single_axis_separation,
         bond_axis = :x,
         chain_axis = :x,
+        parent_materialization_planning_family =
+            :bond_aligned_diatomic_parent_lattice,
     )
     _pqs_route_driver_check_standard_unit_inventory(
         pqs_report;
@@ -1166,6 +1190,8 @@ end
             :explicit_two_atom_single_axis_separation,
         bond_axis = :x,
         chain_axis = :x,
+        parent_materialization_planning_family =
+            :bond_aligned_diatomic_parent_lattice,
     )
     _pqs_route_driver_check_standard_unit_inventory(
         white_lindsey_report;
@@ -1193,6 +1219,7 @@ end
         system_classification_status = :explicit_atom_count_one,
         bond_axis = nothing,
         chain_axis = nothing,
+        parent_materialization_planning_family = :one_center_parent_lattice,
     )
     one_center_request =
         GaussletBases._cartesian_shellization_route_configured_request(one_center_report)
