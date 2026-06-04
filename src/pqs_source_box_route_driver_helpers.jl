@@ -932,6 +932,8 @@ function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_
             :absent_for_fixed_block,
         pure_operator_payload_available,
         status,
+        required_builder_contract =
+            :white_lindsey_low_order_fixed_block_density_density_builder,
         ham_operator_payload_status,
         ham_interaction_status,
         ham_bundle_export_status,

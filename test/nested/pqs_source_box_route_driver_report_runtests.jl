@@ -334,6 +334,8 @@ function _pqs_route_driver_check_white_lindsey_ham_preflight()
     @test preflight.basis_bundle_ham_payload_status == :absent_for_fixed_block
     @test !preflight.pure_operator_payload_available
     @test preflight.status == :blocked_missing_pure_low_order_interaction_builder
+    @test preflight.required_builder_contract ==
+          :white_lindsey_low_order_fixed_block_density_density_builder
     @test preflight.ham_operator_payload_status == :pending_low_order_operator_payload
     @test preflight.ham_interaction_status ==
           :pending_low_order_density_density_interaction_matrix
@@ -389,6 +391,8 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             @test saved_materialization.basis_artifact_status == :written_basis_only_bundle
             @test saved_materialization.ham_preflight.status ==
                   :blocked_missing_pure_low_order_interaction_builder
+            @test saved_materialization.ham_preflight.required_builder_contract ==
+                  :white_lindsey_low_order_fixed_block_density_density_builder
             @test saved_materialization.ham_preflight.missing_builder ==
                   :missing_pure_low_order_fixed_block_density_density_interaction_builder
             @test saved_materialization.ham_preflight_status ==
