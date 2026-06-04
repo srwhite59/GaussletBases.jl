@@ -59,6 +59,7 @@ using GaussletBases
     save_artifact = false
     save_tsv = false
     materialize_route = false
+    probe_route_configured_one_center_materializer = false
     save_basis_artifact = false
     save_ham_artifact = false
     outfile = "pqs_source_box_route_driver_report.jld2"
@@ -139,7 +140,8 @@ using GaussletBases
 
     materialization = GaussletBases._pqs_source_box_route_driver_materialization(
         report;
-        materialize_route, save_basis_artifact, save_ham_artifact, basisfile, hamfile,
+        materialize_route, probe_route_configured_one_center_materializer,
+        save_basis_artifact, save_ham_artifact, basisfile, hamfile,
         white_lindsey_expansion, white_lindsey_Z,)
 
 # Short screen summary first; detailed sections follow below.
@@ -173,13 +175,17 @@ using GaussletBases
     @show materialization.route_configured_available_fact_count
     @show materialization.route_configured_materializer_config_status
     @show materialization.route_configured_materializer_config_pending_input_count
+    @show materialization.route_configured_one_center_materializer_probe_requested
+    @show materialization.route_configured_one_center_materializer_probe_status
+    @show materialization.route_configured_one_center_materializer_probe_blocker
     @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
 
 # Detailed sections and optional artifacts stay behind helpers so the driver
 # remains an editable run recipe rather than a report-schema implementation.
     GaussletBases._pqs_source_box_route_driver_print_details(report)
-    if materialize_route || save_basis_artifact || save_ham_artifact
+    if materialize_route || probe_route_configured_one_center_materializer ||
+       save_basis_artifact || save_ham_artifact
         GaussletBases._pqs_source_box_route_driver_print_materialization(materialization)
     end
     GaussletBases._pqs_source_box_route_driver_save( report;

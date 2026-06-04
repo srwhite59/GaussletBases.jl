@@ -61,6 +61,26 @@ function _pqs_route_driver_report_for_test(; route_family = :pqs_source_box)
     )
 end
 
+function _pqs_route_driver_one_center_white_lindsey_report_for_test()
+    return (;
+        route_family = :white_lindsey_low_order,
+        retained_dimension = 223,
+        system_metadata = (;
+            atom_symbols = ("Be",),
+            nuclear_charges = (4,),
+            atom_locations = ((0.0, 0.0, 0.0),),
+            parent_axis_counts = (x = 7, y = 7, z = 7),
+            parent_axis_counts_source = :manual_fixture,
+            parent_box = (x = -3.0:3.0, y = -3.0:3.0, z = -3.0:3.0),
+        ),
+        recipe_metadata = (;
+            route_kind = :one_center_low_order_probe,
+            route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
+            benchmark_role = :published_cartesian_baseline_for_pqs_comparison,
+        ),
+    )
+end
+
 function _pqs_route_driver_check_standard_unit_inventory(
     report;
     retained_dimension,
@@ -353,6 +373,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
         default_status;
         current_materialization_source = :pending_source_box_route_materializer,
     )
+    @test !default_status.route_configured_one_center_materializer_probe_requested
+    @test default_status.route_configured_one_center_materializer_probe_status ==
+          :not_requested
+    @test !default_status.route_configured_one_center_materializer_probe_materialized
+    @test !default_status.route_configured_one_center_materializer_probe_consumed
+    @test default_status.route_configured_one_center_materializer_probe_blocker === nothing
+    @test default_status.route_configured_one_center_materializer_probe.materialization === nothing
     @test default_status.ham_bundle_export_status == :not_requested
     @test default_status.ham_preflight_status == :not_checked_metadata_only
     @test default_status.ham_missing_builder === nothing
@@ -396,6 +423,59 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test pqs_status.ham_bundle_export_status == :pending_source_box_retained_route
     @test pqs_status.ham_preflight === nothing
     @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
+
+    white_lindsey_probe_blocked =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            white_lindsey_report;
+            materialize_route = true,
+            probe_route_configured_one_center_materializer = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            basisfile = "unused_basis.jld2",
+            hamfile = "unused.jld2",
+            white_lindsey_expansion = density_expansion,
+        )
+    @test white_lindsey_probe_blocked.status == :materialized_seed_report_available
+    @test white_lindsey_probe_blocked.shellization_source ==
+          :white_lindsey_one_center_seed
+    @test !white_lindsey_probe_blocked.route_configured_shellization_consumed
+    @test white_lindsey_probe_blocked.route_configured_one_center_materializer_probe_requested
+    @test white_lindsey_probe_blocked.route_configured_one_center_materializer_probe_status ==
+          :blocked_not_one_center
+    @test !white_lindsey_probe_blocked.route_configured_one_center_materializer_probe_materialized
+    @test !white_lindsey_probe_blocked.route_configured_one_center_materializer_probe_consumed
+    @test white_lindsey_probe_blocked.route_configured_one_center_materializer_probe_blocker ==
+          :route_config_not_one_center
+    @test white_lindsey_probe_blocked.route_configured_one_center_materializer_probe.materialization ===
+          nothing
+
+    one_center_probe =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = false,
+            probe_route_configured_one_center_materializer = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            basisfile = "unused_basis.jld2",
+            hamfile = "unused.jld2",
+            white_lindsey_expansion = density_expansion,
+        )
+    @test one_center_probe.status == :not_requested_metadata_only
+    @test one_center_probe.route_configured_system_classification == :one_center
+    @test one_center_probe.route_configured_one_center_materializer_probe_requested
+    @test one_center_probe.route_configured_one_center_materializer_probe_status ==
+          :materialized_route_configured_one_center_low_order
+    @test one_center_probe.route_configured_one_center_materializer_probe_materialized
+    @test one_center_probe.route_configured_one_center_materializer_probe_consumed
+    @test one_center_probe.route_configured_one_center_materializer_probe_blocker === nothing
+    route_configured_materialization =
+        one_center_probe.route_configured_one_center_materializer_probe.materialization
+    @test route_configured_materialization.object_kind ==
+          :cartesian_shellization_route_one_center_materialization
+    @test route_configured_materialization.retained_dimension == 223
+    @test route_configured_materialization.route_configured_shellization_consumed
+    @test route_configured_materialization.calls_white_lindsey_seed_fixture
+    @test !route_configured_materialization.public_default_behavior_changed
 
     mktempdir() do dir
         pqs_hamfile = joinpath(dir, "pqs_pending_ham.jld2")
