@@ -5,7 +5,7 @@ using GaussletBases
 # Editable route defaults. Override these with a config file or `name=value`
 # arguments after the script path.
     route_family = :pqs_source_box
-    route_kind = :be2_pqs_source_box_development_spine
+    route_kind = :be2_cartesian_nesting_route_driver_spine
     atom_symbols = ("Be", "Be")
     nuclear_charges = (4, 4)
     atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))

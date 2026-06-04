@@ -16,12 +16,13 @@ const _PQS_ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
     :pair_families,
     :output_representations,
 )
+const _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND = :be2_cartesian_nesting_route_driver_spine
 
 function _pqs_route_driver_report_for_test(; route_family = :pqs_source_box)
     return GaussletBases._pqs_source_box_route_driver_dry_run(
         ;
         route_family,
-        route_kind = :be2_pqs_source_box_development_spine,
+        route_kind = _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND,
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
         atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
@@ -71,6 +72,7 @@ function _pqs_route_driver_check_standard_unit_inventory(
     output_representations,
 )
     @test report.retained_dimension == retained_dimension
+    @test report.recipe_metadata.route_kind == _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND
     @test Tuple(unit.unit_key for unit in report.retained_units) == unit_keys
     @test length(report.pair_entries) == pair_count
     @test report.pair_family_counts == pair_family_counts
