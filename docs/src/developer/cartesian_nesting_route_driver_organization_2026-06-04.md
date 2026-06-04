@@ -11,13 +11,16 @@ work. It is not a pass/fail status report for the current private driver.
 Terminology:
 
 - PQS means Projected q-Shell: a retained boundary object built by projecting
-  raw product-box modes, not by assigning positive retained quadrature weights.
+  raw product-box modes, not by treating retained columns as a quadrature rule.
 - Source-box route means the current PQS/source-box-first algorithmic
   direction, where retained blocks are meant to come from source-box pair
   transforms.
 - White-Lindsey low-order route means the old published Cartesian nested
   gausslet baseline, used here as the prior-work comparison route. The durable
-  spelling should be `Lindsey`.
+  spelling should be `Lindsey`. The phrase `low-order` is retrospective repo
+  terminology: it became useful only after later high-order PQS methods and
+  earlier high-order variations existed. It should not imply that the original
+  White-Lindsey route was designed as a subsidiary version of PQS.
 - Standard units means the modern top-level partition into Cartesian
   source/product units. A one-atom problem may produce one unsplit unit; a
   diatomic or larger system may produce several units. The route code should
@@ -92,6 +95,12 @@ The relatively unimportant part is the old code's exact rule for when to split
 the system into boxes. That rule was not the scientific core of the method, and
 it should not become a route contract in the current repo.
 
+The old implementation should still be treated as valuable implementation
+material. The goal is not to reimplement it from scratch if existing optimized
+pieces can be incorporated. The long-term direction should be to retire old
+standalone route surfaces that are not unified, while preserving their shared
+and well-optimized parts inside the modern route organization.
+
 The durable reading is:
 
 - White-Lindsey owns a low-order COMX-style retained-basis treatment inside
@@ -99,6 +108,37 @@ The durable reading is:
 - The modern repo owns the outward unit/box organization.
 - The benchmark route should fit the modern unit/box description, rather than
   forcing the modern code to reproduce old atom-count split heuristics.
+
+For materialized White-Lindsey work, the order matters. The shell or box
+boundary is first split into disjoint geometric pieces. A face-interior piece
+uses a two-dimensional product of two one-dimensional retained side functions.
+An edge piece uses a one-dimensional retained side function along the free
+axis. A corner piece is a single retained site, mapped directly from the parent
+lattice to the final retained lattice. The split therefore determines the
+dimension of the retained construction: 2D faces, 1D edges, and 0D corners.
+
+The repo already has implementation material in this direction, but it is not
+yet wired into the private route-driver White-Lindsey skeleton. In particular,
+`src/cartesian_nested_faces.jl` defines `_CartesianNestedFace3D`,
+`_CartesianNestedEdge3D`, `_CartesianNestedCorner3D`, and
+`_CartesianNestedCompleteShell3D`, with `_nested_complete_rectangular_shell`
+assembling six face interiors, twelve edges, and eight corners into one
+complete nonrecursive shell layer. That is a useful source of construction
+logic for a future materialized benchmark route. Existing
+`ordinary_cartesian_qiu_white_operators` paths can consume nested fixed blocks,
+so the benchmark-route seed should connect this materialized shell/fixed-block
+machinery to the route-driver report rather than reimplementing the
+face/edge/corner decomposition from scratch.
+
+Both PQS and White-Lindsey need IDA weights in the same definitional sense:
+the unsquared integral of each retained basis function. These weights are not
+a quadrature rule for arbitrary integration. Initial weights can be constructed
+from the three-dimensional product of one-dimensional function-transform
+integrals. For White-Lindsey, once the disjoint face, edge, and corner retained
+pieces are built, those weights are final for the retained basis. For PQS, the
+initial product-mode weights are only seeds; projection and orthogonalization
+change the retained functions, so the final IDA weights must be recomputed or
+propagated for the final retained basis.
 
 This means the route skeleton can honestly say:
 
@@ -117,8 +157,10 @@ White-Lindsey low-order nesting has disjoint units. Once the units are chosen,
 they are comparatively simple: they do not require a later projection,
 orthogonalization, or Lowdin-style cleanup stage to resolve overlap between
 retained boundary objects. The difficulty is pushed earlier into the breakup of
-space into pieces, especially the edge, face, and corner bookkeeping needed by
-a low-order Cartesian shell decomposition.
+space into pieces. In the low-order shell decomposition, face interiors, edges,
+and corners are different retained-piece types rather than one uniform unit
+type: faces are two-dimensional products, edges are one-dimensional pieces,
+and corners are direct single-site pieces.
 
 PQS points in the opposite direction. The unit description can be simpler and
 more regular at the route level, but the retained objects are projected
@@ -199,7 +241,8 @@ Several existing lane boundaries remain important:
 
 - Shell/support-row contraction is an oracle/debug path, not the PQS
   source-box algorithm.
-- Retained PQS columns are not positive quadrature weights.
+- Retained PQS columns are not a quadrature rule. IDA weights are the
+  unsquared integrals of the final retained basis functions.
 - IDA/source-box comparisons and MWG/final-residual supplement logic remain
   separate concepts.
 - A metadata skeleton is not a Hamiltonian implementation.
