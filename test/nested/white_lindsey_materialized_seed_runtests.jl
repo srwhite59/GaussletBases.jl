@@ -2,44 +2,12 @@ using LinearAlgebra
 using Test
 using GaussletBases
 
-function _white_lindsey_materialized_seed_fixture()
-    parent_side_count = 7
-    nside = 5
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    basis = build_basis(
-        MappedUniformBasisSpec(
-            :G10;
-            count = parent_side_count,
-            mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0),
-            reference_spacing = 1.0,
-        ),
-    )
-    sequence = build_one_center_atomic_full_parent_shell_sequence(
-        basis;
-        expansion = expansion,
-        nside = nside,
-        gausslet_backend = :numerical_reference,
-        refinement_levels = 0,
-    )
-    fixed_block = GaussletBases._nested_fixed_block(sequence, basis, :numerical_reference)
-    structure = one_center_atomic_nested_structure_diagnostics(
-        sequence;
-        parent_side_count = parent_side_count,
-        nside = nside,
-    )
-    return (; parent_side_count, nside, basis, sequence, fixed_block, structure)
-end
-
 @testset "White-Lindsey materialized complete-shell seed fixture" begin
-    fixture = _white_lindsey_materialized_seed_fixture()
+    fixture = GaussletBases._white_lindsey_low_order_materialized_seed_fixture()
     sequence = fixture.sequence
     fixed_block = fixture.fixed_block
     structure = fixture.structure
-    inventory = GaussletBases._white_lindsey_low_order_materialized_seed_inventory(
-        sequence,
-        fixed_block,
-        structure,
-    )
+    inventory = fixture.inventory
 
     shell_retained_count = 98
     core_retained_count = 5^3

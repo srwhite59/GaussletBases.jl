@@ -89,3 +89,44 @@ function _white_lindsey_low_order_materialized_seed_inventory(
         weight_semantics = :retained_basis_integral_weights,
     )
 end
+
+function _white_lindsey_low_order_materialized_seed_fixture(;
+    parent_side_count::Int = 7,
+    nside::Int = 5,
+    Z::Real = 2.0,
+    d::Real = 0.2,
+    tail_spacing::Real = 10.0,
+    basis_family::Symbol = :G10,
+    reference_spacing::Real = 1.0,
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    gausslet_backend::Symbol = :numerical_reference,
+    refinement_levels::Integer = 0,
+)
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            basis_family;
+            count = parent_side_count,
+            mapping = white_lindsey_atomic_mapping(; Z = Z, d = d, tail_spacing = tail_spacing),
+            reference_spacing = reference_spacing,
+        ),
+    )
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        basis;
+        expansion = expansion,
+        nside = nside,
+        gausslet_backend = gausslet_backend,
+        refinement_levels = refinement_levels,
+    )
+    fixed_block = _nested_fixed_block(sequence, basis, gausslet_backend)
+    structure = one_center_atomic_nested_structure_diagnostics(
+        sequence;
+        parent_side_count = parent_side_count,
+        nside = nside,
+    )
+    inventory = _white_lindsey_low_order_materialized_seed_inventory(
+        sequence,
+        fixed_block,
+        structure,
+    )
+    return (; parent_side_count, nside, basis, sequence, fixed_block, structure, inventory)
+end
