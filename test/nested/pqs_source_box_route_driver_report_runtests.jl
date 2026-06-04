@@ -137,6 +137,70 @@ function _pqs_route_driver_check_report_output_sections(report)
     return nothing
 end
 
+function _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
+    default_status = GaussletBases._pqs_source_box_route_driver_materialization(
+        pqs_report;
+        materialize_route = false,
+        save_ham_artifact = false,
+        hamfile = "unused.jld2",
+    )
+    @test default_status.status == :not_requested_metadata_only
+    @test default_status.materialized_report === nothing
+    @test default_status.ham_bundle_export_status == :not_requested
+    @test !default_status.ham_artifact_written
+
+    pqs_status = GaussletBases._pqs_source_box_route_driver_materialization(
+        pqs_report;
+        materialize_route = true,
+        save_ham_artifact = false,
+        hamfile = "unused.jld2",
+    )
+    @test pqs_status.status == :pending_source_box_retained_route
+    @test pqs_status.materialized_report === nothing
+    @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
+    @test pqs_status.ham_bundle_export_status == :pending_source_box_retained_route
+    @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
+
+    white_lindsey_status = GaussletBases._pqs_source_box_route_driver_materialization(
+        white_lindsey_report;
+        materialize_route = true,
+        save_ham_artifact = false,
+        hamfile = "unused.jld2",
+    )
+    @test white_lindsey_status.status == :materialized_seed_report_available
+    @test white_lindsey_status.materialized_report.object_kind ==
+          :white_lindsey_low_order_materialized_seed_report
+    @test white_lindsey_status.materialized_report_kind ==
+          :white_lindsey_low_order_materialized_seed_report
+    @test white_lindsey_status.retained_dimension == 223
+    @test white_lindsey_status.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test white_lindsey_status.one_body_operator_status ==
+          :materialized_finite_one_body_inventory
+    @test white_lindsey_status.basis_bundle_export_status ==
+          :supported_basis_only_fixed_block
+    @test white_lindsey_status.ham_bundle_export_status ==
+          :pending_real_interaction_matrix
+    @test white_lindsey_status.ham_artifact_status == :not_requested
+    @test !white_lindsey_status.ham_artifact_written
+
+    mktempdir() do dir
+        hamfile = joinpath(dir, "white_lindsey_pending_ham.jld2")
+        save_status = GaussletBases._pqs_source_box_route_driver_materialization(
+            white_lindsey_report;
+            materialize_route = true,
+            save_ham_artifact = true,
+            hamfile,
+        )
+        @test save_status.ham_artifact_status ==
+              :not_written_pending_real_interaction_matrix
+        @test save_status.ham_export_blocker == :pending_real_interaction_matrix
+        @test !save_status.ham_artifact_written
+        @test !isfile(hamfile)
+    end
+    return nothing
+end
+
 @testset "Route-driver standard unit inventory report" begin
     pqs_report = _pqs_route_driver_report_for_test()
     _pqs_route_driver_check_standard_unit_inventory(
@@ -173,4 +237,5 @@ end
         output_representations = (:low_order_nested_cartesian_basis,),
     )
     _pqs_route_driver_check_report_output_sections(white_lindsey_report)
+    _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
 end

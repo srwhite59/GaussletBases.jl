@@ -174,6 +174,30 @@ function _pqs_source_box_route_driver_print_details(report)
     return nothing
 end
 
+function _pqs_source_box_route_driver_print_materialization(materialization)
+    _pqs_route_driver_print_section("route_materialization")
+    for field in (
+        :route_family,
+        :materialize_route_requested,
+        :save_ham_artifact_requested,
+        :status,
+        :materialized_report_kind,
+        :retained_dimension,
+        :final_integral_weights_status,
+        :one_body_operator_status,
+        :basis_bundle_export_status,
+        :ham_bundle_export_status,
+        :ham_artifact_status,
+        :ham_artifact_written,
+        :hamfile,
+        :ham_export_blocker,
+        :pqs_materialization_status,
+    )
+        _pqs_route_driver_print_kv(field, getproperty(materialization, field))
+    end
+    return nothing
+end
+
 
 # Optional artifact helpers for the private driver.
 

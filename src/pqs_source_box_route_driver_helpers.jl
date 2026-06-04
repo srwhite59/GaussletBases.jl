@@ -863,6 +863,103 @@ function _pqs_source_box_route_driver_report(
     )
 end
 
+function _pqs_source_box_route_driver_materialization(
+    report;
+    materialize_route::Bool = false,
+    save_ham_artifact::Bool = false,
+    hamfile::AbstractString = "cartesian_nesting_route_driver_ham_bundle.jld2",
+)
+    route_family = report.route_family
+    if !materialize_route
+        return (;
+            object_kind = :cartesian_nesting_route_driver_materialization,
+            route_family,
+            private_development_only = true,
+            materialize_route_requested = false,
+            save_ham_artifact_requested = save_ham_artifact,
+            status = :not_requested_metadata_only,
+            materialized_report = nothing,
+            materialized_report_kind = nothing,
+            retained_dimension = report.retained_dimension,
+            final_integral_weights_status = :not_checked_metadata_only,
+            one_body_operator_status = :not_checked_metadata_only,
+            basis_bundle_export_status = :not_requested,
+            ham_bundle_export_status = :not_requested,
+            ham_artifact_status =
+                save_ham_artifact ?
+                :not_written_materialization_not_requested :
+                :not_requested,
+            ham_artifact_written = false,
+            hamfile,
+            ham_export_blocker =
+                save_ham_artifact ? :materialize_route_false : nothing,
+            pqs_materialization_status =
+                route_family == :pqs_source_box ?
+                :pending_source_box_retained_route :
+                :not_applicable,
+        )
+    end
+
+    if route_family == :white_lindsey_low_order
+        materialized_report = _white_lindsey_low_order_materialized_seed_report()
+        ham_export_blocker = :pending_real_interaction_matrix
+        return (;
+            object_kind = :cartesian_nesting_route_driver_materialization,
+            route_family,
+            private_development_only = true,
+            materialize_route_requested = true,
+            save_ham_artifact_requested = save_ham_artifact,
+            status = :materialized_seed_report_available,
+            materialized_report,
+            materialized_report_kind = materialized_report.object_kind,
+            retained_dimension = materialized_report.retained_dimension,
+            final_integral_weights_status =
+                materialized_report.inventory.retained_basis_integral_weights_ready ?
+                :available_retained_basis_integral_weights :
+                :not_ready,
+            one_body_operator_status =
+                materialized_report.operator_inventory.all_finite ?
+                :materialized_finite_one_body_inventory :
+                :not_ready,
+            basis_bundle_export_status = :supported_basis_only_fixed_block,
+            ham_bundle_export_status = :pending_real_interaction_matrix,
+            ham_artifact_status =
+                save_ham_artifact ?
+                :not_written_pending_real_interaction_matrix :
+                :not_requested,
+            ham_artifact_written = false,
+            hamfile,
+            ham_export_blocker,
+            pqs_materialization_status = :not_applicable,
+        )
+    end
+
+    ham_export_blocker = :pending_source_box_retained_route
+    return (;
+        object_kind = :cartesian_nesting_route_driver_materialization,
+        route_family,
+        private_development_only = true,
+        materialize_route_requested = true,
+        save_ham_artifact_requested = save_ham_artifact,
+        status = :pending_source_box_retained_route,
+        materialized_report = nothing,
+        materialized_report_kind = nothing,
+        retained_dimension = report.retained_dimension,
+        final_integral_weights_status = :pending_final_ida_weights,
+        one_body_operator_status = :pending_source_box_retained_blocks,
+        basis_bundle_export_status = :pending_final_retained_basis,
+        ham_bundle_export_status = :pending_source_box_retained_route,
+        ham_artifact_status =
+            save_ham_artifact ?
+            :not_written_pending_source_box_retained_route :
+            :not_requested,
+        ham_artifact_written = false,
+        hamfile,
+        ham_export_blocker,
+        pqs_materialization_status = :pending_source_box_retained_route,
+    )
+end
+
 
 # Compatibility dry-run wrapper. This mirrors the executable driver stages,
 # but returns a report directly for focused validation and tests.

@@ -56,8 +56,11 @@ using GaussletBases
 
     save_artifact = false
     save_tsv = false
+    materialize_route = false
+    save_ham_artifact = false
     outfile = "pqs_source_box_route_driver_report.jld2"
     tsvfile = "pqs_source_box_route_driver_report.tsv"
+    hamfile = "cartesian_nesting_route_driver_ham_bundle.jld2"
 
 # Optional config include, followed by simple `name=value` overrides.
     inputs = String[]
@@ -130,6 +133,10 @@ using GaussletBases
         system_metadata, recipe_metadata, parent_description,
         route_skeleton, route_facts, contract, diagnostics)
 
+    materialization = GaussletBases._pqs_source_box_route_driver_materialization(
+        report;
+        materialize_route, save_ham_artifact, hamfile,)
+
 # Short screen summary first; detailed sections follow below.
     retained_counts = route_facts.retained_counts
     retained_dimension = route_facts.retained_dimension
@@ -148,10 +155,15 @@ using GaussletBases
     @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
     @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
     @show retained_counts retained_dimension
+    @show materialization.status materialization.ham_bundle_export_status
+    @show materialization.ham_artifact_status materialization.ham_artifact_written
 
 # Detailed sections and optional artifacts stay behind helpers so the driver
 # remains an editable run recipe rather than a report-schema implementation.
     GaussletBases._pqs_source_box_route_driver_print_details(report)
+    if materialize_route || save_ham_artifact
+        GaussletBases._pqs_source_box_route_driver_print_materialization(materialization)
+    end
     GaussletBases._pqs_source_box_route_driver_save( report;
         save_artifact, save_tsv, outfile, tsvfile,)
 
