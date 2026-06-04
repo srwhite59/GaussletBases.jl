@@ -160,6 +160,17 @@ should be able to answer these questions without studying a large helper file:
 - What is a real algorithmic path and what is only reference/debug metadata?
 - What facts remain pending before this is more than a metadata dry run?
 
+The driver should keep `route_family` and `route_kind` separate. The
+`route_family` field is the actual selector for route-family behavior; in this
+private driver it currently distinguishes `:pqs_source_box` from
+`:white_lindsey_low_order`. The `route_kind` field is a private run-recipe
+metadata label for the driver spine, not the branch selector. Its default label
+is the route-neutral `:be2_cartesian_nesting_route_driver_spine`, so a
+White-Lindsey dry run does not inherit a PQS/source-box route-kind name when a
+user overrides only `route_family`. Route-family-specific facts should remain
+in the route recipe, skeleton, diagnostics, and `standard_unit_inventory`
+summary rather than being inferred from `route_kind`.
+
 ## Consequences For Helper And Source Organization
 
 Helper code should mirror the driver stages. If the driver has clear stages but
