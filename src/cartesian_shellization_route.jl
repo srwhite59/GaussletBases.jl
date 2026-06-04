@@ -437,3 +437,41 @@ function _cartesian_shellization_route_materializer_input_readiness(
         constructs_fixed_block = false,
     )
 end
+
+function _cartesian_shellization_route_materializer_config(
+    request,
+    plan,
+    helper_map,
+    readiness,
+)
+    return (
+        object_kind = :cartesian_shellization_route_materializer_config,
+        status = readiness.status,
+        private_development_only = true,
+        route_family = request.route_family,
+        route_kind = request.route_kind,
+        system_classification = request.system_classification,
+        system_classification_status = request.system_classification_status,
+        bond_axis = request.bond_axis,
+        atom_symbols = request.atom_symbols,
+        atom_locations = request.atom_locations,
+        nuclear_charges = request.nuclear_charges,
+        parent_axis_counts = request.parent_axis_counts,
+        parent_axis_counts_source = request.parent_axis_counts_source,
+        parent_box = request.parent_box,
+        planning_family = plan.planning_family,
+        primary_planned_helper = helper_map.primary_planned_helper,
+        helper_chain = helper_map.helper_chain,
+        pending_inputs = readiness.missing_inputs,
+        pending_input_count = readiness.missing_input_count,
+        blocker = readiness.blocker,
+        driver_defaults_not_materializer_contract =
+            readiness.driver_defaults_not_materializer_contract,
+        materializer_ready = readiness.materializer_ready,
+        route_configured_shellization_consumed = false,
+        constructs_basis = false,
+        constructs_axis_bundles = false,
+        constructs_shell_sequence = false,
+        constructs_fixed_block = false,
+    )
+end

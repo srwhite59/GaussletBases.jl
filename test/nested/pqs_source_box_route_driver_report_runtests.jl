@@ -194,6 +194,12 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test materialization.route_configured_materializer_missing_input_count == 9
     @test materialization.route_configured_input_readiness_blocker ==
           :pending_route_configured_bond_aligned_diatomic_materializer_inputs
+    @test materialization.route_configured_materializer_config_available
+    @test materialization.route_configured_materializer_config_status ==
+          :blocked_missing_materializer_inputs
+    @test materialization.route_configured_materializer_config_planning_family ==
+          :bond_aligned_diatomic_shellization
+    @test materialization.route_configured_materializer_config_pending_input_count == 9
 
     request = materialization.route_configured_shellization_request
     @test request.object_kind == :cartesian_shellization_route_configured_request
@@ -294,6 +300,36 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test !readiness.constructs_axis_bundles
     @test !readiness.constructs_shell_sequence
     @test !readiness.constructs_fixed_block
+
+    config = materialization.route_configured_materializer_config
+    @test config.object_kind == :cartesian_shellization_route_materializer_config
+    @test config.status == materialization.route_configured_materializer_config_status
+    @test config.private_development_only
+    @test config.route_family == request.route_family
+    @test config.route_kind == request.route_kind
+    @test config.system_classification == request.system_classification
+    @test config.bond_axis == request.bond_axis
+    @test config.atom_symbols == request.atom_symbols
+    @test config.atom_locations == request.atom_locations
+    @test config.nuclear_charges == request.nuclear_charges
+    @test config.parent_axis_counts == request.parent_axis_counts
+    @test config.parent_box == request.parent_box
+    @test config.planning_family ==
+          materialization.route_configured_materializer_config_planning_family
+    @test config.primary_planned_helper == helper_map.primary_planned_helper
+    @test config.helper_chain == helper_map.helper_chain
+    @test config.pending_inputs == readiness.missing_inputs
+    @test config.pending_input_count ==
+          materialization.route_configured_materializer_config_pending_input_count
+    @test config.blocker == readiness.blocker
+    @test config.driver_defaults_not_materializer_contract ==
+          readiness.driver_defaults_not_materializer_contract
+    @test !config.materializer_ready
+    @test !config.route_configured_shellization_consumed
+    @test !config.constructs_basis
+    @test !config.constructs_axis_bundles
+    @test !config.constructs_shell_sequence
+    @test !config.constructs_fixed_block
     return nothing
 end
 
@@ -514,6 +550,11 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test file["meta/route_configured_materializer_missing_input_count"] == 9
             @test String(file["meta/route_configured_input_readiness_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
+            @test String(file["meta/route_configured_materializer_config_status"]) ==
+                  "blocked_missing_materializer_inputs"
+            @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
+                  "bond_aligned_diatomic_shellization"
+            @test file["meta/route_configured_materializer_config_pending_input_count"] == 9
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -594,6 +635,11 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test file["meta/route_configured_materializer_missing_input_count"] == 9
             @test String(file["meta/route_configured_input_readiness_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
+            @test String(file["meta/route_configured_materializer_config_status"]) ==
+                  "blocked_missing_materializer_inputs"
+            @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
+                  "bond_aligned_diatomic_shellization"
+            @test file["meta/route_configured_materializer_config_pending_input_count"] == 9
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -842,6 +888,22 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
         )
         @test occursin(
             "route_materialization\troute_configured_input_readiness_blocker\t:pending_route_configured_bond_aligned_diatomic_materializer_inputs",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_materializer_config_available\ttrue",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_materializer_config_status\t:blocked_missing_materializer_inputs",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_materializer_config_planning_family\t:bond_aligned_diatomic_shellization",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_materializer_config_pending_input_count\t9",
             tsv,
         )
         @test occursin(
