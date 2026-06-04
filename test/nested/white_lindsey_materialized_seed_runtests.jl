@@ -26,6 +26,39 @@ using JLD2
     shell = only(sequence.shell_layers)
     @test shell isa GaussletBases._CartesianNestedCompleteShell3D
 
+    shellization_summary = GaussletBases._cartesian_shellization_route_summary(sequence)
+    @test shellization_summary.object_kind == :cartesian_shellization_route_summary
+    @test shellization_summary.status == :private_development_summary
+    @test shellization_summary.private_development_only
+    @test shellization_summary.route_family == :one_center_full_parent
+    @test shellization_summary.source_kind == :one_center_shell_sequence
+    @test shellization_summary.shellization_stage == :route_neutral_spatial_planning
+    @test shellization_summary.lowering_stage == :not_lowered_by_shellization_summary
+    @test shellization_summary.parent_box == sequence.working_box
+    @test shellization_summary.working_box == sequence.working_box
+    @test shellization_summary.core_column_range == sequence.core_column_range
+    @test shellization_summary.core_retained_count == length(sequence.core_column_range)
+    @test shellization_summary.shell_layer_count == length(sequence.shell_layers)
+    @test shellization_summary.shell_layer_kinds == (:_CartesianNestedCompleteShell3D,)
+    @test shellization_summary.shell_layer_column_ranges == Tuple(sequence.layer_column_ranges)
+    @test shellization_summary.retained_dimension == size(sequence.coefficient_matrix, 2)
+    @test shellization_summary.support_count == length(sequence.support_indices)
+    @test shellization_summary.split_status == :not_applicable
+    @test shellization_summary.bond_axis === nothing
+    @test !shellization_summary.midpoint_slab_present
+    @test shellization_summary.child_sequence_count == 0
+    @test shellization_summary.shared_shell_layer_count == length(sequence.shell_layers)
+    @test isempty(shellization_summary.child_column_ranges)
+    @test shellization_summary.contact_or_merge_status == :not_applicable
+    @test shellization_summary.diagnostics.route_neutral_spatial_planning
+    @test !shellization_summary.diagnostics.lowering_applied_by_summary
+    @test !shellization_summary.diagnostics.white_lindsey_lowering_adopted_by_summary
+    @test !shellization_summary.diagnostics.pqs_lowering_adopted_by_summary
+    @test !shellization_summary.diagnostics.public_default_behavior_changed
+    @test !shellization_summary.diagnostics.hamiltonian_schema_changed
+    @test !shellization_summary.diagnostics.gto_supplement_semantics_changed
+    @test !shellization_summary.diagnostics.raw_or_diagnostic_weights_promoted
+
     @test length(shell.faces) == 6
     @test length(shell.edges) == 12
     @test length(shell.corners) == 8
