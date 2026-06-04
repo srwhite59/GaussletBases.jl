@@ -8,11 +8,15 @@ function _one_center_shellification_plan_fixture(; count::Int = 9, nside::Int = 
         mapping = white_lindsey_atomic_mapping(; Z = 4.0, d = 0.15),
         reference_spacing = 1.0,
     ))
-    sequence = build_one_center_atomic_full_parent_shell_sequence(
+    bundle = GaussletBases._mapped_ordinary_gausslet_1d_bundle(
         basis;
         exponents = expansion.exponents,
-        gausslet_backend = :numerical_reference,
+        backend = :numerical_reference,
         refinement_levels = 0,
+    )
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        bundle;
+        expansion,
         nside,
     )
     plan = GaussletBases._cartesian_shellification_plan_one_center_low_order(
@@ -28,7 +32,7 @@ function _one_center_shellification_plan_fixture(; count::Int = 9, nside::Int = 
         parent_side_count = count,
         nside,
     )
-    return (; count, nside, sequence, plan, audit, diagnostics)
+    return (; count, nside, basis, bundle, expansion, sequence, plan, audit, diagnostics)
 end
 
 function _bond_aligned_diatomic_shellification_plan_fixture(;
@@ -140,6 +144,80 @@ end
     @test !plan.diagnostics.public_default_behavior_changed
     @test !plan.diagnostics.pqs_production_source_box_materialization_claimed
     @test !plan.diagnostics.mwg_ida_semantics_changed
+end
+
+@testset "one-center low-order shellification plan materializer matches legacy sequence" begin
+    fixture = _one_center_shellification_plan_fixture()
+    legacy = fixture.sequence
+    plan = fixture.plan
+    materialized = GaussletBases._cartesian_materialize_shellification_low_order(
+        plan,
+        fixture.bundle;
+        expansion = fixture.expansion,
+    )
+    audit = GaussletBases._nested_shell_sequence_contract_audit(
+        materialized,
+        (fixture.count, fixture.count, fixture.count),
+    )
+
+    @test materialized.working_box == legacy.working_box
+    @test materialized.working_box == plan.working_box
+    @test length(materialized.shell_layers) == length(legacy.shell_layers)
+    @test length(materialized.shell_layers) == plan.shell_layer_count
+    @test materialized.core_indices == legacy.core_indices
+    @test materialized.core_states == legacy.core_states
+    @test materialized.core_column_range == legacy.core_column_range
+    @test materialized.layer_column_ranges == legacy.layer_column_ranges
+    @test materialized.support_indices == legacy.support_indices
+    @test materialized.support_states == legacy.support_states
+    @test size(materialized.coefficient_matrix) == size(legacy.coefficient_matrix)
+    @test materialized.coefficient_matrix ≈ legacy.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
+
+    shell_regions =
+        Tuple(region for region in plan.regions if region.role == :low_order_complete_shell)
+    @test length(shell_regions) == length(materialized.shell_layers)
+    for (region, shell, legacy_shell, column_range) in zip(
+        shell_regions,
+        materialized.shell_layers,
+        legacy.shell_layers,
+        materialized.layer_column_ranges,
+    )
+        @test shell isa GaussletBases._CartesianNestedCompleteShell3D
+        @test shell.provenance == region.provenance
+        @test shell.provenance == legacy_shell.provenance
+        @test shell.support_indices == legacy_shell.support_indices
+        @test shell.support_states == legacy_shell.support_states
+        @test shell.face_column_ranges == legacy_shell.face_column_ranges
+        @test shell.edge_column_ranges == legacy_shell.edge_column_ranges
+        @test shell.corner_column_ranges == legacy_shell.corner_column_ranges
+        @test size(shell.coefficient_matrix) == size(legacy_shell.coefficient_matrix)
+        @test shell.coefficient_matrix ≈ legacy_shell.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
+        @test length(column_range) == region.retained_count
+    end
+
+    direct_core_region = only(region for region in plan.regions if region.role == :direct_core)
+    @test direct_core_region.box == plan.direct_core_box
+    @test length(materialized.core_indices) == direct_core_region.retained_count
+    @test length(materialized.core_column_range) == direct_core_region.retained_count
+
+    @test materialized.packet.overlap ≈ legacy.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.kinetic ≈ legacy.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_x ≈ legacy.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_y ≈ legacy.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_z ≈ legacy.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_x ≈ legacy.packet.x2_x atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_y ≈ legacy.packet.x2_y atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_z ≈ legacy.packet.x2_z atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.weights ≈ legacy.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.gaussian_sum ≈ legacy.packet.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.pair_sum ≈ legacy.packet.pair_sum atol = 1.0e-10 rtol = 1.0e-10
+
+    @test audit.full_parent_working_box
+    @test audit.missing_row_count == 0
+    @test audit.ownership_group_count_min == 1
+    @test audit.ownership_group_count_max == 1
+    @test audit.ownership_unowned_row_count == 0
+    @test audit.ownership_multi_owned_row_count == 0
 end
 
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin

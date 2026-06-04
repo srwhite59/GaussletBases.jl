@@ -572,6 +572,108 @@ function _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
     )
 end
 
+function _cartesian_materialize_shellification_low_order(
+    plan,
+    bundle::_MappedOrdinaryGausslet1DBundle;
+    expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
+    packet_kernel::Symbol = :factorized_direct,
+    verify_factorized_reconstruction::Bool = true,
+)
+    term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
+    bundles = _CartesianNestedAxisBundles3D(bundle, bundle, bundle)
+    return _cartesian_materialize_shellification_low_order(
+        plan,
+        bundles;
+        packet_kernel,
+        term_coefficients,
+        verify_factorized_reconstruction,
+    )
+end
+
+function _cartesian_materialize_shellification_low_order(
+    plan,
+    bundles::_CartesianNestedAxisBundles3D;
+    packet_kernel::Symbol = :factorized_direct,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = true,
+)
+    plan.object_kind == :cartesian_shellification_plan3d || throw(
+        ArgumentError("low-order shellification materializer requires a cartesian_shellification_plan3d"),
+    )
+    plan.system_classification == :one_center || throw(
+        ArgumentError("low-order shellification materializer currently supports only one-center plans"),
+    )
+    plan.source_kind == :one_center_atomic_full_parent_shellification_plan || throw(
+        ArgumentError("low-order shellification materializer currently supports only the full-parent one-center plan"),
+    )
+    plan.route_family == :white_lindsey_low_order || throw(
+        ArgumentError("low-order shellification materializer requires route_family = :white_lindsey_low_order"),
+    )
+
+    dims = _nested_axis_lengths(bundles)
+    Tuple(length.(plan.parent_box)) == dims || throw(
+        ArgumentError("low-order shellification materializer requires plan parent_box dimensions to match axis bundles"),
+    )
+    plan.full_parent_working_box || throw(
+        ArgumentError("low-order one-center shellification materializer requires full-parent working box"),
+    )
+    regions = Tuple(plan.regions)
+    !isempty(regions) || throw(
+        ArgumentError("low-order shellification materializer requires at least one plan region"),
+    )
+    last(regions).role == :direct_core || throw(
+        ArgumentError("low-order shellification materializer requires the final plan region to be :direct_core"),
+    )
+    all(region.role == :low_order_complete_shell for region in regions[1:(end - 1)]) ||
+        throw(
+            ArgumentError("low-order one-center shellification materializer supports only :low_order_complete_shell regions before the direct core"),
+        )
+
+    retention = plan.shell_retention
+    shell_layers = _CartesianNestedCompleteShell3D[]
+    for region in regions[1:(end - 1)]
+        isnothing(region.next_inner_box) && throw(
+            ArgumentError("low-order shell region materialization requires next_inner_box"),
+        )
+        shell = _nested_complete_rectangular_shell(
+            bundles,
+            region.next_inner_box...;
+            retain_xy = retention.retain_xy,
+            retain_xz = retention.retain_xz,
+            retain_yz = retention.retain_yz,
+            retain_x_edge = retention.retain_x_edge,
+            retain_y_edge = retention.retain_y_edge,
+            retain_z_edge = retention.retain_z_edge,
+            x_fixed = (first(region.box[1]), last(region.box[1])),
+            y_fixed = (first(region.box[2]), last(region.box[2])),
+            z_fixed = (first(region.box[3]), last(region.box[3])),
+            packet_kernel = packet_kernel,
+            term_coefficients = term_coefficients,
+            verify_factorized_reconstruction = verify_factorized_reconstruction,
+        )
+        shell.provenance == region.provenance || throw(
+            ArgumentError("low-order shell region materialization produced provenance inconsistent with the plan"),
+        )
+        push!(shell_layers, shell)
+    end
+
+    direct_core_region = last(regions)
+    core_indices = _nested_box_support_indices(direct_core_region.box..., dims)
+    length(core_indices) == direct_core_region.retained_count || throw(
+        ArgumentError("low-order direct-core materialization produced a retained count inconsistent with the plan"),
+    )
+    core_coefficients = _nested_direct_core_coefficients(core_indices, prod(dims))
+    return _nested_shell_sequence_from_core_block(
+        bundles,
+        core_indices,
+        core_coefficients,
+        shell_layers;
+        packet_kernel,
+        term_coefficients,
+        verify_factorized_reconstruction,
+    )
+end
+
 function _cartesian_shellization_sequence_summary(
     sequence::_CartesianNestedShellSequence3D;
     source_kind::Symbol,
