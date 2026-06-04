@@ -148,6 +148,56 @@ This means the route skeleton can honestly say:
 - materialized low-order unit transforms and operator blocks remain pending
   implementation work.
 
+## Materialized White-Lindsey Seed Status
+
+The repo now has a small private materialized seed for the White-Lindsey
+low-order benchmark direction. The source anchor is
+`src/white_lindsey_materialized_seed.jl`, with focused validation in
+`test/nested/white_lindsey_materialized_seed_runtests.jl`.
+
+The seed fixture is deliberately tiny: a one-center full-parent `7`/`5`
+construction. Its default packet kernel is `:factorized_direct`, and the same
+tiny fixture is compared against `:support_reference` for the one-body
+operators. This is seed validation only; it is not a public route and is not
+connected to the main route-driver dry run.
+
+The materialized retained units are grouped as:
+
+- direct core;
+- face interiors as two-dimensional products of one-dimensional retained side
+  functions;
+- edges as one-dimensional retained side functions;
+- corners as direct single-site pieces.
+
+The seed carries retained-basis integral weights. These are the unsquared
+integrals of the retained basis functions, not positive quadrature weights and
+not PQS retained-column division weights.
+
+The current one-body operator inventory covers:
+
+- overlap;
+- position;
+- second moment;
+- kinetic.
+
+Focused tests assert finite matrices for all of these terms, overlap identity,
+and symmetry for overlap, second moment, and kinetic. The helper records
+symmetry errors for every term, including position.
+
+A private aggregate seed report now bundles the fixture, materialized
+inventory, route-unit inventory, and one-body operator inventory into one
+object for future driver work. The deliberate non-goals remain in force:
+
+- no public or default behavior;
+- no connection to `_pqs_source_box_route_driver_dry_run`;
+- no route-report schema change;
+- no pair/operator blocks between route units;
+- no electron-electron, MWG, CR2, ECP, or full IDA assembly.
+
+The next design decision is whether and how to expose this aggregate private
+seed report through an explicit non-default driver path. That should be a
+manager-owned route decision, not an implicit helper-side adoption.
+
 ## Two Useful Extremes
 
 PQS and the White-Lindsey low-order method should both remain visible because
