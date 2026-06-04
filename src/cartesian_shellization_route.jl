@@ -909,3 +909,118 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
         public_default_behavior_changed = false,
     )
 end
+
+function _cartesian_shellization_route_materialize_bond_aligned_diatomic(
+    config;
+    parent_qw_basis_object = nothing,
+    parent_axis_bundle_object = nothing,
+    expansion::Union{Nothing,CoulombGaussianExpansion} = nothing,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    shared_shell_layer_policy = nothing,
+    packet_kernel = nothing,
+    axis_bundle_backend = nothing,
+)
+    config.system_classification == :bond_aligned_diatomic || throw(
+        ArgumentError("diatomic shellization materializer requires config.system_classification = :bond_aligned_diatomic"),
+    )
+    config.route_family == :white_lindsey_low_order || throw(
+        ArgumentError("diatomic shellization materializer is private for :white_lindsey_low_order configs"),
+    )
+
+    missing_contract = Symbol[]
+    !config.materializer_options_ready &&
+        append!(missing_contract, config.missing_materializer_options)
+    isnothing(parent_qw_basis_object) &&
+        push!(missing_contract, :parent_qw_basis_object_handoff)
+    isnothing(parent_axis_bundle_object) &&
+        push!(missing_contract, :parent_axis_bundle_object_handoff)
+    isnothing(axis_bundle_backend) &&
+        push!(missing_contract, :axis_bundle_backend_provenance)
+    isnothing(shared_shell_layer_policy) &&
+        push!(missing_contract, :shared_shell_layer_policy)
+    isnothing(packet_kernel) && push!(missing_contract, :packet_kernel)
+    isnothing(expansion) && isnothing(term_coefficients) &&
+        push!(missing_contract, :coulomb_expansion_or_term_coefficients)
+    if config.materializer_backend_requested == :pgdg_localized_experimental &&
+       shared_shell_layer_policy != :endcap_panel_owned
+        push!(missing_contract, :pgdg_requires_endcap_panel_owned_shared_shell_policy)
+    end
+    if !isnothing(axis_bundle_backend) &&
+       axis_bundle_backend != config.materializer_backend_requested
+        push!(missing_contract, :axis_bundle_backend_mismatches_materializer_backend)
+    end
+    missing_contract = Tuple(unique(missing_contract))
+
+    materializer_options = (
+        nside = config.materializer_nside_requested,
+        d = config.materializer_d_requested,
+        reference_spacing = config.materializer_reference_spacing_requested,
+        tail_spacing = config.materializer_tail_spacing_requested,
+        gausslet_backend = config.materializer_backend_requested,
+        axis_bundle_backend = axis_bundle_backend,
+        shared_shell_layer_policy = shared_shell_layer_policy,
+        packet_kernel = packet_kernel,
+        term_coefficients_source =
+            isnothing(term_coefficients) ?
+            (isnothing(expansion) ? nothing : :coulomb_expansion_coefficients) :
+            :caller_supplied_term_coefficients,
+    )
+
+    if !isempty(missing_contract)
+        return (
+            object_kind = :cartesian_shellization_route_bond_aligned_diatomic_materialization,
+            status = :blocked_missing_diatomic_materializer_contract,
+            private_development_only = true,
+            route_family = config.route_family,
+            route_kind = config.route_kind,
+            planning_family = config.planning_family,
+            materialized = false,
+            blocker = :pending_route_configured_bond_aligned_diatomic_materializer_contract,
+            missing_contract,
+            materializer_options,
+            source = nothing,
+            shellization_summary = nothing,
+            retained_dimension = nothing,
+            route_configured_shellization_consumed = false,
+            public_default_behavior_changed = false,
+        )
+    end
+
+    coefficients =
+        isnothing(term_coefficients) ?
+        Float64[Float64(value) for value in expansion.coefficients] :
+        Float64[Float64(value) for value in term_coefficients]
+    source = _nested_bond_aligned_diatomic_source(
+        parent_qw_basis_object,
+        parent_axis_bundle_object;
+        bond_axis = config.bond_axis,
+        nside = config.materializer_nside_requested,
+        term_coefficients = coefficients,
+        shared_shell_layer_policy = shared_shell_layer_policy,
+        packet_kernel = packet_kernel,
+    )
+    shellization_summary = _cartesian_shellization_route_summary(
+        source;
+        route_family = config.route_family,
+        source_kind = :route_configured_bond_aligned_diatomic_source,
+        shellization_role = :route_configured_bond_aligned_diatomic_shellization,
+    )
+
+    return (
+        object_kind = :cartesian_shellization_route_bond_aligned_diatomic_materialization,
+        status = :materialized_route_configured_bond_aligned_diatomic_shellization,
+        private_development_only = true,
+        route_family = config.route_family,
+        route_kind = config.route_kind,
+        planning_family = config.planning_family,
+        materialized = true,
+        blocker = nothing,
+        missing_contract = (),
+        materializer_options,
+        source,
+        shellization_summary,
+        retained_dimension = shellization_summary.retained_dimension,
+        route_configured_shellization_consumed = true,
+        public_default_behavior_changed = false,
+    )
+end

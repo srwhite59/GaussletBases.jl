@@ -1946,6 +1946,83 @@ function _pqs_source_box_route_driver_one_center_materializer_probe(
     end
 end
 
+function _pqs_source_box_route_driver_diatomic_materializer_probe(
+    config;
+    probe_route_configured_diatomic_materializer::Bool = false,
+    white_lindsey_expansion = nothing,
+)
+    if !probe_route_configured_diatomic_materializer
+        return (;
+            object_kind = :route_configured_diatomic_materializer_probe,
+            requested = false,
+            status = :not_requested,
+            materialized = false,
+            route_configured_shellization_consumed = false,
+            blocker = nothing,
+            missing_contract = (),
+            materialization = nothing,
+            error_message = nothing,
+        )
+    elseif config.system_classification != :bond_aligned_diatomic
+        return (;
+            object_kind = :route_configured_diatomic_materializer_probe,
+            requested = true,
+            status = :blocked_not_bond_aligned_diatomic,
+            materialized = false,
+            route_configured_shellization_consumed = false,
+            blocker = :route_config_not_bond_aligned_diatomic,
+            missing_contract = (),
+            materialization = nothing,
+            error_message = nothing,
+        )
+    elseif config.route_family != :white_lindsey_low_order
+        return (;
+            object_kind = :route_configured_diatomic_materializer_probe,
+            requested = true,
+            status = :blocked_not_white_lindsey_low_order,
+            materialized = false,
+            route_configured_shellization_consumed = false,
+            blocker = :route_config_not_white_lindsey_low_order,
+            missing_contract = (),
+            materialization = nothing,
+            error_message = nothing,
+        )
+    end
+
+    try
+        materialization =
+            _cartesian_shellization_route_materialize_bond_aligned_diatomic(
+                config;
+                expansion = white_lindsey_expansion,
+            )
+        return (;
+            object_kind = :route_configured_diatomic_materializer_probe,
+            requested = true,
+            status = materialization.status,
+            materialized = materialization.materialized,
+            route_configured_shellization_consumed =
+                materialization.route_configured_shellization_consumed,
+            blocker = materialization.blocker,
+            missing_contract = materialization.missing_contract,
+            materialization,
+            error_message = nothing,
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        return (;
+            object_kind = :route_configured_diatomic_materializer_probe,
+            requested = true,
+            status = :blocked_materializer_precondition,
+            materialized = false,
+            route_configured_shellization_consumed = false,
+            blocker = :materializer_precondition_failed,
+            missing_contract = (),
+            materialization = nothing,
+            error_message = sprint(showerror, error),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_route_configured_one_center_report(
     materialization,
 )
@@ -2080,6 +2157,32 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe.route_configured_shellization_consumed
     route_configured_one_center_materializer_probe_blocker =
         route_configured_one_center_materializer_probe.blocker
+    route_configured_diatomic_materializer_requested =
+        materialize_route &&
+        route_family == :white_lindsey_low_order &&
+        route_configured_system_classification == :bond_aligned_diatomic
+    route_configured_diatomic_materializer_probe =
+        _pqs_source_box_route_driver_diatomic_materializer_probe(
+            route_configured_materializer_config;
+            probe_route_configured_diatomic_materializer =
+                route_configured_diatomic_materializer_requested,
+            white_lindsey_expansion,
+        )
+    route_configured_diatomic_materializer_probe_requested =
+        route_configured_diatomic_materializer_probe.requested
+    route_configured_diatomic_materializer_probe_status =
+        route_configured_diatomic_materializer_probe.status
+    route_configured_diatomic_materializer_probe_materialized =
+        route_configured_diatomic_materializer_probe.materialized
+    route_configured_diatomic_materializer_probe_consumed =
+        route_configured_diatomic_materializer_probe.route_configured_shellization_consumed
+    route_configured_diatomic_materializer_probe_blocker =
+        route_configured_diatomic_materializer_probe.blocker
+    route_configured_diatomic_materializer_missing_contract =
+        route_configured_diatomic_materializer_probe.missing_contract
+    route_configured_diatomic_seed_fallback =
+        route_configured_diatomic_materializer_probe_requested &&
+        !route_configured_diatomic_materializer_probe_consumed
     route_configured_materializer_backend_requested =
         route_configured_materializer_config.materializer_backend_requested
     route_configured_materializer_backend_source =
@@ -2119,6 +2222,8 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_materializer_consumed_options =
         route_configured_one_center_materializer_probe_materialized ?
         route_configured_one_center_materializer_probe.materialization.materializer_options :
+        route_configured_diatomic_materializer_probe_materialized ?
+        route_configured_diatomic_materializer_probe.materialization.materializer_options :
         nothing
     route_configured_materializer_backend_consumed =
         isnothing(route_configured_materializer_consumed_options) ?
@@ -2164,6 +2269,16 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_materializer_options_ready,
         route_configured_materializer_missing_options,
         route_configured_materializer_option_blocker,
+    )
+    route_configured_diatomic_materializer_contract = (;
+        route_configured_diatomic_materializer_probe,
+        route_configured_diatomic_materializer_probe_requested,
+        route_configured_diatomic_materializer_probe_status,
+        route_configured_diatomic_materializer_probe_materialized,
+        route_configured_diatomic_materializer_probe_consumed,
+        route_configured_diatomic_materializer_probe_blocker,
+        route_configured_diatomic_materializer_missing_contract,
+        route_configured_diatomic_seed_fallback,
     )
 
     if !materialize_route
@@ -2212,6 +2327,7 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_diatomic_materializer_contract...,
             route_configured_materializer_contract...,
             shellization_summary = nothing,
             shellization_summary_available = false,
@@ -2365,6 +2481,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_materialized,
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
+                    route_configured_diatomic_materializer_contract...,
                     route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
@@ -2423,6 +2540,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_materialized,
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
+                    route_configured_diatomic_materializer_contract...,
                     route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
@@ -2498,6 +2616,7 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_diatomic_materializer_contract...,
             route_configured_materializer_contract...,
             shellization_summary,
             shellization_summary_available,
@@ -2580,6 +2699,7 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe_materialized,
         route_configured_one_center_materializer_probe_consumed,
         route_configured_one_center_materializer_probe_blocker,
+        route_configured_diatomic_materializer_contract...,
         route_configured_materializer_contract...,
         shellization_summary = nothing,
         shellization_summary_available = false,
@@ -2931,6 +3051,9 @@ function cartesian_print_summary(report, materialization)
     @show materialization.route_configured_one_center_materializer_probe_requested
     @show materialization.route_configured_one_center_materializer_probe_status
     @show materialization.route_configured_one_center_materializer_probe_blocker
+    @show materialization.route_configured_diatomic_materializer_probe_requested
+    @show materialization.route_configured_diatomic_materializer_probe_status
+    @show materialization.route_configured_diatomic_materializer_probe_blocker
     @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
     return nothing
@@ -2940,6 +3063,7 @@ function cartesian_print_details(report, materialization)
     _pqs_source_box_route_driver_print_details(report)
     if materialization.materialize_route_requested ||
        materialization.route_configured_one_center_materializer_probe_requested ||
+       materialization.route_configured_diatomic_materializer_probe_requested ||
        materialization.save_basis_artifact_requested ||
        materialization.save_ham_artifact_requested
         _pqs_source_box_route_driver_print_materialization(materialization)
