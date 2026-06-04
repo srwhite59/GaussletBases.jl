@@ -866,7 +866,9 @@ end
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
+    save_basis_artifact::Bool = false,
     save_ham_artifact::Bool = false,
+    basisfile::AbstractString = "cartesian_nesting_route_driver_basis_bundle.jld2",
     hamfile::AbstractString = "cartesian_nesting_route_driver_ham_bundle.jld2",
 )
     route_family = report.route_family
@@ -876,6 +878,7 @@ function _pqs_source_box_route_driver_materialization(
             route_family,
             private_development_only = true,
             materialize_route_requested = false,
+            save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
             status = :not_requested_metadata_only,
             materialized_report = nothing,
@@ -884,6 +887,15 @@ function _pqs_source_box_route_driver_materialization(
             final_integral_weights_status = :not_checked_metadata_only,
             one_body_operator_status = :not_checked_metadata_only,
             basis_bundle_export_status = :not_requested,
+            basis_artifact_status =
+                save_basis_artifact ?
+                :not_written_materialization_not_requested :
+                :not_requested,
+            basis_artifact_written = false,
+            basisfile,
+            basis_artifact_path = nothing,
+            basis_export_blocker =
+                save_basis_artifact ? :materialize_route_false : nothing,
             ham_bundle_export_status = :not_requested,
             ham_artifact_status =
                 save_ham_artifact ?
@@ -902,12 +914,35 @@ function _pqs_source_box_route_driver_materialization(
 
     if route_family == :white_lindsey_low_order
         materialized_report = _white_lindsey_low_order_materialized_seed_report()
+        basis_export_status = :supported_basis_only_fixed_block
+        basis_artifact_written = false
+        basis_artifact_status =
+            save_basis_artifact ? :written_basis_only_bundle : :not_requested
+        if save_basis_artifact
+            write_cartesian_basis_bundle_jld2(
+                basisfile,
+                materialized_report.fixture.fixed_block;
+                include_ham = false,
+                meta = (;
+                    route_family,
+                    route_kind = report.recipe_metadata.route_kind,
+                    benchmark_role = report.recipe_metadata.benchmark_role,
+                    materialized_report_kind = materialized_report.object_kind,
+                    export_status = :basis_only,
+                    basis_export_status,
+                    ham_export_status = :pending_real_interaction_matrix,
+                    private_development_only = true,
+                ),
+            )
+            basis_artifact_written = true
+        end
         ham_export_blocker = :pending_real_interaction_matrix
         return (;
             object_kind = :cartesian_nesting_route_driver_materialization,
             route_family,
             private_development_only = true,
             materialize_route_requested = true,
+            save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
             status = :materialized_seed_report_available,
             materialized_report,
@@ -921,7 +956,12 @@ function _pqs_source_box_route_driver_materialization(
                 materialized_report.operator_inventory.all_finite ?
                 :materialized_finite_one_body_inventory :
                 :not_ready,
-            basis_bundle_export_status = :supported_basis_only_fixed_block,
+            basis_bundle_export_status = basis_export_status,
+            basis_artifact_status,
+            basis_artifact_written,
+            basisfile,
+            basis_artifact_path = basis_artifact_written ? basisfile : nothing,
+            basis_export_blocker = nothing,
             ham_bundle_export_status = :pending_real_interaction_matrix,
             ham_artifact_status =
                 save_ham_artifact ?
@@ -940,6 +980,7 @@ function _pqs_source_box_route_driver_materialization(
         route_family,
         private_development_only = true,
         materialize_route_requested = true,
+        save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
         status = :pending_source_box_retained_route,
         materialized_report = nothing,
@@ -948,6 +989,15 @@ function _pqs_source_box_route_driver_materialization(
         final_integral_weights_status = :pending_final_ida_weights,
         one_body_operator_status = :pending_source_box_retained_blocks,
         basis_bundle_export_status = :pending_final_retained_basis,
+        basis_artifact_status =
+            save_basis_artifact ?
+            :not_written_pending_final_retained_basis :
+            :not_requested,
+        basis_artifact_written = false,
+        basisfile,
+        basis_artifact_path = nothing,
+        basis_export_blocker =
+            save_basis_artifact ? :pending_final_retained_basis : nothing,
         ham_bundle_export_status = :pending_source_box_retained_route,
         ham_artifact_status =
             save_ham_artifact ?

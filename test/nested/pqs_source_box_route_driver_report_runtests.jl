@@ -1,5 +1,6 @@
 using Test
 using GaussletBases
+using JLD2
 
 const _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
     :unit_count,
@@ -141,30 +142,40 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     default_status = GaussletBases._pqs_source_box_route_driver_materialization(
         pqs_report;
         materialize_route = false,
+        save_basis_artifact = false,
         save_ham_artifact = false,
+        basisfile = "unused_basis.jld2",
         hamfile = "unused.jld2",
     )
     @test default_status.status == :not_requested_metadata_only
     @test default_status.materialized_report === nothing
     @test default_status.ham_bundle_export_status == :not_requested
+    @test default_status.basis_artifact_status == :not_requested
+    @test !default_status.basis_artifact_written
     @test !default_status.ham_artifact_written
 
     pqs_status = GaussletBases._pqs_source_box_route_driver_materialization(
         pqs_report;
         materialize_route = true,
+        save_basis_artifact = false,
         save_ham_artifact = false,
+        basisfile = "unused_basis.jld2",
         hamfile = "unused.jld2",
     )
     @test pqs_status.status == :pending_source_box_retained_route
     @test pqs_status.materialized_report === nothing
     @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
+    @test pqs_status.basis_bundle_export_status == :pending_final_retained_basis
+    @test pqs_status.basis_artifact_status == :not_requested
     @test pqs_status.ham_bundle_export_status == :pending_source_box_retained_route
     @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
 
     white_lindsey_status = GaussletBases._pqs_source_box_route_driver_materialization(
         white_lindsey_report;
         materialize_route = true,
+        save_basis_artifact = false,
         save_ham_artifact = false,
+        basisfile = "unused_basis.jld2",
         hamfile = "unused.jld2",
     )
     @test white_lindsey_status.status == :materialized_seed_report_available
@@ -179,6 +190,8 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :materialized_finite_one_body_inventory
     @test white_lindsey_status.basis_bundle_export_status ==
           :supported_basis_only_fixed_block
+    @test white_lindsey_status.basis_artifact_status == :not_requested
+    @test !white_lindsey_status.basis_artifact_written
     @test white_lindsey_status.ham_bundle_export_status ==
           :pending_real_interaction_matrix
     @test white_lindsey_status.ham_artifact_status == :not_requested
@@ -189,7 +202,9 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
         save_status = GaussletBases._pqs_source_box_route_driver_materialization(
             white_lindsey_report;
             materialize_route = true,
+            save_basis_artifact = false,
             save_ham_artifact = true,
+            basisfile = joinpath(dir, "unused_basis.jld2"),
             hamfile,
         )
         @test save_status.ham_artifact_status ==
@@ -197,6 +212,45 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
         @test save_status.ham_export_blocker == :pending_real_interaction_matrix
         @test !save_status.ham_artifact_written
         @test !isfile(hamfile)
+    end
+
+    mktempdir() do dir
+        basisfile = joinpath(dir, "white_lindsey_basis_bundle.jld2")
+        basis_status = GaussletBases._pqs_source_box_route_driver_materialization(
+            white_lindsey_report;
+            materialize_route = true,
+            save_basis_artifact = true,
+            save_ham_artifact = false,
+            basisfile,
+            hamfile = joinpath(dir, "unused_ham.jld2"),
+        )
+        @test basis_status.basis_artifact_status == :written_basis_only_bundle
+        @test basis_status.basis_artifact_written
+        @test basis_status.basis_artifact_path == basisfile
+        @test isfile(basisfile)
+        @test !isfile(joinpath(dir, "unused_ham.jld2"))
+        jldopen(basisfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "meta" in top_keys
+            @test !("ham" in top_keys)
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test length(file["basis/final_integral_weights"]) == 223
+            @test Bool(file["meta/has_ham"]) == false
+            @test String(file["meta/route_family"]) == "white_lindsey_low_order"
+            @test String(file["meta/benchmark_role"]) ==
+                  "published_cartesian_baseline_for_pqs_comparison"
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_materialized_seed_report"
+            @test String(file["meta/export_status"]) == "basis_only"
+            @test String(file["meta/basis_export_status"]) ==
+                  "supported_basis_only_fixed_block"
+            @test String(file["meta/ham_export_status"]) ==
+                  "pending_real_interaction_matrix"
+        end
     end
     return nothing
 end
