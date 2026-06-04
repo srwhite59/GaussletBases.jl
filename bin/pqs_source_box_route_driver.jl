@@ -2,129 +2,157 @@
 
 using GaussletBases
 
-route_kind = :be2_pqs_source_box_development_spine
-atom_symbols = ("Be", "Be")
-nuclear_charges = (4, 4)
-atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
-radius = 15.0
-parent_axis_counts = (x = 9, y = 7, z = 9)
-map_backend = :pgdg_localized_experimental
+# Editable route defaults. Override these with a config file or `name=value`
+# arguments after the script path.
+    route_family = :pqs_source_box
+    route_kind = :be2_pqs_source_box_development_spine
+    atom_symbols = ("Be", "Be")
+    nuclear_charges = (4, 4)
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0))
+    radius = 15.0
+    parent_axis_counts = (x = 9, y = 7, z = 9)
+    map_backend = :pgdg_localized_experimental
 
-q = 5
-n_s = q
-reference_spacing = 1.0
-tail_spacing = 10.0
-q_to_core_spacing_rule = :standard_pqs_ns_equals_q
-core_spacing = nothing
-probe_parent_axis_construction = :auto
-parent_axis_probe_backend = :pgdg_localized_experimental
-parent_axis_probe_family = :G10
-probe_raw_product_box_plans = :auto
-raw_product_box_probe_backend = :pgdg_localized_experimental
-route_shape = (:pqs_left, :product, :pqs_right)
-product_body_rule = :centered_single_z_slab
-pqs_retained_rule = :boundary_comx_product_mode_selection
-product_retained_rule = :product_doside_retained_unit
-terms = (
-    :overlap,
-    :position_x,
-    :position_y,
-    :position_z,
-    :x2_x,
-    :x2_y,
-    :x2_z,
-    :kinetic,
-)
-pair_factor_normalization = :density_normalized
-support_dense_direct_allowed = false
-reference_only_authorities = (
-    :support_row_oracle,
-    :dense_parent_projection,
-)
-save_artifact = false
-save_tsv = false
-outfile = "pqs_source_box_route_driver_report.jld2"
-tsvfile = "pqs_source_box_route_driver_report.tsv"
+# PQS/source-box sizing rule.
+    q = 5
+    n_s = q
+    reference_spacing = 1.0
+    tail_spacing = 10.0
+    q_to_core_spacing_rule = :standard_pqs_ns_equals_q
+    core_spacing = nothing
 
-inputs = String[]
-if length(ARGS) > 0
-    if occursin("=", ARGS[1])
-        inputs = ARGS
-    else
-        fullpath = isabspath(ARGS[1]) ? ARGS[1] : joinpath(pwd(), ARGS[1])
-        println("including ", fullpath)
-        include(fullpath)
-        length(ARGS) > 1 && (inputs = ARGS[2:end])
+# Optional construction probes. `:auto` runs the probe when the prerequisite
+# spacing or parent-axis metadata is available.
+    probe_parent_axis_construction = :auto
+    parent_axis_probe_backend = :pgdg_localized_experimental
+    parent_axis_probe_family = :G10
+    probe_raw_product_box_plans = :auto
+    raw_product_box_probe_backend = :pgdg_localized_experimental
+
+# Source-box route recipe. The driver reports this route shape; it does not
+# build a Hamiltonian or adopt a public/default route.
+    route_shape = (:pqs_left, :product, :pqs_right)
+    product_body_rule = :centered_single_z_slab
+    pqs_retained_rule = :boundary_comx_product_mode_selection
+    product_retained_rule = :product_doside_retained_unit
+    terms = ( :overlap, :position_x, :position_y, :position_z,
+        :x2_x, :x2_y, :x2_z, :kinetic,)
+    pair_factor_normalization = :density_normalized
+
+# These names document reference/debug paths only. They are not algorithmic
+# source-box rules and should remain reported as no-go/advisory metadata.
+    support_dense_direct_allowed = false
+    reference_only_authorities = (:support_row_oracle, :dense_parent_projection,)
+
+# White-Lindsey low-order benchmark recipe. This uses the same standard
+# unit/box organization as the modern routes; it does not preserve the old
+# code's atom-count split heuristic as a route contract.
+    white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening,)
+    white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family
+    white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening
+    white_lindsey_retained_rule = :low_order_unit_comx_retained_basis
+    white_lindsey_operator_rule = :low_order_unit_operator_blocks
+    white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
+
+    save_artifact = false
+    save_tsv = false
+    outfile = "pqs_source_box_route_driver_report.jld2"
+    tsvfile = "pqs_source_box_route_driver_report.tsv"
+
+# Optional config include, followed by simple `name=value` overrides.
+    inputs = String[]
+    if length(ARGS) > 0
+        if occursin("=", ARGS[1])
+            inputs = ARGS
+        else
+            fullpath = isabspath(ARGS[1]) ? ARGS[1] : joinpath(pwd(), ARGS[1])
+            println("including ", fullpath)
+            include(fullpath)
+            length(ARGS) > 1 && (inputs = ARGS[2:end])
+        end
     end
-end
-eval.(Meta.parse.(inputs))
+    eval.(Meta.parse.(inputs))
 
-report = GaussletBases._pqs_source_box_route_driver_dry_run(
-    ;
-    route_kind,
-    atom_symbols,
-    nuclear_charges,
-    atom_locations,
-    radius,
-    parent_axis_counts,
-    map_backend,
-    q,
-    n_s,
-    reference_spacing,
-    tail_spacing,
-    q_to_core_spacing_rule,
-    core_spacing,
-    probe_parent_axis_construction,
-    parent_axis_probe_backend,
-    parent_axis_probe_family,
-    probe_raw_product_box_plans,
-    raw_product_box_probe_backend,
-    route_shape,
-    product_body_rule,
-    pqs_retained_rule,
-    product_retained_rule,
-    terms,
-    pair_factor_normalization,
-    support_dense_direct_allowed,
-    reference_only_authorities,
-)
+    system_inputs = (; atom_symbols, nuclear_charges, atom_locations,
+        radius, parent_axis_counts, map_backend,)
+    spacing_inputs = (; q, n_s, reference_spacing, tail_spacing,
+        q_to_core_spacing_rule, core_spacing,)
+    probe_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
+        parent_axis_probe_family, probe_raw_product_box_plans, raw_product_box_probe_backend,)
 
-standard_setup = report.standard_setup
-parent_axis_readiness = report.parent_axis_readiness
-route_axis_counts = report.route_axis_counts
-diagnostics = report.diagnostics
-retained_counts = report.retained_counts
-retained_dimension = report.retained_dimension
+    source_box_recipe = (; route_shape, product_body_rule,
+        pqs_retained_rule, product_retained_rule,
+        support_dense_direct_allowed, reference_only_authorities,)
+    white_lindsey_recipe = (; route_shape = white_lindsey_route_shape,
+        mapping_rule = white_lindsey_mapping_rule, nesting_rule = white_lindsey_nesting_rule,
+        retained_rule = white_lindsey_retained_rule, operator_rule = white_lindsey_operator_rule,
+        benchmark_role = white_lindsey_benchmark_role,)
+    route_recipe = (; route_family, route_kind, terms, pair_factor_normalization,
+        source_box = source_box_recipe, white_lindsey = white_lindsey_recipe,)
 
-println("PQS source-box route driver")
-@show route_kind
-@show q
-@show radius
-@show route_shape
-@show product_body_rule
-@show pair_factor_normalization
-@show standard_setup.n_s
-@show standard_setup.core_cube_side
-@show standard_setup.core_spacing
-@show standard_setup.spacing.q_to_core_spacing_rule_status
-@show parent_axis_readiness.status
-@show parent_axis_readiness.parent_axis_counts_status
-@show route_axis_counts.parent_axis_counts_source
-@show route_axis_counts.parent_axis_counts
-@show diagnostics.parent_axis_probe_requested
-@show diagnostics.parent_axis_probe_status
-@show diagnostics.raw_product_box_probe_requested
-@show diagnostics.raw_product_box_probe_status
-@show retained_counts
-@show retained_dimension
+# Build the metadata-only route report in visible stages. The helpers below
+# hide field-packing boilerplate, not the route order.
+    GaussletBases._pqs_source_box_route_driver_check_inputs(route_recipe)
 
-GaussletBases._pqs_source_box_route_driver_print_details(report)
-GaussletBases._pqs_source_box_route_driver_save(
-    report;
-    save_artifact,
-    save_tsv,
-    outfile,
-    tsvfile,
-)
+    standard_setup = GaussletBases._pqs_source_box_route_driver_standard_setup(
+        system_inputs, spacing_inputs)
+
+    parent_axis = GaussletBases._pqs_source_box_route_driver_parent_axis(
+        standard_setup, system_inputs, probe_inputs)
+    parent_axis_readiness = parent_axis.parent_axis_readiness
+
+    route_axis_counts = GaussletBases._pqs_source_box_route_driver_route_axis_counts(
+        standard_setup, parent_axis, system_inputs, route_recipe)
+
+    system_metadata = GaussletBases._pqs_source_box_route_driver_system_metadata(
+        standard_setup, route_axis_counts, system_inputs)
+
+    route_skeleton = GaussletBases._pqs_source_box_route_driver_route_skeleton(
+        route_axis_counts, spacing_inputs, route_recipe)
+
+    raw_box = GaussletBases._pqs_source_box_route_driver_raw_box_probe(
+        standard_setup, route_skeleton, parent_axis, route_axis_counts,
+        probe_inputs, route_recipe)
+
+    recipe_metadata = GaussletBases._pqs_source_box_route_driver_recipe_metadata(
+        standard_setup, route_axis_counts, parent_axis, raw_box,
+        spacing_inputs, probe_inputs, route_recipe)
+
+    parent_description = GaussletBases._pqs_source_box_route_driver_parent_description(
+        standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box)
+    route_facts = GaussletBases._pqs_source_box_route_driver_route_facts(route_skeleton)
+    contract = GaussletBases._pqs_source_box_route_driver_contract_metadata(route_recipe)
+    diagnostics = GaussletBases._pqs_source_box_route_driver_diagnostics(
+        standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box, contract)
+
+    report = GaussletBases._pqs_source_box_route_driver_report(
+        standard_setup, parent_axis, route_axis_counts, raw_box,
+        system_metadata, recipe_metadata, parent_description,
+        route_skeleton, route_facts, contract, diagnostics)
+
+# Short screen summary first; detailed sections follow below.
+    retained_counts = route_facts.retained_counts
+    retained_dimension = route_facts.retained_dimension
+
+    println("Cartesian nesting route driver")
+    @show route_family route_kind q radius
+    if route_family == :pqs_source_box
+        @show route_shape product_body_rule pair_factor_normalization
+    else
+        @show white_lindsey_route_shape white_lindsey_mapping_rule white_lindsey_nesting_rule
+    end
+    @show standard_setup.n_s standard_setup.core_cube_side standard_setup.core_spacing
+    @show standard_setup.spacing.q_to_core_spacing_rule_status
+    @show parent_axis_readiness.status parent_axis_readiness.parent_axis_counts_status
+    @show route_axis_counts.parent_axis_counts_source route_axis_counts.parent_axis_counts
+    @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
+    @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
+    @show retained_counts retained_dimension
+
+# Detailed sections and optional artifacts stay behind helpers so the driver
+# remains an editable run recipe rather than a report-schema implementation.
+    GaussletBases._pqs_source_box_route_driver_print_details(report)
+    GaussletBases._pqs_source_box_route_driver_save( report;
+        save_artifact, save_tsv, outfile, tsvfile,)
 
 println("driver complete")
