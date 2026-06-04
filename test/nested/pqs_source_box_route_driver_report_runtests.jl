@@ -96,6 +96,45 @@ function _pqs_route_driver_check_standard_unit_inventory(
     return nothing
 end
 
+function _pqs_route_driver_check_report_output_sections(report)
+    tmpdir = mktempdir()
+    try
+        textfile = joinpath(tmpdir, "report.txt")
+        open(textfile, "w") do io
+            redirect_stdout(io) do
+                GaussletBases._pqs_source_box_route_driver_print_details(report)
+            end
+        end
+        text = read(textfile, String)
+        @test occursin("[standard_unit_inventory]", text)
+        @test occursin("[retained_units]", text)
+        @test occursin("[pair_inventory]", text)
+
+        tsvfile = joinpath(tmpdir, "report.tsv")
+        stdout_file = joinpath(tmpdir, "save_stdout.txt")
+        open(stdout_file, "w") do io
+            redirect_stdout(io) do
+                GaussletBases._pqs_source_box_route_driver_save(
+                    report;
+                    save_artifact = false,
+                    save_tsv = true,
+                    outfile = joinpath(tmpdir, "unused.jld2"),
+                    tsvfile,
+                )
+            end
+        end
+        tsv = read(tsvfile, String)
+        @test occursin("standard_unit_inventory\tunit_count", tsv)
+        @test occursin("retained_unit\t", tsv)
+        @test occursin("pair_entry\t", tsv)
+    finally
+        rm(tmpdir; recursive = true, force = true)
+    end
+    @test !isfile("pqs_source_box_route_driver_report.jld2")
+    @test !isfile("pqs_source_box_route_driver_report.tsv")
+    return nothing
+end
+
 @testset "PQS route-driver standard unit inventory report" begin
     pqs_report = _pqs_route_driver_report_for_test()
     _pqs_route_driver_check_standard_unit_inventory(
@@ -110,6 +149,7 @@ end
         pair_families = (:pqs_pqs, :pqs_product, :product_product),
         output_representations = (:retained_two_index_density_density,),
     )
+    _pqs_route_driver_check_report_output_sections(pqs_report)
 
     white_lindsey_report =
         _pqs_route_driver_report_for_test(route_family = :white_lindsey_low_order)
@@ -130,4 +170,5 @@ end
         pair_families = (:white_lindsey_low_order,),
         output_representations = (:low_order_nested_cartesian_basis,),
     )
+    _pqs_route_driver_check_report_output_sections(white_lindsey_report)
 end
