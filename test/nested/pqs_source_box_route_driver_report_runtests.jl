@@ -610,16 +610,26 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test one_center_probe.route_configured_one_center_materializer_probe_materialized
     @test one_center_probe.route_configured_one_center_materializer_probe_consumed
     @test one_center_probe.route_configured_one_center_materializer_probe_blocker === nothing
+    @test one_center_probe.route_configured_primary_planned_helper ==
+          :_cartesian_materialize_shellification_low_order
     route_configured_materialization =
         one_center_probe.route_configured_one_center_materializer_probe.materialization
     @test route_configured_materialization.object_kind ==
           :cartesian_shellization_route_one_center_materialization
     @test route_configured_materialization.retained_dimension == 223
     @test route_configured_materialization.route_configured_shellization_consumed
+    @test route_configured_materialization.shellification_plan_path_used
+    @test route_configured_materialization.calls_shellification_plan_materializer
+    @test !route_configured_materialization.calls_build_one_center_atomic_full_parent_shell_sequence
     @test !route_configured_materialization.calls_white_lindsey_seed_fixture
     @test route_configured_materialization.calls_lower_level_one_center_helpers_directly
     @test route_configured_materialization.shellization_summary.source_kind ==
           :route_configured_one_center_low_order
+    @test route_configured_materialization.shellification_plan_summary.source_kind ==
+          :one_center_atomic_full_parent_shellification_plan
+    @test route_configured_materialization.shellification_plan_summary.retained_dimension ==
+          route_configured_materialization.retained_dimension
+    @test route_configured_materialization.shellification_plan_summary.coverage_complete
     @test route_configured_materialization.materializer_options.gausslet_backend ==
           :pgdg_localized_experimental
     @test route_configured_materialization.materializer_options.d == 0.15

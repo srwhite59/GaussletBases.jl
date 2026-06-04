@@ -1200,11 +1200,12 @@ function _cartesian_shellization_route_planning_helper_map(plan)
             status = :metadata_only_pending_materializer_inputs,
             private_development_only = true,
             planning_family = plan.planning_family,
-            primary_planned_helper = :build_one_center_atomic_full_parent_shell_sequence,
+            primary_planned_helper = :_cartesian_materialize_shellification_low_order,
             helper_chain = (
-                :build_one_center_atomic_full_parent_shell_sequence,
-                :_build_one_center_atomic_shell_sequence,
-                :_nested_complete_shell_sequence_for_box,
+                :_cartesian_shellification_plan_one_center_low_order,
+                :_cartesian_materialize_shellification_low_order,
+                :_nested_complete_rectangular_shell,
+                :_nested_shell_sequence_from_core_block,
                 :_nested_fixed_block,
             ),
             missing_inputs,
@@ -1421,6 +1422,26 @@ function _cartesian_shellization_route_origin_centered(location; atol::Float64 =
     return all(coord -> isapprox(coord, 0.0; atol = atol, rtol = 0.0), coords)
 end
 
+function _cartesian_shellification_plan_private_summary(plan)
+    return (;
+        object_kind = :cartesian_shellification_plan_private_summary,
+        status = plan.status,
+        private_development_only = true,
+        source_kind = plan.source_kind,
+        route_family = plan.route_family,
+        system_classification = plan.system_classification,
+        shellification_stage = plan.shellification_stage,
+        lowering_stage = plan.lowering_stage,
+        region_count = plan.region_count,
+        ordered_region_roles = plan.ordered_region_roles,
+        shell_region_count = plan.shell_region_count,
+        direct_core_region_count = plan.direct_core_region_count,
+        retained_dimension = plan.retained_dimension,
+        coverage_status = plan.coverage.status,
+        coverage_complete = plan.coverage.coverage_complete,
+    )
+end
+
 function _cartesian_shellization_route_materialize_one_center_low_order(
     config;
     nside::Int = 5,
@@ -1467,13 +1488,25 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
             reference_spacing = reference_spacing,
         ),
     )
-    sequence = build_one_center_atomic_full_parent_shell_sequence(
+    bundle = _mapped_ordinary_gausslet_1d_bundle(
         basis;
-        expansion = expansion,
-        nside = nside,
-        gausslet_backend = gausslet_backend,
+        exponents = expansion.exponents,
+        center = 0.0,
+        backend = gausslet_backend,
         refinement_levels = refinement_levels,
-        packet_kernel = packet_kernel,
+    )
+    shellification_plan = _cartesian_shellification_plan_one_center_low_order(
+        parent_side_count;
+        nside,
+        route_family = config.route_family,
+    )
+    shellification_plan_summary =
+        _cartesian_shellification_plan_private_summary(shellification_plan)
+    sequence = _cartesian_materialize_shellification_low_order(
+        shellification_plan,
+        bundle;
+        expansion,
+        packet_kernel,
     )
     fixed_block = _nested_fixed_block(sequence, basis, gausslet_backend)
     structure = one_center_atomic_nested_structure_diagnostics(
@@ -1498,6 +1531,7 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
         nside,
         packet_kernel,
         basis,
+        shellification_plan_summary,
         sequence,
         fixed_block,
         structure,
@@ -1545,8 +1579,12 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
         sequence,
         fixed_block,
         shellization_summary,
+        shellification_plan_summary,
         retained_dimension = size(sequence.coefficient_matrix, 2),
         route_configured_shellization_consumed = true,
+        shellification_plan_path_used = true,
+        calls_shellification_plan_materializer = true,
+        calls_build_one_center_atomic_full_parent_shell_sequence = false,
         calls_white_lindsey_seed_fixture = false,
         calls_lower_level_one_center_helpers_directly = true,
         public_default_behavior_changed = false,

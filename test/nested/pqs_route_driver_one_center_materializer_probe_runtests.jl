@@ -132,11 +132,24 @@ end
           :cartesian_shellization_route_one_center_materialization
     @test materialization.retained_dimension == 223
     @test materialization.route_configured_shellization_consumed
+    @test materialization.shellification_plan_path_used
+    @test materialization.calls_shellification_plan_materializer
+    @test !materialization.calls_build_one_center_atomic_full_parent_shell_sequence
     @test !materialization.calls_white_lindsey_seed_fixture
     @test materialization.materializer_options.gausslet_backend ==
           :pgdg_localized_experimental
     @test materialization.materializer_options.d == 0.15
     @test materialization.materializer_options.nside == 5
+    plan_summary = materialization.shellification_plan_summary
+    @test plan_summary.object_kind == :cartesian_shellification_plan_private_summary
+    @test plan_summary.source_kind == :one_center_atomic_full_parent_shellification_plan
+    @test plan_summary.route_family == :white_lindsey_low_order
+    @test plan_summary.system_classification == :one_center
+    @test plan_summary.region_count == 2
+    @test plan_summary.shell_region_count == 1
+    @test plan_summary.direct_core_region_count == 1
+    @test plan_summary.retained_dimension == materialization.retained_dimension
+    @test plan_summary.coverage_complete
     @test one_center_status.route_configured_materializer_backend_requested ==
           :pgdg_localized_experimental
     @test one_center_status.route_configured_materializer_backend_consumed ==
