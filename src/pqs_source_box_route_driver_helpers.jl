@@ -2917,10 +2917,28 @@ function _pqs_source_box_route_driver_materialization(
                     :not_written_route_configured_diatomic_ham_adapter_blocked
                 ) :
                 :not_requested
-            ham_export_blocker =
+            diatomic_ham_bundle_export_status =
                 diatomic_ham_adapter_available ?
+                :available_route_configured_diatomic_ham_bundle_payload :
+                save_ham_artifact ?
+                :pending_route_configured_diatomic_ham_export :
+                :not_requested
+            ham_export_blocker =
+                diatomic_ham_adapter_available || !save_ham_artifact ?
                 nothing :
                 :pending_route_configured_diatomic_ham_export
+            basis_companion_ham_artifact_status =
+                save_ham_artifact ?
+                (
+                    diatomic_ham_adapter_available ?
+                    :companion_route_configured_diatomic_ham_artifact_ready :
+                    :pending_route_configured_diatomic_ham_export
+                ) :
+                :not_requested
+            basis_companion_ham_export_status =
+                save_ham_artifact ? diatomic_ham_bundle_export_status : :not_requested
+            basis_companion_ham_export_blocker =
+                save_ham_artifact ? ham_export_blocker : nothing
             basis_artifact_written = false
             if save_basis_artifact && diatomic_basis_adapter_available
                 write_cartesian_basis_bundle_jld2(
@@ -2980,9 +2998,15 @@ function _pqs_source_box_route_driver_materialization(
                         basis_export_status =
                             :supported_route_configured_diatomic_basis_only_fixed_block,
                         ham_export_status =
-                            :pending_route_configured_diatomic_ham_export,
-                        ham_export_blocker =
-                            :pending_route_configured_diatomic_ham_export,
+                            :artifact_local_basis_only_no_ham_payload,
+                        ham_export_blocker = nothing,
+                        companion_ham_artifact_requested = save_ham_artifact,
+                        companion_ham_artifact_status =
+                            basis_companion_ham_artifact_status,
+                        companion_ham_export_status =
+                            basis_companion_ham_export_status,
+                        companion_ham_export_blocker =
+                            basis_companion_ham_export_blocker,
                         private_development_only = true,
                     ),
                 )
@@ -3161,11 +3185,7 @@ function _pqs_source_box_route_driver_materialization(
                     :not_requested :
                     diatomic_ham_adapter.interaction_status,
                 ham_bundle_export_status =
-                    diatomic_ham_adapter_available ?
-                    :available_route_configured_diatomic_ham_bundle_payload :
-                    save_ham_artifact ?
-                    :pending_route_configured_diatomic_ham_export :
-                    :not_requested,
+                    diatomic_ham_bundle_export_status,
                 ham_artifact_status,
                 ham_artifact_written,
                 hamfile,

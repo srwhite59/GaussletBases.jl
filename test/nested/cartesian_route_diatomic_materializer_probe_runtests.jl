@@ -84,7 +84,14 @@ end
             @test String(file["meta/basis_export_status"]) ==
                   "supported_route_configured_diatomic_basis_only_fixed_block"
             @test String(file["meta/ham_export_status"]) ==
-                  "pending_route_configured_diatomic_ham_export"
+                  "artifact_local_basis_only_no_ham_payload"
+            @test Bool(file["meta/ham_export_blocker/is_nothing"])
+            @test Bool(file["meta/companion_ham_artifact_requested"])
+            @test String(file["meta/companion_ham_artifact_status"]) ==
+                  "companion_route_configured_diatomic_ham_artifact_ready"
+            @test String(file["meta/companion_ham_export_status"]) ==
+                  "available_route_configured_diatomic_ham_bundle_payload"
+            @test Bool(file["meta/companion_ham_export_blocker/is_nothing"])
         end
         jldopen(hamfile, "r") do file
             @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
