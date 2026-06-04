@@ -3,6 +3,9 @@
 # Keep route bookkeeping here so the executable driver can stay human-facing:
 # editable defaults, overrides, visible stages, print, and save.
 
+
+# Small local utility helpers.
+
 function _pqs_route_driver_probe_requested(value, core_spacing)
     value == :auto && return !isnothing(core_spacing)
     value isa Bool && return value
@@ -49,6 +52,9 @@ function _pqs_route_driver_parent_source_box(counts)
     return (x = 1:counts.x, y = 1:counts.y, z = 1:counts.z)
 end
 
+
+# Input checks and standard setup.
+
 function _pqs_source_box_route_driver_check_inputs(route_recipe)
     route_recipe.route_family in (:pqs_source_box, :white_lindsey_low_order) || throw(
         ArgumentError("route_family must be :pqs_source_box or :white_lindsey_low_order"),
@@ -76,6 +82,9 @@ function _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inpu
         n_s = spacing_inputs.n_s,
     )
 end
+
+
+# Parent-axis readiness/probe.
 
 function _pqs_source_box_route_driver_parent_axis(
     standard_setup,
@@ -117,6 +126,9 @@ function _pqs_source_box_route_driver_parent_axis(
         parent_axis_probe_pending_facts,
     )
 end
+
+
+# Route axis counts.
 
 function _pqs_source_box_route_driver_route_axis_counts(
     standard_setup,
@@ -193,6 +205,9 @@ function _pqs_source_box_route_driver_route_axis_counts(
     )
 end
 
+
+# Compatibility route-axis count helper for older source-box-only callers.
+
 function _pqs_source_box_route_driver_route_axis_counts(
     standard_setup,
     parent_axis,
@@ -204,6 +219,9 @@ function _pqs_source_box_route_driver_route_axis_counts(
         manual_parent_axis_counts = system_inputs.parent_axis_counts,
     )
 end
+
+
+# System metadata.
 
 function _pqs_source_box_route_driver_system_metadata(
     standard_setup,
@@ -224,6 +242,12 @@ function _pqs_source_box_route_driver_system_metadata(
         map_backend = system_inputs.map_backend,
     )
 end
+
+
+# Route skeletons.
+#
+# The default PQS/source-box skeleton delegates to the source-box route helper.
+# The White-Lindsey route remains a low-order benchmark metadata skeleton.
 
 function _pqs_source_box_route_driver_route_skeleton(
     route_axis_counts,
@@ -372,6 +396,9 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
     )
 end
 
+
+# Route-specific probes.
+
 function _pqs_source_box_route_driver_raw_box_probe(
     standard_setup,
     route_skeleton,
@@ -413,6 +440,9 @@ function _pqs_source_box_route_driver_raw_box_probe(
         raw_product_box_probe_pending_facts,
     )
 end
+
+
+# Metadata and parent description.
 
 function _pqs_source_box_route_driver_recipe_metadata(
     standard_setup,
@@ -520,6 +550,9 @@ function _pqs_source_box_route_driver_parent_description(
         ),
     )
 end
+
+
+# Route facts, contracts, diagnostics, and report assembly.
 
 function _pqs_source_box_route_driver_route_facts(route_skeleton)
     return (;
@@ -774,6 +807,10 @@ function _pqs_source_box_route_driver_report(
         diagnostics,
     )
 end
+
+
+# Compatibility dry-run wrapper. This mirrors the executable driver stages,
+# but returns a report directly for focused validation and tests.
 
 function _pqs_source_box_route_driver_dry_run(;
     route_family = :pqs_source_box,
