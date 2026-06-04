@@ -134,7 +134,16 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
         structure,
         packet_kernel = packet_kernel,
     )
-    return (; parent_side_count, nside, packet_kernel, basis, sequence, fixed_block, structure, inventory)
+    return (;
+        parent_side_count,
+        nside,
+        packet_kernel,
+        basis,
+        sequence,
+        fixed_block,
+        structure,
+        inventory,
+    )
 end
 
 function _white_lindsey_low_order_materialized_seed_packet_kernel(seed, inventory = nothing)
@@ -316,5 +325,30 @@ function _white_lindsey_low_order_materialized_seed_operator_inventory(seed)
         overlap_identity_ready = overlap_identity_error <= symmetry_tolerance,
         operator_pairs_materialized = false,
         electron_electron_materialized = false,
+    )
+end
+
+function _white_lindsey_low_order_materialized_seed_report(; kwargs...)
+    fixture = _white_lindsey_low_order_materialized_seed_fixture(; kwargs...)
+    inventory = fixture.inventory
+    route_units = _white_lindsey_low_order_materialized_seed_route_units(fixture)
+    operator_inventory = _white_lindsey_low_order_materialized_seed_operator_inventory(fixture)
+    operator_pairs_materialized =
+        route_units.operator_pairs_materialized || operator_inventory.operator_pairs_materialized
+
+    return (;
+        object_kind = :white_lindsey_low_order_materialized_seed_report,
+        route_family = :white_lindsey_low_order,
+        status = :private_development_seed,
+        private_development_only = true,
+        fixture,
+        inventory,
+        route_units,
+        operator_inventory,
+        packet_kernel = fixture.packet_kernel,
+        retained_dimension = route_units.retained_dimension,
+        operator_pairs_materialized,
+        electron_electron_materialized = operator_inventory.electron_electron_materialized,
+        weight_semantics = :retained_basis_integral_weights,
     )
 end

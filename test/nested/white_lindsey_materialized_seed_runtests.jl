@@ -188,6 +188,24 @@ using GaussletBases
     @test !operator_inventory.operator_pairs_materialized
     @test !operator_inventory.electron_electron_materialized
 
+    report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    @test report.object_kind == :white_lindsey_low_order_materialized_seed_report
+    @test report.route_family == :white_lindsey_low_order
+    @test report.status == :private_development_seed
+    @test report.private_development_only
+    @test report.packet_kernel == :factorized_direct
+    @test report.fixture.packet_kernel == :factorized_direct
+    @test report.inventory === report.fixture.inventory
+    @test report.route_units.retained_dimension == route_units.retained_dimension
+    @test report.retained_dimension == route_units.retained_dimension
+    @test report.operator_inventory.retained_dimension == operator_inventory.retained_dimension
+    @test Tuple(unit.unit_key for unit in report.route_units.retained_units) ==
+          Tuple(unit.unit_key for unit in route_units.retained_units)
+    @test report.operator_inventory.terms == operator_inventory.terms
+    @test !report.operator_pairs_materialized
+    @test !report.electron_electron_materialized
+    @test report.weight_semantics == :retained_basis_integral_weights
+
     direct_inventory = GaussletBases._white_lindsey_low_order_materialized_seed_inventory(
         sequence,
         fixed_block,
@@ -229,6 +247,22 @@ using GaussletBases
     @test Tuple(unit.retained_unit_kind for unit in support_route_units.retained_units) ==
           Tuple(unit.retained_unit_kind for unit in route_units.retained_units)
     @test support_operator_inventory.terms == operator_inventory.terms
+
+    support_report =
+        GaussletBases._white_lindsey_low_order_materialized_seed_report(
+            packet_kernel = :support_reference,
+        )
+    @test support_report.packet_kernel == :support_reference
+    @test support_report.fixture.packet_kernel == :support_reference
+    @test support_report.inventory.packet_kernel == :support_reference
+    @test support_report.route_units.packet_kernel == :support_reference
+    @test support_report.operator_inventory.packet_kernel == :support_reference
+    @test support_report.retained_dimension == support_route_units.retained_dimension
+    @test Tuple(unit.unit_key for unit in support_report.route_units.retained_units) ==
+          Tuple(unit.unit_key for unit in support_route_units.retained_units)
+    @test support_report.operator_inventory.terms == support_operator_inventory.terms
+    @test !support_report.operator_pairs_materialized
+    @test !support_report.electron_electron_materialized
 
     direct_matrices =
         GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
