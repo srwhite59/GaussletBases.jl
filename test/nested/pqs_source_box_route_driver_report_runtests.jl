@@ -173,8 +173,8 @@ function _pqs_route_driver_check_report_output_sections(report)
     finally
         rm(tmpdir; recursive = true, force = true)
     end
-    @test !isfile("pqs_source_box_route_driver_report.jld2")
-    @test !isfile("pqs_source_box_route_driver_report.tsv")
+    @test !isfile("cartesian_ham_builder_report.jld2")
+    @test !isfile("cartesian_ham_builder_report.tsv")
     return nothing
 end
 

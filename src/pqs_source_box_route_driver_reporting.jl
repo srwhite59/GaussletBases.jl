@@ -1,4 +1,4 @@
-# Text report and optional artifact helpers for `bin/pqs_source_box_route_driver.jl`.
+# Text report and optional artifact helpers for `bin/cartesian_ham_builder.jl`.
 #
 # Keep these after report construction so the core route helper file can focus
 # on setup, skeletons, diagnostics, and dry-run report assembly.

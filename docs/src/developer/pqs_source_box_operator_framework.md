@@ -1271,7 +1271,7 @@ for full Be2 q5/CR2 artifacts are still `:unavailable` in this checkpoint;
 full shell/source-unit labels need explicit repo export before shell-start
 contraction becomes a contract.
 
-The tracked private driver `bin/pqs_source_box_route_driver.jl` is an
+The tracked private driver `bin/cartesian_ham_builder.jl` is an
 old-style development spine for the second migration. It follows the simple
 `nestpgg.jl` pattern: plain `using` statements, top-level defaults, optional
 config include, simple `name=value` overrides, and straight-line printed

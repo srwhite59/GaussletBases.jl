@@ -1,4 +1,4 @@
-# Private support for `bin/pqs_source_box_route_driver.jl`.
+# Private support for `bin/cartesian_ham_builder.jl`.
 #
 # Keep route bookkeeping here so the executable driver can stay human-facing:
 # editable defaults, overrides, visible stages, print, and save.
@@ -1530,6 +1530,286 @@ function _pqs_source_box_route_driver_materialization(
 end
 
 
+# High-level driver facade.
+
+function cartesian_system(system_inputs)
+    return merge(
+        (;
+            object_kind = :cartesian_route_system,
+            status = :initialized_driver_system,
+        ),
+        system_inputs,
+    )
+end
+
+function cartesian_recipe(route_inputs)
+    if hasproperty(route_inputs, :source_box) &&
+       hasproperty(route_inputs, :white_lindsey)
+        route_recipe = route_inputs
+    else
+        source_box_recipe = (;
+            route_shape = route_inputs.route_shape,
+            product_body_rule = route_inputs.product_body_rule,
+            pqs_retained_rule = route_inputs.pqs_retained_rule,
+            product_retained_rule = route_inputs.product_retained_rule,
+            support_dense_direct_allowed = route_inputs.support_dense_direct_allowed,
+            reference_only_authorities = route_inputs.reference_only_authorities,
+        )
+        white_lindsey_recipe = (;
+            route_shape = route_inputs.white_lindsey_route_shape,
+            mapping_rule = route_inputs.white_lindsey_mapping_rule,
+            nesting_rule = route_inputs.white_lindsey_nesting_rule,
+            retained_rule = route_inputs.white_lindsey_retained_rule,
+            operator_rule = route_inputs.white_lindsey_operator_rule,
+            benchmark_role = route_inputs.white_lindsey_benchmark_role,
+        )
+        route_recipe = (;
+            route_family = route_inputs.route_family,
+            route_kind = route_inputs.route_kind,
+            terms = route_inputs.terms,
+            pair_factor_normalization = route_inputs.pair_factor_normalization,
+            source_box = source_box_recipe,
+            white_lindsey = white_lindsey_recipe,
+        )
+    end
+
+    _pqs_source_box_route_driver_check_inputs(route_recipe)
+    return route_recipe
+end
+
+function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
+    standard_setup =
+        _pqs_source_box_route_driver_standard_setup(system, spacing_inputs)
+    parent_axis =
+        _pqs_source_box_route_driver_parent_axis(
+            standard_setup, system, parent_inputs)
+    route_axis_counts =
+        _pqs_source_box_route_driver_route_axis_counts(
+            standard_setup, parent_axis, system, recipe)
+
+    return (;
+        object_kind = :cartesian_route_parent,
+        status = route_axis_counts.status,
+        system,
+        spacing_inputs,
+        parent_inputs,
+        standard_setup,
+        parent_axis,
+        parent_axis_readiness = parent_axis.parent_axis_readiness,
+        parent_axis_probe = parent_axis.parent_axis_probe,
+        route_axis_counts,
+        axis_counts = route_axis_counts.parent_axis_counts,
+        axis_counts_source = route_axis_counts.parent_axis_counts_source,
+        physical_box = standard_setup.parent_box,
+        physical_box_rule = standard_setup.parent_box_rule,
+    )
+end
+
+function cartesian_shells(parent, spacing_inputs, recipe)
+    route_skeleton =
+        _pqs_source_box_route_driver_route_skeleton(
+            parent.route_axis_counts, spacing_inputs, recipe)
+
+    return (;
+        object_kind = :cartesian_shells,
+        status = route_skeleton.status,
+        spacing_inputs,
+        route_skeleton,
+        route_shape = route_skeleton.route_shape,
+        source_boxes = route_skeleton.source_boxes,
+        shellization_stage = :represented_by_route_skeleton,
+    )
+end
+
+function cartesian_units(parent, shells, route_inputs, recipe)
+    raw_box =
+        _pqs_source_box_route_driver_raw_box_probe(
+            parent.standard_setup, shells.route_skeleton, parent.parent_axis,
+            parent.route_axis_counts, route_inputs, recipe)
+
+    return (;
+        object_kind = :cartesian_units,
+        status = shells.route_skeleton.status,
+        route_inputs,
+        route_skeleton = shells.route_skeleton,
+        raw_box,
+        source_boxes = shells.route_skeleton.source_boxes,
+        source_dimensions = shells.route_skeleton.source_dimensions,
+        retained_units = shells.route_skeleton.retained_units,
+        retained_unit_order = shells.route_skeleton.retained_unit_order,
+        unit_stage = :broken_into_source_units,
+    )
+end
+
+function cartesian_transforms(units, recipe)
+    retained_units = units.retained_units
+    return (;
+        object_kind = :cartesian_transforms,
+        status = units.status,
+        route_family = recipe.route_family,
+        retained_units,
+        retained_counts =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_count),
+        ranges =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_range),
+        retained_dimension =
+            _pqs_source_box_route_driver_inventory_retained_dimension(retained_units),
+        transform_stage = :unit_retained_transforms_described,
+    )
+end
+
+function cartesian_pair_terms(units, transforms, recipe)
+    route_skeleton = units.route_skeleton
+
+    return (;
+        object_kind = :cartesian_pair_terms,
+        status = units.status,
+        route_family = recipe.route_family,
+        retained_dimension = transforms.retained_dimension,
+        pair_entries = route_skeleton.pair_entries,
+        pair_family_counts = route_skeleton.pair_family_counts,
+        helper_by_pair_family = route_skeleton.helper_by_pair_family,
+        pair_stage = :pair_operator_terms_described,
+    )
+end
+
+function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
+    route_skeleton = shells.route_skeleton
+    route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
+    contract = _pqs_source_box_route_driver_contract_metadata(recipe)
+
+    return (;
+        object_kind = :cartesian_assembly,
+        status = route_skeleton.status,
+        spacing_inputs = shells.spacing_inputs,
+        route_inputs = units.route_inputs,
+        route_skeleton,
+        raw_box = units.raw_box,
+        route_facts,
+        contract,
+        shells,
+        units,
+        transforms,
+        pairs,
+        assembly_stage = :assembled_report_inputs,
+    )
+end
+
+function cartesian_report(system, parent, assembly, recipe)
+    standard_setup = parent.standard_setup
+    parent_axis = parent.parent_axis
+    route_axis_counts = parent.route_axis_counts
+    route_skeleton = assembly.route_skeleton
+    raw_box = assembly.raw_box
+    route_facts = assembly.route_facts
+    contract = assembly.contract
+    probe_inputs = merge(parent.parent_inputs, assembly.route_inputs)
+
+    system_metadata =
+        _pqs_source_box_route_driver_system_metadata(
+            standard_setup, route_axis_counts, system)
+    recipe_metadata =
+        _pqs_source_box_route_driver_recipe_metadata(
+            standard_setup, route_axis_counts, parent_axis, raw_box,
+            assembly.spacing_inputs, probe_inputs, recipe)
+    parent_description =
+        _pqs_source_box_route_driver_parent_description(
+            standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box)
+    diagnostics =
+        _pqs_source_box_route_driver_diagnostics(
+            standard_setup, parent_axis, route_axis_counts,
+            route_skeleton, raw_box, contract)
+
+    return _pqs_source_box_route_driver_report(
+        standard_setup, parent_axis, route_axis_counts, raw_box,
+        system_metadata, recipe_metadata, parent_description,
+        route_skeleton, route_facts, contract, diagnostics)
+end
+
+function cartesian_materialization(report, materialization_inputs)
+    return _pqs_source_box_route_driver_materialization(
+        report;
+        materialization_inputs...,
+    )
+end
+
+function cartesian_print_summary(report, materialization)
+    recipe = report.recipe_metadata
+    setup = report.standard_setup
+    readiness = report.parent_axis_readiness
+    route_axis_counts = report.route_axis_counts
+    diagnostics = report.diagnostics
+    retained_counts = report.retained_counts
+    retained_dimension = report.retained_dimension
+
+    route_family = report.route_family
+    route_kind = recipe.route_kind
+    q = recipe.q
+    radius = report.system_metadata.radius
+
+    println("Cartesian nesting route driver")
+    @show route_family route_kind q radius
+    if route_family == :pqs_source_box
+        route_shape = recipe.route_shape
+        product_body_rule = recipe.product_body_rule
+        pair_factor_normalization = recipe.pair_factor_normalization
+        @show route_shape product_body_rule pair_factor_normalization
+    else
+        white_lindsey_route_shape = recipe.route_shape
+        white_lindsey_mapping_rule = recipe.white_lindsey_mapping_rule
+        white_lindsey_nesting_rule = recipe.white_lindsey_nesting_rule
+        @show white_lindsey_route_shape white_lindsey_mapping_rule white_lindsey_nesting_rule
+    end
+
+    @show setup.n_s setup.core_cube_side setup.core_spacing
+    @show setup.spacing.q_to_core_spacing_rule_status
+    @show readiness.status readiness.parent_axis_counts_status
+    @show route_axis_counts.parent_axis_counts_source route_axis_counts.parent_axis_counts
+    @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
+    @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
+    @show retained_counts retained_dimension
+    @show materialization.basis_artifact_status materialization.basis_artifact_written
+    @show materialization.status materialization.ham_bundle_export_status
+    @show materialization.route_configured_system_classification
+    @show materialization.route_configured_shellization_request_status
+    @show materialization.route_configured_shellization_planning_family
+    @show materialization.route_configured_midpoint_slab_status
+    @show materialization.route_configured_primary_planned_helper
+    @show materialization.route_configured_missing_input_count
+    @show materialization.route_configured_input_readiness_status
+    @show materialization.route_configured_available_fact_count
+    @show materialization.route_configured_materializer_config_status
+    @show materialization.route_configured_materializer_config_pending_input_count
+    @show materialization.route_configured_one_center_materializer_probe_requested
+    @show materialization.route_configured_one_center_materializer_probe_status
+    @show materialization.route_configured_one_center_materializer_probe_blocker
+    @show materialization.shellization_source materialization.route_configured_shellization_consumed
+    @show materialization.ham_artifact_status materialization.ham_artifact_written
+    return nothing
+end
+
+function cartesian_print_details(report, materialization)
+    _pqs_source_box_route_driver_print_details(report)
+    if materialization.materialize_route_requested ||
+       materialization.route_configured_one_center_materializer_probe_requested ||
+       materialization.save_basis_artifact_requested ||
+       materialization.save_ham_artifact_requested
+        _pqs_source_box_route_driver_print_materialization(materialization)
+    end
+    return nothing
+end
+
+function cartesian_save(report, save_inputs, materialization)
+    return _pqs_source_box_route_driver_save(
+        report;
+        save_inputs...,
+        materialization,
+    )
+end
+
+
 # Compatibility dry-run wrapper. This mirrors the executable driver stages,
 # but returns a report directly for focused validation and tests.
 
@@ -1556,40 +1836,22 @@ function _pqs_source_box_route_driver_dry_run(;
         q_to_core_spacing_rule, core_spacing,)
     probe_inputs = (; probe_parent_axis_construction, parent_axis_probe_backend,
         parent_axis_probe_family, probe_raw_product_box_plans, raw_product_box_probe_backend,)
-    source_box_recipe = (; route_shape, product_body_rule,
-        pqs_retained_rule, product_retained_rule,
-        support_dense_direct_allowed, reference_only_authorities,)
-    white_lindsey_recipe = (; route_shape = white_lindsey_route_shape,
-        mapping_rule = white_lindsey_mapping_rule, nesting_rule = white_lindsey_nesting_rule,
-        retained_rule = white_lindsey_retained_rule, operator_rule = white_lindsey_operator_rule,
-        benchmark_role = white_lindsey_benchmark_role,)
-    route_recipe = (; route_family, route_kind, terms, pair_factor_normalization,
-        source_box = source_box_recipe, white_lindsey = white_lindsey_recipe,)
+    route_inputs = (;
+        route_family, route_kind, route_shape, product_body_rule,
+        pqs_retained_rule, product_retained_rule, terms, pair_factor_normalization,
+        support_dense_direct_allowed, reference_only_authorities,
+        white_lindsey_route_shape, white_lindsey_mapping_rule,
+        white_lindsey_nesting_rule, white_lindsey_retained_rule,
+        white_lindsey_operator_rule, white_lindsey_benchmark_role,
+    )
 
-    _pqs_source_box_route_driver_check_inputs(route_recipe)
-    standard_setup = _pqs_source_box_route_driver_standard_setup(system_inputs, spacing_inputs)
-    parent_axis = _pqs_source_box_route_driver_parent_axis(
-        standard_setup, system_inputs, probe_inputs)
-    route_axis_counts = _pqs_source_box_route_driver_route_axis_counts(
-        standard_setup, parent_axis, system_inputs, route_recipe)
-    system_metadata = _pqs_source_box_route_driver_system_metadata(
-        standard_setup, route_axis_counts, system_inputs)
-    route_skeleton = _pqs_source_box_route_driver_route_skeleton(
-        route_axis_counts, spacing_inputs, route_recipe)
-    raw_box = _pqs_source_box_route_driver_raw_box_probe(
-        standard_setup, route_skeleton, parent_axis, route_axis_counts,
-        probe_inputs, route_recipe)
-    recipe_metadata = _pqs_source_box_route_driver_recipe_metadata(
-        standard_setup, route_axis_counts, parent_axis, raw_box,
-        spacing_inputs, probe_inputs, route_recipe)
-    parent_description = _pqs_source_box_route_driver_parent_description(
-        standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box)
-    route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
-    contract = _pqs_source_box_route_driver_contract_metadata(route_recipe)
-    diagnostics = _pqs_source_box_route_driver_diagnostics(
-        standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box, contract)
-    return _pqs_source_box_route_driver_report(
-        standard_setup, parent_axis, route_axis_counts, raw_box,
-        system_metadata, recipe_metadata, parent_description,
-        route_skeleton, route_facts, contract, diagnostics)
+    system = cartesian_system(system_inputs)
+    recipe = cartesian_recipe(route_inputs)
+    parent = cartesian_parent(system, spacing_inputs, probe_inputs, recipe)
+    shells = cartesian_shells(parent, spacing_inputs, recipe)
+    units = cartesian_units(parent, shells, probe_inputs, recipe)
+    transforms = cartesian_transforms(units, recipe)
+    pairs = cartesian_pair_terms(units, transforms, recipe)
+    assembly = cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
+    return cartesian_report(system, parent, assembly, recipe)
 end

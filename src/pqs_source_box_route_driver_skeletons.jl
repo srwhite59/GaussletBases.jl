@@ -1,4 +1,4 @@
-# Route-family skeleton helpers for `bin/pqs_source_box_route_driver.jl`.
+# Route-family skeleton helpers for `bin/cartesian_ham_builder.jl`.
 #
 # These functions keep route-family-specific skeleton construction out of the
 # main driver helper file. They consume setup/axis-count utilities defined in
