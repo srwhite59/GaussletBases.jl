@@ -595,24 +595,55 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
 
     parent_side_count = axis_counts[1]
     Z = Float64(only(config.nuclear_charges))
-    fixture = _white_lindsey_low_order_materialized_seed_fixture(
-        parent_side_count = parent_side_count,
-        nside = nside,
-        Z = Z,
-        d = d,
-        tail_spacing = tail_spacing,
-        basis_family = basis_family,
-        reference_spacing = reference_spacing,
+    basis = build_basis(
+        MappedUniformBasisSpec(
+            basis_family;
+            count = parent_side_count,
+            mapping = white_lindsey_atomic_mapping(;
+                Z = Z,
+                d = d,
+                tail_spacing = tail_spacing,
+            ),
+            reference_spacing = reference_spacing,
+        ),
+    )
+    sequence = build_one_center_atomic_full_parent_shell_sequence(
+        basis;
         expansion = expansion,
+        nside = nside,
         gausslet_backend = gausslet_backend,
         refinement_levels = refinement_levels,
         packet_kernel = packet_kernel,
     )
+    fixed_block = _nested_fixed_block(sequence, basis, gausslet_backend)
+    structure = one_center_atomic_nested_structure_diagnostics(
+        sequence;
+        parent_side_count = parent_side_count,
+        nside = nside,
+    )
     shellization_summary = _cartesian_shellization_route_summary(
-        fixture.sequence;
+        sequence;
         route_family = config.route_family,
         source_kind = :route_configured_one_center_low_order,
         shellization_role = :route_configured_one_center_full_parent_shellization,
+    )
+    inventory = _white_lindsey_low_order_materialized_seed_inventory(
+        sequence,
+        fixed_block,
+        structure,
+        packet_kernel = packet_kernel,
+    )
+    fixture = (;
+        parent_side_count,
+        nside,
+        packet_kernel,
+        basis,
+        sequence,
+        fixed_block,
+        structure,
+        shellization_summary,
+        inventory,
+        source_kind = :route_configured_one_center_low_order,
     )
 
     return (
@@ -646,13 +677,13 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
             packet_kernel = packet_kernel,
         ),
         fixture,
-        sequence = fixture.sequence,
-        fixed_block = fixture.fixed_block,
+        sequence,
+        fixed_block,
         shellization_summary,
-        retained_dimension = size(fixture.sequence.coefficient_matrix, 2),
+        retained_dimension = size(sequence.coefficient_matrix, 2),
         route_configured_shellization_consumed = true,
-        calls_white_lindsey_seed_fixture = true,
-        calls_lower_level_one_center_helpers_directly = false,
+        calls_white_lindsey_seed_fixture = false,
+        calls_lower_level_one_center_helpers_directly = true,
         public_default_behavior_changed = false,
     )
 end

@@ -322,14 +322,16 @@ using JLD2
     @test one_center_materialization.route_kind == :one_center_low_order_probe
     @test one_center_materialization.planning_family == :one_center_atomic_shellization
     @test one_center_materialization.route_configured_shellization_consumed
-    @test one_center_materialization.calls_white_lindsey_seed_fixture
-    @test !one_center_materialization.calls_lower_level_one_center_helpers_directly
+    @test !one_center_materialization.calls_white_lindsey_seed_fixture
+    @test one_center_materialization.calls_lower_level_one_center_helpers_directly
     @test !one_center_materialization.public_default_behavior_changed
     @test one_center_materialization.materializer_options.parent_side_count == 7
     @test one_center_materialization.materializer_options.nside == 5
     @test one_center_materialization.materializer_options.Z == 4.0
     @test one_center_materialization.fixture.parent_side_count == 7
     @test one_center_materialization.fixture.nside == 5
+    @test one_center_materialization.fixture.source_kind ==
+          :route_configured_one_center_low_order
     @test one_center_materialization.sequence === one_center_materialization.fixture.sequence
     @test one_center_materialization.fixed_block ===
           one_center_materialization.fixture.fixed_block

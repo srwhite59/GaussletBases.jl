@@ -609,7 +609,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :cartesian_shellization_route_one_center_materialization
     @test route_configured_materialization.retained_dimension == 223
     @test route_configured_materialization.route_configured_shellization_consumed
-    @test route_configured_materialization.calls_white_lindsey_seed_fixture
+    @test !route_configured_materialization.calls_white_lindsey_seed_fixture
+    @test route_configured_materialization.calls_lower_level_one_center_helpers_directly
+    @test route_configured_materialization.shellization_summary.source_kind ==
+          :route_configured_one_center_low_order
     @test !route_configured_materialization.public_default_behavior_changed
 
     mktempdir() do dir
