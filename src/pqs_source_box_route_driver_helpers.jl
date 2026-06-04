@@ -2173,7 +2173,7 @@ function _pqs_source_box_route_driver_materialization(
         materialized_shellization_stage = materialized_report.materialized_shellization_stage
         seed_materialization_status = materialized_report.seed_materialization_status
         ham_bundle_adapter = nothing
-        if save_ham_artifact && !use_route_configured_one_center_report
+        if save_ham_artifact
             isnothing(white_lindsey_expansion) && throw(
                 ArgumentError(
                     "White-Lindsey Ham artifact export requires explicit white_lindsey_expansion",
@@ -2199,10 +2199,7 @@ function _pqs_source_box_route_driver_materialization(
         ham_operator_payload_status = ham_preflight.ham_operator_payload_status
         ham_interaction_status = ham_preflight.ham_interaction_status
         ham_bundle_export_status = ham_preflight.ham_bundle_export_status
-        ham_export_blocker =
-            save_ham_artifact && use_route_configured_one_center_report ?
-            :route_configured_one_center_ham_export_not_wired :
-            ham_preflight.missing_builder
+        ham_export_blocker = ham_preflight.missing_builder
         basis_artifact_written = false
         basis_artifact_status =
             save_basis_artifact ?
@@ -2267,15 +2264,9 @@ function _pqs_source_box_route_driver_materialization(
         ham_artifact_written = false
         ham_artifact_status =
             save_ham_artifact ?
-            (
-                use_route_configured_one_center_report ?
-                :not_written_route_configured_one_center_ham_export_not_wired :
-                :not_written_private_white_lindsey_ham_adapter_not_ready
-            ) :
+            :not_written_private_white_lindsey_ham_adapter_not_ready :
             :not_requested
-        if save_ham_artifact &&
-           !use_route_configured_one_center_report &&
-           ham_preflight.full_ham_export_ready
+        if save_ham_artifact && ham_preflight.full_ham_export_ready
             write_cartesian_basis_bundle_jld2(
                 hamfile,
                 ham_bundle_adapter;
@@ -2330,7 +2321,10 @@ function _pqs_source_box_route_driver_materialization(
                 ),
             )
             ham_artifact_written = true
-            ham_artifact_status = :written_white_lindsey_low_order_ham_bundle
+            ham_artifact_status =
+                use_route_configured_one_center_report ?
+                :written_route_configured_one_center_ham_bundle :
+                :written_white_lindsey_low_order_ham_bundle
         end
         return (;
             object_kind = :cartesian_nesting_route_driver_materialization,

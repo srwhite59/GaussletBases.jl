@@ -700,7 +700,7 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
 
     mktempdir() do dir
         hamfile = joinpath(dir, "route_configured_one_center_ham.jld2")
-        ham_blocked = GaussletBases._pqs_source_box_route_driver_materialization(
+        ham_status = GaussletBases._pqs_source_box_route_driver_materialization(
             _pqs_route_driver_one_center_white_lindsey_report_for_test();
             materialize_route = true,
             save_basis_artifact = false,
@@ -708,20 +708,86 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             basisfile = joinpath(dir, "unused_basis.jld2"),
             hamfile,
             white_lindsey_expansion = density_expansion,
+            white_lindsey_Z = 2.0,
         )
-        @test ham_blocked.status ==
+        @test ham_status.status ==
               :materialized_route_configured_one_center_report_available
-        @test ham_blocked.basis_bundle_export_status ==
+        @test ham_status.basis_bundle_export_status ==
               :supported_route_configured_one_center_basis_only_fixed_block
-        @test ham_blocked.basis_artifact_status == :not_requested
-        @test ham_blocked.basis_export_blocker === nothing
-        @test ham_blocked.ham_export_blocker ==
-              :route_configured_one_center_ham_export_not_wired
-        @test ham_blocked.ham_artifact_status ==
-              :not_written_route_configured_one_center_ham_export_not_wired
-        @test !ham_blocked.ham_artifact_written
-        @test !isfile(hamfile)
+        @test ham_status.basis_artifact_status == :not_requested
+        @test ham_status.basis_export_blocker === nothing
+        @test ham_status.ham_preflight_status ==
+              :available_private_low_order_ham_bundle_adapter
+        @test ham_status.ham_missing_builder === nothing
+        @test ham_status.ham_operator_payload_status ==
+              :available_low_order_operator_payload
+        @test ham_status.ham_interaction_status ==
+              :available_low_order_density_density_interaction_matrix
+        @test ham_status.ham_bundle_export_status ==
+              :available_low_order_ham_bundle_payload
+        @test ham_status.ham_export_blocker === nothing
+        @test ham_status.ham_artifact_status ==
+              :written_route_configured_one_center_ham_bundle
+        @test ham_status.ham_artifact_written
+        @test isfile(hamfile)
         @test !isfile(joinpath(dir, "unused_basis.jld2"))
+        jldopen(hamfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "ham" in top_keys
+            @test "meta" in top_keys
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "white_lindsey_low_order"
+            @test String(file["ham/route_family"]) == "white_lindsey_low_order"
+            @test size(file["ham/overlap"]) == (223, 223)
+            @test size(file["ham/one_body_hamiltonian"]) == (223, 223)
+            @test size(file["ham/interaction_matrix"]) == (223, 223)
+            @test length(file["ham/basis_integral_weights"]) == 223
+            @test file["ham/basis_integral_weights"] == file["basis/final_integral_weights"]
+            @test Bool(file["meta/has_ham"])
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_one_center_report"
+            @test String(file["meta/shellization_source"]) ==
+                  "route_configured_one_center_low_order"
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test String(file["meta/seed_materialization_status"]) ==
+                  "not_seed_route_configured_materialization"
+            @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "available_private_low_order_ham_bundle_adapter"
+            @test Bool(file["meta/ham_missing_builder/is_nothing"])
+            @test String(file["meta/ham_operator_payload_status"]) ==
+                  "available_low_order_operator_payload"
+            @test String(file["meta/ham_interaction_status"]) ==
+                  "available_low_order_density_density_interaction_matrix"
+            @test String(file["meta/ham_export_status"]) ==
+                  "available_low_order_ham_bundle_payload"
+            @test Bool(file["meta/ham_export_blocker/is_nothing"])
+        end
+    end
+
+    mktempdir() do dir
+        @test_throws ArgumentError GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = true,
+            basisfile = joinpath(dir, "unused_basis.jld2"),
+            hamfile = joinpath(dir, "missing_expansion_ham.jld2"),
+        )
+        @test_throws ArgumentError GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = true,
+            basisfile = joinpath(dir, "unused_basis.jld2"),
+            hamfile = joinpath(dir, "missing_z_ham.jld2"),
+            white_lindsey_expansion = density_expansion,
+        )
+        @test !isfile(joinpath(dir, "missing_expansion_ham.jld2"))
+        @test !isfile(joinpath(dir, "missing_z_ham.jld2"))
     end
 
     mktempdir() do dir
