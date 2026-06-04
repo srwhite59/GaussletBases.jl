@@ -1,5 +1,6 @@
 using Test
 using GaussletBases
+using JLD2
 
 function _cartesian_route_diatomic_white_lindsey_report_for_test()
     return GaussletBases._pqs_source_box_route_driver_dry_run(
@@ -44,15 +45,47 @@ end
     @test report.route_materializer_payload.axis_bundle_backend ==
           :pgdg_localized_experimental
 
-    materialization = GaussletBases._pqs_source_box_route_driver_materialization(
-        report;
-        materialize_route = true,
-        save_basis_artifact = false,
-        save_ham_artifact = false,
-        basisfile = "unused_basis.jld2",
-        hamfile = "unused_ham.jld2",
-        white_lindsey_expansion = expansion,
-    )
+    materialization = mktempdir() do dir
+        basisfile = joinpath(dir, "route_configured_diatomic_basis.jld2")
+        hamfile = joinpath(dir, "unused_ham.jld2")
+        materialization = GaussletBases._pqs_source_box_route_driver_materialization(
+            report;
+            materialize_route = true,
+            save_basis_artifact = true,
+            save_ham_artifact = false,
+            basisfile,
+            hamfile,
+            white_lindsey_expansion = expansion,
+        )
+        @test materialization.basis_artifact_written
+        @test materialization.basis_artifact_path == basisfile
+        @test isfile(basisfile)
+        @test !isfile(hamfile)
+        jldopen(basisfile, "r") do file
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test String(file["basis/parent_kind"]) == "cartesian_product_basis"
+            @test file["basis/final_dimension"] == materialization.retained_dimension
+            @test length(file["basis/final_integral_weights"]) ==
+                  materialization.retained_dimension
+            @test all(isfinite, file["basis/final_integral_weights"])
+            @test minimum(file["basis/final_integral_weights"]) > 0.0
+            @test length(file["basis/basis_labels"]) == materialization.retained_dimension
+            @test size(file["basis/basis_centers"]) ==
+                  (materialization.retained_dimension, 3)
+            @test Bool(file["meta/has_ham"]) == false
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "cartesian_shellization_route_bond_aligned_diatomic_materialization"
+            @test String(file["meta/shellization_source"]) ==
+                  "route_configured_bond_aligned_diatomic_source"
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test String(file["meta/basis_export_status"]) ==
+                  "supported_route_configured_diatomic_basis_only_fixed_block"
+            @test String(file["meta/ham_export_status"]) ==
+                  "pending_route_configured_diatomic_ham_export"
+        end
+        materialization
+    end
 
     @test materialization.route_configured_system_classification ==
           :bond_aligned_diatomic
@@ -115,10 +148,42 @@ end
     @test materialization.seed_materialization_status ==
           :not_seed_route_configured_diatomic_shellization
     @test materialization.retained_dimension > 0
+    adapter_summary =
+        materialization.route_configured_diatomic_basis_adapter_summary
+    @test adapter_summary.status == :available_route_configured_diatomic_basis_adapter
+    @test adapter_summary.retained_dimension == materialization.retained_dimension
+    @test adapter_summary.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test adapter_summary.final_integral_weight_count ==
+          materialization.retained_dimension
+    @test adapter_summary.label_status ==
+          :available_route_configured_diatomic_basis_labels
+    @test adapter_summary.grouping_status ==
+          :available_route_configured_diatomic_grouping
+    @test isempty(adapter_summary.missing_fields)
+    @test adapter_summary.blocker === nothing
+    @test adapter_summary.basis_metadata.basis_kind == :nested_fixed_block
+    @test adapter_summary.basis_metadata.parent_kind == :cartesian_product_basis
+    @test adapter_summary.basis_metadata.label_count == materialization.retained_dimension
+    @test adapter_summary.grouping.source_kind ==
+          :route_configured_bond_aligned_diatomic_source
+    @test adapter_summary.grouping.child_sequence_count ==
+          length(adapter_summary.grouping.child_column_ranges)
     @test materialization.basis_bundle_export_status ==
-          :pending_route_configured_diatomic_basis_export
-    @test materialization.basis_artifact_status == :not_requested
-    @test !materialization.basis_artifact_written
+          :supported_route_configured_diatomic_basis_only_fixed_block
+    @test materialization.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test materialization.basis_artifact_status ==
+          :written_route_configured_diatomic_basis_only_bundle
+    @test materialization.basis_export_blocker === nothing
     @test materialization.ham_artifact_status == :not_requested
     @test !materialization.ham_artifact_written
+    @test materialization.ham_preflight_status ==
+          :blocked_route_configured_diatomic_ham_export_not_adopted
+    @test materialization.ham_missing_builder ==
+          :pending_route_configured_diatomic_ham_builder
+    @test materialization.ham_bundle_export_status ==
+          :pending_route_configured_diatomic_ham_export
+    @test materialization.ham_export_blocker ==
+          :pending_route_configured_diatomic_ham_export
 end

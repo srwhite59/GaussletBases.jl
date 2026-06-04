@@ -2140,6 +2140,171 @@ function _pqs_source_box_route_driver_route_configured_one_center_report(
     )
 end
 
+function _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter(
+    materialization,
+)
+    if isnothing(materialization) || !materialization.materialized
+        return (;
+            object_kind = :route_configured_diatomic_basis_adapter,
+            status = :blocked_missing_route_configured_diatomic_materialization,
+            private_development_only = true,
+            fixed_block = nothing,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension = nothing,
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_no_materialization,
+            grouping_status = :not_checked_no_materialization,
+            final_integral_weights_status = :not_checked_no_materialization,
+            missing_fields = (:route_configured_diatomic_materialization,),
+            blocker = :missing_route_configured_diatomic_materialization,
+        )
+    elseif isnothing(materialization.source)
+        return (;
+            object_kind = :route_configured_diatomic_basis_adapter,
+            status = :blocked_missing_route_configured_diatomic_source,
+            private_development_only = true,
+            fixed_block = nothing,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension = materialization.retained_dimension,
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_no_source,
+            grouping_status = :not_checked_no_source,
+            final_integral_weights_status = :not_checked_no_source,
+            missing_fields = (:route_configured_diatomic_source,),
+            blocker = :missing_route_configured_diatomic_source,
+        )
+    end
+
+    try
+        source = materialization.source
+        fixed_block = _nested_fixed_block(source)
+        representation = basis_representation(fixed_block)
+        final_integral_weights =
+            _cartesian_bundle_integral_weights(fixed_block, representation)
+        retained_dimension = representation.metadata.final_dimension
+        labels = representation.metadata.basis_labels
+        centers = representation.metadata.basis_centers
+        weights_ready =
+            length(final_integral_weights) == retained_dimension &&
+            all(isfinite, final_integral_weights) &&
+            all(>(0.0), final_integral_weights)
+        labels_ready =
+            length(labels) == retained_dimension &&
+            all(!isempty, labels)
+        centers_ready =
+            size(centers) == (retained_dimension, 3) &&
+            all(isfinite, centers)
+        grouping = (;
+            source_kind = :route_configured_bond_aligned_diatomic_source,
+            shell_kind = representation.metadata.route_metadata.shell_kind,
+            working_box_profile =
+                representation.metadata.route_metadata.working_box_profile,
+            support_count = representation.metadata.route_metadata.support_count,
+            child_sequence_count = length(source.child_sequences),
+            shared_shell_layer_count = length(source.shared_shell_layers),
+            child_column_ranges = Tuple(source.child_column_ranges),
+            midpoint_slab_column_range = source.midpoint_slab_column_range,
+        )
+        grouping_ready =
+            grouping.child_sequence_count == length(grouping.child_column_ranges) &&
+            grouping.support_count == length(fixed_block.support_indices)
+        missing_fields = Symbol[]
+        weights_ready || push!(
+            missing_fields,
+            :route_configured_diatomic_final_weight_contract,
+        )
+        labels_ready || push!(missing_fields, :route_configured_diatomic_basis_labels)
+        centers_ready || push!(missing_fields, :route_configured_diatomic_basis_centers)
+        grouping_ready || push!(missing_fields, :route_configured_diatomic_grouping)
+        missing_fields = Tuple(missing_fields)
+
+        return (;
+            object_kind = :route_configured_diatomic_basis_adapter,
+            status =
+                isempty(missing_fields) ?
+                :available_route_configured_diatomic_basis_adapter :
+                :blocked_route_configured_diatomic_basis_adapter_contract,
+            private_development_only = true,
+            fixed_block,
+            representation,
+            final_integral_weights,
+            retained_dimension,
+            basis_metadata = (;
+                basis_kind = representation.metadata.basis_kind,
+                parent_kind = representation.metadata.parent_kind,
+                axis_sharing = representation.metadata.axis_sharing,
+                parent_axis_counts = representation.metadata.parent_axis_counts,
+                parent_dimension = representation.metadata.parent_dimension,
+                final_dimension = representation.metadata.final_dimension,
+                label_count = length(labels),
+                center_count = size(centers, 1),
+            ),
+            grouping,
+            label_status =
+                labels_ready ? :available_route_configured_diatomic_basis_labels :
+                :blocked_route_configured_diatomic_basis_labels,
+            grouping_status =
+                grouping_ready ? :available_route_configured_diatomic_grouping :
+                :blocked_route_configured_diatomic_grouping,
+            final_integral_weights_status =
+                weights_ready ?
+                :available_retained_basis_integral_weights :
+                :pending_route_configured_diatomic_final_weight_contract,
+            missing_fields,
+            blocker =
+                isempty(missing_fields) ?
+                nothing :
+                :pending_route_configured_diatomic_basis_adapter_contract,
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        return (;
+            object_kind = :route_configured_diatomic_basis_adapter,
+            status = :blocked_route_configured_diatomic_basis_adapter_precondition,
+            private_development_only = true,
+            fixed_block = nothing,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension = materialization.retained_dimension,
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_basis_adapter_precondition,
+            grouping_status = :not_checked_basis_adapter_precondition,
+            final_integral_weights_status =
+                :not_checked_basis_adapter_precondition,
+            missing_fields = (:route_configured_diatomic_basis_adapter_precondition,),
+            blocker = :route_configured_diatomic_basis_adapter_precondition_failed,
+            error_message = sprint(showerror, error),
+        )
+    end
+end
+
+function _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter_summary(
+    adapter,
+)
+    return (;
+        object_kind = adapter.object_kind,
+        status = adapter.status,
+        private_development_only = adapter.private_development_only,
+        retained_dimension = adapter.retained_dimension,
+        basis_metadata = adapter.basis_metadata,
+        grouping = adapter.grouping,
+        label_status = adapter.label_status,
+        grouping_status = adapter.grouping_status,
+        final_integral_weights_status = adapter.final_integral_weights_status,
+        final_integral_weight_count =
+            isnothing(adapter.final_integral_weights) ?
+            nothing :
+            length(adapter.final_integral_weights),
+        missing_fields = adapter.missing_fields,
+        blocker = adapter.blocker,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
@@ -2521,20 +2686,100 @@ function _pqs_source_box_route_driver_materialization(
         if use_route_configured_diatomic_shellization
             diatomic_materialization =
                 route_configured_diatomic_materializer_probe.materialization
+            diatomic_basis_adapter =
+                _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter(
+                    diatomic_materialization,
+                )
+            diatomic_basis_adapter_summary =
+                _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter_summary(
+                    diatomic_basis_adapter,
+                )
+            diatomic_basis_adapter_available =
+                diatomic_basis_adapter.status ==
+                :available_route_configured_diatomic_basis_adapter
             shellization_summary = diatomic_materialization.shellization_summary
             shellization_summary_available = !isnothing(shellization_summary)
             basis_artifact_status =
                 save_basis_artifact ?
-                :not_written_route_configured_diatomic_basis_export_pending :
+                (
+                    diatomic_basis_adapter_available ?
+                    :written_route_configured_diatomic_basis_only_bundle :
+                    :not_written_route_configured_diatomic_basis_adapter_blocked
+                ) :
                 :not_requested
             ham_artifact_status =
                 save_ham_artifact ?
                 :not_written_route_configured_diatomic_ham_export_pending :
                 :not_requested
             ham_export_blocker =
-                save_ham_artifact ?
-                :pending_route_configured_diatomic_ham_export :
-                nothing
+                :pending_route_configured_diatomic_ham_export
+            basis_artifact_written = false
+            if save_basis_artifact && diatomic_basis_adapter_available
+                write_cartesian_basis_bundle_jld2(
+                    basisfile,
+                    diatomic_basis_adapter.fixed_block;
+                    include_ham = false,
+                    meta = (;
+                        route_family,
+                        route_kind = report.recipe_metadata.route_kind,
+                        benchmark_role = report.recipe_metadata.benchmark_role,
+                        materialized_report_kind = diatomic_materialization.object_kind,
+                        route_configured_shellization_request_status,
+                        route_configured_system_classification,
+                        route_configured_system_classification_status,
+                        route_configured_bond_axis,
+                        route_configured_shellization_plan_status,
+                        route_configured_shellization_planning_status,
+                        route_configured_shellization_planning_family,
+                        route_configured_midpoint_slab_status,
+                        route_configured_shellization_helper_map_status,
+                        route_configured_primary_planned_helper,
+                        route_configured_missing_input_count,
+                        route_configured_helper_map_blocker,
+                        route_configured_input_readiness_status,
+                        route_configured_available_fact_count,
+                        route_configured_materializer_missing_input_count,
+                        route_configured_input_readiness_blocker,
+                        route_configured_materializer_config_status,
+                        route_configured_materializer_config_planning_family,
+                        route_configured_materializer_config_pending_input_count,
+                        route_configured_one_center_materializer_probe_requested,
+                        route_configured_one_center_materializer_probe_status,
+                        route_configured_one_center_materializer_probe_materialized,
+                        route_configured_one_center_materializer_probe_consumed,
+                        route_configured_one_center_materializer_probe_blocker,
+                        route_configured_diatomic_materializer_contract...,
+                        route_configured_materializer_contract...,
+                        route_configured_diatomic_basis_adapter_status =
+                            diatomic_basis_adapter.status,
+                        route_configured_diatomic_basis_adapter_retained_dimension =
+                            diatomic_basis_adapter.retained_dimension,
+                        route_configured_diatomic_basis_adapter_final_integral_weights_status =
+                            diatomic_basis_adapter.final_integral_weights_status,
+                        route_configured_diatomic_basis_adapter_label_status =
+                            diatomic_basis_adapter.label_status,
+                        route_configured_diatomic_basis_adapter_grouping_status =
+                            diatomic_basis_adapter.grouping_status,
+                        shellization_summary_available,
+                        shellization_source =
+                            :route_configured_bond_aligned_diatomic_source,
+                        route_configured_shellization_consumed = true,
+                        materialized_shellization_stage =
+                            shellization_summary.shellization_stage,
+                        seed_materialization_status =
+                            :not_seed_route_configured_diatomic_shellization,
+                        export_status = :basis_only,
+                        basis_export_status =
+                            :supported_route_configured_diatomic_basis_only_fixed_block,
+                        ham_export_status =
+                            :pending_route_configured_diatomic_ham_export,
+                        ham_export_blocker =
+                            :pending_route_configured_diatomic_ham_export,
+                        private_development_only = true,
+                    ),
+                )
+                basis_artifact_written = true
+            end
             return (;
                 object_kind = :cartesian_nesting_route_driver_materialization,
                 route_family,
@@ -2582,6 +2827,8 @@ function _pqs_source_box_route_driver_materialization(
                 route_configured_one_center_materializer_probe_blocker,
                 route_configured_diatomic_materializer_contract...,
                 route_configured_materializer_contract...,
+                route_configured_diatomic_basis_adapter_summary =
+                    diatomic_basis_adapter_summary,
                 shellization_summary,
                 shellization_summary_available,
                 shellization_source = :route_configured_bond_aligned_diatomic_source,
@@ -2592,27 +2839,25 @@ function _pqs_source_box_route_driver_materialization(
                     :not_seed_route_configured_diatomic_shellization,
                 retained_dimension = diatomic_materialization.retained_dimension,
                 final_integral_weights_status =
-                    :pending_route_configured_diatomic_fixed_block_adapter,
+                    diatomic_basis_adapter.final_integral_weights_status,
                 one_body_operator_status =
                     :pending_route_configured_diatomic_operator_inventory,
                 basis_bundle_export_status =
+                    diatomic_basis_adapter_available ?
+                    :supported_route_configured_diatomic_basis_only_fixed_block :
                     :pending_route_configured_diatomic_basis_export,
                 basis_artifact_status,
-                basis_artifact_written = false,
+                basis_artifact_written,
                 basisfile,
-                basis_artifact_path = nothing,
+                basis_artifact_path = basis_artifact_written ? basisfile : nothing,
                 basis_export_blocker =
-                    save_basis_artifact ?
-                    :pending_route_configured_diatomic_basis_export :
-                    nothing,
+                    diatomic_basis_adapter_available ?
+                    nothing :
+                    :pending_route_configured_diatomic_basis_adapter_contract,
                 ham_preflight_status =
-                    save_ham_artifact ?
-                    :blocked_route_configured_diatomic_ham_export_not_adopted :
-                    :not_requested,
+                    :blocked_route_configured_diatomic_ham_export_not_adopted,
                 ham_missing_builder =
-                    save_ham_artifact ?
-                    :pending_route_configured_diatomic_ham_builder :
-                    nothing,
+                    :pending_route_configured_diatomic_ham_builder,
                 ham_operator_payload_status =
                     :pending_route_configured_diatomic_operator_payload,
                 ham_interaction_status =
