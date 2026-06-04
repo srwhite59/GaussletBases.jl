@@ -1891,6 +1891,18 @@ function _pqs_source_box_route_driver_one_center_materializer_probe(
             materialization = nothing,
             error_message = nothing,
         )
+    elseif !config.materializer_options_ready
+        return (;
+            object_kind = :route_configured_one_center_materializer_probe,
+            requested = true,
+            status = :blocked_missing_materializer_options,
+            materialized = false,
+            route_configured_shellization_consumed = false,
+            blocker = config.materializer_option_blocker,
+            materialization = nothing,
+            error_message =
+                "missing materializer options: $(config.missing_materializer_options)",
+        )
     end
 
     expansion =
@@ -1902,6 +1914,11 @@ function _pqs_source_box_route_driver_one_center_materializer_probe(
             _cartesian_shellization_route_materialize_one_center_low_order(
                 config;
                 expansion,
+                gausslet_backend = config.materializer_backend_requested,
+                d = config.materializer_d_requested,
+                nside = config.materializer_nside_requested,
+                reference_spacing = config.materializer_reference_spacing_requested,
+                tail_spacing = config.materializer_tail_spacing_requested,
             )
         return (;
             object_kind = :route_configured_one_center_materializer_probe,
@@ -1974,12 +1991,18 @@ function _pqs_source_box_route_driver_materialization(
     save_ham_artifact::Bool = false,
     basisfile::AbstractString = "cartesian_nesting_route_driver_basis_bundle.jld2",
     hamfile::AbstractString = "cartesian_nesting_route_driver_ham_bundle.jld2",
+    materializer_backend = nothing,
+    materializer_nside = nothing,
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
 )
     route_family = report.route_family
     route_configured_shellization_request =
-        _cartesian_shellization_route_configured_request(report)
+        _cartesian_shellization_route_configured_request(
+            report;
+            materializer_backend,
+            materializer_nside,
+        )
     route_configured_shellization_request_status =
         route_configured_shellization_request.status
     route_configured_system_classification =
@@ -2057,6 +2080,91 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe.route_configured_shellization_consumed
     route_configured_one_center_materializer_probe_blocker =
         route_configured_one_center_materializer_probe.blocker
+    route_configured_materializer_backend_requested =
+        route_configured_materializer_config.materializer_backend_requested
+    route_configured_materializer_backend_source =
+        route_configured_materializer_config.materializer_backend_source
+    route_configured_materializer_backend_status =
+        route_configured_materializer_config.materializer_backend_status
+    route_configured_materializer_d_requested =
+        route_configured_materializer_config.materializer_d_requested
+    route_configured_materializer_d_source =
+        route_configured_materializer_config.materializer_d_source
+    route_configured_materializer_d_status =
+        route_configured_materializer_config.materializer_d_status
+    route_configured_materializer_nside_requested =
+        route_configured_materializer_config.materializer_nside_requested
+    route_configured_materializer_nside_source =
+        route_configured_materializer_config.materializer_nside_source
+    route_configured_materializer_nside_status =
+        route_configured_materializer_config.materializer_nside_status
+    route_configured_materializer_reference_spacing_requested =
+        route_configured_materializer_config.materializer_reference_spacing_requested
+    route_configured_materializer_reference_spacing_source =
+        route_configured_materializer_config.materializer_reference_spacing_source
+    route_configured_materializer_reference_spacing_status =
+        route_configured_materializer_config.materializer_reference_spacing_status
+    route_configured_materializer_tail_spacing_requested =
+        route_configured_materializer_config.materializer_tail_spacing_requested
+    route_configured_materializer_tail_spacing_source =
+        route_configured_materializer_config.materializer_tail_spacing_source
+    route_configured_materializer_tail_spacing_status =
+        route_configured_materializer_config.materializer_tail_spacing_status
+    route_configured_materializer_options_ready =
+        route_configured_materializer_config.materializer_options_ready
+    route_configured_materializer_missing_options =
+        route_configured_materializer_config.missing_materializer_options
+    route_configured_materializer_option_blocker =
+        route_configured_materializer_config.materializer_option_blocker
+    route_configured_materializer_consumed_options =
+        route_configured_one_center_materializer_probe_materialized ?
+        route_configured_one_center_materializer_probe.materialization.materializer_options :
+        nothing
+    route_configured_materializer_backend_consumed =
+        isnothing(route_configured_materializer_consumed_options) ?
+        nothing :
+        route_configured_materializer_consumed_options.gausslet_backend
+    route_configured_materializer_d_consumed =
+        isnothing(route_configured_materializer_consumed_options) ?
+        nothing :
+        route_configured_materializer_consumed_options.d
+    route_configured_materializer_nside_consumed =
+        isnothing(route_configured_materializer_consumed_options) ?
+        nothing :
+        route_configured_materializer_consumed_options.nside
+    route_configured_materializer_reference_spacing_consumed =
+        isnothing(route_configured_materializer_consumed_options) ?
+        nothing :
+        route_configured_materializer_consumed_options.reference_spacing
+    route_configured_materializer_tail_spacing_consumed =
+        isnothing(route_configured_materializer_consumed_options) ?
+        nothing :
+        route_configured_materializer_consumed_options.tail_spacing
+    route_configured_materializer_contract = (;
+        route_configured_materializer_backend_requested,
+        route_configured_materializer_backend_source,
+        route_configured_materializer_backend_status,
+        route_configured_materializer_backend_consumed,
+        route_configured_materializer_d_requested,
+        route_configured_materializer_d_source,
+        route_configured_materializer_d_status,
+        route_configured_materializer_d_consumed,
+        route_configured_materializer_nside_requested,
+        route_configured_materializer_nside_source,
+        route_configured_materializer_nside_status,
+        route_configured_materializer_nside_consumed,
+        route_configured_materializer_reference_spacing_requested,
+        route_configured_materializer_reference_spacing_source,
+        route_configured_materializer_reference_spacing_status,
+        route_configured_materializer_reference_spacing_consumed,
+        route_configured_materializer_tail_spacing_requested,
+        route_configured_materializer_tail_spacing_source,
+        route_configured_materializer_tail_spacing_status,
+        route_configured_materializer_tail_spacing_consumed,
+        route_configured_materializer_options_ready,
+        route_configured_materializer_missing_options,
+        route_configured_materializer_option_blocker,
+    )
 
     if !materialize_route
         return (;
@@ -2104,6 +2212,7 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_materializer_contract...,
             shellization_summary = nothing,
             shellization_summary_available = false,
             shellization_source =
@@ -2151,9 +2260,22 @@ function _pqs_source_box_route_driver_materialization(
     end
 
     if route_family == :white_lindsey_low_order
-        use_route_configured_one_center_report =
+        route_configured_one_center_report_required =
             materialize_route &&
-            route_configured_system_classification == :one_center &&
+            route_configured_system_classification == :one_center
+        if route_configured_one_center_report_required &&
+           !route_configured_one_center_materializer_probe_materialized
+            throw(
+                ArgumentError(
+                    "route-configured one-center materializer failed: " *
+                    string(route_configured_one_center_materializer_probe_blocker) *
+                    " " *
+                    string(route_configured_one_center_materializer_probe.error_message),
+                ),
+            )
+        end
+        use_route_configured_one_center_report =
+            route_configured_one_center_report_required &&
             route_configured_one_center_materializer_probe_materialized
         materialized_report =
             use_route_configured_one_center_report ?
@@ -2243,6 +2365,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_materialized,
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
+                    route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -2300,6 +2423,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_materialized,
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
+                    route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -2374,6 +2498,7 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_materializer_contract...,
             shellization_summary,
             shellization_summary_available,
             shellization_source,
@@ -2455,6 +2580,7 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe_materialized,
         route_configured_one_center_materializer_probe_consumed,
         route_configured_one_center_materializer_probe_blocker,
+        route_configured_materializer_contract...,
         shellization_summary = nothing,
         shellization_summary_available = false,
         shellization_source = :pending_source_box_route_shellization,
@@ -2796,6 +2922,12 @@ function cartesian_print_summary(report, materialization)
     @show materialization.route_configured_available_fact_count
     @show materialization.route_configured_materializer_config_status
     @show materialization.route_configured_materializer_config_pending_input_count
+    @show materialization.route_configured_materializer_backend_requested
+    @show materialization.route_configured_materializer_backend_consumed
+    @show materialization.route_configured_materializer_d_requested
+    @show materialization.route_configured_materializer_d_consumed
+    @show materialization.route_configured_materializer_nside_requested
+    @show materialization.route_configured_materializer_nside_consumed
     @show materialization.route_configured_one_center_materializer_probe_requested
     @show materialization.route_configured_one_center_materializer_probe_status
     @show materialization.route_configured_one_center_materializer_probe_blocker

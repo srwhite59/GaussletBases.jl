@@ -56,11 +56,17 @@ function _pqs_route_driver_one_center_probe_report()
             parent_axis_counts = (x = 7, y = 7, z = 7),
             parent_axis_counts_source = :manual_fixture,
             parent_box = (x = -3.0:3.0, y = -3.0:3.0, z = -3.0:3.0),
+            map_backend = :pgdg_localized_experimental,
         ),
         recipe_metadata = (;
             route_kind = :one_center_low_order_probe,
             route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
             benchmark_role = :published_cartesian_baseline_for_pqs_comparison,
+            n_s = 5,
+            core_spacing = 0.15,
+            reference_spacing = 1.0,
+            tail_spacing = 10.0,
+            parent_axis_probe_backend = :pgdg_localized_experimental,
         ),
     )
 end
@@ -126,6 +132,18 @@ end
           :cartesian_shellization_route_one_center_materialization
     @test materialization.retained_dimension == 223
     @test materialization.route_configured_shellization_consumed
-    @test materialization.calls_white_lindsey_seed_fixture
+    @test !materialization.calls_white_lindsey_seed_fixture
+    @test materialization.materializer_options.gausslet_backend ==
+          :pgdg_localized_experimental
+    @test materialization.materializer_options.d == 0.15
+    @test materialization.materializer_options.nside == 5
+    @test one_center_status.route_configured_materializer_backend_requested ==
+          :pgdg_localized_experimental
+    @test one_center_status.route_configured_materializer_backend_consumed ==
+          :pgdg_localized_experimental
+    @test one_center_status.route_configured_materializer_d_requested == 0.15
+    @test one_center_status.route_configured_materializer_d_consumed == 0.15
+    @test one_center_status.route_configured_materializer_nside_requested == 5
+    @test one_center_status.route_configured_materializer_nside_consumed == 5
     @test !materialization.public_default_behavior_changed
 end

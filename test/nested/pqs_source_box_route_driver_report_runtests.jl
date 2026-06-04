@@ -127,11 +127,17 @@ function _pqs_route_driver_one_center_white_lindsey_report_for_test()
             parent_axis_counts = (x = 7, y = 7, z = 7),
             parent_axis_counts_source = :manual_fixture,
             parent_box = (x = -3.0:3.0, y = -3.0:3.0, z = -3.0:3.0),
+            map_backend = :pgdg_localized_experimental,
         ),
         recipe_metadata = (;
             route_kind = :one_center_low_order_probe,
             route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
             benchmark_role = :published_cartesian_baseline_for_pqs_comparison,
+            n_s = 5,
+            core_spacing = 0.15,
+            reference_spacing = 1.0,
+            tail_spacing = 10.0,
+            parent_axis_probe_backend = :pgdg_localized_experimental,
         ),
     )
 end
@@ -613,6 +619,18 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test route_configured_materialization.calls_lower_level_one_center_helpers_directly
     @test route_configured_materialization.shellization_summary.source_kind ==
           :route_configured_one_center_low_order
+    @test route_configured_materialization.materializer_options.gausslet_backend ==
+          :pgdg_localized_experimental
+    @test route_configured_materialization.materializer_options.d == 0.15
+    @test route_configured_materialization.materializer_options.nside == 5
+    @test one_center_probe.route_configured_materializer_backend_requested ==
+          :pgdg_localized_experimental
+    @test one_center_probe.route_configured_materializer_backend_consumed ==
+          :pgdg_localized_experimental
+    @test one_center_probe.route_configured_materializer_d_requested == 0.15
+    @test one_center_probe.route_configured_materializer_d_consumed == 0.15
+    @test one_center_probe.route_configured_materializer_nside_requested == 5
+    @test one_center_probe.route_configured_materializer_nside_consumed == 5
     @test !route_configured_materialization.public_default_behavior_changed
 
     one_center_materialized =
@@ -640,6 +658,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test one_center_materialized.route_configured_one_center_materializer_probe_requested
     @test one_center_materialized.route_configured_one_center_materializer_probe_materialized
     @test one_center_materialized.route_configured_one_center_materializer_probe_consumed
+    @test one_center_materialized.route_configured_materializer_backend_requested ==
+          :pgdg_localized_experimental
+    @test one_center_materialized.route_configured_materializer_backend_consumed ==
+          :pgdg_localized_experimental
+    @test one_center_materialized.route_configured_materializer_d_requested == 0.15
+    @test one_center_materialized.route_configured_materializer_d_consumed == 0.15
+    @test one_center_materialized.route_configured_materializer_nside_requested == 5
+    @test one_center_materialized.route_configured_materializer_nside_consumed == 5
     @test one_center_materialized.materialized_report.shellization_summary.source_kind ==
           :route_configured_one_center_low_order
     @test one_center_materialized.materialized_report.weight_semantics ==
@@ -695,6 +721,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/export_status"]) == "basis_only"
             @test String(file["meta/basis_export_status"]) ==
                   "supported_route_configured_one_center_basis_only_fixed_block"
+            @test String(file["meta/route_configured_materializer_backend_requested"]) ==
+                  "pgdg_localized_experimental"
+            @test String(file["meta/route_configured_materializer_backend_consumed"]) ==
+                  "pgdg_localized_experimental"
+            @test file["meta/route_configured_materializer_d_requested"] == 0.15
+            @test file["meta/route_configured_materializer_d_consumed"] == 0.15
+            @test file["meta/route_configured_materializer_nside_requested"] == 5
+            @test file["meta/route_configured_materializer_nside_consumed"] == 5
         end
     end
 
@@ -765,6 +799,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/ham_export_status"]) ==
                   "available_low_order_ham_bundle_payload"
             @test Bool(file["meta/ham_export_blocker/is_nothing"])
+            @test String(file["meta/route_configured_materializer_backend_requested"]) ==
+                  "pgdg_localized_experimental"
+            @test String(file["meta/route_configured_materializer_backend_consumed"]) ==
+                  "pgdg_localized_experimental"
+            @test file["meta/route_configured_materializer_d_requested"] == 0.15
+            @test file["meta/route_configured_materializer_d_consumed"] == 0.15
+            @test file["meta/route_configured_materializer_nside_requested"] == 5
+            @test file["meta/route_configured_materializer_nside_consumed"] == 5
         end
     end
 

@@ -206,7 +206,131 @@ function _cartesian_shellization_route_report_classification(report, system_meta
     )
 end
 
-function _cartesian_shellization_route_configured_request(report)
+function _cartesian_shellization_route_get(values, field::Symbol, default = nothing)
+    return hasproperty(values, field) ? getproperty(values, field) : default
+end
+
+function _cartesian_shellization_route_materializer_backend_request(
+    system_metadata,
+    recipe_metadata,
+    materializer_backend,
+)
+    if !isnothing(materializer_backend)
+        return (
+            requested = materializer_backend,
+            source = :materialization_input,
+            status = :explicit_materializer_backend,
+        )
+    end
+
+    map_backend = _cartesian_shellization_route_get(system_metadata, :map_backend)
+    if !isnothing(map_backend)
+        return (
+            requested = map_backend,
+            source = :system_map_backend,
+            status = :defaulted_from_system_map_backend,
+        )
+    end
+
+    parent_axis_probe_backend =
+        _cartesian_shellization_route_get(recipe_metadata, :parent_axis_probe_backend)
+    if !isnothing(parent_axis_probe_backend)
+        return (
+            requested = parent_axis_probe_backend,
+            source = :parent_axis_probe_backend,
+            status = :defaulted_from_parent_axis_probe_backend,
+        )
+    end
+
+    raw_product_box_probe_backend =
+        _cartesian_shellization_route_get(recipe_metadata, :raw_product_box_probe_backend)
+    if !isnothing(raw_product_box_probe_backend)
+        return (
+            requested = raw_product_box_probe_backend,
+            source = :raw_product_box_probe_backend,
+            status = :defaulted_from_raw_product_box_probe_backend,
+        )
+    end
+
+    return (
+        requested = nothing,
+        source = :unavailable,
+        status = :missing_materializer_backend,
+    )
+end
+
+function _cartesian_shellization_route_materializer_d_request(recipe_metadata)
+    core_spacing = _cartesian_shellization_route_get(recipe_metadata, :core_spacing)
+    if !isnothing(core_spacing)
+        return (
+            requested = Float64(core_spacing),
+            source = :recipe_core_spacing,
+            status = :defaulted_from_route_core_spacing,
+        )
+    end
+
+    return (
+        requested = nothing,
+        source = :unavailable,
+        status = :missing_route_core_spacing,
+    )
+end
+
+function _cartesian_shellization_route_materializer_nside_request(
+    recipe_metadata,
+    materializer_nside,
+)
+    if !isnothing(materializer_nside)
+        return (
+            requested = Int(materializer_nside),
+            source = :materialization_input,
+            status = :explicit_materializer_nside,
+        )
+    end
+
+    recipe_n_s = _cartesian_shellization_route_get(recipe_metadata, :n_s)
+    if !isnothing(recipe_n_s)
+        return (
+            requested = Int(recipe_n_s),
+            source = :recipe_n_s,
+            status = :defaulted_from_route_n_s,
+        )
+    end
+
+    return (
+        requested = nothing,
+        source = :unavailable,
+        status = :missing_materializer_nside,
+    )
+end
+
+function _cartesian_shellization_route_materializer_spacing_request(
+    recipe_metadata,
+    field::Symbol,
+    source::Symbol,
+    missing_status::Symbol,
+)
+    value = _cartesian_shellization_route_get(recipe_metadata, field)
+    if !isnothing(value)
+        return (
+            requested = Float64(value),
+            source = source,
+            status = Symbol(:defaulted_from_, source),
+        )
+    end
+
+    return (
+        requested = nothing,
+        source = :unavailable,
+        status = missing_status,
+    )
+end
+
+function _cartesian_shellization_route_configured_request(
+    report;
+    materializer_backend = nothing,
+    materializer_nside = nothing,
+)
     system_metadata = report.system_metadata
     recipe_metadata = report.recipe_metadata
     parent_contract = _cartesian_shellization_route_parent_contract(report)
@@ -244,6 +368,41 @@ function _cartesian_shellization_route_configured_request(report)
         report.route_family == :white_lindsey_low_order ?
         :white_lindsey_one_center_seed :
         :pending_source_box_route_materializer
+    backend_request = _cartesian_shellization_route_materializer_backend_request(
+        system_metadata,
+        recipe_metadata,
+        materializer_backend,
+    )
+    d_request = _cartesian_shellization_route_materializer_d_request(recipe_metadata)
+    nside_request =
+        _cartesian_shellization_route_materializer_nside_request(
+            recipe_metadata,
+            materializer_nside,
+        )
+    reference_spacing_request =
+        _cartesian_shellization_route_materializer_spacing_request(
+            recipe_metadata,
+            :reference_spacing,
+            :recipe_reference_spacing,
+            :missing_reference_spacing,
+        )
+    tail_spacing_request =
+        _cartesian_shellization_route_materializer_spacing_request(
+            recipe_metadata,
+            :tail_spacing,
+            :recipe_tail_spacing,
+            :missing_tail_spacing,
+        )
+    missing_materializer_options = Tuple(
+        option for (option, value) in (
+            :gausslet_backend => backend_request.requested,
+            :d => d_request.requested,
+            :nside => nside_request.requested,
+            :reference_spacing => reference_spacing_request.requested,
+            :tail_spacing => tail_spacing_request.requested,
+        ) if isnothing(value)
+    )
+    materializer_options_ready = isempty(missing_materializer_options)
 
     return (
         object_kind = :cartesian_shellization_route_configured_request,
@@ -263,6 +422,25 @@ function _cartesian_shellization_route_configured_request(report)
         expected_next_materializer_status =
             :pending_route_configured_shellization_materializer,
         current_materialization_source,
+        materializer_backend_requested = backend_request.requested,
+        materializer_backend_source = backend_request.source,
+        materializer_backend_status = backend_request.status,
+        materializer_d_requested = d_request.requested,
+        materializer_d_source = d_request.source,
+        materializer_d_status = d_request.status,
+        materializer_nside_requested = nside_request.requested,
+        materializer_nside_source = nside_request.source,
+        materializer_nside_status = nside_request.status,
+        materializer_reference_spacing_requested = reference_spacing_request.requested,
+        materializer_reference_spacing_source = reference_spacing_request.source,
+        materializer_reference_spacing_status = reference_spacing_request.status,
+        materializer_tail_spacing_requested = tail_spacing_request.requested,
+        materializer_tail_spacing_source = tail_spacing_request.source,
+        materializer_tail_spacing_status = tail_spacing_request.status,
+        materializer_options_ready,
+        missing_materializer_options,
+        materializer_option_blocker =
+            materializer_options_ready ? nothing : :missing_route_materializer_options,
         route_configured_shellization_consumed = false,
         constructs_basis = false,
         constructs_shell_sequence = false,
@@ -493,6 +671,27 @@ function _cartesian_shellization_route_materializer_input_readiness(
         missing_inputs,
         missing_input_count = length(missing_inputs),
         blocker = helper_map.blocker,
+        materializer_backend_requested = request.materializer_backend_requested,
+        materializer_backend_source = request.materializer_backend_source,
+        materializer_backend_status = request.materializer_backend_status,
+        materializer_d_requested = request.materializer_d_requested,
+        materializer_d_source = request.materializer_d_source,
+        materializer_d_status = request.materializer_d_status,
+        materializer_nside_requested = request.materializer_nside_requested,
+        materializer_nside_source = request.materializer_nside_source,
+        materializer_nside_status = request.materializer_nside_status,
+        materializer_reference_spacing_requested =
+            request.materializer_reference_spacing_requested,
+        materializer_reference_spacing_source =
+            request.materializer_reference_spacing_source,
+        materializer_reference_spacing_status =
+            request.materializer_reference_spacing_status,
+        materializer_tail_spacing_requested = request.materializer_tail_spacing_requested,
+        materializer_tail_spacing_source = request.materializer_tail_spacing_source,
+        materializer_tail_spacing_status = request.materializer_tail_spacing_status,
+        materializer_options_ready = request.materializer_options_ready,
+        missing_materializer_options = request.missing_materializer_options,
+        materializer_option_blocker = request.materializer_option_blocker,
         driver_defaults_not_materializer_contract = (
             :nside,
             :backend_refinement_options,
@@ -529,6 +728,28 @@ function _cartesian_shellization_route_materializer_config(
         parent_axis_counts = request.parent_axis_counts,
         parent_axis_counts_source = request.parent_axis_counts_source,
         parent_box = request.parent_box,
+        materializer_backend_requested = readiness.materializer_backend_requested,
+        materializer_backend_source = readiness.materializer_backend_source,
+        materializer_backend_status = readiness.materializer_backend_status,
+        materializer_d_requested = readiness.materializer_d_requested,
+        materializer_d_source = readiness.materializer_d_source,
+        materializer_d_status = readiness.materializer_d_status,
+        materializer_nside_requested = readiness.materializer_nside_requested,
+        materializer_nside_source = readiness.materializer_nside_source,
+        materializer_nside_status = readiness.materializer_nside_status,
+        materializer_reference_spacing_requested =
+            readiness.materializer_reference_spacing_requested,
+        materializer_reference_spacing_source =
+            readiness.materializer_reference_spacing_source,
+        materializer_reference_spacing_status =
+            readiness.materializer_reference_spacing_status,
+        materializer_tail_spacing_requested =
+            readiness.materializer_tail_spacing_requested,
+        materializer_tail_spacing_source = readiness.materializer_tail_spacing_source,
+        materializer_tail_spacing_status = readiness.materializer_tail_spacing_status,
+        materializer_options_ready = readiness.materializer_options_ready,
+        missing_materializer_options = readiness.missing_materializer_options,
+        materializer_option_blocker = readiness.materializer_option_blocker,
         planning_family = plan.planning_family,
         primary_planned_helper = helper_map.primary_planned_helper,
         helper_chain = helper_map.helper_chain,
@@ -660,6 +881,11 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
             :atom_locations,
             :nuclear_charges,
             :parent_axis_counts,
+            :materializer_backend_requested,
+            :materializer_d_requested,
+            :materializer_nside_requested,
+            :materializer_reference_spacing_requested,
+            :materializer_tail_spacing_requested,
             :planning_family,
             :primary_planned_helper,
             :helper_chain,

@@ -52,6 +52,10 @@ materialize_route = false
 probe_route_configured_one_center_materializer = false
 save_basis_artifact = false
 save_ham_artifact = false
+# `nothing` means the helper derives these from route metadata:
+# backend from map/probe backend, nside from n_s.
+materializer_backend = nothing
+materializer_nside = nothing
 outfile = "cartesian_ham_builder_report.jld2"
 tsvfile = "cartesian_ham_builder_report.tsv"
 basisfile = "cartesian_nesting_route_driver_basis_bundle.jld2"
@@ -85,6 +89,7 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
+    materializer_backend, materializer_nside,
     white_lindsey_expansion, white_lindsey_Z)
 save_inputs = (; save_artifact, save_tsv, outfile, tsvfile)
 
