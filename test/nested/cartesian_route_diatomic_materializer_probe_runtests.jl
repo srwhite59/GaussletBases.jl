@@ -52,15 +52,17 @@ end
             report;
             materialize_route = true,
             save_basis_artifact = true,
-            save_ham_artifact = false,
+            save_ham_artifact = true,
             basisfile,
             hamfile,
             white_lindsey_expansion = expansion,
         )
         @test materialization.basis_artifact_written
         @test materialization.basis_artifact_path == basisfile
+        @test materialization.ham_artifact_written
+        @test materialization.hamfile == hamfile
         @test isfile(basisfile)
-        @test !isfile(hamfile)
+        @test isfile(hamfile)
         jldopen(basisfile, "r") do file
             @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
             @test String(file["basis/basis_kind"]) == "nested_fixed_block"
@@ -83,6 +85,43 @@ end
                   "supported_route_configured_diatomic_basis_only_fixed_block"
             @test String(file["meta/ham_export_status"]) ==
                   "pending_route_configured_diatomic_ham_export"
+        end
+        jldopen(hamfile, "r") do file
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "ordinary_cartesian_operators"
+            @test String(file["ham/interaction_treatment"]) == "ggt_nearest"
+            @test String(file["ham/gausslet_backend"]) ==
+                  "pgdg_localized_experimental"
+            @test file["basis/final_dimension"] == materialization.retained_dimension
+            @test size(file["ham/overlap"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test size(file["ham/one_body_hamiltonian"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test size(file["ham/interaction_matrix"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test length(file["ham/basis_integral_weights"]) ==
+                  materialization.retained_dimension
+            @test file["ham/basis_integral_weights"] ==
+                  file["basis/final_integral_weights"]
+            @test length(file["ham/orbital_labels"]) == materialization.retained_dimension
+            @test size(file["ham/basis_centers"]) ==
+                  (materialization.retained_dimension, 3)
+            @test file["ham/default_nuclear_charges"] == [4.0, 4.0]
+            @test String(file["ham/nuclear_term_storage"]) == "by_center"
+            @test file["ham/nuclear_one_body_by_center/count"] == 2
+            @test Bool(file["meta/has_ham"])
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "cartesian_shellization_route_bond_aligned_diatomic_materialization"
+            @test String(file["meta/shellization_source"]) ==
+                  "route_configured_bond_aligned_diatomic_source"
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "available_route_configured_diatomic_ham_adapter"
+            @test String(file["meta/ham_export_status"]) ==
+                  "available_route_configured_diatomic_ham_bundle_payload"
         end
         materialization
     end
@@ -176,14 +215,36 @@ end
     @test materialization.basis_artifact_status ==
           :written_route_configured_diatomic_basis_only_bundle
     @test materialization.basis_export_blocker === nothing
-    @test materialization.ham_artifact_status == :not_requested
-    @test !materialization.ham_artifact_written
+    ham_adapter_summary =
+        materialization.route_configured_diatomic_ham_adapter_summary
+    @test ham_adapter_summary.status == :available_route_configured_diatomic_ham_adapter
+    @test ham_adapter_summary.retained_dimension == materialization.retained_dimension
+    @test ham_adapter_summary.operator_payload_status ==
+          :available_route_configured_diatomic_operator_payload
+    @test ham_adapter_summary.interaction_status ==
+          :available_route_configured_diatomic_density_density_interaction_matrix
+    @test ham_adapter_summary.nuclear_metadata_status ==
+          :available_route_configured_diatomic_nuclear_metadata
+    @test ham_adapter_summary.interaction_treatment == :ggt_nearest
+    @test ham_adapter_summary.gausslet_backend == :pgdg_localized_experimental
+    @test ham_adapter_summary.nuclear_charges == (4.0, 4.0)
+    @test ham_adapter_summary.nuclear_term_storage == :by_center
+    @test ham_adapter_summary.nuclear_one_body_by_center_count == 2
+    @test isempty(ham_adapter_summary.missing_fields)
+    @test ham_adapter_summary.blocker === nothing
+    @test materialization.ham_artifact_status ==
+          :written_route_configured_diatomic_ham_bundle
+    @test materialization.ham_artifact_written
     @test materialization.ham_preflight_status ==
-          :blocked_route_configured_diatomic_ham_export_not_adopted
-    @test materialization.ham_missing_builder ==
-          :pending_route_configured_diatomic_ham_builder
+          :available_route_configured_diatomic_ham_adapter
+    @test materialization.ham_missing_builder === nothing
+    @test materialization.ham_operator_payload_status ==
+          :available_route_configured_diatomic_operator_payload
+    @test materialization.ham_interaction_status ==
+          :available_route_configured_diatomic_density_density_interaction_matrix
+    @test materialization.ham_preflight_status ==
+          :available_route_configured_diatomic_ham_adapter
     @test materialization.ham_bundle_export_status ==
-          :pending_route_configured_diatomic_ham_export
-    @test materialization.ham_export_blocker ==
-          :pending_route_configured_diatomic_ham_export
+          :available_route_configured_diatomic_ham_bundle_payload
+    @test materialization.ham_export_blocker === nothing
 end
