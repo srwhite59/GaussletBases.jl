@@ -208,3 +208,88 @@ function _cartesian_shellization_route_configured_request(report)
         bond_axis = classification.bond_axis,
     )
 end
+
+function _cartesian_shellization_route_planning_stage_statuses(request)
+    if request.system_classification == :one_center
+        return (
+            planning_family = :one_center_atomic_shellization,
+            planning_status = :planned_metadata_only,
+            atom_local_core_status = :planned_single_atom_uncontracted_core,
+            atom_local_shell_status = :planned_single_atom_local_shells,
+            contact_merge_status = :not_applicable_one_center,
+            midpoint_slab_status = :not_applicable_one_center,
+            outer_rectangular_shell_status = :planned_after_atom_local_region,
+            boundary_edge_adjustment_status = :planned_final_adjustment,
+        )
+    elseif request.system_classification == :bond_aligned_diatomic
+        return (
+            planning_family = :bond_aligned_diatomic_shellization,
+            planning_status = :planned_metadata_only,
+            atom_local_core_status = :planned_two_atom_uncontracted_cores,
+            atom_local_shell_status = :planned_two_atom_local_shells,
+            contact_merge_status = :planned_contact_or_merge_decision,
+            midpoint_slab_status = :conditional_diatomic_midpoint_slab,
+            outer_rectangular_shell_status = :planned_after_contact_merge_region,
+            boundary_edge_adjustment_status = :planned_final_adjustment,
+        )
+    elseif request.system_classification == :pending_system_classification
+        return (
+            planning_family = :pending_system_classification,
+            planning_status = :blocked_pending_system_classification,
+            atom_local_core_status = :pending_system_classification,
+            atom_local_shell_status = :pending_system_classification,
+            contact_merge_status = :pending_system_classification,
+            midpoint_slab_status = :pending_system_classification,
+            outer_rectangular_shell_status = :pending_system_classification,
+            boundary_edge_adjustment_status = :pending_system_classification,
+        )
+    end
+    return (
+        planning_family = :unsupported_general_multi_atom_shellization,
+        planning_status = :unsupported_general_multi_atom,
+        atom_local_core_status = :unsupported_general_multi_atom,
+        atom_local_shell_status = :unsupported_general_multi_atom,
+        contact_merge_status = :unsupported_general_multi_atom,
+        midpoint_slab_status = :unsupported_general_multi_atom,
+        outer_rectangular_shell_status = :unsupported_general_multi_atom,
+        boundary_edge_adjustment_status = :unsupported_general_multi_atom,
+    )
+end
+
+function _cartesian_shellization_route_planning_stub(request)
+    stage_statuses = _cartesian_shellization_route_planning_stage_statuses(request)
+    spatial_stage_order = (
+        :atom_local_uncontracted_cores,
+        :atom_local_shells,
+        :contact_merge,
+        :optional_midpoint_slab,
+        :outer_rectangular_shell_boxes,
+        :final_boundary_edge_adjustment,
+    )
+
+    return (
+        object_kind = :cartesian_shellization_route_planning_stub,
+        status = :metadata_only_pending_materializer,
+        planning_status = stage_statuses.planning_status,
+        private_development_only = true,
+        request_object_kind = request.object_kind,
+        route_family = request.route_family,
+        route_kind = request.route_kind,
+        system_classification = request.system_classification,
+        system_classification_status = request.system_classification_status,
+        bond_axis = request.bond_axis,
+        planning_family = stage_statuses.planning_family,
+        spatial_stage_order,
+        atom_local_core_status = stage_statuses.atom_local_core_status,
+        atom_local_shell_status = stage_statuses.atom_local_shell_status,
+        contact_merge_status = stage_statuses.contact_merge_status,
+        midpoint_slab_status = stage_statuses.midpoint_slab_status,
+        outer_rectangular_shell_status = stage_statuses.outer_rectangular_shell_status,
+        boundary_edge_adjustment_status = stage_statuses.boundary_edge_adjustment_status,
+        expected_next_materializer_status = request.expected_next_materializer_status,
+        constructs_basis = false,
+        constructs_shell_sequence = false,
+        constructs_fixed_block = false,
+        route_configured_shellization_consumed = false,
+    )
+end

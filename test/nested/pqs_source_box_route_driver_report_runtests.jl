@@ -170,6 +170,15 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test materialization.route_configured_system_classification_status ==
           :explicit_two_atom_single_axis_separation
     @test materialization.route_configured_bond_axis == :x
+    @test materialization.route_configured_shellization_plan_available
+    @test materialization.route_configured_shellization_plan_status ==
+          :metadata_only_pending_materializer
+    @test materialization.route_configured_shellization_planning_status ==
+          :planned_metadata_only
+    @test materialization.route_configured_shellization_planning_family ==
+          :bond_aligned_diatomic_shellization
+    @test materialization.route_configured_midpoint_slab_status ==
+          :conditional_diatomic_midpoint_slab
 
     request = materialization.route_configured_shellization_request
     @test request.object_kind == :cartesian_shellization_route_configured_request
@@ -191,6 +200,42 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test !request.constructs_basis
     @test !request.constructs_shell_sequence
     @test !request.constructs_fixed_block
+
+    plan = materialization.route_configured_shellization_plan
+    @test plan.object_kind == :cartesian_shellization_route_planning_stub
+    @test plan.status == materialization.route_configured_shellization_plan_status
+    @test plan.planning_status ==
+          materialization.route_configured_shellization_planning_status
+    @test plan.private_development_only
+    @test plan.request_object_kind == request.object_kind
+    @test plan.route_family == request.route_family
+    @test plan.route_kind == request.route_kind
+    @test plan.system_classification == request.system_classification
+    @test plan.system_classification_status == request.system_classification_status
+    @test plan.bond_axis == request.bond_axis
+    @test plan.planning_family ==
+          materialization.route_configured_shellization_planning_family
+    @test plan.spatial_stage_order == (
+        :atom_local_uncontracted_cores,
+        :atom_local_shells,
+        :contact_merge,
+        :optional_midpoint_slab,
+        :outer_rectangular_shell_boxes,
+        :final_boundary_edge_adjustment,
+    )
+    @test plan.atom_local_core_status == :planned_two_atom_uncontracted_cores
+    @test plan.atom_local_shell_status == :planned_two_atom_local_shells
+    @test plan.contact_merge_status == :planned_contact_or_merge_decision
+    @test plan.midpoint_slab_status ==
+          materialization.route_configured_midpoint_slab_status
+    @test plan.outer_rectangular_shell_status == :planned_after_contact_merge_region
+    @test plan.boundary_edge_adjustment_status == :planned_final_adjustment
+    @test plan.expected_next_materializer_status ==
+          :pending_route_configured_shellization_materializer
+    @test !plan.constructs_basis
+    @test !plan.constructs_shell_sequence
+    @test !plan.constructs_fixed_block
+    @test !plan.route_configured_shellization_consumed
     return nothing
 end
 
@@ -390,6 +435,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/route_configured_system_classification_status"]) ==
                   "explicit_two_atom_single_axis_separation"
             @test String(file["meta/route_configured_bond_axis"]) == "x"
+            @test String(file["meta/route_configured_shellization_plan_status"]) ==
+                  "metadata_only_pending_materializer"
+            @test String(file["meta/route_configured_shellization_planning_status"]) ==
+                  "planned_metadata_only"
+            @test String(file["meta/route_configured_shellization_planning_family"]) ==
+                  "bond_aligned_diatomic_shellization"
+            @test String(file["meta/route_configured_midpoint_slab_status"]) ==
+                  "conditional_diatomic_midpoint_slab"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -449,6 +502,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/route_configured_system_classification_status"]) ==
                   "explicit_two_atom_single_axis_separation"
             @test String(file["meta/route_configured_bond_axis"]) == "x"
+            @test String(file["meta/route_configured_shellization_plan_status"]) ==
+                  "metadata_only_pending_materializer"
+            @test String(file["meta/route_configured_shellization_planning_status"]) ==
+                  "planned_metadata_only"
+            @test String(file["meta/route_configured_shellization_planning_family"]) ==
+                  "bond_aligned_diatomic_shellization"
+            @test String(file["meta/route_configured_midpoint_slab_status"]) ==
+                  "conditional_diatomic_midpoint_slab"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -637,6 +698,26 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
         )
         @test occursin(
             "route_materialization\troute_configured_bond_axis\t:x",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_plan_available\ttrue",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_plan_status\t:metadata_only_pending_materializer",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_planning_status\t:planned_metadata_only",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_planning_family\t:bond_aligned_diatomic_shellization",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_midpoint_slab_status\t:conditional_diatomic_midpoint_slab",
             tsv,
         )
         @test occursin(

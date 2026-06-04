@@ -980,6 +980,16 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_system_classification_status =
         route_configured_shellization_request.system_classification_status
     route_configured_bond_axis = route_configured_shellization_request.bond_axis
+    route_configured_shellization_plan =
+        _cartesian_shellization_route_planning_stub(route_configured_shellization_request)
+    route_configured_shellization_plan_status =
+        route_configured_shellization_plan.status
+    route_configured_shellization_planning_status =
+        route_configured_shellization_plan.planning_status
+    route_configured_shellization_planning_family =
+        route_configured_shellization_plan.planning_family
+    route_configured_midpoint_slab_status =
+        route_configured_shellization_plan.midpoint_slab_status
 
     if !materialize_route
         return (;
@@ -998,6 +1008,12 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_system_classification,
             route_configured_system_classification_status,
             route_configured_bond_axis,
+            route_configured_shellization_plan,
+            route_configured_shellization_plan_available = true,
+            route_configured_shellization_plan_status,
+            route_configured_shellization_planning_status,
+            route_configured_shellization_planning_family,
+            route_configured_midpoint_slab_status,
             shellization_summary = nothing,
             shellization_summary_available = false,
             shellization_source =
@@ -1099,6 +1115,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_system_classification,
                     route_configured_system_classification_status,
                     route_configured_bond_axis,
+                    route_configured_shellization_plan_status,
+                    route_configured_shellization_planning_status,
+                    route_configured_shellization_planning_family,
+                    route_configured_midpoint_slab_status,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1136,6 +1156,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_system_classification,
                     route_configured_system_classification_status,
                     route_configured_bond_axis,
+                    route_configured_shellization_plan_status,
+                    route_configured_shellization_planning_status,
+                    route_configured_shellization_planning_family,
+                    route_configured_midpoint_slab_status,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1175,6 +1199,12 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_system_classification,
             route_configured_system_classification_status,
             route_configured_bond_axis,
+            route_configured_shellization_plan,
+            route_configured_shellization_plan_available = true,
+            route_configured_shellization_plan_status,
+            route_configured_shellization_planning_status,
+            route_configured_shellization_planning_family,
+            route_configured_midpoint_slab_status,
             shellization_summary,
             shellization_summary_available,
             shellization_source,
@@ -1227,6 +1257,12 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_system_classification,
         route_configured_system_classification_status,
         route_configured_bond_axis,
+        route_configured_shellization_plan,
+        route_configured_shellization_plan_available = true,
+        route_configured_shellization_plan_status,
+        route_configured_shellization_planning_status,
+        route_configured_shellization_planning_family,
+        route_configured_midpoint_slab_status,
         shellization_summary = nothing,
         shellization_summary_available = false,
         shellization_source = :pending_source_box_route_shellization,
