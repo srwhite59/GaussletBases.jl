@@ -147,6 +147,7 @@ function build_one_center_atomic_full_parent_shell_sequence(
     bundle::_MappedOrdinaryGausslet1DBundle;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     nside::Int,
+    packet_kernel::Symbol = :factorized_direct,
 )
     n = length(bundle.basis)
     term_coefficients = _one_center_atomic_term_coefficients(bundle, expansion)
@@ -154,6 +155,7 @@ function build_one_center_atomic_full_parent_shell_sequence(
         bundle,
         (1:n, 1:n, 1:n);
         nside = nside,
+        packet_kernel = packet_kernel,
         term_coefficients = term_coefficients,
     )
 end

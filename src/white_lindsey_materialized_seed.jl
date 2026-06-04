@@ -11,6 +11,8 @@ function _white_lindsey_low_order_materialized_seed_inventory(
     sequence::_CartesianNestedShellSequence3D,
     fixed_block::_NestedFixedBlock3D,
     structure::OneCenterAtomicNestedStructureDiagnostics,
+    ;
+    packet_kernel::Union{Nothing,Symbol} = nothing,
 )
     length(sequence.shell_layers) == 1 || throw(
         ArgumentError("White-Lindsey materialized seed inventory expects exactly one shell layer"),
@@ -49,6 +51,7 @@ function _white_lindsey_low_order_materialized_seed_inventory(
         route_family = :white_lindsey_low_order,
         status = :private_development_seed,
         private_development_only = true,
+        packet_kernel,
         parent_side_count = structure.parent_side_count,
         source_side_count = structure.working_box_side_count,
         nside = structure.nside,
@@ -101,6 +104,7 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
     expansion::CoulombGaussianExpansion = coulomb_gaussian_expansion(doacc = false),
     gausslet_backend::Symbol = :numerical_reference,
     refinement_levels::Integer = 0,
+    packet_kernel::Symbol = :factorized_direct,
 )
     basis = build_basis(
         MappedUniformBasisSpec(
@@ -116,6 +120,7 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
         nside = nside,
         gausslet_backend = gausslet_backend,
         refinement_levels = refinement_levels,
+        packet_kernel = packet_kernel,
     )
     fixed_block = _nested_fixed_block(sequence, basis, gausslet_backend)
     structure = one_center_atomic_nested_structure_diagnostics(
@@ -127,8 +132,17 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
         sequence,
         fixed_block,
         structure,
+        packet_kernel = packet_kernel,
     )
-    return (; parent_side_count, nside, basis, sequence, fixed_block, structure, inventory)
+    return (; parent_side_count, nside, packet_kernel, basis, sequence, fixed_block, structure, inventory)
+end
+
+function _white_lindsey_low_order_materialized_seed_packet_kernel(seed, inventory = nothing)
+    hasproperty(seed, :packet_kernel) && return seed.packet_kernel
+    if !isnothing(inventory) && hasproperty(inventory, :packet_kernel)
+        return inventory.packet_kernel
+    end
+    return nothing
 end
 
 function _white_lindsey_low_order_grouped_range(ranges)
@@ -138,6 +152,7 @@ end
 
 function _white_lindsey_low_order_materialized_seed_route_units(seed)
     inventory = hasproperty(seed, :inventory) ? seed.inventory : seed
+    packet_kernel = _white_lindsey_low_order_materialized_seed_packet_kernel(seed, inventory)
     source_side_count = inventory.source_side_count
     retained_ranges = inventory.retained_ranges
     inner_side_count = source_side_count - 2
@@ -218,6 +233,7 @@ function _white_lindsey_low_order_materialized_seed_route_units(seed)
         object_kind = :white_lindsey_low_order_materialized_seed_route_units,
         route_family = :white_lindsey_low_order,
         status = :private_development_seed,
+        packet_kernel,
         retained_units,
         unit_inventory,
         standard_unit_inventory =
@@ -265,6 +281,7 @@ end
 
 function _white_lindsey_low_order_materialized_seed_operator_inventory(seed)
     fixed_block = hasproperty(seed, :fixed_block) ? seed.fixed_block : seed
+    packet_kernel = _white_lindsey_low_order_materialized_seed_packet_kernel(seed)
     matrices = _white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
     terms = keys(matrices)
     retained_dimension = size(fixed_block.overlap, 1)
@@ -285,6 +302,7 @@ function _white_lindsey_low_order_materialized_seed_operator_inventory(seed)
         object_kind = :white_lindsey_low_order_materialized_seed_operator_inventory,
         route_family = :white_lindsey_low_order,
         status = :private_development_seed,
+        packet_kernel,
         operator_source = :nested_fixed_block,
         retained_dimension,
         terms,

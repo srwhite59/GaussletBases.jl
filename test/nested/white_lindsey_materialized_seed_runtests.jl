@@ -16,6 +16,7 @@ using GaussletBases
     core_retained_count = 5^3
     total_retained_dimension = core_retained_count + shell_retained_count
 
+    @test fixture.packet_kernel == :factorized_direct
     @test sequence isa GaussletBases._CartesianNestedShellSequence3D
     @test length(sequence.shell_layers) == 1
     shell = only(sequence.shell_layers)
@@ -76,6 +77,7 @@ using GaussletBases
     @test inventory.route_family == :white_lindsey_low_order
     @test inventory.status == :private_development_seed
     @test inventory.private_development_only
+    @test inventory.packet_kernel == :factorized_direct
     @test inventory.parent_side_count == 7
     @test inventory.source_side_count == 7
     @test inventory.nside == 5
@@ -108,6 +110,7 @@ using GaussletBases
     @test route_units.object_kind == :white_lindsey_low_order_materialized_seed_route_units
     @test route_units.route_family == :white_lindsey_low_order
     @test route_units.status == :private_development_seed
+    @test route_units.packet_kernel == :factorized_direct
     @test route_units.retained_dimension == 223
     @test !route_units.operator_pairs_materialized
     @test isempty(route_units.pair_entries)
@@ -159,6 +162,7 @@ using GaussletBases
           :white_lindsey_low_order_materialized_seed_operator_inventory
     @test operator_inventory.route_family == :white_lindsey_low_order
     @test operator_inventory.status == :private_development_seed
+    @test operator_inventory.packet_kernel == :factorized_direct
     @test operator_inventory.operator_source == :nested_fixed_block
     @test operator_inventory.retained_dimension == 223
     @test operator_inventory.terms == (
@@ -183,4 +187,60 @@ using GaussletBases
     @test operator_inventory.symmetric_ready.kinetic
     @test !operator_inventory.operator_pairs_materialized
     @test !operator_inventory.electron_electron_materialized
+
+    direct_inventory = GaussletBases._white_lindsey_low_order_materialized_seed_inventory(
+        sequence,
+        fixed_block,
+        structure,
+    )
+    direct_route_units =
+        GaussletBases._white_lindsey_low_order_materialized_seed_route_units(direct_inventory)
+    direct_operator_inventory =
+        GaussletBases._white_lindsey_low_order_materialized_seed_operator_inventory(fixed_block)
+    @test direct_inventory.packet_kernel === nothing
+    @test direct_route_units.packet_kernel === nothing
+    @test direct_operator_inventory.packet_kernel === nothing
+
+    support_fixture =
+        GaussletBases._white_lindsey_low_order_materialized_seed_fixture(
+            packet_kernel = :support_reference,
+        )
+    support_inventory = support_fixture.inventory
+    support_route_units =
+        GaussletBases._white_lindsey_low_order_materialized_seed_route_units(support_fixture)
+    support_operator_inventory =
+        GaussletBases._white_lindsey_low_order_materialized_seed_operator_inventory(
+            support_fixture,
+        )
+
+    @test support_fixture.packet_kernel == :support_reference
+    @test support_inventory.packet_kernel == :support_reference
+    @test support_route_units.packet_kernel == :support_reference
+    @test support_operator_inventory.packet_kernel == :support_reference
+    @test support_inventory.retained_counts == inventory.retained_counts
+    @test support_inventory.retained_ranges == inventory.retained_ranges
+    @test support_inventory.retained_basis_integral_weights_ready
+    @test support_route_units.retained_dimension == route_units.retained_dimension
+    @test support_route_units.unit_inventory.retained_counts ==
+          route_units.unit_inventory.retained_counts
+    @test support_route_units.unit_inventory.ranges == route_units.unit_inventory.ranges
+    @test Tuple(unit.unit_key for unit in support_route_units.retained_units) ==
+          Tuple(unit.unit_key for unit in route_units.retained_units)
+    @test Tuple(unit.retained_unit_kind for unit in support_route_units.retained_units) ==
+          Tuple(unit.retained_unit_kind for unit in route_units.retained_units)
+    @test support_operator_inventory.terms == operator_inventory.terms
+
+    direct_matrices =
+        GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
+    support_matrices =
+        GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(
+            support_fixture.fixed_block,
+        )
+    matrix_comparison_tolerance = 1.0e-10
+    for term in operator_inventory.terms
+        @test norm(
+            getproperty(direct_matrices, term) - getproperty(support_matrices, term),
+            Inf,
+        ) <= matrix_comparison_tolerance
+    end
 end
