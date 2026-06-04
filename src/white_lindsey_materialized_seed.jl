@@ -130,3 +130,102 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
     )
     return (; parent_side_count, nside, basis, sequence, fixed_block, structure, inventory)
 end
+
+function _white_lindsey_low_order_grouped_range(ranges)
+    isempty(ranges) && return nothing
+    return first(first(ranges)):last(last(ranges))
+end
+
+function _white_lindsey_low_order_materialized_seed_route_units(seed)
+    inventory = hasproperty(seed, :inventory) ? seed.inventory : seed
+    source_side_count = inventory.source_side_count
+    retained_ranges = inventory.retained_ranges
+    inner_side_count = source_side_count - 2
+    source_box = ntuple(_ -> 1:source_side_count, 3)
+    core_box = ntuple(_ -> 2:(source_side_count - 1), 3)
+
+    retained_units = (
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :low_order_core_direct,
+            unit_role = :direct_core,
+            retained_unit_kind = :white_lindsey_direct_core,
+            source_family = :white_lindsey_low_order_materialized_core,
+            source_box = core_box,
+            source_dimensions = (inner_side_count, inner_side_count, inner_side_count),
+            retained_rule_kind = :direct_parent_sites,
+            retained_rule_derivation = :materialized_complete_shell_direct_core,
+            retained_range = retained_ranges.core,
+            retained_count = inventory.retained_counts.core,
+            provenance_label = :white_lindsey_low_order_direct_core,
+            weight_semantics = :retained_basis_integral_weights,
+        ),
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :low_order_face_interiors,
+            unit_role = :face_interiors,
+            retained_unit_kind = :white_lindsey_face_interior_2d_products,
+            source_family = :white_lindsey_low_order_materialized_faces,
+            source_box = source_box,
+            source_dimensions = (6, inner_side_count, inner_side_count),
+            retained_rule_kind = :face_interior_2d_products_of_1d_retained_side_functions,
+            retained_rule_derivation = :materialized_complete_shell_face_column_ranges,
+            retained_range = _white_lindsey_low_order_grouped_range(retained_ranges.faces),
+            retained_count = inventory.retained_counts.faces,
+            provenance_label = :white_lindsey_low_order_face_interiors,
+            weight_semantics = :retained_basis_integral_weights,
+        ),
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :low_order_edges,
+            unit_role = :edges,
+            retained_unit_kind = :white_lindsey_edge_1d_side_functions,
+            source_family = :white_lindsey_low_order_materialized_edges,
+            source_box = source_box,
+            source_dimensions = (12, inner_side_count),
+            retained_rule_kind = :edge_1d_retained_side_functions,
+            retained_rule_derivation = :materialized_complete_shell_edge_column_ranges,
+            retained_range = _white_lindsey_low_order_grouped_range(retained_ranges.edges),
+            retained_count = inventory.retained_counts.edges,
+            provenance_label = :white_lindsey_low_order_edges,
+            weight_semantics = :retained_basis_integral_weights,
+        ),
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :low_order_corners,
+            unit_role = :corners,
+            retained_unit_kind = :white_lindsey_corner_direct_single_sites,
+            source_family = :white_lindsey_low_order_materialized_corners,
+            source_box = source_box,
+            source_dimensions = (8,),
+            retained_rule_kind = :corner_direct_single_site_pieces,
+            retained_rule_derivation = :materialized_complete_shell_corner_column_ranges,
+            retained_range = _white_lindsey_low_order_grouped_range(retained_ranges.corners),
+            retained_count = inventory.retained_counts.corners,
+            provenance_label = :white_lindsey_low_order_corners,
+            weight_semantics = :retained_basis_integral_weights,
+        ),
+    )
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
+    pair_entries = ()
+    pair_family_counts = (white_lindsey_low_order = 0,)
+    route_facts = (;
+        source_dimensions = unit_inventory.source_dimensions,
+        retained_units,
+        retained_counts = unit_inventory.retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts,
+    )
+    return (;
+        object_kind = :white_lindsey_low_order_materialized_seed_route_units,
+        route_family = :white_lindsey_low_order,
+        status = :private_development_seed,
+        retained_units,
+        unit_inventory,
+        standard_unit_inventory =
+            _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts),
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts,
+        operator_pairs_materialized = false,
+        weight_semantics = :retained_basis_integral_weights,
+    )
+end

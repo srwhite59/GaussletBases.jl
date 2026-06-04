@@ -8,6 +8,7 @@ using GaussletBases
     fixed_block = fixture.fixed_block
     structure = fixture.structure
     inventory = fixture.inventory
+    route_units = GaussletBases._white_lindsey_low_order_materialized_seed_route_units(fixture)
 
     shell_retained_count = 98
     core_retained_count = 5^3
@@ -101,4 +102,54 @@ using GaussletBases
     @test inventory.overlap_ready
     @test inventory.retained_basis_integral_weights_ready
     @test inventory.weight_semantics == :retained_basis_integral_weights
+
+    @test route_units.object_kind == :white_lindsey_low_order_materialized_seed_route_units
+    @test route_units.route_family == :white_lindsey_low_order
+    @test route_units.status == :private_development_seed
+    @test route_units.retained_dimension == 223
+    @test !route_units.operator_pairs_materialized
+    @test isempty(route_units.pair_entries)
+    @test route_units.pair_family_counts == (white_lindsey_low_order = 0,)
+    @test route_units.weight_semantics == :retained_basis_integral_weights
+
+    @test Tuple(unit.unit_key for unit in route_units.retained_units) == (
+        :low_order_core_direct,
+        :low_order_face_interiors,
+        :low_order_edges,
+        :low_order_corners,
+    )
+    @test Tuple(unit.retained_unit_kind for unit in route_units.retained_units) == (
+        :white_lindsey_direct_core,
+        :white_lindsey_face_interior_2d_products,
+        :white_lindsey_edge_1d_side_functions,
+        :white_lindsey_corner_direct_single_sites,
+    )
+    @test Tuple(unit.retained_rule_kind for unit in route_units.retained_units) == (
+        :direct_parent_sites,
+        :face_interior_2d_products_of_1d_retained_side_functions,
+        :edge_1d_retained_side_functions,
+        :corner_direct_single_site_pieces,
+    )
+    @test all(
+        unit -> unit.weight_semantics == :retained_basis_integral_weights,
+        route_units.retained_units,
+    )
+    @test route_units.unit_inventory.retained_counts == (
+        low_order_core_direct = 125,
+        low_order_face_interiors = 54,
+        low_order_edges = 36,
+        low_order_corners = 8,
+    )
+    @test route_units.unit_inventory.ranges == (
+        low_order_core_direct = 1:125,
+        low_order_face_interiors = 126:179,
+        low_order_edges = 180:215,
+        low_order_corners = 216:223,
+    )
+    @test route_units.standard_unit_inventory.retained_counts_materialized
+    @test route_units.standard_unit_inventory.retained_ranges_materialized
+    @test route_units.standard_unit_inventory.retained_dimension == 223
+    @test route_units.standard_unit_inventory.pair_count == 0
+    @test route_units.standard_unit_inventory.pair_family_counts ==
+          (white_lindsey_low_order = 0,)
 end
