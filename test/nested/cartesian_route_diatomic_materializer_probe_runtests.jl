@@ -34,10 +34,18 @@ function _cartesian_route_diatomic_white_lindsey_report_for_test()
     )
 end
 
-@testset "route-configured diatomic materializer probe blocker" begin
+@testset "route-configured diatomic materializer probe consumes parent handoff" begin
     expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
+    report = _cartesian_route_diatomic_white_lindsey_report_for_test()
+    @test report.route_materializer_payload.private_development_only
+    @test report.route_materializer_payload.transient_only
+    @test report.route_materializer_payload.parent_qw_basis_object_available
+    @test report.route_materializer_payload.parent_axis_bundle_object_available
+    @test report.route_materializer_payload.axis_bundle_backend ==
+          :pgdg_localized_experimental
+
     materialization = GaussletBases._pqs_source_box_route_driver_materialization(
-        _cartesian_route_diatomic_white_lindsey_report_for_test();
+        report;
         materialize_route = true,
         save_basis_artifact = false,
         save_ham_artifact = false,
@@ -50,31 +58,67 @@ end
           :bond_aligned_diatomic
     @test materialization.route_configured_diatomic_materializer_probe_requested
     @test materialization.route_configured_diatomic_materializer_probe_status ==
-          :blocked_missing_diatomic_materializer_contract
-    @test !materialization.route_configured_diatomic_materializer_probe_materialized
-    @test !materialization.route_configured_diatomic_materializer_probe_consumed
-    @test materialization.route_configured_diatomic_materializer_probe_blocker ==
-          :pending_route_configured_bond_aligned_diatomic_materializer_contract
-    @test materialization.route_configured_diatomic_seed_fallback
+          :materialized_route_configured_bond_aligned_diatomic_shellization
+    @test materialization.route_configured_diatomic_materializer_probe_materialized
+    @test materialization.route_configured_diatomic_materializer_probe_consumed
+    @test materialization.route_configured_diatomic_materializer_probe_blocker ===
+          nothing
+    @test !materialization.route_configured_diatomic_seed_fallback
+    @test materialization.route_configured_diatomic_materializer_payload_available
+    @test materialization.route_configured_diatomic_parent_qw_basis_object_handoff_available
+    @test materialization.route_configured_diatomic_parent_axis_bundle_object_handoff_available
+    @test materialization.route_configured_diatomic_axis_bundle_backend_handoff_available
+    @test materialization.route_configured_diatomic_axis_bundle_backend_handoff ==
+          :pgdg_localized_experimental
+    @test materialization.route_configured_diatomic_shared_shell_layer_policy ==
+          :endcap_panel_owned
+    @test materialization.route_configured_diatomic_packet_kernel ==
+          :factorized_direct
+    @test materialization.route_configured_diatomic_policy_source ==
+          :existing_endcap_panel_owned_pgdg_route
 
     missing = materialization.route_configured_diatomic_materializer_missing_contract
-    @test :parent_qw_basis_object_handoff in missing
-    @test :parent_axis_bundle_object_handoff in missing
-    @test :axis_bundle_backend_provenance in missing
-    @test :shared_shell_layer_policy in missing
-    @test :packet_kernel in missing
-    @test :pgdg_requires_endcap_panel_owned_shared_shell_policy in missing
+    @test isempty(missing)
+    @test !in(:parent_qw_basis_object_handoff, missing)
+    @test !in(:parent_axis_bundle_object_handoff, missing)
+    @test !in(:axis_bundle_backend_provenance, missing)
+    @test !in(:shared_shell_layer_policy, missing)
+    @test !in(:packet_kernel, missing)
+    @test !in(:pgdg_requires_endcap_panel_owned_shared_shell_policy, missing)
     @test !in(:coulomb_expansion_or_term_coefficients, missing)
 
     @test materialization.route_configured_materializer_backend_requested ==
           :pgdg_localized_experimental
-    @test materialization.route_configured_materializer_backend_consumed === nothing
+    @test materialization.route_configured_materializer_backend_consumed ==
+          :pgdg_localized_experimental
     @test materialization.route_configured_materializer_d_requested == 0.15
-    @test materialization.route_configured_materializer_d_consumed === nothing
+    @test materialization.route_configured_materializer_d_consumed == 0.15
     @test materialization.route_configured_materializer_nside_requested == 5
-    @test materialization.route_configured_materializer_nside_consumed === nothing
+    @test materialization.route_configured_materializer_nside_consumed == 5
 
-    @test materialization.status == :materialized_seed_report_available
-    @test materialization.shellization_source == :white_lindsey_one_center_seed
-    @test !materialization.route_configured_shellization_consumed
+    probe_materialization =
+        materialization.route_configured_diatomic_materializer_probe.materialization
+    probe_options = probe_materialization.materializer_options
+    @test probe_options.axis_bundle_backend == :pgdg_localized_experimental
+    @test probe_options.shared_shell_layer_policy == :endcap_panel_owned
+    @test probe_options.packet_kernel == :factorized_direct
+    @test probe_options.term_coefficients_source == :coulomb_expansion_coefficients
+
+    @test materialization.status ==
+          :materialized_route_configured_diatomic_shellization_available
+    @test materialization.materialized_report === nothing
+    @test materialization.materialized_report_kind ==
+          :cartesian_shellization_route_bond_aligned_diatomic_materialization
+    @test materialization.shellization_source ==
+          :route_configured_bond_aligned_diatomic_source
+    @test materialization.route_configured_shellization_consumed
+    @test materialization.seed_materialization_status ==
+          :not_seed_route_configured_diatomic_shellization
+    @test materialization.retained_dimension > 0
+    @test materialization.basis_bundle_export_status ==
+          :pending_route_configured_diatomic_basis_export
+    @test materialization.basis_artifact_status == :not_requested
+    @test !materialization.basis_artifact_written
+    @test materialization.ham_artifact_status == :not_requested
+    @test !materialization.ham_artifact_written
 end

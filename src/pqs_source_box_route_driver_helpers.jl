@@ -1709,6 +1709,7 @@ end
 
 function _pqs_source_box_route_driver_report(
     standard_setup,
+    parent,
     parent_axis,
     route_axis_counts,
     raw_box,
@@ -1721,6 +1722,8 @@ function _pqs_source_box_route_driver_report(
     contract,
     diagnostics,
 )
+    route_materializer_payload =
+        _pqs_source_box_route_driver_materializer_payload(parent)
     return (;
         object_kind = :cartesian_nesting_route_driver_skeleton_report,
         generated_at = Base.Libc.strftime("%Y-%m-%dT%H:%M:%S", time()),
@@ -1753,6 +1756,43 @@ function _pqs_source_box_route_driver_report(
         stage_table = contract.stage_table,
         dry_run_validation = contract.dry_run_validation,
         diagnostics,
+        route_materializer_payload,
+    )
+end
+
+function _pqs_source_box_route_driver_materializer_payload(parent)
+    parent_axis_probe =
+        hasproperty(parent, :parent_axis_probe) ? parent.parent_axis_probe : nothing
+    parent_qw_basis_object =
+        hasproperty(parent, :parent_qw_basis_object) ?
+        parent.parent_qw_basis_object :
+        nothing
+    parent_axis_bundle_object =
+        hasproperty(parent, :parent_axis_bundle_object) ?
+        parent.parent_axis_bundle_object :
+        nothing
+    axis_bundle_backend =
+        !isnothing(parent_axis_probe) &&
+        hasproperty(parent_axis_probe, :gausslet_backend) ?
+        parent_axis_probe.gausslet_backend :
+        nothing
+
+    return (;
+        object_kind = :cartesian_route_materializer_transient_payload,
+        private_development_only = true,
+        transient_only = true,
+        durable_report_serialization = :sanitize_before_save,
+        source = :parent_axis_probe_object_carry,
+        parent_qw_basis_object,
+        parent_axis_bundle_object,
+        parent_qw_basis_object_available = !isnothing(parent_qw_basis_object),
+        parent_axis_bundle_object_available = !isnothing(parent_axis_bundle_object),
+        parent_qw_basis_object_type_label =
+            _pqs_route_driver_type_label(parent_qw_basis_object),
+        parent_axis_bundle_object_type_label =
+            _pqs_route_driver_type_label(parent_axis_bundle_object),
+        axis_bundle_backend,
+        axis_bundle_backend_available = !isnothing(axis_bundle_backend),
     )
 end
 
@@ -1949,8 +1989,28 @@ end
 function _pqs_source_box_route_driver_diatomic_materializer_probe(
     config;
     probe_route_configured_diatomic_materializer::Bool = false,
+    route_materializer_payload = nothing,
     white_lindsey_expansion = nothing,
+    shared_shell_layer_policy = nothing,
+    packet_kernel = nothing,
 )
+    parent_qw_basis_object =
+        isnothing(route_materializer_payload) ?
+        nothing :
+        route_materializer_payload.parent_qw_basis_object
+    parent_axis_bundle_object =
+        isnothing(route_materializer_payload) ?
+        nothing :
+        route_materializer_payload.parent_axis_bundle_object
+    axis_bundle_backend =
+        isnothing(route_materializer_payload) ?
+        nothing :
+        route_materializer_payload.axis_bundle_backend
+    parent_qw_basis_object_handoff_available = !isnothing(parent_qw_basis_object)
+    parent_axis_bundle_object_handoff_available =
+        !isnothing(parent_axis_bundle_object)
+    axis_bundle_backend_handoff_available = !isnothing(axis_bundle_backend)
+
     if !probe_route_configured_diatomic_materializer
         return (;
             object_kind = :route_configured_diatomic_materializer_probe,
@@ -1960,6 +2020,9 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
             route_configured_shellization_consumed = false,
             blocker = nothing,
             missing_contract = (),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
             materialization = nothing,
             error_message = nothing,
         )
@@ -1972,6 +2035,9 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
             route_configured_shellization_consumed = false,
             blocker = :route_config_not_bond_aligned_diatomic,
             missing_contract = (),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
             materialization = nothing,
             error_message = nothing,
         )
@@ -1984,6 +2050,9 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
             route_configured_shellization_consumed = false,
             blocker = :route_config_not_white_lindsey_low_order,
             missing_contract = (),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
             materialization = nothing,
             error_message = nothing,
         )
@@ -1993,7 +2062,12 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
         materialization =
             _cartesian_shellization_route_materialize_bond_aligned_diatomic(
                 config;
+                parent_qw_basis_object,
+                parent_axis_bundle_object,
                 expansion = white_lindsey_expansion,
+                shared_shell_layer_policy,
+                packet_kernel,
+                axis_bundle_backend,
             )
         return (;
             object_kind = :route_configured_diatomic_materializer_probe,
@@ -2004,6 +2078,9 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
                 materialization.route_configured_shellization_consumed,
             blocker = materialization.blocker,
             missing_contract = materialization.missing_contract,
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
             materialization,
             error_message = nothing,
         )
@@ -2017,6 +2094,9 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
             route_configured_shellization_consumed = false,
             blocker = :materializer_precondition_failed,
             missing_contract = (),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
             materialization = nothing,
             error_message = sprint(showerror, error),
         )
@@ -2161,12 +2241,34 @@ function _pqs_source_box_route_driver_materialization(
         materialize_route &&
         route_family == :white_lindsey_low_order &&
         route_configured_system_classification == :bond_aligned_diatomic
+    route_materializer_payload =
+        hasproperty(report, :route_materializer_payload) ?
+        report.route_materializer_payload :
+        nothing
+    route_configured_diatomic_shared_shell_layer_policy =
+        route_configured_diatomic_materializer_requested &&
+        route_configured_materializer_config.materializer_backend_requested ==
+        :pgdg_localized_experimental ?
+        :endcap_panel_owned :
+        nothing
+    route_configured_diatomic_packet_kernel =
+        route_configured_diatomic_materializer_requested ?
+        :factorized_direct :
+        nothing
+    route_configured_diatomic_policy_source =
+        isnothing(route_configured_diatomic_shared_shell_layer_policy) ?
+        nothing :
+        :existing_endcap_panel_owned_pgdg_route
     route_configured_diatomic_materializer_probe =
         _pqs_source_box_route_driver_diatomic_materializer_probe(
             route_configured_materializer_config;
             probe_route_configured_diatomic_materializer =
                 route_configured_diatomic_materializer_requested,
+            route_materializer_payload,
             white_lindsey_expansion,
+            shared_shell_layer_policy =
+                route_configured_diatomic_shared_shell_layer_policy,
+            packet_kernel = route_configured_diatomic_packet_kernel,
         )
     route_configured_diatomic_materializer_probe_requested =
         route_configured_diatomic_materializer_probe.requested
@@ -2180,6 +2282,18 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_materializer_probe.blocker
     route_configured_diatomic_materializer_missing_contract =
         route_configured_diatomic_materializer_probe.missing_contract
+    route_configured_diatomic_materializer_payload_available =
+        !isnothing(route_materializer_payload)
+    route_configured_diatomic_parent_qw_basis_object_handoff_available =
+        route_configured_diatomic_materializer_probe.parent_qw_basis_object_handoff_available
+    route_configured_diatomic_parent_axis_bundle_object_handoff_available =
+        route_configured_diatomic_materializer_probe.parent_axis_bundle_object_handoff_available
+    route_configured_diatomic_axis_bundle_backend_handoff_available =
+        route_configured_diatomic_materializer_probe.axis_bundle_backend_handoff_available
+    route_configured_diatomic_axis_bundle_backend_handoff =
+        isnothing(route_materializer_payload) ?
+        nothing :
+        route_materializer_payload.axis_bundle_backend
     route_configured_diatomic_seed_fallback =
         route_configured_diatomic_materializer_probe_requested &&
         !route_configured_diatomic_materializer_probe_consumed
@@ -2278,6 +2392,14 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_materializer_probe_consumed,
         route_configured_diatomic_materializer_probe_blocker,
         route_configured_diatomic_materializer_missing_contract,
+        route_configured_diatomic_materializer_payload_available,
+        route_configured_diatomic_parent_qw_basis_object_handoff_available,
+        route_configured_diatomic_parent_axis_bundle_object_handoff_available,
+        route_configured_diatomic_axis_bundle_backend_handoff_available,
+        route_configured_diatomic_axis_bundle_backend_handoff,
+        route_configured_diatomic_shared_shell_layer_policy,
+        route_configured_diatomic_packet_kernel,
+        route_configured_diatomic_policy_source,
         route_configured_diatomic_seed_fallback,
     )
 
@@ -2393,6 +2515,118 @@ function _pqs_source_box_route_driver_materialization(
         use_route_configured_one_center_report =
             route_configured_one_center_report_required &&
             route_configured_one_center_materializer_probe_materialized
+        use_route_configured_diatomic_shellization =
+            route_configured_diatomic_materializer_requested &&
+            route_configured_diatomic_materializer_probe_consumed
+        if use_route_configured_diatomic_shellization
+            diatomic_materialization =
+                route_configured_diatomic_materializer_probe.materialization
+            shellization_summary = diatomic_materialization.shellization_summary
+            shellization_summary_available = !isnothing(shellization_summary)
+            basis_artifact_status =
+                save_basis_artifact ?
+                :not_written_route_configured_diatomic_basis_export_pending :
+                :not_requested
+            ham_artifact_status =
+                save_ham_artifact ?
+                :not_written_route_configured_diatomic_ham_export_pending :
+                :not_requested
+            ham_export_blocker =
+                save_ham_artifact ?
+                :pending_route_configured_diatomic_ham_export :
+                nothing
+            return (;
+                object_kind = :cartesian_nesting_route_driver_materialization,
+                route_family,
+                private_development_only = true,
+                materialize_route_requested = true,
+                save_basis_artifact_requested = save_basis_artifact,
+                save_ham_artifact_requested = save_ham_artifact,
+                status = :materialized_route_configured_diatomic_shellization_available,
+                materialized_report = nothing,
+                materialized_report_kind = diatomic_materialization.object_kind,
+                route_configured_shellization_request,
+                route_configured_shellization_request_available = true,
+                route_configured_shellization_request_status,
+                route_configured_system_classification,
+                route_configured_system_classification_status,
+                route_configured_bond_axis,
+                route_configured_shellization_plan,
+                route_configured_shellization_plan_available = true,
+                route_configured_shellization_plan_status,
+                route_configured_shellization_planning_status,
+                route_configured_shellization_planning_family,
+                route_configured_midpoint_slab_status,
+                route_configured_shellization_helper_map,
+                route_configured_shellization_helper_map_available = true,
+                route_configured_shellization_helper_map_status,
+                route_configured_primary_planned_helper,
+                route_configured_missing_input_count,
+                route_configured_helper_map_blocker,
+                route_configured_input_readiness,
+                route_configured_input_readiness_available = true,
+                route_configured_input_readiness_status,
+                route_configured_available_fact_count,
+                route_configured_materializer_missing_input_count,
+                route_configured_input_readiness_blocker,
+                route_configured_materializer_config,
+                route_configured_materializer_config_available = true,
+                route_configured_materializer_config_status,
+                route_configured_materializer_config_planning_family,
+                route_configured_materializer_config_pending_input_count,
+                route_configured_one_center_materializer_probe,
+                route_configured_one_center_materializer_probe_requested,
+                route_configured_one_center_materializer_probe_status,
+                route_configured_one_center_materializer_probe_materialized,
+                route_configured_one_center_materializer_probe_consumed,
+                route_configured_one_center_materializer_probe_blocker,
+                route_configured_diatomic_materializer_contract...,
+                route_configured_materializer_contract...,
+                shellization_summary,
+                shellization_summary_available,
+                shellization_source = :route_configured_bond_aligned_diatomic_source,
+                route_configured_shellization_consumed = true,
+                materialized_shellization_stage =
+                    shellization_summary.shellization_stage,
+                seed_materialization_status =
+                    :not_seed_route_configured_diatomic_shellization,
+                retained_dimension = diatomic_materialization.retained_dimension,
+                final_integral_weights_status =
+                    :pending_route_configured_diatomic_fixed_block_adapter,
+                one_body_operator_status =
+                    :pending_route_configured_diatomic_operator_inventory,
+                basis_bundle_export_status =
+                    :pending_route_configured_diatomic_basis_export,
+                basis_artifact_status,
+                basis_artifact_written = false,
+                basisfile,
+                basis_artifact_path = nothing,
+                basis_export_blocker =
+                    save_basis_artifact ?
+                    :pending_route_configured_diatomic_basis_export :
+                    nothing,
+                ham_preflight_status =
+                    save_ham_artifact ?
+                    :blocked_route_configured_diatomic_ham_export_not_adopted :
+                    :not_requested,
+                ham_missing_builder =
+                    save_ham_artifact ?
+                    :pending_route_configured_diatomic_ham_builder :
+                    nothing,
+                ham_operator_payload_status =
+                    :pending_route_configured_diatomic_operator_payload,
+                ham_interaction_status =
+                    :pending_route_configured_diatomic_density_density_builder,
+                ham_bundle_export_status =
+                    :pending_route_configured_diatomic_ham_export,
+                ham_artifact_status,
+                ham_artifact_written = false,
+                hamfile,
+                ham_export_blocker,
+                ham_preflight = nothing,
+                pqs_materialization_status = :not_applicable,
+            )
+        end
         materialized_report =
             use_route_configured_one_center_report ?
             _pqs_source_box_route_driver_route_configured_one_center_report(
@@ -2983,7 +3217,7 @@ function cartesian_report(system, parent, assembly, recipe)
             route_skeleton, raw_box, contract)
 
     return _pqs_source_box_route_driver_report(
-        standard_setup, parent_axis, route_axis_counts, raw_box,
+        standard_setup, parent, parent_axis, route_axis_counts, raw_box,
         system_metadata, recipe_metadata, parent_contract, parent_description,
         route_skeleton, route_facts, contract, diagnostics)
 end
