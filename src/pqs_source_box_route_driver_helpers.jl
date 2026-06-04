@@ -2163,7 +2163,7 @@ function _pqs_source_box_route_driver_materialization(
             _white_lindsey_low_order_materialized_seed_report()
         basis_export_status =
             use_route_configured_one_center_report ?
-            :not_wired_route_configured_one_center_basis_export :
+            :supported_route_configured_one_center_basis_only_fixed_block :
             :supported_basis_only_fixed_block
         shellization_summary = materialized_report.shellization_summary
         shellization_summary_available = materialized_report.shellization_summary_available
@@ -2208,11 +2208,11 @@ function _pqs_source_box_route_driver_materialization(
             save_basis_artifact ?
             (
                 use_route_configured_one_center_report ?
-                :not_written_route_configured_one_center_basis_export_not_wired :
+                :written_route_configured_one_center_basis_only_bundle :
                 :written_basis_only_bundle
             ) :
             :not_requested
-        if save_basis_artifact && !use_route_configured_one_center_report
+        if save_basis_artifact
             write_cartesian_basis_bundle_jld2(
                 basisfile,
                 materialized_report.fixture.fixed_block;
@@ -2400,10 +2400,7 @@ function _pqs_source_box_route_driver_materialization(
             basis_artifact_written,
             basisfile,
             basis_artifact_path = basis_artifact_written ? basisfile : nothing,
-            basis_export_blocker =
-                save_basis_artifact && use_route_configured_one_center_report ?
-                :route_configured_one_center_basis_export_not_wired :
-                nothing,
+            basis_export_blocker = nothing,
             ham_preflight_status = ham_preflight.status,
             ham_missing_builder = ham_preflight.missing_builder,
             ham_operator_payload_status,

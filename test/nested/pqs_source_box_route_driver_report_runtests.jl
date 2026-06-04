@@ -645,9 +645,84 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test one_center_materialized.materialized_report.weight_semantics ==
           :retained_basis_integral_weights
     @test one_center_materialized.basis_bundle_export_status ==
-          :not_wired_route_configured_one_center_basis_export
+          :supported_route_configured_one_center_basis_only_fixed_block
     @test one_center_materialized.basis_artifact_status == :not_requested
     @test one_center_materialized.ham_artifact_status == :not_requested
+
+    mktempdir() do dir
+        basisfile = joinpath(dir, "route_configured_one_center_basis.jld2")
+        hamfile = joinpath(dir, "unused_ham.jld2")
+        basis_status = GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = true,
+            save_basis_artifact = true,
+            save_ham_artifact = false,
+            basisfile,
+            hamfile,
+            white_lindsey_expansion = density_expansion,
+        )
+        @test basis_status.status ==
+              :materialized_route_configured_one_center_report_available
+        @test basis_status.basis_bundle_export_status ==
+              :supported_route_configured_one_center_basis_only_fixed_block
+        @test basis_status.basis_artifact_status ==
+              :written_route_configured_one_center_basis_only_bundle
+        @test basis_status.basis_export_blocker === nothing
+        @test basis_status.basis_artifact_written
+        @test basis_status.basis_artifact_path == basisfile
+        @test basis_status.ham_artifact_status == :not_requested
+        @test !basis_status.ham_artifact_written
+        @test isfile(basisfile)
+        @test !isfile(hamfile)
+        jldopen(basisfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "meta" in top_keys
+            @test !("ham" in top_keys)
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test length(file["basis/final_integral_weights"]) == 223
+            @test Bool(file["meta/has_ham"]) == false
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_one_center_report"
+            @test String(file["meta/shellization_source"]) ==
+                  "route_configured_one_center_low_order"
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test String(file["meta/seed_materialization_status"]) ==
+                  "not_seed_route_configured_materialization"
+            @test String(file["meta/export_status"]) == "basis_only"
+            @test String(file["meta/basis_export_status"]) ==
+                  "supported_route_configured_one_center_basis_only_fixed_block"
+        end
+    end
+
+    mktempdir() do dir
+        hamfile = joinpath(dir, "route_configured_one_center_ham.jld2")
+        ham_blocked = GaussletBases._pqs_source_box_route_driver_materialization(
+            _pqs_route_driver_one_center_white_lindsey_report_for_test();
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = true,
+            basisfile = joinpath(dir, "unused_basis.jld2"),
+            hamfile,
+            white_lindsey_expansion = density_expansion,
+        )
+        @test ham_blocked.status ==
+              :materialized_route_configured_one_center_report_available
+        @test ham_blocked.basis_bundle_export_status ==
+              :supported_route_configured_one_center_basis_only_fixed_block
+        @test ham_blocked.basis_artifact_status == :not_requested
+        @test ham_blocked.basis_export_blocker === nothing
+        @test ham_blocked.ham_export_blocker ==
+              :route_configured_one_center_ham_export_not_wired
+        @test ham_blocked.ham_artifact_status ==
+              :not_written_route_configured_one_center_ham_export_not_wired
+        @test !ham_blocked.ham_artifact_written
+        @test !isfile(hamfile)
+        @test !isfile(joinpath(dir, "unused_basis.jld2"))
+    end
 
     mktempdir() do dir
         pqs_hamfile = joinpath(dir, "pqs_pending_ham.jld2")
