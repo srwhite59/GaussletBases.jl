@@ -170,8 +170,11 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test default_status.status == :not_requested_metadata_only
     @test default_status.materialized_report === nothing
     @test default_status.ham_bundle_export_status == :not_requested
+    @test default_status.ham_preflight_status == :not_checked_metadata_only
+    @test default_status.ham_missing_builder === nothing
     @test default_status.ham_operator_payload_status == :not_checked_metadata_only
     @test default_status.ham_interaction_status == :not_checked_metadata_only
+    @test default_status.ham_preflight === nothing
     @test default_status.basis_artifact_status == :not_requested
     @test !default_status.basis_artifact_written
     @test !default_status.ham_artifact_written
@@ -189,11 +192,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
     @test pqs_status.basis_bundle_export_status == :pending_final_retained_basis
     @test pqs_status.basis_artifact_status == :not_requested
+    @test pqs_status.ham_preflight_status == :not_applicable_to_pqs_source_box_route
+    @test pqs_status.ham_missing_builder == :pending_source_box_retained_route
     @test pqs_status.ham_operator_payload_status ==
           :pending_source_box_retained_operator_payload
     @test pqs_status.ham_interaction_status ==
           :pending_source_box_retained_density_density_blocks
     @test pqs_status.ham_bundle_export_status == :pending_source_box_retained_route
+    @test pqs_status.ham_preflight === nothing
     @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
 
     white_lindsey_status = GaussletBases._pqs_source_box_route_driver_materialization(
@@ -218,6 +224,12 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :supported_basis_only_fixed_block
     @test white_lindsey_status.basis_artifact_status == :not_requested
     @test !white_lindsey_status.basis_artifact_written
+    @test white_lindsey_status.ham_preflight.object_kind ==
+          :white_lindsey_low_order_ham_preflight
+    @test white_lindsey_status.ham_preflight_status ==
+          :blocked_missing_pure_low_order_interaction_builder
+    @test white_lindsey_status.ham_missing_builder ==
+          :missing_pure_low_order_fixed_block_density_density_interaction_builder
     @test white_lindsey_status.ham_operator_payload_status ==
           :pending_low_order_operator_payload
     @test white_lindsey_status.ham_interaction_status ==
@@ -281,6 +293,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test String(file["meta/export_status"]) == "basis_only"
             @test String(file["meta/basis_export_status"]) ==
                   "supported_basis_only_fixed_block"
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "blocked_missing_pure_low_order_interaction_builder"
+            @test String(file["meta/ham_missing_builder"]) ==
+                  "missing_pure_low_order_fixed_block_density_density_interaction_builder"
             @test String(file["meta/ham_operator_payload_status"]) ==
                   "pending_low_order_operator_payload"
             @test String(file["meta/ham_interaction_status"]) ==
@@ -291,6 +307,43 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "missing_pure_low_order_fixed_block_density_density_interaction_builder"
         end
     end
+    return nothing
+end
+
+function _pqs_route_driver_check_white_lindsey_ham_preflight()
+    seed_report = GaussletBases._white_lindsey_low_order_materialized_seed_report()
+    preflight = GaussletBases._pqs_source_box_route_driver_white_lindsey_ham_preflight(
+        seed_report,
+    )
+    fixed_block_preflight =
+        GaussletBases._pqs_source_box_route_driver_white_lindsey_ham_preflight(
+            seed_report.fixture.fixed_block,
+        )
+
+    @test preflight == fixed_block_preflight
+    @test preflight.object_kind == :white_lindsey_low_order_ham_preflight
+    @test preflight.route_family == :white_lindsey_low_order
+    @test occursin("_NestedFixedBlock3D", preflight.fixed_block_type_label)
+    @test occursin("MappedUniformBasis", preflight.parent_basis_type_label)
+    @test !preflight.ordinary_qw_fixed_block_applicable
+    @test !preflight.nested_cartesian_fixed_block_applicable
+    @test preflight.ordinary_cartesian_ida_builder_name_defined
+    @test !preflight.ordinary_cartesian_ida_fixed_block_applicable
+    @test preflight.basis_bundle_include_ham_checked
+    @test !preflight.basis_bundle_ham_payload_available
+    @test preflight.basis_bundle_ham_payload_status == :absent_for_fixed_block
+    @test !preflight.pure_operator_payload_available
+    @test preflight.status == :blocked_missing_pure_low_order_interaction_builder
+    @test preflight.ham_operator_payload_status == :pending_low_order_operator_payload
+    @test preflight.ham_interaction_status ==
+          :pending_low_order_density_density_interaction_matrix
+    @test preflight.ham_bundle_export_status ==
+          :pending_low_order_density_density_interaction_matrix
+    @test preflight.missing_builder ==
+          :missing_pure_low_order_fixed_block_density_density_interaction_builder
+    @test preflight.supplement_required_paths_policy ==
+          :diagnostic_only_not_benchmark_route
+    @test !preflight.full_ham_export_ready
     return nothing
 end
 
@@ -334,6 +387,14 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             saved_materialization = file["materialization"]
             @test saved_materialization.status == :materialized_seed_report_available
             @test saved_materialization.basis_artifact_status == :written_basis_only_bundle
+            @test saved_materialization.ham_preflight.status ==
+                  :blocked_missing_pure_low_order_interaction_builder
+            @test saved_materialization.ham_preflight.missing_builder ==
+                  :missing_pure_low_order_fixed_block_density_density_interaction_builder
+            @test saved_materialization.ham_preflight_status ==
+                  :blocked_missing_pure_low_order_interaction_builder
+            @test saved_materialization.ham_missing_builder ==
+                  :missing_pure_low_order_fixed_block_density_density_interaction_builder
             @test saved_materialization.ham_operator_payload_status ==
                   :pending_low_order_operator_payload
             @test saved_materialization.ham_interaction_status ==
@@ -347,6 +408,14 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
         tsv = read(tsvfile, String)
         @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
         @test occursin("route_materialization\tbasis_artifact_status\t:written_basis_only_bundle", tsv)
+        @test occursin(
+            "route_materialization\tham_preflight_status\t:blocked_missing_pure_low_order_interaction_builder",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tham_missing_builder\t:missing_pure_low_order_fixed_block_density_density_interaction_builder",
+            tsv,
+        )
         @test occursin(
             "route_materialization\tham_operator_payload_status\t:pending_low_order_operator_payload",
             tsv,
@@ -404,6 +473,7 @@ end
         output_representations = (:low_order_nested_cartesian_basis,),
     )
     _pqs_route_driver_check_report_output_sections(white_lindsey_report)
+    _pqs_route_driver_check_white_lindsey_ham_preflight()
     _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
     _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_report)
 end

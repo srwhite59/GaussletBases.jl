@@ -863,6 +863,84 @@ function _pqs_source_box_route_driver_report(
     )
 end
 
+function _pqs_source_box_route_driver_white_lindsey_preflight_fixed_block(seed_or_fixed_block)
+    if hasproperty(seed_or_fixed_block, :fixture) &&
+       hasproperty(seed_or_fixed_block.fixture, :fixed_block)
+        return seed_or_fixed_block.fixture.fixed_block
+    elseif hasproperty(seed_or_fixed_block, :fixed_block)
+        return seed_or_fixed_block.fixed_block
+    end
+    return seed_or_fixed_block
+end
+
+function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_block)
+    fixed_block =
+        _pqs_source_box_route_driver_white_lindsey_preflight_fixed_block(seed_or_fixed_block)
+    ordinary_qw_fixed_block_applicable =
+        applicable(ordinary_cartesian_qiu_white_operators, fixed_block)
+    nested_cartesian_fixed_block_applicable =
+        applicable(nested_cartesian_operators, fixed_block)
+    ida_builder_name_defined = isdefined(@__MODULE__, :ordinary_cartesian_ida_operators)
+    ordinary_cartesian_ida_fixed_block_applicable =
+        ida_builder_name_defined &&
+        applicable(getfield(@__MODULE__, :ordinary_cartesian_ida_operators), fixed_block)
+    basis_bundle_payload = cartesian_basis_bundle_payload(fixed_block; include_ham = true)
+    basis_bundle_ham_payload_available = !isnothing(basis_bundle_payload.ham)
+    pure_operator_payload_available =
+        ordinary_qw_fixed_block_applicable ||
+        nested_cartesian_fixed_block_applicable ||
+        ordinary_cartesian_ida_fixed_block_applicable ||
+        basis_bundle_ham_payload_available
+    missing_builder =
+        pure_operator_payload_available ?
+        nothing :
+        :missing_pure_low_order_fixed_block_density_density_interaction_builder
+    status =
+        pure_operator_payload_available ?
+        :available_pure_low_order_operator_payload :
+        :blocked_missing_pure_low_order_interaction_builder
+    ham_operator_payload_status =
+        pure_operator_payload_available ?
+        :available_low_order_operator_payload :
+        :pending_low_order_operator_payload
+    ham_interaction_status =
+        basis_bundle_ham_payload_available ?
+        :available_low_order_density_density_interaction_matrix :
+        :pending_low_order_density_density_interaction_matrix
+    ham_bundle_export_status =
+        basis_bundle_ham_payload_available ?
+        :available_low_order_ham_bundle_payload :
+        :pending_low_order_density_density_interaction_matrix
+
+    return (;
+        object_kind = :white_lindsey_low_order_ham_preflight,
+        route_family = :white_lindsey_low_order,
+        fixed_block_type_label = string(typeof(fixed_block)),
+        parent_basis_type_label =
+            hasproperty(fixed_block, :parent_basis) ?
+            string(typeof(fixed_block.parent_basis)) :
+            "unavailable",
+        ordinary_qw_fixed_block_applicable,
+        nested_cartesian_fixed_block_applicable,
+        ordinary_cartesian_ida_builder_name_defined = ida_builder_name_defined,
+        ordinary_cartesian_ida_fixed_block_applicable,
+        basis_bundle_include_ham_checked = true,
+        basis_bundle_ham_payload_available,
+        basis_bundle_ham_payload_status =
+            basis_bundle_ham_payload_available ?
+            :available :
+            :absent_for_fixed_block,
+        pure_operator_payload_available,
+        status,
+        ham_operator_payload_status,
+        ham_interaction_status,
+        ham_bundle_export_status,
+        missing_builder,
+        supplement_required_paths_policy = :diagnostic_only_not_benchmark_route,
+        full_ham_export_ready = basis_bundle_ham_payload_available,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
@@ -896,6 +974,8 @@ function _pqs_source_box_route_driver_materialization(
             basis_artifact_path = nothing,
             basis_export_blocker =
                 save_basis_artifact ? :materialize_route_false : nothing,
+            ham_preflight_status = :not_checked_metadata_only,
+            ham_missing_builder = nothing,
             ham_operator_payload_status = :not_checked_metadata_only,
             ham_interaction_status = :not_checked_metadata_only,
             ham_bundle_export_status = :not_requested,
@@ -907,6 +987,7 @@ function _pqs_source_box_route_driver_materialization(
             hamfile,
             ham_export_blocker =
                 save_ham_artifact ? :materialize_route_false : nothing,
+            ham_preflight = nothing,
             pqs_materialization_status =
                 route_family == :pqs_source_box ?
                 :pending_source_box_retained_route :
@@ -917,10 +998,12 @@ function _pqs_source_box_route_driver_materialization(
     if route_family == :white_lindsey_low_order
         materialized_report = _white_lindsey_low_order_materialized_seed_report()
         basis_export_status = :supported_basis_only_fixed_block
-        ham_operator_payload_status = :pending_low_order_operator_payload
-        ham_interaction_status = :pending_low_order_density_density_interaction_matrix
-        ham_bundle_export_status = :pending_low_order_density_density_interaction_matrix
-        ham_export_blocker = :missing_pure_low_order_fixed_block_density_density_interaction_builder
+        ham_preflight =
+            _pqs_source_box_route_driver_white_lindsey_ham_preflight(materialized_report)
+        ham_operator_payload_status = ham_preflight.ham_operator_payload_status
+        ham_interaction_status = ham_preflight.ham_interaction_status
+        ham_bundle_export_status = ham_preflight.ham_bundle_export_status
+        ham_export_blocker = ham_preflight.missing_builder
         basis_artifact_written = false
         basis_artifact_status =
             save_basis_artifact ? :written_basis_only_bundle : :not_requested
@@ -936,6 +1019,8 @@ function _pqs_source_box_route_driver_materialization(
                     materialized_report_kind = materialized_report.object_kind,
                     export_status = :basis_only,
                     basis_export_status,
+                    ham_preflight_status = ham_preflight.status,
+                    ham_missing_builder = ham_preflight.missing_builder,
                     ham_operator_payload_status,
                     ham_interaction_status,
                     ham_export_status = ham_bundle_export_status,
@@ -970,6 +1055,8 @@ function _pqs_source_box_route_driver_materialization(
             basisfile,
             basis_artifact_path = basis_artifact_written ? basisfile : nothing,
             basis_export_blocker = nothing,
+            ham_preflight_status = ham_preflight.status,
+            ham_missing_builder = ham_preflight.missing_builder,
             ham_operator_payload_status,
             ham_interaction_status,
             ham_bundle_export_status,
@@ -980,6 +1067,7 @@ function _pqs_source_box_route_driver_materialization(
             ham_artifact_written = false,
             hamfile,
             ham_export_blocker,
+            ham_preflight,
             pqs_materialization_status = :not_applicable,
         )
     end
@@ -1008,6 +1096,8 @@ function _pqs_source_box_route_driver_materialization(
         basis_artifact_path = nothing,
         basis_export_blocker =
             save_basis_artifact ? :pending_final_retained_basis : nothing,
+        ham_preflight_status = :not_applicable_to_pqs_source_box_route,
+        ham_missing_builder = :pending_source_box_retained_route,
         ham_operator_payload_status = :pending_source_box_retained_operator_payload,
         ham_interaction_status = :pending_source_box_retained_density_density_blocks,
         ham_bundle_export_status = :pending_source_box_retained_route,
@@ -1018,6 +1108,7 @@ function _pqs_source_box_route_driver_materialization(
         ham_artifact_written = false,
         hamfile,
         ham_export_blocker,
+        ham_preflight = nothing,
         pqs_materialization_status = :pending_source_box_retained_route,
     )
 end
