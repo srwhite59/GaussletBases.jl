@@ -179,6 +179,14 @@ function _pqs_route_driver_check_be2_shellization_request(
           :bond_aligned_diatomic_shellization
     @test materialization.route_configured_midpoint_slab_status ==
           :conditional_diatomic_midpoint_slab
+    @test materialization.route_configured_shellization_helper_map_available
+    @test materialization.route_configured_shellization_helper_map_status ==
+          :metadata_only_pending_materializer_inputs
+    @test materialization.route_configured_primary_planned_helper ==
+          :_nested_bond_aligned_diatomic_source
+    @test materialization.route_configured_missing_input_count == 9
+    @test materialization.route_configured_helper_map_blocker ==
+          :pending_route_configured_bond_aligned_diatomic_materializer_inputs
 
     request = materialization.route_configured_shellization_request
     @test request.object_kind == :cartesian_shellization_route_configured_request
@@ -236,6 +244,27 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test !plan.constructs_shell_sequence
     @test !plan.constructs_fixed_block
     @test !plan.route_configured_shellization_consumed
+
+    helper_map = materialization.route_configured_shellization_helper_map
+    @test helper_map.object_kind == :cartesian_shellization_route_planning_helper_map
+    @test helper_map.status ==
+          materialization.route_configured_shellization_helper_map_status
+    @test helper_map.private_development_only
+    @test helper_map.planning_family == plan.planning_family
+    @test helper_map.primary_planned_helper ==
+          materialization.route_configured_primary_planned_helper
+    @test helper_map.helper_chain == (
+        :_nested_bond_aligned_diatomic_source,
+        :_nested_bond_aligned_diatomic_split_geometry,
+        :_nested_bond_aligned_diatomic_sequence_for_box,
+        :_nested_shell_sequence_from_core_block,
+        :_nested_fixed_block,
+    )
+    @test helper_map.missing_input_count ==
+          materialization.route_configured_missing_input_count
+    @test helper_map.blocker == materialization.route_configured_helper_map_blocker
+    @test !helper_map.route_configured_shellization_consumed
+    @test !helper_map.calls_mapped_helpers
     return nothing
 end
 
@@ -443,6 +472,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "bond_aligned_diatomic_shellization"
             @test String(file["meta/route_configured_midpoint_slab_status"]) ==
                   "conditional_diatomic_midpoint_slab"
+            @test String(file["meta/route_configured_shellization_helper_map_status"]) ==
+                  "metadata_only_pending_materializer_inputs"
+            @test String(file["meta/route_configured_primary_planned_helper"]) ==
+                  "_nested_bond_aligned_diatomic_source"
+            @test file["meta/route_configured_missing_input_count"] == 9
+            @test String(file["meta/route_configured_helper_map_blocker"]) ==
+                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -510,6 +546,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "bond_aligned_diatomic_shellization"
             @test String(file["meta/route_configured_midpoint_slab_status"]) ==
                   "conditional_diatomic_midpoint_slab"
+            @test String(file["meta/route_configured_shellization_helper_map_status"]) ==
+                  "metadata_only_pending_materializer_inputs"
+            @test String(file["meta/route_configured_primary_planned_helper"]) ==
+                  "_nested_bond_aligned_diatomic_source"
+            @test file["meta/route_configured_missing_input_count"] == 9
+            @test String(file["meta/route_configured_helper_map_blocker"]) ==
+                  "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -718,6 +761,26 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
         )
         @test occursin(
             "route_materialization\troute_configured_midpoint_slab_status\t:conditional_diatomic_midpoint_slab",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_helper_map_available\ttrue",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_helper_map_status\t:metadata_only_pending_materializer_inputs",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_primary_planned_helper\t:_nested_bond_aligned_diatomic_source",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_missing_input_count\t9",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_helper_map_blocker\t:pending_route_configured_bond_aligned_diatomic_materializer_inputs",
             tsv,
         )
         @test occursin(

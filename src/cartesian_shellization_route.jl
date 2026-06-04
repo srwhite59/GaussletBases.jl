@@ -293,3 +293,94 @@ function _cartesian_shellization_route_planning_stub(request)
         route_configured_shellization_consumed = false,
     )
 end
+
+function _cartesian_shellization_route_planning_helper_map(plan)
+    if plan.planning_family == :one_center_atomic_shellization
+        missing_inputs = (
+            :route_configured_one_center_basis,
+            :coulomb_expansion,
+            :nside,
+            :gausslet_backend,
+            :refinement_levels,
+            :packet_kernel,
+            :fixed_block_materialization_handoff,
+            :basis_or_ham_export_handoff,
+        )
+        return (
+            object_kind = :cartesian_shellization_route_planning_helper_map,
+            status = :metadata_only_pending_materializer_inputs,
+            private_development_only = true,
+            planning_family = plan.planning_family,
+            primary_planned_helper = :build_one_center_atomic_full_parent_shell_sequence,
+            helper_chain = (
+                :build_one_center_atomic_full_parent_shell_sequence,
+                :_build_one_center_atomic_shell_sequence,
+                :_nested_complete_shell_sequence_for_box,
+                :_nested_fixed_block,
+            ),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            blocker = :pending_route_configured_one_center_materializer_inputs,
+            route_configured_shellization_consumed = false,
+            calls_mapped_helpers = false,
+        )
+    elseif plan.planning_family == :bond_aligned_diatomic_shellization
+        missing_inputs = (
+            :bond_aligned_basis_or_source_object,
+            :axis_bundles,
+            :coulomb_expansion_coefficients,
+            :split_options,
+            :shared_shell_layer_policy,
+            :nside,
+            :packet_kernel,
+            :fixed_block_adapter_handoff,
+            :basis_or_ham_export_handoff,
+        )
+        return (
+            object_kind = :cartesian_shellization_route_planning_helper_map,
+            status = :metadata_only_pending_materializer_inputs,
+            private_development_only = true,
+            planning_family = plan.planning_family,
+            primary_planned_helper = :_nested_bond_aligned_diatomic_source,
+            helper_chain = (
+                :_nested_bond_aligned_diatomic_source,
+                :_nested_bond_aligned_diatomic_split_geometry,
+                :_nested_bond_aligned_diatomic_sequence_for_box,
+                :_nested_shell_sequence_from_core_block,
+                :_nested_fixed_block,
+            ),
+            missing_inputs,
+            missing_input_count = length(missing_inputs),
+            blocker = :pending_route_configured_bond_aligned_diatomic_materializer_inputs,
+            route_configured_shellization_consumed = false,
+            calls_mapped_helpers = false,
+        )
+    elseif plan.planning_family == :pending_system_classification
+        return (
+            object_kind = :cartesian_shellization_route_planning_helper_map,
+            status = :blocked_pending_system_classification,
+            private_development_only = true,
+            planning_family = plan.planning_family,
+            primary_planned_helper = nothing,
+            helper_chain = (),
+            missing_inputs = (),
+            missing_input_count = 0,
+            blocker = :pending_system_classification,
+            route_configured_shellization_consumed = false,
+            calls_mapped_helpers = false,
+        )
+    end
+    return (
+        object_kind = :cartesian_shellization_route_planning_helper_map,
+        status = :blocked_unsupported_general_multi_atom,
+        private_development_only = true,
+        planning_family = plan.planning_family,
+        primary_planned_helper = nothing,
+        helper_chain = (),
+        missing_inputs = (),
+        missing_input_count = 0,
+        blocker = :unsupported_general_multi_atom_shellization,
+        route_configured_shellization_consumed = false,
+        calls_mapped_helpers = false,
+    )
+end
