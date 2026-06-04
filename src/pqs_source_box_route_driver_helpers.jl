@@ -1000,6 +1000,19 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_shellization_helper_map.missing_input_count
     route_configured_helper_map_blocker =
         route_configured_shellization_helper_map.blocker
+    route_configured_input_readiness =
+        _cartesian_shellization_route_materializer_input_readiness(
+            route_configured_shellization_request,
+            route_configured_shellization_plan,
+            route_configured_shellization_helper_map,
+        )
+    route_configured_input_readiness_status = route_configured_input_readiness.status
+    route_configured_available_fact_count =
+        route_configured_input_readiness.available_fact_count
+    route_configured_materializer_missing_input_count =
+        route_configured_input_readiness.missing_input_count
+    route_configured_input_readiness_blocker =
+        route_configured_input_readiness.blocker
 
     if !materialize_route
         return (;
@@ -1030,6 +1043,12 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_primary_planned_helper,
             route_configured_missing_input_count,
             route_configured_helper_map_blocker,
+            route_configured_input_readiness,
+            route_configured_input_readiness_available = true,
+            route_configured_input_readiness_status,
+            route_configured_available_fact_count,
+            route_configured_materializer_missing_input_count,
+            route_configured_input_readiness_blocker,
             shellization_summary = nothing,
             shellization_summary_available = false,
             shellization_source =
@@ -1139,6 +1158,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_primary_planned_helper,
                     route_configured_missing_input_count,
                     route_configured_helper_map_blocker,
+                    route_configured_input_readiness_status,
+                    route_configured_available_fact_count,
+                    route_configured_materializer_missing_input_count,
+                    route_configured_input_readiness_blocker,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1184,6 +1207,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_primary_planned_helper,
                     route_configured_missing_input_count,
                     route_configured_helper_map_blocker,
+                    route_configured_input_readiness_status,
+                    route_configured_available_fact_count,
+                    route_configured_materializer_missing_input_count,
+                    route_configured_input_readiness_blocker,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1235,6 +1262,12 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_primary_planned_helper,
             route_configured_missing_input_count,
             route_configured_helper_map_blocker,
+            route_configured_input_readiness,
+            route_configured_input_readiness_available = true,
+            route_configured_input_readiness_status,
+            route_configured_available_fact_count,
+            route_configured_materializer_missing_input_count,
+            route_configured_input_readiness_blocker,
             shellization_summary,
             shellization_summary_available,
             shellization_source,
@@ -1299,6 +1332,12 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_primary_planned_helper,
         route_configured_missing_input_count,
         route_configured_helper_map_blocker,
+        route_configured_input_readiness,
+        route_configured_input_readiness_available = true,
+        route_configured_input_readiness_status,
+        route_configured_available_fact_count,
+        route_configured_materializer_missing_input_count,
+        route_configured_input_readiness_blocker,
         shellization_summary = nothing,
         shellization_summary_available = false,
         shellization_source = :pending_source_box_route_shellization,

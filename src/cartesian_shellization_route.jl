@@ -384,3 +384,56 @@ function _cartesian_shellization_route_planning_helper_map(plan)
         calls_mapped_helpers = false,
     )
 end
+
+function _cartesian_shellization_route_materializer_input_readiness(
+    request,
+    plan,
+    helper_map,
+)
+    available_facts = (
+        :atom_symbols,
+        :atom_locations,
+        :nuclear_charges,
+        :route_family,
+        :route_kind,
+        :parent_axis_counts,
+        :parent_box,
+        :requested_shellization_stage,
+        :planning_family,
+        :planned_helper_chain,
+    )
+    missing_inputs = helper_map.missing_inputs
+    materializer_ready = isempty(missing_inputs) && isnothing(helper_map.blocker)
+    status =
+        materializer_ready ?
+        :ready_for_route_configured_materializer :
+        helper_map.status == :metadata_only_pending_materializer_inputs ?
+        :blocked_missing_materializer_inputs :
+        helper_map.status
+
+    return (
+        object_kind = :cartesian_shellization_route_materializer_input_readiness,
+        status,
+        private_development_only = true,
+        route_family = request.route_family,
+        route_kind = request.route_kind,
+        planning_family = plan.planning_family,
+        available_facts,
+        available_fact_count = length(available_facts),
+        missing_inputs,
+        missing_input_count = length(missing_inputs),
+        blocker = helper_map.blocker,
+        driver_defaults_not_materializer_contract = (
+            :nside,
+            :backend_refinement_options,
+            :packet_kernel,
+            :fixed_block_or_export_handoff,
+        ),
+        materializer_ready,
+        route_configured_shellization_consumed = false,
+        constructs_basis = false,
+        constructs_axis_bundles = false,
+        constructs_shell_sequence = false,
+        constructs_fixed_block = false,
+    )
+end

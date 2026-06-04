@@ -169,6 +169,8 @@ using GaussletBases
     @show materialization.route_configured_midpoint_slab_status
     @show materialization.route_configured_primary_planned_helper
     @show materialization.route_configured_missing_input_count
+    @show materialization.route_configured_input_readiness_status
+    @show materialization.route_configured_available_fact_count
     @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
 
