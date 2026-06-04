@@ -22,7 +22,12 @@ function _write_diatomic_be2_driver_config(
     tsvfile,
     basisfile,
     hamfile,
+    interaction_treatment = nothing,
 )
+    interaction_treatment_line =
+        isnothing(interaction_treatment) ?
+        "" :
+        "route_configured_diatomic_ham_interaction_treatment = $(repr(interaction_treatment))\n"
     write(
         configfile,
         """
@@ -47,7 +52,7 @@ raw_product_box_probe_backend = :pgdg_localized_experimental
 
 materializer_backend = :pgdg_localized_experimental
 materializer_nside = 5
-materialize_route = true
+$(interaction_treatment_line)materialize_route = true
 probe_route_configured_one_center_materializer = false
 save_artifact = true
 save_tsv = true
@@ -118,6 +123,12 @@ end
             @test materialization.route_configured_materializer_d_consumed == 0.15
             @test materialization.route_configured_materializer_nside_requested == 5
             @test materialization.route_configured_materializer_nside_consumed == 5
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_requested ==
+                  :ggt_nearest
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_consumed ==
+                  :ggt_nearest
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_status ==
+                  :available_route_configured_diatomic_ham_interaction_treatment
             @test materialization.basis_artifact_written
             @test materialization.ham_artifact_written
             @test materialization.ham_bundle_export_status ==
@@ -148,6 +159,16 @@ end
             @test String(file["meta/export_status"]) == "basis_only"
             @test String(file["meta/basis_export_status"]) ==
                   "supported_route_configured_diatomic_basis_only_fixed_block"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_requested"
+                ],
+            ) == "ggt_nearest"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_consumed"
+                ],
+            ) == "ggt_nearest"
             @test String(file["meta/ham_export_status"]) ==
                   "artifact_local_basis_only_no_ham_payload"
             @test Bool(file["meta/ham_export_blocker/is_nothing"])
@@ -190,6 +211,16 @@ end
             @test Bool(file["meta/route_configured_shellization_consumed"])
             @test String(file["meta/ham_preflight_status"]) ==
                   "available_route_configured_diatomic_ham_adapter"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_requested"
+                ],
+            ) == "ggt_nearest"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_consumed"
+                ],
+            ) == "ggt_nearest"
             @test String(file["meta/ham_operator_payload_status"]) ==
                   "available_route_configured_diatomic_operator_payload"
             @test String(file["meta/ham_interaction_status"]) ==
@@ -220,5 +251,140 @@ end
             "route_materialization\tham_artifact_status\t:written_route_configured_diatomic_ham_bundle",
             tsv,
         )
+    end
+
+    mktempdir() do dir
+        configfile = joinpath(dir, "be2_explicit_ggt_driver_config.jl")
+        reportfile = joinpath(dir, "be2_explicit_ggt_report.jld2")
+        tsvfile = joinpath(dir, "be2_explicit_ggt_report.tsv")
+        basisfile = joinpath(dir, "be2_explicit_ggt_basis.jld2")
+        hamfile = joinpath(dir, "be2_explicit_ggt_ham.jld2")
+        stdoutfile = joinpath(dir, "be2_explicit_ggt_driver_stdout.txt")
+        _write_diatomic_be2_driver_config(
+            configfile;
+            reportfile,
+            tsvfile,
+            basisfile,
+            hamfile,
+            interaction_treatment = :ggt_nearest,
+        )
+
+        open(stdoutfile, "w") do io
+            redirect_stdout(io) do
+                _cartesian_ham_builder_diatomic_with_args([configfile]) do
+                    include(_CARTESIAN_HAM_BUILDER_DIATOMIC_DRIVER)
+                end
+            end
+        end
+
+        @test isfile(reportfile)
+        @test isfile(basisfile)
+        @test isfile(hamfile)
+        jldopen(reportfile, "r") do file
+            materialization = file["materialization"]
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_requested ==
+                  :ggt_nearest
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_consumed ==
+                  :ggt_nearest
+            @test materialization.ham_artifact_written
+            @test materialization.ham_bundle_export_status ==
+                  :available_route_configured_diatomic_ham_bundle_payload
+        end
+        jldopen(hamfile, "r") do file
+            @test String(file["ham/interaction_treatment"]) == "ggt_nearest"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_requested"
+                ],
+            ) == "ggt_nearest"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_consumed"
+                ],
+            ) == "ggt_nearest"
+        end
+    end
+
+    mktempdir() do dir
+        configfile = joinpath(dir, "be2_mwg_driver_config.jl")
+        reportfile = joinpath(dir, "be2_mwg_report.jld2")
+        tsvfile = joinpath(dir, "be2_mwg_report.tsv")
+        basisfile = joinpath(dir, "be2_mwg_basis.jld2")
+        hamfile = joinpath(dir, "be2_mwg_ham.jld2")
+        stdoutfile = joinpath(dir, "be2_mwg_driver_stdout.txt")
+        _write_diatomic_be2_driver_config(
+            configfile;
+            reportfile,
+            tsvfile,
+            basisfile,
+            hamfile,
+            interaction_treatment = :mwg,
+        )
+
+        open(stdoutfile, "w") do io
+            redirect_stdout(io) do
+                _cartesian_ham_builder_diatomic_with_args([configfile]) do
+                    include(_CARTESIAN_HAM_BUILDER_DIATOMIC_DRIVER)
+                end
+            end
+        end
+
+        @test isfile(reportfile)
+        @test isfile(tsvfile)
+        @test isfile(basisfile)
+        @test !isfile(hamfile)
+        jldopen(reportfile, "r") do file
+            materialization = file["materialization"]
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_requested ==
+                  :mwg
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_consumed ===
+                  nothing
+            @test materialization.route_configured_diatomic_ham_interaction_treatment_status ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            @test !materialization.ham_artifact_written
+            @test materialization.ham_artifact_status ==
+                  :not_written_route_configured_diatomic_ham_adapter_blocked
+            @test materialization.ham_missing_builder ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            @test materialization.ham_interaction_status ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            @test materialization.ham_bundle_export_status ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            @test materialization.ham_export_blocker ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            adapter_summary =
+                materialization.route_configured_diatomic_ham_adapter_summary
+            @test adapter_summary.status ==
+                  :blocked_route_configured_diatomic_ham_interaction_treatment
+            @test adapter_summary.interaction_treatment_requested == :mwg
+            @test adapter_summary.interaction_treatment == :mwg
+            @test adapter_summary.blocker ==
+                  :pending_route_configured_diatomic_mwg_operator_support
+            @test adapter_summary.missing_fields ==
+                  (:pending_route_configured_diatomic_mwg_operator_support,)
+        end
+        jldopen(basisfile, "r") do file
+            @test String(file["meta/ham_export_status"]) ==
+                  "artifact_local_basis_only_no_ham_payload"
+            @test String(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_requested"
+                ],
+            ) == "mwg"
+            @test Bool(
+                file[
+                    "meta/route_configured_diatomic_ham_interaction_treatment_consumed/is_nothing"
+                ],
+            )
+            @test String(
+                file["meta/route_configured_diatomic_ham_interaction_treatment_status"]
+            ) == "pending_route_configured_diatomic_mwg_operator_support"
+            @test String(file["meta/companion_ham_artifact_status"]) ==
+                  "pending_route_configured_diatomic_mwg_operator_support"
+            @test String(file["meta/companion_ham_export_status"]) ==
+                  "pending_route_configured_diatomic_mwg_operator_support"
+            @test String(file["meta/companion_ham_export_blocker"]) ==
+                  "pending_route_configured_diatomic_mwg_operator_support"
+        end
     end
 end

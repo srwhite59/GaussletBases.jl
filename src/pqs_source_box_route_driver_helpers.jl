@@ -2312,6 +2312,7 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
     interaction_treatment::Symbol = :ggt_nearest,
     nuclear_term_storage::Symbol = :by_center,
 )
+    mwg_ida_treatments = (:mwg, :ida, :mwg_ida, :ida_mwg)
     if basis_adapter.status != :available_route_configured_diatomic_basis_adapter
         return (;
             object_kind = :route_configured_diatomic_ham_adapter,
@@ -2324,8 +2325,33 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
             nuclear_metadata_status = :not_checked_missing_basis_adapter,
             operator_payload_status = :not_checked_missing_basis_adapter,
             interaction_status = :not_checked_missing_basis_adapter,
+            interaction_treatment_requested = interaction_treatment,
+            interaction_treatment,
             missing_fields = (:route_configured_diatomic_basis_adapter,),
             blocker = :missing_route_configured_diatomic_basis_adapter,
+        )
+    elseif interaction_treatment in mwg_ida_treatments
+        return (;
+            object_kind = :route_configured_diatomic_ham_adapter,
+            status =
+                :blocked_route_configured_diatomic_ham_interaction_treatment,
+            private_development_only = true,
+            operators = nothing,
+            retained_dimension = basis_adapter.retained_dimension,
+            matrix_sizes = nothing,
+            final_integral_weights_status = basis_adapter.final_integral_weights_status,
+            nuclear_metadata_status = :not_checked_blocked_interaction_treatment,
+            operator_payload_status = :blocked_route_configured_diatomic_operator_payload,
+            interaction_status =
+                :pending_route_configured_diatomic_mwg_operator_support,
+            interaction_treatment_requested = interaction_treatment,
+            interaction_treatment,
+            gausslet_backend,
+            nuclear_charges = nothing,
+            nuclear_term_storage = nothing,
+            nuclear_one_body_by_center_count = 0,
+            missing_fields = (:pending_route_configured_diatomic_mwg_operator_support,),
+            blocker = :pending_route_configured_diatomic_mwg_operator_support,
         )
     elseif isnothing(expansion)
         return (;
@@ -2339,6 +2365,8 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
             nuclear_metadata_status = :not_checked_missing_expansion,
             operator_payload_status = :not_checked_missing_expansion,
             interaction_status = :not_checked_missing_expansion,
+            interaction_treatment_requested = interaction_treatment,
+            interaction_treatment,
             missing_fields = (:coulomb_expansion,),
             blocker = :missing_route_configured_diatomic_expansion,
         )
@@ -2419,6 +2447,7 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
                 matrix_size_ready && finite_ready ?
                 :available_route_configured_diatomic_density_density_interaction_matrix :
                 :pending_route_configured_diatomic_density_density_builder,
+            interaction_treatment_requested = interaction_treatment,
             interaction_treatment = operators.interaction_treatment,
             gausslet_backend = operators.gausslet_backend,
             nuclear_charges = Tuple(operators.nuclear_charges),
@@ -2447,6 +2476,8 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
             nuclear_metadata_status = :not_checked_ham_adapter_precondition,
             operator_payload_status = :not_checked_ham_adapter_precondition,
             interaction_status = :not_checked_ham_adapter_precondition,
+            interaction_treatment_requested = interaction_treatment,
+            interaction_treatment,
             missing_fields = (:route_configured_diatomic_ham_adapter_precondition,),
             blocker = :route_configured_diatomic_ham_adapter_precondition_failed,
             error_message = sprint(showerror, error),
@@ -2467,6 +2498,10 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter_summ
         nuclear_metadata_status = adapter.nuclear_metadata_status,
         operator_payload_status = adapter.operator_payload_status,
         interaction_status = adapter.interaction_status,
+        interaction_treatment_requested =
+            hasproperty(adapter, :interaction_treatment_requested) ?
+            adapter.interaction_treatment_requested :
+            nothing,
         interaction_treatment =
             hasproperty(adapter, :interaction_treatment) ?
             adapter.interaction_treatment :
@@ -2498,6 +2533,7 @@ function _pqs_source_box_route_driver_materialization(
     hamfile::AbstractString = "cartesian_nesting_route_driver_ham_bundle.jld2",
     materializer_backend = nothing,
     materializer_nside = nothing,
+    route_configured_diatomic_ham_interaction_treatment::Symbol = :ggt_nearest,
     white_lindsey_expansion = nothing,
     white_lindsey_Z = nothing,
 )
@@ -2887,6 +2923,8 @@ function _pqs_source_box_route_driver_materialization(
                     white_lindsey_expansion;
                     gausslet_backend =
                         route_configured_materializer_backend_requested,
+                    interaction_treatment =
+                        route_configured_diatomic_ham_interaction_treatment,
                 ) :
                 nothing
             diatomic_ham_adapter_summary =
@@ -2899,6 +2937,16 @@ function _pqs_source_box_route_driver_materialization(
                 !isnothing(diatomic_ham_adapter) &&
                 diatomic_ham_adapter.status ==
                 :available_route_configured_diatomic_ham_adapter
+            diatomic_ham_interaction_treatment_consumed =
+                diatomic_ham_adapter_available ?
+                diatomic_ham_adapter.interaction_treatment :
+                nothing
+            diatomic_ham_interaction_treatment_status =
+                diatomic_ham_adapter_available ?
+                :available_route_configured_diatomic_ham_interaction_treatment :
+                save_ham_artifact && !isnothing(diatomic_ham_adapter) ?
+                diatomic_ham_adapter.interaction_status :
+                :not_requested
             shellization_summary = diatomic_materialization.shellization_summary
             shellization_summary_available = !isnothing(shellization_summary)
             basis_artifact_status =
@@ -2917,22 +2965,33 @@ function _pqs_source_box_route_driver_materialization(
                     :not_written_route_configured_diatomic_ham_adapter_blocked
                 ) :
                 :not_requested
+            diatomic_ham_adapter_blocker =
+                isnothing(diatomic_ham_adapter) ? nothing : diatomic_ham_adapter.blocker
             diatomic_ham_bundle_export_status =
                 diatomic_ham_adapter_available ?
                 :available_route_configured_diatomic_ham_bundle_payload :
                 save_ham_artifact ?
-                :pending_route_configured_diatomic_ham_export :
+                something(
+                    diatomic_ham_adapter_blocker,
+                    :pending_route_configured_diatomic_ham_export,
+                ) :
                 :not_requested
             ham_export_blocker =
                 diatomic_ham_adapter_available || !save_ham_artifact ?
                 nothing :
-                :pending_route_configured_diatomic_ham_export
+                something(
+                    diatomic_ham_adapter_blocker,
+                    :pending_route_configured_diatomic_ham_export,
+                )
             basis_companion_ham_artifact_status =
                 save_ham_artifact ?
                 (
                     diatomic_ham_adapter_available ?
                     :companion_route_configured_diatomic_ham_artifact_ready :
-                    :pending_route_configured_diatomic_ham_export
+                    something(
+                        diatomic_ham_adapter_blocker,
+                        :pending_route_configured_diatomic_ham_export,
+                    )
                 ) :
                 :not_requested
             basis_companion_ham_export_status =
@@ -2986,6 +3045,12 @@ function _pqs_source_box_route_driver_materialization(
                             diatomic_basis_adapter.label_status,
                         route_configured_diatomic_basis_adapter_grouping_status =
                             diatomic_basis_adapter.grouping_status,
+                        route_configured_diatomic_ham_interaction_treatment_requested =
+                            route_configured_diatomic_ham_interaction_treatment,
+                        route_configured_diatomic_ham_interaction_treatment_consumed =
+                            diatomic_ham_interaction_treatment_consumed,
+                        route_configured_diatomic_ham_interaction_treatment_status =
+                            diatomic_ham_interaction_treatment_status,
                         shellization_summary_available,
                         shellization_source =
                             :route_configured_bond_aligned_diatomic_source,
@@ -3063,6 +3128,12 @@ function _pqs_source_box_route_driver_materialization(
                             diatomic_ham_adapter.interaction_status,
                         route_configured_diatomic_ham_adapter_nuclear_metadata_status =
                             diatomic_ham_adapter.nuclear_metadata_status,
+                        route_configured_diatomic_ham_interaction_treatment_requested =
+                            route_configured_diatomic_ham_interaction_treatment,
+                        route_configured_diatomic_ham_interaction_treatment_consumed =
+                            diatomic_ham_interaction_treatment_consumed,
+                        route_configured_diatomic_ham_interaction_treatment_status =
+                            diatomic_ham_interaction_treatment_status,
                         shellization_summary_available,
                         shellization_source =
                             :route_configured_bond_aligned_diatomic_source,
@@ -3095,6 +3166,12 @@ function _pqs_source_box_route_driver_materialization(
                 materialize_route_requested = true,
                 save_basis_artifact_requested = save_basis_artifact,
                 save_ham_artifact_requested = save_ham_artifact,
+                route_configured_diatomic_ham_interaction_treatment_requested =
+                    route_configured_diatomic_ham_interaction_treatment,
+                route_configured_diatomic_ham_interaction_treatment_consumed =
+                    diatomic_ham_interaction_treatment_consumed,
+                route_configured_diatomic_ham_interaction_treatment_status =
+                    diatomic_ham_interaction_treatment_status,
                 status = :materialized_route_configured_diatomic_shellization_available,
                 materialized_report = nothing,
                 materialized_report_kind = diatomic_materialization.object_kind,
@@ -3174,7 +3251,10 @@ function _pqs_source_box_route_driver_materialization(
                     diatomic_ham_adapter_available ?
                     nothing :
                     save_ham_artifact ?
-                    :pending_route_configured_diatomic_ham_adapter :
+                    something(
+                        diatomic_ham_adapter_blocker,
+                        :pending_route_configured_diatomic_ham_adapter,
+                    ) :
                     nothing,
                 ham_operator_payload_status =
                     isnothing(diatomic_ham_adapter) ?
