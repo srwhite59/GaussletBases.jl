@@ -777,15 +777,25 @@ allowed to appear in planning metadata as a selected future policy, but it is
 not consumed by the opt-in builder and should fail rather than silently
 falling back to q4 or complete-rectangular behavior.
 
-The longer-term high-order shell target is now Projected q-Shell (PQS), defined
-as boundary COMX-product modes from the full local block transform, projected
-to raw boundary rows, then cleaned with full-rank symmetric Lowdin. Cubic
-atom-local shells should move toward `PQS(q, q)`, and rectangular
-molecular/exterior shells should move toward `PQS(q, L)`. Existing q-row and
-endcap/panel work is transitional infrastructure and validation scaffolding,
-not the preferred regular shell abstraction. See
-[`projected_q_shell_policy.md`](projected_q_shell_policy.md) for the policy
-definition and the first q=5 C2 `R = 4.7` external preflight evidence.
+Historical note, superseded by
+[`projected_q_shell_policy.md`](projected_q_shell_policy.md) and
+[`pqs_source_box_operator_framework.md`](pqs_source_box_operator_framework.md):
+the older version of this plan described Projected q-Shell (PQS) as boundary
+COMX-product modes projected to raw boundary rows and then cleaned with
+full-rank symmetric Lowdin. That conflated the source-box PQS retained rule
+with one shell-realization adapter.
+
+The active contract is two-stage. The PQS retained rule is source-box first:
+select boundary/product modes from the raw product-source box, then build
+source-box pair operators from that compact object. Shell projection,
+support-row realization, and Lowdin cleanup are realization/adaptor paths used
+for compatibility, diagnostics, and oracle comparisons unless a later reviewed
+framework decision promotes them. Cubic atom-local shells should move toward
+`PQS(q, q)`, and rectangular molecular/exterior shells should move toward
+`PQS(q, L)`. Existing q-row and endcap/panel work is transitional
+infrastructure and validation scaffolding, not the preferred regular shell
+abstraction. See the policy/framework docs for the active definition and the
+first q=5 C2 `R = 4.7` external preflight evidence.
 
 As of commits `06483f8`, `bd66e51`, `e4fbcca`, and `42103e3`, mainline also
 has a private opt-in PQS construction smoke. The local layer helper uses

@@ -140,6 +140,12 @@ initial product-mode weights are only seeds; projection and orthogonalization
 change the retained functions, so the final IDA weights must be recomputed or
 propagated for the final retained basis.
 
+This memo uses the same vocabulary as the active PQS source-box framework:
+`raw_source_weight` for provisional source/product weights,
+`final_ida_weight` for the first-class unsquared integral of the final retained
+basis function, and `retained_column_diagnostic_weight` for debug/reference
+metadata that must not be substituted for IDA division.
+
 This means the route skeleton can honestly say:
 
 - standard unit/box organization is intended;

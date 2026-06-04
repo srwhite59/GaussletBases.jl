@@ -53,6 +53,29 @@ part of the structured shell; shell realization/support-local contraction are
 compatibility/oracle paths; structured PQS rank loss is a construction
 diagnostic rather than silent compression.
 
+## Weight Vocabulary
+
+PQS weights are first-class objects when they are final IDA weights, but the
+word "weight" also appears in provisional and diagnostic contexts. These names
+must stay distinct:
+
+- `raw_source_weight`: a provisional source/product/parent weight or integral
+  attached before the final retained basis is fixed. Raw-weighted pair-factor
+  conversion may use these only at the source/raw object that owns the positive
+  normalization convention.
+- `final_ida_weight`: the unsquared integral of the final retained basis
+  function. This is a first-class object and is required for IDA. A PQS route
+  may use IDA weights only after they have been recomputed or propagated
+  through the actual final retained transform.
+- `retained_column_diagnostic_weight`: a debug/reference value attached to a
+  retained column in a private fixture or adapter. It is not an IDA weight and
+  must not be used for IDA division unless a reviewed contract explicitly
+  promotes it to `final_ida_weight`.
+
+The warning in this framework is therefore not "PQS can never have weights."
+The warning is that current retained-column diagnostics, raw source weights,
+and shell-realization metadata are not substitutes for final IDA weights.
+
 ## Key Spaces
 
 The lane uses four spaces that must remain distinct.
@@ -225,7 +248,8 @@ Owns:
 - diagnostics describing whether the transform is intended algorithmic input
   or oracle-only.
 
-Must not pretend retained PQS weights are positive quadrature weights.
+Must not pretend retained-column diagnostic weights are positive quadrature
+weights or final IDA weights.
 
 Must not use the current shell-realized fixture as the algorithmic retained
 rule merely because it carries support-local coefficients.
@@ -344,8 +368,8 @@ Anti-invariants:
 
 - Do not use Lowdin cleanup alone as a full raw-to-retained transform.
 - Do not infer an algorithmic retained rule from support-local coefficients.
-- Do not divide by retained PQS weights or mark them positive quadrature
-  weights.
+- Do not divide by retained-column diagnostic weights or mark them positive
+  quadrature weights/final IDA weights.
 - Do not use the current shell-realized fixture as the algorithmic PQS rule
   unless a future framework update explicitly defines that route.
 
@@ -485,7 +509,8 @@ Target object setup:
 - The retained rule must provide boundary mode indices, boundary column
   indices, retained count, and source-mode ordering.
 - No shell projection, Lowdin cleanup, support-local coefficient matrix, or
-  retained PQS weight may participate in the algorithmic retained rule.
+  retained-column diagnostic weight may participate in the algorithmic retained
+  rule.
 - Any support-row data used for comparison must be attached through a separate
   adapter/oracle object.
 
@@ -549,7 +574,8 @@ Explicit exclusions:
 - No shell projection or Lowdin in the raw-box operator path.
 - No support-local shell-row contraction as algorithm.
 - No support-local fallback optimization.
-- No retained PQS weights, positive quadrature semantics, or IDA division.
+- No retained-column diagnostic weights, positive quadrature semantics, or IDA
+  division.
 - No packet/fixed-block adoption.
 - No QW/Hamiltonian, local/ECP/Gaussian/MWG/interaction, public/default, CR2,
   or science-status change.
@@ -559,7 +585,9 @@ Future implementation stop conditions:
 - Stop if the helper needs a current-route shell-realized compact transform.
 - Stop if the helper needs shell rows or support-local coefficients to define
   the retained rule.
-- Stop if retained PQS weights become necessary for any operator term.
+- Stop if a private source-box helper needs final IDA weights for an operator
+  term before the route has a reviewed final-weight contract; do not substitute
+  retained-column diagnostics.
 - Stop if the fixture would require packet/fixed-block/QW/Hamiltonian/public
   behavior changes.
 - Stop if cross-box compatibility is ambiguous; keep the first pass to
@@ -575,8 +603,11 @@ These invariants are lane-wide.
   operator construction.
 - The support-local shell-row path is an oracle/debug/reference path unless a
   framework update explicitly says otherwise.
-- Retained PQS weights are debug/reference metadata only. They must not become
-  IDA division weights or positive quadrature-weight carriers.
+- Retained-column diagnostic weights are debug/reference metadata only. They
+  must not become IDA division weights or positive quadrature-weight carriers.
+  Final PQS IDA weights are different: they are first-class unsquared integrals
+  of the final retained basis functions and must be recomputed or propagated
+  through the final transform before any IDA path can use them.
 - PGDG analytic provenance and "no numerical fallback invoked by this helper"
   are different claims and should be reported separately.
 - Current fixed-block or packet authority remains authoritative until a private
@@ -601,7 +632,7 @@ The lane should stop if it starts drifting into any of these patterns.
   the object contract has not been defined.
 - Mixing shell-row realization into raw product-box operator construction.
 - Claiming PQS/product or PQS/PQS production support from oracle-only evidence.
-- Treating retained PQS weights as IDA-safe weights.
+- Treating retained-column diagnostic weights as IDA-safe final weights.
 - Adding local/ECP/Gaussian/MWG/interaction work before the safe source-box
   operator path is structurally clean.
 - Installing sidecars, packets, QW/Hamiltonian hooks, or public/default routes
@@ -865,9 +896,10 @@ The geometry checkpoint validates the shifted `q5/L5` and rectangular
 `q5/L7` samples against the explicit-fixture route producer and safe-term
 consumer path to roundoff. It adds no shell projection, Lowdin cleanup,
 support-local fallback as an algorithm, support coefficient matrices,
-retained PQS weights, IDA division, packet or fixed-block adoption,
-QW/Hamiltonian routing, public/default behavior, local/ECP/Gaussian/MWG/
-interaction terms, IDA/MWG change, or CR2 science claim.
+retained-column diagnostic weights, IDA division, packet or fixed-block
+adoption, QW/Hamiltonian routing, public/default behavior,
+local/ECP/Gaussian/MWG/interaction terms, IDA/MWG change, or CR2 science
+claim.
 
 Commit `17dd86d` records the focused axis-general validation checkpoint for
 the same helper. The helper is now validated for `:z` and `:x` fixture bond
@@ -896,9 +928,10 @@ and unsupported safe terms reject before source-box construction.
 
 These producer gates do not change the source-box-first boundary. They add no
 shell projection, Lowdin cleanup, support-local PQS oracle, support
-coefficient matrix use, retained PQS weights, IDA division, packet or
-fixed-block adoption, QW/Hamiltonian routing, public/default behavior,
-local/ECP/Gaussian/MWG/interaction terms, IDA/MWG change, or CR2 claim.
+coefficient matrix use, retained-column diagnostic weights, IDA division,
+packet or fixed-block adoption, QW/Hamiltonian routing, public/default
+behavior, local/ECP/Gaussian/MWG/interaction terms, IDA/MWG change, or CR2
+claim.
 
 The private source-box local-Gaussian one-body checkpoint is commits
 `b12f1b4`, `7608264`, `d948d51`, `c262d40`, `5dc0642`, and `dea7feb`.
@@ -940,11 +973,11 @@ charge scaling, by-center preservation, and rejected malformed center/charge
 inputs.
 
 The checkpoint adds no ECP terms, electron-electron terms, MWG/IDA change,
-retained PQS positive-weight semantics, retained-weight IDA division,
-shell-row support-local contraction as an algorithm, packet or fixed-block
-adoption, QW/Hamiltonian routing, public/default behavior, or CR2 science
-claim. Starting electron-electron interactions is a separate semantic lane and
-should wait for explicit review.
+retained-column diagnostic positive-weight semantics, retained-column
+diagnostic-weight IDA division, shell-row support-local contraction as an
+algorithm, packet or fixed-block adoption, QW/Hamiltonian routing,
+public/default behavior, or CR2 science claim. Starting electron-electron
+interactions is a separate semantic lane and should wait for explicit review.
 
 ### Electron-Electron Source-Box Design Lane
 
@@ -962,8 +995,10 @@ The existing ordinary/MWG/IDA path has two distinct pair-factor objects:
 That weight division belongs to the raw/source or support quadrature object
 that owns the positive weights. It must not be moved onto retained PQS
 columns. Retained PQS columns are transformed source-box columns, not positive
-quadrature carriers, and they must continue to report retained-weight
-semantics as not IDA-safe.
+quadrature carriers, and retained-column diagnostic weights must continue to
+report semantics as not IDA-safe. This does not demote final PQS IDA weights:
+those are separate first-class unsquared integrals of the final retained basis
+functions, as defined above.
 
 The first electron-electron object contract should describe:
 
@@ -1022,7 +1057,8 @@ conversion wrapper. It accepts raw-weighted per-axis pair factors plus
 explicit positive source weights, divides by the source-weight outer product,
 then delegates to the PQS/product density-normalized core. This is raw/source
 quadrature-weight normalization only; retained PQS columns still do not carry
-positive quadrature weights and are not IDA-division weights.
+positive quadrature weights, and retained-column diagnostics are not
+IDA-division weights.
 
 Commit `653d35d` adds the private PQS/PQS density-normalized source-box
 density-density block. It uses mode-selected raw product-box PQS on both
@@ -1032,7 +1068,7 @@ caller-supplied density-normalized per-axis pair factors; explicit positive
 source weights are required only as provenance and positivity checks. The
 helper does not use shell projection, Lowdin cleanup, support coefficient
 matrices, support-local/shell-row contraction as the algorithm, retained PQS
-weights, or retained-weight/IDA division.
+diagnostic weights, or retained-column diagnostic-weight/IDA division.
 
 Commit `3b64e91` adds the matching private PQS/PQS raw-weighted conversion
 wrapper. It accepts raw-weighted per-axis pair factors plus explicit positive
@@ -1068,13 +1104,14 @@ route mode. In raw-weighted mode, normalization is still source-box
 normalization only: raw per-axis pair factors are divided by explicit
 raw/source quadrature-weight outer products through the existing raw-weighted
 wrappers, then the density-normalized cores are used. Retained PQS columns
-still do not carry positive quadrature weights, retained PQS weights are not
-used, and retained-weight/IDA division remains forbidden. The consumer adds no
-shell projection, Lowdin cleanup, support-local/shell-row algorithm, support
-coefficient matrix, packet/fixed-block adoption, QW/Hamiltonian routing,
-MWG/IDA semantic change, public/default route, ECP behavior, or CR2 science
-claim. It records timing/allocation diagnostics for complete retained-matrix
-assembly only as private route-consumer diagnostics.
+still do not carry positive quadrature weights, retained-column diagnostic
+weights are not used, and retained-column diagnostic-weight/IDA division
+remains forbidden. The consumer adds no shell projection, Lowdin cleanup,
+support-local/shell-row algorithm, support coefficient matrix,
+packet/fixed-block adoption, QW/Hamiltonian routing, MWG/IDA semantic change,
+public/default route, ECP behavior, or CR2 science claim. It records
+timing/allocation diagnostics for complete retained-matrix assembly only as
+private route-consumer diagnostics.
 
 Commit `e868f49` adds the matching private density-density route producer
 wrapper, `_pqs_pqs_product_raw_box_density_density_route_producer(...)`. It
@@ -1092,13 +1129,13 @@ as the consumer. Density-normalized factors are accepted as already
 normalized. Raw-weighted factors are normalized only by explicit raw/source
 quadrature-weight outer products in the existing raw-weighted wrappers before
 delegating to the density-normalized helpers. Retained PQS columns are still
-not positive quadrature weights and are not used for retained-weight or IDA
-division. Every pair remains on the source-box algorithmic path; shell
-projection, Lowdin cleanup, support-local/shell-row contraction, support
-coefficient matrices, packet/fixed-block adoption, QW/Hamiltonian routing,
-real MWG/IDA pair-factor provenance, public/default behavior, ECP behavior,
-and CR2 science claims remain out of scope. Dense raw product-box matrices,
-if mentioned in diagnostics, are validation-only.
+not positive quadrature weights and are not used for retained-column
+diagnostic-weight or IDA division. Every pair remains on the source-box
+algorithmic path; shell projection, Lowdin cleanup, support-local/shell-row
+contraction, support coefficient matrices, packet/fixed-block adoption,
+QW/Hamiltonian routing, real MWG/IDA pair-factor provenance, public/default
+behavior, ECP behavior, and CR2 science claims remain out of scope. Dense raw
+product-box matrices, if mentioned in diagnostics, are validation-only.
 
 Commit `3028556` adds a private diagnostic PGDG IDA source-factor provenance
 extractor, `_pqs_source_box_ida_factor_provenance(...)`. It records the real
@@ -1146,7 +1183,8 @@ fixture agrees to roundoff, with dense-parent projection max error about
 not the source-box algorithm, and it does not adopt packet/fixed-block/
 QW/Hamiltonian/public/default behavior. MWG supplement/residual coupling
 remains separate and unadapted, and retained PQS columns remain non-
-quadrature retained columns with no retained-weight/IDA division.
+quadrature retained columns with no retained-column diagnostic-weight/IDA
+division.
 
 Commits `33a76ed` and `30fd052` add the private component route smoke helper
 `_pqs_pqs_product_source_box_component_route_smoke(...)` for the same small
@@ -1173,9 +1211,9 @@ raw/source quadrature weights own the normalization before the
 density-normalized cores are used. Dense parent IDA authority is still
 validation-only and, at this checkpoint, density-normalized-only. MWG
 supplement/residual coupling remains separate and unadapted. The helper adds
-no retained PQS weights, retained-weight/IDA division, shell/support-local
-algorithm, packet/fixed-block/QW/Hamiltonian adoption, public/default route,
-ECP behavior, or CR2 science claim.
+no retained-column diagnostic weights, retained-column diagnostic-weight/IDA
+division, shell/support-local algorithm, packet/fixed-block/QW/Hamiltonian
+adoption, public/default route, ECP behavior, or CR2 science claim.
 
 The ignored private report probe
 `tmp/work/pqs_component_route_smoke_report.jl` records this component route
@@ -1248,8 +1286,8 @@ The driver is deliberately private scaffolding. It records the source-box-first
 route shape, retained ranges, pair-family helper names, density-normalized or
 raw-weighted pair-factor mode, and no-go diagnostics. It must not be treated as
 packet/fixed-block/QW/Hamiltonian adoption, MWG/IDA semantic change,
-retained-weight division, repo-side `ray_id`, ECP behavior, CR2 science status,
-or a shell/support-local algorithm.
+retained-column diagnostic-weight division, repo-side `ray_id`, ECP behavior,
+CR2 science status, or a shell/support-local algorithm.
 
 The repo-owned private writer
 `_write_pqs_pqs_product_component_route_smoke_cr2_sidecar_schema_report(...)`
@@ -1261,7 +1299,7 @@ nearest-grid label heuristics, residual owners, fixed/residual/final
 dimensions and ranges, component block shapes, and lane-boundary no-go
 records. This writer is still private/reporting-only and adds no unified
 Hamiltonian route, shell-label reconstruction, raw GTO/GTO or fixed/raw-GTO
-MWG blocks, retained-weight/IDA division, or packet/fixed-block/
+MWG blocks, retained-column diagnostic-weight/IDA division, or packet/fixed-block/
 QW/Hamiltonian/public/default adoption.
 
 The private fixed-side retained-unit metadata checkpoint adds
@@ -1281,7 +1319,8 @@ the optional section. When present, the repo-owned writer emits a
 `[fixed_side_retained_unit_metadata]` section with the same reporting facts and
 the same no-go records: shell labels remain unavailable, center/grid label
 reconstruction and nearest-grid heuristics remain disabled, and no
-retained-weight/IDA division or route/adoption behavior is introduced.
+retained-column diagnostic-weight/IDA division or route/adoption behavior is
+introduced.
 
 The source-shell/source-mode label lane is provenance metadata, not operator
 data. A label such as `(shell_id, ix, iy, iz)` identifies a
@@ -1358,7 +1397,7 @@ The current electron-electron source-box checkpoint is therefore:
 - the private component-route report adapter consumes those source-box/PQS
   summaries plus final-residual MWG supplement facts as adjacent report lanes,
   with tracked synthetic coverage for owner, authority-error, raw/fixed-GTO
-  MWG-block, and retained-weight/IDA-division gates;
+  MWG-block, and retained-column diagnostic-weight/IDA-division gates;
 - all current outputs are retained two-index density-density blocks, not
   four-index Galerkin Coulomb tensors;
 - explicit route calls may still use synthetic or caller-supplied data, and
@@ -1420,8 +1459,9 @@ report. It should include:
 - authority-comparison facts and skip reasons;
 - timing/allocation facts for component assembly and report adaptation;
 - no-go diagnostics for public/default behavior, packet/fixed-block/
-  QW/Hamiltonian adoption, MWG/IDA semantic changes, retained-weight/IDA
-  division, owner/shell/ray inference, ECP behavior, and CR2 science status.
+  QW/Hamiltonian adoption, MWG/IDA semantic changes,
+  retained-column diagnostic-weight/IDA division, owner/shell/ray inference,
+  ECP behavior, and CR2 science status.
 
 The fixed/PQS source-box lane and the final-residual MWG lane stay adjacent,
 not merged, until a later reviewed adapter explicitly composes them. By-center
