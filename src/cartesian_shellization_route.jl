@@ -31,6 +31,170 @@ function _cartesian_shellization_common_diagnostics(;
     )
 end
 
+function _cartesian_shellification_box_point_count(box::NTuple{3,UnitRange{Int}})
+    return prod(length.(box))
+end
+
+function _cartesian_shellification_region3d(;
+    order::Int,
+    role::Symbol,
+    box::NTuple{3,UnitRange{Int}},
+    lowering_family::Symbol,
+    provenance,
+    retained_count::Int,
+    source_point_count::Int = _cartesian_shellification_box_point_count(box),
+    next_inner_box = nothing,
+)
+    return (;
+        object_kind = :cartesian_shellification_region3d,
+        order,
+        role,
+        box,
+        box_shape = Tuple(length.(box)),
+        source_point_count,
+        lowering_family,
+        lowering_status = :planned_not_lowered,
+        retained_count,
+        next_inner_box,
+        provenance,
+    )
+end
+
+function _cartesian_shellification_one_center_low_order_coverage(
+    parent_box::NTuple{3,UnitRange{Int}},
+    regions,
+)
+    shell_source_point_count = sum(
+        region.source_point_count for region in regions
+        if region.role == :low_order_complete_shell;
+        init = 0,
+    )
+    direct_core_source_point_count = sum(
+        region.source_point_count for region in regions
+        if region.role == :direct_core;
+        init = 0,
+    )
+    total_source_point_count = shell_source_point_count + direct_core_source_point_count
+    parent_point_count = _cartesian_shellification_box_point_count(parent_box)
+    return (;
+        object_kind = :cartesian_shellification_plan_coverage3d,
+        status =
+            total_source_point_count == parent_point_count ?
+            :coverage_complete :
+            :coverage_incomplete,
+        parent_point_count,
+        shell_source_point_count,
+        direct_core_source_point_count,
+        total_source_point_count,
+        missing_point_count = parent_point_count - total_source_point_count,
+        coverage_complete = total_source_point_count == parent_point_count,
+    )
+end
+
+function _cartesian_shellification_plan_one_center_low_order(
+    parent_side_count::Int;
+    nside::Int,
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    parent_side_count >= nside || throw(
+        ArgumentError("one-center shellification plan requires parent side count >= nside"),
+    )
+    parent_box = ntuple(_ -> 1:parent_side_count, 3)
+    shell_layer_count, core_side_count =
+        _one_center_atomic_shell_layer_count(parent_side_count, nside)
+    retention = _one_center_atomic_complete_shell_retention(nside)
+
+    regions = []
+    for layer_index in 1:shell_layer_count
+        provenance = _one_center_atomic_layer_provenance(
+            parent_box,
+            layer_index,
+            retention.shell_increment,
+        )
+        push!(
+            regions,
+            _cartesian_shellification_region3d(
+                order = layer_index,
+                role = :low_order_complete_shell,
+                box = provenance.source_box,
+                next_inner_box = provenance.next_inner_box,
+                lowering_family = :white_lindsey_complete_shell,
+                provenance = provenance,
+                source_point_count = provenance.source_point_count,
+                retained_count = retention.shell_increment,
+            ),
+        )
+    end
+
+    core_offset = shell_layer_count
+    direct_core_box = ntuple(3) do axis
+        (first(parent_box[axis]) + core_offset):(last(parent_box[axis]) - core_offset)
+    end
+    direct_core_point_count = _cartesian_shellification_box_point_count(direct_core_box)
+    direct_core_point_count == core_side_count^3 || throw(
+        ArgumentError("one-center shellification plan produced inconsistent direct core size"),
+    )
+    push!(
+        regions,
+        _cartesian_shellification_region3d(
+            order = shell_layer_count + 1,
+            role = :direct_core,
+            box = direct_core_box,
+            lowering_family = :direct_product_core,
+            provenance = (;
+                source = :one_center_atomic_full_parent_final_direct_core,
+                shell_layer_count,
+                core_side_count,
+            ),
+            retained_count = direct_core_point_count,
+            source_point_count = direct_core_point_count,
+        ),
+    )
+    regions = Tuple(regions)
+    coverage =
+        _cartesian_shellification_one_center_low_order_coverage(parent_box, regions)
+
+    return (;
+        object_kind = :cartesian_shellification_plan3d,
+        status = :planned_metadata_only,
+        private_development_only = true,
+        source_kind = :one_center_atomic_full_parent_shellification_plan,
+        route_family,
+        system_classification = :one_center,
+        shellification_role = :atom_local_full_parent_shellification,
+        shellification_stage = :route_neutral_spatial_planning,
+        lowering_stage = :not_lowered_by_shellification_plan,
+        parent_box,
+        working_box = parent_box,
+        full_parent_working_box = true,
+        nside,
+        core_side_count,
+        direct_core_box,
+        direct_core_point_count,
+        shell_layer_count,
+        shell_retention = retention,
+        regions,
+        region_count = length(regions),
+        ordered_region_roles = Tuple(region.role for region in regions),
+        ordered_region_boxes = Tuple(region.box for region in regions),
+        shell_region_count = count(region -> region.role == :low_order_complete_shell, regions),
+        direct_core_region_count = count(region -> region.role == :direct_core, regions),
+        retained_dimension = sum(region.retained_count for region in regions),
+        coverage,
+        diagnostics = (;
+            source = :current_one_center_atomic_full_parent_shell_sequence_contract,
+            private_development_only = true,
+            route_neutral_spatial_planning = true,
+            lowering_applied_by_plan = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+            shellification_rewrite = false,
+            pqs_production_source_box_materialization_claimed = false,
+            mwg_ida_semantics_changed = false,
+        ),
+    )
+end
+
 function _cartesian_shellization_sequence_summary(
     sequence::_CartesianNestedShellSequence3D;
     source_kind::Symbol,
