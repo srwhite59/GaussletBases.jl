@@ -159,6 +159,7 @@ function _pqs_route_driver_check_report_output_sections(report)
 end
 
 function _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
+    density_expansion = coulomb_gaussian_expansion(doacc = false)
     default_status = GaussletBases._pqs_source_box_route_driver_materialization(
         pqs_report;
         materialize_route = false,
@@ -202,6 +203,25 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test pqs_status.ham_preflight === nothing
     @test pqs_status.pqs_materialization_status == :pending_source_box_retained_route
 
+    mktempdir() do dir
+        pqs_hamfile = joinpath(dir, "pqs_pending_ham.jld2")
+        pqs_ham_status = GaussletBases._pqs_source_box_route_driver_materialization(
+            pqs_report;
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = true,
+            basisfile = joinpath(dir, "unused_basis.jld2"),
+            hamfile = pqs_hamfile,
+        )
+        @test pqs_ham_status.ham_bundle_export_status ==
+              :pending_source_box_retained_route
+        @test pqs_ham_status.ham_artifact_status ==
+              :not_written_pending_source_box_retained_route
+        @test pqs_ham_status.ham_export_blocker == :pending_source_box_retained_route
+        @test !pqs_ham_status.ham_artifact_written
+        @test !isfile(pqs_hamfile)
+    end
+
     white_lindsey_status = GaussletBases._pqs_source_box_route_driver_materialization(
         white_lindsey_report;
         materialize_route = true,
@@ -242,7 +262,7 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test !white_lindsey_status.ham_artifact_written
 
     mktempdir() do dir
-        hamfile = joinpath(dir, "white_lindsey_pending_ham.jld2")
+        hamfile = joinpath(dir, "white_lindsey_ham.jld2")
         save_status = GaussletBases._pqs_source_box_route_driver_materialization(
             white_lindsey_report;
             materialize_route = true,
@@ -250,13 +270,53 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             save_ham_artifact = true,
             basisfile = joinpath(dir, "unused_basis.jld2"),
             hamfile,
+            white_lindsey_expansion = density_expansion,
+            white_lindsey_Z = 2.0,
         )
+        @test save_status.ham_preflight_status ==
+              :available_private_low_order_ham_bundle_adapter
+        @test save_status.ham_missing_builder === nothing
+        @test save_status.ham_operator_payload_status ==
+              :available_low_order_operator_payload
+        @test save_status.ham_interaction_status ==
+              :available_low_order_density_density_interaction_matrix
+        @test save_status.ham_bundle_export_status ==
+              :available_low_order_ham_bundle_payload
         @test save_status.ham_artifact_status ==
-              :not_written_pending_low_order_density_density_interaction_matrix
-        @test save_status.ham_export_blocker ==
-              :missing_pure_low_order_fixed_block_density_density_interaction_builder
-        @test !save_status.ham_artifact_written
-        @test !isfile(hamfile)
+              :written_white_lindsey_low_order_ham_bundle
+        @test save_status.ham_export_blocker === nothing
+        @test save_status.ham_artifact_written
+        @test isfile(hamfile)
+        @test !isfile(joinpath(dir, "unused_basis.jld2"))
+        jldopen(hamfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "ham" in top_keys
+            @test "meta" in top_keys
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "white_lindsey_low_order"
+            @test String(file["ham/route_family"]) == "white_lindsey_low_order"
+            @test size(file["ham/overlap"]) == (223, 223)
+            @test size(file["ham/one_body_hamiltonian"]) == (223, 223)
+            @test size(file["ham/interaction_matrix"]) == (223, 223)
+            @test length(file["ham/basis_integral_weights"]) == 223
+            @test file["ham/basis_integral_weights"] == file["basis/final_integral_weights"]
+            @test Bool(file["meta/has_ham"])
+            @test String(file["meta/route_family"]) == "white_lindsey_low_order"
+            @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "available_private_low_order_ham_bundle_adapter"
+            @test Bool(file["meta/ham_missing_builder/is_nothing"])
+            @test String(file["meta/ham_operator_payload_status"]) ==
+                  "available_low_order_operator_payload"
+            @test String(file["meta/ham_interaction_status"]) ==
+                  "available_low_order_density_density_interaction_matrix"
+            @test String(file["meta/ham_export_status"]) ==
+                  "available_low_order_ham_bundle_payload"
+            @test Bool(file["meta/ham_export_blocker/is_nothing"])
+        end
     end
 
     mktempdir() do dir
@@ -346,6 +406,36 @@ function _pqs_route_driver_check_white_lindsey_ham_preflight()
     @test preflight.supplement_required_paths_policy ==
           :diagnostic_only_not_benchmark_route
     @test !preflight.full_ham_export_ready
+
+    density_expansion = coulomb_gaussian_expansion(doacc = false)
+    ham_adapter =
+        GaussletBases._white_lindsey_low_order_materialized_seed_ham_bundle_adapter(
+            seed_report;
+            expansion = density_expansion,
+            Z = 2.0,
+        )
+    adapter_preflight =
+        GaussletBases._pqs_source_box_route_driver_white_lindsey_ham_preflight(
+            seed_report;
+            ham_bundle_adapter = ham_adapter,
+        )
+    @test adapter_preflight.object_kind == :white_lindsey_low_order_ham_preflight
+    @test adapter_preflight.private_writer_adapter_used
+    @test adapter_preflight.private_payload_candidate_status ==
+          :private_payload_candidate_not_writer_adapted
+    @test adapter_preflight.basis_bundle_ham_payload_available
+    @test adapter_preflight.basis_bundle_ham_payload_status ==
+          :available_private_writer_adapter
+    @test adapter_preflight.pure_operator_payload_available
+    @test adapter_preflight.status == :available_private_low_order_ham_bundle_adapter
+    @test adapter_preflight.ham_operator_payload_status ==
+          :available_low_order_operator_payload
+    @test adapter_preflight.ham_interaction_status ==
+          :available_low_order_density_density_interaction_matrix
+    @test adapter_preflight.ham_bundle_export_status ==
+          :available_low_order_ham_bundle_payload
+    @test adapter_preflight.missing_builder === nothing
+    @test adapter_preflight.full_ham_export_ready
     return nothing
 end
 

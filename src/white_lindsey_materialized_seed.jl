@@ -417,6 +417,47 @@ function _white_lindsey_low_order_materialized_seed_ham_payload_candidate(
     )
 end
 
+struct _WhiteLindseyLowOrderHamBundleAdapter
+    fixed_block::_NestedFixedBlock3D
+    candidate::NamedTuple
+    expansion::CoulombGaussianExpansion
+end
+
+function _white_lindsey_low_order_materialized_seed_ham_bundle_adapter(
+    seed_or_block;
+    expansion::CoulombGaussianExpansion,
+    Z::Real,
+    symmetry_tolerance::Float64 = 1.0e-10,
+)
+    fixed_block = _white_lindsey_low_order_materialized_seed_fixed_block(seed_or_block)
+    candidate = _white_lindsey_low_order_materialized_seed_ham_payload_candidate(
+        seed_or_block;
+        expansion,
+        Z,
+        symmetry_tolerance,
+    )
+    checks = candidate.checks
+    checks.matrix_size_ready || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires retained-size matrices"),
+    )
+    checks.all_finite || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires finite matrices"),
+    )
+    checks.all_symmetric || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires symmetric matrices"),
+    )
+    checks.weights_ready || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires finite final integral weights"),
+    )
+    checks.gaussian_sum_available || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires gaussian_sum"),
+    )
+    checks.pair_sum_available || throw(
+        ArgumentError("White-Lindsey Ham bundle adapter requires pair_sum"),
+    )
+    return _WhiteLindseyLowOrderHamBundleAdapter(fixed_block, candidate, expansion)
+end
+
 function _white_lindsey_low_order_materialized_seed_report(; kwargs...)
     fixture = _white_lindsey_low_order_materialized_seed_fixture(; kwargs...)
     inventory = fixture.inventory

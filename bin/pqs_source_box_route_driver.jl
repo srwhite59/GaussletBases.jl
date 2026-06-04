@@ -53,6 +53,8 @@ using GaussletBases
     white_lindsey_retained_rule = :low_order_unit_comx_retained_basis
     white_lindsey_operator_rule = :low_order_unit_operator_blocks
     white_lindsey_benchmark_role = :published_cartesian_baseline_for_pqs_comparison
+    white_lindsey_Z = 2.0
+    white_lindsey_expansion = coulomb_gaussian_expansion(doacc = false)
 
     save_artifact = false
     save_tsv = false
@@ -137,7 +139,8 @@ using GaussletBases
 
     materialization = GaussletBases._pqs_source_box_route_driver_materialization(
         report;
-        materialize_route, save_basis_artifact, save_ham_artifact, basisfile, hamfile,)
+        materialize_route, save_basis_artifact, save_ham_artifact, basisfile, hamfile,
+        white_lindsey_expansion, white_lindsey_Z,)
 
 # Short screen summary first; detailed sections follow below.
     retained_counts = route_facts.retained_counts
@@ -149,6 +152,7 @@ using GaussletBases
         @show route_shape product_body_rule pair_factor_normalization
     else
         @show white_lindsey_route_shape white_lindsey_mapping_rule white_lindsey_nesting_rule
+        @show white_lindsey_Z length(white_lindsey_expansion.exponents)
     end
     @show standard_setup.n_s standard_setup.core_cube_side standard_setup.core_spacing
     @show standard_setup.spacing.q_to_core_spacing_rule_status

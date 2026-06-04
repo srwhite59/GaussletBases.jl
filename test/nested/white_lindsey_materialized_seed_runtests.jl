@@ -1,6 +1,7 @@
 using LinearAlgebra
 using Test
 using GaussletBases
+using JLD2
 
 @testset "White-Lindsey materialized complete-shell seed fixture" begin
     density_expansion = coulomb_gaussian_expansion(doacc = false)
@@ -377,6 +378,67 @@ using GaussletBases
     @test fixed_block_candidate.one_body_hamiltonian == expected_one_body
     @test fixed_block_candidate.interaction_matrix == direct_interaction
     @test !fixed_block_candidate.export_ready
+
+    ham_adapter =
+        GaussletBases._white_lindsey_low_order_materialized_seed_ham_bundle_adapter(
+            fixture;
+            expansion = density_expansion,
+            Z = 2.0,
+        )
+    @test ham_adapter isa GaussletBases._WhiteLindseyLowOrderHamBundleAdapter
+    @test ham_adapter.fixed_block === fixed_block
+    @test ham_adapter.candidate == ham_candidate
+    @test ham_adapter.expansion === density_expansion
+
+    adapter_bundle = cartesian_basis_bundle_payload(ham_adapter)
+    @test adapter_bundle.basis["basis_kind"] == "nested_fixed_block"
+    @test adapter_bundle.ham !== nothing
+    @test adapter_bundle.ham["format"] == "cartesian_hamiltonian_bundle_v1"
+    @test adapter_bundle.ham["model_kind"] == "white_lindsey_low_order"
+    @test adapter_bundle.ham["route_family"] == "white_lindsey_low_order"
+    @test adapter_bundle.ham["interaction_model"] == "density_density"
+    @test adapter_bundle.ham["interaction_treatment"] == "nested_fixed_block_pair_sum"
+    @test adapter_bundle.ham["payload_candidate_status"] ==
+          "private_payload_candidate_not_writer_adapted"
+    @test size(adapter_bundle.ham["overlap"]) ==
+          (total_retained_dimension, total_retained_dimension)
+    @test size(adapter_bundle.ham["one_body_hamiltonian"]) ==
+          (total_retained_dimension, total_retained_dimension)
+    @test size(adapter_bundle.ham["interaction_matrix"]) ==
+          (total_retained_dimension, total_retained_dimension)
+    @test adapter_bundle.ham["basis_integral_weights"] ==
+          adapter_bundle.basis["final_integral_weights"]
+    @test adapter_bundle.ham["basis_integral_weights"] == ham_candidate.final_integral_weights
+    @test adapter_bundle.ham["nuclear_charge"] == 2.0
+    @test adapter_bundle.meta["has_ham"]
+
+    mktempdir() do dir
+        hamfile = joinpath(dir, "white_lindsey_adapter_ham.jld2")
+        @test write_cartesian_basis_bundle_jld2(hamfile, ham_adapter) == hamfile
+        @test isfile(hamfile)
+        jldopen(hamfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "basis" in top_keys
+            @test "ham" in top_keys
+            @test "meta" in top_keys
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "white_lindsey_low_order"
+            @test String(file["ham/route_family"]) == "white_lindsey_low_order"
+            @test String(file["ham/interaction_model"]) == "density_density"
+            @test String(file["ham/interaction_treatment"]) == "nested_fixed_block_pair_sum"
+            @test size(file["ham/overlap"]) ==
+                  (total_retained_dimension, total_retained_dimension)
+            @test size(file["ham/one_body_hamiltonian"]) ==
+                  (total_retained_dimension, total_retained_dimension)
+            @test size(file["ham/interaction_matrix"]) ==
+                  (total_retained_dimension, total_retained_dimension)
+            @test file["ham/basis_integral_weights"] == file["basis/final_integral_weights"]
+            @test length(file["ham/basis_integral_weights"]) == total_retained_dimension
+            @test Bool(file["meta/has_ham"])
+        end
+    end
 
     direct_matrices =
         GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)

@@ -873,9 +873,16 @@ function _pqs_source_box_route_driver_white_lindsey_preflight_fixed_block(seed_o
     return seed_or_fixed_block
 end
 
-function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_block)
+function _pqs_source_box_route_driver_white_lindsey_ham_preflight(
+    seed_or_fixed_block;
+    ham_bundle_adapter = nothing,
+)
     fixed_block =
-        _pqs_source_box_route_driver_white_lindsey_preflight_fixed_block(seed_or_fixed_block)
+        isnothing(ham_bundle_adapter) ?
+        _pqs_source_box_route_driver_white_lindsey_preflight_fixed_block(
+            seed_or_fixed_block,
+        ) :
+        ham_bundle_adapter.fixed_block
     ordinary_qw_fixed_block_applicable =
         applicable(ordinary_cartesian_qiu_white_operators, fixed_block)
     nested_cartesian_fixed_block_applicable =
@@ -884,7 +891,8 @@ function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_
     ordinary_cartesian_ida_fixed_block_applicable =
         ida_builder_name_defined &&
         applicable(getfield(@__MODULE__, :ordinary_cartesian_ida_operators), fixed_block)
-    basis_bundle_payload = cartesian_basis_bundle_payload(fixed_block; include_ham = true)
+    bundle_object = isnothing(ham_bundle_adapter) ? fixed_block : ham_bundle_adapter
+    basis_bundle_payload = cartesian_basis_bundle_payload(bundle_object; include_ham = true)
     basis_bundle_ham_payload_available = !isnothing(basis_bundle_payload.ham)
     pure_operator_payload_available =
         ordinary_qw_fixed_block_applicable ||
@@ -896,6 +904,8 @@ function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_
         nothing :
         :missing_pure_low_order_fixed_block_density_density_interaction_builder
     status =
+        basis_bundle_ham_payload_available && !isnothing(ham_bundle_adapter) ?
+        :available_private_low_order_ham_bundle_adapter :
         pure_operator_payload_available ?
         :available_pure_low_order_operator_payload :
         :blocked_missing_pure_low_order_interaction_builder
@@ -928,7 +938,11 @@ function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_
         basis_bundle_ham_payload_available,
         basis_bundle_ham_payload_status =
             basis_bundle_ham_payload_available ?
-            :available :
+            (
+                isnothing(ham_bundle_adapter) ?
+                :available :
+                :available_private_writer_adapter
+            ) :
             :absent_for_fixed_block,
         pure_operator_payload_available,
         status,
@@ -940,6 +954,9 @@ function _pqs_source_box_route_driver_white_lindsey_ham_preflight(seed_or_fixed_
         missing_builder,
         supplement_required_paths_policy = :diagnostic_only_not_benchmark_route,
         full_ham_export_ready = basis_bundle_ham_payload_available,
+        private_writer_adapter_used = !isnothing(ham_bundle_adapter),
+        private_payload_candidate_status =
+            isnothing(ham_bundle_adapter) ? nothing : ham_bundle_adapter.candidate.status,
     )
 end
 
@@ -950,6 +967,8 @@ function _pqs_source_box_route_driver_materialization(
     save_ham_artifact::Bool = false,
     basisfile::AbstractString = "cartesian_nesting_route_driver_basis_bundle.jld2",
     hamfile::AbstractString = "cartesian_nesting_route_driver_ham_bundle.jld2",
+    white_lindsey_expansion = nothing,
+    white_lindsey_Z = nothing,
 )
     route_family = report.route_family
     if !materialize_route
@@ -1000,8 +1019,30 @@ function _pqs_source_box_route_driver_materialization(
     if route_family == :white_lindsey_low_order
         materialized_report = _white_lindsey_low_order_materialized_seed_report()
         basis_export_status = :supported_basis_only_fixed_block
+        ham_bundle_adapter = nothing
+        if save_ham_artifact
+            isnothing(white_lindsey_expansion) && throw(
+                ArgumentError(
+                    "White-Lindsey Ham artifact export requires explicit white_lindsey_expansion",
+                ),
+            )
+            isnothing(white_lindsey_Z) && throw(
+                ArgumentError("White-Lindsey Ham artifact export requires explicit white_lindsey_Z"),
+            )
+            ham_bundle_adapter =
+                _white_lindsey_low_order_materialized_seed_ham_bundle_adapter(
+                    materialized_report;
+                    expansion = white_lindsey_expansion,
+                    Z = white_lindsey_Z,
+                )
+        end
         ham_preflight =
-            _pqs_source_box_route_driver_white_lindsey_ham_preflight(materialized_report)
+            isnothing(ham_bundle_adapter) ?
+            _pqs_source_box_route_driver_white_lindsey_ham_preflight(materialized_report) :
+            _pqs_source_box_route_driver_white_lindsey_ham_preflight(
+                materialized_report;
+                ham_bundle_adapter = ham_bundle_adapter,
+            )
         ham_operator_payload_status = ham_preflight.ham_operator_payload_status
         ham_interaction_status = ham_preflight.ham_interaction_status
         ham_bundle_export_status = ham_preflight.ham_bundle_export_status
@@ -1031,6 +1072,39 @@ function _pqs_source_box_route_driver_materialization(
                 ),
             )
             basis_artifact_written = true
+        end
+        ham_artifact_written = false
+        ham_artifact_status =
+            save_ham_artifact ?
+            :not_written_private_white_lindsey_ham_adapter_not_ready :
+            :not_requested
+        if save_ham_artifact && ham_preflight.full_ham_export_ready
+            write_cartesian_basis_bundle_jld2(
+                hamfile,
+                ham_bundle_adapter;
+                include_ham = true,
+                meta = (;
+                    route_family,
+                    route_kind = report.recipe_metadata.route_kind,
+                    benchmark_role = report.recipe_metadata.benchmark_role,
+                    materialized_report_kind = materialized_report.object_kind,
+                    export_status = :basis_and_ham,
+                    basis_export_status,
+                    ham_preflight_status = ham_preflight.status,
+                    ham_missing_builder = ham_preflight.missing_builder,
+                    ham_operator_payload_status,
+                    ham_interaction_status,
+                    ham_export_status = ham_bundle_export_status,
+                    ham_export_blocker,
+                    private_development_only = true,
+                    private_writer_adapter =
+                        :_WhiteLindseyLowOrderHamBundleAdapter,
+                    ham_payload_candidate_status =
+                        ham_bundle_adapter.candidate.status,
+                ),
+            )
+            ham_artifact_written = true
+            ham_artifact_status = :written_white_lindsey_low_order_ham_bundle
         end
         return (;
             object_kind = :cartesian_nesting_route_driver_materialization,
@@ -1062,11 +1136,8 @@ function _pqs_source_box_route_driver_materialization(
             ham_operator_payload_status,
             ham_interaction_status,
             ham_bundle_export_status,
-            ham_artifact_status =
-                save_ham_artifact ?
-                :not_written_pending_low_order_density_density_interaction_matrix :
-                :not_requested,
-            ham_artifact_written = false,
+            ham_artifact_status,
+            ham_artifact_written,
             hamfile,
             ham_export_blocker,
             ham_preflight,

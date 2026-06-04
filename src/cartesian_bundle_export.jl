@@ -36,6 +36,12 @@ function _cartesian_bundle_representation(
     return _cartesian_bundle_supported_basis(basis_representation(basis))
 end
 
+function _cartesian_bundle_representation(
+    adapter::_WhiteLindseyLowOrderHamBundleAdapter,
+)
+    return _cartesian_bundle_representation(adapter.fixed_block)
+end
+
 function _cartesian_bundle_representation(operators::OrdinaryCartesianIDAOperators)
     return _cartesian_bundle_supported_basis(basis_representation(operators.basis))
 end
@@ -343,6 +349,12 @@ function _cartesian_bundle_integral_weights(
     fixed_block::_NestedFixedBlock3D,
 )
     return Vector{Float64}(fixed_block.weights)
+end
+
+function _cartesian_bundle_integral_weights(
+    adapter::_WhiteLindseyLowOrderHamBundleAdapter,
+)
+    return Vector{Float64}(adapter.candidate.final_integral_weights)
 end
 
 function _cartesian_bundle_integral_weights(
@@ -698,6 +710,41 @@ function _cartesian_ham_values(
     return values
 end
 
+function _cartesian_ham_values(
+    adapter::_WhiteLindseyLowOrderHamBundleAdapter,
+    representation::CartesianBasisRepresentation3D,
+)
+    candidate = adapter.candidate
+    return Dict{String,Any}(
+        "format" => "cartesian_hamiltonian_bundle_v1",
+        "version" => 1,
+        "object_type" => string(nameof(typeof(adapter))),
+        "model_kind" => "white_lindsey_low_order",
+        "route_family" => "white_lindsey_low_order",
+        "private_development_only" => true,
+        "interaction_model" => "density_density",
+        "interaction_treatment" => "nested_fixed_block_pair_sum",
+        "overlap_key" => "overlap",
+        "onebody_key" => "one_body_hamiltonian",
+        "interaction_key" => "interaction_matrix",
+        "basis_integral_weights_key" => "basis/final_integral_weights",
+        "overlap" => Matrix{Float64}(candidate.overlap),
+        "one_body_hamiltonian" => Matrix{Float64}(candidate.one_body_hamiltonian),
+        "interaction_matrix" => Matrix{Float64}(candidate.interaction_matrix),
+        "orbital_labels" => String[
+            String(label) for label in representation.metadata.basis_labels
+        ],
+        "basis_centers" => Matrix{Float64}(representation.metadata.basis_centers),
+        "basis_integral_weights" => Vector{Float64}(candidate.final_integral_weights),
+        "expansion/exponents" => copy(adapter.expansion.exponents),
+        "expansion/coefficients" => copy(adapter.expansion.coefficients),
+        "nuclear_charge" => candidate.nuclear_charge,
+        "payload_candidate_status" => String(candidate.status),
+        "one_body_source" => String(candidate.one_body_source),
+        "interaction_source" => String(candidate.interaction_source),
+    )
+end
+
 function _write_cartesian_ham_group!(
     file,
     ::CartesianBasisRepresentation3D,
@@ -719,6 +766,57 @@ function _write_cartesian_ham_group!(
 )
     _cartesian_bundle_supported_basis(representation)
     return false
+end
+
+function _write_cartesian_ham_group!(
+    file,
+    adapter::_WhiteLindseyLowOrderHamBundleAdapter,
+    representation::CartesianBasisRepresentation3D,
+)
+    candidate = adapter.candidate
+    file["ham/format"] = "cartesian_hamiltonian_bundle_v1"
+    file["ham/version"] = 1
+    file["ham/object_type"] = string(nameof(typeof(adapter)))
+    file["ham/model_kind"] = "white_lindsey_low_order"
+    file["ham/route_family"] = "white_lindsey_low_order"
+    file["ham/private_development_only"] = true
+    file["ham/interaction_model"] = "density_density"
+    file["ham/interaction_treatment"] = "nested_fixed_block_pair_sum"
+    file["ham/overlap_key"] = "overlap"
+    file["ham/onebody_key"] = "one_body_hamiltonian"
+    file["ham/interaction_key"] = "interaction_matrix"
+    file["ham/basis_integral_weights_key"] = "basis/final_integral_weights"
+    _cartesian_write_dense_matrix!(file, "ham/overlap", candidate.overlap)
+    _cartesian_write_dense_matrix!(
+        file,
+        "ham/one_body_hamiltonian",
+        candidate.one_body_hamiltonian,
+    )
+    _cartesian_write_dense_matrix!(file, "ham/interaction_matrix", candidate.interaction_matrix)
+    file["ham/orbital_labels"] = String[
+        String(label) for label in representation.metadata.basis_labels
+    ]
+    _cartesian_write_dense_matrix!(
+        file,
+        "ham/basis_centers",
+        representation.metadata.basis_centers,
+    )
+    _cartesian_write_float_vector!(
+        file,
+        "ham/basis_integral_weights",
+        candidate.final_integral_weights,
+    )
+    _cartesian_write_float_vector!(file, "ham/expansion/exponents", adapter.expansion.exponents)
+    _cartesian_write_float_vector!(
+        file,
+        "ham/expansion/coefficients",
+        adapter.expansion.coefficients,
+    )
+    file["ham/nuclear_charge"] = candidate.nuclear_charge
+    file["ham/payload_candidate_status"] = String(candidate.status)
+    file["ham/one_body_source"] = String(candidate.one_body_source)
+    file["ham/interaction_source"] = String(candidate.interaction_source)
+    return true
 end
 
 function _write_cartesian_ham_group!(
