@@ -46,21 +46,24 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
     source_dimensions = _pqs_route_driver_axis_count_tuple(counts)
     source_dimension = isnothing(source_dimensions) ? nothing : prod(source_dimensions)
 
-    retained_units = ((
-        unit_key = :low_order_units,
-        unit_role = :standard_box_units_with_white_lindsey_low_order_transform,
-        retained_unit_kind = :low_order_unit_partition,
-        source_family = :standard_cartesian_unit_boxes,
-        source_box = source_box,
-        source_dimensions = source_dimensions,
-        source_dimension = source_dimension,
-        retained_rule_kind = low_order_recipe.retained_rule,
-        retained_rule_derivation = :unit_box_comx_coarsening_not_historical_split_rule,
-        retained_range = nothing,
-        retained_count = nothing,
-        provenance_label = :white_lindsey_low_order_units,
-        weight_semantics = :not_pqs_retained_weights,
-    ),)
+    retained_units = (
+        _pqs_source_box_route_driver_unit_record(
+            unit_key = :low_order_units,
+            unit_role = :standard_box_units_with_white_lindsey_low_order_transform,
+            retained_unit_kind = :low_order_unit_partition,
+            source_family = :standard_cartesian_unit_boxes,
+            source_box = source_box,
+            source_dimensions = source_dimensions,
+            source_dimension = source_dimension,
+            retained_rule_kind = low_order_recipe.retained_rule,
+            retained_rule_derivation = :unit_box_comx_coarsening_not_historical_split_rule,
+            retained_range = nothing,
+            retained_count = nothing,
+            provenance_label = :white_lindsey_low_order_units,
+            weight_semantics = :not_pqs_retained_weights,
+        ),
+    )
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
     pair_entries = ((
         pair_key = (:low_order_units, :low_order_units),
         pair_family = :white_lindsey_low_order,
@@ -96,12 +99,12 @@ function _pqs_source_box_route_driver_white_lindsey_low_order_skeleton(
         retained_unit_order = (:low_order_units,),
         q = spacing_inputs.q,
         parent_axis_counts = counts,
-        source_boxes = (low_order_units = source_box,),
-        source_dimensions = (low_order_units = source_dimensions,),
+        source_boxes = unit_inventory.source_boxes,
+        source_dimensions = unit_inventory.source_dimensions,
         retained_units,
-        retained_counts = (low_order_units = nothing,),
-        ranges = (low_order_units = nothing,),
-        retained_dimension = nothing,
+        retained_counts = unit_inventory.retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
         pair_entries,
         pair_family_counts,
         helper_by_pair_family,

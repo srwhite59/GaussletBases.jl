@@ -400,7 +400,189 @@ end
 
 # Route facts, contracts, diagnostics, and report assembly.
 
+function _pqs_source_box_route_driver_shared_unit_fields()
+    return (
+        :unit_key,
+        :unit_role,
+        :retained_unit_kind,
+        :source_family,
+        :source_box,
+        :source_dimensions,
+        :source_dimension,
+        :retained_rule_kind,
+        :retained_rule_derivation,
+        :retained_range,
+        :retained_count,
+        :provenance_label,
+        :weight_semantics,
+    )
+end
+
+function _pqs_source_box_route_driver_pair_entry_fields()
+    return (
+        :pair_key,
+        :pair_family,
+        :pair_kind,
+        :density_density_helper,
+        :source_box_algorithmic_path,
+        :fallback_oracle_path,
+        :transpose_policy,
+        :output_representation,
+    )
+end
+
+function _pqs_source_box_route_driver_check_record_fields(record, expected_fields, label)
+    actual_fields = Tuple(keys(record))
+    actual_fields == expected_fields || throw(
+        ArgumentError("$(label) fields $(actual_fields) do not match $(expected_fields)"),
+    )
+    return record
+end
+
+function _pqs_source_box_route_driver_unit_record(;
+    unit_key,
+    unit_role,
+    retained_unit_kind,
+    source_family,
+    source_box,
+    source_dimensions,
+    source_dimension = isnothing(source_dimensions) ? nothing : prod(source_dimensions),
+    retained_rule_kind,
+    retained_rule_derivation,
+    retained_range,
+    retained_count,
+    provenance_label,
+    weight_semantics,
+)
+    if !isnothing(source_dimensions) && !isnothing(source_dimension)
+        derived_source_dimension = prod(source_dimensions)
+        source_dimension == derived_source_dimension || throw(
+            ArgumentError("source_dimension $(source_dimension) does not match $(derived_source_dimension)"),
+        )
+    end
+
+    record = (;
+        unit_key,
+        unit_role,
+        retained_unit_kind,
+        source_family,
+        source_box,
+        source_dimensions,
+        source_dimension,
+        retained_rule_kind,
+        retained_rule_derivation,
+        retained_range,
+        retained_count,
+        provenance_label,
+        weight_semantics,
+    )
+    return _pqs_source_box_route_driver_check_record_fields(
+        record,
+        _pqs_source_box_route_driver_shared_unit_fields(),
+        :retained_unit,
+    )
+end
+
+function _pqs_source_box_route_driver_named_tuple_from_units(retained_units, field)
+    unit_keys = Tuple(unit.unit_key for unit in retained_units)
+    values = Tuple(getproperty(unit, field) for unit in retained_units)
+    return NamedTuple{unit_keys}(values)
+end
+
+function _pqs_source_box_route_driver_inventory_retained_dimension(retained_units)
+    isempty(retained_units) && return 0
+    any(unit -> isnothing(unit.retained_range), retained_units) && return nothing
+    return maximum(last(unit.retained_range) for unit in retained_units)
+end
+
+function _pqs_source_box_route_driver_unit_inventory(retained_units)
+    expected_fields = _pqs_source_box_route_driver_shared_unit_fields()
+    for unit in retained_units
+        _pqs_source_box_route_driver_check_record_fields(
+            unit,
+            expected_fields,
+            :retained_unit,
+        )
+    end
+
+    return (;
+        retained_units,
+        source_boxes =
+            _pqs_source_box_route_driver_named_tuple_from_units(retained_units, :source_box),
+        source_dimensions =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :source_dimensions),
+        retained_counts =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_count),
+        ranges =
+            _pqs_source_box_route_driver_named_tuple_from_units(
+                retained_units, :retained_range),
+        retained_dimension =
+            _pqs_source_box_route_driver_inventory_retained_dimension(retained_units),
+    )
+end
+
+function _pqs_source_box_route_driver_inventory_map_matches(existing, derived)
+    length(keys(existing)) == length(keys(derived)) || return false
+    for key in keys(derived)
+        hasproperty(existing, key) || return false
+        getproperty(existing, key) == getproperty(derived, key) || return false
+    end
+    return true
+end
+
+function _pqs_source_box_route_driver_pair_inventory(
+    pair_entries;
+    expected_families = nothing,
+)
+    expected_fields = _pqs_source_box_route_driver_pair_entry_fields()
+    for entry in pair_entries
+        _pqs_source_box_route_driver_check_record_fields(
+            entry,
+            expected_fields,
+            :pair_entry,
+        )
+    end
+    families = isnothing(expected_families) ?
+        Tuple(unique(entry.pair_family for entry in pair_entries)) :
+        Tuple(expected_families)
+    pair_family_counts = NamedTuple{families}(
+        Tuple(count(entry -> entry.pair_family == family, pair_entries) for family in families),
+    )
+    return (; pair_entries, pair_family_counts)
+end
+
 function _pqs_source_box_route_driver_route_facts(route_skeleton)
+    unit_inventory =
+        _pqs_source_box_route_driver_unit_inventory(route_skeleton.retained_units)
+    _pqs_source_box_route_driver_inventory_map_matches(
+        route_skeleton.source_boxes, unit_inventory.source_boxes) || throw(
+        ArgumentError("route skeleton source_boxes do not match retained unit records"),
+    )
+    _pqs_source_box_route_driver_inventory_map_matches(
+        route_skeleton.source_dimensions, unit_inventory.source_dimensions) || throw(
+        ArgumentError("route skeleton source_dimensions do not match retained unit records"),
+    )
+    _pqs_source_box_route_driver_inventory_map_matches(
+        route_skeleton.retained_counts, unit_inventory.retained_counts) || throw(
+        ArgumentError("route skeleton retained_counts do not match retained unit records"),
+    )
+    _pqs_source_box_route_driver_inventory_map_matches(
+        route_skeleton.ranges, unit_inventory.ranges) || throw(
+        ArgumentError("route skeleton ranges do not match retained unit records"),
+    )
+    route_skeleton.retained_dimension == unit_inventory.retained_dimension || throw(
+        ArgumentError("route skeleton retained_dimension does not match retained unit records"),
+    )
+    pair_inventory = _pqs_source_box_route_driver_pair_inventory(
+        route_skeleton.pair_entries;
+        expected_families = keys(route_skeleton.pair_family_counts),
+    )
+    route_skeleton.pair_family_counts == pair_inventory.pair_family_counts || throw(
+        ArgumentError("route skeleton pair_family_counts do not match pair entries"),
+    )
+
     return (;
         source_boxes = route_skeleton.source_boxes,
         source_dimensions = route_skeleton.source_dimensions,
