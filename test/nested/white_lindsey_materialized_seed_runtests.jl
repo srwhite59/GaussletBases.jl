@@ -11,6 +11,7 @@ using JLD2
     sequence = fixture.sequence
     fixed_block = fixture.fixed_block
     structure = fixture.structure
+    fixture_shellization_summary = fixture.shellization_summary
     inventory = fixture.inventory
     route_units = GaussletBases._white_lindsey_low_order_materialized_seed_route_units(fixture)
     operator_inventory =
@@ -58,6 +59,16 @@ using JLD2
     @test !shellization_summary.diagnostics.hamiltonian_schema_changed
     @test !shellization_summary.diagnostics.gto_supplement_semantics_changed
     @test !shellization_summary.diagnostics.raw_or_diagnostic_weights_promoted
+
+    @test fixture_shellization_summary.object_kind == :cartesian_shellization_route_summary
+    @test fixture_shellization_summary.route_family == :white_lindsey_low_order
+    @test fixture_shellization_summary.source_kind == :white_lindsey_one_center_seed
+    @test fixture_shellization_summary.shellization_role ==
+          :seed_one_center_full_parent_shellization
+    @test fixture_shellization_summary.shellization_stage == :route_neutral_spatial_planning
+    @test fixture_shellization_summary.lowering_stage ==
+          :not_lowered_by_shellization_summary
+    @test fixture_shellization_summary.retained_dimension == total_retained_dimension
 
     @test length(shell.faces) == 6
     @test length(shell.edges) == 12
@@ -236,6 +247,12 @@ using JLD2
     @test report.route_units.retained_dimension == route_units.retained_dimension
     @test report.retained_dimension == route_units.retained_dimension
     @test report.operator_inventory.retained_dimension == operator_inventory.retained_dimension
+    @test report.shellization_summary === report.fixture.shellization_summary
+    @test report.shellization_summary_available
+    @test report.shellization_source == :white_lindsey_one_center_seed
+    @test !report.route_configured_shellization_consumed
+    @test report.materialized_shellization_stage == :route_neutral_spatial_planning
+    @test report.seed_materialization_status == :seed_based_private_materialization
     @test Tuple(unit.unit_key for unit in report.route_units.retained_units) ==
           Tuple(unit.unit_key for unit in route_units.retained_units)
     @test report.operator_inventory.terms == operator_inventory.terms

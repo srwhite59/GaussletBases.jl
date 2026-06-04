@@ -170,6 +170,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     )
     @test default_status.status == :not_requested_metadata_only
     @test default_status.materialized_report === nothing
+    @test default_status.shellization_summary === nothing
+    @test !default_status.shellization_summary_available
+    @test !default_status.route_configured_shellization_consumed
+    @test default_status.materialized_shellization_stage == :not_checked_metadata_only
     @test default_status.ham_bundle_export_status == :not_requested
     @test default_status.ham_preflight_status == :not_checked_metadata_only
     @test default_status.ham_missing_builder === nothing
@@ -190,6 +194,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     )
     @test pqs_status.status == :pending_source_box_retained_route
     @test pqs_status.materialized_report === nothing
+    @test pqs_status.shellization_summary === nothing
+    @test !pqs_status.shellization_summary_available
+    @test pqs_status.shellization_source == :pending_source_box_route_shellization
+    @test !pqs_status.route_configured_shellization_consumed
+    @test pqs_status.materialized_shellization_stage ==
+          :pending_source_box_retained_route
+    @test pqs_status.seed_materialization_status == :not_applicable
     @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
     @test pqs_status.basis_bundle_export_status == :pending_final_retained_basis
     @test pqs_status.basis_artifact_status == :not_requested
@@ -235,6 +246,15 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :white_lindsey_low_order_materialized_seed_report
     @test white_lindsey_status.materialized_report_kind ==
           :white_lindsey_low_order_materialized_seed_report
+    @test white_lindsey_status.shellization_summary ===
+          white_lindsey_status.materialized_report.shellization_summary
+    @test white_lindsey_status.shellization_summary_available
+    @test white_lindsey_status.shellization_source == :white_lindsey_one_center_seed
+    @test !white_lindsey_status.route_configured_shellization_consumed
+    @test white_lindsey_status.materialized_shellization_stage ==
+          :route_neutral_spatial_planning
+    @test white_lindsey_status.seed_materialization_status ==
+          :seed_based_private_materialization
     @test white_lindsey_status.retained_dimension == 223
     @test white_lindsey_status.final_integral_weights_status ==
           :available_retained_basis_integral_weights
@@ -284,6 +304,11 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
               :available_low_order_ham_bundle_payload
         @test save_status.ham_artifact_status ==
               :written_white_lindsey_low_order_ham_bundle
+        @test save_status.shellization_summary_available
+        @test save_status.shellization_source == :white_lindsey_one_center_seed
+        @test !save_status.route_configured_shellization_consumed
+        @test save_status.materialized_shellization_stage ==
+              :route_neutral_spatial_planning
         @test save_status.ham_export_blocker === nothing
         @test save_status.ham_artifact_written
         @test isfile(hamfile)
@@ -306,6 +331,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test Bool(file["meta/has_ham"])
             @test String(file["meta/route_family"]) == "white_lindsey_low_order"
             @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test Bool(file["meta/shellization_summary_available"])
+            @test String(file["meta/shellization_source"]) ==
+                  "white_lindsey_one_center_seed"
+            @test Bool(file["meta/route_configured_shellization_consumed"]) == false
+            @test String(file["meta/materialized_shellization_stage"]) ==
+                  "route_neutral_spatial_planning"
+            @test String(file["meta/seed_materialization_status"]) ==
+                  "seed_based_private_materialization"
             @test String(file["meta/ham_preflight_status"]) ==
                   "available_private_low_order_ham_bundle_adapter"
             @test Bool(file["meta/ham_missing_builder/is_nothing"])
@@ -350,6 +383,14 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "published_cartesian_baseline_for_pqs_comparison"
             @test String(file["meta/materialized_report_kind"]) ==
                   "white_lindsey_low_order_materialized_seed_report"
+            @test Bool(file["meta/shellization_summary_available"])
+            @test String(file["meta/shellization_source"]) ==
+                  "white_lindsey_one_center_seed"
+            @test Bool(file["meta/route_configured_shellization_consumed"]) == false
+            @test String(file["meta/materialized_shellization_stage"]) ==
+                  "route_neutral_spatial_planning"
+            @test String(file["meta/seed_materialization_status"]) ==
+                  "seed_based_private_materialization"
             @test String(file["meta/export_status"]) == "basis_only"
             @test String(file["meta/basis_export_status"]) ==
                   "supported_basis_only_fixed_block"
@@ -479,6 +520,13 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             saved_materialization = file["materialization"]
             @test saved_materialization.status == :materialized_seed_report_available
             @test saved_materialization.basis_artifact_status == :written_basis_only_bundle
+            @test saved_materialization.shellization_summary_available
+            @test saved_materialization.shellization_source == :white_lindsey_one_center_seed
+            @test !saved_materialization.route_configured_shellization_consumed
+            @test saved_materialization.materialized_shellization_stage ==
+                  :route_neutral_spatial_planning
+            @test saved_materialization.seed_materialization_status ==
+                  :seed_based_private_materialization
             @test saved_materialization.ham_preflight.status ==
                   :blocked_missing_pure_low_order_interaction_builder
             @test saved_materialization.ham_preflight.required_builder_contract ==
@@ -501,6 +549,26 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
 
         tsv = read(tsvfile, String)
         @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
+        @test occursin(
+            "route_materialization\tshellization_summary_available\ttrue",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tshellization_source\t:white_lindsey_one_center_seed",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_consumed\tfalse",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tmaterialized_shellization_stage\t:route_neutral_spatial_planning",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tseed_materialization_status\t:seed_based_private_materialization",
+            tsv,
+        )
         @test occursin("route_materialization\tbasis_artifact_status\t:written_basis_only_bundle", tsv)
         @test occursin(
             "route_materialization\tham_preflight_status\t:blocked_missing_pure_low_order_interaction_builder",

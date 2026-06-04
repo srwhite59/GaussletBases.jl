@@ -163,6 +163,7 @@ using GaussletBases
     @show retained_counts retained_dimension
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status
+    @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
 
 # Detailed sections and optional artifacts stay behind helpers so the driver

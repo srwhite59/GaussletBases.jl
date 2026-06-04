@@ -982,6 +982,18 @@ function _pqs_source_box_route_driver_materialization(
             status = :not_requested_metadata_only,
             materialized_report = nothing,
             materialized_report_kind = nothing,
+            shellization_summary = nothing,
+            shellization_summary_available = false,
+            shellization_source =
+                route_family == :white_lindsey_low_order ?
+                :white_lindsey_one_center_seed_not_materialized :
+                nothing,
+            route_configured_shellization_consumed = false,
+            materialized_shellization_stage = :not_checked_metadata_only,
+            seed_materialization_status =
+                route_family == :white_lindsey_low_order ?
+                :not_requested_seed_materialization :
+                :not_applicable,
             retained_dimension = report.retained_dimension,
             final_integral_weights_status = :not_checked_metadata_only,
             one_body_operator_status = :not_checked_metadata_only,
@@ -1019,6 +1031,13 @@ function _pqs_source_box_route_driver_materialization(
     if route_family == :white_lindsey_low_order
         materialized_report = _white_lindsey_low_order_materialized_seed_report()
         basis_export_status = :supported_basis_only_fixed_block
+        shellization_summary = materialized_report.shellization_summary
+        shellization_summary_available = materialized_report.shellization_summary_available
+        shellization_source = materialized_report.shellization_source
+        route_configured_shellization_consumed =
+            materialized_report.route_configured_shellization_consumed
+        materialized_shellization_stage = materialized_report.materialized_shellization_stage
+        seed_materialization_status = materialized_report.seed_materialization_status
         ham_bundle_adapter = nothing
         if save_ham_artifact
             isnothing(white_lindsey_expansion) && throw(
@@ -1060,6 +1079,11 @@ function _pqs_source_box_route_driver_materialization(
                     route_kind = report.recipe_metadata.route_kind,
                     benchmark_role = report.recipe_metadata.benchmark_role,
                     materialized_report_kind = materialized_report.object_kind,
+                    shellization_summary_available,
+                    shellization_source,
+                    route_configured_shellization_consumed,
+                    materialized_shellization_stage,
+                    seed_materialization_status,
                     export_status = :basis_only,
                     basis_export_status,
                     ham_preflight_status = ham_preflight.status,
@@ -1088,6 +1112,11 @@ function _pqs_source_box_route_driver_materialization(
                     route_kind = report.recipe_metadata.route_kind,
                     benchmark_role = report.recipe_metadata.benchmark_role,
                     materialized_report_kind = materialized_report.object_kind,
+                    shellization_summary_available,
+                    shellization_source,
+                    route_configured_shellization_consumed,
+                    materialized_shellization_stage,
+                    seed_materialization_status,
                     export_status = :basis_and_ham,
                     basis_export_status,
                     ham_preflight_status = ham_preflight.status,
@@ -1116,6 +1145,12 @@ function _pqs_source_box_route_driver_materialization(
             status = :materialized_seed_report_available,
             materialized_report,
             materialized_report_kind = materialized_report.object_kind,
+            shellization_summary,
+            shellization_summary_available,
+            shellization_source,
+            route_configured_shellization_consumed,
+            materialized_shellization_stage,
+            seed_materialization_status,
             retained_dimension = materialized_report.retained_dimension,
             final_integral_weights_status =
                 materialized_report.inventory.retained_basis_integral_weights_ready ?
@@ -1156,6 +1191,12 @@ function _pqs_source_box_route_driver_materialization(
         status = :pending_source_box_retained_route,
         materialized_report = nothing,
         materialized_report_kind = nothing,
+        shellization_summary = nothing,
+        shellization_summary_available = false,
+        shellization_source = :pending_source_box_route_shellization,
+        route_configured_shellization_consumed = false,
+        materialized_shellization_stage = :pending_source_box_retained_route,
+        seed_materialization_status = :not_applicable,
         retained_dimension = report.retained_dimension,
         final_integral_weights_status = :pending_final_ida_weights,
         one_body_operator_status = :pending_source_box_retained_blocks,

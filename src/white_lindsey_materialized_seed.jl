@@ -128,6 +128,12 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
         parent_side_count = parent_side_count,
         nside = nside,
     )
+    shellization_summary = _cartesian_shellization_route_summary(
+        sequence;
+        route_family = :white_lindsey_low_order,
+        source_kind = :white_lindsey_one_center_seed,
+        shellization_role = :seed_one_center_full_parent_shellization,
+    )
     inventory = _white_lindsey_low_order_materialized_seed_inventory(
         sequence,
         fixed_block,
@@ -142,6 +148,7 @@ function _white_lindsey_low_order_materialized_seed_fixture(;
         sequence,
         fixed_block,
         structure,
+        shellization_summary,
         inventory,
     )
 end
@@ -465,6 +472,7 @@ function _white_lindsey_low_order_materialized_seed_report(; kwargs...)
     operator_inventory = _white_lindsey_low_order_materialized_seed_operator_inventory(fixture)
     operator_pairs_materialized =
         route_units.operator_pairs_materialized || operator_inventory.operator_pairs_materialized
+    shellization_summary = fixture.shellization_summary
 
     return (;
         object_kind = :white_lindsey_low_order_materialized_seed_report,
@@ -475,6 +483,12 @@ function _white_lindsey_low_order_materialized_seed_report(; kwargs...)
         inventory,
         route_units,
         operator_inventory,
+        shellization_summary,
+        shellization_summary_available = true,
+        shellization_source = :white_lindsey_one_center_seed,
+        route_configured_shellization_consumed = false,
+        materialized_shellization_stage = shellization_summary.shellization_stage,
+        seed_materialization_status = :seed_based_private_materialization,
         packet_kernel = fixture.packet_kernel,
         retained_dimension = route_units.retained_dimension,
         operator_pairs_materialized,
