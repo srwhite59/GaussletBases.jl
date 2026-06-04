@@ -3,7 +3,10 @@ using Test
 using GaussletBases
 
 @testset "White-Lindsey materialized complete-shell seed fixture" begin
-    fixture = GaussletBases._white_lindsey_low_order_materialized_seed_fixture()
+    density_expansion = coulomb_gaussian_expansion(doacc = false)
+    fixture = GaussletBases._white_lindsey_low_order_materialized_seed_fixture(
+        expansion = density_expansion,
+    )
     sequence = fixture.sequence
     fixed_block = fixture.fixed_block
     structure = fixture.structure
@@ -221,6 +224,7 @@ using GaussletBases
 
     support_fixture =
         GaussletBases._white_lindsey_low_order_materialized_seed_fixture(
+            expansion = density_expansion,
             packet_kernel = :support_reference,
         )
     support_inventory = support_fixture.inventory
@@ -263,6 +267,43 @@ using GaussletBases
     @test support_report.operator_inventory.terms == support_operator_inventory.terms
     @test !support_report.operator_pairs_materialized
     @test !support_report.electron_electron_materialized
+
+    @test !isnothing(fixed_block.pair_sum)
+    @test !isnothing(support_fixture.fixed_block.pair_sum)
+    direct_interaction =
+        GaussletBases._qwrg_fixed_block_interaction_matrix(fixed_block, density_expansion)
+    support_interaction = GaussletBases._qwrg_fixed_block_interaction_matrix(
+        support_fixture.fixed_block,
+        density_expansion,
+    )
+    @test size(direct_interaction) == (total_retained_dimension, total_retained_dimension)
+    @test size(support_interaction) == size(direct_interaction)
+    @test size(fixed_block.coefficient_matrix, 2) == size(direct_interaction, 1)
+    @test size(support_fixture.fixed_block.coefficient_matrix, 2) ==
+          size(support_interaction, 1)
+    @test length(fixed_block.weights) == size(direct_interaction, 1)
+    @test length(support_fixture.fixed_block.weights) == size(support_interaction, 1)
+    @test all(isfinite, fixed_block.weights)
+    @test all(isfinite, support_fixture.fixed_block.weights)
+    @test minimum(fixed_block.weights) > 0.0
+    @test minimum(support_fixture.fixed_block.weights) > 0.0
+    @test all(isfinite, direct_interaction)
+    @test all(isfinite, support_interaction)
+    direct_interaction_symmetry_error = norm(
+        direct_interaction - transpose(direct_interaction),
+        Inf,
+    )
+    support_interaction_symmetry_error = norm(
+        support_interaction - transpose(support_interaction),
+        Inf,
+    )
+    @test direct_interaction_symmetry_error <= 1.0e-12
+    @test support_interaction_symmetry_error <= 1.0e-12
+    density_interaction_comparison_error = norm(
+        direct_interaction - support_interaction,
+        Inf,
+    )
+    @test density_interaction_comparison_error <= 1.0e-10
 
     direct_matrices =
         GaussletBases._white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
