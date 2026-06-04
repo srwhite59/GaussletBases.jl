@@ -553,6 +553,31 @@ function _pqs_source_box_route_driver_pair_inventory(
     return (; pair_entries, pair_family_counts)
 end
 
+function _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts)
+    retained_units = route_facts.retained_units
+    pair_entries = route_facts.pair_entries
+    retained_counts = route_facts.retained_counts
+    retained_ranges = route_facts.ranges
+    return (;
+        unit_count = length(retained_units),
+        unit_keys = Tuple(unit.unit_key for unit in retained_units),
+        retained_unit_kinds = Tuple(unit.retained_unit_kind for unit in retained_units),
+        source_families = Tuple(unit.source_family for unit in retained_units),
+        source_dimensions = route_facts.source_dimensions,
+        retained_counts = retained_counts,
+        retained_dimension = route_facts.retained_dimension,
+        retained_counts_materialized =
+            all(!isnothing(getproperty(retained_counts, key)) for key in keys(retained_counts)),
+        retained_ranges_materialized =
+            all(!isnothing(getproperty(retained_ranges, key)) for key in keys(retained_ranges)),
+        pair_count = length(pair_entries),
+        pair_family_counts = route_facts.pair_family_counts,
+        pair_families = Tuple(unique(entry.pair_family for entry in pair_entries)),
+        output_representations =
+            Tuple(unique(entry.output_representation for entry in pair_entries)),
+    )
+end
+
 function _pqs_source_box_route_driver_route_facts(route_skeleton)
     unit_inventory =
         _pqs_source_box_route_driver_unit_inventory(route_skeleton.retained_units)
@@ -829,6 +854,8 @@ function _pqs_source_box_route_driver_report(
         pair_entries = route_facts.pair_entries,
         pair_family_counts = route_facts.pair_family_counts,
         helper_by_pair_family = route_facts.helper_by_pair_family,
+        standard_unit_inventory =
+            _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts),
         linear_algebra_plan = contract.linear_algebra_plan,
         stage_table = contract.stage_table,
         dry_run_validation = contract.dry_run_validation,

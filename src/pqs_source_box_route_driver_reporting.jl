@@ -143,6 +143,8 @@ function _pqs_source_box_route_driver_print_details(report)
 
     _pqs_route_driver_print_named_tuple("parent_description", report.parent_description)
     _pqs_route_driver_print_named_tuple("source_boxes", report.source_boxes)
+    _pqs_route_driver_print_named_tuple(
+        "standard_unit_inventory", report.standard_unit_inventory)
 
     _pqs_route_driver_print_section("retained_units")
     for unit in report.retained_units
@@ -224,6 +226,8 @@ function _pqs_source_box_route_driver_save(
                     report.raw_product_box_probe.diagnostics,
                 )
             end
+            _pqs_route_driver_write_named_tuple_tsv(
+                io, "standard_unit_inventory", report.standard_unit_inventory)
             for unit in report.retained_units
                 _pqs_route_driver_write_tsv_row(io, "retained_unit", unit.unit_key, unit)
             end
