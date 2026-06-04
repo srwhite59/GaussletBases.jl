@@ -2795,6 +2795,10 @@ function _pqs_source_box_route_driver_materialization(
             materialize_route_requested = false,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
+            route_configured_diatomic_ham_interaction_treatment_requested = nothing,
+            route_configured_diatomic_ham_interaction_treatment_consumed = nothing,
+            route_configured_diatomic_ham_interaction_treatment_status =
+                :not_applicable,
             status = :not_requested_metadata_only,
             materialized_report = nothing,
             materialized_report_kind = nothing,
@@ -3456,6 +3460,10 @@ function _pqs_source_box_route_driver_materialization(
             materialize_route_requested = true,
             save_basis_artifact_requested = save_basis_artifact,
             save_ham_artifact_requested = save_ham_artifact,
+            route_configured_diatomic_ham_interaction_treatment_requested = nothing,
+            route_configured_diatomic_ham_interaction_treatment_consumed = nothing,
+            route_configured_diatomic_ham_interaction_treatment_status =
+                :not_applicable,
             status =
                 use_route_configured_one_center_report ?
                 :materialized_route_configured_one_center_report_available :
@@ -3542,6 +3550,9 @@ function _pqs_source_box_route_driver_materialization(
         materialize_route_requested = true,
         save_basis_artifact_requested = save_basis_artifact,
         save_ham_artifact_requested = save_ham_artifact,
+        route_configured_diatomic_ham_interaction_treatment_requested = nothing,
+        route_configured_diatomic_ham_interaction_treatment_consumed = nothing,
+        route_configured_diatomic_ham_interaction_treatment_status = :not_applicable,
         status = :pending_source_box_retained_route,
         materialized_report = nothing,
         materialized_report_kind = nothing,

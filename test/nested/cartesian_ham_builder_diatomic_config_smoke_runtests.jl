@@ -248,8 +248,29 @@ end
             tsv,
         )
         @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_requested\t:ggt_nearest",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_consumed\t:ggt_nearest",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_status\t:available_route_configured_diatomic_ham_interaction_treatment",
+            tsv,
+        )
+        @test occursin(
             "route_materialization\tham_artifact_status\t:written_route_configured_diatomic_ham_bundle",
             tsv,
+        )
+        stdout = read(stdoutfile, String)
+        @test occursin(
+            "route_configured_diatomic_ham_interaction_treatment_requested",
+            stdout,
+        )
+        @test occursin(
+            "available_route_configured_diatomic_ham_interaction_treatment",
+            stdout,
         )
     end
 
@@ -386,5 +407,28 @@ end
             @test String(file["meta/companion_ham_export_blocker"]) ==
                   "pending_route_configured_diatomic_mwg_operator_support"
         end
+        tsv = read(tsvfile, String)
+        @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_requested\t:mwg",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_consumed\tnothing",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_diatomic_ham_interaction_treatment_status\t:pending_route_configured_diatomic_mwg_operator_support",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\tham_export_blocker\t:pending_route_configured_diatomic_mwg_operator_support",
+            tsv,
+        )
+        stdout = read(stdoutfile, String)
+        @test occursin(
+            "route_configured_diatomic_ham_interaction_treatment_requested",
+            stdout,
+        )
+        @test occursin("pending_route_configured_diatomic_mwg_operator_support", stdout)
     end
 end
