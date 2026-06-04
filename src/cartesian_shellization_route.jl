@@ -172,10 +172,74 @@ function _cartesian_shellization_route_system_classification(system_metadata)
     )
 end
 
+function _cartesian_shellization_route_parent_contract(report)
+    return hasproperty(report, :parent_contract) ? report.parent_contract : nothing
+end
+
+function _cartesian_shellization_route_report_classification(report, system_metadata)
+    parent_contract = _cartesian_shellization_route_parent_contract(report)
+    if !isnothing(parent_contract)
+        return (
+            system_classification = parent_contract.system_classification,
+            system_classification_status =
+                parent_contract.system_classification_status,
+            bond_axis = parent_contract.bond_axis,
+            chain_axis = parent_contract.chain_axis,
+            classification_source = :parent_contract,
+            parent_contract_available = true,
+            parent_contract_status = parent_contract.status,
+            parent_basis_materialization_status =
+                parent_contract.parent_basis_materialization_status,
+        )
+    end
+
+    classification = _cartesian_shellization_route_system_classification(system_metadata)
+    return (
+        system_classification = classification.system_classification,
+        system_classification_status = classification.system_classification_status,
+        bond_axis = classification.bond_axis,
+        chain_axis = nothing,
+        classification_source = :system_metadata_fallback,
+        parent_contract_available = false,
+        parent_contract_status = :not_available_legacy_report,
+        parent_basis_materialization_status = :not_available_legacy_report,
+    )
+end
+
 function _cartesian_shellization_route_configured_request(report)
     system_metadata = report.system_metadata
     recipe_metadata = report.recipe_metadata
-    classification = _cartesian_shellization_route_system_classification(system_metadata)
+    parent_contract = _cartesian_shellization_route_parent_contract(report)
+    classification =
+        _cartesian_shellization_route_report_classification(report, system_metadata)
+    atom_count =
+        isnothing(parent_contract) ?
+        length(system_metadata.atom_symbols) :
+        parent_contract.atom_count
+    atom_symbols =
+        isnothing(parent_contract) ?
+        Tuple(system_metadata.atom_symbols) :
+        parent_contract.atom_symbols
+    atom_locations =
+        isnothing(parent_contract) ?
+        Tuple(system_metadata.atom_locations) :
+        parent_contract.atom_locations
+    nuclear_charges =
+        isnothing(parent_contract) ?
+        Tuple(system_metadata.nuclear_charges) :
+        parent_contract.nuclear_charges
+    parent_axis_counts =
+        isnothing(parent_contract) ?
+        system_metadata.parent_axis_counts :
+        parent_contract.parent_axis_counts
+    parent_axis_counts_source =
+        isnothing(parent_contract) ?
+        system_metadata.parent_axis_counts_source :
+        parent_contract.parent_axis_counts_source
+    parent_box =
+        isnothing(parent_contract) ?
+        system_metadata.parent_box :
+        parent_contract.parent_box
     current_materialization_source =
         report.route_family == :white_lindsey_low_order ?
         :white_lindsey_one_center_seed :
@@ -188,13 +252,13 @@ function _cartesian_shellization_route_configured_request(report)
         route_family = report.route_family,
         route_kind = recipe_metadata.route_kind,
         route_shape = recipe_metadata.route_shape,
-        atom_count = length(system_metadata.atom_symbols),
-        atom_symbols = Tuple(system_metadata.atom_symbols),
-        atom_locations = Tuple(system_metadata.atom_locations),
-        nuclear_charges = Tuple(system_metadata.nuclear_charges),
-        parent_axis_counts = system_metadata.parent_axis_counts,
-        parent_axis_counts_source = system_metadata.parent_axis_counts_source,
-        parent_box = system_metadata.parent_box,
+        atom_count,
+        atom_symbols,
+        atom_locations,
+        nuclear_charges,
+        parent_axis_counts,
+        parent_axis_counts_source,
+        parent_box,
         requested_shellization_stage = :route_neutral_spatial_planning,
         expected_next_materializer_status =
             :pending_route_configured_shellization_materializer,
@@ -206,6 +270,12 @@ function _cartesian_shellization_route_configured_request(report)
         system_classification = classification.system_classification,
         system_classification_status = classification.system_classification_status,
         bond_axis = classification.bond_axis,
+        chain_axis = classification.chain_axis,
+        classification_source = classification.classification_source,
+        parent_contract_available = classification.parent_contract_available,
+        parent_contract_status = classification.parent_contract_status,
+        parent_basis_materialization_status =
+            classification.parent_basis_materialization_status,
     )
 end
 

@@ -17,18 +17,51 @@ const _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
     :pair_families,
     :output_representations,
 )
+const _ROUTE_DRIVER_PARENT_CONTRACT_KEYS = (
+    :object_kind,
+    :status,
+    :atom_count,
+    :center_count,
+    :atom_symbols,
+    :nuclear_charges,
+    :atom_locations,
+    :center_table,
+    :center_axis_metadata,
+    :system_classification,
+    :system_classification_status,
+    :bond_axis,
+    :chain_axis,
+    :parent_axis_counts,
+    :parent_axis_counts_source,
+    :parent_axis_counts_status,
+    :parent_box,
+    :parent_box_rule,
+    :parent_basis_materialization_status,
+    :parent_basis_materialization,
+    :parent_basis_materialized,
+    :parent_axis_metadata_constructed,
+    :axis_bundle_materialized,
+    :diagnostics,
+)
 const _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND = :be2_cartesian_nesting_route_driver_spine
 
-function _pqs_route_driver_report_for_test(; route_family = :pqs_source_box)
+function _pqs_route_driver_report_for_test(;
+    route_family = :pqs_source_box,
+    route_kind = _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND,
+    atom_symbols = ("Be", "Be"),
+    nuclear_charges = (4, 4),
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+    parent_axis_counts = (x = 9, y = 7, z = 9),
+)
     return GaussletBases._pqs_source_box_route_driver_dry_run(
         ;
         route_family,
-        route_kind = _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND,
-        atom_symbols = ("Be", "Be"),
-        nuclear_charges = (4, 4),
-        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        route_kind,
+        atom_symbols,
+        nuclear_charges,
+        atom_locations,
         radius = 15.0,
-        parent_axis_counts = (x = 9, y = 7, z = 9),
+        parent_axis_counts,
         map_backend = :pgdg_localized_experimental,
         q = 5,
         n_s = 5,
@@ -58,6 +91,18 @@ function _pqs_route_driver_report_for_test(; route_family = :pqs_source_box)
         pair_factor_normalization = :density_normalized,
         support_dense_direct_allowed = false,
         reference_only_authorities = (:support_row_oracle, :dense_parent_projection),
+    )
+end
+
+function _pqs_route_driver_one_center_report_for_test()
+    return _pqs_route_driver_report_for_test(
+        ;
+        route_family = :white_lindsey_low_order,
+        route_kind = :one_center_parent_contract_report_probe,
+        atom_symbols = ("Be",),
+        nuclear_charges = (4,),
+        atom_locations = ((0.0, 0.0, 0.0),),
+        parent_axis_counts = (x = 7, y = 7, z = 7),
     )
 end
 
@@ -119,6 +164,46 @@ function _pqs_route_driver_check_standard_unit_inventory(
     return nothing
 end
 
+function _pqs_route_driver_check_parent_contract(
+    report;
+    atom_count,
+    system_classification,
+    system_classification_status,
+    bond_axis,
+    chain_axis,
+)
+    @test hasproperty(report, :parent_contract)
+    parent_contract = report.parent_contract
+    @test Tuple(keys(parent_contract)) == _ROUTE_DRIVER_PARENT_CONTRACT_KEYS
+    @test parent_contract.object_kind == :cartesian_route_parent_contract
+    @test parent_contract.atom_count == atom_count
+    @test parent_contract.center_count == atom_count
+    @test parent_contract.system_classification == system_classification
+    @test parent_contract.system_classification_status == system_classification_status
+    @test parent_contract.bond_axis == bond_axis
+    @test parent_contract.chain_axis == chain_axis
+    @test parent_contract.parent_axis_counts == report.system_metadata.parent_axis_counts
+    @test parent_contract.parent_axis_counts_source ==
+          report.system_metadata.parent_axis_counts_source
+    @test parent_contract.parent_box == report.system_metadata.parent_box
+    @test parent_contract.parent_basis_materialization_status ==
+          :metadata_only_not_materialized
+    @test !parent_contract.parent_basis_materialized
+    @test !parent_contract.axis_bundle_materialized
+    @test parent_contract.diagnostics.parent_contract_driven_downstream_metadata
+    @test parent_contract.diagnostics.public_default_behavior_changed == false
+
+    @test report.parent_description.parent_contract_status == parent_contract.status
+    @test report.parent_description.system_classification == system_classification
+    @test report.parent_description.system_classification_status ==
+          system_classification_status
+    @test report.parent_description.bond_axis == bond_axis
+    @test report.parent_description.chain_axis == chain_axis
+    @test report.parent_description.parent_basis_materialization_status ==
+          parent_contract.parent_basis_materialization_status
+    return nothing
+end
+
 function _pqs_route_driver_check_report_output_sections(report)
     tmpdir = mktempdir()
     try
@@ -130,6 +215,7 @@ function _pqs_route_driver_check_report_output_sections(report)
         end
         text = read(textfile, String)
         @test occursin("[standard_unit_inventory]", text)
+        @test occursin("[parent_contract]", text)
         @test occursin("[retained_units]", text)
         @test occursin("[pair_inventory]", text)
 
@@ -167,6 +253,8 @@ function _pqs_route_driver_check_report_output_sections(report)
             end
         end
         tsv = read(tsvfile, String)
+        @test occursin("parent_contract\tsystem_classification", tsv)
+        @test occursin("parent_contract\tparent_basis_materialization_status", tsv)
         @test occursin("standard_unit_inventory\tunit_count", tsv)
         @test occursin("retained_unit\t", tsv)
         @test occursin("pair_entry\t", tsv)
@@ -233,6 +321,11 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test request.system_classification_status ==
           materialization.route_configured_system_classification_status
     @test request.bond_axis == materialization.route_configured_bond_axis
+    @test request.classification_source == :parent_contract
+    @test request.parent_contract_available
+    @test request.parent_contract_status == :available
+    @test request.parent_basis_materialization_status ==
+          :metadata_only_not_materialized
     @test request.requested_shellization_stage == :route_neutral_spatial_planning
     @test request.expected_next_materializer_status ==
           :pending_route_configured_shellization_materializer
@@ -462,6 +555,8 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
         )
     @test one_center_probe.status == :not_requested_metadata_only
     @test one_center_probe.route_configured_system_classification == :one_center
+    @test one_center_probe.route_configured_shellization_request.classification_source ==
+          :system_metadata_fallback
     @test one_center_probe.route_configured_one_center_materializer_probe_requested
     @test one_center_probe.route_configured_one_center_materializer_probe_status ==
           :materialized_route_configured_one_center_low_order
@@ -1038,6 +1133,15 @@ end
 
 @testset "Route-driver standard unit inventory report" begin
     pqs_report = _pqs_route_driver_report_for_test()
+    _pqs_route_driver_check_parent_contract(
+        pqs_report;
+        atom_count = 2,
+        system_classification = :bond_aligned_diatomic,
+        system_classification_status =
+            :explicit_two_atom_single_axis_separation,
+        bond_axis = :x,
+        chain_axis = :x,
+    )
     _pqs_route_driver_check_standard_unit_inventory(
         pqs_report;
         retained_dimension = 221,
@@ -1054,6 +1158,15 @@ end
 
     white_lindsey_report =
         _pqs_route_driver_report_for_test(route_family = :white_lindsey_low_order)
+    _pqs_route_driver_check_parent_contract(
+        white_lindsey_report;
+        atom_count = 2,
+        system_classification = :bond_aligned_diatomic,
+        system_classification_status =
+            :explicit_two_atom_single_axis_separation,
+        bond_axis = :x,
+        chain_axis = :x,
+    )
     _pqs_route_driver_check_standard_unit_inventory(
         white_lindsey_report;
         retained_dimension = nothing,
@@ -1072,6 +1185,20 @@ end
         output_representations = (:low_order_nested_cartesian_basis,),
     )
     _pqs_route_driver_check_report_output_sections(white_lindsey_report)
+    one_center_report = _pqs_route_driver_one_center_report_for_test()
+    _pqs_route_driver_check_parent_contract(
+        one_center_report;
+        atom_count = 1,
+        system_classification = :one_center,
+        system_classification_status = :explicit_atom_count_one,
+        bond_axis = nothing,
+        chain_axis = nothing,
+    )
+    one_center_request =
+        GaussletBases._cartesian_shellization_route_configured_request(one_center_report)
+    @test one_center_request.system_classification ==
+          one_center_report.parent_contract.system_classification
+    @test one_center_request.classification_source == :parent_contract
     _pqs_route_driver_check_white_lindsey_ham_preflight()
     _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
     _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_report)

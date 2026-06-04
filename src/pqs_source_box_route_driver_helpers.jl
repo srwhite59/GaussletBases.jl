@@ -420,6 +420,45 @@ end
 
 # Metadata and parent description.
 
+function _pqs_source_box_route_driver_parent_contract(parent)
+    return (;
+        object_kind = :cartesian_route_parent_contract,
+        status = parent.status,
+        atom_count = parent.atom_count,
+        center_count = parent.center_count,
+        atom_symbols = parent.atom_symbols,
+        nuclear_charges = parent.nuclear_charges,
+        atom_locations = parent.atom_locations,
+        center_table = parent.center_table,
+        center_axis_metadata = parent.center_axis_metadata,
+        system_classification = parent.system_classification,
+        system_classification_status = parent.system_classification_status,
+        bond_axis = parent.bond_axis,
+        chain_axis = parent.chain_axis,
+        parent_axis_counts = parent.axis_counts,
+        parent_axis_counts_source = parent.axis_counts_source,
+        parent_axis_counts_status = parent.axis_counts_status,
+        parent_box = parent.physical_box,
+        parent_box_rule = parent.physical_box_rule,
+        parent_basis_materialization_status =
+            parent.parent_basis_materialization_status,
+        parent_basis_materialization = parent.parent_basis_materialization,
+        parent_basis_materialized = parent.parent_basis_materialized,
+        parent_axis_metadata_constructed =
+            parent.parent_axis_metadata_constructed,
+        axis_bundle_materialized = parent.axis_bundle_materialized,
+        diagnostics = (
+            source = :cartesian_parent,
+            private_development_only = true,
+            report_parent_contract = true,
+            parent_contract_driven_downstream_metadata = true,
+            parent_basis_materialized = parent.parent_basis_materialized,
+            axis_bundle_materialized = parent.axis_bundle_materialized,
+            public_default_behavior_changed = false,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_recipe_metadata(
     standard_setup,
     route_axis_counts,
@@ -493,6 +532,7 @@ function _pqs_source_box_route_driver_parent_description(
     standard_setup,
     parent_axis,
     route_axis_counts,
+    parent_contract,
     route_skeleton,
     raw_box,
 )
@@ -504,6 +544,18 @@ function _pqs_source_box_route_driver_parent_description(
         parent_axis_readiness = parent_axis.parent_axis_readiness,
         parent_axis_probe = parent_axis.parent_axis_probe,
         route_axis_counts,
+        parent_contract_status = parent_contract.status,
+        parent_contract_object_kind = parent_contract.object_kind,
+        center_count = parent_contract.center_count,
+        system_classification = parent_contract.system_classification,
+        system_classification_status =
+            parent_contract.system_classification_status,
+        bond_axis = parent_contract.bond_axis,
+        chain_axis = parent_contract.chain_axis,
+        parent_basis_materialization_status =
+            parent_contract.parent_basis_materialization_status,
+        parent_basis_materialized = parent_contract.parent_basis_materialized,
+        axis_bundle_materialized = parent_contract.axis_bundle_materialized,
         raw_product_box_probe = raw_box.raw_product_box_probe,
         physical_parent_box = standard_setup.parent_box,
         physical_parent_box_rule = standard_setup.parent_box_rule,
@@ -954,6 +1006,7 @@ function _pqs_source_box_route_driver_report(
     raw_box,
     system_metadata,
     recipe_metadata,
+    parent_contract,
     parent_description,
     route_skeleton,
     route_facts,
@@ -971,6 +1024,7 @@ function _pqs_source_box_route_driver_report(
         raw_product_box_probe = raw_box.raw_product_box_probe,
         system_metadata,
         recipe_metadata,
+        parent_contract,
         parent_description,
         route_skeleton,
         route_shape = route_skeleton.route_shape,
@@ -1867,9 +1921,11 @@ function cartesian_report(system, parent, assembly, recipe)
         _pqs_source_box_route_driver_recipe_metadata(
             standard_setup, route_axis_counts, parent_axis, raw_box,
             assembly.spacing_inputs, probe_inputs, recipe)
+    parent_contract = _pqs_source_box_route_driver_parent_contract(parent)
     parent_description =
         _pqs_source_box_route_driver_parent_description(
-            standard_setup, parent_axis, route_axis_counts, route_skeleton, raw_box)
+            standard_setup, parent_axis, route_axis_counts, parent_contract,
+            route_skeleton, raw_box)
     diagnostics =
         _pqs_source_box_route_driver_diagnostics(
             standard_setup, parent_axis, route_axis_counts,
@@ -1877,7 +1933,7 @@ function cartesian_report(system, parent, assembly, recipe)
 
     return _pqs_source_box_route_driver_report(
         standard_setup, parent_axis, route_axis_counts, raw_box,
-        system_metadata, recipe_metadata, parent_description,
+        system_metadata, recipe_metadata, parent_contract, parent_description,
         route_skeleton, route_facts, contract, diagnostics)
 end
 

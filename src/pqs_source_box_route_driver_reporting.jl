@@ -141,6 +141,7 @@ function _pqs_source_box_route_driver_print_details(report)
         end
     end
 
+    _pqs_route_driver_print_named_tuple("parent_contract", report.parent_contract)
     _pqs_route_driver_print_named_tuple("parent_description", report.parent_description)
     _pqs_route_driver_print_named_tuple("source_boxes", report.source_boxes)
     _pqs_route_driver_print_named_tuple(
@@ -280,6 +281,8 @@ function _pqs_source_box_route_driver_save(
             println(io, "section\tkey\tvalue")
             _pqs_route_driver_write_named_tuple_tsv(io, "system_metadata", report.system_metadata)
             _pqs_route_driver_write_named_tuple_tsv(io, "recipe_metadata", report.recipe_metadata)
+            _pqs_route_driver_write_named_tuple_tsv(
+                io, "parent_contract", report.parent_contract)
             _pqs_route_driver_write_named_tuple_tsv(
                 io, "standard_setup_diagnostics", report.standard_setup.diagnostics,
             )
