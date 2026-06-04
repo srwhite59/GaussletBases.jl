@@ -1239,8 +1239,9 @@ end
         chain_axis = nothing,
         parent_materialization_planning_family = :one_center_parent_lattice,
         constructs_basis_now = true,
+        constructs_axis_bundle_now = true,
         parent_basis_materialization_status =
-            :parent_basis_object_available_axis_bundle_pending,
+            :materialized_parent_objects_available,
     )
     one_center_request =
         GaussletBases._cartesian_shellization_route_configured_request(one_center_report)

@@ -295,24 +295,26 @@ end
     @test one_center.parent_materialization_plan.object_kind ==
           :cartesian_parent_materialization_plan
     @test one_center.parent_materialization_plan_status ==
-          :one_center_parent_basis_carried_axis_bundle_pending
+          :materialized_parent_objects_available
     @test one_center.parent_materialization_planning_family ==
           :one_center_parent_lattice
-    @test one_center.parent_materialization_blocker ==
-          :pending_one_center_axis_bundle_builder
+    @test one_center.parent_materialization_blocker === nothing
     @test one_center.parent_materialization_plan.one_center_compatible
     @test one_center.parent_materialization_plan.constructs_basis_now
-    @test !one_center.parent_materialization_plan.constructs_axis_bundle_now
+    @test one_center.parent_materialization_plan.constructs_axis_bundle_now
     @test one_center.parent_basis_object_available
     @test !one_center.parent_qw_basis_object_available
-    @test !one_center.parent_axis_bundle_object_available
+    @test one_center.parent_axis_bundle_object_available
     @test one_center.parent_basis_object !== nothing
     @test one_center.parent_qw_basis_object === nothing
-    @test one_center.parent_axis_bundle_object === nothing
+    @test one_center.parent_axis_bundle_object !== nothing
+    @test one_center.parent_object_carry.parent_axis_bundle_object_source ==
+          :one_center_mapped_ordinary_axis_bundles
     @test one_center.parent_basis_object_type_label ==
           "CartesianParentGaussletBasis3D"
     @test one_center.parent_qw_basis_object_type_label == "unavailable"
-    @test one_center.parent_axis_bundle_object_type_label == "unavailable"
+    @test one_center.parent_axis_bundle_object_type_label ==
+          "_CartesianNestedAxisBundles3D"
     @test GaussletBases.CartesianParentGaussletBases.parent_axis_counts(
         one_center.parent_basis_object,
     ) == (7, 7, 7)
@@ -320,6 +322,10 @@ end
         one_center_rectangular.parent_basis_object,
     ) == (7, 5, 9)
     @test one_center_rectangular.parent_basis_object.axis_sharing == :separate_axes
+    @test one_center_rectangular.parent_axis_bundle_object_available
+    @test GaussletBases._nested_axis_lengths(
+        one_center_rectangular.parent_axis_bundle_object,
+    ) == (7, 5, 9)
 
     @test one_center_shifted.parent_materialization_plan_status ==
           :metadata_only_pending_one_center_parent_axis_builder
@@ -400,7 +406,7 @@ end
     @test non_axis_aligned.parent_materialization_plan.blocked
 
     @test one_center.parent_basis_materialization_status ==
-          :parent_basis_object_available_axis_bundle_pending
+          :materialized_parent_objects_available
     @test one_center_shifted.parent_basis_materialization_status ==
           :metadata_only_not_materialized
     @test be2.parent_basis_materialization_status ==
@@ -420,7 +426,7 @@ end
     @test !chain.parent_basis_materialized
     @test !heteronuclear_chain.parent_basis_materialized
     @test !non_axis_aligned.parent_basis_materialized
-    @test !one_center.axis_bundle_materialized
+    @test one_center.axis_bundle_materialized
     @test !one_center_shifted.axis_bundle_materialized
     @test !be2.axis_bundle_materialized
     @test probed_be2.axis_bundle_materialized
