@@ -52,6 +52,11 @@ function _pqs_route_driver_parent_source_box(counts)
     return (x = 1:counts.x, y = 1:counts.y, z = 1:counts.z)
 end
 
+function _pqs_route_driver_type_label(object)
+    isnothing(object) && return "unavailable"
+    return string(nameof(typeof(object)))
+end
+
 
 # Input checks and standard setup.
 
@@ -184,32 +189,84 @@ function _cartesian_parent_system_classification(center_table, axis_metadata)
     )
 end
 
-function _cartesian_parent_materialization_status(parent_axis)
+function _cartesian_parent_object_carry(parent_axis)
+    parent_axis_probe = parent_axis.parent_axis_probe
+    qw_basis_object =
+        !isnothing(parent_axis_probe) &&
+        hasproperty(parent_axis_probe, :basis_object) ?
+        parent_axis_probe.basis_object :
+        nothing
+    axis_bundle_object =
+        !isnothing(parent_axis_probe) &&
+        hasproperty(parent_axis_probe, :axis_bundle_object) ?
+        parent_axis_probe.axis_bundle_object :
+        nothing
+    parent_basis_object =
+        isnothing(qw_basis_object) ?
+        nothing :
+        CartesianParentGaussletBases.cartesian_parent_gausslet_basis(qw_basis_object)
+
+    return (;
+        object_kind = :cartesian_parent_object_carry,
+        status =
+            !isnothing(parent_basis_object) && !isnothing(axis_bundle_object) ?
+            :materialized_parent_objects_available :
+            :not_materialized,
+        parent_basis_object,
+        parent_qw_basis_object = qw_basis_object,
+        parent_axis_bundle_object = axis_bundle_object,
+        parent_basis_object_available = !isnothing(parent_basis_object),
+        parent_qw_basis_object_available = !isnothing(qw_basis_object),
+        parent_axis_bundle_object_available = !isnothing(axis_bundle_object),
+        parent_basis_object_type_label = _pqs_route_driver_type_label(parent_basis_object),
+        parent_qw_basis_object_type_label = _pqs_route_driver_type_label(qw_basis_object),
+        parent_axis_bundle_object_type_label =
+            _pqs_route_driver_type_label(axis_bundle_object),
+        parent_axis_counts =
+            isnothing(parent_basis_object) ?
+            nothing :
+            CartesianParentGaussletBases.parent_axis_counts(parent_basis_object),
+        object_carry_scope = :transient_cartesian_parent_only,
+        report_must_sanitize = true,
+    )
+end
+
+function _cartesian_parent_materialization_status(parent_axis, object_carry)
     parent_axis_probe = parent_axis.parent_axis_probe
     parent_axis_metadata_constructed = parent_axis.parent_axis_probe_constructed
     axis_bundle_status =
         isnothing(parent_axis_probe) ?
         :not_requested :
         parent_axis_probe.axis_bundle_metadata.status
+    parent_basis_object_available = object_carry.parent_basis_object_available
+    axis_bundle_object_available = object_carry.parent_axis_bundle_object_available
 
     return (
         object_kind = :cartesian_parent_materialization_status,
         status =
+            parent_basis_object_available && axis_bundle_object_available ?
+            :materialized_parent_objects_available :
             parent_axis_metadata_constructed ?
             :metadata_constructed_probe_only :
             :metadata_only_not_materialized,
         parent_axis_metadata_constructed,
-        parent_basis_materialized = false,
-        parent_basis_object_available = false,
+        parent_basis_materialized = parent_basis_object_available,
+        parent_basis_object_available,
+        parent_basis_object_type_label = object_carry.parent_basis_object_type_label,
         parent_basis_metadata_available =
             !isnothing(parent_axis_probe) && !isnothing(parent_axis_probe.basis_metadata),
-        axis_bundle_materialized = false,
-        axis_bundle_object_available = false,
+        axis_bundle_materialized = axis_bundle_object_available,
+        axis_bundle_object_available,
+        axis_bundle_object_type_label =
+            object_carry.parent_axis_bundle_object_type_label,
         axis_bundle_metadata_status = axis_bundle_status,
         axis_bundle_metadata_available =
             !isnothing(parent_axis_probe) &&
             axis_bundle_status == :constructed,
-        materialization_scope = :metadata_only_parent_contract,
+        materialization_scope =
+            parent_basis_object_available && axis_bundle_object_available ?
+            :transient_parent_objects_carried_report_metadata_only :
+            :metadata_only_parent_contract,
     )
 end
 
@@ -249,6 +306,14 @@ function _cartesian_parent_materialization_plan(
     axis_bundle_metadata_available =
         !isnothing(parent_axis.parent_axis_probe) &&
         parent_axis.parent_axis_probe.axis_bundle_metadata.status == :constructed
+    basis_object_available =
+        !isnothing(parent_axis.parent_axis_probe) &&
+        hasproperty(parent_axis.parent_axis_probe, :basis_object_available) &&
+        parent_axis.parent_axis_probe.basis_object_available
+    axis_bundle_object_available =
+        !isnothing(parent_axis.parent_axis_probe) &&
+        hasproperty(parent_axis.parent_axis_probe, :axis_bundle_object_available) &&
+        parent_axis.parent_axis_probe.axis_bundle_object_available
     available_inputs =
         _cartesian_parent_materialization_plan_available_inputs(
             standard_setup, parent_axis, route_axis_counts)
@@ -284,6 +349,8 @@ function _cartesian_parent_materialization_plan(
             constructs_axis_bundle_now = false,
             basis_metadata_available,
             axis_bundle_metadata_available,
+            basis_object_available,
+            axis_bundle_object_available,
             required_inputs_available = available_inputs,
             available_input_count = length(available_inputs),
             missing_inputs,
@@ -307,7 +374,11 @@ function _cartesian_parent_materialization_plan(
             :bond_aligned_homonuclear_qw_basis :
             :bond_aligned_heteronuclear_qw_basis
         probe_constructed = parent_axis.parent_axis_probe_constructed
+        carried_objects_available =
+            basis_object_available && axis_bundle_object_available
         missing_inputs =
+            carried_objects_available ?
+            () :
             probe_constructed ?
             (:real_parent_basis_object_carry_or_reviewed_materializer_handoff,) :
             (
@@ -318,6 +389,8 @@ function _cartesian_parent_materialization_plan(
         return (;
             object_kind = :cartesian_parent_materialization_plan,
             status =
+                carried_objects_available ?
+                :materialized_parent_objects_available :
                 probe_constructed ?
                 :metadata_probe_available_pending_parent_basis_carry :
                 :metadata_only_diatomic_parent_api_candidate,
@@ -336,25 +409,32 @@ function _cartesian_parent_materialization_plan(
             one_center_compatible = false,
             bond_aligned_diatomic_compatible = true,
             axis_aligned_chain_compatible = false,
-            metadata_only = true,
-            constructs_basis_now = false,
-            constructs_axis_bundle_now = false,
+            metadata_only = !carried_objects_available,
+            constructs_basis_now = carried_objects_available,
+            constructs_axis_bundle_now = carried_objects_available,
             basis_metadata_available,
             axis_bundle_metadata_available,
+            basis_object_available,
+            axis_bundle_object_available,
             required_inputs_available = available_inputs,
             available_input_count = length(available_inputs),
             missing_inputs,
             missing_input_count = length(missing_inputs),
             pending_facts = missing_inputs,
-            blocked = true,
+            blocked = !carried_objects_available,
             blocker =
+                carried_objects_available ?
+                nothing :
                 probe_constructed ?
                 :pending_real_parent_basis_carry :
                 :pending_reviewed_diatomic_parent_materializer,
             diagnostics = (
                 source = :cartesian_parent_materialization_plan,
                 private_development_only = true,
-                materialization_scope = :metadata_only_parent_planning,
+                materialization_scope =
+                    carried_objects_available ?
+                    :transient_parent_objects_available :
+                    :metadata_only_parent_planning,
                 public_default_behavior_changed = false,
                 shellification_restructured = false,
                 hamiltonian_export = false,
@@ -402,6 +482,8 @@ function _cartesian_parent_materialization_plan(
             constructs_axis_bundle_now = false,
             basis_metadata_available,
             axis_bundle_metadata_available,
+            basis_object_available,
+            axis_bundle_object_available,
             required_inputs_available = available_inputs,
             available_input_count = length(available_inputs),
             missing_inputs,
@@ -446,6 +528,8 @@ function _cartesian_parent_materialization_plan(
             constructs_axis_bundle_now = false,
             basis_metadata_available,
             axis_bundle_metadata_available,
+            basis_object_available,
+            axis_bundle_object_available,
             required_inputs_available = available_inputs,
             available_input_count = length(available_inputs),
             missing_inputs,
@@ -487,6 +571,8 @@ function _cartesian_parent_materialization_plan(
         constructs_axis_bundle_now = false,
         basis_metadata_available,
         axis_bundle_metadata_available,
+        basis_object_available,
+        axis_bundle_object_available,
         required_inputs_available = available_inputs,
         available_input_count = length(available_inputs),
         missing_inputs,
@@ -501,6 +587,64 @@ function _cartesian_parent_materialization_plan(
             public_default_behavior_changed = false,
             shellification_restructured = false,
             hamiltonian_export = false,
+        ),
+    )
+end
+
+function _cartesian_parent_axis_probe_report_summary(parent_axis_probe)
+    isnothing(parent_axis_probe) && return nothing
+    carry_objects_requested =
+        hasproperty(parent_axis_probe, :carry_objects_requested) &&
+        parent_axis_probe.carry_objects_requested
+    basis_object_available =
+        hasproperty(parent_axis_probe, :basis_object_available) &&
+        parent_axis_probe.basis_object_available
+    axis_bundle_object_available =
+        hasproperty(parent_axis_probe, :axis_bundle_object_available) &&
+        parent_axis_probe.axis_bundle_object_available
+    basis_object_type_label =
+        hasproperty(parent_axis_probe, :basis_object_type_label) ?
+        parent_axis_probe.basis_object_type_label :
+        "unavailable"
+    axis_bundle_object_type_label =
+        hasproperty(parent_axis_probe, :axis_bundle_object_type_label) ?
+        parent_axis_probe.axis_bundle_object_type_label :
+        "unavailable"
+
+    return (
+        object_kind = parent_axis_probe.object_kind,
+        status = parent_axis_probe.status,
+        readiness = parent_axis_probe.readiness,
+        basis_metadata = parent_axis_probe.basis_metadata,
+        axis_bundle_metadata = parent_axis_probe.axis_bundle_metadata,
+        axis_lengths = parent_axis_probe.axis_lengths,
+        physical_extent_inputs = parent_axis_probe.physical_extent_inputs,
+        core_spacing = parent_axis_probe.core_spacing,
+        reference_spacing = parent_axis_probe.reference_spacing,
+        tail_spacing = parent_axis_probe.tail_spacing,
+        gausslet_backend = parent_axis_probe.gausslet_backend,
+        gausslet_backend_role = parent_axis_probe.gausslet_backend_role,
+        expansion_source = parent_axis_probe.expansion_source,
+        explicit_spacing_probe_only = parent_axis_probe.explicit_spacing_probe_only,
+        default_standard_rule = parent_axis_probe.default_standard_rule,
+        core_spacing_source = parent_axis_probe.core_spacing_source,
+        parent_axis_metadata_constructed =
+            parent_axis_probe.parent_axis_metadata_constructed,
+        carry_objects_requested,
+        basis_object_available,
+        axis_bundle_object_available,
+        basis_object_type_label,
+        axis_bundle_object_type_label,
+        heavy_objects_sanitized = true,
+        pending_facts = parent_axis_probe.pending_facts,
+        diagnostics = merge(
+            parent_axis_probe.diagnostics,
+            (
+                carry_objects_requested = carry_objects_requested,
+                basis_object_available = basis_object_available,
+                axis_bundle_object_available = axis_bundle_object_available,
+                heavy_objects_sanitized = true,
+            ),
         ),
     )
 end
@@ -525,12 +669,17 @@ function _pqs_source_box_route_driver_parent_axis(
             probe_inputs.probe_parent_axis_construction,
             standard_setup.core_spacing,
         )
+    parent_axis_probe_carry_objects_requested =
+        parent_axis_probe_requested &&
+        parent_axis_readiness.homonuclear &&
+        parent_axis_readiness.geometry.existing_bond_aligned_api_geometry_ready
     parent_axis_probe = parent_axis_probe_requested ?
         metrics._pqs_explicit_core_spacing_parent_axis_probe(
             standard_setup;
             gausslet_backend = probe_inputs.parent_axis_probe_backend,
             family = probe_inputs.parent_axis_probe_family,
             construct_axis_bundles = true,
+            carry_objects = parent_axis_probe_carry_objects_requested,
         ) : nothing
     parent_axis_probe_status =
         isnothing(parent_axis_probe) ? :not_requested : parent_axis_probe.status
@@ -542,6 +691,7 @@ function _pqs_source_box_route_driver_parent_axis(
     return (;
         parent_axis_readiness,
         parent_axis_probe_requested,
+        parent_axis_probe_carry_objects_requested,
         parent_axis_probe,
         parent_axis_probe_status,
         parent_axis_probe_constructed,
@@ -738,6 +888,16 @@ function _pqs_source_box_route_driver_parent_contract(parent)
         parent_materialization_planning_family =
             parent.parent_materialization_planning_family,
         parent_materialization_blocker = parent.parent_materialization_blocker,
+        parent_basis_object_available = parent.parent_basis_object_available,
+        parent_qw_basis_object_available =
+            parent.parent_qw_basis_object_available,
+        parent_axis_bundle_object_available =
+            parent.parent_axis_bundle_object_available,
+        parent_basis_object_type_label = parent.parent_basis_object_type_label,
+        parent_qw_basis_object_type_label =
+            parent.parent_qw_basis_object_type_label,
+        parent_axis_bundle_object_type_label =
+            parent.parent_axis_bundle_object_type_label,
         parent_basis_materialization_status =
             parent.parent_basis_materialization_status,
         parent_basis_materialization = parent.parent_basis_materialization,
@@ -840,7 +1000,8 @@ function _pqs_source_box_route_driver_parent_description(
         route_family = route_skeleton.route_family,
         standard_setup,
         parent_axis_readiness = parent_axis.parent_axis_readiness,
-        parent_axis_probe = parent_axis.parent_axis_probe,
+        parent_axis_probe =
+            _cartesian_parent_axis_probe_report_summary(parent_axis.parent_axis_probe),
         route_axis_counts,
         parent_contract_status = parent_contract.status,
         parent_contract_object_kind = parent_contract.object_kind,
@@ -856,6 +1017,10 @@ function _pqs_source_box_route_driver_parent_description(
             parent_contract.parent_materialization_planning_family,
         parent_materialization_blocker =
             parent_contract.parent_materialization_blocker,
+        parent_basis_object_available =
+            parent_contract.parent_basis_object_available,
+        parent_axis_bundle_object_available =
+            parent_contract.parent_axis_bundle_object_available,
         parent_basis_materialization_status =
             parent_contract.parent_basis_materialization_status,
         parent_basis_materialized = parent_contract.parent_basis_materialized,
@@ -1323,7 +1488,8 @@ function _pqs_source_box_route_driver_report(
         route_family = route_skeleton.route_family,
         standard_setup,
         parent_axis_readiness = parent_axis.parent_axis_readiness,
-        parent_axis_probe = parent_axis.parent_axis_probe,
+        parent_axis_probe =
+            _cartesian_parent_axis_probe_report_summary(parent_axis.parent_axis_probe),
         route_axis_counts,
         raw_product_box_probe = raw_box.raw_product_box_probe,
         system_metadata,
@@ -2078,11 +2244,13 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
             standard_setup, parent_axis, system, recipe)
+    object_carry = _cartesian_parent_object_carry(parent_axis)
     materialization_plan =
         _cartesian_parent_materialization_plan(
             center_table, center_axis_metadata, classification,
             standard_setup, parent_axis, route_axis_counts)
-    materialization_status = _cartesian_parent_materialization_status(parent_axis)
+    materialization_status =
+        _cartesian_parent_materialization_status(parent_axis, object_carry)
 
     return (;
         object_kind = :cartesian_route_parent,
@@ -2111,6 +2279,20 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
         axis_counts_status = route_axis_counts.status,
         physical_box = standard_setup.parent_box,
         physical_box_rule = standard_setup.parent_box_rule,
+        parent_object_carry = object_carry,
+        parent_basis_object = object_carry.parent_basis_object,
+        parent_qw_basis_object = object_carry.parent_qw_basis_object,
+        parent_axis_bundle_object = object_carry.parent_axis_bundle_object,
+        parent_basis_object_available = object_carry.parent_basis_object_available,
+        parent_qw_basis_object_available =
+            object_carry.parent_qw_basis_object_available,
+        parent_axis_bundle_object_available =
+            object_carry.parent_axis_bundle_object_available,
+        parent_basis_object_type_label = object_carry.parent_basis_object_type_label,
+        parent_qw_basis_object_type_label =
+            object_carry.parent_qw_basis_object_type_label,
+        parent_axis_bundle_object_type_label =
+            object_carry.parent_axis_bundle_object_type_label,
         parent_materialization_plan = materialization_plan,
         parent_materialization_plan_status = materialization_plan.status,
         parent_materialization_planning_family =

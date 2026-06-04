@@ -40,6 +40,12 @@ const _ROUTE_DRIVER_PARENT_CONTRACT_KEYS = (
     :parent_materialization_plan_status,
     :parent_materialization_planning_family,
     :parent_materialization_blocker,
+    :parent_basis_object_available,
+    :parent_qw_basis_object_available,
+    :parent_axis_bundle_object_available,
+    :parent_basis_object_type_label,
+    :parent_qw_basis_object_type_label,
+    :parent_axis_bundle_object_type_label,
     :parent_basis_materialization_status,
     :parent_basis_materialization,
     :parent_basis_materialized,
@@ -195,6 +201,13 @@ function _pqs_route_driver_check_parent_contract(
           parent_contract.parent_materialization_plan.status
     @test parent_contract.parent_materialization_blocker ==
           parent_contract.parent_materialization_plan.blocker
+    @test !hasproperty(parent_contract, :parent_basis_object)
+    @test !hasproperty(parent_contract, :parent_qw_basis_object)
+    @test !hasproperty(parent_contract, :parent_axis_bundle_object)
+    @test parent_contract.parent_basis_object_available ==
+          parent_contract.parent_materialization_plan.constructs_basis_now
+    @test parent_contract.parent_axis_bundle_object_available ==
+          parent_contract.parent_materialization_plan.constructs_axis_bundle_now
     @test !parent_contract.parent_materialization_plan.constructs_basis_now
     @test !parent_contract.parent_materialization_plan.constructs_axis_bundle_now
     @test parent_contract.parent_axis_counts == report.system_metadata.parent_axis_counts

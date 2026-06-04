@@ -28,6 +28,16 @@ const _CARTESIAN_PARENT_CONTRACT_FIELDS = (
     :axis_counts_status,
     :physical_box,
     :physical_box_rule,
+    :parent_object_carry,
+    :parent_basis_object,
+    :parent_qw_basis_object,
+    :parent_axis_bundle_object,
+    :parent_basis_object_available,
+    :parent_qw_basis_object_available,
+    :parent_axis_bundle_object_available,
+    :parent_basis_object_type_label,
+    :parent_qw_basis_object_type_label,
+    :parent_axis_bundle_object_type_label,
     :parent_materialization_plan,
     :parent_materialization_plan_status,
     :parent_materialization_planning_family,
@@ -69,6 +79,7 @@ function _cartesian_parent_contract_parent(;
     nuclear_charges,
     atom_locations,
     parent_axis_counts,
+    probe_parent_axis_construction = false,
 )
     system = GaussletBases.cartesian_system(
         (;
@@ -89,7 +100,7 @@ function _cartesian_parent_contract_parent(;
         core_spacing = nothing,
     )
     parent_inputs = (;
-        probe_parent_axis_construction = false,
+        probe_parent_axis_construction,
         parent_axis_probe_backend = :pgdg_localized_experimental,
         parent_axis_probe_family = :G10,
     )
@@ -120,6 +131,13 @@ end
         atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
         parent_axis_counts = (x = 9, y = 7, z = 9),
     )
+    probed_be2 = _cartesian_parent_contract_parent(
+        atom_symbols = ("Be", "Be"),
+        nuclear_charges = (4, 4),
+        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        parent_axis_counts = nothing,
+        probe_parent_axis_construction = true,
+    )
     chain = _cartesian_parent_contract_parent(
         atom_symbols = ("Be", "Be", "Be"),
         nuclear_charges = (4, 4, 4),
@@ -142,6 +160,7 @@ end
     @test Tuple(propertynames(one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(scalar_one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(be2)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
+    @test Tuple(propertynames(probed_be2)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(chain)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(heteronuclear_chain)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(non_axis_aligned)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
@@ -149,22 +168,26 @@ end
     @test one_center.object_kind == :cartesian_route_parent
     @test scalar_one_center.object_kind == :cartesian_route_parent
     @test be2.object_kind == :cartesian_route_parent
+    @test probed_be2.object_kind == :cartesian_route_parent
     @test chain.object_kind == :cartesian_route_parent
     @test heteronuclear_chain.object_kind == :cartesian_route_parent
     @test non_axis_aligned.object_kind == :cartesian_route_parent
 
     @test one_center.axis_counts == (x = 7, y = 7, z = 7)
     @test be2.axis_counts == (x = 9, y = 7, z = 9)
+    @test probed_be2.axis_counts == (x = 31, y = 17, z = 17)
     @test chain.axis_counts == (x = 11, y = 7, z = 7)
     @test heteronuclear_chain.axis_counts == (x = 11, y = 7, z = 7)
     @test non_axis_aligned.axis_counts == (x = 9, y = 7, z = 9)
     @test one_center.axis_counts_source == :manual_fixture
     @test be2.axis_counts_source == :manual_fixture
+    @test probed_be2.axis_counts_source == :constructed_parent_axis_probe
     @test chain.axis_counts_source == :manual_fixture
     @test heteronuclear_chain.axis_counts_source == :manual_fixture
     @test non_axis_aligned.axis_counts_source == :manual_fixture
     @test one_center.axis_counts_status == :available
     @test be2.axis_counts_status == :available
+    @test probed_be2.axis_counts_status == :available
     @test chain.axis_counts_status == :available
     @test heteronuclear_chain.axis_counts_status == :available
     @test non_axis_aligned.axis_counts_status == :available
@@ -174,11 +197,13 @@ end
     @test scalar_one_center.atom_symbols == ("Be",)
     @test scalar_one_center.nuclear_charges == (4.0,)
     @test be2.atom_count == 2
+    @test probed_be2.atom_count == 2
     @test chain.atom_count == 3
     @test heteronuclear_chain.atom_count == 3
     @test non_axis_aligned.atom_count == 2
     @test one_center.center_count == one_center.atom_count
     @test be2.center_count == be2.atom_count
+    @test probed_be2.center_count == probed_be2.atom_count
     @test chain.center_count == chain.atom_count
     @test heteronuclear_chain.center_count == heteronuclear_chain.atom_count
     @test non_axis_aligned.center_count == non_axis_aligned.atom_count
@@ -199,6 +224,9 @@ end
     @test be2.chain_axis == :x
     @test be2.center_axis_metadata.axis_aligned
     @test be2.center_axis_metadata.center_axis_coordinates == (-2.0, 2.0)
+    @test probed_be2.system_classification == be2.system_classification
+    @test probed_be2.bond_axis == :x
+    @test probed_be2.chain_axis == :x
 
     @test chain.system_classification == :axis_aligned_chain_metadata_only
     @test chain.system_classification_status ==
@@ -222,6 +250,8 @@ end
 
     @test one_center.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
     @test be2.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
+    @test probed_be2.parent_axis_readiness.parent_axis_counts_status ==
+          :pending_helper_or_documented_rule
     @test chain.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
     @test heteronuclear_chain.parent_axis_readiness.parent_axis_counts_status ==
           :manual_fixture
@@ -251,6 +281,31 @@ end
     @test be2.parent_materialization_plan.bond_aligned_diatomic_compatible
     @test !be2.parent_materialization_plan.constructs_basis_now
     @test !be2.parent_materialization_plan.constructs_axis_bundle_now
+    @test !be2.parent_basis_object_available
+    @test !be2.parent_axis_bundle_object_available
+    @test be2.parent_basis_object === nothing
+    @test be2.parent_axis_bundle_object === nothing
+
+    @test probed_be2.parent_axis_probe.carry_objects_requested
+    @test probed_be2.parent_axis_probe.basis_object_available
+    @test probed_be2.parent_axis_probe.axis_bundle_object_available
+    @test probed_be2.parent_basis_object_available
+    @test probed_be2.parent_qw_basis_object_available
+    @test probed_be2.parent_axis_bundle_object_available
+    @test probed_be2.parent_basis_object !== nothing
+    @test probed_be2.parent_qw_basis_object !== nothing
+    @test probed_be2.parent_axis_bundle_object !== nothing
+    @test probed_be2.parent_basis_object_type_label ==
+          "CartesianParentGaussletBasis3D"
+    @test probed_be2.parent_qw_basis_object_type_label ==
+          "BondAlignedDiatomicQWBasis3D"
+    @test probed_be2.parent_axis_bundle_object_type_label ==
+          "_CartesianNestedAxisBundles3D"
+    @test probed_be2.parent_materialization_plan_status ==
+          :materialized_parent_objects_available
+    @test probed_be2.parent_materialization_blocker === nothing
+    @test probed_be2.parent_materialization_plan.constructs_basis_now
+    @test probed_be2.parent_materialization_plan.constructs_axis_bundle_now
 
     @test chain.parent_materialization_plan_status ==
           :metadata_only_chain_parent_constructor_candidate
@@ -284,6 +339,8 @@ end
           :metadata_only_not_materialized
     @test be2.parent_basis_materialization_status ==
           :metadata_only_not_materialized
+    @test probed_be2.parent_basis_materialization_status ==
+          :materialized_parent_objects_available
     @test chain.parent_basis_materialization_status ==
           :metadata_only_not_materialized
     @test heteronuclear_chain.parent_basis_materialization_status ==
@@ -292,11 +349,13 @@ end
           :metadata_only_not_materialized
     @test !one_center.parent_basis_materialized
     @test !be2.parent_basis_materialized
+    @test probed_be2.parent_basis_materialized
     @test !chain.parent_basis_materialized
     @test !heteronuclear_chain.parent_basis_materialized
     @test !non_axis_aligned.parent_basis_materialized
     @test !one_center.axis_bundle_materialized
     @test !be2.axis_bundle_materialized
+    @test probed_be2.axis_bundle_materialized
     @test !chain.axis_bundle_materialized
     @test !heteronuclear_chain.axis_bundle_materialized
     @test !non_axis_aligned.axis_bundle_materialized

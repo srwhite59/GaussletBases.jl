@@ -13251,6 +13251,7 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
     gausslet_backend::Symbol = :pgdg_localized_experimental,
     family = :G10,
     construct_axis_bundles::Bool = true,
+    carry_objects::Bool = false,
 )
     readiness = _pqs_standard_parent_axis_construction_readiness(setup)
     spacing_source = setup.spacing.core_spacing_source
@@ -13288,6 +13289,13 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
             default_standard_rule = default_standard_rule,
             core_spacing_source = spacing_source,
             parent_axis_metadata_constructed = false,
+            carry_objects_requested = carry_objects,
+            basis_object_available = false,
+            axis_bundle_object_available = false,
+            basis_object_type_label = "unavailable",
+            axis_bundle_object_type_label = "unavailable",
+            basis_object = nothing,
+            axis_bundle_object = nothing,
             pending_facts = pending_facts,
             diagnostics = (
                 source = :pqs_explicit_core_spacing_parent_axis_probe,
@@ -13297,6 +13305,9 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
                 default_standard_rule = default_standard_rule,
                 core_spacing_source = spacing_source,
                 parent_axis_metadata_constructed = false,
+                carry_objects_requested = carry_objects,
+                basis_object_available = false,
+                axis_bundle_object_available = false,
                 gausslet_backend = gausslet_backend,
                 gausslet_backend_role =
                     _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),
@@ -13355,6 +13366,8 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
         y = length(basis.basis_y),
         z = length(basis.basis_z),
     )
+    basis_object = carry_objects ? basis : nothing
+    axis_bundle_object = carry_objects ? axis_bundles : nothing
     return (
         object_kind = :pqs_explicit_core_spacing_parent_axis_probe,
         status = :constructed_explicit_core_spacing_parent_axis_metadata,
@@ -13396,6 +13409,13 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
         default_standard_rule = default_standard_rule,
         core_spacing_source = spacing_source,
         parent_axis_metadata_constructed = true,
+        carry_objects_requested = carry_objects,
+        basis_object_available = !isnothing(basis_object),
+        axis_bundle_object_available = !isnothing(axis_bundle_object),
+        basis_object_type_label = string(nameof(typeof(basis))),
+        axis_bundle_object_type_label = string(nameof(typeof(axis_bundles))),
+        basis_object = basis_object,
+        axis_bundle_object = axis_bundle_object,
         pending_facts = (),
         diagnostics = (
             source = :pqs_explicit_core_spacing_parent_axis_probe,
@@ -13405,6 +13425,9 @@ function _pqs_explicit_core_spacing_parent_axis_probe(
             default_standard_rule = default_standard_rule,
             core_spacing_source = spacing_source,
             parent_axis_metadata_constructed = true,
+            carry_objects_requested = carry_objects,
+            basis_object_available = !isnothing(basis_object),
+            axis_bundle_object_available = !isnothing(axis_bundle_object),
             gausslet_backend = gausslet_backend,
             gausslet_backend_role =
                 _pqs_explicit_core_spacing_probe_backend_role(gausslet_backend),

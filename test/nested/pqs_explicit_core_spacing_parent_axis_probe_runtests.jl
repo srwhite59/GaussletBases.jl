@@ -18,6 +18,11 @@ using GaussletBases
     @test unavailable_probe.status == :not_constructed_pending_facts
     @test unavailable_probe.axis_lengths === nothing
     @test !unavailable_probe.parent_axis_metadata_constructed
+    @test !unavailable_probe.carry_objects_requested
+    @test !unavailable_probe.basis_object_available
+    @test !unavailable_probe.axis_bundle_object_available
+    @test unavailable_probe.basis_object === nothing
+    @test unavailable_probe.axis_bundle_object === nothing
     @test :explicit_core_spacing in unavailable_probe.pending_facts
     @test !unavailable_probe.diagnostics.explicit_spacing_probe_only
     @test !unavailable_probe.diagnostics.default_standard_rule
@@ -35,6 +40,11 @@ using GaussletBases
     @test standard_probe.status ==
           :constructed_explicit_core_spacing_parent_axis_metadata
     @test standard_probe.parent_axis_metadata_constructed
+    @test !standard_probe.carry_objects_requested
+    @test !standard_probe.basis_object_available
+    @test !standard_probe.axis_bundle_object_available
+    @test standard_probe.basis_object === nothing
+    @test standard_probe.axis_bundle_object === nothing
     @test standard_probe.core_spacing == 0.15
     @test standard_probe.core_spacing_source == :standard_n_s_default
     @test !standard_probe.explicit_spacing_probe_only
@@ -57,6 +67,11 @@ using GaussletBases
     @test explicit_probe.axis_bundle_metadata.status == :constructed
     @test explicit_probe.axis_bundle_metadata.object_kind == :_CartesianNestedAxisBundles3D
     @test explicit_probe.basis_metadata.object_kind == :BondAlignedDiatomicQWBasis3D
+    @test !explicit_probe.carry_objects_requested
+    @test !explicit_probe.basis_object_available
+    @test !explicit_probe.axis_bundle_object_available
+    @test explicit_probe.basis_object === nothing
+    @test explicit_probe.axis_bundle_object === nothing
     @test explicit_probe.basis_metadata.constructor == :bond_aligned_homonuclear_qw_basis
     @test explicit_probe.basis_metadata.bond_axis == :x
     @test explicit_probe.basis_metadata.bond_length == 4.0
@@ -76,6 +91,22 @@ using GaussletBases
     @test explicit_probe.explicit_spacing_probe_only
     @test !explicit_probe.default_standard_rule
     @test explicit_probe.core_spacing_source == :explicit_core_spacing_override
+
+    carried_probe =
+        metrics_module._pqs_explicit_core_spacing_parent_axis_probe(
+            explicit_setup;
+            carry_objects = true,
+        )
+    @test carried_probe.status ==
+          :constructed_explicit_core_spacing_parent_axis_metadata
+    @test carried_probe.carry_objects_requested
+    @test carried_probe.basis_object_available
+    @test carried_probe.axis_bundle_object_available
+    @test carried_probe.basis_object !== nothing
+    @test carried_probe.axis_bundle_object !== nothing
+    @test carried_probe.basis_object_type_label == "BondAlignedDiatomicQWBasis3D"
+    @test carried_probe.axis_bundle_object_type_label ==
+          "_CartesianNestedAxisBundles3D"
 
     numerical_probe =
         metrics_module._pqs_explicit_core_spacing_parent_axis_probe(
@@ -114,6 +145,7 @@ using GaussletBases
         unavailable_probe.diagnostics,
         standard_probe.diagnostics,
         explicit_probe.diagnostics,
+        carried_probe.diagnostics,
         disabled_probe.diagnostics,
         heteronuclear_probe.diagnostics,
     )
