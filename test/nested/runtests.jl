@@ -7,6 +7,7 @@ include("pqs_route_axis_count_selection_runtests.jl")
 include("pqs_raw_product_box_plan_probe_runtests.jl")
 include("pqs_source_box_route_skeleton_runtests.jl")
 include("pqs_source_box_route_driver_report_runtests.jl")
+include("white_lindsey_materialized_seed_runtests.jl")
 
 @testset "Cartesian nested face first primitive" begin
     function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)

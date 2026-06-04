@@ -35,6 +35,11 @@ end
     sequence = fixture.sequence
     fixed_block = fixture.fixed_block
     structure = fixture.structure
+    inventory = GaussletBases._white_lindsey_low_order_materialized_seed_inventory(
+        sequence,
+        fixed_block,
+        structure,
+    )
 
     shell_retained_count = 98
     core_retained_count = 5^3
@@ -95,4 +100,37 @@ end
     @test structure.total_expected_gausslet_count == total_retained_dimension
     @test structure.total_actual_gausslet_count == total_retained_dimension
     @test structure.layers_match_expected
+
+    @test inventory.object_kind == :white_lindsey_low_order_materialized_seed_inventory
+    @test inventory.route_family == :white_lindsey_low_order
+    @test inventory.status == :private_development_seed
+    @test inventory.private_development_only
+    @test inventory.parent_side_count == 7
+    @test inventory.source_side_count == 7
+    @test inventory.nside == 5
+    @test inventory.piece_counts == (core = 1, faces = 6, edges = 12, corners = 8)
+    @test inventory.support_counts == (core = 125, shell = 218, total_source = 343)
+    @test inventory.retained_counts == (
+        core = 125,
+        faces = 54,
+        edges = 36,
+        corners = 8,
+        shell = 98,
+        total = 223,
+    )
+    @test inventory.retained_ranges.core == 1:125
+    @test inventory.retained_ranges.shell == 126:223
+    @test inventory.retained_ranges.faces ==
+          Tuple((first(range) + 125):(last(range) + 125) for range in shell.face_column_ranges)
+    @test inventory.retained_ranges.edges ==
+          Tuple((first(range) + 125):(last(range) + 125) for range in shell.edge_column_ranges)
+    @test inventory.retained_ranges.corners ==
+          Tuple((first(range) + 125):(last(range) + 125) for range in shell.corner_column_ranges)
+    @test inventory.materialized_shell_local_ranges.faces == Tuple(shell.face_column_ranges)
+    @test inventory.materialized_shell_local_ranges.edges == Tuple(shell.edge_column_ranges)
+    @test inventory.materialized_shell_local_ranges.corners == Tuple(shell.corner_column_ranges)
+    @test inventory.fixed_block_ready
+    @test inventory.overlap_ready
+    @test inventory.retained_basis_integral_weights_ready
+    @test inventory.weight_semantics == :retained_basis_integral_weights
 end
