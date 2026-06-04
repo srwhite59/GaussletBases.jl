@@ -158,6 +158,42 @@ function _pqs_route_driver_check_report_output_sections(report)
     return nothing
 end
 
+function _pqs_route_driver_check_be2_shellization_request(
+    materialization;
+    current_materialization_source,
+)
+    @test materialization.route_configured_shellization_request_available
+    @test materialization.route_configured_shellization_request_status ==
+          :metadata_only_pending_materializer
+    @test materialization.route_configured_system_classification ==
+          :bond_aligned_diatomic
+    @test materialization.route_configured_system_classification_status ==
+          :explicit_two_atom_single_axis_separation
+    @test materialization.route_configured_bond_axis == :x
+
+    request = materialization.route_configured_shellization_request
+    @test request.object_kind == :cartesian_shellization_route_configured_request
+    @test request.status == materialization.route_configured_shellization_request_status
+    @test request.private_development_only
+    @test request.route_family == materialization.route_family
+    @test request.route_kind == _PQS_ROUTE_DRIVER_TEST_ROUTE_KIND
+    @test request.atom_count == 2
+    @test request.atom_symbols == ("Be", "Be")
+    @test request.system_classification == materialization.route_configured_system_classification
+    @test request.system_classification_status ==
+          materialization.route_configured_system_classification_status
+    @test request.bond_axis == materialization.route_configured_bond_axis
+    @test request.requested_shellization_stage == :route_neutral_spatial_planning
+    @test request.expected_next_materializer_status ==
+          :pending_route_configured_shellization_materializer
+    @test request.current_materialization_source == current_materialization_source
+    @test !request.route_configured_shellization_consumed
+    @test !request.constructs_basis
+    @test !request.constructs_shell_sequence
+    @test !request.constructs_fixed_block
+    return nothing
+end
+
 function _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
     density_expansion = coulomb_gaussian_expansion(doacc = false)
     default_status = GaussletBases._pqs_source_box_route_driver_materialization(
@@ -174,6 +210,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test !default_status.shellization_summary_available
     @test !default_status.route_configured_shellization_consumed
     @test default_status.materialized_shellization_stage == :not_checked_metadata_only
+    _pqs_route_driver_check_be2_shellization_request(
+        default_status;
+        current_materialization_source = :pending_source_box_route_materializer,
+    )
     @test default_status.ham_bundle_export_status == :not_requested
     @test default_status.ham_preflight_status == :not_checked_metadata_only
     @test default_status.ham_missing_builder === nothing
@@ -201,6 +241,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     @test pqs_status.materialized_shellization_stage ==
           :pending_source_box_retained_route
     @test pqs_status.seed_materialization_status == :not_applicable
+    _pqs_route_driver_check_be2_shellization_request(
+        pqs_status;
+        current_materialization_source = :pending_source_box_route_materializer,
+    )
     @test pqs_status.final_integral_weights_status == :pending_final_ida_weights
     @test pqs_status.basis_bundle_export_status == :pending_final_retained_basis
     @test pqs_status.basis_artifact_status == :not_requested
@@ -255,6 +299,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
           :route_neutral_spatial_planning
     @test white_lindsey_status.seed_materialization_status ==
           :seed_based_private_materialization
+    _pqs_route_driver_check_be2_shellization_request(
+        white_lindsey_status;
+        current_materialization_source = :white_lindsey_one_center_seed,
+    )
     @test white_lindsey_status.retained_dimension == 223
     @test white_lindsey_status.final_integral_weights_status ==
           :available_retained_basis_integral_weights
@@ -309,6 +357,10 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
         @test !save_status.route_configured_shellization_consumed
         @test save_status.materialized_shellization_stage ==
               :route_neutral_spatial_planning
+        _pqs_route_driver_check_be2_shellization_request(
+            save_status;
+            current_materialization_source = :white_lindsey_one_center_seed,
+        )
         @test save_status.ham_export_blocker === nothing
         @test save_status.ham_artifact_written
         @test isfile(hamfile)
@@ -331,6 +383,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
             @test Bool(file["meta/has_ham"])
             @test String(file["meta/route_family"]) == "white_lindsey_low_order"
             @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test String(file["meta/route_configured_shellization_request_status"]) ==
+                  "metadata_only_pending_materializer"
+            @test String(file["meta/route_configured_system_classification"]) ==
+                  "bond_aligned_diatomic"
+            @test String(file["meta/route_configured_system_classification_status"]) ==
+                  "explicit_two_atom_single_axis_separation"
+            @test String(file["meta/route_configured_bond_axis"]) == "x"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -383,6 +442,13 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "published_cartesian_baseline_for_pqs_comparison"
             @test String(file["meta/materialized_report_kind"]) ==
                   "white_lindsey_low_order_materialized_seed_report"
+            @test String(file["meta/route_configured_shellization_request_status"]) ==
+                  "metadata_only_pending_materializer"
+            @test String(file["meta/route_configured_system_classification"]) ==
+                  "bond_aligned_diatomic"
+            @test String(file["meta/route_configured_system_classification_status"]) ==
+                  "explicit_two_atom_single_axis_separation"
+            @test String(file["meta/route_configured_bond_axis"]) == "x"
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -527,6 +593,10 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
                   :route_neutral_spatial_planning
             @test saved_materialization.seed_materialization_status ==
                   :seed_based_private_materialization
+            _pqs_route_driver_check_be2_shellization_request(
+                saved_materialization;
+                current_materialization_source = :white_lindsey_one_center_seed,
+            )
             @test saved_materialization.ham_preflight.status ==
                   :blocked_missing_pure_low_order_interaction_builder
             @test saved_materialization.ham_preflight.required_builder_contract ==
@@ -549,6 +619,26 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
 
         tsv = read(tsvfile, String)
         @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
+        @test occursin(
+            "route_materialization\troute_configured_shellization_request_available\ttrue",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_shellization_request_status\t:metadata_only_pending_materializer",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_system_classification\t:bond_aligned_diatomic",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_system_classification_status\t:explicit_two_atom_single_axis_separation",
+            tsv,
+        )
+        @test occursin(
+            "route_materialization\troute_configured_bond_axis\t:x",
+            tsv,
+        )
         @test occursin(
             "route_materialization\tshellization_summary_available\ttrue",
             tsv,

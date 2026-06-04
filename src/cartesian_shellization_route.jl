@@ -120,3 +120,91 @@ function _cartesian_shellization_route_summary(
         contact_or_merge_status = contact_or_merge_status,
     )
 end
+
+function _cartesian_shellization_route_location_tuple(location)
+    length(location) == 3 || throw(
+        ArgumentError("route shellization request expects three Cartesian coordinates"),
+    )
+    return (Float64(location[1]), Float64(location[2]), Float64(location[3]))
+end
+
+function _cartesian_shellization_route_diatomic_axis(atom_locations; atol::Float64 = 1.0e-12)
+    first_location = _cartesian_shellization_route_location_tuple(atom_locations[1])
+    second_location = _cartesian_shellization_route_location_tuple(atom_locations[2])
+    deltas = abs.(
+        (
+            second_location[1] - first_location[1],
+            second_location[2] - first_location[2],
+            second_location[3] - first_location[3],
+        ),
+    )
+    active_axes = Tuple(axis for (axis, delta) in zip((:x, :y, :z), deltas) if delta > atol)
+    return length(active_axes) == 1 ? only(active_axes) : nothing
+end
+
+function _cartesian_shellization_route_system_classification(system_metadata)
+    atom_count = length(system_metadata.atom_symbols)
+    if atom_count == 1
+        return (
+            system_classification = :one_center,
+            system_classification_status = :explicit_atom_count_one,
+            bond_axis = nothing,
+        )
+    elseif atom_count == 2
+        bond_axis = _cartesian_shellization_route_diatomic_axis(system_metadata.atom_locations)
+        if isnothing(bond_axis)
+            return (
+                system_classification = :pending_system_classification,
+                system_classification_status = :diatomic_not_axis_aligned_by_metadata,
+                bond_axis = nothing,
+            )
+        end
+        return (
+            system_classification = :bond_aligned_diatomic,
+            system_classification_status = :explicit_two_atom_single_axis_separation,
+            bond_axis = bond_axis,
+        )
+    end
+    return (
+        system_classification = :unsupported_general_multi_atom,
+        system_classification_status = :general_multi_atom_shellization_not_planned,
+        bond_axis = nothing,
+    )
+end
+
+function _cartesian_shellization_route_configured_request(report)
+    system_metadata = report.system_metadata
+    recipe_metadata = report.recipe_metadata
+    classification = _cartesian_shellization_route_system_classification(system_metadata)
+    current_materialization_source =
+        report.route_family == :white_lindsey_low_order ?
+        :white_lindsey_one_center_seed :
+        :pending_source_box_route_materializer
+
+    return (
+        object_kind = :cartesian_shellization_route_configured_request,
+        status = :metadata_only_pending_materializer,
+        private_development_only = true,
+        route_family = report.route_family,
+        route_kind = recipe_metadata.route_kind,
+        route_shape = recipe_metadata.route_shape,
+        atom_count = length(system_metadata.atom_symbols),
+        atom_symbols = Tuple(system_metadata.atom_symbols),
+        atom_locations = Tuple(system_metadata.atom_locations),
+        nuclear_charges = Tuple(system_metadata.nuclear_charges),
+        parent_axis_counts = system_metadata.parent_axis_counts,
+        parent_axis_counts_source = system_metadata.parent_axis_counts_source,
+        parent_box = system_metadata.parent_box,
+        requested_shellization_stage = :route_neutral_spatial_planning,
+        expected_next_materializer_status =
+            :pending_route_configured_shellization_materializer,
+        current_materialization_source,
+        route_configured_shellization_consumed = false,
+        constructs_basis = false,
+        constructs_shell_sequence = false,
+        constructs_fixed_block = false,
+        system_classification = classification.system_classification,
+        system_classification_status = classification.system_classification_status,
+        bond_axis = classification.bond_axis,
+    )
+end

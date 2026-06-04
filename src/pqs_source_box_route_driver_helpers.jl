@@ -971,6 +971,16 @@ function _pqs_source_box_route_driver_materialization(
     white_lindsey_Z = nothing,
 )
     route_family = report.route_family
+    route_configured_shellization_request =
+        _cartesian_shellization_route_configured_request(report)
+    route_configured_shellization_request_status =
+        route_configured_shellization_request.status
+    route_configured_system_classification =
+        route_configured_shellization_request.system_classification
+    route_configured_system_classification_status =
+        route_configured_shellization_request.system_classification_status
+    route_configured_bond_axis = route_configured_shellization_request.bond_axis
+
     if !materialize_route
         return (;
             object_kind = :cartesian_nesting_route_driver_materialization,
@@ -982,6 +992,12 @@ function _pqs_source_box_route_driver_materialization(
             status = :not_requested_metadata_only,
             materialized_report = nothing,
             materialized_report_kind = nothing,
+            route_configured_shellization_request,
+            route_configured_shellization_request_available = true,
+            route_configured_shellization_request_status,
+            route_configured_system_classification,
+            route_configured_system_classification_status,
+            route_configured_bond_axis,
             shellization_summary = nothing,
             shellization_summary_available = false,
             shellization_source =
@@ -1079,6 +1095,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_kind = report.recipe_metadata.route_kind,
                     benchmark_role = report.recipe_metadata.benchmark_role,
                     materialized_report_kind = materialized_report.object_kind,
+                    route_configured_shellization_request_status,
+                    route_configured_system_classification,
+                    route_configured_system_classification_status,
+                    route_configured_bond_axis,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1112,6 +1132,10 @@ function _pqs_source_box_route_driver_materialization(
                     route_kind = report.recipe_metadata.route_kind,
                     benchmark_role = report.recipe_metadata.benchmark_role,
                     materialized_report_kind = materialized_report.object_kind,
+                    route_configured_shellization_request_status,
+                    route_configured_system_classification,
+                    route_configured_system_classification_status,
+                    route_configured_bond_axis,
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
@@ -1145,6 +1169,12 @@ function _pqs_source_box_route_driver_materialization(
             status = :materialized_seed_report_available,
             materialized_report,
             materialized_report_kind = materialized_report.object_kind,
+            route_configured_shellization_request,
+            route_configured_shellization_request_available = true,
+            route_configured_shellization_request_status,
+            route_configured_system_classification,
+            route_configured_system_classification_status,
+            route_configured_bond_axis,
             shellization_summary,
             shellization_summary_available,
             shellization_source,
@@ -1191,6 +1221,12 @@ function _pqs_source_box_route_driver_materialization(
         status = :pending_source_box_retained_route,
         materialized_report = nothing,
         materialized_report_kind = nothing,
+        route_configured_shellization_request,
+        route_configured_shellization_request_available = true,
+        route_configured_shellization_request_status,
+        route_configured_system_classification,
+        route_configured_system_classification_status,
+        route_configured_bond_axis,
         shellization_summary = nothing,
         shellization_summary_available = false,
         shellization_source = :pending_source_box_route_shellization,
