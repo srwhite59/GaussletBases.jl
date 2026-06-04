@@ -13,7 +13,7 @@ using GaussletBases
     parent_axis_counts = (x = 9, y = 7, z = 9)
     map_backend = :pgdg_localized_experimental
 
-# PQS/source-box sizing rule.
+# Route sizing and spacing defaults.
     q = 5
     n_s = q
     reference_spacing = 1.0

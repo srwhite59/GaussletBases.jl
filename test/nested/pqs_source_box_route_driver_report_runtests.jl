@@ -1,7 +1,7 @@
 using Test
 using GaussletBases
 
-const _PQS_ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
+const _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS = (
     :unit_count,
     :unit_keys,
     :retained_unit_kinds,
@@ -79,7 +79,7 @@ function _pqs_route_driver_check_standard_unit_inventory(
 
     @test hasproperty(report, :standard_unit_inventory)
     summary = report.standard_unit_inventory
-    @test Tuple(keys(summary)) == _PQS_ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS
+    @test Tuple(keys(summary)) == _ROUTE_DRIVER_STANDARD_UNIT_INVENTORY_KEYS
     @test summary.unit_count == length(unit_keys)
     @test summary.unit_keys == unit_keys
     @test summary.retained_unit_kinds ==
@@ -137,7 +137,7 @@ function _pqs_route_driver_check_report_output_sections(report)
     return nothing
 end
 
-@testset "PQS route-driver standard unit inventory report" begin
+@testset "Route-driver standard unit inventory report" begin
     pqs_report = _pqs_route_driver_report_for_test()
     _pqs_route_driver_check_standard_unit_inventory(
         pqs_report;
