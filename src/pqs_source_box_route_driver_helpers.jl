@@ -189,7 +189,94 @@ function _cartesian_parent_system_classification(center_table, axis_metadata)
     )
 end
 
-function _cartesian_parent_object_carry(parent_axis)
+function _cartesian_one_center_parent_basis_object(
+    center_table,
+    classification,
+    standard_setup,
+    route_axis_counts,
+    parent_inputs,
+)
+    classification.system_classification == :one_center || return (;
+        parent_basis_object = nothing,
+        parent_basis_metadata_available = false,
+        parent_basis_object_source = :not_applicable,
+        status = :not_applicable_to_system_classification,
+        pending_facts = (),
+    )
+
+    counts = route_axis_counts.parent_axis_counts
+    isnothing(counts) && return (;
+        parent_basis_object = nothing,
+        parent_basis_metadata_available = false,
+        parent_basis_object_source = :unavailable_parent_axis_counts,
+        status = :pending_parent_axis_counts,
+        pending_facts = (:parent_axis_counts,),
+    )
+
+    center = first(center_table)
+    origin_centered = all(abs.(center.location) .<= 1.0e-12)
+    origin_centered || return (;
+        parent_basis_object = nothing,
+        parent_basis_metadata_available = false,
+        parent_basis_object_source = :pending_non_origin_one_center_parent_mapping,
+        status = :pending_origin_centered_or_translated_one_center_parent_mapping,
+        pending_facts = (:origin_centered_one_center_parent_or_translated_mapping,),
+    )
+
+    family =
+        hasproperty(parent_inputs, :parent_axis_probe_family) ?
+        parent_inputs.parent_axis_probe_family :
+        :G10
+    axis_cache = Dict{Int, Any}()
+    function _axis_for_count(count)
+        axis_count = Int(count)
+        get!(axis_cache, axis_count) do
+            build_basis(MappedUniformBasisSpec(
+                family;
+                count = axis_count,
+                mapping = IdentityMapping(),
+                reference_spacing = standard_setup.reference_spacing,
+            ))
+        end
+    end
+
+    parent_basis_object =
+        CartesianParentGaussletBases.CartesianParentGaussletBasis3D(
+            (;
+                x = _axis_for_count(counts.x),
+                y = _axis_for_count(counts.y),
+                z = _axis_for_count(counts.z),
+            );
+            metadata = (
+                basis_family = :one_center_mapped_uniform_cartesian_product,
+                axis_basis_helper = :_cartesian_one_center_parent_basis_object,
+                axis_family = Symbol(family),
+                mapping = :IdentityMapping,
+                reference_spacing = standard_setup.reference_spacing,
+                atom_symbol = center.atom_symbol,
+                nuclear_charge = center.nuclear_charge,
+                atom_location = center.location,
+                axis_counts = counts,
+            ),
+        )
+
+    return (;
+        parent_basis_object,
+        parent_basis_metadata_available = true,
+        parent_basis_object_source = :one_center_mapped_uniform_axes,
+        status = :constructed_one_center_parent_basis_object,
+        pending_facts = (:one_center_axis_bundle_builder,),
+    )
+end
+
+function _cartesian_parent_object_carry(
+    center_table,
+    classification,
+    standard_setup,
+    parent_axis,
+    route_axis_counts,
+    parent_inputs,
+)
     parent_axis_probe = parent_axis.parent_axis_probe
     qw_basis_object =
         !isnothing(parent_axis_probe) &&
@@ -205,12 +292,36 @@ function _cartesian_parent_object_carry(parent_axis)
         isnothing(qw_basis_object) ?
         nothing :
         CartesianParentGaussletBases.cartesian_parent_gausslet_basis(qw_basis_object)
+    one_center_parent_basis =
+        isnothing(parent_basis_object) ?
+        _cartesian_one_center_parent_basis_object(
+            center_table, classification, standard_setup,
+            route_axis_counts, parent_inputs) :
+        nothing
+    parent_basis_object =
+        isnothing(parent_basis_object) && !isnothing(one_center_parent_basis) ?
+        one_center_parent_basis.parent_basis_object :
+        parent_basis_object
+    parent_basis_metadata_available =
+        !isnothing(qw_basis_object) ||
+        (
+            !isnothing(one_center_parent_basis) &&
+            one_center_parent_basis.parent_basis_metadata_available
+        )
+    parent_basis_object_source =
+        !isnothing(qw_basis_object) ?
+        :parent_axis_probe_qw_basis :
+        isnothing(one_center_parent_basis) ?
+        :unavailable :
+        one_center_parent_basis.parent_basis_object_source
 
     return (;
         object_kind = :cartesian_parent_object_carry,
         status =
             !isnothing(parent_basis_object) && !isnothing(axis_bundle_object) ?
             :materialized_parent_objects_available :
+            !isnothing(parent_basis_object) ?
+            :parent_basis_object_available_axis_bundle_pending :
             :not_materialized,
         parent_basis_object,
         parent_qw_basis_object = qw_basis_object,
@@ -218,6 +329,13 @@ function _cartesian_parent_object_carry(parent_axis)
         parent_basis_object_available = !isnothing(parent_basis_object),
         parent_qw_basis_object_available = !isnothing(qw_basis_object),
         parent_axis_bundle_object_available = !isnothing(axis_bundle_object),
+        parent_basis_metadata_available,
+        parent_axis_bundle_metadata_available =
+            !isnothing(parent_axis_probe) &&
+            parent_axis_probe.axis_bundle_metadata.status == :constructed,
+        parent_basis_object_source,
+        parent_axis_bundle_object_source =
+            !isnothing(axis_bundle_object) ? :parent_axis_probe_axis_bundle : :unavailable,
         parent_basis_object_type_label = _pqs_route_driver_type_label(parent_basis_object),
         parent_qw_basis_object_type_label = _pqs_route_driver_type_label(qw_basis_object),
         parent_axis_bundle_object_type_label =
@@ -235,9 +353,13 @@ function _cartesian_parent_materialization_status(parent_axis, object_carry)
     parent_axis_probe = parent_axis.parent_axis_probe
     parent_axis_metadata_constructed = parent_axis.parent_axis_probe_constructed
     axis_bundle_status =
-        isnothing(parent_axis_probe) ?
-        :not_requested :
-        parent_axis_probe.axis_bundle_metadata.status
+        object_carry.parent_axis_bundle_object_available ?
+        :constructed :
+        !isnothing(parent_axis_probe) ?
+        parent_axis_probe.axis_bundle_metadata.status :
+        object_carry.parent_basis_object_available ?
+        :pending_one_center_axis_bundle_builder :
+        :not_requested
     parent_basis_object_available = object_carry.parent_basis_object_available
     axis_bundle_object_available = object_carry.parent_axis_bundle_object_available
 
@@ -246,6 +368,8 @@ function _cartesian_parent_materialization_status(parent_axis, object_carry)
         status =
             parent_basis_object_available && axis_bundle_object_available ?
             :materialized_parent_objects_available :
+            parent_basis_object_available ?
+            :parent_basis_object_available_axis_bundle_pending :
             parent_axis_metadata_constructed ?
             :metadata_constructed_probe_only :
             :metadata_only_not_materialized,
@@ -254,18 +378,19 @@ function _cartesian_parent_materialization_status(parent_axis, object_carry)
         parent_basis_object_available,
         parent_basis_object_type_label = object_carry.parent_basis_object_type_label,
         parent_basis_metadata_available =
-            !isnothing(parent_axis_probe) && !isnothing(parent_axis_probe.basis_metadata),
+            object_carry.parent_basis_metadata_available,
         axis_bundle_materialized = axis_bundle_object_available,
         axis_bundle_object_available,
         axis_bundle_object_type_label =
             object_carry.parent_axis_bundle_object_type_label,
         axis_bundle_metadata_status = axis_bundle_status,
         axis_bundle_metadata_available =
-            !isnothing(parent_axis_probe) &&
-            axis_bundle_status == :constructed,
+            object_carry.parent_axis_bundle_metadata_available,
         materialization_scope =
             parent_basis_object_available && axis_bundle_object_available ?
             :transient_parent_objects_carried_report_metadata_only :
+            parent_basis_object_available ?
+            :transient_parent_basis_carried_axis_bundle_pending_report_metadata_only :
             :metadata_only_parent_contract,
     )
 end
@@ -298,22 +423,18 @@ function _cartesian_parent_materialization_plan(
     standard_setup,
     parent_axis,
     route_axis_counts,
+    object_carry,
 )
     atom_count = length(center_table)
     basis_metadata_available =
         !isnothing(parent_axis.parent_axis_probe) &&
-        !isnothing(parent_axis.parent_axis_probe.basis_metadata)
+        !isnothing(parent_axis.parent_axis_probe.basis_metadata) ||
+        object_carry.parent_basis_metadata_available
     axis_bundle_metadata_available =
         !isnothing(parent_axis.parent_axis_probe) &&
         parent_axis.parent_axis_probe.axis_bundle_metadata.status == :constructed
-    basis_object_available =
-        !isnothing(parent_axis.parent_axis_probe) &&
-        hasproperty(parent_axis.parent_axis_probe, :basis_object_available) &&
-        parent_axis.parent_axis_probe.basis_object_available
-    axis_bundle_object_available =
-        !isnothing(parent_axis.parent_axis_probe) &&
-        hasproperty(parent_axis.parent_axis_probe, :axis_bundle_object_available) &&
-        parent_axis.parent_axis_probe.axis_bundle_object_available
+    basis_object_available = object_carry.parent_basis_object_available
+    axis_bundle_object_available = object_carry.parent_axis_bundle_object_available
     available_inputs =
         _cartesian_parent_materialization_plan_available_inputs(
             standard_setup, parent_axis, route_axis_counts)
@@ -321,14 +442,20 @@ function _cartesian_parent_materialization_plan(
 
     family = classification.system_classification
     if family == :one_center
-        missing_inputs = (
-            route_axis_pending...,
-            :reviewed_one_center_parent_axis_builder,
-            :one_center_parent_basis_or_axis_bundle_metadata_probe,
-        )
+        missing_inputs =
+            basis_object_available ?
+            (:one_center_axis_bundle_builder,) :
+            (
+                route_axis_pending...,
+                :reviewed_one_center_parent_axis_builder,
+                :one_center_parent_basis_or_axis_bundle_metadata_probe,
+            )
         return (;
             object_kind = :cartesian_parent_materialization_plan,
-            status = :metadata_only_pending_one_center_parent_axis_builder,
+            status =
+                basis_object_available ?
+                :one_center_parent_basis_carried_axis_bundle_pending :
+                :metadata_only_pending_one_center_parent_axis_builder,
             planning_family = :one_center_parent_lattice,
             system_classification = family,
             system_classification_status =
@@ -344,8 +471,8 @@ function _cartesian_parent_materialization_plan(
             one_center_compatible = true,
             bond_aligned_diatomic_compatible = false,
             axis_aligned_chain_compatible = false,
-            metadata_only = true,
-            constructs_basis_now = false,
+            metadata_only = !basis_object_available,
+            constructs_basis_now = basis_object_available,
             constructs_axis_bundle_now = false,
             basis_metadata_available,
             axis_bundle_metadata_available,
@@ -357,11 +484,17 @@ function _cartesian_parent_materialization_plan(
             missing_input_count = length(missing_inputs),
             pending_facts = missing_inputs,
             blocked = true,
-            blocker = :pending_one_center_parent_axis_builder,
+            blocker =
+                basis_object_available ?
+                :pending_one_center_axis_bundle_builder :
+                :pending_one_center_parent_axis_builder,
             diagnostics = (
                 source = :cartesian_parent_materialization_plan,
                 private_development_only = true,
-                materialization_scope = :metadata_only_parent_planning,
+                materialization_scope =
+                    basis_object_available ?
+                    :transient_one_center_parent_basis_object_available :
+                    :metadata_only_parent_planning,
                 public_default_behavior_changed = false,
                 shellification_restructured = false,
                 hamiltonian_export = false,
@@ -2244,11 +2377,13 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     route_axis_counts =
         _pqs_source_box_route_driver_route_axis_counts(
             standard_setup, parent_axis, system, recipe)
-    object_carry = _cartesian_parent_object_carry(parent_axis)
+    object_carry = _cartesian_parent_object_carry(
+        center_table, classification, standard_setup,
+        parent_axis, route_axis_counts, parent_inputs)
     materialization_plan =
         _cartesian_parent_materialization_plan(
             center_table, center_axis_metadata, classification,
-            standard_setup, parent_axis, route_axis_counts)
+            standard_setup, parent_axis, route_axis_counts, object_carry)
     materialization_status =
         _cartesian_parent_materialization_status(parent_axis, object_carry)
 

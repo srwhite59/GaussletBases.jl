@@ -182,6 +182,9 @@ function _pqs_route_driver_check_parent_contract(
     bond_axis,
     chain_axis,
     parent_materialization_planning_family,
+    constructs_basis_now = false,
+    constructs_axis_bundle_now = false,
+    parent_basis_materialization_status = :metadata_only_not_materialized,
 )
     @test hasproperty(report, :parent_contract)
     parent_contract = report.parent_contract
@@ -208,16 +211,18 @@ function _pqs_route_driver_check_parent_contract(
           parent_contract.parent_materialization_plan.constructs_basis_now
     @test parent_contract.parent_axis_bundle_object_available ==
           parent_contract.parent_materialization_plan.constructs_axis_bundle_now
-    @test !parent_contract.parent_materialization_plan.constructs_basis_now
-    @test !parent_contract.parent_materialization_plan.constructs_axis_bundle_now
+    @test parent_contract.parent_materialization_plan.constructs_basis_now ==
+          constructs_basis_now
+    @test parent_contract.parent_materialization_plan.constructs_axis_bundle_now ==
+          constructs_axis_bundle_now
     @test parent_contract.parent_axis_counts == report.system_metadata.parent_axis_counts
     @test parent_contract.parent_axis_counts_source ==
           report.system_metadata.parent_axis_counts_source
     @test parent_contract.parent_box == report.system_metadata.parent_box
     @test parent_contract.parent_basis_materialization_status ==
-          :metadata_only_not_materialized
-    @test !parent_contract.parent_basis_materialized
-    @test !parent_contract.axis_bundle_materialized
+          parent_basis_materialization_status
+    @test parent_contract.parent_basis_materialized == constructs_basis_now
+    @test parent_contract.axis_bundle_materialized == constructs_axis_bundle_now
     @test parent_contract.diagnostics.parent_contract_driven_downstream_metadata
     @test parent_contract.diagnostics.public_default_behavior_changed == false
 
@@ -1233,6 +1238,9 @@ end
         bond_axis = nothing,
         chain_axis = nothing,
         parent_materialization_planning_family = :one_center_parent_lattice,
+        constructs_basis_now = true,
+        parent_basis_materialization_status =
+            :parent_basis_object_available_axis_bundle_pending,
     )
     one_center_request =
         GaussletBases._cartesian_shellization_route_configured_request(one_center_report)

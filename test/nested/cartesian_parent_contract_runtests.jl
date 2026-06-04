@@ -125,6 +125,18 @@ end
         atom_locations = ((0.0, 0.0, 0.0),),
         parent_axis_counts = (x = 7, y = 7, z = 7),
     )
+    one_center_rectangular = _cartesian_parent_contract_parent(
+        atom_symbols = ("Be",),
+        nuclear_charges = (4,),
+        atom_locations = ((0.0, 0.0, 0.0),),
+        parent_axis_counts = (x = 7, y = 5, z = 9),
+    )
+    one_center_shifted = _cartesian_parent_contract_parent(
+        atom_symbols = ("Be",),
+        nuclear_charges = (4,),
+        atom_locations = ((1.0, 0.0, 0.0),),
+        parent_axis_counts = (x = 7, y = 7, z = 7),
+    )
     be2 = _cartesian_parent_contract_parent(
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
@@ -159,6 +171,10 @@ end
 
     @test Tuple(propertynames(one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(scalar_one_center)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
+    @test Tuple(propertynames(one_center_rectangular)) ==
+          _CARTESIAN_PARENT_CONTRACT_FIELDS
+    @test Tuple(propertynames(one_center_shifted)) ==
+          _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(be2)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(probed_be2)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
     @test Tuple(propertynames(chain)) == _CARTESIAN_PARENT_CONTRACT_FIELDS
@@ -167,6 +183,8 @@ end
 
     @test one_center.object_kind == :cartesian_route_parent
     @test scalar_one_center.object_kind == :cartesian_route_parent
+    @test one_center_rectangular.object_kind == :cartesian_route_parent
+    @test one_center_shifted.object_kind == :cartesian_route_parent
     @test be2.object_kind == :cartesian_route_parent
     @test probed_be2.object_kind == :cartesian_route_parent
     @test chain.object_kind == :cartesian_route_parent
@@ -174,18 +192,24 @@ end
     @test non_axis_aligned.object_kind == :cartesian_route_parent
 
     @test one_center.axis_counts == (x = 7, y = 7, z = 7)
+    @test one_center_rectangular.axis_counts == (x = 7, y = 5, z = 9)
+    @test one_center_shifted.axis_counts == (x = 7, y = 7, z = 7)
     @test be2.axis_counts == (x = 9, y = 7, z = 9)
     @test probed_be2.axis_counts == (x = 31, y = 17, z = 17)
     @test chain.axis_counts == (x = 11, y = 7, z = 7)
     @test heteronuclear_chain.axis_counts == (x = 11, y = 7, z = 7)
     @test non_axis_aligned.axis_counts == (x = 9, y = 7, z = 9)
     @test one_center.axis_counts_source == :manual_fixture
+    @test one_center_rectangular.axis_counts_source == :manual_fixture
+    @test one_center_shifted.axis_counts_source == :manual_fixture
     @test be2.axis_counts_source == :manual_fixture
     @test probed_be2.axis_counts_source == :constructed_parent_axis_probe
     @test chain.axis_counts_source == :manual_fixture
     @test heteronuclear_chain.axis_counts_source == :manual_fixture
     @test non_axis_aligned.axis_counts_source == :manual_fixture
     @test one_center.axis_counts_status == :available
+    @test one_center_rectangular.axis_counts_status == :available
+    @test one_center_shifted.axis_counts_status == :available
     @test be2.axis_counts_status == :available
     @test probed_be2.axis_counts_status == :available
     @test chain.axis_counts_status == :available
@@ -194,6 +218,8 @@ end
 
     @test one_center.atom_count == 1
     @test scalar_one_center.atom_count == 1
+    @test one_center_rectangular.atom_count == 1
+    @test one_center_shifted.atom_count == 1
     @test scalar_one_center.atom_symbols == ("Be",)
     @test scalar_one_center.nuclear_charges == (4.0,)
     @test be2.atom_count == 2
@@ -202,6 +228,8 @@ end
     @test heteronuclear_chain.atom_count == 3
     @test non_axis_aligned.atom_count == 2
     @test one_center.center_count == one_center.atom_count
+    @test one_center_rectangular.center_count == one_center_rectangular.atom_count
+    @test one_center_shifted.center_count == one_center_shifted.atom_count
     @test be2.center_count == be2.atom_count
     @test probed_be2.center_count == probed_be2.atom_count
     @test chain.center_count == chain.atom_count
@@ -212,6 +240,8 @@ end
     @test Tuple(center.nuclear_charge for center in be2.center_table) == (4, 4)
 
     @test one_center.system_classification == :one_center
+    @test one_center_rectangular.system_classification == :one_center
+    @test one_center_shifted.system_classification == :one_center
     @test one_center.system_classification_status == :explicit_atom_count_one
     @test one_center.bond_axis === nothing
     @test one_center.chain_axis === nothing
@@ -249,6 +279,10 @@ end
     @test non_axis_aligned.center_axis_metadata.active_axes == (:x, :y)
 
     @test one_center.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
+    @test one_center_rectangular.parent_axis_readiness.parent_axis_counts_status ==
+          :manual_fixture
+    @test one_center_shifted.parent_axis_readiness.parent_axis_counts_status ==
+          :manual_fixture
     @test be2.parent_axis_readiness.parent_axis_counts_status == :manual_fixture
     @test probed_be2.parent_axis_readiness.parent_axis_counts_status ==
           :pending_helper_or_documented_rule
@@ -261,14 +295,44 @@ end
     @test one_center.parent_materialization_plan.object_kind ==
           :cartesian_parent_materialization_plan
     @test one_center.parent_materialization_plan_status ==
-          :metadata_only_pending_one_center_parent_axis_builder
+          :one_center_parent_basis_carried_axis_bundle_pending
     @test one_center.parent_materialization_planning_family ==
           :one_center_parent_lattice
     @test one_center.parent_materialization_blocker ==
-          :pending_one_center_parent_axis_builder
+          :pending_one_center_axis_bundle_builder
     @test one_center.parent_materialization_plan.one_center_compatible
-    @test !one_center.parent_materialization_plan.constructs_basis_now
+    @test one_center.parent_materialization_plan.constructs_basis_now
     @test !one_center.parent_materialization_plan.constructs_axis_bundle_now
+    @test one_center.parent_basis_object_available
+    @test !one_center.parent_qw_basis_object_available
+    @test !one_center.parent_axis_bundle_object_available
+    @test one_center.parent_basis_object !== nothing
+    @test one_center.parent_qw_basis_object === nothing
+    @test one_center.parent_axis_bundle_object === nothing
+    @test one_center.parent_basis_object_type_label ==
+          "CartesianParentGaussletBasis3D"
+    @test one_center.parent_qw_basis_object_type_label == "unavailable"
+    @test one_center.parent_axis_bundle_object_type_label == "unavailable"
+    @test GaussletBases.CartesianParentGaussletBases.parent_axis_counts(
+        one_center.parent_basis_object,
+    ) == (7, 7, 7)
+    @test GaussletBases.CartesianParentGaussletBases.parent_axis_counts(
+        one_center_rectangular.parent_basis_object,
+    ) == (7, 5, 9)
+    @test one_center_rectangular.parent_basis_object.axis_sharing == :separate_axes
+
+    @test one_center_shifted.parent_materialization_plan_status ==
+          :metadata_only_pending_one_center_parent_axis_builder
+    @test one_center_shifted.parent_materialization_blocker ==
+          :pending_one_center_parent_axis_builder
+    @test !one_center_shifted.parent_materialization_plan.constructs_basis_now
+    @test !one_center_shifted.parent_materialization_plan.constructs_axis_bundle_now
+    @test !one_center_shifted.parent_basis_object_available
+    @test !one_center_shifted.parent_qw_basis_object_available
+    @test !one_center_shifted.parent_axis_bundle_object_available
+    @test one_center_shifted.parent_basis_object === nothing
+    @test one_center_shifted.parent_object_carry.parent_basis_object_source ==
+          :pending_non_origin_one_center_parent_mapping
 
     @test be2.parent_materialization_plan_status ==
           :metadata_only_diatomic_parent_api_candidate
@@ -336,6 +400,8 @@ end
     @test non_axis_aligned.parent_materialization_plan.blocked
 
     @test one_center.parent_basis_materialization_status ==
+          :parent_basis_object_available_axis_bundle_pending
+    @test one_center_shifted.parent_basis_materialization_status ==
           :metadata_only_not_materialized
     @test be2.parent_basis_materialization_status ==
           :metadata_only_not_materialized
@@ -347,13 +413,15 @@ end
           :metadata_only_not_materialized
     @test non_axis_aligned.parent_basis_materialization_status ==
           :metadata_only_not_materialized
-    @test !one_center.parent_basis_materialized
+    @test one_center.parent_basis_materialized
+    @test !one_center_shifted.parent_basis_materialized
     @test !be2.parent_basis_materialized
     @test probed_be2.parent_basis_materialized
     @test !chain.parent_basis_materialized
     @test !heteronuclear_chain.parent_basis_materialized
     @test !non_axis_aligned.parent_basis_materialized
     @test !one_center.axis_bundle_materialized
+    @test !one_center_shifted.axis_bundle_materialized
     @test !be2.axis_bundle_materialized
     @test probed_be2.axis_bundle_materialized
     @test !chain.axis_bundle_materialized
