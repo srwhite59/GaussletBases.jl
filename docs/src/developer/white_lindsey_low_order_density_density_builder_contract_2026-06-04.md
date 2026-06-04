@@ -122,3 +122,127 @@ Useful existing pieces include:
 Reuse candidates are not adoption decisions. In particular, supplement-required
 atomic paths remain diagnostic inventory only for this benchmark route unless
 a later manager-scoped pass changes that boundary explicitly.
+
+## Design Inventory: 2026-06-04
+
+The strongest current reuse candidate is the existing nested fixed-block
+pair-sum path:
+
+- `src/cartesian_nested_faces.jl`
+  - `_nested_factorized_weight_aware_pair_terms(...)`;
+  - `_nested_weight_aware_pair_terms(...)`;
+  - `_nested_shell_packet(...)`;
+- `src/ordinary_qw_raw_blocks.jl`
+  - `_qwrg_fixed_block_interaction_matrix(fixed_block, expansion)`.
+
+The current White-Lindsey seed fixed block already carries `pair_sum`. A
+focused probe on the tiny `7`/`5` seed found:
+
+- `fixed_block.pair_sum !== nothing`;
+- `_qwrg_fixed_block_interaction_matrix(fixed_block, expansion)` returns a
+  finite symmetric `223 x 223` matrix;
+- the symmetry error was `0.0` for the probed seed.
+
+This suggests the likely builder formula is not a new Coulomb tensor
+construction. The likely first builder should consume the retained fixed
+block's existing density-density pair sum:
+
+```julia
+interaction_matrix =
+    _qwrg_fixed_block_interaction_matrix(fixed_block, expansion)
+```
+
+Conceptually, `fixed_block.pair_sum` is the retained two-index
+density-density matrix assembled during nested packet construction. It is the
+Coulomb-Gaussian expansion sum of density-normalized retained pair factors,
+not a four-index Galerkin Coulomb tensor and not a placeholder quadrature
+matrix.
+
+### Scaling And Normalization Ownership
+
+Current ownership appears to be:
+
+- Coulomb Gaussian exponents and coefficients are selected at sequence build
+  time. For the one-center atomic seed,
+  `_one_center_atomic_term_coefficients(...)` verifies that the PGDG bundle
+  exponents match the supplied `CoulombGaussianExpansion`, then uses the
+  expansion coefficients as `term_coefficients`.
+- Raw pair-factor normalization is owned by the nested packet pair-term
+  helpers, not by the eventual Ham writer.
+- In the factorized packet path,
+  `_nested_factorized_weight_aware_pair_terms(...)` projects axis integral
+  weights, builds normalized axis pair-term tables, and contracts the
+  coefficient-weighted three-axis term products.
+- In the support-reference packet path,
+  `_nested_weight_aware_pair_terms(...)` computes final retained weights,
+  divides support coefficients by those weights, and contracts raw pair terms.
+  This path is a small-fixture authority/debug comparison, not the intended
+  scalable algorithm.
+- `fixed_block.weights` are the final retained-basis integral weights. The
+  builder should carry them through to the payload and must not divide by them
+  again when consuming `fixed_block.pair_sum`.
+- `_qwrg_fixed_block_interaction_matrix(...)` owns the final symmetrization of
+  the stored pair sum.
+
+The remaining scaling decision is whether the future builder should trust
+`fixed_block.pair_sum` as already normalized and coefficient-summed, or expose
+a more explicit receipt proving those facts before a Ham bundle can be written.
+
+### Proposed Smallest Validation Fixture
+
+The smallest useful fixture is the current one-center White-Lindsey seed:
+
+```julia
+_white_lindsey_low_order_materialized_seed_fixture(
+    packet_kernel = :factorized_direct,
+)
+```
+
+Validation should compare it against the same seed with:
+
+```julia
+packet_kernel = :support_reference
+```
+
+The first design probe found:
+
+- factorized interaction size: `(223, 223)`;
+- support-reference interaction size: `(223, 223)`;
+- both outputs finite;
+- both symmetry errors `0.0`;
+- `norm(factorized - support_reference, Inf) =
+  2.5757174171303632e-14`.
+
+This fixture should check:
+
+- `fixed_block.pair_sum !== nothing`;
+- `length(fixed_block.weights) == retained_dimension`;
+- all final weights are finite; for this seed, `minimum(fixed_block.weights) >
+  0.0` is a useful regression check, but positivity must not be promoted to a
+  generic quadrature-weight semantic;
+- interaction matrix size is `(retained_dimension, retained_dimension)`;
+- finite output;
+- symmetry error;
+- factorized-direct versus support-reference agreement.
+
+Dense parent four-index construction is not needed as the intended algorithm.
+It may be considered only as an additional tiny debug authority if a future
+manager-scoped pass asks for it.
+
+### Remaining Ambiguities
+
+The next manager/user decisions are:
+
+- whether `_qwrg_fixed_block_interaction_matrix(...)` is acceptable as the
+  interaction source for the private benchmark Ham builder, or whether a new
+  wrapper must first audit `pair_sum` provenance;
+- whether the full payload should be an `OrdinaryCartesianOperators3D`
+  instance, a new private fixed-block Ham payload, or a conversion object
+  consumed by the existing bundle writer;
+- how labels and centers should be populated for the current one-center
+  fixed-block retained pieces;
+- whether the one-body Hamiltonian should initially use only kinetic plus
+  stored `gaussian_sum` nuclear attraction, and how by-center nuclear sidecars
+  should be represented for this private route;
+- what retained dimension and packet kernel should define the first
+  performance target beyond the tiny seed.
