@@ -547,8 +547,6 @@ function _cartesian_shellization_route_planning_helper_map(plan)
         missing_inputs = (
             :route_configured_one_center_basis,
             :coulomb_expansion,
-            :nside,
-            :gausslet_backend,
             :refinement_levels,
             :packet_kernel,
             :fixed_block_materialization_handoff,
@@ -579,7 +577,6 @@ function _cartesian_shellization_route_planning_helper_map(plan)
             :coulomb_expansion_coefficients,
             :split_options,
             :shared_shell_layer_policy,
-            :nside,
             :packet_kernel,
             :fixed_block_adapter_handoff,
             :basis_or_ham_export_handoff,
@@ -693,8 +690,7 @@ function _cartesian_shellization_route_materializer_input_readiness(
         missing_materializer_options = request.missing_materializer_options,
         materializer_option_blocker = request.materializer_option_blocker,
         driver_defaults_not_materializer_contract = (
-            :nside,
-            :backend_refinement_options,
+            :refinement_options,
             :packet_kernel,
             :fixed_block_or_export_handoff,
         ),

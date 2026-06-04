@@ -338,14 +338,14 @@ function _pqs_route_driver_check_be2_shellization_request(
           :metadata_only_pending_materializer_inputs
     @test materialization.route_configured_primary_planned_helper ==
           :_nested_bond_aligned_diatomic_source
-    @test materialization.route_configured_missing_input_count == 9
+    @test materialization.route_configured_missing_input_count == 8
     @test materialization.route_configured_helper_map_blocker ==
           :pending_route_configured_bond_aligned_diatomic_materializer_inputs
     @test materialization.route_configured_input_readiness_available
     @test materialization.route_configured_input_readiness_status ==
           :blocked_missing_materializer_inputs
     @test materialization.route_configured_available_fact_count == 10
-    @test materialization.route_configured_materializer_missing_input_count == 9
+    @test materialization.route_configured_materializer_missing_input_count == 8
     @test materialization.route_configured_input_readiness_blocker ==
           :pending_route_configured_bond_aligned_diatomic_materializer_inputs
     @test materialization.route_configured_materializer_config_available
@@ -353,7 +353,7 @@ function _pqs_route_driver_check_be2_shellization_request(
           :blocked_missing_materializer_inputs
     @test materialization.route_configured_materializer_config_planning_family ==
           :bond_aligned_diatomic_shellization
-    @test materialization.route_configured_materializer_config_pending_input_count == 9
+    @test materialization.route_configured_materializer_config_pending_input_count == 8
 
     request = materialization.route_configured_shellization_request
     @test request.object_kind == :cartesian_shellization_route_configured_request
@@ -452,7 +452,8 @@ function _pqs_route_driver_check_be2_shellization_request(
     @test readiness.missing_input_count ==
           materialization.route_configured_materializer_missing_input_count
     @test readiness.blocker == materialization.route_configured_input_readiness_blocker
-    @test :nside in readiness.driver_defaults_not_materializer_contract
+    @test !in(:nside, readiness.driver_defaults_not_materializer_contract)
+    @test :refinement_options in readiness.driver_defaults_not_materializer_contract
     @test !readiness.materializer_ready
     @test !readiness.route_configured_shellization_consumed
     @test !readiness.constructs_basis
@@ -976,20 +977,20 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "metadata_only_pending_materializer_inputs"
             @test String(file["meta/route_configured_primary_planned_helper"]) ==
                   "_nested_bond_aligned_diatomic_source"
-            @test file["meta/route_configured_missing_input_count"] == 9
+            @test file["meta/route_configured_missing_input_count"] == 8
             @test String(file["meta/route_configured_helper_map_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test String(file["meta/route_configured_input_readiness_status"]) ==
                   "blocked_missing_materializer_inputs"
             @test file["meta/route_configured_available_fact_count"] == 10
-            @test file["meta/route_configured_materializer_missing_input_count"] == 9
+            @test file["meta/route_configured_materializer_missing_input_count"] == 8
             @test String(file["meta/route_configured_input_readiness_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test String(file["meta/route_configured_materializer_config_status"]) ==
                   "blocked_missing_materializer_inputs"
             @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
                   "bond_aligned_diatomic_shellization"
-            @test file["meta/route_configured_materializer_config_pending_input_count"] == 9
+            @test file["meta/route_configured_materializer_config_pending_input_count"] == 8
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -1061,20 +1062,20 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
                   "metadata_only_pending_materializer_inputs"
             @test String(file["meta/route_configured_primary_planned_helper"]) ==
                   "_nested_bond_aligned_diatomic_source"
-            @test file["meta/route_configured_missing_input_count"] == 9
+            @test file["meta/route_configured_missing_input_count"] == 8
             @test String(file["meta/route_configured_helper_map_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test String(file["meta/route_configured_input_readiness_status"]) ==
                   "blocked_missing_materializer_inputs"
             @test file["meta/route_configured_available_fact_count"] == 10
-            @test file["meta/route_configured_materializer_missing_input_count"] == 9
+            @test file["meta/route_configured_materializer_missing_input_count"] == 8
             @test String(file["meta/route_configured_input_readiness_blocker"]) ==
                   "pending_route_configured_bond_aligned_diatomic_materializer_inputs"
             @test String(file["meta/route_configured_materializer_config_status"]) ==
                   "blocked_missing_materializer_inputs"
             @test String(file["meta/route_configured_materializer_config_planning_family"]) ==
                   "bond_aligned_diatomic_shellization"
-            @test file["meta/route_configured_materializer_config_pending_input_count"] == 9
+            @test file["meta/route_configured_materializer_config_pending_input_count"] == 8
             @test Bool(file["meta/shellization_summary_available"])
             @test String(file["meta/shellization_source"]) ==
                   "white_lindsey_one_center_seed"
@@ -1298,7 +1299,7 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             tsv,
         )
         @test occursin(
-            "route_materialization\troute_configured_missing_input_count\t9",
+            "route_materialization\troute_configured_missing_input_count\t8",
             tsv,
         )
         @test occursin(
@@ -1318,7 +1319,7 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             tsv,
         )
         @test occursin(
-            "route_materialization\troute_configured_materializer_missing_input_count\t9",
+            "route_materialization\troute_configured_materializer_missing_input_count\t8",
             tsv,
         )
         @test occursin(
@@ -1338,7 +1339,7 @@ function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_
             tsv,
         )
         @test occursin(
-            "route_materialization\troute_configured_materializer_config_pending_input_count\t9",
+            "route_materialization\troute_configured_materializer_config_pending_input_count\t8",
             tsv,
         )
         @test occursin(
