@@ -229,3 +229,74 @@ function _white_lindsey_low_order_materialized_seed_route_units(seed)
         weight_semantics = :retained_basis_integral_weights,
     )
 end
+
+function _white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
+    return (;
+        overlap = fixed_block.overlap,
+        position_x = fixed_block.position_x,
+        position_y = fixed_block.position_y,
+        position_z = fixed_block.position_z,
+        x2_x = fixed_block.x2_x,
+        x2_y = fixed_block.x2_y,
+        x2_z = fixed_block.x2_z,
+        kinetic = fixed_block.kinetic,
+    )
+end
+
+function _white_lindsey_low_order_operator_matrix_sizes(matrices)
+    return NamedTuple{keys(matrices)}(Tuple(size(matrix) for matrix in values(matrices)))
+end
+
+function _white_lindsey_low_order_operator_finite_ready(matrices)
+    return NamedTuple{keys(matrices)}(Tuple(all(isfinite, matrix) for matrix in values(matrices)))
+end
+
+function _white_lindsey_low_order_operator_symmetry_errors(matrices)
+    return NamedTuple{keys(matrices)}(
+        Tuple(norm(matrix - transpose(matrix), Inf) for matrix in values(matrices)),
+    )
+end
+
+function _white_lindsey_low_order_operator_symmetric_ready(symmetry_errors; atol::Float64)
+    return NamedTuple{keys(symmetry_errors)}(
+        Tuple(error <= atol for error in values(symmetry_errors)),
+    )
+end
+
+function _white_lindsey_low_order_materialized_seed_operator_inventory(seed)
+    fixed_block = hasproperty(seed, :fixed_block) ? seed.fixed_block : seed
+    matrices = _white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
+    terms = keys(matrices)
+    retained_dimension = size(fixed_block.overlap, 1)
+    matrix_sizes = _white_lindsey_low_order_operator_matrix_sizes(matrices)
+    finite_ready = _white_lindsey_low_order_operator_finite_ready(matrices)
+    symmetry_errors = _white_lindsey_low_order_operator_symmetry_errors(matrices)
+    symmetry_tolerance = 1.0e-10
+    symmetric_ready = _white_lindsey_low_order_operator_symmetric_ready(
+        symmetry_errors;
+        atol = symmetry_tolerance,
+    )
+    overlap_identity_error = norm(
+        fixed_block.overlap - Matrix{Float64}(I, retained_dimension, retained_dimension),
+        Inf,
+    )
+
+    return (;
+        object_kind = :white_lindsey_low_order_materialized_seed_operator_inventory,
+        route_family = :white_lindsey_low_order,
+        status = :private_development_seed,
+        operator_source = :nested_fixed_block,
+        retained_dimension,
+        terms,
+        matrix_sizes,
+        finite_ready,
+        all_finite = all(values(finite_ready)),
+        symmetry_errors,
+        symmetric_ready,
+        symmetry_tolerance,
+        overlap_identity_error,
+        overlap_identity_ready = overlap_identity_error <= symmetry_tolerance,
+        operator_pairs_materialized = false,
+        electron_electron_materialized = false,
+    )
+end

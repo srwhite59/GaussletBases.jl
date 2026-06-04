@@ -9,6 +9,8 @@ using GaussletBases
     structure = fixture.structure
     inventory = fixture.inventory
     route_units = GaussletBases._white_lindsey_low_order_materialized_seed_route_units(fixture)
+    operator_inventory =
+        GaussletBases._white_lindsey_low_order_materialized_seed_operator_inventory(fixture)
 
     shell_retained_count = 98
     core_retained_count = 5^3
@@ -152,4 +154,33 @@ using GaussletBases
     @test route_units.standard_unit_inventory.pair_count == 0
     @test route_units.standard_unit_inventory.pair_family_counts ==
           (white_lindsey_low_order = 0,)
+
+    @test operator_inventory.object_kind ==
+          :white_lindsey_low_order_materialized_seed_operator_inventory
+    @test operator_inventory.route_family == :white_lindsey_low_order
+    @test operator_inventory.status == :private_development_seed
+    @test operator_inventory.operator_source == :nested_fixed_block
+    @test operator_inventory.retained_dimension == 223
+    @test operator_inventory.terms == (
+        :overlap,
+        :position_x,
+        :position_y,
+        :position_z,
+        :x2_x,
+        :x2_y,
+        :x2_z,
+        :kinetic,
+    )
+    @test all(==((223, 223)), values(operator_inventory.matrix_sizes))
+    @test all(values(operator_inventory.finite_ready))
+    @test operator_inventory.all_finite
+    @test operator_inventory.overlap_identity_error < 1.0e-10
+    @test operator_inventory.overlap_identity_ready
+    @test operator_inventory.symmetric_ready.overlap
+    @test operator_inventory.symmetric_ready.x2_x
+    @test operator_inventory.symmetric_ready.x2_y
+    @test operator_inventory.symmetric_ready.x2_z
+    @test operator_inventory.symmetric_ready.kinetic
+    @test !operator_inventory.operator_pairs_materialized
+    @test !operator_inventory.electron_electron_materialized
 end
