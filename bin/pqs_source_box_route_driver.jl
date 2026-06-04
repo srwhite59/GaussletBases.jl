@@ -168,6 +168,6 @@ using GaussletBases
         GaussletBases._pqs_source_box_route_driver_print_materialization(materialization)
     end
     GaussletBases._pqs_source_box_route_driver_save( report;
-        save_artifact, save_tsv, outfile, tsvfile,)
+        save_artifact, save_tsv, outfile, tsvfile, materialization,)
 
 println("driver complete")

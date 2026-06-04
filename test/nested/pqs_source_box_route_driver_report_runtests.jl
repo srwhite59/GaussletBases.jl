@@ -113,6 +113,26 @@ function _pqs_route_driver_check_report_output_sections(report)
         @test occursin("[retained_units]", text)
         @test occursin("[pair_inventory]", text)
 
+        jld2file = joinpath(tmpdir, "report.jld2")
+        open(joinpath(tmpdir, "jld2_stdout.txt"), "w") do io
+            redirect_stdout(io) do
+                GaussletBases._pqs_source_box_route_driver_save(
+                    report;
+                    save_artifact = true,
+                    save_tsv = false,
+                    outfile = jld2file,
+                    tsvfile = joinpath(tmpdir, "unused.tsv"),
+                )
+            end
+        end
+        jldopen(jld2file, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "report" in top_keys
+            @test !("materialization" in top_keys)
+        end
+
         tsvfile = joinpath(tmpdir, "report.tsv")
         stdout_file = joinpath(tmpdir, "save_stdout.txt")
         open(stdout_file, "w") do io
@@ -255,6 +275,59 @@ function _pqs_route_driver_check_materialization_status(pqs_report, white_lindse
     return nothing
 end
 
+function _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_report)
+    mktempdir() do dir
+        basisfile = joinpath(dir, "white_lindsey_basis_bundle.jld2")
+        materialization = GaussletBases._pqs_source_box_route_driver_materialization(
+            white_lindsey_report;
+            materialize_route = true,
+            save_basis_artifact = true,
+            save_ham_artifact = false,
+            basisfile,
+            hamfile = joinpath(dir, "unused_ham.jld2"),
+        )
+        reportfile = joinpath(dir, "route_report.jld2")
+        tsvfile = joinpath(dir, "route_report.tsv")
+        stdout_file = joinpath(dir, "save_stdout.txt")
+        open(stdout_file, "w") do io
+            redirect_stdout(io) do
+                GaussletBases._pqs_source_box_route_driver_save(
+                    white_lindsey_report;
+                    save_artifact = true,
+                    save_tsv = true,
+                    outfile = reportfile,
+                    tsvfile,
+                    materialization,
+                )
+            end
+        end
+
+        @test isfile(reportfile)
+        @test isfile(tsvfile)
+        @test isfile(basisfile)
+        @test !isfile(joinpath(dir, "unused_ham.jld2"))
+        jldopen(reportfile, "r") do file
+            top_keys = Set(
+                key isa AbstractVector ? join(string.(key), "/") : string(key) for key in keys(file)
+            )
+            @test "report" in top_keys
+            @test "materialization" in top_keys
+            saved_materialization = file["materialization"]
+            @test saved_materialization.status == :materialized_seed_report_available
+            @test saved_materialization.basis_artifact_status == :written_basis_only_bundle
+            @test saved_materialization.ham_bundle_export_status ==
+                  :pending_real_interaction_matrix
+        end
+
+        tsv = read(tsvfile, String)
+        @test occursin("route_materialization\tstatus\t:materialized_seed_report_available", tsv)
+        @test occursin("route_materialization\tbasis_artifact_status\t:written_basis_only_bundle", tsv)
+        @test occursin("route_materialization\tham_bundle_export_status\t:pending_real_interaction_matrix", tsv)
+        @test !occursin("route_materialization\tmaterialized_report\t", tsv)
+    end
+    return nothing
+end
+
 @testset "Route-driver standard unit inventory report" begin
     pqs_report = _pqs_route_driver_report_for_test()
     _pqs_route_driver_check_standard_unit_inventory(
@@ -292,4 +365,5 @@ end
     )
     _pqs_route_driver_check_report_output_sections(white_lindsey_report)
     _pqs_route_driver_check_materialization_status(pqs_report, white_lindsey_report)
+    _pqs_route_driver_check_materialization_report_artifacts(white_lindsey_report)
 end

@@ -174,9 +174,8 @@ function _pqs_source_box_route_driver_print_details(report)
     return nothing
 end
 
-function _pqs_source_box_route_driver_print_materialization(materialization)
-    _pqs_route_driver_print_section("route_materialization")
-    for field in (
+function _pqs_source_box_route_driver_materialization_status_fields()
+    return (
         :route_family,
         :materialize_route_requested,
         :save_basis_artifact_requested,
@@ -199,6 +198,11 @@ function _pqs_source_box_route_driver_print_materialization(materialization)
         :ham_export_blocker,
         :pqs_materialization_status,
     )
+end
+
+function _pqs_source_box_route_driver_print_materialization(materialization)
+    _pqs_route_driver_print_section("route_materialization")
+    for field in _pqs_source_box_route_driver_materialization_status_fields()
         _pqs_route_driver_print_kv(field, getproperty(materialization, field))
     end
     return nothing
@@ -221,11 +225,15 @@ end
 
 function _pqs_source_box_route_driver_save(
     report;
-    save_artifact, save_tsv, outfile, tsvfile,
+    save_artifact, save_tsv, outfile, tsvfile, materialization = nothing,
 )
     if save_artifact
         println("saving JLD2 report ", outfile)
-        jldsave(outfile; report)
+        if isnothing(materialization)
+            jldsave(outfile; report)
+        else
+            jldsave(outfile; report, materialization)
+        end
     end
 
     if save_tsv
@@ -263,6 +271,16 @@ function _pqs_source_box_route_driver_save(
             end
             for entry in report.pair_entries
                 _pqs_route_driver_write_tsv_row(io, "pair_entry", entry.pair_key, entry)
+            end
+            if !isnothing(materialization)
+                for field in _pqs_source_box_route_driver_materialization_status_fields()
+                    _pqs_route_driver_write_tsv_row(
+                        io,
+                        "route_materialization",
+                        field,
+                        getproperty(materialization, field),
+                    )
+                end
             end
             _pqs_route_driver_write_named_tuple_tsv(io, "diagnostics", report.diagnostics)
         end
