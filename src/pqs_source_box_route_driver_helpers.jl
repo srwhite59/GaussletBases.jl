@@ -7321,6 +7321,50 @@ function _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
     return nothing
 end
 
+function _pqs_source_box_route_driver_crc_typed_pair_operator_plan_print_line(
+    report,
+)
+    hasproperty(
+        report,
+        :low_order_route_core_typed_pair_operator_plan_inventory_available,
+    ) || return nothing
+    availability =
+        report.low_order_route_core_typed_pair_operator_plan_inventory_available ?
+        "available" :
+        "unavailable"
+    materialized =
+        report.low_order_route_core_typed_pair_operator_plan_materialized ?
+        "yes" :
+        "no"
+    return string(
+        "CRC typed pair-operator inventory: ",
+        availability,
+        " (",
+        repr(
+            report.low_order_route_core_typed_pair_operator_plan_inventory_status,
+        ),
+        "), typed plans ",
+        report.low_order_route_core_typed_pair_operator_plan_count,
+        ", blocked ",
+        report.low_order_route_core_typed_pair_operator_plan_blocked_count,
+        ", materialized ",
+        materialized,
+        ", blocker ",
+        repr(report.low_order_route_core_typed_pair_operator_plan_blocker),
+    )
+end
+
+function _pqs_source_box_route_driver_print_crc_typed_pair_operator_plan_summary(
+    report,
+)
+    line =
+        _pqs_source_box_route_driver_crc_typed_pair_operator_plan_print_line(
+            report,
+        )
+    isnothing(line) || println(line)
+    return nothing
+end
+
 function cartesian_print_summary(report, materialization)
     recipe = report.recipe_metadata
     setup = report.standard_setup
@@ -7366,6 +7410,9 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_pair_count
     _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
     _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
+    _pqs_source_box_route_driver_print_crc_typed_pair_operator_plan_summary(
+        report,
+    )
     @show report.low_order_hamiltonian_matrices_materialized
     _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
     @show materialization.basis_artifact_status materialization.basis_artifact_written

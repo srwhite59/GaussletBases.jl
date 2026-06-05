@@ -570,6 +570,10 @@ end
         summary_stdout,
     )
     @test occursin(
+        "CRC typed pair-operator inventory: available (:blocked_route_core_pair_operator_plan_inventory), typed plans 36, blocked 15, materialized no, blocker :aggregate_subtree_operator_plan_required",
+        summary_stdout,
+    )
+    @test occursin(
         "report.low_order_hamiltonian_matrices_materialized = false",
         summary_stdout,
     )
