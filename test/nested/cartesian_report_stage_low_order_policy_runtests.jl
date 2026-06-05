@@ -164,6 +164,11 @@ end
     @test default_summary.route_core_pair_count == 0
     @test !default_summary.route_core_pair_order_matches_staged
     @test isempty(default_summary.route_core_pair_family_counts)
+    @test !default_summary.route_core_pair_operator_ready
+    @test default_summary.route_core_pair_operator_readiness_status ==
+          :not_selected_legacy_source_pairs
+    @test default_summary.route_core_pair_operator_blocker ==
+          :not_selected_legacy_source_pairs
     @test default_summary.report_stage_fields_preserved
     @test default_report.low_order_shellization_policy_resolved ==
           :legacy_diatomic_source
@@ -196,6 +201,9 @@ end
     @test default_report.low_order_route_core_final_unit_count == 0
     @test !default_report.low_order_route_core_pair_inventory_available
     @test default_report.low_order_route_core_pair_count == 0
+    @test !default_report.low_order_route_core_pair_operator_ready
+    @test default_report.low_order_route_core_pair_operator_readiness_status ==
+          :not_selected_legacy_source_pairs
     @test !default_summary.pqs_lowering_prototype_available
     @test !default_summary.pqs_transform_prototype_available
     @test default_summary.pqs_prototype_stage == :not_available
@@ -270,6 +278,10 @@ end
     @test sum(
         family.pair_count for family in atom_growth_summary.route_core_pair_family_counts
     ) == 36
+    @test atom_growth_summary.route_core_pair_operator_ready
+    @test atom_growth_summary.route_core_pair_operator_readiness_status ==
+          :ready_route_core_pair_operator_metadata
+    @test isnothing(atom_growth_summary.route_core_pair_operator_blocker)
     @test atom_growth_summary.summary_only
     @test atom_growth_report.low_order_shellization_policy_requested ==
           :atom_growth_complete_rectangular
@@ -317,6 +329,10 @@ end
           :atom_growth_pair_inventory
     @test atom_growth_report.low_order_route_core_pair_family_counts ==
           atom_growth_summary.route_core_pair_family_counts
+    @test atom_growth_report.low_order_route_core_pair_operator_ready
+    @test atom_growth_report.low_order_route_core_pair_operator_readiness_status ==
+          :ready_route_core_pair_operator_metadata
+    @test isnothing(atom_growth_report.low_order_route_core_pair_operator_blocker)
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104

@@ -1823,6 +1823,14 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.route_core_pair_family_counts,
         low_order_route_core_summary_status =
             low_order_route_summary.route_core_summary_status,
+        low_order_route_core_pair_operator_ready =
+            low_order_route_summary.route_core_pair_operator_ready,
+        low_order_route_core_pair_operator_readiness_status =
+            low_order_route_summary.route_core_pair_operator_readiness_status,
+        low_order_route_core_pair_operator_blocker =
+            low_order_route_summary.route_core_pair_operator_blocker,
+        low_order_route_core_pair_operator_readiness_requirements =
+            low_order_route_summary.route_core_pair_operator_readiness_requirements,
         low_order_lw_complete_shell_cpb_enumeration_available =
             low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
         low_order_lw_complete_shell_region_count =
@@ -5647,6 +5655,96 @@ function _pqs_source_box_route_driver_route_core_pair_family_counts(
     )
 end
 
+function _pqs_source_box_route_driver_route_core_readiness_requirements()
+    return (
+        :complete_crc_final_unit_inventory,
+        :available_crc_pair_inventory,
+        :positive_crc_pair_count,
+        :crc_pair_order_matches_staged,
+        :crc_pair_family_metadata_available,
+    )
+end
+
+function _pqs_source_box_route_driver_route_core_pair_operator_readiness(;
+    route_core_sidecar_inventory,
+    route_core_pair_inventory_available::Bool,
+    route_core_pair_count::Int,
+    route_core_pair_order_matches_staged::Bool,
+    route_core_pair_family_counts,
+)
+    requirements =
+        _pqs_source_box_route_driver_route_core_readiness_requirements()
+    if isnothing(route_core_sidecar_inventory) ||
+       !hasproperty(route_core_sidecar_inventory, :status)
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_missing_route_core_sidecar_inventory,
+            route_core_pair_operator_blocker =
+                :missing_route_core_sidecar_inventory,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    if route_core_sidecar_inventory.status !=
+       :available_route_core_sidecar_inventory ||
+       route_core_sidecar_inventory.unsupported_unit_count != 0
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_incomplete_route_core_final_unit_inventory,
+            route_core_pair_operator_blocker =
+                :incomplete_route_core_final_unit_inventory,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    if !route_core_pair_inventory_available
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_missing_route_core_pair_inventory,
+            route_core_pair_operator_blocker =
+                :missing_route_core_pair_inventory,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    if route_core_pair_count <= 0
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_empty_route_core_pair_inventory,
+            route_core_pair_operator_blocker =
+                :empty_route_core_pair_inventory,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    if !route_core_pair_order_matches_staged
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_route_core_pair_order_mismatch,
+            route_core_pair_operator_blocker = :route_core_pair_order_mismatch,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    if isempty(route_core_pair_family_counts)
+        return (;
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_missing_route_core_pair_family_metadata,
+            route_core_pair_operator_blocker =
+                :missing_route_core_pair_family_metadata,
+            route_core_pair_operator_readiness_requirements = requirements,
+        )
+    end
+    return (;
+        route_core_pair_operator_ready = true,
+        route_core_pair_operator_readiness_status =
+            :ready_route_core_pair_operator_metadata,
+        route_core_pair_operator_blocker = nothing,
+        route_core_pair_operator_readiness_requirements = requirements,
+    )
+end
+
 function _pqs_source_box_route_driver_pair_keys_from_entries(pair_entries)
     return Tuple(pair.pair_key for pair in pair_entries)
 end
@@ -5706,6 +5804,13 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
             route_core_pair_family_count_source = :not_available,
             route_core_summary_status =
                 :blocked_missing_route_core_sidecar_inventory,
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status =
+                :blocked_missing_route_core_sidecar_inventory,
+            route_core_pair_operator_blocker =
+                :missing_route_core_sidecar_inventory,
+            route_core_pair_operator_readiness_requirements =
+                _pqs_source_box_route_driver_route_core_readiness_requirements(),
         )
     end
 
@@ -5733,6 +5838,23 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
        !route_core_pair_order_matches_staged
         throw(ArgumentError("CRC pair keys do not match pair-stage comparison keys"))
     end
+    route_core_pair_count =
+        route_core_pair_inventory_available ?
+        route_core_sidecar_inventory.crc_pair_count :
+        0
+    route_core_pair_family_counts =
+        _pqs_source_box_route_driver_route_core_pair_family_counts(
+            route_core_pair_inventory,
+        )
+    route_core_pair_operator_readiness =
+        _pqs_source_box_route_driver_route_core_pair_operator_readiness(
+            ;
+            route_core_sidecar_inventory,
+            route_core_pair_inventory_available,
+            route_core_pair_count,
+            route_core_pair_order_matches_staged,
+            route_core_pair_family_counts,
+        )
 
     return (;
         route_core_final_unit_count =
@@ -5743,17 +5865,11 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
         route_core_pair_inventory_status =
             route_core_sidecar_inventory.crc_pair_inventory_status,
         route_core_pair_inventory,
-        route_core_pair_count =
-            route_core_pair_inventory_available ?
-            route_core_sidecar_inventory.crc_pair_count :
-            0,
+        route_core_pair_count,
         route_core_pair_keys,
         route_core_pair_order_matches_staged,
         route_core_pair_order_comparison_source = comparison.source,
-        route_core_pair_family_counts =
-            _pqs_source_box_route_driver_route_core_pair_family_counts(
-                route_core_pair_inventory,
-            ),
+        route_core_pair_family_counts,
         route_core_pair_family_count_source =
             route_core_pair_inventory_available ?
             :crc_final_unit_lowering_recipes :
@@ -5762,6 +5878,7 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
             route_core_pair_inventory_available ?
             :available_route_core_unit_pair_summary :
             route_core_sidecar_inventory.crc_pair_inventory_status,
+        route_core_pair_operator_readiness...,
     )
 end
 
@@ -5782,6 +5899,11 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         route_core_pair_family_counts = (),
         route_core_pair_family_count_source = :not_available,
         route_core_summary_status = :not_available,
+        route_core_pair_operator_ready = false,
+        route_core_pair_operator_readiness_status = :not_available,
+        route_core_pair_operator_blocker = :not_available,
+        route_core_pair_operator_readiness_requirements =
+            _pqs_source_box_route_driver_route_core_readiness_requirements(),
     )
     low_order_transforms =
         hasproperty(transforms, :low_order_transforms) ?
@@ -5866,6 +5988,11 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                 route_core_pair_inventory_status =
                     :not_selected_legacy_source_pairs,
                 route_core_summary_status =
+                    :not_selected_legacy_source_pairs,
+                route_core_pair_operator_ready = false,
+                route_core_pair_operator_readiness_status =
+                    :not_selected_legacy_source_pairs,
+                route_core_pair_operator_blocker =
                     :not_selected_legacy_source_pairs,
             ),
         )
@@ -6005,6 +6132,14 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_pair_family_count_source,
         route_core_summary_status =
             low_order_pairs.route_core_summary_status,
+        route_core_pair_operator_ready =
+            low_order_pairs.route_core_pair_operator_ready,
+        route_core_pair_operator_readiness_status =
+            low_order_pairs.route_core_pair_operator_readiness_status,
+        route_core_pair_operator_blocker =
+            low_order_pairs.route_core_pair_operator_blocker,
+        route_core_pair_operator_readiness_requirements =
+            low_order_pairs.route_core_pair_operator_readiness_requirements,
         active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = low_order_pairs.pair_entries,
         pair_family_counts = low_order_pairs.pair_family_counts,
@@ -6060,6 +6195,11 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             route_core_pair_order_comparison_source = :not_available,
             route_core_pair_family_counts = (),
             route_core_summary_status = :not_available,
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status = :not_available,
+            route_core_pair_operator_blocker = :not_available,
+            route_core_pair_operator_readiness_requirements =
+                _pqs_source_box_route_driver_route_core_readiness_requirements(),
             helper_by_pair_family = nothing,
             pair_operator_helper_by_family = nothing,
             pair_helper_status_by_family = nothing,
@@ -6167,6 +6307,14 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         route_core_pair_family_counts =
             low_order_pairs.route_core_pair_family_counts,
         route_core_summary_status = low_order_pairs.route_core_summary_status,
+        route_core_pair_operator_ready =
+            low_order_pairs.route_core_pair_operator_ready,
+        route_core_pair_operator_readiness_status =
+            low_order_pairs.route_core_pair_operator_readiness_status,
+        route_core_pair_operator_blocker =
+            low_order_pairs.route_core_pair_operator_blocker,
+        route_core_pair_operator_readiness_requirements =
+            low_order_pairs.route_core_pair_operator_readiness_requirements,
         helper_by_pair_family = low_order_pairs.helper_by_pair_family,
         pair_operator_helper_by_family =
             low_order_pairs.pair_operator_helper_by_family,
@@ -6239,6 +6387,14 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.route_core_pair_family_counts,
         low_order_route_core_summary_status =
             low_order_assembly.route_core_summary_status,
+        low_order_route_core_pair_operator_ready =
+            low_order_assembly.route_core_pair_operator_ready,
+        low_order_route_core_pair_operator_readiness_status =
+            low_order_assembly.route_core_pair_operator_readiness_status,
+        low_order_route_core_pair_operator_blocker =
+            low_order_assembly.route_core_pair_operator_blocker,
+        low_order_route_core_pair_operator_readiness_requirements =
+            low_order_assembly.route_core_pair_operator_readiness_requirements,
         low_order_pair_operator_helper_by_family =
             low_order_assembly.pair_operator_helper_by_family,
         low_order_pair_helper_status_by_family =
@@ -6448,6 +6604,11 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             route_core_pair_order_comparison_source = :not_available,
             route_core_pair_family_counts = (),
             route_core_summary_status = :not_available,
+            route_core_pair_operator_ready = false,
+            route_core_pair_operator_readiness_status = :not_available,
+            route_core_pair_operator_blocker = :not_available,
+            route_core_pair_operator_readiness_requirements =
+                _pqs_source_box_route_driver_route_core_readiness_requirements(),
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
@@ -6517,6 +6678,14 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         route_core_pair_family_counts =
             low_order_assembly.route_core_pair_family_counts,
         route_core_summary_status = low_order_assembly.route_core_summary_status,
+        route_core_pair_operator_ready =
+            low_order_assembly.route_core_pair_operator_ready,
+        route_core_pair_operator_readiness_status =
+            low_order_assembly.route_core_pair_operator_readiness_status,
+        route_core_pair_operator_blocker =
+            low_order_assembly.route_core_pair_operator_blocker,
+        route_core_pair_operator_readiness_requirements =
+            low_order_assembly.route_core_pair_operator_readiness_requirements,
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,

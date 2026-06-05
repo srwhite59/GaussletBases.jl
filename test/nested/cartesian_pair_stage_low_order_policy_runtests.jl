@@ -130,6 +130,11 @@ end
           :not_selected_legacy_source_pairs
     @test default_summary.route_core_pair_count == 0
     @test isempty(default_summary.route_core_pair_keys)
+    @test !default_summary.route_core_pair_operator_ready
+    @test default_summary.route_core_pair_operator_readiness_status ==
+          :not_selected_legacy_source_pairs
+    @test default_summary.route_core_pair_operator_blocker ==
+          :not_selected_legacy_source_pairs
     @test default_summary.pair_stage_fields_preserved
     @test default_pairs.pair_entries === default_stages.units.route_skeleton.pair_entries
     @test default_pairs.pair_family_counts ===
@@ -142,6 +147,7 @@ end
     @test !default_pairs.route_core_pair_inventory_available
     @test default_pairs.route_core_pair_inventory_status ==
           :not_selected_legacy_source_pairs
+    @test !default_pairs.route_core_pair_operator_ready
     @test default_pairs.pair_stage == :pair_operator_terms_described
 
     atom_growth_stages = _cartesian_pair_stage_low_order_policy_pairs(
@@ -192,9 +198,22 @@ end
           :atom_growth_pair_inventory
     @test atom_growth_summary.route_core_pair_family_count_source ==
           :crc_final_unit_lowering_recipes
+    @test atom_growth_summary.route_core_pair_operator_ready
+    @test atom_growth_summary.route_core_pair_operator_readiness_status ==
+          :ready_route_core_pair_operator_metadata
+    @test isnothing(atom_growth_summary.route_core_pair_operator_blocker)
+    @test atom_growth_summary.route_core_pair_operator_readiness_requirements ==
+          (
+              :complete_crc_final_unit_inventory,
+              :available_crc_pair_inventory,
+              :positive_crc_pair_count,
+              :crc_pair_order_matches_staged,
+              :crc_pair_family_metadata_available,
+          )
     @test atom_growth_pairs.route_core_pair_inventory_available
     @test atom_growth_pairs.route_core_pair_inventory ===
           atom_growth_summary.route_core_pair_inventory
+    @test atom_growth_pairs.route_core_pair_operator_ready
     pair_inventory = atom_growth_summary.pair_inventory
     unit_inventory = atom_growth_stages.units.plan_unit_inventory
     @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory
@@ -355,6 +374,7 @@ end
     @test blocked_summary.route_core_pair_order_matches_staged
     @test blocked_summary.route_core_pair_order_comparison_source ==
           :route_core_sidecar_staged_pair_keys
+    @test blocked_summary.route_core_pair_operator_ready
     @test blocked_summary.helper_by_pair_family ==
           expected_atom_growth_helper_status
     @test blocked_summary.route_skeleton_pair_entries ===
@@ -363,4 +383,22 @@ end
           atom_growth_stages.units.route_skeleton.pair_family_counts
     @test blocked_summary.route_skeleton_helper_by_pair_family ===
           atom_growth_stages.units.route_skeleton.helper_by_pair_family
+
+    missing_crc_units = merge(
+        atom_growth_stages.units,
+        (; route_core_sidecar_inventory = nothing),
+    )
+    missing_crc_summary =
+        GaussletBases._pqs_source_box_route_driver_pair_stage_low_order_summary(
+            missing_crc_units,
+            atom_growth_stages.transforms,
+            atom_growth_stages.units.route_skeleton,
+        )
+    @test missing_crc_summary.independent_atom_growth_pair_inventory_available
+    @test !missing_crc_summary.route_core_pair_inventory_available
+    @test !missing_crc_summary.route_core_pair_operator_ready
+    @test missing_crc_summary.route_core_pair_operator_readiness_status ==
+          :blocked_missing_route_core_sidecar_inventory
+    @test missing_crc_summary.route_core_pair_operator_blocker ==
+          :missing_route_core_sidecar_inventory
 end
