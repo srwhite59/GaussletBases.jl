@@ -3015,11 +3015,55 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter_summ
     )
 end
 
+function _pqs_source_box_route_driver_low_order_shellization_policy(
+    requested_policy,
+    probe_route_configured_diatomic_atom_growth_materializer::Bool,
+)
+    supported_policies = (:legacy_diatomic_source, :atom_growth_complete_rectangular)
+    explicit_policy_requested = !isnothing(requested_policy)
+    resolved_policy =
+        explicit_policy_requested ?
+        requested_policy :
+        probe_route_configured_diatomic_atom_growth_materializer ?
+        :atom_growth_complete_rectangular :
+        :legacy_diatomic_source
+    policy_source =
+        explicit_policy_requested ?
+        :explicit_low_order_shellization_policy :
+        probe_route_configured_diatomic_atom_growth_materializer ?
+        :probe_route_configured_diatomic_atom_growth_materializer_alias :
+        :default_legacy_diatomic_source
+    supported = resolved_policy in supported_policies
+    conflict =
+        explicit_policy_requested &&
+        probe_route_configured_diatomic_atom_growth_materializer &&
+        resolved_policy != :atom_growth_complete_rectangular
+    status =
+        !supported ?
+        :blocked_unsupported_low_order_shellization_policy :
+        conflict ?
+        :blocked_conflicting_low_order_shellization_policy :
+        :available_low_order_shellization_policy
+    blocker =
+        status == :available_low_order_shellization_policy ?
+        nothing :
+        status
+
+    return (;
+        low_order_shellization_policy_requested = requested_policy,
+        low_order_shellization_policy_resolved = resolved_policy,
+        low_order_shellization_policy_source = policy_source,
+        low_order_shellization_policy_status = status,
+        low_order_shellization_policy_blocker = blocker,
+    )
+end
+
 function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
     probe_route_configured_one_center_materializer::Bool = false,
     probe_route_configured_diatomic_atom_growth_materializer::Bool = false,
+    low_order_shellization_policy = nothing,
     save_basis_artifact::Bool = false,
     save_ham_artifact::Bool = false,
     basisfile::AbstractString = "cartesian_nesting_route_driver_basis_bundle.jld2",
@@ -3090,6 +3134,21 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_materializer_config.planning_family
     route_configured_materializer_config_pending_input_count =
         route_configured_materializer_config.pending_input_count
+    low_order_shellization_policy_contract =
+        _pqs_source_box_route_driver_low_order_shellization_policy(
+            low_order_shellization_policy,
+            probe_route_configured_diatomic_atom_growth_materializer,
+        )
+    low_order_shellization_policy_requested =
+        low_order_shellization_policy_contract.low_order_shellization_policy_requested
+    low_order_shellization_policy_resolved =
+        low_order_shellization_policy_contract.low_order_shellization_policy_resolved
+    low_order_shellization_policy_source =
+        low_order_shellization_policy_contract.low_order_shellization_policy_source
+    low_order_shellization_policy_status =
+        low_order_shellization_policy_contract.low_order_shellization_policy_status
+    low_order_shellization_policy_blocker =
+        low_order_shellization_policy_contract.low_order_shellization_policy_blocker
     route_configured_one_center_materializer_requested =
         probe_route_configured_one_center_materializer ||
         (
@@ -3117,7 +3176,9 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_diatomic_materializer_requested =
         materialize_route &&
         route_family == :white_lindsey_low_order &&
-        route_configured_system_classification == :bond_aligned_diatomic
+        route_configured_system_classification == :bond_aligned_diatomic &&
+        low_order_shellization_policy_status == :available_low_order_shellization_policy &&
+        low_order_shellization_policy_resolved == :legacy_diatomic_source
     route_materializer_payload =
         hasproperty(report, :route_materializer_payload) ?
         report.route_materializer_payload :
@@ -3174,10 +3235,23 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_diatomic_seed_fallback =
         route_configured_diatomic_materializer_probe_requested &&
         !route_configured_diatomic_materializer_probe_consumed
+    route_configured_diatomic_atom_growth_materializer_requested =
+        materialize_route &&
+        route_family == :white_lindsey_low_order &&
+        route_configured_system_classification == :bond_aligned_diatomic &&
+        low_order_shellization_policy_status == :available_low_order_shellization_policy &&
+        low_order_shellization_policy_resolved == :atom_growth_complete_rectangular
+    route_configured_diatomic_atom_growth_materializer_probe_requested_input =
+        low_order_shellization_policy_status == :available_low_order_shellization_policy &&
+        (
+            probe_route_configured_diatomic_atom_growth_materializer ||
+            route_configured_diatomic_atom_growth_materializer_requested
+        )
     route_configured_diatomic_atom_growth_materializer_probe =
         _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
             route_configured_materializer_config;
-            probe_route_configured_diatomic_atom_growth_materializer,
+            probe_route_configured_diatomic_atom_growth_materializer =
+                route_configured_diatomic_atom_growth_materializer_probe_requested_input,
             route_materializer_payload,
             white_lindsey_expansion,
             packet_kernel = route_configured_diatomic_packet_kernel,
@@ -3310,6 +3384,11 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_materializer_options_ready,
         route_configured_materializer_missing_options,
         route_configured_materializer_option_blocker,
+        low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source,
+        low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker,
     )
     route_configured_diatomic_materializer_contract = (;
         route_configured_diatomic_materializer_probe,
@@ -3446,6 +3525,102 @@ function _pqs_source_box_route_driver_materialization(
             hamfile,
             ham_export_blocker =
                 save_ham_artifact ? :materialize_route_false : nothing,
+            ham_preflight = nothing,
+            pqs_materialization_status =
+                route_family == :pqs_source_box ?
+                :pending_source_box_retained_route :
+                :not_applicable,
+        )
+    end
+
+    if low_order_shellization_policy_status != :available_low_order_shellization_policy
+        return (;
+            object_kind = :cartesian_nesting_route_driver_materialization,
+            route_family,
+            private_development_only = true,
+            materialize_route_requested = true,
+            save_basis_artifact_requested = save_basis_artifact,
+            save_ham_artifact_requested = save_ham_artifact,
+            route_configured_diatomic_ham_interaction_treatment_requested = nothing,
+            route_configured_diatomic_ham_interaction_treatment_consumed = nothing,
+            route_configured_diatomic_ham_interaction_treatment_status =
+                :not_applicable,
+            status = low_order_shellization_policy_status,
+            materialized_report = nothing,
+            materialized_report_kind = nothing,
+            route_configured_shellization_request,
+            route_configured_shellization_request_available = true,
+            route_configured_shellization_request_status,
+            route_configured_system_classification,
+            route_configured_system_classification_status,
+            route_configured_bond_axis,
+            route_configured_shellization_plan,
+            route_configured_shellization_plan_available = true,
+            route_configured_shellization_plan_status,
+            route_configured_shellization_planning_status,
+            route_configured_shellization_planning_family,
+            route_configured_midpoint_slab_status,
+            route_configured_shellization_helper_map,
+            route_configured_shellization_helper_map_available = true,
+            route_configured_shellization_helper_map_status,
+            route_configured_primary_planned_helper,
+            route_configured_missing_input_count,
+            route_configured_helper_map_blocker,
+            route_configured_input_readiness,
+            route_configured_input_readiness_available = true,
+            route_configured_input_readiness_status,
+            route_configured_available_fact_count,
+            route_configured_materializer_missing_input_count,
+            route_configured_input_readiness_blocker,
+            route_configured_materializer_config,
+            route_configured_materializer_config_available = true,
+            route_configured_materializer_config_status,
+            route_configured_materializer_config_planning_family,
+            route_configured_materializer_config_pending_input_count,
+            route_configured_one_center_materializer_probe,
+            route_configured_one_center_materializer_probe_requested,
+            route_configured_one_center_materializer_probe_status,
+            route_configured_one_center_materializer_probe_materialized,
+            route_configured_one_center_materializer_probe_consumed,
+            route_configured_one_center_materializer_probe_blocker,
+            route_configured_diatomic_atom_growth_materializer_probe,
+            route_configured_diatomic_materializer_contract...,
+            route_configured_diatomic_atom_growth_materializer_contract...,
+            route_configured_materializer_contract...,
+            shellization_summary = nothing,
+            shellization_summary_available = false,
+            shellization_source = :blocked_low_order_shellization_policy,
+            route_configured_shellization_consumed = false,
+            route_configured_legacy_diatomic_source_consumed = false,
+            materialized_shellization_stage = :blocked_low_order_shellization_policy,
+            seed_materialization_status = :not_applicable,
+            retained_dimension = report.retained_dimension,
+            final_integral_weights_status = :not_checked_low_order_policy_blocked,
+            one_body_operator_status = :not_checked_low_order_policy_blocked,
+            basis_bundle_export_status = :not_requested,
+            basis_artifact_status =
+                save_basis_artifact ?
+                :not_written_invalid_low_order_shellization_policy :
+                :not_requested,
+            basis_artifact_written = false,
+            basisfile,
+            basis_artifact_path = nothing,
+            basis_export_blocker =
+                save_basis_artifact ? low_order_shellization_policy_blocker : nothing,
+            ham_preflight_status = :not_checked_low_order_policy_blocked,
+            ham_missing_builder =
+                save_ham_artifact ? low_order_shellization_policy_blocker : nothing,
+            ham_operator_payload_status = :not_checked_low_order_policy_blocked,
+            ham_interaction_status = :not_checked_low_order_policy_blocked,
+            ham_bundle_export_status = :not_requested,
+            ham_artifact_status =
+                save_ham_artifact ?
+                :not_written_invalid_low_order_shellization_policy :
+                :not_requested,
+            ham_artifact_written = false,
+            hamfile,
+            ham_export_blocker =
+                save_ham_artifact ? low_order_shellization_policy_blocker : nothing,
             ham_preflight = nothing,
             pqs_materialization_status =
                 route_family == :pqs_source_box ?
@@ -4583,6 +4758,10 @@ function cartesian_print_summary(report, materialization)
     @show materialization.route_configured_materializer_d_consumed
     @show materialization.route_configured_materializer_nside_requested
     @show materialization.route_configured_materializer_nside_consumed
+    @show materialization.low_order_shellization_policy_requested
+    @show materialization.low_order_shellization_policy_resolved
+    @show materialization.low_order_shellization_policy_source
+    @show materialization.low_order_shellization_policy_status
     @show materialization.route_configured_one_center_materializer_probe_requested
     @show materialization.route_configured_one_center_materializer_probe_status
     @show materialization.route_configured_one_center_materializer_probe_blocker

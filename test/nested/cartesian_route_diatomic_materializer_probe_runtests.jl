@@ -304,6 +304,14 @@ end
           :materialized_route_configured_diatomic_shellization_available
     @test default_materialization.shellization_source ==
           :route_configured_bond_aligned_diatomic_source
+    @test default_materialization.low_order_shellization_policy_requested ===
+          nothing
+    @test default_materialization.low_order_shellization_policy_resolved ==
+          :legacy_diatomic_source
+    @test default_materialization.low_order_shellization_policy_source ==
+          :default_legacy_diatomic_source
+    @test default_materialization.low_order_shellization_policy_status ==
+          :available_low_order_shellization_policy
     @test default_materialization.route_configured_shellization_consumed
     @test !default_materialization.route_configured_diatomic_atom_growth_shellification_consumed
     @test default_materialization.route_configured_legacy_diatomic_source_consumed
@@ -329,6 +337,14 @@ end
 
     @test opt_in_materialization.status ==
           :materialized_route_configured_diatomic_atom_growth_report_available
+    @test opt_in_materialization.low_order_shellization_policy_requested ===
+          nothing
+    @test opt_in_materialization.low_order_shellization_policy_resolved ==
+          :atom_growth_complete_rectangular
+    @test opt_in_materialization.low_order_shellization_policy_source ==
+          :probe_route_configured_diatomic_atom_growth_materializer_alias
+    @test opt_in_materialization.low_order_shellization_policy_status ==
+          :available_low_order_shellization_policy
     @test opt_in_materialization.materialized_report !== nothing
     @test opt_in_materialization.materialized_report_kind ==
           :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
@@ -437,6 +453,33 @@ end
     @test opt_in_materialization.ham_bundle_export_status == :not_requested
     @test opt_in_materialization.ham_artifact_status == :not_requested
     @test !opt_in_materialization.ham_artifact_written
+
+    conflicting_policy_materialization =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            report;
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            white_lindsey_expansion = expansion,
+            low_order_shellization_policy = :legacy_diatomic_source,
+            probe_route_configured_diatomic_atom_growth_materializer = true,
+        )
+
+    @test conflicting_policy_materialization.status ==
+          :blocked_conflicting_low_order_shellization_policy
+    @test conflicting_policy_materialization.low_order_shellization_policy_requested ==
+          :legacy_diatomic_source
+    @test conflicting_policy_materialization.low_order_shellization_policy_resolved ==
+          :legacy_diatomic_source
+    @test conflicting_policy_materialization.low_order_shellization_policy_source ==
+          :explicit_low_order_shellization_policy
+    @test conflicting_policy_materialization.low_order_shellization_policy_status ==
+          :blocked_conflicting_low_order_shellization_policy
+    @test conflicting_policy_materialization.low_order_shellization_policy_blocker ==
+          :blocked_conflicting_low_order_shellization_policy
+    @test !conflicting_policy_materialization.route_configured_shellization_consumed
+    @test !conflicting_policy_materialization.route_configured_diatomic_atom_growth_shellification_consumed
+    @test !conflicting_policy_materialization.route_configured_legacy_diatomic_source_consumed
 end
 
 @testset "route-configured diatomic atom-growth opt-in writes private artifacts" begin
@@ -454,11 +497,19 @@ end
             basisfile,
             hamfile,
             white_lindsey_expansion = expansion,
-            probe_route_configured_diatomic_atom_growth_materializer = true,
+            low_order_shellization_policy = :atom_growth_complete_rectangular,
         )
 
         @test materialization.status ==
               :materialized_route_configured_diatomic_atom_growth_artifacts_available
+        @test materialization.low_order_shellization_policy_requested ==
+              :atom_growth_complete_rectangular
+        @test materialization.low_order_shellization_policy_resolved ==
+              :atom_growth_complete_rectangular
+        @test materialization.low_order_shellization_policy_source ==
+              :explicit_low_order_shellization_policy
+        @test materialization.low_order_shellization_policy_status ==
+              :available_low_order_shellization_policy
         @test materialization.basis_artifact_written
         @test materialization.ham_artifact_written
         @test materialization.basis_artifact_path == basisfile

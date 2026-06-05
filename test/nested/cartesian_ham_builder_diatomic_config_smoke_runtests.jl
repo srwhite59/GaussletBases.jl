@@ -24,11 +24,16 @@ function _write_diatomic_be2_driver_config(
     hamfile,
     interaction_treatment = nothing,
     probe_atom_growth = false,
+    low_order_shellization_policy = nothing,
 )
     interaction_treatment_line =
         isnothing(interaction_treatment) ?
         "" :
         "route_configured_diatomic_ham_interaction_treatment = $(repr(interaction_treatment))\n"
+    low_order_shellization_policy_line =
+        isnothing(low_order_shellization_policy) ?
+        "" :
+        "low_order_shellization_policy = $(repr(low_order_shellization_policy))\n"
     write(
         configfile,
         """
@@ -53,7 +58,7 @@ raw_product_box_probe_backend = :pgdg_localized_experimental
 
 materializer_backend = :pgdg_localized_experimental
 materializer_nside = 5
-$(interaction_treatment_line)materialize_route = true
+$(interaction_treatment_line)$(low_order_shellization_policy_line)materialize_route = true
 probe_route_configured_one_center_materializer = false
 probe_route_configured_diatomic_atom_growth_materializer = $(repr(probe_atom_growth))
 save_artifact = true
@@ -341,7 +346,7 @@ end
             tsvfile,
             basisfile,
             hamfile,
-            probe_atom_growth = true,
+            low_order_shellization_policy = :atom_growth_complete_rectangular,
         )
 
         open(stdoutfile, "w") do io
@@ -369,6 +374,14 @@ end
                   :private_development_route_configured_atom_growth
             @test materialization.shellization_source ==
                   :bond_aligned_diatomic_atom_growth_construction_plan
+            @test materialization.low_order_shellization_policy_requested ==
+                  :atom_growth_complete_rectangular
+            @test materialization.low_order_shellization_policy_resolved ==
+                  :atom_growth_complete_rectangular
+            @test materialization.low_order_shellization_policy_source ==
+                  :explicit_low_order_shellization_policy
+            @test materialization.low_order_shellization_policy_status ==
+                  :available_low_order_shellization_policy
             @test materialization.route_configured_shellization_consumed
             @test materialization.route_configured_diatomic_atom_growth_shellification_consumed
             @test !materialization.route_configured_legacy_diatomic_source_consumed
@@ -440,6 +453,14 @@ end
         stdout = read(stdoutfile, String)
         @test occursin(
             "route_configured_diatomic_atom_growth_materializer_probe_requested",
+            stdout,
+        )
+        @test occursin(
+            "materialization.low_order_shellization_policy_resolved = :atom_growth_complete_rectangular",
+            stdout,
+        )
+        @test occursin(
+            "materialization.low_order_shellization_policy_source = :explicit_low_order_shellization_policy",
             stdout,
         )
         @test occursin(
