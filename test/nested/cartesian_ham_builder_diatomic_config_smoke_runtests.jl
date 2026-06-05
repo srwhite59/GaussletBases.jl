@@ -23,6 +23,7 @@ function _write_diatomic_be2_driver_config(
     basisfile,
     hamfile,
     interaction_treatment = nothing,
+    probe_atom_growth = false,
 )
     interaction_treatment_line =
         isnothing(interaction_treatment) ?
@@ -54,6 +55,7 @@ materializer_backend = :pgdg_localized_experimental
 materializer_nside = 5
 $(interaction_treatment_line)materialize_route = true
 probe_route_configured_one_center_materializer = false
+probe_route_configured_diatomic_atom_growth_materializer = $(repr(probe_atom_growth))
 save_artifact = true
 save_tsv = true
 save_basis_artifact = true
@@ -324,6 +326,124 @@ end
                 ],
             ) == "ggt_nearest"
         end
+    end
+
+    mktempdir() do dir
+        configfile = joinpath(dir, "be2_atom_growth_driver_config.jl")
+        reportfile = joinpath(dir, "be2_atom_growth_report.jld2")
+        tsvfile = joinpath(dir, "be2_atom_growth_report.tsv")
+        basisfile = joinpath(dir, "be2_atom_growth_basis.jld2")
+        hamfile = joinpath(dir, "be2_atom_growth_ham.jld2")
+        stdoutfile = joinpath(dir, "be2_atom_growth_driver_stdout.txt")
+        _write_diatomic_be2_driver_config(
+            configfile;
+            reportfile,
+            tsvfile,
+            basisfile,
+            hamfile,
+            probe_atom_growth = true,
+        )
+
+        open(stdoutfile, "w") do io
+            redirect_stdout(io) do
+                _cartesian_ham_builder_diatomic_with_args([configfile]) do
+                    include(_CARTESIAN_HAM_BUILDER_DIATOMIC_DRIVER)
+                end
+            end
+        end
+
+        @test isfile(reportfile)
+        @test isfile(tsvfile)
+        @test isfile(basisfile)
+        @test isfile(hamfile)
+
+        retained_dimension = jldopen(reportfile, "r") do file
+            materialization = file["materialization"]
+            @test materialization.status ==
+                  :materialized_route_configured_diatomic_atom_growth_artifacts_available
+            @test materialization.materialized_report_kind ==
+                  :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
+            @test materialization.materialized_report.object_kind ==
+                  :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
+            @test materialization.materialized_report.status ==
+                  :private_development_route_configured_atom_growth
+            @test materialization.shellization_source ==
+                  :bond_aligned_diatomic_atom_growth_construction_plan
+            @test !materialization.route_configured_shellization_consumed
+            @test materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+            @test materialization.route_configured_diatomic_atom_growth_basis_adapter_status ==
+                  :available_route_configured_diatomic_atom_growth_basis_adapter
+            @test materialization.route_configured_diatomic_atom_growth_ham_adapter_status ==
+                  :available_route_configured_diatomic_ham_adapter
+            @test materialization.basis_artifact_written
+            @test materialization.ham_artifact_written
+            @test materialization.ham_preflight_status ==
+                  :available_route_configured_diatomic_atom_growth_ham_adapter
+            @test materialization.ham_bundle_export_status ==
+                  :available_route_configured_diatomic_atom_growth_ham_bundle_payload
+            materialization.retained_dimension
+        end
+
+        jldopen(basisfile, "r") do file
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test file["basis/final_dimension"] == retained_dimension
+            @test length(file["basis/final_integral_weights"]) == retained_dimension
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_diatomic_atom_growth_report"
+            @test String(file["meta/shellification_materialization_kind"]) ==
+                  "cartesian_atom_growth_shellification_materialization_result"
+            @test String(file["meta/shellization_source"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test String(file["meta/shellization_authority"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test !Bool(file["meta/active_source_authority"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_default_behavior_changed"])
+            @test String(file["meta/basis_export_status"]) ==
+                  "supported_route_configured_diatomic_atom_growth_basis_only_fixed_block"
+        end
+
+        jldopen(hamfile, "r") do file
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "ordinary_cartesian_operators"
+            @test String(file["ham/interaction_treatment"]) == "ggt_nearest"
+            @test file["basis/final_dimension"] == retained_dimension
+            @test size(file["ham/overlap"]) ==
+                  (retained_dimension, retained_dimension)
+            @test size(file["ham/one_body_hamiltonian"]) ==
+                  (retained_dimension, retained_dimension)
+            @test size(file["ham/interaction_matrix"]) ==
+                  (retained_dimension, retained_dimension)
+            @test file["ham/default_nuclear_charges"] == [4.0, 4.0]
+            @test String(file["ham/nuclear_term_storage"]) == "by_center"
+            @test file["ham/nuclear_one_body_by_center/count"] == 2
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_diatomic_atom_growth_report"
+            @test String(file["meta/shellification_materialization_kind"]) ==
+                  "cartesian_atom_growth_shellification_materialization_result"
+            @test String(file["meta/shellization_source"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test String(file["meta/shellization_authority"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test !Bool(file["meta/active_source_authority"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_default_behavior_changed"])
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "available_route_configured_diatomic_atom_growth_ham_adapter"
+            @test String(file["meta/ham_export_status"]) ==
+                  "available_route_configured_diatomic_atom_growth_ham_bundle_payload"
+        end
+
+        stdout = read(stdoutfile, String)
+        @test occursin(
+            "route_configured_diatomic_atom_growth_materializer_probe_requested",
+            stdout,
+        )
+        @test occursin(
+            "materialized_route_configured_diatomic_atom_growth_artifacts_available",
+            stdout,
+        )
     end
 
     mktempdir() do dir

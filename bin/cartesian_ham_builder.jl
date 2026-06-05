@@ -50,6 +50,7 @@ save_artifact = false
 save_tsv = false
 materialize_route = false
 probe_route_configured_one_center_materializer = false
+probe_route_configured_diatomic_atom_growth_materializer = false
 save_basis_artifact = false
 save_ham_artifact = false
 # `nothing` means the helper derives these from route metadata:
@@ -89,6 +90,7 @@ route_inputs = (; route_family, route_kind, route_shape, product_body_rule,
     white_lindsey_nesting_rule, white_lindsey_retained_rule,
     white_lindsey_operator_rule, white_lindsey_benchmark_role)
 materialization_inputs = (; materialize_route, probe_route_configured_one_center_materializer,
+    probe_route_configured_diatomic_atom_growth_materializer,
     save_basis_artifact, save_ham_artifact, basisfile, hamfile,
     materializer_backend, materializer_nside,
     route_configured_diatomic_ham_interaction_treatment,
