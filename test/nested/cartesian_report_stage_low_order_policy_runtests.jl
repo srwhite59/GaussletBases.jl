@@ -391,4 +391,13 @@ end
         "report.low_order_hamiltonian_matrices_materialized = false",
         summary_stdout,
     )
+    expected_pqs_line = string(
+        "CPB/PQS prototype: metadata-only, unit=",
+        atom_growth_report.low_order_pqs_prototype_unit_key,
+        ", source=filled CPB, owned support is shell, ",
+        "retained space=boundary COMX products, ",
+        "realization=shell projection + Lowdin deferred, ",
+        "operators/materialization=no",
+    )
+    @test occursin(expected_pqs_line, summary_stdout)
 end

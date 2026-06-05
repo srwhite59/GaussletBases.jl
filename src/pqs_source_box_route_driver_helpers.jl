@@ -6169,6 +6169,54 @@ function cartesian_materialization(report, materialization_inputs)
     )
 end
 
+function _pqs_source_box_route_driver_pqs_prototype_print_line(report)
+    hasproperty(report, :low_order_pqs_transform_prototype_available) ||
+        return nothing
+    report.low_order_pqs_transform_prototype_available || return nothing
+    source =
+        report.low_order_pqs_prototype_source_cpb_kind == :filled_source_cpb ?
+        "filled CPB" :
+        string(report.low_order_pqs_prototype_source_cpb_kind)
+    owned_support =
+        report.low_order_pqs_prototype_owned_support_is_cpb ? "CPB" : "shell"
+    retained_space =
+        report.low_order_pqs_prototype_intermediate_retained_space ==
+        :boundary_comx_product_mode_selection ?
+        "boundary COMX products" :
+        string(report.low_order_pqs_prototype_intermediate_retained_space)
+    realization =
+        report.low_order_pqs_prototype_shell_realization ==
+        :shell_projection_lowdin_deferred ?
+        "shell projection + Lowdin deferred" :
+        string(report.low_order_pqs_prototype_shell_realization)
+    materialized =
+        report.low_order_pqs_prototype_source_operator_blocks_materialized ||
+        report.low_order_pqs_prototype_operator_blocks_materialized ||
+        report.low_order_pqs_prototype_pair_operator_blocks_materialized ||
+        report.low_order_pqs_prototype_hamiltonian_data_materialized ||
+        report.low_order_pqs_prototype_artifacts_materialized
+    return string(
+        "CPB/PQS prototype: metadata-only, unit=",
+        report.low_order_pqs_prototype_unit_key,
+        ", source=",
+        source,
+        ", owned support is ",
+        owned_support,
+        ", retained space=",
+        retained_space,
+        ", realization=",
+        realization,
+        ", operators/materialization=",
+        materialized ? "yes" : "no",
+    )
+end
+
+function _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
+    line = _pqs_source_box_route_driver_pqs_prototype_print_line(report)
+    isnothing(line) || println(line)
+    return nothing
+end
+
 function cartesian_print_summary(report, materialization)
     recipe = report.recipe_metadata
     setup = report.standard_setup
@@ -6213,6 +6261,7 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_pair_inventory_source
     @show report.low_order_pair_count
     @show report.low_order_hamiltonian_matrices_materialized
+    _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status
     @show materialization.materialized_report_kind
