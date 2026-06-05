@@ -4826,13 +4826,113 @@ function cartesian_units(parent, shells, route_inputs, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
+    low_order_units =
+        hasproperty(units, :low_order_units) ?
+        units.low_order_units :
+        nothing
+    if isnothing(low_order_units)
+        return (;
+            object_kind = :cartesian_transform_stage_low_order_summary,
+            status = :not_available_missing_unit_stage_summary,
+            low_order_shellization_policy_requested = nothing,
+            low_order_shellization_policy_resolved = :not_available,
+            low_order_shellization_policy_source = :not_available,
+            low_order_shellization_policy_status =
+                :not_available_missing_unit_stage_summary,
+            low_order_shellization_policy_blocker =
+                :missing_unit_stage_low_order_summary,
+            shellization_source = :not_available,
+            shellization_kind = :not_available,
+            unit_route_kind = :not_available,
+            transform_route_kind = :not_available,
+            atom_growth_transforms_selected = false,
+            legacy_source_transforms_selected = false,
+            coefficient_transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            transform_materialization_status = :not_available,
+            retained_unit_dimensions_known = false,
+            retained_unit_ranges_known = false,
+            retained_dimension_known = false,
+            retained_dimension = nothing,
+            plan_authority = false,
+            active_source_authority = false,
+            legacy_source_authority = false,
+            transform_fields_preserved = false,
+            summary_only = true,
+        )
+    end
+
+    atom_growth_transforms_selected = low_order_units.atom_growth_units_selected
+    legacy_source_transforms_selected = low_order_units.legacy_source_units_selected
+    transform_route_kind =
+        atom_growth_transforms_selected ?
+        :atom_growth_complete_rectangular_low_order_transforms :
+        legacy_source_transforms_selected ?
+        :legacy_diatomic_source_low_order_transforms :
+        :not_selected
+
+    return (;
+        object_kind = :cartesian_transform_stage_low_order_summary,
+        status =
+            low_order_units.status == :available_unit_stage_low_order_summary ?
+            :available_transform_stage_low_order_summary :
+            low_order_units.status,
+        low_order_shellization_policy_requested =
+            low_order_units.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_units.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_units.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_units.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_units.low_order_shellization_policy_blocker,
+        shellization_source = low_order_units.shellization_source,
+        shellization_kind = low_order_units.shellization_kind,
+        unit_route_kind = low_order_units.unit_route_kind,
+        transform_route_kind,
+        atom_growth_transforms_selected,
+        legacy_source_transforms_selected,
+        coefficient_transforms_materialized = false,
+        coefficient_maps_materialized = false,
+        transform_materialization_status =
+            atom_growth_transforms_selected ?
+            :deferred_atom_growth_complete_rectangular_transform_materialization :
+            legacy_source_transforms_selected ?
+            :deferred_legacy_diatomic_source_transform_materialization :
+            low_order_units.materialization_status,
+        retained_unit_dimensions_known = low_order_units.retained_unit_dimensions_known,
+        retained_unit_ranges_known = low_order_units.retained_unit_ranges_known,
+        retained_dimension_known = low_order_units.retained_dimension_known,
+        retained_dimension = low_order_units.retained_dimension,
+        plan_authority = low_order_units.plan_authority,
+        active_source_authority = low_order_units.active_source_authority,
+        legacy_source_authority = low_order_units.legacy_source_authority,
+        transform_fields_preserved = true,
+        summary_only = true,
+    )
+end
+
 function cartesian_transforms(units, recipe)
     retained_units = units.retained_units
+    low_order_transforms =
+        _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     return (;
         object_kind = :cartesian_transforms,
         status = units.status,
         route_family = recipe.route_family,
         retained_units,
+        low_order_transforms,
+        low_order_transform_route_kind =
+            low_order_transforms.transform_route_kind,
+        atom_growth_transforms_selected =
+            low_order_transforms.atom_growth_transforms_selected,
+        coefficient_transforms_materialized =
+            low_order_transforms.coefficient_transforms_materialized,
+        coefficient_maps_materialized =
+            low_order_transforms.coefficient_maps_materialized,
+        active_source_authority = low_order_transforms.active_source_authority,
         retained_counts =
             _pqs_source_box_route_driver_named_tuple_from_units(
                 retained_units, :retained_count),
