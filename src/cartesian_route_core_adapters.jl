@@ -27,6 +27,22 @@ function _cartesian_route_core_optional_positive_int(value, label::AbstractStrin
     return Int(value)
 end
 
+function _cartesian_route_core_is_complete_shell(
+    outer_box::CartesianRouteCore.CoordinateProductBox,
+    inner_box::CartesianRouteCore.CoordinateProductBox,
+)
+    CartesianRouteCore.codimension(outer_box) == 0 || return false
+    CartesianRouteCore.codimension(inner_box) == 0 || return false
+    for axis_index in 1:3
+        outer = CartesianRouteCore.intervals(outer_box)[axis_index]
+        inner = CartesianRouteCore.intervals(inner_box)[axis_index]
+        length(outer) >= 3 || return false
+        first(inner) == first(outer) + 1 || return false
+        last(inner) == last(outer) - 1 || return false
+    end
+    return true
+end
+
 function _cartesian_route_core_cpb_from_staged(cpb_record)
     cpb_record isa CartesianRouteCore.CoordinateProductBox && return cpb_record
     intervals =
@@ -127,12 +143,23 @@ function _cartesian_route_core_owned_support_from_staged(owned_support_record)
     support =
         isnothing(inner_record) ?
         CartesianRouteCore.owned_cpb(outer_box; support_kind, metadata) :
-        CartesianRouteCore.complete_shell_support(
-            outer_box,
-            _cartesian_route_core_filled_cpb_from_staged(inner_record);
-            support_kind,
-            metadata,
-        )
+        begin
+            inner_box = _cartesian_route_core_filled_cpb_from_staged(inner_record)
+            _cartesian_route_core_is_complete_shell(outer_box, inner_box) ?
+            CartesianRouteCore.complete_shell_support(
+                outer_box,
+                inner_box;
+                support_kind,
+                metadata,
+            ) :
+            CartesianRouteCore.OwnedSupport(
+                support_kind,
+                (),
+                outer_box,
+                inner_box,
+                metadata,
+            )
+        end
 
     staged_support_count =
         _cartesian_route_core_staged_field(owned_support_record, :support_count, nothing)
@@ -290,6 +317,124 @@ function _cartesian_route_core_lw_complete_shell_sidecar(unit)
     return _cartesian_route_core_sidecar_object(
         ;
         sidecar_source = :atom_growth_lw_complete_shell_plan_unit,
+        shellification_region,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization,
+        final_retained_unit,
+    )
+end
+
+function _cartesian_route_core_ranges_intersect(
+    left::UnitRange{Int},
+    right::UnitRange{Int},
+)
+    return max(first(left), first(right)) <= min(last(left), last(right))
+end
+
+function _cartesian_route_core_cpbs_overlap(left, right)
+    return all(
+        axis_index -> _cartesian_route_core_ranges_intersect(
+            CartesianRouteCore.intervals(left)[axis_index],
+            CartesianRouteCore.intervals(right)[axis_index],
+        ),
+        1:3,
+    )
+end
+
+function _cartesian_route_core_cpbs_are_disjoint(cpbs)
+    for left_index in eachindex(cpbs)
+        for right_index in (left_index + 1):length(cpbs)
+            _cartesian_route_core_cpbs_overlap(
+                cpbs[left_index],
+                cpbs[right_index],
+            ) && return false
+        end
+    end
+    return true
+end
+
+function _cartesian_route_core_boundary_slab_set_sidecar(unit)
+    _cartesian_route_core_staged_field(unit, :lowering_family, nothing) ===
+    :outer_mismatch_boundary_slab_set ||
+        throw(ArgumentError("boundary slab-set CRC sidecar expects outer mismatch unit"))
+    source_cpbs = Tuple(
+        _cartesian_route_core_cpb_from_staged(cpb)
+        for cpb in _cartesian_route_core_staged_field(unit, :source_cpbs, ())
+    )
+    length(source_cpbs) >= 2 ||
+        throw(ArgumentError("boundary slab-set CRC sidecar expects slab-piece source CPBs"))
+    _cartesian_route_core_cpbs_are_disjoint(source_cpbs) ||
+        throw(ArgumentError("boundary slab-set source CPBs must be disjoint"))
+
+    shellification_region =
+        _cartesian_route_core_shellification_region_from_staged(unit)
+    owned_support = CartesianRouteCore.owned_support(shellification_region)
+    isempty(owned_support.cpbs) ||
+        throw(ArgumentError("outer mismatch support must not be a single owned CPB"))
+    !isnothing(owned_support.outer_box) && !isnothing(owned_support.inner_exclusion_box) ||
+        throw(ArgumentError("outer mismatch support must be a shell-difference support"))
+
+    source_support_count =
+        sum(CartesianRouteCore.support_count, source_cpbs; init = 0)
+    source_support_count == CartesianRouteCore.support_count(shellification_region) ||
+        throw(ArgumentError("boundary slab-set source CPBs do not match owned support"))
+
+    lowering_source = CartesianRouteCore.lowering_source(
+        :direct_boundary_slab_set,
+        shellification_region,
+        source_cpbs;
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            staged_lowering_family = unit.lowering_family,
+            source_cpb_count = length(source_cpbs),
+            source_support_count,
+            coefficient_maps_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+    )
+    intermediate_retained_space = CartesianRouteCore.intermediate_retained_space(
+        lowering_source;
+        retained_rule = :direct_slab_set_identity_modes,
+        dimension = source_support_count,
+        materialized = false,
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            status = :deferred_not_materialized,
+        ),
+    )
+    shell_realization = CartesianRouteCore.trivial_shell_realization(
+        intermediate_retained_space,
+        shellification_region;
+        status = :direct_or_trivial,
+        final_dimension = source_support_count,
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            shell_row_oracle_authority = false,
+        ),
+    )
+    final_retained_unit = CartesianRouteCore.final_retained_unit(
+        unit.unit_key,
+        unit.unit_role,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization;
+        dimension = source_support_count,
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            status = :deferred_until_materialization,
+            pair_planning_input = true,
+        ),
+    )
+
+    return _cartesian_route_core_sidecar_object(
+        ;
+        sidecar_source = :atom_growth_outer_mismatch_boundary_slab_set_plan_unit,
         shellification_region,
         lowering_source,
         intermediate_retained_space,
@@ -462,6 +607,13 @@ function _cartesian_route_core_sidecar(record)
         ) === :white_lindsey_adaptive_complete_shell
             return _cartesian_route_core_lw_complete_shell_sidecar(record)
         end
+        if _cartesian_route_core_staged_field(
+            record,
+            :lowering_family,
+            nothing,
+        ) === :outer_mismatch_boundary_slab_set
+            return _cartesian_route_core_boundary_slab_set_sidecar(record)
+        end
         return _cartesian_route_core_direct_cpb_sidecar(record)
     end
     if object_kind === :cartesian_pqs_lowering_metadata_prototype
@@ -491,6 +643,12 @@ function _cartesian_route_core_missing_plan_unit_sidecar_reason(unit)
         )
 
     lowering_family === :white_lindsey_adaptive_complete_shell && return nothing
+    if lowering_family === :outer_mismatch_boundary_slab_set &&
+       materialization_dependency ===
+       :plan_lowerable_outer_mismatch_boundary_slab_set &&
+       source_cpb_count > 0
+        return nothing
+    end
     if materialization_dependency === :plan_lowerable_direct_slab &&
        owned_support_is_cpb &&
        source_cpb_count == 1

@@ -148,8 +148,8 @@ end
     @test sidecar_inventory.status ==
           :blocked_incomplete_route_core_sidecar_inventory
     @test sidecar_inventory.unit_count == plan_inventory.unit_count
-    @test sidecar_inventory.supported_unit_count == 5
-    @test sidecar_inventory.unsupported_unit_count == 3
+    @test sidecar_inventory.supported_unit_count == 6
+    @test sidecar_inventory.unsupported_unit_count == 2
     @test sidecar_inventory.final_unit_count ==
           sidecar_inventory.supported_unit_count
     @test all(
@@ -171,14 +171,9 @@ end
         sidecar_inventory.final_units,
     )
     @test sidecar_inventory.unsupported_unit_keys ==
-          (
-              :outer_mismatch_shared_molecular_shell,
-              :left_atom_box,
-              :right_atom_box,
-          )
+          (:left_atom_box, :right_atom_box)
     @test sidecar_inventory.missing_route_core_sidecar_reasons ==
           (
-              :outer_mismatch_boundary_slab_set_not_yet_mapped_to_crc_final_unit,
               :atom_local_child_shellification_not_yet_split_into_crc_child_units,
               :atom_local_child_shellification_not_yet_split_into_crc_child_units,
           )
@@ -206,6 +201,36 @@ end
           :direct_identity_cpb
     @test direct_entry.route_core_sidecar.intermediate_retained_space.retained_rule ==
           :identity_source_modes
+
+    outer_mismatch_entry = only(
+        entry for entry in sidecar_inventory.supported_entries
+        if entry.unit_key == :outer_mismatch_shared_molecular_shell
+    )
+    outer_mismatch_sidecar = outer_mismatch_entry.route_core_sidecar
+    @test outer_mismatch_sidecar.sidecar_source ==
+          :atom_growth_outer_mismatch_boundary_slab_set_plan_unit
+    @test CRC.lowering_recipe(outer_mismatch_sidecar.lowering_source) ==
+          :direct_boundary_slab_set
+    outer_mismatch_sources =
+        CRC.source_cpbs(outer_mismatch_sidecar.lowering_source)
+    @test length(outer_mismatch_sources) == 2
+    @test all(
+        cpb -> cpb isa CRC.CoordinateProductBox,
+        outer_mismatch_sources,
+    )
+    @test sum(CRC.support_count, outer_mismatch_sources; init = 0) ==
+          CRC.support_count(outer_mismatch_sidecar.shellification_region)
+    outer_mismatch_support =
+        CRC.owned_support(outer_mismatch_sidecar.shellification_region)
+    @test isempty(outer_mismatch_support.cpbs)
+    @test !isnothing(outer_mismatch_support.outer_box)
+    @test !isnothing(outer_mismatch_support.inner_exclusion_box)
+    @test outer_mismatch_sidecar.intermediate_retained_space.retained_rule ==
+          :direct_slab_set_identity_modes
+    @test outer_mismatch_sidecar.intermediate_retained_space.dimension ==
+          sum(CRC.support_count, outer_mismatch_sources; init = 0)
+    @test !outer_mismatch_sidecar.numerical_behavior_changed
+    @test !outer_mismatch_sidecar.materialization_behavior_changed
 
     @test units.route_core_sidecar_inventory_available
     @test units.route_core_sidecar_inventory ===
