@@ -792,6 +792,330 @@ function _cartesian_shellification_plan(
     )
 end
 
+function _cartesian_atom_growth_shellification_materialization_counts(regions)
+    return (;
+        object_kind = :cartesian_atom_growth_shellification_materialization_counts,
+        plan_lowerable_region_count =
+            count(region -> region.independently_lowerable, regions),
+        source_backed_region_count = count(region -> region.source_backed, regions),
+        unsupported_region_count =
+            count(region -> !region.independently_lowerable, regions),
+        atom_local_child_plan_count = count(
+            region ->
+                region.materialization_dependency ==
+                :plan_lowerable_atom_local_child_shellification,
+            regions,
+        ),
+        direct_contact_slab_count = count(
+            region -> region.materialization_dependency == :plan_lowerable_direct_slab,
+            regions,
+        ),
+        shared_complete_shell_count = count(
+            region ->
+                region.materialization_dependency ==
+                :plan_lowerable_shared_complete_shell,
+            regions,
+        ),
+        unsupported_outer_mismatch_count = count(
+            region ->
+                region.materialization_dependency ==
+                :unsupported_outer_mismatch_adjustment,
+            regions,
+        ),
+    )
+end
+
+function _cartesian_atom_growth_shellification_scaffold_region(
+    construction_region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D;
+    lowering_piece = nothing,
+    lowering_family::Symbol,
+    materialization_dependency::Symbol,
+    independently_lowerable::Bool,
+    missing_independent_lowering_reason = nothing,
+    retirement_target::Symbol,
+)
+    support_count = length(construction_region.support_indices)
+    if !isnothing(lowering_piece)
+        lowering_piece.support_count == support_count || throw(
+            ArgumentError(
+                "atom-growth shellification scaffold support count does not match lowering piece",
+            ),
+        )
+    end
+    return (;
+        object_kind = :cartesian_atom_growth_shellification_region_scaffold3d,
+        role = construction_region.role,
+        order = construction_region.order_index,
+        order_index = construction_region.order_index,
+        box = construction_region.box,
+        outer_box = construction_region.box,
+        inner_exclusion_box = construction_region.inner_exclusion_box,
+        box_shape = Tuple(length.(construction_region.box)),
+        support_indices = Int.(construction_region.support_indices),
+        support_count,
+        source_point_count = support_count,
+        construction_metadata = construction_region.metadata,
+        lowering_family,
+        materialization_dependency,
+        lowering_piece,
+        lowering_piece_object_kind =
+            isnothing(lowering_piece) ? nothing : lowering_piece.object_kind,
+        lowering_piece_role = isnothing(lowering_piece) ? nothing : lowering_piece.role,
+        lowering_piece_support_count =
+            isnothing(lowering_piece) ? nothing : lowering_piece.support_count,
+        support_count_matches_lowering_piece =
+            !isnothing(lowering_piece) && lowering_piece.support_count == support_count,
+        independently_lowerable,
+        source_backed = false,
+        missing_independent_lowering_reason,
+        retirement_target,
+        provenance = (;
+            source = :_BondAlignedDiatomicAtomGrowthConstructionPlan3D,
+            construction_role = construction_region.role,
+            construction_order_index = construction_region.order_index,
+            construction_region_metadata = construction_region.metadata,
+        ),
+    )
+end
+
+function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_order(
+    construction_plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D,
+    bundles::_CartesianNestedAxisBundles3D;
+    nside::Int,
+    child_retention_policy::CartesianNestedCompleteShellRetentionContract,
+    shared_retention_policy::CartesianNestedCompleteShellRetentionContract,
+    reference_fudge_factor::Real,
+    core_near_nucleus_protect_rows::Int,
+    shared_shell_angular_resolution_scale::Real,
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    parent_box = construction_plan.anatomy.recipe.parent_box
+    parent_dims = Tuple(length.(parent_box))
+    _nested_axis_lengths(bundles) == parent_dims || throw(
+        ArgumentError("atom-growth shellification scaffold requires bundles matching construction-plan parent dimensions"),
+    )
+    bond_axis = construction_plan.anatomy.recipe.bond_axis
+    bond_axis in (:x, :y, :z) || throw(
+        ArgumentError("atom-growth shellification scaffold requires bond_axis = :x, :y, or :z"),
+    )
+
+    regions = NamedTuple[]
+    shared_complete_shell_regions = NamedTuple[]
+    unsupported_regions = NamedTuple[]
+    left_child_plan = nothing
+    right_child_plan = nothing
+    contact_cap_region = nothing
+
+    for construction_region in construction_plan.regions
+        if construction_region.role in (:left_atom_box, :right_atom_box)
+            atom_side = construction_region.role == :left_atom_box ? :left : :right
+            child_plan = _cartesian_shellification_plan_atom_local_child_low_order(
+                bundles,
+                construction_region.box;
+                order_index = construction_region.order_index,
+                atom_side,
+                bond_axis,
+                nside,
+                retention_policy = child_retention_policy,
+                reference_fudge_factor,
+                core_near_nucleus_protect_rows,
+            )
+            construction_region.role == :left_atom_box ?
+                (left_child_plan = child_plan) :
+                (right_child_plan = child_plan)
+            push!(
+                regions,
+                _cartesian_atom_growth_shellification_scaffold_region(
+                    construction_region;
+                    lowering_piece = child_plan,
+                    lowering_family = :white_lindsey_atom_local_child_shellification,
+                    materialization_dependency =
+                        :plan_lowerable_atom_local_child_shellification,
+                    independently_lowerable = true,
+                    missing_independent_lowering_reason = nothing,
+                    retirement_target = :already_plan_lowered_region,
+                ),
+            )
+        elseif construction_region.role == :contact_cap
+            contact_cap_region =
+                _cartesian_shellification_plan_direct_midpoint_slab_region3d(
+                    bundles,
+                    construction_region.box;
+                    order_index = construction_region.order_index,
+                    bond_axis,
+                    split_index = nothing,
+                    column_range = nothing,
+                )
+            push!(
+                regions,
+                _cartesian_atom_growth_shellification_scaffold_region(
+                    construction_region;
+                    lowering_piece = contact_cap_region,
+                    lowering_family = :direct_contact_cap_slab,
+                    materialization_dependency = :plan_lowerable_direct_slab,
+                    independently_lowerable = true,
+                    missing_independent_lowering_reason = nothing,
+                    retirement_target = :already_plan_lowered_region,
+                ),
+            )
+        elseif construction_region.role == :regular_shared_molecular_shell
+            isnothing(construction_region.inner_exclusion_box) && throw(
+                ArgumentError("regular shared molecular shell requires an inner exclusion box"),
+            )
+            shared_region =
+                _cartesian_shellification_plan_shared_complete_shell_region3d(
+                    bundles,
+                    construction_region.box,
+                    construction_region.inner_exclusion_box;
+                    order_index = construction_region.order_index,
+                    bond_axis,
+                    nside,
+                    retention_policy = shared_retention_policy,
+                    shared_shell_angular_resolution_scale,
+                )
+            push!(shared_complete_shell_regions, shared_region)
+            push!(
+                regions,
+                _cartesian_atom_growth_shellification_scaffold_region(
+                    construction_region;
+                    lowering_piece = shared_region,
+                    lowering_family = :white_lindsey_adaptive_complete_shell,
+                    materialization_dependency =
+                        :plan_lowerable_shared_complete_shell,
+                    independently_lowerable = true,
+                    missing_independent_lowering_reason = nothing,
+                    retirement_target = :already_plan_lowered_region,
+                ),
+            )
+        elseif construction_region.role == :outer_mismatch_shared_molecular_shell
+            unsupported = _cartesian_atom_growth_shellification_scaffold_region(
+                construction_region;
+                lowering_piece = nothing,
+                lowering_family = :outer_mismatch_adjustment_region,
+                materialization_dependency = :unsupported_outer_mismatch_adjustment,
+                independently_lowerable = false,
+                missing_independent_lowering_reason =
+                    :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005,
+                retirement_target = :future_outer_mismatch_plan_lowered_region,
+            )
+            push!(regions, unsupported)
+            push!(unsupported_regions, unsupported)
+        else
+            throw(
+                ArgumentError(
+                    "unsupported atom-growth construction region role $(construction_region.role)",
+                ),
+            )
+        end
+    end
+
+    isnothing(left_child_plan) && throw(
+        ArgumentError("atom-growth shellification scaffold requires a left atom box"),
+    )
+    isnothing(right_child_plan) && throw(
+        ArgumentError("atom-growth shellification scaffold requires a right atom box"),
+    )
+    regions = Tuple(regions)
+    shared_complete_shell_regions = Tuple(shared_complete_shell_regions)
+    unsupported_regions = Tuple(unsupported_regions)
+    materialization_dependency_counts =
+        _cartesian_atom_growth_shellification_materialization_counts(regions)
+    assembly_core_order = isnothing(contact_cap_region) ?
+        (:left_atom_box, :right_atom_box) :
+        (:left_atom_box, :contact_cap, :right_atom_box)
+    materialization_status = isempty(unsupported_regions) ?
+        :ready_supported_complete_rectangular_subset :
+        :blocked_unsupported_outer_mismatch
+
+    return (;
+        object_kind = :cartesian_atom_growth_shellification_plan3d,
+        status = :planned_metadata_only,
+        materialization_status,
+        private_development_only = true,
+        source_kind = :bond_aligned_diatomic_atom_growth_construction_plan,
+        route_family,
+        system_classification = :bond_aligned_diatomic,
+        shellification_role = :atom_growth_complete_rectangular_low_order_scaffold,
+        shellification_stage = :route_neutral_spatial_planning,
+        lowering_stage = :not_lowered_by_shellification_plan,
+        parent_box,
+        working_box = parent_box,
+        full_parent_working_box = construction_plan.support_coverage.coverage_ok,
+        bond_axis,
+        nside,
+        child_retention_policy,
+        shared_retention_policy,
+        reference_fudge_factor = Float64(reference_fudge_factor),
+        core_near_nucleus_protect_rows,
+        shared_shell_angular_resolution_scale =
+            Float64(shared_shell_angular_resolution_scale),
+        spatial_policy_order = :atom_outward,
+        construction_region_order = Tuple(construction_plan.region_order),
+        assembly_shell_order = :outside_in,
+        assembly_core_order,
+        construction_plan,
+        regions,
+        region_count = length(regions),
+        ordered_region_roles = Tuple(region.role for region in regions),
+        ordered_region_boxes = Tuple(region.box for region in regions),
+        ordered_materialization_dependencies =
+            Tuple(region.materialization_dependency for region in regions),
+        materialization_dependency_counts,
+        left_child_plan,
+        right_child_plan,
+        contact_cap_region,
+        shared_complete_shell_regions,
+        unsupported_regions,
+        unsupported_region_count = length(unsupported_regions),
+        coverage = (;
+            object_kind = :cartesian_atom_growth_shellification_coverage3d,
+            expected_support_count =
+                construction_plan.support_coverage.expected_support_count,
+            region_support_count =
+                construction_plan.support_coverage.region_support_count,
+            covered_support_count =
+                construction_plan.support_coverage.covered_support_count,
+            duplicate_count = construction_plan.support_coverage.duplicate_count,
+            missing_count = construction_plan.support_coverage.missing_count,
+            outside_count = construction_plan.support_coverage.outside_count,
+            coverage_complete = construction_plan.support_coverage.coverage_ok,
+        ),
+        diagnostics = (;
+            source = :_BondAlignedDiatomicAtomGrowthConstructionPlan3D,
+            private_development_only = true,
+            atom_growth_construction_plan_authority = true,
+            active_source_authority = false,
+            active_source_oracle_comparison_run = false,
+            route_neutral_spatial_planning = true,
+            lowering_applied_by_plan = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+            shellification_rewrite = false,
+            pqs_production_source_box_materialization_claimed = false,
+            mwg_ida_semantics_changed = false,
+        ),
+    )
+end
+
+function _cartesian_shellification_plan(
+    plan_kind::Symbol,
+    construction_plan::_BondAlignedDiatomicAtomGrowthConstructionPlan3D,
+    bundles::_CartesianNestedAxisBundles3D;
+    kwargs...,
+)
+    plan_kind == :bond_aligned_diatomic_atom_growth_complete_rectangular_low_order ||
+        throw(
+            ArgumentError(
+                "unsupported atom-growth shellification plan kind: $(plan_kind)",
+            ),
+        )
+    return _cartesian_shellification_plan_atom_growth_complete_rectangular_low_order(
+        construction_plan,
+        bundles;
+        kwargs...,
+    )
+end
+
 function _cartesian_atom_local_child_shell_boxes(
     outer_box::NTuple{3,UnitRange{Int}},
     nside::Int,
@@ -1230,6 +1554,58 @@ function _cartesian_materialize_split_complete_rectangular_shellification_low_or
         sequence,
         child_column_ranges = (left_column_range, right_column_range),
         midpoint_slab_column_range = midpoint_column_range,
+    )
+end
+
+function _cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
+    plan,
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+)
+    plan.object_kind == :cartesian_atom_growth_shellification_plan3d || throw(
+        ArgumentError("atom-growth materializer requires a cartesian_atom_growth_shellification_plan3d"),
+    )
+    if !isempty(plan.unsupported_regions)
+        return (;
+            object_kind = :cartesian_atom_growth_shellification_materialization_result,
+            status = :blocked_unsupported_regions,
+            materialization_status = plan.materialization_status,
+            blocked_reason =
+                :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005,
+            unsupported_regions = plan.unsupported_regions,
+            unsupported_region_count = length(plan.unsupported_regions),
+            sequence = nothing,
+            assembly = nothing,
+            active_source_authority = false,
+            route_behavior_changed = false,
+        )
+    end
+    isnothing(term_coefficients) && throw(
+        ArgumentError("atom-growth materializer requires explicit term coefficients"),
+    )
+    assembly = _cartesian_materialize_split_complete_rectangular_shellification_low_order(
+        plan.left_child_plan,
+        plan.right_child_plan,
+        plan.shared_complete_shell_regions,
+        basis,
+        bundles;
+        midpoint_region = plan.contact_cap_region,
+        term_coefficients,
+        packet_kernel,
+    )
+    return (;
+        object_kind = :cartesian_atom_growth_shellification_materialization_result,
+        status = :materialized_supported_complete_rectangular_low_order,
+        materialization_status = plan.materialization_status,
+        blocked_reason = nothing,
+        unsupported_regions = (),
+        unsupported_region_count = 0,
+        sequence = assembly.sequence,
+        assembly,
+        active_source_authority = false,
+        route_behavior_changed = false,
     )
 end
 

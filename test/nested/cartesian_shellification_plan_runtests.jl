@@ -730,6 +730,151 @@ end
     end
 end
 
+@testset "atom-growth-backed complete-rectangular scaffold maps construction plan" begin
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 5.0,
+        core_spacing = 0.7,
+        xmax_parallel = 8.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    bundles = GaussletBases._qwrg_bond_aligned_axis_bundles(basis, expansion)
+    anatomy = GaussletBases._nested_bond_aligned_diatomic_atom_growth_anatomy(
+        basis,
+        bundles;
+        protected_atom_side_count = 5,
+    )
+    construction_plan =
+        GaussletBases._nested_bond_aligned_diatomic_atom_growth_construction_plan(
+            anatomy,
+        )
+    nside = 5
+    retention = GaussletBases._nested_resolve_complete_shell_retention(nside)
+    protect_rows =
+        GaussletBases._nested_diatomic_resolve_core_near_nucleus_protect_rows(
+            :auto,
+            nside,
+        )
+
+    scaffold =
+        GaussletBases._cartesian_shellification_plan_atom_growth_complete_rectangular_low_order(
+            construction_plan,
+            bundles;
+            nside,
+            child_retention_policy = retention,
+            shared_retention_policy = retention,
+            reference_fudge_factor = 1.2,
+            core_near_nucleus_protect_rows = protect_rows,
+            shared_shell_angular_resolution_scale = 1.4,
+        )
+
+    @test construction_plan.region_order == [
+        :outer_mismatch_shared_molecular_shell,
+        :regular_shared_molecular_shell,
+        :left_atom_box,
+        :right_atom_box,
+        :contact_cap,
+    ]
+    @test scaffold.object_kind == :cartesian_atom_growth_shellification_plan3d
+    @test scaffold.source_kind ==
+          :bond_aligned_diatomic_atom_growth_construction_plan
+    @test scaffold.spatial_policy_order == :atom_outward
+    @test scaffold.construction_region_order == Tuple(construction_plan.region_order)
+    @test scaffold.assembly_shell_order == :outside_in
+    @test scaffold.assembly_core_order ==
+          (:left_atom_box, :contact_cap, :right_atom_box)
+    @test scaffold.ordered_region_roles == Tuple(construction_plan.region_order)
+    @test [region.support_count for region in scaffold.regions] ==
+          [length(region.support_indices) for region in construction_plan.regions]
+    @test all(region -> !region.source_backed, scaffold.regions)
+    @test !(:source in propertynames(scaffold))
+    @test scaffold.diagnostics.atom_growth_construction_plan_authority
+    @test !scaffold.diagnostics.active_source_authority
+    @test !scaffold.diagnostics.active_source_oracle_comparison_run
+    @test !scaffold.diagnostics.materialization_behavior_changed
+    @test !scaffold.diagnostics.public_default_behavior_changed
+
+    counts = scaffold.materialization_dependency_counts
+    @test counts.source_backed_region_count == 0
+    @test counts.atom_local_child_plan_count == 2
+    @test counts.direct_contact_slab_count == 1
+    @test counts.shared_complete_shell_count == 1
+    @test counts.unsupported_outer_mismatch_count == 1
+    @test scaffold.unsupported_region_count == 1
+    @test scaffold.materialization_status == :blocked_unsupported_outer_mismatch
+
+    left_region = only(
+        region for region in construction_plan.regions if region.role == :left_atom_box
+    )
+    right_region = only(
+        region for region in construction_plan.regions if region.role == :right_atom_box
+    )
+    contact_region = only(
+        region for region in construction_plan.regions if region.role == :contact_cap
+    )
+    shared_region = only(
+        region for region in construction_plan.regions
+        if region.role == :regular_shared_molecular_shell
+    )
+    mismatch_region = only(
+        region for region in scaffold.regions
+        if region.role == :outer_mismatch_shared_molecular_shell
+    )
+
+    @test scaffold.left_child_plan.outer_box == left_region.box
+    @test scaffold.left_child_plan.support_count == length(left_region.support_indices)
+    @test scaffold.left_child_plan.source_backed == false
+    @test scaffold.right_child_plan.outer_box == right_region.box
+    @test scaffold.right_child_plan.support_count == length(right_region.support_indices)
+    @test scaffold.right_child_plan.source_backed == false
+    @test scaffold.contact_cap_region.box == contact_region.box
+    @test scaffold.contact_cap_region.support_count ==
+          length(contact_region.support_indices)
+    @test scaffold.contact_cap_region.source_backed == false
+    @test length(scaffold.shared_complete_shell_regions) == 1
+    @test scaffold.shared_complete_shell_regions[1].outer_box == shared_region.box
+    @test scaffold.shared_complete_shell_regions[1].inner_exclusion_box ==
+          shared_region.inner_exclusion_box
+    @test scaffold.shared_complete_shell_regions[1].support_count ==
+          length(shared_region.support_indices)
+    @test scaffold.shared_complete_shell_regions[1].source_backed == false
+
+    for region in scaffold.regions
+        if region.role == :outer_mismatch_shared_molecular_shell
+            @test !region.independently_lowerable
+            @test region.materialization_dependency ==
+                  :unsupported_outer_mismatch_adjustment
+            @test region.missing_independent_lowering_reason ==
+                  :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005
+            @test region.retirement_target ==
+                  :future_outer_mismatch_plan_lowered_region
+            @test region.lowering_piece === nothing
+        else
+            @test region.independently_lowerable
+            @test region.missing_independent_lowering_reason === nothing
+            @test region.retirement_target == :already_plan_lowered_region
+            @test region.support_count_matches_lowering_piece
+        end
+    end
+    @test mismatch_region.support_count == 98
+
+    blocked =
+        GaussletBases._cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
+            scaffold,
+            basis,
+            bundles,
+        )
+    @test blocked.status == :blocked_unsupported_regions
+    @test blocked.blocked_reason ==
+          :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005
+    @test blocked.sequence === nothing
+    @test blocked.unsupported_region_count == 1
+    @test !blocked.active_source_authority
+    @test !blocked.route_behavior_changed
+end
+
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin
     fixture = _bond_aligned_diatomic_shellification_plan_fixture()
     nside = fixture.nside
