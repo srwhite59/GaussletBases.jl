@@ -423,7 +423,7 @@ function _pqs_source_box_route_driver_route_configured_diatomic_atom_growth_repo
     )
 end
 
-function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_materialization(
+function _pqs_source_box_route_driver_diatomic_atom_growth_materialization(
     context,
 )
     (;
@@ -513,6 +513,8 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_mater
             :atom_growth_ham_operator_adapter_contract,
         ) :
         nothing
+    atom_growth_artifact_export_requested =
+        save_basis_artifact || save_ham_artifact
     atom_growth_retained_dimension =
         atom_growth_basis_adapter_available ?
         atom_growth_basis_adapter.retained_dimension :
@@ -534,11 +536,15 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_mater
         ) :
         :not_requested
     atom_growth_basis_bundle_export_status =
-        atom_growth_basis_adapter_available ?
-        :supported_route_configured_diatomic_atom_growth_basis_only_fixed_block :
-        :pending_route_configured_diatomic_atom_growth_basis_export
+        atom_growth_artifact_export_requested ?
+        (
+            atom_growth_basis_adapter_available ?
+            :supported_route_configured_diatomic_atom_growth_basis_only_fixed_block :
+            :pending_route_configured_diatomic_atom_growth_basis_export
+        ) :
+        :not_requested
     atom_growth_ham_bundle_export_status =
-        atom_growth_ham_adapter_available ?
+        atom_growth_artifact_export_requested && atom_growth_ham_adapter_available ?
         :available_route_configured_diatomic_atom_growth_ham_bundle_payload :
         save_ham_artifact ?
         something(
@@ -547,17 +553,17 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_mater
         ) :
         :not_requested
     atom_growth_ham_preflight_status =
-        atom_growth_ham_adapter_available ?
+        atom_growth_artifact_export_requested && atom_growth_ham_adapter_available ?
         :available_route_configured_diatomic_atom_growth_ham_adapter :
         save_ham_artifact ?
         route_configured_diatomic_atom_growth_ham_adapter_status :
         :not_requested
     atom_growth_ham_interaction_treatment_consumed =
-        atom_growth_ham_adapter_available ?
+        atom_growth_artifact_export_requested && atom_growth_ham_adapter_available ?
         atom_growth_ham_adapter.interaction_treatment :
         nothing
     atom_growth_ham_interaction_treatment_status =
-        atom_growth_ham_adapter_available ?
+        atom_growth_artifact_export_requested && atom_growth_ham_adapter_available ?
         :available_route_configured_diatomic_ham_interaction_treatment :
         save_ham_artifact ?
         route_configured_diatomic_atom_growth_ham_adapter_status :
@@ -699,8 +705,16 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_mater
         status =
             atom_growth_export_blocker === nothing &&
             (!save_ham_artifact || atom_growth_ham_export_blocker === nothing) ?
-            :materialized_route_configured_diatomic_atom_growth_artifacts_available :
-            :blocked_route_configured_diatomic_atom_growth_artifact_export,
+            (
+                atom_growth_artifact_export_requested ?
+                :materialized_route_configured_diatomic_atom_growth_artifacts_available :
+                :materialized_route_configured_diatomic_atom_growth_report_available
+            ) :
+            (
+                atom_growth_artifact_export_requested ?
+                :blocked_route_configured_diatomic_atom_growth_artifact_export :
+                :blocked_route_configured_diatomic_atom_growth_materialization_report
+            ),
         materialized_report = atom_growth_materialized_report,
         materialized_report_kind = atom_growth_materialized_report_kind,
         route_configured_shellization_request,

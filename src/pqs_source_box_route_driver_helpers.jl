@@ -3466,11 +3466,10 @@ function _pqs_source_box_route_driver_materialization(
         use_route_configured_diatomic_shellization =
             route_configured_diatomic_materializer_requested &&
             route_configured_diatomic_materializer_probe_consumed
-        route_configured_diatomic_atom_growth_artifact_export_requested =
-            route_configured_diatomic_atom_growth_materializer_probe_requested &&
-            (save_basis_artifact || save_ham_artifact)
-        if route_configured_diatomic_atom_growth_artifact_export_requested
-            atom_growth_artifact_export_context = (;
+        route_configured_diatomic_atom_growth_materialization_requested =
+            route_configured_diatomic_atom_growth_materializer_probe_requested
+        if route_configured_diatomic_atom_growth_materialization_requested
+            atom_growth_materialization_context = (;
                 report,
                 route_family,
                 save_basis_artifact,
@@ -3519,8 +3518,8 @@ function _pqs_source_box_route_driver_materialization(
                 route_configured_diatomic_atom_growth_materializer_contract,
                 route_configured_materializer_contract,
             )
-            return _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_materialization(
-                atom_growth_artifact_export_context,
+            return _pqs_source_box_route_driver_diatomic_atom_growth_materialization(
+                atom_growth_materialization_context,
             )
         end
         if use_route_configured_diatomic_shellization

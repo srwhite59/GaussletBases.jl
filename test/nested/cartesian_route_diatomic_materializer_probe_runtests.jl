@@ -326,11 +326,15 @@ end
         opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe
 
     @test opt_in_materialization.status ==
-          :materialized_route_configured_diatomic_shellization_available
+          :materialized_route_configured_diatomic_atom_growth_report_available
+    @test opt_in_materialization.materialized_report !== nothing
+    @test opt_in_materialization.materialized_report_kind ==
+          :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
+    @test opt_in_materialization.materialized_report.status ==
+          :private_development_route_configured_atom_growth
     @test opt_in_materialization.shellization_source ==
-          :route_configured_bond_aligned_diatomic_source
-    @test opt_in_materialization.route_configured_shellization_consumed
-    @test opt_in_materialization.route_configured_diatomic_materializer_probe_consumed
+          :bond_aligned_diatomic_atom_growth_construction_plan
+    @test !opt_in_materialization.route_configured_shellization_consumed
     @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
     @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_status ==
           :materialized_route_configured_bond_aligned_diatomic_atom_growth_shellization
@@ -421,8 +425,12 @@ end
     @test probe.ham_adapter_summary.interaction_status ==
           :available_route_configured_diatomic_density_density_interaction_matrix
     @test probe.ham_adapter_blocker === nothing
+    @test opt_in_materialization.basis_bundle_export_status == :not_requested
+    @test opt_in_materialization.basis_artifact_status == :not_requested
+    @test !opt_in_materialization.basis_artifact_written
     @test opt_in_materialization.ham_bundle_export_status == :not_requested
     @test opt_in_materialization.ham_artifact_status == :not_requested
+    @test !opt_in_materialization.ham_artifact_written
 end
 
 @testset "route-configured diatomic atom-growth opt-in writes private artifacts" begin
