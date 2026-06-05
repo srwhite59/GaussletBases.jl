@@ -146,10 +146,10 @@ end
     @test sidecar_inventory.object_kind ==
           :cartesian_route_core_sidecar_inventory
     @test sidecar_inventory.status ==
-          :blocked_incomplete_route_core_sidecar_inventory
+          :available_route_core_sidecar_inventory
     @test sidecar_inventory.unit_count == plan_inventory.unit_count
-    @test sidecar_inventory.supported_unit_count == 6
-    @test sidecar_inventory.unsupported_unit_count == 2
+    @test sidecar_inventory.supported_unit_count == 8
+    @test sidecar_inventory.unsupported_unit_count == 0
     @test sidecar_inventory.final_unit_count ==
           sidecar_inventory.supported_unit_count
     @test all(
@@ -170,21 +170,19 @@ end
         unit -> unit isa CRC.FinalRetainedUnit,
         sidecar_inventory.final_units,
     )
-    @test sidecar_inventory.unsupported_unit_keys ==
-          (:left_atom_box, :right_atom_box)
-    @test sidecar_inventory.missing_route_core_sidecar_reasons ==
-          (
-              :atom_local_child_shellification_not_yet_split_into_crc_child_units,
-              :atom_local_child_shellification_not_yet_split_into_crc_child_units,
-          )
-    @test !sidecar_inventory.crc_pair_inventory_available
+    @test isempty(sidecar_inventory.unsupported_unit_keys)
+    @test isempty(sidecar_inventory.missing_route_core_sidecar_reasons)
+    @test sidecar_inventory.crc_pair_inventory_available
     @test sidecar_inventory.crc_pair_inventory_status ==
-          :blocked_missing_unit_sidecars
-    @test sidecar_inventory.crc_pair_inventory === nothing
-    @test isempty(sidecar_inventory.crc_pair_keys)
+          :available_route_core_unit_pair_inventory
+    @test sidecar_inventory.crc_pair_inventory isa CRC.UnitPairInventory
+    @test sidecar_inventory.crc_pair_count == 36
+    @test length(CRC.pair_entries(sidecar_inventory.crc_pair_inventory)) == 36
     @test length(sidecar_inventory.staged_pair_keys) ==
           plan_inventory.unit_count * (plan_inventory.unit_count + 1) ÷ 2
-    @test !sidecar_inventory.pair_inventory_order_matches_staged
+    @test sidecar_inventory.crc_pair_keys ==
+          sidecar_inventory.staged_pair_keys
+    @test sidecar_inventory.pair_inventory_order_matches_staged
     @test sidecar_inventory.pqs_prototype_sidecar_available
     @test sidecar_inventory.pqs_prototype_sidecar.final_retained_unit isa
           CRC.FinalRetainedUnit
@@ -201,6 +199,60 @@ end
           :direct_identity_cpb
     @test direct_entry.route_core_sidecar.intermediate_retained_space.retained_rule ==
           :identity_source_modes
+
+    for (unit_key, atom_side) in
+        ((:left_atom_box, :left), (:right_atom_box, :right))
+        atom_entry = only(
+            entry for entry in sidecar_inventory.supported_entries
+            if entry.unit_key == unit_key
+        )
+        atom_sidecar = atom_entry.route_core_sidecar
+        atom_unit = only(
+            unit for unit in plan_inventory.plan_units
+            if unit.unit_key == unit_key
+        )
+        @test atom_sidecar.sidecar_source ==
+              :atom_growth_atom_local_child_shellification_plan_unit
+        @test CRC.lowering_recipe(atom_sidecar.lowering_source) ==
+              :white_lindsey_atom_local_child_shellification
+        @test atom_sidecar.lowering_source.metadata.atom_side == atom_side
+        @test atom_sidecar.lowering_source.metadata.child_source_cpbs_enumerated ==
+              false
+        @test atom_sidecar.lowering_source.metadata.staged_child_source_cpb_count ==
+              0
+        @test atom_sidecar.lowering_source.metadata.child_shellification_plan_object_kind ==
+              :cartesian_atom_local_child_shellification_plan3d
+        atom_sources = CRC.source_cpbs(atom_sidecar.lowering_source)
+        @test length(atom_sources) == 1
+        atom_source = only(atom_sources)
+        @test atom_source isa CRC.CoordinateProductBox
+        @test CRC.codimension(atom_source) == 0
+        @test CRC.shape(atom_source) == atom_unit.source_dimensions
+        @test CRC.support_count(atom_source) == atom_unit.support_count
+        @test atom_source.metadata.child_source_cpbs_enumerated == false
+        atom_support = CRC.owned_support(atom_sidecar.shellification_region)
+        @test length(atom_support.cpbs) == 1
+        @test isnothing(atom_support.inner_exclusion_box)
+        @test CRC.intervals(atom_source) == CRC.intervals(only(atom_support.cpbs))
+        @test CRC.support_count(atom_sidecar.shellification_region) ==
+              atom_unit.support_count
+        @test atom_sidecar.intermediate_retained_space.retained_rule ==
+              :atom_local_child_shellification_sequence
+        @test atom_sidecar.intermediate_retained_space.source_mode_dims ==
+              atom_unit.source_dimensions
+        @test isnothing(atom_sidecar.intermediate_retained_space.dimension)
+        @test atom_sidecar.intermediate_retained_space.metadata.child_core_policy_available ==
+              false
+        @test atom_sidecar.shell_realization.realization_kind ==
+              :direct_or_trivial_embedding
+        @test atom_sidecar.shell_realization.metadata.shell_row_oracle_authority ==
+              false
+        @test atom_sidecar.final_retained_unit.unit_key == unit_key
+        @test atom_sidecar.final_retained_unit.role == unit_key
+        @test isnothing(atom_sidecar.final_retained_unit.dimension)
+        @test !atom_sidecar.numerical_behavior_changed
+        @test !atom_sidecar.materialization_behavior_changed
+    end
 
     outer_mismatch_entry = only(
         entry for entry in sidecar_inventory.supported_entries

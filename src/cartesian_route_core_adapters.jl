@@ -443,6 +443,189 @@ function _cartesian_route_core_boundary_slab_set_sidecar(unit)
     )
 end
 
+function _cartesian_route_core_atom_side_from_unit(unit)
+    unit_key = _cartesian_route_core_staged_field(unit, :unit_key, nothing)
+    unit_key === :left_atom_box && return :left
+    unit_key === :right_atom_box && return :right
+    throw(ArgumentError("atom-local child CRC sidecar requires left/right atom box unit_key"))
+end
+
+function _cartesian_route_core_atom_local_child_source_cpb(unit)
+    source_box = _cartesian_route_core_staged_field(unit, :source_box, nothing)
+    isnothing(source_box) &&
+        throw(ArgumentError("atom-local child CRC sidecar is missing source_box"))
+    descriptor =
+        _cartesian_route_core_staged_field(unit, :source_descriptor, nothing)
+    isnothing(descriptor) &&
+        throw(ArgumentError("atom-local child CRC sidecar is missing source_descriptor"))
+    _cartesian_route_core_staged_field(descriptor, :descriptor_kind, nothing) ===
+    :source_box ||
+        throw(ArgumentError("atom-local child CRC sidecar expects a source-box descriptor"))
+
+    unit_key = _cartesian_route_core_staged_field(unit, :unit_key, nothing)
+    descriptor_support_count =
+        _cartesian_route_core_staged_field(descriptor, :support_count, nothing)
+    metadata = _cartesian_route_core_merge_metadata(
+        descriptor;
+        extra = (;
+            staged_object_kind =
+                _cartesian_route_core_staged_field(descriptor, :object_kind, nothing),
+            descriptor_kind =
+                _cartesian_route_core_staged_field(descriptor, :descriptor_kind, nothing),
+            source = :atom_growth_atom_local_child_source_box,
+            unit_key,
+            staged_support_count = descriptor_support_count,
+            child_source_cpbs_enumerated = false,
+        ),
+    )
+    source_cpb = CartesianRouteCore.cpb(
+        source_box;
+        role = Symbol(String(unit_key), "_source_cpb"),
+        metadata,
+    )
+    if !isnothing(descriptor_support_count) &&
+       CartesianRouteCore.support_count(source_cpb) != descriptor_support_count
+        throw(ArgumentError("atom-local child source-box descriptor support count does not match source_box"))
+    end
+    return source_cpb
+end
+
+function _cartesian_route_core_atom_local_child_shellification_sidecar(unit)
+    _cartesian_route_core_staged_field(unit, :lowering_family, nothing) ===
+    :white_lindsey_atom_local_child_shellification ||
+        throw(ArgumentError("atom-local child CRC sidecar expects atom-local child shellification"))
+    _cartesian_route_core_staged_field(unit, :materialization_dependency, nothing) ===
+    :plan_lowerable_atom_local_child_shellification ||
+        throw(ArgumentError("atom-local child CRC sidecar expects the atom-local child materialization dependency"))
+
+    atom_side = _cartesian_route_core_atom_side_from_unit(unit)
+    shellification_region =
+        _cartesian_route_core_shellification_region_from_staged(unit)
+    owned_support = CartesianRouteCore.owned_support(shellification_region)
+    length(owned_support.cpbs) == 1 ||
+        throw(ArgumentError("atom-local child CRC sidecar expects coordinate-product owned support"))
+    isnothing(owned_support.inner_exclusion_box) ||
+        throw(ArgumentError("atom-local child CRC sidecar does not expect a shell-difference owned support"))
+
+    source_cpb = _cartesian_route_core_atom_local_child_source_cpb(unit)
+    owned_cpb = only(owned_support.cpbs)
+    CartesianRouteCore.intervals(source_cpb) == CartesianRouteCore.intervals(owned_cpb) ||
+        throw(ArgumentError("atom-local child source CPB must match owned support CPB"))
+    source_support_count = CartesianRouteCore.support_count(source_cpb)
+    source_support_count == CartesianRouteCore.support_count(shellification_region) ||
+        throw(ArgumentError("atom-local child source CPB support count does not match owned support"))
+
+    lowering_parameters =
+        _cartesian_route_core_staged_field(unit, :lowering_parameters, (;))
+    lowering_recipe =
+        _cartesian_route_core_staged_field(unit, :lowering_recipe, (;))
+    lowering_source = CartesianRouteCore.lowering_source(
+        :white_lindsey_atom_local_child_shellification,
+        shellification_region,
+        (source_cpb,);
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            atom_side,
+            staged_lowering_family = unit.lowering_family,
+            staged_materialization_dependency = unit.materialization_dependency,
+            route_level_source_cpb_count = 1,
+            route_level_source_support_count = source_support_count,
+            staged_child_source_cpb_count =
+                _cartesian_route_core_staged_field(unit, :source_cpb_count, nothing),
+            child_source_cpbs_enumerated = false,
+            child_shellification_plan_object_kind =
+                _cartesian_route_core_staged_field(
+                    lowering_parameters,
+                    :lowering_piece_object_kind,
+                    nothing,
+                ),
+            child_shellification_plan_role =
+                _cartesian_route_core_staged_field(
+                    lowering_parameters,
+                    :lowering_piece_role,
+                    nothing,
+                ),
+            child_shellification_plan_support_count =
+                _cartesian_route_core_staged_field(
+                    lowering_parameters,
+                    :lowering_piece_support_count,
+                    nothing,
+                ),
+            planned_child_source_cpb_families =
+                _cartesian_route_core_staged_field(
+                    lowering_recipe,
+                    :source_cpb_families,
+                    (),
+                ),
+            staged_source_cpb_enumeration_status =
+                _cartesian_route_core_staged_field(
+                    lowering_recipe,
+                    :source_cpb_enumeration_status,
+                    nothing,
+                ),
+            coefficient_maps_materialized = false,
+            source_operator_blocks_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+    )
+    intermediate_retained_space = CartesianRouteCore.intermediate_retained_space(
+        lowering_source;
+        retained_rule = :atom_local_child_shellification_sequence,
+        source_mode_dims = CartesianRouteCore.shape(source_cpb),
+        materialized = false,
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            atom_side,
+            status = :deferred_not_materialized,
+            child_shellification_sequence_planned = true,
+            child_source_cpbs_enumerated = false,
+            child_core_policy_available = false,
+            coefficient_maps_materialized = false,
+        ),
+    )
+    shell_realization = CartesianRouteCore.trivial_shell_realization(
+        intermediate_retained_space,
+        shellification_region;
+        status = :route_level_atom_local_child_shellification_planned,
+        final_dimension = nothing,
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            unit_key = unit.unit_key,
+            atom_side,
+            shell_row_oracle_authority = false,
+            child_coefficient_maps_materialized = false,
+        ),
+    )
+    final_retained_unit = CartesianRouteCore.final_retained_unit(
+        unit.unit_key,
+        unit.unit_role,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization;
+        metadata = (;
+            source = :atom_growth_plan_unit,
+            status = :deferred_until_materialization,
+            pair_planning_input = true,
+            route_level_final_unit_preserves_staged_unit_key = true,
+            coefficient_maps_materialized = false,
+        ),
+    )
+
+    return _cartesian_route_core_sidecar_object(
+        ;
+        sidecar_source = :atom_growth_atom_local_child_shellification_plan_unit,
+        shellification_region,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization,
+        final_retained_unit,
+    )
+end
+
 function _cartesian_route_core_direct_cpb_sidecar(unit)
     _cartesian_route_core_staged_field(unit, :materialization_dependency, nothing) ===
     :plan_lowerable_direct_slab ||
@@ -614,6 +797,13 @@ function _cartesian_route_core_sidecar(record)
         ) === :outer_mismatch_boundary_slab_set
             return _cartesian_route_core_boundary_slab_set_sidecar(record)
         end
+        if _cartesian_route_core_staged_field(
+            record,
+            :lowering_family,
+            nothing,
+        ) === :white_lindsey_atom_local_child_shellification
+            return _cartesian_route_core_atom_local_child_shellification_sidecar(record)
+        end
         return _cartesian_route_core_direct_cpb_sidecar(record)
     end
     if object_kind === :cartesian_pqs_lowering_metadata_prototype
@@ -654,10 +844,20 @@ function _cartesian_route_core_missing_plan_unit_sidecar_reason(unit)
        source_cpb_count == 1
         return nothing
     end
+    if lowering_family === :white_lindsey_atom_local_child_shellification &&
+       materialization_dependency ===
+       :plan_lowerable_atom_local_child_shellification &&
+       owned_support_is_cpb &&
+       !isnothing(_cartesian_route_core_staged_field(unit, :source_box, nothing)) &&
+       !isnothing(
+           _cartesian_route_core_staged_field(unit, :source_descriptor, nothing),
+       )
+        return nothing
+    end
     lowering_family === :outer_mismatch_boundary_slab_set &&
         return :outer_mismatch_boundary_slab_set_not_yet_mapped_to_crc_final_unit
     lowering_family === :white_lindsey_atom_local_child_shellification &&
-        return :atom_local_child_shellification_not_yet_split_into_crc_child_units
+        return :atom_local_child_shellification_missing_source_box_descriptor
     materialization_dependency === :plan_lowerable_direct_slab &&
         return :direct_slab_without_single_owned_source_cpb
     return :unsupported_lowering_family
