@@ -265,6 +265,48 @@ LW often collapses the intermediate and final stages because its CPB boundary
 strata already live on disjoint shell support. PQS must not collapse them unless
 a reviewed contract explicitly permits it.
 
+## Layer responsibility addendum
+
+Each layer should have one main output type.
+
+```text
+shellification -> ShellificationRegion / owned shell support
+lowering       -> CPBs plus a lowering recipe
+construction   -> intermediate and final retained spaces
+pair planning  -> pairs of final retained units
+```
+
+In this vocabulary, **atom-growth** is a shellification policy, not the name of
+the whole low-order or PQS route. It answers "who owns which parent rows?" and
+produces shells or other owned support regions.
+
+Lowering is the first recipe-specific step. It answers "which CPBs are used to
+construct retained functions from this owned support?"
+
+For low-order White--Lindsey, lowering breaks a shell into disjoint
+boundary-stratum CPBs:
+
+```text
+ShellificationRegion Ω -> facet CPBs + edge CPBs + corner CPBs + direct CPBs
+```
+
+For PQS, lowering chooses a filled source CPB associated with the shell:
+
+```text
+ShellificationRegion Ω -> filled source CPB B_source
+```
+
+This is sometimes informally described as making the box out of the shell, but
+the shell itself is still not a CPB. The filled source CPB is a coordinate
+product source domain; selected source modes are later realized back onto the
+owned shell support by projection and cleanup.
+
+Thus the layers should not leak into each other: shellification should not own
+face/edge/corner or COMX-mode decisions, and pair planning should not start from
+shells or source CPBs directly. Pair planning starts after construction, from
+final retained units that keep links back to their owned support, source CPBs,
+intermediate retained space, shell realization, and lowering recipe.
+
 ## Suggested object vocabulary
 
 Use this vocabulary in future developer notes and private contracts:
