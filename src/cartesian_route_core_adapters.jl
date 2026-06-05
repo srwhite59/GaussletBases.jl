@@ -901,6 +901,8 @@ end
 function _cartesian_route_core_pair_operator_plan_inventory_metadata(
     crc_pair_inventory,
 )
+    readiness_requirements =
+        CartesianRouteCore.pair_operator_materialization_readiness_requirements()
     if isnothing(crc_pair_inventory)
         return (;
             crc_pair_operator_plan_inventory_available = false,
@@ -912,6 +914,16 @@ function _cartesian_route_core_pair_operator_plan_inventory_metadata(
                 :missing_route_core_unit_pair_inventory,
             crc_pair_operator_plan_blocked_count = 0,
             crc_pair_operator_plan_materialized = false,
+            crc_pair_operator_materialization_ready = false,
+            crc_pair_operator_materialization_readiness_status =
+                :blocked_missing_route_core_unit_pair_inventory,
+            crc_pair_operator_materialization_readiness_blocker =
+                :missing_route_core_unit_pair_inventory,
+            crc_pair_operator_materialization_readiness_requirements =
+                readiness_requirements,
+            crc_pair_operator_materialization_readiness_plan_count = 0,
+            crc_pair_operator_materialization_readiness_blocked_count = 0,
+            crc_pair_operator_materialization_readiness_materialized_count = 0,
         )
     end
 
@@ -926,6 +938,8 @@ function _cartesian_route_core_pair_operator_plan_inventory_metadata(
     blocked_count =
         count(plan -> !isnothing(CartesianRouteCore.blocker(plan)), plans)
     plan_materialized = any(plan -> plan.materialized, plans)
+    readiness =
+        CartesianRouteCore.pair_operator_materialization_readiness(plan_inventory)
 
     return (;
         crc_pair_operator_plan_inventory_available = true,
@@ -940,6 +954,19 @@ function _cartesian_route_core_pair_operator_plan_inventory_metadata(
             CartesianRouteCore.blocker(plan_inventory),
         crc_pair_operator_plan_blocked_count = blocked_count,
         crc_pair_operator_plan_materialized = plan_materialized,
+        crc_pair_operator_materialization_ready = readiness.ready,
+        crc_pair_operator_materialization_readiness_status =
+            readiness.status,
+        crc_pair_operator_materialization_readiness_blocker =
+            readiness.blocker,
+        crc_pair_operator_materialization_readiness_requirements =
+            readiness.requirements,
+        crc_pair_operator_materialization_readiness_plan_count =
+            readiness.plan_count,
+        crc_pair_operator_materialization_readiness_blocked_count =
+            readiness.blocked_count,
+        crc_pair_operator_materialization_readiness_materialized_count =
+            readiness.materialized_count,
     )
 end
 

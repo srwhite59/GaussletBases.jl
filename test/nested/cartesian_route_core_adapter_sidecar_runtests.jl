@@ -202,6 +202,24 @@ end
           :aggregate_subtree_operator_plan_required
     @test sidecar_inventory.crc_pair_operator_plan_blocked_count == 15
     @test !sidecar_inventory.crc_pair_operator_plan_materialized
+    @test !sidecar_inventory.crc_pair_operator_materialization_ready
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_status ==
+          :blocked_pair_operator_materialization
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_requirements ==
+          (
+              :nonempty_pair_operator_plan_inventory,
+              :no_blocked_typed_pair_operator_plans,
+              :no_pending_pair_operator_source_paths,
+              :no_already_materialized_typed_pair_operator_plans,
+          )
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_plan_count ==
+          36
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_blocked_count ==
+          15
+    @test sidecar_inventory.crc_pair_operator_materialization_readiness_materialized_count ==
+          0
     typed_pair_plans = CRC.pair_operator_plans(
         sidecar_inventory.crc_pair_operator_plan_inventory,
     )
