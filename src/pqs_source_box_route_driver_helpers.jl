@@ -1847,6 +1847,28 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.route_core_pair_operator_plan,
         low_order_route_core_pair_operator_plan_blocker =
             low_order_route_summary.route_core_pair_operator_plan_blocker,
+        low_order_route_core_typed_pair_operator_plan_inventory_available =
+            low_order_route_summary.route_core_typed_pair_operator_plan_inventory_available,
+        low_order_route_core_typed_pair_operator_plan_inventory_status =
+            low_order_route_summary.route_core_typed_pair_operator_plan_inventory_status,
+        low_order_route_core_typed_pair_operator_plan_blocker =
+            low_order_route_summary.route_core_typed_pair_operator_plan_blocker,
+        low_order_route_core_typed_pair_operator_plan_count =
+            low_order_route_summary.route_core_typed_pair_operator_plan_count,
+        low_order_route_core_typed_pair_operator_plan_blocked_count =
+            low_order_route_summary.route_core_typed_pair_operator_plan_blocked_count,
+        low_order_route_core_typed_pair_operator_plan_materialized =
+            low_order_route_summary.route_core_typed_pair_operator_plan_materialized,
+        low_order_route_core_typed_pair_operator_source_path_counts =
+            low_order_route_summary.route_core_typed_pair_operator_source_path_counts,
+        low_order_route_core_typed_pair_operator_final_block_path_counts =
+            low_order_route_summary.route_core_typed_pair_operator_final_block_path_counts,
+        low_order_route_core_typed_pair_operator_materialization_status_counts =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_status_counts,
+        low_order_route_core_typed_pair_operator_blocker_counts =
+            low_order_route_summary.route_core_typed_pair_operator_blocker_counts,
+        low_order_route_core_typed_pair_operator_plan_family_counts =
+            low_order_route_summary.route_core_typed_pair_operator_plan_family_counts,
         low_order_lw_complete_shell_cpb_enumeration_available =
             low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
         low_order_lw_complete_shell_region_count =
@@ -5671,6 +5693,82 @@ function _pqs_source_box_route_driver_route_core_pair_family_counts(
     )
 end
 
+function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+    status,
+    blocker,
+)
+    return (;
+        route_core_typed_pair_operator_plan_inventory_available = false,
+        route_core_typed_pair_operator_plan_inventory_status = status,
+        route_core_typed_pair_operator_plan_blocker = blocker,
+        route_core_typed_pair_operator_plan_count = 0,
+        route_core_typed_pair_operator_plan_blocked_count = 0,
+        route_core_typed_pair_operator_plan_materialized = false,
+        route_core_typed_pair_operator_source_path_counts = (),
+        route_core_typed_pair_operator_final_block_path_counts = (),
+        route_core_typed_pair_operator_materialization_status_counts = (),
+        route_core_typed_pair_operator_blocker_counts = (),
+        route_core_typed_pair_operator_plan_family_counts = (),
+    )
+end
+
+function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_metadata(
+    route_core_sidecar_inventory,
+)
+    if isnothing(route_core_sidecar_inventory) ||
+       !hasproperty(
+           route_core_sidecar_inventory,
+           :crc_pair_operator_plan_inventory_available,
+       )
+        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+            :blocked_missing_route_core_sidecar_inventory,
+            :missing_route_core_sidecar_inventory,
+        )
+    end
+
+    if !route_core_sidecar_inventory.crc_pair_operator_plan_inventory_available
+        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+            route_core_sidecar_inventory.crc_pair_operator_plan_inventory_status,
+            route_core_sidecar_inventory.crc_pair_operator_plan_blocker,
+        )
+    end
+
+    plan_inventory =
+        route_core_sidecar_inventory.crc_pair_operator_plan_inventory
+    if isnothing(plan_inventory)
+        return _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+            :blocked_missing_route_core_typed_pair_operator_plan_inventory,
+            :missing_route_core_typed_pair_operator_plan_inventory,
+        )
+    end
+
+    return (;
+        route_core_typed_pair_operator_plan_inventory_available = true,
+        route_core_typed_pair_operator_plan_inventory_status =
+            route_core_sidecar_inventory.crc_pair_operator_plan_inventory_status,
+        route_core_typed_pair_operator_plan_blocker =
+            route_core_sidecar_inventory.crc_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_count =
+            route_core_sidecar_inventory.crc_pair_operator_plan_count,
+        route_core_typed_pair_operator_plan_blocked_count =
+            route_core_sidecar_inventory.crc_pair_operator_plan_blocked_count,
+        route_core_typed_pair_operator_plan_materialized =
+            route_core_sidecar_inventory.crc_pair_operator_plan_materialized,
+        route_core_typed_pair_operator_source_path_counts =
+            CartesianRouteCore.pair_operator_source_path_counts(plan_inventory),
+        route_core_typed_pair_operator_final_block_path_counts =
+            CartesianRouteCore.pair_operator_final_block_path_counts(plan_inventory),
+        route_core_typed_pair_operator_materialization_status_counts =
+            CartesianRouteCore.pair_operator_materialization_status_counts(
+                plan_inventory,
+            ),
+        route_core_typed_pair_operator_blocker_counts =
+            CartesianRouteCore.pair_operator_blocker_counts(plan_inventory),
+        route_core_typed_pair_operator_plan_family_counts =
+            CartesianRouteCore.pair_operator_plan_family_counts(plan_inventory),
+    )
+end
+
 function _pqs_source_box_route_driver_route_core_readiness_requirements()
     return (
         :complete_crc_final_unit_inventory,
@@ -5952,9 +6050,17 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
                 :missing_route_core_sidecar_inventory,
             route_core_pair_operator_readiness_requirements =
                 _pqs_source_box_route_driver_route_core_readiness_requirements(),
+            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+                :blocked_missing_route_core_sidecar_inventory,
+                :missing_route_core_sidecar_inventory,
+            )...,
         )
     end
 
+    route_core_typed_pair_operator_plan_metadata =
+        _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_metadata(
+            route_core_sidecar_inventory,
+        )
     comparison = _pqs_source_box_route_driver_route_core_pair_comparison(
         route_core_sidecar_inventory,
         atom_growth_pair_inventory,
@@ -6020,6 +6126,7 @@ function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
             :available_route_core_unit_pair_summary :
             route_core_sidecar_inventory.crc_pair_inventory_status,
         route_core_pair_operator_readiness...,
+        route_core_typed_pair_operator_plan_metadata...,
     )
 end
 
@@ -6053,6 +6160,10 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         route_core_pair_operator_plan_status = :not_available,
         route_core_pair_operator_plan = nothing,
         route_core_pair_operator_plan_blocker = :not_available,
+        _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+            :not_available,
+            :not_available,
+        )...,
     )
     low_order_transforms =
         hasproperty(transforms, :low_order_transforms) ?
@@ -6142,6 +6253,10 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                 route_core_pair_operator_readiness_status =
                     :not_selected_legacy_source_pairs,
                 route_core_pair_operator_blocker =
+                    :not_selected_legacy_source_pairs,
+                route_core_typed_pair_operator_plan_inventory_status =
+                    :not_selected_legacy_source_pairs,
+                route_core_typed_pair_operator_plan_blocker =
                     :not_selected_legacy_source_pairs,
             ),
         )
@@ -6315,6 +6430,28 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_pair_operator_plan,
         route_core_pair_operator_plan_blocker =
             low_order_pairs.route_core_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_inventory_available =
+            low_order_pairs.route_core_typed_pair_operator_plan_inventory_available,
+        route_core_typed_pair_operator_plan_inventory_status =
+            low_order_pairs.route_core_typed_pair_operator_plan_inventory_status,
+        route_core_typed_pair_operator_plan_blocker =
+            low_order_pairs.route_core_typed_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_count =
+            low_order_pairs.route_core_typed_pair_operator_plan_count,
+        route_core_typed_pair_operator_plan_blocked_count =
+            low_order_pairs.route_core_typed_pair_operator_plan_blocked_count,
+        route_core_typed_pair_operator_plan_materialized =
+            low_order_pairs.route_core_typed_pair_operator_plan_materialized,
+        route_core_typed_pair_operator_source_path_counts =
+            low_order_pairs.route_core_typed_pair_operator_source_path_counts,
+        route_core_typed_pair_operator_final_block_path_counts =
+            low_order_pairs.route_core_typed_pair_operator_final_block_path_counts,
+        route_core_typed_pair_operator_materialization_status_counts =
+            low_order_pairs.route_core_typed_pair_operator_materialization_status_counts,
+        route_core_typed_pair_operator_blocker_counts =
+            low_order_pairs.route_core_typed_pair_operator_blocker_counts,
+        route_core_typed_pair_operator_plan_family_counts =
+            low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
         active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = low_order_pairs.pair_entries,
         pair_family_counts = low_order_pairs.pair_family_counts,
@@ -6383,6 +6520,10 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             route_core_pair_operator_plan_status = :not_available,
             route_core_pair_operator_plan = nothing,
             route_core_pair_operator_plan_blocker = :not_available,
+            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+                :not_available,
+                :not_available,
+            )...,
             helper_by_pair_family = nothing,
             pair_operator_helper_by_family = nothing,
             pair_helper_status_by_family = nothing,
@@ -6514,6 +6655,28 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             low_order_pairs.route_core_pair_operator_plan,
         route_core_pair_operator_plan_blocker =
             low_order_pairs.route_core_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_inventory_available =
+            low_order_pairs.route_core_typed_pair_operator_plan_inventory_available,
+        route_core_typed_pair_operator_plan_inventory_status =
+            low_order_pairs.route_core_typed_pair_operator_plan_inventory_status,
+        route_core_typed_pair_operator_plan_blocker =
+            low_order_pairs.route_core_typed_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_count =
+            low_order_pairs.route_core_typed_pair_operator_plan_count,
+        route_core_typed_pair_operator_plan_blocked_count =
+            low_order_pairs.route_core_typed_pair_operator_plan_blocked_count,
+        route_core_typed_pair_operator_plan_materialized =
+            low_order_pairs.route_core_typed_pair_operator_plan_materialized,
+        route_core_typed_pair_operator_source_path_counts =
+            low_order_pairs.route_core_typed_pair_operator_source_path_counts,
+        route_core_typed_pair_operator_final_block_path_counts =
+            low_order_pairs.route_core_typed_pair_operator_final_block_path_counts,
+        route_core_typed_pair_operator_materialization_status_counts =
+            low_order_pairs.route_core_typed_pair_operator_materialization_status_counts,
+        route_core_typed_pair_operator_blocker_counts =
+            low_order_pairs.route_core_typed_pair_operator_blocker_counts,
+        route_core_typed_pair_operator_plan_family_counts =
+            low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
         helper_by_pair_family = low_order_pairs.helper_by_pair_family,
         pair_operator_helper_by_family =
             low_order_pairs.pair_operator_helper_by_family,
@@ -6610,6 +6773,28 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.route_core_pair_operator_plan,
         low_order_route_core_pair_operator_plan_blocker =
             low_order_assembly.route_core_pair_operator_plan_blocker,
+        low_order_route_core_typed_pair_operator_plan_inventory_available =
+            low_order_assembly.route_core_typed_pair_operator_plan_inventory_available,
+        low_order_route_core_typed_pair_operator_plan_inventory_status =
+            low_order_assembly.route_core_typed_pair_operator_plan_inventory_status,
+        low_order_route_core_typed_pair_operator_plan_blocker =
+            low_order_assembly.route_core_typed_pair_operator_plan_blocker,
+        low_order_route_core_typed_pair_operator_plan_count =
+            low_order_assembly.route_core_typed_pair_operator_plan_count,
+        low_order_route_core_typed_pair_operator_plan_blocked_count =
+            low_order_assembly.route_core_typed_pair_operator_plan_blocked_count,
+        low_order_route_core_typed_pair_operator_plan_materialized =
+            low_order_assembly.route_core_typed_pair_operator_plan_materialized,
+        low_order_route_core_typed_pair_operator_source_path_counts =
+            low_order_assembly.route_core_typed_pair_operator_source_path_counts,
+        low_order_route_core_typed_pair_operator_final_block_path_counts =
+            low_order_assembly.route_core_typed_pair_operator_final_block_path_counts,
+        low_order_route_core_typed_pair_operator_materialization_status_counts =
+            low_order_assembly.route_core_typed_pair_operator_materialization_status_counts,
+        low_order_route_core_typed_pair_operator_blocker_counts =
+            low_order_assembly.route_core_typed_pair_operator_blocker_counts,
+        low_order_route_core_typed_pair_operator_plan_family_counts =
+            low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
         low_order_pair_operator_helper_by_family =
             low_order_assembly.pair_operator_helper_by_family,
         low_order_pair_helper_status_by_family =
@@ -6832,6 +7017,10 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             route_core_pair_operator_plan_status = :not_available,
             route_core_pair_operator_plan = nothing,
             route_core_pair_operator_plan_blocker = :not_available,
+            _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+                :not_available,
+                :not_available,
+            )...,
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
@@ -6925,6 +7114,28 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.route_core_pair_operator_plan,
         route_core_pair_operator_plan_blocker =
             low_order_assembly.route_core_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_inventory_available =
+            low_order_assembly.route_core_typed_pair_operator_plan_inventory_available,
+        route_core_typed_pair_operator_plan_inventory_status =
+            low_order_assembly.route_core_typed_pair_operator_plan_inventory_status,
+        route_core_typed_pair_operator_plan_blocker =
+            low_order_assembly.route_core_typed_pair_operator_plan_blocker,
+        route_core_typed_pair_operator_plan_count =
+            low_order_assembly.route_core_typed_pair_operator_plan_count,
+        route_core_typed_pair_operator_plan_blocked_count =
+            low_order_assembly.route_core_typed_pair_operator_plan_blocked_count,
+        route_core_typed_pair_operator_plan_materialized =
+            low_order_assembly.route_core_typed_pair_operator_plan_materialized,
+        route_core_typed_pair_operator_source_path_counts =
+            low_order_assembly.route_core_typed_pair_operator_source_path_counts,
+        route_core_typed_pair_operator_final_block_path_counts =
+            low_order_assembly.route_core_typed_pair_operator_final_block_path_counts,
+        route_core_typed_pair_operator_materialization_status_counts =
+            low_order_assembly.route_core_typed_pair_operator_materialization_status_counts,
+        route_core_typed_pair_operator_blocker_counts =
+            low_order_assembly.route_core_typed_pair_operator_blocker_counts,
+        route_core_typed_pair_operator_plan_family_counts =
+            low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,

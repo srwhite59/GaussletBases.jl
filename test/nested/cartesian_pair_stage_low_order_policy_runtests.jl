@@ -97,6 +97,13 @@ function _cartesian_pair_stage_low_order_policy_pairs(fixture; policy = nothing)
     return (; shells, units, transforms, pairs)
 end
 
+function _cartesian_pair_stage_count_by_field(entries, field, value)
+    for entry in entries
+        getproperty(entry, field) == value && return entry.pair_count
+    end
+    return 0
+end
+
 @testset "cartesian pair stage carries selected low-order policy" begin
     fixture = _cartesian_pair_stage_low_order_policy_fixture()
 
@@ -248,6 +255,47 @@ end
     @test !atom_growth_plan.operator_blocks_materialized
     @test !atom_growth_plan.hamiltonian_matrices_materialized
     @test !isempty(atom_growth_plan.operator_block_family_plan)
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_available
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_status ==
+          :blocked_route_core_pair_operator_plan_inventory
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_count == 36
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count == 15
+    @test !atom_growth_summary.route_core_typed_pair_operator_plan_materialized
+    @test _cartesian_pair_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_source_path_counts,
+        :source_operator_path,
+        :aggregate_subtree_adapter_required,
+    ) == 15
+    @test _cartesian_pair_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
+        :materialization_status,
+        :metadata_only_not_materialized,
+    ) == 21
+    @test _cartesian_pair_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
+        :materialization_status,
+        :blocked_metadata_only_not_materialized,
+    ) == 15
+    @test _cartesian_pair_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
+        :blocker,
+        nothing,
+    ) == 21
+    @test _cartesian_pair_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
+        :blocker,
+        :aggregate_subtree_operator_plan_required,
+    ) == 15
+    @test sum(
+        entry.pair_count for entry in
+        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts
+    ) == 36
+    @test all(
+        entry -> !entry.materialized,
+        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts,
+    )
     @test atom_growth_pairs.route_core_pair_inventory_available
     @test atom_growth_pairs.route_core_pair_inventory ===
           atom_growth_summary.route_core_pair_inventory
@@ -255,6 +303,12 @@ end
     @test atom_growth_pairs.route_core_pair_operator_preflight ===
           atom_growth_preflight
     @test atom_growth_pairs.route_core_pair_operator_plan === atom_growth_plan
+    @test atom_growth_pairs.route_core_typed_pair_operator_plan_count ==
+          atom_growth_summary.route_core_typed_pair_operator_plan_count
+    @test atom_growth_pairs.route_core_typed_pair_operator_plan_blocked_count ==
+          atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count
+    @test atom_growth_pairs.route_core_typed_pair_operator_plan_materialized ==
+          atom_growth_summary.route_core_typed_pair_operator_plan_materialized
     pair_inventory = atom_growth_summary.pair_inventory
     unit_inventory = atom_growth_stages.units.plan_unit_inventory
     @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory

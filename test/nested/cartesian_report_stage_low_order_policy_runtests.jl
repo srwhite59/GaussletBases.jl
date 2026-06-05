@@ -114,6 +114,13 @@ function _cartesian_report_stage_low_order_policy_report(
     return (; shells, units, transforms, pairs, assembly, report)
 end
 
+function _cartesian_report_stage_count_by_field(entries, field, value)
+    for entry in entries
+        getproperty(entry, field) == value && return entry.pair_count
+    end
+    return 0
+end
+
 @testset "cartesian report stage carries selected low-order policy" begin
     fixture = _cartesian_report_stage_low_order_policy_fixture()
 
@@ -373,6 +380,54 @@ end
           36
     @test !atom_growth_report.low_order_route_core_pair_operator_plan.operator_blocks_materialized
     @test !atom_growth_report.low_order_route_core_pair_operator_plan.hamiltonian_matrices_materialized
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_available
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_inventory_status ==
+          :blocked_route_core_pair_operator_plan_inventory
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_count == 36
+    @test atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count == 15
+    @test !atom_growth_summary.route_core_typed_pair_operator_plan_materialized
+    @test _cartesian_report_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_source_path_counts,
+        :source_operator_path,
+        :aggregate_subtree_adapter_required,
+    ) == 15
+    @test _cartesian_report_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
+        :materialization_status,
+        :metadata_only_not_materialized,
+    ) == 21
+    @test _cartesian_report_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_materialization_status_counts,
+        :materialization_status,
+        :blocked_metadata_only_not_materialized,
+    ) == 15
+    @test _cartesian_report_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
+        :blocker,
+        nothing,
+    ) == 21
+    @test _cartesian_report_stage_count_by_field(
+        atom_growth_summary.route_core_typed_pair_operator_blocker_counts,
+        :blocker,
+        :aggregate_subtree_operator_plan_required,
+    ) == 15
+    @test sum(
+        entry.pair_count for entry in
+        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts
+    ) == 36
+    @test all(
+        entry -> !entry.materialized,
+        atom_growth_summary.route_core_typed_pair_operator_plan_family_counts,
+    )
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_plan_count ==
+          atom_growth_summary.route_core_typed_pair_operator_plan_count
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_plan_blocked_count ==
+          atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count
+    @test !atom_growth_report.low_order_route_core_typed_pair_operator_plan_materialized
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_source_path_counts ==
+          atom_growth_summary.route_core_typed_pair_operator_source_path_counts
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104
