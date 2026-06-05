@@ -169,6 +169,51 @@ end
     synthetic_family_counts = CRC.pair_operator_plan_family_counts(plan_inventory)
     @test sum(entry.pair_count for entry in synthetic_family_counts) == 6
     @test all(entry -> !entry.materialized, synthetic_family_counts)
+    blocked_readiness =
+        CRC.pair_operator_materialization_readiness(plan_inventory)
+    @test !blocked_readiness.ready
+    @test blocked_readiness.status == :blocked_pair_operator_materialization
+    @test blocked_readiness.blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test blocked_readiness.requirements ==
+          (
+              :nonempty_pair_operator_plan_inventory,
+              :no_blocked_typed_pair_operator_plans,
+              :no_pending_pair_operator_source_paths,
+              :no_already_materialized_typed_pair_operator_plans,
+          )
+    @test blocked_readiness.plan_count == 6
+    @test blocked_readiness.blocked_count == 3
+    @test blocked_readiness.materialized_count == 0
+
+    direct_ready_inventory = CRC.pair_operator_plan_inventory(
+        CRC.unit_pair_inventory((direct_unit,)),
+    )
+    direct_ready_readiness =
+        CRC.pair_operator_materialization_readiness(direct_ready_inventory)
+    @test direct_ready_readiness.ready
+    @test direct_ready_readiness.status == :ready_pair_operator_materialization
+    @test isnothing(direct_ready_readiness.blocker)
+    @test direct_ready_readiness.plan_count == 1
+    @test direct_ready_readiness.blocked_count == 0
+    @test direct_ready_readiness.materialized_count == 0
+
+    direct_materialized_inventory = CRC.pair_operator_plan_inventory(
+        CRC.unit_pair_inventory((direct_unit,));
+        materialized = true,
+    )
+    direct_materialized_readiness =
+        CRC.pair_operator_materialization_readiness(
+            direct_materialized_inventory,
+        )
+    @test !direct_materialized_readiness.ready
+    @test direct_materialized_readiness.status ==
+          :blocked_already_materialized_pair_operator_plans
+    @test direct_materialized_readiness.blocker ==
+          :typed_pair_operator_plans_already_materialized
+    @test direct_materialized_readiness.plan_count == 1
+    @test direct_materialized_readiness.blocked_count == 0
+    @test direct_materialized_readiness.materialized_count == 1
 
     pqs_plan = _crc_pair_plan_by_key(plan_inventory, (:pqs_shell, :pqs_shell))
     @test pqs_plan isa CRC.PairOperatorPlan

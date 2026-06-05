@@ -448,6 +448,87 @@ pair_operator_plans(inventory::PairOperatorPlanInventory) = inventory.plans
 pair_operator_plan_count(inventory::PairOperatorPlanInventory) =
     length(inventory.plans)
 
+function pair_operator_materialization_readiness_requirements()
+    return (
+        :nonempty_pair_operator_plan_inventory,
+        :no_blocked_typed_pair_operator_plans,
+        :no_pending_pair_operator_source_paths,
+        :no_already_materialized_typed_pair_operator_plans,
+    )
+end
+
+function pair_operator_materialization_readiness(
+    inventory::PairOperatorPlanInventory,
+)
+    plans = pair_operator_plans(inventory)
+    plan_count = pair_operator_plan_count(inventory)
+    blocked_count = count(plan -> !isnothing(blocker(plan)), plans)
+    materialized_count = count(plan -> plan.materialized, plans)
+    pending_count =
+        count(plan -> source_operator_path(plan) === :pending_pair_operator_path, plans)
+    requirements = pair_operator_materialization_readiness_requirements()
+
+    if plan_count == 0
+        return (;
+            ready = false,
+            status = :blocked_empty_pair_operator_plan_inventory,
+            blocker = :empty_pair_operator_plan_inventory,
+            requirements,
+            plan_count,
+            blocked_count,
+            materialized_count,
+        )
+    end
+
+    if blocked_count > 0
+        first_blocked_plan =
+            first(plan for plan in plans if !isnothing(blocker(plan)))
+        return (;
+            ready = false,
+            status = :blocked_pair_operator_materialization,
+            blocker = blocker(first_blocked_plan),
+            requirements,
+            plan_count,
+            blocked_count,
+            materialized_count,
+        )
+    end
+
+    if pending_count > 0
+        return (;
+            ready = false,
+            status = :blocked_pending_pair_operator_source_path,
+            blocker = :pending_pair_operator_path,
+            requirements,
+            plan_count,
+            blocked_count,
+            materialized_count,
+        )
+    end
+
+    if materialized_count > 0
+        return (;
+            ready = false,
+            status = :blocked_already_materialized_pair_operator_plans,
+            blocker = :typed_pair_operator_plans_already_materialized,
+            requirements,
+            plan_count,
+            blocked_count,
+            materialized_count,
+        )
+    end
+
+    return (;
+        ready = true,
+        status = :ready_pair_operator_materialization,
+        blocker = nothing,
+        requirements,
+        plan_count,
+        blocked_count,
+        materialized_count,
+    )
+end
+
 function _pair_operator_count_entries(values, value_field::Symbol)
     counts = Dict{Any,Int}()
     order = Any[]
