@@ -7081,6 +7081,35 @@ function _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
     return nothing
 end
 
+function _pqs_source_box_route_driver_crc_operator_plan_print_line(report)
+    hasproperty(report, :low_order_route_core_pair_operator_plan_status) ||
+        return nothing
+    status = report.low_order_route_core_pair_operator_plan_status
+    if status == :ready_route_core_pair_operator_plan
+        return string(
+            "CRC pair-operator plan: ready metadata plan, final units ",
+            report.low_order_route_core_pair_operator_plan.route_core_final_unit_count,
+            ", pairs ",
+            report.low_order_route_core_pair_operator_plan.route_core_pair_count,
+            ", operator blocks materialized no",
+        )
+    end
+    if status == :blocked_route_core_pair_operator_plan
+        return string(
+            "CRC pair-operator plan: blocked metadata plan, blocker ",
+            report.low_order_route_core_pair_operator_plan_blocker,
+            ", operator blocks materialized no",
+        )
+    end
+    return string("CRC pair-operator plan: ", status)
+end
+
+function _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
+    line = _pqs_source_box_route_driver_crc_operator_plan_print_line(report)
+    isnothing(line) || println(line)
+    return nothing
+end
+
 function cartesian_print_summary(report, materialization)
     recipe = report.recipe_metadata
     setup = report.standard_setup
@@ -7125,6 +7154,7 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_pair_inventory_source
     @show report.low_order_pair_count
     _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
+    _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
     @show report.low_order_hamiltonian_matrices_materialized
     _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
     @show materialization.basis_artifact_status materialization.basis_artifact_written

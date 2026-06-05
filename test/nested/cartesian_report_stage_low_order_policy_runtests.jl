@@ -227,6 +227,13 @@ end
     @test default_report.route_skeleton === default_stages.shells.route_skeleton
     @test default_report.pair_entries ===
           default_stages.shells.route_skeleton.pair_entries
+    default_plan_line =
+        GaussletBases._pqs_source_box_route_driver_crc_operator_plan_print_line(
+            default_report,
+        )
+    @test occursin("blocked metadata plan", default_plan_line)
+    @test occursin("not_selected_legacy_source_pairs", default_plan_line)
+    @test occursin("operator blocks materialized no", default_plan_line)
 
     atom_growth_stages =
         _cartesian_report_stage_low_order_policy_report(
@@ -501,6 +508,10 @@ end
     @test occursin("CRC pair families: ", summary_stdout)
     @test occursin(
         "white_lindsey_atom_local_child_shellification",
+        summary_stdout,
+    )
+    @test occursin(
+        "CRC pair-operator plan: ready metadata plan, final units 8, pairs 36, operator blocks materialized no",
         summary_stdout,
     )
     @test occursin(
