@@ -784,7 +784,12 @@ end
     @test scaffold.construction_region_order == Tuple(construction_plan.region_order)
     @test scaffold.assembly_shell_order == :outside_in
     @test scaffold.assembly_core_order ==
-          (:left_atom_box, :contact_cap, :right_atom_box)
+          (
+              :outer_mismatch_shared_molecular_shell,
+              :left_atom_box,
+              :contact_cap,
+              :right_atom_box,
+          )
     @test scaffold.ordered_region_roles == Tuple(construction_plan.region_order)
     @test [region.support_count for region in scaffold.regions] ==
           [length(region.support_indices) for region in construction_plan.regions]
@@ -804,8 +809,7 @@ end
     @test counts.outer_mismatch_boundary_slab_set_count == 1
     @test counts.unsupported_outer_mismatch_count == 0
     @test scaffold.unsupported_region_count == 0
-    @test scaffold.materialization_status ==
-          :blocked_outer_mismatch_sequence_assembly_not_implemented
+    @test scaffold.materialization_status == :ready_supported_complete_rectangular_subset
 
     left_region = only(
         region for region in construction_plan.regions if region.role == :left_atom_box
@@ -902,20 +906,53 @@ end
         column in 1:slab_set.retained_count
     ]
 
-    blocked =
+    materialization =
         GaussletBases._cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
             scaffold,
             basis,
             bundles,
+            term_coefficients = Float64.(expansion.coefficients),
+            packet_kernel = :factorized_direct,
         )
-    @test blocked.status == :blocked_sequence_assembly
-    @test blocked.blocked_reason ==
-          :outer_mismatch_sequence_assembly_not_implemented
-    @test blocked.sequence === nothing
-    @test blocked.unsupported_region_count == 0
-    @test length(blocked.outer_mismatch_boundary_slab_sets) == 1
-    @test !blocked.active_source_authority
-    @test !blocked.route_behavior_changed
+    @test materialization.status == :materialized_supported_complete_rectangular_low_order
+    @test materialization.blocked_reason === nothing
+    @test materialization.unsupported_region_count == 0
+    @test length(materialization.outer_mismatch_boundary_slab_sets) == 1
+    @test !materialization.active_source_authority
+    @test !materialization.route_behavior_changed
+    assembly = materialization.assembly
+    sequence = materialization.sequence
+    audit = GaussletBases._nested_shell_sequence_contract_audit(
+        sequence,
+        Tuple(length.(construction_plan.anatomy.recipe.parent_box)),
+    )
+    @test assembly.status == :materialized_atom_growth_complete_rectangular_low_order
+    @test assembly.core_block_order == scaffold.assembly_core_order
+    expected_core_support = vcat(
+        piece_support_indices,
+        scaffold.left_child_plan.support_indices,
+        scaffold.contact_cap_region.support_indices,
+        scaffold.right_child_plan.support_indices,
+    )
+    @test assembly.core_support_indices == expected_core_support
+    @test sequence.core_indices == expected_core_support
+    @test sequence.working_box == construction_plan.anatomy.recipe.parent_box
+    @test audit.full_parent_working_box
+    @test audit.missing_row_count == 0
+    @test audit.ownership_unowned_row_count == 0
+    @test audit.ownership_multi_owned_row_count == 0
+    @test assembly.outer_mismatch_column_ranges == (1:98,)
+    @test assembly.outer_mismatch_slab_column_ranges == ((1:49, 50:98),)
+    contact_start = last(assembly.child_column_ranges[1]) + 1
+    @test assembly.contact_cap_column_range ==
+          contact_start:(contact_start + length(contact_region.support_indices) - 1)
+    @test assembly.shared_shell_column_ranges == Tuple(sequence.layer_column_ranges)
+    @test length(assembly.shared_shell_layers) ==
+          length(scaffold.shared_complete_shell_regions)
+    direct_outer_columns = only(assembly.outer_mismatch_column_ranges)
+    local_outer_block =
+        Matrix(sequence.coefficient_matrix[piece_support_indices, direct_outer_columns])
+    @test local_outer_block == local_direct_block
 end
 
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin

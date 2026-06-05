@@ -1214,13 +1214,14 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
     unsupported_regions = Tuple(unsupported_regions)
     materialization_dependency_counts =
         _cartesian_atom_growth_shellification_materialization_counts(regions)
-    assembly_core_order = isnothing(contact_cap_region) ?
+    atom_contact_core_order = isnothing(contact_cap_region) ?
         (:left_atom_box, :right_atom_box) :
         (:left_atom_box, :contact_cap, :right_atom_box)
+    assembly_core_order = isempty(outer_mismatch_boundary_slab_sets) ?
+        atom_contact_core_order :
+        (:outer_mismatch_shared_molecular_shell, atom_contact_core_order...)
     materialization_status =
         !isempty(unsupported_regions) ? :blocked_unsupported_regions :
-        !isempty(outer_mismatch_boundary_slab_sets) ?
-        :blocked_outer_mismatch_sequence_assembly_not_implemented :
         :ready_supported_complete_rectangular_subset
 
     return (;
@@ -1756,6 +1757,141 @@ function _cartesian_materialize_split_complete_rectangular_shellification_low_or
     )
 end
 
+function _cartesian_materialize_atom_growth_complete_rectangular_sequence_low_order(
+    plan,
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+)
+    plan.object_kind == :cartesian_atom_growth_shellification_plan3d || throw(
+        ArgumentError("atom-growth sequence assembly requires a cartesian_atom_growth_shellification_plan3d"),
+    )
+    isempty(plan.unsupported_regions) || throw(
+        ArgumentError("atom-growth sequence assembly requires all scaffold regions to be independently lowerable"),
+    )
+    isnothing(term_coefficients) && throw(
+        ArgumentError("atom-growth sequence assembly requires explicit term coefficients"),
+    )
+
+    outer_mismatch_materializations = Tuple(
+        _cartesian_materialize_outer_mismatch_boundary_slab_set(slab_set, bundles)
+        for slab_set in plan.outer_mismatch_boundary_slab_sets
+    )
+    left_sequence = _cartesian_materialize_atom_local_child_shellification_low_order(
+        plan.left_child_plan,
+        basis,
+        bundles;
+        term_coefficients,
+        packet_kernel,
+        build_packet = false,
+    )
+    right_sequence = _cartesian_materialize_atom_local_child_shellification_low_order(
+        plan.right_child_plan,
+        basis,
+        bundles;
+        term_coefficients,
+        packet_kernel,
+        build_packet = false,
+    )
+    contact_cap_data =
+        isnothing(plan.contact_cap_region) ?
+        nothing :
+        _cartesian_materialize_direct_box_region(plan.contact_cap_region, bundles)
+    shared_layers = [
+        _cartesian_materialize_shared_complete_shell_region(
+            region,
+            basis,
+            bundles;
+            term_coefficients,
+            packet_kernel,
+        ) for region in plan.shared_complete_shell_regions
+    ]
+
+    core_block_roles = Symbol[]
+    core_support_blocks = Vector{Vector{Int}}()
+    core_coefficient_blocks = _CartesianCoefficientMap[]
+    for materialization in outer_mismatch_materializations
+        push!(core_block_roles, materialization.slab_set.role)
+        push!(core_support_blocks, materialization.support_indices)
+        push!(core_coefficient_blocks, materialization.coefficient_matrix)
+    end
+    push!(core_block_roles, :left_atom_box)
+    push!(core_support_blocks, left_sequence.support_indices)
+    push!(core_coefficient_blocks, left_sequence.coefficient_matrix)
+    if !isnothing(contact_cap_data)
+        push!(core_block_roles, :contact_cap)
+        push!(core_support_blocks, contact_cap_data.support_indices)
+        push!(core_coefficient_blocks, contact_cap_data.coefficient_matrix)
+    end
+    push!(core_block_roles, :right_atom_box)
+    push!(core_support_blocks, right_sequence.support_indices)
+    push!(core_coefficient_blocks, right_sequence.coefficient_matrix)
+
+    core_support = vcat(core_support_blocks...)
+    core_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
+    sequence = _nested_shell_sequence_from_core_block(
+        bundles,
+        core_support,
+        core_coefficients,
+        shared_layers;
+        term_coefficients,
+        packet_kernel,
+        verify_factorized_reconstruction = false,
+    )
+
+    column_start = first(sequence.core_column_range)
+    outer_mismatch_column_ranges = UnitRange{Int}[]
+    outer_mismatch_slab_column_ranges = []
+    for materialization in outer_mismatch_materializations
+        ncols = size(materialization.coefficient_matrix, 2)
+        column_range = column_start:(column_start + ncols - 1)
+        push!(outer_mismatch_column_ranges, column_range)
+        push!(
+            outer_mismatch_slab_column_ranges,
+            Tuple(
+                (first(local_range) + first(column_range) - 1):
+                (last(local_range) + first(column_range) - 1)
+                for local_range in materialization.slab_column_ranges
+            ),
+        )
+        column_start = last(column_range) + 1
+    end
+    left_columns = size(left_sequence.coefficient_matrix, 2)
+    left_column_range = column_start:(column_start + left_columns - 1)
+    column_start = last(left_column_range) + 1
+    contact_cap_column_range = nothing
+    if !isnothing(contact_cap_data)
+        contact_columns = size(contact_cap_data.coefficient_matrix, 2)
+        contact_cap_column_range = column_start:(column_start + contact_columns - 1)
+        column_start = last(contact_cap_column_range) + 1
+    end
+    right_columns = size(right_sequence.coefficient_matrix, 2)
+    right_column_range = column_start:(column_start + right_columns - 1)
+
+    return (;
+        object_kind = :cartesian_atom_growth_complete_rectangular_sequence_materialization,
+        status = :materialized_atom_growth_complete_rectangular_low_order,
+        private_development_only = true,
+        active_source_authority = false,
+        route_behavior_changed = false,
+        core_block_order = Tuple(core_block_roles),
+        core_support_blocks = Tuple(core_support_blocks),
+        core_support_indices = core_support,
+        outer_mismatch_materializations,
+        outer_mismatch_column_ranges = Tuple(outer_mismatch_column_ranges),
+        outer_mismatch_slab_column_ranges =
+            Tuple(outer_mismatch_slab_column_ranges),
+        child_sequences = (left_sequence, right_sequence),
+        contact_cap_data,
+        shared_shell_layers = Tuple(shared_layers),
+        sequence,
+        child_column_ranges = (left_column_range, right_column_range),
+        contact_cap_column_range,
+        shared_shell_column_ranges = Tuple(sequence.layer_column_ranges),
+    )
+end
+
 function _cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
     plan,
     basis,
@@ -1783,32 +1919,10 @@ function _cartesian_materialize_atom_growth_complete_rectangular_shellification_
             route_behavior_changed = false,
         )
     end
-    if !isempty(plan.outer_mismatch_boundary_slab_sets)
-        return (;
-            object_kind = :cartesian_atom_growth_shellification_materialization_result,
-            status = :blocked_sequence_assembly,
-            materialization_status = plan.materialization_status,
-            blocked_reason = :outer_mismatch_sequence_assembly_not_implemented,
-            unsupported_regions = (),
-            unsupported_region_count = 0,
-            outer_mismatch_boundary_slab_sets =
-                plan.outer_mismatch_boundary_slab_sets,
-            sequence = nothing,
-            assembly = nothing,
-            active_source_authority = false,
-            route_behavior_changed = false,
-        )
-    end
-    isnothing(term_coefficients) && throw(
-        ArgumentError("atom-growth materializer requires explicit term coefficients"),
-    )
-    assembly = _cartesian_materialize_split_complete_rectangular_shellification_low_order(
-        plan.left_child_plan,
-        plan.right_child_plan,
-        plan.shared_complete_shell_regions,
+    assembly = _cartesian_materialize_atom_growth_complete_rectangular_sequence_low_order(
+        plan,
         basis,
         bundles;
-        midpoint_region = plan.contact_cap_region,
         term_coefficients,
         packet_kernel,
     )
@@ -1819,7 +1933,8 @@ function _cartesian_materialize_atom_growth_complete_rectangular_shellification_
         blocked_reason = nothing,
         unsupported_regions = (),
         unsupported_region_count = 0,
-        outer_mismatch_boundary_slab_sets = (),
+        outer_mismatch_boundary_slab_sets =
+            plan.outer_mismatch_boundary_slab_sets,
         sequence = assembly.sequence,
         assembly,
         active_source_authority = false,
