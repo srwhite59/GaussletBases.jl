@@ -670,6 +670,281 @@ function _cartesian_shellification_plan(
     )
 end
 
+function _cartesian_atom_local_child_shell_boxes(
+    outer_box::NTuple{3,UnitRange{Int}},
+    nside::Int,
+)
+    shell_boxes = NamedTuple[]
+    current_box = outer_box
+    while minimum(length.(current_box)) > nside
+        _nested_can_shrink_box(current_box) || break
+        inner_box = _nested_inner_box(current_box)
+        push!(
+            shell_boxes,
+            (;
+                outer_box = current_box,
+                inner_exclusion_box = inner_box,
+                source_point_count =
+                    _cartesian_shellification_box_point_count(current_box) -
+                    _cartesian_shellification_box_point_count(inner_box),
+            ),
+        )
+        current_box = inner_box
+    end
+    return (;
+        shell_boxes = Tuple(shell_boxes),
+        core_box = current_box,
+    )
+end
+
+function _cartesian_atom_local_child_shell_region3d(;
+    order_index::Int,
+    shell_box,
+    retention_policy::CartesianNestedCompleteShellRetentionContract,
+    nside::Int,
+    reference_fudge_factor::Float64,
+)
+    return (;
+        object_kind = :cartesian_atom_local_child_shell_region3d,
+        role = :atom_local_complete_shell,
+        order_index,
+        outer_box = shell_box.outer_box,
+        inner_exclusion_box = shell_box.inner_exclusion_box,
+        region_kind = :complete_shell_layer,
+        lowering_family = :white_lindsey_adaptive_complete_shell,
+        lowering_parameters = (;
+            retention_policy,
+            nside,
+            reference_fudge_factor,
+            enforce_symmetric_odd = false,
+        ),
+        source_point_count = shell_box.source_point_count,
+        source_backed = false,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
+    )
+end
+
+function _cartesian_atom_local_child_core_region3d(;
+    order_index::Int,
+    core_box::NTuple{3,UnitRange{Int}},
+    support_indices::AbstractVector{Int},
+    bond_axis::Symbol,
+    nside::Int,
+    retention_policy::CartesianNestedCompleteShellRetentionContract,
+    reference_fudge_factor::Float64,
+    core_near_nucleus_protect_rows::Int,
+)
+    return (;
+        object_kind = :cartesian_atom_local_child_core_region3d,
+        role = :atom_local_child_core,
+        order_index,
+        outer_box = core_box,
+        inner_exclusion_box = nothing,
+        region_kind = :nonuniform_direct_core,
+        lowering_family = :diatomic_nonuniform_bond_axis_core,
+        core_policy = :diatomic_nonuniform_bond_axis_core,
+        lowering_parameters = (;
+            retention_policy,
+            bond_axis,
+            nside,
+            minimum_parallel_retain =
+                _nested_diatomic_axis_minimum_retain(retention_policy, bond_axis),
+            reference_fudge_factor,
+            core_near_nucleus_protect_rows,
+        ),
+        support_indices = Int.(support_indices),
+        support_count = length(support_indices),
+        source_backed = false,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
+    )
+end
+
+function _cartesian_shellification_plan_atom_local_child_low_order(
+    bundles::_CartesianNestedAxisBundles3D,
+    outer_box::NTuple{3,UnitRange{Int}};
+    order_index::Int,
+    atom_side::Symbol,
+    bond_axis::Symbol,
+    nside::Int,
+    retention_policy::CartesianNestedCompleteShellRetentionContract,
+    reference_fudge_factor::Real,
+    core_near_nucleus_protect_rows::Int,
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    atom_side in (:left, :right) || throw(
+        ArgumentError("atom-local child shellification plan requires atom_side = :left or :right"),
+    )
+    bond_axis in (:x, :y, :z) || throw(
+        ArgumentError("atom-local child shellification plan requires bond_axis = :x, :y, or :z"),
+    )
+    nside >= 1 || throw(
+        ArgumentError("atom-local child shellification plan requires positive nside"),
+    )
+    reference_fudge_factor > 0 || throw(
+        ArgumentError("atom-local child shellification plan requires positive reference_fudge_factor"),
+    )
+
+    dims = _nested_axis_lengths(bundles)
+    support_indices = _nested_box_support_indices(outer_box..., dims)
+    shell_plan = _cartesian_atom_local_child_shell_boxes(outer_box, nside)
+    shell_regions = Tuple(
+        _cartesian_atom_local_child_shell_region3d(
+            order_index = index,
+            shell_box = shell_box,
+            retention_policy = retention_policy,
+            nside = nside,
+            reference_fudge_factor = Float64(reference_fudge_factor),
+        ) for (index, shell_box) in enumerate(shell_plan.shell_boxes)
+    )
+    core_support_indices = _nested_box_support_indices(shell_plan.core_box..., dims)
+    core_region = _cartesian_atom_local_child_core_region3d(
+        order_index = length(shell_regions) + 1,
+        core_box = shell_plan.core_box,
+        support_indices = core_support_indices,
+        bond_axis = bond_axis,
+        nside = nside,
+        retention_policy = retention_policy,
+        reference_fudge_factor = Float64(reference_fudge_factor),
+        core_near_nucleus_protect_rows = core_near_nucleus_protect_rows,
+    )
+
+    return (;
+        object_kind = :cartesian_atom_local_child_shellification_plan3d,
+        status = :planned_metadata_only,
+        private_development_only = true,
+        source_kind = :atom_outward_atom_local_child_shellification_plan,
+        route_family,
+        role = :atom_local_subtree,
+        order_index,
+        atom_side,
+        bond_axis,
+        nside,
+        retention_policy,
+        core_policy = :diatomic_nonuniform_bond_axis_core,
+        reference_fudge_factor = Float64(reference_fudge_factor),
+        core_near_nucleus_protect_rows,
+        outer_box,
+        working_box = outer_box,
+        shell_regions,
+        shell_layer_count = length(shell_regions),
+        core_region,
+        core_box = shell_plan.core_box,
+        support_indices = Int.(support_indices),
+        support_count = length(support_indices),
+        coverage_metadata = (;
+            object_kind = :cartesian_atom_local_child_shellification_coverage,
+            expected_support_count = _cartesian_shellification_box_point_count(outer_box),
+            support_count = length(support_indices),
+            coverage_complete =
+                length(support_indices) ==
+                _cartesian_shellification_box_point_count(outer_box),
+        ),
+        source_backed = false,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
+        diagnostics = (;
+            private_development_only = true,
+            atom_outward_policy = true,
+            active_source_authority = false,
+            active_source_oracle_only = true,
+            independently_lowerable = true,
+            shared_shell_policy_changed = false,
+            route_behavior_changed = false,
+            mwg_ida_semantics_changed = false,
+        ),
+    )
+end
+
+function _cartesian_materialize_atom_local_child_shellification_low_order(
+    plan,
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+    build_packet::Bool = false,
+)
+    plan.object_kind == :cartesian_atom_local_child_shellification_plan3d || throw(
+        ArgumentError("atom-local child materializer requires a cartesian_atom_local_child_shellification_plan3d"),
+    )
+    plan.source_backed && throw(
+        ArgumentError("atom-local child materializer requires an independently lowerable plan"),
+    )
+    plan.core_policy == :diatomic_nonuniform_bond_axis_core || throw(
+        ArgumentError("atom-local child materializer requires core_policy = :diatomic_nonuniform_bond_axis_core"),
+    )
+    isnothing(term_coefficients) && throw(
+        ArgumentError("atom-local child materializer requires explicit term coefficients"),
+    )
+
+    current_box = plan.outer_box
+    shell_layers = _CartesianNestedCompleteShell3D[]
+    for region in plan.shell_regions
+        region.source_backed && throw(
+            ArgumentError("atom-local child shell region must be independently lowerable"),
+        )
+        region.outer_box == current_box || throw(
+            ArgumentError("atom-local child shell region order is inconsistent with the plan"),
+        )
+        inner_box = region.inner_exclusion_box
+        adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+            basis,
+            bundles,
+            current_box,
+            inner_box,
+            plan.retention_policy;
+            nside = plan.nside,
+            reference_fudge_factor = plan.reference_fudge_factor,
+        )
+        push!(
+            shell_layers,
+            _nested_complete_rectangular_shell(
+                bundles,
+                inner_box...;
+                retain_xy = adaptive_retention.retain_xy,
+                retain_xz = adaptive_retention.retain_xz,
+                retain_yz = adaptive_retention.retain_yz,
+                retain_x_edge = adaptive_retention.retain_x_edge,
+                retain_y_edge = adaptive_retention.retain_y_edge,
+                retain_z_edge = adaptive_retention.retain_z_edge,
+                x_fixed = (first(current_box[1]), last(current_box[1])),
+                y_fixed = (first(current_box[2]), last(current_box[2])),
+                z_fixed = (first(current_box[3]), last(current_box[3])),
+                enforce_symmetric_odd = false,
+                term_coefficients = term_coefficients,
+                packet_kernel = packet_kernel,
+                verify_factorized_reconstruction = false,
+            ),
+        )
+        current_box = inner_box
+    end
+    current_box == plan.core_box || throw(
+        ArgumentError("atom-local child shell plan core box is inconsistent with shell regions"),
+    )
+    core_block = _nested_bond_aligned_diatomic_nonuniform_core_block(
+        basis,
+        bundles,
+        plan.core_box;
+        bond_axis = plan.bond_axis,
+        nside = plan.nside,
+        minimum_parallel_retain =
+            _nested_diatomic_axis_minimum_retain(plan.retention_policy, plan.bond_axis),
+        reference_fudge_factor = plan.reference_fudge_factor,
+        core_near_nucleus_protect_rows = plan.core_near_nucleus_protect_rows,
+    )
+    return _nested_shell_sequence_from_core_block(
+        bundles,
+        core_block.support_indices,
+        core_block.coefficient_matrix,
+        shell_layers;
+        term_coefficients = term_coefficients,
+        packet_kernel = packet_kernel,
+        build_packet = build_packet,
+        verify_factorized_reconstruction = false,
+    )
+end
+
 function _cartesian_materialize_direct_box_region(
     region,
     bundles::_CartesianNestedAxisBundles3D,

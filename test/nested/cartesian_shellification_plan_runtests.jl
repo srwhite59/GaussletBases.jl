@@ -54,13 +54,16 @@ end
 function _bond_aligned_diatomic_shellification_plan_fixture(;
     nside::Int = 5,
     shared_shell_layer_policy::Symbol = :endcap_panel_owned,
+    xmax_parallel::Float64 = 6.0,
+    xmax_transverse::Float64 = 4.0,
+    min_unsplit_parallel_to_transverse_ratio_for_split::Float64 = 3.0,
 )
     basis = bond_aligned_homonuclear_qw_basis(
         family = :G10,
         bond_length = 1.4,
         core_spacing = 0.7,
-        xmax_parallel = 6.0,
-        xmax_transverse = 4.0,
+        xmax_parallel = xmax_parallel,
+        xmax_transverse = xmax_transverse,
         bond_axis = :z,
     )
     expansion = coulomb_gaussian_expansion(doacc = false)
@@ -72,6 +75,7 @@ function _bond_aligned_diatomic_shellification_plan_fixture(;
         nside,
         term_coefficients = Float64.(expansion.coefficients),
         packet_kernel = :factorized_direct,
+        min_unsplit_parallel_to_transverse_ratio_for_split,
         shared_shell_layer_policy,
         shared_shell_endcap_panel_q = 4,
         shared_shell_endcap_panel_L = 4,
@@ -316,6 +320,128 @@ end
     @test audit.ownership_group_count_max == 1
     @test audit.ownership_unowned_row_count == 0
     @test audit.ownership_multi_owned_row_count == 0
+end
+
+@testset "atom-outward atom-local child subplans lower to oracle child sequences" begin
+    fixture = _bond_aligned_diatomic_shellification_plan_fixture(
+        xmax_parallel = 12.0,
+        xmax_transverse = 8.0,
+        min_unsplit_parallel_to_transverse_ratio_for_split = 1.0,
+    )
+    source = fixture.source
+    @test source.geometry.did_split
+    @test length(source.geometry.child_boxes) == 2
+    @test length(source.child_sequences) == 2
+
+    protect_rows =
+        GaussletBases._nested_diatomic_resolve_core_near_nucleus_protect_rows(
+            :auto,
+            source.nside,
+        )
+    for (child_index, atom_side) in enumerate((:left, :right))
+        oracle = source.child_sequences[child_index]
+        child_box = source.geometry.child_boxes[child_index]
+        plan = GaussletBases._cartesian_shellification_plan_atom_local_child_low_order(
+            fixture.bundles,
+            child_box;
+            order_index = child_index,
+            atom_side = atom_side,
+            bond_axis = source.geometry.bond_axis,
+            nside = source.nside,
+            retention_policy = source.child_shell_retention_contract,
+            reference_fudge_factor = 1.2,
+            core_near_nucleus_protect_rows = protect_rows,
+        )
+
+        @test plan.object_kind == :cartesian_atom_local_child_shellification_plan3d
+        @test plan.source_kind == :atom_outward_atom_local_child_shellification_plan
+        @test plan.role == :atom_local_subtree
+        @test plan.atom_side == atom_side
+        @test plan.order_index == child_index
+        @test plan.outer_box == child_box
+        @test plan.working_box == child_box
+        @test plan.bond_axis == source.geometry.bond_axis
+        @test plan.nside == source.nside
+        @test plan.retention_policy == source.child_shell_retention_contract
+        @test plan.core_policy == :diatomic_nonuniform_bond_axis_core
+        @test !plan.source_backed
+        @test plan.missing_independent_lowering_reason === nothing
+        @test plan.retirement_target == :already_plan_lowered_region
+        @test plan.coverage_metadata.coverage_complete
+        @test plan.coverage_metadata.expected_support_count ==
+              GaussletBases._cartesian_shellification_box_point_count(child_box)
+        @test plan.coverage_metadata.support_count == length(plan.support_indices)
+        @test all(region -> !region.source_backed, plan.shell_regions)
+        @test plan.core_region.source_backed == false
+        @test plan.core_region.core_policy == :diatomic_nonuniform_bond_axis_core
+        @test plan.diagnostics.atom_outward_policy
+        @test plan.diagnostics.active_source_oracle_only
+        @test !plan.diagnostics.active_source_authority
+        @test !plan.diagnostics.route_behavior_changed
+
+        materialized =
+            GaussletBases._cartesian_materialize_atom_local_child_shellification_low_order(
+                plan,
+                fixture.basis,
+                fixture.bundles;
+                term_coefficients = Float64.(fixture.expansion.coefficients),
+                packet_kernel = :factorized_direct,
+                build_packet = false,
+            )
+        materialized_audit = GaussletBases._nested_shell_sequence_contract_audit(
+            materialized,
+            Tuple(length.(source.geometry.parent_box)),
+        )
+        oracle_audit = GaussletBases._nested_shell_sequence_contract_audit(
+            oracle,
+            Tuple(length.(source.geometry.parent_box)),
+        )
+
+        @test materialized.working_box == oracle.working_box
+        @test materialized.working_box == child_box
+        @test materialized.core_indices == oracle.core_indices
+        @test materialized.core_states == oracle.core_states
+        @test materialized.core_column_range == oracle.core_column_range
+        @test materialized.layer_column_ranges == oracle.layer_column_ranges
+        @test materialized.support_indices == oracle.support_indices
+        @test materialized.support_states === oracle.support_states
+        @test size(materialized.coefficient_matrix) == size(oracle.coefficient_matrix)
+        @test isapprox(
+            materialized.coefficient_matrix,
+            oracle.coefficient_matrix;
+            atol = 1.0e-10,
+            rtol = 1.0e-10,
+        )
+        @test materialized.packet === oracle.packet
+        @test isnothing(materialized.packet)
+        @test materialized_audit == oracle_audit
+
+        @test length(materialized.shell_layers) == length(oracle.shell_layers)
+        @test length(materialized.shell_layers) == plan.shell_layer_count
+        for (shell, oracle_shell, region, column_range) in zip(
+            materialized.shell_layers,
+            oracle.shell_layers,
+            plan.shell_regions,
+            materialized.layer_column_ranges,
+        )
+            @test region.lowering_family == :white_lindsey_adaptive_complete_shell
+            @test region.retirement_target == :already_plan_lowered_region
+            @test shell.provenance == oracle_shell.provenance
+            @test shell.support_indices == oracle_shell.support_indices
+            @test shell.support_states == oracle_shell.support_states
+            @test shell.face_column_ranges == oracle_shell.face_column_ranges
+            @test shell.edge_column_ranges == oracle_shell.edge_column_ranges
+            @test shell.corner_column_ranges == oracle_shell.corner_column_ranges
+            @test size(shell.coefficient_matrix) == size(oracle_shell.coefficient_matrix)
+            @test isapprox(
+                shell.coefficient_matrix,
+                oracle_shell.coefficient_matrix;
+                atol = 1.0e-10,
+                rtol = 1.0e-10,
+            )
+            @test length(column_range) == size(shell.coefficient_matrix, 2)
+        end
+    end
 end
 
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin
