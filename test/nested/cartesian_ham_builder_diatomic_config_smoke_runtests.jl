@@ -369,7 +369,9 @@ end
                   :private_development_route_configured_atom_growth
             @test materialization.shellization_source ==
                   :bond_aligned_diatomic_atom_growth_construction_plan
-            @test !materialization.route_configured_shellization_consumed
+            @test materialization.route_configured_shellization_consumed
+            @test materialization.route_configured_diatomic_atom_growth_shellification_consumed
+            @test !materialization.route_configured_legacy_diatomic_source_consumed
             @test materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
             @test materialization.route_configured_diatomic_atom_growth_basis_adapter_status ==
                   :available_route_configured_diatomic_atom_growth_basis_adapter
@@ -446,6 +448,14 @@ end
         )
         @test occursin(
             "materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed = true",
+            stdout,
+        )
+        @test occursin(
+            "materialization.route_configured_diatomic_atom_growth_shellification_consumed = true",
+            stdout,
+        )
+        @test occursin(
+            "materialization.route_configured_legacy_diatomic_source_consumed = false",
             stdout,
         )
         @test occursin(

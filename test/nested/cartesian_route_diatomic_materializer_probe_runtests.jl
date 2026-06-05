@@ -305,6 +305,8 @@ end
     @test default_materialization.shellization_source ==
           :route_configured_bond_aligned_diatomic_source
     @test default_materialization.route_configured_shellization_consumed
+    @test !default_materialization.route_configured_diatomic_atom_growth_shellification_consumed
+    @test default_materialization.route_configured_legacy_diatomic_source_consumed
     @test default_materialization.route_configured_diatomic_materializer_probe_consumed
     @test !default_materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
     @test default_materialization.route_configured_diatomic_atom_growth_materializer_probe_status ==
@@ -334,7 +336,9 @@ end
           :private_development_route_configured_atom_growth
     @test opt_in_materialization.shellization_source ==
           :bond_aligned_diatomic_atom_growth_construction_plan
-    @test !opt_in_materialization.route_configured_shellization_consumed
+    @test opt_in_materialization.route_configured_shellization_consumed
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_shellification_consumed
+    @test !opt_in_materialization.route_configured_legacy_diatomic_source_consumed
     @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
     @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_status ==
           :materialized_route_configured_bond_aligned_diatomic_atom_growth_shellization
@@ -373,7 +377,9 @@ end
     @test probe.requested
     @test probe.materialized
     @test probe.atom_growth_shellification_consumed
-    @test !probe.route_configured_shellization_consumed
+    @test probe.route_configured_diatomic_atom_growth_shellification_consumed
+    @test probe.route_configured_shellization_consumed
+    @test !probe.route_configured_legacy_diatomic_source_consumed
     @test probe.sequence_available
     @test probe.retained_dimension > 0
     @test probe.support_count > 0
@@ -469,7 +475,9 @@ end
         @test materialization.ham_export_blocker === nothing
         @test materialization.shellization_source ==
               :bond_aligned_diatomic_atom_growth_construction_plan
-        @test !materialization.route_configured_shellization_consumed
+        @test materialization.route_configured_shellization_consumed
+        @test materialization.route_configured_diatomic_atom_growth_shellification_consumed
+        @test !materialization.route_configured_legacy_diatomic_source_consumed
         @test materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
         @test materialization.materialized_report !== nothing
         @test materialization.materialized_report_kind ==
@@ -533,8 +541,10 @@ end
             @test String(file["meta/shellization_authority"]) ==
                   "bond_aligned_diatomic_atom_growth_construction_plan"
             @test !Bool(file["meta/active_source_authority"])
-            @test !Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_shellification_consumed"])
             @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_configured_legacy_diatomic_source_consumed"])
             @test !Bool(file["meta/route_default_behavior_changed"])
             @test String(file["meta/basis_export_status"]) ==
                   "supported_route_configured_diatomic_atom_growth_basis_only_fixed_block"
@@ -580,8 +590,10 @@ end
             @test String(file["meta/shellization_authority"]) ==
                   "bond_aligned_diatomic_atom_growth_construction_plan"
             @test !Bool(file["meta/active_source_authority"])
-            @test !Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_shellification_consumed"])
             @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_configured_legacy_diatomic_source_consumed"])
             @test !Bool(file["meta/route_default_behavior_changed"])
             @test String(file["meta/export_status"]) == "basis_and_ham"
             @test String(file["meta/ham_preflight_status"]) ==

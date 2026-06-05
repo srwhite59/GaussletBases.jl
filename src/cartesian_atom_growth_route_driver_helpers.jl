@@ -630,9 +630,10 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materialization(
         shellization_authority =
             :bond_aligned_diatomic_atom_growth_construction_plan,
         active_source_authority = false,
-        route_configured_shellization_consumed = false,
+        route_configured_shellization_consumed = atom_growth_materialized,
         route_configured_diatomic_atom_growth_probe_consumed =
             route_configured_diatomic_atom_growth_materializer_probe_consumed,
+        route_configured_legacy_diatomic_source_consumed = false,
         route_default_behavior_changed = false,
         materialized_shellization_stage =
             :atom_growth_complete_rectangular_low_order,
@@ -764,7 +765,8 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materialization(
         shellization_summary_available = false,
         shellization_source =
             :bond_aligned_diatomic_atom_growth_construction_plan,
-        route_configured_shellization_consumed = false,
+        route_configured_shellization_consumed = atom_growth_materialized,
+        route_configured_legacy_diatomic_source_consumed = false,
         materialized_shellization_stage =
             :atom_growth_complete_rectangular_low_order,
         seed_materialization_status =

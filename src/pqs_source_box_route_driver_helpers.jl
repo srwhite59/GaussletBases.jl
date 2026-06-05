@@ -2147,7 +2147,9 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
             status,
             materialized = false,
             atom_growth_shellification_consumed = false,
+            route_configured_diatomic_atom_growth_shellification_consumed = false,
             route_configured_shellization_consumed = false,
+            route_configured_legacy_diatomic_source_consumed = false,
             blocker,
             missing_contract = Tuple(missing_contract),
             parent_qw_basis_object_handoff_available,
@@ -2350,7 +2352,10 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
                 materialization.status,
             materialized,
             atom_growth_shellification_consumed = materialized,
-            route_configured_shellization_consumed = false,
+            route_configured_diatomic_atom_growth_shellification_consumed =
+                materialized,
+            route_configured_shellization_consumed = materialized,
+            route_configured_legacy_diatomic_source_consumed = false,
             blocker = materialized ? nothing : materialization.blocked_reason,
             missing_contract = (),
             parent_qw_basis_object_handoff_available,
@@ -3185,6 +3190,8 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_atom_growth_materializer_probe.materialized
     route_configured_diatomic_atom_growth_materializer_probe_consumed =
         route_configured_diatomic_atom_growth_materializer_probe.atom_growth_shellification_consumed
+    route_configured_diatomic_atom_growth_shellification_consumed =
+        route_configured_diatomic_atom_growth_materializer_probe.route_configured_diatomic_atom_growth_shellification_consumed
     route_configured_diatomic_atom_growth_materializer_probe_blocker =
         route_configured_diatomic_atom_growth_materializer_probe.blocker
     route_configured_diatomic_atom_growth_materializer_missing_contract =
@@ -3327,6 +3334,7 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_atom_growth_materializer_probe_status,
         route_configured_diatomic_atom_growth_materializer_probe_materialized,
         route_configured_diatomic_atom_growth_materializer_probe_consumed,
+        route_configured_diatomic_atom_growth_shellification_consumed,
         route_configured_diatomic_atom_growth_materializer_probe_blocker,
         route_configured_diatomic_atom_growth_materializer_missing_contract,
         route_configured_diatomic_atom_growth_sequence_available,
@@ -3406,6 +3414,7 @@ function _pqs_source_box_route_driver_materialization(
                 :white_lindsey_one_center_seed_not_materialized :
                 nothing,
             route_configured_shellization_consumed = false,
+            route_configured_legacy_diatomic_source_consumed = false,
             materialized_shellization_stage = :not_checked_metadata_only,
             seed_materialization_status =
                 route_family == :white_lindsey_low_order ?
@@ -3676,6 +3685,7 @@ function _pqs_source_box_route_driver_materialization(
                         shellization_source =
                             :route_configured_bond_aligned_diatomic_source,
                         route_configured_shellization_consumed = true,
+                        route_configured_legacy_diatomic_source_consumed = true,
                         materialized_shellization_stage =
                             shellization_summary.shellization_stage,
                         seed_materialization_status =
@@ -3760,6 +3770,7 @@ function _pqs_source_box_route_driver_materialization(
                         shellization_source =
                             :route_configured_bond_aligned_diatomic_source,
                         route_configured_shellization_consumed = true,
+                        route_configured_legacy_diatomic_source_consumed = true,
                         materialized_shellization_stage =
                             shellization_summary.shellization_stage,
                         seed_materialization_status =
@@ -3844,6 +3855,7 @@ function _pqs_source_box_route_driver_materialization(
                 shellization_summary_available,
                 shellization_source = :route_configured_bond_aligned_diatomic_source,
                 route_configured_shellization_consumed = true,
+                route_configured_legacy_diatomic_source_consumed = true,
                 materialized_shellization_stage =
                     shellization_summary.shellization_stage,
                 seed_materialization_status =
@@ -3992,6 +4004,7 @@ function _pqs_source_box_route_driver_materialization(
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
+                    route_configured_legacy_diatomic_source_consumed = false,
                     materialized_shellization_stage,
                     seed_materialization_status,
                     export_status = :basis_only,
@@ -4052,6 +4065,7 @@ function _pqs_source_box_route_driver_materialization(
                     shellization_summary_available,
                     shellization_source,
                     route_configured_shellization_consumed,
+                    route_configured_legacy_diatomic_source_consumed = false,
                     materialized_shellization_stage,
                     seed_materialization_status,
                     export_status = :basis_and_ham,
@@ -4135,6 +4149,7 @@ function _pqs_source_box_route_driver_materialization(
             shellization_summary_available,
             shellization_source,
             route_configured_shellization_consumed,
+            route_configured_legacy_diatomic_source_consumed = false,
             materialized_shellization_stage,
             seed_materialization_status,
             retained_dimension = materialized_report.retained_dimension,
@@ -4223,6 +4238,7 @@ function _pqs_source_box_route_driver_materialization(
         shellization_summary_available = false,
         shellization_source = :pending_source_box_route_shellization,
         route_configured_shellization_consumed = false,
+        route_configured_legacy_diatomic_source_consumed = false,
         materialized_shellization_stage = :pending_source_box_retained_route,
         seed_materialization_status = :not_applicable,
         retained_dimension = report.retained_dimension,
@@ -4576,9 +4592,11 @@ function cartesian_print_summary(report, materialization)
     @show materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
     @show materialization.route_configured_diatomic_atom_growth_materializer_probe_status
     @show materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+    @show materialization.route_configured_diatomic_atom_growth_shellification_consumed
     @show materialization.route_configured_diatomic_atom_growth_basis_adapter_status
     @show materialization.route_configured_diatomic_atom_growth_final_integral_weights_status
     @show materialization.route_configured_diatomic_atom_growth_ham_adapter_status
+    @show materialization.route_configured_legacy_diatomic_source_consumed
     @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
     return nothing
