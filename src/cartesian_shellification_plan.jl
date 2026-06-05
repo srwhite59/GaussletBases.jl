@@ -40,6 +40,7 @@ function _cartesian_shellification_region3d(;
     role::Symbol,
     box::NTuple{3,UnitRange{Int}},
     lowering_family::Symbol,
+    materialization_dependency::Symbol,
     provenance,
     retained_count::Int,
     source_point_count::Int = _cartesian_shellification_box_point_count(box),
@@ -56,11 +57,63 @@ function _cartesian_shellification_region3d(;
         source_point_count,
         lowering_family,
         lowering_status = :planned_not_lowered,
+        materialization_dependency,
         retained_count,
         support_count,
         column_range,
         next_inner_box,
         provenance,
+    )
+end
+
+function _cartesian_shellification_materialization_dependency_counts(regions)
+    plan_lowerable_dependencies = (
+        :plan_lowerable_complete_shell,
+        :plan_lowerable_direct_core,
+    )
+    source_backed_dependencies = (
+        :source_backed_shared_shell_layer,
+        :source_backed_child_sequence,
+        :source_box_direct_in_source_backed_adapter,
+    )
+    return (;
+        object_kind = :cartesian_shellification_materialization_dependency_counts,
+        allowed_values = (
+            plan_lowerable_dependencies...,
+            source_backed_dependencies...,
+        ),
+        ordered_materialization_dependencies =
+            Tuple(region.materialization_dependency for region in regions),
+        plan_lowerable_region_count = count(
+            region -> region.materialization_dependency in plan_lowerable_dependencies,
+            regions,
+        ),
+        source_backed_region_count = count(
+            region -> region.materialization_dependency in source_backed_dependencies,
+            regions,
+        ),
+        plan_lowerable_complete_shell_count = count(
+            region -> region.materialization_dependency == :plan_lowerable_complete_shell,
+            regions,
+        ),
+        plan_lowerable_direct_core_count = count(
+            region -> region.materialization_dependency == :plan_lowerable_direct_core,
+            regions,
+        ),
+        source_backed_shared_shell_layer_count = count(
+            region -> region.materialization_dependency == :source_backed_shared_shell_layer,
+            regions,
+        ),
+        source_backed_child_sequence_count = count(
+            region -> region.materialization_dependency == :source_backed_child_sequence,
+            regions,
+        ),
+        source_box_direct_adapter_region_count = count(
+            region ->
+                region.materialization_dependency ==
+                :source_box_direct_in_source_backed_adapter,
+            regions,
+        ),
     )
 end
 
@@ -169,6 +222,7 @@ function _cartesian_shellification_shared_shell_region3d(
         box = box,
         next_inner_box = next_inner_box,
         lowering_family = _cartesian_shellification_layer_lowering_family(layer),
+        materialization_dependency = :source_backed_shared_shell_layer,
         provenance = (;
             source = :_CartesianNestedBondAlignedDiatomicSource3D_shared_shell_layer,
             shared_layer_index,
@@ -208,6 +262,7 @@ function _cartesian_shellification_child_sequence_region3d(
         role = geometry.did_split ? :atom_local_subtree : :unsplit_child_subtree,
         box = child_sequence.working_box,
         lowering_family = :white_lindsey_child_shell_sequence,
+        materialization_dependency = :source_backed_child_sequence,
         provenance = (;
             source = :_CartesianNestedBondAlignedDiatomicSource3D_child_sequence,
             child_index,
@@ -244,6 +299,7 @@ function _cartesian_shellification_midpoint_slab_region3d(
         role = :midpoint_slab,
         box = box,
         lowering_family = :direct_midpoint_slab,
+        materialization_dependency = :source_box_direct_in_source_backed_adapter,
         provenance = (;
             source = :_CartesianNestedBondAlignedDiatomicSource3D_midpoint_slab,
             box_source = :geometry_shared_midpoint_box,
@@ -356,6 +412,7 @@ function _cartesian_shellification_plan_one_center_low_order(
                 box = provenance.source_box,
                 next_inner_box = provenance.next_inner_box,
                 lowering_family = :white_lindsey_complete_shell,
+                materialization_dependency = :plan_lowerable_complete_shell,
                 provenance = provenance,
                 source_point_count = provenance.source_point_count,
                 retained_count = retention.shell_increment,
@@ -378,6 +435,7 @@ function _cartesian_shellification_plan_one_center_low_order(
             role = :direct_core,
             box = direct_core_box,
             lowering_family = :direct_product_core,
+            materialization_dependency = :plan_lowerable_direct_core,
             provenance = (;
                 source = :one_center_atomic_full_parent_final_direct_core,
                 shell_layer_count,
@@ -388,6 +446,8 @@ function _cartesian_shellification_plan_one_center_low_order(
         ),
     )
     regions = Tuple(regions)
+    materialization_dependency_counts =
+        _cartesian_shellification_materialization_dependency_counts(regions)
     coverage =
         _cartesian_shellification_one_center_low_order_coverage(parent_box, regions)
 
@@ -414,6 +474,9 @@ function _cartesian_shellification_plan_one_center_low_order(
         region_count = length(regions),
         ordered_region_roles = Tuple(region.role for region in regions),
         ordered_region_boxes = Tuple(region.box for region in regions),
+        ordered_materialization_dependencies =
+            materialization_dependency_counts.ordered_materialization_dependencies,
+        materialization_dependency_counts,
         shell_region_count = count(region -> region.role == :low_order_complete_shell, regions),
         direct_core_region_count = count(region -> region.role == :direct_core, regions),
         retained_dimension = sum(region.retained_count for region in regions),
@@ -505,6 +568,8 @@ function _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
         end
     end
     regions = Tuple(regions)
+    materialization_dependency_counts =
+        _cartesian_shellification_materialization_dependency_counts(regions)
     coverage = _cartesian_shellification_diatomic_source_coverage(source, regions)
 
     return (;
@@ -547,6 +612,9 @@ function _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
         region_count = length(regions),
         ordered_region_roles = Tuple(region.role for region in regions),
         ordered_region_boxes = Tuple(region.box for region in regions),
+        ordered_materialization_dependencies =
+            materialization_dependency_counts.ordered_materialization_dependencies,
+        materialization_dependency_counts,
         shared_shell_region_count =
             count(region -> region.role == :shared_outer_shell, regions),
         child_subtree_region_count = count(
@@ -840,6 +908,15 @@ function _cartesian_shellification_plan_private_summary(plan)
             lowering_stage = plan.lowering_stage,
             region_count = plan.region_count,
             ordered_region_roles = plan.ordered_region_roles,
+            ordered_materialization_dependencies =
+                plan.ordered_materialization_dependencies,
+            materialization_dependency_counts = plan.materialization_dependency_counts,
+            plan_lowerable_region_count =
+                plan.materialization_dependency_counts.plan_lowerable_region_count,
+            source_backed_region_count =
+                plan.materialization_dependency_counts.source_backed_region_count,
+            source_box_direct_adapter_region_count =
+                plan.materialization_dependency_counts.source_box_direct_adapter_region_count,
             shell_region_count = plan.shell_region_count,
             direct_core_region_count = plan.direct_core_region_count,
             retained_dimension = plan.retained_dimension,
@@ -861,6 +938,15 @@ function _cartesian_shellification_plan_private_summary(plan)
             midpoint_slab_present = plan.midpoint_slab_present,
             region_count = plan.region_count,
             ordered_region_roles = plan.ordered_region_roles,
+            ordered_materialization_dependencies =
+                plan.ordered_materialization_dependencies,
+            materialization_dependency_counts = plan.materialization_dependency_counts,
+            plan_lowerable_region_count =
+                plan.materialization_dependency_counts.plan_lowerable_region_count,
+            source_backed_region_count =
+                plan.materialization_dependency_counts.source_backed_region_count,
+            source_box_direct_adapter_region_count =
+                plan.materialization_dependency_counts.source_box_direct_adapter_region_count,
             shared_shell_region_count = plan.shared_shell_region_count,
             child_subtree_region_count = plan.child_subtree_region_count,
             midpoint_slab_region_count = plan.midpoint_slab_region_count,

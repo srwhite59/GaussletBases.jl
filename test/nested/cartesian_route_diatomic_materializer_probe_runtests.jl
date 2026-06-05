@@ -198,6 +198,16 @@ end
           length(probe_materialization.source.child_sequences)
     @test plan_summary.midpoint_slab_region_count ==
           (isnothing(probe_materialization.source.midpoint_slab_column_range) ? 0 : 1)
+    @test plan_summary.plan_lowerable_region_count == 0
+    @test plan_summary.source_backed_region_count == plan_summary.region_count
+    @test plan_summary.source_box_direct_adapter_region_count ==
+          plan_summary.midpoint_slab_region_count
+    @test plan_summary.materialization_dependency_counts.source_backed_shared_shell_layer_count ==
+          plan_summary.shared_shell_region_count
+    @test plan_summary.materialization_dependency_counts.source_backed_child_sequence_count ==
+          plan_summary.child_subtree_region_count
+    @test plan_summary.materialization_dependency_counts.source_box_direct_adapter_region_count ==
+          plan_summary.midpoint_slab_region_count
     @test plan_summary.retained_dimension == probe_materialization.retained_dimension
     @test plan_summary.support_count ==
           length(probe_materialization.source.sequence.support_indices)

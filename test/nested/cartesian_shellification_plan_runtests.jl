@@ -122,6 +122,19 @@ end
     @test plan.direct_core_region_count == 1
     @test plan.ordered_region_roles ==
           Tuple(vcat(fill(:low_order_complete_shell, plan.shell_layer_count), :direct_core))
+    @test plan.ordered_materialization_dependencies == Tuple(
+        vcat(
+            fill(:plan_lowerable_complete_shell, plan.shell_layer_count),
+            :plan_lowerable_direct_core,
+        ),
+    )
+    @test plan.materialization_dependency_counts.plan_lowerable_region_count ==
+          plan.region_count
+    @test plan.materialization_dependency_counts.source_backed_region_count == 0
+    @test plan.materialization_dependency_counts.plan_lowerable_complete_shell_count ==
+          plan.shell_region_count
+    @test plan.materialization_dependency_counts.plan_lowerable_direct_core_count == 1
+    @test plan.materialization_dependency_counts.source_box_direct_adapter_region_count == 0
 
     shell_regions =
         Tuple(region for region in plan.regions if region.role == :low_order_complete_shell)
@@ -131,6 +144,7 @@ end
         @test region.object_kind == :cartesian_shellification_region3d
         @test region.lowering_family == :white_lindsey_complete_shell
         @test region.lowering_status == :planned_not_lowered
+        @test region.materialization_dependency == :plan_lowerable_complete_shell
         @test region.box == shell.provenance.source_box
         @test region.next_inner_box == shell.provenance.next_inner_box
         @test region.box_shape == Tuple(length.(shell.provenance.source_box))
@@ -142,6 +156,7 @@ end
     direct_core_region = only(region for region in plan.regions if region.role == :direct_core)
     @test direct_core_region.lowering_family == :direct_product_core
     @test direct_core_region.lowering_status == :planned_not_lowered
+    @test direct_core_region.materialization_dependency == :plan_lowerable_direct_core
     @test direct_core_region.box == plan.direct_core_box
     @test direct_core_region.box_shape == (nside, nside, nside)
     @test direct_core_region.source_point_count == nside^3
@@ -167,6 +182,15 @@ end
     @test !plan.diagnostics.public_default_behavior_changed
     @test !plan.diagnostics.pqs_production_source_box_materialization_claimed
     @test !plan.diagnostics.mwg_ida_semantics_changed
+
+    plan_summary = GaussletBases._cartesian_shellification_plan_private_summary(plan)
+    @test plan_summary.ordered_materialization_dependencies ==
+          plan.ordered_materialization_dependencies
+    @test plan_summary.materialization_dependency_counts ==
+          plan.materialization_dependency_counts
+    @test plan_summary.plan_lowerable_region_count == plan.region_count
+    @test plan_summary.source_backed_region_count == 0
+    @test plan_summary.source_box_direct_adapter_region_count == 0
 end
 
 @testset "one-center low-order shellification plan materializer matches legacy sequence" begin
@@ -336,6 +360,17 @@ end
     @test plan.region_count == length(plan.regions)
     @test plan.ordered_region_roles == Tuple(region.role for region in plan.regions)
     @test plan.ordered_region_boxes == Tuple(region.box for region in plan.regions)
+    @test plan.ordered_materialization_dependencies ==
+          Tuple(region.materialization_dependency for region in plan.regions)
+    @test plan.materialization_dependency_counts.plan_lowerable_region_count == 0
+    @test plan.materialization_dependency_counts.source_backed_region_count ==
+          plan.region_count
+    @test plan.materialization_dependency_counts.source_backed_shared_shell_layer_count ==
+          plan.shared_shell_region_count
+    @test plan.materialization_dependency_counts.source_backed_child_sequence_count ==
+          plan.child_subtree_region_count
+    @test plan.materialization_dependency_counts.source_box_direct_adapter_region_count ==
+          plan.midpoint_slab_region_count
 
     shared_regions =
         Tuple(region for region in plan.regions if region.role == :shared_outer_shell)
@@ -359,6 +394,7 @@ end
         @test region.object_kind == :cartesian_shellification_region3d
         @test region.order == index
         @test region.lowering_status == :planned_not_lowered
+        @test region.materialization_dependency == :source_backed_shared_shell_layer
         @test region.box == source_box
         @test region.next_inner_box == next_inner_box
         @test region.box_shape == Tuple(length.(source_box))
@@ -393,6 +429,7 @@ end
         @test region.object_kind == :cartesian_shellification_region3d
         @test region.lowering_status == :planned_not_lowered
         @test region.lowering_family == :white_lindsey_child_shell_sequence
+        @test region.materialization_dependency == :source_backed_child_sequence
         @test region.role == (geometry.did_split ? :atom_local_subtree : :unsplit_child_subtree)
         @test region.box == child_sequence.working_box
         @test region.box_shape == Tuple(length.(child_sequence.working_box))
@@ -427,6 +464,8 @@ end
         @test plan.midpoint_slab_region_count == 1
         @test region.box == midpoint_box
         @test region.lowering_family == :direct_midpoint_slab
+        @test region.materialization_dependency ==
+              :source_box_direct_in_source_backed_adapter
         @test region.column_range == source.midpoint_slab_column_range
         @test region.source_point_count ==
               GaussletBases._cartesian_shellification_box_point_count(midpoint_box)
@@ -461,4 +500,14 @@ end
     @test !plan.diagnostics.shellification_rewrite
     @test !plan.diagnostics.pqs_production_source_box_materialization_claimed
     @test !plan.diagnostics.mwg_ida_semantics_changed
+
+    plan_summary = GaussletBases._cartesian_shellification_plan_private_summary(plan)
+    @test plan_summary.ordered_materialization_dependencies ==
+          plan.ordered_materialization_dependencies
+    @test plan_summary.materialization_dependency_counts ==
+          plan.materialization_dependency_counts
+    @test plan_summary.plan_lowerable_region_count == 0
+    @test plan_summary.source_backed_region_count == plan.region_count
+    @test plan_summary.source_box_direct_adapter_region_count ==
+          plan.midpoint_slab_region_count
 end

@@ -148,6 +148,11 @@ end
     @test plan_summary.region_count == 2
     @test plan_summary.shell_region_count == 1
     @test plan_summary.direct_core_region_count == 1
+    @test plan_summary.ordered_materialization_dependencies ==
+          (:plan_lowerable_complete_shell, :plan_lowerable_direct_core)
+    @test plan_summary.plan_lowerable_region_count == plan_summary.region_count
+    @test plan_summary.source_backed_region_count == 0
+    @test plan_summary.source_box_direct_adapter_region_count == 0
     @test plan_summary.retained_dimension == materialization.retained_dimension
     @test plan_summary.coverage_complete
     @test one_center_status.route_configured_materializer_backend_requested ==
