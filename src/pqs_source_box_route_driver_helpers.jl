@@ -4945,14 +4945,115 @@ function cartesian_transforms(units, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_pair_stage_low_order_summary(
+    transforms,
+    route_skeleton,
+)
+    low_order_transforms =
+        hasproperty(transforms, :low_order_transforms) ?
+        transforms.low_order_transforms :
+        nothing
+    if isnothing(low_order_transforms)
+        return (;
+            object_kind = :cartesian_pair_stage_low_order_summary,
+            status = :not_available_missing_transform_stage_summary,
+            low_order_shellization_policy_requested = nothing,
+            low_order_shellization_policy_resolved = :not_available,
+            low_order_shellization_policy_source = :not_available,
+            low_order_shellization_policy_status =
+                :not_available_missing_transform_stage_summary,
+            low_order_shellization_policy_blocker =
+                :missing_transform_stage_low_order_summary,
+            shellization_source = :not_available,
+            shellization_kind = :not_available,
+            unit_route_kind = :not_available,
+            transform_route_kind = :not_available,
+            pair_route_kind = :not_available,
+            atom_growth_pairs_selected = false,
+            legacy_source_pairs_selected = false,
+            pair_operator_blocks_materialized = false,
+            pair_inventory_known = false,
+            pair_inventory_source = :not_available,
+            route_skeleton_pair_entry_count = 0,
+            route_skeleton_pair_family_counts = nothing,
+            independent_atom_growth_pair_inventory_available = false,
+            plan_authority = false,
+            active_source_authority = false,
+            legacy_source_authority = false,
+            pair_stage_fields_preserved = false,
+            summary_only = true,
+        )
+    end
+
+    atom_growth_pairs_selected =
+        low_order_transforms.atom_growth_transforms_selected
+    legacy_source_pairs_selected =
+        low_order_transforms.legacy_source_transforms_selected
+    pair_route_kind =
+        atom_growth_pairs_selected ?
+        :atom_growth_complete_rectangular_low_order_pairs :
+        legacy_source_pairs_selected ?
+        :legacy_diatomic_source_low_order_pairs :
+        :not_selected
+
+    return (;
+        object_kind = :cartesian_pair_stage_low_order_summary,
+        status =
+            low_order_transforms.status ==
+            :available_transform_stage_low_order_summary ?
+            :available_pair_stage_low_order_summary :
+            low_order_transforms.status,
+        low_order_shellization_policy_requested =
+            low_order_transforms.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_transforms.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_transforms.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_transforms.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_transforms.low_order_shellization_policy_blocker,
+        shellization_source = low_order_transforms.shellization_source,
+        shellization_kind = low_order_transforms.shellization_kind,
+        unit_route_kind = low_order_transforms.unit_route_kind,
+        transform_route_kind = low_order_transforms.transform_route_kind,
+        pair_route_kind,
+        atom_growth_pairs_selected,
+        legacy_source_pairs_selected,
+        pair_operator_blocks_materialized = false,
+        pair_inventory_known = true,
+        pair_inventory_source = :route_skeleton_pair_entries_only,
+        route_skeleton_pair_entry_count = length(route_skeleton.pair_entries),
+        route_skeleton_pair_family_counts = route_skeleton.pair_family_counts,
+        independent_atom_growth_pair_inventory_available = false,
+        plan_authority = low_order_transforms.plan_authority,
+        active_source_authority = low_order_transforms.active_source_authority,
+        legacy_source_authority = low_order_transforms.legacy_source_authority,
+        pair_stage_fields_preserved = true,
+        summary_only = true,
+    )
+end
+
 function cartesian_pair_terms(units, transforms, recipe)
     route_skeleton = units.route_skeleton
+    low_order_pairs =
+        _pqs_source_box_route_driver_pair_stage_low_order_summary(
+            transforms,
+            route_skeleton,
+        )
 
     return (;
         object_kind = :cartesian_pair_terms,
         status = units.status,
         route_family = recipe.route_family,
         retained_dimension = transforms.retained_dimension,
+        low_order_pairs,
+        low_order_pair_route_kind = low_order_pairs.pair_route_kind,
+        atom_growth_pairs_selected = low_order_pairs.atom_growth_pairs_selected,
+        pair_operator_blocks_materialized =
+            low_order_pairs.pair_operator_blocks_materialized,
+        pair_inventory_source = low_order_pairs.pair_inventory_source,
+        active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = route_skeleton.pair_entries,
         pair_family_counts = route_skeleton.pair_family_counts,
         helper_by_pair_family = route_skeleton.helper_by_pair_family,
