@@ -125,6 +125,11 @@ end
     @test default_summary.route_skeleton_pair_family_counts ==
           default_pairs.pair_family_counts
     @test !default_summary.independent_atom_growth_pair_inventory_available
+    @test !default_summary.route_core_pair_inventory_available
+    @test default_summary.route_core_pair_inventory_status ==
+          :not_selected_legacy_source_pairs
+    @test default_summary.route_core_pair_count == 0
+    @test isempty(default_summary.route_core_pair_keys)
     @test default_summary.pair_stage_fields_preserved
     @test default_pairs.pair_entries === default_stages.units.route_skeleton.pair_entries
     @test default_pairs.pair_family_counts ===
@@ -134,6 +139,9 @@ end
     @test default_pairs.pair_operator_helper_by_family ===
           default_stages.units.route_skeleton.helper_by_pair_family
     @test isnothing(default_pairs.pair_helper_status_by_family)
+    @test !default_pairs.route_core_pair_inventory_available
+    @test default_pairs.route_core_pair_inventory_status ==
+          :not_selected_legacy_source_pairs
     @test default_pairs.pair_stage == :pair_operator_terms_described
 
     atom_growth_stages = _cartesian_pair_stage_low_order_policy_pairs(
@@ -174,6 +182,19 @@ end
     @test atom_growth_summary.pair_inventory_source ==
           :atom_growth_unit_inventory
     @test atom_growth_summary.independent_atom_growth_pair_inventory_available
+    @test atom_growth_summary.route_core_pair_inventory_available
+    @test atom_growth_summary.route_core_pair_inventory_status ==
+          :available_route_core_unit_pair_inventory
+    @test atom_growth_summary.route_core_pair_inventory isa
+          GaussletBases.CartesianRouteCore.UnitPairInventory
+    @test atom_growth_summary.route_core_pair_count == 36
+    @test atom_growth_summary.route_core_pair_order_comparison_source ==
+          :atom_growth_pair_inventory
+    @test atom_growth_summary.route_core_pair_family_count_source ==
+          :crc_final_unit_lowering_recipes
+    @test atom_growth_pairs.route_core_pair_inventory_available
+    @test atom_growth_pairs.route_core_pair_inventory ===
+          atom_growth_summary.route_core_pair_inventory
     pair_inventory = atom_growth_summary.pair_inventory
     unit_inventory = atom_growth_stages.units.plan_unit_inventory
     @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory
@@ -257,6 +278,19 @@ end
     )
     @test Tuple(pair.pair_key for pair in pair_inventory.pair_entries) ==
           expected_pair_keys
+    @test atom_growth_summary.route_core_pair_keys == expected_pair_keys
+    @test atom_growth_summary.route_core_pair_order_matches_staged
+    @test atom_growth_pairs.route_core_pair_keys == expected_pair_keys
+    route_core_family_counts =
+        atom_growth_summary.route_core_pair_family_counts
+    @test !isempty(route_core_family_counts)
+    @test all(
+        record -> record.pair_family_source == :crc_final_unit_lowering_recipes,
+        route_core_family_counts,
+    )
+    @test all(record -> length(record.pair_family) == 2, route_core_family_counts)
+    @test sum(record.pair_count for record in route_core_family_counts) ==
+          atom_growth_summary.route_core_pair_count
     @test all(
         pair -> !pair.operator_pair_block_materialized,
         pair_inventory.pair_entries,
@@ -314,6 +348,13 @@ end
     @test blocked_summary.pair_count == 0
     @test blocked_summary.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           0
+    @test blocked_summary.route_core_pair_inventory_available
+    @test blocked_summary.route_core_pair_inventory_status ==
+          :available_route_core_unit_pair_inventory
+    @test blocked_summary.route_core_pair_count == 36
+    @test blocked_summary.route_core_pair_order_matches_staged
+    @test blocked_summary.route_core_pair_order_comparison_source ==
+          :route_core_sidecar_staged_pair_keys
     @test blocked_summary.helper_by_pair_family ==
           expected_atom_growth_helper_status
     @test blocked_summary.route_skeleton_pair_entries ===

@@ -5610,11 +5610,150 @@ function cartesian_transforms(units, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_route_core_pair_family_counts(
+    route_core_pair_inventory,
+)
+    isnothing(route_core_pair_inventory) && return ()
+    pair_entries = CartesianRouteCore.pair_entries(route_core_pair_inventory)
+    family_keys = Tuple(
+        (
+            CartesianRouteCore.lowering_recipe(pair.left),
+            CartesianRouteCore.lowering_recipe(pair.right),
+        ) for pair in pair_entries
+    )
+    unique_family_keys = Tuple(unique(family_keys))
+    return Tuple(
+        (;
+            pair_family,
+            pair_count = count(==(pair_family), family_keys),
+            pair_family_source = :crc_final_unit_lowering_recipes,
+        ) for pair_family in unique_family_keys
+    )
+end
+
+function _pqs_source_box_route_driver_pair_keys_from_entries(pair_entries)
+    return Tuple(pair.pair_key for pair in pair_entries)
+end
+
+function _pqs_source_box_route_driver_route_core_pair_comparison(
+    route_core_sidecar_inventory,
+    atom_growth_pair_inventory,
+    route_skeleton,
+)
+    if !isnothing(atom_growth_pair_inventory) &&
+       atom_growth_pair_inventory.status == :available_atom_growth_pair_inventory
+        return (;
+            pair_keys =
+                _pqs_source_box_route_driver_pair_keys_from_entries(
+                    atom_growth_pair_inventory.pair_entries,
+                ),
+            source = :atom_growth_pair_inventory,
+        )
+    end
+    if !isnothing(route_core_sidecar_inventory) &&
+       hasproperty(route_core_sidecar_inventory, :staged_pair_keys)
+        return (;
+            pair_keys = route_core_sidecar_inventory.staged_pair_keys,
+            source = :route_core_sidecar_staged_pair_keys,
+        )
+    end
+    if !isnothing(route_skeleton) && hasproperty(route_skeleton, :pair_entries)
+        return (;
+            pair_keys =
+                _pqs_source_box_route_driver_pair_keys_from_entries(
+                    route_skeleton.pair_entries,
+                ),
+            source = :route_skeleton_pair_entries,
+        )
+    end
+    return (; pair_keys = (), source = :not_available)
+end
+
+function _pqs_source_box_route_driver_route_core_pair_stage_metadata(
+    route_core_sidecar_inventory,
+    atom_growth_pair_inventory,
+    route_skeleton,
+)
+    if isnothing(route_core_sidecar_inventory) ||
+       !hasproperty(route_core_sidecar_inventory, :crc_pair_inventory_available)
+        return (;
+            route_core_pair_inventory_available = false,
+            route_core_pair_inventory_status =
+                :blocked_missing_route_core_sidecar_inventory,
+            route_core_pair_inventory = nothing,
+            route_core_pair_count = 0,
+            route_core_pair_keys = (),
+            route_core_pair_order_matches_staged = false,
+            route_core_pair_order_comparison_source = :not_available,
+            route_core_pair_family_counts = (),
+            route_core_pair_family_count_source = :not_available,
+        )
+    end
+
+    comparison = _pqs_source_box_route_driver_route_core_pair_comparison(
+        route_core_sidecar_inventory,
+        atom_growth_pair_inventory,
+        route_skeleton,
+    )
+    route_core_pair_inventory_available =
+        route_core_sidecar_inventory.crc_pair_inventory_available
+    route_core_pair_inventory =
+        route_core_pair_inventory_available ?
+        route_core_sidecar_inventory.crc_pair_inventory :
+        nothing
+    route_core_pair_keys =
+        route_core_pair_inventory_available ?
+        route_core_sidecar_inventory.crc_pair_keys :
+        ()
+    route_core_pair_order_matches_staged =
+        route_core_pair_inventory_available &&
+        !isempty(comparison.pair_keys) &&
+        route_core_pair_keys == comparison.pair_keys
+    if route_core_pair_inventory_available &&
+       !isempty(comparison.pair_keys) &&
+       !route_core_pair_order_matches_staged
+        throw(ArgumentError("CRC pair keys do not match pair-stage comparison keys"))
+    end
+
+    return (;
+        route_core_pair_inventory_available,
+        route_core_pair_inventory_status =
+            route_core_sidecar_inventory.crc_pair_inventory_status,
+        route_core_pair_inventory,
+        route_core_pair_count =
+            route_core_pair_inventory_available ?
+            route_core_sidecar_inventory.crc_pair_count :
+            0,
+        route_core_pair_keys,
+        route_core_pair_order_matches_staged,
+        route_core_pair_order_comparison_source = comparison.source,
+        route_core_pair_family_counts =
+            _pqs_source_box_route_driver_route_core_pair_family_counts(
+                route_core_pair_inventory,
+            ),
+        route_core_pair_family_count_source =
+            route_core_pair_inventory_available ?
+            :crc_final_unit_lowering_recipes :
+            :not_available,
+    )
+end
+
 function _pqs_source_box_route_driver_pair_stage_low_order_summary(
     units,
     transforms,
     route_skeleton,
 )
+    route_core_pair_unavailable = (;
+        route_core_pair_inventory_available = false,
+        route_core_pair_inventory_status = :not_available,
+        route_core_pair_inventory = nothing,
+        route_core_pair_count = 0,
+        route_core_pair_keys = (),
+        route_core_pair_order_matches_staged = false,
+        route_core_pair_order_comparison_source = :not_available,
+        route_core_pair_family_counts = (),
+        route_core_pair_family_count_source = :not_available,
+    )
     low_order_transforms =
         hasproperty(transforms, :low_order_transforms) ?
         transforms.low_order_transforms :
@@ -5658,6 +5797,7 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             legacy_source_authority = false,
             pair_stage_fields_preserved = false,
             route_skeleton_pair_inventory_source = :not_available,
+            route_core_pair_unavailable...,
             summary_only = true,
         )
     end
@@ -5682,6 +5822,22 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             atom_growth_plan_unit_inventory,
         ) :
         nothing
+    route_core_pair_metadata =
+        atom_growth_pairs_selected ?
+        _pqs_source_box_route_driver_route_core_pair_stage_metadata(
+            hasproperty(units, :route_core_sidecar_inventory) ?
+            units.route_core_sidecar_inventory :
+            nothing,
+            atom_growth_pair_inventory,
+            route_skeleton,
+        ) :
+        merge(
+            route_core_pair_unavailable,
+            (;
+                route_core_pair_inventory_status =
+                    :not_selected_legacy_source_pairs,
+            ),
+        )
     independent_atom_growth_pair_inventory_available =
         !isnothing(atom_growth_pair_inventory) &&
         atom_growth_pair_inventory.status == :available_atom_growth_pair_inventory
@@ -5770,6 +5926,7 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         pair_stage_fields_preserved = true,
         route_skeleton_pair_inventory_source =
             :route_skeleton_compatibility_fields,
+        route_core_pair_metadata...,
         summary_only = !independent_atom_growth_pair_inventory_available,
     )
 end
@@ -5798,6 +5955,21 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.independent_atom_growth_pair_inventory_available,
         pair_inventory = low_order_pairs.pair_inventory,
         pair_inventory_source = low_order_pairs.pair_inventory_source,
+        route_core_pair_inventory_available =
+            low_order_pairs.route_core_pair_inventory_available,
+        route_core_pair_inventory_status =
+            low_order_pairs.route_core_pair_inventory_status,
+        route_core_pair_inventory = low_order_pairs.route_core_pair_inventory,
+        route_core_pair_count = low_order_pairs.route_core_pair_count,
+        route_core_pair_keys = low_order_pairs.route_core_pair_keys,
+        route_core_pair_order_matches_staged =
+            low_order_pairs.route_core_pair_order_matches_staged,
+        route_core_pair_order_comparison_source =
+            low_order_pairs.route_core_pair_order_comparison_source,
+        route_core_pair_family_counts =
+            low_order_pairs.route_core_pair_family_counts,
+        route_core_pair_family_count_source =
+            low_order_pairs.route_core_pair_family_count_source,
         active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = low_order_pairs.pair_entries,
         pair_family_counts = low_order_pairs.pair_family_counts,
