@@ -1,0 +1,221 @@
+using Test
+using GaussletBases
+
+function _cartesian_assembly_stage_low_order_policy_fixture()
+    system_inputs = (;
+        atom_symbols = ("Be", "Be"),
+        nuclear_charges = (4, 4),
+        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        radius = 15.0,
+        parent_axis_counts = (x = 9, y = 7, z = 9),
+        map_backend = :pgdg_localized_experimental,
+    )
+    spacing_inputs = (;
+        q = 5,
+        n_s = 5,
+        reference_spacing = 1.0,
+        tail_spacing = 10.0,
+        q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
+        core_spacing = 0.15,
+    )
+    parent_inputs = (;
+        probe_parent_axis_construction = :auto,
+        parent_axis_probe_backend = :pgdg_localized_experimental,
+        parent_axis_probe_family = :G10,
+    )
+    route_probe_inputs = (;
+        probe_raw_product_box_plans = :auto,
+        raw_product_box_probe_backend = :pgdg_localized_experimental,
+    )
+    route_inputs = (;
+        route_family = :white_lindsey_low_order,
+        route_kind = :be2_cartesian_assembly_stage_low_order_policy,
+        route_shape = (:pqs_left, :product, :pqs_right),
+        product_body_rule = :centered_single_z_slab,
+        pqs_retained_rule = :boundary_comx_product_mode_selection,
+        product_retained_rule = :product_doside_retained_unit,
+        terms = (
+            :overlap,
+            :position_x,
+            :position_y,
+            :position_z,
+            :x2_x,
+            :x2_y,
+            :x2_z,
+            :kinetic,
+        ),
+        pair_factor_normalization = :density_normalized,
+        support_dense_direct_allowed = false,
+        reference_only_authorities =
+            (:support_row_oracle, :dense_parent_projection),
+        white_lindsey_route_shape =
+            (:standard_cartesian_units, :low_order_comx_coarsening),
+        white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family,
+        white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening,
+        white_lindsey_retained_rule = :low_order_unit_comx_retained_basis,
+        white_lindsey_operator_rule = :low_order_unit_operator_blocks,
+        white_lindsey_benchmark_role =
+            :published_cartesian_baseline_for_pqs_comparison,
+    )
+
+    system = GaussletBases.cartesian_system(system_inputs)
+    recipe = GaussletBases.cartesian_recipe(route_inputs)
+    parent = GaussletBases.cartesian_parent(
+        system,
+        spacing_inputs,
+        parent_inputs,
+        recipe,
+    )
+    return (; system, parent, spacing_inputs, recipe, route_probe_inputs)
+end
+
+function _cartesian_assembly_stage_low_order_policy_assembly(
+    fixture;
+    policy = nothing,
+)
+    shells = isnothing(policy) ?
+        GaussletBases.cartesian_shells(
+            fixture.parent,
+            fixture.spacing_inputs,
+            fixture.recipe,
+        ) :
+        GaussletBases.cartesian_shells(
+            fixture.parent,
+            fixture.spacing_inputs,
+            fixture.recipe;
+            low_order_shellization_policy = policy,
+        )
+    units = GaussletBases.cartesian_units(
+        fixture.parent,
+        shells,
+        fixture.route_probe_inputs,
+        fixture.recipe,
+    )
+    transforms = GaussletBases.cartesian_transforms(units, fixture.recipe)
+    pairs = GaussletBases.cartesian_pair_terms(
+        units,
+        transforms,
+        fixture.recipe,
+    )
+    assembly = GaussletBases.cartesian_assembly(
+        fixture.parent,
+        shells,
+        units,
+        transforms,
+        pairs,
+        fixture.recipe,
+    )
+    return (; shells, units, transforms, pairs, assembly)
+end
+
+@testset "cartesian assembly stage carries selected low-order policy" begin
+    fixture = _cartesian_assembly_stage_low_order_policy_fixture()
+
+    default_stages =
+        _cartesian_assembly_stage_low_order_policy_assembly(fixture)
+    default_assembly = default_stages.assembly
+    default_summary = default_assembly.low_order_assembly
+    @test default_assembly.object_kind == :cartesian_assembly
+    @test default_summary.object_kind ==
+          :cartesian_assembly_stage_low_order_summary
+    @test default_summary.low_order_shellization_policy_resolved ==
+          :legacy_diatomic_source
+    @test default_summary.shellization_source ==
+          :route_configured_bond_aligned_diatomic_source
+    @test default_summary.pair_route_kind ==
+          :legacy_diatomic_source_low_order_pairs
+    @test default_summary.assembly_source ==
+          :legacy_diatomic_source_pair_terms
+    @test default_summary.assembly_route_kind ==
+          :legacy_diatomic_source_low_order_assembly
+    @test default_summary.assembly_kind == :legacy_diatomic_source_low_order
+    @test default_summary.legacy_source_assembly_selected
+    @test default_summary.active_source_authority
+    @test !default_summary.atom_growth_assembly_selected
+    @test !default_summary.hamiltonian_matrices_materialized
+    @test !default_summary.operator_matrices_materialized
+    @test !default_summary.pair_operator_blocks_materialized
+    @test !default_summary.pair_operator_blocks_available
+    @test !default_summary.assembly_can_proceed_from_current_staged_data
+    @test default_summary.assembly_requires_materialization
+    @test default_summary.assembly_materialization_status ==
+          :deferred_legacy_diatomic_source_pair_block_materialization
+    @test default_summary.assembly_blocker == :pair_operator_blocks_deferred
+    @test default_summary.assembly_stage_fields_preserved
+    @test default_assembly.low_order_assembly_route_kind ==
+          :legacy_diatomic_source_low_order_assembly
+    @test default_assembly.low_order_assembly_source ==
+          :legacy_diatomic_source_pair_terms
+    @test !default_assembly.atom_growth_assembly_selected
+    @test !default_assembly.hamiltonian_matrices_materialized
+    @test !default_assembly.operator_matrices_materialized
+    @test !default_assembly.pair_operator_blocks_materialized
+    @test default_assembly.assembly_requires_materialization
+    @test default_assembly.active_source_authority
+    @test default_assembly.route_skeleton === default_stages.shells.route_skeleton
+    @test default_assembly.shells === default_stages.shells
+    @test default_assembly.units === default_stages.units
+    @test default_assembly.transforms === default_stages.transforms
+    @test default_assembly.pairs === default_stages.pairs
+    @test hasproperty(default_assembly, :route_facts)
+    @test hasproperty(default_assembly, :contract)
+    @test default_assembly.assembly_stage == :assembled_report_inputs
+
+    atom_growth_stages =
+        _cartesian_assembly_stage_low_order_policy_assembly(
+            fixture;
+            policy = :atom_growth_complete_rectangular,
+        )
+    atom_growth_assembly = atom_growth_stages.assembly
+    atom_growth_summary = atom_growth_assembly.low_order_assembly
+    @test atom_growth_assembly.low_order_assembly_route_kind ==
+          :atom_growth_complete_rectangular_low_order_assembly
+    @test atom_growth_assembly.low_order_assembly_source ==
+          :atom_growth_complete_rectangular_low_order_pair_terms
+    @test atom_growth_assembly.atom_growth_assembly_selected
+    @test !atom_growth_assembly.hamiltonian_matrices_materialized
+    @test !atom_growth_assembly.operator_matrices_materialized
+    @test !atom_growth_assembly.pair_operator_blocks_materialized
+    @test atom_growth_assembly.assembly_requires_materialization
+    @test !atom_growth_assembly.active_source_authority
+    @test atom_growth_summary.low_order_shellization_policy_resolved ==
+          :atom_growth_complete_rectangular
+    @test atom_growth_summary.shellization_source ==
+          :bond_aligned_diatomic_atom_growth_construction_plan
+    @test atom_growth_summary.shellization_kind ==
+          :atom_growth_complete_rectangular
+    @test atom_growth_summary.pair_route_kind ==
+          :atom_growth_complete_rectangular_low_order_pairs
+    @test atom_growth_summary.assembly_source ==
+          :atom_growth_complete_rectangular_low_order_pair_terms
+    @test atom_growth_summary.assembly_route_kind ==
+          :atom_growth_complete_rectangular_low_order_assembly
+    @test atom_growth_summary.assembly_kind ==
+          :atom_growth_complete_rectangular_low_order
+    @test atom_growth_summary.atom_growth_assembly_selected
+    @test !atom_growth_summary.legacy_source_assembly_selected
+    @test atom_growth_summary.plan_authority
+    @test !atom_growth_summary.active_source_authority
+    @test !atom_growth_summary.legacy_source_authority
+    @test !atom_growth_summary.hamiltonian_matrices_materialized
+    @test !atom_growth_summary.operator_matrices_materialized
+    @test !atom_growth_summary.pair_operator_blocks_materialized
+    @test !atom_growth_summary.pair_operator_blocks_available
+    @test !atom_growth_summary.assembly_can_proceed_from_current_staged_data
+    @test atom_growth_summary.assembly_requires_materialization
+    @test atom_growth_summary.assembly_materialization_status ==
+          :deferred_atom_growth_complete_rectangular_pair_block_materialization
+    @test atom_growth_summary.assembly_blocker ==
+          :pair_operator_blocks_deferred
+    @test atom_growth_summary.summary_only
+    @test atom_growth_summary.assembly_stage_fields_preserved
+    @test atom_growth_assembly.route_skeleton ===
+          atom_growth_stages.shells.route_skeleton
+    @test hasproperty(atom_growth_assembly, :route_facts)
+    @test hasproperty(atom_growth_assembly, :contract)
+    @test atom_growth_assembly.shells === atom_growth_stages.shells
+    @test atom_growth_assembly.units === atom_growth_stages.units
+    @test atom_growth_assembly.transforms === atom_growth_stages.transforms
+    @test atom_growth_assembly.pairs === atom_growth_stages.pairs
+    @test atom_growth_assembly.assembly_stage == :assembled_report_inputs
+end

@@ -5061,10 +5061,136 @@ function cartesian_pair_terms(units, transforms, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
+    low_order_pairs =
+        hasproperty(pairs, :low_order_pairs) ? pairs.low_order_pairs : nothing
+    if isnothing(low_order_pairs)
+        return (;
+            object_kind = :cartesian_assembly_stage_low_order_summary,
+            status = :not_available_missing_pair_stage_summary,
+            low_order_shellization_policy_requested = nothing,
+            low_order_shellization_policy_resolved = :not_available,
+            low_order_shellization_policy_source = :not_available,
+            low_order_shellization_policy_status =
+                :not_available_missing_pair_stage_summary,
+            low_order_shellization_policy_blocker =
+                :missing_pair_stage_low_order_summary,
+            shellization_source = :not_available,
+            shellization_kind = :not_available,
+            unit_route_kind = :not_available,
+            transform_route_kind = :not_available,
+            pair_route_kind = :not_available,
+            assembly_source = :not_available,
+            assembly_route_kind = :not_available,
+            assembly_kind = :not_available,
+            atom_growth_assembly_selected = false,
+            legacy_source_assembly_selected = false,
+            hamiltonian_matrices_materialized = false,
+            operator_matrices_materialized = false,
+            pair_operator_blocks_materialized = false,
+            pair_operator_blocks_available = false,
+            assembly_can_proceed_from_current_staged_data = false,
+            assembly_requires_materialization = true,
+            assembly_materialization_status =
+                :blocked_missing_pair_stage_summary,
+            assembly_blocker = :missing_pair_stage_low_order_summary,
+            plan_authority = false,
+            active_source_authority = false,
+            legacy_source_authority = false,
+            assembly_stage_fields_preserved = false,
+            summary_only = true,
+        )
+    end
+
+    atom_growth_assembly_selected =
+        low_order_pairs.atom_growth_pairs_selected
+    legacy_source_assembly_selected =
+        low_order_pairs.legacy_source_pairs_selected
+    assembly_route_kind =
+        atom_growth_assembly_selected ?
+        :atom_growth_complete_rectangular_low_order_assembly :
+        legacy_source_assembly_selected ?
+        :legacy_diatomic_source_low_order_assembly :
+        :not_selected
+    assembly_source =
+        atom_growth_assembly_selected ?
+        :atom_growth_complete_rectangular_low_order_pair_terms :
+        legacy_source_assembly_selected ?
+        :legacy_diatomic_source_pair_terms :
+        :not_selected
+    assembly_kind =
+        atom_growth_assembly_selected ?
+        :atom_growth_complete_rectangular_low_order :
+        legacy_source_assembly_selected ?
+        :legacy_diatomic_source_low_order :
+        :not_selected
+    pair_operator_blocks_materialized =
+        low_order_pairs.pair_operator_blocks_materialized
+    assembly_can_proceed_from_current_staged_data =
+        pair_operator_blocks_materialized
+    assembly_requires_materialization =
+        !assembly_can_proceed_from_current_staged_data
+    assembly_materialization_status =
+        pair_operator_blocks_materialized ?
+        :ready_for_low_order_operator_matrix_assembly :
+        atom_growth_assembly_selected ?
+        :deferred_atom_growth_complete_rectangular_pair_block_materialization :
+        legacy_source_assembly_selected ?
+        :deferred_legacy_diatomic_source_pair_block_materialization :
+        :not_selected
+    assembly_blocker =
+        assembly_requires_materialization ?
+        :pair_operator_blocks_deferred :
+        nothing
+
+    return (;
+        object_kind = :cartesian_assembly_stage_low_order_summary,
+        status =
+            low_order_pairs.status == :available_pair_stage_low_order_summary ?
+            :available_assembly_stage_low_order_summary :
+            low_order_pairs.status,
+        low_order_shellization_policy_requested =
+            low_order_pairs.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_pairs.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_pairs.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_pairs.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_pairs.low_order_shellization_policy_blocker,
+        shellization_source = low_order_pairs.shellization_source,
+        shellization_kind = low_order_pairs.shellization_kind,
+        unit_route_kind = low_order_pairs.unit_route_kind,
+        transform_route_kind = low_order_pairs.transform_route_kind,
+        pair_route_kind = low_order_pairs.pair_route_kind,
+        assembly_source,
+        assembly_route_kind,
+        assembly_kind,
+        atom_growth_assembly_selected,
+        legacy_source_assembly_selected,
+        hamiltonian_matrices_materialized = false,
+        operator_matrices_materialized = false,
+        pair_operator_blocks_materialized,
+        pair_operator_blocks_available = pair_operator_blocks_materialized,
+        assembly_can_proceed_from_current_staged_data,
+        assembly_requires_materialization,
+        assembly_materialization_status,
+        assembly_blocker,
+        plan_authority = low_order_pairs.plan_authority,
+        active_source_authority = low_order_pairs.active_source_authority,
+        legacy_source_authority = low_order_pairs.legacy_source_authority,
+        assembly_stage_fields_preserved = true,
+        summary_only = true,
+    )
+end
+
 function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     route_skeleton = shells.route_skeleton
     route_facts = _pqs_source_box_route_driver_route_facts(route_skeleton)
     contract = _pqs_source_box_route_driver_contract_metadata(recipe)
+    low_order_assembly =
+        _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
 
     return (;
         object_kind = :cartesian_assembly,
@@ -5079,6 +5205,21 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         units,
         transforms,
         pairs,
+        low_order_assembly,
+        low_order_assembly_source = low_order_assembly.assembly_source,
+        low_order_assembly_route_kind =
+            low_order_assembly.assembly_route_kind,
+        atom_growth_assembly_selected =
+            low_order_assembly.atom_growth_assembly_selected,
+        hamiltonian_matrices_materialized =
+            low_order_assembly.hamiltonian_matrices_materialized,
+        operator_matrices_materialized =
+            low_order_assembly.operator_matrices_materialized,
+        pair_operator_blocks_materialized =
+            low_order_assembly.pair_operator_blocks_materialized,
+        assembly_requires_materialization =
+            low_order_assembly.assembly_requires_materialization,
+        active_source_authority = low_order_assembly.active_source_authority,
         assembly_stage = :assembled_report_inputs,
     )
 end
