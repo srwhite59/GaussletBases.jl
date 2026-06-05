@@ -1,0 +1,424 @@
+# Private route-report helpers for the atom-growth Cartesian diatomic driver path.
+# This file is included after the generic route-driver helpers and White-Lindsey seed helpers.
+
+function _pqs_source_box_route_driver_atom_growth_unit_key(prefix::Symbol, index::Int)
+    return index == 1 ? prefix : Symbol(string(prefix), "_", index)
+end
+
+function _pqs_source_box_route_driver_atom_growth_unit_record(;
+    unit_key,
+    unit_role,
+    retained_unit_kind,
+    source_family,
+    source_box,
+    retained_rule_kind,
+    retained_rule_derivation,
+    retained_range,
+    provenance_label,
+    source_dimensions = isnothing(source_box) ? nothing : Tuple(length.(source_box)),
+    source_dimension =
+        isnothing(source_dimensions) ?
+        (isnothing(retained_range) ? nothing : length(retained_range)) :
+        prod(source_dimensions),
+)
+    return _pqs_source_box_route_driver_unit_record(
+        unit_key = unit_key,
+        unit_role = unit_role,
+        retained_unit_kind = retained_unit_kind,
+        source_family = source_family,
+        source_box = source_box,
+        source_dimensions = source_dimensions,
+        source_dimension = source_dimension,
+        retained_rule_kind = retained_rule_kind,
+        retained_rule_derivation = retained_rule_derivation,
+        retained_range = retained_range,
+        retained_count = isnothing(retained_range) ? nothing : length(retained_range),
+        provenance_label = provenance_label,
+        weight_semantics = :retained_basis_integral_weights,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_atom_growth_route_units(probe)
+    if !probe.materialized || isnothing(probe.materialization) ||
+       isnothing(probe.materialization.assembly)
+        return (;
+            object_kind = :white_lindsey_low_order_diatomic_atom_growth_route_units,
+            route_family = :white_lindsey_low_order,
+            status = :blocked_missing_atom_growth_assembly,
+            private_development_only = true,
+            retained_units = (),
+            unit_inventory = nothing,
+            standard_unit_inventory = nothing,
+            retained_dimension = probe.retained_dimension,
+            pair_entries = (),
+            pair_family_counts = (white_lindsey_low_order_atom_growth = 0,),
+            operator_pairs_materialized = false,
+            weight_semantics = :retained_basis_integral_weights,
+            blocker = :missing_atom_growth_assembly,
+        )
+    end
+
+    scaffold = probe.scaffold
+    assembly = probe.materialization.assembly
+    retained_units = NamedTuple[]
+
+    for (index, slab_set) in enumerate(scaffold.outer_mismatch_boundary_slab_sets)
+        retained_range = assembly.outer_mismatch_column_ranges[index]
+        push!(
+            retained_units,
+            _pqs_source_box_route_driver_atom_growth_unit_record(
+                unit_key = _pqs_source_box_route_driver_atom_growth_unit_key(
+                    :outer_mismatch_shared_molecular_shell,
+                    index,
+                ),
+                unit_role = :outer_mismatch_shared_molecular_shell,
+                retained_unit_kind =
+                    :atom_growth_outer_mismatch_boundary_slab_set,
+                source_family =
+                    :white_lindsey_low_order_atom_growth_outer_mismatch,
+                source_box = nothing,
+                source_dimensions = nothing,
+                source_dimension = slab_set.support_count,
+                retained_rule_kind = :direct_boundary_slab_parent_sites,
+                retained_rule_derivation =
+                    :atom_growth_outer_mismatch_boundary_slab_set,
+                retained_range = retained_range,
+                provenance_label =
+                    :bond_aligned_diatomic_atom_growth_outer_mismatch,
+            ),
+        )
+    end
+
+    push!(
+        retained_units,
+        _pqs_source_box_route_driver_atom_growth_unit_record(
+            unit_key = :left_atom_box,
+            unit_role = :left_atom_box,
+            retained_unit_kind = :atom_growth_atom_local_child_box,
+            source_family = :white_lindsey_low_order_atom_growth_atom_box,
+            source_box = scaffold.left_child_plan.outer_box,
+            retained_rule_kind = :atom_local_child_shellification_plan,
+            retained_rule_derivation =
+                :atom_growth_complete_rectangular_left_child_plan,
+            retained_range = assembly.child_column_ranges[1],
+            provenance_label = :bond_aligned_diatomic_atom_growth_left_atom_box,
+        ),
+    )
+
+    if !isnothing(scaffold.contact_cap_region)
+        push!(
+            retained_units,
+            _pqs_source_box_route_driver_atom_growth_unit_record(
+                unit_key = :contact_cap,
+                unit_role = :contact_cap,
+                retained_unit_kind = :atom_growth_direct_contact_cap,
+                source_family = :white_lindsey_low_order_atom_growth_contact_cap,
+                source_box = scaffold.contact_cap_region.box,
+                retained_rule_kind = :direct_contact_cap_parent_sites,
+                retained_rule_derivation =
+                    :atom_growth_complete_rectangular_contact_cap,
+                retained_range = assembly.contact_cap_column_range,
+                provenance_label =
+                    :bond_aligned_diatomic_atom_growth_contact_cap,
+            ),
+        )
+    end
+
+    push!(
+        retained_units,
+        _pqs_source_box_route_driver_atom_growth_unit_record(
+            unit_key = :right_atom_box,
+            unit_role = :right_atom_box,
+            retained_unit_kind = :atom_growth_atom_local_child_box,
+            source_family = :white_lindsey_low_order_atom_growth_atom_box,
+            source_box = scaffold.right_child_plan.outer_box,
+            retained_rule_kind = :atom_local_child_shellification_plan,
+            retained_rule_derivation =
+                :atom_growth_complete_rectangular_right_child_plan,
+            retained_range = assembly.child_column_ranges[2],
+            provenance_label = :bond_aligned_diatomic_atom_growth_right_atom_box,
+        ),
+    )
+
+    for (index, region) in enumerate(scaffold.shared_complete_shell_regions)
+        retained_range = assembly.shared_shell_column_ranges[index]
+        push!(
+            retained_units,
+            _pqs_source_box_route_driver_atom_growth_unit_record(
+                unit_key = _pqs_source_box_route_driver_atom_growth_unit_key(
+                    :regular_shared_molecular_shell,
+                    index,
+                ),
+                unit_role = :regular_shared_molecular_shell,
+                retained_unit_kind = :atom_growth_shared_complete_rectangular_shell,
+                source_family =
+                    :white_lindsey_low_order_atom_growth_shared_shell,
+                source_box = region.outer_box,
+                source_dimensions = nothing,
+                source_dimension = region.support_count,
+                retained_rule_kind = :shared_complete_rectangular_shell_plan,
+                retained_rule_derivation =
+                    :atom_growth_complete_rectangular_shared_shell_region,
+                retained_range = retained_range,
+                provenance_label =
+                    :bond_aligned_diatomic_atom_growth_shared_shell,
+            ),
+        )
+    end
+
+    retained_units = Tuple(retained_units)
+    unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
+    pair_entries = ()
+    pair_family_counts = (white_lindsey_low_order_atom_growth = 0,)
+    route_facts = (;
+        source_dimensions = unit_inventory.source_dimensions,
+        retained_units,
+        retained_counts = unit_inventory.retained_counts,
+        ranges = unit_inventory.ranges,
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts,
+    )
+
+    return (;
+        object_kind = :white_lindsey_low_order_diatomic_atom_growth_route_units,
+        route_family = :white_lindsey_low_order,
+        status = :available_atom_growth_retained_unit_inventory,
+        private_development_only = true,
+        retained_units,
+        unit_inventory,
+        standard_unit_inventory =
+            _pqs_source_box_route_driver_standard_unit_inventory_summary(route_facts),
+        retained_dimension = unit_inventory.retained_dimension,
+        pair_entries,
+        pair_family_counts,
+        operator_pairs_materialized = false,
+        pair_inventory_status =
+            :assembled_sequence_payload_not_pair_decomposed,
+        weight_semantics = :retained_basis_integral_weights,
+        blocker = nothing,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_atom_growth_transform_inventory(
+    probe,
+)
+    sequence = probe.materialization.sequence
+    weights =
+        isnothing(probe.basis_adapter) ?
+        nothing :
+        probe.basis_adapter.final_integral_weights
+    retained_dimension = size(sequence.coefficient_matrix, 2)
+    final_integral_weights_ready =
+        !isnothing(weights) &&
+        length(weights) == retained_dimension &&
+        all(isfinite, weights) &&
+        all(>(0.0), weights)
+
+    return (;
+        object_kind =
+            :white_lindsey_low_order_diatomic_atom_growth_transform_inventory,
+        route_family = :white_lindsey_low_order,
+        status =
+            final_integral_weights_ready ?
+            :available_atom_growth_transform_inventory :
+            :blocked_atom_growth_transform_inventory_contract,
+        private_development_only = true,
+        transform_source = :atom_growth_shell_sequence_coefficient_matrix,
+        coefficient_matrix_size = size(sequence.coefficient_matrix),
+        coefficient_matrix_finite = all(isfinite, sequence.coefficient_matrix),
+        retained_dimension,
+        support_count = length(sequence.support_indices),
+        final_integral_weight_count = isnothing(weights) ? 0 : length(weights),
+        final_integral_weights_status = probe.final_integral_weights_status,
+        final_integral_weights_ready,
+        weight_semantics = :retained_basis_integral_weights,
+        blocker =
+            final_integral_weights_ready ?
+            nothing :
+            :atom_growth_final_integral_weight_contract,
+    )
+end
+
+function _pqs_source_box_route_driver_diatomic_atom_growth_operator_inventory(
+    probe,
+)
+    fixed_block = probe.basis_adapter.fixed_block
+    fixed_block_matrices =
+        _white_lindsey_low_order_materialized_seed_operator_matrices(fixed_block)
+    fixed_block_matrix_sizes =
+        _white_lindsey_low_order_operator_matrix_sizes(fixed_block_matrices)
+    fixed_block_finite_ready =
+        _white_lindsey_low_order_operator_finite_ready(fixed_block_matrices)
+    ham_adapter_available =
+        !isnothing(probe.ham_adapter) &&
+        probe.ham_adapter.status == :available_route_configured_diatomic_ham_adapter
+    ham_matrices =
+        ham_adapter_available ?
+        (;
+            overlap = probe.ham_adapter.operators.overlap,
+            one_body_hamiltonian =
+                probe.ham_adapter.operators.one_body_hamiltonian,
+            interaction_matrix = probe.ham_adapter.operators.interaction_matrix,
+        ) :
+        nothing
+    ham_matrix_sizes =
+        ham_adapter_available ?
+        _white_lindsey_low_order_operator_matrix_sizes(ham_matrices) :
+        nothing
+    ham_finite_ready =
+        ham_adapter_available ?
+        _white_lindsey_low_order_operator_finite_ready(ham_matrices) :
+        nothing
+    ham_all_finite =
+        ham_adapter_available ? all(values(ham_finite_ready)) : false
+
+    return (;
+        object_kind =
+            :white_lindsey_low_order_diatomic_atom_growth_operator_inventory,
+        route_family = :white_lindsey_low_order,
+        status =
+            ham_adapter_available && ham_all_finite ?
+            :available_atom_growth_operator_inventory :
+            :blocked_atom_growth_operator_inventory_contract,
+        private_development_only = true,
+        operator_source = :atom_growth_fixed_block_and_ham_adapter,
+        fixed_block_matrix_sizes,
+        fixed_block_finite_ready,
+        fixed_block_all_finite = all(values(fixed_block_finite_ready)),
+        ham_adapter_status = probe.ham_adapter_status,
+        ham_matrix_sizes,
+        ham_finite_ready,
+        ham_all_finite,
+        final_integral_weights_status = probe.final_integral_weights_status,
+        operator_pairs_materialized = false,
+        pair_inventory_status =
+            :assembled_sequence_payload_not_pair_decomposed,
+        electron_electron_materialized = ham_adapter_available,
+        overlap_materialized = ham_adapter_available,
+        one_body_hamiltonian_materialized = ham_adapter_available,
+        density_density_interaction_materialized = ham_adapter_available,
+        blocker =
+            ham_adapter_available && ham_all_finite ?
+            nothing :
+            :atom_growth_ham_operator_adapter_contract,
+    )
+end
+
+function _pqs_source_box_route_driver_route_configured_diatomic_atom_growth_report(
+    probe;
+    basis_artifact_status,
+    ham_artifact_status,
+    basis_bundle_export_status,
+    ham_bundle_export_status,
+)
+    if !probe.materialized || isnothing(probe.materialization)
+        return (;
+            object_kind =
+                :white_lindsey_low_order_route_configured_diatomic_atom_growth_report,
+            route_family = :white_lindsey_low_order,
+            status = :blocked_missing_atom_growth_materialization,
+            private_development_only = true,
+            shellization_source =
+                :bond_aligned_diatomic_atom_growth_construction_plan,
+            shellization_authority =
+                :bond_aligned_diatomic_atom_growth_construction_plan,
+            active_source_authority = false,
+            route_default_behavior_changed = false,
+            sequence_available = false,
+            retained_dimension = probe.retained_dimension,
+            support_count = probe.support_count,
+            route_units = nothing,
+            transform_inventory = nothing,
+            operator_inventory = nothing,
+            final_integral_weights_status = probe.final_integral_weights_status,
+            basis_adapter_status = probe.basis_adapter_status,
+            ham_adapter_status = probe.ham_adapter_status,
+            basis_artifact_status,
+            ham_artifact_status,
+            basis_bundle_export_status,
+            ham_bundle_export_status,
+            blocker = :missing_atom_growth_materialization,
+        )
+    elseif isnothing(probe.basis_adapter) ||
+           isnothing(probe.basis_adapter.fixed_block)
+        return (;
+            object_kind =
+                :white_lindsey_low_order_route_configured_diatomic_atom_growth_report,
+            route_family = :white_lindsey_low_order,
+            status = :blocked_missing_atom_growth_basis_adapter,
+            private_development_only = true,
+            shellization_source =
+                :bond_aligned_diatomic_atom_growth_construction_plan,
+            shellization_authority =
+                :bond_aligned_diatomic_atom_growth_construction_plan,
+            active_source_authority = false,
+            route_default_behavior_changed = false,
+            sequence_available = probe.sequence_available,
+            retained_dimension = probe.retained_dimension,
+            support_count = probe.support_count,
+            route_units = nothing,
+            transform_inventory = nothing,
+            operator_inventory = nothing,
+            final_integral_weights_status = probe.final_integral_weights_status,
+            basis_adapter_status = probe.basis_adapter_status,
+            ham_adapter_status = probe.ham_adapter_status,
+            basis_artifact_status,
+            ham_artifact_status,
+            basis_bundle_export_status,
+            ham_bundle_export_status,
+            blocker = :atom_growth_basis_representation_contract,
+        )
+    end
+
+    route_units =
+        _pqs_source_box_route_driver_diatomic_atom_growth_route_units(probe)
+    transform_inventory =
+        _pqs_source_box_route_driver_diatomic_atom_growth_transform_inventory(probe)
+    operator_inventory =
+        _pqs_source_box_route_driver_diatomic_atom_growth_operator_inventory(probe)
+    retained_dimension = probe.retained_dimension
+    inventory_ready =
+        route_units.status == :available_atom_growth_retained_unit_inventory &&
+        transform_inventory.status == :available_atom_growth_transform_inventory &&
+        operator_inventory.status == :available_atom_growth_operator_inventory
+
+    return (;
+        object_kind =
+            :white_lindsey_low_order_route_configured_diatomic_atom_growth_report,
+        route_family = :white_lindsey_low_order,
+        status =
+            inventory_ready ?
+            :private_development_route_configured_atom_growth :
+            :blocked_atom_growth_route_report_contract,
+        private_development_only = true,
+        materialization_status = probe.materialization.status,
+        shellization_source =
+            :bond_aligned_diatomic_atom_growth_construction_plan,
+        shellization_authority =
+            :bond_aligned_diatomic_atom_growth_construction_plan,
+        active_source_authority = false,
+        route_default_behavior_changed = false,
+        sequence_available = probe.sequence_available,
+        retained_dimension,
+        support_count = probe.support_count,
+        route_units,
+        transform_inventory,
+        operator_inventory,
+        basis_adapter_summary = probe.basis_adapter_summary,
+        ham_adapter_summary = probe.ham_adapter_summary,
+        final_integral_weights_status = probe.final_integral_weights_status,
+        final_integral_weights_ready =
+            transform_inventory.final_integral_weights_ready,
+        basis_adapter_status = probe.basis_adapter_status,
+        ham_adapter_status = probe.ham_adapter_status,
+        basis_artifact_status,
+        ham_artifact_status,
+        basis_bundle_export_status,
+        ham_bundle_export_status,
+        operator_pairs_materialized = route_units.operator_pairs_materialized,
+        electron_electron_materialized = operator_inventory.electron_electron_materialized,
+        weight_semantics = :retained_basis_integral_weights,
+        blocker = inventory_ready ? nothing : :atom_growth_route_report_contract,
+    )
+end
