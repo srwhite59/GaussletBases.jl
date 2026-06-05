@@ -100,6 +100,10 @@ end
     @test default_summary.legacy_source_transforms_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_transforms_selected
+    @test !default_summary.atom_growth_transform_contracts_available
+    @test !default_summary.transform_contract_inventory_available
+    @test default_summary.transform_contract_source ==
+          :legacy_diatomic_source_summary
     @test !default_summary.coefficient_transforms_materialized
     @test !default_summary.coefficient_maps_materialized
     @test default_summary.transform_materialization_status ==
@@ -132,6 +136,12 @@ end
     @test atom_growth_transforms.low_order_transform_route_kind ==
           :atom_growth_complete_rectangular_low_order_transforms
     @test atom_growth_transforms.atom_growth_transforms_selected
+    @test atom_growth_transforms.atom_growth_transform_contracts_available
+    @test atom_growth_transforms.transform_contract_inventory_available
+    @test atom_growth_transforms.transform_contract_source ==
+          :atom_growth_plan_unit_inventory
+    @test atom_growth_transforms.transform_contract_status ==
+          :available_atom_growth_transform_contract_inventory
     @test !atom_growth_transforms.coefficient_transforms_materialized
     @test !atom_growth_transforms.coefficient_maps_materialized
     @test !atom_growth_transforms.active_source_authority
@@ -147,6 +157,12 @@ end
           :atom_growth_complete_rectangular_low_order_transforms
     @test atom_growth_summary.atom_growth_transforms_selected
     @test !atom_growth_summary.legacy_source_transforms_selected
+    @test atom_growth_summary.atom_growth_transform_contracts_available
+    @test atom_growth_summary.transform_contract_inventory_available
+    @test atom_growth_summary.transform_contract_source ==
+          :atom_growth_plan_unit_inventory
+    @test atom_growth_summary.transform_contract_status ==
+          :available_atom_growth_transform_contract_inventory
     @test atom_growth_summary.plan_authority
     @test !atom_growth_summary.active_source_authority
     @test !atom_growth_summary.legacy_source_authority
@@ -158,8 +174,59 @@ end
     @test !atom_growth_summary.retained_unit_ranges_known
     @test !atom_growth_summary.retained_dimension_known
     @test atom_growth_summary.retained_dimension === nothing
-    @test atom_growth_summary.summary_only
+    @test !atom_growth_summary.summary_only
+    unit_inventory = atom_growth_units.plan_unit_inventory
+    contract_inventory = atom_growth_summary.transform_contract_inventory
+    @test contract_inventory.object_kind ==
+          :cartesian_atom_growth_transform_contract_inventory
+    @test contract_inventory.transform_contract_source ==
+          :atom_growth_plan_unit_inventory
+    @test contract_inventory.unit_keys == unit_inventory.unit_keys
+    @test contract_inventory.unit_roles == unit_inventory.unit_roles
+    @test contract_inventory.contract_count == unit_inventory.unit_count
+    expected_contract_names = Tuple(
+        role == :outer_mismatch_shared_molecular_shell ?
+        :outer_mismatch_boundary_slab_set :
+        role == :regular_shared_molecular_shell ?
+        :adaptive_complete_shell_layer :
+        role in (:left_atom_box, :right_atom_box) ?
+        :atom_local_child_shellification_sequence :
+        role == :contact_cap ?
+        :direct_identity_selector :
+        :unexpected_atom_growth_transform_contract
+        for role in contract_inventory.unit_roles
+    )
+    @test contract_inventory.contract_names == expected_contract_names
+    @test !(:unexpected_atom_growth_transform_contract in expected_contract_names)
+    @test contract_inventory.source_backed_contract_count == 0
+    @test !contract_inventory.coefficient_transforms_materialized
+    @test !contract_inventory.coefficient_maps_materialized
+    @test !contract_inventory.retained_unit_dimensions_known
+    @test !contract_inventory.retained_unit_ranges_known
+    @test !contract_inventory.retained_dimension_known
+    @test all(
+        contract -> !contract.source_backed,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.coefficient_transform_materialized == false,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.coefficient_map_materialized == false,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.retained_count_known == false,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.retained_range_known == false,
+        contract_inventory.transform_contracts,
+    )
     @test atom_growth_summary.transform_fields_preserved
+    @test atom_growth_summary.route_skeleton_transform_inventory_source ==
+          :route_skeleton_compatibility_fields
     @test atom_growth_transforms.retained_units === atom_growth_units.retained_units
     @test hasproperty(atom_growth_transforms, :retained_counts)
     @test hasproperty(atom_growth_transforms, :ranges)

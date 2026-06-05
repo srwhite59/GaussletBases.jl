@@ -182,6 +182,133 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
     )
 end
 
+function _pqs_source_box_route_driver_atom_growth_transform_contract_name(unit)
+    unit.lowering_family == :white_lindsey_atom_local_child_shellification &&
+        return :atom_local_child_shellification_sequence
+    unit.materialization_dependency == :plan_lowerable_direct_slab &&
+        return :direct_identity_selector
+    unit.lowering_family == :white_lindsey_adaptive_complete_shell &&
+        return :adaptive_complete_shell_layer
+    unit.lowering_family == :outer_mismatch_boundary_slab_set &&
+        return :outer_mismatch_boundary_slab_set
+    return nothing
+end
+
+function _pqs_source_box_route_driver_atom_growth_transform_contract_record(
+    unit,
+)
+    transform_contract =
+        _pqs_source_box_route_driver_atom_growth_transform_contract_name(unit)
+    isnothing(transform_contract) && throw(
+        ArgumentError(
+            "atom-growth plan unit $(unit.unit_key) has no transform contract for lowering family $(unit.lowering_family)",
+        ),
+    )
+    return (;
+        object_kind = :cartesian_atom_growth_transform_contract,
+        unit_key = unit.unit_key,
+        unit_role = unit.unit_role,
+        transform_contract,
+        contract_source = :atom_growth_plan_unit_inventory,
+        lowering_family = unit.lowering_family,
+        materialization_dependency = unit.materialization_dependency,
+        source_backed = unit.source_backed,
+        independently_lowerable = unit.independently_lowerable,
+        coefficient_transform_materialized = false,
+        coefficient_map_materialized = false,
+        retained_count_known = unit.retained_count_known,
+        retained_range_known = unit.retained_range_known,
+        retained_dimension_known = unit.retained_dimension_known,
+    )
+end
+
+function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
+    plan_unit_inventory,
+)
+    if isnothing(plan_unit_inventory) ||
+       plan_unit_inventory.status != :available_atom_growth_plan_unit_inventory
+        return (;
+            object_kind = :cartesian_atom_growth_transform_contract_inventory,
+            status = :blocked_missing_atom_growth_plan_unit_inventory,
+            private_development_only = true,
+            transform_contract_source = :blocked_missing_plan_unit_inventory,
+            transform_contracts = (),
+            contract_count = 0,
+            unit_keys = (),
+            unit_roles = (),
+            contract_names = (),
+            source_backed_contract_count = 0,
+            coefficient_transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            retained_unit_dimensions_known = false,
+            retained_unit_ranges_known = false,
+            retained_dimension_known = false,
+            retained_dimension = nothing,
+            route_skeleton_authority = false,
+            blocker = :missing_atom_growth_plan_unit_inventory,
+        )
+    end
+
+    unsupported_unit_keys = Tuple(
+        unit.unit_key for unit in plan_unit_inventory.plan_units
+        if isnothing(
+            _pqs_source_box_route_driver_atom_growth_transform_contract_name(unit),
+        )
+    )
+    if !isempty(unsupported_unit_keys)
+        return (;
+            object_kind = :cartesian_atom_growth_transform_contract_inventory,
+            status = :blocked_unknown_atom_growth_transform_contract,
+            private_development_only = true,
+            transform_contract_source = :atom_growth_plan_unit_inventory,
+            transform_contracts = (),
+            contract_count = 0,
+            unit_keys = (),
+            unit_roles = (),
+            contract_names = (),
+            source_backed_contract_count = 0,
+            coefficient_transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            retained_unit_dimensions_known = false,
+            retained_unit_ranges_known = false,
+            retained_dimension_known = false,
+            retained_dimension = nothing,
+            route_skeleton_authority = false,
+            blocker = (;
+                reason = :unknown_atom_growth_transform_contract,
+                unit_keys = unsupported_unit_keys,
+            ),
+        )
+    end
+
+    transform_contracts = Tuple(
+        _pqs_source_box_route_driver_atom_growth_transform_contract_record(unit)
+        for unit in plan_unit_inventory.plan_units
+    )
+    return (;
+        object_kind = :cartesian_atom_growth_transform_contract_inventory,
+        status = :available_atom_growth_transform_contract_inventory,
+        private_development_only = true,
+        transform_contract_source = :atom_growth_plan_unit_inventory,
+        transform_contracts,
+        contract_count = length(transform_contracts),
+        unit_keys = Tuple(contract.unit_key for contract in transform_contracts),
+        unit_roles = Tuple(contract.unit_role for contract in transform_contracts),
+        contract_names =
+            Tuple(contract.transform_contract for contract in transform_contracts),
+        source_backed_contract_count =
+            count(contract -> contract.source_backed, transform_contracts),
+        coefficient_transforms_materialized = false,
+        coefficient_maps_materialized = false,
+        retained_unit_dimensions_known = false,
+        retained_unit_ranges_known = false,
+        retained_dimension_known = false,
+        retained_dimension = nothing,
+        route_skeleton_authority = false,
+        blocker = nothing,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_unit_record(;
     unit_key,
     unit_role,

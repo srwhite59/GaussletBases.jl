@@ -5217,7 +5217,18 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
+            transform_contract_source = :not_available,
+            transform_contract_status = :not_available,
+            atom_growth_transform_contracts_available = false,
+            transform_contract_inventory_available = false,
+            transform_contract_inventory = nothing,
+            transform_contract_count = 0,
+            transform_contract_unit_keys = (),
+            transform_contract_unit_roles = (),
+            transform_contract_names = (),
+            source_backed_contract_count = 0,
             transform_fields_preserved = false,
+            route_skeleton_transform_inventory_source = :not_available,
             summary_only = true,
         )
     end
@@ -5230,13 +5241,44 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         legacy_source_transforms_selected ?
         :legacy_diatomic_source_low_order_transforms :
         :not_selected
+    transform_contract_inventory =
+        atom_growth_transforms_selected ?
+        _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
+            low_order_units.plan_unit_inventory,
+        ) :
+        nothing
+    transform_contract_inventory_available =
+        !isnothing(transform_contract_inventory) &&
+        transform_contract_inventory.status ==
+        :available_atom_growth_transform_contract_inventory
+    transform_contract_source =
+        transform_contract_inventory_available ?
+        transform_contract_inventory.transform_contract_source :
+        atom_growth_transforms_selected ?
+        :blocked_atom_growth_plan_unit_inventory :
+        legacy_source_transforms_selected ?
+        :legacy_diatomic_source_summary :
+        :route_skeleton_compatibility_fields
+    transform_contract_status =
+        isnothing(transform_contract_inventory) ?
+        transform_contract_source :
+        transform_contract_inventory.status
+    source_backed_contract_count =
+        isnothing(transform_contract_inventory) ?
+        0 :
+        transform_contract_inventory.source_backed_contract_count
+    status =
+        transform_contract_inventory_available ?
+        :available_transform_stage_low_order_summary :
+        !isnothing(transform_contract_inventory) ?
+        transform_contract_inventory.status :
+        low_order_units.status == :available_unit_stage_low_order_summary ?
+        :available_transform_stage_low_order_summary :
+        low_order_units.status
 
     return (;
         object_kind = :cartesian_transform_stage_low_order_summary,
-        status =
-            low_order_units.status == :available_unit_stage_low_order_summary ?
-            :available_transform_stage_low_order_summary :
-            low_order_units.status,
+        status,
         low_order_shellization_policy_requested =
             low_order_units.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -5268,8 +5310,33 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         plan_authority = low_order_units.plan_authority,
         active_source_authority = low_order_units.active_source_authority,
         legacy_source_authority = low_order_units.legacy_source_authority,
+        transform_contract_source,
+        transform_contract_status,
+        atom_growth_transform_contracts_available =
+            transform_contract_inventory_available,
+        transform_contract_inventory_available,
+        transform_contract_inventory,
+        transform_contract_count =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.contract_count :
+            0,
+        transform_contract_unit_keys =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.unit_keys :
+            (),
+        transform_contract_unit_roles =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.unit_roles :
+            (),
+        transform_contract_names =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.contract_names :
+            (),
+        source_backed_contract_count,
         transform_fields_preserved = true,
-        summary_only = true,
+        route_skeleton_transform_inventory_source =
+            :route_skeleton_compatibility_fields,
+        summary_only = !transform_contract_inventory_available,
     )
 end
 
@@ -5291,6 +5358,17 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.coefficient_transforms_materialized,
         coefficient_maps_materialized =
             low_order_transforms.coefficient_maps_materialized,
+        atom_growth_transform_contracts_available =
+            low_order_transforms.atom_growth_transform_contracts_available,
+        transform_contract_inventory_available =
+            low_order_transforms.transform_contract_inventory_available,
+        transform_contract_inventory =
+            low_order_transforms.transform_contract_inventory,
+        transform_contract_source =
+            low_order_transforms.transform_contract_source,
+        transform_contract_status =
+            low_order_transforms.transform_contract_status,
+        summary_only = low_order_transforms.summary_only,
         active_source_authority = low_order_transforms.active_source_authority,
         retained_counts =
             _pqs_source_box_route_driver_named_tuple_from_units(
