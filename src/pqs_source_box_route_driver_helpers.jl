@@ -4711,11 +4711,100 @@ function cartesian_shells(
     )
 end
 
+function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
+    low_order_shellization =
+        hasproperty(shells, :low_order_shellization) ?
+        shells.low_order_shellization :
+        nothing
+    if isnothing(low_order_shellization)
+        return (;
+            object_kind = :cartesian_unit_stage_low_order_summary,
+            status = :not_available_missing_shell_stage_summary,
+            low_order_shellization_policy_requested = nothing,
+            low_order_shellization_policy_resolved = :not_available,
+            low_order_shellization_policy_source = :not_available,
+            low_order_shellization_policy_status =
+                :not_available_missing_shell_stage_summary,
+            low_order_shellization_policy_blocker =
+                :missing_shell_stage_low_order_summary,
+            shellization_source = :not_available,
+            shellization_kind = :not_available,
+            unit_route_kind = :not_available,
+            atom_growth_units_selected = false,
+            legacy_source_units_selected = false,
+            atom_growth_unit_summary_available = false,
+            materialized_units_available = false,
+            materialization_status = :not_available,
+            retained_unit_dimensions_known = false,
+            retained_unit_ranges_known = false,
+            retained_dimension_known = false,
+            retained_dimension = nothing,
+            plan_authority = false,
+            active_source_authority = false,
+            legacy_source_authority = false,
+            route_skeleton_unit_fields_preserved = false,
+            summary_only = true,
+        )
+    end
+
+    atom_growth_units_selected = low_order_shellization.atom_growth_selected
+    legacy_source_units_selected = low_order_shellization.legacy_source_selected
+    unit_route_kind =
+        atom_growth_units_selected ?
+        :atom_growth_complete_rectangular_low_order_units :
+        legacy_source_units_selected ?
+        :legacy_diatomic_source_low_order_units :
+        :not_selected
+
+    return (;
+        object_kind = :cartesian_unit_stage_low_order_summary,
+        status =
+            low_order_shellization.status ==
+            :available_shell_stage_low_order_shellization_summary ?
+            :available_unit_stage_low_order_summary :
+            low_order_shellization.status,
+        low_order_shellization_policy_requested =
+            low_order_shellization.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_shellization.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_shellization.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_shellization.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_shellization.low_order_shellization_policy_blocker,
+        shellization_source = low_order_shellization.shellization_source,
+        shellization_kind = low_order_shellization.shellization_kind,
+        unit_route_kind,
+        atom_growth_units_selected,
+        legacy_source_units_selected,
+        atom_growth_unit_summary_available = atom_growth_units_selected,
+        materialized_units_available = false,
+        materialization_status =
+            atom_growth_units_selected ?
+            :deferred_atom_growth_complete_rectangular_unit_materialization :
+            legacy_source_units_selected ?
+            :deferred_legacy_diatomic_source_unit_materialization :
+            low_order_shellization.materialization_status,
+        retained_unit_dimensions_known = false,
+        retained_unit_ranges_known = false,
+        retained_dimension_known = false,
+        retained_dimension = nothing,
+        plan_authority = low_order_shellization.atom_growth_plan_authority,
+        active_source_authority = low_order_shellization.active_source_authority,
+        legacy_source_authority = low_order_shellization.legacy_source_authority,
+        route_skeleton_unit_fields_preserved = true,
+        summary_only = true,
+    )
+end
+
 function cartesian_units(parent, shells, route_inputs, recipe)
     raw_box =
         _pqs_source_box_route_driver_raw_box_probe(
             parent.standard_setup, shells.route_skeleton, parent.parent_axis,
             parent.route_axis_counts, route_inputs, recipe)
+    low_order_units =
+        _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
 
     return (;
         object_kind = :cartesian_units,
@@ -4723,6 +4812,12 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         route_inputs,
         route_skeleton = shells.route_skeleton,
         raw_box,
+        low_order_units,
+        low_order_unit_route_kind = low_order_units.unit_route_kind,
+        atom_growth_unit_summary_available =
+            low_order_units.atom_growth_unit_summary_available,
+        atom_growth_units_selected = low_order_units.atom_growth_units_selected,
+        active_source_authority = low_order_units.active_source_authority,
         source_boxes = shells.route_skeleton.source_boxes,
         source_dimensions = shells.route_skeleton.source_dimensions,
         retained_units = shells.route_skeleton.retained_units,
