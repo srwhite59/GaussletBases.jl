@@ -254,4 +254,50 @@ end
           atom_growth_stages.shells.route_skeleton
     @test atom_growth_report.pair_entries ===
           atom_growth_stages.shells.route_skeleton.pair_entries
+
+    atom_growth_materialization = GaussletBases.cartesian_materialization(
+        atom_growth_report,
+        (;
+            low_order_shellization_policy =
+                :atom_growth_complete_rectangular,
+        ),
+    )
+    summary_stdout = mktemp() do path, io
+        redirect_stdout(io) do
+            GaussletBases.cartesian_print_summary(
+                atom_growth_report,
+                atom_growth_materialization,
+            )
+        end
+        flush(io)
+        read(path, String)
+    end
+    @test occursin(
+        "report.low_order_shellization_policy_resolved = :atom_growth_complete_rectangular",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_shellization_policy_source = :explicit_low_order_shellization_policy",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.atom_growth_low_order_route_selected = true",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_active_source_authority = false",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_materialization_required = true",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_materialization_status = :deferred_atom_growth_complete_rectangular_pair_block_materialization",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_hamiltonian_matrices_materialized = false",
+        summary_stdout,
+    )
 end

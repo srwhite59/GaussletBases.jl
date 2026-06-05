@@ -5439,6 +5439,13 @@ function cartesian_print_summary(report, materialization)
     @show diagnostics.parent_axis_probe_requested diagnostics.parent_axis_probe_status
     @show diagnostics.raw_product_box_probe_requested diagnostics.raw_product_box_probe_status
     @show retained_counts retained_dimension
+    @show report.low_order_shellization_policy_resolved
+    @show report.low_order_shellization_policy_source
+    @show report.atom_growth_low_order_route_selected
+    @show report.low_order_active_source_authority
+    @show report.low_order_materialization_required
+    @show report.low_order_materialization_status
+    @show report.low_order_hamiltonian_matrices_materialized
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status
     @show materialization.materialized_report_kind
