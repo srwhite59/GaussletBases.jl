@@ -43,5 +43,6 @@ include("shellification_regions.jl")
 include("lowering_sources.jl")
 include("retained_spaces.jl")
 include("unit_pairs.jl")
+include("pair_operator_plans.jl")
 
 end # module CartesianRouteCore
