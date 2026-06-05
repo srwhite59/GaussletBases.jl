@@ -105,7 +105,13 @@ save_inputs = (; save_artifact, save_tsv, outfile, tsvfile)
 system = GaussletBases.cartesian_system(system_inputs)
 recipe = GaussletBases.cartesian_recipe(route_inputs)
 parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
-shells = GaussletBases.cartesian_shells(parent, spacing_inputs, recipe)
+shells = GaussletBases.cartesian_shells(
+    parent,
+    spacing_inputs,
+    recipe;
+    low_order_shellization_policy,
+    probe_route_configured_diatomic_atom_growth_materializer,
+)
 units = GaussletBases.cartesian_units(parent, shells, route_probe_inputs, recipe)
 @time "Transforming: " transforms = GaussletBases.cartesian_transforms(units, recipe)
 @time "Pair terms: " pairs = GaussletBases.cartesian_pair_terms(units, transforms, recipe)

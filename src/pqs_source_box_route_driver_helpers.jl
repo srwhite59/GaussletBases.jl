@@ -4572,16 +4572,139 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     )
 end
 
-function cartesian_shells(parent, spacing_inputs, recipe)
+function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
+    parent,
+    recipe;
+    low_order_shellization_policy = nothing,
+    probe_route_configured_diatomic_atom_growth_materializer::Bool = false,
+)
+    policy =
+        recipe.route_family == :white_lindsey_low_order ?
+        _pqs_source_box_route_driver_low_order_shellization_policy(
+            low_order_shellization_policy,
+            probe_route_configured_diatomic_atom_growth_materializer,
+        ) :
+        (;
+            low_order_shellization_policy_requested = low_order_shellization_policy,
+            low_order_shellization_policy_resolved = :not_applicable,
+            low_order_shellization_policy_source = :not_applicable,
+            low_order_shellization_policy_status = :not_applicable,
+            low_order_shellization_policy_blocker = nothing,
+        )
+    policy_resolved = policy.low_order_shellization_policy_resolved
+    bond_aligned_diatomic =
+        parent.system_classification == :bond_aligned_diatomic
+    atom_growth_selected =
+        recipe.route_family == :white_lindsey_low_order &&
+        bond_aligned_diatomic &&
+        policy.low_order_shellization_policy_status ==
+        :available_low_order_shellization_policy &&
+        policy_resolved == :atom_growth_complete_rectangular
+    legacy_source_selected =
+        recipe.route_family == :white_lindsey_low_order &&
+        bond_aligned_diatomic &&
+        policy.low_order_shellization_policy_status ==
+        :available_low_order_shellization_policy &&
+        policy_resolved == :legacy_diatomic_source
+    shellization_source =
+        atom_growth_selected ?
+        :bond_aligned_diatomic_atom_growth_construction_plan :
+        legacy_source_selected ?
+        :route_configured_bond_aligned_diatomic_source :
+        recipe.route_family == :white_lindsey_low_order ?
+        (
+            bond_aligned_diatomic ?
+            :blocked_low_order_shellization_policy :
+            :route_configured_low_order_non_diatomic_shellization
+        ) :
+        :not_applicable
+    shellization_kind =
+        atom_growth_selected ?
+        :atom_growth_complete_rectangular :
+        legacy_source_selected ?
+        :legacy_diatomic_source :
+        recipe.route_family == :white_lindsey_low_order ?
+        :non_diatomic_low_order_shellization :
+        :not_applicable
+    materialization_required =
+        atom_growth_selected || legacy_source_selected
+    materialization_status =
+        atom_growth_selected ?
+        :deferred_atom_growth_complete_rectangular_materialization :
+        legacy_source_selected ?
+        :deferred_legacy_diatomic_source_materialization :
+        policy.low_order_shellization_policy_status
+
+    return (;
+        object_kind = :cartesian_shell_stage_low_order_shellization_summary,
+        route_family = recipe.route_family,
+        status =
+            policy.low_order_shellization_policy_status ==
+            :available_low_order_shellization_policy ?
+            :available_shell_stage_low_order_shellization_summary :
+            policy.low_order_shellization_policy_status,
+        policy...,
+        shellization_source,
+        shellization_kind,
+        atom_growth_selected,
+        legacy_source_selected,
+        atom_growth_plan_summary_available = atom_growth_selected,
+        atom_growth_plan_available = false,
+        atom_growth_scaffold_available = false,
+        atom_growth_plan_authority = atom_growth_selected,
+        active_source_authority = legacy_source_selected,
+        legacy_source_authority = legacy_source_selected,
+        coverage_status = :not_checked_shell_stage_summary_only,
+        coverage_complete = nothing,
+        materialization_required,
+        materialization_available = false,
+        materialization_status,
+        materialization_stage = :deferred_to_route_materialization,
+        system_classification = parent.system_classification,
+        system_classification_status = parent.system_classification_status,
+        bond_axis = parent.bond_axis,
+        private_development_only = true,
+        full_plan_stored = false,
+        scaffold_stored = false,
+        summary_only = true,
+    )
+end
+
+function cartesian_shells(
+    parent,
+    spacing_inputs,
+    recipe;
+    low_order_shellization_policy = nothing,
+    probe_route_configured_diatomic_atom_growth_materializer::Bool = false,
+)
     route_skeleton =
         _pqs_source_box_route_driver_route_skeleton(
             parent.route_axis_counts, spacing_inputs, recipe)
+    low_order_shellization =
+        _pqs_source_box_route_driver_shell_stage_low_order_shellization(
+            parent,
+            recipe;
+            low_order_shellization_policy,
+            probe_route_configured_diatomic_atom_growth_materializer,
+        )
 
     return (;
         object_kind = :cartesian_shells,
         status = route_skeleton.status,
         spacing_inputs,
         route_skeleton,
+        low_order_shellization,
+        low_order_shellization_policy_resolved =
+            low_order_shellization.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_status =
+            low_order_shellization.low_order_shellization_policy_status,
+        shellization_source = low_order_shellization.shellization_source,
+        shellization_kind = low_order_shellization.shellization_kind,
+        atom_growth_plan_summary_available =
+            low_order_shellization.atom_growth_plan_summary_available,
+        atom_growth_plan_authority =
+            low_order_shellization.atom_growth_plan_authority,
+        active_source_authority = low_order_shellization.active_source_authority,
         route_shape = route_skeleton.route_shape,
         source_boxes = route_skeleton.source_boxes,
         shellization_stage = :represented_by_route_skeleton,
