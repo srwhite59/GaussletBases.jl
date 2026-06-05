@@ -135,6 +135,13 @@ end
           :not_selected_legacy_source_pairs
     @test default_summary.route_core_pair_operator_blocker ==
           :not_selected_legacy_source_pairs
+    @test default_summary.route_core_pair_operator_preflight_available
+    @test default_summary.route_core_pair_operator_preflight_status ==
+          :blocked_route_core_pair_operator_preflight
+    @test default_summary.route_core_pair_operator_preflight_blocker ==
+          :not_selected_legacy_source_pairs
+    @test default_summary.route_core_pair_operator_preflight.operator_blocks_materialized ==
+          false
     @test default_summary.pair_stage_fields_preserved
     @test default_pairs.pair_entries === default_stages.units.route_skeleton.pair_entries
     @test default_pairs.pair_family_counts ===
@@ -210,10 +217,24 @@ end
               :crc_pair_order_matches_staged,
               :crc_pair_family_metadata_available,
           )
+    @test atom_growth_summary.route_core_pair_operator_preflight_available
+    @test atom_growth_summary.route_core_pair_operator_preflight_status ==
+          :ready_route_core_pair_operator_preflight
+    @test isnothing(atom_growth_summary.route_core_pair_operator_preflight_blocker)
+    atom_growth_preflight =
+        atom_growth_summary.route_core_pair_operator_preflight
+    @test atom_growth_preflight.route_core_final_unit_count == 8
+    @test atom_growth_preflight.route_core_pair_count == 36
+    @test atom_growth_preflight.route_core_pair_order_matches_staged
+    @test !atom_growth_preflight.operator_blocks_materialized
+    @test !atom_growth_preflight.pair_operator_blocks_materialized
+    @test !atom_growth_preflight.source_operator_blocks_materialized
     @test atom_growth_pairs.route_core_pair_inventory_available
     @test atom_growth_pairs.route_core_pair_inventory ===
           atom_growth_summary.route_core_pair_inventory
     @test atom_growth_pairs.route_core_pair_operator_ready
+    @test atom_growth_pairs.route_core_pair_operator_preflight ===
+          atom_growth_preflight
     pair_inventory = atom_growth_summary.pair_inventory
     unit_inventory = atom_growth_stages.units.plan_unit_inventory
     @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory
@@ -401,4 +422,10 @@ end
           :blocked_missing_route_core_sidecar_inventory
     @test missing_crc_summary.route_core_pair_operator_blocker ==
           :missing_route_core_sidecar_inventory
+    @test missing_crc_summary.route_core_pair_operator_preflight_available
+    @test missing_crc_summary.route_core_pair_operator_preflight_status ==
+          :blocked_route_core_pair_operator_preflight
+    @test missing_crc_summary.route_core_pair_operator_preflight_blocker ==
+          :missing_route_core_sidecar_inventory
+    @test !missing_crc_summary.route_core_pair_operator_preflight.operator_blocks_materialized
 end
