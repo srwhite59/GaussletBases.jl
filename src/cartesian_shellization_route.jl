@@ -798,7 +798,8 @@ function _cartesian_shellization_route_materialize_one_center_low_order(
         backend = gausslet_backend,
         refinement_levels = refinement_levels,
     )
-    shellification_plan = _cartesian_shellification_plan_one_center_low_order(
+    shellification_plan = _cartesian_shellification_plan(
+        :one_center_full_parent_low_order,
         parent_side_count;
         nside,
         route_family = config.route_family,
@@ -993,11 +994,11 @@ function _cartesian_shellization_route_materialize_bond_aligned_diatomic(
         source_kind = :route_configured_bond_aligned_diatomic_source,
         shellization_role = :route_configured_bond_aligned_diatomic_shellization,
     )
-    shellification_plan =
-        _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
-            source;
-            route_family = config.route_family,
-        )
+    shellification_plan = _cartesian_shellification_plan(
+        :bond_aligned_diatomic_active_source_low_order,
+        source;
+        route_family = config.route_family,
+    )
     shellification_plan_summary =
         _cartesian_shellification_plan_private_summary(shellification_plan)
 

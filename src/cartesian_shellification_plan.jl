@@ -572,6 +572,36 @@ function _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
     )
 end
 
+function _cartesian_shellification_plan(
+    plan_kind::Symbol,
+    parent_side_count::Int;
+    nside::Int,
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    plan_kind == :one_center_full_parent_low_order || throw(
+        ArgumentError("unsupported one-center shellification plan kind: $(plan_kind)"),
+    )
+    return _cartesian_shellification_plan_one_center_low_order(
+        parent_side_count;
+        nside,
+        route_family,
+    )
+end
+
+function _cartesian_shellification_plan(
+    plan_kind::Symbol,
+    source::_CartesianNestedBondAlignedDiatomicSource3D;
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    plan_kind == :bond_aligned_diatomic_active_source_low_order || throw(
+        ArgumentError("unsupported source-backed diatomic shellification plan kind: $(plan_kind)"),
+    )
+    return _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
+        source;
+        route_family,
+    )
+end
+
 function _cartesian_materialize_shellification_low_order(
     plan,
     bundle::_MappedOrdinaryGausslet1DBundle;

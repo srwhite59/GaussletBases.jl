@@ -19,7 +19,12 @@ function _one_center_shellification_plan_fixture(; count::Int = 9, nside::Int = 
         expansion,
         nside,
     )
-    plan = GaussletBases._cartesian_shellification_plan_one_center_low_order(
+    specific_plan = GaussletBases._cartesian_shellification_plan_one_center_low_order(
+        count;
+        nside,
+    )
+    plan = GaussletBases._cartesian_shellification_plan(
+        :one_center_full_parent_low_order,
         count;
         nside,
     )
@@ -32,7 +37,18 @@ function _one_center_shellification_plan_fixture(; count::Int = 9, nside::Int = 
         parent_side_count = count,
         nside,
     )
-    return (; count, nside, basis, bundle, expansion, sequence, plan, audit, diagnostics)
+    return (;
+        count,
+        nside,
+        basis,
+        bundle,
+        expansion,
+        sequence,
+        specific_plan,
+        plan,
+        audit,
+        diagnostics,
+    )
 end
 
 function _bond_aligned_diatomic_shellification_plan_fixture(;
@@ -60,11 +76,16 @@ function _bond_aligned_diatomic_shellification_plan_fixture(;
         shared_shell_endcap_panel_q = 4,
         shared_shell_endcap_panel_L = 4,
     )
-    plan = GaussletBases._cartesian_shellification_plan_bond_aligned_diatomic_low_order(
+    specific_plan =
+        GaussletBases._cartesian_shellification_plan_bond_aligned_diatomic_low_order(
+            source,
+        )
+    plan = GaussletBases._cartesian_shellification_plan(
+        :bond_aligned_diatomic_active_source_low_order,
         source,
     )
     audit = GaussletBases._nested_source_contract_audit(source)
-    return (; nside, basis, bundles, expansion, source, plan, audit)
+    return (; nside, basis, bundles, expansion, source, specific_plan, plan, audit)
 end
 
 @testset "one-center low-order shellification plan matches legacy sequence" begin
@@ -72,10 +93,12 @@ end
     count = fixture.count
     nside = fixture.nside
     sequence = fixture.sequence
+    specific_plan = fixture.specific_plan
     plan = fixture.plan
     audit = fixture.audit
     diagnostics = fixture.diagnostics
 
+    @test plan == specific_plan
     @test plan.object_kind == :cartesian_shellification_plan3d
     @test plan.status == :planned_metadata_only
     @test plan.private_development_only
@@ -276,10 +299,12 @@ end
     nside = fixture.nside
     source = fixture.source
     sequence = source.sequence
+    specific_plan = fixture.specific_plan
     plan = fixture.plan
     audit = fixture.audit
     geometry = source.geometry
 
+    @test plan == specific_plan
     @test plan.object_kind == :cartesian_shellification_plan3d
     @test plan.status == :planned_metadata_only
     @test plan.private_development_only
