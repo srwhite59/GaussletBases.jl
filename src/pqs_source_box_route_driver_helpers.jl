@@ -2103,6 +2103,238 @@ function _pqs_source_box_route_driver_diatomic_materializer_probe(
     end
 end
 
+function _pqs_source_box_route_driver_materializer_payload_property(
+    payload,
+    field::Symbol,
+)
+    return !isnothing(payload) && hasproperty(payload, field) ?
+           getproperty(payload, field) :
+           nothing
+end
+
+function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
+    config;
+    probe_route_configured_diatomic_atom_growth_materializer::Bool = false,
+    route_materializer_payload = nothing,
+    white_lindsey_expansion = nothing,
+    packet_kernel = nothing,
+)
+    parent_qw_basis_object =
+        _pqs_source_box_route_driver_materializer_payload_property(
+            route_materializer_payload,
+            :parent_qw_basis_object,
+        )
+    parent_axis_bundle_object =
+        _pqs_source_box_route_driver_materializer_payload_property(
+            route_materializer_payload,
+            :parent_axis_bundle_object,
+        )
+    axis_bundle_backend =
+        _pqs_source_box_route_driver_materializer_payload_property(
+            route_materializer_payload,
+            :axis_bundle_backend,
+        )
+    parent_qw_basis_object_handoff_available = !isnothing(parent_qw_basis_object)
+    parent_axis_bundle_object_handoff_available =
+        !isnothing(parent_axis_bundle_object)
+    axis_bundle_backend_handoff_available = !isnothing(axis_bundle_backend)
+
+    blocked_probe(status, blocker; missing_contract = (), error_message = nothing) =
+        (;
+            object_kind =
+                :route_configured_diatomic_atom_growth_materializer_probe,
+            requested = probe_route_configured_diatomic_atom_growth_materializer,
+            status,
+            materialized = false,
+            atom_growth_shellification_consumed = false,
+            route_configured_shellization_consumed = false,
+            blocker,
+            missing_contract = Tuple(missing_contract),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
+            axis_bundle_backend_handoff = axis_bundle_backend,
+            materializer_options = nothing,
+            construction_plan = nothing,
+            scaffold = nothing,
+            materialization = nothing,
+            sequence_available = false,
+            retained_dimension = nothing,
+            support_count = nothing,
+            coverage_audit = nothing,
+            coverage_complete = false,
+            atom_growth_construction_plan_authority = false,
+            active_source_authority = false,
+            active_source_oracle_comparison_run = false,
+            route_behavior_changed = false,
+            shellification_plan_path_used = false,
+            calls_shellification_plan_materializer = false,
+            ham_adapter_status = :not_requested,
+            ham_adapter_blocker = nothing,
+            error_message,
+        )
+
+    if !probe_route_configured_diatomic_atom_growth_materializer
+        return blocked_probe(:not_requested, nothing)
+    elseif config.system_classification != :bond_aligned_diatomic
+        return blocked_probe(
+            :blocked_not_bond_aligned_diatomic,
+            :route_config_not_bond_aligned_diatomic,
+        )
+    elseif config.route_family != :white_lindsey_low_order
+        return blocked_probe(
+            :blocked_not_white_lindsey_low_order,
+            :route_config_not_white_lindsey_low_order,
+        )
+    end
+
+    missing_contract = Symbol[]
+    !config.materializer_options_ready &&
+        append!(missing_contract, config.missing_materializer_options)
+    isnothing(parent_qw_basis_object) &&
+        push!(missing_contract, :parent_qw_basis_object_handoff)
+    isnothing(parent_axis_bundle_object) &&
+        push!(missing_contract, :parent_axis_bundle_object_handoff)
+    isnothing(axis_bundle_backend) &&
+        push!(missing_contract, :axis_bundle_backend_provenance)
+    if !isnothing(axis_bundle_backend) &&
+       axis_bundle_backend != config.materializer_backend_requested
+        push!(missing_contract, :axis_bundle_backend_mismatches_materializer_backend)
+    end
+    missing_contract = Tuple(unique(missing_contract))
+    if !isempty(missing_contract)
+        return blocked_probe(
+            :blocked_missing_atom_growth_materializer_contract,
+            :pending_route_configured_bond_aligned_diatomic_atom_growth_materializer_contract;
+            missing_contract,
+        )
+    end
+
+    expansion =
+        isnothing(white_lindsey_expansion) ?
+        coulomb_gaussian_expansion(doacc = false) :
+        white_lindsey_expansion
+    consumed_packet_kernel = isnothing(packet_kernel) ? :factorized_direct : packet_kernel
+    materializer_options = (;
+        nside = config.materializer_nside_requested,
+        d = config.materializer_d_requested,
+        reference_spacing = config.materializer_reference_spacing_requested,
+        tail_spacing = config.materializer_tail_spacing_requested,
+        gausslet_backend = config.materializer_backend_requested,
+        axis_bundle_backend,
+        packet_kernel = consumed_packet_kernel,
+        term_coefficients_source = :coulomb_expansion_coefficients,
+        plan_authority = :atom_growth,
+    )
+
+    try
+        nside = config.materializer_nside_requested
+        anatomy = _nested_bond_aligned_diatomic_atom_growth_anatomy(
+            parent_qw_basis_object,
+            parent_axis_bundle_object;
+            bond_axis = config.bond_axis,
+            protected_atom_side_count = nside,
+        )
+        construction_plan =
+            _nested_bond_aligned_diatomic_atom_growth_construction_plan(anatomy)
+        retention = _nested_resolve_complete_shell_retention(nside)
+        protect_rows =
+            _nested_diatomic_resolve_core_near_nucleus_protect_rows(:auto, nside)
+        scaffold =
+            _cartesian_shellification_plan_atom_growth_complete_rectangular_low_order(
+                construction_plan,
+                parent_axis_bundle_object;
+                nside,
+                child_retention_policy = retention,
+                shared_retention_policy = retention,
+                reference_fudge_factor = 1.2,
+                core_near_nucleus_protect_rows = protect_rows,
+                shared_shell_angular_resolution_scale = 1.4,
+                route_family = config.route_family,
+            )
+        materialization =
+            _cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
+                scaffold,
+                parent_qw_basis_object,
+                parent_axis_bundle_object;
+                term_coefficients = Float64.(expansion.coefficients),
+                packet_kernel = consumed_packet_kernel,
+            )
+        sequence = materialization.sequence
+        sequence_available = !isnothing(sequence)
+        coverage_audit =
+            sequence_available ?
+            _nested_shell_sequence_contract_audit(
+                sequence,
+                Tuple(length.(construction_plan.anatomy.recipe.parent_box)),
+            ) :
+            nothing
+        retained_dimension =
+            sequence_available ? size(sequence.coefficient_matrix, 2) : nothing
+        support_count =
+            sequence_available ? length(sequence.support_indices) : nothing
+        coverage_complete =
+            !isnothing(coverage_audit) &&
+            coverage_audit.full_parent_working_box &&
+            coverage_audit.missing_row_count == 0 &&
+            coverage_audit.ownership_unowned_row_count == 0 &&
+            coverage_audit.ownership_multi_owned_row_count == 0
+        materialized =
+            materialization.status ==
+            :materialized_supported_complete_rectangular_low_order
+        return (;
+            object_kind =
+                :route_configured_diatomic_atom_growth_materializer_probe,
+            requested = true,
+            status =
+                materialized ?
+                :materialized_route_configured_bond_aligned_diatomic_atom_growth_shellization :
+                materialization.status,
+            materialized,
+            atom_growth_shellification_consumed = materialized,
+            route_configured_shellization_consumed = false,
+            blocker = materialized ? nothing : materialization.blocked_reason,
+            missing_contract = (),
+            parent_qw_basis_object_handoff_available,
+            parent_axis_bundle_object_handoff_available,
+            axis_bundle_backend_handoff_available,
+            axis_bundle_backend_handoff = axis_bundle_backend,
+            materializer_options,
+            construction_plan,
+            scaffold,
+            materialization,
+            sequence_available,
+            retained_dimension,
+            support_count,
+            coverage_audit,
+            coverage_complete,
+            atom_growth_construction_plan_authority =
+                scaffold.diagnostics.atom_growth_construction_plan_authority,
+            active_source_authority =
+                scaffold.diagnostics.active_source_authority ||
+                materialization.active_source_authority,
+            active_source_oracle_comparison_run =
+                scaffold.diagnostics.active_source_oracle_comparison_run,
+            route_behavior_changed =
+                scaffold.diagnostics.materialization_behavior_changed ||
+                materialization.route_behavior_changed,
+            shellification_plan_path_used = true,
+            calls_shellification_plan_materializer = true,
+            ham_adapter_status =
+                :blocked_atom_growth_report_adapter_not_implemented,
+            ham_adapter_blocker = :atom_growth_report_adapter_not_implemented,
+            error_message = nothing,
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        return blocked_probe(
+            :blocked_atom_growth_materializer_precondition,
+            :atom_growth_materializer_precondition_failed;
+            error_message = sprint(showerror, error),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_route_configured_one_center_report(
     materialization,
 )
@@ -2527,6 +2759,7 @@ function _pqs_source_box_route_driver_materialization(
     report;
     materialize_route::Bool = false,
     probe_route_configured_one_center_materializer::Bool = false,
+    probe_route_configured_diatomic_atom_growth_materializer::Bool = false,
     save_basis_artifact::Bool = false,
     save_ham_artifact::Bool = false,
     basisfile::AbstractString = "cartesian_nesting_route_driver_basis_bundle.jld2",
@@ -2681,6 +2914,44 @@ function _pqs_source_box_route_driver_materialization(
     route_configured_diatomic_seed_fallback =
         route_configured_diatomic_materializer_probe_requested &&
         !route_configured_diatomic_materializer_probe_consumed
+    route_configured_diatomic_atom_growth_materializer_probe =
+        _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
+            route_configured_materializer_config;
+            probe_route_configured_diatomic_atom_growth_materializer,
+            route_materializer_payload,
+            white_lindsey_expansion,
+            packet_kernel = route_configured_diatomic_packet_kernel,
+        )
+    route_configured_diatomic_atom_growth_materializer_probe_requested =
+        route_configured_diatomic_atom_growth_materializer_probe.requested
+    route_configured_diatomic_atom_growth_materializer_probe_status =
+        route_configured_diatomic_atom_growth_materializer_probe.status
+    route_configured_diatomic_atom_growth_materializer_probe_materialized =
+        route_configured_diatomic_atom_growth_materializer_probe.materialized
+    route_configured_diatomic_atom_growth_materializer_probe_consumed =
+        route_configured_diatomic_atom_growth_materializer_probe.atom_growth_shellification_consumed
+    route_configured_diatomic_atom_growth_materializer_probe_blocker =
+        route_configured_diatomic_atom_growth_materializer_probe.blocker
+    route_configured_diatomic_atom_growth_materializer_missing_contract =
+        route_configured_diatomic_atom_growth_materializer_probe.missing_contract
+    route_configured_diatomic_atom_growth_sequence_available =
+        route_configured_diatomic_atom_growth_materializer_probe.sequence_available
+    route_configured_diatomic_atom_growth_retained_dimension =
+        route_configured_diatomic_atom_growth_materializer_probe.retained_dimension
+    route_configured_diatomic_atom_growth_support_count =
+        route_configured_diatomic_atom_growth_materializer_probe.support_count
+    route_configured_diatomic_atom_growth_coverage_complete =
+        route_configured_diatomic_atom_growth_materializer_probe.coverage_complete
+    route_configured_diatomic_atom_growth_active_source_authority =
+        route_configured_diatomic_atom_growth_materializer_probe.active_source_authority
+    route_configured_diatomic_atom_growth_plan_authority =
+        route_configured_diatomic_atom_growth_materializer_probe.atom_growth_construction_plan_authority
+    route_configured_diatomic_atom_growth_calls_shellification_plan_materializer =
+        route_configured_diatomic_atom_growth_materializer_probe.calls_shellification_plan_materializer
+    route_configured_diatomic_atom_growth_ham_adapter_status =
+        route_configured_diatomic_atom_growth_materializer_probe.ham_adapter_status
+    route_configured_diatomic_atom_growth_ham_adapter_blocker =
+        route_configured_diatomic_atom_growth_materializer_probe.ham_adapter_blocker
     route_configured_materializer_backend_requested =
         route_configured_materializer_config.materializer_backend_requested
     route_configured_materializer_backend_source =
@@ -2786,6 +3057,23 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_policy_source,
         route_configured_diatomic_seed_fallback,
     )
+    route_configured_diatomic_atom_growth_materializer_contract = (;
+        route_configured_diatomic_atom_growth_materializer_probe_requested,
+        route_configured_diatomic_atom_growth_materializer_probe_status,
+        route_configured_diatomic_atom_growth_materializer_probe_materialized,
+        route_configured_diatomic_atom_growth_materializer_probe_consumed,
+        route_configured_diatomic_atom_growth_materializer_probe_blocker,
+        route_configured_diatomic_atom_growth_materializer_missing_contract,
+        route_configured_diatomic_atom_growth_sequence_available,
+        route_configured_diatomic_atom_growth_retained_dimension,
+        route_configured_diatomic_atom_growth_support_count,
+        route_configured_diatomic_atom_growth_coverage_complete,
+        route_configured_diatomic_atom_growth_active_source_authority,
+        route_configured_diatomic_atom_growth_plan_authority,
+        route_configured_diatomic_atom_growth_calls_shellification_plan_materializer,
+        route_configured_diatomic_atom_growth_ham_adapter_status,
+        route_configured_diatomic_atom_growth_ham_adapter_blocker,
+    )
 
     if !materialize_route
         return (;
@@ -2837,7 +3125,9 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_diatomic_atom_growth_materializer_probe,
             route_configured_diatomic_materializer_contract...,
+            route_configured_diatomic_atom_growth_materializer_contract...,
             route_configured_materializer_contract...,
             shellization_summary = nothing,
             shellization_summary_available = false,
@@ -3038,6 +3328,7 @@ function _pqs_source_box_route_driver_materialization(
                         route_configured_one_center_materializer_probe_consumed,
                         route_configured_one_center_materializer_probe_blocker,
                         route_configured_diatomic_materializer_contract...,
+                        route_configured_diatomic_atom_growth_materializer_contract...,
                         route_configured_materializer_contract...,
                         route_configured_diatomic_basis_adapter_status =
                             diatomic_basis_adapter.status,
@@ -3117,6 +3408,7 @@ function _pqs_source_box_route_driver_materialization(
                         route_configured_one_center_materializer_probe_consumed,
                         route_configured_one_center_materializer_probe_blocker,
                         route_configured_diatomic_materializer_contract...,
+                        route_configured_diatomic_atom_growth_materializer_contract...,
                         route_configured_materializer_contract...,
                         route_configured_diatomic_basis_adapter_status =
                             diatomic_basis_adapter.status,
@@ -3214,7 +3506,9 @@ function _pqs_source_box_route_driver_materialization(
                 route_configured_one_center_materializer_probe_materialized,
                 route_configured_one_center_materializer_probe_consumed,
                 route_configured_one_center_materializer_probe_blocker,
+                route_configured_diatomic_atom_growth_materializer_probe,
                 route_configured_diatomic_materializer_contract...,
+                route_configured_diatomic_atom_growth_materializer_contract...,
                 route_configured_materializer_contract...,
                 route_configured_diatomic_basis_adapter_summary =
                     diatomic_basis_adapter_summary,
@@ -3367,6 +3661,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
                     route_configured_diatomic_materializer_contract...,
+                    route_configured_diatomic_atom_growth_materializer_contract...,
                     route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
@@ -3426,6 +3721,7 @@ function _pqs_source_box_route_driver_materialization(
                     route_configured_one_center_materializer_probe_consumed,
                     route_configured_one_center_materializer_probe_blocker,
                     route_configured_diatomic_materializer_contract...,
+                    route_configured_diatomic_atom_growth_materializer_contract...,
                     route_configured_materializer_contract...,
                     shellization_summary_available,
                     shellization_source,
@@ -3505,7 +3801,9 @@ function _pqs_source_box_route_driver_materialization(
             route_configured_one_center_materializer_probe_materialized,
             route_configured_one_center_materializer_probe_consumed,
             route_configured_one_center_materializer_probe_blocker,
+            route_configured_diatomic_atom_growth_materializer_probe,
             route_configured_diatomic_materializer_contract...,
+            route_configured_diatomic_atom_growth_materializer_contract...,
             route_configured_materializer_contract...,
             shellization_summary,
             shellization_summary_available,
@@ -3591,7 +3889,9 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe_materialized,
         route_configured_one_center_materializer_probe_consumed,
         route_configured_one_center_materializer_probe_blocker,
+        route_configured_diatomic_atom_growth_materializer_probe,
         route_configured_diatomic_materializer_contract...,
+        route_configured_diatomic_atom_growth_materializer_contract...,
         route_configured_materializer_contract...,
         shellization_summary = nothing,
         shellization_summary_available = false,

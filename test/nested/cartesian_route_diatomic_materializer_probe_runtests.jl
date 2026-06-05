@@ -286,3 +286,108 @@ end
           :available_route_configured_diatomic_ham_bundle_payload
     @test materialization.ham_export_blocker === nothing
 end
+
+@testset "route-configured diatomic atom-growth materializer probe is opt-in" begin
+    expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
+    report = _cartesian_route_diatomic_white_lindsey_report_for_test()
+
+    default_materialization =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            report;
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            white_lindsey_expansion = expansion,
+        )
+
+    @test default_materialization.status ==
+          :materialized_route_configured_diatomic_shellization_available
+    @test default_materialization.shellization_source ==
+          :route_configured_bond_aligned_diatomic_source
+    @test default_materialization.route_configured_shellization_consumed
+    @test default_materialization.route_configured_diatomic_materializer_probe_consumed
+    @test !default_materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
+    @test default_materialization.route_configured_diatomic_atom_growth_materializer_probe_status ==
+          :not_requested
+    @test !default_materialization.route_configured_diatomic_atom_growth_materializer_probe_materialized
+    @test !default_materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+    @test !default_materialization.route_configured_diatomic_atom_growth_calls_shellification_plan_materializer
+
+    opt_in_materialization =
+        GaussletBases._pqs_source_box_route_driver_materialization(
+            report;
+            materialize_route = true,
+            save_basis_artifact = false,
+            save_ham_artifact = false,
+            white_lindsey_expansion = expansion,
+            probe_route_configured_diatomic_atom_growth_materializer = true,
+        )
+    probe =
+        opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe
+
+    @test opt_in_materialization.status ==
+          :materialized_route_configured_diatomic_shellization_available
+    @test opt_in_materialization.shellization_source ==
+          :route_configured_bond_aligned_diatomic_source
+    @test opt_in_materialization.route_configured_shellization_consumed
+    @test opt_in_materialization.route_configured_diatomic_materializer_probe_consumed
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_status ==
+          :materialized_route_configured_bond_aligned_diatomic_atom_growth_shellization
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_materialized
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_materializer_probe_blocker ===
+          nothing
+    @test isempty(
+        opt_in_materialization.route_configured_diatomic_atom_growth_materializer_missing_contract,
+    )
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_sequence_available
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_retained_dimension ==
+          probe.retained_dimension
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_support_count ==
+          probe.support_count
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_coverage_complete
+    @test !opt_in_materialization.route_configured_diatomic_atom_growth_active_source_authority
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_plan_authority
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_calls_shellification_plan_materializer
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_status ==
+          :blocked_atom_growth_report_adapter_not_implemented
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_blocker ==
+          :atom_growth_report_adapter_not_implemented
+
+    @test probe.requested
+    @test probe.materialized
+    @test probe.atom_growth_shellification_consumed
+    @test !probe.route_configured_shellization_consumed
+    @test probe.sequence_available
+    @test probe.retained_dimension > 0
+    @test probe.support_count > 0
+    @test probe.retained_dimension ==
+          size(probe.materialization.sequence.coefficient_matrix, 2)
+    @test probe.support_count ==
+          length(probe.materialization.sequence.support_indices)
+    @test probe.coverage_complete
+    @test probe.coverage_audit.full_parent_working_box
+    @test probe.coverage_audit.missing_row_count == 0
+    @test probe.coverage_audit.ownership_unowned_row_count == 0
+    @test probe.coverage_audit.ownership_multi_owned_row_count == 0
+    @test probe.scaffold.source_kind ==
+          :bond_aligned_diatomic_atom_growth_construction_plan
+    @test probe.scaffold.diagnostics.atom_growth_construction_plan_authority
+    @test !probe.scaffold.diagnostics.active_source_authority
+    @test !probe.scaffold.diagnostics.active_source_oracle_comparison_run
+    @test !probe.active_source_authority
+    @test !probe.active_source_oracle_comparison_run
+    @test !probe.route_behavior_changed
+    @test probe.shellification_plan_path_used
+    @test probe.calls_shellification_plan_materializer
+    @test probe.materialization.status ==
+          :materialized_supported_complete_rectangular_low_order
+    @test probe.materialization.assembly.status ==
+          :materialized_atom_growth_complete_rectangular_low_order
+    @test probe.ham_adapter_status ==
+          :blocked_atom_growth_report_adapter_not_implemented
+    @test probe.ham_adapter_blocker == :atom_growth_report_adapter_not_implemented
+    @test opt_in_materialization.ham_bundle_export_status == :not_requested
+    @test opt_in_materialization.ham_artifact_status == :not_requested
+end
