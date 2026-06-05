@@ -70,6 +70,7 @@ function _cartesian_shellification_materialization_dependency_counts(regions)
     plan_lowerable_dependencies = (
         :plan_lowerable_complete_shell,
         :plan_lowerable_direct_core,
+        :plan_lowerable_direct_slab,
     )
     source_backed_dependencies = (
         :source_backed_shared_shell_layer,
@@ -98,6 +99,10 @@ function _cartesian_shellification_materialization_dependency_counts(regions)
         ),
         plan_lowerable_direct_core_count = count(
             region -> region.materialization_dependency == :plan_lowerable_direct_core,
+            regions,
+        ),
+        plan_lowerable_direct_slab_count = count(
+            region -> region.materialization_dependency == :plan_lowerable_direct_slab,
             regions,
         ),
         source_backed_shared_shell_layer_count = count(
@@ -311,6 +316,50 @@ function _cartesian_shellification_midpoint_slab_region3d(
         source_point_count = source_point_count,
         support_count = source_point_count,
         column_range = column_range,
+    )
+end
+
+function _cartesian_shellification_plan_direct_midpoint_slab_region3d(
+    bundles::_CartesianNestedAxisBundles3D,
+    box::NTuple{3,UnitRange{Int}};
+    order_index::Int,
+    bond_axis::Symbol,
+    split_index::Union{Nothing,Int} = nothing,
+    column_range = nothing,
+)
+    bond_axis in (:x, :y, :z) || throw(
+        ArgumentError("direct midpoint slab region requires bond_axis = :x, :y, or :z"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    support_indices = _nested_box_support_indices(box..., dims)
+    source_point_count = _cartesian_shellification_box_point_count(box)
+    return (;
+        object_kind = :cartesian_atom_outward_direct_midpoint_slab_region3d,
+        role = :midpoint_slab,
+        order = order_index,
+        order_index,
+        box,
+        outer_box = box,
+        inner_exclusion_box = nothing,
+        box_shape = Tuple(length.(box)),
+        region_kind = :direct_contact_or_midpoint_slab,
+        lowering_family = :direct_midpoint_slab,
+        materialization_dependency = :plan_lowerable_direct_slab,
+        source_point_count = source_point_count,
+        support_indices = Int.(support_indices),
+        support_count = length(support_indices),
+        retained_count = source_point_count,
+        column_range,
+        provenance = (;
+            source = :atom_outward_direct_midpoint_slab_region,
+            box_source = :geometry_input,
+            column_range_source = isnothing(column_range) ? nothing : :oracle_only_column_range,
+            split_index,
+            bond_axis,
+        ),
+        source_backed = false,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
     )
 end
 
@@ -959,10 +1008,18 @@ function _cartesian_materialize_direct_box_region(
             throw(ArgumentError("direct-core region must use :direct_product_core lowering"))
         end
     elseif region.role == :midpoint_slab
-        if region.materialization_dependency !=
+        if region.materialization_dependency ==
            :source_box_direct_in_source_backed_adapter
+            nothing
+        elseif region.materialization_dependency == :plan_lowerable_direct_slab
+            if hasproperty(region, :source_backed) && region.source_backed
+                throw(
+                    ArgumentError("plan-lowerable midpoint-slab region must not be source-backed"),
+                )
+            end
+        else
             throw(
-                ArgumentError("midpoint-slab region must be source-box direct inside the source-backed adapter"),
+                ArgumentError("midpoint-slab region must be source-backed direct or plan-lowerable direct"),
             )
         end
         if region.lowering_family != :direct_midpoint_slab

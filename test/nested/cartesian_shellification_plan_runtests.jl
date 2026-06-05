@@ -444,6 +444,76 @@ end
     end
 end
 
+@testset "atom-outward direct midpoint slab region lowers to oracle slab block" begin
+    fixture = _bond_aligned_diatomic_shellification_plan_fixture(
+        xmax_parallel = 12.0,
+        xmax_transverse = 8.0,
+        min_unsplit_parallel_to_transverse_ratio_for_split = 1.0,
+    )
+    source = fixture.source
+    @test source.geometry.did_split
+    @test !isnothing(source.geometry.shared_midpoint_box)
+    @test !isnothing(source.midpoint_slab_column_range)
+
+    midpoint_box = source.geometry.shared_midpoint_box
+    region = GaussletBases._cartesian_shellification_plan_direct_midpoint_slab_region3d(
+        fixture.bundles,
+        midpoint_box;
+        order_index = 2,
+        bond_axis = source.geometry.bond_axis,
+        split_index = source.geometry.split_index,
+        column_range = source.midpoint_slab_column_range,
+    )
+
+    @test region.object_kind == :cartesian_atom_outward_direct_midpoint_slab_region3d
+    @test region.role == :midpoint_slab
+    @test region.order == 2
+    @test region.order_index == 2
+    @test region.box == midpoint_box
+    @test region.outer_box == midpoint_box
+    @test region.box_shape == Tuple(length.(midpoint_box))
+    @test region.region_kind == :direct_contact_or_midpoint_slab
+    @test region.lowering_family == :direct_midpoint_slab
+    @test region.materialization_dependency == :plan_lowerable_direct_slab
+    @test !region.source_backed
+    @test region.missing_independent_lowering_reason === nothing
+    @test region.retirement_target == :already_plan_lowered_region
+    @test region.provenance.source == :atom_outward_direct_midpoint_slab_region
+    @test region.provenance.box_source == :geometry_input
+    @test region.provenance.column_range_source == :oracle_only_column_range
+    @test region.provenance.split_index == source.geometry.split_index
+    @test region.provenance.bond_axis == source.geometry.bond_axis
+    @test region.column_range == source.midpoint_slab_column_range
+    @test region.source_point_count ==
+          GaussletBases._cartesian_shellification_box_point_count(midpoint_box)
+    @test region.support_count == length(region.support_indices)
+    @test region.retained_count == region.source_point_count
+    @test region.retained_count == length(source.midpoint_slab_column_range)
+
+    slab_data = GaussletBases._cartesian_materialize_direct_box_region(
+        region,
+        fixture.bundles,
+    )
+    expected = GaussletBases._nested_direct_box_coefficients(
+        fixture.bundles,
+        midpoint_box,
+    )
+    legacy_block =
+        source.sequence.coefficient_matrix[:, source.midpoint_slab_column_range]
+
+    @test slab_data.support_indices == expected.support_indices
+    @test slab_data.support_indices == region.support_indices
+    @test size(slab_data.coefficient_matrix) == size(expected.coefficient_matrix)
+    @test slab_data.coefficient_matrix == expected.coefficient_matrix
+    @test size(slab_data.coefficient_matrix) == size(legacy_block)
+    @test isapprox(
+        slab_data.coefficient_matrix,
+        legacy_block;
+        atol = 1.0e-10,
+        rtol = 1.0e-10,
+    )
+end
+
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin
     fixture = _bond_aligned_diatomic_shellification_plan_fixture()
     nside = fixture.nside
