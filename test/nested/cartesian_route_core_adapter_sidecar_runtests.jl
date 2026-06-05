@@ -183,6 +183,49 @@ end
     @test sidecar_inventory.crc_pair_keys ==
           sidecar_inventory.staged_pair_keys
     @test sidecar_inventory.pair_inventory_order_matches_staged
+    @test sidecar_inventory.crc_pair_operator_plan_inventory_available
+    @test sidecar_inventory.crc_pair_operator_plan_inventory_status ==
+          :blocked_route_core_pair_operator_plan_inventory
+    @test sidecar_inventory.crc_pair_operator_plan_inventory isa
+          CRC.PairOperatorPlanInventory
+    @test sidecar_inventory.crc_pair_operator_plan_count == 36
+    @test CRC.pair_operator_plan_count(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    ) == 36
+    @test sidecar_inventory.crc_pair_operator_plan_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test sidecar_inventory.crc_pair_operator_plan_blocked_count == 15
+    @test !sidecar_inventory.crc_pair_operator_plan_materialized
+    typed_pair_plans = CRC.pair_operator_plans(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    )
+    @test length(typed_pair_plans) == sidecar_inventory.crc_pair_count
+    @test all(plan -> !plan.materialized, typed_pair_plans)
+    @test count(plan -> isnothing(CRC.blocker(plan)), typed_pair_plans) == 21
+    aggregate_pair_plans = Tuple(
+        plan for plan in typed_pair_plans
+        if :left_atom_box in plan.pair.pair_key ||
+           :right_atom_box in plan.pair.pair_key
+    )
+    @test length(aggregate_pair_plans) == 15
+    @test all(
+        plan -> CRC.source_operator_path(plan) ==
+                :aggregate_subtree_adapter_required,
+        aggregate_pair_plans,
+    )
+    @test all(
+        plan -> CRC.blocker(plan) ==
+                :aggregate_subtree_operator_plan_required,
+        aggregate_pair_plans,
+    )
+    @test all(
+        plan -> !(CRC.source_operator_path(plan) in (
+            :pqs_source_cpb_1d_factor_path,
+            :direct_source_cpb_1d_factor_path,
+            :direct_identity_cpb_path,
+        )),
+        aggregate_pair_plans,
+    )
     @test sidecar_inventory.pqs_prototype_sidecar_available
     @test sidecar_inventory.pqs_prototype_sidecar.final_retained_unit isa
           CRC.FinalRetainedUnit

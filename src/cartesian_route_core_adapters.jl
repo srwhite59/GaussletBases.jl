@@ -898,7 +898,54 @@ function _cartesian_route_core_expected_pair_keys(unit_keys)
     )
 end
 
+function _cartesian_route_core_pair_operator_plan_inventory_metadata(
+    crc_pair_inventory,
+)
+    if isnothing(crc_pair_inventory)
+        return (;
+            crc_pair_operator_plan_inventory_available = false,
+            crc_pair_operator_plan_inventory_status =
+                :blocked_missing_route_core_unit_pair_inventory,
+            crc_pair_operator_plan_inventory = nothing,
+            crc_pair_operator_plan_count = 0,
+            crc_pair_operator_plan_blocker =
+                :missing_route_core_unit_pair_inventory,
+            crc_pair_operator_plan_blocked_count = 0,
+            crc_pair_operator_plan_materialized = false,
+        )
+    end
+
+    plan_inventory = CartesianRouteCore.pair_operator_plan_inventory(
+        crc_pair_inventory;
+        metadata = (;
+            source = :cartesian_route_core_sidecar_inventory,
+            status = :metadata_only_adapter_sidecar,
+        ),
+    )
+    plans = CartesianRouteCore.pair_operator_plans(plan_inventory)
+    blocked_count =
+        count(plan -> !isnothing(CartesianRouteCore.blocker(plan)), plans)
+    plan_materialized = any(plan -> plan.materialized, plans)
+
+    return (;
+        crc_pair_operator_plan_inventory_available = true,
+        crc_pair_operator_plan_inventory_status =
+            blocked_count == 0 ?
+            :available_route_core_pair_operator_plan_inventory :
+            :blocked_route_core_pair_operator_plan_inventory,
+        crc_pair_operator_plan_inventory = plan_inventory,
+        crc_pair_operator_plan_count =
+            CartesianRouteCore.pair_operator_plan_count(plan_inventory),
+        crc_pair_operator_plan_blocker =
+            CartesianRouteCore.blocker(plan_inventory),
+        crc_pair_operator_plan_blocked_count = blocked_count,
+        crc_pair_operator_plan_materialized = plan_materialized,
+    )
+end
+
 function _cartesian_route_core_blocked_sidecar_inventory(status, blocker)
+    crc_pair_operator_plan_metadata =
+        _cartesian_route_core_pair_operator_plan_inventory_metadata(nothing)
     return (;
         object_kind = :cartesian_route_core_sidecar_inventory,
         status,
@@ -923,6 +970,7 @@ function _cartesian_route_core_blocked_sidecar_inventory(status, blocker)
         crc_pair_keys = (),
         staged_pair_keys = (),
         pair_inventory_order_matches_staged = false,
+        crc_pair_operator_plan_metadata...,
         pqs_prototype_sidecar_available = false,
         pqs_prototype_sidecar = nothing,
         blocker,
@@ -970,6 +1018,10 @@ function _cartesian_route_core_sidecar_inventory(plan_inventory)
         isnothing(crc_pair_inventory) ?
         () :
         CartesianRouteCore.pair_keys(crc_pair_inventory)
+    crc_pair_operator_plan_metadata =
+        _cartesian_route_core_pair_operator_plan_inventory_metadata(
+            crc_pair_inventory,
+        )
 
     pqs_prototype_sidecar =
         _cartesian_route_core_staged_field(
@@ -1016,6 +1068,7 @@ function _cartesian_route_core_sidecar_inventory(plan_inventory)
         staged_pair_keys,
         pair_inventory_order_matches_staged =
             !isnothing(crc_pair_inventory) && crc_pair_keys == staged_pair_keys,
+        crc_pair_operator_plan_metadata...,
         pqs_prototype_sidecar_available = !isnothing(pqs_prototype_sidecar),
         pqs_prototype_sidecar,
         blocker =
