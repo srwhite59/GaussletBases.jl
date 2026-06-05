@@ -151,6 +151,13 @@ end
     @test !default_summary.hamiltonian_matrices_materialized
     @test !default_summary.operator_matrices_materialized
     @test !default_summary.pair_operator_blocks_materialized
+    @test default_summary.pair_inventory_source ==
+          :route_skeleton_pair_entries_only
+    @test default_summary.pair_inventory_known
+    @test !default_summary.independent_atom_growth_pair_inventory_available
+    @test default_summary.pair_count == length(default_stages.pairs.pair_entries)
+    @test default_summary.pair_family_counts ==
+          default_stages.pairs.pair_family_counts
     @test default_summary.report_stage_fields_preserved
     @test default_report.low_order_shellization_policy_resolved ==
           :legacy_diatomic_source
@@ -172,6 +179,12 @@ end
     @test !default_report.low_order_hamiltonian_matrices_materialized
     @test !default_report.low_order_operator_matrices_materialized
     @test !default_report.low_order_pair_operator_blocks_materialized
+    @test default_report.low_order_pair_inventory_source ==
+          :route_skeleton_pair_entries_only
+    @test default_report.low_order_pair_inventory_known
+    @test !default_report.low_order_independent_atom_growth_pair_inventory_available
+    @test default_report.low_order_pair_count ==
+          length(default_stages.pairs.pair_entries)
     @test hasproperty(default_report, :route_materializer_payload)
     @test hasproperty(default_report, :diagnostics)
     @test default_report.route_skeleton === default_stages.shells.route_skeleton
@@ -220,6 +233,13 @@ end
     @test !atom_growth_summary.hamiltonian_matrices_materialized
     @test !atom_growth_summary.operator_matrices_materialized
     @test !atom_growth_summary.pair_operator_blocks_materialized
+    @test atom_growth_summary.pair_inventory_source ==
+          :atom_growth_unit_inventory
+    @test atom_growth_summary.pair_inventory_known
+    @test atom_growth_summary.independent_atom_growth_pair_inventory_available
+    @test atom_growth_summary.pair_count == 36
+    @test atom_growth_summary.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          36
     @test atom_growth_summary.summary_only
     @test atom_growth_report.low_order_shellization_policy_requested ==
           :atom_growth_complete_rectangular
@@ -248,6 +268,13 @@ end
     @test !atom_growth_report.low_order_hamiltonian_matrices_materialized
     @test !atom_growth_report.low_order_operator_matrices_materialized
     @test !atom_growth_report.low_order_pair_operator_blocks_materialized
+    @test atom_growth_report.low_order_pair_inventory_source ==
+          :atom_growth_unit_inventory
+    @test atom_growth_report.low_order_pair_inventory_known
+    @test atom_growth_report.low_order_independent_atom_growth_pair_inventory_available
+    @test atom_growth_report.low_order_pair_count == 36
+    @test atom_growth_report.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          36
     @test hasproperty(atom_growth_report, :route_materializer_payload)
     @test hasproperty(atom_growth_report, :diagnostics)
     @test atom_growth_report.route_skeleton ===
@@ -294,6 +321,14 @@ end
     )
     @test occursin(
         "report.low_order_materialization_status = :deferred_atom_growth_complete_rectangular_pair_block_materialization",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_pair_inventory_source = :atom_growth_unit_inventory",
+        summary_stdout,
+    )
+    @test occursin(
+        "report.low_order_pair_count = 36",
         summary_stdout,
     )
     @test occursin(

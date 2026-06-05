@@ -1799,6 +1799,14 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.operator_matrices_materialized,
         low_order_pair_operator_blocks_materialized =
             low_order_route_summary.pair_operator_blocks_materialized,
+        low_order_pair_inventory_source =
+            low_order_route_summary.pair_inventory_source,
+        low_order_pair_inventory_known =
+            low_order_route_summary.pair_inventory_known,
+        low_order_independent_atom_growth_pair_inventory_available =
+            low_order_route_summary.independent_atom_growth_pair_inventory_available,
+        low_order_pair_count = low_order_route_summary.pair_count,
+        low_order_pair_family_counts = low_order_route_summary.pair_family_counts,
         diagnostics,
         route_materializer_payload,
     )
@@ -5614,6 +5622,14 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             operator_matrices_materialized = false,
             pair_operator_blocks_materialized = false,
             pair_operator_blocks_available = false,
+            pair_inventory_source = :not_available,
+            pair_inventory_known = false,
+            independent_atom_growth_pair_inventory_available = false,
+            pair_count = 0,
+            pair_family_counts = nothing,
+            helper_by_pair_family = nothing,
+            pair_operator_helper_by_family = nothing,
+            pair_helper_status_by_family = nothing,
             assembly_can_proceed_from_current_staged_data = false,
             assembly_requires_materialization = true,
             assembly_materialization_status =
@@ -5698,6 +5714,16 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         operator_matrices_materialized = false,
         pair_operator_blocks_materialized,
         pair_operator_blocks_available = pair_operator_blocks_materialized,
+        pair_inventory_source = low_order_pairs.pair_inventory_source,
+        pair_inventory_known = low_order_pairs.pair_inventory_known,
+        independent_atom_growth_pair_inventory_available =
+            low_order_pairs.independent_atom_growth_pair_inventory_available,
+        pair_count = low_order_pairs.pair_count,
+        pair_family_counts = low_order_pairs.pair_family_counts,
+        helper_by_pair_family = low_order_pairs.helper_by_pair_family,
+        pair_operator_helper_by_family =
+            low_order_pairs.pair_operator_helper_by_family,
+        pair_helper_status_by_family = low_order_pairs.pair_helper_status_by_family,
         assembly_can_proceed_from_current_staged_data,
         assembly_requires_materialization,
         assembly_materialization_status,
@@ -5742,6 +5768,18 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.operator_matrices_materialized,
         pair_operator_blocks_materialized =
             low_order_assembly.pair_operator_blocks_materialized,
+        low_order_pair_inventory_source =
+            low_order_assembly.pair_inventory_source,
+        low_order_pair_inventory_known =
+            low_order_assembly.pair_inventory_known,
+        low_order_independent_atom_growth_pair_inventory_available =
+            low_order_assembly.independent_atom_growth_pair_inventory_available,
+        low_order_pair_count = low_order_assembly.pair_count,
+        low_order_pair_family_counts = low_order_assembly.pair_family_counts,
+        low_order_pair_operator_helper_by_family =
+            low_order_assembly.pair_operator_helper_by_family,
+        low_order_pair_helper_status_by_family =
+            low_order_assembly.pair_helper_status_by_family,
         assembly_requires_materialization =
             low_order_assembly.assembly_requires_materialization,
         active_source_authority = low_order_assembly.active_source_authority,
@@ -5785,6 +5823,11 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             hamiltonian_matrices_materialized = false,
             operator_matrices_materialized = false,
             pair_operator_blocks_materialized = false,
+            pair_inventory_source = :not_available,
+            pair_inventory_known = false,
+            independent_atom_growth_pair_inventory_available = false,
+            pair_count = 0,
+            pair_family_counts = nothing,
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
@@ -5832,6 +5875,12 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.operator_matrices_materialized,
         pair_operator_blocks_materialized =
             low_order_assembly.pair_operator_blocks_materialized,
+        pair_inventory_source = low_order_assembly.pair_inventory_source,
+        pair_inventory_known = low_order_assembly.pair_inventory_known,
+        independent_atom_growth_pair_inventory_available =
+            low_order_assembly.independent_atom_growth_pair_inventory_available,
+        pair_count = low_order_assembly.pair_count,
+        pair_family_counts = low_order_assembly.pair_family_counts,
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,
@@ -5926,6 +5975,8 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_active_source_authority
     @show report.low_order_materialization_required
     @show report.low_order_materialization_status
+    @show report.low_order_pair_inventory_source
+    @show report.low_order_pair_count
     @show report.low_order_hamiltonian_matrices_materialized
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status

@@ -136,6 +136,13 @@ end
     @test !default_summary.operator_matrices_materialized
     @test !default_summary.pair_operator_blocks_materialized
     @test !default_summary.pair_operator_blocks_available
+    @test default_summary.pair_inventory_source ==
+          :route_skeleton_pair_entries_only
+    @test default_summary.pair_inventory_known
+    @test !default_summary.independent_atom_growth_pair_inventory_available
+    @test default_summary.pair_count == length(default_stages.pairs.pair_entries)
+    @test default_summary.pair_family_counts ==
+          default_stages.pairs.pair_family_counts
     @test !default_summary.assembly_can_proceed_from_current_staged_data
     @test default_summary.assembly_requires_materialization
     @test default_summary.assembly_materialization_status ==
@@ -150,6 +157,12 @@ end
     @test !default_assembly.hamiltonian_matrices_materialized
     @test !default_assembly.operator_matrices_materialized
     @test !default_assembly.pair_operator_blocks_materialized
+    @test default_assembly.low_order_pair_inventory_source ==
+          :route_skeleton_pair_entries_only
+    @test default_assembly.low_order_pair_inventory_known
+    @test !default_assembly.low_order_independent_atom_growth_pair_inventory_available
+    @test default_assembly.low_order_pair_count ==
+          length(default_stages.pairs.pair_entries)
     @test default_assembly.assembly_requires_materialization
     @test default_assembly.active_source_authority
     @test default_assembly.route_skeleton === default_stages.shells.route_skeleton
@@ -201,6 +214,13 @@ end
     @test !atom_growth_summary.operator_matrices_materialized
     @test !atom_growth_summary.pair_operator_blocks_materialized
     @test !atom_growth_summary.pair_operator_blocks_available
+    @test atom_growth_summary.pair_inventory_source ==
+          :atom_growth_unit_inventory
+    @test atom_growth_summary.pair_inventory_known
+    @test atom_growth_summary.independent_atom_growth_pair_inventory_available
+    @test atom_growth_summary.pair_count == 36
+    @test atom_growth_summary.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          36
     @test !atom_growth_summary.assembly_can_proceed_from_current_staged_data
     @test atom_growth_summary.assembly_requires_materialization
     @test atom_growth_summary.assembly_materialization_status ==
@@ -209,6 +229,21 @@ end
           :pair_operator_blocks_deferred
     @test atom_growth_summary.summary_only
     @test atom_growth_summary.assembly_stage_fields_preserved
+    expected_atom_growth_helper_status = (
+        white_lindsey_low_order_atom_growth_unit_pair =
+            :deferred_no_pair_operator_block_helper,
+    )
+    @test atom_growth_summary.pair_helper_status_by_family ==
+          expected_atom_growth_helper_status
+    @test atom_growth_assembly.low_order_pair_inventory_source ==
+          :atom_growth_unit_inventory
+    @test atom_growth_assembly.low_order_pair_inventory_known
+    @test atom_growth_assembly.low_order_independent_atom_growth_pair_inventory_available
+    @test atom_growth_assembly.low_order_pair_count == 36
+    @test atom_growth_assembly.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          36
+    @test atom_growth_assembly.low_order_pair_helper_status_by_family ==
+          expected_atom_growth_helper_status
     @test atom_growth_assembly.route_skeleton ===
           atom_growth_stages.shells.route_skeleton
     @test hasproperty(atom_growth_assembly, :route_facts)
