@@ -2169,6 +2169,15 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
             route_behavior_changed = false,
             shellification_plan_path_used = false,
             calls_shellification_plan_materializer = false,
+            fixed_block_available = false,
+            fixed_block_status = :not_requested,
+            basis_adapter = nothing,
+            basis_adapter_summary = nothing,
+            basis_adapter_status = :not_requested,
+            basis_adapter_blocker = nothing,
+            final_integral_weights_status = :not_requested,
+            ham_adapter = nothing,
+            ham_adapter_summary = nothing,
             ham_adapter_status = :not_requested,
             ham_adapter_blocker = nothing,
             error_message,
@@ -2282,6 +2291,55 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
         materialized =
             materialization.status ==
             :materialized_supported_complete_rectangular_low_order
+        basis_adapter =
+            materialized ?
+            _pqs_source_box_route_driver_diatomic_atom_growth_basis_adapter(
+                materialization,
+                construction_plan,
+                scaffold,
+                parent_qw_basis_object,
+                config.materializer_backend_requested,
+            ) :
+            nothing
+        basis_adapter_summary =
+            isnothing(basis_adapter) ?
+            nothing :
+            _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter_summary(
+                basis_adapter,
+            )
+        basis_adapter_available =
+            !isnothing(basis_adapter) &&
+            basis_adapter.status ==
+            :available_route_configured_diatomic_atom_growth_basis_adapter
+        fixed_block_available =
+            !isnothing(basis_adapter) && !isnothing(basis_adapter.fixed_block)
+        ham_adapter =
+            basis_adapter_available ?
+            _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
+                basis_adapter,
+                expansion;
+                gausslet_backend = config.materializer_backend_requested,
+                interaction_treatment = :ggt_nearest,
+            ) :
+            nothing
+        ham_adapter_summary =
+            isnothing(ham_adapter) ?
+            nothing :
+            _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter_summary(
+                ham_adapter,
+            )
+        ham_adapter_blocker =
+            isnothing(ham_adapter) ?
+            (
+                basis_adapter_available ?
+                :atom_growth_ham_operator_adapter_contract :
+                isnothing(basis_adapter) ?
+                :atom_growth_fixed_block_adapter_contract :
+                basis_adapter.blocker
+            ) :
+            ham_adapter.blocker == :pending_route_configured_diatomic_ham_adapter_contract ?
+            :atom_growth_ham_operator_adapter_contract :
+            ham_adapter.blocker
         return (;
             object_kind =
                 :route_configured_diatomic_atom_growth_materializer_probe,
@@ -2320,9 +2378,31 @@ function _pqs_source_box_route_driver_diatomic_atom_growth_materializer_probe(
                 materialization.route_behavior_changed,
             shellification_plan_path_used = true,
             calls_shellification_plan_materializer = true,
+            fixed_block_available,
+            fixed_block_status =
+                fixed_block_available ?
+                basis_adapter.fixed_block_status :
+                isnothing(basis_adapter) ?
+                :not_checked_missing_atom_growth_sequence :
+                basis_adapter.fixed_block_status,
+            basis_adapter,
+            basis_adapter_summary,
+            basis_adapter_status =
+                isnothing(basis_adapter) ? :not_checked_missing_atom_growth_sequence :
+                basis_adapter.status,
+            basis_adapter_blocker =
+                isnothing(basis_adapter) ? :atom_growth_fixed_block_adapter_contract :
+                basis_adapter.blocker,
+            final_integral_weights_status =
+                isnothing(basis_adapter) ? :not_checked_missing_atom_growth_sequence :
+                basis_adapter.final_integral_weights_status,
+            ham_adapter,
+            ham_adapter_summary,
             ham_adapter_status =
-                :blocked_atom_growth_report_adapter_not_implemented,
-            ham_adapter_blocker = :atom_growth_report_adapter_not_implemented,
+                isnothing(ham_adapter) ?
+                :blocked_missing_route_configured_diatomic_atom_growth_basis_adapter :
+                ham_adapter.status,
+            ham_adapter_blocker,
             error_message = nothing,
         )
     catch error
@@ -2537,6 +2617,177 @@ function _pqs_source_box_route_driver_route_configured_diatomic_basis_adapter_su
     )
 end
 
+function _pqs_source_box_route_driver_diatomic_atom_growth_basis_adapter(
+    materialization,
+    construction_plan,
+    scaffold,
+    parent_qw_basis_object,
+    gausslet_backend,
+)
+    if isnothing(materialization) || isnothing(materialization.sequence)
+        return (;
+            object_kind = :route_configured_diatomic_atom_growth_basis_adapter,
+            status = :blocked_missing_route_configured_diatomic_atom_growth_sequence,
+            private_development_only = true,
+            fixed_block = nothing,
+            fixed_block_status = :not_checked_missing_atom_growth_sequence,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension = nothing,
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_missing_atom_growth_sequence,
+            grouping_status = :not_checked_missing_atom_growth_sequence,
+            final_integral_weights_status =
+                :not_checked_missing_atom_growth_sequence,
+            missing_fields = (:route_configured_diatomic_atom_growth_sequence,),
+            blocker = :atom_growth_fixed_block_adapter_contract,
+        )
+    elseif isnothing(parent_qw_basis_object)
+        return (;
+            object_kind = :route_configured_diatomic_atom_growth_basis_adapter,
+            status = :blocked_missing_atom_growth_parent_basis,
+            private_development_only = true,
+            fixed_block = nothing,
+            fixed_block_status = :not_checked_missing_parent_basis,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension = size(materialization.sequence.coefficient_matrix, 2),
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_missing_parent_basis,
+            grouping_status = :not_checked_missing_parent_basis,
+            final_integral_weights_status = :not_checked_missing_parent_basis,
+            missing_fields = (:parent_qw_basis_object_handoff,),
+            blocker = :atom_growth_fixed_block_adapter_contract,
+        )
+    end
+
+    try
+        sequence = materialization.sequence
+        fixed_block = _nested_fixed_block(
+            sequence,
+            parent_qw_basis_object,
+            gausslet_backend,
+        )
+        representation = basis_representation(fixed_block)
+        final_integral_weights =
+            _cartesian_bundle_integral_weights(fixed_block, representation)
+        retained_dimension = representation.metadata.final_dimension
+        labels = representation.metadata.basis_labels
+        centers = representation.metadata.basis_centers
+        route_metadata = representation.metadata.route_metadata
+        weights_ready =
+            length(final_integral_weights) == retained_dimension &&
+            all(isfinite, final_integral_weights) &&
+            all(>(0.0), final_integral_weights)
+        labels_ready =
+            length(labels) == retained_dimension &&
+            all(!isempty, labels)
+        centers_ready =
+            size(centers) == (retained_dimension, 3) &&
+            all(isfinite, centers)
+        grouping = (;
+            source_kind = :bond_aligned_diatomic_atom_growth_construction_plan,
+            shell_kind = route_metadata.shell_kind,
+            working_box_profile = route_metadata.working_box_profile,
+            support_count = route_metadata.support_count,
+            construction_region_order = Tuple(construction_plan.region_order),
+            assembly_core_order = scaffold.assembly_core_order,
+            assembly_shell_order = scaffold.assembly_shell_order,
+            outer_mismatch_boundary_slab_set_count =
+                length(scaffold.outer_mismatch_boundary_slab_sets),
+            child_column_ranges = Tuple(materialization.assembly.child_column_ranges),
+            contact_cap_column_range =
+                materialization.assembly.contact_cap_column_range,
+            shared_shell_column_ranges =
+                Tuple(materialization.assembly.shared_shell_column_ranges),
+        )
+        grouping_ready =
+            grouping.support_count == length(fixed_block.support_indices) &&
+            grouping.support_count == length(sequence.support_indices)
+        missing_fields = Symbol[]
+        weights_ready ||
+            push!(missing_fields, :atom_growth_final_integral_weight_contract)
+        labels_ready ||
+            push!(missing_fields, :atom_growth_basis_representation_contract)
+        centers_ready ||
+            push!(missing_fields, :atom_growth_basis_representation_contract)
+        grouping_ready ||
+            push!(missing_fields, :atom_growth_basis_representation_contract)
+        missing_fields = Tuple(unique(missing_fields))
+        blocker =
+            isempty(missing_fields) ?
+            nothing :
+            in(:atom_growth_final_integral_weight_contract, missing_fields) ?
+            :atom_growth_final_integral_weight_contract :
+            :atom_growth_basis_representation_contract
+
+        return (;
+            object_kind = :route_configured_diatomic_atom_growth_basis_adapter,
+            status =
+                isempty(missing_fields) ?
+                :available_route_configured_diatomic_atom_growth_basis_adapter :
+                :blocked_route_configured_diatomic_atom_growth_basis_adapter_contract,
+            private_development_only = true,
+            fixed_block,
+            fixed_block_status = :available_route_configured_diatomic_atom_growth_fixed_block,
+            representation,
+            final_integral_weights,
+            retained_dimension,
+            basis_metadata = (;
+                basis_kind = representation.metadata.basis_kind,
+                parent_kind = representation.metadata.parent_kind,
+                axis_sharing = representation.metadata.axis_sharing,
+                parent_axis_counts = representation.metadata.parent_axis_counts,
+                parent_dimension = representation.metadata.parent_dimension,
+                final_dimension = representation.metadata.final_dimension,
+                label_count = length(labels),
+                center_count = size(centers, 1),
+            ),
+            grouping,
+            label_status =
+                labels_ready ?
+                :available_route_configured_diatomic_atom_growth_basis_labels :
+                :blocked_atom_growth_basis_representation_contract,
+            grouping_status =
+                grouping_ready ?
+                :available_route_configured_diatomic_atom_growth_grouping :
+                :blocked_atom_growth_basis_representation_contract,
+            final_integral_weights_status =
+                weights_ready ?
+                :available_retained_basis_integral_weights :
+                :pending_atom_growth_final_integral_weight_contract,
+            missing_fields,
+            blocker,
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        return (;
+            object_kind = :route_configured_diatomic_atom_growth_basis_adapter,
+            status = :blocked_atom_growth_fixed_block_adapter_precondition,
+            private_development_only = true,
+            fixed_block = nothing,
+            fixed_block_status = :blocked_atom_growth_fixed_block_adapter_precondition,
+            representation = nothing,
+            final_integral_weights = nothing,
+            retained_dimension =
+                !isnothing(materialization) && !isnothing(materialization.sequence) ?
+                size(materialization.sequence.coefficient_matrix, 2) :
+                nothing,
+            basis_metadata = nothing,
+            grouping = nothing,
+            label_status = :not_checked_fixed_block_adapter_precondition,
+            grouping_status = :not_checked_fixed_block_adapter_precondition,
+            final_integral_weights_status =
+                :not_checked_fixed_block_adapter_precondition,
+            missing_fields = (:atom_growth_fixed_block_adapter_contract,),
+            blocker = :atom_growth_fixed_block_adapter_contract,
+            error_message = sprint(showerror, error),
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
     basis_adapter,
     expansion;
@@ -2545,7 +2796,11 @@ function _pqs_source_box_route_driver_route_configured_diatomic_ham_adapter(
     nuclear_term_storage::Symbol = :by_center,
 )
     mwg_ida_treatments = (:mwg, :ida, :mwg_ida, :ida_mwg)
-    if basis_adapter.status != :available_route_configured_diatomic_basis_adapter
+    available_basis_adapter_statuses = (
+        :available_route_configured_diatomic_basis_adapter,
+        :available_route_configured_diatomic_atom_growth_basis_adapter,
+    )
+    if !(basis_adapter.status in available_basis_adapter_statuses)
         return (;
             object_kind = :route_configured_diatomic_ham_adapter,
             status = :blocked_missing_route_configured_diatomic_basis_adapter,
@@ -2948,6 +3203,16 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_atom_growth_materializer_probe.atom_growth_construction_plan_authority
     route_configured_diatomic_atom_growth_calls_shellification_plan_materializer =
         route_configured_diatomic_atom_growth_materializer_probe.calls_shellification_plan_materializer
+    route_configured_diatomic_atom_growth_fixed_block_available =
+        route_configured_diatomic_atom_growth_materializer_probe.fixed_block_available
+    route_configured_diatomic_atom_growth_fixed_block_status =
+        route_configured_diatomic_atom_growth_materializer_probe.fixed_block_status
+    route_configured_diatomic_atom_growth_basis_adapter_status =
+        route_configured_diatomic_atom_growth_materializer_probe.basis_adapter_status
+    route_configured_diatomic_atom_growth_basis_adapter_blocker =
+        route_configured_diatomic_atom_growth_materializer_probe.basis_adapter_blocker
+    route_configured_diatomic_atom_growth_final_integral_weights_status =
+        route_configured_diatomic_atom_growth_materializer_probe.final_integral_weights_status
     route_configured_diatomic_atom_growth_ham_adapter_status =
         route_configured_diatomic_atom_growth_materializer_probe.ham_adapter_status
     route_configured_diatomic_atom_growth_ham_adapter_blocker =
@@ -3071,6 +3336,11 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_diatomic_atom_growth_active_source_authority,
         route_configured_diatomic_atom_growth_plan_authority,
         route_configured_diatomic_atom_growth_calls_shellification_plan_materializer,
+        route_configured_diatomic_atom_growth_fixed_block_available,
+        route_configured_diatomic_atom_growth_fixed_block_status,
+        route_configured_diatomic_atom_growth_basis_adapter_status,
+        route_configured_diatomic_atom_growth_basis_adapter_blocker,
+        route_configured_diatomic_atom_growth_final_integral_weights_status,
         route_configured_diatomic_atom_growth_ham_adapter_status,
         route_configured_diatomic_atom_growth_ham_adapter_blocker,
     )

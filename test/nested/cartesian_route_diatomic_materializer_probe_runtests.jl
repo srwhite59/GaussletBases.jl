@@ -350,10 +350,21 @@ end
     @test !opt_in_materialization.route_configured_diatomic_atom_growth_active_source_authority
     @test opt_in_materialization.route_configured_diatomic_atom_growth_plan_authority
     @test opt_in_materialization.route_configured_diatomic_atom_growth_calls_shellification_plan_materializer
-    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_status ==
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_fixed_block_available
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_fixed_block_status ==
+          :available_route_configured_diatomic_atom_growth_fixed_block
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_basis_adapter_status ==
+          :available_route_configured_diatomic_atom_growth_basis_adapter
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_basis_adapter_blocker ===
+          nothing
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_status !=
           :blocked_atom_growth_report_adapter_not_implemented
-    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_blocker ==
-          :atom_growth_report_adapter_not_implemented
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_status ==
+          :available_route_configured_diatomic_ham_adapter
+    @test opt_in_materialization.route_configured_diatomic_atom_growth_ham_adapter_blocker ===
+          nothing
 
     @test probe.requested
     @test probe.materialized
@@ -385,9 +396,31 @@ end
           :materialized_supported_complete_rectangular_low_order
     @test probe.materialization.assembly.status ==
           :materialized_atom_growth_complete_rectangular_low_order
-    @test probe.ham_adapter_status ==
+    @test probe.fixed_block_available
+    @test probe.fixed_block_status ==
+          :available_route_configured_diatomic_atom_growth_fixed_block
+    @test probe.basis_adapter.status ==
+          :available_route_configured_diatomic_atom_growth_basis_adapter
+    @test probe.basis_adapter_summary.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test probe.basis_adapter_summary.retained_dimension == probe.retained_dimension
+    @test probe.basis_adapter_summary.grouping.source_kind ==
+          :bond_aligned_diatomic_atom_growth_construction_plan
+    @test probe.basis_adapter_blocker === nothing
+    @test probe.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test probe.ham_adapter_status !=
           :blocked_atom_growth_report_adapter_not_implemented
-    @test probe.ham_adapter_blocker == :atom_growth_report_adapter_not_implemented
+    @test probe.ham_adapter.status == :available_route_configured_diatomic_ham_adapter
+    @test probe.ham_adapter_summary.status ==
+          :available_route_configured_diatomic_ham_adapter
+    @test probe.ham_adapter_summary.final_integral_weights_status ==
+          :available_retained_basis_integral_weights
+    @test probe.ham_adapter_summary.operator_payload_status ==
+          :available_route_configured_diatomic_operator_payload
+    @test probe.ham_adapter_summary.interaction_status ==
+          :available_route_configured_diatomic_density_density_interaction_matrix
+    @test probe.ham_adapter_blocker === nothing
     @test opt_in_materialization.ham_bundle_export_status == :not_requested
     @test opt_in_materialization.ham_artifact_status == :not_requested
 end
