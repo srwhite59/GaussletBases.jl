@@ -801,9 +801,11 @@ end
     @test counts.atom_local_child_plan_count == 2
     @test counts.direct_contact_slab_count == 1
     @test counts.shared_complete_shell_count == 1
-    @test counts.unsupported_outer_mismatch_count == 1
-    @test scaffold.unsupported_region_count == 1
-    @test scaffold.materialization_status == :blocked_unsupported_outer_mismatch
+    @test counts.outer_mismatch_boundary_slab_set_count == 1
+    @test counts.unsupported_outer_mismatch_count == 0
+    @test scaffold.unsupported_region_count == 0
+    @test scaffold.materialization_status ==
+          :blocked_outer_mismatch_sequence_assembly_not_implemented
 
     left_region = only(
         region for region in construction_plan.regions if region.role == :left_atom_box
@@ -817,6 +819,10 @@ end
     shared_region = only(
         region for region in construction_plan.regions
         if region.role == :regular_shared_molecular_shell
+    )
+    mismatch_construction_region = only(
+        region for region in construction_plan.regions
+        if region.role == :outer_mismatch_shared_molecular_shell
     )
     mismatch_region = only(
         region for region in scaffold.regions
@@ -842,23 +848,59 @@ end
     @test scaffold.shared_complete_shell_regions[1].source_backed == false
 
     for region in scaffold.regions
-        if region.role == :outer_mismatch_shared_molecular_shell
-            @test !region.independently_lowerable
-            @test region.materialization_dependency ==
-                  :unsupported_outer_mismatch_adjustment
-            @test region.missing_independent_lowering_reason ==
-                  :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005
-            @test region.retirement_target ==
-                  :future_outer_mismatch_plan_lowered_region
-            @test region.lowering_piece === nothing
-        else
-            @test region.independently_lowerable
-            @test region.missing_independent_lowering_reason === nothing
-            @test region.retirement_target == :already_plan_lowered_region
-            @test region.support_count_matches_lowering_piece
-        end
+        @test region.independently_lowerable
+        @test region.missing_independent_lowering_reason === nothing
+        @test region.retirement_target == :already_plan_lowered_region
+        @test region.support_count_matches_lowering_piece
     end
     @test mismatch_region.support_count == 98
+    @test mismatch_region.materialization_dependency ==
+          :plan_lowerable_outer_mismatch_boundary_slab_set
+    @test mismatch_region.lowering_piece_object_kind ==
+          :cartesian_outer_mismatch_boundary_slab_set3d
+    slab_set = only(scaffold.outer_mismatch_boundary_slab_sets)
+    @test slab_set.role == :outer_mismatch_shared_molecular_shell
+    @test slab_set.source_authority ==
+          :_BondAlignedDiatomicAtomGrowthConstructionPlan3D
+    @test slab_set.source_backed == false
+    @test slab_set.independently_lowerable
+    @test slab_set.support_count == length(mismatch_construction_region.support_indices)
+    @test slab_set.retained_count == slab_set.support_count
+    @test slab_set.support_count_matches_retained_count
+    @test slab_set.slab_piece_roles ==
+          (:outer_mismatch_z_low_slab, :outer_mismatch_z_high_slab)
+    @test map(piece -> piece.support_count, slab_set.slab_pieces) == (49, 49)
+    @test slab_set.slab_column_ranges == (1:49, 50:98)
+    @test slab_set.aggregate_support_coverage.coverage_ok
+    @test slab_set.aggregate_support_coverage.duplicate_count == 0
+    @test slab_set.aggregate_support_coverage.missing_count == 0
+    @test slab_set.aggregate_support_coverage.outside_count == 0
+    piece_support_indices = reduce(
+        vcat,
+        (piece.support_indices for piece in slab_set.slab_pieces);
+        init = Int[],
+    )
+    @test length(unique(piece_support_indices)) == length(piece_support_indices)
+    @test sort(piece_support_indices) ==
+          sort(mismatch_construction_region.support_indices)
+
+    slab_materialization =
+        GaussletBases._cartesian_materialize_outer_mismatch_boundary_slab_set(
+            slab_set,
+            bundles,
+        )
+    parent_dimension = prod(length.(construction_plan.anatomy.recipe.parent_box))
+    @test slab_materialization.status ==
+          :materialized_outer_mismatch_boundary_slab_set
+    @test slab_materialization.support_indices == piece_support_indices
+    @test size(slab_materialization.coefficient_matrix) ==
+          (parent_dimension, slab_set.retained_count)
+    local_direct_block =
+        Matrix(slab_materialization.coefficient_matrix[piece_support_indices, :])
+    @test local_direct_block == [
+        row == column ? 1.0 : 0.0 for row in 1:slab_set.retained_count,
+        column in 1:slab_set.retained_count
+    ]
 
     blocked =
         GaussletBases._cartesian_materialize_atom_growth_complete_rectangular_shellification_low_order(
@@ -866,11 +908,12 @@ end
             basis,
             bundles,
         )
-    @test blocked.status == :blocked_unsupported_regions
+    @test blocked.status == :blocked_sequence_assembly
     @test blocked.blocked_reason ==
-          :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005
+          :outer_mismatch_sequence_assembly_not_implemented
     @test blocked.sequence === nothing
-    @test blocked.unsupported_region_count == 1
+    @test blocked.unsupported_region_count == 0
+    @test length(blocked.outer_mismatch_boundary_slab_sets) == 1
     @test !blocked.active_source_authority
     @test !blocked.route_behavior_changed
 end

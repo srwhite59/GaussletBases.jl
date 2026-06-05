@@ -816,12 +816,197 @@ function _cartesian_atom_growth_shellification_materialization_counts(regions)
                 :plan_lowerable_shared_complete_shell,
             regions,
         ),
+        outer_mismatch_boundary_slab_set_count = count(
+            region ->
+                region.materialization_dependency ==
+                :plan_lowerable_outer_mismatch_boundary_slab_set,
+            regions,
+        ),
         unsupported_outer_mismatch_count = count(
             region ->
                 region.materialization_dependency ==
                 :unsupported_outer_mismatch_adjustment,
             regions,
         ),
+    )
+end
+
+function _cartesian_outer_mismatch_boundary_slab_piece3d(piece)
+    support_count = length(piece.support_indices)
+    return (;
+        object_kind = :cartesian_outer_mismatch_boundary_slab_piece3d,
+        role = piece.role,
+        piece_index = piece.piece_index,
+        primitive_family = piece.primitive_family,
+        box = piece.box,
+        inner_exclusion_box = piece.inner_exclusion_box,
+        support_indices = Int.(piece.support_indices),
+        support_count,
+        retained_count = support_count,
+        lowering_family = :direct_boundary_slab,
+        materialization_dependency = :plan_lowerable_direct_boundary_slab,
+        coefficient_contract = :identity_selector_boundary_slab,
+        metadata = piece.metadata,
+        source_backed = false,
+        independently_lowerable = true,
+    )
+end
+
+function _cartesian_outer_mismatch_slab_column_ranges(slab_pieces)
+    ranges = UnitRange{Int}[]
+    column_start = 1
+    for piece in slab_pieces
+        column_stop = column_start + piece.retained_count - 1
+        push!(ranges, column_start:column_stop)
+        column_start = column_stop + 1
+    end
+    return Tuple(ranges)
+end
+
+function _cartesian_shellification_plan_outer_mismatch_boundary_slab_set(
+    construction_region::_BondAlignedDiatomicAtomGrowthConstructionRegion3D,
+    bundles::_CartesianNestedAxisBundles3D;
+    parent_box::NTuple{3,UnitRange{Int}},
+)
+    construction_region.role == :outer_mismatch_shared_molecular_shell || throw(
+        ArgumentError("outer-mismatch slab-set helper requires an outer-mismatch construction region"),
+    )
+    inner_box = construction_region.inner_exclusion_box
+    isnothing(inner_box) && throw(
+        ArgumentError("outer-mismatch slab-set helper requires an inner exclusion box"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    dims == Tuple(length.(parent_box)) || throw(
+        ArgumentError("outer-mismatch slab-set helper requires bundles matching parent_box"),
+    )
+    construction_pieces = _BondAlignedDiatomicHighOrderConstructionPiece3D[]
+    piece_index = 1
+    for axis_index in 1:3, side in (:low, :high)
+        piece_box = _nested_diatomic_outer_mismatch_piece_box(
+            construction_region.box,
+            inner_box,
+            axis_index,
+            side,
+        )
+        isnothing(piece_box) && continue
+        push!(
+            construction_pieces,
+            _nested_diatomic_high_order_construction_piece(
+                _nested_diatomic_outer_mismatch_piece_role(axis_index, side),
+                piece_index,
+                :outer_mismatch_boundary_slab,
+                piece_box,
+                nothing,
+                dims;
+                metadata = (
+                    axis = (:x, :y, :z)[axis_index],
+                    axis_index = axis_index,
+                    side = side,
+                    edge_assignment_policy = :earlier_axes_absorb_outer_edges,
+                ),
+            ),
+        )
+        piece_index += 1
+    end
+    coverage = _nested_diatomic_high_order_construction_piece_coverage(
+        construction_region.support_indices,
+        construction_pieces,
+    )
+    coverage.coverage_ok || throw(
+        ArgumentError("outer-mismatch boundary slab set must exactly cover its construction region"),
+    )
+    slab_pieces = Tuple(
+        _cartesian_outer_mismatch_boundary_slab_piece3d(piece)
+        for piece in construction_pieces
+    )
+    slab_column_ranges = _cartesian_outer_mismatch_slab_column_ranges(slab_pieces)
+    retained_count = sum(piece.retained_count for piece in slab_pieces; init = 0)
+    return (;
+        object_kind = :cartesian_outer_mismatch_boundary_slab_set3d,
+        role = :outer_mismatch_shared_molecular_shell,
+        source_authority = :_BondAlignedDiatomicAtomGrowthConstructionPlan3D,
+        order = construction_region.order_index,
+        order_index = construction_region.order_index,
+        outer_box = construction_region.box,
+        box = construction_region.box,
+        inner_exclusion_box = inner_box,
+        primitive_family = :outer_mismatch_boundary_slab_set,
+        lowering_family = :outer_mismatch_boundary_slab_set,
+        materialization_dependency =
+            :plan_lowerable_outer_mismatch_boundary_slab_set,
+        slab_pieces,
+        slab_piece_roles = Tuple(piece.role for piece in slab_pieces),
+        slab_piece_count = length(slab_pieces),
+        slab_column_ranges,
+        support_indices = Int.(construction_region.support_indices),
+        support_count = length(construction_region.support_indices),
+        retained_count,
+        support_count_matches_retained_count =
+            retained_count == length(construction_region.support_indices),
+        aggregate_support_coverage = (;
+            object_kind = :cartesian_outer_mismatch_boundary_slab_set_coverage,
+            expected_support_count = coverage.expected_support_count,
+            piece_support_count = coverage.piece_support_count,
+            covered_support_count = coverage.covered_support_count,
+            duplicate_count = coverage.duplicate_count,
+            missing_count = coverage.missing_count,
+            outside_count = coverage.outside_count,
+            coverage_ok = coverage.coverage_ok,
+        ),
+        source_backed = false,
+        independently_lowerable = true,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
+        diagnostics = (;
+            source = :cartesian_outer_mismatch_boundary_slab_set3d,
+            atom_growth_construction_plan_authority = true,
+            active_source_authority = false,
+            boundary_slab_set = true,
+            slab_order_policy = :axis_ordered_disjoint_boundary_slabs,
+            coefficient_contract = :identity_selector_boundary_slab,
+            route_behavior_changed = false,
+        ),
+    )
+end
+
+function _cartesian_materialize_outer_mismatch_boundary_slab_set(
+    slab_set,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    slab_set.object_kind == :cartesian_outer_mismatch_boundary_slab_set3d ||
+        throw(
+            ArgumentError("outer-mismatch materializer requires a cartesian_outer_mismatch_boundary_slab_set3d"),
+        )
+    slab_set.independently_lowerable || throw(
+        ArgumentError("outer-mismatch materializer requires an independently lowerable slab set"),
+    )
+    slab_set.aggregate_support_coverage.coverage_ok || throw(
+        ArgumentError("outer-mismatch materializer requires clean slab-set coverage"),
+    )
+    support_indices = reduce(
+        vcat,
+        (piece.support_indices for piece in slab_set.slab_pieces);
+        init = Int[],
+    )
+    sort(support_indices) == sort(slab_set.support_indices) || throw(
+        ArgumentError("outer-mismatch materializer produced support different from the slab set"),
+    )
+    coefficient_matrix = _nested_direct_box_coefficients(
+        _nested_axis_lengths(bundles),
+        support_indices,
+    )
+    return (;
+        object_kind = :cartesian_outer_mismatch_boundary_slab_set_materialization,
+        status = :materialized_outer_mismatch_boundary_slab_set,
+        slab_set,
+        support_indices,
+        coefficient_matrix,
+        retained_count = size(coefficient_matrix, 2),
+        slab_column_ranges = slab_set.slab_column_ranges,
+        source_backed = false,
+        independently_lowerable = true,
+        active_source_authority = false,
+        route_behavior_changed = false,
     )
 end
 
@@ -901,6 +1086,7 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
 
     regions = NamedTuple[]
     shared_complete_shell_regions = NamedTuple[]
+    outer_mismatch_boundary_slab_sets = NamedTuple[]
     unsupported_regions = NamedTuple[]
     left_child_plan = nothing
     right_child_plan = nothing
@@ -988,18 +1174,25 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
                 ),
             )
         elseif construction_region.role == :outer_mismatch_shared_molecular_shell
-            unsupported = _cartesian_atom_growth_shellification_scaffold_region(
-                construction_region;
-                lowering_piece = nothing,
-                lowering_family = :outer_mismatch_adjustment_region,
-                materialization_dependency = :unsupported_outer_mismatch_adjustment,
-                independently_lowerable = false,
-                missing_independent_lowering_reason =
-                    :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005,
-                retirement_target = :future_outer_mismatch_plan_lowered_region,
+            slab_set = _cartesian_shellification_plan_outer_mismatch_boundary_slab_set(
+                construction_region,
+                bundles;
+                parent_box,
             )
-            push!(regions, unsupported)
-            push!(unsupported_regions, unsupported)
+            push!(outer_mismatch_boundary_slab_sets, slab_set)
+            push!(
+                regions,
+                _cartesian_atom_growth_shellification_scaffold_region(
+                    construction_region;
+                    lowering_piece = slab_set,
+                    lowering_family = :outer_mismatch_boundary_slab_set,
+                    materialization_dependency =
+                        :plan_lowerable_outer_mismatch_boundary_slab_set,
+                    independently_lowerable = true,
+                    missing_independent_lowering_reason = nothing,
+                    retirement_target = :already_plan_lowered_region,
+                ),
+            )
         else
             throw(
                 ArgumentError(
@@ -1017,15 +1210,18 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
     )
     regions = Tuple(regions)
     shared_complete_shell_regions = Tuple(shared_complete_shell_regions)
+    outer_mismatch_boundary_slab_sets = Tuple(outer_mismatch_boundary_slab_sets)
     unsupported_regions = Tuple(unsupported_regions)
     materialization_dependency_counts =
         _cartesian_atom_growth_shellification_materialization_counts(regions)
     assembly_core_order = isnothing(contact_cap_region) ?
         (:left_atom_box, :right_atom_box) :
         (:left_atom_box, :contact_cap, :right_atom_box)
-    materialization_status = isempty(unsupported_regions) ?
-        :ready_supported_complete_rectangular_subset :
-        :blocked_unsupported_outer_mismatch
+    materialization_status =
+        !isempty(unsupported_regions) ? :blocked_unsupported_regions :
+        !isempty(outer_mismatch_boundary_slab_sets) ?
+        :blocked_outer_mismatch_sequence_assembly_not_implemented :
+        :ready_supported_complete_rectangular_subset
 
     return (;
         object_kind = :cartesian_atom_growth_shellification_plan3d,
@@ -1065,6 +1261,7 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
         right_child_plan,
         contact_cap_region,
         shared_complete_shell_regions,
+        outer_mismatch_boundary_slab_sets,
         unsupported_regions,
         unsupported_region_count = length(unsupported_regions),
         coverage = (;
@@ -1086,6 +1283,8 @@ function _cartesian_shellification_plan_atom_growth_complete_rectangular_low_ord
             atom_growth_construction_plan_authority = true,
             active_source_authority = false,
             active_source_oracle_comparison_run = false,
+            outer_mismatch_independently_lowerable =
+                !isempty(outer_mismatch_boundary_slab_sets),
             route_neutral_spatial_planning = true,
             lowering_applied_by_plan = false,
             materialization_behavior_changed = false,
@@ -1573,9 +1772,27 @@ function _cartesian_materialize_atom_growth_complete_rectangular_shellification_
             status = :blocked_unsupported_regions,
             materialization_status = plan.materialization_status,
             blocked_reason =
-                :outer_mismatch_adjustment_lowering_not_implemented_in_pass_005,
+                :unsupported_shellification_region_lowering,
             unsupported_regions = plan.unsupported_regions,
             unsupported_region_count = length(plan.unsupported_regions),
+            outer_mismatch_boundary_slab_sets =
+                plan.outer_mismatch_boundary_slab_sets,
+            sequence = nothing,
+            assembly = nothing,
+            active_source_authority = false,
+            route_behavior_changed = false,
+        )
+    end
+    if !isempty(plan.outer_mismatch_boundary_slab_sets)
+        return (;
+            object_kind = :cartesian_atom_growth_shellification_materialization_result,
+            status = :blocked_sequence_assembly,
+            materialization_status = plan.materialization_status,
+            blocked_reason = :outer_mismatch_sequence_assembly_not_implemented,
+            unsupported_regions = (),
+            unsupported_region_count = 0,
+            outer_mismatch_boundary_slab_sets =
+                plan.outer_mismatch_boundary_slab_sets,
             sequence = nothing,
             assembly = nothing,
             active_source_authority = false,
@@ -1602,6 +1819,7 @@ function _cartesian_materialize_atom_growth_complete_rectangular_shellification_
         blocked_reason = nothing,
         unsupported_regions = (),
         unsupported_region_count = 0,
+        outer_mismatch_boundary_slab_sets = (),
         sequence = assembly.sequence,
         assembly,
         active_source_authority = false,
