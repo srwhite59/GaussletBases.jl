@@ -441,6 +441,22 @@ end
             stdout,
         )
         @test occursin(
+            "materialization.route_configured_diatomic_atom_growth_materializer_probe_status = :materialized_route_configured_bond_aligned_diatomic_atom_growth_shellization",
+            stdout,
+        )
+        @test occursin(
+            "materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed = true",
+            stdout,
+        )
+        @test occursin(
+            "materialization.materialized_report_kind = :white_lindsey_low_order_route_configured_diatomic_atom_growth_report",
+            stdout,
+        )
+        @test occursin(
+            "materialization.route_configured_diatomic_atom_growth_ham_adapter_status = :available_route_configured_diatomic_ham_adapter",
+            stdout,
+        )
+        @test occursin(
             "materialized_route_configured_diatomic_atom_growth_artifacts_available",
             stdout,
         )

@@ -4551,6 +4551,7 @@ function cartesian_print_summary(report, materialization)
     @show retained_counts retained_dimension
     @show materialization.basis_artifact_status materialization.basis_artifact_written
     @show materialization.status materialization.ham_bundle_export_status
+    @show materialization.materialized_report_kind
     @show materialization.route_configured_system_classification
     @show materialization.route_configured_shellization_request_status
     @show materialization.route_configured_shellization_planning_family
@@ -4573,6 +4574,12 @@ function cartesian_print_summary(report, materialization)
     @show materialization.route_configured_diatomic_materializer_probe_requested
     @show materialization.route_configured_diatomic_materializer_probe_status
     @show materialization.route_configured_diatomic_materializer_probe_blocker
+    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_requested
+    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_status
+    @show materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+    @show materialization.route_configured_diatomic_atom_growth_basis_adapter_status
+    @show materialization.route_configured_diatomic_atom_growth_final_integral_weights_status
+    @show materialization.route_configured_diatomic_atom_growth_ham_adapter_status
     @show materialization.shellization_source materialization.route_configured_shellization_consumed
     @show materialization.ham_artifact_status materialization.ham_artifact_written
     return nothing
@@ -4583,6 +4590,7 @@ function cartesian_print_details(report, materialization)
     if materialization.materialize_route_requested ||
        materialization.route_configured_one_center_materializer_probe_requested ||
        materialization.route_configured_diatomic_materializer_probe_requested ||
+       materialization.route_configured_diatomic_atom_growth_materializer_probe_requested ||
        materialization.save_basis_artifact_requested ||
        materialization.save_ham_artifact_requested
         _pqs_source_box_route_driver_print_materialization(materialization)
