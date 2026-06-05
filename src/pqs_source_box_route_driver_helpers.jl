@@ -1807,6 +1807,36 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.independent_atom_growth_pair_inventory_available,
         low_order_pair_count = low_order_route_summary.pair_count,
         low_order_pair_family_counts = low_order_route_summary.pair_family_counts,
+        low_order_pqs_lowering_prototype_available =
+            low_order_route_summary.pqs_lowering_prototype_available,
+        low_order_pqs_transform_prototype_available =
+            low_order_route_summary.pqs_transform_prototype_available,
+        low_order_pqs_prototype_unit_key =
+            low_order_route_summary.pqs_prototype_unit_key,
+        low_order_pqs_prototype_stage =
+            low_order_route_summary.pqs_prototype_stage,
+        low_order_pqs_prototype_source_cpb_kind =
+            low_order_route_summary.pqs_prototype_source_cpb_kind,
+        low_order_pqs_prototype_owned_support_is_cpb =
+            low_order_route_summary.pqs_prototype_owned_support_is_cpb,
+        low_order_pqs_prototype_intermediate_retained_space =
+            low_order_route_summary.pqs_prototype_intermediate_retained_space,
+        low_order_pqs_prototype_shell_realization =
+            low_order_route_summary.pqs_prototype_shell_realization,
+        low_order_pqs_prototype_source_count_distinct_from_owned_support_count =
+            low_order_route_summary.pqs_prototype_source_count_distinct_from_owned_support_count,
+        low_order_pqs_prototype_coefficient_maps_materialized =
+            low_order_route_summary.pqs_prototype_coefficient_maps_materialized,
+        low_order_pqs_prototype_source_operator_blocks_materialized =
+            low_order_route_summary.pqs_prototype_source_operator_blocks_materialized,
+        low_order_pqs_prototype_operator_blocks_materialized =
+            low_order_route_summary.pqs_prototype_operator_blocks_materialized,
+        low_order_pqs_prototype_pair_operator_blocks_materialized =
+            low_order_route_summary.pqs_prototype_pair_operator_blocks_materialized,
+        low_order_pqs_prototype_hamiltonian_data_materialized =
+            low_order_route_summary.pqs_prototype_hamiltonian_data_materialized,
+        low_order_pqs_prototype_artifacts_materialized =
+            low_order_route_summary.pqs_prototype_artifacts_materialized,
         diagnostics,
         route_materializer_payload,
     )
@@ -5882,6 +5912,110 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
+    assembly,
+)
+    units = hasproperty(assembly, :units) ? assembly.units : nothing
+    transforms =
+        hasproperty(assembly, :transforms) ? assembly.transforms : nothing
+    lowering_available =
+        !isnothing(units) &&
+        hasproperty(units, :pqs_lowering_prototype_available) &&
+        units.pqs_lowering_prototype_available
+    transform_available =
+        !isnothing(transforms) &&
+        hasproperty(transforms, :pqs_transform_prototype_available) &&
+        transforms.pqs_transform_prototype_available
+    lowering_prototype =
+        lowering_available ? units.pqs_lowering_prototype : nothing
+    transform_prototype =
+        transform_available ? transforms.pqs_transform_prototype : nothing
+    prototype =
+        transform_available ?
+        transform_prototype :
+        lowering_available ?
+        lowering_prototype :
+        nothing
+    source_cpb =
+        isnothing(prototype) || !hasproperty(prototype, :source_cpb) ?
+        nothing :
+        prototype.source_cpb
+    source_cpb_support_count =
+        isnothing(prototype) ||
+        !hasproperty(prototype, :source_cpb_support_count) ?
+        nothing :
+        prototype.source_cpb_support_count
+    owned_support_count =
+        isnothing(prototype) ||
+        !hasproperty(prototype, :owned_support_count) ?
+        nothing :
+        prototype.owned_support_count
+    intermediate_retained_space =
+        isnothing(prototype) ||
+        !hasproperty(prototype, :intermediate_retained_space) ?
+        nothing :
+        prototype.intermediate_retained_space
+
+    return (;
+        pqs_lowering_prototype_available = lowering_available,
+        pqs_transform_prototype_available = transform_available,
+        pqs_lowering_prototype = lowering_prototype,
+        pqs_transform_prototype = transform_prototype,
+        pqs_prototype_unit_key =
+            isnothing(prototype) ? nothing : prototype.unit_key,
+        pqs_prototype_stage =
+            isnothing(prototype) ? :not_available : :metadata_only,
+        pqs_prototype_source =
+            transform_available ?
+            :transform_stage_pqs_transform_prototype :
+            lowering_available ?
+            :unit_stage_pqs_lowering_prototype :
+            :not_available,
+        pqs_prototype_source_cpb_kind =
+            isnothing(source_cpb) ? nothing : source_cpb.cpb_family,
+        pqs_prototype_source_cpb_support_count =
+            source_cpb_support_count,
+        pqs_prototype_source_cpb_support_count_source =
+            isnothing(prototype) ||
+            !hasproperty(prototype, :source_cpb_support_count_source) ?
+            nothing :
+            prototype.source_cpb_support_count_source,
+        pqs_prototype_owned_support_count = owned_support_count,
+        pqs_prototype_owned_support_count_source =
+            isnothing(prototype) ||
+            !hasproperty(prototype, :owned_support_count_source) ?
+            nothing :
+            prototype.owned_support_count_source,
+        pqs_prototype_source_count_distinct_from_owned_support_count =
+            !isnothing(source_cpb_support_count) &&
+            !isnothing(owned_support_count) &&
+            source_cpb_support_count != owned_support_count,
+        pqs_prototype_owned_support_is_cpb =
+            isnothing(prototype) ||
+            !hasproperty(prototype, :owned_support) ?
+            false :
+            prototype.owned_support.owned_support_is_cpb,
+        pqs_prototype_intermediate_retained_space =
+            isnothing(intermediate_retained_space) ?
+            nothing :
+            intermediate_retained_space.retained_rule,
+        pqs_prototype_shell_realization =
+            transform_available ?
+            :shell_projection_lowdin_deferred :
+            lowering_available ?
+            :shell_projection_lowdin_deferred :
+            nothing,
+        pqs_prototype_coefficient_maps_materialized = false,
+        pqs_prototype_coefficient_transform_materialized = false,
+        pqs_prototype_numerical_transform_materialized = false,
+        pqs_prototype_source_operator_blocks_materialized = false,
+        pqs_prototype_operator_blocks_materialized = false,
+        pqs_prototype_pair_operator_blocks_materialized = false,
+        pqs_prototype_hamiltonian_data_materialized = false,
+        pqs_prototype_artifacts_materialized = false,
+    )
+end
+
 function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
     assembly,
 )
@@ -5889,6 +6023,10 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         hasproperty(assembly, :low_order_assembly) ?
         assembly.low_order_assembly :
         nothing
+    pqs_prototype_summary =
+        _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
+            assembly,
+        )
     if isnothing(low_order_assembly)
         return (;
             object_kind = :cartesian_report_stage_low_order_route_summary,
@@ -5926,6 +6064,7 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
+            pqs_prototype_summary...,
             report_stage_fields_preserved = false,
             summary_only = true,
         )
@@ -5979,6 +6118,7 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,
+        pqs_prototype_summary...,
         report_stage_fields_preserved = true,
         summary_only = true,
     )

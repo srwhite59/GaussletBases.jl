@@ -185,6 +185,12 @@ end
     @test !default_report.low_order_independent_atom_growth_pair_inventory_available
     @test default_report.low_order_pair_count ==
           length(default_stages.pairs.pair_entries)
+    @test !default_summary.pqs_lowering_prototype_available
+    @test !default_summary.pqs_transform_prototype_available
+    @test default_summary.pqs_prototype_stage == :not_available
+    @test !default_report.low_order_pqs_lowering_prototype_available
+    @test !default_report.low_order_pqs_transform_prototype_available
+    @test default_report.low_order_pqs_prototype_stage == :not_available
     @test hasproperty(default_report, :route_materializer_payload)
     @test hasproperty(default_report, :diagnostics)
     @test default_report.route_skeleton === default_stages.shells.route_skeleton
@@ -275,6 +281,56 @@ end
     @test atom_growth_report.low_order_pair_count == 36
     @test atom_growth_report.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           36
+    @test atom_growth_summary.pqs_lowering_prototype_available
+    @test atom_growth_summary.pqs_transform_prototype_available
+    @test atom_growth_summary.pqs_lowering_prototype ===
+          atom_growth_stages.units.pqs_lowering_prototype
+    @test atom_growth_summary.pqs_transform_prototype ===
+          atom_growth_stages.transforms.pqs_transform_prototype
+    @test atom_growth_summary.pqs_prototype_unit_key ==
+          atom_growth_stages.units.pqs_lowering_prototype_unit_key
+    @test atom_growth_summary.pqs_prototype_stage == :metadata_only
+    @test atom_growth_summary.pqs_prototype_source ==
+          :transform_stage_pqs_transform_prototype
+    @test atom_growth_summary.pqs_prototype_source_cpb_kind ==
+          :filled_source_cpb
+    @test !atom_growth_summary.pqs_prototype_owned_support_is_cpb
+    @test atom_growth_summary.pqs_prototype_intermediate_retained_space ==
+          :boundary_comx_product_mode_selection
+    @test atom_growth_summary.pqs_prototype_shell_realization ==
+          :shell_projection_lowdin_deferred
+    @test atom_growth_summary.pqs_prototype_source_cpb_support_count ==
+          atom_growth_stages.units.pqs_lowering_prototype.source_cpb_support_count
+    @test atom_growth_summary.pqs_prototype_owned_support_count ==
+          atom_growth_stages.units.pqs_lowering_prototype.owned_support_count
+    @test atom_growth_summary.pqs_prototype_source_count_distinct_from_owned_support_count
+    @test !atom_growth_summary.pqs_prototype_coefficient_maps_materialized
+    @test !atom_growth_summary.pqs_prototype_coefficient_transform_materialized
+    @test !atom_growth_summary.pqs_prototype_numerical_transform_materialized
+    @test !atom_growth_summary.pqs_prototype_source_operator_blocks_materialized
+    @test !atom_growth_summary.pqs_prototype_operator_blocks_materialized
+    @test !atom_growth_summary.pqs_prototype_pair_operator_blocks_materialized
+    @test !atom_growth_summary.pqs_prototype_hamiltonian_data_materialized
+    @test !atom_growth_summary.pqs_prototype_artifacts_materialized
+    @test atom_growth_report.low_order_pqs_lowering_prototype_available
+    @test atom_growth_report.low_order_pqs_transform_prototype_available
+    @test atom_growth_report.low_order_pqs_prototype_unit_key ==
+          atom_growth_summary.pqs_prototype_unit_key
+    @test atom_growth_report.low_order_pqs_prototype_stage == :metadata_only
+    @test atom_growth_report.low_order_pqs_prototype_source_cpb_kind ==
+          :filled_source_cpb
+    @test !atom_growth_report.low_order_pqs_prototype_owned_support_is_cpb
+    @test atom_growth_report.low_order_pqs_prototype_intermediate_retained_space ==
+          :boundary_comx_product_mode_selection
+    @test atom_growth_report.low_order_pqs_prototype_shell_realization ==
+          :shell_projection_lowdin_deferred
+    @test atom_growth_report.low_order_pqs_prototype_source_count_distinct_from_owned_support_count
+    @test !atom_growth_report.low_order_pqs_prototype_coefficient_maps_materialized
+    @test !atom_growth_report.low_order_pqs_prototype_source_operator_blocks_materialized
+    @test !atom_growth_report.low_order_pqs_prototype_operator_blocks_materialized
+    @test !atom_growth_report.low_order_pqs_prototype_pair_operator_blocks_materialized
+    @test !atom_growth_report.low_order_pqs_prototype_hamiltonian_data_materialized
+    @test !atom_growth_report.low_order_pqs_prototype_artifacts_materialized
     @test hasproperty(atom_growth_report, :route_materializer_payload)
     @test hasproperty(atom_growth_report, :diagnostics)
     @test atom_growth_report.route_skeleton ===
