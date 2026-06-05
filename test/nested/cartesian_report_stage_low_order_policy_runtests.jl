@@ -158,6 +158,12 @@ end
     @test default_summary.pair_count == length(default_stages.pairs.pair_entries)
     @test default_summary.pair_family_counts ==
           default_stages.pairs.pair_family_counts
+    @test default_summary.route_core_summary_status == :not_selected_legacy_source_pairs
+    @test default_summary.route_core_final_unit_count == 0
+    @test !default_summary.route_core_pair_inventory_available
+    @test default_summary.route_core_pair_count == 0
+    @test !default_summary.route_core_pair_order_matches_staged
+    @test isempty(default_summary.route_core_pair_family_counts)
     @test default_summary.report_stage_fields_preserved
     @test default_report.low_order_shellization_policy_resolved ==
           :legacy_diatomic_source
@@ -185,6 +191,11 @@ end
     @test !default_report.low_order_independent_atom_growth_pair_inventory_available
     @test default_report.low_order_pair_count ==
           length(default_stages.pairs.pair_entries)
+    @test default_report.low_order_route_core_summary_status ==
+          :not_selected_legacy_source_pairs
+    @test default_report.low_order_route_core_final_unit_count == 0
+    @test !default_report.low_order_route_core_pair_inventory_available
+    @test default_report.low_order_route_core_pair_count == 0
     @test !default_summary.pqs_lowering_prototype_available
     @test !default_summary.pqs_transform_prototype_available
     @test default_summary.pqs_prototype_stage == :not_available
@@ -246,6 +257,19 @@ end
     @test atom_growth_summary.pair_count == 36
     @test atom_growth_summary.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           36
+    @test atom_growth_summary.route_core_summary_status ==
+          :available_route_core_unit_pair_summary
+    @test atom_growth_summary.route_core_final_unit_count == 8
+    @test atom_growth_summary.route_core_pair_inventory_available
+    @test atom_growth_summary.route_core_pair_inventory_status ==
+          :available_route_core_unit_pair_inventory
+    @test atom_growth_summary.route_core_pair_count == 36
+    @test atom_growth_summary.route_core_pair_order_matches_staged
+    @test atom_growth_summary.route_core_pair_order_comparison_source ==
+          :atom_growth_pair_inventory
+    @test sum(
+        family.pair_count for family in atom_growth_summary.route_core_pair_family_counts
+    ) == 36
     @test atom_growth_summary.summary_only
     @test atom_growth_report.low_order_shellization_policy_requested ==
           :atom_growth_complete_rectangular
@@ -281,6 +305,18 @@ end
     @test atom_growth_report.low_order_pair_count == 36
     @test atom_growth_report.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           36
+    @test atom_growth_report.low_order_route_core_summary_status ==
+          :available_route_core_unit_pair_summary
+    @test atom_growth_report.low_order_route_core_final_unit_count == 8
+    @test atom_growth_report.low_order_route_core_pair_inventory_available
+    @test atom_growth_report.low_order_route_core_pair_inventory_status ==
+          :available_route_core_unit_pair_inventory
+    @test atom_growth_report.low_order_route_core_pair_count == 36
+    @test atom_growth_report.low_order_route_core_pair_order_matches_staged
+    @test atom_growth_report.low_order_route_core_pair_order_comparison_source ==
+          :atom_growth_pair_inventory
+    @test atom_growth_report.low_order_route_core_pair_family_counts ==
+          atom_growth_summary.route_core_pair_family_counts
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104
@@ -407,6 +443,15 @@ end
     )
     @test occursin(
         "report.low_order_pair_count = 36",
+        summary_stdout,
+    )
+    @test occursin(
+        "CRC sidecars: final units 8, pairs 36, order match yes",
+        summary_stdout,
+    )
+    @test occursin("CRC pair families: ", summary_stdout)
+    @test occursin(
+        "white_lindsey_atom_local_child_shellification",
         summary_stdout,
     )
     @test occursin(
