@@ -1423,22 +1423,56 @@ function _cartesian_shellization_route_origin_centered(location; atol::Float64 =
 end
 
 function _cartesian_shellification_plan_private_summary(plan)
-    return (;
-        object_kind = :cartesian_shellification_plan_private_summary,
-        status = plan.status,
-        private_development_only = true,
-        source_kind = plan.source_kind,
-        route_family = plan.route_family,
-        system_classification = plan.system_classification,
-        shellification_stage = plan.shellification_stage,
-        lowering_stage = plan.lowering_stage,
-        region_count = plan.region_count,
-        ordered_region_roles = plan.ordered_region_roles,
-        shell_region_count = plan.shell_region_count,
-        direct_core_region_count = plan.direct_core_region_count,
-        retained_dimension = plan.retained_dimension,
-        coverage_status = plan.coverage.status,
-        coverage_complete = plan.coverage.coverage_complete,
+    if plan.system_classification == :one_center
+        return (;
+            object_kind = :cartesian_shellification_plan_private_summary,
+            status = plan.status,
+            private_development_only = true,
+            source_kind = plan.source_kind,
+            route_family = plan.route_family,
+            system_classification = plan.system_classification,
+            shellification_stage = plan.shellification_stage,
+            lowering_stage = plan.lowering_stage,
+            region_count = plan.region_count,
+            ordered_region_roles = plan.ordered_region_roles,
+            shell_region_count = plan.shell_region_count,
+            direct_core_region_count = plan.direct_core_region_count,
+            retained_dimension = plan.retained_dimension,
+            coverage_status = plan.coverage.status,
+            coverage_complete = plan.coverage.coverage_complete,
+        )
+    elseif plan.system_classification == :bond_aligned_diatomic
+        return (;
+            object_kind = :cartesian_shellification_plan_private_summary,
+            status = plan.status,
+            private_development_only = true,
+            source_kind = plan.source_kind,
+            route_family = plan.route_family,
+            system_classification = plan.system_classification,
+            shellification_stage = plan.shellification_stage,
+            lowering_stage = plan.lowering_stage,
+            split_status = plan.split_status,
+            did_split = plan.did_split,
+            midpoint_slab_present = plan.midpoint_slab_present,
+            region_count = plan.region_count,
+            ordered_region_roles = plan.ordered_region_roles,
+            shared_shell_region_count = plan.shared_shell_region_count,
+            child_subtree_region_count = plan.child_subtree_region_count,
+            midpoint_slab_region_count = plan.midpoint_slab_region_count,
+            shared_shell_layer_count = plan.shared_shell_layer_count,
+            child_sequence_count = plan.child_sequence_count,
+            retained_dimension = plan.retained_dimension,
+            support_count = plan.support_count,
+            coverage_status = plan.coverage.status,
+            coverage_complete = plan.coverage.coverage_complete,
+            region_support_count_matches_sequence =
+                plan.coverage.region_support_count_matches_sequence,
+        )
+    end
+    throw(
+        ArgumentError(
+            "private shellification plan summary does not support system_classification $(plan.system_classification)",
+        ),
     )
 end
 
@@ -1661,8 +1695,12 @@ function _cartesian_shellization_route_materialize_bond_aligned_diatomic(
             materializer_options,
             source = nothing,
             shellization_summary = nothing,
+            shellification_plan_summary = nothing,
             retained_dimension = nothing,
             route_configured_shellization_consumed = false,
+            shellification_plan_path_available = false,
+            shellification_plan_path_used = false,
+            calls_shellification_plan_materializer = false,
             public_default_behavior_changed = false,
         )
     end
@@ -1686,6 +1724,13 @@ function _cartesian_shellization_route_materialize_bond_aligned_diatomic(
         source_kind = :route_configured_bond_aligned_diatomic_source,
         shellization_role = :route_configured_bond_aligned_diatomic_shellization,
     )
+    shellification_plan =
+        _cartesian_shellification_plan_bond_aligned_diatomic_low_order(
+            source;
+            route_family = config.route_family,
+        )
+    shellification_plan_summary =
+        _cartesian_shellification_plan_private_summary(shellification_plan)
 
     return (
         object_kind = :cartesian_shellization_route_bond_aligned_diatomic_materialization,
@@ -1700,8 +1745,12 @@ function _cartesian_shellization_route_materialize_bond_aligned_diatomic(
         materializer_options,
         source,
         shellization_summary,
+        shellification_plan_summary,
         retained_dimension = shellization_summary.retained_dimension,
         route_configured_shellization_consumed = true,
+        shellification_plan_path_available = true,
+        shellification_plan_path_used = false,
+        calls_shellification_plan_materializer = false,
         public_default_behavior_changed = false,
     )
 end

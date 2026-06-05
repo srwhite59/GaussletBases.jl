@@ -182,6 +182,27 @@ end
     @test probe_options.shared_shell_layer_policy == :endcap_panel_owned
     @test probe_options.packet_kernel == :factorized_direct
     @test probe_options.term_coefficients_source == :coulomb_expansion_coefficients
+    @test probe_materialization.shellification_plan_path_available
+    @test !probe_materialization.shellification_plan_path_used
+    @test !probe_materialization.calls_shellification_plan_materializer
+    plan_summary = probe_materialization.shellification_plan_summary
+    @test plan_summary.object_kind == :cartesian_shellification_plan_private_summary
+    @test plan_summary.source_kind ==
+          :bond_aligned_diatomic_active_source_shellification_plan
+    @test plan_summary.route_family == :white_lindsey_low_order
+    @test plan_summary.system_classification == :bond_aligned_diatomic
+    @test plan_summary.split_status == probe_materialization.shellization_summary.split_status
+    @test plan_summary.shared_shell_region_count ==
+          length(probe_materialization.source.shared_shell_layers)
+    @test plan_summary.child_subtree_region_count ==
+          length(probe_materialization.source.child_sequences)
+    @test plan_summary.midpoint_slab_region_count ==
+          (isnothing(probe_materialization.source.midpoint_slab_column_range) ? 0 : 1)
+    @test plan_summary.retained_dimension == probe_materialization.retained_dimension
+    @test plan_summary.support_count ==
+          length(probe_materialization.source.sequence.support_indices)
+    @test plan_summary.coverage_complete
+    @test plan_summary.region_support_count_matches_sequence
 
     @test materialization.status ==
           :materialized_route_configured_diatomic_shellization_available
