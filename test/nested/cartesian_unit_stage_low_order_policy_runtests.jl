@@ -192,6 +192,8 @@ end
     @test plan_inventory.owned_support_available
     @test plan_inventory.lowering_source_cpbs_available
     @test plan_inventory.source_cpb_count == 3
+    @test plan_inventory.pqs_lowering_prototype_available
+    @test !isnothing(plan_inventory.pqs_lowering_prototype_unit_key)
     @test all(unit -> !unit.source_backed, plan_inventory.plan_units)
     @test all(unit -> unit.independently_lowerable, plan_inventory.plan_units)
     @test all(
@@ -211,12 +213,45 @@ end
         plan_inventory.plan_units,
     )
     @test all(
+        unit -> unit.owned_support.owned_support_authority ==
+                :shellification_region,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.owned_support.shellification_authority_scope ==
+                :owned_support_only,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> !unit.owned_support.shellification_region_is_lowering_source,
+        plan_inventory.plan_units,
+    )
+    @test all(
         unit -> unit.lowering_recipe.object_kind == :cartesian_cpb_lowering_recipe,
         plan_inventory.plan_units,
     )
     @test all(
         unit -> unit.lowering_recipe.lowering_stage ==
                 :coordinate_product_box_lowering,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.owned_support_authority ==
+                :shellification_region,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.shellification_authority_scope ==
+                :owned_support_only,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> !unit.lowering_recipe.shellification_region_is_lowering_source,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.lowering_source_authority ==
+                :lowering_recipe_cpbs,
         plan_inventory.plan_units,
     )
     @test all(
@@ -256,6 +291,7 @@ end
         shell_difference_units,
     )
     @test all(unit -> !unit.owned_support.box_difference_is_cpb, shell_difference_units)
+    @test all(unit -> !unit.owned_support.owned_support_is_cpb, shell_difference_units)
     @test all(
         unit -> !isnothing(unit.owned_support.inner_exclusion_cpb),
         shell_difference_units,
@@ -305,6 +341,63 @@ end
             if unit.lowering_family == :white_lindsey_adaptive_complete_shell
         ),
     )
+    pqs_prototype = plan_inventory.pqs_lowering_prototype
+    @test pqs_prototype.object_kind ==
+          :cartesian_pqs_lowering_metadata_prototype
+    @test pqs_prototype.status == :metadata_only_planned
+    @test pqs_prototype.unit_key == plan_inventory.pqs_lowering_prototype_unit_key
+    pqs_unit = only(
+        unit for unit in plan_inventory.plan_units
+        if unit.unit_key == pqs_prototype.unit_key
+    )
+    @test pqs_unit.unit_role == :regular_shared_molecular_shell
+    @test pqs_prototype.owned_support === pqs_unit.owned_support
+    @test pqs_prototype.owned_support_authority == :shellification_region
+    @test pqs_prototype.shellification_authority_scope == :owned_support_only
+    @test !pqs_prototype.shellification_region_is_lowering_source
+    @test !pqs_prototype.owned_support_is_cpb
+    @test pqs_prototype.owned_support_is_shell_difference
+    @test pqs_prototype.source_cpb.object_kind ==
+          :cartesian_coordinate_product_box3d
+    @test pqs_prototype.source_cpb.cpb_family == :filled_source_cpb
+    @test pqs_prototype.source_cpb.coordinate_product_box
+    @test pqs_prototype.source_cpb.codimension == 0
+    @test pqs_prototype.source_cpb.support_count ==
+          prod(pqs_prototype.source_cpb.dimensions)
+    @test pqs_prototype.source_cpb.support_count ==
+          pqs_prototype.source_cpb_support_count
+    @test pqs_prototype.source_cpb_support_count_source ==
+          :filled_coordinate_product_box
+    @test pqs_prototype.owned_support.support_count == pqs_unit.support_count
+    @test pqs_prototype.owned_support_count == pqs_unit.support_count
+    @test pqs_prototype.owned_support_count_source == :shellification_region
+    @test pqs_prototype.source_cpb_support_count !=
+          pqs_prototype.owned_support_count
+    @test pqs_prototype.lowering_source_authority ==
+          :pqs_lowering_recipe_filled_source_cpb
+    @test pqs_prototype.lowering_recipe == :pqs_filled_source_cpb
+    @test pqs_prototype.lowering_recipe_contract.retained_rule ==
+          :boundary_comx_product_mode_selection
+    @test pqs_prototype.intermediate_retained_space.object_kind ==
+          :pqs_boundary_comx_product_intermediate_retained_space
+    @test pqs_prototype.intermediate_retained_space.status == :planned_deferred
+    @test pqs_prototype.intermediate_retained_space.selected_modes ==
+          :boundary_comx_product_modes
+    @test pqs_prototype.shell_realization.object_kind ==
+          :pqs_shell_projection_lowdin_realization
+    @test pqs_prototype.shell_realization.status == :planned_deferred
+    @test pqs_prototype.shell_realization.shell_projection_planned
+    @test pqs_prototype.shell_realization.lowdin_cleanup_planned
+    @test !pqs_prototype.dense_parent_space_operators_are_algorithm
+    @test !pqs_prototype.shell_row_operator_algorithm
+    @test !pqs_prototype.coefficient_maps_materialized
+    @test !pqs_prototype.operator_blocks_materialized
+    @test !pqs_prototype.pair_operator_blocks_materialized
+    @test !pqs_prototype.public_route_adoption
+    @test pqs_unit.lowering_recipe.source_cpb_families ==
+          (:facet_cpb, :edge_cpb, :corner_cpb)
+    @test pqs_unit.lowering_recipe.source_cpb_enumeration_status ==
+          :planned_cpb_families_not_enumerated
     @test all(
         unit -> unit.source_descriptor.final_column_ranges_available == false,
         plan_inventory.plan_units,
@@ -315,6 +408,9 @@ end
     @test atom_growth_summary.route_skeleton_unit_fields_preserved
     @test atom_growth_summary.route_skeleton_unit_inventory_source ==
           :route_skeleton_compatibility_fields
+    @test atom_growth_units.pqs_lowering_prototype_available
+    @test atom_growth_units.pqs_lowering_prototype ===
+          plan_inventory.pqs_lowering_prototype
     @test atom_growth_units.source_boxes ===
           atom_growth_units.route_skeleton.source_boxes
     @test atom_growth_units.source_dimensions ===

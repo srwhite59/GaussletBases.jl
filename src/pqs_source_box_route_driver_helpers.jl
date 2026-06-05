@@ -5054,6 +5054,9 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             owned_support_available = false,
             lowering_source_cpbs_available = false,
             source_cpb_count = 0,
+            pqs_lowering_prototype_available = false,
+            pqs_lowering_prototype = nothing,
+            pqs_lowering_prototype_unit_key = nothing,
             route_skeleton_unit_fields_preserved = false,
             route_skeleton_unit_inventory_source = :not_available,
             summary_only = true,
@@ -5168,6 +5171,17 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             plan_unit_inventory_available &&
             plan_unit_inventory.lowering_source_cpbs_available,
         source_cpb_count,
+        pqs_lowering_prototype_available =
+            plan_unit_inventory_available &&
+            plan_unit_inventory.pqs_lowering_prototype_available,
+        pqs_lowering_prototype =
+            plan_unit_inventory_available ?
+            plan_unit_inventory.pqs_lowering_prototype :
+            nothing,
+        pqs_lowering_prototype_unit_key =
+            plan_unit_inventory_available ?
+            plan_unit_inventory.pqs_lowering_prototype_unit_key :
+            nothing,
         route_skeleton_unit_fields_preserved = true,
         route_skeleton_unit_inventory_source =
             :route_skeleton_compatibility_fields,
@@ -5208,6 +5222,11 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         lowering_source_cpbs_available =
             low_order_units.lowering_source_cpbs_available,
         source_cpb_count = low_order_units.source_cpb_count,
+        pqs_lowering_prototype_available =
+            low_order_units.pqs_lowering_prototype_available,
+        pqs_lowering_prototype = low_order_units.pqs_lowering_prototype,
+        pqs_lowering_prototype_unit_key =
+            low_order_units.pqs_lowering_prototype_unit_key,
         materialized_units_available =
             low_order_units.materialized_units_available,
         retained_unit_dimensions_known =

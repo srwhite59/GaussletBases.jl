@@ -228,6 +228,20 @@ end
         contract_inventory.transform_contracts,
     )
     @test all(
+        contract -> contract.lowering_recipe.shellification_authority_scope ==
+                    :owned_support_only,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> !contract.lowering_recipe.shellification_region_is_lowering_source,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.lowering_recipe.lowering_source_authority ==
+                    :lowering_recipe_cpbs,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
         contract -> contract.intermediate_retained_space.object_kind ==
                     :cartesian_intermediate_retained_space_contract,
         contract_inventory.transform_contracts,

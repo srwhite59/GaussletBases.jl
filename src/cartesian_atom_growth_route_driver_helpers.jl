@@ -100,7 +100,11 @@ function _pqs_source_box_route_driver_owned_support(region)
         object_kind = :cartesian_owned_support_region3d,
         role = region.role,
         support_kind = owned_support_kind,
+        owned_support_authority = :shellification_region,
+        shellification_authority_scope = :owned_support_only,
         shellification_region_is_cpb = false,
+        shellification_region_is_lowering_source = false,
+        owned_support_is_cpb = isnothing(inner_exclusion_box),
         owned_support_is_coordinate_product = isnothing(inner_exclusion_box),
         owned_support_is_shell_difference = !isnothing(inner_exclusion_box),
         box_difference_is_cpb = false,
@@ -183,6 +187,10 @@ function _pqs_source_box_route_driver_lowering_recipe(region, source_cpbs)
             isempty(source_cpbs) ?
             :planned_cpb_families_not_enumerated :
             :explicit_source_cpbs,
+        owned_support_authority = :shellification_region,
+        shellification_authority_scope = :owned_support_only,
+        shellification_region_is_lowering_source = false,
+        lowering_source_authority = :lowering_recipe_cpbs,
         white_lindsey_lowering_sources_are_cpbs =
             all(!=(:pending_cpb_lowering_family), source_families),
         shellification_region_authority = false,
@@ -228,6 +236,80 @@ function _pqs_source_box_route_driver_final_retained_unit_contract(
         retained_count_known = false,
         retained_range_known = false,
         pair_planning_input = true,
+    )
+end
+
+function _pqs_source_box_route_driver_pqs_lowering_prototype(unit)
+    unit.owned_support.owned_support_is_shell_difference || return nothing
+    source_box = unit.owned_support.outer_cpb.box
+    source_cpb_support_count = prod(length.(source_box))
+    owned_support_count = unit.support_count
+    source_cpb = _pqs_source_box_route_driver_cpb_descriptor(
+        box = source_box,
+        role = :pqs_filled_source_cpb,
+        cpb_family = :filled_source_cpb,
+        source = :metadata_only_pqs_lowering_prototype,
+        support_count = source_cpb_support_count,
+    )
+    return (;
+        object_kind = :cartesian_pqs_lowering_metadata_prototype,
+        status = :metadata_only_planned,
+        private_development_only = true,
+        unit_key = unit.unit_key,
+        unit_role = unit.unit_role,
+        shellification_policy = unit.shellification_policy,
+        shellification_authority_scope = :owned_support_only,
+        owned_support_authority = :shellification_region,
+        owned_support = unit.owned_support,
+        owned_support_is_cpb = unit.owned_support.owned_support_is_cpb,
+        owned_support_is_shell_difference =
+            unit.owned_support.owned_support_is_shell_difference,
+        owned_support_count,
+        owned_support_count_source = :shellification_region,
+        source_cpb,
+        source_cpb_support_count,
+        source_cpb_support_count_source = :filled_coordinate_product_box,
+        source_cpbs = (source_cpb,),
+        source_cpb_count = 1,
+        lowering_source_authority = :pqs_lowering_recipe_filled_source_cpb,
+        shellification_region_is_lowering_source = false,
+        lowering_recipe = :pqs_filled_source_cpb,
+        lowering_recipe_contract = (;
+            object_kind = :cartesian_cpb_lowering_recipe,
+            lowering_stage = :coordinate_product_box_lowering,
+            lowering_family = :projected_q_shell,
+            lowering_recipe = :pqs_filled_source_cpb,
+            source_cpb_families = (:filled_source_cpb,),
+            retained_rule = :boundary_comx_product_mode_selection,
+            shellification_region_authority = false,
+            shellification_authority_scope = :owned_support_only,
+            lowering_source_authority = :pqs_lowering_recipe_filled_source_cpb,
+        ),
+        intermediate_retained_space = (;
+            object_kind =
+                :pqs_boundary_comx_product_intermediate_retained_space,
+            construction_stage = :intermediate_retained_space,
+            status = :planned_deferred,
+            retained_rule = :boundary_comx_product_mode_selection,
+            selected_modes = :boundary_comx_product_modes,
+            source_space_operator_blocks_planned = true,
+            retained_dimension_known = false,
+        ),
+        shell_realization = (;
+            object_kind = :pqs_shell_projection_lowdin_realization,
+            construction_stage = :shell_realization,
+            status = :planned_deferred,
+            shell_projection_planned = true,
+            lowdin_cleanup_planned = true,
+            materialized = false,
+        ),
+        dense_parent_space_operators_are_algorithm = false,
+        shell_row_operator_algorithm = false,
+        coefficient_maps_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        public_route_adoption = false,
+        default_route_behavior_changed = false,
     )
 end
 
@@ -395,6 +477,17 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
         NamedTuple{unit_keys}(Tuple(unit.support_count for unit in plan_units))
     source_backed_unit_count = count(unit -> unit.source_backed, plan_units)
     source_cpb_count = sum(unit.source_cpb_count for unit in plan_units; init = 0)
+    pqs_lowering_prototype_unit =
+        findfirst(
+            unit -> unit.unit_role == :regular_shared_molecular_shell,
+            plan_units,
+        )
+    pqs_lowering_prototype =
+        isnothing(pqs_lowering_prototype_unit) ?
+        nothing :
+        _pqs_source_box_route_driver_pqs_lowering_prototype(
+            plan_units[pqs_lowering_prototype_unit],
+        )
     return (;
         object_kind = :cartesian_atom_growth_plan_unit_inventory,
         status = :available_atom_growth_plan_unit_inventory,
@@ -405,6 +498,12 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
         owned_support_available = true,
         lowering_source_cpbs_available = true,
         source_cpb_count,
+        pqs_lowering_prototype_available = !isnothing(pqs_lowering_prototype),
+        pqs_lowering_prototype,
+        pqs_lowering_prototype_unit_key =
+            isnothing(pqs_lowering_prototype) ?
+            nothing :
+            pqs_lowering_prototype.unit_key,
         plan_units,
         unit_count = length(plan_units),
         unit_keys,
