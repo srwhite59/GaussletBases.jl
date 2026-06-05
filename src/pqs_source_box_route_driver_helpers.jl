@@ -1721,6 +1721,7 @@ function _pqs_source_box_route_driver_report(
     route_facts,
     contract,
     diagnostics,
+    low_order_route_summary,
 )
     route_materializer_payload =
         _pqs_source_box_route_driver_materializer_payload(parent)
@@ -1755,6 +1756,49 @@ function _pqs_source_box_route_driver_report(
         linear_algebra_plan = contract.linear_algebra_plan,
         stage_table = contract.stage_table,
         dry_run_validation = contract.dry_run_validation,
+        low_order_route_summary,
+        low_order_shellization_policy_requested =
+            low_order_route_summary.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_route_summary.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_route_summary.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_route_summary.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_route_summary.low_order_shellization_policy_blocker,
+        low_order_shellization_source =
+            low_order_route_summary.shellization_source,
+        low_order_shellization_kind = low_order_route_summary.shellization_kind,
+        low_order_unit_route_kind = low_order_route_summary.unit_route_kind,
+        low_order_transform_route_kind =
+            low_order_route_summary.transform_route_kind,
+        low_order_pair_route_kind = low_order_route_summary.pair_route_kind,
+        low_order_assembly_source = low_order_route_summary.assembly_source,
+        low_order_assembly_route_kind =
+            low_order_route_summary.assembly_route_kind,
+        low_order_assembly_kind = low_order_route_summary.assembly_kind,
+        atom_growth_low_order_route_selected =
+            low_order_route_summary.atom_growth_selected,
+        legacy_source_low_order_route_selected =
+            low_order_route_summary.legacy_source_selected,
+        low_order_plan_authority = low_order_route_summary.plan_authority,
+        low_order_active_source_authority =
+            low_order_route_summary.active_source_authority,
+        low_order_legacy_source_authority =
+            low_order_route_summary.legacy_source_authority,
+        low_order_materialization_required =
+            low_order_route_summary.materialization_required,
+        low_order_materialization_status =
+            low_order_route_summary.materialization_status,
+        low_order_materialization_blocker =
+            low_order_route_summary.materialization_blocker,
+        low_order_hamiltonian_matrices_materialized =
+            low_order_route_summary.hamiltonian_matrices_materialized,
+        low_order_operator_matrices_materialized =
+            low_order_route_summary.operator_matrices_materialized,
+        low_order_pair_operator_blocks_materialized =
+            low_order_route_summary.pair_operator_blocks_materialized,
         diagnostics,
         route_materializer_payload,
     )
@@ -5224,6 +5268,97 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
     )
 end
 
+function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
+    assembly,
+)
+    low_order_assembly =
+        hasproperty(assembly, :low_order_assembly) ?
+        assembly.low_order_assembly :
+        nothing
+    if isnothing(low_order_assembly)
+        return (;
+            object_kind = :cartesian_report_stage_low_order_route_summary,
+            status = :not_available_missing_assembly_stage_summary,
+            low_order_shellization_policy_requested = nothing,
+            low_order_shellization_policy_resolved = :not_available,
+            low_order_shellization_policy_source = :not_available,
+            low_order_shellization_policy_status =
+                :not_available_missing_assembly_stage_summary,
+            low_order_shellization_policy_blocker =
+                :missing_assembly_stage_low_order_summary,
+            shellization_source = :not_available,
+            shellization_kind = :not_available,
+            unit_route_kind = :not_available,
+            transform_route_kind = :not_available,
+            pair_route_kind = :not_available,
+            assembly_source = :not_available,
+            assembly_route_kind = :not_available,
+            assembly_kind = :not_available,
+            atom_growth_selected = false,
+            legacy_source_selected = false,
+            materialization_required = true,
+            materialization_status =
+                :blocked_missing_assembly_stage_summary,
+            materialization_blocker =
+                :missing_assembly_stage_low_order_summary,
+            hamiltonian_matrices_materialized = false,
+            operator_matrices_materialized = false,
+            pair_operator_blocks_materialized = false,
+            plan_authority = false,
+            active_source_authority = false,
+            legacy_source_authority = false,
+            report_stage_fields_preserved = false,
+            summary_only = true,
+        )
+    end
+
+    return (;
+        object_kind = :cartesian_report_stage_low_order_route_summary,
+        status =
+            low_order_assembly.status ==
+            :available_assembly_stage_low_order_summary ?
+            :available_report_stage_low_order_route_summary :
+            low_order_assembly.status,
+        low_order_shellization_policy_requested =
+            low_order_assembly.low_order_shellization_policy_requested,
+        low_order_shellization_policy_resolved =
+            low_order_assembly.low_order_shellization_policy_resolved,
+        low_order_shellization_policy_source =
+            low_order_assembly.low_order_shellization_policy_source,
+        low_order_shellization_policy_status =
+            low_order_assembly.low_order_shellization_policy_status,
+        low_order_shellization_policy_blocker =
+            low_order_assembly.low_order_shellization_policy_blocker,
+        shellization_source = low_order_assembly.shellization_source,
+        shellization_kind = low_order_assembly.shellization_kind,
+        unit_route_kind = low_order_assembly.unit_route_kind,
+        transform_route_kind = low_order_assembly.transform_route_kind,
+        pair_route_kind = low_order_assembly.pair_route_kind,
+        assembly_source = low_order_assembly.assembly_source,
+        assembly_route_kind = low_order_assembly.assembly_route_kind,
+        assembly_kind = low_order_assembly.assembly_kind,
+        atom_growth_selected = low_order_assembly.atom_growth_assembly_selected,
+        legacy_source_selected =
+            low_order_assembly.legacy_source_assembly_selected,
+        materialization_required =
+            low_order_assembly.assembly_requires_materialization,
+        materialization_status =
+            low_order_assembly.assembly_materialization_status,
+        materialization_blocker = low_order_assembly.assembly_blocker,
+        hamiltonian_matrices_materialized =
+            low_order_assembly.hamiltonian_matrices_materialized,
+        operator_matrices_materialized =
+            low_order_assembly.operator_matrices_materialized,
+        pair_operator_blocks_materialized =
+            low_order_assembly.pair_operator_blocks_materialized,
+        plan_authority = low_order_assembly.plan_authority,
+        active_source_authority = low_order_assembly.active_source_authority,
+        legacy_source_authority = low_order_assembly.legacy_source_authority,
+        report_stage_fields_preserved = true,
+        summary_only = true,
+    )
+end
+
 function cartesian_report(system, parent, assembly, recipe)
     standard_setup = parent.standard_setup
     parent_axis = parent.parent_axis
@@ -5250,11 +5385,16 @@ function cartesian_report(system, parent, assembly, recipe)
         _pqs_source_box_route_driver_diagnostics(
             standard_setup, parent_axis, route_axis_counts,
             route_skeleton, raw_box, contract)
+    low_order_route_summary =
+        _pqs_source_box_route_driver_report_stage_low_order_route_summary(
+            assembly,
+        )
 
     return _pqs_source_box_route_driver_report(
         standard_setup, parent, parent_axis, route_axis_counts, raw_box,
         system_metadata, recipe_metadata, parent_contract, parent_description,
-        route_skeleton, route_facts, contract, diagnostics)
+        route_skeleton, route_facts, contract, diagnostics,
+        low_order_route_summary)
 end
 
 function cartesian_materialization(report, materialization_inputs)
