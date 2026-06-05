@@ -210,6 +210,12 @@ end
     @test default_report.low_order_route_core_pair_operator_preflight_blocker ==
           :not_selected_legacy_source_pairs
     @test !default_report.low_order_route_core_pair_operator_preflight.operator_blocks_materialized
+    @test default_report.low_order_route_core_pair_operator_plan_available
+    @test default_report.low_order_route_core_pair_operator_plan_status ==
+          :blocked_route_core_pair_operator_plan
+    @test default_report.low_order_route_core_pair_operator_plan_blocker ==
+          :not_selected_legacy_source_pairs
+    @test !default_report.low_order_route_core_pair_operator_plan.operator_blocks_materialized
     @test !default_summary.pqs_lowering_prototype_available
     @test !default_summary.pqs_transform_prototype_available
     @test default_summary.pqs_prototype_stage == :not_available
@@ -350,6 +356,16 @@ end
     @test atom_growth_report.low_order_route_core_pair_operator_preflight.route_core_pair_count ==
           36
     @test !atom_growth_report.low_order_route_core_pair_operator_preflight.operator_blocks_materialized
+    @test atom_growth_report.low_order_route_core_pair_operator_plan_available
+    @test atom_growth_report.low_order_route_core_pair_operator_plan_status ==
+          :ready_route_core_pair_operator_plan
+    @test isnothing(atom_growth_report.low_order_route_core_pair_operator_plan_blocker)
+    @test atom_growth_report.low_order_route_core_pair_operator_plan.route_core_final_unit_count ==
+          8
+    @test atom_growth_report.low_order_route_core_pair_operator_plan.route_core_pair_count ==
+          36
+    @test !atom_growth_report.low_order_route_core_pair_operator_plan.operator_blocks_materialized
+    @test !atom_growth_report.low_order_route_core_pair_operator_plan.hamiltonian_matrices_materialized
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104
