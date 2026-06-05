@@ -1869,6 +1869,20 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.route_core_typed_pair_operator_blocker_counts,
         low_order_route_core_typed_pair_operator_plan_family_counts =
             low_order_route_summary.route_core_typed_pair_operator_plan_family_counts,
+        low_order_route_core_typed_pair_operator_materialization_ready =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_ready,
+        low_order_route_core_typed_pair_operator_materialization_readiness_status =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_status,
+        low_order_route_core_typed_pair_operator_materialization_readiness_blocker =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_blocker,
+        low_order_route_core_typed_pair_operator_materialization_readiness_requirements =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_requirements,
+        low_order_route_core_typed_pair_operator_materialization_readiness_plan_count =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_plan_count,
+        low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count,
+        low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            low_order_route_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         low_order_lw_complete_shell_cpb_enumeration_available =
             low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
         low_order_lw_complete_shell_region_count =
@@ -5709,6 +5723,16 @@ function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavai
         route_core_typed_pair_operator_materialization_status_counts = (),
         route_core_typed_pair_operator_blocker_counts = (),
         route_core_typed_pair_operator_plan_family_counts = (),
+        route_core_typed_pair_operator_materialization_ready = false,
+        route_core_typed_pair_operator_materialization_readiness_status =
+            status,
+        route_core_typed_pair_operator_materialization_readiness_blocker =
+            blocker,
+        route_core_typed_pair_operator_materialization_readiness_requirements =
+            CartesianRouteCore.pair_operator_materialization_readiness_requirements(),
+        route_core_typed_pair_operator_materialization_readiness_plan_count = 0,
+        route_core_typed_pair_operator_materialization_readiness_blocked_count = 0,
+        route_core_typed_pair_operator_materialization_readiness_materialized_count = 0,
     )
 end
 
@@ -5766,6 +5790,20 @@ function _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_metada
             CartesianRouteCore.pair_operator_blocker_counts(plan_inventory),
         route_core_typed_pair_operator_plan_family_counts =
             CartesianRouteCore.pair_operator_plan_family_counts(plan_inventory),
+        route_core_typed_pair_operator_materialization_ready =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_ready,
+        route_core_typed_pair_operator_materialization_readiness_status =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_status,
+        route_core_typed_pair_operator_materialization_readiness_blocker =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_blocker,
+        route_core_typed_pair_operator_materialization_readiness_requirements =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_requirements,
+        route_core_typed_pair_operator_materialization_readiness_plan_count =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_plan_count,
+        route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_blocked_count,
+        route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            route_core_sidecar_inventory.crc_pair_operator_materialization_readiness_materialized_count,
     )
 end
 
@@ -6452,6 +6490,20 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_typed_pair_operator_blocker_counts,
         route_core_typed_pair_operator_plan_family_counts =
             low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
+        route_core_typed_pair_operator_materialization_ready =
+            low_order_pairs.route_core_typed_pair_operator_materialization_ready,
+        route_core_typed_pair_operator_materialization_readiness_status =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_status,
+        route_core_typed_pair_operator_materialization_readiness_blocker =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocker,
+        route_core_typed_pair_operator_materialization_readiness_requirements =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_requirements,
+        route_core_typed_pair_operator_materialization_readiness_plan_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_plan_count,
+        route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocked_count,
+        route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = low_order_pairs.pair_entries,
         pair_family_counts = low_order_pairs.pair_family_counts,
@@ -6677,6 +6729,20 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             low_order_pairs.route_core_typed_pair_operator_blocker_counts,
         route_core_typed_pair_operator_plan_family_counts =
             low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
+        route_core_typed_pair_operator_materialization_ready =
+            low_order_pairs.route_core_typed_pair_operator_materialization_ready,
+        route_core_typed_pair_operator_materialization_readiness_status =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_status,
+        route_core_typed_pair_operator_materialization_readiness_blocker =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocker,
+        route_core_typed_pair_operator_materialization_readiness_requirements =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_requirements,
+        route_core_typed_pair_operator_materialization_readiness_plan_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_plan_count,
+        route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocked_count,
+        route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         helper_by_pair_family = low_order_pairs.helper_by_pair_family,
         pair_operator_helper_by_family =
             low_order_pairs.pair_operator_helper_by_family,
@@ -6795,6 +6861,20 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.route_core_typed_pair_operator_blocker_counts,
         low_order_route_core_typed_pair_operator_plan_family_counts =
             low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
+        low_order_route_core_typed_pair_operator_materialization_ready =
+            low_order_assembly.route_core_typed_pair_operator_materialization_ready,
+        low_order_route_core_typed_pair_operator_materialization_readiness_status =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_status,
+        low_order_route_core_typed_pair_operator_materialization_readiness_blocker =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocker,
+        low_order_route_core_typed_pair_operator_materialization_readiness_requirements =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_requirements,
+        low_order_route_core_typed_pair_operator_materialization_readiness_plan_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_plan_count,
+        low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocked_count,
+        low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         low_order_pair_operator_helper_by_family =
             low_order_assembly.pair_operator_helper_by_family,
         low_order_pair_helper_status_by_family =
@@ -7136,6 +7216,20 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.route_core_typed_pair_operator_blocker_counts,
         route_core_typed_pair_operator_plan_family_counts =
             low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
+        route_core_typed_pair_operator_materialization_ready =
+            low_order_assembly.route_core_typed_pair_operator_materialization_ready,
+        route_core_typed_pair_operator_materialization_readiness_status =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_status,
+        route_core_typed_pair_operator_materialization_readiness_blocker =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocker,
+        route_core_typed_pair_operator_materialization_readiness_requirements =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_requirements,
+        route_core_typed_pair_operator_materialization_readiness_plan_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_plan_count,
+        route_core_typed_pair_operator_materialization_readiness_blocked_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocked_count,
+        route_core_typed_pair_operator_materialization_readiness_materialized_count =
+            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         plan_authority = low_order_assembly.plan_authority,
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,

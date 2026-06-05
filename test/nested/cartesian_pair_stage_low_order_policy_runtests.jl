@@ -296,6 +296,17 @@ end
         entry -> !entry.materialized,
         atom_growth_summary.route_core_typed_pair_operator_plan_family_counts,
     )
+    @test !atom_growth_summary.route_core_typed_pair_operator_materialization_ready
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status ==
+          :blocked_pair_operator_materialization
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_plan_count ==
+          36
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count ==
+          15
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count ==
+          0
     @test atom_growth_pairs.route_core_pair_inventory_available
     @test atom_growth_pairs.route_core_pair_inventory ===
           atom_growth_summary.route_core_pair_inventory
@@ -309,6 +320,12 @@ end
           atom_growth_summary.route_core_typed_pair_operator_plan_blocked_count
     @test atom_growth_pairs.route_core_typed_pair_operator_plan_materialized ==
           atom_growth_summary.route_core_typed_pair_operator_plan_materialized
+    @test atom_growth_pairs.route_core_typed_pair_operator_materialization_ready ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_ready
+    @test atom_growth_pairs.route_core_typed_pair_operator_materialization_readiness_status ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status
+    @test atom_growth_pairs.route_core_typed_pair_operator_materialization_readiness_blocker ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker
     pair_inventory = atom_growth_summary.pair_inventory
     unit_inventory = atom_growth_stages.units.plan_unit_inventory
     @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory

@@ -428,6 +428,29 @@ end
     @test !atom_growth_report.low_order_route_core_typed_pair_operator_plan_materialized
     @test atom_growth_report.low_order_route_core_typed_pair_operator_source_path_counts ==
           atom_growth_summary.route_core_typed_pair_operator_source_path_counts
+    @test !atom_growth_summary.route_core_typed_pair_operator_materialization_ready
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status ==
+          :blocked_pair_operator_materialization
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker ==
+          :aggregate_subtree_operator_plan_required
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_plan_count ==
+          36
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count ==
+          15
+    @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count ==
+          0
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_ready ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_ready
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_status ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_status
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_blocker ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocker
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_plan_count ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_plan_count
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_blocked_count
+    @test atom_growth_report.low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count ==
+          atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count
     @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
     @test atom_growth_summary.lw_complete_shell_region_count == 4
     @test atom_growth_summary.lw_complete_shell_cpb_count == 104
