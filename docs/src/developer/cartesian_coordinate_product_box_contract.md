@@ -180,6 +180,86 @@ Thus low-order LW is a **boundary-stratum CPB lowering**. It works on small,
 disjoint CPBs and naturally produces face/facet, edge, and corner retained
 pieces.
 
+### White-Lindsey complete-shell CPB stratum enumeration
+
+Before code enumerates `:facet_cpb`, `:edge_cpb`, and `:corner_cpb` records for
+a complete shell, the complete-shell geometry must satisfy the normal
+single-layer boundary contract:
+
+```text
+B_outer = I_x x I_y x I_z
+B_inner = I_x^- x I_y^- x I_z^-
+Ω = B_outer \ B_inner
+```
+
+For each axis `a`, `I_a^-` is the strict interior interval obtained by removing
+exactly the low and high outer boundary points from `I_a`. The normal complete
+shell therefore has one low and one high boundary point on every axis, and a
+nonempty inner interval on every axis. If a shell does not meet this condition,
+do not silently force it into the complete-shell enumeration described here.
+
+Let
+
+```text
+L_a = first(I_a)
+H_a = last(I_a)
+J_a = I_a^-
+P_a^low  = {L_a}
+P_a^high = {H_a}
+```
+
+The complete-shell enumeration is the disjoint CPB decomposition whose union is
+`Ω`:
+
+```text
+Facet on axis a, side σ:
+P_a^σ x J_b x J_c
+
+Edge on axes a,b, sides σ,τ, remaining axis c:
+P_a^σ x P_b^τ x J_c
+
+Corner on sides σ_x,σ_y,σ_z:
+P_x^σ_x x P_y^σ_y x P_z^σ_z
+```
+
+Here `(a,b,c)` ranges over the Cartesian axes. Facets use the outer boundary
+point on one axis and the inner intervals on the other two axes. Edges use the
+outer boundary points on two axes and the inner interval on the remaining axis.
+Corners use outer boundary points on all three axes.
+
+Using inner intervals on the non-boundary axes is what makes the strata
+disjoint: a parent point belongs to a facet, edge, or corner according to how
+many axes sit on an outer boundary point. The union is `Ω` because every point
+of `B_outer \ B_inner` has at least one axis on an outer boundary point under
+the complete-shell condition.
+
+Use explicit low/high side labels in canonical axis order. Role names should be
+predictable symbols such as:
+
+```text
+:x_low_facet
+:y_high_z_low_edge
+:x_low_y_high_z_high_corner
+```
+
+For edges and corners, list only the axes that sit on outer boundary points,
+in `x`, `y`, `z` order. This avoids role names that depend on construction
+order.
+
+Partial shells, outer mismatch slabs, contact caps, no-endcap shells, and
+extra-endcap shells are not complete shells for this enumeration. Represent
+them first as explicit slab or piece support decompositions, then lower those
+pieces with their own roles. Do not hide such cases behind
+`:facet_cpb`/`:edge_cpb`/`:corner_cpb` records that imply a complete-shell
+union.
+
+This enumeration is lowering geometry only. Shellification still owns the
+disjoint shell support `Ω`. The boundary-stratum CPBs are lowering sources or
+support pieces for the White-Lindsey construction, and product/doside
+coefficient maps are later construction data. They are not shellification
+authority and should not be recorded as if shellification had chosen
+product/doside transforms.
+
 ## PQS lowering
 
 PQS uses the same shellification regions but a different lowering source.
