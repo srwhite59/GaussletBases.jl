@@ -186,6 +186,12 @@ end
     @test !plan_inventory.retained_unit_ranges_known
     @test !plan_inventory.retained_dimension_known
     @test plan_inventory.retained_dimension === nothing
+    @test plan_inventory.cpb_contract_stage ==
+          :shellification_to_cpb_lowering_to_construction
+    @test !plan_inventory.shellification_regions_are_cpbs
+    @test plan_inventory.owned_support_available
+    @test plan_inventory.lowering_source_cpbs_available
+    @test plan_inventory.source_cpb_count == 3
     @test all(unit -> !unit.source_backed, plan_inventory.plan_units)
     @test all(unit -> unit.independently_lowerable, plan_inventory.plan_units)
     @test all(
@@ -195,6 +201,110 @@ end
     @test all(unit -> unit.support_count > 0, plan_inventory.plan_units)
     @test all(unit -> unit.retained_count === nothing, plan_inventory.plan_units)
     @test all(unit -> unit.retained_range === nothing, plan_inventory.plan_units)
+    @test all(unit -> !unit.shellification_region_is_cpb, plan_inventory.plan_units)
+    @test all(
+        unit -> unit.owned_support.object_kind == :cartesian_owned_support_region3d,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> !unit.owned_support.shellification_region_is_cpb,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.object_kind == :cartesian_cpb_lowering_recipe,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.lowering_stage ==
+                :coordinate_product_box_lowering,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.intermediate_retained_space.object_kind ==
+                :cartesian_intermediate_retained_space_contract,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.shell_realization.object_kind ==
+                :cartesian_shell_realization_contract,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.final_retained_unit.object_kind ==
+                :cartesian_final_retained_unit_contract,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.final_retained_unit.downstream_of_lowering,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> !unit.final_retained_unit.direct_shellification_region_alias,
+        plan_inventory.plan_units,
+    )
+    @test all(
+        unit -> unit.cpb_contract.final_unit_downstream_of_lowering,
+        plan_inventory.plan_units,
+    )
+    shell_difference_units = Tuple(
+        unit for unit in plan_inventory.plan_units
+        if unit.owned_support.owned_support_is_shell_difference
+    )
+    @test !isempty(shell_difference_units)
+    @test all(
+        unit -> unit.owned_support.support_kind == :shell_difference_owned_support,
+        shell_difference_units,
+    )
+    @test all(unit -> !unit.owned_support.box_difference_is_cpb, shell_difference_units)
+    @test all(
+        unit -> !isnothing(unit.owned_support.inner_exclusion_cpb),
+        shell_difference_units,
+    )
+    @test all(
+        unit -> unit.owned_support.inner_exclusion_cpb.object_kind ==
+                :cartesian_coordinate_product_box3d,
+        shell_difference_units,
+    )
+    explicit_source_cpbs = reduce(
+        vcat,
+        (collect(unit.source_cpbs) for unit in plan_inventory.plan_units);
+        init = NamedTuple[],
+    )
+    @test length(explicit_source_cpbs) == plan_inventory.source_cpb_count
+    @test all(
+        cpb -> cpb.object_kind == :cartesian_coordinate_product_box3d,
+        explicit_source_cpbs,
+    )
+    @test all(cpb -> cpb.coordinate_product_box, explicit_source_cpbs)
+    @test count(
+        unit -> unit.lowering_family == :outer_mismatch_boundary_slab_set &&
+                unit.source_cpb_count == 2 &&
+                unit.lowering_recipe.source_cpb_families ==
+                (:direct_boundary_slab_cpb,),
+        plan_inventory.plan_units,
+    ) == 1
+    @test count(
+        unit -> unit.materialization_dependency == :plan_lowerable_direct_slab &&
+                unit.source_cpb_count == 1 &&
+                unit.lowering_recipe.source_cpb_families == (:direct_slab_cpb,),
+        plan_inventory.plan_units,
+    ) == 1
+    @test all(
+        unit -> unit.lowering_recipe.source_cpb_families ==
+                (:facet_cpb, :edge_cpb, :corner_cpb),
+        (
+            unit for unit in plan_inventory.plan_units
+            if unit.lowering_family == :white_lindsey_adaptive_complete_shell
+        ),
+    )
+    @test all(
+        unit -> unit.lowering_recipe.source_cpb_enumeration_status ==
+                :planned_cpb_families_not_enumerated,
+        (
+            unit for unit in plan_inventory.plan_units
+            if unit.lowering_family == :white_lindsey_adaptive_complete_shell
+        ),
+    )
     @test all(
         unit -> unit.source_descriptor.final_column_ranges_available == false,
         plan_inventory.plan_units,

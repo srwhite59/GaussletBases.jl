@@ -204,6 +204,46 @@ end
         pair_inventory.pair_entries,
     )
     @test all(
+        pair -> pair.pair_planning_source == :final_retained_units,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.left_final_retained_unit.object_kind ==
+                :cartesian_final_retained_unit_contract,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.right_final_retained_unit.object_kind ==
+                :cartesian_final_retained_unit_contract,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.left_final_retained_unit.downstream_of_lowering,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.right_final_retained_unit.downstream_of_lowering,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> !pair.left_final_retained_unit.direct_shellification_region_alias,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> !pair.right_final_retained_unit.direct_shellification_region_alias,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.left_owned_support.object_kind ==
+                :cartesian_owned_support_region3d,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.right_owned_support.object_kind ==
+                :cartesian_owned_support_region3d,
+        pair_inventory.pair_entries,
+    )
+    @test all(
         pair -> pair.left_unit_index <= pair.right_unit_index,
         pair_inventory.pair_entries,
     )

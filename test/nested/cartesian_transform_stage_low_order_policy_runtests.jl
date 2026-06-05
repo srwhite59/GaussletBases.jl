@@ -142,6 +142,10 @@ end
           :atom_growth_plan_unit_inventory
     @test atom_growth_transforms.transform_contract_status ==
           :available_atom_growth_transform_contract_inventory
+    @test atom_growth_transforms.cpb_contract_stage ==
+          :construction_transform_contract
+    @test atom_growth_transforms.transform_contracts_derive_from_lowering
+    @test atom_growth_transforms.final_retained_units_are_pair_planning_inputs
     @test !atom_growth_transforms.coefficient_transforms_materialized
     @test !atom_growth_transforms.coefficient_maps_materialized
     @test !atom_growth_transforms.active_source_authority
@@ -163,6 +167,10 @@ end
           :atom_growth_plan_unit_inventory
     @test atom_growth_summary.transform_contract_status ==
           :available_atom_growth_transform_contract_inventory
+    @test atom_growth_summary.cpb_contract_stage ==
+          :construction_transform_contract
+    @test atom_growth_summary.transform_contracts_derive_from_lowering
+    @test atom_growth_summary.final_retained_units_are_pair_planning_inputs
     @test atom_growth_summary.plan_authority
     @test !atom_growth_summary.active_source_authority
     @test !atom_growth_summary.legacy_source_authority
@@ -204,6 +212,44 @@ end
     @test !contract_inventory.retained_unit_dimensions_known
     @test !contract_inventory.retained_unit_ranges_known
     @test !contract_inventory.retained_dimension_known
+    @test all(
+        contract -> contract.cpb_contract_stage ==
+                    :construction_transform_contract,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.owned_support.object_kind ==
+                    :cartesian_owned_support_region3d,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.lowering_recipe.object_kind ==
+                    :cartesian_cpb_lowering_recipe,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.intermediate_retained_space.object_kind ==
+                    :cartesian_intermediate_retained_space_contract,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.shell_realization.object_kind ==
+                    :cartesian_shell_realization_contract,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.final_retained_unit.object_kind ==
+                    :cartesian_final_retained_unit_contract,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.final_unit_downstream_of_lowering,
+        contract_inventory.transform_contracts,
+    )
+    @test all(
+        contract -> contract.final_retained_unit.pair_planning_input,
+        contract_inventory.transform_contracts,
+    )
     @test all(
         contract -> !contract.source_backed,
         contract_inventory.transform_contracts,

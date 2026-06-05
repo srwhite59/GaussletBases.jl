@@ -5049,6 +5049,11 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             plan_unit_keys = (),
             plan_unit_support_counts = (),
             source_backed_region_count = 0,
+            cpb_contract_stage = :not_available,
+            shellification_regions_are_cpbs = false,
+            owned_support_available = false,
+            lowering_source_cpbs_available = false,
+            source_cpb_count = 0,
             route_skeleton_unit_fields_preserved = false,
             route_skeleton_unit_inventory_source = :not_available,
             summary_only = true,
@@ -5088,6 +5093,12 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         isnothing(plan_unit_inventory) ?
         0 :
         plan_unit_inventory.source_backed_region_count
+    cpb_contract_stage =
+        plan_unit_inventory_available ?
+        plan_unit_inventory.cpb_contract_stage :
+        :not_available
+    source_cpb_count =
+        plan_unit_inventory_available ? plan_unit_inventory.source_cpb_count : 0
     status =
         plan_unit_inventory_available ?
         :available_unit_stage_low_order_summary :
@@ -5145,6 +5156,18 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             plan_unit_inventory.support_counts :
             (),
         source_backed_region_count,
+        cpb_contract_stage,
+        shellification_regions_are_cpbs =
+            plan_unit_inventory_available ?
+            plan_unit_inventory.shellification_regions_are_cpbs :
+            false,
+        owned_support_available =
+            plan_unit_inventory_available &&
+            plan_unit_inventory.owned_support_available,
+        lowering_source_cpbs_available =
+            plan_unit_inventory_available &&
+            plan_unit_inventory.lowering_source_cpbs_available,
+        source_cpb_count,
         route_skeleton_unit_fields_preserved = true,
         route_skeleton_unit_inventory_source =
             :route_skeleton_compatibility_fields,
@@ -5178,6 +5201,13 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         plan_unit_inventory = low_order_units.plan_unit_inventory,
         unit_inventory_source = low_order_units.unit_inventory_source,
         unit_inventory_status = low_order_units.unit_inventory_status,
+        cpb_contract_stage = low_order_units.cpb_contract_stage,
+        shellification_regions_are_cpbs =
+            low_order_units.shellification_regions_are_cpbs,
+        owned_support_available = low_order_units.owned_support_available,
+        lowering_source_cpbs_available =
+            low_order_units.lowering_source_cpbs_available,
+        source_cpb_count = low_order_units.source_cpb_count,
         materialized_units_available =
             low_order_units.materialized_units_available,
         retained_unit_dimensions_known =
@@ -5237,6 +5267,9 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             transform_contract_unit_roles = (),
             transform_contract_names = (),
             source_backed_contract_count = 0,
+            cpb_contract_stage = :not_available,
+            transform_contracts_derive_from_lowering = false,
+            final_retained_units_are_pair_planning_inputs = false,
             transform_fields_preserved = false,
             route_skeleton_transform_inventory_source = :not_available,
             summary_only = true,
@@ -5277,6 +5310,18 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         isnothing(transform_contract_inventory) ?
         0 :
         transform_contract_inventory.source_backed_contract_count
+    transform_contracts_derive_from_lowering =
+        transform_contract_inventory_available &&
+        all(
+            contract -> contract.final_unit_downstream_of_lowering,
+            transform_contract_inventory.transform_contracts,
+        )
+    final_retained_units_are_pair_planning_inputs =
+        transform_contract_inventory_available &&
+        all(
+            contract -> contract.final_retained_unit.pair_planning_input,
+            transform_contract_inventory.transform_contracts,
+        )
     status =
         transform_contract_inventory_available ?
         :available_transform_stage_low_order_summary :
@@ -5343,6 +5388,12 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             transform_contract_inventory.contract_names :
             (),
         source_backed_contract_count,
+        cpb_contract_stage =
+            transform_contract_inventory_available ?
+            :construction_transform_contract :
+            :not_available,
+        transform_contracts_derive_from_lowering,
+        final_retained_units_are_pair_planning_inputs,
         transform_fields_preserved = true,
         route_skeleton_transform_inventory_source =
             :route_skeleton_compatibility_fields,
@@ -5378,6 +5429,11 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.transform_contract_source,
         transform_contract_status =
             low_order_transforms.transform_contract_status,
+        cpb_contract_stage = low_order_transforms.cpb_contract_stage,
+        transform_contracts_derive_from_lowering =
+            low_order_transforms.transform_contracts_derive_from_lowering,
+        final_retained_units_are_pair_planning_inputs =
+            low_order_transforms.final_retained_units_are_pair_planning_inputs,
         summary_only = low_order_transforms.summary_only,
         active_source_authority = low_order_transforms.active_source_authority,
         retained_counts =

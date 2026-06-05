@@ -25,6 +25,212 @@ function _pqs_source_box_route_driver_atom_growth_lowering_parameters(region)
     )
 end
 
+function _pqs_source_box_route_driver_cpb_codimension(
+    box::NTuple{3,UnitRange{Int}},
+)
+    return count(==(1), length.(box))
+end
+
+function _pqs_source_box_route_driver_cpb_geometry_kind(codimension::Int)
+    codimension == 0 && return :filled_volume_cpb
+    codimension == 1 && return :facet_or_slab_cpb
+    codimension == 2 && return :edge_cpb
+    codimension == 3 && return :corner_cpb
+    return :invalid_cpb_codimension
+end
+
+function _pqs_source_box_route_driver_cpb_descriptor(;
+    box::NTuple{3,UnitRange{Int}},
+    role::Symbol,
+    cpb_family::Symbol,
+    source::Symbol,
+    support_count = nothing,
+    metadata = nothing,
+)
+    codimension = _pqs_source_box_route_driver_cpb_codimension(box)
+    return (;
+        object_kind = :cartesian_coordinate_product_box3d,
+        coordinate_product_box = true,
+        intervals = box,
+        box = box,
+        dimensions = Tuple(length.(box)),
+        codimension,
+        geometry_kind = _pqs_source_box_route_driver_cpb_geometry_kind(codimension),
+        role,
+        cpb_family,
+        source,
+        support_count,
+        metadata,
+    )
+end
+
+function _pqs_source_box_route_driver_owned_support(region)
+    inner_exclusion_box =
+        _pqs_source_box_route_driver_atom_growth_unit_field(
+            region,
+            :inner_exclusion_box,
+            nothing,
+        )
+    outer_box =
+        _pqs_source_box_route_driver_atom_growth_unit_field(
+            region,
+            :outer_box,
+            region.box,
+        )
+    outer_cpb = _pqs_source_box_route_driver_cpb_descriptor(
+        box = outer_box,
+        role = :owned_support_outer_extent,
+        cpb_family = :owned_support_extent_cpb,
+        source = :atom_growth_shellification_region,
+    )
+    inner_exclusion_cpb =
+        isnothing(inner_exclusion_box) ?
+        nothing :
+        _pqs_source_box_route_driver_cpb_descriptor(
+            box = inner_exclusion_box,
+            role = :owned_support_inner_exclusion,
+            cpb_family = :owned_support_exclusion_cpb,
+            source = :atom_growth_shellification_region,
+        )
+    owned_support_kind =
+        isnothing(inner_exclusion_box) ?
+        :coordinate_product_owned_support :
+        :shell_difference_owned_support
+    return (;
+        object_kind = :cartesian_owned_support_region3d,
+        role = region.role,
+        support_kind = owned_support_kind,
+        shellification_region_is_cpb = false,
+        owned_support_is_coordinate_product = isnothing(inner_exclusion_box),
+        owned_support_is_shell_difference = !isnothing(inner_exclusion_box),
+        box_difference_is_cpb = false,
+        outer_cpb,
+        inner_exclusion_cpb,
+        support_count = region.support_count,
+        support_count_source = :atom_growth_shellification_region,
+    )
+end
+
+function _pqs_source_box_route_driver_lowering_source_cpbs(region)
+    piece = region.lowering_piece
+    if !isnothing(piece) &&
+       region.lowering_piece_object_kind == :cartesian_outer_mismatch_boundary_slab_set3d
+        slab_pieces =
+            _pqs_source_box_route_driver_atom_growth_unit_field(
+                piece,
+                :slab_pieces,
+                (),
+            )
+        return Tuple(
+            _pqs_source_box_route_driver_cpb_descriptor(
+                box = slab_piece.box,
+                role = slab_piece.role,
+                cpb_family = :direct_boundary_slab_cpb,
+                source = :outer_mismatch_boundary_slab_set_lowering,
+                support_count = slab_piece.support_count,
+                metadata =
+                    _pqs_source_box_route_driver_atom_growth_unit_field(
+                        slab_piece,
+                        :metadata,
+                        nothing,
+                    ),
+            ) for slab_piece in slab_pieces
+        )
+    end
+    if region.materialization_dependency == :plan_lowerable_direct_slab
+        return (
+            _pqs_source_box_route_driver_cpb_descriptor(
+                box = region.box,
+                role = region.role,
+                cpb_family = :direct_slab_cpb,
+                source = :direct_slab_lowering,
+                support_count = region.support_count,
+            ),
+        )
+    end
+    return ()
+end
+
+function _pqs_source_box_route_driver_lowering_source_families(region)
+    if region.lowering_family == :outer_mismatch_boundary_slab_set
+        return (:direct_boundary_slab_cpb,)
+    end
+    if region.lowering_family == :white_lindsey_adaptive_complete_shell
+        return (:facet_cpb, :edge_cpb, :corner_cpb)
+    end
+    if region.lowering_family == :white_lindsey_atom_local_child_shellification
+        return (:facet_cpb, :edge_cpb, :corner_cpb, :direct_core_cpb)
+    end
+    if region.materialization_dependency == :plan_lowerable_direct_slab
+        return (:direct_slab_cpb,)
+    end
+    return (:pending_cpb_lowering_family,)
+end
+
+function _pqs_source_box_route_driver_lowering_recipe(region, source_cpbs)
+    source_families =
+        _pqs_source_box_route_driver_lowering_source_families(region)
+    return (;
+        object_kind = :cartesian_cpb_lowering_recipe,
+        lowering_stage = :coordinate_product_box_lowering,
+        shellification_policy = :atom_growth_complete_rectangular,
+        atom_growth_is_shellification_policy = true,
+        lowering_family = region.lowering_family,
+        materialization_dependency = region.materialization_dependency,
+        source_cpb_families = source_families,
+        source_cpb_count = length(source_cpbs),
+        source_cpb_enumeration_status =
+            isempty(source_cpbs) ?
+            :planned_cpb_families_not_enumerated :
+            :explicit_source_cpbs,
+        white_lindsey_lowering_sources_are_cpbs =
+            all(!=(:pending_cpb_lowering_family), source_families),
+        shellification_region_authority = false,
+    )
+end
+
+function _pqs_source_box_route_driver_intermediate_retained_space(unit_key)
+    return (;
+        object_kind = :cartesian_intermediate_retained_space_contract,
+        unit_key,
+        construction_stage = :intermediate_retained_space,
+        status = :deferred_not_materialized,
+        retained_dimension_known = false,
+        retained_count = nothing,
+        retained_range = nothing,
+        direct_shellification_region_alias = false,
+    )
+end
+
+function _pqs_source_box_route_driver_shell_realization_contract(unit_key)
+    return (;
+        object_kind = :cartesian_shell_realization_contract,
+        unit_key,
+        construction_stage = :shell_realization,
+        status = :deferred_or_trivial_for_white_lindsey_lowering,
+        shell_realization_materialized = false,
+        shell_row_oracle_authority = false,
+    )
+end
+
+function _pqs_source_box_route_driver_final_retained_unit_contract(
+    unit_key,
+    unit_role,
+)
+    return (;
+        object_kind = :cartesian_final_retained_unit_contract,
+        unit_key,
+        unit_role,
+        construction_stage = :final_retained_unit,
+        status = :deferred_until_materialization,
+        downstream_of_lowering = true,
+        direct_shellification_region_alias = false,
+        retained_count_known = false,
+        retained_range_known = false,
+        pair_planning_input = true,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_source_descriptor(region)
     piece = region.lowering_piece
     if !isnothing(piece) &&
@@ -71,22 +277,46 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_record(
     region;
     unit_key::Symbol,
 )
+    source_cpbs = _pqs_source_box_route_driver_lowering_source_cpbs(region)
+    lowering_recipe =
+        _pqs_source_box_route_driver_lowering_recipe(region, source_cpbs)
+    owned_support = _pqs_source_box_route_driver_owned_support(region)
+    intermediate_retained_space =
+        _pqs_source_box_route_driver_intermediate_retained_space(unit_key)
+    shell_realization =
+        _pqs_source_box_route_driver_shell_realization_contract(unit_key)
+    final_retained_unit =
+        _pqs_source_box_route_driver_final_retained_unit_contract(
+            unit_key,
+            region.role,
+        )
     return (;
         object_kind = :cartesian_atom_growth_plan_unit,
         unit_key,
         unit_role = region.role,
         region_order_index = region.order_index,
+        shellification_policy = :atom_growth_complete_rectangular,
+        shellification_region_object_kind = region.object_kind,
+        shellification_region_is_cpb = false,
+        owned_support,
         source_descriptor =
             _pqs_source_box_route_driver_atom_growth_source_descriptor(region),
+        source_cpbs,
+        source_cpb_count = length(source_cpbs),
         source_box = region.box,
         source_dimensions = region.box_shape,
         source_dimension = region.support_count,
         support_count = region.support_count,
+        lowering_stage = :coordinate_product_box_lowering,
+        lowering_recipe,
         lowering_family = region.lowering_family,
         lowering_parameters =
             _pqs_source_box_route_driver_atom_growth_lowering_parameters(region),
         lowering_piece_object_kind = region.lowering_piece_object_kind,
         materialization_dependency = region.materialization_dependency,
+        intermediate_retained_space,
+        shell_realization,
+        final_retained_unit,
         source_backed = region.source_backed,
         independently_lowerable = region.independently_lowerable,
         retirement_target = region.retirement_target,
@@ -97,6 +327,15 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_record(
         retained_range_known = false,
         retained_dimension_known = false,
         materialized_units_available = false,
+        cpb_contract = (;
+            object_kind = :cartesian_cpb_stage_contract,
+            shellification_layer = :owned_support,
+            lowering_layer = :source_cpbs,
+            construction_layer = :intermediate_to_final_retained_unit,
+            pair_planning_layer = :final_retained_unit_pairs,
+            shellification_region_is_cpb = false,
+            final_unit_downstream_of_lowering = true,
+        ),
         provenance_label = :bond_aligned_diatomic_atom_growth_shellification_plan,
     )
 end
@@ -155,11 +394,17 @@ function _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
     support_counts =
         NamedTuple{unit_keys}(Tuple(unit.support_count for unit in plan_units))
     source_backed_unit_count = count(unit -> unit.source_backed, plan_units)
+    source_cpb_count = sum(unit.source_cpb_count for unit in plan_units; init = 0)
     return (;
         object_kind = :cartesian_atom_growth_plan_unit_inventory,
         status = :available_atom_growth_plan_unit_inventory,
         private_development_only = true,
         unit_inventory_source = :atom_growth_shellification_plan,
+        cpb_contract_stage = :shellification_to_cpb_lowering_to_construction,
+        shellification_regions_are_cpbs = false,
+        owned_support_available = true,
+        lowering_source_cpbs_available = true,
+        source_cpb_count,
         plan_units,
         unit_count = length(plan_units),
         unit_keys,
@@ -210,6 +455,16 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_record(
         unit_role = unit.unit_role,
         transform_contract,
         contract_source = :atom_growth_plan_unit_inventory,
+        cpb_contract_stage = :construction_transform_contract,
+        owned_support = unit.owned_support,
+        source_cpbs = unit.source_cpbs,
+        source_cpb_count = unit.source_cpb_count,
+        lowering_recipe = unit.lowering_recipe,
+        intermediate_retained_space = unit.intermediate_retained_space,
+        shell_realization = unit.shell_realization,
+        final_retained_unit = unit.final_retained_unit,
+        final_unit_downstream_of_lowering =
+            unit.final_retained_unit.downstream_of_lowering,
         lowering_family = unit.lowering_family,
         materialization_dependency = unit.materialization_dependency,
         source_backed = unit.source_backed,
@@ -324,6 +579,11 @@ function _pqs_source_box_route_driver_atom_growth_pair_record(
         right_unit_role = right_unit.unit_role,
         left_unit_index,
         right_unit_index,
+        pair_planning_source = :final_retained_units,
+        left_final_retained_unit = left_unit.final_retained_unit,
+        right_final_retained_unit = right_unit.final_retained_unit,
+        left_owned_support = left_unit.owned_support,
+        right_owned_support = right_unit.owned_support,
         pair_family = :white_lindsey_low_order_atom_growth_unit_pair,
         pair_contract = :planned_low_order_unit_pair_operator_block,
         pair_inventory_source = :atom_growth_unit_inventory,
