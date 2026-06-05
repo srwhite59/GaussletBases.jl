@@ -463,8 +463,40 @@ end
               :bond_aligned_diatomic_atom_growth_construction_plan
         @test !materialization.route_configured_shellization_consumed
         @test materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+        @test materialization.materialized_report !== nothing
         @test materialization.materialized_report_kind ==
-              :cartesian_atom_growth_shellification_materialization_result
+              :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
+        atom_growth_report = materialization.materialized_report
+        @test atom_growth_report.object_kind ==
+              :white_lindsey_low_order_route_configured_diatomic_atom_growth_report
+        @test atom_growth_report.status ==
+              :private_development_route_configured_atom_growth
+        @test atom_growth_report.shellization_authority ==
+              :bond_aligned_diatomic_atom_growth_construction_plan
+        @test !atom_growth_report.active_source_authority
+        @test !atom_growth_report.route_default_behavior_changed
+        @test atom_growth_report.retained_dimension == materialization.retained_dimension
+        @test atom_growth_report.sequence_available
+        @test atom_growth_report.final_integral_weights_status ==
+              :available_retained_basis_integral_weights
+        @test atom_growth_report.final_integral_weights_ready
+        @test atom_growth_report.route_units.status ==
+              :available_atom_growth_retained_unit_inventory
+        @test atom_growth_report.route_units.retained_dimension ==
+              materialization.retained_dimension
+        @test atom_growth_report.route_units.pair_inventory_status ==
+              :assembled_sequence_payload_not_pair_decomposed
+        @test atom_growth_report.transform_inventory.status ==
+              :available_atom_growth_transform_inventory
+        @test atom_growth_report.transform_inventory.retained_dimension ==
+              materialization.retained_dimension
+        @test atom_growth_report.transform_inventory.final_integral_weights_ready
+        @test atom_growth_report.operator_inventory.status ==
+              :available_atom_growth_operator_inventory
+        @test atom_growth_report.operator_inventory.fixed_block_all_finite
+        @test atom_growth_report.operator_inventory.ham_all_finite
+        @test atom_growth_report.operator_inventory.electron_electron_materialized
+        @test atom_growth_report.operator_inventory.density_density_interaction_materialized
         @test materialization.retained_dimension ==
               materialization.route_configured_diatomic_atom_growth_retained_dimension
         @test isfile(basisfile)
@@ -485,6 +517,8 @@ end
                   (materialization.retained_dimension, 3)
             @test Bool(file["meta/has_ham"]) == false
             @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_diatomic_atom_growth_report"
+            @test String(file["meta/shellification_materialization_kind"]) ==
                   "cartesian_atom_growth_shellification_materialization_result"
             @test String(file["meta/shellization_source"]) ==
                   "bond_aligned_diatomic_atom_growth_construction_plan"
@@ -530,6 +564,8 @@ end
             @test file["ham/nuclear_one_body_by_center/count"] == 2
             @test Bool(file["meta/has_ham"])
             @test String(file["meta/materialized_report_kind"]) ==
+                  "white_lindsey_low_order_route_configured_diatomic_atom_growth_report"
+            @test String(file["meta/shellification_materialization_kind"]) ==
                   "cartesian_atom_growth_shellification_materialization_result"
             @test String(file["meta/shellization_source"]) ==
                   "bond_aligned_diatomic_atom_growth_construction_plan"
