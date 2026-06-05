@@ -71,6 +71,7 @@ function _cartesian_shellification_materialization_dependency_counts(regions)
         :plan_lowerable_complete_shell,
         :plan_lowerable_direct_core,
         :plan_lowerable_direct_slab,
+        :plan_lowerable_shared_complete_shell,
     )
     source_backed_dependencies = (
         :source_backed_shared_shell_layer,
@@ -103,6 +104,12 @@ function _cartesian_shellification_materialization_dependency_counts(regions)
         ),
         plan_lowerable_direct_slab_count = count(
             region -> region.materialization_dependency == :plan_lowerable_direct_slab,
+            regions,
+        ),
+        plan_lowerable_shared_complete_shell_count = count(
+            region ->
+                region.materialization_dependency ==
+                :plan_lowerable_shared_complete_shell,
             regions,
         ),
         source_backed_shared_shell_layer_count = count(
@@ -355,6 +362,72 @@ function _cartesian_shellification_plan_direct_midpoint_slab_region3d(
             box_source = :geometry_input,
             column_range_source = isnothing(column_range) ? nothing : :oracle_only_column_range,
             split_index,
+            bond_axis,
+        ),
+        source_backed = false,
+        missing_independent_lowering_reason = nothing,
+        retirement_target = :already_plan_lowered_region,
+    )
+end
+
+function _cartesian_shellification_plan_shared_complete_shell_region3d(
+    bundles::_CartesianNestedAxisBundles3D,
+    outer_box::NTuple{3,UnitRange{Int}},
+    inner_exclusion_box::NTuple{3,UnitRange{Int}};
+    order_index::Int,
+    bond_axis::Symbol,
+    nside::Int,
+    retention_policy::CartesianNestedCompleteShellRetentionContract,
+    shared_shell_angular_resolution_scale::Real,
+    retained_count = nothing,
+    column_range = nothing,
+)
+    bond_axis in (:x, :y, :z) || throw(
+        ArgumentError("shared complete-shell region requires bond_axis = :x, :y, or :z"),
+    )
+    shared_shell_angular_resolution_scale > 0 || throw(
+        ArgumentError("shared complete-shell region requires positive angular resolution scale"),
+    )
+    dims = _nested_axis_lengths(bundles)
+    support_count =
+        _cartesian_shellification_box_point_count(outer_box) -
+        _cartesian_shellification_box_point_count(inner_exclusion_box)
+    return (;
+        object_kind = :cartesian_atom_outward_shared_complete_shell_region3d,
+        role = :regular_shared_molecular_shell,
+        order = order_index,
+        order_index,
+        outer_box,
+        box = outer_box,
+        inner_exclusion_box,
+        next_inner_box = inner_exclusion_box,
+        box_shape = Tuple(length.(outer_box)),
+        inner_box_shape = Tuple(length.(inner_exclusion_box)),
+        region_kind = :complete_rectangular_shell,
+        lowering_family = :white_lindsey_adaptive_complete_shell,
+        materialization_dependency = :plan_lowerable_shared_complete_shell,
+        lowering_parameters = (;
+            retention_policy,
+            bond_axis,
+            nside,
+            shared_shell_angular_resolution_scale =
+                Float64(shared_shell_angular_resolution_scale),
+            enforce_symmetric_odd = false,
+        ),
+        coverage_metadata = (;
+            object_kind = :cartesian_shared_complete_shell_region_coverage,
+            parent_dims = dims,
+            support_count,
+        ),
+        source_point_count = support_count,
+        support_count,
+        retained_count,
+        column_range,
+        provenance = (;
+            source = :atom_outward_shared_complete_shell_region,
+            box_source = :geometry_input,
+            retained_count_source = isnothing(retained_count) ? nothing : :oracle_only,
+            column_range_source = isnothing(column_range) ? nothing : :oracle_only,
             bond_axis,
         ),
         source_backed = false,
@@ -992,6 +1065,68 @@ function _cartesian_materialize_atom_local_child_shellification_low_order(
         build_packet = build_packet,
         verify_factorized_reconstruction = false,
     )
+end
+
+function _cartesian_materialize_shared_complete_shell_region(
+    region,
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+)
+    region.object_kind == :cartesian_atom_outward_shared_complete_shell_region3d ||
+        throw(
+            ArgumentError("shared complete-shell materializer requires a cartesian_atom_outward_shared_complete_shell_region3d"),
+        )
+    region.source_backed && throw(
+        ArgumentError("shared complete-shell materializer requires an independently lowerable region"),
+    )
+    region.materialization_dependency == :plan_lowerable_shared_complete_shell || throw(
+        ArgumentError("shared complete-shell materializer requires plan-lowerable dependency"),
+    )
+    region.lowering_family == :white_lindsey_adaptive_complete_shell || throw(
+        ArgumentError("shared complete-shell materializer requires adaptive complete-shell lowering"),
+    )
+    isnothing(term_coefficients) && throw(
+        ArgumentError("shared complete-shell materializer requires explicit term coefficients"),
+    )
+
+    adaptive_retention = _nested_diatomic_adaptive_shell_retention(
+        basis,
+        bundles,
+        region.outer_box,
+        region.inner_exclusion_box,
+        region.lowering_parameters.retention_policy;
+        nside = region.lowering_parameters.nside,
+        shared_shell_angular_resolution_scale =
+            region.lowering_parameters.shared_shell_angular_resolution_scale,
+    )
+    shell = _nested_complete_rectangular_shell(
+        bundles,
+        region.inner_exclusion_box...;
+        retain_xy = adaptive_retention.retain_xy,
+        retain_xz = adaptive_retention.retain_xz,
+        retain_yz = adaptive_retention.retain_yz,
+        retain_x_edge = adaptive_retention.retain_x_edge,
+        retain_y_edge = adaptive_retention.retain_y_edge,
+        retain_z_edge = adaptive_retention.retain_z_edge,
+        x_fixed = (first(region.outer_box[1]), last(region.outer_box[1])),
+        y_fixed = (first(region.outer_box[2]), last(region.outer_box[2])),
+        z_fixed = (first(region.outer_box[3]), last(region.outer_box[3])),
+        enforce_symmetric_odd = false,
+        term_coefficients = term_coefficients,
+        packet_kernel = packet_kernel,
+        verify_factorized_reconstruction = false,
+    )
+    length(shell.support_indices) == region.support_count || throw(
+        ArgumentError("shared complete-shell materializer produced support count inconsistent with the region"),
+    )
+    if !isnothing(region.retained_count)
+        size(shell.coefficient_matrix, 2) == region.retained_count || throw(
+            ArgumentError("shared complete-shell materializer produced retained count inconsistent with the region"),
+        )
+    end
+    return shell
 end
 
 function _cartesian_materialize_direct_box_region(

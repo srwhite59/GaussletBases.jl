@@ -75,8 +75,9 @@ function _bond_aligned_diatomic_shellification_plan_fixture(;
         nside,
         term_coefficients = Float64.(expansion.coefficients),
         packet_kernel = :factorized_direct,
-        min_unsplit_parallel_to_transverse_ratio_for_split,
-        shared_shell_layer_policy,
+        min_unsplit_parallel_to_transverse_ratio_for_split =
+            min_unsplit_parallel_to_transverse_ratio_for_split,
+        shared_shell_layer_policy = shared_shell_layer_policy,
         shared_shell_endcap_panel_q = 4,
         shared_shell_endcap_panel_L = 4,
     )
@@ -512,6 +513,85 @@ end
         atol = 1.0e-10,
         rtol = 1.0e-10,
     )
+end
+
+@testset "atom-outward shared complete-shell regions lower to oracle layers" begin
+    fixture = _bond_aligned_diatomic_shellification_plan_fixture(
+        shared_shell_layer_policy = :complete_rectangular,
+    )
+    source = fixture.source
+    @test !isempty(source.shared_shell_layers)
+    @test all(
+        layer -> layer isa GaussletBases._CartesianNestedCompleteShell3D,
+        source.shared_shell_layers,
+    )
+
+    for (layer_index, oracle) in enumerate(source.shared_shell_layers)
+        outer_box = oracle.provenance.source_box
+        inner_box = oracle.provenance.next_inner_box
+        column_range = source.sequence.layer_column_ranges[layer_index]
+        region =
+            GaussletBases._cartesian_shellification_plan_shared_complete_shell_region3d(
+                fixture.bundles,
+                outer_box,
+                inner_box;
+                order_index = layer_index,
+                bond_axis = source.geometry.bond_axis,
+                nside = source.nside,
+                retention_policy = source.shared_shell_retention_contract,
+                shared_shell_angular_resolution_scale = 1.4,
+                retained_count = size(oracle.coefficient_matrix, 2),
+                column_range = column_range,
+            )
+
+        @test region.object_kind ==
+              :cartesian_atom_outward_shared_complete_shell_region3d
+        @test region.role == :regular_shared_molecular_shell
+        @test region.order == layer_index
+        @test region.order_index == layer_index
+        @test region.outer_box == outer_box
+        @test region.inner_exclusion_box == inner_box
+        @test region.next_inner_box == inner_box
+        @test region.region_kind == :complete_rectangular_shell
+        @test region.lowering_family == :white_lindsey_adaptive_complete_shell
+        @test region.materialization_dependency ==
+              :plan_lowerable_shared_complete_shell
+        @test !region.source_backed
+        @test region.missing_independent_lowering_reason === nothing
+        @test region.retirement_target == :already_plan_lowered_region
+        @test region.source_point_count == oracle.provenance.source_point_count
+        @test region.support_count == length(oracle.support_indices)
+        @test region.retained_count == size(oracle.coefficient_matrix, 2)
+        @test region.retained_count == length(column_range)
+        @test region.column_range == column_range
+        @test region.provenance.source == :atom_outward_shared_complete_shell_region
+        @test region.provenance.box_source == :geometry_input
+        @test region.provenance.retained_count_source == :oracle_only
+        @test region.provenance.column_range_source == :oracle_only
+
+        materialized =
+            GaussletBases._cartesian_materialize_shared_complete_shell_region(
+                region,
+                fixture.basis,
+                fixture.bundles;
+                term_coefficients = Float64.(fixture.expansion.coefficients),
+                packet_kernel = :factorized_direct,
+            )
+
+        @test materialized.provenance == oracle.provenance
+        @test materialized.support_indices == oracle.support_indices
+        @test materialized.support_states == oracle.support_states
+        @test materialized.face_column_ranges == oracle.face_column_ranges
+        @test materialized.edge_column_ranges == oracle.edge_column_ranges
+        @test materialized.corner_column_ranges == oracle.corner_column_ranges
+        @test size(materialized.coefficient_matrix) == size(oracle.coefficient_matrix)
+        @test isapprox(
+            materialized.coefficient_matrix,
+            oracle.coefficient_matrix;
+            atol = 1.0e-10,
+            rtol = 1.0e-10,
+        )
+    end
 end
 
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin
