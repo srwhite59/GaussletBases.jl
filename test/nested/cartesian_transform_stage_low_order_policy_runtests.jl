@@ -144,6 +144,7 @@ end
           :available_atom_growth_transform_contract_inventory
     @test atom_growth_transforms.cpb_contract_stage ==
           :construction_transform_contract
+    @test atom_growth_transforms.pqs_transform_prototype_available
     @test atom_growth_transforms.transform_contracts_derive_from_lowering
     @test atom_growth_transforms.final_retained_units_are_pair_planning_inputs
     @test !atom_growth_transforms.coefficient_transforms_materialized
@@ -169,6 +170,7 @@ end
           :available_atom_growth_transform_contract_inventory
     @test atom_growth_summary.cpb_contract_stage ==
           :construction_transform_contract
+    @test atom_growth_summary.pqs_transform_prototype_available
     @test atom_growth_summary.transform_contracts_derive_from_lowering
     @test atom_growth_summary.final_retained_units_are_pair_planning_inputs
     @test atom_growth_summary.plan_authority
@@ -209,6 +211,56 @@ end
     @test contract_inventory.source_backed_contract_count == 0
     @test !contract_inventory.coefficient_transforms_materialized
     @test !contract_inventory.coefficient_maps_materialized
+    @test contract_inventory.pqs_transform_prototype_available
+    @test contract_inventory.source_lowering_prototype_unit_key ==
+          unit_inventory.pqs_lowering_prototype_unit_key
+    pqs_transform_prototype = contract_inventory.pqs_transform_prototype
+    pqs_lowering_prototype = unit_inventory.pqs_lowering_prototype
+    @test pqs_transform_prototype.object_kind ==
+          :cartesian_pqs_transform_metadata_prototype
+    @test pqs_transform_prototype.status == :metadata_only_planned
+    @test pqs_transform_prototype.source_lowering_prototype ===
+          pqs_lowering_prototype
+    @test pqs_transform_prototype.source_lowering_prototype_unit_key ==
+          pqs_lowering_prototype.unit_key
+    @test pqs_transform_prototype.unit_key == pqs_lowering_prototype.unit_key
+    @test pqs_transform_prototype.transform_plan == (
+        :source_retained_modes,
+        :shell_projection,
+        :lowdin_cleanup,
+        :final_retained_unit,
+    )
+    @test pqs_transform_prototype.source_cpb === pqs_lowering_prototype.source_cpb
+    @test pqs_transform_prototype.source_cpb.support_count ==
+          prod(pqs_transform_prototype.source_cpb.dimensions)
+    @test pqs_transform_prototype.source_cpb_support_count ==
+          pqs_lowering_prototype.source_cpb_support_count
+    @test pqs_transform_prototype.owned_support ===
+          pqs_lowering_prototype.owned_support
+    @test pqs_transform_prototype.owned_support_count ==
+          pqs_lowering_prototype.owned_support_count
+    @test pqs_transform_prototype.source_cpb_support_count !=
+          pqs_transform_prototype.owned_support_count
+    @test pqs_transform_prototype.intermediate_retained_space ===
+          pqs_lowering_prototype.intermediate_retained_space
+    @test pqs_transform_prototype.shell_realization ===
+          pqs_lowering_prototype.shell_realization
+    @test pqs_transform_prototype.final_retained_unit.object_kind ==
+          :cartesian_final_retained_unit_contract
+    @test pqs_transform_prototype.final_retained_unit.unit_key ==
+          pqs_lowering_prototype.unit_key
+    @test !pqs_transform_prototype.coefficient_transform_materialized
+    @test !pqs_transform_prototype.coefficient_maps_materialized
+    @test !pqs_transform_prototype.numerical_transform_materialized
+    @test !pqs_transform_prototype.source_operator_blocks_materialized
+    @test !pqs_transform_prototype.operator_blocks_materialized
+    @test !pqs_transform_prototype.pair_operator_blocks_materialized
+    @test !pqs_transform_prototype.hamiltonian_data_materialized
+    @test !pqs_transform_prototype.dense_parent_space_operators_are_algorithm
+    @test atom_growth_summary.pqs_transform_prototype ===
+          pqs_transform_prototype
+    @test atom_growth_transforms.pqs_transform_prototype ===
+          pqs_transform_prototype
     @test !contract_inventory.retained_unit_dimensions_known
     @test !contract_inventory.retained_unit_ranges_known
     @test !contract_inventory.retained_dimension_known

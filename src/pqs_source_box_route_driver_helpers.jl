@@ -5281,6 +5281,9 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             atom_growth_transform_contracts_available = false,
             transform_contract_inventory_available = false,
             transform_contract_inventory = nothing,
+            pqs_transform_prototype_available = false,
+            pqs_transform_prototype = nothing,
+            source_lowering_prototype_unit_key = nothing,
             transform_contract_count = 0,
             transform_contract_unit_keys = (),
             transform_contract_unit_roles = (),
@@ -5390,6 +5393,17 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             transform_contract_inventory_available,
         transform_contract_inventory_available,
         transform_contract_inventory,
+        pqs_transform_prototype_available =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.pqs_transform_prototype_available,
+        pqs_transform_prototype =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.pqs_transform_prototype :
+            nothing,
+        source_lowering_prototype_unit_key =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.source_lowering_prototype_unit_key :
+            nothing,
         transform_contract_count =
             transform_contract_inventory_available ?
             transform_contract_inventory.contract_count :
@@ -5444,6 +5458,12 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.transform_contract_inventory_available,
         transform_contract_inventory =
             low_order_transforms.transform_contract_inventory,
+        pqs_transform_prototype_available =
+            low_order_transforms.pqs_transform_prototype_available,
+        pqs_transform_prototype =
+            low_order_transforms.pqs_transform_prototype,
+        source_lowering_prototype_unit_key =
+            low_order_transforms.source_lowering_prototype_unit_key,
         transform_contract_source =
             low_order_transforms.transform_contract_source,
         transform_contract_status =

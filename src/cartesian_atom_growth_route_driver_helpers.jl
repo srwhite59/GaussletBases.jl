@@ -576,6 +576,49 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_record(
     )
 end
 
+function _pqs_source_box_route_driver_pqs_transform_prototype(
+    lowering_prototype,
+    transform_contract,
+)
+    return (;
+        object_kind = :cartesian_pqs_transform_metadata_prototype,
+        status = :metadata_only_planned,
+        private_development_only = true,
+        transform_stage = :construction_transform_contract,
+        transform_plan = (
+            :source_retained_modes,
+            :shell_projection,
+            :lowdin_cleanup,
+            :final_retained_unit,
+        ),
+        source_lowering_prototype = lowering_prototype,
+        source_lowering_prototype_unit_key = lowering_prototype.unit_key,
+        unit_key = lowering_prototype.unit_key,
+        unit_role = lowering_prototype.unit_role,
+        source_cpb = lowering_prototype.source_cpb,
+        source_cpb_support_count =
+            lowering_prototype.source_cpb_support_count,
+        source_cpb_support_count_source =
+            lowering_prototype.source_cpb_support_count_source,
+        owned_support = lowering_prototype.owned_support,
+        owned_support_count = lowering_prototype.owned_support_count,
+        owned_support_count_source =
+            lowering_prototype.owned_support_count_source,
+        intermediate_retained_space =
+            lowering_prototype.intermediate_retained_space,
+        shell_realization = lowering_prototype.shell_realization,
+        final_retained_unit = transform_contract.final_retained_unit,
+        coefficient_transform_materialized = false,
+        coefficient_maps_materialized = false,
+        numerical_transform_materialized = false,
+        source_operator_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        dense_parent_space_operators_are_algorithm = false,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
     plan_unit_inventory,
 )
@@ -594,6 +637,9 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             source_backed_contract_count = 0,
             coefficient_transforms_materialized = false,
             coefficient_maps_materialized = false,
+            pqs_transform_prototype_available = false,
+            pqs_transform_prototype = nothing,
+            source_lowering_prototype_unit_key = nothing,
             retained_unit_dimensions_known = false,
             retained_unit_ranges_known = false,
             retained_dimension_known = false,
@@ -623,6 +669,9 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             source_backed_contract_count = 0,
             coefficient_transforms_materialized = false,
             coefficient_maps_materialized = false,
+            pqs_transform_prototype_available = false,
+            pqs_transform_prototype = nothing,
+            source_lowering_prototype_unit_key = nothing,
             retained_unit_dimensions_known = false,
             retained_unit_ranges_known = false,
             retained_dimension_known = false,
@@ -639,6 +688,25 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
         _pqs_source_box_route_driver_atom_growth_transform_contract_record(unit)
         for unit in plan_unit_inventory.plan_units
     )
+    pqs_lowering_prototype =
+        hasproperty(plan_unit_inventory, :pqs_lowering_prototype_available) &&
+        plan_unit_inventory.pqs_lowering_prototype_available ?
+        plan_unit_inventory.pqs_lowering_prototype :
+        nothing
+    pqs_transform_contract_index =
+        isnothing(pqs_lowering_prototype) ?
+        nothing :
+        findfirst(
+            contract -> contract.unit_key == pqs_lowering_prototype.unit_key,
+            transform_contracts,
+        )
+    pqs_transform_prototype =
+        isnothing(pqs_transform_contract_index) ?
+        nothing :
+        _pqs_source_box_route_driver_pqs_transform_prototype(
+            pqs_lowering_prototype,
+            transform_contracts[pqs_transform_contract_index],
+        )
     return (;
         object_kind = :cartesian_atom_growth_transform_contract_inventory,
         status = :available_atom_growth_transform_contract_inventory,
@@ -654,6 +722,12 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             count(contract -> contract.source_backed, transform_contracts),
         coefficient_transforms_materialized = false,
         coefficient_maps_materialized = false,
+        pqs_transform_prototype_available = !isnothing(pqs_transform_prototype),
+        pqs_transform_prototype,
+        source_lowering_prototype_unit_key =
+            isnothing(pqs_transform_prototype) ?
+            nothing :
+            pqs_transform_prototype.source_lowering_prototype_unit_key,
         retained_unit_dimensions_known = false,
         retained_unit_ranges_known = false,
         retained_dimension_known = false,
