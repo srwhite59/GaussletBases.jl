@@ -3383,6 +3383,8 @@ function _pqs_source_box_route_driver_materialization(
         route_configured_one_center_materializer_probe.materialization.materializer_options :
         route_configured_diatomic_materializer_probe_materialized ?
         route_configured_diatomic_materializer_probe.materialization.materializer_options :
+        route_configured_diatomic_atom_growth_materializer_probe_materialized ?
+        route_configured_diatomic_atom_growth_materializer_probe.materializer_options :
         nothing
     route_configured_materializer_backend_consumed =
         isnothing(route_configured_materializer_consumed_options) ?
