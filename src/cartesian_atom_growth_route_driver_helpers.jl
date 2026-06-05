@@ -422,3 +422,374 @@ function _pqs_source_box_route_driver_route_configured_diatomic_atom_growth_repo
         blocker = inventory_ready ? nothing : :atom_growth_route_report_contract,
     )
 end
+
+function _pqs_source_box_route_driver_diatomic_atom_growth_artifact_export_materialization(
+    context,
+)
+    (;
+        report,
+        route_family,
+        save_basis_artifact,
+        save_ham_artifact,
+        basisfile,
+        hamfile,
+        route_configured_diatomic_ham_interaction_treatment,
+        route_configured_shellization_request,
+        route_configured_shellization_request_status,
+        route_configured_system_classification,
+        route_configured_system_classification_status,
+        route_configured_bond_axis,
+        route_configured_shellization_plan,
+        route_configured_shellization_plan_status,
+        route_configured_shellization_planning_status,
+        route_configured_shellization_planning_family,
+        route_configured_midpoint_slab_status,
+        route_configured_shellization_helper_map,
+        route_configured_shellization_helper_map_status,
+        route_configured_primary_planned_helper,
+        route_configured_missing_input_count,
+        route_configured_helper_map_blocker,
+        route_configured_input_readiness,
+        route_configured_input_readiness_status,
+        route_configured_available_fact_count,
+        route_configured_materializer_missing_input_count,
+        route_configured_input_readiness_blocker,
+        route_configured_materializer_config,
+        route_configured_materializer_config_status,
+        route_configured_materializer_config_planning_family,
+        route_configured_materializer_config_pending_input_count,
+        route_configured_one_center_materializer_probe,
+        route_configured_one_center_materializer_probe_requested,
+        route_configured_one_center_materializer_probe_status,
+        route_configured_one_center_materializer_probe_materialized,
+        route_configured_one_center_materializer_probe_consumed,
+        route_configured_one_center_materializer_probe_blocker,
+        route_configured_diatomic_atom_growth_materializer_probe,
+        route_configured_diatomic_atom_growth_materializer_probe_consumed,
+        route_configured_diatomic_atom_growth_materializer_probe_blocker,
+        route_configured_diatomic_atom_growth_basis_adapter_blocker,
+        route_configured_diatomic_atom_growth_final_integral_weights_status,
+        route_configured_diatomic_atom_growth_ham_adapter_status,
+        route_configured_diatomic_atom_growth_ham_adapter_blocker,
+        route_configured_diatomic_materializer_contract,
+        route_configured_diatomic_atom_growth_materializer_contract,
+        route_configured_materializer_contract,
+    ) = context
+
+    atom_growth_probe =
+        route_configured_diatomic_atom_growth_materializer_probe
+    atom_growth_basis_adapter = atom_growth_probe.basis_adapter
+    atom_growth_ham_adapter = atom_growth_probe.ham_adapter
+    atom_growth_basis_adapter_available =
+        !isnothing(atom_growth_basis_adapter) &&
+        atom_growth_basis_adapter.status ==
+        :available_route_configured_diatomic_atom_growth_basis_adapter
+    atom_growth_ham_adapter_available =
+        !isnothing(atom_growth_ham_adapter) &&
+        atom_growth_ham_adapter.status ==
+        :available_route_configured_diatomic_ham_adapter
+    atom_growth_materialized =
+        route_configured_diatomic_atom_growth_materializer_probe_consumed
+    atom_growth_export_blocker =
+        !atom_growth_materialized ?
+        something(
+            route_configured_diatomic_atom_growth_materializer_probe_blocker,
+            :atom_growth_materializer_not_consumed,
+        ) :
+        !atom_growth_basis_adapter_available ?
+        something(
+            route_configured_diatomic_atom_growth_basis_adapter_blocker,
+            :atom_growth_basis_representation_contract,
+        ) :
+        nothing
+    atom_growth_ham_export_blocker =
+        !save_ham_artifact ?
+        nothing :
+        !atom_growth_basis_adapter_available ?
+        atom_growth_export_blocker :
+        !atom_growth_ham_adapter_available ?
+        something(
+            route_configured_diatomic_atom_growth_ham_adapter_blocker,
+            :atom_growth_ham_operator_adapter_contract,
+        ) :
+        nothing
+    atom_growth_retained_dimension =
+        atom_growth_basis_adapter_available ?
+        atom_growth_basis_adapter.retained_dimension :
+        atom_growth_probe.retained_dimension
+    atom_growth_basis_artifact_status =
+        save_basis_artifact ?
+        (
+            atom_growth_basis_adapter_available ?
+            :written_route_configured_diatomic_atom_growth_basis_only_bundle :
+            :not_written_route_configured_diatomic_atom_growth_basis_adapter_blocked
+        ) :
+        :not_requested
+    atom_growth_ham_artifact_status =
+        save_ham_artifact ?
+        (
+            atom_growth_ham_adapter_available ?
+            :written_route_configured_diatomic_atom_growth_ham_bundle :
+            :not_written_route_configured_diatomic_atom_growth_ham_adapter_blocked
+        ) :
+        :not_requested
+    atom_growth_basis_bundle_export_status =
+        atom_growth_basis_adapter_available ?
+        :supported_route_configured_diatomic_atom_growth_basis_only_fixed_block :
+        :pending_route_configured_diatomic_atom_growth_basis_export
+    atom_growth_ham_bundle_export_status =
+        atom_growth_ham_adapter_available ?
+        :available_route_configured_diatomic_atom_growth_ham_bundle_payload :
+        save_ham_artifact ?
+        something(
+            atom_growth_ham_export_blocker,
+            :pending_route_configured_diatomic_atom_growth_ham_export,
+        ) :
+        :not_requested
+    atom_growth_ham_preflight_status =
+        atom_growth_ham_adapter_available ?
+        :available_route_configured_diatomic_atom_growth_ham_adapter :
+        save_ham_artifact ?
+        route_configured_diatomic_atom_growth_ham_adapter_status :
+        :not_requested
+    atom_growth_ham_interaction_treatment_consumed =
+        atom_growth_ham_adapter_available ?
+        atom_growth_ham_adapter.interaction_treatment :
+        nothing
+    atom_growth_ham_interaction_treatment_status =
+        atom_growth_ham_adapter_available ?
+        :available_route_configured_diatomic_ham_interaction_treatment :
+        save_ham_artifact ?
+        route_configured_diatomic_atom_growth_ham_adapter_status :
+        :not_requested
+    atom_growth_materialized_report =
+        atom_growth_materialized ?
+        _pqs_source_box_route_driver_route_configured_diatomic_atom_growth_report(
+            atom_growth_probe;
+            basis_artifact_status = atom_growth_basis_artifact_status,
+            ham_artifact_status = atom_growth_ham_artifact_status,
+            basis_bundle_export_status =
+                atom_growth_basis_bundle_export_status,
+            ham_bundle_export_status =
+                atom_growth_ham_bundle_export_status,
+        ) :
+        nothing
+    atom_growth_materialized_report_kind =
+        isnothing(atom_growth_materialized_report) ?
+        nothing :
+        atom_growth_materialized_report.object_kind
+    atom_growth_artifact_meta = (;
+        route_family,
+        route_kind = report.recipe_metadata.route_kind,
+        benchmark_role = report.recipe_metadata.benchmark_role,
+        materialized_report_kind =
+            something(
+                atom_growth_materialized_report_kind,
+                :not_materialized_atom_growth_probe,
+            ),
+        shellification_materialization_kind =
+            atom_growth_materialized ?
+            atom_growth_probe.materialization.object_kind :
+            :not_materialized_atom_growth_probe,
+        route_configured_shellization_request_status,
+        route_configured_system_classification,
+        route_configured_system_classification_status,
+        route_configured_bond_axis,
+        route_configured_shellization_plan_status,
+        route_configured_shellization_planning_status,
+        route_configured_shellization_planning_family,
+        route_configured_midpoint_slab_status,
+        route_configured_shellization_helper_map_status,
+        route_configured_primary_planned_helper,
+        route_configured_missing_input_count,
+        route_configured_helper_map_blocker,
+        route_configured_input_readiness_status,
+        route_configured_available_fact_count,
+        route_configured_materializer_missing_input_count,
+        route_configured_input_readiness_blocker,
+        route_configured_materializer_config_status,
+        route_configured_materializer_config_planning_family,
+        route_configured_materializer_config_pending_input_count,
+        route_configured_one_center_materializer_probe_requested,
+        route_configured_one_center_materializer_probe_status,
+        route_configured_one_center_materializer_probe_materialized,
+        route_configured_one_center_materializer_probe_consumed,
+        route_configured_one_center_materializer_probe_blocker,
+        route_configured_diatomic_materializer_contract...,
+        route_configured_diatomic_atom_growth_materializer_contract...,
+        route_configured_materializer_contract...,
+        shellization_summary_available = false,
+        shellization_source =
+            :bond_aligned_diatomic_atom_growth_construction_plan,
+        shellization_authority =
+            :bond_aligned_diatomic_atom_growth_construction_plan,
+        active_source_authority = false,
+        route_configured_shellization_consumed = false,
+        route_configured_diatomic_atom_growth_probe_consumed =
+            route_configured_diatomic_atom_growth_materializer_probe_consumed,
+        route_default_behavior_changed = false,
+        materialized_shellization_stage =
+            :atom_growth_complete_rectangular_low_order,
+        seed_materialization_status =
+            :not_seed_route_configured_diatomic_atom_growth_shellization,
+        private_development_only = true,
+    )
+    atom_growth_basis_artifact_written = false
+    if save_basis_artifact && atom_growth_basis_adapter_available
+        write_cartesian_basis_bundle_jld2(
+            basisfile,
+            atom_growth_basis_adapter.fixed_block;
+            include_ham = false,
+            meta = (;
+                atom_growth_artifact_meta...,
+                export_status = :basis_only,
+                basis_export_status =
+                    atom_growth_basis_bundle_export_status,
+                ham_export_status =
+                    :artifact_local_basis_only_no_ham_payload,
+                ham_export_blocker = nothing,
+                companion_ham_artifact_requested = save_ham_artifact,
+                companion_ham_artifact_status =
+                    atom_growth_ham_artifact_status,
+                companion_ham_export_status =
+                    atom_growth_ham_bundle_export_status,
+                companion_ham_export_blocker =
+                    atom_growth_ham_export_blocker,
+            ),
+        )
+        atom_growth_basis_artifact_written = true
+    end
+    atom_growth_ham_artifact_written = false
+    if save_ham_artifact && atom_growth_ham_adapter_available
+        write_cartesian_basis_bundle_jld2(
+            hamfile,
+            atom_growth_ham_adapter.operators;
+            include_ham = true,
+            meta = (;
+                atom_growth_artifact_meta...,
+                export_status = :basis_and_ham,
+                basis_export_status =
+                    atom_growth_basis_bundle_export_status,
+                ham_preflight_status = atom_growth_ham_preflight_status,
+                ham_operator_payload_status =
+                    atom_growth_ham_adapter.operator_payload_status,
+                ham_interaction_status =
+                    atom_growth_ham_adapter.interaction_status,
+                ham_export_status =
+                    atom_growth_ham_bundle_export_status,
+                ham_export_blocker = nothing,
+            ),
+        )
+        atom_growth_ham_artifact_written = true
+    end
+
+    return (;
+        object_kind = :cartesian_nesting_route_driver_materialization,
+        route_family,
+        private_development_only = true,
+        materialize_route_requested = true,
+        save_basis_artifact_requested = save_basis_artifact,
+        save_ham_artifact_requested = save_ham_artifact,
+        route_configured_diatomic_ham_interaction_treatment_requested =
+            route_configured_diatomic_ham_interaction_treatment,
+        route_configured_diatomic_ham_interaction_treatment_consumed =
+            atom_growth_ham_interaction_treatment_consumed,
+        route_configured_diatomic_ham_interaction_treatment_status =
+            atom_growth_ham_interaction_treatment_status,
+        status =
+            atom_growth_export_blocker === nothing &&
+            (!save_ham_artifact || atom_growth_ham_export_blocker === nothing) ?
+            :materialized_route_configured_diatomic_atom_growth_artifacts_available :
+            :blocked_route_configured_diatomic_atom_growth_artifact_export,
+        materialized_report = atom_growth_materialized_report,
+        materialized_report_kind = atom_growth_materialized_report_kind,
+        route_configured_shellization_request,
+        route_configured_shellization_request_available = true,
+        route_configured_shellization_request_status,
+        route_configured_system_classification,
+        route_configured_system_classification_status,
+        route_configured_bond_axis,
+        route_configured_shellization_plan,
+        route_configured_shellization_plan_available = true,
+        route_configured_shellization_plan_status,
+        route_configured_shellization_planning_status,
+        route_configured_shellization_planning_family,
+        route_configured_midpoint_slab_status,
+        route_configured_shellization_helper_map,
+        route_configured_shellization_helper_map_available = true,
+        route_configured_shellization_helper_map_status,
+        route_configured_primary_planned_helper,
+        route_configured_missing_input_count,
+        route_configured_helper_map_blocker,
+        route_configured_input_readiness,
+        route_configured_input_readiness_available = true,
+        route_configured_input_readiness_status,
+        route_configured_available_fact_count,
+        route_configured_materializer_missing_input_count,
+        route_configured_input_readiness_blocker,
+        route_configured_materializer_config,
+        route_configured_materializer_config_available = true,
+        route_configured_materializer_config_status,
+        route_configured_materializer_config_planning_family,
+        route_configured_materializer_config_pending_input_count,
+        route_configured_one_center_materializer_probe,
+        route_configured_one_center_materializer_probe_requested,
+        route_configured_one_center_materializer_probe_status,
+        route_configured_one_center_materializer_probe_materialized,
+        route_configured_one_center_materializer_probe_consumed,
+        route_configured_one_center_materializer_probe_blocker,
+        route_configured_diatomic_atom_growth_materializer_probe,
+        route_configured_diatomic_materializer_contract...,
+        route_configured_diatomic_atom_growth_materializer_contract...,
+        route_configured_materializer_contract...,
+        route_configured_diatomic_basis_adapter_summary =
+            atom_growth_probe.basis_adapter_summary,
+        route_configured_diatomic_ham_adapter_summary =
+            atom_growth_probe.ham_adapter_summary,
+        shellization_summary = nothing,
+        shellization_summary_available = false,
+        shellization_source =
+            :bond_aligned_diatomic_atom_growth_construction_plan,
+        route_configured_shellization_consumed = false,
+        materialized_shellization_stage =
+            :atom_growth_complete_rectangular_low_order,
+        seed_materialization_status =
+            :not_seed_route_configured_diatomic_atom_growth_shellization,
+        retained_dimension = atom_growth_retained_dimension,
+        final_integral_weights_status =
+            route_configured_diatomic_atom_growth_final_integral_weights_status,
+        one_body_operator_status =
+            atom_growth_ham_adapter_available ?
+            :available_route_configured_diatomic_operator_payload :
+            :not_requested,
+        basis_bundle_export_status =
+            atom_growth_basis_bundle_export_status,
+        basis_artifact_status = atom_growth_basis_artifact_status,
+        basis_artifact_written = atom_growth_basis_artifact_written,
+        basisfile,
+        basis_artifact_path =
+            atom_growth_basis_artifact_written ? basisfile : nothing,
+        basis_export_blocker =
+            atom_growth_basis_adapter_available ?
+            nothing :
+            atom_growth_export_blocker,
+        ham_preflight_status = atom_growth_ham_preflight_status,
+        ham_missing_builder = atom_growth_ham_export_blocker,
+        ham_operator_payload_status =
+            atom_growth_ham_adapter_available ?
+            atom_growth_ham_adapter.operator_payload_status :
+            route_configured_diatomic_atom_growth_ham_adapter_status,
+        ham_interaction_status =
+            atom_growth_ham_adapter_available ?
+            atom_growth_ham_adapter.interaction_status :
+            route_configured_diatomic_atom_growth_ham_adapter_status,
+        ham_bundle_export_status =
+            atom_growth_ham_bundle_export_status,
+        ham_artifact_status = atom_growth_ham_artifact_status,
+        ham_artifact_written = atom_growth_ham_artifact_written,
+        hamfile,
+        ham_export_blocker = atom_growth_ham_export_blocker,
+        ham_preflight = nothing,
+        pqs_materialization_status = :not_applicable,
+    )
+end
