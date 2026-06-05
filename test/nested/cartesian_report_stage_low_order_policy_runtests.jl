@@ -281,6 +281,28 @@ end
     @test atom_growth_report.low_order_pair_count == 36
     @test atom_growth_report.low_order_pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
           36
+    @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
+    @test atom_growth_summary.lw_complete_shell_region_count == 4
+    @test atom_growth_summary.lw_complete_shell_cpb_count == 104
+    @test atom_growth_summary.lw_complete_shell_cpb_family_counts ==
+          (facet_cpb = 24, edge_cpb = 48, corner_cpb = 32)
+    @test atom_growth_summary.lw_complete_shell_enumeration_policy ==
+          :white_lindsey_complete_shell_boundary_strata
+    @test !atom_growth_summary.lw_complete_shell_coefficient_maps_materialized
+    @test !atom_growth_summary.lw_complete_shell_operator_blocks_materialized
+    @test !atom_growth_summary.lw_complete_shell_pair_operator_blocks_materialized
+    @test !atom_growth_summary.lw_complete_shell_hamiltonian_data_materialized
+    @test atom_growth_report.low_order_lw_complete_shell_cpb_enumeration_available
+    @test atom_growth_report.low_order_lw_complete_shell_region_count == 4
+    @test atom_growth_report.low_order_lw_complete_shell_cpb_count == 104
+    @test atom_growth_report.low_order_lw_complete_shell_cpb_family_counts ==
+          atom_growth_summary.lw_complete_shell_cpb_family_counts
+    @test atom_growth_report.low_order_lw_complete_shell_enumeration_policy ==
+          :white_lindsey_complete_shell_boundary_strata
+    @test !atom_growth_report.low_order_lw_complete_shell_coefficient_maps_materialized
+    @test !atom_growth_report.low_order_lw_complete_shell_operator_blocks_materialized
+    @test !atom_growth_report.low_order_lw_complete_shell_pair_operator_blocks_materialized
+    @test !atom_growth_report.low_order_lw_complete_shell_hamiltonian_data_materialized
     @test atom_growth_summary.pqs_lowering_prototype_available
     @test atom_growth_summary.pqs_transform_prototype_available
     @test atom_growth_summary.pqs_lowering_prototype ===

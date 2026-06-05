@@ -211,6 +211,31 @@ end
     @test contract_inventory.source_backed_contract_count == 0
     @test !contract_inventory.coefficient_transforms_materialized
     @test !contract_inventory.coefficient_maps_materialized
+    @test contract_inventory.lw_complete_shell_cpb_enumeration_available
+    @test contract_inventory.lw_complete_shell_region_count == 4
+    @test contract_inventory.lw_complete_shell_cpb_count == 104
+    @test contract_inventory.lw_complete_shell_cpb_family_counts ==
+          (facet_cpb = 24, edge_cpb = 48, corner_cpb = 32)
+    @test contract_inventory.lw_complete_shell_enumeration_policy ==
+          :white_lindsey_complete_shell_boundary_strata
+    @test !contract_inventory.lw_complete_shell_coefficient_maps_materialized
+    @test !contract_inventory.lw_complete_shell_operator_blocks_materialized
+    @test !contract_inventory.lw_complete_shell_pair_operator_blocks_materialized
+    @test !contract_inventory.lw_complete_shell_hamiltonian_data_materialized
+    @test atom_growth_summary.lw_complete_shell_cpb_enumeration_available
+    @test atom_growth_summary.lw_complete_shell_region_count == 4
+    @test atom_growth_summary.lw_complete_shell_cpb_count == 104
+    @test atom_growth_summary.lw_complete_shell_cpb_family_counts ==
+          contract_inventory.lw_complete_shell_cpb_family_counts
+    @test atom_growth_transforms.lw_complete_shell_cpb_enumeration_available
+    @test atom_growth_transforms.lw_complete_shell_region_count == 4
+    @test atom_growth_transforms.lw_complete_shell_cpb_count == 104
+    @test atom_growth_transforms.lw_complete_shell_cpb_family_counts ==
+          contract_inventory.lw_complete_shell_cpb_family_counts
+    @test !atom_growth_transforms.lw_complete_shell_coefficient_maps_materialized
+    @test !atom_growth_transforms.lw_complete_shell_operator_blocks_materialized
+    @test !atom_growth_transforms.lw_complete_shell_pair_operator_blocks_materialized
+    @test !atom_growth_transforms.lw_complete_shell_hamiltonian_data_materialized
     @test contract_inventory.pqs_transform_prototype_available
     @test contract_inventory.source_lowering_prototype_unit_key ==
           unit_inventory.pqs_lowering_prototype_unit_key

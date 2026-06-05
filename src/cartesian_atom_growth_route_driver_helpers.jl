@@ -863,6 +863,51 @@ function _pqs_source_box_route_driver_pqs_transform_prototype(
     )
 end
 
+function _pqs_source_box_route_driver_lw_complete_shell_cpb_summary(plan_units)
+    complete_shell_units = Tuple(
+        unit for unit in plan_units
+        if unit.lowering_family == :white_lindsey_adaptive_complete_shell &&
+           unit.lowering_recipe.source_cpb_enumeration_status ==
+           :explicit_complete_shell_boundary_strata
+    )
+    family_counts = (;
+        facet_cpb = sum(
+            unit -> unit.lowering_recipe.complete_shell_cpb_family_counts.facet_cpb,
+            complete_shell_units;
+            init = 0,
+        ),
+        edge_cpb = sum(
+            unit -> unit.lowering_recipe.complete_shell_cpb_family_counts.edge_cpb,
+            complete_shell_units;
+            init = 0,
+        ),
+        corner_cpb = sum(
+            unit -> unit.lowering_recipe.complete_shell_cpb_family_counts.corner_cpb,
+            complete_shell_units;
+            init = 0,
+        ),
+    )
+    cpb_count =
+        family_counts.facet_cpb +
+        family_counts.edge_cpb +
+        family_counts.corner_cpb
+    return (;
+        lw_complete_shell_cpb_enumeration_available =
+            !isempty(complete_shell_units),
+        lw_complete_shell_region_count = length(complete_shell_units),
+        lw_complete_shell_cpb_count = cpb_count,
+        lw_complete_shell_cpb_family_counts = family_counts,
+        lw_complete_shell_enumeration_policy =
+            isempty(complete_shell_units) ?
+            nothing :
+            :white_lindsey_complete_shell_boundary_strata,
+        lw_complete_shell_coefficient_maps_materialized = false,
+        lw_complete_shell_operator_blocks_materialized = false,
+        lw_complete_shell_pair_operator_blocks_materialized = false,
+        lw_complete_shell_hamiltonian_data_materialized = false,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
     plan_unit_inventory,
 )
@@ -881,6 +926,16 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             source_backed_contract_count = 0,
             coefficient_transforms_materialized = false,
             coefficient_maps_materialized = false,
+            lw_complete_shell_cpb_enumeration_available = false,
+            lw_complete_shell_region_count = 0,
+            lw_complete_shell_cpb_count = 0,
+            lw_complete_shell_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            lw_complete_shell_enumeration_policy = nothing,
+            lw_complete_shell_coefficient_maps_materialized = false,
+            lw_complete_shell_operator_blocks_materialized = false,
+            lw_complete_shell_pair_operator_blocks_materialized = false,
+            lw_complete_shell_hamiltonian_data_materialized = false,
             pqs_transform_prototype_available = false,
             pqs_transform_prototype = nothing,
             source_lowering_prototype_unit_key = nothing,
@@ -913,6 +968,16 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             source_backed_contract_count = 0,
             coefficient_transforms_materialized = false,
             coefficient_maps_materialized = false,
+            lw_complete_shell_cpb_enumeration_available = false,
+            lw_complete_shell_region_count = 0,
+            lw_complete_shell_cpb_count = 0,
+            lw_complete_shell_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            lw_complete_shell_enumeration_policy = nothing,
+            lw_complete_shell_coefficient_maps_materialized = false,
+            lw_complete_shell_operator_blocks_materialized = false,
+            lw_complete_shell_pair_operator_blocks_materialized = false,
+            lw_complete_shell_hamiltonian_data_materialized = false,
             pqs_transform_prototype_available = false,
             pqs_transform_prototype = nothing,
             source_lowering_prototype_unit_key = nothing,
@@ -932,6 +997,10 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
         _pqs_source_box_route_driver_atom_growth_transform_contract_record(unit)
         for unit in plan_unit_inventory.plan_units
     )
+    lw_complete_shell_summary =
+        _pqs_source_box_route_driver_lw_complete_shell_cpb_summary(
+            plan_unit_inventory.plan_units,
+        )
     pqs_lowering_prototype =
         hasproperty(plan_unit_inventory, :pqs_lowering_prototype_available) &&
         plan_unit_inventory.pqs_lowering_prototype_available ?
@@ -966,6 +1035,7 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
             count(contract -> contract.source_backed, transform_contracts),
         coefficient_transforms_materialized = false,
         coefficient_maps_materialized = false,
+        lw_complete_shell_summary...,
         pqs_transform_prototype_available = !isnothing(pqs_transform_prototype),
         pqs_transform_prototype,
         source_lowering_prototype_unit_key =

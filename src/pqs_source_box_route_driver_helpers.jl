@@ -1807,6 +1807,24 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.independent_atom_growth_pair_inventory_available,
         low_order_pair_count = low_order_route_summary.pair_count,
         low_order_pair_family_counts = low_order_route_summary.pair_family_counts,
+        low_order_lw_complete_shell_cpb_enumeration_available =
+            low_order_route_summary.lw_complete_shell_cpb_enumeration_available,
+        low_order_lw_complete_shell_region_count =
+            low_order_route_summary.lw_complete_shell_region_count,
+        low_order_lw_complete_shell_cpb_count =
+            low_order_route_summary.lw_complete_shell_cpb_count,
+        low_order_lw_complete_shell_cpb_family_counts =
+            low_order_route_summary.lw_complete_shell_cpb_family_counts,
+        low_order_lw_complete_shell_enumeration_policy =
+            low_order_route_summary.lw_complete_shell_enumeration_policy,
+        low_order_lw_complete_shell_coefficient_maps_materialized =
+            low_order_route_summary.lw_complete_shell_coefficient_maps_materialized,
+        low_order_lw_complete_shell_operator_blocks_materialized =
+            low_order_route_summary.lw_complete_shell_operator_blocks_materialized,
+        low_order_lw_complete_shell_pair_operator_blocks_materialized =
+            low_order_route_summary.lw_complete_shell_pair_operator_blocks_materialized,
+        low_order_lw_complete_shell_hamiltonian_data_materialized =
+            low_order_route_summary.lw_complete_shell_hamiltonian_data_materialized,
         low_order_pqs_lowering_prototype_available =
             low_order_route_summary.pqs_lowering_prototype_available,
         low_order_pqs_transform_prototype_available =
@@ -5311,6 +5329,16 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             atom_growth_transform_contracts_available = false,
             transform_contract_inventory_available = false,
             transform_contract_inventory = nothing,
+            lw_complete_shell_cpb_enumeration_available = false,
+            lw_complete_shell_region_count = 0,
+            lw_complete_shell_cpb_count = 0,
+            lw_complete_shell_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            lw_complete_shell_enumeration_policy = nothing,
+            lw_complete_shell_coefficient_maps_materialized = false,
+            lw_complete_shell_operator_blocks_materialized = false,
+            lw_complete_shell_pair_operator_blocks_materialized = false,
+            lw_complete_shell_hamiltonian_data_materialized = false,
             pqs_transform_prototype_available = false,
             pqs_transform_prototype = nothing,
             source_lowering_prototype_unit_key = nothing,
@@ -5423,6 +5451,37 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             transform_contract_inventory_available,
         transform_contract_inventory_available,
         transform_contract_inventory,
+        lw_complete_shell_cpb_enumeration_available =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.lw_complete_shell_cpb_enumeration_available,
+        lw_complete_shell_region_count =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.lw_complete_shell_region_count :
+            0,
+        lw_complete_shell_cpb_count =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.lw_complete_shell_cpb_count :
+            0,
+        lw_complete_shell_cpb_family_counts =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.lw_complete_shell_cpb_family_counts :
+            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+        lw_complete_shell_enumeration_policy =
+            transform_contract_inventory_available ?
+            transform_contract_inventory.lw_complete_shell_enumeration_policy :
+            nothing,
+        lw_complete_shell_coefficient_maps_materialized =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.lw_complete_shell_coefficient_maps_materialized,
+        lw_complete_shell_operator_blocks_materialized =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.lw_complete_shell_operator_blocks_materialized,
+        lw_complete_shell_pair_operator_blocks_materialized =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.lw_complete_shell_pair_operator_blocks_materialized,
+        lw_complete_shell_hamiltonian_data_materialized =
+            transform_contract_inventory_available &&
+            transform_contract_inventory.lw_complete_shell_hamiltonian_data_materialized,
         pqs_transform_prototype_available =
             transform_contract_inventory_available &&
             transform_contract_inventory.pqs_transform_prototype_available,
@@ -5488,6 +5547,24 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.transform_contract_inventory_available,
         transform_contract_inventory =
             low_order_transforms.transform_contract_inventory,
+        lw_complete_shell_cpb_enumeration_available =
+            low_order_transforms.lw_complete_shell_cpb_enumeration_available,
+        lw_complete_shell_region_count =
+            low_order_transforms.lw_complete_shell_region_count,
+        lw_complete_shell_cpb_count =
+            low_order_transforms.lw_complete_shell_cpb_count,
+        lw_complete_shell_cpb_family_counts =
+            low_order_transforms.lw_complete_shell_cpb_family_counts,
+        lw_complete_shell_enumeration_policy =
+            low_order_transforms.lw_complete_shell_enumeration_policy,
+        lw_complete_shell_coefficient_maps_materialized =
+            low_order_transforms.lw_complete_shell_coefficient_maps_materialized,
+        lw_complete_shell_operator_blocks_materialized =
+            low_order_transforms.lw_complete_shell_operator_blocks_materialized,
+        lw_complete_shell_pair_operator_blocks_materialized =
+            low_order_transforms.lw_complete_shell_pair_operator_blocks_materialized,
+        lw_complete_shell_hamiltonian_data_materialized =
+            low_order_transforms.lw_complete_shell_hamiltonian_data_materialized,
         pqs_transform_prototype_available =
             low_order_transforms.pqs_transform_prototype_available,
         pqs_transform_prototype =
@@ -6016,6 +6093,43 @@ function _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
     )
 end
 
+function _pqs_source_box_route_driver_report_stage_lw_complete_shell_summary(
+    assembly,
+)
+    transforms =
+        hasproperty(assembly, :transforms) ? assembly.transforms : nothing
+    available =
+        !isnothing(transforms) &&
+        hasproperty(transforms, :lw_complete_shell_cpb_enumeration_available) &&
+        transforms.lw_complete_shell_cpb_enumeration_available
+
+    return (;
+        lw_complete_shell_cpb_enumeration_available = available,
+        lw_complete_shell_region_count =
+            available ? transforms.lw_complete_shell_region_count : 0,
+        lw_complete_shell_cpb_count =
+            available ? transforms.lw_complete_shell_cpb_count : 0,
+        lw_complete_shell_cpb_family_counts =
+            available ?
+            transforms.lw_complete_shell_cpb_family_counts :
+            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+        lw_complete_shell_enumeration_policy =
+            available ? transforms.lw_complete_shell_enumeration_policy : nothing,
+        lw_complete_shell_coefficient_maps_materialized =
+            available &&
+            transforms.lw_complete_shell_coefficient_maps_materialized,
+        lw_complete_shell_operator_blocks_materialized =
+            available &&
+            transforms.lw_complete_shell_operator_blocks_materialized,
+        lw_complete_shell_pair_operator_blocks_materialized =
+            available &&
+            transforms.lw_complete_shell_pair_operator_blocks_materialized,
+        lw_complete_shell_hamiltonian_data_materialized =
+            available &&
+            transforms.lw_complete_shell_hamiltonian_data_materialized,
+    )
+end
+
 function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
     assembly,
 )
@@ -6025,6 +6139,10 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         nothing
     pqs_prototype_summary =
         _pqs_source_box_route_driver_report_stage_pqs_prototype_summary(
+            assembly,
+        )
+    lw_complete_shell_summary =
+        _pqs_source_box_route_driver_report_stage_lw_complete_shell_summary(
             assembly,
         )
     if isnothing(low_order_assembly)
@@ -6065,6 +6183,7 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             active_source_authority = false,
             legacy_source_authority = false,
             pqs_prototype_summary...,
+            lw_complete_shell_summary...,
             report_stage_fields_preserved = false,
             summary_only = true,
         )
@@ -6119,6 +6238,7 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         active_source_authority = low_order_assembly.active_source_authority,
         legacy_source_authority = low_order_assembly.legacy_source_authority,
         pqs_prototype_summary...,
+        lw_complete_shell_summary...,
         report_stage_fields_preserved = true,
         summary_only = true,
     )
