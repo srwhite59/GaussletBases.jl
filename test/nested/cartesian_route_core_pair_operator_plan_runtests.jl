@@ -87,6 +87,12 @@ function _crc_pair_plan_by_key(inventory, pair_key)
                 if plan.pair.pair_key == pair_key)
 end
 
+function _crc_pair_count(counts, field::Symbol, value)
+    matches = Tuple(entry for entry in counts if getproperty(entry, field) === value)
+    isempty(matches) && return 0
+    return only(matches).pair_count
+end
+
 @testset "CartesianRouteCore pair operator plan contract" begin
     pqs_unit = _crc_pair_plan_pqs_unit(:pqs_shell)
     direct_unit = _crc_pair_plan_direct_unit(:direct_slab)
@@ -108,6 +114,61 @@ end
     @test CRC.blocker(plan_inventory) ==
           :aggregate_subtree_operator_plan_required
     @test !plan_inventory.materialized
+    @test sum(entry.pair_count for entry in
+              CRC.pair_operator_source_path_counts(plan_inventory)) == 6
+    @test _crc_pair_count(
+        CRC.pair_operator_source_path_counts(plan_inventory),
+        :source_operator_path,
+        :pqs_source_cpb_1d_factor_path,
+    ) == 2
+    @test _crc_pair_count(
+        CRC.pair_operator_source_path_counts(plan_inventory),
+        :source_operator_path,
+        :direct_identity_cpb_path,
+    ) == 1
+    @test _crc_pair_count(
+        CRC.pair_operator_source_path_counts(plan_inventory),
+        :source_operator_path,
+        :aggregate_subtree_adapter_required,
+    ) == 3
+    @test _crc_pair_count(
+        CRC.pair_operator_final_block_path_counts(plan_inventory),
+        :final_block_path,
+        :source_block_realization_then_final_block,
+    ) == 2
+    @test _crc_pair_count(
+        CRC.pair_operator_final_block_path_counts(plan_inventory),
+        :final_block_path,
+        :source_block_direct_to_final_block,
+    ) == 1
+    @test _crc_pair_count(
+        CRC.pair_operator_final_block_path_counts(plan_inventory),
+        :final_block_path,
+        :blocked_final_pair_block_path,
+    ) == 3
+    @test _crc_pair_count(
+        CRC.pair_operator_materialization_status_counts(plan_inventory),
+        :materialization_status,
+        :metadata_only_not_materialized,
+    ) == 3
+    @test _crc_pair_count(
+        CRC.pair_operator_materialization_status_counts(plan_inventory),
+        :materialization_status,
+        :blocked_metadata_only_not_materialized,
+    ) == 3
+    @test _crc_pair_count(
+        CRC.pair_operator_blocker_counts(plan_inventory),
+        :blocker,
+        nothing,
+    ) == 3
+    @test _crc_pair_count(
+        CRC.pair_operator_blocker_counts(plan_inventory),
+        :blocker,
+        :aggregate_subtree_operator_plan_required,
+    ) == 3
+    synthetic_family_counts = CRC.pair_operator_plan_family_counts(plan_inventory)
+    @test sum(entry.pair_count for entry in synthetic_family_counts) == 6
+    @test all(entry -> !entry.materialized, synthetic_family_counts)
 
     pqs_plan = _crc_pair_plan_by_key(plan_inventory, (:pqs_shell, :pqs_shell))
     @test pqs_plan isa CRC.PairOperatorPlan

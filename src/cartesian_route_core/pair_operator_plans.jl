@@ -447,3 +447,78 @@ blocker(inventory::PairOperatorPlanInventory) = inventory.blocker
 pair_operator_plans(inventory::PairOperatorPlanInventory) = inventory.plans
 pair_operator_plan_count(inventory::PairOperatorPlanInventory) =
     length(inventory.plans)
+
+function _pair_operator_count_entries(values, value_field::Symbol)
+    counts = Dict{Any,Int}()
+    order = Any[]
+    for value in values
+        if !haskey(counts, value)
+            counts[value] = 0
+            push!(order, value)
+        end
+        counts[value] += 1
+    end
+    return Tuple(
+        NamedTuple{(value_field, :pair_count)}((value, counts[value]))
+        for value in order
+    )
+end
+
+function pair_operator_source_path_counts(inventory::PairOperatorPlanInventory)
+    return _pair_operator_count_entries(
+        (source_operator_path(plan) for plan in pair_operator_plans(inventory)),
+        :source_operator_path,
+    )
+end
+
+function pair_operator_final_block_path_counts(inventory::PairOperatorPlanInventory)
+    return _pair_operator_count_entries(
+        (final_block_path(plan) for plan in pair_operator_plans(inventory)),
+        :final_block_path,
+    )
+end
+
+function pair_operator_materialization_status_counts(
+    inventory::PairOperatorPlanInventory,
+)
+    return _pair_operator_count_entries(
+        (materialization_status(plan) for plan in pair_operator_plans(inventory)),
+        :materialization_status,
+    )
+end
+
+function pair_operator_blocker_counts(inventory::PairOperatorPlanInventory)
+    return _pair_operator_count_entries(
+        (blocker(plan) for plan in pair_operator_plans(inventory)),
+        :blocker,
+    )
+end
+
+function pair_operator_plan_family_counts(inventory::PairOperatorPlanInventory)
+    counts = Dict{Any,Int}()
+    order = Any[]
+    for plan in pair_operator_plans(inventory)
+        key = (
+            source_operator_path(plan),
+            final_block_path(plan),
+            materialization_status(plan),
+            blocker(plan),
+            plan.materialized,
+        )
+        if !haskey(counts, key)
+            counts[key] = 0
+            push!(order, key)
+        end
+        counts[key] += 1
+    end
+    return Tuple(
+        (;
+            source_operator_path = key[1],
+            final_block_path = key[2],
+            materialization_status = key[3],
+            blocker = key[4],
+            materialized = key[5],
+            pair_count = counts[key],
+        ) for key in order
+    )
+end

@@ -74,6 +74,12 @@ function _cartesian_route_core_adapter_fixture()
     return units
 end
 
+function _cartesian_route_core_adapter_pair_count(counts, field::Symbol, value)
+    matches = Tuple(entry for entry in counts if getproperty(entry, field) === value)
+    isempty(matches) && return 0
+    return only(matches).pair_count
+end
+
 @testset "CartesianRouteCore staged adapter sidecars" begin
     units = _cartesian_route_core_adapter_fixture()
     plan_inventory = units.plan_unit_inventory
@@ -202,6 +208,73 @@ end
     @test length(typed_pair_plans) == sidecar_inventory.crc_pair_count
     @test all(plan -> !plan.materialized, typed_pair_plans)
     @test count(plan -> isnothing(CRC.blocker(plan)), typed_pair_plans) == 21
+    source_path_counts = CRC.pair_operator_source_path_counts(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    )
+    @test sum(entry.pair_count for entry in source_path_counts) == 36
+    @test _cartesian_route_core_adapter_pair_count(
+        source_path_counts,
+        :source_operator_path,
+        :aggregate_subtree_adapter_required,
+    ) == 15
+    @test _cartesian_route_core_adapter_pair_count(
+        source_path_counts,
+        :source_operator_path,
+        :white_lindsey_boundary_stratum_adapter_path,
+    ) > 0
+    @test _cartesian_route_core_adapter_pair_count(
+        source_path_counts,
+        :source_operator_path,
+        :direct_boundary_slab_set_adapter_path,
+    ) > 0
+    @test _cartesian_route_core_adapter_pair_count(
+        source_path_counts,
+        :source_operator_path,
+        :direct_identity_cpb_path,
+    ) > 0
+    final_block_path_counts = CRC.pair_operator_final_block_path_counts(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    )
+    @test sum(entry.pair_count for entry in final_block_path_counts) == 36
+    @test _cartesian_route_core_adapter_pair_count(
+        final_block_path_counts,
+        :final_block_path,
+        :blocked_final_pair_block_path,
+    ) == 15
+    materialization_status_counts =
+        CRC.pair_operator_materialization_status_counts(
+            sidecar_inventory.crc_pair_operator_plan_inventory,
+        )
+    @test sum(entry.pair_count for entry in materialization_status_counts) == 36
+    @test _cartesian_route_core_adapter_pair_count(
+        materialization_status_counts,
+        :materialization_status,
+        :metadata_only_not_materialized,
+    ) == 21
+    @test _cartesian_route_core_adapter_pair_count(
+        materialization_status_counts,
+        :materialization_status,
+        :blocked_metadata_only_not_materialized,
+    ) == 15
+    blocker_counts = CRC.pair_operator_blocker_counts(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    )
+    @test sum(entry.pair_count for entry in blocker_counts) == 36
+    @test _cartesian_route_core_adapter_pair_count(
+        blocker_counts,
+        :blocker,
+        nothing,
+    ) == 21
+    @test _cartesian_route_core_adapter_pair_count(
+        blocker_counts,
+        :blocker,
+        :aggregate_subtree_operator_plan_required,
+    ) == 15
+    plan_family_counts = CRC.pair_operator_plan_family_counts(
+        sidecar_inventory.crc_pair_operator_plan_inventory,
+    )
+    @test sum(entry.pair_count for entry in plan_family_counts) == 36
+    @test all(entry -> !entry.materialized, plan_family_counts)
     aggregate_pair_plans = Tuple(
         plan for plan in typed_pair_plans
         if :left_atom_box in plan.pair.pair_key ||
