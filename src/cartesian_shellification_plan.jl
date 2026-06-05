@@ -670,6 +670,50 @@ function _cartesian_shellification_plan(
     )
 end
 
+function _cartesian_materialize_direct_box_region(
+    region,
+    bundles::_CartesianNestedAxisBundles3D,
+)
+    if region.role == :direct_core
+        if region.materialization_dependency != :plan_lowerable_direct_core
+            throw(
+                ArgumentError("direct-core region must be plan-lowerable before direct-box materialization"),
+            )
+        end
+        if region.lowering_family != :direct_product_core
+            throw(ArgumentError("direct-core region must use :direct_product_core lowering"))
+        end
+    elseif region.role == :midpoint_slab
+        if region.materialization_dependency !=
+           :source_box_direct_in_source_backed_adapter
+            throw(
+                ArgumentError("midpoint-slab region must be source-box direct inside the source-backed adapter"),
+            )
+        end
+        if region.lowering_family != :direct_midpoint_slab
+            throw(
+                ArgumentError("midpoint-slab region must use :direct_midpoint_slab lowering"),
+            )
+        end
+    else
+        throw(
+            ArgumentError("direct-box region materialization does not support role $(region.role)"),
+        )
+    end
+
+    direct_box = _nested_direct_box_coefficients(bundles, region.box)
+    length(direct_box.support_indices) == region.support_count || throw(
+        ArgumentError("direct-box materialization produced support count inconsistent with the region"),
+    )
+    length(direct_box.support_indices) == region.retained_count || throw(
+        ArgumentError("direct-box materialization produced retained count inconsistent with the region"),
+    )
+    size(direct_box.coefficient_matrix, 2) == region.retained_count || throw(
+        ArgumentError("direct-box materialization produced coefficient columns inconsistent with the region"),
+    )
+    return direct_box
+end
+
 function _cartesian_materialize_shellification_low_order(
     plan,
     bundle::_MappedOrdinaryGausslet1DBundle;
@@ -756,15 +800,11 @@ function _cartesian_materialize_shellification_low_order(
     end
 
     direct_core_region = last(regions)
-    core_indices = _nested_box_support_indices(direct_core_region.box..., dims)
-    length(core_indices) == direct_core_region.retained_count || throw(
-        ArgumentError("low-order direct-core materialization produced a retained count inconsistent with the plan"),
-    )
-    core_coefficients = _nested_direct_core_coefficients(core_indices, prod(dims))
+    direct_core = _cartesian_materialize_direct_box_region(direct_core_region, bundles)
     return _nested_shell_sequence_from_core_block(
         bundles,
-        core_indices,
-        core_coefficients,
+        direct_core.support_indices,
+        direct_core.coefficient_matrix,
         shell_layers;
         packet_kernel,
         term_coefficients,
@@ -871,7 +911,8 @@ function _cartesian_materialize_source_backed_shellification_low_order(
             region.box == source.geometry.shared_midpoint_box || throw(
                 ArgumentError("source-backed diatomic midpoint region box does not match source midpoint box"),
             )
-            slab_data = _nested_direct_box_coefficients(source.axis_bundles, region.box)
+            slab_data =
+                _cartesian_materialize_direct_box_region(region, source.axis_bundles)
             push!(core_support_blocks, slab_data.support_indices)
             push!(core_coefficient_blocks, slab_data.coefficient_matrix)
         elseif region.role != :shared_outer_shell
