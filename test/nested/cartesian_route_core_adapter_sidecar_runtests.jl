@@ -71,11 +71,12 @@ function _cartesian_route_core_adapter_fixture()
         route_probe_inputs,
         recipe,
     )
-    return units.plan_unit_inventory
+    return units
 end
 
 @testset "CartesianRouteCore staged adapter sidecars" begin
-    plan_inventory = _cartesian_route_core_adapter_fixture()
+    units = _cartesian_route_core_adapter_fixture()
+    plan_inventory = units.plan_unit_inventory
     @test plan_inventory.status == :available_atom_growth_plan_unit_inventory
 
     lw_unit = first(
@@ -139,4 +140,78 @@ end
     @test pqs_sidecar.shell_realization.realization_kind ==
           :shell_projection_lowdin
     @test pqs_sidecar.final_retained_unit.unit_key == pqs_prototype.unit_key
+
+    sidecar_inventory =
+        GaussletBases._cartesian_route_core_sidecar_inventory(plan_inventory)
+    @test sidecar_inventory.object_kind ==
+          :cartesian_route_core_sidecar_inventory
+    @test sidecar_inventory.status ==
+          :blocked_incomplete_route_core_sidecar_inventory
+    @test sidecar_inventory.unit_count == plan_inventory.unit_count
+    @test sidecar_inventory.supported_unit_count == 5
+    @test sidecar_inventory.unsupported_unit_count == 3
+    @test sidecar_inventory.final_unit_count ==
+          sidecar_inventory.supported_unit_count
+    @test all(
+        entry -> entry.route_core_sidecar_available,
+        sidecar_inventory.supported_entries,
+    )
+    @test all(
+        entry -> entry.route_core_sidecar.object_kind ==
+                 :cartesian_route_core_sidecar,
+        sidecar_inventory.supported_entries,
+    )
+    @test all(
+        entry -> entry.route_core_sidecar.final_retained_unit isa
+                 CRC.FinalRetainedUnit,
+        sidecar_inventory.supported_entries,
+    )
+    @test all(
+        unit -> unit isa CRC.FinalRetainedUnit,
+        sidecar_inventory.final_units,
+    )
+    @test sidecar_inventory.unsupported_unit_keys ==
+          (
+              :outer_mismatch_shared_molecular_shell,
+              :left_atom_box,
+              :right_atom_box,
+          )
+    @test sidecar_inventory.missing_route_core_sidecar_reasons ==
+          (
+              :outer_mismatch_boundary_slab_set_not_yet_mapped_to_crc_final_unit,
+              :atom_local_child_shellification_not_yet_split_into_crc_child_units,
+              :atom_local_child_shellification_not_yet_split_into_crc_child_units,
+          )
+    @test !sidecar_inventory.crc_pair_inventory_available
+    @test sidecar_inventory.crc_pair_inventory_status ==
+          :blocked_missing_unit_sidecars
+    @test sidecar_inventory.crc_pair_inventory === nothing
+    @test isempty(sidecar_inventory.crc_pair_keys)
+    @test length(sidecar_inventory.staged_pair_keys) ==
+          plan_inventory.unit_count * (plan_inventory.unit_count + 1) ÷ 2
+    @test !sidecar_inventory.pair_inventory_order_matches_staged
+    @test sidecar_inventory.pqs_prototype_sidecar_available
+    @test sidecar_inventory.pqs_prototype_sidecar.final_retained_unit isa
+          CRC.FinalRetainedUnit
+    @test !sidecar_inventory.numerical_behavior_changed
+    @test !sidecar_inventory.materialization_behavior_changed
+
+    direct_entry = only(
+        entry for entry in sidecar_inventory.supported_entries
+        if entry.unit_key == :contact_cap
+    )
+    @test direct_entry.route_core_sidecar.sidecar_source ==
+          :atom_growth_direct_cpb_plan_unit
+    @test CRC.lowering_recipe(direct_entry.route_core_sidecar.lowering_source) ==
+          :direct_identity_cpb
+    @test direct_entry.route_core_sidecar.intermediate_retained_space.retained_rule ==
+          :identity_source_modes
+
+    @test units.route_core_sidecar_inventory_available
+    @test units.route_core_sidecar_inventory ===
+          units.low_order_units.route_core_sidecar_inventory
+    @test units.route_core_sidecar_inventory.status ==
+          sidecar_inventory.status
+    @test units.route_core_sidecar_inventory.supported_unit_count ==
+          sidecar_inventory.supported_unit_count
 end

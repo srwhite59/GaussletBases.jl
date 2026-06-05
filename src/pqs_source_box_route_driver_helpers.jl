@@ -5105,6 +5105,9 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             pqs_lowering_prototype_available = false,
             pqs_lowering_prototype = nothing,
             pqs_lowering_prototype_unit_key = nothing,
+            route_core_sidecar_inventory_available = false,
+            route_core_sidecar_inventory =
+                _cartesian_route_core_sidecar_inventory(nothing),
             route_skeleton_unit_fields_preserved = false,
             route_skeleton_unit_inventory_source = :not_available,
             summary_only = true,
@@ -5150,6 +5153,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         :not_available
     source_cpb_count =
         plan_unit_inventory_available ? plan_unit_inventory.source_cpb_count : 0
+    route_core_sidecar_inventory =
+        plan_unit_inventory_available ?
+        _cartesian_route_core_sidecar_inventory(plan_unit_inventory) :
+        _cartesian_route_core_sidecar_inventory(nothing)
     status =
         plan_unit_inventory_available ?
         :available_unit_stage_low_order_summary :
@@ -5230,6 +5237,12 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             plan_unit_inventory_available ?
             plan_unit_inventory.pqs_lowering_prototype_unit_key :
             nothing,
+        route_core_sidecar_inventory_available =
+            route_core_sidecar_inventory.status in (
+                :available_route_core_sidecar_inventory,
+                :blocked_incomplete_route_core_sidecar_inventory,
+            ),
+        route_core_sidecar_inventory,
         route_skeleton_unit_fields_preserved = true,
         route_skeleton_unit_inventory_source =
             :route_skeleton_compatibility_fields,
@@ -5275,6 +5288,9 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         pqs_lowering_prototype = low_order_units.pqs_lowering_prototype,
         pqs_lowering_prototype_unit_key =
             low_order_units.pqs_lowering_prototype_unit_key,
+        route_core_sidecar_inventory_available =
+            low_order_units.route_core_sidecar_inventory_available,
+        route_core_sidecar_inventory = low_order_units.route_core_sidecar_inventory,
         materialized_units_available =
             low_order_units.materialized_units_available,
         retained_unit_dimensions_known =
