@@ -5,6 +5,183 @@ function _pqs_source_box_route_driver_atom_growth_unit_key(prefix::Symbol, index
     return index == 1 ? prefix : Symbol(string(prefix), "_", index)
 end
 
+function _pqs_source_box_route_driver_atom_growth_unit_field(
+    object,
+    field::Symbol,
+    default = nothing,
+)
+    return hasproperty(object, field) ? getproperty(object, field) : default
+end
+
+function _pqs_source_box_route_driver_atom_growth_lowering_parameters(region)
+    piece = region.lowering_piece
+    if !isnothing(piece) && hasproperty(piece, :lowering_parameters)
+        return piece.lowering_parameters
+    end
+    return (;
+        lowering_piece_object_kind = region.lowering_piece_object_kind,
+        lowering_piece_role = region.lowering_piece_role,
+        lowering_piece_support_count = region.lowering_piece_support_count,
+    )
+end
+
+function _pqs_source_box_route_driver_atom_growth_source_descriptor(region)
+    piece = region.lowering_piece
+    if !isnothing(piece) &&
+       region.lowering_piece_object_kind == :cartesian_outer_mismatch_boundary_slab_set3d
+        slab_pieces =
+            _pqs_source_box_route_driver_atom_growth_unit_field(
+                piece,
+                :slab_pieces,
+                (),
+            )
+        return (;
+            object_kind = :atom_growth_plan_unit_slab_set_descriptor,
+            descriptor_kind = :outer_mismatch_boundary_slab_set,
+            box = region.box,
+            box_shape = region.box_shape,
+            support_count = region.support_count,
+            slab_piece_count = length(slab_pieces),
+            slab_piece_roles = Tuple(
+                _pqs_source_box_route_driver_atom_growth_unit_field(
+                    slab_piece,
+                    :role,
+                ) for slab_piece in slab_pieces
+            ),
+            slab_piece_support_counts = Tuple(
+                _pqs_source_box_route_driver_atom_growth_unit_field(
+                    slab_piece,
+                    :support_count,
+                ) for slab_piece in slab_pieces
+            ),
+            final_column_ranges_available = false,
+        )
+    end
+    return (;
+        object_kind = :atom_growth_plan_unit_box_descriptor,
+        descriptor_kind = :source_box,
+        box = region.box,
+        box_shape = region.box_shape,
+        support_count = region.support_count,
+        final_column_ranges_available = false,
+    )
+end
+
+function _pqs_source_box_route_driver_atom_growth_plan_unit_record(
+    region;
+    unit_key::Symbol,
+)
+    return (;
+        object_kind = :cartesian_atom_growth_plan_unit,
+        unit_key,
+        unit_role = region.role,
+        region_order_index = region.order_index,
+        source_descriptor =
+            _pqs_source_box_route_driver_atom_growth_source_descriptor(region),
+        source_box = region.box,
+        source_dimensions = region.box_shape,
+        source_dimension = region.support_count,
+        support_count = region.support_count,
+        lowering_family = region.lowering_family,
+        lowering_parameters =
+            _pqs_source_box_route_driver_atom_growth_lowering_parameters(region),
+        lowering_piece_object_kind = region.lowering_piece_object_kind,
+        materialization_dependency = region.materialization_dependency,
+        source_backed = region.source_backed,
+        independently_lowerable = region.independently_lowerable,
+        retirement_target = region.retirement_target,
+        retained_count = nothing,
+        retained_range = nothing,
+        retained_dimension = nothing,
+        retained_count_known = false,
+        retained_range_known = false,
+        retained_dimension_known = false,
+        materialized_units_available = false,
+        provenance_label = :bond_aligned_diatomic_atom_growth_shellification_plan,
+    )
+end
+
+function _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
+    low_order_shellization,
+)
+    if !low_order_shellization.atom_growth_scaffold_available ||
+       isnothing(low_order_shellization.atom_growth_scaffold)
+        return (;
+            object_kind = :cartesian_atom_growth_plan_unit_inventory,
+            status = low_order_shellization.status,
+            private_development_only = true,
+            unit_inventory_source = :blocked_atom_growth_shellification_plan,
+            plan_units = (),
+            unit_count = 0,
+            unit_keys = (),
+            unit_roles = (),
+            support_counts = (),
+            materialization_dependencies = (),
+            source_backed_region_count = 0,
+            source_backed_unit_count = 0,
+            plan_lowerable_unit_count = 0,
+            retained_unit_dimensions_known = false,
+            retained_unit_ranges_known = false,
+            retained_dimension_known = false,
+            retained_dimension = nothing,
+            materialized_units_available = false,
+            route_skeleton_authority = false,
+            blocker =
+                low_order_shellization.atom_growth_shellification_plan_status,
+        )
+    end
+
+    scaffold = low_order_shellization.atom_growth_scaffold
+    role_counts = Dict{Symbol,Int}()
+    plan_units = NamedTuple[]
+    for region in scaffold.regions
+        role_index = get(role_counts, region.role, 0) + 1
+        role_counts[region.role] = role_index
+        push!(
+            plan_units,
+            _pqs_source_box_route_driver_atom_growth_plan_unit_record(
+                region;
+                unit_key =
+                    _pqs_source_box_route_driver_atom_growth_unit_key(
+                        region.role,
+                        role_index,
+                    ),
+            ),
+        )
+    end
+
+    plan_units = Tuple(plan_units)
+    unit_keys = Tuple(unit.unit_key for unit in plan_units)
+    support_counts =
+        NamedTuple{unit_keys}(Tuple(unit.support_count for unit in plan_units))
+    source_backed_unit_count = count(unit -> unit.source_backed, plan_units)
+    return (;
+        object_kind = :cartesian_atom_growth_plan_unit_inventory,
+        status = :available_atom_growth_plan_unit_inventory,
+        private_development_only = true,
+        unit_inventory_source = :atom_growth_shellification_plan,
+        plan_units,
+        unit_count = length(plan_units),
+        unit_keys,
+        unit_roles = Tuple(unit.unit_role for unit in plan_units),
+        support_counts,
+        materialization_dependencies =
+            Tuple(unit.materialization_dependency for unit in plan_units),
+        source_backed_region_count =
+            scaffold.materialization_dependency_counts.source_backed_region_count,
+        source_backed_unit_count,
+        plan_lowerable_unit_count =
+            scaffold.materialization_dependency_counts.plan_lowerable_region_count,
+        retained_unit_dimensions_known = false,
+        retained_unit_ranges_known = false,
+        retained_dimension_known = false,
+        retained_dimension = nothing,
+        materialized_units_available = false,
+        route_skeleton_authority = false,
+        blocker = nothing,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_unit_record(;
     unit_key,
     unit_role,

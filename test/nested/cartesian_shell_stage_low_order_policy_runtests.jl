@@ -89,6 +89,7 @@ end
     @test default_summary.shellization_source ==
           :route_configured_bond_aligned_diatomic_source
     @test default_summary.shellization_kind == :legacy_diatomic_source
+    @test default_shells.shellization_stage == :legacy_diatomic_source_summary
     @test default_summary.legacy_source_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_selected
@@ -112,6 +113,8 @@ end
     @test atom_growth_shells.atom_growth_plan_available
     @test atom_growth_shells.atom_growth_scaffold_available
     @test atom_growth_shells.atom_growth_shellification_plan_status ==
+          :available_atom_growth_shellification_plan
+    @test atom_growth_shells.shellization_stage ==
           :available_atom_growth_shellification_plan
     @test atom_growth_shells.atom_growth_plan_authority
     @test !atom_growth_shells.active_source_authority
@@ -188,6 +191,8 @@ end
         low_order_shellization_policy = :atom_growth_complete_rectangular,
     )
     missing_parent_summary = missing_parent_shells.low_order_shellization
+    @test missing_parent_shells.shellization_stage ==
+          :blocked_atom_growth_missing_parent_objects
     @test missing_parent_summary.status ==
           :blocked_atom_growth_missing_parent_objects
     @test !missing_parent_summary.atom_growth_plan_available

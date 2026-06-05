@@ -4980,8 +4980,22 @@ function cartesian_shells(
         active_source_authority = low_order_shellization.active_source_authority,
         route_shape = route_skeleton.route_shape,
         source_boxes = route_skeleton.source_boxes,
-        shellization_stage = :represented_by_route_skeleton,
+        shellization_stage =
+            _pqs_source_box_route_driver_shellization_stage(
+                low_order_shellization,
+            ),
     )
+end
+
+function _pqs_source_box_route_driver_shellization_stage(low_order_shellization)
+    low_order_shellization.atom_growth_selected && return (
+        low_order_shellization.atom_growth_shellification_plan_available ?
+        :available_atom_growth_shellification_plan :
+        low_order_shellization.status
+    )
+    low_order_shellization.legacy_source_selected &&
+        return :legacy_diatomic_source_summary
+    return :represented_by_route_skeleton
 end
 
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
@@ -5015,7 +5029,18 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
+            unit_inventory_source = :not_available,
+            unit_inventory_status = :not_available,
+            atom_growth_unit_inventory_available = false,
+            plan_unit_inventory_available = false,
+            plan_unit_inventory = nothing,
+            plan_unit_count = 0,
+            plan_unit_roles = (),
+            plan_unit_keys = (),
+            plan_unit_support_counts = (),
+            source_backed_region_count = 0,
             route_skeleton_unit_fields_preserved = false,
+            route_skeleton_unit_inventory_source = :not_available,
             summary_only = true,
         )
     end
@@ -5028,14 +5053,42 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         legacy_source_units_selected ?
         :legacy_diatomic_source_low_order_units :
         :not_selected
+    plan_unit_inventory =
+        atom_growth_units_selected ?
+        _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
+            low_order_shellization,
+        ) :
+        nothing
+    plan_unit_inventory_available =
+        !isnothing(plan_unit_inventory) &&
+        plan_unit_inventory.status == :available_atom_growth_plan_unit_inventory
+    unit_inventory_source =
+        plan_unit_inventory_available ?
+        plan_unit_inventory.unit_inventory_source :
+        atom_growth_units_selected ?
+        :blocked_atom_growth_shellification_plan :
+        legacy_source_units_selected ?
+        :legacy_diatomic_source_summary :
+        :route_skeleton_compatibility_fields
+    unit_inventory_status =
+        isnothing(plan_unit_inventory) ?
+        unit_inventory_source :
+        plan_unit_inventory.status
+    source_backed_region_count =
+        isnothing(plan_unit_inventory) ?
+        0 :
+        plan_unit_inventory.source_backed_region_count
+    status =
+        plan_unit_inventory_available ?
+        :available_unit_stage_low_order_summary :
+        low_order_shellization.status ==
+        :available_shell_stage_low_order_shellization_summary ?
+        :available_unit_stage_low_order_summary :
+        low_order_shellization.status
 
     return (;
         object_kind = :cartesian_unit_stage_low_order_summary,
-        status =
-            low_order_shellization.status ==
-            :available_shell_stage_low_order_shellization_summary ?
-            :available_unit_stage_low_order_summary :
-            low_order_shellization.status,
+        status,
         low_order_shellization_policy_requested =
             low_order_shellization.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -5066,8 +5119,26 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         plan_authority = low_order_shellization.atom_growth_plan_authority,
         active_source_authority = low_order_shellization.active_source_authority,
         legacy_source_authority = low_order_shellization.legacy_source_authority,
+        unit_inventory_source,
+        unit_inventory_status,
+        atom_growth_unit_inventory_available = plan_unit_inventory_available,
+        plan_unit_inventory_available,
+        plan_unit_inventory,
+        plan_unit_count =
+            plan_unit_inventory_available ? plan_unit_inventory.unit_count : 0,
+        plan_unit_roles =
+            plan_unit_inventory_available ? plan_unit_inventory.unit_roles : (),
+        plan_unit_keys =
+            plan_unit_inventory_available ? plan_unit_inventory.unit_keys : (),
+        plan_unit_support_counts =
+            plan_unit_inventory_available ?
+            plan_unit_inventory.support_counts :
+            (),
+        source_backed_region_count,
         route_skeleton_unit_fields_preserved = true,
-        summary_only = true,
+        route_skeleton_unit_inventory_source =
+            :route_skeleton_compatibility_fields,
+        summary_only = !plan_unit_inventory_available,
     )
 end
 
@@ -5090,6 +5161,21 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         atom_growth_unit_summary_available =
             low_order_units.atom_growth_unit_summary_available,
         atom_growth_units_selected = low_order_units.atom_growth_units_selected,
+        atom_growth_unit_inventory_available =
+            low_order_units.atom_growth_unit_inventory_available,
+        plan_unit_inventory_available =
+            low_order_units.plan_unit_inventory_available,
+        plan_unit_inventory = low_order_units.plan_unit_inventory,
+        unit_inventory_source = low_order_units.unit_inventory_source,
+        unit_inventory_status = low_order_units.unit_inventory_status,
+        materialized_units_available =
+            low_order_units.materialized_units_available,
+        retained_unit_dimensions_known =
+            low_order_units.retained_unit_dimensions_known,
+        retained_unit_ranges_known =
+            low_order_units.retained_unit_ranges_known,
+        retained_dimension_known = low_order_units.retained_dimension_known,
+        summary_only = low_order_units.summary_only,
         active_source_authority = low_order_units.active_source_authority,
         source_boxes = shells.route_skeleton.source_boxes,
         source_dimensions = shells.route_skeleton.source_dimensions,

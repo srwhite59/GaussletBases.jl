@@ -98,6 +98,10 @@ end
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_units_selected
     @test !default_summary.atom_growth_unit_summary_available
+    @test !default_summary.atom_growth_unit_inventory_available
+    @test !default_summary.plan_unit_inventory_available
+    @test default_summary.unit_inventory_source ==
+          :legacy_diatomic_source_summary
     @test !default_summary.materialized_units_available
     @test default_summary.materialization_status ==
           :deferred_legacy_diatomic_source_unit_materialization
@@ -129,6 +133,12 @@ end
           :atom_growth_complete_rectangular_low_order_units
     @test atom_growth_units.atom_growth_unit_summary_available
     @test atom_growth_units.atom_growth_units_selected
+    @test atom_growth_units.atom_growth_unit_inventory_available
+    @test atom_growth_units.plan_unit_inventory_available
+    @test atom_growth_units.unit_inventory_source ==
+          :atom_growth_shellification_plan
+    @test atom_growth_units.unit_inventory_status ==
+          :available_atom_growth_plan_unit_inventory
     @test !atom_growth_units.active_source_authority
     @test atom_growth_summary.low_order_shellization_policy_resolved ==
           :atom_growth_complete_rectangular
@@ -141,6 +151,12 @@ end
     @test atom_growth_summary.atom_growth_units_selected
     @test !atom_growth_summary.legacy_source_units_selected
     @test atom_growth_summary.atom_growth_unit_summary_available
+    @test atom_growth_summary.atom_growth_unit_inventory_available
+    @test atom_growth_summary.plan_unit_inventory_available
+    @test atom_growth_summary.unit_inventory_source ==
+          :atom_growth_shellification_plan
+    @test atom_growth_summary.unit_inventory_status ==
+          :available_atom_growth_plan_unit_inventory
     @test atom_growth_summary.plan_authority
     @test !atom_growth_summary.active_source_authority
     @test !atom_growth_summary.legacy_source_authority
@@ -151,8 +167,44 @@ end
     @test !atom_growth_summary.retained_unit_ranges_known
     @test !atom_growth_summary.retained_dimension_known
     @test atom_growth_summary.retained_dimension === nothing
-    @test atom_growth_summary.summary_only
+    @test !atom_growth_summary.summary_only
+    plan_inventory = atom_growth_summary.plan_unit_inventory
+    @test plan_inventory.object_kind ==
+          :cartesian_atom_growth_plan_unit_inventory
+    @test plan_inventory.unit_inventory_source ==
+          :atom_growth_shellification_plan
+    @test plan_inventory.unit_roles ==
+          atom_growth_shells.low_order_shellization.atom_growth_scaffold.ordered_region_roles
+    @test plan_inventory.unit_count == length(plan_inventory.plan_units)
+    @test plan_inventory.unit_count ==
+          atom_growth_shells.low_order_shellization.atom_growth_scaffold.region_count
+    @test plan_inventory.source_backed_region_count == 0
+    @test plan_inventory.source_backed_unit_count == 0
+    @test plan_inventory.plan_lowerable_unit_count == plan_inventory.unit_count
+    @test !plan_inventory.materialized_units_available
+    @test !plan_inventory.retained_unit_dimensions_known
+    @test !plan_inventory.retained_unit_ranges_known
+    @test !plan_inventory.retained_dimension_known
+    @test plan_inventory.retained_dimension === nothing
+    @test all(unit -> !unit.source_backed, plan_inventory.plan_units)
+    @test all(unit -> unit.independently_lowerable, plan_inventory.plan_units)
+    @test all(
+        unit -> unit.retirement_target == :already_plan_lowered_region,
+        plan_inventory.plan_units,
+    )
+    @test all(unit -> unit.support_count > 0, plan_inventory.plan_units)
+    @test all(unit -> unit.retained_count === nothing, plan_inventory.plan_units)
+    @test all(unit -> unit.retained_range === nothing, plan_inventory.plan_units)
+    @test all(
+        unit -> unit.source_descriptor.final_column_ranges_available == false,
+        plan_inventory.plan_units,
+    )
+    @test Tuple(keys(plan_inventory.support_counts)) == plan_inventory.unit_keys
+    @test Tuple(values(plan_inventory.support_counts)) ==
+          Tuple(unit.support_count for unit in plan_inventory.plan_units)
     @test atom_growth_summary.route_skeleton_unit_fields_preserved
+    @test atom_growth_summary.route_skeleton_unit_inventory_source ==
+          :route_skeleton_compatibility_fields
     @test atom_growth_units.source_boxes ===
           atom_growth_units.route_skeleton.source_boxes
     @test atom_growth_units.source_dimensions ===
