@@ -64,7 +64,7 @@ function _bond_aligned_diatomic_shellification_plan_fixture(;
         source,
     )
     audit = GaussletBases._nested_source_contract_audit(source)
-    return (; nside, basis, bundles, source, plan, audit)
+    return (; nside, basis, bundles, expansion, source, plan, audit)
 end
 
 @testset "one-center low-order shellification plan matches legacy sequence" begin
@@ -200,6 +200,57 @@ end
     @test length(materialized.core_indices) == direct_core_region.retained_count
     @test length(materialized.core_column_range) == direct_core_region.retained_count
 
+    @test materialized.packet.overlap ≈ legacy.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.kinetic ≈ legacy.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_x ≈ legacy.packet.position_x atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_y ≈ legacy.packet.position_y atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.position_z ≈ legacy.packet.position_z atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_x ≈ legacy.packet.x2_x atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_y ≈ legacy.packet.x2_y atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.x2_z ≈ legacy.packet.x2_z atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.weights ≈ legacy.packet.weights atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.gaussian_sum ≈ legacy.packet.gaussian_sum atol = 1.0e-10 rtol = 1.0e-10
+    @test materialized.packet.pair_sum ≈ legacy.packet.pair_sum atol = 1.0e-10 rtol = 1.0e-10
+
+    @test audit.full_parent_working_box
+    @test audit.missing_row_count == 0
+    @test audit.ownership_group_count_min == 1
+    @test audit.ownership_group_count_max == 1
+    @test audit.ownership_unowned_row_count == 0
+    @test audit.ownership_multi_owned_row_count == 0
+end
+
+@testset "bond-aligned diatomic source-backed shellification materializer matches active sequence" begin
+    fixture = _bond_aligned_diatomic_shellification_plan_fixture()
+    source = fixture.source
+    plan = fixture.plan
+    legacy = source.sequence
+    materialized =
+        GaussletBases._cartesian_materialize_source_backed_shellification_low_order(
+            plan,
+            source;
+            packet_kernel = :factorized_direct,
+            term_coefficients = Float64.(fixture.expansion.coefficients),
+        )
+    audit = GaussletBases._nested_shell_sequence_contract_audit(
+        materialized,
+        Tuple(length.(source.geometry.parent_box)),
+    )
+
+    @test materialized.working_box == legacy.working_box
+    @test materialized.core_indices == legacy.core_indices
+    @test materialized.core_states == legacy.core_states
+    @test materialized.core_column_range == legacy.core_column_range
+    @test materialized.layer_column_ranges == legacy.layer_column_ranges
+    @test materialized.support_indices == legacy.support_indices
+    @test materialized.support_states == legacy.support_states
+    @test length(materialized.shell_layers) == length(source.shared_shell_layers)
+    @test all(
+        materialized.shell_layers[index] === source.shared_shell_layers[index] for
+        index in eachindex(source.shared_shell_layers)
+    )
+    @test size(materialized.coefficient_matrix) == size(legacy.coefficient_matrix)
+    @test materialized.coefficient_matrix ≈ legacy.coefficient_matrix atol = 1.0e-10 rtol = 1.0e-10
     @test materialized.packet.overlap ≈ legacy.packet.overlap atol = 1.0e-10 rtol = 1.0e-10
     @test materialized.packet.kinetic ≈ legacy.packet.kinetic atol = 1.0e-10 rtol = 1.0e-10
     @test materialized.packet.position_x ≈ legacy.packet.position_x atol = 1.0e-10 rtol = 1.0e-10

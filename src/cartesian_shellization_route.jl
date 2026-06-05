@@ -674,6 +674,130 @@ function _cartesian_materialize_shellification_low_order(
     )
 end
 
+function _cartesian_assert_diatomic_plan_describes_source(
+    plan,
+    source::_CartesianNestedBondAlignedDiatomicSource3D,
+)
+    plan.object_kind == :cartesian_shellification_plan3d || throw(
+        ArgumentError("source-backed diatomic shellification materializer requires a cartesian_shellification_plan3d"),
+    )
+    plan.system_classification == :bond_aligned_diatomic || throw(
+        ArgumentError("source-backed diatomic shellification materializer requires a bond-aligned diatomic plan"),
+    )
+    plan.source_kind == :bond_aligned_diatomic_active_source_shellification_plan ||
+        throw(
+            ArgumentError("source-backed diatomic shellification materializer requires an active-source diatomic plan"),
+        )
+    plan.parent_box == source.geometry.parent_box || throw(
+        ArgumentError("source-backed diatomic shellification plan parent_box does not match the source"),
+    )
+    plan.split_working_box == source.geometry.working_box || throw(
+        ArgumentError("source-backed diatomic shellification plan split_working_box does not match the source"),
+    )
+    plan.working_box == source.sequence.working_box || throw(
+        ArgumentError("source-backed diatomic shellification plan working_box does not match the merged source sequence"),
+    )
+    plan.bond_axis == source.geometry.bond_axis || throw(
+        ArgumentError("source-backed diatomic shellification plan bond_axis does not match the source"),
+    )
+    plan.did_split == source.geometry.did_split || throw(
+        ArgumentError("source-backed diatomic shellification plan split status does not match the source"),
+    )
+    plan.shared_shell_layer_count == length(source.shared_shell_layers) || throw(
+        ArgumentError("source-backed diatomic shellification plan shared-shell count does not match the source"),
+    )
+    plan.child_sequence_count == length(source.child_sequences) || throw(
+        ArgumentError("source-backed diatomic shellification plan child-sequence count does not match the source"),
+    )
+    plan.child_column_ranges == Tuple(source.child_column_ranges) || throw(
+        ArgumentError("source-backed diatomic shellification plan child column ranges do not match the source"),
+    )
+    plan.midpoint_slab_column_range == source.midpoint_slab_column_range || throw(
+        ArgumentError("source-backed diatomic shellification plan midpoint slab column range does not match the source"),
+    )
+    return nothing
+end
+
+function _cartesian_materialize_source_backed_shellification_low_order(
+    plan,
+    source::_CartesianNestedBondAlignedDiatomicSource3D;
+    packet_kernel::Symbol = :factorized_direct,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    verify_factorized_reconstruction::Bool = false,
+)
+    _cartesian_assert_diatomic_plan_describes_source(plan, source)
+    length(source.sequence.shell_layers) == length(source.shared_shell_layers) || throw(
+        ArgumentError("source-backed diatomic materialization requires merged sequence shell layers to be the source shared-shell layers"),
+    )
+    length(source.sequence.layer_column_ranges) == length(source.shared_shell_layers) || throw(
+        ArgumentError("source-backed diatomic materialization requires one merged sequence column range per shared-shell layer"),
+    )
+
+    shared_regions =
+        Tuple(region for region in plan.regions if region.role == :shared_outer_shell)
+    length(shared_regions) == length(source.shared_shell_layers) || throw(
+        ArgumentError("source-backed diatomic plan shared-shell regions do not match source shared-shell layers"),
+    )
+    for (region, layer, column_range) in
+        zip(shared_regions, source.shared_shell_layers, source.sequence.layer_column_ranges)
+        region.box == _cartesian_shellification_layer_source_box(layer) || throw(
+            ArgumentError("source-backed diatomic shared-shell region box does not match source layer provenance"),
+        )
+        region.next_inner_box == _cartesian_shellification_layer_next_inner_box(layer) ||
+            throw(
+                ArgumentError("source-backed diatomic shared-shell region inner box does not match source layer provenance"),
+            )
+        region.column_range == column_range || throw(
+            ArgumentError("source-backed diatomic shared-shell region column range does not match source sequence"),
+        )
+    end
+
+    core_support_blocks = Vector{Vector{Int}}()
+    core_coefficient_blocks = _CartesianCoefficientMap[]
+    for region in plan.regions
+        if region.role in (:atom_local_subtree, :unsplit_child_subtree)
+            child_index = region.provenance.child_index
+            child_sequence = source.child_sequences[child_index]
+            region.column_range == source.child_column_ranges[child_index] || throw(
+                ArgumentError("source-backed diatomic child region column range does not match source child range"),
+            )
+            region.box == child_sequence.working_box || throw(
+                ArgumentError("source-backed diatomic child region box does not match source child sequence"),
+            )
+            push!(core_support_blocks, child_sequence.support_indices)
+            push!(core_coefficient_blocks, child_sequence.coefficient_matrix)
+        elseif region.role == :midpoint_slab
+            region.column_range == source.midpoint_slab_column_range || throw(
+                ArgumentError("source-backed diatomic midpoint region column range does not match source midpoint range"),
+            )
+            region.box == source.geometry.shared_midpoint_box || throw(
+                ArgumentError("source-backed diatomic midpoint region box does not match source midpoint box"),
+            )
+            slab_data = _nested_direct_box_coefficients(source.axis_bundles, region.box)
+            push!(core_support_blocks, slab_data.support_indices)
+            push!(core_coefficient_blocks, slab_data.coefficient_matrix)
+        elseif region.role != :shared_outer_shell
+            throw(
+                ArgumentError("source-backed diatomic materializer does not support region role $(region.role)"),
+            )
+        end
+    end
+    isempty(core_support_blocks) && throw(
+        ArgumentError("source-backed diatomic materializer requires at least one child or midpoint core block"),
+    )
+    core_support = vcat(core_support_blocks...)
+    core_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
+    return _nested_shell_sequence_from_core_block(
+        source.axis_bundles,
+        core_support,
+        core_coefficients,
+        source.shared_shell_layers;
+        packet_kernel,
+        term_coefficients,
+        verify_factorized_reconstruction,
+    )
+end
+
 function _cartesian_shellization_sequence_summary(
     sequence::_CartesianNestedShellSequence3D;
     source_kind::Symbol,
