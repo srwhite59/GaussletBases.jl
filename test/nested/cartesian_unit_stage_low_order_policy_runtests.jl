@@ -69,6 +69,10 @@ function _cartesian_unit_stage_low_order_policy_fixture()
     return (; parent, spacing_inputs, recipe, route_probe_inputs)
 end
 
+function _cartesian_unit_stage_box_points(box)
+    return Set((x, y, z) for x in box[1] for y in box[2] for z in box[3])
+end
+
 @testset "cartesian unit stage carries selected low-order policy" begin
     fixture = _cartesian_unit_stage_low_order_policy_fixture()
 
@@ -191,7 +195,7 @@ end
     @test !plan_inventory.shellification_regions_are_cpbs
     @test plan_inventory.owned_support_available
     @test plan_inventory.lowering_source_cpbs_available
-    @test plan_inventory.source_cpb_count == 3
+    @test plan_inventory.source_cpb_count == 107
     @test plan_inventory.pqs_lowering_prototype_available
     @test !isnothing(plan_inventory.pqs_lowering_prototype_unit_key)
     @test all(unit -> !unit.source_backed, plan_inventory.plan_units)
@@ -325,22 +329,116 @@ end
                 unit.lowering_recipe.source_cpb_families == (:direct_slab_cpb,),
         plan_inventory.plan_units,
     ) == 1
+    complete_shell_units = Tuple(
+        unit for unit in plan_inventory.plan_units
+        if unit.lowering_family == :white_lindsey_adaptive_complete_shell
+    )
+    @test length(complete_shell_units) == 4
+    @test all(unit -> unit.source_cpb_count == 26, complete_shell_units)
+    @test plan_inventory.source_cpb_count ==
+          3 + 26 * length(complete_shell_units)
     @test all(
         unit -> unit.lowering_recipe.source_cpb_families ==
                 (:facet_cpb, :edge_cpb, :corner_cpb),
-        (
-            unit for unit in plan_inventory.plan_units
-            if unit.lowering_family == :white_lindsey_adaptive_complete_shell
-        ),
+        complete_shell_units,
     )
     @test all(
         unit -> unit.lowering_recipe.source_cpb_enumeration_status ==
-                :planned_cpb_families_not_enumerated,
-        (
-            unit for unit in plan_inventory.plan_units
-            if unit.lowering_family == :white_lindsey_adaptive_complete_shell
-        ),
+                :explicit_complete_shell_boundary_strata,
+        complete_shell_units,
     )
+    @test all(
+        unit -> unit.lowering_recipe.source_cpb_enumeration_reason === nothing,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.enumeration_policy ==
+                :white_lindsey_complete_shell_boundary_strata,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.complete_shell_condition_status ==
+                :supported_complete_shell,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> unit.lowering_recipe.complete_shell_cpb_family_counts ==
+                (facet_cpb = 6, edge_cpb = 12, corner_cpb = 8),
+        complete_shell_units,
+    )
+    @test all(
+        unit -> !unit.lowering_recipe.coefficient_maps_materialized,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> !unit.lowering_recipe.operator_blocks_materialized,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> !unit.lowering_recipe.pair_operator_blocks_materialized,
+        complete_shell_units,
+    )
+    @test all(
+        unit -> !unit.lowering_recipe.hamiltonian_data_materialized,
+        complete_shell_units,
+    )
+    complete_shell_cpbs = reduce(
+        vcat,
+        (collect(unit.source_cpbs) for unit in complete_shell_units);
+        init = NamedTuple[],
+    )
+    complete_shell_roles = Set(cpb.role for cpb in complete_shell_cpbs)
+    @test :x_low_facet in complete_shell_roles
+    @test :y_high_z_low_edge in complete_shell_roles
+    @test :x_low_y_high_z_high_corner in complete_shell_roles
+    @test all(
+        cpb -> cpb.metadata.enumeration_policy ==
+               :white_lindsey_complete_shell_boundary_strata,
+        complete_shell_cpbs,
+    )
+    @test all(
+        cpb -> cpb.metadata.shellification_authority_scope ==
+               :owned_support_only,
+        complete_shell_cpbs,
+    )
+    @test all(cpb -> cpb.metadata.lowering_geometry_only, complete_shell_cpbs)
+    @test all(
+        cpb -> !cpb.metadata.coefficient_maps_materialized,
+        complete_shell_cpbs,
+    )
+    @test all(
+        cpb -> !cpb.metadata.operator_blocks_materialized,
+        complete_shell_cpbs,
+    )
+    @test all(
+        cpb -> !cpb.metadata.pair_operator_blocks_materialized,
+        complete_shell_cpbs,
+    )
+    @test all(
+        cpb -> !cpb.metadata.hamiltonian_data_materialized,
+        complete_shell_cpbs,
+    )
+    for unit in complete_shell_units
+        @test count(cpb -> cpb.cpb_family == :facet_cpb, unit.source_cpbs) == 6
+        @test count(cpb -> cpb.cpb_family == :edge_cpb, unit.source_cpbs) == 12
+        @test count(cpb -> cpb.cpb_family == :corner_cpb, unit.source_cpbs) == 8
+        @test sum(cpb.support_count for cpb in unit.source_cpbs) ==
+              unit.support_count
+        stratum_points = Set{NTuple{3,Int}}()
+        for cpb in unit.source_cpbs
+            cpb_points = _cartesian_unit_stage_box_points(cpb.box)
+            @test isempty(intersect(stratum_points, cpb_points))
+            union!(stratum_points, cpb_points)
+        end
+        owned_shell_points = setdiff(
+            _cartesian_unit_stage_box_points(unit.owned_support.outer_cpb.box),
+            _cartesian_unit_stage_box_points(
+                unit.owned_support.inner_exclusion_cpb.box,
+            ),
+        )
+        @test stratum_points == owned_shell_points
+        @test length(stratum_points) == unit.support_count
+    end
     pqs_prototype = plan_inventory.pqs_lowering_prototype
     @test pqs_prototype.object_kind ==
           :cartesian_pqs_lowering_metadata_prototype
@@ -396,8 +494,9 @@ end
     @test !pqs_prototype.public_route_adoption
     @test pqs_unit.lowering_recipe.source_cpb_families ==
           (:facet_cpb, :edge_cpb, :corner_cpb)
+    @test pqs_unit.source_cpb_count == 26
     @test pqs_unit.lowering_recipe.source_cpb_enumeration_status ==
-          :planned_cpb_families_not_enumerated
+          :explicit_complete_shell_boundary_strata
     @test all(
         unit -> unit.source_descriptor.final_column_ranges_available == false,
         plan_inventory.plan_units,

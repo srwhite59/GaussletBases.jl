@@ -64,6 +64,241 @@ function _pqs_source_box_route_driver_cpb_descriptor(;
     )
 end
 
+function _pqs_source_box_route_driver_complete_shell_condition(region)
+    outer_box =
+        _pqs_source_box_route_driver_atom_growth_unit_field(
+            region,
+            :outer_box,
+            region.box,
+        )
+    inner_box =
+        _pqs_source_box_route_driver_atom_growth_unit_field(
+            region,
+            :inner_exclusion_box,
+            nothing,
+        )
+    if isnothing(inner_box)
+        return (;
+            complete_shell_supported = false,
+            complete_shell_status = :unsupported_complete_shell,
+            unsupported_reasons = (:missing_inner_exclusion_box,),
+            outer_box,
+            inner_box,
+        )
+    end
+
+    reasons = Symbol[]
+    for axis_index in 1:3
+        outer_axis = outer_box[axis_index]
+        inner_axis = inner_box[axis_index]
+        if isempty(inner_axis)
+            push!(reasons, :empty_inner_interval)
+        elseif first(inner_axis) != first(outer_axis) + 1 ||
+               last(inner_axis) != last(outer_axis) - 1
+            push!(reasons, :inner_interval_not_single_layer_strict_interior)
+        end
+    end
+    unsupported_reasons = Tuple(unique(reasons))
+    return (;
+        complete_shell_supported = isempty(unsupported_reasons),
+        complete_shell_status =
+            isempty(unsupported_reasons) ?
+            :supported_complete_shell :
+            :unsupported_complete_shell,
+        unsupported_reasons,
+        outer_box,
+        inner_box,
+    )
+end
+
+function _pqs_source_box_route_driver_complete_shell_stratum_role(
+    axis_indices,
+    sides,
+    stratum_kind::Symbol,
+)
+    axis_symbols = (:x, :y, :z)
+    parts = String[]
+    for (axis_index, side) in zip(axis_indices, sides)
+        push!(parts, string(axis_symbols[axis_index]))
+        push!(parts, string(side))
+    end
+    push!(parts, string(stratum_kind))
+    return Symbol(join(parts, "_"))
+end
+
+function _pqs_source_box_route_driver_complete_shell_stratum_box(
+    outer_box,
+    inner_box,
+    axis_indices,
+    sides,
+)
+    ranges = Vector{UnitRange{Int}}(undef, 3)
+    for axis_index in 1:3
+        side_index = findfirst(==(axis_index), axis_indices)
+        if isnothing(side_index)
+            ranges[axis_index] = inner_box[axis_index]
+        else
+            side = sides[side_index]
+            boundary_point =
+                side == :low ?
+                first(outer_box[axis_index]) :
+                last(outer_box[axis_index])
+            ranges[axis_index] = boundary_point:boundary_point
+        end
+    end
+    return (ranges[1], ranges[2], ranges[3])
+end
+
+function _pqs_source_box_route_driver_complete_shell_stratum_cpb(
+    outer_box,
+    inner_box,
+    axis_indices,
+    sides,
+    cpb_family::Symbol,
+    stratum_kind::Symbol,
+)
+    box = _pqs_source_box_route_driver_complete_shell_stratum_box(
+        outer_box,
+        inner_box,
+        axis_indices,
+        sides,
+    )
+    return _pqs_source_box_route_driver_cpb_descriptor(
+        box = box,
+        role =
+            _pqs_source_box_route_driver_complete_shell_stratum_role(
+                axis_indices,
+                sides,
+                stratum_kind,
+            ),
+        cpb_family = cpb_family,
+        source = :white_lindsey_complete_shell_boundary_strata,
+        support_count = prod(length.(box)),
+        metadata = (;
+            enumeration_policy =
+                :white_lindsey_complete_shell_boundary_strata,
+            shellification_authority_scope = :owned_support_only,
+            lowering_geometry_only = true,
+            boundary_axis_indices = axis_indices,
+            boundary_sides = sides,
+            coefficient_maps_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_complete_shell_source_cpbs(region)
+    condition =
+        _pqs_source_box_route_driver_complete_shell_condition(region)
+    condition.complete_shell_supported || return ()
+
+    cpbs = NamedTuple[]
+    sides = (:low, :high)
+    for axis_index in 1:3
+        for side in sides
+            push!(
+                cpbs,
+                _pqs_source_box_route_driver_complete_shell_stratum_cpb(
+                    condition.outer_box,
+                    condition.inner_box,
+                    (axis_index,),
+                    (side,),
+                    :facet_cpb,
+                    :facet,
+                ),
+            )
+        end
+    end
+    for axis_indices in ((1, 2), (1, 3), (2, 3))
+        for first_side in sides
+            for second_side in sides
+                push!(
+                    cpbs,
+                    _pqs_source_box_route_driver_complete_shell_stratum_cpb(
+                        condition.outer_box,
+                        condition.inner_box,
+                        axis_indices,
+                        (first_side, second_side),
+                        :edge_cpb,
+                        :edge,
+                    ),
+                )
+            end
+        end
+    end
+    for x_side in sides
+        for y_side in sides
+            for z_side in sides
+                push!(
+                    cpbs,
+                    _pqs_source_box_route_driver_complete_shell_stratum_cpb(
+                        condition.outer_box,
+                        condition.inner_box,
+                        (1, 2, 3),
+                        (x_side, y_side, z_side),
+                        :corner_cpb,
+                        :corner,
+                    ),
+                )
+            end
+        end
+    end
+    return Tuple(cpbs)
+end
+
+function _pqs_source_box_route_driver_cpb_family_counts(source_cpbs)
+    return (;
+        facet_cpb = count(cpb -> cpb.cpb_family == :facet_cpb, source_cpbs),
+        edge_cpb = count(cpb -> cpb.cpb_family == :edge_cpb, source_cpbs),
+        corner_cpb = count(cpb -> cpb.cpb_family == :corner_cpb, source_cpbs),
+    )
+end
+
+function _pqs_source_box_route_driver_lowering_source_enumeration_metadata(
+    region,
+    source_cpbs,
+)
+    if region.lowering_family == :white_lindsey_adaptive_complete_shell
+        condition =
+            _pqs_source_box_route_driver_complete_shell_condition(region)
+        cpb_family_counts =
+            _pqs_source_box_route_driver_cpb_family_counts(source_cpbs)
+        source_cpb_enumeration_status =
+            condition.complete_shell_supported && length(source_cpbs) == 26 ?
+            :explicit_complete_shell_boundary_strata :
+            :planned_cpb_families_not_enumerated
+        return (;
+            source_cpb_enumeration_status,
+            source_cpb_enumeration_reason =
+                source_cpb_enumeration_status ==
+                :explicit_complete_shell_boundary_strata ?
+                nothing :
+                condition.unsupported_reasons,
+            enumeration_policy =
+                :white_lindsey_complete_shell_boundary_strata,
+            complete_shell_condition_status =
+                condition.complete_shell_status,
+            complete_shell_unsupported_reasons =
+                condition.unsupported_reasons,
+            complete_shell_cpb_family_counts = cpb_family_counts,
+        )
+    end
+    return (;
+        source_cpb_enumeration_status =
+            isempty(source_cpbs) ?
+            :planned_cpb_families_not_enumerated :
+            :explicit_source_cpbs,
+        source_cpb_enumeration_reason = nothing,
+        enumeration_policy = nothing,
+        complete_shell_condition_status = :not_applicable,
+        complete_shell_unsupported_reasons = (),
+        complete_shell_cpb_family_counts =
+            _pqs_source_box_route_driver_cpb_family_counts(source_cpbs),
+    )
+end
+
 function _pqs_source_box_route_driver_owned_support(region)
     inner_exclusion_box =
         _pqs_source_box_route_driver_atom_growth_unit_field(
@@ -117,6 +352,9 @@ end
 
 function _pqs_source_box_route_driver_lowering_source_cpbs(region)
     piece = region.lowering_piece
+    if region.lowering_family == :white_lindsey_adaptive_complete_shell
+        return _pqs_source_box_route_driver_complete_shell_source_cpbs(region)
+    end
     if !isnothing(piece) &&
        region.lowering_piece_object_kind == :cartesian_outer_mismatch_boundary_slab_set3d
         slab_pieces =
@@ -174,6 +412,11 @@ end
 function _pqs_source_box_route_driver_lowering_recipe(region, source_cpbs)
     source_families =
         _pqs_source_box_route_driver_lowering_source_families(region)
+    enumeration_metadata =
+        _pqs_source_box_route_driver_lowering_source_enumeration_metadata(
+            region,
+            source_cpbs,
+        )
     return (;
         object_kind = :cartesian_cpb_lowering_recipe,
         lowering_stage = :coordinate_product_box_lowering,
@@ -183,16 +426,17 @@ function _pqs_source_box_route_driver_lowering_recipe(region, source_cpbs)
         materialization_dependency = region.materialization_dependency,
         source_cpb_families = source_families,
         source_cpb_count = length(source_cpbs),
-        source_cpb_enumeration_status =
-            isempty(source_cpbs) ?
-            :planned_cpb_families_not_enumerated :
-            :explicit_source_cpbs,
+        enumeration_metadata...,
         owned_support_authority = :shellification_region,
         shellification_authority_scope = :owned_support_only,
         shellification_region_is_lowering_source = false,
         lowering_source_authority = :lowering_recipe_cpbs,
         white_lindsey_lowering_sources_are_cpbs =
             all(!=(:pending_cpb_lowering_family), source_families),
+        coefficient_maps_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
         shellification_region_authority = false,
     )
 end
