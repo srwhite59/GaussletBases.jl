@@ -5385,6 +5385,7 @@ function cartesian_transforms(units, recipe)
 end
 
 function _pqs_source_box_route_driver_pair_stage_low_order_summary(
+    units,
     transforms,
     route_skeleton,
 )
@@ -5413,13 +5414,24 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             pair_operator_blocks_materialized = false,
             pair_inventory_known = false,
             pair_inventory_source = :not_available,
+            pair_inventory = nothing,
+            pair_entries = (),
+            pair_count = 0,
+            pair_family_counts = nothing,
+            helper_by_pair_family = nothing,
+            pair_operator_helper_by_family = nothing,
+            pair_helper_status_by_family = nothing,
+            operator_pairs_materialized = false,
             route_skeleton_pair_entry_count = 0,
             route_skeleton_pair_family_counts = nothing,
+            route_skeleton_pair_entries = (),
+            route_skeleton_helper_by_pair_family = nothing,
             independent_atom_growth_pair_inventory_available = false,
             plan_authority = false,
             active_source_authority = false,
             legacy_source_authority = false,
             pair_stage_fields_preserved = false,
+            route_skeleton_pair_inventory_source = :not_available,
             summary_only = true,
         )
     end
@@ -5434,6 +5446,57 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         legacy_source_pairs_selected ?
         :legacy_diatomic_source_low_order_pairs :
         :not_selected
+    atom_growth_plan_unit_inventory =
+        atom_growth_pairs_selected && hasproperty(units, :plan_unit_inventory) ?
+        units.plan_unit_inventory :
+        nothing
+    atom_growth_pair_inventory =
+        atom_growth_pairs_selected ?
+        _pqs_source_box_route_driver_atom_growth_pair_inventory(
+            atom_growth_plan_unit_inventory,
+        ) :
+        nothing
+    independent_atom_growth_pair_inventory_available =
+        !isnothing(atom_growth_pair_inventory) &&
+        atom_growth_pair_inventory.status == :available_atom_growth_pair_inventory
+    pair_entries =
+        independent_atom_growth_pair_inventory_available ?
+        atom_growth_pair_inventory.pair_entries :
+        atom_growth_pairs_selected ?
+        () :
+        route_skeleton.pair_entries
+    pair_family_counts =
+        independent_atom_growth_pair_inventory_available ?
+        atom_growth_pair_inventory.pair_family_counts :
+        atom_growth_pairs_selected ?
+        (white_lindsey_low_order_atom_growth_unit_pair = 0,) :
+        route_skeleton.pair_family_counts
+    pair_inventory_source =
+        independent_atom_growth_pair_inventory_available ?
+        atom_growth_pair_inventory.pair_inventory_source :
+        atom_growth_pairs_selected ?
+        atom_growth_pair_inventory.pair_inventory_source :
+        :route_skeleton_pair_entries_only
+    pair_inventory_known =
+        atom_growth_pairs_selected ?
+        independent_atom_growth_pair_inventory_available :
+        !isempty(pair_entries)
+    atom_growth_pair_helper_status_by_family = (
+        white_lindsey_low_order_atom_growth_unit_pair =
+            :deferred_no_pair_operator_block_helper,
+    )
+    pair_operator_helper_by_family =
+        atom_growth_pairs_selected ?
+        atom_growth_pair_helper_status_by_family :
+        route_skeleton.helper_by_pair_family
+    pair_helper_status_by_family =
+        atom_growth_pairs_selected ?
+        atom_growth_pair_helper_status_by_family :
+        nothing
+    operator_pairs_materialized =
+        independent_atom_growth_pair_inventory_available ?
+        atom_growth_pair_inventory.operator_pairs_materialized :
+        false
 
     return (;
         object_kind = :cartesian_pair_stage_low_order_summary,
@@ -5460,16 +5523,28 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         atom_growth_pairs_selected,
         legacy_source_pairs_selected,
         pair_operator_blocks_materialized = false,
-        pair_inventory_known = true,
-        pair_inventory_source = :route_skeleton_pair_entries_only,
+        operator_pairs_materialized,
+        pair_inventory_known,
+        pair_inventory_source,
+        pair_inventory = atom_growth_pair_inventory,
+        pair_entries,
+        pair_count = length(pair_entries),
+        pair_family_counts,
+        helper_by_pair_family = pair_operator_helper_by_family,
+        pair_operator_helper_by_family,
+        pair_helper_status_by_family,
         route_skeleton_pair_entry_count = length(route_skeleton.pair_entries),
         route_skeleton_pair_family_counts = route_skeleton.pair_family_counts,
-        independent_atom_growth_pair_inventory_available = false,
+        route_skeleton_pair_entries = route_skeleton.pair_entries,
+        route_skeleton_helper_by_pair_family = route_skeleton.helper_by_pair_family,
+        independent_atom_growth_pair_inventory_available,
         plan_authority = low_order_transforms.plan_authority,
         active_source_authority = low_order_transforms.active_source_authority,
         legacy_source_authority = low_order_transforms.legacy_source_authority,
         pair_stage_fields_preserved = true,
-        summary_only = true,
+        route_skeleton_pair_inventory_source =
+            :route_skeleton_compatibility_fields,
+        summary_only = !independent_atom_growth_pair_inventory_available,
     )
 end
 
@@ -5477,6 +5552,7 @@ function cartesian_pair_terms(units, transforms, recipe)
     route_skeleton = units.route_skeleton
     low_order_pairs =
         _pqs_source_box_route_driver_pair_stage_low_order_summary(
+            units,
             transforms,
             route_skeleton,
         )
@@ -5491,11 +5567,21 @@ function cartesian_pair_terms(units, transforms, recipe)
         atom_growth_pairs_selected = low_order_pairs.atom_growth_pairs_selected,
         pair_operator_blocks_materialized =
             low_order_pairs.pair_operator_blocks_materialized,
+        operator_pairs_materialized = low_order_pairs.operator_pairs_materialized,
+        independent_atom_growth_pair_inventory_available =
+            low_order_pairs.independent_atom_growth_pair_inventory_available,
+        pair_inventory = low_order_pairs.pair_inventory,
         pair_inventory_source = low_order_pairs.pair_inventory_source,
         active_source_authority = low_order_pairs.active_source_authority,
-        pair_entries = route_skeleton.pair_entries,
-        pair_family_counts = route_skeleton.pair_family_counts,
-        helper_by_pair_family = route_skeleton.helper_by_pair_family,
+        pair_entries = low_order_pairs.pair_entries,
+        pair_family_counts = low_order_pairs.pair_family_counts,
+        helper_by_pair_family = low_order_pairs.helper_by_pair_family,
+        pair_operator_helper_by_family =
+            low_order_pairs.pair_operator_helper_by_family,
+        pair_helper_status_by_family = low_order_pairs.pair_helper_status_by_family,
+        route_skeleton_pair_entries = route_skeleton.pair_entries,
+        route_skeleton_pair_family_counts = route_skeleton.pair_family_counts,
+        route_skeleton_helper_by_pair_family = route_skeleton.helper_by_pair_family,
         pair_stage = :pair_operator_terms_described,
     )
 end

@@ -131,6 +131,9 @@ end
           default_stages.units.route_skeleton.pair_family_counts
     @test default_pairs.helper_by_pair_family ===
           default_stages.units.route_skeleton.helper_by_pair_family
+    @test default_pairs.pair_operator_helper_by_family ===
+          default_stages.units.route_skeleton.helper_by_pair_family
+    @test isnothing(default_pairs.pair_helper_status_by_family)
     @test default_pairs.pair_stage == :pair_operator_terms_described
 
     atom_growth_stages = _cartesian_pair_stage_low_order_policy_pairs(
@@ -143,8 +146,10 @@ end
           :atom_growth_complete_rectangular_low_order_pairs
     @test atom_growth_pairs.atom_growth_pairs_selected
     @test !atom_growth_pairs.pair_operator_blocks_materialized
+    @test !atom_growth_pairs.operator_pairs_materialized
     @test atom_growth_pairs.pair_inventory_source ==
-          :route_skeleton_pair_entries_only
+          :atom_growth_unit_inventory
+    @test atom_growth_pairs.independent_atom_growth_pair_inventory_available
     @test !atom_growth_pairs.active_source_authority
     @test atom_growth_summary.low_order_shellization_policy_resolved ==
           :atom_growth_complete_rectangular
@@ -164,21 +169,117 @@ end
     @test !atom_growth_summary.active_source_authority
     @test !atom_growth_summary.legacy_source_authority
     @test !atom_growth_summary.pair_operator_blocks_materialized
+    @test !atom_growth_summary.operator_pairs_materialized
     @test atom_growth_summary.pair_inventory_known
     @test atom_growth_summary.pair_inventory_source ==
-          :route_skeleton_pair_entries_only
+          :atom_growth_unit_inventory
+    @test atom_growth_summary.independent_atom_growth_pair_inventory_available
+    pair_inventory = atom_growth_summary.pair_inventory
+    unit_inventory = atom_growth_stages.units.plan_unit_inventory
+    @test pair_inventory.object_kind == :cartesian_atom_growth_plan_pair_inventory
+    @test pair_inventory.status == :available_atom_growth_pair_inventory
+    @test pair_inventory.pair_inventory_source == :atom_growth_unit_inventory
+    @test pair_inventory.unit_count == unit_inventory.unit_count
+    @test pair_inventory.unit_count == 8
+    @test pair_inventory.pair_count ==
+          pair_inventory.unit_count * (pair_inventory.unit_count + 1) ÷ 2
+    @test pair_inventory.pair_count == 36
+    @test pair_inventory.pair_entries === atom_growth_pairs.pair_entries
+    @test atom_growth_summary.pair_entries === atom_growth_pairs.pair_entries
+    @test atom_growth_summary.pair_count == pair_inventory.pair_count
+    @test atom_growth_summary.pair_family_counts ==
+          pair_inventory.pair_family_counts
+    @test pair_inventory.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          pair_inventory.pair_count
+    @test all(
+        pair -> pair.pair_family == :white_lindsey_low_order_atom_growth_unit_pair,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.pair_contract == :planned_low_order_unit_pair_operator_block,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.pair_inventory_source == :atom_growth_unit_inventory,
+        pair_inventory.pair_entries,
+    )
+    @test all(
+        pair -> pair.left_unit_index <= pair.right_unit_index,
+        pair_inventory.pair_entries,
+    )
+    expected_pair_keys = Tuple(
+        (
+            unit_inventory.plan_units[left_index].unit_key,
+            unit_inventory.plan_units[right_index].unit_key,
+        )
+        for left_index in 1:unit_inventory.unit_count
+        for right_index in left_index:unit_inventory.unit_count
+    )
+    @test Tuple(pair.pair_key for pair in pair_inventory.pair_entries) ==
+          expected_pair_keys
+    @test all(
+        pair -> !pair.operator_pair_block_materialized,
+        pair_inventory.pair_entries,
+    )
+    @test all(pair -> !pair.operator_block_materialized, pair_inventory.pair_entries)
+    @test !pair_inventory.operator_pairs_materialized
+    @test !pair_inventory.pair_operator_blocks_materialized
     @test atom_growth_summary.route_skeleton_pair_entry_count ==
-          length(atom_growth_pairs.pair_entries)
+          length(atom_growth_stages.units.route_skeleton.pair_entries)
     @test atom_growth_summary.route_skeleton_pair_family_counts ==
-          atom_growth_pairs.pair_family_counts
-    @test !atom_growth_summary.independent_atom_growth_pair_inventory_available
-    @test atom_growth_summary.summary_only
-    @test atom_growth_summary.pair_stage_fields_preserved
-    @test atom_growth_pairs.pair_entries ===
-          atom_growth_stages.units.route_skeleton.pair_entries
-    @test atom_growth_pairs.pair_family_counts ===
           atom_growth_stages.units.route_skeleton.pair_family_counts
-    @test atom_growth_pairs.helper_by_pair_family ===
+    @test atom_growth_summary.route_skeleton_pair_entries ===
+          atom_growth_stages.units.route_skeleton.pair_entries
+    @test atom_growth_summary.route_skeleton_pair_inventory_source ==
+          :route_skeleton_compatibility_fields
+    @test !atom_growth_summary.summary_only
+    @test atom_growth_summary.pair_stage_fields_preserved
+    @test atom_growth_pairs.pair_entries !==
+          atom_growth_stages.units.route_skeleton.pair_entries
+    @test atom_growth_pairs.route_skeleton_pair_entries ===
+          atom_growth_stages.units.route_skeleton.pair_entries
+    @test atom_growth_pairs.route_skeleton_pair_family_counts ===
+          atom_growth_stages.units.route_skeleton.pair_family_counts
+    expected_atom_growth_helper_status = (
+        white_lindsey_low_order_atom_growth_unit_pair =
+            :deferred_no_pair_operator_block_helper,
+    )
+    @test atom_growth_pairs.helper_by_pair_family ==
+          expected_atom_growth_helper_status
+    @test atom_growth_pairs.pair_operator_helper_by_family ==
+          expected_atom_growth_helper_status
+    @test atom_growth_pairs.pair_helper_status_by_family ==
+          expected_atom_growth_helper_status
+    @test !(:white_lindsey_low_order in keys(atom_growth_pairs.helper_by_pair_family))
+    @test atom_growth_pairs.route_skeleton_helper_by_pair_family ===
           atom_growth_stages.units.route_skeleton.helper_by_pair_family
     @test atom_growth_pairs.pair_stage == :pair_operator_terms_described
+
+    blocked_units = merge(
+        atom_growth_stages.units,
+        (; plan_unit_inventory = nothing),
+    )
+    blocked_summary =
+        GaussletBases._pqs_source_box_route_driver_pair_stage_low_order_summary(
+            blocked_units,
+            atom_growth_stages.transforms,
+            atom_growth_stages.units.route_skeleton,
+        )
+    @test blocked_summary.atom_growth_pairs_selected
+    @test !blocked_summary.independent_atom_growth_pair_inventory_available
+    @test !blocked_summary.pair_inventory_known
+    @test blocked_summary.pair_inventory_source ==
+          :blocked_missing_plan_unit_inventory
+    @test blocked_summary.pair_entries == ()
+    @test blocked_summary.pair_count == 0
+    @test blocked_summary.pair_family_counts.white_lindsey_low_order_atom_growth_unit_pair ==
+          0
+    @test blocked_summary.helper_by_pair_family ==
+          expected_atom_growth_helper_status
+    @test blocked_summary.route_skeleton_pair_entries ===
+          atom_growth_stages.units.route_skeleton.pair_entries
+    @test blocked_summary.route_skeleton_pair_family_counts ===
+          atom_growth_stages.units.route_skeleton.pair_family_counts
+    @test blocked_summary.route_skeleton_helper_by_pair_family ===
+          atom_growth_stages.units.route_skeleton.helper_by_pair_family
 end

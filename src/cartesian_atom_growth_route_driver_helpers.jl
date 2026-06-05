@@ -309,6 +309,96 @@ function _pqs_source_box_route_driver_atom_growth_transform_contract_inventory(
     )
 end
 
+function _pqs_source_box_route_driver_atom_growth_pair_record(
+    left_unit,
+    right_unit;
+    left_unit_index::Int,
+    right_unit_index::Int,
+)
+    return (;
+        object_kind = :cartesian_atom_growth_plan_pair,
+        pair_key = (left_unit.unit_key, right_unit.unit_key),
+        left_unit_key = left_unit.unit_key,
+        right_unit_key = right_unit.unit_key,
+        left_unit_role = left_unit.unit_role,
+        right_unit_role = right_unit.unit_role,
+        left_unit_index,
+        right_unit_index,
+        pair_family = :white_lindsey_low_order_atom_growth_unit_pair,
+        pair_contract = :planned_low_order_unit_pair_operator_block,
+        pair_inventory_source = :atom_growth_unit_inventory,
+        operator_pair_block_materialized = false,
+        operator_block_materialized = false,
+        retained_block_dimensions_known = false,
+        operator_block_dimensions_known = false,
+        retained_block_dimensions = nothing,
+        operator_block_dimensions = nothing,
+    )
+end
+
+function _pqs_source_box_route_driver_atom_growth_pair_inventory(
+    plan_unit_inventory,
+)
+    if isnothing(plan_unit_inventory) ||
+       plan_unit_inventory.status != :available_atom_growth_plan_unit_inventory
+        return (;
+            object_kind = :cartesian_atom_growth_plan_pair_inventory,
+            status = :blocked_missing_atom_growth_plan_unit_inventory,
+            private_development_only = true,
+            pair_inventory_source = :blocked_missing_plan_unit_inventory,
+            unit_count = 0,
+            pair_count = 0,
+            pair_entries = (),
+            pair_family_counts =
+                (white_lindsey_low_order_atom_growth_unit_pair = 0,),
+            upper_triangular_unit_pairs = false,
+            operator_pairs_materialized = false,
+            pair_operator_blocks_materialized = false,
+            operator_blocks_materialized = false,
+            retained_block_dimensions_known = false,
+            operator_block_dimensions_known = false,
+            blocker = :missing_atom_growth_plan_unit_inventory,
+        )
+    end
+
+    plan_units = plan_unit_inventory.plan_units
+    pair_entries = NamedTuple[]
+    for left_index in eachindex(plan_units)
+        for right_index in left_index:length(plan_units)
+            push!(
+                pair_entries,
+                _pqs_source_box_route_driver_atom_growth_pair_record(
+                    plan_units[left_index],
+                    plan_units[right_index];
+                    left_unit_index = left_index,
+                    right_unit_index = right_index,
+                ),
+            )
+        end
+    end
+
+    pair_entries = Tuple(pair_entries)
+    pair_count = length(pair_entries)
+    return (;
+        object_kind = :cartesian_atom_growth_plan_pair_inventory,
+        status = :available_atom_growth_pair_inventory,
+        private_development_only = true,
+        pair_inventory_source = :atom_growth_unit_inventory,
+        unit_count = length(plan_units),
+        pair_count,
+        pair_entries,
+        pair_family_counts =
+            (white_lindsey_low_order_atom_growth_unit_pair = pair_count,),
+        upper_triangular_unit_pairs = true,
+        operator_pairs_materialized = false,
+        pair_operator_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        retained_block_dimensions_known = false,
+        operator_block_dimensions_known = false,
+        blocker = nothing,
+    )
+end
+
 function _pqs_source_box_route_driver_atom_growth_unit_record(;
     unit_key,
     unit_role,
