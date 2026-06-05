@@ -1129,6 +1129,110 @@ function _cartesian_materialize_shared_complete_shell_region(
     return shell
 end
 
+function _cartesian_materialize_split_complete_rectangular_shellification_low_order(
+    left_child_plan,
+    right_child_plan,
+    shared_shell_regions,
+    basis,
+    bundles::_CartesianNestedAxisBundles3D;
+    midpoint_region = nothing,
+    term_coefficients::Union{Nothing,AbstractVector{<:Real}} = nothing,
+    packet_kernel::Symbol = :factorized_direct,
+)
+    isnothing(term_coefficients) && throw(
+        ArgumentError("split complete-rectangular materializer requires explicit term coefficients"),
+    )
+    left_child_plan.source_backed && throw(
+        ArgumentError("left atom-local child plan must be independently lowerable"),
+    )
+    right_child_plan.source_backed && throw(
+        ArgumentError("right atom-local child plan must be independently lowerable"),
+    )
+
+    left_sequence = _cartesian_materialize_atom_local_child_shellification_low_order(
+        left_child_plan,
+        basis,
+        bundles;
+        term_coefficients,
+        packet_kernel,
+        build_packet = false,
+    )
+    right_sequence = _cartesian_materialize_atom_local_child_shellification_low_order(
+        right_child_plan,
+        basis,
+        bundles;
+        term_coefficients,
+        packet_kernel,
+        build_packet = false,
+    )
+    midpoint_data =
+        isnothing(midpoint_region) ?
+        nothing :
+        _cartesian_materialize_direct_box_region(midpoint_region, bundles)
+    shared_layers = [
+        _cartesian_materialize_shared_complete_shell_region(
+            region,
+            basis,
+            bundles;
+            term_coefficients,
+            packet_kernel,
+        ) for region in shared_shell_regions
+    ]
+
+    core_support_blocks = Vector{Vector{Int}}()
+    core_coefficient_blocks = _CartesianCoefficientMap[]
+    push!(core_support_blocks, left_sequence.support_indices)
+    push!(core_coefficient_blocks, left_sequence.coefficient_matrix)
+    if !isnothing(midpoint_data)
+        push!(core_support_blocks, midpoint_data.support_indices)
+        push!(core_coefficient_blocks, midpoint_data.coefficient_matrix)
+    end
+    push!(core_support_blocks, right_sequence.support_indices)
+    push!(core_coefficient_blocks, right_sequence.coefficient_matrix)
+    core_support = vcat(core_support_blocks...)
+    core_coefficients = _nested_hcat_coefficient_maps(core_coefficient_blocks)
+    sequence = _nested_shell_sequence_from_core_block(
+        bundles,
+        core_support,
+        core_coefficients,
+        shared_layers;
+        term_coefficients,
+        packet_kernel,
+        verify_factorized_reconstruction = false,
+    )
+
+    column_start = first(sequence.core_column_range)
+    left_columns = size(left_sequence.coefficient_matrix, 2)
+    left_column_range = column_start:(column_start + left_columns - 1)
+    column_start = last(left_column_range) + 1
+    midpoint_column_range = nothing
+    if !isnothing(midpoint_data)
+        slab_columns = size(midpoint_data.coefficient_matrix, 2)
+        midpoint_column_range = column_start:(column_start + slab_columns - 1)
+        column_start = last(midpoint_column_range) + 1
+    end
+    right_columns = size(right_sequence.coefficient_matrix, 2)
+    right_column_range = column_start:(column_start + right_columns - 1)
+
+    return (;
+        object_kind = :cartesian_atom_outward_split_complete_rectangular_materialization,
+        status = :materialized_split_complete_rectangular_low_order,
+        private_development_only = true,
+        active_source_authority = false,
+        route_behavior_changed = false,
+        left_child_plan,
+        right_child_plan,
+        midpoint_region,
+        shared_shell_regions = Tuple(shared_shell_regions),
+        child_sequences = (left_sequence, right_sequence),
+        midpoint_slab_data = midpoint_data,
+        shared_shell_layers = Tuple(shared_layers),
+        sequence,
+        child_column_ranges = (left_column_range, right_column_range),
+        midpoint_slab_column_range = midpoint_column_range,
+    )
+end
+
 function _cartesian_materialize_direct_box_region(
     region,
     bundles::_CartesianNestedAxisBundles3D,

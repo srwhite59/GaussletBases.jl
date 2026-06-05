@@ -594,6 +594,142 @@ end
     end
 end
 
+@testset "atom-outward complete-rectangular split assembly matches oracle sequence" begin
+    fixture = _bond_aligned_diatomic_shellification_plan_fixture(
+        shared_shell_layer_policy = :complete_rectangular,
+        xmax_parallel = 12.0,
+        xmax_transverse = 8.0,
+        min_unsplit_parallel_to_transverse_ratio_for_split = 1.0,
+    )
+    source = fixture.source
+    oracle = source.sequence
+    @test source.geometry.did_split
+    @test length(source.geometry.child_boxes) == 2
+    @test length(source.child_sequences) == 2
+    @test !isempty(source.shared_shell_layers)
+    @test all(
+        layer -> layer isa GaussletBases._CartesianNestedCompleteShell3D,
+        source.shared_shell_layers,
+    )
+
+    protect_rows =
+        GaussletBases._nested_diatomic_resolve_core_near_nucleus_protect_rows(
+            :auto,
+            source.nside,
+        )
+    left_child_plan =
+        GaussletBases._cartesian_shellification_plan_atom_local_child_low_order(
+            fixture.bundles,
+            source.geometry.child_boxes[1];
+            order_index = 1,
+            atom_side = :left,
+            bond_axis = source.geometry.bond_axis,
+            nside = source.nside,
+            retention_policy = source.child_shell_retention_contract,
+            reference_fudge_factor = 1.2,
+            core_near_nucleus_protect_rows = protect_rows,
+        )
+    right_child_plan =
+        GaussletBases._cartesian_shellification_plan_atom_local_child_low_order(
+            fixture.bundles,
+            source.geometry.child_boxes[2];
+            order_index = 3,
+            atom_side = :right,
+            bond_axis = source.geometry.bond_axis,
+            nside = source.nside,
+            retention_policy = source.child_shell_retention_contract,
+            reference_fudge_factor = 1.2,
+            core_near_nucleus_protect_rows = protect_rows,
+        )
+    midpoint_region =
+        isnothing(source.geometry.shared_midpoint_box) ?
+        nothing :
+        GaussletBases._cartesian_shellification_plan_direct_midpoint_slab_region3d(
+            fixture.bundles,
+            source.geometry.shared_midpoint_box;
+            order_index = 2,
+            bond_axis = source.geometry.bond_axis,
+            split_index = source.geometry.split_index,
+            column_range = source.midpoint_slab_column_range,
+        )
+    shared_regions = Tuple(
+        GaussletBases._cartesian_shellification_plan_shared_complete_shell_region3d(
+            fixture.bundles,
+            layer.provenance.source_box,
+            layer.provenance.next_inner_box;
+            order_index = layer_index,
+            bond_axis = source.geometry.bond_axis,
+            nside = source.nside,
+            retention_policy = source.shared_shell_retention_contract,
+            shared_shell_angular_resolution_scale = 1.4,
+            retained_count = size(layer.coefficient_matrix, 2),
+            column_range = source.sequence.layer_column_ranges[layer_index],
+        ) for (layer_index, layer) in enumerate(source.shared_shell_layers)
+    )
+
+    materialization =
+        GaussletBases._cartesian_materialize_split_complete_rectangular_shellification_low_order(
+            left_child_plan,
+            right_child_plan,
+            shared_regions,
+            fixture.basis,
+            fixture.bundles;
+            midpoint_region,
+            term_coefficients = Float64.(fixture.expansion.coefficients),
+            packet_kernel = :factorized_direct,
+        )
+    materialized = materialization.sequence
+
+    @test materialization.object_kind ==
+          :cartesian_atom_outward_split_complete_rectangular_materialization
+    @test materialization.private_development_only
+    @test !materialization.active_source_authority
+    @test !materialization.route_behavior_changed
+    @test !(:source in propertynames(materialization))
+    @test materialization.child_column_ranges == Tuple(source.child_column_ranges)
+    @test materialization.midpoint_slab_column_range ==
+          source.midpoint_slab_column_range
+
+    @test materialized.working_box == oracle.working_box
+    @test materialized.core_indices == oracle.core_indices
+    @test materialized.core_states == oracle.core_states
+    @test materialized.core_column_range == oracle.core_column_range
+    @test materialized.layer_column_ranges == oracle.layer_column_ranges
+    @test materialized.support_indices == oracle.support_indices
+    @test materialized.support_states == oracle.support_states
+    @test length(materialized.shell_layers) == length(oracle.shell_layers)
+    @test length(materialized.shell_layers) == length(source.shared_shell_layers)
+    @test size(materialized.coefficient_matrix) == size(oracle.coefficient_matrix)
+    @test isapprox(
+        materialized.coefficient_matrix,
+        oracle.coefficient_matrix;
+        atol = 1.0e-10,
+        rtol = 1.0e-10,
+    )
+
+    for (layer, oracle_layer, region, column_range) in zip(
+        materialization.shared_shell_layers,
+        source.shared_shell_layers,
+        shared_regions,
+        materialized.layer_column_ranges,
+    )
+        @test region.column_range == column_range
+        @test layer.provenance == oracle_layer.provenance
+        @test layer.support_indices == oracle_layer.support_indices
+        @test layer.support_states == oracle_layer.support_states
+        @test layer.face_column_ranges == oracle_layer.face_column_ranges
+        @test layer.edge_column_ranges == oracle_layer.edge_column_ranges
+        @test layer.corner_column_ranges == oracle_layer.corner_column_ranges
+        @test size(layer.coefficient_matrix) == size(oracle_layer.coefficient_matrix)
+        @test isapprox(
+            layer.coefficient_matrix,
+            oracle_layer.coefficient_matrix;
+            atol = 1.0e-10,
+            rtol = 1.0e-10,
+        )
+    end
+end
+
 @testset "bond-aligned diatomic low-order shellification plan matches active source" begin
     fixture = _bond_aligned_diatomic_shellification_plan_fixture()
     nside = fixture.nside
