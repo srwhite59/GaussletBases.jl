@@ -41,6 +41,14 @@ notes:
 - external agent background memo:
   `/Users/srw/Dropbox/chatarchive/handoff/external_analysis/pqs_source_box_manuscript_packet_2026-06-01/agent_oriented_background_2026-06-01.md`
 
+The geometry/lowering vocabulary is defined in
+[`cartesian_coordinate_product_box_contract.md`](cartesian_coordinate_product_box_contract.md).
+That note introduces **Coordinate Product Box** (CPB) as the common
+coordinate-product source/support primitive and separates shellification owned
+support from filled source boxes, intermediate retained spaces, and
+shell-realization maps. Read it before extending this framework toward shared
+LW/PQS driver stages.
+
 If those documents and this one disagree, stop and update the framework or
 policy explicitly before continuing implementation. Do not resolve the conflict
 silently in code.

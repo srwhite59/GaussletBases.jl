@@ -19,6 +19,13 @@ does not claim production science validation.
 
 ## Definition
 
+The geometry vocabulary for filled source boxes, boundary strata, and shell
+owned support is defined in
+[`cartesian_coordinate_product_box_contract.md`](cartesian_coordinate_product_box_contract.md).
+In that vocabulary, PQS uses a filled source **Coordinate Product Box** (CPB)
+for raw product-box operators and only later realizes selected boundary modes
+on the owned shell support. The shell support itself is not a CPB.
+
 PQS now has two distinct stages that must not be conflated.
 
 The raw product-box reference stage is:

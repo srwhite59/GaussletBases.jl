@@ -10,6 +10,12 @@ This note records the intended next abstraction for high-order Cartesian
 construction. It is a design contract, not a claim that all routes already use
 this machinery.
 
+The coordinate-product geometry vocabulary used here is defined in
+[`cartesian_coordinate_product_box_contract.md`](cartesian_coordinate_product_box_contract.md).
+In that vocabulary, a raw product source box is a filled **Coordinate Product
+Box** (CPB) plus source-mode and transform metadata; a shell such as
+`B_outer \ B_inner` is not itself a CPB.
+
 ## Core Idea
 
 Most retained Cartesian units should be understood as:
