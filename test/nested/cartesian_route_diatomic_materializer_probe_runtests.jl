@@ -424,3 +424,131 @@ end
     @test opt_in_materialization.ham_bundle_export_status == :not_requested
     @test opt_in_materialization.ham_artifact_status == :not_requested
 end
+
+@testset "route-configured diatomic atom-growth opt-in writes private artifacts" begin
+    expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
+    report = _cartesian_route_diatomic_white_lindsey_report_for_test()
+
+    materialization = mktempdir() do dir
+        basisfile = joinpath(dir, "atom_growth_basis.jld2")
+        hamfile = joinpath(dir, "atom_growth_ham.jld2")
+        materialization = GaussletBases._pqs_source_box_route_driver_materialization(
+            report;
+            materialize_route = true,
+            save_basis_artifact = true,
+            save_ham_artifact = true,
+            basisfile,
+            hamfile,
+            white_lindsey_expansion = expansion,
+            probe_route_configured_diatomic_atom_growth_materializer = true,
+        )
+
+        @test materialization.status ==
+              :materialized_route_configured_diatomic_atom_growth_artifacts_available
+        @test materialization.basis_artifact_written
+        @test materialization.ham_artifact_written
+        @test materialization.basis_artifact_path == basisfile
+        @test materialization.basis_artifact_status ==
+              :written_route_configured_diatomic_atom_growth_basis_only_bundle
+        @test materialization.ham_artifact_status ==
+              :written_route_configured_diatomic_atom_growth_ham_bundle
+        @test materialization.basis_bundle_export_status ==
+              :supported_route_configured_diatomic_atom_growth_basis_only_fixed_block
+        @test materialization.ham_preflight_status ==
+              :available_route_configured_diatomic_atom_growth_ham_adapter
+        @test materialization.ham_bundle_export_status ==
+              :available_route_configured_diatomic_atom_growth_ham_bundle_payload
+        @test materialization.ham_export_blocker === nothing
+        @test materialization.shellization_source ==
+              :bond_aligned_diatomic_atom_growth_construction_plan
+        @test !materialization.route_configured_shellization_consumed
+        @test materialization.route_configured_diatomic_atom_growth_materializer_probe_consumed
+        @test materialization.materialized_report_kind ==
+              :cartesian_atom_growth_shellification_materialization_result
+        @test materialization.retained_dimension ==
+              materialization.route_configured_diatomic_atom_growth_retained_dimension
+        @test isfile(basisfile)
+        @test isfile(hamfile)
+
+        jldopen(basisfile, "r") do file
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test String(file["basis/parent_kind"]) == "cartesian_product_basis"
+            @test file["basis/final_dimension"] == materialization.retained_dimension
+            @test length(file["basis/final_integral_weights"]) ==
+                  materialization.retained_dimension
+            @test all(isfinite, file["basis/final_integral_weights"])
+            @test minimum(file["basis/final_integral_weights"]) > 0.0
+            @test length(file["basis/basis_labels"]) ==
+                  materialization.retained_dimension
+            @test size(file["basis/basis_centers"]) ==
+                  (materialization.retained_dimension, 3)
+            @test Bool(file["meta/has_ham"]) == false
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "cartesian_atom_growth_shellification_materialization_result"
+            @test String(file["meta/shellization_source"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test String(file["meta/shellization_authority"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test !Bool(file["meta/active_source_authority"])
+            @test !Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_default_behavior_changed"])
+            @test String(file["meta/basis_export_status"]) ==
+                  "supported_route_configured_diatomic_atom_growth_basis_only_fixed_block"
+            @test String(file["meta/ham_export_status"]) ==
+                  "artifact_local_basis_only_no_ham_payload"
+            @test Bool(file["meta/ham_export_blocker/is_nothing"])
+            @test String(file["meta/companion_ham_artifact_status"]) ==
+                  "written_route_configured_diatomic_atom_growth_ham_bundle"
+            @test String(file["meta/companion_ham_export_status"]) ==
+                  "available_route_configured_diatomic_atom_growth_ham_bundle_payload"
+            @test Bool(file["meta/companion_ham_export_blocker/is_nothing"])
+        end
+
+        jldopen(hamfile, "r") do file
+            @test String(file["basis/format"]) == "cartesian_basis_bundle_v1"
+            @test String(file["basis/basis_kind"]) == "nested_fixed_block"
+            @test String(file["ham/format"]) == "cartesian_hamiltonian_bundle_v1"
+            @test String(file["ham/model_kind"]) == "ordinary_cartesian_operators"
+            @test String(file["ham/interaction_treatment"]) == "ggt_nearest"
+            @test String(file["ham/gausslet_backend"]) ==
+                  "pgdg_localized_experimental"
+            @test file["basis/final_dimension"] == materialization.retained_dimension
+            @test size(file["ham/overlap"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test size(file["ham/one_body_hamiltonian"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test size(file["ham/interaction_matrix"]) ==
+                  (materialization.retained_dimension, materialization.retained_dimension)
+            @test length(file["ham/basis_integral_weights"]) ==
+                  materialization.retained_dimension
+            @test file["ham/basis_integral_weights"] ==
+                  file["basis/final_integral_weights"]
+            @test file["ham/default_nuclear_charges"] == [4.0, 4.0]
+            @test String(file["ham/nuclear_term_storage"]) == "by_center"
+            @test file["ham/nuclear_one_body_by_center/count"] == 2
+            @test Bool(file["meta/has_ham"])
+            @test String(file["meta/materialized_report_kind"]) ==
+                  "cartesian_atom_growth_shellification_materialization_result"
+            @test String(file["meta/shellization_source"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test String(file["meta/shellization_authority"]) ==
+                  "bond_aligned_diatomic_atom_growth_construction_plan"
+            @test !Bool(file["meta/active_source_authority"])
+            @test !Bool(file["meta/route_configured_shellization_consumed"])
+            @test Bool(file["meta/route_configured_diatomic_atom_growth_probe_consumed"])
+            @test !Bool(file["meta/route_default_behavior_changed"])
+            @test String(file["meta/export_status"]) == "basis_and_ham"
+            @test String(file["meta/ham_preflight_status"]) ==
+                  "available_route_configured_diatomic_atom_growth_ham_adapter"
+            @test String(file["meta/ham_export_status"]) ==
+                  "available_route_configured_diatomic_atom_growth_ham_bundle_payload"
+            @test Bool(file["meta/ham_export_blocker/is_nothing"])
+        end
+        materialization
+    end
+
+    @test materialization.ham_artifact_written
+    @test materialization.ham_missing_builder === nothing
+end
