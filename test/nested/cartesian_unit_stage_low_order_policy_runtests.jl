@@ -576,6 +576,42 @@ end
           terminal_inventory.unit_kinds
     @test terminal_units.terminal_shellification_unit_support_counts ==
           terminal_inventory.support_counts
+    @test terminal_units.terminal_shellification_lowering_contract_inventory_available
+    @test terminal_units.terminal_shellification_lowering_contract_inventory_status ==
+          :available_terminal_region_lowering_contract_inventory
+    terminal_lowering_inventory =
+        terminal_units.terminal_shellification_lowering_contract_inventory
+    @test terminal_lowering_inventory.object_kind ==
+          :cartesian_terminal_region_lowering_contract_inventory
+    @test terminal_lowering_inventory.terminal_region_unit_count ==
+          terminal_inventory.unit_count
+    @test terminal_units.terminal_shellification_lowering_contract_count ==
+          terminal_lowering_inventory.lowering_contract_count
+    @test terminal_units.terminal_shellification_lowering_contract_count >=
+          terminal_units.terminal_shellification_unit_count
+    @test terminal_units.terminal_shellification_lowering_contract_kinds ==
+          terminal_lowering_inventory.lowering_contract_kinds
+    @test terminal_units.terminal_shellification_lowering_contract_kind_counts ==
+          terminal_lowering_inventory.lowering_contract_kind_counts
+    @test terminal_units.terminal_shellification_contract_counts_by_unit ==
+          terminal_lowering_inventory.contract_counts_by_unit
+    @test all(
+        entry.lowering_contract_count >= 1
+        for entry in terminal_units.terminal_shellification_contract_counts_by_unit
+    )
+    @test terminal_units.terminal_shellification_lw_complete_shell_cpb_count ==
+          terminal_lowering_inventory.lw_complete_shell_cpb_count
+    @test terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          terminal_lowering_inventory.lw_complete_shell_cpb_family_counts
+    @test !terminal_lowering_inventory.final_retained_unit_inventory_available
+    @test !terminal_lowering_inventory.pair_inventory_available
+    @test !terminal_lowering_inventory.coefficient_maps_materialized
+    @test !terminal_lowering_inventory.transform_contracts_materialized
+    @test !terminal_lowering_inventory.retained_spaces_materialized
+    @test !terminal_lowering_inventory.operator_blocks_materialized
+    @test !terminal_lowering_inventory.pair_operator_blocks_materialized
+    @test !terminal_lowering_inventory.hamiltonian_data_materialized
+    @test !terminal_lowering_inventory.artifacts_materialized
     @test !terminal_units.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_units.terminal_shellification_pair_inventory_available
     @test terminal_units.terminal_shellification_central_gap_region_count ==
@@ -624,6 +660,23 @@ end
           terminal_inventory.unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_inventory.support_counts
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
+          :available_terminal_region_lowering_contract_inventory
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory ===
+          terminal_lowering_inventory
+    @test terminal_summary.terminal_shellification_lowering_contract_count ==
+          terminal_lowering_inventory.lowering_contract_count
+    @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
+          terminal_lowering_inventory.lowering_contract_kinds
+    @test terminal_summary.terminal_shellification_lowering_contract_kind_counts ==
+          terminal_lowering_inventory.lowering_contract_kind_counts
+    @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
+          terminal_lowering_inventory.contract_counts_by_unit
+    @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
+          terminal_lowering_inventory.lw_complete_shell_cpb_count
+    @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          terminal_lowering_inventory.lw_complete_shell_cpb_family_counts
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
     @test terminal_summary.plan_unit_inventory_available
@@ -681,6 +734,25 @@ end
         record.source_cpb_plan.source_cpb_plan_equals_owned_support
         for record in direct_terminal_units
     )
+    direct_terminal_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind in (
+                    :direct_core_identity_cpb,
+                    :direct_slab_identity_cpb,
+                    :direct_boundary_slab_identity_cpb,
+                ),
+            terminal_lowering_inventory.lowering_contracts,
+        )
+    @test !isempty(direct_terminal_contracts)
+    @test all(
+        contract.identity_like_source_contract
+        for contract in direct_terminal_contracts
+    )
+    @test all(
+        contract.source_cpb_plan_equals_owned_support
+        for contract in direct_terminal_contracts
+    )
     complete_shell_units =
         filter(
             record -> record.terminal_region_kind == :complete_shell,
@@ -695,6 +767,38 @@ end
         :filled_source_cpb
         for record in complete_shell_units
     )
+    if !isempty(complete_shell_units)
+        lw_contracts =
+            filter(
+                contract ->
+                    contract.lowering_contract_kind ==
+                    :white_lindsey_boundary_strata,
+                terminal_lowering_inventory.lowering_contracts,
+            )
+        @test length(lw_contracts) == length(complete_shell_units)
+        @test all(
+            contract.source_cpb_family_counts ==
+            (facet_cpb = 6, edge_cpb = 12, corner_cpb = 8)
+            for contract in lw_contracts
+        )
+        @test all(contract.source_cpb_count == 26 for contract in lw_contracts)
+        pqs_contracts =
+            filter(
+                contract ->
+                    contract.lowering_contract_kind == :pqs_filled_source_cpb,
+                terminal_lowering_inventory.lowering_contracts,
+            )
+        @test length(pqs_contracts) == length(complete_shell_units)
+        @test all(contract.source_cpb_count == 1 for contract in pqs_contracts)
+        @test all(
+            contract.source_cpb_plan_kind == :filled_source_cpb
+            for contract in pqs_contracts
+        )
+        @test all(
+            !contract.face_edge_corner_decomposition_required
+            for contract in pqs_contracts
+        )
+    end
     @test terminal_summary.route_skeleton_unit_fields_preserved
     @test terminal_units.source_boxes ===
           terminal_units.route_skeleton.source_boxes
@@ -726,6 +830,9 @@ end
     )
     distorted_inventory =
         distorted_units.terminal_shellification_unit_inventory
+    @test distorted_units.terminal_shellification_lowering_contract_inventory_available
+    distorted_lowering_inventory =
+        distorted_units.terminal_shellification_lowering_contract_inventory
     distorted_units_for_gap =
         filter(
             record ->
@@ -739,6 +846,17 @@ end
     @test !isnothing(distorted_unit.source_mode_shape)
     @test distorted_unit.source_cpb_plan.source_mode_shape ==
           distorted_unit.source_mode_shape
+    distorted_contract = only(
+        contract for contract in distorted_lowering_inventory.lowering_contracts
+        if contract.lowering_contract_kind == :distorted_product_box_comx
+    )
+    @test !distorted_contract.identity_like_source_contract
+    @test distorted_contract.source_mode_shape == distorted_unit.source_mode_shape
+    @test distorted_contract.q == distorted_unit.q
+    @test distorted_contract.L == distorted_unit.L
+    @test distorted_contract.aspect_ratio == distorted_unit.aspect_ratio
     @test !distorted_inventory.final_retained_unit_inventory_available
     @test !distorted_inventory.pair_inventory_available
+    @test !distorted_lowering_inventory.final_retained_unit_inventory_available
+    @test !distorted_lowering_inventory.pair_inventory_available
 end
