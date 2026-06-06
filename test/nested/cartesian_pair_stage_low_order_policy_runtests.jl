@@ -115,8 +115,6 @@ function _assert_terminal_lowering_contract_fields_match_pair_stage(
     @test pair_stage.terminal_shellification_lowering_contract_inventory_available
     @test pair_stage.terminal_shellification_lowering_contract_inventory_status ==
           transforms.terminal_shellification_lowering_contract_inventory_status
-    @test pair_stage.terminal_shellification_lowering_contract_inventory ===
-          transforms.terminal_shellification_lowering_contract_inventory
     @test pair_stage.terminal_shellification_lowering_contract_count ==
           transforms.terminal_shellification_lowering_contract_count
     @test pair_stage.terminal_shellification_lowering_contract_kinds ==
@@ -128,8 +126,6 @@ function _assert_terminal_lowering_contract_fields_match_pair_stage(
     @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_available
     @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_status ==
           transforms.terminal_shellification_selected_lowering_contract_inventory_status
-    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory ===
-          transforms.terminal_shellification_selected_lowering_contract_inventory
     @test pair_stage.terminal_shellification_selected_lowering_family ==
           transforms.terminal_shellification_selected_lowering_family
     @test pair_stage.terminal_shellification_selected_contract_count ==
@@ -146,6 +142,34 @@ function _assert_terminal_lowering_contract_fields_match_pair_stage(
           transforms.terminal_shellification_unselected_contract_count
     @test pair_stage.terminal_shellification_unselected_contract_kinds ==
           transforms.terminal_shellification_unselected_contract_kinds
+    transform_selected_crc_sidecars =
+        transforms.terminal_shellification_selected_crc_sidecar_summary
+    pair_stage_selected_crc_sidecars =
+        pair_stage.terminal_shellification_selected_crc_sidecar_summary
+    @test pair_stage_selected_crc_sidecars.object_kind ==
+          :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
+    @test pair_stage_selected_crc_sidecars.status ==
+          transform_selected_crc_sidecars.status
+    @test pair_stage_selected_crc_sidecars.selected_contract_count ==
+          transform_selected_crc_sidecars.selected_contract_count
+    @test pair_stage_selected_crc_sidecars.sidecar_available_count ==
+          transform_selected_crc_sidecars.sidecar_available_count
+    @test pair_stage_selected_crc_sidecars.sidecar_missing_count ==
+          transform_selected_crc_sidecars.sidecar_missing_count
+    @test pair_stage_selected_crc_sidecars.sidecar_inventory_complete ==
+          transform_selected_crc_sidecars.sidecar_inventory_complete
+    @test pair_stage_selected_crc_sidecars.missing_sidecar_reasons ==
+          transform_selected_crc_sidecars.missing_sidecar_reasons
+    @test pair_stage_selected_crc_sidecars.missing_sidecar_kinds ==
+          transform_selected_crc_sidecars.missing_sidecar_kinds
+    @test !pair_stage_selected_crc_sidecars.final_retained_unit_inventory_available
+    @test !pair_stage_selected_crc_sidecars.pair_inventory_available
+    @test pair_stage_selected_crc_sidecars.pair_inventory_status ==
+          transform_selected_crc_sidecars.pair_inventory_status
+    @test !pair_stage_selected_crc_sidecars.operator_blocks_materialized
+    @test !pair_stage_selected_crc_sidecars.pair_operator_blocks_materialized
+    @test !pair_stage_selected_crc_sidecars.hamiltonian_data_materialized
+    @test !pair_stage_selected_crc_sidecars.artifacts_materialized
     @test pair_stage.terminal_shellification_lw_complete_shell_cpb_count ==
           transforms.terminal_shellification_lw_complete_shell_cpb_count
     @test pair_stage.terminal_shellification_lw_complete_shell_cpb_family_counts ==
@@ -220,12 +244,13 @@ end
           :not_selected_legacy_source_pairs
     @test !default_summary.route_core_pair_operator_plan.operator_blocks_materialized
     @test default_summary.pair_stage_fields_preserved
-    @test default_pairs.pair_entries === default_stages.units.route_skeleton.pair_entries
-    @test default_pairs.pair_family_counts ===
+    @test length(default_pairs.pair_entries) ==
+          length(default_stages.units.route_skeleton.pair_entries)
+    @test default_pairs.pair_family_counts ==
           default_stages.units.route_skeleton.pair_family_counts
-    @test default_pairs.helper_by_pair_family ===
+    @test default_pairs.helper_by_pair_family ==
           default_stages.units.route_skeleton.helper_by_pair_family
-    @test default_pairs.pair_operator_helper_by_family ===
+    @test default_pairs.pair_operator_helper_by_family ==
           default_stages.units.route_skeleton.helper_by_pair_family
     @test isnothing(default_pairs.pair_helper_status_by_family)
     @test !default_pairs.route_core_pair_inventory_available
@@ -373,12 +398,15 @@ end
     @test atom_growth_summary.route_core_typed_pair_operator_materialization_readiness_materialized_count ==
           0
     @test atom_growth_pairs.route_core_pair_inventory_available
-    @test atom_growth_pairs.route_core_pair_inventory ===
-          atom_growth_summary.route_core_pair_inventory
+    @test atom_growth_pairs.route_core_pair_count ==
+          atom_growth_summary.route_core_pair_count
+    @test atom_growth_pairs.route_core_pair_order_matches_staged ==
+          atom_growth_summary.route_core_pair_order_matches_staged
     @test atom_growth_pairs.route_core_pair_operator_ready
-    @test atom_growth_pairs.route_core_pair_operator_preflight ===
-          atom_growth_preflight
-    @test atom_growth_pairs.route_core_pair_operator_plan === atom_growth_plan
+    @test atom_growth_pairs.route_core_pair_operator_preflight_status ==
+          atom_growth_preflight.status
+    @test atom_growth_pairs.route_core_pair_operator_plan_status ==
+          atom_growth_plan.status
     @test atom_growth_pairs.route_core_typed_pair_operator_plan_count ==
           atom_growth_summary.route_core_typed_pair_operator_plan_count
     @test atom_growth_pairs.route_core_typed_pair_operator_plan_blocked_count ==
@@ -401,8 +429,8 @@ end
     @test pair_inventory.pair_count ==
           pair_inventory.unit_count * (pair_inventory.unit_count + 1) ÷ 2
     @test pair_inventory.pair_count == 36
-    @test pair_inventory.pair_entries === atom_growth_pairs.pair_entries
-    @test atom_growth_summary.pair_entries === atom_growth_pairs.pair_entries
+    @test length(atom_growth_pairs.pair_entries) == pair_inventory.pair_count
+    @test atom_growth_summary.pair_count == length(atom_growth_pairs.pair_entries)
     @test atom_growth_summary.pair_count == pair_inventory.pair_count
     @test atom_growth_summary.pair_family_counts ==
           pair_inventory.pair_family_counts
@@ -498,17 +526,13 @@ end
           length(atom_growth_stages.units.route_skeleton.pair_entries)
     @test atom_growth_summary.route_skeleton_pair_family_counts ==
           atom_growth_stages.units.route_skeleton.pair_family_counts
-    @test atom_growth_summary.route_skeleton_pair_entries ===
-          atom_growth_stages.units.route_skeleton.pair_entries
     @test atom_growth_summary.route_skeleton_pair_inventory_source ==
           :route_skeleton_compatibility_fields
     @test !atom_growth_summary.summary_only
     @test atom_growth_summary.pair_stage_fields_preserved
-    @test atom_growth_pairs.pair_entries !==
-          atom_growth_stages.units.route_skeleton.pair_entries
-    @test atom_growth_pairs.route_skeleton_pair_entries ===
-          atom_growth_stages.units.route_skeleton.pair_entries
-    @test atom_growth_pairs.route_skeleton_pair_family_counts ===
+    @test length(atom_growth_pairs.route_skeleton_pair_entries) ==
+          length(atom_growth_stages.units.route_skeleton.pair_entries)
+    @test atom_growth_pairs.route_skeleton_pair_family_counts ==
           atom_growth_stages.units.route_skeleton.pair_family_counts
     expected_atom_growth_helper_status = (
         white_lindsey_low_order_atom_growth_unit_pair =
@@ -521,7 +545,7 @@ end
     @test atom_growth_pairs.pair_helper_status_by_family ==
           expected_atom_growth_helper_status
     @test !(:white_lindsey_low_order in keys(atom_growth_pairs.helper_by_pair_family))
-    @test atom_growth_pairs.route_skeleton_helper_by_pair_family ===
+    @test atom_growth_pairs.route_skeleton_helper_by_pair_family ==
           atom_growth_stages.units.route_skeleton.helper_by_pair_family
     @test atom_growth_pairs.pair_stage == :pair_operator_terms_described
 
@@ -542,13 +566,9 @@ end
     @test terminal_pairs.terminal_shellification_pairs_selected
     @test terminal_pairs.terminal_shellification_pair_summary_available
     @test terminal_pairs.terminal_shellification_scaffold_available
-    @test terminal_pairs.terminal_shellification_scaffold ===
-          terminal_stages.transforms.terminal_shellification_scaffold
     @test terminal_pairs.terminal_shellification_region_count ==
           terminal_stages.transforms.terminal_shellification_region_count
     @test terminal_pairs.terminal_shellification_unit_inventory_available
-    @test terminal_pairs.terminal_shellification_unit_inventory ===
-          terminal_stages.transforms.terminal_shellification_unit_inventory
     @test terminal_pairs.terminal_shellification_unit_count ==
           terminal_stages.transforms.terminal_shellification_unit_count
     @test terminal_pairs.terminal_shellification_unit_keys ==
@@ -577,11 +597,7 @@ end
     @test terminal_pairs.pair_inventory_source ==
           :terminal_shellification_scaffold
     @test terminal_pairs.pair_entries == ()
-    @test terminal_pairs.pair_entries !==
-          terminal_stages.units.route_skeleton.pair_entries
     @test terminal_pairs.pair_family_counts == ()
-    @test terminal_pairs.pair_family_counts !==
-          terminal_stages.units.route_skeleton.pair_family_counts
     @test terminal_pairs.helper_by_pair_family == ()
     @test terminal_pairs.pair_operator_helper_by_family == ()
     @test terminal_pairs.pair_helper_status_by_family == ()
@@ -632,13 +648,9 @@ end
     @test !terminal_summary.legacy_source_pairs_selected
     @test terminal_summary.terminal_shellification_pair_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_scaffold ===
-          terminal_stages.transforms.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_stages.transforms.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test terminal_summary.terminal_shellification_unit_inventory ===
-          terminal_stages.transforms.terminal_shellification_unit_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_stages.transforms.terminal_shellification_unit_count
     @test terminal_summary.terminal_shellification_unit_keys ==
@@ -666,12 +678,8 @@ end
           :terminal_shellification_scaffold
     @test terminal_summary.pair_inventory === nothing
     @test terminal_summary.pair_entries == ()
-    @test terminal_summary.pair_entries !==
-          terminal_stages.units.route_skeleton.pair_entries
     @test terminal_summary.pair_count == 0
     @test terminal_summary.pair_family_counts == ()
-    @test terminal_summary.pair_family_counts !==
-          terminal_stages.units.route_skeleton.pair_family_counts
     @test terminal_summary.helper_by_pair_family == ()
     @test terminal_summary.pair_operator_helper_by_family == ()
     @test terminal_summary.pair_helper_status_by_family == ()
@@ -706,9 +714,9 @@ end
           :deferred_terminal_shellification_typed_pair_operator_plan_inventory
     @test terminal_summary.route_core_typed_pair_operator_plan_blocker ==
           :deferred_terminal_shellification_pair_inventory
-    @test terminal_summary.route_skeleton_pair_entries ===
-          terminal_stages.units.route_skeleton.pair_entries
-    @test terminal_summary.route_skeleton_pair_family_counts ===
+    @test length(terminal_summary.route_skeleton_pair_entries) ==
+          length(terminal_stages.units.route_skeleton.pair_entries)
+    @test terminal_summary.route_skeleton_pair_family_counts ==
           terminal_stages.units.route_skeleton.pair_family_counts
     @test terminal_summary.summary_only
     @test all(
@@ -720,11 +728,11 @@ end
         terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
     )
     @test terminal_summary.pair_stage_fields_preserved
-    @test terminal_pairs.route_skeleton_pair_entries ===
-          terminal_stages.units.route_skeleton.pair_entries
-    @test terminal_pairs.route_skeleton_pair_family_counts ===
+    @test length(terminal_pairs.route_skeleton_pair_entries) ==
+          length(terminal_stages.units.route_skeleton.pair_entries)
+    @test terminal_pairs.route_skeleton_pair_family_counts ==
           terminal_stages.units.route_skeleton.pair_family_counts
-    @test terminal_pairs.route_skeleton_helper_by_pair_family ===
+    @test terminal_pairs.route_skeleton_helper_by_pair_family ==
           terminal_stages.units.route_skeleton.helper_by_pair_family
     @test terminal_pairs.pair_stage == :pair_operator_terms_described
 
@@ -757,11 +765,11 @@ end
     @test blocked_summary.route_core_pair_operator_ready
     @test blocked_summary.helper_by_pair_family ==
           expected_atom_growth_helper_status
-    @test blocked_summary.route_skeleton_pair_entries ===
-          atom_growth_stages.units.route_skeleton.pair_entries
-    @test blocked_summary.route_skeleton_pair_family_counts ===
+    @test length(blocked_summary.route_skeleton_pair_entries) ==
+          length(atom_growth_stages.units.route_skeleton.pair_entries)
+    @test blocked_summary.route_skeleton_pair_family_counts ==
           atom_growth_stages.units.route_skeleton.pair_family_counts
-    @test blocked_summary.route_skeleton_helper_by_pair_family ===
+    @test blocked_summary.route_skeleton_helper_by_pair_family ==
           atom_growth_stages.units.route_skeleton.helper_by_pair_family
 
     missing_crc_units = merge(

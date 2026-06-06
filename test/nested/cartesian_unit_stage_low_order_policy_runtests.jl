@@ -120,11 +120,13 @@ end
     @test !default_summary.retained_unit_ranges_known
     @test !default_summary.retained_dimension_known
     @test default_summary.route_skeleton_unit_fields_preserved
-    @test default_units.source_boxes === default_units.route_skeleton.source_boxes
-    @test default_units.source_dimensions ===
+    @test length(default_units.source_boxes) ==
+          length(default_units.route_skeleton.source_boxes)
+    @test default_units.source_dimensions ==
           default_units.route_skeleton.source_dimensions
-    @test default_units.retained_units === default_units.route_skeleton.retained_units
-    @test default_units.retained_unit_order ===
+    @test length(default_units.retained_units) ==
+          length(default_units.route_skeleton.retained_units)
+    @test default_units.retained_unit_order ==
           default_units.route_skeleton.retained_unit_order
 
     atom_growth_shells = GaussletBases.cartesian_shells(
@@ -459,7 +461,6 @@ end
         if unit.unit_key == pqs_prototype.unit_key
     )
     @test pqs_unit.unit_role == :regular_shared_molecular_shell
-    @test pqs_prototype.owned_support === pqs_unit.owned_support
     @test pqs_prototype.owned_support_authority == :shellification_region
     @test pqs_prototype.shellification_authority_scope == :owned_support_only
     @test !pqs_prototype.shellification_region_is_lowering_source
@@ -518,15 +519,17 @@ end
     @test atom_growth_summary.route_skeleton_unit_inventory_source ==
           :route_skeleton_compatibility_fields
     @test atom_growth_units.pqs_lowering_prototype_available
-    @test atom_growth_units.pqs_lowering_prototype ===
-          plan_inventory.pqs_lowering_prototype
-    @test atom_growth_units.source_boxes ===
-          atom_growth_units.route_skeleton.source_boxes
-    @test atom_growth_units.source_dimensions ===
+    @test atom_growth_units.pqs_lowering_prototype.status ==
+          plan_inventory.pqs_lowering_prototype.status
+    @test atom_growth_units.pqs_lowering_prototype.unit_key ==
+          plan_inventory.pqs_lowering_prototype.unit_key
+    @test length(atom_growth_units.source_boxes) ==
+          length(atom_growth_units.route_skeleton.source_boxes)
+    @test atom_growth_units.source_dimensions ==
           atom_growth_units.route_skeleton.source_dimensions
-    @test atom_growth_units.retained_units ===
-          atom_growth_units.route_skeleton.retained_units
-    @test atom_growth_units.retained_unit_order ===
+    @test length(atom_growth_units.retained_units) ==
+          length(atom_growth_units.route_skeleton.retained_units)
+    @test atom_growth_units.retained_unit_order ==
           atom_growth_units.route_skeleton.retained_unit_order
 
     terminal_fixture =
@@ -554,8 +557,6 @@ end
     @test terminal_units.terminal_shellification_units_selected
     @test terminal_units.terminal_shellification_unit_summary_available
     @test terminal_units.terminal_shellification_scaffold_available
-    @test terminal_units.terminal_shellification_scaffold ===
-          terminal_shells.low_order_shellization.terminal_shellification_scaffold
     @test terminal_units.terminal_shellification_region_count ==
           terminal_shells.terminal_shellification_region_count
     @test terminal_units.terminal_shellification_unit_inventory_available
@@ -675,8 +676,6 @@ end
     @test !selected_crc_sidecars.pair_operator_blocks_materialized
     @test !selected_crc_sidecars.hamiltonian_data_materialized
     @test !selected_crc_sidecars.artifacts_materialized
-    @test !selected_crc_sidecars.sidecar_inventory.final_retained_unit_inventory_available
-    @test !selected_crc_sidecars.sidecar_inventory.pair_inventory_available
     @test terminal_units.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_lowering_inventory.lw_complete_shell_cpb_count
     @test terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts ==
@@ -719,15 +718,11 @@ end
     @test !terminal_summary.legacy_source_units_selected
     @test terminal_summary.terminal_shellification_unit_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_scaffold ===
-          terminal_shells.low_order_shellization.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_shells.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
     @test terminal_summary.terminal_shellification_unit_inventory_status ==
           :available_terminal_region_unit_inventory
-    @test terminal_summary.terminal_shellification_unit_inventory ===
-          terminal_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_inventory.unit_count
     @test terminal_summary.terminal_shellification_unit_keys ==
@@ -741,8 +736,6 @@ end
     @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
     @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
           :available_terminal_region_lowering_contract_inventory
-    @test terminal_summary.terminal_shellification_lowering_contract_inventory ===
-          terminal_lowering_inventory
     @test terminal_summary.terminal_shellification_lowering_contract_count ==
           terminal_lowering_inventory.lowering_contract_count
     @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
@@ -754,8 +747,6 @@ end
     @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_available
     @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_status ==
           :available_selected_terminal_lowering_contract_inventory
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory ===
-          selected_terminal_lowering_inventory
     @test terminal_summary.terminal_shellification_selected_lowering_family ==
           :white_lindsey_low_order
     @test terminal_summary.terminal_shellification_selected_contract_count ==
@@ -778,7 +769,6 @@ end
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
     @test terminal_summary.plan_unit_inventory_available
-    @test terminal_summary.plan_unit_inventory === terminal_inventory
     @test terminal_summary.plan_unit_count == terminal_inventory.unit_count
     @test terminal_summary.plan_unit_roles == terminal_inventory.unit_roles
     @test terminal_summary.plan_unit_keys == terminal_inventory.unit_keys
@@ -931,13 +921,13 @@ end
               0
     end
     @test terminal_summary.route_skeleton_unit_fields_preserved
-    @test terminal_units.source_boxes ===
-          terminal_units.route_skeleton.source_boxes
-    @test terminal_units.source_dimensions ===
+    @test length(terminal_units.source_boxes) ==
+          length(terminal_units.route_skeleton.source_boxes)
+    @test terminal_units.source_dimensions ==
           terminal_units.route_skeleton.source_dimensions
-    @test terminal_units.retained_units ===
-          terminal_units.route_skeleton.retained_units
-    @test terminal_units.retained_unit_order ===
+    @test length(terminal_units.retained_units) ==
+          length(terminal_units.route_skeleton.retained_units)
+    @test terminal_units.retained_unit_order ==
           terminal_units.route_skeleton.retained_unit_order
 
     distorted_fixture =

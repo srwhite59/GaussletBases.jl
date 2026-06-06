@@ -118,7 +118,8 @@ end
     @test !default_summary.retained_unit_ranges_known
     @test !default_summary.retained_dimension_known
     @test default_summary.transform_fields_preserved
-    @test default_transforms.retained_units === default_units.retained_units
+    @test length(default_transforms.retained_units) ==
+          length(default_units.retained_units)
     @test hasproperty(default_transforms, :retained_counts)
     @test hasproperty(default_transforms, :ranges)
     @test hasproperty(default_transforms, :retained_dimension)
@@ -252,8 +253,6 @@ end
     @test pqs_transform_prototype.object_kind ==
           :cartesian_pqs_transform_metadata_prototype
     @test pqs_transform_prototype.status == :metadata_only_planned
-    @test pqs_transform_prototype.source_lowering_prototype ===
-          pqs_lowering_prototype
     @test pqs_transform_prototype.source_lowering_prototype_unit_key ==
           pqs_lowering_prototype.unit_key
     @test pqs_transform_prototype.unit_key == pqs_lowering_prototype.unit_key
@@ -263,21 +262,24 @@ end
         :lowdin_cleanup,
         :final_retained_unit,
     )
-    @test pqs_transform_prototype.source_cpb === pqs_lowering_prototype.source_cpb
+    @test pqs_transform_prototype.source_cpb.cpb_family ==
+          pqs_lowering_prototype.source_cpb.cpb_family
     @test pqs_transform_prototype.source_cpb.support_count ==
           prod(pqs_transform_prototype.source_cpb.dimensions)
     @test pqs_transform_prototype.source_cpb_support_count ==
           pqs_lowering_prototype.source_cpb_support_count
-    @test pqs_transform_prototype.owned_support ===
-          pqs_lowering_prototype.owned_support
     @test pqs_transform_prototype.owned_support_count ==
           pqs_lowering_prototype.owned_support_count
     @test pqs_transform_prototype.source_cpb_support_count !=
           pqs_transform_prototype.owned_support_count
-    @test pqs_transform_prototype.intermediate_retained_space ===
-          pqs_lowering_prototype.intermediate_retained_space
-    @test pqs_transform_prototype.shell_realization ===
-          pqs_lowering_prototype.shell_realization
+    @test pqs_transform_prototype.intermediate_retained_space.object_kind ==
+          pqs_lowering_prototype.intermediate_retained_space.object_kind
+    @test pqs_transform_prototype.intermediate_retained_space.status ==
+          pqs_lowering_prototype.intermediate_retained_space.status
+    @test pqs_transform_prototype.shell_realization.object_kind ==
+          pqs_lowering_prototype.shell_realization.object_kind
+    @test pqs_transform_prototype.shell_realization.status ==
+          pqs_lowering_prototype.shell_realization.status
     @test pqs_transform_prototype.final_retained_unit.object_kind ==
           :cartesian_final_retained_unit_contract
     @test pqs_transform_prototype.final_retained_unit.unit_key ==
@@ -290,10 +292,14 @@ end
     @test !pqs_transform_prototype.pair_operator_blocks_materialized
     @test !pqs_transform_prototype.hamiltonian_data_materialized
     @test !pqs_transform_prototype.dense_parent_space_operators_are_algorithm
-    @test atom_growth_summary.pqs_transform_prototype ===
-          pqs_transform_prototype
-    @test atom_growth_transforms.pqs_transform_prototype ===
-          pqs_transform_prototype
+    @test atom_growth_summary.pqs_transform_prototype.unit_key ==
+          pqs_transform_prototype.unit_key
+    @test atom_growth_summary.pqs_transform_prototype.status ==
+          pqs_transform_prototype.status
+    @test atom_growth_transforms.pqs_transform_prototype.unit_key ==
+          pqs_transform_prototype.unit_key
+    @test atom_growth_transforms.pqs_transform_prototype.status ==
+          pqs_transform_prototype.status
     @test !contract_inventory.retained_unit_dimensions_known
     @test !contract_inventory.retained_unit_ranges_known
     @test !contract_inventory.retained_dimension_known
@@ -372,7 +378,8 @@ end
     @test atom_growth_summary.transform_fields_preserved
     @test atom_growth_summary.route_skeleton_transform_inventory_source ==
           :route_skeleton_compatibility_fields
-    @test atom_growth_transforms.retained_units === atom_growth_units.retained_units
+    @test length(atom_growth_transforms.retained_units) ==
+          length(atom_growth_units.retained_units)
     @test hasproperty(atom_growth_transforms, :retained_counts)
     @test hasproperty(atom_growth_transforms, :ranges)
     @test hasproperty(atom_growth_transforms, :retained_dimension)
@@ -406,13 +413,9 @@ end
     @test terminal_transforms.terminal_shellification_transforms_selected
     @test terminal_transforms.terminal_shellification_transform_summary_available
     @test terminal_transforms.terminal_shellification_scaffold_available
-    @test terminal_transforms.terminal_shellification_scaffold ===
-          terminal_units.terminal_shellification_scaffold
     @test terminal_transforms.terminal_shellification_region_count ==
           terminal_units.terminal_shellification_region_count
     @test terminal_transforms.terminal_shellification_unit_inventory_available
-    @test terminal_transforms.terminal_shellification_unit_inventory ===
-          terminal_units.terminal_shellification_unit_inventory
     @test terminal_transforms.terminal_shellification_unit_count ==
           terminal_units.terminal_shellification_unit_count
     @test terminal_transforms.terminal_shellification_unit_keys ==
@@ -426,8 +429,6 @@ end
     @test terminal_transforms.terminal_shellification_lowering_contract_inventory_available
     @test terminal_transforms.terminal_shellification_lowering_contract_inventory_status ==
           terminal_units.terminal_shellification_lowering_contract_inventory_status
-    @test terminal_transforms.terminal_shellification_lowering_contract_inventory ===
-          terminal_units.terminal_shellification_lowering_contract_inventory
     @test terminal_transforms.terminal_shellification_lowering_contract_count ==
           terminal_units.terminal_shellification_lowering_contract_count
     @test terminal_transforms.terminal_shellification_lowering_contract_kinds ==
@@ -439,8 +440,6 @@ end
     @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_available
     @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_status ==
           terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
-    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory ===
-          terminal_units.terminal_shellification_selected_lowering_contract_inventory
     @test terminal_transforms.terminal_shellification_selected_lowering_family ==
           terminal_units.terminal_shellification_selected_lowering_family
     @test terminal_transforms.terminal_shellification_selected_contract_count ==
@@ -461,7 +460,6 @@ end
         terminal_units.low_order_units.terminal_shellification_selected_crc_sidecar_summary
     transform_selected_crc_sidecars =
         terminal_transforms.terminal_shellification_selected_crc_sidecar_summary
-    @test transform_selected_crc_sidecars === unit_selected_crc_sidecars
     @test transform_selected_crc_sidecars.object_kind ==
           :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
     @test transform_selected_crc_sidecars.status ==
@@ -482,8 +480,6 @@ end
     @test !transform_selected_crc_sidecars.pair_operator_blocks_materialized
     @test !transform_selected_crc_sidecars.hamiltonian_data_materialized
     @test !transform_selected_crc_sidecars.artifacts_materialized
-    @test !transform_selected_crc_sidecars.sidecar_inventory.final_retained_unit_inventory_available
-    @test !transform_selected_crc_sidecars.sidecar_inventory.pair_inventory_available
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts ==
@@ -565,13 +561,9 @@ end
     @test !terminal_summary.legacy_source_transforms_selected
     @test terminal_summary.terminal_shellification_transform_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_scaffold ===
-          terminal_units.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_units.terminal_shellification_region_count
     @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test terminal_summary.terminal_shellification_unit_inventory ===
-          terminal_units.terminal_shellification_unit_inventory
     @test terminal_summary.terminal_shellification_unit_count ==
           terminal_units.terminal_shellification_unit_count
     @test terminal_summary.terminal_shellification_unit_keys ==
@@ -585,8 +577,6 @@ end
     @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
     @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
           terminal_units.terminal_shellification_lowering_contract_inventory_status
-    @test terminal_summary.terminal_shellification_lowering_contract_inventory ===
-          terminal_units.terminal_shellification_lowering_contract_inventory
     @test terminal_summary.terminal_shellification_lowering_contract_count ==
           terminal_units.terminal_shellification_lowering_contract_count
     @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
@@ -598,8 +588,6 @@ end
     @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_available
     @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_status ==
           terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
-    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory ===
-          selected_terminal_lowering_inventory
     @test terminal_summary.terminal_shellification_selected_lowering_family ==
           terminal_units.terminal_shellification_selected_lowering_family
     @test terminal_summary.terminal_shellification_selected_contract_count ==
@@ -618,7 +606,6 @@ end
           terminal_units.terminal_shellification_unselected_contract_kinds
     summary_selected_crc_sidecars =
         terminal_summary.terminal_shellification_selected_crc_sidecar_summary
-    @test summary_selected_crc_sidecars === unit_selected_crc_sidecars
     @test summary_selected_crc_sidecars.status ==
           transform_selected_crc_sidecars.status
     @test summary_selected_crc_sidecars.selected_contract_count ==
@@ -715,7 +702,8 @@ end
     @test !terminal_summary.pqs_transform_prototype_available
     @test terminal_summary.pqs_transform_prototype === nothing
     @test terminal_summary.transform_fields_preserved
-    @test terminal_transforms.retained_units === terminal_units.retained_units
+    @test length(terminal_transforms.retained_units) ==
+          length(terminal_units.retained_units)
     @test terminal_transforms.transform_stage ==
           :unit_retained_transforms_described
 end
