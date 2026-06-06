@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 using Test
 using GaussletBases
 

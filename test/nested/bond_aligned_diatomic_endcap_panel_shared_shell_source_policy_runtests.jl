@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Bond-aligned diatomic endcap-panel shared shell source policy" begin
     basis = bond_aligned_homonuclear_qw_basis(
         family = :G10,

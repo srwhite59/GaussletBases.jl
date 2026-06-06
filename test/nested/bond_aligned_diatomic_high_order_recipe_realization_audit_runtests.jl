@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Bond-aligned diatomic high-order recipe realization audit" begin
     plan29 = GaussletBases._nested_bond_aligned_diatomic_atom_growth_construction_plan(
         (1:29, 1:29, 1:29);

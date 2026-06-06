@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 using Test
 
 include("pqs_source_metadata_real_artifact_acceptance_support.jl")

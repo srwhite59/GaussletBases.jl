@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Bond-aligned diatomic high-order recipe opt-in source construction" begin
     basis = bond_aligned_homonuclear_qw_basis(
         family = :G10,

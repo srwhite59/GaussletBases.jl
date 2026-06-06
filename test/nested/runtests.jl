@@ -1,25 +1,23 @@
-include("pqs_source_metadata_real_artifact_acceptance_runtests.jl")
+# Default nested runner: fast/default nested contract tests only.
+# Slow/manual integration and audit tests live in integration_runtests.jl.
+
+using Test
+using LinearAlgebra
+using SparseArrays
+using GaussletBases
+
 include("pqs_component_route_report_adapter_runtests.jl")
 include("pqs_standard_source_box_route_setup_runtests.jl")
 include("pqs_standard_parent_axis_readiness_runtests.jl")
-include("pqs_explicit_core_spacing_parent_axis_probe_runtests.jl")
 include("pqs_route_axis_count_selection_runtests.jl")
-include("pqs_raw_product_box_plan_probe_runtests.jl")
 include("pqs_source_box_route_skeleton_runtests.jl")
-include("pqs_source_box_route_driver_report_runtests.jl")
 include("pqs_source_box_route_driver_crc_print_line_runtests.jl")
 include("cartesian_route_core_examples_runtests.jl")
 include("cartesian_shellification_module_runtests.jl")
 include("cartesian_driver_module_boundary_runtests.jl")
-include("cartesian_terminal_shellification_geometry_runtests.jl")
 include("cartesian_selected_terminal_lowering_contract_inventory_runtests.jl")
 include("cartesian_route_core_selected_terminal_lowering_sidecar_runtests.jl")
 include("cartesian_pair_stage_fingerprint_helpers_runtests.jl")
-include("cartesian_shellification_plan_runtests.jl")
-include("cartesian_ham_builder_one_center_config_smoke_runtests.jl")
-include("cartesian_ham_builder_diatomic_config_smoke_runtests.jl")
-include("cartesian_route_diatomic_materializer_probe_runtests.jl")
-include("white_lindsey_materialized_seed_runtests.jl")
 
 @testset "Cartesian nested face first primitive" begin
     function _fixed_a_nested_test_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
@@ -255,19 +253,11 @@ end
     @test_throws ArgumentError GaussletBases._nested_owned_unit_coverage_audit([dense_unit], [1, 1, 2])
 end
 
-include("pqs_projected_q_shell_local_layer_integration_runtests.jl")
-
 include("cartesian_endcap_panel_owned_shell_producer_runtests.jl")
 
 include("bond_aligned_diatomic_atom_growth_anatomy_policy_runtests.jl")
 include("bond_aligned_diatomic_atom_growth_construction_plan_runtests.jl")
 include("bond_aligned_diatomic_high_order_recipe_policy_metadata_runtests.jl")
-include("bond_aligned_diatomic_high_order_recipe_realization_audit_runtests.jl")
-
-include("bond_aligned_diatomic_high_order_recipe_opt_in_source_construction_integration_runtests.jl")
-
-include("bond_aligned_diatomic_endcap_panel_shared_shell_source_policy_runtests.jl")
-
 include("cartesian_nested_shell_first_packet_runtests.jl")
 include("cartesian_nested_support_immediate_contraction_helpers_runtests.jl")
 include("cartesian_nested_shell_interface_runtests.jl")
@@ -275,7 +265,6 @@ include("cartesian_nested_fixed_block_qw_pgdg_adapter_runtests.jl")
 
 include("one_center_atomic_full_parent_nested_contract_runtests.jl")
 include("one_center_atomic_legacy_profile_nested_contract_runtests.jl")
-include("one_center_atomic_fixed_block_timing_surface_runtests.jl")
 include("global_timing_macro_surface_runtests.jl")
 include("one_center_atomic_compact_fixed_block_term_storage_runtests.jl")
 

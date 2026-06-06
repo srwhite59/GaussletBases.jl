@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested projected q-shell local layer" begin
     function _pqs_test_bundle(count::Int)
         xmax = 8.0

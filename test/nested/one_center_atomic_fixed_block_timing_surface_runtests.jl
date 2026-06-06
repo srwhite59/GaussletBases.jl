@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic fixed-block timing surface" begin
     function _timing_labels(report::GaussletBases.TimeG.TimingReport)
         labels = String[]

@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 using LinearAlgebra
 using Test
 using GaussletBases
