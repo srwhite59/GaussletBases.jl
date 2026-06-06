@@ -240,6 +240,11 @@ end
     @test default_report.route_skeleton === default_stages.shells.route_skeleton
     @test default_report.pair_entries ===
           default_stages.shells.route_skeleton.pair_entries
+    @test isnothing(
+        GaussletBases._pqs_source_box_route_driver_terminal_shellification_print_line(
+            default_report,
+        ),
+    )
     default_plan_line =
         GaussletBases._pqs_source_box_route_driver_crc_operator_plan_print_line(
             default_report,
@@ -537,6 +542,11 @@ end
           atom_growth_stages.shells.route_skeleton
     @test atom_growth_report.pair_entries ===
           atom_growth_stages.shells.route_skeleton.pair_entries
+    @test isnothing(
+        GaussletBases._pqs_source_box_route_driver_terminal_shellification_print_line(
+            atom_growth_report,
+        ),
+    )
 
     terminal_fixture = _cartesian_report_stage_low_order_policy_fixture(
         probe_parent_axis_construction = false,
@@ -690,6 +700,37 @@ end
           :deferred_terminal_shellification_typed_pair_operator_plan_inventory
     @test terminal_report.low_order_route_core_typed_pair_operator_plan_blocker ==
           :deferred_terminal_shellification_pair_inventory
+    terminal_print_line =
+        GaussletBases._pqs_source_box_route_driver_terminal_shellification_print_line(
+            terminal_report,
+        )
+    @test !isnothing(terminal_print_line)
+    @test occursin("Terminal shellification: selected", terminal_print_line)
+    @test occursin(
+        "regions $(terminal_report.low_order_terminal_shellification_region_count)",
+        terminal_print_line,
+    )
+    @test occursin(
+        "central gaps $(terminal_report.low_order_terminal_shellification_central_gap_region_count)",
+        terminal_print_line,
+    )
+    @test occursin(
+        "midpoint slabs $(terminal_report.low_order_terminal_shellification_central_midpoint_slab_count)",
+        terminal_print_line,
+    )
+    @test occursin(
+        "central distorted product boxes $(terminal_report.low_order_terminal_shellification_central_distorted_product_box_count)",
+        terminal_print_line,
+    )
+    @test occursin(
+        "pair inventory :deferred_terminal_shellification_pair_inventory",
+        terminal_print_line,
+    )
+    @test occursin(
+        "assembly/materialization :deferred_terminal_shellification_assembly_materialization",
+        terminal_print_line,
+    )
+    @test occursin("operators/materialization=no", terminal_print_line)
 
     atom_growth_materialization = GaussletBases.cartesian_materialization(
         atom_growth_report,

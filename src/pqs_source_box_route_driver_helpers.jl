@@ -8155,6 +8155,41 @@ function _pqs_source_box_route_driver_print_pqs_prototype_summary(report)
     return nothing
 end
 
+function _pqs_source_box_route_driver_terminal_shellification_print_line(report)
+    hasproperty(report, :low_order_terminal_shellification_selected) ||
+        return nothing
+    report.low_order_terminal_shellification_selected || return nothing
+    materialized =
+        report.low_order_operator_matrices_materialized ||
+        report.low_order_pair_operator_blocks_materialized ||
+        report.low_order_hamiltonian_matrices_materialized
+    return string(
+        "Terminal shellification: selected, regions ",
+        report.low_order_terminal_shellification_region_count,
+        ", central gaps ",
+        report.low_order_terminal_shellification_central_gap_region_count,
+        ", midpoint slabs ",
+        report.low_order_terminal_shellification_central_midpoint_slab_count,
+        ", central distorted product boxes ",
+        report.low_order_terminal_shellification_central_distorted_product_box_count,
+        ", pair inventory ",
+        repr(report.low_order_terminal_shellification_pair_inventory_status),
+        ", assembly/materialization ",
+        repr(
+            report.low_order_terminal_shellification_assembly_materialization_status,
+        ),
+        ", operators/materialization=",
+        materialized ? "yes" : "no",
+    )
+end
+
+function _pqs_source_box_route_driver_print_terminal_shellification_summary(report)
+    line =
+        _pqs_source_box_route_driver_terminal_shellification_print_line(report)
+    isnothing(line) || println(line)
+    return nothing
+end
+
 function _pqs_source_box_route_driver_crc_pair_family_label(pair_family)
     length(pair_family) == 2 || return string(pair_family)
     return string(pair_family[1], " / ", pair_family[2])
@@ -8324,6 +8359,7 @@ function cartesian_print_summary(report, materialization)
     @show report.low_order_materialization_status
     @show report.low_order_pair_inventory_source
     @show report.low_order_pair_count
+    _pqs_source_box_route_driver_print_terminal_shellification_summary(report)
     _pqs_source_box_route_driver_print_crc_sidecar_summary(report)
     _pqs_source_box_route_driver_print_crc_operator_plan_summary(report)
     _pqs_source_box_route_driver_print_crc_typed_pair_operator_plan_summary(
