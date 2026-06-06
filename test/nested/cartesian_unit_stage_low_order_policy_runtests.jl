@@ -558,9 +558,26 @@ end
           terminal_shells.low_order_shellization.terminal_shellification_scaffold
     @test terminal_units.terminal_shellification_region_count ==
           terminal_shells.terminal_shellification_region_count
-    @test !terminal_units.terminal_shellification_unit_inventory_available
+    @test terminal_units.terminal_shellification_unit_inventory_available
     @test terminal_units.terminal_shellification_unit_inventory_status ==
-          :deferred_terminal_shellification_unit_inventory
+          :available_terminal_region_unit_inventory
+    terminal_inventory = terminal_units.terminal_shellification_unit_inventory
+    @test terminal_inventory.object_kind ==
+          :cartesian_terminal_region_unit_inventory
+    @test terminal_units.terminal_shellification_unit_count ==
+          terminal_inventory.unit_count
+    @test terminal_units.terminal_shellification_unit_count ==
+          terminal_units.terminal_shellification_region_count
+    @test terminal_units.terminal_shellification_unit_keys ==
+          terminal_inventory.unit_keys
+    @test terminal_units.terminal_shellification_unit_roles ==
+          terminal_inventory.unit_roles
+    @test terminal_units.terminal_shellification_unit_kinds ==
+          terminal_inventory.unit_kinds
+    @test terminal_units.terminal_shellification_unit_support_counts ==
+          terminal_inventory.support_counts
+    @test !terminal_units.terminal_shellification_final_retained_unit_inventory_available
+    @test !terminal_units.terminal_shellification_pair_inventory_available
     @test terminal_units.terminal_shellification_central_gap_region_count ==
           terminal_shells.terminal_shellification_central_gap_region_count
     @test terminal_units.terminal_shellification_central_midpoint_slab_count ==
@@ -574,7 +591,7 @@ end
     @test terminal_summary.object_kind ==
           :cartesian_unit_stage_low_order_summary
     @test terminal_summary.status ==
-          :deferred_terminal_shellification_unit_inventory
+          :available_unit_stage_low_order_summary
     @test terminal_summary.low_order_shellization_policy_resolved ==
           :terminal_cartesian_shellification_geometry
     @test terminal_summary.shellization_source ==
@@ -592,16 +609,35 @@ end
           terminal_shells.low_order_shellization.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_shells.terminal_shellification_region_count
-    @test !terminal_summary.terminal_shellification_unit_inventory_available
+    @test terminal_summary.terminal_shellification_unit_inventory_available
     @test terminal_summary.terminal_shellification_unit_inventory_status ==
-          :deferred_terminal_shellification_unit_inventory
-    @test !terminal_summary.plan_unit_inventory_available
-    @test terminal_summary.plan_unit_inventory === nothing
-    @test terminal_summary.plan_unit_count == 0
+          :available_terminal_region_unit_inventory
+    @test terminal_summary.terminal_shellification_unit_inventory ===
+          terminal_inventory
+    @test terminal_summary.terminal_shellification_unit_count ==
+          terminal_inventory.unit_count
+    @test terminal_summary.terminal_shellification_unit_keys ==
+          terminal_inventory.unit_keys
+    @test terminal_summary.terminal_shellification_unit_roles ==
+          terminal_inventory.unit_roles
+    @test terminal_summary.terminal_shellification_unit_kinds ==
+          terminal_inventory.unit_kinds
+    @test terminal_summary.terminal_shellification_unit_support_counts ==
+          terminal_inventory.support_counts
+    @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
+    @test !terminal_summary.terminal_shellification_pair_inventory_available
+    @test terminal_summary.plan_unit_inventory_available
+    @test terminal_summary.plan_unit_inventory === terminal_inventory
+    @test terminal_summary.plan_unit_count == terminal_inventory.unit_count
+    @test terminal_summary.plan_unit_roles == terminal_inventory.unit_roles
+    @test terminal_summary.plan_unit_keys == terminal_inventory.unit_keys
+    @test terminal_summary.plan_unit_support_counts ==
+          terminal_inventory.support_counts
     @test terminal_summary.unit_inventory_source ==
           :terminal_shellification_scaffold
     @test terminal_summary.unit_inventory_status ==
-          :deferred_terminal_shellification_unit_inventory
+          :available_terminal_region_unit_inventory
+    @test !terminal_summary.atom_growth_unit_inventory_available
     @test terminal_summary.plan_authority
     @test !terminal_summary.active_source_authority
     @test !terminal_summary.legacy_source_authority
@@ -618,6 +654,47 @@ end
     @test !terminal_summary.lowering_source_cpbs_available
     @test terminal_summary.source_cpb_count == 0
     @test !terminal_summary.pqs_lowering_prototype_available
+    @test all(
+        record.unit_key ∉ (:left_atom_box, :right_atom_box)
+        for record in terminal_inventory.terminal_region_units
+    )
+    @test all(
+        !record.owned_support_is_cpb
+        for record in terminal_inventory.terminal_region_units
+    )
+    @test all(
+        !record.shellification_region_is_cpb
+        for record in terminal_inventory.terminal_region_units
+    )
+    direct_terminal_units =
+        filter(
+            record ->
+                record.terminal_region_kind in (
+                    :direct_core,
+                    :direct_midpoint_slab,
+                    :outer_mismatch_slab,
+                ),
+            terminal_inventory.terminal_region_units,
+        )
+    @test !isempty(direct_terminal_units)
+    @test all(
+        record.source_cpb_plan.source_cpb_plan_equals_owned_support
+        for record in direct_terminal_units
+    )
+    complete_shell_units =
+        filter(
+            record -> record.terminal_region_kind == :complete_shell,
+            terminal_inventory.terminal_region_units,
+        )
+    @test all(
+        record.lw_complete_shell_lowering.total_source_cpb_count == 26
+        for record in complete_shell_units
+    )
+    @test all(
+        record.pqs_complete_shell_lowering.source_cpb_plan_kind ==
+        :filled_source_cpb
+        for record in complete_shell_units
+    )
     @test terminal_summary.route_skeleton_unit_fields_preserved
     @test terminal_units.source_boxes ===
           terminal_units.route_skeleton.source_boxes
@@ -627,4 +704,41 @@ end
           terminal_units.route_skeleton.retained_units
     @test terminal_units.retained_unit_order ===
           terminal_units.route_skeleton.retained_unit_order
+
+    distorted_fixture =
+        _cartesian_unit_stage_low_order_policy_fixture(
+            probe_parent_axis_construction = false,
+            atom_locations = ((-8.0, 0.0, 0.0), (8.0, 0.0, 0.0)),
+            parent_axis_counts = (x = 21, y = 7, z = 7),
+        )
+    distorted_shells = GaussletBases.cartesian_shells(
+        distorted_fixture.parent,
+        distorted_fixture.spacing_inputs,
+        distorted_fixture.recipe;
+        low_order_shellization_policy =
+            :terminal_cartesian_shellification_geometry,
+    )
+    distorted_units = GaussletBases.cartesian_units(
+        distorted_fixture.parent,
+        distorted_shells,
+        distorted_fixture.route_probe_inputs,
+        distorted_fixture.recipe,
+    )
+    distorted_inventory =
+        distorted_units.terminal_shellification_unit_inventory
+    distorted_units_for_gap =
+        filter(
+            record ->
+                record.terminal_region_kind == :central_distorted_product_box,
+            distorted_inventory.terminal_region_units,
+        )
+    @test length(distorted_units_for_gap) == 1
+    distorted_unit = only(distorted_units_for_gap)
+    @test distorted_unit.unit_kind == :central_distorted_product_box_unit
+    @test !distorted_unit.identity_lowering_planned
+    @test !isnothing(distorted_unit.source_mode_shape)
+    @test distorted_unit.source_cpb_plan.source_mode_shape ==
+          distorted_unit.source_mode_shape
+    @test !distorted_inventory.final_retained_unit_inventory_available
+    @test !distorted_inventory.pair_inventory_available
 end

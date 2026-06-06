@@ -197,6 +197,164 @@ function _terminal_geometry_assert_scaffold_contract(
     return scaffold
 end
 
+function _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    inventory =
+        GaussletBases._cartesian_terminal_shellification_region_unit_inventory(
+            scaffold,
+        )
+    @test inventory.object_kind == :cartesian_terminal_region_unit_inventory
+    @test inventory.status == :available_terminal_region_unit_inventory
+    @test inventory.inventory_source == :terminal_shellification_scaffold
+    @test inventory.private_development_only
+    @test inventory.terminal_region_count == scaffold.region_count
+    @test inventory.unit_count == scaffold.region_count
+    @test length(inventory.terminal_region_units) == scaffold.region_count
+    @test inventory.unit_records == inventory.terminal_region_units
+    @test inventory.terminal_region_roles == scaffold.ordered_region_roles
+    @test inventory.terminal_region_kinds == scaffold.ordered_region_kinds
+    @test inventory.support_counts ==
+          Tuple(region.support_count for region in scaffold.regions)
+    @test inventory.all_units_from_terminal_regions
+    @test !inventory.final_retained_unit_inventory_available
+    @test !inventory.pair_inventory_available
+    @test inventory.pair_inventory_status ==
+          :not_available_terminal_region_metadata_only
+    @test !inventory.coefficient_maps_materialized
+    @test !inventory.transform_contracts_materialized
+    @test !inventory.retained_spaces_materialized
+    @test !inventory.operator_blocks_materialized
+    @test !inventory.pair_operator_blocks_materialized
+    @test !inventory.hamiltonian_data_materialized
+    @test !inventory.artifacts_materialized
+    @test inventory.diagnostics.terminal_region_metadata_only
+    @test inventory.diagnostics.all_units_from_terminal_regions
+    @test inventory.diagnostics.no_aggregate_atom_box_units
+    @test inventory.diagnostics.no_atom_growth_route_units
+    @test !inventory.diagnostics.shellification_regions_are_cpbs
+    @test !inventory.diagnostics.final_retained_unit_inventory_available
+    @test !inventory.diagnostics.pair_inventory_available
+    @test !inventory.diagnostics.materialization_behavior_changed
+    @test !inventory.diagnostics.public_default_behavior_changed
+
+    @test all(
+        record.unit_key ∉ (:left_atom_box, :right_atom_box)
+        for record in inventory.terminal_region_units
+    )
+    @test all(
+        record.unit_role ∉ (:left_atom_box, :right_atom_box)
+        for record in inventory.terminal_region_units
+    )
+    @test all(
+        record.lowering_family_planned !=
+        :white_lindsey_atom_local_child_shellification
+        for record in inventory.terminal_region_units
+    )
+
+    for (record, region) in zip(inventory.terminal_region_units, scaffold.regions)
+        @test record.object_kind == :cartesian_terminal_region_unit_record
+        @test record.unit_index == region.order_index
+        @test record.terminal_region_order_index == region.order_index
+        @test record.terminal_region_role == region.role
+        @test record.terminal_region_kind == region.region_kind
+        @test record.outer_box == region.outer_box
+        @test record.inner_exclusion_box == region.inner_exclusion_box
+        @test record.support_count == region.support_count
+        @test !record.owned_support_is_cpb
+        @test !record.shellification_region_is_cpb
+        @test !record.shellification_region_is_lowering_source
+        @test record.lowering_recipe_status == :planned_not_materialized
+        @test record.source_cpb_plan_status == :planned_not_materialized
+        @test record.retained_space_status == :not_materialized
+        @test !record.coefficient_maps_materialized
+        @test !record.transform_contracts_materialized
+        @test !record.operator_blocks_materialized
+        @test !record.pair_operator_blocks_materialized
+        @test !record.hamiltonian_data_materialized
+        @test record.final_retained_unit_status ==
+              :not_available_terminal_region_metadata_only
+    end
+
+    complete_shell_units =
+        filter(
+            record -> record.terminal_region_kind == :complete_shell,
+            inventory.terminal_region_units,
+        )
+    @test inventory.complete_shell_unit_count == length(complete_shell_units)
+    @test inventory.lw_complete_shell_region_count == length(complete_shell_units)
+    @test inventory.lw_complete_shell_cpb_count == 26 * length(complete_shell_units)
+    @test inventory.lw_complete_shell_cpb_family_counts == (
+        facet_cpb = 6 * length(complete_shell_units),
+        edge_cpb = 12 * length(complete_shell_units),
+        corner_cpb = 8 * length(complete_shell_units),
+    )
+    for record in complete_shell_units
+        @test record.unit_kind in (
+            :atom_local_complete_shell_unit,
+            :shared_molecular_complete_shell_unit,
+        )
+        @test !record.owned_support_is_cpb
+        @test record.owned_support_status ==
+              :owned_shell_support_outer_minus_inner_exclusion
+        @test !record.identity_lowering_planned
+        @test record.lw_complete_shell_lowering.facet_count == 6
+        @test record.lw_complete_shell_lowering.edge_count == 12
+        @test record.lw_complete_shell_lowering.corner_count == 8
+        @test record.lw_complete_shell_lowering.total_source_cpb_count == 26
+        @test record.lw_complete_shell_lowering.status ==
+              :planned_not_materialized
+        @test record.pqs_complete_shell_lowering.source_cpb_count == 1
+        @test record.pqs_complete_shell_lowering.source_cpb_plan_kind ==
+              :filled_source_cpb
+        @test record.pqs_complete_shell_lowering.retained_rule ==
+              :boundary_comx_product_mode_selection
+        @test !record.pqs_complete_shell_lowering.face_edge_corner_decomposition_required
+        @test record.pqs_filled_source_cpb_plan ===
+              record.pqs_complete_shell_lowering
+    end
+
+    direct_units =
+        filter(
+            record ->
+                record.terminal_region_kind in (
+                    :direct_core,
+                    :direct_midpoint_slab,
+                    :outer_mismatch_slab,
+                ),
+            inventory.terminal_region_units,
+    )
+    for record in direct_units
+        @test record.owned_support_status == :owned_support_equals_region_box
+        @test record.identity_lowering_planned
+        @test record.source_cpb_plan.source_cpb_plan_box == record.outer_box
+        @test record.source_cpb_plan.source_cpb_plan_equals_owned_support
+        @test record.source_cpb_plan.source_cpb_count == 1
+        @test record.source_cpb_plan.status == :planned_not_materialized
+        @test !record.source_cpb_plan.coefficient_maps_materialized
+        @test !record.source_cpb_plan.operator_blocks_materialized
+    end
+
+    central_units =
+        filter(
+            record ->
+                record.terminal_region_kind == :central_distorted_product_box,
+            inventory.terminal_region_units,
+        )
+    for record in central_units
+        @test record.unit_kind == :central_distorted_product_box_unit
+        @test !record.identity_lowering_planned
+        @test record.lowering_family_planned == :distorted_product_box_comx
+        @test !isnothing(record.source_mode_shape)
+        @test !isnothing(record.q)
+        @test !isnothing(record.L)
+        @test !isnothing(record.aspect_ratio)
+        @test record.source_cpb_plan.source_mode_shape == record.source_mode_shape
+        @test record.source_cpb_plan.retained_rule ==
+              :distorted_product_comx_all_axes
+    end
+
+    return inventory
+end
+
 @testset "terminal Cartesian shellification one-center centered complete shells" begin
     axes = (collect(1:9), collect(1:9), collect(1:9))
     plan = GaussletBases._cartesian_terminal_shellification_geometry(
@@ -241,6 +399,12 @@ end
         region.retirement_target == :already_plan_lowered_region
         for region in scaffold.regions
     )
+    inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    @test inventory.unit_kinds == (
+        :direct_core_unit,
+        :atom_local_complete_shell_unit,
+        :atom_local_complete_shell_unit,
+    )
 end
 
 @testset "terminal Cartesian shellification one-center outer mismatch slabs" begin
@@ -263,6 +427,22 @@ end
         region.materialization_dependency == :plan_lowerable_direct_boundary_slab
         for region in summary.regions
         if region.region_kind == :outer_mismatch_slab
+    )
+    scaffold = _terminal_geometry_assert_scaffold_contract(plan)
+    inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    mismatch_units =
+        filter(
+            record -> record.terminal_region_kind == :outer_mismatch_slab,
+            inventory.terminal_region_units,
+        )
+    @test !isempty(mismatch_units)
+    @test all(
+        record.unit_kind == :outer_mismatch_boundary_slab_unit
+        for record in mismatch_units
+    )
+    @test all(
+        record.lowering_family_planned == :direct_boundary_slab_identity_cpb
+        for record in mismatch_units
     )
 end
 
@@ -312,6 +492,20 @@ end
     @test length(midpoint_scaffold_regions) == 1
     @test only(midpoint_scaffold_regions).lowering_family == :direct_midpoint_slab
     @test only(midpoint_scaffold_regions).independently_lowerable
+    inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    @test any(
+        record.unit_kind == :shared_molecular_complete_shell_unit
+        for record in inventory.terminal_region_units
+    )
+    midpoint_units =
+        filter(
+            record -> record.terminal_region_kind == :direct_midpoint_slab,
+            inventory.terminal_region_units,
+        )
+    @test length(midpoint_units) == 1
+    @test only(midpoint_units).unit_kind == :direct_midpoint_slab_unit
+    @test only(midpoint_units).lowering_family_planned ==
+          :direct_slab_identity_cpb
 end
 
 @testset "terminal Cartesian shellification diatomic without midpoint" begin
@@ -368,6 +562,21 @@ end
     @test all(
         region.materialization_dependency == :plan_lowerable_direct_slab
         for region in midpoint_scaffold_regions
+    )
+    inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    midpoint_units =
+        filter(
+            record -> record.terminal_region_kind == :direct_midpoint_slab,
+            inventory.terminal_region_units,
+        )
+    @test length(midpoint_units) == 5
+    @test all(
+        record.unit_kind == :direct_midpoint_slab_unit
+        for record in midpoint_units
+    )
+    @test all(
+        record.lowering_family_planned == :direct_slab_identity_cpb
+        for record in midpoint_units
     )
 end
 
@@ -433,6 +642,17 @@ end
     @test central_scaffold_region.metadata.q == 3
     @test central_scaffold_region.metadata.L == 7
     @test central_scaffold_region.metadata.source_mode_shape == (7, 3, 3)
+    inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    central_unit = only(
+        record for record in inventory.terminal_region_units
+        if record.terminal_region_kind == :central_distorted_product_box
+    )
+    @test central_unit.source_mode_shape == (7, 3, 3)
+    @test central_unit.q == 3
+    @test central_unit.L == 7
+    @test central_unit.source_cpb_plan.source_cpb_plan_kind ==
+          :central_distorted_product_box_source
+    @test !central_unit.identity_lowering_planned
 end
 
 @testset "terminal Cartesian shellification invalid inputs and unsupported geometries" begin
