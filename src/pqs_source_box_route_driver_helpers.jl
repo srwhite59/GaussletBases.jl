@@ -6275,6 +6275,124 @@ function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
     )
 end
 
+function _pqs_source_box_route_driver_terminal_shellification_alias_fields(
+    source,
+    selected::Bool;
+    selected_status = :not_selected,
+    include_crc_sidecar_summary::Bool = true,
+)
+    selected_fields =
+        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+            selected ?
+            source.terminal_shellification_selected_lowering_contract_inventory :
+            nothing,
+            selected ?
+            source.terminal_shellification_selected_lowering_contract_inventory_status :
+            selected_status,
+            selected ?
+            source.terminal_shellification_selected_lowering_family :
+            nothing,
+        )
+    crc_sidecar_fields =
+        include_crc_sidecar_summary ?
+        (;
+            terminal_shellification_selected_crc_sidecar_summary =
+                selected &&
+                hasproperty(
+                    source,
+                    :terminal_shellification_selected_crc_sidecar_summary,
+                ) ?
+                source.terminal_shellification_selected_crc_sidecar_summary :
+                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+                    nothing,
+                ),
+        ) :
+        (;)
+
+    return merge(
+        (;
+            terminal_shellification_scaffold_available =
+                selected && source.terminal_shellification_scaffold_available,
+            terminal_shellification_scaffold =
+                selected ? source.terminal_shellification_scaffold : nothing,
+            terminal_shellification_region_count =
+                selected ? source.terminal_shellification_region_count : 0,
+            terminal_shellification_unit_inventory_available =
+                selected && source.terminal_shellification_unit_inventory_available,
+            terminal_shellification_unit_inventory =
+                selected ? source.terminal_shellification_unit_inventory : nothing,
+            terminal_shellification_unit_count =
+                selected ? source.terminal_shellification_unit_count : 0,
+            terminal_shellification_unit_keys =
+                selected ? source.terminal_shellification_unit_keys : (),
+            terminal_shellification_unit_roles =
+                selected ? source.terminal_shellification_unit_roles : (),
+            terminal_shellification_unit_kinds =
+                selected ? source.terminal_shellification_unit_kinds : (),
+            terminal_shellification_unit_support_counts =
+                selected ? source.terminal_shellification_unit_support_counts : (),
+            terminal_shellification_lowering_contract_inventory_available =
+                selected &&
+                source.terminal_shellification_lowering_contract_inventory_available,
+            terminal_shellification_lowering_contract_inventory_status =
+                selected ?
+                source.terminal_shellification_lowering_contract_inventory_status :
+                :not_selected,
+            terminal_shellification_lowering_contract_inventory =
+                selected ?
+                source.terminal_shellification_lowering_contract_inventory :
+                nothing,
+            terminal_shellification_lowering_contract_count =
+                selected ?
+                source.terminal_shellification_lowering_contract_count :
+                0,
+            terminal_shellification_lowering_contract_kinds =
+                selected ?
+                source.terminal_shellification_lowering_contract_kinds :
+                (),
+            terminal_shellification_lowering_contract_kind_counts =
+                selected ?
+                source.terminal_shellification_lowering_contract_kind_counts :
+                _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_counts(),
+        ),
+        selected_fields,
+        crc_sidecar_fields,
+        (;
+            terminal_shellification_contract_counts_by_unit =
+                selected ?
+                source.terminal_shellification_contract_counts_by_unit :
+                (),
+            terminal_shellification_lw_complete_shell_cpb_count =
+                selected ?
+                source.terminal_shellification_lw_complete_shell_cpb_count :
+                0,
+            terminal_shellification_lw_complete_shell_cpb_family_counts =
+                selected ?
+                source.terminal_shellification_lw_complete_shell_cpb_family_counts :
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            terminal_shellification_final_retained_unit_inventory_available =
+                selected &&
+                source.terminal_shellification_final_retained_unit_inventory_available,
+            terminal_shellification_central_gap_region_count =
+                selected ?
+                source.terminal_shellification_central_gap_region_count :
+                0,
+            terminal_shellification_central_midpoint_slab_count =
+                selected ?
+                source.terminal_shellification_central_midpoint_slab_count :
+                0,
+            terminal_shellification_central_distorted_product_box_count =
+                selected ?
+                source.terminal_shellification_central_distorted_product_box_count :
+                0,
+            terminal_shellification_central_distorted_product_box_metadata =
+                selected ?
+                source.terminal_shellification_central_distorted_product_box_metadata :
+                (),
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_terminal_route_state_summary(;
     status,
     selected::Bool,
@@ -7275,129 +7393,15 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         terminal_shellification_transforms_selected,
         legacy_source_transforms_selected,
         terminal_shellification_transform_summary_available,
-        terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_scaffold :
-            nothing,
-        terminal_shellification_region_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_region_count :
-            0,
-        terminal_shellification_unit_inventory_available =
-            terminal_shellification_transforms_selected &&
-            low_order_units.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_inventory :
-            nothing,
-        terminal_shellification_unit_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_count :
-            0,
-        terminal_shellification_unit_keys =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_keys :
-            (),
-        terminal_shellification_unit_roles =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_roles :
-            (),
-        terminal_shellification_unit_kinds =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_kinds :
-            (),
-        terminal_shellification_unit_support_counts =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_unit_support_counts :
-            (),
-        terminal_shellification_lowering_contract_inventory_available =
-            terminal_shellification_transforms_selected &&
-            low_order_units.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lowering_contract_inventory_status :
-            :not_selected,
-        terminal_shellification_lowering_contract_inventory =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lowering_contract_inventory :
-            nothing,
-        terminal_shellification_lowering_contract_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lowering_contract_count :
-            0,
-        terminal_shellification_lowering_contract_kinds =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lowering_contract_kinds :
-            (),
-        terminal_shellification_lowering_contract_kind_counts =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lowering_contract_kind_counts :
-            (
-                direct_core_identity_cpb_count = 0,
-                direct_slab_identity_cpb_count = 0,
-                direct_boundary_slab_identity_cpb_count = 0,
-                white_lindsey_boundary_strata_count = 0,
-                pqs_filled_source_cpb_count = 0,
-                distorted_product_box_comx_count = 0,
-            ),
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_selected_lowering_contract_inventory :
-            nothing,
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_selected_lowering_contract_inventory_status :
-            :not_selected,
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_selected_lowering_family :
-            nothing,
+        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            low_order_units,
+            terminal_shellification_transforms_selected,
         )...,
-        terminal_shellification_selected_crc_sidecar_summary =
-            terminal_shellification_transforms_selected &&
-            hasproperty(
-                low_order_units,
-                :terminal_shellification_selected_crc_sidecar_summary,
-            ) ?
-            low_order_units.terminal_shellification_selected_crc_sidecar_summary :
-            _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
-                nothing,
-            ),
-        terminal_shellification_contract_counts_by_unit =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_contract_counts_by_unit :
-            (),
-        terminal_shellification_lw_complete_shell_cpb_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lw_complete_shell_cpb_count :
-            0,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        terminal_shellification_final_retained_unit_inventory_available =
-            terminal_shellification_transforms_selected &&
-            low_order_units.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_pair_inventory_available =
             terminal_shellification_transforms_selected &&
             low_order_units.terminal_shellification_pair_inventory_available,
         terminal_shellification_transform_contracts_available = false,
         terminal_shellification_transform_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_central_gap_region_count :
-            0,
-        terminal_shellification_central_midpoint_slab_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_central_midpoint_slab_count :
-            0,
-        terminal_shellification_central_distorted_product_box_count =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_central_distorted_product_box_count :
-            0,
-        terminal_shellification_central_distorted_product_box_metadata =
-            terminal_shellification_transforms_selected ?
-            low_order_units.terminal_shellification_central_distorted_product_box_metadata :
-            (),
         coefficient_transforms_materialized = false,
         coefficient_maps_materialized = false,
         transform_materialization_status =
@@ -8367,130 +8371,16 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         terminal_shellification_pairs_selected,
         legacy_source_pairs_selected,
         terminal_shellification_pair_summary_available,
-        terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_scaffold :
-            nothing,
-        terminal_shellification_region_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_region_count :
-            0,
-        terminal_shellification_unit_inventory_available =
-            terminal_shellification_pairs_selected &&
-            low_order_transforms.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_inventory :
-            nothing,
-        terminal_shellification_unit_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_count :
-            0,
-        terminal_shellification_unit_keys =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_keys :
-            (),
-        terminal_shellification_unit_roles =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_roles :
-            (),
-        terminal_shellification_unit_kinds =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_kinds :
-            (),
-        terminal_shellification_unit_support_counts =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_unit_support_counts :
-            (),
-        terminal_shellification_lowering_contract_inventory_available =
-            terminal_shellification_pairs_selected &&
-            low_order_transforms.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lowering_contract_inventory_status :
-            :not_selected,
-        terminal_shellification_lowering_contract_inventory =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lowering_contract_inventory :
-            nothing,
-        terminal_shellification_lowering_contract_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lowering_contract_count :
-            0,
-        terminal_shellification_lowering_contract_kinds =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lowering_contract_kinds :
-            (),
-        terminal_shellification_lowering_contract_kind_counts =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lowering_contract_kind_counts :
-            (
-                direct_core_identity_cpb_count = 0,
-                direct_slab_identity_cpb_count = 0,
-                direct_boundary_slab_identity_cpb_count = 0,
-                white_lindsey_boundary_strata_count = 0,
-                pqs_filled_source_cpb_count = 0,
-                distorted_product_box_comx_count = 0,
-            ),
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory :
-            nothing,
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory_status :
-            :not_selected,
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_selected_lowering_family :
-            nothing,
+        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            low_order_transforms,
+            terminal_shellification_pairs_selected,
         )...,
-        terminal_shellification_selected_crc_sidecar_summary =
-            terminal_shellification_pairs_selected &&
-            hasproperty(
-                low_order_transforms,
-                :terminal_shellification_selected_crc_sidecar_summary,
-            ) ?
-            low_order_transforms.terminal_shellification_selected_crc_sidecar_summary :
-            _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
-                nothing,
-            ),
-        terminal_shellification_contract_counts_by_unit =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_contract_counts_by_unit :
-            (),
-        terminal_shellification_lw_complete_shell_cpb_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lw_complete_shell_cpb_count :
-            0,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        terminal_shellification_final_retained_unit_inventory_available =
-            terminal_shellification_pairs_selected &&
-            low_order_transforms.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_pairs_selected &&
             low_order_transforms.terminal_shellification_transform_contracts_available,
         terminal_shellification_pair_inventory_available = false,
         terminal_shellification_pair_inventory_status,
         terminal_shellification_pair_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_central_gap_region_count :
-            0,
-        terminal_shellification_central_midpoint_slab_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_central_midpoint_slab_count :
-            0,
-        terminal_shellification_central_distorted_product_box_count =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_central_distorted_product_box_count :
-            0,
-        terminal_shellification_central_distorted_product_box_metadata =
-            terminal_shellification_pairs_selected ?
-            low_order_transforms.terminal_shellification_central_distorted_product_box_metadata :
-            (),
         pair_operator_blocks_materialized = false,
         operator_pairs_materialized,
         pair_inventory_known,
@@ -8868,98 +8758,11 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         terminal_shellification_assembly_selected,
         legacy_source_assembly_selected,
         terminal_shellification_assembly_summary_available,
-        terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_scaffold :
-            nothing,
-        terminal_shellification_region_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_region_count :
-            0,
-        terminal_shellification_unit_inventory_available =
-            terminal_shellification_assembly_selected &&
-            low_order_pairs.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_inventory :
-            nothing,
-        terminal_shellification_unit_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_count :
-            0,
-        terminal_shellification_unit_keys =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_keys :
-            (),
-        terminal_shellification_unit_roles =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_roles :
-            (),
-        terminal_shellification_unit_kinds =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_kinds :
-            (),
-        terminal_shellification_unit_support_counts =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_unit_support_counts :
-            (),
-        terminal_shellification_lowering_contract_inventory_available =
-            terminal_shellification_assembly_selected &&
-            low_order_pairs.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lowering_contract_inventory_status :
-            :not_selected,
-        terminal_shellification_lowering_contract_inventory =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lowering_contract_inventory :
-            nothing,
-        terminal_shellification_lowering_contract_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lowering_contract_count :
-            0,
-        terminal_shellification_lowering_contract_kinds =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lowering_contract_kinds :
-            (),
-        terminal_shellification_lowering_contract_kind_counts =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lowering_contract_kind_counts :
-            (
-                direct_core_identity_cpb_count = 0,
-                direct_slab_identity_cpb_count = 0,
-                direct_boundary_slab_identity_cpb_count = 0,
-                white_lindsey_boundary_strata_count = 0,
-                pqs_filled_source_cpb_count = 0,
-                distorted_product_box_comx_count = 0,
-            ),
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory :
-            nothing,
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory_status :
-            :not_selected,
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_selected_lowering_family :
-            nothing,
+        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            low_order_pairs,
+            terminal_shellification_assembly_selected;
+            include_crc_sidecar_summary = false,
         )...,
-        terminal_shellification_contract_counts_by_unit =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_contract_counts_by_unit :
-            (),
-        terminal_shellification_lw_complete_shell_cpb_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lw_complete_shell_cpb_count :
-            0,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_lw_complete_shell_cpb_family_counts :
-            (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
-        terminal_shellification_final_retained_unit_inventory_available =
-            terminal_shellification_assembly_selected &&
-            low_order_pairs.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_assembly_selected &&
             low_order_pairs.terminal_shellification_transform_contracts_available,
@@ -8975,22 +8778,6 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             low_order_pairs.terminal_shellification_pair_materialization_status :
             :not_selected,
         terminal_shellification_assembly_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_central_gap_region_count :
-            0,
-        terminal_shellification_central_midpoint_slab_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_central_midpoint_slab_count :
-            0,
-        terminal_shellification_central_distorted_product_box_count =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_central_distorted_product_box_count :
-            0,
-        terminal_shellification_central_distorted_product_box_metadata =
-            terminal_shellification_assembly_selected ?
-            low_order_pairs.terminal_shellification_central_distorted_product_box_metadata :
-            (),
         hamiltonian_matrices_materialized = false,
         operator_matrices_materialized = false,
         pair_operator_blocks_materialized,

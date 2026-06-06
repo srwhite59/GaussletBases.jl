@@ -81,6 +81,12 @@ end
             :white_lindsey_low_order,
             lowering_plan,
         )
+    selected_inventory_fields =
+        GaussletBases._pqs_source_box_route_driver_selected_terminal_lowering_fields(
+            selected_inventory,
+            selected_inventory.status,
+            :white_lindsey_low_order,
+        )
     @test module_summary.status == :available_terminal_lowering_plan
     @test module_summary.policy_kind == :white_lindsey_terminal_lowering
     @test module_summary.terminal_region_count ==
@@ -142,6 +148,77 @@ end
     @test terminal_route_summary.selected_crc_sidecar_missing_count ==
           crc_sidecar_summary.sidecar_missing_count
     @test !terminal_route_summary.operator_blocks_materialized
+
+    alias_source = merge(
+        (;
+            terminal_shellification_scaffold_available = true,
+            terminal_shellification_scaffold = :synthetic_scaffold,
+            terminal_shellification_region_count =
+                module_summary.terminal_region_count,
+            terminal_shellification_unit_inventory_available = true,
+            terminal_shellification_unit_inventory = unit_inventory,
+            terminal_shellification_unit_count = unit_inventory.unit_count,
+            terminal_shellification_unit_keys = unit_inventory.unit_keys,
+            terminal_shellification_unit_roles = unit_inventory.unit_roles,
+            terminal_shellification_unit_kinds = unit_inventory.unit_kinds,
+            terminal_shellification_unit_support_counts =
+                unit_inventory.support_counts,
+            terminal_shellification_lowering_contract_inventory_available = true,
+            terminal_shellification_lowering_contract_inventory_status =
+                lowering_inventory.status,
+            terminal_shellification_lowering_contract_inventory =
+                lowering_inventory,
+            terminal_shellification_lowering_contract_count =
+                lowering_inventory.lowering_contract_count,
+            terminal_shellification_lowering_contract_kinds =
+                lowering_inventory.lowering_contract_kinds,
+            terminal_shellification_lowering_contract_kind_counts =
+                lowering_inventory.lowering_contract_kind_counts,
+            terminal_shellification_selected_crc_sidecar_summary =
+                crc_sidecar_summary,
+            terminal_shellification_contract_counts_by_unit =
+                lowering_inventory.contract_counts_by_unit,
+            terminal_shellification_lw_complete_shell_cpb_count =
+                lowering_inventory.lw_complete_shell_cpb_count,
+            terminal_shellification_lw_complete_shell_cpb_family_counts =
+                lowering_inventory.lw_complete_shell_cpb_family_counts,
+            terminal_shellification_final_retained_unit_inventory_available =
+                lowering_inventory.final_retained_unit_inventory_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
+        ),
+        selected_inventory_fields,
+    )
+    alias_fields =
+        GaussletBases._pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            alias_source,
+            true,
+        )
+    unselected_alias_fields =
+        GaussletBases._pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            alias_source,
+            false;
+            include_crc_sidecar_summary = false,
+        )
+
+    @test alias_fields.terminal_shellification_unit_count ==
+          unit_inventory.unit_count
+    @test alias_fields.terminal_shellification_lowering_contract_count ==
+          module_summary.available_contract_count
+    @test alias_fields.terminal_shellification_selected_contract_count ==
+          module_summary.selected_contract_count
+    @test alias_fields.terminal_shellification_selected_crc_sidecar_summary.status ==
+          crc_sidecar_summary.status
+    @test !alias_fields.terminal_shellification_final_retained_unit_inventory_available
+    @test unselected_alias_fields.terminal_shellification_unit_count == 0
+    @test unselected_alias_fields.terminal_shellification_lowering_contract_kinds ==
+          ()
+    @test !hasproperty(
+        unselected_alias_fields,
+        :terminal_shellification_selected_crc_sidecar_summary,
+    )
 
     @test !module_summary.materialized
     @test !module_summary.operator_blocks_materialized
