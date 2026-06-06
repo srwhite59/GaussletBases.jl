@@ -1810,6 +1810,14 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.terminal_shellification_lowering_contract_inventory_status,
         low_order_terminal_shellification_lowering_contract_inventory =
             low_order_route_summary.terminal_shellification_lowering_contract_inventory,
+        low_order_terminal_shellification_lowering_plan_available =
+            low_order_route_summary.terminal_shellification_lowering_plan_available,
+        low_order_terminal_shellification_lowering_plan_status =
+            low_order_route_summary.terminal_shellification_lowering_plan_status,
+        low_order_terminal_shellification_lowering_plan =
+            low_order_route_summary.terminal_shellification_lowering_plan,
+        low_order_terminal_shellification_lowering_summary =
+            low_order_route_summary.terminal_shellification_lowering_summary,
         low_order_terminal_shellification_lowering_contract_count =
             low_order_route_summary.terminal_shellification_lowering_contract_count,
         low_order_terminal_shellification_lowering_contract_kinds =
@@ -5062,14 +5070,18 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
             parent.system_classification == :bond_aligned_diatomic ?
             parent.bond_axis :
             :auto
-        plan = _cartesian_terminal_shellification_geometry(
-            parent_axes,
-            nuclear_positions;
+        policy = CartesianShellification.AtomOutwardShellification(;
             core_side = parent.standard_setup.core_cube_side,
             q = parent.standard_setup.q,
             bond_axis,
         )
-        scaffold = _cartesian_terminal_shellification_geometry_scaffold(
+        plan = CartesianShellification.shellify(
+            parent_axes,
+            nuclear_positions,
+            policy,
+        )
+        raw_plan = CartesianShellification.raw_plan(plan)
+        scaffold = CartesianShellification.scaffold(
             plan;
             route_family = :white_lindsey_low_order,
         )
@@ -5083,7 +5095,9 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
         return (;
             object_kind = :cartesian_shell_stage_terminal_shellification_payload,
             status,
+            policy,
             plan,
+            raw_plan,
             scaffold,
             plan_available = true,
             scaffold_available = true,
@@ -5520,15 +5534,616 @@ function _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_coun
     return _cartesian_terminal_region_lowering_contract_kind_counts(())
 end
 
+function _pqs_source_box_route_driver_terminal_lowering_policy(
+    route_lowering_family,
+    low_order_shellization,
+)
+    route_lowering_family == :white_lindsey_low_order &&
+        return CartesianTerminalLowering.WhiteLindseyLowering()
+    if route_lowering_family == :pqs
+        plan =
+            hasproperty(low_order_shellization, :terminal_shellification_plan) ?
+            low_order_shellization.terminal_shellification_plan :
+            nothing
+        raw_plan =
+            plan isa CartesianShellification.ShellificationPlan ?
+            CartesianShellification.raw_plan(plan) :
+            nothing
+        q = !isnothing(raw_plan) && hasproperty(raw_plan, :q) ? raw_plan.q : nothing
+        isnothing(q) &&
+            throw(ArgumentError("PQS terminal lowering requires shellification q"))
+        return CartesianTerminalLowering.PQSLowering(q = q)
+    end
+    return nothing
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_plan(
+    low_order_shellization,
+    route_lowering_family,
+)
+    plan =
+        hasproperty(low_order_shellization, :terminal_shellification_plan) ?
+        low_order_shellization.terminal_shellification_plan :
+        nothing
+    plan isa CartesianShellification.ShellificationPlan || return nothing
+
+    policy =
+        _pqs_source_box_route_driver_terminal_lowering_policy(
+            route_lowering_family,
+            low_order_shellization,
+        )
+    isnothing(policy) && return nothing
+    return CartesianTerminalLowering.lower_terminal_regions(plan, policy)
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
+    return (;
+        direct_core_identity_cpb_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :direct_core_identity_cpb,
+                contracts,
+            ),
+        direct_slab_identity_cpb_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :direct_slab_identity_cpb,
+                contracts,
+            ),
+        direct_boundary_slab_identity_cpb_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :direct_boundary_slab_identity_cpb,
+                contracts,
+            ),
+        white_lindsey_boundary_strata_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :white_lindsey_boundary_strata,
+                contracts,
+            ),
+        pqs_filled_source_cpb_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :pqs_filled_source_cpb,
+                contracts,
+            ),
+        distorted_product_box_comx_count =
+            count(
+                contract ->
+                    CartesianTerminalLowering.lowering_kind(contract) ==
+                    :distorted_product_box_comx,
+                contracts,
+            ),
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_metadata(
+    contract,
+    field::Symbol,
+    default = nothing,
+)
+    return hasproperty(contract.metadata, field) ?
+           getproperty(contract.metadata, field) :
+           default
+end
+
+function _pqs_source_box_route_driver_terminal_region_key(unit)
+    return Symbol("terminal_region_", string(unit.terminal_region_order_index))
+end
+
+function _pqs_source_box_route_driver_unit_for_terminal_lowering_contract(
+    unit_inventory,
+    contract,
+)
+    matches = Tuple(
+        unit for unit in unit_inventory.terminal_region_units
+        if _pqs_source_box_route_driver_terminal_region_key(unit) ==
+           contract.terminal_region_key
+    )
+    length(matches) == 1 ||
+        throw(
+            ArgumentError(
+                "expected exactly one terminal-region unit for $(contract.terminal_region_key)",
+            ),
+        )
+    return only(matches)
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_kind(
+    contract,
+)
+    kind = CartesianTerminalLowering.lowering_kind(contract)
+    kind in (
+        :direct_core_identity_cpb,
+        :direct_slab_identity_cpb,
+        :direct_boundary_slab_identity_cpb,
+    ) && return :direct_coordinate_product_source
+    kind == :white_lindsey_boundary_strata &&
+        return :complete_shell_boundary_strata
+    kind == :pqs_filled_source_cpb && return :filled_source_cpb
+    kind == :distorted_product_box_comx &&
+        return :central_distorted_product_box_source
+    return :terminal_lowering_source_cpb
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_box(
+    contract,
+)
+    source_cpbs = CartesianTerminalLowering.source_cpbs(contract)
+    length(source_cpbs) == 1 || return nothing
+    return CartesianCPB.intervals(only(source_cpbs))
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_source_family_counts(
+    contract,
+)
+    return (;
+        facet_cpb =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :facet_count,
+                0,
+            ),
+        edge_cpb =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :edge_count,
+                0,
+            ),
+        corner_cpb =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :corner_count,
+                0,
+            ),
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_retained_rule(contract)
+    kind = CartesianTerminalLowering.lowering_kind(contract)
+    kind == :white_lindsey_boundary_strata &&
+        return :white_lindsey_boundary_strata_children
+    kind == :pqs_filled_source_cpb &&
+        return :boundary_comx_product_mode_selection
+    return contract.retained_rule
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_shell_realization_status(
+    contract,
+)
+    kind = CartesianTerminalLowering.lowering_kind(contract)
+    kind == :pqs_filled_source_cpb &&
+        return :projection_lowdin_planned_not_materialized
+    return :not_materialized
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_final_granularity(
+    contract,
+)
+    kind = CartesianTerminalLowering.lowering_kind(contract)
+    kind == :white_lindsey_boundary_strata &&
+        return :white_lindsey_boundary_strata_children_planned
+    kind == :pqs_filled_source_cpb &&
+        return :single_pqs_shell_realized_unit_planned
+    kind == :distorted_product_box_comx &&
+        return :single_distorted_product_box_unit_planned
+    return :single_direct_source_cpb
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_contract_record(
+    contract,
+    unit,
+    contract_index::Int,
+)
+    lowering_kind = CartesianTerminalLowering.lowering_kind(contract)
+    source_cpbs = CartesianTerminalLowering.source_cpbs(contract)
+    source_cpb_plan_box =
+        _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_box(
+            contract,
+        )
+    source_cpb_count = length(source_cpbs)
+    identity_like =
+        _pqs_source_box_route_driver_terminal_lowering_metadata(
+            contract,
+            :identity_like,
+            false,
+        )
+    source_cpb_plan_equals_owned_support =
+        unit.terminal_region_kind != :complete_shell
+    source_mode_shape =
+        _pqs_source_box_route_driver_terminal_lowering_metadata(
+            contract,
+            :source_mode_shape,
+            nothing,
+        )
+    return (;
+        object_kind = :cartesian_terminal_region_lowering_contract,
+        status = :planned_not_materialized,
+        contract_index,
+        contract_key =
+            Symbol(String(unit.unit_key), "_", String(lowering_kind)),
+        terminal_region_key = contract.terminal_region_key,
+        unit_index = unit.unit_index,
+        unit_key = unit.unit_key,
+        unit_role = unit.unit_role,
+        unit_kind = unit.unit_kind,
+        terminal_region_order_index = unit.terminal_region_order_index,
+        terminal_region_role = unit.terminal_region_role,
+        terminal_region_kind = unit.terminal_region_kind,
+        lowering_contract_kind = lowering_kind,
+        outer_box = unit.outer_box,
+        box = unit.outer_box,
+        inner_exclusion_box = unit.inner_exclusion_box,
+        support_count = unit.support_count,
+        owned_support_status = unit.owned_support_status,
+        owned_support_is_cpb = unit.owned_support_is_cpb,
+        shellification_region_is_cpb = unit.shellification_region_is_cpb,
+        shellification_region_is_lowering_source =
+            unit.shellification_region_is_lowering_source,
+        source_cpb = source_cpb_count == 1 ? only(source_cpbs) : nothing,
+        source_cpbs,
+        source_cpb_plan_status = :planned_not_materialized,
+        source_cpb_plan_box,
+        source_cpb_plan_kind =
+            _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_kind(
+                contract,
+            ),
+        source_cpb_plan_equals_owned_support,
+        source_cpb_count,
+        source_cpb_family_counts =
+            _pqs_source_box_route_driver_terminal_lowering_source_family_counts(
+                contract,
+            ),
+        source_cpbs_materialized = false,
+        identity_like_source_contract = identity_like,
+        retained_rule =
+            _pqs_source_box_route_driver_terminal_lowering_retained_rule(
+                contract,
+            ),
+        source_mode_shape,
+        q =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :q,
+                nothing,
+            ),
+        L =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :L,
+                nothing,
+            ),
+        aspect_ratio =
+            _pqs_source_box_route_driver_terminal_lowering_metadata(
+                contract,
+                :aspect_ratio,
+                nothing,
+            ),
+        intermediate_retained_space_status =
+            lowering_kind in (:pqs_filled_source_cpb, :distorted_product_box_comx) ?
+            :planned_not_materialized :
+            :not_materialized,
+        shell_realization_status =
+            _pqs_source_box_route_driver_terminal_lowering_shell_realization_status(
+                contract,
+            ),
+        face_edge_corner_decomposition_required =
+            lowering_kind == :white_lindsey_boundary_strata,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        final_retained_unit_status = :not_materialized,
+        final_retained_unit_records_materialized = false,
+        final_unit_count_planned =
+            lowering_kind == :white_lindsey_boundary_strata ? source_cpb_count : 1,
+        final_unit_granularity =
+            _pqs_source_box_route_driver_terminal_lowering_final_granularity(
+                contract,
+            ),
+        metadata = merge(
+            unit.metadata,
+            (;
+                terminal_lowering_contract_key = contract.contract_key,
+                terminal_lowering_plan_contract = true,
+            ),
+        ),
+        provenance = (;
+            source = :terminal_lowering_plan_compatibility_adapter,
+            unit_inventory_source =
+                :_cartesian_terminal_shellification_region_unit_inventory,
+            unit_key = unit.unit_key,
+            terminal_region_key = contract.terminal_region_key,
+            terminal_region_role = unit.terminal_region_role,
+            terminal_region_kind = unit.terminal_region_kind,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan(
+    terminal_lowering_plan,
+    unit_inventory,
+)
+    terminal_lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ||
+        throw(
+            ArgumentError(
+                "terminal lowering compatibility inventory requires a TerminalLoweringPlan",
+            ),
+        )
+    unit_inventory.object_kind == :cartesian_terminal_region_unit_inventory ||
+        throw(
+            ArgumentError(
+                "terminal lowering compatibility inventory requires a terminal-region unit inventory",
+            ),
+        )
+
+    typed_contracts =
+        CartesianTerminalLowering.available_contracts(terminal_lowering_plan)
+    lowering_contracts = Tuple(
+        _pqs_source_box_route_driver_terminal_lowering_contract_record(
+            contract,
+            _pqs_source_box_route_driver_unit_for_terminal_lowering_contract(
+                unit_inventory,
+                contract,
+            ),
+            contract_index,
+        )
+        for (contract_index, contract) in enumerate(typed_contracts)
+    )
+    contract_counts_by_unit = Tuple(
+        (;
+            unit_key = unit.unit_key,
+            lowering_contract_count =
+                count(
+                    contract -> contract.unit_key == unit.unit_key,
+                    lowering_contracts,
+                ),
+        ) for unit in unit_inventory.terminal_region_units
+    )
+    complete_shell_contracts = Tuple(
+        contract for contract in lowering_contracts
+        if contract.terminal_region_kind == :complete_shell
+    )
+    lw_contracts = Tuple(
+        contract for contract in lowering_contracts
+        if contract.lowering_contract_kind == :white_lindsey_boundary_strata
+    )
+
+    return (;
+        object_kind = :cartesian_terminal_region_lowering_contract_inventory,
+        status = :available_terminal_region_lowering_contract_inventory,
+        inventory_source = :terminal_lowering_plan_compatibility_adapter,
+        source_object_kind = :cartesian_terminal_lowering_plan,
+        private_development_only = true,
+        terminal_region_unit_count = unit_inventory.unit_count,
+        lowering_contract_count = length(lowering_contracts),
+        lowering_contracts,
+        contract_records = lowering_contracts,
+        unit_keys = unit_inventory.unit_keys,
+        unit_roles = unit_inventory.unit_roles,
+        unit_kinds = unit_inventory.unit_kinds,
+        terminal_region_roles = unit_inventory.terminal_region_roles,
+        terminal_region_kinds = unit_inventory.terminal_region_kinds,
+        support_counts = unit_inventory.support_counts,
+        contract_counts_by_unit,
+        lowering_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in lowering_contracts),
+        lowering_contract_kind_counts =
+            _cartesian_terminal_region_lowering_contract_kind_counts(
+                lowering_contracts,
+            ),
+        complete_shell_unit_count = unit_inventory.complete_shell_unit_count,
+        complete_shell_lowering_contract_count = length(complete_shell_contracts),
+        lw_complete_shell_lowering_contract_count = length(lw_contracts),
+        lw_complete_shell_cpb_count =
+            sum(contract -> contract.source_cpb_count, lw_contracts; init = 0),
+        lw_complete_shell_cpb_family_counts =
+            (
+                facet_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.facet_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+                edge_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.edge_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+                corner_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.corner_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+            ),
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :not_available_lowering_contract_metadata_only,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        diagnostics = (;
+            source = :terminal_lowering_plan_compatibility_adapter,
+            private_development_only = true,
+            terminal_region_metadata_only = true,
+            lowering_contracts_metadata_only = true,
+            all_units_have_lowering_contracts =
+                all(entry -> entry.lowering_contract_count >= 1, contract_counts_by_unit),
+            final_retained_unit_inventory_available = false,
+            pair_inventory_available = false,
+            coefficient_maps_materialized = false,
+            transform_contracts_materialized = false,
+            retained_spaces_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+        ),
+    )
+end
+
+function _pqs_source_box_route_driver_compat_contract_for_terminal_contract(
+    lowering_contract_inventory,
+    terminal_contract,
+)
+    matches = Tuple(
+        contract for contract in lowering_contract_inventory.lowering_contracts
+        if contract.terminal_region_key == terminal_contract.terminal_region_key &&
+           contract.lowering_contract_kind ==
+           CartesianTerminalLowering.lowering_kind(terminal_contract)
+    )
+    length(matches) == 1 ||
+        throw(
+            ArgumentError(
+                "expected exactly one compatibility contract for $(terminal_contract.contract_key)",
+            ),
+        )
+    return only(matches)
+end
+
+function _pqs_source_box_route_driver_selected_terminal_lowering_contract_inventory_from_plan(
+    terminal_lowering_plan,
+    lowering_contract_inventory,
+    route_lowering_family::Symbol,
+)
+    terminal_lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ||
+        throw(
+            ArgumentError(
+                "selected terminal lowering compatibility inventory requires a TerminalLoweringPlan",
+            ),
+        )
+    selected_contracts = Tuple(
+        _pqs_source_box_route_driver_compat_contract_for_terminal_contract(
+            lowering_contract_inventory,
+            contract,
+        )
+        for contract in CartesianTerminalLowering.selected_contracts(
+            terminal_lowering_plan,
+        )
+    )
+    selected_contract_keys =
+        Tuple(contract.contract_key for contract in selected_contracts)
+    unselected_contracts = Tuple(
+        contract for contract in lowering_contract_inventory.lowering_contracts
+        if !(contract.contract_key in selected_contract_keys)
+    )
+    unit_keys = lowering_contract_inventory.unit_keys
+    selected_contract_counts_by_unit = Tuple(
+        (;
+            unit_key,
+            selected_contract_count =
+                count(
+                    contract -> contract.unit_key == unit_key,
+                    selected_contracts,
+                ),
+        ) for unit_key in unit_keys
+    )
+    all_units_have_exactly_one_selected_contract =
+        all(entry -> entry.selected_contract_count == 1, selected_contract_counts_by_unit)
+
+    return (;
+        object_kind = :cartesian_selected_terminal_lowering_contract_inventory,
+        status = :available_selected_terminal_lowering_contract_inventory,
+        inventory_source = :terminal_lowering_plan_compatibility_adapter,
+        source_object_kind = lowering_contract_inventory.object_kind,
+        private_development_only = true,
+        route_lowering_family,
+        terminal_region_unit_count = length(unit_keys),
+        selected_contract_count = length(selected_contracts),
+        selected_contracts,
+        selected_contract_records = selected_contracts,
+        selected_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in selected_contracts),
+        selected_contract_kind_counts =
+            _cartesian_terminal_region_lowering_contract_kind_counts(
+                selected_contracts,
+            ),
+        selected_contract_counts_by_unit,
+        all_units_have_exactly_one_selected_contract,
+        unselected_contract_count = length(unselected_contracts),
+        unselected_contracts,
+        unselected_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in unselected_contracts),
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :not_available_selected_lowering_metadata_only,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        diagnostics = (;
+            source = :terminal_lowering_plan_compatibility_adapter,
+            private_development_only = true,
+            selected_lowering_metadata_only = true,
+            all_units_have_exactly_one_selected_contract,
+            final_retained_unit_inventory_available = false,
+            pair_inventory_available = false,
+            coefficient_maps_materialized = false,
+            transform_contracts_materialized = false,
+            retained_spaces_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+        ),
+    )
+end
+
 function _pqs_source_box_route_driver_selected_terminal_lowering_fields(
     selected_terminal_lowering_contract_inventory,
     status::Symbol,
     route_lowering_family,
+    terminal_lowering_plan = nothing,
 )
     selected_inventory_available =
         !isnothing(selected_terminal_lowering_contract_inventory) &&
         selected_terminal_lowering_contract_inventory.status ==
         :available_selected_terminal_lowering_contract_inventory
+    terminal_lowering_plan_available =
+        terminal_lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan
+    terminal_lowering_summary =
+        terminal_lowering_plan_available ?
+        CartesianTerminalLowering.summary(terminal_lowering_plan) :
+        nothing
+    selected_contracts =
+        terminal_lowering_plan_available ?
+        CartesianTerminalLowering.selected_contracts(terminal_lowering_plan) :
+        ()
+    available_contracts =
+        terminal_lowering_plan_available ?
+        CartesianTerminalLowering.available_contracts(terminal_lowering_plan) :
+        ()
+    selected_contract_keys =
+        Tuple(contract.contract_key for contract in selected_contracts)
+    unselected_contracts =
+        terminal_lowering_plan_available ?
+        Tuple(
+            contract for contract in available_contracts
+            if !(contract.contract_key in selected_contract_keys)
+        ) :
+        ()
     return (;
         terminal_shellification_selected_lowering_contract_inventory_available =
             selected_inventory_available,
@@ -5539,14 +6154,22 @@ function _pqs_source_box_route_driver_selected_terminal_lowering_fields(
         terminal_shellification_selected_lowering_family =
             route_lowering_family,
         terminal_shellification_selected_contract_count =
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.selected_contract_count :
             selected_inventory_available ?
             selected_terminal_lowering_contract_inventory.selected_contract_count :
             0,
         terminal_shellification_selected_contract_kinds =
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.selected_contract_kinds :
             selected_inventory_available ?
             selected_terminal_lowering_contract_inventory.selected_contract_kinds :
             (),
         terminal_shellification_selected_contract_kind_counts =
+            terminal_lowering_plan_available ?
+            _pqs_source_box_route_driver_terminal_lowering_kind_counts(
+                selected_contracts,
+            ) :
             selected_inventory_available ?
             selected_terminal_lowering_contract_inventory.selected_contract_kind_counts :
             _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_counts(),
@@ -5555,13 +6178,19 @@ function _pqs_source_box_route_driver_selected_terminal_lowering_fields(
             selected_terminal_lowering_contract_inventory.selected_contract_counts_by_unit :
             (),
         terminal_shellification_all_units_have_exactly_one_selected_contract =
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.all_terminal_regions_have_selected_contract :
             selected_inventory_available &&
             selected_terminal_lowering_contract_inventory.all_units_have_exactly_one_selected_contract,
         terminal_shellification_unselected_contract_count =
+            terminal_lowering_plan_available ?
+            length(unselected_contracts) :
             selected_inventory_available ?
             selected_terminal_lowering_contract_inventory.unselected_contract_count :
             0,
         terminal_shellification_unselected_contract_kinds =
+            terminal_lowering_plan_available ?
+            Tuple(contract.lowering_kind for contract in unselected_contracts) :
             selected_inventory_available ?
             selected_terminal_lowering_contract_inventory.unselected_contract_kinds :
             (),
@@ -5636,15 +6265,212 @@ function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
     )
 end
 
+function _pqs_source_box_route_driver_terminal_route_state_summary(;
+    status,
+    selected::Bool,
+    route_lowering_family,
+    shellification_plan_available::Bool,
+    unit_inventory_available::Bool,
+    unit_inventory,
+    lowering_plan_available::Bool,
+    lowering_summary,
+    selected_contract_inventory_available::Bool,
+    selected_contract_inventory,
+    selected_crc_sidecar_summary,
+)
+    return (;
+        object_kind = :cartesian_driver_terminal_route_state_summary,
+        status,
+        selected,
+        route_lowering_family,
+        shellification_plan_available,
+        unit_inventory_available,
+        unit_count =
+            unit_inventory_available && !isnothing(unit_inventory) ?
+            unit_inventory.unit_count :
+            0,
+        unit_keys =
+            unit_inventory_available && !isnothing(unit_inventory) ?
+            unit_inventory.unit_keys :
+            (),
+        unit_kinds =
+            unit_inventory_available && !isnothing(unit_inventory) ?
+            unit_inventory.unit_kinds :
+            (),
+        lowering_plan_available,
+        lowering_plan_status =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.status :
+            :not_available,
+        available_contract_count =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.available_contract_count :
+            0,
+        available_contract_kinds =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.available_contract_kinds :
+            (),
+        selected_contract_inventory_available,
+        selected_contract_count =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.selected_contract_count :
+            selected_contract_inventory_available &&
+            !isnothing(selected_contract_inventory) ?
+            selected_contract_inventory.selected_contract_count :
+            0,
+        selected_contract_kinds =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.selected_contract_kinds :
+            selected_contract_inventory_available &&
+            !isnothing(selected_contract_inventory) ?
+            selected_contract_inventory.selected_contract_kinds :
+            (),
+        all_units_have_selected_contract =
+            lowering_plan_available && !isnothing(lowering_summary) ?
+            lowering_summary.all_terminal_regions_have_selected_contract :
+            selected_contract_inventory_available &&
+            !isnothing(selected_contract_inventory) &&
+            selected_contract_inventory.all_units_have_exactly_one_selected_contract,
+        selected_crc_sidecar_status =
+            !isnothing(selected_crc_sidecar_summary) ?
+            selected_crc_sidecar_summary.status :
+            :not_available,
+        selected_crc_sidecar_complete =
+            !isnothing(selected_crc_sidecar_summary) ?
+            selected_crc_sidecar_summary.sidecar_inventory_complete :
+            false,
+        selected_crc_sidecar_available_count =
+            !isnothing(selected_crc_sidecar_summary) ?
+            selected_crc_sidecar_summary.sidecar_available_count :
+            0,
+        selected_crc_sidecar_missing_count =
+            !isnothing(selected_crc_sidecar_summary) ?
+            selected_crc_sidecar_summary.sidecar_missing_count :
+            0,
+        final_retained_unit_inventory_available =
+            !isnothing(selected_crc_sidecar_summary) &&
+            selected_crc_sidecar_summary.final_retained_unit_inventory_available,
+        pair_inventory_available =
+            !isnothing(selected_crc_sidecar_summary) &&
+            selected_crc_sidecar_summary.pair_inventory_available,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized =
+            !isnothing(selected_crc_sidecar_summary) &&
+            selected_crc_sidecar_summary.pair_operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            !isnothing(selected_crc_sidecar_summary) &&
+            selected_crc_sidecar_summary.hamiltonian_data_materialized,
+        artifacts_materialized =
+            !isnothing(selected_crc_sidecar_summary) &&
+            selected_crc_sidecar_summary.artifacts_materialized,
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_route_state(;
+    status,
+    selected::Bool,
+    route_lowering_family = nothing,
+    shellification_plan = nothing,
+    unit_inventory = nothing,
+    lowering_plan = nothing,
+    lowering_summary = nothing,
+    lowering_contract_inventory = nothing,
+    selected_contract_inventory = nothing,
+    selected_crc_sidecar_summary = nothing,
+    blocker = nothing,
+)
+    shellification_plan_available =
+        shellification_plan isa CartesianShellification.ShellificationPlan
+    unit_inventory_available =
+        !isnothing(unit_inventory) &&
+        hasproperty(unit_inventory, :status) &&
+        unit_inventory.status == :available_terminal_region_unit_inventory
+    lowering_plan_available =
+        lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan
+    lowering_contract_inventory_available =
+        !isnothing(lowering_contract_inventory) &&
+        hasproperty(lowering_contract_inventory, :status) &&
+        lowering_contract_inventory.status ==
+        :available_terminal_region_lowering_contract_inventory
+    selected_contract_inventory_available =
+        !isnothing(selected_contract_inventory) &&
+        hasproperty(selected_contract_inventory, :status) &&
+        selected_contract_inventory.status ==
+        :available_selected_terminal_lowering_contract_inventory
+    selected_crc_sidecar_summary =
+        isnothing(selected_crc_sidecar_summary) ?
+        _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+            nothing,
+        ) :
+        selected_crc_sidecar_summary
+    summary =
+        _pqs_source_box_route_driver_terminal_route_state_summary(;
+            status,
+            selected,
+            route_lowering_family,
+            shellification_plan_available,
+            unit_inventory_available,
+            unit_inventory,
+            lowering_plan_available,
+            lowering_summary,
+            selected_contract_inventory_available,
+            selected_contract_inventory,
+            selected_crc_sidecar_summary,
+        )
+
+    return (;
+        object_kind = :cartesian_driver_terminal_route_state,
+        status,
+        selected,
+        available = summary.shellification_plan_available,
+        private_development_only = true,
+        route_lowering_family,
+        shellification_plan_available,
+        shellification_plan,
+        unit_inventory_available,
+        unit_inventory,
+        lowering_plan_available,
+        lowering_plan,
+        lowering_summary,
+        lowering_contract_inventory_available,
+        lowering_contract_inventory,
+        selected_contract_inventory_available,
+        selected_contract_inventory,
+        selected_crc_sidecar_summary,
+        summary,
+        blocker,
+        compatibility_alias_status =
+            :legacy_scalar_aliases_derived_from_terminal_route_state,
+    )
+end
+
+function _pqs_source_box_route_driver_terminal_route_state_unavailable(
+    status::Symbol,
+    blocker = nothing,
+)
+    return _pqs_source_box_route_driver_terminal_route_state(;
+        status,
+        selected = false,
+        blocker,
+    )
+end
+
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     low_order_shellization =
         hasproperty(shells, :low_order_shellization) ?
         shells.low_order_shellization :
         nothing
     if isnothing(low_order_shellization)
+        terminal_route_state =
+            _pqs_source_box_route_driver_terminal_route_state_unavailable(
+                :not_available_missing_shell_stage_summary,
+                :missing_shell_stage_low_order_summary,
+            )
         return (;
             object_kind = :cartesian_unit_stage_low_order_summary,
             status = :not_available_missing_shell_stage_summary,
+            terminal_route_state,
+            terminal_route_summary = terminal_route_state.summary,
             low_order_shellization_policy_requested = nothing,
             low_order_shellization_policy_resolved = :not_available,
             low_order_shellization_policy_source = :not_available,
@@ -5686,6 +6512,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                     pqs_filled_source_cpb_count = 0,
                     distorted_product_box_comx_count = 0,
                 ),
+            terminal_shellification_lowering_plan_available = false,
+            terminal_shellification_lowering_plan_status = :not_available,
+            terminal_shellification_lowering_plan = nothing,
+            terminal_shellification_lowering_summary = nothing,
             _pqs_source_box_route_driver_selected_terminal_lowering_fields(
                 nothing,
                 :not_available,
@@ -5777,9 +6607,37 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             :deferred_terminal_shellification_unit_inventory
         ) :
         :not_selected
+    route_lowering_family =
+        terminal_shellification_units_selected ?
+        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization) :
+        nothing
+    terminal_lowering_plan =
+        terminal_shellification_units_selected && !isnothing(route_lowering_family) ?
+        _pqs_source_box_route_driver_terminal_lowering_plan(
+            low_order_shellization,
+            route_lowering_family,
+        ) :
+        nothing
+    terminal_lowering_plan_available =
+        terminal_lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan
+    terminal_lowering_summary =
+        terminal_lowering_plan_available ?
+        CartesianTerminalLowering.summary(terminal_lowering_plan) :
+        nothing
+    terminal_lowering_plan_status =
+        terminal_shellification_units_selected ?
+        (
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.status :
+            isnothing(route_lowering_family) ?
+            :not_available_terminal_lowering_family :
+            :deferred_terminal_lowering_plan
+        ) :
+        :not_selected
     terminal_region_lowering_contract_inventory =
-        terminal_region_unit_inventory_available ?
-        _cartesian_terminal_region_lowering_contract_inventory(
+        terminal_region_unit_inventory_available && terminal_lowering_plan_available ?
+        _pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan(
+            terminal_lowering_plan,
             terminal_region_unit_inventory,
         ) :
         nothing
@@ -5792,17 +6650,17 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         (
             terminal_region_lowering_contract_inventory_available ?
             terminal_region_lowering_contract_inventory.status :
+            terminal_lowering_plan_available ?
+            :deferred_terminal_lowering_plan_compatibility_inventory :
             :deferred_terminal_shellification_lowering_contract_inventory
         ) :
         :not_selected
-    route_lowering_family =
-        terminal_shellification_units_selected ?
-        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization) :
-        nothing
     selected_terminal_lowering_contract_inventory =
         terminal_region_lowering_contract_inventory_available &&
+        terminal_lowering_plan_available &&
         !isnothing(route_lowering_family) ?
-        _cartesian_selected_terminal_lowering_contract_inventory(
+        _pqs_source_box_route_driver_selected_terminal_lowering_contract_inventory_from_plan(
+            terminal_lowering_plan,
             terminal_region_lowering_contract_inventory,
             route_lowering_family,
         ) :
@@ -5828,10 +6686,36 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             selected_terminal_lowering_contract_inventory,
             selected_terminal_lowering_contract_inventory_status,
             route_lowering_family,
+            terminal_lowering_plan,
         )
     selected_terminal_crc_sidecar_summary =
         _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
             selected_terminal_lowering_contract_inventory,
+        )
+    terminal_route_state =
+        _pqs_source_box_route_driver_terminal_route_state(;
+            status = terminal_shellification_units_selected ?
+                     terminal_lowering_plan_status :
+                     :not_selected,
+            selected = terminal_shellification_units_selected,
+            route_lowering_family,
+            shellification_plan =
+                terminal_shellification_units_selected ?
+                low_order_shellization.terminal_shellification_plan :
+                nothing,
+            unit_inventory = terminal_region_unit_inventory,
+            lowering_plan = terminal_lowering_plan,
+            lowering_summary = terminal_lowering_summary,
+            lowering_contract_inventory =
+                terminal_region_lowering_contract_inventory,
+            selected_contract_inventory =
+                selected_terminal_lowering_contract_inventory,
+            selected_crc_sidecar_summary = selected_terminal_crc_sidecar_summary,
+            blocker =
+                terminal_shellification_units_selected &&
+                !terminal_lowering_plan_available ?
+                terminal_lowering_plan_status :
+                nothing,
         )
     atom_growth_plan_unit_inventory =
         atom_growth_units_selected ?
@@ -5901,6 +6785,8 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     return (;
         object_kind = :cartesian_unit_stage_low_order_summary,
         status,
+        terminal_route_state,
+        terminal_route_summary = terminal_route_state.summary,
         low_order_shellization_policy_requested =
             low_order_shellization.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -5958,17 +6844,25 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             terminal_shellification_lowering_contract_inventory_status,
         terminal_shellification_lowering_contract_inventory =
             terminal_region_lowering_contract_inventory,
+        terminal_shellification_lowering_plan_available =
+            terminal_lowering_plan_available,
+        terminal_shellification_lowering_plan_status =
+            terminal_lowering_plan_status,
+        terminal_shellification_lowering_plan = terminal_lowering_plan,
+        terminal_shellification_lowering_summary = terminal_lowering_summary,
         terminal_shellification_lowering_contract_count =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.lowering_contract_count :
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.available_contract_count :
             0,
         terminal_shellification_lowering_contract_kinds =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.lowering_contract_kinds :
+            terminal_lowering_plan_available ?
+            terminal_lowering_summary.available_contract_kinds :
             (),
         terminal_shellification_lowering_contract_kind_counts =
-            terminal_region_lowering_contract_inventory_available ?
-            terminal_region_lowering_contract_inventory.lowering_contract_kind_counts :
+            terminal_lowering_plan_available ?
+            _pqs_source_box_route_driver_terminal_lowering_kind_counts(
+                CartesianTerminalLowering.available_contracts(terminal_lowering_plan),
+            ) :
             (
                 direct_core_identity_cpb_count = 0,
                 direct_slab_identity_cpb_count = 0,
@@ -6108,6 +7002,8 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         route_skeleton = shells.route_skeleton,
         raw_box,
         low_order_units,
+        terminal_route_state = low_order_units.terminal_route_state,
+        terminal_route_summary = low_order_units.terminal_route_summary,
         low_order_unit_route_kind = low_order_units.unit_route_kind,
         atom_growth_unit_summary_available =
             low_order_units.atom_growth_unit_summary_available,
@@ -6146,6 +7042,14 @@ function cartesian_units(parent, shells, route_inputs, recipe)
             low_order_units.terminal_shellification_lowering_contract_inventory_status,
         terminal_shellification_lowering_contract_inventory =
             low_order_units.terminal_shellification_lowering_contract_inventory,
+        terminal_shellification_lowering_plan_available =
+            low_order_units.terminal_shellification_lowering_plan_available,
+        terminal_shellification_lowering_plan_status =
+            low_order_units.terminal_shellification_lowering_plan_status,
+        terminal_shellification_lowering_plan =
+            low_order_units.terminal_shellification_lowering_plan,
+        terminal_shellification_lowering_summary =
+            low_order_units.terminal_shellification_lowering_summary,
         terminal_shellification_lowering_contract_count =
             low_order_units.terminal_shellification_lowering_contract_count,
         terminal_shellification_lowering_contract_kinds =
@@ -6235,9 +7139,16 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         units.low_order_units :
         nothing
     if isnothing(low_order_units)
+        terminal_route_state =
+            _pqs_source_box_route_driver_terminal_route_state_unavailable(
+                :not_available_missing_unit_stage_summary,
+                :missing_unit_stage_low_order_summary,
+            )
         return (;
             object_kind = :cartesian_transform_stage_low_order_summary,
             status = :not_available_missing_unit_stage_summary,
+            terminal_route_state,
+            terminal_route_summary = terminal_route_state.summary,
             low_order_shellization_policy_requested = nothing,
             low_order_shellization_policy_resolved = :not_available,
             low_order_shellization_policy_source = :not_available,
@@ -6420,6 +7331,8 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     return (;
         object_kind = :cartesian_transform_stage_low_order_summary,
         status,
+        terminal_route_state = low_order_units.terminal_route_state,
+        terminal_route_summary = low_order_units.terminal_route_summary,
         low_order_shellization_policy_requested =
             low_order_units.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -6668,6 +7581,8 @@ function cartesian_transforms(units, recipe)
         route_family = recipe.route_family,
         retained_units,
         low_order_transforms,
+        terminal_route_state = low_order_transforms.terminal_route_state,
+        terminal_route_summary = low_order_transforms.terminal_route_summary,
         low_order_transform_route_kind =
             low_order_transforms.transform_route_kind,
         atom_growth_transforms_selected =
@@ -7333,9 +8248,16 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         transforms.low_order_transforms :
         nothing
     if isnothing(low_order_transforms)
+        terminal_route_state =
+            _pqs_source_box_route_driver_terminal_route_state_unavailable(
+                :not_available_missing_transform_stage_summary,
+                :missing_transform_stage_low_order_summary,
+            )
         return (;
             object_kind = :cartesian_pair_stage_low_order_summary,
             status = :not_available_missing_transform_stage_summary,
+            terminal_route_state,
+            terminal_route_summary = terminal_route_state.summary,
             low_order_shellization_policy_requested = nothing,
             low_order_shellization_policy_resolved = :not_available,
             low_order_shellization_policy_source = :not_available,
@@ -7569,6 +8491,8 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         independent_atom_growth_pair_inventory_available ?
         atom_growth_pair_inventory.operator_pairs_materialized :
         false
+    terminal_route_state = low_order_transforms.terminal_route_state
+    terminal_route_summary = low_order_transforms.terminal_route_summary
 
     return (;
         object_kind = :cartesian_pair_stage_low_order_summary,
@@ -7580,6 +8504,8 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             :available_transform_stage_low_order_summary ?
             :available_pair_stage_low_order_summary :
             low_order_transforms.status,
+        terminal_route_state,
+        terminal_route_summary,
         low_order_shellization_policy_requested =
             low_order_transforms.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -7769,6 +8695,8 @@ function cartesian_pair_terms(units, transforms, recipe)
         route_family = recipe.route_family,
         retained_dimension = transforms.retained_dimension,
         low_order_pairs,
+        terminal_route_state = low_order_pairs.terminal_route_state,
+        terminal_route_summary = low_order_pairs.terminal_route_summary,
         low_order_pair_route_kind = low_order_pairs.pair_route_kind,
         atom_growth_pairs_selected = low_order_pairs.atom_growth_pairs_selected,
         terminal_shellification_pairs_selected =
@@ -7959,9 +8887,16 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
     low_order_pairs =
         hasproperty(pairs, :low_order_pairs) ? pairs.low_order_pairs : nothing
     if isnothing(low_order_pairs)
+        terminal_route_state =
+            _pqs_source_box_route_driver_terminal_route_state_unavailable(
+                :not_available_missing_pair_stage_summary,
+                :missing_pair_stage_low_order_summary,
+            )
         return (;
             object_kind = :cartesian_assembly_stage_low_order_summary,
             status = :not_available_missing_pair_stage_summary,
+            terminal_route_state,
+            terminal_route_summary = terminal_route_state.summary,
             low_order_shellization_policy_requested = nothing,
             low_order_shellization_policy_resolved = :not_available,
             low_order_shellization_policy_source = :not_available,
@@ -8139,6 +9074,8 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             :pair_operator_blocks_deferred
         ) :
         nothing
+    terminal_route_state = low_order_pairs.terminal_route_state
+    terminal_route_summary = low_order_pairs.terminal_route_summary
 
     return (;
         object_kind = :cartesian_assembly_stage_low_order_summary,
@@ -8149,6 +9086,8 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             low_order_pairs.status == :available_pair_stage_low_order_summary ?
             :available_assembly_stage_low_order_summary :
             low_order_pairs.status,
+        terminal_route_state,
+        terminal_route_summary,
         low_order_shellization_policy_requested =
             low_order_pairs.low_order_shellization_policy_requested,
         low_order_shellization_policy_resolved =
@@ -8415,6 +9354,8 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
         transforms,
         pairs,
         low_order_assembly,
+        terminal_route_state = low_order_assembly.terminal_route_state,
+        terminal_route_summary = low_order_assembly.terminal_route_summary,
         low_order_assembly_source = low_order_assembly.assembly_source,
         low_order_assembly_route_kind =
             low_order_assembly.assembly_route_kind,

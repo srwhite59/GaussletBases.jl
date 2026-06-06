@@ -1,0 +1,149 @@
+using Test
+using GaussletBases
+
+function _terminal_shellification_plan_for_boundary_test()
+    policy = GaussletBases.CartesianShellification.AtomOutwardShellification(;
+        core_side = 5,
+        q = 5,
+        bond_axis = :auto,
+    )
+    return GaussletBases.CartesianShellification.shellify(
+        (collect(1:9), collect(1:9), collect(1:9)),
+        (5, 5, 5),
+        policy,
+    )
+end
+
+function _terminal_unit_inventory_for_boundary_test(shellification_plan)
+    raw_plan = GaussletBases.CartesianShellification.raw_plan(shellification_plan)
+    records = Tuple(
+        GaussletBases._cartesian_terminal_region_unit_record(region)
+        for region in raw_plan.regions
+    )
+    return (;
+        object_kind = :cartesian_terminal_region_unit_inventory,
+        status = :available_terminal_region_unit_inventory,
+        unit_count = length(records),
+        terminal_region_units = records,
+        unit_keys = Tuple(record.unit_key for record in records),
+        unit_roles = Tuple(record.unit_role for record in records),
+        unit_kinds = Tuple(record.unit_kind for record in records),
+        terminal_region_roles =
+            Tuple(record.terminal_region_role for record in records),
+        terminal_region_kinds =
+            Tuple(record.terminal_region_kind for record in records),
+        support_counts = Tuple(record.support_count for record in records),
+        complete_shell_unit_count =
+            count(record -> record.terminal_region_kind == :complete_shell, records),
+    )
+end
+
+@testset "driver helper boundary uses terminal lowering module summary" begin
+    shellification_plan = _terminal_shellification_plan_for_boundary_test()
+    low_order_shellization = (;
+        route_family = :white_lindsey_low_order,
+        terminal_shellification_plan = shellification_plan,
+    )
+    lowering_plan =
+        GaussletBases._pqs_source_box_route_driver_terminal_lowering_plan(
+            low_order_shellization,
+            :white_lindsey_low_order,
+        )
+    unit_inventory = _terminal_unit_inventory_for_boundary_test(shellification_plan)
+    lowering_inventory =
+        GaussletBases._pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan(
+            lowering_plan,
+            unit_inventory,
+        )
+    selected_inventory =
+        GaussletBases._pqs_source_box_route_driver_selected_terminal_lowering_contract_inventory_from_plan(
+            lowering_plan,
+            lowering_inventory,
+            :white_lindsey_low_order,
+        )
+
+    @test shellification_plan isa
+          GaussletBases.CartesianShellification.ShellificationPlan
+    @test lowering_plan isa
+          GaussletBases.CartesianTerminalLowering.TerminalLoweringPlan
+    @test lowering_inventory.inventory_source ==
+          :terminal_lowering_plan_compatibility_adapter
+    @test selected_inventory.inventory_source ==
+          :terminal_lowering_plan_compatibility_adapter
+
+    module_summary = GaussletBases.CartesianTerminalLowering.summary(
+        lowering_plan,
+    )
+    selected_fields =
+        GaussletBases._pqs_source_box_route_driver_selected_terminal_lowering_fields(
+            nothing,
+            :available_terminal_lowering_plan,
+            :white_lindsey_low_order,
+            lowering_plan,
+        )
+    @test module_summary.status == :available_terminal_lowering_plan
+    @test module_summary.policy_kind == :white_lindsey_terminal_lowering
+    @test module_summary.terminal_region_count ==
+          length(GaussletBases.CartesianShellification.terminal_regions(shellification_plan))
+    @test module_summary.available_contract_count >
+          module_summary.selected_contract_count
+    @test module_summary.selected_contract_count ==
+          module_summary.terminal_region_count
+    @test :white_lindsey_boundary_strata in
+          module_summary.selected_contract_kinds
+    @test :pqs_filled_source_cpb in module_summary.available_contract_kinds
+    @test selected_fields.terminal_shellification_selected_contract_count ==
+          module_summary.selected_contract_count
+    @test selected_fields.terminal_shellification_selected_contract_kinds ==
+          module_summary.selected_contract_kinds
+    @test selected_fields.terminal_shellification_unselected_contract_count ==
+          module_summary.available_contract_count -
+          module_summary.selected_contract_count
+    @test lowering_inventory.lowering_contract_count ==
+          module_summary.available_contract_count
+    @test selected_inventory.selected_contract_count ==
+          module_summary.selected_contract_count
+
+    crc_sidecar_summary =
+        GaussletBases._pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+            selected_inventory,
+        )
+    terminal_route_state =
+        GaussletBases._pqs_source_box_route_driver_terminal_route_state(;
+            status = module_summary.status,
+            selected = true,
+            route_lowering_family = :white_lindsey_low_order,
+            shellification_plan,
+            unit_inventory,
+            lowering_plan,
+            lowering_summary = module_summary,
+            lowering_contract_inventory = lowering_inventory,
+            selected_contract_inventory = selected_inventory,
+            selected_crc_sidecar_summary = crc_sidecar_summary,
+        )
+    terminal_route_summary = terminal_route_state.summary
+
+    @test terminal_route_state.object_kind ==
+          :cartesian_driver_terminal_route_state
+    @test terminal_route_summary.object_kind ==
+          :cartesian_driver_terminal_route_state_summary
+    @test terminal_route_summary.status == module_summary.status
+    @test terminal_route_summary.unit_count == unit_inventory.unit_count
+    @test terminal_route_summary.available_contract_count ==
+          module_summary.available_contract_count
+    @test terminal_route_summary.selected_contract_count ==
+          module_summary.selected_contract_count
+    @test terminal_route_summary.selected_contract_kinds ==
+          module_summary.selected_contract_kinds
+    @test terminal_route_summary.selected_crc_sidecar_status ==
+          crc_sidecar_summary.status
+    @test terminal_route_summary.selected_crc_sidecar_available_count ==
+          crc_sidecar_summary.sidecar_available_count
+    @test terminal_route_summary.selected_crc_sidecar_missing_count ==
+          crc_sidecar_summary.sidecar_missing_count
+    @test !terminal_route_summary.operator_blocks_materialized
+
+    @test !module_summary.materialized
+    @test !module_summary.operator_blocks_materialized
+    @test !module_summary.hamiltonian_data_materialized
+end

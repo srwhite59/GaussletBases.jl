@@ -105,6 +105,54 @@ This should be treated as ownership cleanup, not as a test-framework rewrite.
   active public-contract coverage
 - do not combine unrelated domains just to reduce file count
 
+## Structured-state rule
+
+Do not propagate a new route concept through the driver by adding many scalar
+fields to every staged `NamedTuple`.
+
+If a concept has internal structure, make it a compact object owned by the
+appropriate module, carry that object through the stages, and expose only a
+small summary or fingerprint. Final human-facing reports may expose a few
+scalar aliases derived from the object, but compatibility aliases should be
+temporary and minimal.
+
+Bad pattern:
+
+```julia
+foo_available
+foo_status
+foo_count
+foo_keys
+foo_kinds
+foo_kind_counts
+foo_inventory
+foo_summary
+foo_materialized
+```
+
+especially when the same field cloud is repeated through units, transforms,
+pairs, assembly, and reports.
+
+Good pattern:
+
+```julia
+foo = FooModule.plan_or_summary(...)
+foo_summary = FooModule.summary(foo)
+```
+
+Implementation rules:
+
+- before adding more than three related fields to a staged object, stop and
+  define a module-owned object or compact summary
+- before copying the same field group across two stages, stop and carry the
+  object instead
+- repeated scalar pass-through fields are a code smell and should trigger
+  refactoring
+
+This applies broadly to shellification, lowering, selected lowering, CRC
+sidecars, final retained units, pair inventories, operator plans, reports, and
+future route concepts.
+
 ## Staged metadata assertion rule
 
 Do not compare large staged metadata objects with `==` or `===`.
@@ -127,6 +175,10 @@ If a stage carries a sidecar forward, tests should prove the contract through
 these small fields. Whole-object equality on staged metadata is brittle,
 expensive, and can dominate runtime through specialization, deep traversal, or
 failure rendering.
+
+Tests for structured staged state should compare compact summaries or
+fingerprints, not whole nested objects and not long rows of copied scalar
+fields.
 
 ## Test runtime policy
 

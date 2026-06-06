@@ -86,10 +86,17 @@ Use `JuliaStyle.md` as the local guide for small Julia cleanup passes and new
 code edits. These preferences are low priority relative to correctness and
 contract clarity; do not churn numerical kernels solely for style.
 
-## Staged metadata and test runtime rules
+## Structured state, staged metadata, and test runtime rules
 
 Short commandment:
 
+- do not create flat field clouds for new route concepts
+- if a concept has internal structure, carry a compact module-owned object and
+  expose only a small summary or fingerprint
+- before adding more than three related fields to a staged object, stop and
+  define a compact object or summary
+- before copying the same field group across two stages, stop and carry the
+  object instead
 - do not compare large staged metadata objects with `==` or `===`
 - compare compact fingerprints or summaries: statuses, counts, keys, kinds,
   booleans, materialization flags, and short missing-reason tuples
