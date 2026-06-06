@@ -1326,3 +1326,400 @@ function _cartesian_terminal_shellification_region_unit_inventory(scaffold)
         ),
     )
 end
+
+function _cartesian_terminal_region_lowering_contract_base(
+    unit,
+    contract_index::Int,
+    lowering_contract_kind::Symbol,
+)
+    return (;
+        object_kind = :cartesian_terminal_region_lowering_contract,
+        status = :planned_not_materialized,
+        contract_index,
+        contract_key =
+            Symbol(String(unit.unit_key), "_", String(lowering_contract_kind)),
+        unit_index = unit.unit_index,
+        unit_key = unit.unit_key,
+        unit_role = unit.unit_role,
+        unit_kind = unit.unit_kind,
+        terminal_region_order_index = unit.terminal_region_order_index,
+        terminal_region_role = unit.terminal_region_role,
+        terminal_region_kind = unit.terminal_region_kind,
+        lowering_contract_kind,
+        outer_box = unit.outer_box,
+        box = unit.outer_box,
+        inner_exclusion_box = unit.inner_exclusion_box,
+        support_count = unit.support_count,
+        owned_support_status = unit.owned_support_status,
+        owned_support_is_cpb = unit.owned_support_is_cpb,
+        shellification_region_is_cpb = unit.shellification_region_is_cpb,
+        shellification_region_is_lowering_source =
+            unit.shellification_region_is_lowering_source,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        final_retained_unit_status = :not_materialized,
+        final_retained_unit_records_materialized = false,
+        metadata = unit.metadata,
+        provenance = (;
+            source = :_cartesian_terminal_region_lowering_contract_inventory,
+            unit_inventory_source =
+                :_cartesian_terminal_shellification_region_unit_inventory,
+            unit_key = unit.unit_key,
+            terminal_region_role = unit.terminal_region_role,
+            terminal_region_kind = unit.terminal_region_kind,
+        ),
+    )
+end
+
+function _cartesian_terminal_region_direct_lowering_contract(
+    unit,
+    contract_index::Int,
+)
+    plan = unit.source_cpb_plan
+    return merge(
+        _cartesian_terminal_region_lowering_contract_base(
+            unit,
+            contract_index,
+            unit.lowering_family_planned,
+        ),
+        (;
+            source_cpb_plan_status = plan.source_cpb_plan_status,
+            source_cpb_plan_box = plan.source_cpb_plan_box,
+            source_cpb_plan_kind = plan.source_cpb_plan_kind,
+            source_cpb_plan_equals_owned_support =
+                plan.source_cpb_plan_equals_owned_support,
+            source_cpb_count = plan.source_cpb_count,
+            source_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            identity_like_source_contract = true,
+            retained_rule = plan.retained_rule,
+            intermediate_retained_space_status = :not_materialized,
+            shell_realization_status = :not_materialized,
+            face_edge_corner_decomposition_required = false,
+            final_unit_count_planned = 1,
+            final_unit_granularity = :single_direct_source_cpb,
+        ),
+    )
+end
+
+function _cartesian_terminal_region_lw_complete_shell_lowering_contract(
+    unit,
+    contract_index::Int,
+)
+    lowering = unit.lw_complete_shell_lowering
+    return merge(
+        _cartesian_terminal_region_lowering_contract_base(
+            unit,
+            contract_index,
+            :white_lindsey_boundary_strata,
+        ),
+        (;
+            source_cpb_plan_status = :planned_not_materialized,
+            source_cpb_plan_box = nothing,
+            source_cpb_plan_kind = :complete_shell_boundary_strata,
+            source_cpb_plan_equals_owned_support = false,
+            source_cpb_count = lowering.total_source_cpb_count,
+            source_cpb_family_counts =
+                (
+                    facet_cpb = lowering.facet_count,
+                    edge_cpb = lowering.edge_count,
+                    corner_cpb = lowering.corner_count,
+                ),
+            source_cpbs_materialized = false,
+            identity_like_source_contract = false,
+            retained_rule = :white_lindsey_boundary_strata_children,
+            intermediate_retained_space_status = :not_materialized,
+            shell_realization_status = :not_materialized,
+            face_edge_corner_decomposition_required = true,
+            final_unit_count_planned = lowering.total_source_cpb_count,
+            final_unit_granularity =
+                :white_lindsey_boundary_strata_children_planned,
+        ),
+    )
+end
+
+function _cartesian_terminal_region_pqs_complete_shell_lowering_contract(
+    unit,
+    contract_index::Int,
+)
+    lowering = unit.pqs_complete_shell_lowering
+    return merge(
+        _cartesian_terminal_region_lowering_contract_base(
+            unit,
+            contract_index,
+            :pqs_filled_source_cpb,
+        ),
+        (;
+            source_cpb_plan_status = lowering.source_cpb_plan_status,
+            source_cpb_plan_box = lowering.source_cpb_plan_box,
+            source_cpb_plan_kind = lowering.source_cpb_plan_kind,
+            source_cpb_plan_equals_owned_support = false,
+            source_cpb_count = lowering.source_cpb_count,
+            source_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            identity_like_source_contract = false,
+            retained_rule = lowering.retained_rule,
+            intermediate_retained_space_status = :planned_not_materialized,
+            shell_realization_status = lowering.shell_realization_status,
+            face_edge_corner_decomposition_required =
+                lowering.face_edge_corner_decomposition_required,
+            final_unit_count_planned = 1,
+            final_unit_granularity = :single_pqs_shell_realized_unit_planned,
+        ),
+    )
+end
+
+function _cartesian_terminal_region_distorted_product_box_lowering_contract(
+    unit,
+    contract_index::Int,
+)
+    plan = unit.source_cpb_plan
+    return merge(
+        _cartesian_terminal_region_lowering_contract_base(
+            unit,
+            contract_index,
+            :distorted_product_box_comx,
+        ),
+        (;
+            source_cpb_plan_status = plan.source_cpb_plan_status,
+            source_cpb_plan_box = plan.source_cpb_plan_box,
+            source_cpb_plan_kind = plan.source_cpb_plan_kind,
+            source_cpb_plan_equals_owned_support =
+                plan.source_cpb_plan_equals_owned_support,
+            source_cpb_count = plan.source_cpb_count,
+            source_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
+            identity_like_source_contract = false,
+            retained_rule = plan.retained_rule,
+            source_mode_shape = plan.source_mode_shape,
+            q = plan.q,
+            L = plan.L,
+            aspect_ratio = plan.aspect_ratio,
+            intermediate_retained_space_status = :planned_not_materialized,
+            shell_realization_status = :not_materialized,
+            face_edge_corner_decomposition_required = false,
+            final_unit_count_planned = 1,
+            final_unit_granularity =
+                :single_distorted_product_box_unit_planned,
+        ),
+    )
+end
+
+function _cartesian_terminal_region_lowering_contracts_for_unit(
+    unit,
+    first_contract_index::Int,
+)
+    records = NamedTuple[]
+
+    if unit.terminal_region_kind in (
+        :direct_core,
+        :direct_midpoint_slab,
+        :outer_mismatch_slab,
+    )
+        push!(
+            records,
+            _cartesian_terminal_region_direct_lowering_contract(
+                unit,
+                first_contract_index,
+            ),
+        )
+    elseif unit.terminal_region_kind == :complete_shell
+        push!(
+            records,
+            _cartesian_terminal_region_lw_complete_shell_lowering_contract(
+                unit,
+                first_contract_index,
+            ),
+        )
+        push!(
+            records,
+            _cartesian_terminal_region_pqs_complete_shell_lowering_contract(
+                unit,
+                first_contract_index + 1,
+            ),
+        )
+    elseif unit.terminal_region_kind == :central_distorted_product_box
+        push!(
+            records,
+            _cartesian_terminal_region_distorted_product_box_lowering_contract(
+                unit,
+                first_contract_index,
+            ),
+        )
+    else
+        throw(
+            ArgumentError(
+                "unsupported terminal-region unit kind $(unit.terminal_region_kind)",
+            ),
+        )
+    end
+
+    return Tuple(records)
+end
+
+function _cartesian_terminal_region_lowering_contract_kind_counts(contracts)
+    return (;
+        direct_core_identity_cpb_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind == :direct_core_identity_cpb,
+                contracts,
+            ),
+        direct_slab_identity_cpb_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind == :direct_slab_identity_cpb,
+                contracts,
+            ),
+        direct_boundary_slab_identity_cpb_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind ==
+                    :direct_boundary_slab_identity_cpb,
+                contracts,
+            ),
+        white_lindsey_boundary_strata_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind ==
+                    :white_lindsey_boundary_strata,
+                contracts,
+            ),
+        pqs_filled_source_cpb_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind == :pqs_filled_source_cpb,
+                contracts,
+            ),
+        distorted_product_box_comx_count =
+            count(
+                contract ->
+                    contract.lowering_contract_kind == :distorted_product_box_comx,
+                contracts,
+            ),
+    )
+end
+
+function _cartesian_terminal_region_lowering_contract_inventory(unit_inventory)
+    unit_inventory.object_kind == :cartesian_terminal_region_unit_inventory ||
+        throw(
+            ArgumentError(
+                "terminal-region lowering contracts require a cartesian_terminal_region_unit_inventory",
+            ),
+        )
+
+    units = unit_inventory.terminal_region_units
+    contracts = NamedTuple[]
+    for unit in units
+        append!(
+            contracts,
+            _cartesian_terminal_region_lowering_contracts_for_unit(
+                unit,
+                length(contracts) + 1,
+            ),
+        )
+    end
+    lowering_contracts = Tuple(contracts)
+    contract_counts_by_unit = Tuple(
+        (
+            unit_key = unit.unit_key,
+            lowering_contract_count =
+                count(contract -> contract.unit_key == unit.unit_key, lowering_contracts),
+        ) for unit in units
+    )
+    all(entry -> entry.lowering_contract_count >= 1, contract_counts_by_unit) ||
+        throw(ArgumentError("every terminal-region unit must have a lowering contract"))
+
+    complete_shell_contracts = Tuple(
+        contract for contract in lowering_contracts
+        if contract.terminal_region_kind == :complete_shell
+    )
+    lw_contracts = Tuple(
+        contract for contract in lowering_contracts
+        if contract.lowering_contract_kind == :white_lindsey_boundary_strata
+    )
+
+    return (;
+        object_kind = :cartesian_terminal_region_lowering_contract_inventory,
+        status = :available_terminal_region_lowering_contract_inventory,
+        inventory_source = :terminal_region_unit_inventory,
+        source_object_kind = unit_inventory.object_kind,
+        private_development_only = true,
+        terminal_region_unit_count = unit_inventory.unit_count,
+        lowering_contract_count = length(lowering_contracts),
+        lowering_contracts,
+        contract_records = lowering_contracts,
+        unit_keys = unit_inventory.unit_keys,
+        unit_roles = unit_inventory.unit_roles,
+        unit_kinds = unit_inventory.unit_kinds,
+        terminal_region_roles = unit_inventory.terminal_region_roles,
+        terminal_region_kinds = unit_inventory.terminal_region_kinds,
+        support_counts = unit_inventory.support_counts,
+        contract_counts_by_unit,
+        lowering_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in lowering_contracts),
+        lowering_contract_kind_counts =
+            _cartesian_terminal_region_lowering_contract_kind_counts(
+                lowering_contracts,
+            ),
+        complete_shell_unit_count = unit_inventory.complete_shell_unit_count,
+        complete_shell_lowering_contract_count = length(complete_shell_contracts),
+        lw_complete_shell_lowering_contract_count = length(lw_contracts),
+        lw_complete_shell_cpb_count =
+            sum(contract -> contract.source_cpb_count, lw_contracts; init = 0),
+        lw_complete_shell_cpb_family_counts =
+            (
+                facet_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.facet_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+                edge_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.edge_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+                corner_cpb =
+                    sum(
+                        contract -> contract.source_cpb_family_counts.corner_cpb,
+                        lw_contracts;
+                        init = 0,
+                    ),
+            ),
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :not_available_lowering_contract_metadata_only,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        diagnostics = (;
+            source = :_cartesian_terminal_region_lowering_contract_inventory,
+            private_development_only = true,
+            terminal_region_metadata_only = true,
+            lowering_contracts_metadata_only = true,
+            all_units_have_lowering_contracts = true,
+            final_retained_unit_inventory_available = false,
+            pair_inventory_available = false,
+            coefficient_maps_materialized = false,
+            transform_contracts_materialized = false,
+            retained_spaces_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+        ),
+    )
+end

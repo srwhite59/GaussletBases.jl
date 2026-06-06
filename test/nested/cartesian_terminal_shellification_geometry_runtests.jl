@@ -355,6 +355,177 @@ function _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
     return inventory
 end
 
+function _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
+    lowering_inventory =
+        GaussletBases._cartesian_terminal_region_lowering_contract_inventory(
+            inventory,
+        )
+    @test lowering_inventory.object_kind ==
+          :cartesian_terminal_region_lowering_contract_inventory
+    @test lowering_inventory.status ==
+          :available_terminal_region_lowering_contract_inventory
+    @test lowering_inventory.inventory_source == :terminal_region_unit_inventory
+    @test lowering_inventory.source_object_kind == inventory.object_kind
+    @test lowering_inventory.private_development_only
+    @test lowering_inventory.terminal_region_unit_count == inventory.unit_count
+    @test lowering_inventory.lowering_contract_count ==
+          length(lowering_inventory.lowering_contracts)
+    @test lowering_inventory.contract_records ==
+          lowering_inventory.lowering_contracts
+    @test lowering_inventory.unit_keys == inventory.unit_keys
+    @test lowering_inventory.unit_roles == inventory.unit_roles
+    @test lowering_inventory.unit_kinds == inventory.unit_kinds
+    @test lowering_inventory.terminal_region_roles ==
+          inventory.terminal_region_roles
+    @test lowering_inventory.terminal_region_kinds ==
+          inventory.terminal_region_kinds
+    @test lowering_inventory.support_counts == inventory.support_counts
+    @test all(
+        entry.lowering_contract_count >= 1
+        for entry in lowering_inventory.contract_counts_by_unit
+    )
+    @test !lowering_inventory.final_retained_unit_inventory_available
+    @test !lowering_inventory.pair_inventory_available
+    @test lowering_inventory.pair_inventory_status ==
+          :not_available_lowering_contract_metadata_only
+    @test !lowering_inventory.coefficient_maps_materialized
+    @test !lowering_inventory.transform_contracts_materialized
+    @test !lowering_inventory.retained_spaces_materialized
+    @test !lowering_inventory.operator_blocks_materialized
+    @test !lowering_inventory.pair_operator_blocks_materialized
+    @test !lowering_inventory.hamiltonian_data_materialized
+    @test !lowering_inventory.artifacts_materialized
+    @test lowering_inventory.diagnostics.lowering_contracts_metadata_only
+    @test lowering_inventory.diagnostics.all_units_have_lowering_contracts
+    @test !lowering_inventory.diagnostics.final_retained_unit_inventory_available
+    @test !lowering_inventory.diagnostics.pair_inventory_available
+    @test !lowering_inventory.diagnostics.coefficient_maps_materialized
+    @test !lowering_inventory.diagnostics.transform_contracts_materialized
+    @test !lowering_inventory.diagnostics.retained_spaces_materialized
+    @test !lowering_inventory.diagnostics.operator_blocks_materialized
+    @test !lowering_inventory.diagnostics.pair_operator_blocks_materialized
+    @test !lowering_inventory.diagnostics.hamiltonian_data_materialized
+    @test !lowering_inventory.diagnostics.artifacts_materialized
+    @test !lowering_inventory.diagnostics.materialization_behavior_changed
+    @test !lowering_inventory.diagnostics.public_default_behavior_changed
+
+    for contract in lowering_inventory.lowering_contracts
+        @test contract.object_kind == :cartesian_terminal_region_lowering_contract
+        @test contract.status == :planned_not_materialized
+        @test contract.unit_key in inventory.unit_keys
+        @test contract.outer_box == contract.box
+        @test !contract.owned_support_is_cpb
+        @test !contract.shellification_region_is_cpb
+        @test !contract.shellification_region_is_lowering_source
+        @test !contract.coefficient_maps_materialized
+        @test !contract.transform_contracts_materialized
+        @test !contract.retained_spaces_materialized
+        @test !contract.operator_blocks_materialized
+        @test !contract.pair_operator_blocks_materialized
+        @test !contract.hamiltonian_data_materialized
+        @test !contract.artifacts_materialized
+        @test contract.final_retained_unit_status == :not_materialized
+        @test !contract.final_retained_unit_records_materialized
+    end
+
+    direct_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind in (
+                    :direct_core_identity_cpb,
+                    :direct_slab_identity_cpb,
+                    :direct_boundary_slab_identity_cpb,
+                ),
+            lowering_inventory.lowering_contracts,
+        )
+    for contract in direct_contracts
+        @test contract.identity_like_source_contract
+        @test contract.source_cpb_plan_box == contract.outer_box
+        @test contract.source_cpb_plan_equals_owned_support
+        @test contract.source_cpb_count == 1
+        @test contract.source_cpb_plan_kind == :direct_coordinate_product_source
+        @test contract.retained_rule == :direct_source_modes
+        @test !contract.face_edge_corner_decomposition_required
+        @test contract.final_unit_count_planned == 1
+    end
+
+    complete_shell_units =
+        filter(
+            record -> record.terminal_region_kind == :complete_shell,
+            inventory.terminal_region_units,
+        )
+    lw_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind == :white_lindsey_boundary_strata,
+            lowering_inventory.lowering_contracts,
+        )
+    @test length(lw_contracts) == length(complete_shell_units)
+    for contract in lw_contracts
+        @test contract.owned_support_status ==
+              :owned_shell_support_outer_minus_inner_exclusion
+        @test !contract.owned_support_is_cpb
+        @test contract.source_cpb_plan_kind == :complete_shell_boundary_strata
+        @test contract.source_cpb_family_counts ==
+              (facet_cpb = 6, edge_cpb = 12, corner_cpb = 8)
+        @test contract.source_cpb_count == 26
+        @test !contract.coefficient_maps_materialized
+        @test contract.final_unit_granularity ==
+              :white_lindsey_boundary_strata_children_planned
+        @test contract.final_unit_count_planned == 26
+    end
+
+    pqs_contracts =
+        filter(
+            contract -> contract.lowering_contract_kind == :pqs_filled_source_cpb,
+            lowering_inventory.lowering_contracts,
+        )
+    @test length(pqs_contracts) == length(complete_shell_units)
+    for contract in pqs_contracts
+        @test contract.source_cpb_count == 1
+        @test contract.source_cpb_plan_box == contract.outer_box
+        @test contract.source_cpb_plan_kind == :filled_source_cpb
+        @test contract.retained_rule == :boundary_comx_product_mode_selection
+        @test contract.intermediate_retained_space_status ==
+              :planned_not_materialized
+        @test contract.shell_realization_status ==
+              :projection_lowdin_planned_not_materialized
+        @test !contract.face_edge_corner_decomposition_required
+        @test !contract.identity_like_source_contract
+        @test contract.final_unit_count_planned == 1
+    end
+
+    central_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind == :distorted_product_box_comx,
+            lowering_inventory.lowering_contracts,
+        )
+    central_units =
+        filter(
+            record ->
+                record.terminal_region_kind == :central_distorted_product_box,
+            inventory.terminal_region_units,
+        )
+    @test length(central_contracts) == length(central_units)
+    for contract in central_contracts
+        matching_unit = only(
+            record for record in central_units
+            if record.unit_key == contract.unit_key
+        )
+        @test !contract.identity_like_source_contract
+        @test contract.source_cpb_plan_box == contract.outer_box
+        @test contract.source_mode_shape == matching_unit.source_mode_shape
+        @test contract.q == matching_unit.q
+        @test contract.L == matching_unit.L
+        @test contract.aspect_ratio == matching_unit.aspect_ratio
+        @test contract.retained_rule == :distorted_product_comx_all_axes
+        @test contract.final_unit_count_planned == 1
+    end
+
+    return lowering_inventory
+end
+
 @testset "terminal Cartesian shellification one-center centered complete shells" begin
     axes = (collect(1:9), collect(1:9), collect(1:9))
     plan = GaussletBases._cartesian_terminal_shellification_geometry(
@@ -400,6 +571,7 @@ end
         for region in scaffold.regions
     )
     inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
     @test inventory.unit_kinds == (
         :direct_core_unit,
         :atom_local_complete_shell_unit,
@@ -430,6 +602,7 @@ end
     )
     scaffold = _terminal_geometry_assert_scaffold_contract(plan)
     inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
     mismatch_units =
         filter(
             record -> record.terminal_region_kind == :outer_mismatch_slab,
@@ -493,6 +666,7 @@ end
     @test only(midpoint_scaffold_regions).lowering_family == :direct_midpoint_slab
     @test only(midpoint_scaffold_regions).independently_lowerable
     inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
     @test any(
         record.unit_kind == :shared_molecular_complete_shell_unit
         for record in inventory.terminal_region_units
@@ -564,6 +738,7 @@ end
         for region in midpoint_scaffold_regions
     )
     inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
     midpoint_units =
         filter(
             record -> record.terminal_region_kind == :direct_midpoint_slab,
@@ -643,6 +818,7 @@ end
     @test central_scaffold_region.metadata.L == 7
     @test central_scaffold_region.metadata.source_mode_shape == (7, 3, 3)
     inventory = _terminal_geometry_assert_region_unit_inventory_contract(scaffold)
+    _terminal_geometry_assert_lowering_contract_inventory_contract(inventory)
     central_unit = only(
         record for record in inventory.terminal_region_units
         if record.terminal_region_kind == :central_distorted_product_box
