@@ -5505,6 +5505,66 @@ function _pqs_source_box_route_driver_shellization_stage(low_order_shellization)
     return :represented_by_route_skeleton
 end
 
+function _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization)
+    hasproperty(low_order_shellization, :route_family) || return nothing
+    low_order_shellization.route_family == :white_lindsey_low_order &&
+        return :white_lindsey_low_order
+    low_order_shellization.route_family == :pqs_source_box && return :pqs
+    return nothing
+end
+
+function _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_counts()
+    return _cartesian_terminal_region_lowering_contract_kind_counts(())
+end
+
+function _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+    selected_terminal_lowering_contract_inventory,
+    status::Symbol,
+    route_lowering_family,
+)
+    selected_inventory_available =
+        !isnothing(selected_terminal_lowering_contract_inventory) &&
+        selected_terminal_lowering_contract_inventory.status ==
+        :available_selected_terminal_lowering_contract_inventory
+    return (;
+        terminal_shellification_selected_lowering_contract_inventory_available =
+            selected_inventory_available,
+        terminal_shellification_selected_lowering_contract_inventory_status =
+            status,
+        terminal_shellification_selected_lowering_contract_inventory =
+            selected_terminal_lowering_contract_inventory,
+        terminal_shellification_selected_lowering_family =
+            route_lowering_family,
+        terminal_shellification_selected_contract_count =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.selected_contract_count :
+            0,
+        terminal_shellification_selected_contract_kinds =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.selected_contract_kinds :
+            (),
+        terminal_shellification_selected_contract_kind_counts =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.selected_contract_kind_counts :
+            _pqs_source_box_route_driver_empty_terminal_lowering_contract_kind_counts(),
+        terminal_shellification_selected_contract_counts_by_unit =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.selected_contract_counts_by_unit :
+            (),
+        terminal_shellification_all_units_have_exactly_one_selected_contract =
+            selected_inventory_available &&
+            selected_terminal_lowering_contract_inventory.all_units_have_exactly_one_selected_contract,
+        terminal_shellification_unselected_contract_count =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.unselected_contract_count :
+            0,
+        terminal_shellification_unselected_contract_kinds =
+            selected_inventory_available ?
+            selected_terminal_lowering_contract_inventory.unselected_contract_kinds :
+            (),
+    )
+end
+
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     low_order_shellization =
         hasproperty(shells, :low_order_shellization) ?
@@ -5555,6 +5615,11 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                     pqs_filled_source_cpb_count = 0,
                     distorted_product_box_comx_count = 0,
                 ),
+            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+                nothing,
+                :not_available,
+                nothing,
+            )...,
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -5655,6 +5720,40 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             :deferred_terminal_shellification_lowering_contract_inventory
         ) :
         :not_selected
+    route_lowering_family =
+        terminal_shellification_units_selected ?
+        _pqs_source_box_route_driver_terminal_lowering_family(low_order_shellization) :
+        nothing
+    selected_terminal_lowering_contract_inventory =
+        terminal_region_lowering_contract_inventory_available &&
+        !isnothing(route_lowering_family) ?
+        _cartesian_selected_terminal_lowering_contract_inventory(
+            terminal_region_lowering_contract_inventory,
+            route_lowering_family,
+        ) :
+        nothing
+    selected_terminal_lowering_contract_inventory_available =
+        !isnothing(selected_terminal_lowering_contract_inventory) &&
+        selected_terminal_lowering_contract_inventory.status ==
+        :available_selected_terminal_lowering_contract_inventory
+    selected_terminal_lowering_contract_inventory_status =
+        terminal_shellification_units_selected ?
+        (
+            selected_terminal_lowering_contract_inventory_available ?
+            selected_terminal_lowering_contract_inventory.status :
+            isnothing(route_lowering_family) ?
+            :not_available_selected_terminal_lowering_family :
+            terminal_region_lowering_contract_inventory_available ?
+            :deferred_terminal_shellification_selected_lowering_contract_inventory :
+            :deferred_terminal_shellification_lowering_contract_inventory
+        ) :
+        :not_selected
+    selected_terminal_lowering_fields =
+        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+            selected_terminal_lowering_contract_inventory,
+            selected_terminal_lowering_contract_inventory_status,
+            route_lowering_family,
+        )
     atom_growth_plan_unit_inventory =
         atom_growth_units_selected ?
         _pqs_source_box_route_driver_atom_growth_plan_unit_inventory(
@@ -5799,6 +5898,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                 pqs_filled_source_cpb_count = 0,
                 distorted_product_box_comx_count = 0,
             ),
+        selected_terminal_lowering_fields...,
         terminal_shellification_contract_counts_by_unit =
             terminal_region_lowering_contract_inventory_available ?
             terminal_region_lowering_contract_inventory.contract_counts_by_unit :
@@ -5971,6 +6071,28 @@ function cartesian_units(parent, shells, route_inputs, recipe)
             low_order_units.terminal_shellification_lowering_contract_kinds,
         terminal_shellification_lowering_contract_kind_counts =
             low_order_units.terminal_shellification_lowering_contract_kind_counts,
+        terminal_shellification_selected_lowering_contract_inventory_available =
+            low_order_units.terminal_shellification_selected_lowering_contract_inventory_available,
+        terminal_shellification_selected_lowering_contract_inventory_status =
+            low_order_units.terminal_shellification_selected_lowering_contract_inventory_status,
+        terminal_shellification_selected_lowering_contract_inventory =
+            low_order_units.terminal_shellification_selected_lowering_contract_inventory,
+        terminal_shellification_selected_lowering_family =
+            low_order_units.terminal_shellification_selected_lowering_family,
+        terminal_shellification_selected_contract_count =
+            low_order_units.terminal_shellification_selected_contract_count,
+        terminal_shellification_selected_contract_kinds =
+            low_order_units.terminal_shellification_selected_contract_kinds,
+        terminal_shellification_selected_contract_kind_counts =
+            low_order_units.terminal_shellification_selected_contract_kind_counts,
+        terminal_shellification_selected_contract_counts_by_unit =
+            low_order_units.terminal_shellification_selected_contract_counts_by_unit,
+        terminal_shellification_all_units_have_exactly_one_selected_contract =
+            low_order_units.terminal_shellification_all_units_have_exactly_one_selected_contract,
+        terminal_shellification_unselected_contract_count =
+            low_order_units.terminal_shellification_unselected_contract_count,
+        terminal_shellification_unselected_contract_kinds =
+            low_order_units.terminal_shellification_unselected_contract_kinds,
         terminal_shellification_contract_counts_by_unit =
             low_order_units.terminal_shellification_contract_counts_by_unit,
         terminal_shellification_lw_complete_shell_cpb_count =
