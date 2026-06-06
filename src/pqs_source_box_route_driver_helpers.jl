@@ -5078,7 +5078,7 @@ function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent
         blocker =
             scaffold.materialization_status ==
             :deferred_pending_distorted_product_box_lowering ?
-            :distorted_product_box_lowering_not_implemented :
+            :distorted_product_box_lowering_pending :
             nothing
         return (;
             object_kind = :cartesian_shell_stage_terminal_shellification_payload,

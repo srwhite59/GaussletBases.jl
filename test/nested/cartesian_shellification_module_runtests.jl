@@ -4,6 +4,16 @@ using GaussletBases
 const CSH = GaussletBases.CartesianShellification
 const CRCForShellification = GaussletBases.CartesianRouteCore
 
+function _cartesian_shellification_module_source_files()
+    module_dir =
+        normpath(joinpath(@__DIR__, "..", "..", "src", "cartesian_shellification"))
+    return sort(collect(
+        joinpath(module_dir, file)
+        for file in readdir(module_dir)
+        if endswith(file, ".jl")
+    ))
+end
+
 function _shellification_module_compact_fingerprint(plan)
     raw = CSH.raw_plan(plan)
     return (;
@@ -157,6 +167,17 @@ function _shellification_scaffold_compact_fingerprint(scaffold)
         hamiltonian_data_materialized =
             scaffold.diagnostics.hamiltonian_data_materialized,
     )
+end
+
+@testset "CartesianShellification dependency direction" begin
+    source_files = _cartesian_shellification_module_source_files()
+    @test !isempty(source_files)
+    for path in source_files
+        text = read(path, String)
+        @test !occursin("parentmodule(@__MODULE__)", text)
+        @test !occursin("GB._", text)
+        @test !occursin("_impl", text)
+    end
 end
 
 @testset "CartesianShellification module facade" begin

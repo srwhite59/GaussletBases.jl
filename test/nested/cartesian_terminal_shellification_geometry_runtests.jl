@@ -811,7 +811,7 @@ end
           :distorted_comx_product_box_deferred
     @test central_scaffold_region.lowering_hint == :distorted_comx_all_axes
     @test central_scaffold_region.missing_independent_lowering_reason ==
-          :distorted_product_box_lowering_not_implemented
+          :distorted_product_box_lowering_pending
     @test central_scaffold_region.retirement_target ==
           :pending_distorted_product_box_lowering_support
     @test central_scaffold_region.metadata.q == 3

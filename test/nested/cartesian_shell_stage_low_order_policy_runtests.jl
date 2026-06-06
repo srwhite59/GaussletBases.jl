@@ -318,7 +318,7 @@ end
     )
     @test !central_region.independently_lowerable
     @test central_region.missing_independent_lowering_reason ==
-          :distorted_product_box_lowering_not_implemented
+          :distorted_product_box_lowering_pending
     @test central_region.metadata.q == 3
     @test central_region.metadata.L == 7
     @test central_region.metadata.source_mode_shape == (7, 3, 3)
