@@ -3,18 +3,22 @@ using GaussletBases
 
 function _cartesian_shell_stage_low_order_policy_fixture(;
     probe_parent_axis_construction = :auto,
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+    parent_axis_counts = (x = 9, y = 7, z = 9),
+    q::Int = 5,
+    n_s::Int = q,
 )
     system_inputs = (;
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
-        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        atom_locations,
         radius = 15.0,
-        parent_axis_counts = (x = 9, y = 7, z = 9),
+        parent_axis_counts,
         map_backend = :pgdg_localized_experimental,
     )
     spacing_inputs = (;
-        q = 5,
-        n_s = 5,
+        q,
+        n_s,
         reference_spacing = 1.0,
         tail_spacing = 10.0,
         q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
@@ -93,8 +97,13 @@ end
     @test default_summary.legacy_source_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_selected
+    @test !default_summary.terminal_shellification_selected
     @test !default_summary.atom_growth_plan_authority
+    @test !default_summary.terminal_shellification_authority
     @test !default_summary.atom_growth_plan_summary_available
+    @test !default_shells.terminal_shellification_selected
+    @test !default_shells.terminal_shellification_plan_available
+    @test !default_shells.terminal_shellification_scaffold_available
 
     atom_growth_shells = GaussletBases.cartesian_shells(
         fixture.parent,
@@ -117,6 +126,10 @@ end
     @test atom_growth_shells.shellization_stage ==
           :available_atom_growth_shellification_plan
     @test atom_growth_shells.atom_growth_plan_authority
+    @test !atom_growth_shells.terminal_shellification_selected
+    @test !atom_growth_shells.terminal_shellification_plan_available
+    @test !atom_growth_shells.terminal_shellification_scaffold_available
+    @test !atom_growth_shells.terminal_shellification_authority
     @test !atom_growth_shells.active_source_authority
     @test atom_growth_shells.coverage_complete
     @test atom_growth_shells.materialization_available
@@ -165,6 +178,8 @@ end
     @test atom_growth_summary.atom_growth_materialization_dependency_counts.unsupported_region_count ==
           0
     @test atom_growth_summary.atom_growth_plan_authority
+    @test !atom_growth_summary.terminal_shellification_selected
+    @test !atom_growth_summary.terminal_shellification_authority
     @test !atom_growth_summary.active_source_authority
     @test atom_growth_summary.coverage_status == :coverage_complete
     @test atom_growth_summary.coverage_complete
@@ -203,4 +218,108 @@ end
     @test missing_parent_summary.summary_only
     @test missing_parent_summary.atom_growth_missing_parent_objects ==
           (:parent_qw_basis_object, :parent_axis_bundle_object)
+
+    terminal_fixture =
+        _cartesian_shell_stage_low_order_policy_fixture(
+            probe_parent_axis_construction = false,
+            atom_locations = ((-4.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
+            parent_axis_counts = (x = 13, y = 7, z = 7),
+        )
+    terminal_shells = GaussletBases.cartesian_shells(
+        terminal_fixture.parent,
+        terminal_fixture.spacing_inputs,
+        terminal_fixture.recipe;
+        low_order_shellization_policy =
+            :terminal_cartesian_shellification_geometry,
+    )
+    terminal_summary = terminal_shells.low_order_shellization
+    @test terminal_shells.low_order_shellization_policy_resolved ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_shells.low_order_shellization_policy_status ==
+          :available_low_order_shellization_policy
+    @test terminal_shells.shellization_source ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_shells.shellization_kind ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_shells.shellization_stage ==
+          :available_terminal_shellification_scaffold
+    @test terminal_shells.terminal_shellification_selected
+    @test terminal_shells.terminal_shellification_plan_available
+    @test terminal_shells.terminal_shellification_scaffold_available
+    @test terminal_shells.terminal_shellification_authority
+    @test !terminal_shells.atom_growth_plan_authority
+    @test !terminal_shells.active_source_authority
+    @test terminal_shells.full_plan_stored
+    @test terminal_shells.scaffold_stored
+    @test !terminal_shells.summary_only
+    @test terminal_shells.coverage_complete
+    @test !terminal_shells.materialization_available
+    @test terminal_shells.terminal_shellification_materialization_status ==
+          :available_terminal_shellification_scaffold
+    @test terminal_shells.terminal_shellification_spatial_policy_order ==
+          :atom_outward
+    @test terminal_shells.terminal_shellification_coverage_complete
+    @test terminal_shells.terminal_shellification_central_gap_region_count == 3
+    @test terminal_shells.terminal_shellification_central_midpoint_slab_count == 3
+    @test terminal_shells.terminal_shellification_central_distorted_product_box_count == 0
+    @test terminal_shells.terminal_shellification_region_count > 0
+    @test terminal_shells.terminal_shellification_scaffold.object_kind ==
+          :cartesian_terminal_shellification_scaffold3d
+
+    @test terminal_summary.status == :available_terminal_shellification_scaffold
+    @test terminal_summary.terminal_shellification_selected
+    @test terminal_summary.terminal_shellification_plan_available
+    @test terminal_summary.terminal_shellification_scaffold_available
+    @test terminal_summary.terminal_shellification_scaffold.object_kind ==
+          :cartesian_terminal_shellification_scaffold3d
+    @test terminal_summary.terminal_shellification_region_count ==
+          terminal_summary.terminal_shellification_scaffold.region_count
+    @test terminal_summary.terminal_shellification_materialization_status ==
+          :available_terminal_shellification_scaffold
+    @test terminal_summary.terminal_shellification_spatial_policy_order ==
+          :atom_outward
+    @test terminal_summary.terminal_shellification_coverage_complete
+    @test terminal_summary.coverage_status == :coverage_complete
+    @test terminal_summary.coverage_complete
+    @test terminal_summary.materialization_stage ==
+          :deferred_to_route_materialization
+    @test !terminal_summary.materialization_available
+    @test terminal_summary.materialized_sequence_available == false
+    @test terminal_summary.materialized_operator_matrices_available == false
+    @test terminal_summary.terminal_shellification_scaffold.diagnostics.terminal_geometry_authority
+    @test !terminal_summary.terminal_shellification_scaffold.diagnostics.shellification_regions_are_cpbs
+    @test !terminal_summary.terminal_shellification_scaffold.diagnostics.shellification_regions_are_lowering_sources
+    @test all(
+        !region.shellification_region_is_cpb
+        for region in terminal_summary.terminal_shellification_scaffold.regions
+    )
+    @test all(
+        !region.shellification_region_is_lowering_source
+        for region in terminal_summary.terminal_shellification_scaffold.regions
+    )
+
+    distorted_plan = GaussletBases._cartesian_terminal_shellification_geometry(
+        (collect(1:21), collect(1:7), collect(1:7)),
+        ((3, 4, 4), (19, 4, 4));
+        core_side = 3,
+        q = 3,
+    )
+    distorted_scaffold =
+        GaussletBases._cartesian_terminal_shellification_geometry_scaffold(
+            distorted_plan,
+        )
+    @test distorted_scaffold.materialization_status ==
+          :deferred_pending_distorted_product_box_lowering
+    @test distorted_scaffold.central_distorted_product_box_count == 1
+    @test distorted_scaffold.deferred_region_count == 1
+    central_region = only(
+        region for region in distorted_scaffold.regions
+        if region.region_kind == :central_distorted_product_box
+    )
+    @test !central_region.independently_lowerable
+    @test central_region.missing_independent_lowering_reason ==
+          :distorted_product_box_lowering_not_implemented
+    @test central_region.metadata.q == 3
+    @test central_region.metadata.L == 7
+    @test central_region.metadata.source_mode_shape == (7, 3, 3)
 end

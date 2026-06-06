@@ -3195,7 +3195,11 @@ function _pqs_source_box_route_driver_low_order_shellization_policy(
     requested_policy,
     probe_route_configured_diatomic_atom_growth_materializer::Bool,
 )
-    supported_policies = (:legacy_diatomic_source, :atom_growth_complete_rectangular)
+    supported_policies = (
+        :legacy_diatomic_source,
+        :atom_growth_complete_rectangular,
+        :terminal_cartesian_shellification_geometry,
+    )
     explicit_policy_requested = !isnothing(requested_policy)
     resolved_policy =
         explicit_policy_requested ?
@@ -4885,6 +4889,197 @@ function _pqs_source_box_route_driver_shell_stage_atom_growth_plan(parent)
     end
 end
 
+function _pqs_source_box_route_driver_terminal_parent_axes(parent)
+    counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
+    isnothing(counts) &&
+        throw(ArgumentError("terminal shellification requires parent axis counts"))
+    all(>(0), counts) ||
+        throw(ArgumentError("terminal shellification requires positive parent axis counts"))
+    return (collect(1:counts[1]), collect(1:counts[2]), collect(1:counts[3]))
+end
+
+function _pqs_source_box_route_driver_axis_index(axis::Symbol)
+    axis == :x && return 1
+    axis == :y && return 2
+    axis == :z && return 3
+    throw(ArgumentError("terminal shellification requires bond_axis = :x, :y, or :z"))
+end
+
+function _pqs_source_box_route_driver_terminal_center_index(count::Int)
+    count > 0 || throw(ArgumentError("terminal shellification axis count must be positive"))
+    return cld(count, 2)
+end
+
+function _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
+    counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
+    isnothing(counts) &&
+        throw(ArgumentError("terminal shellification requires parent axis counts"))
+    core_side = parent.standard_setup.core_cube_side
+    radius = div(core_side - 1, 2)
+    center = ntuple(
+        axis -> _pqs_source_box_route_driver_terminal_center_index(counts[axis]),
+        3,
+    )
+    if parent.system_classification == :one_center
+        return (center,)
+    end
+    parent.system_classification == :bond_aligned_diatomic || throw(
+        ArgumentError("terminal shellification supports one-center or bond-aligned diatomic parents"),
+    )
+    bond_axis_index = _pqs_source_box_route_driver_axis_index(parent.bond_axis)
+    low_center = 1 + radius
+    high_center = counts[bond_axis_index] - radius
+    low_center > 0 && high_center <= counts[bond_axis_index] || throw(
+        ArgumentError("terminal shellification atom core centers fall outside parent axis"),
+    )
+    atom_axis_coordinates =
+        Tuple(location[bond_axis_index] for location in parent.atom_locations)
+    atom_order = Tuple(sortperm(collect(atom_axis_coordinates)))
+    length(atom_order) == 2 || throw(
+        ArgumentError("terminal shellification diatomic path requires two atom locations"),
+    )
+    positions = Vector{NTuple{3,Int}}(undef, 2)
+    for (atom_index, axis_center) in zip(atom_order, (low_center, high_center))
+        positions[atom_index] =
+            ntuple(axis -> axis == bond_axis_index ? axis_center : center[axis], 3)
+    end
+    return Tuple(positions)
+end
+
+function _pqs_source_box_route_driver_terminal_stage_status(scaffold)
+    scaffold.materialization_status == :ready_supported_terminal_subset &&
+        return :available_terminal_shellification_scaffold
+    scaffold.materialization_status ==
+    :deferred_pending_distorted_product_box_lowering &&
+        return :deferred_terminal_shellification_distorted_product_box_lowering
+    return scaffold.materialization_status
+end
+
+function _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent)
+    missing_parent_inputs = Symbol[]
+    isnothing(parent.axis_counts) && push!(missing_parent_inputs, :parent_axis_counts)
+    !hasproperty(parent, :standard_setup) &&
+        push!(missing_parent_inputs, :standard_setup)
+    if !isempty(missing_parent_inputs)
+        return (;
+            object_kind = :cartesian_shell_stage_terminal_shellification_payload,
+            status = :blocked_terminal_shellification_missing_parent_inputs,
+            plan = nothing,
+            scaffold = nothing,
+            plan_available = false,
+            scaffold_available = false,
+            shellification_plan_materialization_available = false,
+            missing_parent_inputs = Tuple(missing_parent_inputs),
+            blocker = :blocked_terminal_shellification_missing_parent_inputs,
+            error_message = nothing,
+            region_count = 0,
+            materialization_dependency_counts = nothing,
+            ordered_region_roles = (),
+            spatial_policy_order = nothing,
+            coverage_status = :not_checked_missing_parent_inputs,
+            coverage_complete = nothing,
+            materialization_status =
+                :blocked_terminal_shellification_missing_parent_inputs,
+            central_gap_region_count = 0,
+            central_midpoint_slab_count = 0,
+            central_distorted_product_box_count = 0,
+            central_distorted_product_box_metadata = (),
+            parent_axes_source = :unavailable,
+            nuclear_positions_source = :unavailable,
+        )
+    end
+
+    try
+        parent_axes = _pqs_source_box_route_driver_terminal_parent_axes(parent)
+        nuclear_positions =
+            _pqs_source_box_route_driver_terminal_nuclear_index_positions(parent)
+        bond_axis =
+            parent.system_classification == :bond_aligned_diatomic ?
+            parent.bond_axis :
+            :auto
+        plan = _cartesian_terminal_shellification_geometry(
+            parent_axes,
+            nuclear_positions;
+            core_side = parent.standard_setup.core_cube_side,
+            q = parent.standard_setup.q,
+            bond_axis,
+        )
+        scaffold = _cartesian_terminal_shellification_geometry_scaffold(
+            plan;
+            route_family = :white_lindsey_low_order,
+        )
+        status = _pqs_source_box_route_driver_terminal_stage_status(scaffold)
+        materialization_available = false
+        blocker =
+            scaffold.materialization_status ==
+            :deferred_pending_distorted_product_box_lowering ?
+            :distorted_product_box_lowering_not_implemented :
+            nothing
+        return (;
+            object_kind = :cartesian_shell_stage_terminal_shellification_payload,
+            status,
+            plan,
+            scaffold,
+            plan_available = true,
+            scaffold_available = true,
+            shellification_plan_materialization_available =
+                materialization_available,
+            missing_parent_inputs = (),
+            blocker,
+            error_message = nothing,
+            region_count = scaffold.region_count,
+            materialization_dependency_counts =
+                scaffold.materialization_dependency_counts,
+            ordered_region_roles = scaffold.ordered_region_roles,
+            spatial_policy_order = scaffold.spatial_policy_order,
+            coverage_status =
+                scaffold.coverage.coverage_complete ?
+                :coverage_complete :
+                :coverage_incomplete,
+            coverage_complete = scaffold.coverage.coverage_complete,
+            materialization_status = status,
+            central_gap_region_count = scaffold.central_gap_region_count,
+            central_midpoint_slab_count = scaffold.central_midpoint_slab_count,
+            central_distorted_product_box_count =
+                scaffold.central_distorted_product_box_count,
+            central_distorted_product_box_metadata =
+                scaffold.central_distorted_product_box_metadata,
+            parent_axes_source = :index_axes_from_parent_axis_counts,
+            nuclear_positions_source =
+                :index_positions_from_parent_counts_and_center_order,
+        )
+    catch error
+        error isa ArgumentError || rethrow()
+        return (;
+            object_kind = :cartesian_shell_stage_terminal_shellification_payload,
+            status = :blocked_terminal_shellification_geometry_precondition,
+            plan = nothing,
+            scaffold = nothing,
+            plan_available = false,
+            scaffold_available = false,
+            shellification_plan_materialization_available = false,
+            missing_parent_inputs = (),
+            blocker = :blocked_terminal_shellification_geometry_precondition,
+            error_message = sprint(showerror, error),
+            region_count = 0,
+            materialization_dependency_counts = nothing,
+            ordered_region_roles = (),
+            spatial_policy_order = nothing,
+            coverage_status = :not_checked_terminal_geometry_precondition,
+            coverage_complete = nothing,
+            materialization_status =
+                :blocked_terminal_shellification_geometry_precondition,
+            central_gap_region_count = 0,
+            central_midpoint_slab_count = 0,
+            central_distorted_product_box_count = 0,
+            central_distorted_product_box_metadata = (),
+            parent_axes_source = :index_axes_from_parent_axis_counts,
+            nuclear_positions_source =
+                :index_positions_from_parent_counts_and_center_order,
+        )
+    end
+end
+
 function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
     parent,
     recipe;
@@ -4913,6 +5108,12 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         policy.low_order_shellization_policy_status ==
         :available_low_order_shellization_policy &&
         policy_resolved == :atom_growth_complete_rectangular
+    terminal_shellification_selected =
+        recipe.route_family == :white_lindsey_low_order &&
+        parent.system_classification in (:one_center, :bond_aligned_diatomic) &&
+        policy.low_order_shellization_policy_status ==
+        :available_low_order_shellization_policy &&
+        policy_resolved == :terminal_cartesian_shellification_geometry
     legacy_source_selected =
         recipe.route_family == :white_lindsey_low_order &&
         bond_aligned_diatomic &&
@@ -4922,6 +5123,8 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
     shellization_source =
         atom_growth_selected ?
         :bond_aligned_diatomic_atom_growth_construction_plan :
+        terminal_shellification_selected ?
+        :terminal_cartesian_shellification_geometry :
         legacy_source_selected ?
         :route_configured_bond_aligned_diatomic_source :
         recipe.route_family == :white_lindsey_low_order ?
@@ -4934,22 +5137,30 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
     shellization_kind =
         atom_growth_selected ?
         :atom_growth_complete_rectangular :
+        terminal_shellification_selected ?
+        :terminal_cartesian_shellification_geometry :
         legacy_source_selected ?
         :legacy_diatomic_source :
         recipe.route_family == :white_lindsey_low_order ?
         :non_diatomic_low_order_shellization :
         :not_applicable
     materialization_required =
-        atom_growth_selected || legacy_source_selected
+        atom_growth_selected || terminal_shellification_selected || legacy_source_selected
     materialization_status =
         atom_growth_selected ?
         :deferred_atom_growth_complete_rectangular_materialization :
+        terminal_shellification_selected ?
+        :deferred_terminal_cartesian_shellification_geometry :
         legacy_source_selected ?
         :deferred_legacy_diatomic_source_materialization :
         policy.low_order_shellization_policy_status
     atom_growth_plan_payload =
         atom_growth_selected ?
         _pqs_source_box_route_driver_shell_stage_atom_growth_plan(parent) :
+        nothing
+    terminal_shellification_payload =
+        terminal_shellification_selected ?
+        _pqs_source_box_route_driver_shell_stage_terminal_shellification(parent) :
         nothing
     atom_growth_plan_available =
         !isnothing(atom_growth_plan_payload) &&
@@ -4964,25 +5175,47 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         isnothing(atom_growth_plan_payload) ?
         nothing :
         atom_growth_plan_payload.status
+    terminal_shellification_plan_available =
+        !isnothing(terminal_shellification_payload) &&
+        terminal_shellification_payload.plan_available
+    terminal_shellification_scaffold_available =
+        !isnothing(terminal_shellification_payload) &&
+        terminal_shellification_payload.scaffold_available
+    terminal_shellification_status =
+        isnothing(terminal_shellification_payload) ?
+        nothing :
+        terminal_shellification_payload.status
     coverage_status =
+        terminal_shellification_selected && !isnothing(terminal_shellification_payload) ?
+        terminal_shellification_payload.coverage_status :
         isnothing(atom_growth_plan_payload) ?
         :not_checked_shell_stage_summary_only :
         atom_growth_plan_payload.coverage_status
     coverage_complete =
+        terminal_shellification_selected && !isnothing(terminal_shellification_payload) ?
+        terminal_shellification_payload.coverage_complete :
         isnothing(atom_growth_plan_payload) ?
         nothing :
         atom_growth_plan_payload.coverage_complete
     materialization_available =
+        terminal_shellification_selected && !isnothing(terminal_shellification_payload) ?
+        terminal_shellification_payload.shellification_plan_materialization_available :
         isnothing(atom_growth_plan_payload) ?
         false :
         atom_growth_plan_payload.shellification_plan_materialization_available
     materialization_status =
+        terminal_shellification_selected && !isnothing(terminal_shellification_payload) ?
+        terminal_shellification_payload.status :
         atom_growth_selected && !isnothing(atom_growth_plan_payload) ?
         atom_growth_plan_payload.status :
         materialization_status
     summary_only =
+        terminal_shellification_selected ?
+        !terminal_shellification_scaffold_available :
         atom_growth_selected ? !atom_growth_shellification_plan_available : true
     status =
+        terminal_shellification_selected && !isnothing(terminal_shellification_payload) ?
+        terminal_shellification_payload.status :
         atom_growth_selected && !isnothing(atom_growth_plan_payload) ?
         atom_growth_plan_payload.status :
         policy.low_order_shellization_policy_status ==
@@ -4998,6 +5231,7 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         shellization_source,
         shellization_kind,
         atom_growth_selected,
+        terminal_shellification_selected,
         legacy_source_selected,
         atom_growth_plan_summary_available = atom_growth_selected,
         atom_growth_plan_available,
@@ -5037,7 +5271,55 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
             isnothing(atom_growth_plan_payload) ?
             nothing :
             atom_growth_plan_payload.materialization_dependency_counts,
+        terminal_shellification_plan_available,
+        terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.scaffold,
+        terminal_shellification_plan =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.plan,
+        terminal_shellification_region_count =
+            isnothing(terminal_shellification_payload) ?
+            0 :
+            terminal_shellification_payload.region_count,
+        terminal_shellification_materialization_status =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.materialization_status,
+        terminal_shellification_spatial_policy_order =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.spatial_policy_order,
+        terminal_shellification_coverage_complete =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.coverage_complete,
+        terminal_shellification_central_gap_region_count =
+            isnothing(terminal_shellification_payload) ?
+            0 :
+            terminal_shellification_payload.central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            isnothing(terminal_shellification_payload) ?
+            0 :
+            terminal_shellification_payload.central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            isnothing(terminal_shellification_payload) ?
+            0 :
+            terminal_shellification_payload.central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            isnothing(terminal_shellification_payload) ?
+            () :
+            terminal_shellification_payload.central_distorted_product_box_metadata,
+        terminal_shellification_materialization_dependency_counts =
+            isnothing(terminal_shellification_payload) ?
+            nothing :
+            terminal_shellification_payload.materialization_dependency_counts,
+        terminal_shellification_payload,
         atom_growth_plan_authority = atom_growth_selected,
+        terminal_shellification_authority = terminal_shellification_selected,
         active_source_authority = legacy_source_selected,
         legacy_source_authority = legacy_source_selected,
         coverage_status,
@@ -5055,8 +5337,11 @@ function _pqs_source_box_route_driver_shell_stage_low_order_shellization(
         system_classification_status = parent.system_classification_status,
         bond_axis = parent.bond_axis,
         private_development_only = true,
-        full_plan_stored = atom_growth_plan_available,
-        scaffold_stored = atom_growth_scaffold_available,
+        full_plan_stored =
+            atom_growth_plan_available || terminal_shellification_plan_available,
+        scaffold_stored =
+            atom_growth_scaffold_available ||
+            terminal_shellification_scaffold_available,
         summary_only,
     )
 end
@@ -5103,6 +5388,28 @@ function cartesian_shells(
             low_order_shellization.atom_growth_region_count,
         atom_growth_unsupported_region_count =
             low_order_shellization.atom_growth_unsupported_region_count,
+        terminal_shellification_selected =
+            low_order_shellization.terminal_shellification_selected,
+        terminal_shellification_plan_available =
+            low_order_shellization.terminal_shellification_plan_available,
+        terminal_shellification_scaffold_available =
+            low_order_shellization.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_shellization.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_shellization.terminal_shellification_region_count,
+        terminal_shellification_materialization_status =
+            low_order_shellization.terminal_shellification_materialization_status,
+        terminal_shellification_spatial_policy_order =
+            low_order_shellization.terminal_shellification_spatial_policy_order,
+        terminal_shellification_coverage_complete =
+            low_order_shellization.terminal_shellification_coverage_complete,
+        terminal_shellification_central_gap_region_count =
+            low_order_shellization.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_shellization.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_shellization.terminal_shellification_central_distorted_product_box_count,
         coverage_complete = low_order_shellization.coverage_complete,
         materialization_available =
             low_order_shellization.materialization_available,
@@ -5111,6 +5418,8 @@ function cartesian_shells(
         summary_only = low_order_shellization.summary_only,
         atom_growth_plan_authority =
             low_order_shellization.atom_growth_plan_authority,
+        terminal_shellification_authority =
+            low_order_shellization.terminal_shellification_authority,
         active_source_authority = low_order_shellization.active_source_authority,
         route_shape = route_skeleton.route_shape,
         source_boxes = route_skeleton.source_boxes,
@@ -5122,6 +5431,8 @@ function cartesian_shells(
 end
 
 function _pqs_source_box_route_driver_shellization_stage(low_order_shellization)
+    low_order_shellization.terminal_shellification_selected &&
+        return low_order_shellization.status
     low_order_shellization.atom_growth_selected && return (
         low_order_shellization.atom_growth_shellification_plan_available ?
         :available_atom_growth_shellification_plan :
