@@ -240,7 +240,7 @@ completeness or backend fidelity.
 
 Only a few files matter enough to direct this lane.
 
-### [src/cartesian_high_order_doside_experimental.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_high_order_doside_experimental.jl)
+### `src/cartesian_high_order_doside_experimental.jl`
 
 This is the basis-construction core.
 
@@ -260,7 +260,7 @@ It is responsible for:
 If the manager is confused about what object is actually being built, this is
 the first file to inspect.
 
-### [src/cartesian_high_order_doside_ida_experimental.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_high_order_doside_ida_experimental.jl)
+### `src/cartesian_high_order_doside_ida_experimental.jl`
 
 This is the one-body / He / benchmark layer.
 
@@ -275,7 +275,7 @@ It is responsible for:
 If the question is “what exactly was validated?” or “what is the current
 timing bottleneck?”, this is the second file to inspect.
 
-### [test/ordinary/high_order_doside_experimental_runtests.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/test/ordinary/high_order_doside_experimental_runtests.jl)
+### `test/ordinary/high_order_doside_experimental_runtests.jl`
 
 This is the focused regression contract.
 
@@ -289,7 +289,7 @@ It currently covers:
 
 If the code changes but this file does not, that is a warning sign.
 
-### [docs/src/developer/high_order_doside_physical_block_speed_plan.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/src/developer/high_order_doside_physical_block_speed_plan.md)
+### [High-order doside physical-block speed plan](high_order_doside_physical_block_speed_plan.md)
 
 This is the current optimization logic memo.
 
@@ -299,7 +299,7 @@ It records:
 - the PGDG contract clarification
 - the current bottleneck interpretation
 
-### [docs/src/developer/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03.md](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/docs/src/developer/high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03.md)
+### [High-order FSB/FBU residual-spectrum reconciliation](high_order_fsb_fbu_residual_spectrum_reconciliation_2026-05-03.md)
 
 This is the most important recent interpretation note.
 
@@ -310,7 +310,7 @@ It records:
   completeness
 - the rank/null audit that corrected the target definition
 
-### [tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl)
+### `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl`
 
 This is the scratch driver that currently best exposes the target-definition
 problem.
@@ -645,7 +645,7 @@ notes.
 Non-destructive drill:
 
 1. Open
-   [tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl).
+   `tmp/work/high_order_fsb_fbu_residual_spectrum_reconciliation.jl`.
 2. Identify the three target kinds it audits.
 3. For `count = 11`, `doside = 5`, side `11`, write down:
    - raw columns for `reduced_physical_transformed_block`
@@ -676,7 +676,7 @@ Use this to decide whether the new manager is safe to steer the lane.
 4. It proves reduced transformed-block union exactness on the same backend. It
    does not prove raw-cube completeness or PGDG-versus-numerical fidelity.
 5. The seam is in
-   [src/cartesian_high_order_doside_experimental.jl](/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/src/cartesian_high_order_doside_experimental.jl),
+   `src/cartesian_high_order_doside_experimental.jl`,
    first function to inspect:
    - `_experimental_high_order_axis_one_body_1d`
    and then
