@@ -36,7 +36,7 @@ Prefer one of these two launch styles for routine work:
 - finds the repo root
 - runs with `--project=<repo-root>`
 - prefers the normal user Julia setup
-- does **not** force a Dropbox-local depot unless explicitly requested
+- does **not** force a Dropbox-local depot
 
 Do **not** use routine commands of the form:
 
@@ -46,7 +46,7 @@ unless there is a specific reason that has already been justified.
 
 In particular:
 
-- do **not** use Dropbox-local Julia depots for normal runs
+- do **not** use Dropbox-local Julia depots
 - prefer the normal user depot in `~/.julia` / `~/.juliaup`
 - prefer checked-in or `tmp/work/*.jl` scripts over long inline `julia -e '...'`
   commands
@@ -57,11 +57,60 @@ Reason:
   environment
 - Dropbox-local depots have previously caused operational problems
 
+## Runtime environment policy
+
+Do not create generated runtime environments inside Dropbox-synced trees.
+
+Keep in Dropbox:
+
+- source code
+- docs and handoffs
+- configs
+- `Project.toml`, `Manifest.toml`, `requirements.txt`, `pyproject.toml`,
+  lockfiles, and small setup scripts
+
+Keep out of Dropbox:
+
+- Python `venv/`, `.venv/`, and `work/venvs/`
+- Julia depots, `.julia_depot/`, `tmp/julia_depot/`, package artifacts, and
+  compiled caches
+- binary/runtime installs and package-manager caches
+
+Use machine-local locations such as `~/.venvs`, `~/.julia`, or
+`~/dmrgtmp/{envs,julia_depots,artifacts,compiled}`. If a special environment is
+needed, create it outside Dropbox and document the activation command.
+
 ## Julia style
 
 Use `JuliaStyle.md` as the local guide for small Julia cleanup passes and new
 code edits. These preferences are low priority relative to correctness and
 contract clarity; do not churn numerical kernels solely for style.
+
+## Staged metadata test policy
+
+Do not compare large staged metadata objects with `==` or `===`.
+
+In particular:
+
+- do not test that a huge sidecar object is identical across stages
+- do not compare whole staged route summaries, CRC sidecars, route inventories,
+  or deeply nested `NamedTuple` metadata objects
+- do not write assertions whose failure path would print or type-infer a full
+  staged metadata object
+
+Test compact, stable summaries instead:
+
+- `status`
+- counts
+- keys and roles
+- kind tuples
+- booleans
+- materialization flags
+- short missing-reason tuples
+
+If a stage should carry a sidecar forward, test the contract through these
+small fields. Whole-object equality on these metadata records is both too
+brittle and too expensive.
 
 ## Final-basis overlap policy
 
