@@ -7280,6 +7280,11 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                     pqs_filled_source_cpb_count = 0,
                     distorted_product_box_comx_count = 0,
                 ),
+            _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+                nothing,
+                :not_available,
+                nothing,
+            )...,
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -7559,6 +7564,17 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
                 pqs_filled_source_cpb_count = 0,
                 distorted_product_box_comx_count = 0,
             ),
+        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory :
+            nothing,
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory_status :
+            :not_selected,
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_selected_lowering_family :
+            nothing,
+        )...,
         terminal_shellification_contract_counts_by_unit =
             terminal_shellification_pairs_selected ?
             low_order_transforms.terminal_shellification_contract_counts_by_unit :
@@ -7680,6 +7696,28 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.terminal_shellification_lowering_contract_kinds,
         terminal_shellification_lowering_contract_kind_counts =
             low_order_pairs.terminal_shellification_lowering_contract_kind_counts,
+        terminal_shellification_selected_lowering_contract_inventory_available =
+            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory_available,
+        terminal_shellification_selected_lowering_contract_inventory_status =
+            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory_status,
+        terminal_shellification_selected_lowering_contract_inventory =
+            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory,
+        terminal_shellification_selected_lowering_family =
+            low_order_pairs.terminal_shellification_selected_lowering_family,
+        terminal_shellification_selected_contract_count =
+            low_order_pairs.terminal_shellification_selected_contract_count,
+        terminal_shellification_selected_contract_kinds =
+            low_order_pairs.terminal_shellification_selected_contract_kinds,
+        terminal_shellification_selected_contract_kind_counts =
+            low_order_pairs.terminal_shellification_selected_contract_kind_counts,
+        terminal_shellification_selected_contract_counts_by_unit =
+            low_order_pairs.terminal_shellification_selected_contract_counts_by_unit,
+        terminal_shellification_all_units_have_exactly_one_selected_contract =
+            low_order_pairs.terminal_shellification_all_units_have_exactly_one_selected_contract,
+        terminal_shellification_unselected_contract_count =
+            low_order_pairs.terminal_shellification_unselected_contract_count,
+        terminal_shellification_unselected_contract_kinds =
+            low_order_pairs.terminal_shellification_unselected_contract_kinds,
         terminal_shellification_contract_counts_by_unit =
             low_order_pairs.terminal_shellification_contract_counts_by_unit,
         terminal_shellification_lw_complete_shell_cpb_count =

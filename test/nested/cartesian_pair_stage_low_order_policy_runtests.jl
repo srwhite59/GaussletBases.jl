@@ -125,10 +125,46 @@ function _assert_terminal_lowering_contract_fields_match_pair_stage(
           transforms.terminal_shellification_lowering_contract_kind_counts
     @test pair_stage.terminal_shellification_contract_counts_by_unit ==
           transforms.terminal_shellification_contract_counts_by_unit
+    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_available
+    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_status ==
+          transforms.terminal_shellification_selected_lowering_contract_inventory_status
+    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory ===
+          transforms.terminal_shellification_selected_lowering_contract_inventory
+    @test pair_stage.terminal_shellification_selected_lowering_family ==
+          transforms.terminal_shellification_selected_lowering_family
+    @test pair_stage.terminal_shellification_selected_contract_count ==
+          transforms.terminal_shellification_selected_contract_count
+    @test pair_stage.terminal_shellification_selected_contract_kinds ==
+          transforms.terminal_shellification_selected_contract_kinds
+    @test pair_stage.terminal_shellification_selected_contract_kind_counts ==
+          transforms.terminal_shellification_selected_contract_kind_counts
+    @test pair_stage.terminal_shellification_selected_contract_counts_by_unit ==
+          transforms.terminal_shellification_selected_contract_counts_by_unit
+    @test pair_stage.terminal_shellification_all_units_have_exactly_one_selected_contract ==
+          transforms.terminal_shellification_all_units_have_exactly_one_selected_contract
+    @test pair_stage.terminal_shellification_unselected_contract_count ==
+          transforms.terminal_shellification_unselected_contract_count
+    @test pair_stage.terminal_shellification_unselected_contract_kinds ==
+          transforms.terminal_shellification_unselected_contract_kinds
     @test pair_stage.terminal_shellification_lw_complete_shell_cpb_count ==
           transforms.terminal_shellification_lw_complete_shell_cpb_count
     @test pair_stage.terminal_shellification_lw_complete_shell_cpb_family_counts ==
           transforms.terminal_shellification_lw_complete_shell_cpb_family_counts
+    selected_inventory =
+        pair_stage.terminal_shellification_selected_lowering_contract_inventory
+    @test selected_inventory.selected_contract_count ==
+          pair_stage.terminal_shellification_unit_count
+    @test selected_inventory.route_lowering_family == :white_lindsey_low_order
+    @test selected_inventory.all_units_have_exactly_one_selected_contract
+    @test !selected_inventory.final_retained_unit_inventory_available
+    @test !selected_inventory.pair_inventory_available
+    @test !selected_inventory.coefficient_maps_materialized
+    @test !selected_inventory.transform_contracts_materialized
+    @test !selected_inventory.retained_spaces_materialized
+    @test !selected_inventory.operator_blocks_materialized
+    @test !selected_inventory.pair_operator_blocks_materialized
+    @test !selected_inventory.hamiltonian_data_materialized
+    @test !selected_inventory.artifacts_materialized
 end
 
 @testset "cartesian pair stage carries selected low-order policy" begin
@@ -534,6 +570,7 @@ end
           :deferred_terminal_shellification_pair_inventory
     @test terminal_pairs.terminal_shellification_pair_materialization_status ==
           :deferred_terminal_shellification_pair_materialization
+    @test !terminal_pairs.independent_atom_growth_pair_inventory_available
     @test !terminal_pairs.pair_operator_blocks_materialized
     @test !terminal_pairs.operator_pairs_materialized
     @test terminal_pairs.pair_inventory === nothing
@@ -623,6 +660,7 @@ end
           :deferred_terminal_shellification_pair_inventory
     @test terminal_summary.terminal_shellification_pair_materialization_status ==
           :deferred_terminal_shellification_pair_materialization
+    @test !terminal_summary.independent_atom_growth_pair_inventory_available
     @test !terminal_summary.pair_inventory_known
     @test terminal_summary.pair_inventory_source ==
           :terminal_shellification_scaffold
