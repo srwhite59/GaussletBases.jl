@@ -7170,7 +7170,23 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             assembly_route_kind = :not_available,
             assembly_kind = :not_available,
             atom_growth_assembly_selected = false,
+            terminal_shellification_assembly_selected = false,
             legacy_source_assembly_selected = false,
+            terminal_shellification_assembly_summary_available = false,
+            terminal_shellification_scaffold_available = false,
+            terminal_shellification_scaffold = nothing,
+            terminal_shellification_region_count = 0,
+            terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_transform_contracts_available = false,
+            terminal_shellification_pair_inventory_available = false,
+            terminal_shellification_pair_inventory_status = :not_available,
+            terminal_shellification_pair_materialization_status = :not_available,
+            terminal_shellification_assembly_materialization_status =
+                :not_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
             hamiltonian_matrices_materialized = false,
             operator_matrices_materialized = false,
             pair_operator_blocks_materialized = false,
@@ -7223,25 +7239,42 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
 
     atom_growth_assembly_selected =
         low_order_pairs.atom_growth_pairs_selected
+    terminal_shellification_assembly_selected =
+        low_order_pairs.terminal_shellification_pairs_selected
     legacy_source_assembly_selected =
         low_order_pairs.legacy_source_pairs_selected
     assembly_route_kind =
         atom_growth_assembly_selected ?
         :atom_growth_complete_rectangular_low_order_assembly :
+        terminal_shellification_assembly_selected ?
+        :terminal_shellification_low_order_assembly :
         legacy_source_assembly_selected ?
         :legacy_diatomic_source_low_order_assembly :
         :not_selected
     assembly_source =
         atom_growth_assembly_selected ?
         :atom_growth_complete_rectangular_low_order_pair_terms :
+        terminal_shellification_assembly_selected ?
+        :terminal_shellification_pair_terms :
         legacy_source_assembly_selected ?
         :legacy_diatomic_source_pair_terms :
         :not_selected
     assembly_kind =
         atom_growth_assembly_selected ?
         :atom_growth_complete_rectangular_low_order :
+        terminal_shellification_assembly_selected ?
+        :terminal_shellification_low_order :
         legacy_source_assembly_selected ?
         :legacy_diatomic_source_low_order :
+        :not_selected
+    terminal_shellification_scaffold_available =
+        terminal_shellification_assembly_selected &&
+        low_order_pairs.terminal_shellification_scaffold_available
+    terminal_shellification_assembly_summary_available =
+        terminal_shellification_assembly_selected
+    terminal_shellification_assembly_materialization_status =
+        terminal_shellification_assembly_selected ?
+        :deferred_terminal_shellification_assembly_materialization :
         :not_selected
     pair_operator_blocks_materialized =
         low_order_pairs.pair_operator_blocks_materialized
@@ -7254,17 +7287,26 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         :ready_for_low_order_operator_matrix_assembly :
         atom_growth_assembly_selected ?
         :deferred_atom_growth_complete_rectangular_pair_block_materialization :
+        terminal_shellification_assembly_selected ?
+        terminal_shellification_assembly_materialization_status :
         legacy_source_assembly_selected ?
         :deferred_legacy_diatomic_source_pair_block_materialization :
         :not_selected
     assembly_blocker =
         assembly_requires_materialization ?
-        :pair_operator_blocks_deferred :
+        (
+            terminal_shellification_assembly_selected ?
+            :terminal_shellification_pair_blocks_deferred :
+            :pair_operator_blocks_deferred
+        ) :
         nothing
 
     return (;
         object_kind = :cartesian_assembly_stage_low_order_summary,
         status =
+            terminal_shellification_assembly_selected &&
+            terminal_shellification_scaffold_available ?
+            :deferred_terminal_shellification_assembly_materialization :
             low_order_pairs.status == :available_pair_stage_low_order_summary ?
             :available_assembly_stage_low_order_summary :
             low_order_pairs.status,
@@ -7287,7 +7329,52 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         assembly_route_kind,
         assembly_kind,
         atom_growth_assembly_selected,
+        terminal_shellification_assembly_selected,
         legacy_source_assembly_selected,
+        terminal_shellification_assembly_summary_available,
+        terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_scaffold :
+            nothing,
+        terminal_shellification_region_count =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_region_count :
+            0,
+        terminal_shellification_unit_inventory_available =
+            terminal_shellification_assembly_selected &&
+            low_order_pairs.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            terminal_shellification_assembly_selected &&
+            low_order_pairs.terminal_shellification_transform_contracts_available,
+        terminal_shellification_pair_inventory_available =
+            terminal_shellification_assembly_selected &&
+            low_order_pairs.terminal_shellification_pair_inventory_available,
+        terminal_shellification_pair_inventory_status =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_pair_inventory_status :
+            :not_selected,
+        terminal_shellification_pair_materialization_status =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_pair_materialization_status :
+            :not_selected,
+        terminal_shellification_assembly_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_central_gap_region_count :
+            0,
+        terminal_shellification_central_midpoint_slab_count =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_central_midpoint_slab_count :
+            0,
+        terminal_shellification_central_distorted_product_box_count =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_central_distorted_product_box_count :
+            0,
+        terminal_shellification_central_distorted_product_box_metadata =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_central_distorted_product_box_metadata :
+            (),
         hamiltonian_matrices_materialized = false,
         operator_matrices_materialized = false,
         pair_operator_blocks_materialized,
@@ -7414,6 +7501,36 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.assembly_route_kind,
         atom_growth_assembly_selected =
             low_order_assembly.atom_growth_assembly_selected,
+        terminal_shellification_assembly_selected =
+            low_order_assembly.terminal_shellification_assembly_selected,
+        terminal_shellification_assembly_summary_available =
+            low_order_assembly.terminal_shellification_assembly_summary_available,
+        terminal_shellification_scaffold_available =
+            low_order_assembly.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_assembly.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_assembly.terminal_shellification_region_count,
+        terminal_shellification_unit_inventory_available =
+            low_order_assembly.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            low_order_assembly.terminal_shellification_transform_contracts_available,
+        terminal_shellification_pair_inventory_available =
+            low_order_assembly.terminal_shellification_pair_inventory_available,
+        terminal_shellification_pair_inventory_status =
+            low_order_assembly.terminal_shellification_pair_inventory_status,
+        terminal_shellification_pair_materialization_status =
+            low_order_assembly.terminal_shellification_pair_materialization_status,
+        terminal_shellification_assembly_materialization_status =
+            low_order_assembly.terminal_shellification_assembly_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            low_order_assembly.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_assembly.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_assembly.terminal_shellification_central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            low_order_assembly.terminal_shellification_central_distorted_product_box_metadata,
         hamiltonian_matrices_materialized =
             low_order_assembly.hamiltonian_matrices_materialized,
         operator_matrices_materialized =

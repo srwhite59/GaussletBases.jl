@@ -1,13 +1,17 @@
 using Test
 using GaussletBases
 
-function _cartesian_assembly_stage_low_order_policy_fixture()
+function _cartesian_assembly_stage_low_order_policy_fixture(;
+    probe_parent_axis_construction = :auto,
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+    parent_axis_counts = (x = 9, y = 7, z = 9),
+)
     system_inputs = (;
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
-        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        atom_locations,
         radius = 15.0,
-        parent_axis_counts = (x = 9, y = 7, z = 9),
+        parent_axis_counts,
         map_backend = :pgdg_localized_experimental,
     )
     spacing_inputs = (;
@@ -19,7 +23,7 @@ function _cartesian_assembly_stage_low_order_policy_fixture()
         core_spacing = 0.15,
     )
     parent_inputs = (;
-        probe_parent_axis_construction = :auto,
+        probe_parent_axis_construction,
         parent_axis_probe_backend = :pgdg_localized_experimental,
         parent_axis_probe_family = :G10,
     )
@@ -132,6 +136,7 @@ end
     @test default_summary.legacy_source_assembly_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_assembly_selected
+    @test !default_summary.terminal_shellification_assembly_selected
     @test !default_summary.hamiltonian_matrices_materialized
     @test !default_summary.operator_matrices_materialized
     @test !default_summary.pair_operator_blocks_materialized
@@ -206,6 +211,7 @@ end
     @test atom_growth_summary.assembly_kind ==
           :atom_growth_complete_rectangular_low_order
     @test atom_growth_summary.atom_growth_assembly_selected
+    @test !atom_growth_summary.terminal_shellification_assembly_selected
     @test !atom_growth_summary.legacy_source_assembly_selected
     @test atom_growth_summary.plan_authority
     @test !atom_growth_summary.active_source_authority
@@ -253,4 +259,154 @@ end
     @test atom_growth_assembly.transforms === atom_growth_stages.transforms
     @test atom_growth_assembly.pairs === atom_growth_stages.pairs
     @test atom_growth_assembly.assembly_stage == :assembled_report_inputs
+
+    terminal_fixture =
+        _cartesian_assembly_stage_low_order_policy_fixture(
+            probe_parent_axis_construction = false,
+            atom_locations = ((-4.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
+            parent_axis_counts = (x = 13, y = 7, z = 7),
+        )
+    terminal_stages =
+        _cartesian_assembly_stage_low_order_policy_assembly(
+            terminal_fixture;
+            policy = :terminal_cartesian_shellification_geometry,
+        )
+    terminal_assembly = terminal_stages.assembly
+    terminal_summary = terminal_assembly.low_order_assembly
+    @test terminal_assembly.low_order_assembly_route_kind ==
+          :terminal_shellification_low_order_assembly
+    @test terminal_assembly.low_order_assembly_source ==
+          :terminal_shellification_pair_terms
+    @test terminal_assembly.terminal_shellification_assembly_selected
+    @test terminal_assembly.terminal_shellification_assembly_summary_available
+    @test terminal_assembly.terminal_shellification_scaffold_available
+    @test terminal_assembly.terminal_shellification_scaffold ===
+          terminal_stages.pairs.terminal_shellification_scaffold
+    @test terminal_assembly.terminal_shellification_region_count ==
+          terminal_stages.pairs.terminal_shellification_region_count
+    @test !terminal_assembly.terminal_shellification_unit_inventory_available
+    @test !terminal_assembly.terminal_shellification_transform_contracts_available
+    @test !terminal_assembly.terminal_shellification_pair_inventory_available
+    @test terminal_assembly.terminal_shellification_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_assembly.terminal_shellification_pair_materialization_status ==
+          :deferred_terminal_shellification_pair_materialization
+    @test terminal_assembly.terminal_shellification_assembly_materialization_status ==
+          :deferred_terminal_shellification_assembly_materialization
+    @test !terminal_assembly.hamiltonian_matrices_materialized
+    @test !terminal_assembly.operator_matrices_materialized
+    @test !terminal_assembly.pair_operator_blocks_materialized
+    @test terminal_assembly.assembly_requires_materialization
+    @test !terminal_assembly.active_source_authority
+    @test terminal_assembly.low_order_pair_inventory_source ==
+          :terminal_shellification_scaffold
+    @test !terminal_assembly.low_order_pair_inventory_known
+    @test !terminal_assembly.low_order_independent_atom_growth_pair_inventory_available
+    @test terminal_assembly.low_order_pair_count == 0
+    @test terminal_assembly.low_order_pair_family_counts == ()
+    @test !terminal_assembly.low_order_route_core_pair_inventory_available
+    @test terminal_assembly.low_order_route_core_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_assembly.low_order_route_core_pair_count == 0
+    @test !terminal_assembly.low_order_route_core_pair_operator_ready
+    @test terminal_assembly.low_order_route_core_pair_operator_readiness_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_assembly.low_order_route_core_typed_pair_operator_plan_inventory_status ==
+          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
+    @test terminal_assembly.low_order_route_core_typed_pair_operator_plan_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_assembly.low_order_route_core_typed_pair_operator_plan_inventory_available
+    @test terminal_assembly.terminal_shellification_central_gap_region_count ==
+          terminal_stages.pairs.terminal_shellification_central_gap_region_count
+    @test terminal_assembly.terminal_shellification_central_midpoint_slab_count ==
+          terminal_stages.pairs.terminal_shellification_central_midpoint_slab_count
+    @test terminal_assembly.terminal_shellification_central_distorted_product_box_count ==
+          terminal_stages.pairs.terminal_shellification_central_distorted_product_box_count
+    @test terminal_assembly.terminal_shellification_central_gap_region_count == 3
+    @test terminal_assembly.terminal_shellification_central_midpoint_slab_count ==
+          3
+    @test terminal_assembly.terminal_shellification_central_distorted_product_box_count ==
+          0
+    @test terminal_summary.object_kind ==
+          :cartesian_assembly_stage_low_order_summary
+    @test terminal_summary.status ==
+          :deferred_terminal_shellification_assembly_materialization
+    @test terminal_summary.low_order_shellization_policy_resolved ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_source ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_kind ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.pair_route_kind ==
+          :terminal_shellification_low_order_pairs
+    @test terminal_summary.assembly_source ==
+          :terminal_shellification_pair_terms
+    @test terminal_summary.assembly_route_kind ==
+          :terminal_shellification_low_order_assembly
+    @test terminal_summary.assembly_kind ==
+          :terminal_shellification_low_order
+    @test terminal_summary.terminal_shellification_assembly_selected
+    @test !terminal_summary.atom_growth_assembly_selected
+    @test !terminal_summary.legacy_source_assembly_selected
+    @test terminal_summary.terminal_shellification_assembly_summary_available
+    @test terminal_summary.terminal_shellification_scaffold_available
+    @test terminal_summary.terminal_shellification_scaffold ===
+          terminal_stages.pairs.terminal_shellification_scaffold
+    @test terminal_summary.terminal_shellification_region_count ==
+          terminal_stages.pairs.terminal_shellification_region_count
+    @test !terminal_summary.terminal_shellification_unit_inventory_available
+    @test !terminal_summary.terminal_shellification_transform_contracts_available
+    @test !terminal_summary.terminal_shellification_pair_inventory_available
+    @test terminal_summary.terminal_shellification_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.terminal_shellification_pair_materialization_status ==
+          :deferred_terminal_shellification_pair_materialization
+    @test terminal_summary.terminal_shellification_assembly_materialization_status ==
+          :deferred_terminal_shellification_assembly_materialization
+    @test !terminal_summary.hamiltonian_matrices_materialized
+    @test !terminal_summary.operator_matrices_materialized
+    @test !terminal_summary.pair_operator_blocks_materialized
+    @test !terminal_summary.pair_operator_blocks_available
+    @test terminal_summary.pair_inventory_source ==
+          :terminal_shellification_scaffold
+    @test !terminal_summary.pair_inventory_known
+    @test !terminal_summary.independent_atom_growth_pair_inventory_available
+    @test terminal_summary.pair_count == 0
+    @test terminal_summary.pair_family_counts == ()
+    @test !terminal_summary.assembly_can_proceed_from_current_staged_data
+    @test terminal_summary.assembly_requires_materialization
+    @test terminal_summary.assembly_materialization_status ==
+          :deferred_terminal_shellification_assembly_materialization
+    @test terminal_summary.assembly_blocker ==
+          :terminal_shellification_pair_blocks_deferred
+    @test terminal_summary.plan_authority
+    @test !terminal_summary.active_source_authority
+    @test !terminal_summary.legacy_source_authority
+    @test !terminal_summary.route_core_pair_inventory_available
+    @test terminal_summary.route_core_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.route_core_pair_count == 0
+    @test terminal_summary.route_core_pair_family_counts == ()
+    @test terminal_summary.route_core_summary_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_summary.route_core_pair_operator_ready
+    @test terminal_summary.route_core_pair_operator_readiness_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.route_core_pair_operator_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_summary.route_core_typed_pair_operator_plan_inventory_available
+    @test terminal_summary.route_core_typed_pair_operator_plan_inventory_status ==
+          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
+    @test terminal_summary.route_core_typed_pair_operator_plan_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.helper_by_pair_family == ()
+    @test terminal_summary.pair_operator_helper_by_family == ()
+    @test terminal_summary.pair_helper_status_by_family == ()
+    @test terminal_summary.summary_only
+    @test terminal_summary.assembly_stage_fields_preserved
+    @test terminal_assembly.shells === terminal_stages.shells
+    @test terminal_assembly.units === terminal_stages.units
+    @test terminal_assembly.transforms === terminal_stages.transforms
+    @test terminal_assembly.pairs === terminal_stages.pairs
+    @test terminal_assembly.assembly_stage == :assembled_report_inputs
 end
