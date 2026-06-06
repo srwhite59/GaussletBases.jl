@@ -6722,7 +6722,21 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             transform_route_kind = :not_available,
             pair_route_kind = :not_available,
             atom_growth_pairs_selected = false,
+            terminal_shellification_pairs_selected = false,
             legacy_source_pairs_selected = false,
+            terminal_shellification_pair_summary_available = false,
+            terminal_shellification_scaffold_available = false,
+            terminal_shellification_scaffold = nothing,
+            terminal_shellification_region_count = 0,
+            terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_transform_contracts_available = false,
+            terminal_shellification_pair_inventory_available = false,
+            terminal_shellification_pair_inventory_status = :not_available,
+            terminal_shellification_pair_materialization_status = :not_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
             pair_operator_blocks_materialized = false,
             pair_inventory_known = false,
             pair_inventory_source = :not_available,
@@ -6751,13 +6765,30 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
 
     atom_growth_pairs_selected =
         low_order_transforms.atom_growth_transforms_selected
+    terminal_shellification_pairs_selected =
+        low_order_transforms.terminal_shellification_transforms_selected
     legacy_source_pairs_selected =
         low_order_transforms.legacy_source_transforms_selected
     pair_route_kind =
         atom_growth_pairs_selected ?
         :atom_growth_complete_rectangular_low_order_pairs :
+        terminal_shellification_pairs_selected ?
+        :terminal_shellification_low_order_pairs :
         legacy_source_pairs_selected ?
         :legacy_diatomic_source_low_order_pairs :
+        :not_selected
+    terminal_shellification_scaffold_available =
+        terminal_shellification_pairs_selected &&
+        low_order_transforms.terminal_shellification_scaffold_available
+    terminal_shellification_pair_summary_available =
+        terminal_shellification_pairs_selected
+    terminal_shellification_pair_inventory_status =
+        terminal_shellification_pairs_selected ?
+        :deferred_terminal_shellification_pair_inventory :
+        :not_selected
+    terminal_shellification_pair_materialization_status =
+        terminal_shellification_pairs_selected ?
+        :deferred_terminal_shellification_pair_materialization :
         :not_selected
     atom_growth_plan_unit_inventory =
         atom_growth_pairs_selected && hasproperty(units, :plan_unit_inventory) ?
@@ -6777,6 +6808,25 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
             nothing,
             atom_growth_pair_inventory,
             route_skeleton,
+        ) :
+        terminal_shellification_pairs_selected ?
+        merge(
+            route_core_pair_unavailable,
+            (;
+                route_core_pair_inventory_status =
+                    :deferred_terminal_shellification_pair_inventory,
+                route_core_summary_status =
+                    :deferred_terminal_shellification_pair_inventory,
+                route_core_pair_operator_ready = false,
+                route_core_pair_operator_readiness_status =
+                    :deferred_terminal_shellification_pair_inventory,
+                route_core_pair_operator_blocker =
+                    :deferred_terminal_shellification_pair_inventory,
+                _pqs_source_box_route_driver_route_core_typed_pair_operator_plan_unavailable_metadata(
+                    :deferred_terminal_shellification_typed_pair_operator_plan_inventory,
+                    :deferred_terminal_shellification_pair_inventory,
+                )...,
+            ),
         ) :
         merge(
             route_core_pair_unavailable,
@@ -6812,22 +6862,30 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         atom_growth_pair_inventory.pair_entries :
         atom_growth_pairs_selected ?
         () :
+        terminal_shellification_pairs_selected ?
+        () :
         route_skeleton.pair_entries
     pair_family_counts =
         independent_atom_growth_pair_inventory_available ?
         atom_growth_pair_inventory.pair_family_counts :
         atom_growth_pairs_selected ?
         (white_lindsey_low_order_atom_growth_unit_pair = 0,) :
+        terminal_shellification_pairs_selected ?
+        () :
         route_skeleton.pair_family_counts
     pair_inventory_source =
         independent_atom_growth_pair_inventory_available ?
         atom_growth_pair_inventory.pair_inventory_source :
         atom_growth_pairs_selected ?
         atom_growth_pair_inventory.pair_inventory_source :
+        terminal_shellification_pairs_selected ?
+        :terminal_shellification_scaffold :
         :route_skeleton_pair_entries_only
     pair_inventory_known =
         atom_growth_pairs_selected ?
         independent_atom_growth_pair_inventory_available :
+        terminal_shellification_pairs_selected ?
+        false :
         !isempty(pair_entries)
     atom_growth_pair_helper_status_by_family = (
         white_lindsey_low_order_atom_growth_unit_pair =
@@ -6836,10 +6894,14 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
     pair_operator_helper_by_family =
         atom_growth_pairs_selected ?
         atom_growth_pair_helper_status_by_family :
+        terminal_shellification_pairs_selected ?
+        () :
         route_skeleton.helper_by_pair_family
     pair_helper_status_by_family =
         atom_growth_pairs_selected ?
         atom_growth_pair_helper_status_by_family :
+        terminal_shellification_pairs_selected ?
+        () :
         nothing
     operator_pairs_materialized =
         independent_atom_growth_pair_inventory_available ?
@@ -6849,6 +6911,9 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
     return (;
         object_kind = :cartesian_pair_stage_low_order_summary,
         status =
+            terminal_shellification_pairs_selected &&
+            terminal_shellification_scaffold_available ?
+            :deferred_terminal_shellification_pair_inventory :
             low_order_transforms.status ==
             :available_transform_stage_low_order_summary ?
             :available_pair_stage_low_order_summary :
@@ -6869,7 +6934,43 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         transform_route_kind = low_order_transforms.transform_route_kind,
         pair_route_kind,
         atom_growth_pairs_selected,
+        terminal_shellification_pairs_selected,
         legacy_source_pairs_selected,
+        terminal_shellification_pair_summary_available,
+        terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_scaffold :
+            nothing,
+        terminal_shellification_region_count =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_region_count :
+            0,
+        terminal_shellification_unit_inventory_available =
+            terminal_shellification_pairs_selected &&
+            low_order_transforms.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            terminal_shellification_pairs_selected &&
+            low_order_transforms.terminal_shellification_transform_contracts_available,
+        terminal_shellification_pair_inventory_available = false,
+        terminal_shellification_pair_inventory_status,
+        terminal_shellification_pair_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_central_gap_region_count :
+            0,
+        terminal_shellification_central_midpoint_slab_count =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_central_midpoint_slab_count :
+            0,
+        terminal_shellification_central_distorted_product_box_count =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_central_distorted_product_box_count :
+            0,
+        terminal_shellification_central_distorted_product_box_metadata =
+            terminal_shellification_pairs_selected ?
+            low_order_transforms.terminal_shellification_central_distorted_product_box_metadata :
+            (),
         pair_operator_blocks_materialized = false,
         operator_pairs_materialized,
         pair_inventory_known,
@@ -6895,7 +6996,9 @@ function _pqs_source_box_route_driver_pair_stage_low_order_summary(
         route_core_pair_metadata...,
         route_core_pair_operator_preflight_metadata...,
         route_core_pair_operator_plan_metadata...,
-        summary_only = !independent_atom_growth_pair_inventory_available,
+        summary_only =
+            terminal_shellification_pairs_selected ||
+            !independent_atom_growth_pair_inventory_available,
     )
 end
 
@@ -6916,6 +7019,34 @@ function cartesian_pair_terms(units, transforms, recipe)
         low_order_pairs,
         low_order_pair_route_kind = low_order_pairs.pair_route_kind,
         atom_growth_pairs_selected = low_order_pairs.atom_growth_pairs_selected,
+        terminal_shellification_pairs_selected =
+            low_order_pairs.terminal_shellification_pairs_selected,
+        terminal_shellification_pair_summary_available =
+            low_order_pairs.terminal_shellification_pair_summary_available,
+        terminal_shellification_scaffold_available =
+            low_order_pairs.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_pairs.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_pairs.terminal_shellification_region_count,
+        terminal_shellification_unit_inventory_available =
+            low_order_pairs.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            low_order_pairs.terminal_shellification_transform_contracts_available,
+        terminal_shellification_pair_inventory_available =
+            low_order_pairs.terminal_shellification_pair_inventory_available,
+        terminal_shellification_pair_inventory_status =
+            low_order_pairs.terminal_shellification_pair_inventory_status,
+        terminal_shellification_pair_materialization_status =
+            low_order_pairs.terminal_shellification_pair_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            low_order_pairs.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_pairs.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_pairs.terminal_shellification_central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            low_order_pairs.terminal_shellification_central_distorted_product_box_metadata,
         pair_operator_blocks_materialized =
             low_order_pairs.pair_operator_blocks_materialized,
         operator_pairs_materialized = low_order_pairs.operator_pairs_materialized,

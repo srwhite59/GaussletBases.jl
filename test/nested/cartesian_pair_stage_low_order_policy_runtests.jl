@@ -1,13 +1,17 @@
 using Test
 using GaussletBases
 
-function _cartesian_pair_stage_low_order_policy_fixture()
+function _cartesian_pair_stage_low_order_policy_fixture(;
+    probe_parent_axis_construction = :auto,
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+    parent_axis_counts = (x = 9, y = 7, z = 9),
+)
     system_inputs = (;
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
-        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        atom_locations,
         radius = 15.0,
-        parent_axis_counts = (x = 9, y = 7, z = 9),
+        parent_axis_counts,
         map_backend = :pgdg_localized_experimental,
     )
     spacing_inputs = (;
@@ -19,7 +23,7 @@ function _cartesian_pair_stage_low_order_policy_fixture()
         core_spacing = 0.15,
     )
     parent_inputs = (;
-        probe_parent_axis_construction = :auto,
+        probe_parent_axis_construction,
         parent_axis_probe_backend = :pgdg_localized_experimental,
         parent_axis_probe_family = :G10,
     )
@@ -123,6 +127,7 @@ end
     @test default_summary.legacy_source_pairs_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_pairs_selected
+    @test !default_summary.terminal_shellification_pairs_selected
     @test !default_summary.pair_operator_blocks_materialized
     @test default_summary.pair_inventory_known
     @test default_summary.pair_inventory_source ==
@@ -198,6 +203,7 @@ end
     @test atom_growth_summary.pair_route_kind ==
           :atom_growth_complete_rectangular_low_order_pairs
     @test atom_growth_summary.atom_growth_pairs_selected
+    @test !atom_growth_summary.terminal_shellification_pairs_selected
     @test !atom_growth_summary.legacy_source_pairs_selected
     @test atom_growth_summary.plan_authority
     @test !atom_growth_summary.active_source_authority
@@ -459,6 +465,165 @@ end
     @test atom_growth_pairs.route_skeleton_helper_by_pair_family ===
           atom_growth_stages.units.route_skeleton.helper_by_pair_family
     @test atom_growth_pairs.pair_stage == :pair_operator_terms_described
+
+    terminal_fixture =
+        _cartesian_pair_stage_low_order_policy_fixture(
+            probe_parent_axis_construction = false,
+            atom_locations = ((-4.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
+            parent_axis_counts = (x = 13, y = 7, z = 7),
+        )
+    terminal_stages = _cartesian_pair_stage_low_order_policy_pairs(
+        terminal_fixture;
+        policy = :terminal_cartesian_shellification_geometry,
+    )
+    terminal_pairs = terminal_stages.pairs
+    terminal_summary = terminal_pairs.low_order_pairs
+    @test terminal_pairs.low_order_pair_route_kind ==
+          :terminal_shellification_low_order_pairs
+    @test terminal_pairs.terminal_shellification_pairs_selected
+    @test terminal_pairs.terminal_shellification_pair_summary_available
+    @test terminal_pairs.terminal_shellification_scaffold_available
+    @test terminal_pairs.terminal_shellification_scaffold ===
+          terminal_stages.transforms.terminal_shellification_scaffold
+    @test terminal_pairs.terminal_shellification_region_count ==
+          terminal_stages.transforms.terminal_shellification_region_count
+    @test !terminal_pairs.terminal_shellification_unit_inventory_available
+    @test !terminal_pairs.terminal_shellification_transform_contracts_available
+    @test !terminal_pairs.terminal_shellification_pair_inventory_available
+    @test terminal_pairs.terminal_shellification_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_pairs.terminal_shellification_pair_materialization_status ==
+          :deferred_terminal_shellification_pair_materialization
+    @test !terminal_pairs.pair_operator_blocks_materialized
+    @test !terminal_pairs.operator_pairs_materialized
+    @test terminal_pairs.pair_inventory === nothing
+    @test terminal_pairs.pair_inventory_source ==
+          :terminal_shellification_scaffold
+    @test terminal_pairs.pair_entries == ()
+    @test terminal_pairs.pair_entries !==
+          terminal_stages.units.route_skeleton.pair_entries
+    @test terminal_pairs.pair_family_counts == ()
+    @test terminal_pairs.pair_family_counts !==
+          terminal_stages.units.route_skeleton.pair_family_counts
+    @test terminal_pairs.helper_by_pair_family == ()
+    @test terminal_pairs.pair_operator_helper_by_family == ()
+    @test terminal_pairs.pair_helper_status_by_family == ()
+    @test !terminal_pairs.route_core_pair_inventory_available
+    @test terminal_pairs.route_core_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_pairs.route_core_pair_operator_ready
+    @test terminal_pairs.route_core_pair_operator_readiness_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_pairs.route_core_pair_operator_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_pairs.route_core_typed_pair_operator_plan_inventory_status ==
+          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
+    @test terminal_pairs.route_core_typed_pair_operator_plan_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_pairs.route_core_typed_pair_operator_plan_inventory_available
+    @test terminal_pairs.route_core_typed_pair_operator_plan_count == 0
+    @test terminal_pairs.route_core_typed_pair_operator_plan_blocked_count == 0
+    @test !terminal_pairs.route_core_typed_pair_operator_plan_materialized
+    @test !terminal_pairs.route_core_typed_pair_operator_materialization_ready
+    @test terminal_pairs.terminal_shellification_central_gap_region_count ==
+          terminal_stages.transforms.terminal_shellification_central_gap_region_count
+    @test terminal_pairs.terminal_shellification_central_midpoint_slab_count ==
+          terminal_stages.transforms.terminal_shellification_central_midpoint_slab_count
+    @test terminal_pairs.terminal_shellification_central_distorted_product_box_count ==
+          terminal_stages.transforms.terminal_shellification_central_distorted_product_box_count
+    @test terminal_pairs.terminal_shellification_central_gap_region_count == 3
+    @test terminal_pairs.terminal_shellification_central_midpoint_slab_count == 3
+    @test terminal_pairs.terminal_shellification_central_distorted_product_box_count ==
+          0
+    @test terminal_summary.object_kind == :cartesian_pair_stage_low_order_summary
+    @test terminal_summary.status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.low_order_shellization_policy_resolved ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_source ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_kind ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.unit_route_kind ==
+          :terminal_shellification_low_order_units
+    @test terminal_summary.transform_route_kind ==
+          :terminal_shellification_low_order_transforms
+    @test terminal_summary.pair_route_kind ==
+          :terminal_shellification_low_order_pairs
+    @test terminal_summary.terminal_shellification_pairs_selected
+    @test !terminal_summary.atom_growth_pairs_selected
+    @test !terminal_summary.legacy_source_pairs_selected
+    @test terminal_summary.terminal_shellification_pair_summary_available
+    @test terminal_summary.terminal_shellification_scaffold_available
+    @test terminal_summary.terminal_shellification_scaffold ===
+          terminal_stages.transforms.terminal_shellification_scaffold
+    @test terminal_summary.terminal_shellification_region_count ==
+          terminal_stages.transforms.terminal_shellification_region_count
+    @test !terminal_summary.terminal_shellification_unit_inventory_available
+    @test !terminal_summary.terminal_shellification_transform_contracts_available
+    @test !terminal_summary.terminal_shellification_pair_inventory_available
+    @test terminal_summary.terminal_shellification_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.terminal_shellification_pair_materialization_status ==
+          :deferred_terminal_shellification_pair_materialization
+    @test !terminal_summary.pair_inventory_known
+    @test terminal_summary.pair_inventory_source ==
+          :terminal_shellification_scaffold
+    @test terminal_summary.pair_inventory === nothing
+    @test terminal_summary.pair_entries == ()
+    @test terminal_summary.pair_entries !==
+          terminal_stages.units.route_skeleton.pair_entries
+    @test terminal_summary.pair_count == 0
+    @test terminal_summary.pair_family_counts == ()
+    @test terminal_summary.pair_family_counts !==
+          terminal_stages.units.route_skeleton.pair_family_counts
+    @test terminal_summary.helper_by_pair_family == ()
+    @test terminal_summary.pair_operator_helper_by_family == ()
+    @test terminal_summary.pair_helper_status_by_family == ()
+    @test !terminal_summary.pair_operator_blocks_materialized
+    @test !terminal_summary.operator_pairs_materialized
+    @test terminal_summary.plan_authority
+    @test !terminal_summary.active_source_authority
+    @test !terminal_summary.legacy_source_authority
+    @test terminal_summary.route_core_pair_inventory_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.route_core_pair_inventory === nothing
+    @test terminal_summary.route_core_pair_count == 0
+    @test terminal_summary.route_core_pair_keys == ()
+    @test terminal_summary.route_core_pair_family_counts == ()
+    @test terminal_summary.route_core_summary_status ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_summary.route_core_pair_operator_ready
+    @test terminal_summary.route_core_pair_operator_preflight_available
+    @test terminal_summary.route_core_pair_operator_preflight_status ==
+          :blocked_route_core_pair_operator_preflight
+    @test terminal_summary.route_core_pair_operator_preflight_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_summary.route_core_pair_operator_preflight.operator_blocks_materialized
+    @test terminal_summary.route_core_pair_operator_plan_available
+    @test terminal_summary.route_core_pair_operator_plan_status ==
+          :blocked_route_core_pair_operator_plan
+    @test terminal_summary.route_core_pair_operator_plan_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test !terminal_summary.route_core_pair_operator_plan.operator_blocks_materialized
+    @test !terminal_summary.route_core_typed_pair_operator_plan_inventory_available
+    @test terminal_summary.route_core_typed_pair_operator_plan_inventory_status ==
+          :deferred_terminal_shellification_typed_pair_operator_plan_inventory
+    @test terminal_summary.route_core_typed_pair_operator_plan_blocker ==
+          :deferred_terminal_shellification_pair_inventory
+    @test terminal_summary.route_skeleton_pair_entries ===
+          terminal_stages.units.route_skeleton.pair_entries
+    @test terminal_summary.route_skeleton_pair_family_counts ===
+          terminal_stages.units.route_skeleton.pair_family_counts
+    @test terminal_summary.summary_only
+    @test terminal_summary.pair_stage_fields_preserved
+    @test terminal_pairs.route_skeleton_pair_entries ===
+          terminal_stages.units.route_skeleton.pair_entries
+    @test terminal_pairs.route_skeleton_pair_family_counts ===
+          terminal_stages.units.route_skeleton.pair_family_counts
+    @test terminal_pairs.route_skeleton_helper_by_pair_family ===
+          terminal_stages.units.route_skeleton.helper_by_pair_family
+    @test terminal_pairs.pair_stage == :pair_operator_terms_described
 
     blocked_units = merge(
         atom_growth_stages.units,
