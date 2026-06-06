@@ -5810,7 +5810,20 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             unit_route_kind = :not_available,
             transform_route_kind = :not_available,
             atom_growth_transforms_selected = false,
+            terminal_shellification_transforms_selected = false,
             legacy_source_transforms_selected = false,
+            terminal_shellification_transform_summary_available = false,
+            terminal_shellification_scaffold_available = false,
+            terminal_shellification_scaffold = nothing,
+            terminal_shellification_region_count = 0,
+            terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_transform_contracts_available = false,
+            terminal_shellification_transform_materialization_status =
+                :not_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
             coefficient_transforms_materialized = false,
             coefficient_maps_materialized = false,
             transform_materialization_status = :not_available,
@@ -5854,12 +5867,25 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     end
 
     atom_growth_transforms_selected = low_order_units.atom_growth_units_selected
+    terminal_shellification_transforms_selected =
+        low_order_units.terminal_shellification_units_selected
     legacy_source_transforms_selected = low_order_units.legacy_source_units_selected
     transform_route_kind =
         atom_growth_transforms_selected ?
         :atom_growth_complete_rectangular_low_order_transforms :
+        terminal_shellification_transforms_selected ?
+        :terminal_shellification_low_order_transforms :
         legacy_source_transforms_selected ?
         :legacy_diatomic_source_low_order_transforms :
+        :not_selected
+    terminal_shellification_scaffold_available =
+        terminal_shellification_transforms_selected &&
+        low_order_units.terminal_shellification_scaffold_available
+    terminal_shellification_transform_summary_available =
+        terminal_shellification_transforms_selected
+    terminal_shellification_transform_materialization_status =
+        terminal_shellification_transforms_selected ?
+        :deferred_terminal_shellification_transform_contracts :
         :not_selected
     transform_contract_inventory =
         atom_growth_transforms_selected ?
@@ -5876,13 +5902,17 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         transform_contract_inventory.transform_contract_source :
         atom_growth_transforms_selected ?
         :blocked_atom_growth_plan_unit_inventory :
+        terminal_shellification_transforms_selected ?
+        :terminal_shellification_scaffold :
         legacy_source_transforms_selected ?
         :legacy_diatomic_source_summary :
         :route_skeleton_compatibility_fields
     transform_contract_status =
+        terminal_shellification_transforms_selected ?
+        terminal_shellification_transform_materialization_status :
         isnothing(transform_contract_inventory) ?
-        transform_contract_source :
-        transform_contract_inventory.status
+            transform_contract_source :
+            transform_contract_inventory.status
     source_backed_contract_count =
         isnothing(transform_contract_inventory) ?
         0 :
@@ -5902,6 +5932,9 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
     status =
         transform_contract_inventory_available ?
         :available_transform_stage_low_order_summary :
+        terminal_shellification_transforms_selected &&
+        terminal_shellification_scaffold_available ?
+        :deferred_terminal_shellification_transform_contracts :
         !isnothing(transform_contract_inventory) ?
         transform_contract_inventory.status :
         low_order_units.status == :available_unit_stage_low_order_summary ?
@@ -5926,12 +5959,46 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         unit_route_kind = low_order_units.unit_route_kind,
         transform_route_kind,
         atom_growth_transforms_selected,
+        terminal_shellification_transforms_selected,
         legacy_source_transforms_selected,
+        terminal_shellification_transform_summary_available,
+        terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_scaffold :
+            nothing,
+        terminal_shellification_region_count =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_region_count :
+            0,
+        terminal_shellification_unit_inventory_available =
+            terminal_shellification_transforms_selected &&
+            low_order_units.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available = false,
+        terminal_shellification_transform_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_central_gap_region_count :
+            0,
+        terminal_shellification_central_midpoint_slab_count =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_central_midpoint_slab_count :
+            0,
+        terminal_shellification_central_distorted_product_box_count =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_central_distorted_product_box_count :
+            0,
+        terminal_shellification_central_distorted_product_box_metadata =
+            terminal_shellification_transforms_selected ?
+            low_order_units.terminal_shellification_central_distorted_product_box_metadata :
+            (),
         coefficient_transforms_materialized = false,
         coefficient_maps_materialized = false,
         transform_materialization_status =
             atom_growth_transforms_selected ?
             :deferred_atom_growth_complete_rectangular_transform_materialization :
+            terminal_shellification_transforms_selected ?
+            terminal_shellification_transform_materialization_status :
             legacy_source_transforms_selected ?
             :deferred_legacy_diatomic_source_transform_materialization :
             low_order_units.materialization_status,
@@ -6016,7 +6083,9 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
         transform_fields_preserved = true,
         route_skeleton_transform_inventory_source =
             :route_skeleton_compatibility_fields,
-        summary_only = !transform_contract_inventory_available,
+        summary_only =
+            terminal_shellification_transforms_selected ||
+            !transform_contract_inventory_available,
     )
 end
 
@@ -6034,6 +6103,30 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.transform_route_kind,
         atom_growth_transforms_selected =
             low_order_transforms.atom_growth_transforms_selected,
+        terminal_shellification_transforms_selected =
+            low_order_transforms.terminal_shellification_transforms_selected,
+        terminal_shellification_transform_summary_available =
+            low_order_transforms.terminal_shellification_transform_summary_available,
+        terminal_shellification_scaffold_available =
+            low_order_transforms.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_transforms.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_transforms.terminal_shellification_region_count,
+        terminal_shellification_unit_inventory_available =
+            low_order_transforms.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            low_order_transforms.terminal_shellification_transform_contracts_available,
+        terminal_shellification_transform_materialization_status =
+            low_order_transforms.terminal_shellification_transform_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            low_order_transforms.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_transforms.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_transforms.terminal_shellification_central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            low_order_transforms.terminal_shellification_central_distorted_product_box_metadata,
         coefficient_transforms_materialized =
             low_order_transforms.coefficient_transforms_materialized,
         coefficient_maps_materialized =

@@ -1,13 +1,17 @@
 using Test
 using GaussletBases
 
-function _cartesian_transform_stage_low_order_policy_fixture()
+function _cartesian_transform_stage_low_order_policy_fixture(;
+    probe_parent_axis_construction = :auto,
+    atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+    parent_axis_counts = (x = 9, y = 7, z = 9),
+)
     system_inputs = (;
         atom_symbols = ("Be", "Be"),
         nuclear_charges = (4, 4),
-        atom_locations = ((-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)),
+        atom_locations,
         radius = 15.0,
-        parent_axis_counts = (x = 9, y = 7, z = 9),
+        parent_axis_counts,
         map_backend = :pgdg_localized_experimental,
     )
     spacing_inputs = (;
@@ -19,7 +23,7 @@ function _cartesian_transform_stage_low_order_policy_fixture()
         core_spacing = 0.15,
     )
     parent_inputs = (;
-        probe_parent_axis_construction = :auto,
+        probe_parent_axis_construction,
         parent_axis_probe_backend = :pgdg_localized_experimental,
         parent_axis_probe_family = :G10,
     )
@@ -100,7 +104,9 @@ end
     @test default_summary.legacy_source_transforms_selected
     @test default_summary.active_source_authority
     @test !default_summary.atom_growth_transforms_selected
+    @test !default_summary.terminal_shellification_transforms_selected
     @test !default_summary.atom_growth_transform_contracts_available
+    @test !default_summary.terminal_shellification_transform_contracts_available
     @test !default_summary.transform_contract_inventory_available
     @test default_summary.transform_contract_source ==
           :legacy_diatomic_source_summary
@@ -161,8 +167,10 @@ end
     @test atom_growth_summary.transform_route_kind ==
           :atom_growth_complete_rectangular_low_order_transforms
     @test atom_growth_summary.atom_growth_transforms_selected
+    @test !atom_growth_summary.terminal_shellification_transforms_selected
     @test !atom_growth_summary.legacy_source_transforms_selected
     @test atom_growth_summary.atom_growth_transform_contracts_available
+    @test !atom_growth_summary.terminal_shellification_transform_contracts_available
     @test atom_growth_summary.transform_contract_inventory_available
     @test atom_growth_summary.transform_contract_source ==
           :atom_growth_plan_unit_inventory
@@ -369,5 +377,115 @@ end
     @test hasproperty(atom_growth_transforms, :ranges)
     @test hasproperty(atom_growth_transforms, :retained_dimension)
     @test atom_growth_transforms.transform_stage ==
+          :unit_retained_transforms_described
+
+    terminal_fixture =
+        _cartesian_transform_stage_low_order_policy_fixture(
+            probe_parent_axis_construction = false,
+            atom_locations = ((-4.0, 0.0, 0.0), (4.0, 0.0, 0.0)),
+            parent_axis_counts = (x = 13, y = 7, z = 7),
+        )
+    terminal_shells = GaussletBases.cartesian_shells(
+        terminal_fixture.parent,
+        terminal_fixture.spacing_inputs,
+        terminal_fixture.recipe;
+        low_order_shellization_policy =
+            :terminal_cartesian_shellification_geometry,
+    )
+    terminal_units = GaussletBases.cartesian_units(
+        terminal_fixture.parent,
+        terminal_shells,
+        terminal_fixture.route_probe_inputs,
+        terminal_fixture.recipe,
+    )
+    terminal_transforms =
+        GaussletBases.cartesian_transforms(terminal_units, terminal_fixture.recipe)
+    terminal_summary = terminal_transforms.low_order_transforms
+    @test terminal_transforms.low_order_transform_route_kind ==
+          :terminal_shellification_low_order_transforms
+    @test terminal_transforms.terminal_shellification_transforms_selected
+    @test terminal_transforms.terminal_shellification_transform_summary_available
+    @test terminal_transforms.terminal_shellification_scaffold_available
+    @test terminal_transforms.terminal_shellification_scaffold ===
+          terminal_units.terminal_shellification_scaffold
+    @test terminal_transforms.terminal_shellification_region_count ==
+          terminal_units.terminal_shellification_region_count
+    @test !terminal_transforms.terminal_shellification_unit_inventory_available
+    @test !terminal_transforms.terminal_shellification_transform_contracts_available
+    @test terminal_transforms.terminal_shellification_transform_materialization_status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test terminal_transforms.transform_contract_source ==
+          :terminal_shellification_scaffold
+    @test terminal_transforms.transform_contract_status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test !terminal_transforms.transform_contract_inventory_available
+    @test terminal_transforms.transform_contract_inventory === nothing
+    @test !terminal_transforms.coefficient_transforms_materialized
+    @test !terminal_transforms.coefficient_maps_materialized
+    @test !terminal_transforms.active_source_authority
+    @test terminal_transforms.terminal_shellification_central_gap_region_count ==
+          terminal_units.terminal_shellification_central_gap_region_count
+    @test terminal_transforms.terminal_shellification_central_midpoint_slab_count ==
+          terminal_units.terminal_shellification_central_midpoint_slab_count
+    @test terminal_transforms.terminal_shellification_central_distorted_product_box_count ==
+          terminal_units.terminal_shellification_central_distorted_product_box_count
+    @test terminal_transforms.terminal_shellification_central_gap_region_count == 3
+    @test terminal_transforms.terminal_shellification_central_midpoint_slab_count ==
+          3
+    @test terminal_transforms.terminal_shellification_central_distorted_product_box_count ==
+          0
+    @test terminal_summary.object_kind ==
+          :cartesian_transform_stage_low_order_summary
+    @test terminal_summary.status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test terminal_summary.low_order_shellization_policy_resolved ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_source ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.shellization_kind ==
+          :terminal_cartesian_shellification_geometry
+    @test terminal_summary.unit_route_kind ==
+          :terminal_shellification_low_order_units
+    @test terminal_summary.transform_route_kind ==
+          :terminal_shellification_low_order_transforms
+    @test terminal_summary.terminal_shellification_transforms_selected
+    @test !terminal_summary.atom_growth_transforms_selected
+    @test !terminal_summary.legacy_source_transforms_selected
+    @test terminal_summary.terminal_shellification_transform_summary_available
+    @test terminal_summary.terminal_shellification_scaffold_available
+    @test terminal_summary.terminal_shellification_scaffold ===
+          terminal_units.terminal_shellification_scaffold
+    @test terminal_summary.terminal_shellification_region_count ==
+          terminal_units.terminal_shellification_region_count
+    @test !terminal_summary.terminal_shellification_unit_inventory_available
+    @test !terminal_summary.terminal_shellification_transform_contracts_available
+    @test terminal_summary.terminal_shellification_transform_materialization_status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test !terminal_summary.transform_contract_inventory_available
+    @test terminal_summary.transform_contract_inventory === nothing
+    @test terminal_summary.transform_contract_count == 0
+    @test terminal_summary.transform_contract_source ==
+          :terminal_shellification_scaffold
+    @test terminal_summary.transform_contract_status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test terminal_summary.plan_authority
+    @test !terminal_summary.active_source_authority
+    @test !terminal_summary.legacy_source_authority
+    @test !terminal_summary.coefficient_transforms_materialized
+    @test !terminal_summary.coefficient_maps_materialized
+    @test terminal_summary.transform_materialization_status ==
+          :deferred_terminal_shellification_transform_contracts
+    @test !terminal_summary.retained_unit_dimensions_known
+    @test !terminal_summary.retained_unit_ranges_known
+    @test !terminal_summary.retained_dimension_known
+    @test terminal_summary.retained_dimension === nothing
+    @test terminal_summary.summary_only
+    @test !terminal_summary.lw_complete_shell_cpb_enumeration_available
+    @test terminal_summary.lw_complete_shell_cpb_count == 0
+    @test !terminal_summary.pqs_transform_prototype_available
+    @test terminal_summary.pqs_transform_prototype === nothing
+    @test terminal_summary.transform_fields_preserved
+    @test terminal_transforms.retained_units === terminal_units.retained_units
+    @test terminal_transforms.transform_stage ==
           :unit_retained_transforms_described
 end
