@@ -4,6 +4,13 @@
 # chosen later by LW/PQS lowering, and it does not own COMX/product/doside
 # transforms.
 
+"""
+    OwnedSupport
+
+Shellification-owned parent support. It may be one CPB, a union of CPBs, or a
+shell difference `outer_box \\ inner_exclusion_box`, but the owned shell itself
+is not a CPB.
+"""
 struct OwnedSupport
     support_kind::Symbol
     cpbs::Tuple{Vararg{CoordinateProductBox}}
@@ -63,6 +70,12 @@ function support_count(support::OwnedSupport)
     return sum(support_count, support.cpbs; init = 0)
 end
 
+"""
+    ShellificationRegion
+
+Route region that owns parent support before any lowering recipe chooses source
+CPBs, retained modes, or realization transforms.
+"""
 struct ShellificationRegion
     role::Symbol
     owned_support::OwnedSupport

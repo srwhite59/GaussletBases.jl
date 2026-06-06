@@ -146,6 +146,12 @@ function _infer_final_block_path(
     return :source_block_direct_to_final_block
 end
 
+"""
+    SourceOperatorPlan
+
+Metadata-only plan for the source-space operator path between two final retained
+units.
+"""
 struct SourceOperatorPlan
     source_operator_path::Symbol
     left::FinalRetainedUnit
@@ -161,6 +167,12 @@ struct SourceOperatorPlan
     metadata::NamedTuple
 end
 
+"""
+    RealizationApplicationPlan
+
+Metadata-only plan for applying one final unit's shell realization before or
+after source-space operator construction.
+"""
 struct RealizationApplicationPlan
     side::Symbol
     realization_path::Symbol
@@ -174,6 +186,12 @@ struct RealizationApplicationPlan
     metadata::NamedTuple
 end
 
+"""
+    FinalPairBlockPlan
+
+Metadata-only plan for producing a final retained-unit pair block from a source
+operator plan and left/right realization plans.
+"""
 struct FinalPairBlockPlan
     final_block_path::Symbol
     left::FinalRetainedUnit
@@ -188,6 +206,12 @@ struct FinalPairBlockPlan
     metadata::NamedTuple
 end
 
+"""
+    PairOperatorPlan
+
+Typed metadata plan for one `UnitPair`, including source-space, realization,
+and final-block planning records.
+"""
 struct PairOperatorPlan
     pair::UnitPair
     left::FinalRetainedUnit
@@ -203,6 +227,11 @@ struct PairOperatorPlan
     metadata::NamedTuple
 end
 
+"""
+    PairOperatorPlanInventory
+
+Metadata-only pair-operator planning inventory for a `UnitPairInventory`.
+"""
 struct PairOperatorPlanInventory
     pair_inventory::UnitPairInventory
     plans::Tuple{Vararg{PairOperatorPlan}}

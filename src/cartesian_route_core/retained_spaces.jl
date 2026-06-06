@@ -32,6 +32,12 @@ function boundary_product_mode_count(source_mode_dims)
     return total - interior
 end
 
+"""
+    IntermediateRetainedSpace
+
+Planned or materialized retained source-space object downstream of a
+`LoweringSource` and upstream of shell realization.
+"""
 struct IntermediateRetainedSpace
     space_kind::Symbol
     lowering_source::LoweringSource
@@ -85,6 +91,12 @@ function intermediate_retained_space(
     )
 end
 
+"""
+    ShellRealization
+
+Plan or record for realizing an intermediate retained space on
+shellification-owned support.
+"""
 struct ShellRealization
     realization_kind::Symbol
     intermediate::IntermediateRetainedSpace
@@ -184,6 +196,12 @@ function pqs_shell_realization(
     )
 end
 
+"""
+    FinalRetainedUnit
+
+Column-owning retained unit used by pair planning. It preserves links back to
+the lowering source, intermediate space, and shell realization.
+"""
 struct FinalRetainedUnit
     unit_key::Symbol
     role::Symbol

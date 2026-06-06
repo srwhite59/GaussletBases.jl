@@ -41,6 +41,12 @@ Important invariants:
   later shell realization.
 - Pair planning starts from `FinalRetainedUnit` objects, not directly from
   shellification regions or source CPBs.
+
+Metadata policy:
+- `metadata` fields are for diagnostics, provenance, labels, and transitional
+  adapter notes.
+- Required route semantics should be typed fields or constructor arguments, not
+  hidden in metadata.
 """
 module CartesianRouteCore
 
@@ -51,6 +57,13 @@ module CartesianRouteCore
 #
 # Pair-operator plan constructors remain module-qualified for now to avoid
 # making metadata-only planning records look like stable public API.
+#
+# Intentionally not exported for now:
+# - SourceOperatorPlan, RealizationApplicationPlan, FinalPairBlockPlan,
+#   PairOperatorPlan, PairOperatorPlanInventory
+# - source_operator_plan, realization_application_plan, final_pair_block_plan,
+#   pair_operator_plan, pair_operator_plan_inventory
+# - pair-operator path/readiness/count query helpers
 export CoordinateProductBox,
        OwnedSupport,
        ShellificationRegion,

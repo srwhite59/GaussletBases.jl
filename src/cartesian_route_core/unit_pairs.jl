@@ -1,6 +1,12 @@
 # Unit-pair inventory. Pair planning starts from final retained units, not from
 # shellification regions or CPBs directly.
 
+"""
+    UnitPair
+
+Upper-triangular pair entry connecting two `FinalRetainedUnit` objects for
+later operator-block planning.
+"""
 struct UnitPair
     pair_key::Tuple{Symbol,Symbol}
     left::FinalRetainedUnit
@@ -11,6 +17,12 @@ struct UnitPair
     metadata::NamedTuple
 end
 
+"""
+    UnitPairInventory
+
+Bookkeeping inventory of final retained units and their upper-triangular pair
+entries.
+"""
 struct UnitPairInventory
     units::Tuple{Vararg{FinalRetainedUnit}}
     pairs::Tuple{Vararg{UnitPair}}

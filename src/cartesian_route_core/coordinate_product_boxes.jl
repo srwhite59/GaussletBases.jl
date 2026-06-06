@@ -9,6 +9,13 @@
 const _CPB_AXES = (:x, :y, :z)
 const _CPB_SIDES = (:low, :high)
 
+"""
+    CoordinateProductBox
+
+Axis-aligned product of three integer coordinate intervals. This is the typed
+source/support object used by lowering; shells such as `B_outer \\ B_inner` are
+represented by `OwnedSupport`, not by this type.
+"""
 struct CoordinateProductBox
     intervals::NTuple{3,UnitRange{Int}}
     role::Symbol

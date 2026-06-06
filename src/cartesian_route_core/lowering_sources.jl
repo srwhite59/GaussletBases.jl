@@ -4,6 +4,12 @@
 # which CPBs are used to construct retained functions from a region's owned
 # support.
 
+"""
+    LoweringSource
+
+Recipe-specific source-domain record that connects a shellification region to
+the CPBs used to construct retained functions.
+"""
 struct LoweringSource
     recipe::Symbol
     owned_region::ShellificationRegion
