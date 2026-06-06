@@ -33,6 +33,17 @@ function _cpb_codimension(intervals::NTuple{3,UnitRange{Int}})
     return count(interval -> length(interval) == 1, intervals)
 end
 
+"""
+    cpb(ix, iy, iz; role = :coordinate_product_box, metadata = (;))
+    cpb((ix, iy, iz); role = :coordinate_product_box, metadata = (;))
+
+Construct a Coordinate Product Box (CPB), an axis-aligned product of three
+integer coordinate intervals. Singleton intervals are allowed, so the same type
+can represent filled boxes, slabs, facets, edges, and corners.
+
+This constructor does not represent shells such as `B_outer \\ B_inner`; use
+`complete_shell_support` for shell-owned support.
+"""
 function cpb(intervals; role::Symbol = :coordinate_product_box, metadata = (;))
     normalized = _normalize_intervals(intervals)
     return CoordinateProductBox(
@@ -47,6 +58,13 @@ function cpb(ix, iy, iz; role::Symbol = :coordinate_product_box, metadata = (;))
     return cpb((ix, iy, iz); role, metadata)
 end
 
+"""
+    filled_cpb(ix, iy, iz; role = :filled_cpb, metadata = (;))
+
+Construct a codimension-0 CPB. All three intervals must be non-singleton.
+
+Use this for PQS filled source boxes and ordinary volume/source boxes.
+"""
 function filled_cpb(ix, iy, iz; role::Symbol = :filled_cpb, metadata = (;))
     box = cpb(ix, iy, iz; role, metadata)
     box.codimension == 0 ||
@@ -54,6 +72,14 @@ function filled_cpb(ix, iy, iz; role::Symbol = :filled_cpb, metadata = (;))
     return box
 end
 
+"""
+    slab_cpb(ix, iy, iz; role = :slab_cpb, metadata = (;))
+
+Construct a codimension-1 CPB. Exactly one interval must be singleton.
+
+Use this for direct slabs, midpoint/contact slabs, boundary slabs, or other
+slab-like source/support pieces.
+"""
 function slab_cpb(ix, iy, iz; role::Symbol = :slab_cpb, metadata = (;))
     box = cpb(ix, iy, iz; role, metadata)
     box.codimension == 1 ||
@@ -61,10 +87,41 @@ function slab_cpb(ix, iy, iz; role::Symbol = :slab_cpb, metadata = (;))
     return box
 end
 
+"""
+    intervals(box)
+
+Return the three coordinate intervals of a CPB.
+"""
 intervals(box::CoordinateProductBox) = box.intervals
+
+"""
+    shape(box)
+
+Return the three interval lengths of a CPB.
+"""
 shape(box::CoordinateProductBox) = Tuple(length(interval) for interval in box.intervals)
+
+"""
+    codimension(box)
+
+Return the number of singleton axes in a CPB.
+"""
 codimension(box::CoordinateProductBox) = box.codimension
+
+"""
+    role(object)
+
+Return the symbolic role attached to a CPB, shellification region, or final
+retained unit.
+"""
 role(box::CoordinateProductBox) = box.role
+
+"""
+    support_count(object)
+
+Return the number of parent rows/sites represented by the object when that
+count is known from geometry.
+"""
 support_count(box::CoordinateProductBox) = prod(shape(box))
 
 _axis_index(axis::Symbol) =
@@ -185,6 +242,9 @@ shell `outer_box \\ inner_box`.
 The result is a named tuple with `facets`, `edges`, `corners`, and `all_strata`.
 The complete-shell invariant is checked: the inner box must remove exactly one
 low and one high boundary point on every axis.
+
+This is the White--Lindsey shell-decomposition geometry. PQS shell lowering uses
+a filled source CPB instead of this facet/edge/corner breakdown.
 """
 function complete_shell_boundary_strata(
     outer_box::CoordinateProductBox,

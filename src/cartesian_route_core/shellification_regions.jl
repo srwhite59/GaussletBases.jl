@@ -24,6 +24,16 @@ function owned_cpb_union(cpbs; support_kind::Symbol = :cpb_union_support, metada
     return OwnedSupport(support_kind, cpb_tuple, nothing, nothing, NamedTuple(metadata))
 end
 
+"""
+    complete_shell_support(outer_box, inner_exclusion_box;
+                           support_kind = :complete_shell_support,
+                           metadata = (;))
+
+Represent shell-owned support `outer_box \\ inner_exclusion_box`.
+
+Both boxes must be filled CPBs, and the inner box must be the one-layer
+interior of the outer box. The returned object is `OwnedSupport`, not a CPB.
+"""
 function complete_shell_support(
     outer_box::CoordinateProductBox,
     inner_exclusion_box::CoordinateProductBox;
@@ -40,6 +50,11 @@ function complete_shell_support(
     )
 end
 
+"""
+    support_count(support)
+
+Return the number of parent rows/sites owned by an `OwnedSupport` object.
+"""
 function support_count(support::OwnedSupport)
     if !isnothing(support.outer_box)
         inner_count = isnothing(support.inner_exclusion_box) ? 0 : support_count(support.inner_exclusion_box)
@@ -54,10 +69,25 @@ struct ShellificationRegion
     metadata::NamedTuple
 end
 
+"""
+    shellification_region(role, owned_support; metadata = (;))
+
+Construct a shellification-owned region.
+
+A `ShellificationRegion` says which parent rows/sites are owned by a route
+region. It does not choose source CPBs, COMX transforms, product/doside maps, or
+operator blocks. Those belong to lowering and construction.
+"""
 function shellification_region(role::Symbol, owned_support::OwnedSupport; metadata = (;))
     return ShellificationRegion(role, owned_support, NamedTuple(metadata))
 end
 
+"""
+    owned_support(region_or_source_or_unit)
+
+Return the shellification-owned support associated with a region, lowering
+source, or final retained unit.
+"""
 owned_support(region::ShellificationRegion) = region.owned_support
 role(region::ShellificationRegion) = region.role
 support_count(region::ShellificationRegion) = support_count(region.owned_support)

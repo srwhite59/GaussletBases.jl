@@ -20,7 +20,10 @@ end
     boundary_product_mode_count(source_mode_dims)
 
 Count product modes with at least one boundary index along a 3D product source.
-This is the PQS counting rule for boundary COMX-product mode selection.
+
+For source dimensions `(nx, ny, nz)`, this returns the full product count minus
+the strictly interior product count. This is the PQS counting rule for boundary
+COMX-product mode selection.
 """
 function boundary_product_mode_count(source_mode_dims)
     dims = _source_mode_dims_or_nothing(source_mode_dims)
@@ -39,6 +42,20 @@ struct IntermediateRetainedSpace
     metadata::NamedTuple
 end
 
+"""
+    intermediate_retained_space(lowering_source;
+                                retained_rule,
+                                dimension = nothing,
+                                source_mode_dims = nothing,
+                                materialized = false,
+                                metadata = (;))
+
+Represent a retained source-space object before final shell realization.
+
+For PQS, this is where boundary COMX-product modes live. For direct pieces, this
+may be an identity-like source-mode space. This object is metadata/planning
+unless `materialized = true`.
+"""
 function intermediate_retained_space(
     lowering_source::LoweringSource;
     space_kind::Symbol = :intermediate_retained_space,
@@ -77,6 +94,18 @@ struct ShellRealization
     metadata::NamedTuple
 end
 
+"""
+    shell_realization(intermediate, owned_region; realization_kind,
+                      status = :planned,
+                      final_dimension = intermediate.dimension,
+                      metadata = (;))
+
+Represent how an intermediate retained space is realized on shellification-owned
+support.
+
+This records the realization contract only. It does not build projection,
+Lowdin, or embedding matrices.
+"""
 function shell_realization(
     intermediate::IntermediateRetainedSpace,
     owned_region::ShellificationRegion;
@@ -96,6 +125,17 @@ function shell_realization(
     )
 end
 
+"""
+    trivial_shell_realization(intermediate, owned_region;
+                              status = :direct_or_trivial,
+                              final_dimension = intermediate.dimension,
+                              metadata = (;))
+
+Construct a direct/trivial shell realization.
+
+Use this for direct or identity-like retained spaces where no PQS shell
+projection/Lowdin cleanup is planned.
+"""
 function trivial_shell_realization(
     intermediate::IntermediateRetainedSpace,
     owned_region::ShellificationRegion;
@@ -113,6 +153,18 @@ function trivial_shell_realization(
     )
 end
 
+"""
+    pqs_shell_realization(intermediate, owned_region;
+                          status = :planned_shell_projection_lowdin,
+                          final_dimension = intermediate.dimension,
+                          metadata = (;))
+
+Construct a PQS shell-realization plan.
+
+The intermediate space must use `:pqs_boundary_comx_product_modes`. This records
+that shell projection and Lowdin cleanup are planned; it does not materialize
+those transforms.
+"""
 function pqs_shell_realization(
     intermediate::IntermediateRetainedSpace,
     owned_region::ShellificationRegion;
@@ -151,6 +203,17 @@ function _column_range_or_nothing(column_range)
     return Int(first(column_range)):Int(last(column_range))
 end
 
+"""
+    final_retained_unit(unit_key, role, lowering_source, intermediate, realization;
+                        column_range = nothing, dimension = nothing,
+                        metadata = (;))
+
+Construct the column-owning unit used by pair planning.
+
+A final retained unit must be downstream of a lowering source, an intermediate
+retained space, and a shell realization. Pair inventories should be built from
+these objects, not directly from shellification regions or CPBs.
+"""
 function final_retained_unit(
     unit_key::Symbol,
     role::Symbol,

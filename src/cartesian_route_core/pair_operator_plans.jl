@@ -3,6 +3,34 @@
 # These records describe the mathematical path for a pair of final retained
 # units before any numerical source block, realization matrix, final block, or
 # Hamiltonian data is materialized.
+#
+# Pair-operator path vocabulary:
+#
+# :direct_identity_cpb_path
+#     Source and final support are the same direct CPB; identity-like source
+#     construction is planned.
+#
+# :direct_source_cpb_1d_factor_path
+#     A direct source CPB can be handled by separable 1D factors.
+#
+# :pqs_source_cpb_1d_factor_path
+#     PQS source-space operators are built on filled source CPBs using 1D
+#     factors, before shell projection/Lowdin realization.
+#
+# :white_lindsey_boundary_stratum_adapter_path
+#     LW boundary-stratum pair path is known only as metadata or adapter at this
+#     stage. It is not yet a numerical block builder.
+#
+# :direct_boundary_slab_set_adapter_path
+#     Boundary slab-set path is represented as an adapter/metadata path.
+#
+# :aggregate_subtree_adapter_required
+#     A compound/nested atom-local unit reached pair planning. This should
+#     usually be treated as evidence that shellification or lowering has not
+#     produced terminal final units yet.
+#
+# :pending_pair_operator_path
+#     No valid operator path has been classified.
 
 const _PAIR_OPERATOR_PLAN_DEFAULT_TERMS = (
     :overlap,

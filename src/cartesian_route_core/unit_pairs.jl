@@ -18,6 +18,14 @@ struct UnitPairInventory
     metadata::NamedTuple
 end
 
+"""
+    unit_pair_inventory(units; symmetry = :symmetric_upper_triangle, metadata = (;))
+
+Build upper-triangular unit pairs from final retained units.
+
+This is bookkeeping for later operator-block planning. The input must be
+`FinalRetainedUnit` objects, not CPBs or shellification regions.
+"""
 function unit_pair_inventory(units; symmetry::Symbol = :symmetric_upper_triangle, metadata = (;))
     unit_tuple = Tuple(units)
     isempty(unit_tuple) && throw(ArgumentError("unit_pair_inventory requires at least one FinalRetainedUnit"))
@@ -51,7 +59,30 @@ function unit_pair_inventory(units; symmetry::Symbol = :symmetric_upper_triangle
     return UnitPairInventory(unit_tuple, Tuple(pairs), symmetry, NamedTuple(metadata))
 end
 
+"""
+    final_units(inventory)
+
+Return the final retained units used to form a unit-pair inventory.
+"""
 final_units(inventory::UnitPairInventory) = inventory.units
+
+"""
+    pair_entries(inventory)
+
+Return the upper-triangular `UnitPair` entries in a unit-pair inventory.
+"""
 pair_entries(inventory::UnitPairInventory) = inventory.pairs
+
+"""
+    unit_keys(inventory)
+
+Return final retained unit keys in inventory order.
+"""
 unit_keys(inventory::UnitPairInventory) = Tuple(unit.unit_key for unit in inventory.units)
+
+"""
+    pair_keys(inventory)
+
+Return pair keys in inventory order.
+"""
 pair_keys(inventory::UnitPairInventory) = Tuple(pair.pair_key for pair in inventory.pairs)
