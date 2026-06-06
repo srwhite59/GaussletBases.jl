@@ -423,6 +423,40 @@ end
           terminal_units.terminal_shellification_unit_kinds
     @test terminal_transforms.terminal_shellification_unit_support_counts ==
           terminal_units.terminal_shellification_unit_support_counts
+    @test terminal_transforms.terminal_shellification_lowering_contract_inventory_available
+    @test terminal_transforms.terminal_shellification_lowering_contract_inventory_status ==
+          terminal_units.terminal_shellification_lowering_contract_inventory_status
+    @test terminal_transforms.terminal_shellification_lowering_contract_inventory ===
+          terminal_units.terminal_shellification_lowering_contract_inventory
+    @test terminal_transforms.terminal_shellification_lowering_contract_count ==
+          terminal_units.terminal_shellification_lowering_contract_count
+    @test terminal_transforms.terminal_shellification_lowering_contract_kinds ==
+          terminal_units.terminal_shellification_lowering_contract_kinds
+    @test terminal_transforms.terminal_shellification_lowering_contract_kind_counts ==
+          terminal_units.terminal_shellification_lowering_contract_kind_counts
+    @test terminal_transforms.terminal_shellification_contract_counts_by_unit ==
+          terminal_units.terminal_shellification_contract_counts_by_unit
+    @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_count ==
+          terminal_units.terminal_shellification_lw_complete_shell_cpb_count
+    @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts
+    terminal_lowering_inventory =
+        terminal_transforms.terminal_shellification_lowering_contract_inventory
+    @test terminal_lowering_inventory.lowering_contract_count >=
+          terminal_transforms.terminal_shellification_unit_count
+    @test all(
+        entry.lowering_contract_count >= 1
+        for entry in terminal_transforms.terminal_shellification_contract_counts_by_unit
+    )
+    @test !terminal_lowering_inventory.final_retained_unit_inventory_available
+    @test !terminal_lowering_inventory.pair_inventory_available
+    @test !terminal_lowering_inventory.coefficient_maps_materialized
+    @test !terminal_lowering_inventory.transform_contracts_materialized
+    @test !terminal_lowering_inventory.retained_spaces_materialized
+    @test !terminal_lowering_inventory.operator_blocks_materialized
+    @test !terminal_lowering_inventory.pair_operator_blocks_materialized
+    @test !terminal_lowering_inventory.hamiltonian_data_materialized
+    @test !terminal_lowering_inventory.artifacts_materialized
     @test !terminal_transforms.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_transforms.terminal_shellification_pair_inventory_available
     @test !terminal_transforms.terminal_shellification_transform_contracts_available
@@ -484,6 +518,23 @@ end
           terminal_units.terminal_shellification_unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_units.terminal_shellification_unit_support_counts
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory_available
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory_status ==
+          terminal_units.terminal_shellification_lowering_contract_inventory_status
+    @test terminal_summary.terminal_shellification_lowering_contract_inventory ===
+          terminal_units.terminal_shellification_lowering_contract_inventory
+    @test terminal_summary.terminal_shellification_lowering_contract_count ==
+          terminal_units.terminal_shellification_lowering_contract_count
+    @test terminal_summary.terminal_shellification_lowering_contract_kinds ==
+          terminal_units.terminal_shellification_lowering_contract_kinds
+    @test terminal_summary.terminal_shellification_lowering_contract_kind_counts ==
+          terminal_units.terminal_shellification_lowering_contract_kind_counts
+    @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
+          terminal_units.terminal_shellification_contract_counts_by_unit
+    @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
+          terminal_units.terminal_shellification_lw_complete_shell_cpb_count
+    @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
@@ -516,6 +567,43 @@ end
         record -> !record.shellification_region_is_cpb,
         terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
     )
+    direct_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind in (
+                    :direct_core_identity_cpb,
+                    :direct_slab_identity_cpb,
+                    :direct_boundary_slab_identity_cpb,
+                ),
+            terminal_lowering_inventory.lowering_contracts,
+        )
+    @test all(contract.identity_like_source_contract for contract in direct_contracts)
+    lw_contracts =
+        filter(
+            contract ->
+                contract.lowering_contract_kind == :white_lindsey_boundary_strata,
+            terminal_lowering_inventory.lowering_contracts,
+        )
+    if !isempty(lw_contracts)
+        @test all(
+            contract.source_cpb_family_counts ==
+            (facet_cpb = 6, edge_cpb = 12, corner_cpb = 8)
+            for contract in lw_contracts
+        )
+        @test all(contract.source_cpb_count == 26 for contract in lw_contracts)
+    end
+    pqs_contracts =
+        filter(
+            contract -> contract.lowering_contract_kind == :pqs_filled_source_cpb,
+            terminal_lowering_inventory.lowering_contracts,
+        )
+    if !isempty(pqs_contracts)
+        @test all(contract.source_cpb_count == 1 for contract in pqs_contracts)
+        @test all(
+            !contract.face_edge_corner_decomposition_required
+            for contract in pqs_contracts
+        )
+    end
     @test !terminal_summary.lw_complete_shell_cpb_enumeration_available
     @test terminal_summary.lw_complete_shell_cpb_count == 0
     @test !terminal_summary.pqs_transform_prototype_available
