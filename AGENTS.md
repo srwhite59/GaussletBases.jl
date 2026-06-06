@@ -112,6 +112,50 @@ If a stage should carry a sidecar forward, test the contract through these
 small fields. Whole-object equality on these metadata records is both too
 brittle and too expensive.
 
+## Test runtime policy
+
+Every test should have an implicit or explicit runtime class. Choose the
+smallest class that validates the edit.
+
+Runtime classes:
+
+- tiny contract tests: seconds; use for every small pass and pure helper/module
+  contracts
+- stage propagation tests: target under roughly 30 seconds after compilation;
+  compare compact fingerprints or summaries, not full staged objects
+- integration tests: allowed to be slow, but explicitly treated as integration
+  gates; run at baton boundaries, before merging, or when behavior crosses a
+  real stage boundary
+- long tests: anything expected to exceed roughly 2 minutes; require a named
+  reason, the feature being validated, why a smaller test is insufficient, and
+  a cadence such as per-pass, baton-end, nightly, or manual
+
+Hard operating rule:
+
+- before running any test expected to take more than 60 seconds, explain why it
+  is necessary
+- if a shorter contract, fingerprint, parse, or focused stage test would
+  validate the edit, write or run that instead
+- do not run full route integration tests repeatedly during mechanical
+  field-carry or metadata propagation passes
+- do not run full integration tests with `--compiled-modules=no`; reserve that
+  for parse/load diagnostics only
+
+Cadence examples:
+
+- documentation-only: `git diff --check`
+- syntax-only or dependency-blocked work: parse the touched Julia files
+- new pure helper/module contract: run that helper's direct test only
+- stage field propagation: run a compact fingerprint/summary propagation test
+- driver behavior change: run one focused staged test
+- numerical/materialization change: run the relevant integration test, with the
+  expected runtime called out first
+
+Repo-specific gate:
+
+- do not use `test/nested/cartesian_pair_stage_low_order_policy_runtests.jl` as
+  a per-pass gate; it is an integration gate
+
 ## Final-basis overlap policy
 
 For final working bases that are intended to be orthonormal:

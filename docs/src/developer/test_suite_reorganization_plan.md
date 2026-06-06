@@ -128,6 +128,73 @@ these small fields. Whole-object equality on staged metadata is brittle,
 expensive, and can dominate runtime through specialization, deep traversal, or
 failure rendering.
 
+## Test runtime policy
+
+Every test should have a runtime class, and long tests require justification.
+The goal is to stop the pattern of repeatedly running full route construction
+after each mechanical field-carry pass.
+
+Runtime classes:
+
+1. Tiny contract tests
+
+   Goal: seconds.
+
+   Use for every small pass when a pure helper, constructor, fingerprint, parser,
+   or local contract is the thing being edited. These tests should not build the
+   full driver route unless that route build is itself the contract.
+
+2. Stage propagation tests
+
+   Goal: under roughly 30 seconds after compilation.
+
+   Use for staged field movement and route metadata propagation. These tests
+   must compare compact fingerprints or stable summaries, not full staged
+   objects.
+
+3. Integration tests
+
+   Goal: allowed to be slow, but explicitly marked.
+
+   Use at baton boundaries, before merging, or when behavior crosses a real
+   stage boundary. Do not use integration tests as the per-pass gate for
+   mechanical metadata propagation.
+
+4. Long tests
+
+   Anything expected to exceed roughly 2 minutes must carry:
+
+   - a named reason
+   - the feature it validates
+   - why a smaller test is insufficient
+   - a suggested cadence: per-pass, baton-end, nightly, or manual
+
+Hard Codex operating rule:
+
+- before running any test expected to take more than 60 seconds, explain why it
+  is necessary
+- if a shorter contract, fingerprint, parse, or focused stage test would
+  validate the edit, write or run that instead
+- do not run full route integration tests repeatedly during mechanical
+  field-carry passes
+- do not run full integration tests with `--compiled-modules=no`; reserve that
+  for parse/load diagnostics only
+
+Recommended per-pass cadence:
+
+- documentation-only: `git diff --check`
+- syntax-only or dependency-blocked work: parse touched Julia files
+- new pure helper/module contract: run the helper's direct test only
+- stage field propagation: run a fingerprint/summary propagation test only
+- driver behavior change: run one focused staged test
+- numerical/materialization change: run the relevant integration test, with the
+  expected runtime called out first
+
+Repo-specific classification:
+
+- `test/nested/cartesian_pair_stage_low_order_policy_runtests.jl` is an
+  integration gate, not a per-pass gate
+
 ## Planned phases
 
 ### Phase 1: runner split and first low-risk extraction
