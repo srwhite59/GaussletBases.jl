@@ -265,4 +265,9 @@ end
     @test CSH.coverage(one_center).coverage_complete
     @test length(CSH.terminal_regions(one_center)) ==
           CSH.raw_plan(one_center).region_count
+    @test_throws ArgumentError CSH.shellify(
+        parent_axes,
+        ((5, 5, 4), (5, 5, 10));
+        policy = CSH.OneCenterShellification(; core_side = 3, q = 3),
+    )
 end

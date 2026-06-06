@@ -75,7 +75,8 @@ AtomOutwardShellification(;
                             audit_coverage = true)
 
 Policy object for the one-center specialization of the atom-outward terminal
-shellification path.
+shellification path. `shellify` with this policy requires exactly one nuclear
+position.
 """
 struct OneCenterShellification <: ShellificationPolicy
     core_side::Int
@@ -99,6 +100,23 @@ OneCenterShellification(;
     q::Integer = core_side,
     audit_coverage::Bool = true,
 ) = OneCenterShellification(core_side, q, audit_coverage)
+
+function _one_center_position(nuclear_positions)
+    if nuclear_positions isa Tuple &&
+       length(nuclear_positions) == 3 &&
+       all(x -> x isa Real, nuclear_positions)
+        return nuclear_positions
+    end
+
+    positions = Tuple(nuclear_positions)
+    length(positions) == 1 ||
+        throw(
+            ArgumentError(
+                "OneCenterShellification requires exactly one nuclear position",
+            ),
+        )
+    return only(positions)
+end
 
 """
     TerminalRegion
@@ -244,9 +262,10 @@ function shellify(
     policy::OneCenterShellification;
     metadata = (;),
 )
+    nuclear_position = _one_center_position(nuclear_positions)
     raw = raw_terminal_geometry(
         parent_axes,
-        nuclear_positions;
+        nuclear_position;
         core_side = policy.core_side,
         q = policy.q,
         bond_axis = :auto,
