@@ -1723,3 +1723,172 @@ function _cartesian_terminal_region_lowering_contract_inventory(unit_inventory)
         ),
     )
 end
+
+function _cartesian_selected_terminal_lowering_contract_kind(
+    terminal_region_kind::Symbol,
+    route_lowering_family::Symbol,
+)
+    terminal_region_kind == :direct_core && return :direct_core_identity_cpb
+    terminal_region_kind == :direct_midpoint_slab &&
+        return :direct_slab_identity_cpb
+    terminal_region_kind == :outer_mismatch_slab &&
+        return :direct_boundary_slab_identity_cpb
+    terminal_region_kind == :central_distorted_product_box &&
+        return :distorted_product_box_comx
+    if terminal_region_kind == :complete_shell
+        route_lowering_family == :white_lindsey_low_order &&
+            return :white_lindsey_boundary_strata
+        route_lowering_family == :pqs && return :pqs_filled_source_cpb
+        throw(
+            ArgumentError(
+                "complete-shell selected lowering requires route_lowering_family :white_lindsey_low_order or :pqs",
+            ),
+        )
+    end
+    throw(
+        ArgumentError(
+            "unsupported terminal-region kind $terminal_region_kind for selected lowering",
+        ),
+    )
+end
+
+function _cartesian_selected_terminal_unit_keys(contracts)
+    unit_keys = Symbol[]
+    for contract in contracts
+        contract.object_kind == :cartesian_terminal_region_lowering_contract ||
+            throw(
+                ArgumentError(
+                    "selected terminal lowering requires terminal-region lowering contract records",
+                ),
+            )
+        contract.unit_key in unit_keys || push!(unit_keys, contract.unit_key)
+    end
+    return Tuple(unit_keys)
+end
+
+function _cartesian_selected_terminal_lowering_contract_for_unit(
+    unit_contracts,
+    route_lowering_family::Symbol,
+)
+    isempty(unit_contracts) &&
+        throw(ArgumentError("each terminal-region unit must have contract candidates"))
+    terminal_region_kind = first(unit_contracts).terminal_region_kind
+    all(contract -> contract.terminal_region_kind == terminal_region_kind, unit_contracts) ||
+        throw(ArgumentError("contract candidates for one unit disagree on terminal-region kind"))
+    selected_kind =
+        _cartesian_selected_terminal_lowering_contract_kind(
+            terminal_region_kind,
+            route_lowering_family,
+        )
+    selected = Tuple(
+        contract for contract in unit_contracts
+        if contract.lowering_contract_kind == selected_kind
+    )
+    length(selected) == 1 ||
+        throw(
+            ArgumentError(
+                "terminal-region unit $(first(unit_contracts).unit_key) must have exactly one selected $selected_kind contract",
+            ),
+        )
+    return only(selected)
+end
+
+function _cartesian_selected_terminal_lowering_contract_inventory(
+    lowering_contract_inventory,
+    route_lowering_family::Symbol,
+)
+    route_lowering_family in (:white_lindsey_low_order, :pqs) ||
+        throw(
+            ArgumentError(
+                "route_lowering_family must be :white_lindsey_low_order or :pqs",
+            ),
+        )
+    lowering_contract_inventory.object_kind ==
+    :cartesian_terminal_region_lowering_contract_inventory ||
+        throw(
+            ArgumentError(
+                "selected terminal lowering contracts require a cartesian_terminal_region_lowering_contract_inventory",
+            ),
+        )
+
+    lowering_contracts = lowering_contract_inventory.lowering_contracts
+    unit_keys = _cartesian_selected_terminal_unit_keys(lowering_contracts)
+    terminal_region_unit_count = length(unit_keys)
+    selected_contracts = Tuple(
+        _cartesian_selected_terminal_lowering_contract_for_unit(
+            Tuple(
+                contract for contract in lowering_contracts
+                if contract.unit_key == unit_key
+            ),
+            route_lowering_family,
+        ) for unit_key in unit_keys
+    )
+    selected_contract_keys =
+        Tuple(contract.contract_key for contract in selected_contracts)
+    unselected_contracts = Tuple(
+        contract for contract in lowering_contracts
+        if !(contract.contract_key in selected_contract_keys)
+    )
+    selected_contract_counts_by_unit = Tuple(
+        (;
+            unit_key,
+            selected_contract_count =
+                count(contract -> contract.unit_key == unit_key, selected_contracts),
+        ) for unit_key in unit_keys
+    )
+    all_units_have_exactly_one_selected_contract =
+        all(entry -> entry.selected_contract_count == 1, selected_contract_counts_by_unit)
+
+    return (;
+        object_kind = :cartesian_selected_terminal_lowering_contract_inventory,
+        status = :available_selected_terminal_lowering_contract_inventory,
+        inventory_source = :terminal_region_lowering_contract_inventory,
+        source_object_kind = lowering_contract_inventory.object_kind,
+        private_development_only = true,
+        route_lowering_family,
+        terminal_region_unit_count,
+        selected_contract_count = length(selected_contracts),
+        selected_contracts,
+        selected_contract_records = selected_contracts,
+        selected_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in selected_contracts),
+        selected_contract_kind_counts =
+            _cartesian_terminal_region_lowering_contract_kind_counts(
+                selected_contracts,
+            ),
+        selected_contract_counts_by_unit,
+        all_units_have_exactly_one_selected_contract,
+        unselected_contract_count = length(unselected_contracts),
+        unselected_contracts,
+        unselected_contract_kinds =
+            Tuple(contract.lowering_contract_kind for contract in unselected_contracts),
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :not_available_selected_lowering_metadata_only,
+        coefficient_maps_materialized = false,
+        transform_contracts_materialized = false,
+        retained_spaces_materialized = false,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        diagnostics = (;
+            source =
+                :_cartesian_selected_terminal_lowering_contract_inventory,
+            private_development_only = true,
+            selected_lowering_metadata_only = true,
+            all_units_have_exactly_one_selected_contract,
+            final_retained_unit_inventory_available = false,
+            pair_inventory_available = false,
+            coefficient_maps_materialized = false,
+            transform_contracts_materialized = false,
+            retained_spaces_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+        ),
+    )
+end
