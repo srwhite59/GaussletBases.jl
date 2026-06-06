@@ -1780,6 +1780,36 @@ function _pqs_source_box_route_driver_report(
         low_order_assembly_kind = low_order_route_summary.assembly_kind,
         atom_growth_low_order_route_selected =
             low_order_route_summary.atom_growth_selected,
+        low_order_terminal_shellification_selected =
+            low_order_route_summary.terminal_shellification_selected,
+        low_order_terminal_shellification_summary_available =
+            low_order_route_summary.terminal_shellification_summary_available,
+        low_order_terminal_shellification_scaffold_available =
+            low_order_route_summary.terminal_shellification_scaffold_available,
+        low_order_terminal_shellification_scaffold =
+            low_order_route_summary.terminal_shellification_scaffold,
+        low_order_terminal_shellification_region_count =
+            low_order_route_summary.terminal_shellification_region_count,
+        low_order_terminal_shellification_unit_inventory_available =
+            low_order_route_summary.terminal_shellification_unit_inventory_available,
+        low_order_terminal_shellification_transform_contracts_available =
+            low_order_route_summary.terminal_shellification_transform_contracts_available,
+        low_order_terminal_shellification_pair_inventory_available =
+            low_order_route_summary.terminal_shellification_pair_inventory_available,
+        low_order_terminal_shellification_pair_inventory_status =
+            low_order_route_summary.terminal_shellification_pair_inventory_status,
+        low_order_terminal_shellification_pair_materialization_status =
+            low_order_route_summary.terminal_shellification_pair_materialization_status,
+        low_order_terminal_shellification_assembly_materialization_status =
+            low_order_route_summary.terminal_shellification_assembly_materialization_status,
+        low_order_terminal_shellification_central_gap_region_count =
+            low_order_route_summary.terminal_shellification_central_gap_region_count,
+        low_order_terminal_shellification_central_midpoint_slab_count =
+            low_order_route_summary.terminal_shellification_central_midpoint_slab_count,
+        low_order_terminal_shellification_central_distorted_product_box_count =
+            low_order_route_summary.terminal_shellification_central_distorted_product_box_count,
+        low_order_terminal_shellification_central_distorted_product_box_metadata =
+            low_order_route_summary.terminal_shellification_central_distorted_product_box_metadata,
         legacy_source_low_order_route_selected =
             low_order_route_summary.legacy_source_selected,
         low_order_plan_authority = low_order_route_summary.plan_authority,
@@ -7808,7 +7838,23 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             assembly_route_kind = :not_available,
             assembly_kind = :not_available,
             atom_growth_selected = false,
+            terminal_shellification_selected = false,
             legacy_source_selected = false,
+            terminal_shellification_summary_available = false,
+            terminal_shellification_scaffold_available = false,
+            terminal_shellification_scaffold = nothing,
+            terminal_shellification_region_count = 0,
+            terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_transform_contracts_available = false,
+            terminal_shellification_pair_inventory_available = false,
+            terminal_shellification_pair_inventory_status = :not_available,
+            terminal_shellification_pair_materialization_status = :not_available,
+            terminal_shellification_assembly_materialization_status =
+                :not_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
             materialization_required = true,
             materialization_status =
                 :blocked_missing_assembly_stage_summary,
@@ -7883,8 +7929,38 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
         assembly_route_kind = low_order_assembly.assembly_route_kind,
         assembly_kind = low_order_assembly.assembly_kind,
         atom_growth_selected = low_order_assembly.atom_growth_assembly_selected,
+        terminal_shellification_selected =
+            low_order_assembly.terminal_shellification_assembly_selected,
         legacy_source_selected =
             low_order_assembly.legacy_source_assembly_selected,
+        terminal_shellification_summary_available =
+            low_order_assembly.terminal_shellification_assembly_summary_available,
+        terminal_shellification_scaffold_available =
+            low_order_assembly.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_assembly.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_assembly.terminal_shellification_region_count,
+        terminal_shellification_unit_inventory_available =
+            low_order_assembly.terminal_shellification_unit_inventory_available,
+        terminal_shellification_transform_contracts_available =
+            low_order_assembly.terminal_shellification_transform_contracts_available,
+        terminal_shellification_pair_inventory_available =
+            low_order_assembly.terminal_shellification_pair_inventory_available,
+        terminal_shellification_pair_inventory_status =
+            low_order_assembly.terminal_shellification_pair_inventory_status,
+        terminal_shellification_pair_materialization_status =
+            low_order_assembly.terminal_shellification_pair_materialization_status,
+        terminal_shellification_assembly_materialization_status =
+            low_order_assembly.terminal_shellification_assembly_materialization_status,
+        terminal_shellification_central_gap_region_count =
+            low_order_assembly.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_assembly.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_assembly.terminal_shellification_central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            low_order_assembly.terminal_shellification_central_distorted_product_box_metadata,
         materialization_required =
             low_order_assembly.assembly_requires_materialization,
         materialization_status =
