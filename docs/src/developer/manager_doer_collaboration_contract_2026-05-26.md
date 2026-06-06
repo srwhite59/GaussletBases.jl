@@ -176,6 +176,21 @@ rather than relying on remembered loop state. This matters in long runs and in
 cross-machine Dropbox runs, where context or file sync can lag behind the
 manager's last action.
 
+When a loop is waiting for the next expected baton file, the default timeout is
+one hour of polling before giving up. This applies on both sides:
+
+- after the doer writes `response.NNN.md`, it should keep polling for
+  `blurb.NNN+1.md`, `STOP.md`, or `ATTENTION.md` for up to one hour before
+  reporting that the manager did not advance the baton;
+- after the manager writes `blurb.NNN.md`, it should keep polling for
+  `response.NNN.md`, `ATTENTION.md`, or a concrete blocker for up to one hour
+  before concluding that the doer did not respond.
+
+The one-hour rule is a minimum patience rule for normal file-sync and agent
+latency. It is not permission to wait silently through a known blocker, and it
+does not override explicit `STOP.md`, `ATTENTION.md`, max-pass completion, or a
+user/manager instruction to stop.
+
 The doer should ignore `.tmp` files, should never update manager-owned files
 such as `state.md`, `review.NNN.md`, `ATTENTION.md`, or `STOP.md`, and should
 never self-assign `blurb.NNN+1.md`.
