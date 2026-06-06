@@ -16,7 +16,7 @@ Use `(collect(1:nx), collect(1:ny), collect(1:nz))` for index-only geometry.
 3-tuple positions in the coordinate system of `parent_axes`; each nucleus is
 snapped to the nearest parent index along each axis.
 """
-function _cartesian_terminal_shellification_geometry(
+function _cartesian_terminal_shellification_geometry_impl(
     parent_axes::NTuple{3,<:AbstractVector},
     nuclear_positions;
     core_side::Int = 5,
@@ -601,6 +601,24 @@ function _cartesian_terminal_shellification_geometry(
     )
 end
 
+function _cartesian_terminal_shellification_geometry(
+    parent_axes::NTuple{3,<:AbstractVector},
+    nuclear_positions;
+    core_side::Int = 5,
+    q::Int = core_side,
+    bond_axis::Symbol = :auto,
+    audit_coverage::Bool = true,
+)
+    return CartesianShellification.raw_terminal_geometry(
+        parent_axes,
+        nuclear_positions;
+        core_side,
+        q,
+        bond_axis,
+        audit_coverage,
+    )
+end
+
 function _cartesian_terminal_shellification_geometry_region_dependency(region)
     region.region_kind == :direct_core && return :plan_lowerable_direct_core
     if region.region_kind == :complete_shell
@@ -681,7 +699,7 @@ function _cartesian_terminal_shellification_geometry_summary_coverage(plan)
     )
 end
 
-function _cartesian_terminal_shellification_geometry_private_summary(plan)
+function _cartesian_terminal_shellification_geometry_private_summary_impl(plan)
     plan.object_kind == :cartesian_terminal_shellification_geometry_plan ||
         throw(
             ArgumentError(
@@ -753,6 +771,10 @@ function _cartesian_terminal_shellification_geometry_private_summary(plan)
         hamiltonian_data_materialized = false,
         public_default_behavior_changed = false,
     )
+end
+
+function _cartesian_terminal_shellification_geometry_private_summary(plan)
+    return CartesianShellification.private_summary(plan)
 end
 
 function _cartesian_terminal_shellification_geometry_region_lowering_family(
@@ -894,12 +916,12 @@ function _cartesian_terminal_shellification_geometry_spatial_policy_order(
     return :terminal_geometry_order
 end
 
-function _cartesian_terminal_shellification_geometry_scaffold(
+function _cartesian_terminal_shellification_geometry_scaffold_impl(
     plan;
     route_family::Symbol = :white_lindsey_low_order,
 )
     summary =
-        _cartesian_terminal_shellification_geometry_private_summary(plan)
+        _cartesian_terminal_shellification_geometry_private_summary_impl(plan)
     regions = Tuple(
         _cartesian_terminal_shellification_geometry_scaffold_region(region)
         for region in summary.regions
@@ -977,6 +999,13 @@ function _cartesian_terminal_shellification_geometry_scaffold(
             cartesian_shells_behavior_changed = false,
         ),
     )
+end
+
+function _cartesian_terminal_shellification_geometry_scaffold(
+    plan;
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    return CartesianShellification.scaffold(plan; route_family)
 end
 
 function _cartesian_terminal_region_unit_key(region)

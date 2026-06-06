@@ -24,9 +24,12 @@ export ShellificationPolicy,
        TerminalRegion,
        ShellificationPlan,
        shellify,
+       raw_terminal_geometry,
        terminal_regions,
        coverage,
        summary,
+       private_summary,
+       scaffold,
        raw_plan
 
 abstract type ShellificationPolicy end
@@ -192,9 +195,33 @@ function _shellification_plan(raw, policy::ShellificationPolicy; metadata = (;))
         raw,
         terminal_region_tuple,
         raw.coverage,
-        GB._cartesian_terminal_shellification_geometry_private_summary(raw),
+        private_summary(raw),
         raw.diagnostics,
         NamedTuple(metadata),
+    )
+end
+
+"""
+    raw_terminal_geometry(parent_axes, nuclear_positions; kwargs...)
+
+Module-level raw terminal shellification entry. This preserves the legacy raw
+NamedTuple shape while keeping shellification authority inside this module.
+"""
+function raw_terminal_geometry(
+    parent_axes::NTuple{3,<:AbstractVector},
+    nuclear_positions;
+    core_side::Int = 5,
+    q::Int = core_side,
+    bond_axis::Symbol = :auto,
+    audit_coverage::Bool = true,
+)
+    return GB._cartesian_terminal_shellification_geometry_impl(
+        parent_axes,
+        nuclear_positions;
+        core_side,
+        q,
+        bond_axis,
+        audit_coverage,
     )
 end
 
@@ -221,7 +248,7 @@ function shellify(
     policy::AtomOutwardShellification;
     metadata = (;),
 )
-    raw = GB._cartesian_terminal_shellification_geometry(
+    raw = raw_terminal_geometry(
         parent_axes,
         nuclear_positions;
         core_side = policy.core_side,
@@ -238,7 +265,7 @@ function shellify(
     policy::OneCenterShellification;
     metadata = (;),
 )
-    raw = GB._cartesian_terminal_shellification_geometry(
+    raw = raw_terminal_geometry(
         parent_axes,
         nuclear_positions;
         core_side = policy.core_side,
@@ -253,5 +280,40 @@ terminal_regions(plan::ShellificationPlan) = plan.terminal_regions
 coverage(plan::ShellificationPlan) = plan.coverage
 summary(plan::ShellificationPlan) = plan.summary
 raw_plan(plan::ShellificationPlan) = plan.raw_plan
+
+"""
+    private_summary(plan_or_raw_plan)
+
+Compact metadata-only terminal shellification summary. This is shellification
+geometry only: no lowering, retained spaces, transforms, pair blocks,
+Hamiltonian data, or artifacts are materialized.
+"""
+private_summary(plan::ShellificationPlan) = summary(plan)
+
+function private_summary(raw_plan)
+    return GB._cartesian_terminal_shellification_geometry_private_summary_impl(
+        raw_plan,
+    )
+end
+
+"""
+    scaffold(plan_or_raw_plan; route_family = :white_lindsey_low_order)
+
+Compatibility scaffold for terminal shellification geometry. The scaffold
+preserves current raw output shape during migration and remains metadata-only.
+"""
+function scaffold(
+    plan::ShellificationPlan;
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    return scaffold(raw_plan(plan); route_family)
+end
+
+function scaffold(raw_plan; route_family::Symbol = :white_lindsey_low_order)
+    return GB._cartesian_terminal_shellification_geometry_scaffold_impl(
+        raw_plan;
+        route_family,
+    )
+end
 
 end # module CartesianShellification
