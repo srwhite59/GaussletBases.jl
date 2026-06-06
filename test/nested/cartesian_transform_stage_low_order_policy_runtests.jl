@@ -436,18 +436,46 @@ end
           terminal_units.terminal_shellification_lowering_contract_kind_counts
     @test terminal_transforms.terminal_shellification_contract_counts_by_unit ==
           terminal_units.terminal_shellification_contract_counts_by_unit
+    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_available
+    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory_status ==
+          terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
+    @test terminal_transforms.terminal_shellification_selected_lowering_contract_inventory ===
+          terminal_units.terminal_shellification_selected_lowering_contract_inventory
+    @test terminal_transforms.terminal_shellification_selected_lowering_family ==
+          terminal_units.terminal_shellification_selected_lowering_family
+    @test terminal_transforms.terminal_shellification_selected_contract_count ==
+          terminal_units.terminal_shellification_selected_contract_count
+    @test terminal_transforms.terminal_shellification_selected_contract_kinds ==
+          terminal_units.terminal_shellification_selected_contract_kinds
+    @test terminal_transforms.terminal_shellification_selected_contract_kind_counts ==
+          terminal_units.terminal_shellification_selected_contract_kind_counts
+    @test terminal_transforms.terminal_shellification_selected_contract_counts_by_unit ==
+          terminal_units.terminal_shellification_selected_contract_counts_by_unit
+    @test terminal_transforms.terminal_shellification_all_units_have_exactly_one_selected_contract ==
+          terminal_units.terminal_shellification_all_units_have_exactly_one_selected_contract
+    @test terminal_transforms.terminal_shellification_unselected_contract_count ==
+          terminal_units.terminal_shellification_unselected_contract_count
+    @test terminal_transforms.terminal_shellification_unselected_contract_kinds ==
+          terminal_units.terminal_shellification_unselected_contract_kinds
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_family_counts
     terminal_lowering_inventory =
         terminal_transforms.terminal_shellification_lowering_contract_inventory
+    selected_terminal_lowering_inventory =
+        terminal_transforms.terminal_shellification_selected_lowering_contract_inventory
     @test terminal_lowering_inventory.lowering_contract_count >=
           terminal_transforms.terminal_shellification_unit_count
     @test all(
         entry.lowering_contract_count >= 1
         for entry in terminal_transforms.terminal_shellification_contract_counts_by_unit
     )
+    @test selected_terminal_lowering_inventory.selected_contract_count ==
+          terminal_transforms.terminal_shellification_unit_count
+    @test selected_terminal_lowering_inventory.route_lowering_family ==
+          :white_lindsey_low_order
+    @test selected_terminal_lowering_inventory.all_units_have_exactly_one_selected_contract
     @test !terminal_lowering_inventory.final_retained_unit_inventory_available
     @test !terminal_lowering_inventory.pair_inventory_available
     @test !terminal_lowering_inventory.coefficient_maps_materialized
@@ -457,6 +485,15 @@ end
     @test !terminal_lowering_inventory.pair_operator_blocks_materialized
     @test !terminal_lowering_inventory.hamiltonian_data_materialized
     @test !terminal_lowering_inventory.artifacts_materialized
+    @test !selected_terminal_lowering_inventory.final_retained_unit_inventory_available
+    @test !selected_terminal_lowering_inventory.pair_inventory_available
+    @test !selected_terminal_lowering_inventory.coefficient_maps_materialized
+    @test !selected_terminal_lowering_inventory.transform_contracts_materialized
+    @test !selected_terminal_lowering_inventory.retained_spaces_materialized
+    @test !selected_terminal_lowering_inventory.operator_blocks_materialized
+    @test !selected_terminal_lowering_inventory.pair_operator_blocks_materialized
+    @test !selected_terminal_lowering_inventory.hamiltonian_data_materialized
+    @test !selected_terminal_lowering_inventory.artifacts_materialized
     @test !terminal_transforms.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_transforms.terminal_shellification_pair_inventory_available
     @test !terminal_transforms.terminal_shellification_transform_contracts_available
@@ -531,6 +568,27 @@ end
           terminal_units.terminal_shellification_lowering_contract_kind_counts
     @test terminal_summary.terminal_shellification_contract_counts_by_unit ==
           terminal_units.terminal_shellification_contract_counts_by_unit
+    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_available
+    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory_status ==
+          terminal_units.terminal_shellification_selected_lowering_contract_inventory_status
+    @test terminal_summary.terminal_shellification_selected_lowering_contract_inventory ===
+          selected_terminal_lowering_inventory
+    @test terminal_summary.terminal_shellification_selected_lowering_family ==
+          terminal_units.terminal_shellification_selected_lowering_family
+    @test terminal_summary.terminal_shellification_selected_contract_count ==
+          terminal_units.terminal_shellification_selected_contract_count
+    @test terminal_summary.terminal_shellification_selected_contract_kinds ==
+          terminal_units.terminal_shellification_selected_contract_kinds
+    @test terminal_summary.terminal_shellification_selected_contract_kind_counts ==
+          terminal_units.terminal_shellification_selected_contract_kind_counts
+    @test terminal_summary.terminal_shellification_selected_contract_counts_by_unit ==
+          terminal_units.terminal_shellification_selected_contract_counts_by_unit
+    @test terminal_summary.terminal_shellification_all_units_have_exactly_one_selected_contract ==
+          terminal_units.terminal_shellification_all_units_have_exactly_one_selected_contract
+    @test terminal_summary.terminal_shellification_unselected_contract_count ==
+          terminal_units.terminal_shellification_unselected_contract_count
+    @test terminal_summary.terminal_shellification_unselected_contract_kinds ==
+          terminal_units.terminal_shellification_unselected_contract_kinds
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==
