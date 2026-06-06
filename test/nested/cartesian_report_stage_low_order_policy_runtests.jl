@@ -125,6 +125,52 @@ function _cartesian_report_stage_count_by_field(entries, field, value)
     return 0
 end
 
+function _assert_terminal_lowering_contract_fields_match_report_summary(
+    summary,
+    assembly,
+)
+    @test summary.terminal_shellification_lowering_contract_inventory_available
+    @test summary.terminal_shellification_lowering_contract_inventory_status ==
+          assembly.terminal_shellification_lowering_contract_inventory_status
+    @test summary.terminal_shellification_lowering_contract_inventory ===
+          assembly.terminal_shellification_lowering_contract_inventory
+    @test summary.terminal_shellification_lowering_contract_count ==
+          assembly.terminal_shellification_lowering_contract_count
+    @test summary.terminal_shellification_lowering_contract_kinds ==
+          assembly.terminal_shellification_lowering_contract_kinds
+    @test summary.terminal_shellification_lowering_contract_kind_counts ==
+          assembly.terminal_shellification_lowering_contract_kind_counts
+    @test summary.terminal_shellification_contract_counts_by_unit ==
+          assembly.terminal_shellification_contract_counts_by_unit
+    @test summary.terminal_shellification_lw_complete_shell_cpb_count ==
+          assembly.terminal_shellification_lw_complete_shell_cpb_count
+    @test summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          assembly.terminal_shellification_lw_complete_shell_cpb_family_counts
+end
+
+function _assert_terminal_lowering_contract_fields_match_route_report(
+    report,
+    summary,
+)
+    @test report.low_order_terminal_shellification_lowering_contract_inventory_available
+    @test report.low_order_terminal_shellification_lowering_contract_inventory_status ==
+          summary.terminal_shellification_lowering_contract_inventory_status
+    @test report.low_order_terminal_shellification_lowering_contract_inventory ===
+          summary.terminal_shellification_lowering_contract_inventory
+    @test report.low_order_terminal_shellification_lowering_contract_count ==
+          summary.terminal_shellification_lowering_contract_count
+    @test report.low_order_terminal_shellification_lowering_contract_kinds ==
+          summary.terminal_shellification_lowering_contract_kinds
+    @test report.low_order_terminal_shellification_lowering_contract_kind_counts ==
+          summary.terminal_shellification_lowering_contract_kind_counts
+    @test report.low_order_terminal_shellification_contract_counts_by_unit ==
+          summary.terminal_shellification_contract_counts_by_unit
+    @test report.low_order_terminal_shellification_lw_complete_shell_cpb_count ==
+          summary.terminal_shellification_lw_complete_shell_cpb_count
+    @test report.low_order_terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          summary.terminal_shellification_lw_complete_shell_cpb_family_counts
+end
+
 @testset "cartesian report stage carries selected low-order policy" begin
     fixture = _cartesian_report_stage_low_order_policy_fixture()
 
@@ -602,6 +648,10 @@ end
           terminal_stages.assembly.terminal_shellification_unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_stages.assembly.terminal_shellification_unit_support_counts
+    _assert_terminal_lowering_contract_fields_match_report_summary(
+        terminal_summary,
+        terminal_stages.assembly,
+    )
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
@@ -691,6 +741,10 @@ end
           terminal_summary.terminal_shellification_unit_kinds
     @test terminal_report.low_order_terminal_shellification_unit_support_counts ==
           terminal_summary.terminal_shellification_unit_support_counts
+    _assert_terminal_lowering_contract_fields_match_route_report(
+        terminal_report,
+        terminal_summary,
+    )
     @test !terminal_report.low_order_terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_report.low_order_terminal_shellification_transform_contracts_available
     @test !terminal_report.low_order_terminal_shellification_pair_inventory_available

@@ -1804,6 +1804,24 @@ function _pqs_source_box_route_driver_report(
             low_order_route_summary.terminal_shellification_unit_kinds,
         low_order_terminal_shellification_unit_support_counts =
             low_order_route_summary.terminal_shellification_unit_support_counts,
+        low_order_terminal_shellification_lowering_contract_inventory_available =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory_available,
+        low_order_terminal_shellification_lowering_contract_inventory_status =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory_status,
+        low_order_terminal_shellification_lowering_contract_inventory =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory,
+        low_order_terminal_shellification_lowering_contract_count =
+            low_order_route_summary.terminal_shellification_lowering_contract_count,
+        low_order_terminal_shellification_lowering_contract_kinds =
+            low_order_route_summary.terminal_shellification_lowering_contract_kinds,
+        low_order_terminal_shellification_lowering_contract_kind_counts =
+            low_order_route_summary.terminal_shellification_lowering_contract_kind_counts,
+        low_order_terminal_shellification_contract_counts_by_unit =
+            low_order_route_summary.terminal_shellification_contract_counts_by_unit,
+        low_order_terminal_shellification_lw_complete_shell_cpb_count =
+            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_count,
+        low_order_terminal_shellification_lw_complete_shell_cpb_family_counts =
+            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_family_counts,
         low_order_terminal_shellification_final_retained_unit_inventory_available =
             low_order_route_summary.terminal_shellification_final_retained_unit_inventory_available,
         low_order_terminal_shellification_transform_contracts_available =
@@ -8427,6 +8445,25 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             terminal_shellification_unit_roles = (),
             terminal_shellification_unit_kinds = (),
             terminal_shellification_unit_support_counts = (),
+            terminal_shellification_lowering_contract_inventory_available = false,
+            terminal_shellification_lowering_contract_inventory_status =
+                :not_available,
+            terminal_shellification_lowering_contract_inventory = nothing,
+            terminal_shellification_lowering_contract_count = 0,
+            terminal_shellification_lowering_contract_kinds = (),
+            terminal_shellification_lowering_contract_kind_counts =
+                (
+                    direct_core_identity_cpb_count = 0,
+                    direct_slab_identity_cpb_count = 0,
+                    direct_boundary_slab_identity_cpb_count = 0,
+                    white_lindsey_boundary_strata_count = 0,
+                    pqs_filled_source_cpb_count = 0,
+                    distorted_product_box_comx_count = 0,
+                ),
+            terminal_shellification_contract_counts_by_unit = (),
+            terminal_shellification_lw_complete_shell_cpb_count = 0,
+            terminal_shellification_lw_complete_shell_cpb_family_counts =
+                (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
             terminal_shellification_final_retained_unit_inventory_available = false,
             terminal_shellification_transform_contracts_available = false,
             terminal_shellification_pair_inventory_available = false,
@@ -8538,6 +8575,24 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.terminal_shellification_unit_kinds,
         terminal_shellification_unit_support_counts =
             low_order_assembly.terminal_shellification_unit_support_counts,
+        terminal_shellification_lowering_contract_inventory_available =
+            low_order_assembly.terminal_shellification_lowering_contract_inventory_available,
+        terminal_shellification_lowering_contract_inventory_status =
+            low_order_assembly.terminal_shellification_lowering_contract_inventory_status,
+        terminal_shellification_lowering_contract_inventory =
+            low_order_assembly.terminal_shellification_lowering_contract_inventory,
+        terminal_shellification_lowering_contract_count =
+            low_order_assembly.terminal_shellification_lowering_contract_count,
+        terminal_shellification_lowering_contract_kinds =
+            low_order_assembly.terminal_shellification_lowering_contract_kinds,
+        terminal_shellification_lowering_contract_kind_counts =
+            low_order_assembly.terminal_shellification_lowering_contract_kind_counts,
+        terminal_shellification_contract_counts_by_unit =
+            low_order_assembly.terminal_shellification_contract_counts_by_unit,
+        terminal_shellification_lw_complete_shell_cpb_count =
+            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_count,
+        terminal_shellification_lw_complete_shell_cpb_family_counts =
+            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_family_counts,
         terminal_shellification_final_retained_unit_inventory_available =
             low_order_assembly.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
