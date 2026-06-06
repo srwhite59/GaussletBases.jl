@@ -5597,6 +5597,45 @@ function _pqs_source_box_route_driver_report_selected_terminal_lowering_fields(
     )
 end
 
+function _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+    selected_terminal_lowering_contract_inventory,
+)
+    sidecar_inventory =
+        _cartesian_route_core_selected_terminal_lowering_sidecar_inventory(
+            selected_terminal_lowering_contract_inventory,
+        )
+    missing_entries = Tuple(
+        entry for entry in sidecar_inventory.sidecar_entries
+        if !entry.route_core_sidecar_available
+    )
+    return (;
+        object_kind =
+            :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary,
+        status = sidecar_inventory.status,
+        private_development_only = true,
+        sidecar_inventory,
+        selected_contract_count = sidecar_inventory.selected_contract_count,
+        sidecar_available_count = sidecar_inventory.sidecar_available_count,
+        sidecar_missing_count = sidecar_inventory.sidecar_missing_count,
+        sidecar_inventory_complete =
+            sidecar_inventory.route_core_sidecar_inventory_complete,
+        missing_sidecar_reasons =
+            Tuple(entry.missing_route_core_sidecar_reason for entry in missing_entries),
+        missing_sidecar_kinds =
+            Tuple(entry.lowering_contract_kind for entry in missing_entries),
+        final_retained_unit_inventory_available =
+            sidecar_inventory.final_retained_unit_inventory_available,
+        pair_inventory_available = sidecar_inventory.pair_inventory_available,
+        pair_inventory_status = sidecar_inventory.pair_inventory_status,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized =
+            sidecar_inventory.pair_operator_blocks_materialized,
+        hamiltonian_data_materialized =
+            sidecar_inventory.hamiltonian_data_materialized,
+        artifacts_materialized = sidecar_inventory.artifacts_materialized,
+    )
+end
+
 function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     low_order_shellization =
         hasproperty(shells, :low_order_shellization) ?
@@ -5652,6 +5691,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                 :not_available,
                 nothing,
             )...,
+            terminal_shellification_selected_crc_sidecar_summary =
+                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+                    nothing,
+                ),
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -5785,6 +5828,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             selected_terminal_lowering_contract_inventory,
             selected_terminal_lowering_contract_inventory_status,
             route_lowering_family,
+        )
+    selected_terminal_crc_sidecar_summary =
+        _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+            selected_terminal_lowering_contract_inventory,
         )
     atom_growth_plan_unit_inventory =
         atom_growth_units_selected ?
@@ -5931,6 +5978,8 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
                 distorted_product_box_comx_count = 0,
             ),
         selected_terminal_lowering_fields...,
+        terminal_shellification_selected_crc_sidecar_summary =
+            selected_terminal_crc_sidecar_summary,
         terminal_shellification_contract_counts_by_unit =
             terminal_region_lowering_contract_inventory_available ?
             terminal_region_lowering_contract_inventory.contract_counts_by_unit :
