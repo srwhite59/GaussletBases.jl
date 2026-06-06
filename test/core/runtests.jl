@@ -94,7 +94,7 @@ end
     end
 
     for (Z, d, wi, expected_s) in ((10.0, 0.02, 6.0, sqrt(0.2)), (10.0, 0.03, 6.0, sqrt(0.3)), (2.0, 0.2, 10.0, sqrt(0.4)))
-        map = white_lindsey_atomic_mapping(Z = Z, d = d, tail_spacing = wi)
+        map = white_lindsey_atomic_mapping(; Z, d, tail_spacing = wi)
 
         @test map isa AsinhMapping
         @test map.a ≈ sqrt(d / Z) atol = 1.0e-14 rtol = 0.0
@@ -133,9 +133,9 @@ end
 
 @testset "CombinedInvsqrtMapping supports first bond-aligned heteronuclear rule" begin
     bond_length = 1.45
-    basis = bond_aligned_heteronuclear_qw_basis(
+    basis = bond_aligned_heteronuclear_qw_basis(;
         atoms = ("He", "H"),
-        bond_length = bond_length,
+        bond_length,
         core_spacings = (0.25, 0.5),
         nuclear_charges = (2.0, 1.0),
         xmax_parallel = 6.0,
@@ -689,7 +689,8 @@ end
     @test intermediate.overlap ≈ transpose(intermediate.overlap) atol = 1.0e-10 rtol = 1.0e-10
     @test norm(intermediate.overlap - I, Inf) < 1.0e-10
     @test intermediate.kinetic ≈ transpose(intermediate.kinetic) atol = 1.0e-10 rtol = 1.0e-10
-    @test maximum(abs.(intermediate.pair_factor_terms[1, :, :] .- transpose(intermediate.pair_factor_terms[1, :, :]))) < 1.0e-10
+    first_pair_terms = @view intermediate.pair_factor_terms[1, :, :]
+    @test maximum(abs.(first_pair_terms .- transpose(first_pair_terms))) < 1.0e-10
     @test bundle.pgdg_intermediate.refinement_levels == 0
     @test bundle.pgdg_intermediate.gaussian_factor_terms ≈ intermediate.gaussian_factor_terms atol = 0.0 rtol = 0.0
     @test GaussletBases._supports_analytic_gaussian_backend(primitive_set(bundle.pgdg_intermediate.base_layer))
@@ -756,11 +757,9 @@ end
     @test length(unique(assigned)) == length(ub)
 
     assembled = zeros(Float64, length(ub), length(ub))
-    for i in 1:length(boxes(partition))
-        for j in 1:length(boxes(partition))
-            assembled[box_indices(partition, i), box_indices(partition, j)] .=
-                box_coupling(overlap, partition, i, j)
-        end
+    for i in 1:length(boxes(partition)), j in 1:length(boxes(partition))
+        assembled[box_indices(partition, i), box_indices(partition, j)] .=
+            box_coupling(overlap, partition, i, j)
     end
 
     @test assembled ≈ overlap atol = 1.0e-12 rtol = 1.0e-12
@@ -782,11 +781,9 @@ end
     @test length(unique(leaf_indices)) == length(ub)
 
     assembled = zeros(Float64, length(ub), length(ub))
-    for box_i in leaves
-        for box_j in leaves
-            assembled[box_i.basis_indices, box_j.basis_indices] .=
-                box_coupling(overlap, refined, box_i.index, box_j.index)
-        end
+    for box_i in leaves, box_j in leaves
+        assembled[box_i.basis_indices, box_j.basis_indices] .=
+            box_coupling(overlap, refined, box_i.index, box_j.index)
     end
 
     @test assembled ≈ overlap atol = 1.0e-12 rtol = 1.0e-12
@@ -874,10 +871,10 @@ end
 
 @testset "Global mapped layer and leaf contraction" begin
     mapping = AsinhMapping(c = 0.15, s = 0.15)
-    global_layer = build_global_mapped_primitive_layer(
+    global_layer = build_global_mapped_primitive_layer(;
         xmin = -2.0,
         xmax = 2.0,
-        mapping = mapping,
+        mapping,
         reference_spacing = 0.5,
         width_scale = 1.0,
     )
@@ -914,4 +911,3 @@ end
     @test refined_rep.basis_matrices.overlap ≈ transpose(refined_rep.basis_matrices.overlap) atol = 1.0e-12 rtol = 1.0e-12
     @test refined_rep.basis_matrices.kinetic ≈ transpose(refined_rep.basis_matrices.kinetic) atol = 1.0e-12 rtol = 1.0e-12
 end
-
