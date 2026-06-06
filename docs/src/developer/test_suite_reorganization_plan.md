@@ -105,6 +105,29 @@ This should be treated as ownership cleanup, not as a test-framework rewrite.
   active public-contract coverage
 - do not combine unrelated domains just to reduce file count
 
+## Staged metadata assertion rule
+
+Do not compare large staged metadata objects with `==` or `===`.
+
+This is a hard testing rule for route metadata, CRC sidecars, staged summaries,
+route inventories, and deeply nested `NamedTuple` objects. Tests must not assert
+that a huge sidecar object is identical across stages, and they must not rely on
+failure paths that print or type-infer the entire staged object.
+
+Instead, test compact, stable summaries:
+
+- `status`
+- counts
+- keys, roles, and kind tuples
+- booleans
+- materialization flags
+- short missing-reason tuples
+
+If a stage carries a sidecar forward, tests should prove the contract through
+these small fields. Whole-object equality on staged metadata is brittle,
+expensive, and can dominate runtime through specialization, deep traversal, or
+failure rendering.
+
 ## Planned phases
 
 ### Phase 1: runner split and first low-risk extraction
