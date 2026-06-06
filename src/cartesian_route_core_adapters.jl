@@ -777,6 +777,513 @@ function _cartesian_route_core_pqs_prototype_sidecar(prototype)
     )
 end
 
+const _CRC_SELECTED_TERMINAL_DIRECT_CONTRACT_KINDS = (
+    :direct_core_identity_cpb,
+    :direct_slab_identity_cpb,
+    :direct_boundary_slab_identity_cpb,
+)
+
+const _CRC_SELECTED_TERMINAL_SUPPORTED_CONTRACT_KINDS = (
+    _CRC_SELECTED_TERMINAL_DIRECT_CONTRACT_KINDS...,
+    :pqs_filled_source_cpb,
+)
+
+function _cartesian_route_core_selected_terminal_lowering_missing_reason(contract)
+    kind = _cartesian_route_core_staged_field(contract, :lowering_contract_kind, nothing)
+    kind === :white_lindsey_boundary_strata &&
+        return :white_lindsey_leaf_sidecars_not_yet_expanded
+    kind === :distorted_product_box_comx &&
+        return :distorted_product_box_comx_sidecar_not_yet_mapped
+    kind in _CRC_SELECTED_TERMINAL_SUPPORTED_CONTRACT_KINDS && return nothing
+    return :unsupported_selected_terminal_lowering_contract_kind
+end
+
+function _cartesian_route_core_selected_terminal_raw_field(contract, fields)
+    for field in fields
+        value = _cartesian_route_core_staged_field(contract, field, nothing)
+        isnothing(value) || return value
+    end
+    return nothing
+end
+
+function _cartesian_route_core_selected_terminal_cpb(
+    cpb_candidate,
+    role::Symbol,
+    contract,
+)
+    cpb_candidate isa CartesianRouteCore.CoordinateProductBox && return cpb_candidate
+    if !isnothing(cpb_candidate) && length(cpb_candidate) == 3 &&
+       all(interval -> interval isa AbstractUnitRange{<:Integer}, cpb_candidate)
+        return CartesianRouteCore.cpb(
+            cpb_candidate;
+            role,
+            metadata = (;
+                source = :selected_terminal_lowering_contract,
+                contract_key =
+                    _cartesian_route_core_staged_field(
+                        contract,
+                        :contract_key,
+                        nothing,
+                    ),
+                unit_key = _cartesian_route_core_staged_field(
+                    contract,
+                    :unit_key,
+                    nothing,
+                ),
+                lowering_contract_kind =
+                    _cartesian_route_core_staged_field(
+                        contract,
+                        :lowering_contract_kind,
+                        nothing,
+                    ),
+            ),
+        )
+    end
+    return _cartesian_route_core_cpb_from_staged(cpb_candidate)
+end
+
+function _cartesian_route_core_selected_terminal_lowering_source_cpb(contract)
+    source_cpb =
+        _cartesian_route_core_staged_field(contract, :source_cpb, nothing)
+    if isnothing(source_cpb)
+        source_cpbs = _cartesian_route_core_staged_field(contract, :source_cpbs, ())
+        source_cpb = isempty(source_cpbs) ? nothing : only(source_cpbs)
+    end
+    source_cpb =
+        isnothing(source_cpb) ?
+        _cartesian_route_core_selected_terminal_raw_field(
+            contract,
+            (:source_cpb_plan_box, :box, :outer_box),
+        ) :
+        source_cpb
+    isnothing(source_cpb) &&
+        throw(ArgumentError("selected lowering contract is missing source CPB box"))
+    role = Symbol(
+        String(_cartesian_route_core_staged_field(contract, :unit_key, :selected_unit)),
+        "_source_cpb",
+    )
+    return _cartesian_route_core_selected_terminal_cpb(source_cpb, role, contract)
+end
+
+function _cartesian_route_core_selected_terminal_lowering_region(
+    contract,
+    source_cpb,
+)
+    staged_region =
+        _cartesian_route_core_staged_field(contract, :shellification_region, nothing)
+    staged_region isa CartesianRouteCore.ShellificationRegion &&
+        return staged_region
+    owned_support_record =
+        _cartesian_route_core_staged_field(contract, :owned_support, nothing)
+    owned_support =
+        !isnothing(owned_support_record) ?
+        _cartesian_route_core_owned_support_from_staged(owned_support_record) :
+        begin
+            inner_exclusion_box =
+                _cartesian_route_core_staged_field(
+                    contract,
+                    :inner_exclusion_box,
+                    nothing,
+                )
+            if !isnothing(inner_exclusion_box)
+                outer_box =
+                    _cartesian_route_core_selected_terminal_raw_field(
+                        contract,
+                        (:outer_box, :source_cpb_plan_box, :source_cpb, :box),
+                    )
+                isnothing(outer_box) &&
+                    throw(ArgumentError("selected shell contract is missing outer_box"))
+                outer_cpb =
+                    _cartesian_route_core_selected_terminal_cpb(
+                        outer_box,
+                        :selected_terminal_outer_cpb,
+                        contract,
+                    )
+                inner_cpb =
+                    _cartesian_route_core_selected_terminal_cpb(
+                        inner_exclusion_box,
+                        :selected_terminal_inner_exclusion_cpb,
+                        contract,
+                    )
+                CartesianRouteCore.complete_shell_support(
+                    outer_cpb,
+                    inner_cpb;
+                    support_kind = :selected_terminal_complete_shell_support,
+                    metadata = (;
+                        source = :selected_terminal_lowering_contract,
+                        contract_key =
+                            _cartesian_route_core_staged_field(
+                                contract,
+                                :contract_key,
+                                nothing,
+                            ),
+                        source_cpb_plan_kind =
+                            _cartesian_route_core_staged_field(
+                                contract,
+                                :source_cpb_plan_kind,
+                                nothing,
+                            ),
+                    ),
+                )
+            else
+                CartesianRouteCore.owned_cpb(
+                    source_cpb;
+                    support_kind = :selected_terminal_lowering_source_cpb_support,
+                    metadata = (;
+                        source = :selected_terminal_lowering_contract,
+                        contract_key =
+                            _cartesian_route_core_staged_field(
+                                contract,
+                                :contract_key,
+                                nothing,
+                            ),
+                    ),
+                )
+            end
+        end
+    staged_support_count =
+        _cartesian_route_core_staged_field(contract, :support_count, nothing)
+    if !isnothing(staged_support_count) &&
+       CartesianRouteCore.support_count(owned_support) != staged_support_count
+        throw(
+            ArgumentError(
+                "selected lowering owned support count does not match contract support_count",
+            ),
+        )
+    end
+    unit_role =
+        _cartesian_route_core_staged_field(
+            contract,
+            :unit_role,
+            _cartesian_route_core_staged_field(
+                contract,
+                :terminal_region_kind,
+                :selected_terminal_region,
+            ),
+        )
+    return CartesianRouteCore.shellification_region(
+        unit_role,
+        owned_support;
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            unit_key = _cartesian_route_core_staged_field(contract, :unit_key, nothing),
+            lowering_contract_kind =
+                _cartesian_route_core_staged_field(
+                    contract,
+                    :lowering_contract_kind,
+                    nothing,
+                ),
+        ),
+    )
+end
+
+function _cartesian_route_core_selected_terminal_lowering_sidecar_object(;
+    sidecar_source::Symbol,
+    shellification_region,
+    lowering_source,
+    intermediate_retained_space,
+    shell_realization,
+    final_retained_unit,
+)
+    return merge(
+        _cartesian_route_core_sidecar_object(
+            ;
+            sidecar_source,
+            shellification_region,
+            lowering_source,
+            intermediate_retained_space,
+            shell_realization,
+            final_retained_unit,
+        ),
+        (;
+            coefficient_maps_materialized = false,
+            transform_contracts_materialized = false,
+            retained_spaces_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+        ),
+    )
+end
+
+function _cartesian_route_core_selected_terminal_direct_lowering_sidecar(
+    contract,
+    kind::Symbol,
+)
+    source_cpb = _cartesian_route_core_selected_terminal_lowering_source_cpb(contract)
+    shellification_region =
+        _cartesian_route_core_selected_terminal_lowering_region(contract, source_cpb)
+    owned_support = CartesianRouteCore.owned_support(shellification_region)
+    length(owned_support.cpbs) == 1 ||
+        throw(ArgumentError("direct selected lowering sidecar expects owned CPB support"))
+    CartesianRouteCore.intervals(source_cpb) ==
+    CartesianRouteCore.intervals(only(owned_support.cpbs)) ||
+        throw(ArgumentError("direct selected lowering source CPB must match owned support"))
+
+    unit_key = _cartesian_route_core_staged_field(contract, :unit_key, :selected_unit)
+    unit_role =
+        _cartesian_route_core_staged_field(contract, :unit_role, shellification_region.role)
+    lowering_source = CartesianRouteCore.lowering_source(
+        kind,
+        shellification_region,
+        (source_cpb,);
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            lowering_contract_kind = kind,
+            identity_like_source_contract = true,
+            coefficient_maps_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+    )
+    intermediate_retained_space = CartesianRouteCore.intermediate_retained_space(
+        lowering_source;
+        retained_rule = :identity_source_modes,
+        source_mode_dims = CartesianRouteCore.shape(source_cpb),
+        materialized = false,
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            retained_space_status = :metadata_only_identity_source_modes,
+            coefficient_maps_materialized = false,
+        ),
+    )
+    shell_realization = CartesianRouteCore.trivial_shell_realization(
+        intermediate_retained_space,
+        shellification_region;
+        status = :direct_or_trivial_metadata_only,
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            shell_row_oracle_authority = false,
+        ),
+    )
+    final_retained_unit = CartesianRouteCore.final_retained_unit(
+        unit_key,
+        unit_role,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization;
+        column_range =
+            _cartesian_route_core_staged_field(contract, :retained_range, nothing),
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            status = :metadata_only_not_staged_final_inventory,
+            pair_planning_input = false,
+            coefficient_maps_materialized = false,
+        ),
+    )
+
+    return _cartesian_route_core_selected_terminal_lowering_sidecar_object(
+        ;
+        sidecar_source = :selected_terminal_direct_identity_lowering_contract,
+        shellification_region,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization,
+        final_retained_unit,
+    )
+end
+
+function _cartesian_route_core_selected_terminal_pqs_lowering_sidecar(contract)
+    source_cpb =
+        _cartesian_route_core_selected_terminal_lowering_source_cpb(contract)
+    CartesianRouteCore.codimension(source_cpb) == 0 ||
+        throw(ArgumentError("PQS selected lowering sidecar expects filled source CPB"))
+    shellification_region =
+        _cartesian_route_core_selected_terminal_lowering_region(contract, source_cpb)
+    unit_key = _cartesian_route_core_staged_field(contract, :unit_key, :selected_unit)
+    unit_role =
+        _cartesian_route_core_staged_field(contract, :unit_role, shellification_region.role)
+    lowering_source = CartesianRouteCore.pqs_filled_source_lowering(
+        shellification_region,
+        source_cpb;
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            lowering_contract_kind = :pqs_filled_source_cpb,
+            coefficient_maps_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+    )
+    intermediate_retained_space = CartesianRouteCore.intermediate_retained_space(
+        lowering_source;
+        retained_rule = :pqs_boundary_comx_product_modes,
+        source_mode_dims = CartesianRouteCore.shape(source_cpb),
+        materialized = false,
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            selected_modes = :boundary_comx_product_modes,
+            status = :metadata_only_boundary_comx_product_modes,
+            coefficient_maps_materialized = false,
+        ),
+    )
+    shell_realization = CartesianRouteCore.pqs_shell_realization(
+        intermediate_retained_space,
+        shellification_region;
+        status = :shell_projection_lowdin_planned_not_materialized,
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            unit_key,
+            contract_key =
+                _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+            shell_projection_planned = true,
+            lowdin_cleanup_planned = true,
+            materialized = false,
+        ),
+    )
+    final_retained_unit = CartesianRouteCore.final_retained_unit(
+        unit_key,
+        unit_role,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization;
+        column_range =
+            _cartesian_route_core_staged_field(contract, :retained_range, nothing),
+        metadata = (;
+            source = :selected_terminal_lowering_contract,
+            status = :metadata_only_not_staged_final_inventory,
+            pair_planning_input = false,
+            coefficient_maps_materialized = false,
+        ),
+    )
+
+    return _cartesian_route_core_selected_terminal_lowering_sidecar_object(
+        ;
+        sidecar_source = :selected_terminal_pqs_filled_source_contract,
+        shellification_region,
+        lowering_source,
+        intermediate_retained_space,
+        shell_realization,
+        final_retained_unit,
+    )
+end
+
+function _cartesian_route_core_selected_terminal_lowering_sidecar(contract)
+    reason = _cartesian_route_core_selected_terminal_lowering_missing_reason(contract)
+    isnothing(reason) ||
+        throw(ArgumentError("unsupported selected terminal lowering contract: $reason"))
+    kind = contract.lowering_contract_kind
+    kind === :pqs_filled_source_cpb &&
+        return _cartesian_route_core_selected_terminal_pqs_lowering_sidecar(contract)
+    return _cartesian_route_core_selected_terminal_direct_lowering_sidecar(
+        contract,
+        kind,
+    )
+end
+
+function _cartesian_route_core_selected_terminal_lowering_sidecar_entry(contract)
+    reason = _cartesian_route_core_selected_terminal_lowering_missing_reason(contract)
+    available = isnothing(reason)
+    return (;
+        object_kind =
+            :cartesian_route_core_selected_terminal_lowering_sidecar_inventory_entry,
+        contract_key =
+            _cartesian_route_core_staged_field(contract, :contract_key, nothing),
+        unit_key = _cartesian_route_core_staged_field(contract, :unit_key, nothing),
+        unit_role = _cartesian_route_core_staged_field(contract, :unit_role, nothing),
+        lowering_contract_kind =
+            _cartesian_route_core_staged_field(
+                contract,
+                :lowering_contract_kind,
+                nothing,
+            ),
+        route_core_sidecar_available = available,
+        route_core_sidecar =
+            available ?
+            _cartesian_route_core_selected_terminal_lowering_sidecar(contract) :
+            nothing,
+        missing_route_core_sidecar_reason = reason,
+    )
+end
+
+function _cartesian_route_core_selected_terminal_lowering_sidecar_inventory(
+    selected_inventory,
+)
+    inventory_available =
+        !isnothing(selected_inventory) &&
+        _cartesian_route_core_staged_field(selected_inventory, :status, nothing) ===
+        :available_selected_terminal_lowering_contract_inventory
+    if !inventory_available
+        return (;
+            object_kind =
+                :cartesian_route_core_selected_terminal_lowering_sidecar_inventory,
+            status = :not_available_selected_terminal_lowering_contract_inventory,
+            private_development_only = true,
+            selected_contract_count = 0,
+            sidecar_available_count = 0,
+            sidecar_missing_count = 0,
+            sidecar_entries = (),
+            route_core_sidecars = (),
+            route_core_sidecar_inventory_complete = false,
+            final_retained_unit_inventory_available = false,
+            pair_inventory_available = false,
+            pair_inventory_status = :not_available_crc_sidecar_metadata_only,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            artifacts_materialized = false,
+        )
+    end
+
+    selected_contracts =
+        _cartesian_route_core_staged_field(
+            selected_inventory,
+            :selected_contracts,
+            _cartesian_route_core_staged_field(
+                selected_inventory,
+                :selected_contract_records,
+                (),
+            ),
+        )
+    entries = Tuple(
+        _cartesian_route_core_selected_terminal_lowering_sidecar_entry(contract)
+        for contract in selected_contracts
+    )
+    route_core_sidecars =
+        Tuple(entry.route_core_sidecar for entry in entries if entry.route_core_sidecar_available)
+    sidecar_missing_count =
+        count(entry -> !entry.route_core_sidecar_available, entries)
+    return (;
+        object_kind =
+            :cartesian_route_core_selected_terminal_lowering_sidecar_inventory,
+        status =
+            sidecar_missing_count == 0 ?
+            :available_selected_terminal_lowering_crc_sidecar_inventory :
+            :partial_selected_terminal_lowering_crc_sidecar_inventory,
+        private_development_only = true,
+        selected_contract_count = length(entries),
+        sidecar_available_count = length(route_core_sidecars),
+        sidecar_missing_count,
+        sidecar_entries = entries,
+        route_core_sidecars,
+        route_core_sidecar_inventory_complete = sidecar_missing_count == 0,
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :not_available_crc_sidecar_metadata_only,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
 function _cartesian_route_core_sidecar(record)
     object_kind = _cartesian_route_core_staged_field(record, :object_kind, nothing)
     if object_kind === :cartesian_atom_growth_plan_unit
