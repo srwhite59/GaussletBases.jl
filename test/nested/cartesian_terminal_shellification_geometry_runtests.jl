@@ -76,6 +76,56 @@ function _terminal_geometry_assert_full_partition(plan)
     return coverage
 end
 
+function _terminal_geometry_assert_private_summary_contract(plan)
+    summary =
+        GaussletBases._cartesian_terminal_shellification_geometry_private_summary(
+            plan,
+        )
+    @test summary.object_kind ==
+          :cartesian_terminal_shellification_geometry_private_summary
+    @test summary.source_kind == :terminal_cartesian_shellification_geometry
+    @test summary.private_development_only
+    @test summary.system_kind == plan.system_kind
+    @test summary.parent_dims == plan.parent_dims
+    @test summary.parent_box == plan.parent_box
+    @test summary.nuclear_indices == plan.nuclear_indices
+    @test summary.bond_axis == plan.bond_axis
+    @test summary.core_side == plan.core_side
+    @test summary.q == plan.q
+    @test summary.ordered_terminal_region_roles == plan.region_roles
+    @test summary.ordered_terminal_region_kinds == plan.region_kinds
+    @test summary.region_count == plan.region_count
+    @test summary.terminal_region_count == plan.terminal_region_count
+    @test summary.region_support_counts ==
+          Tuple(region.support_count for region in plan.regions)
+    @test summary.total_support_count == prod(plan.parent_dims)
+    @test summary.coverage_status == :coverage_complete
+    @test summary.coverage_complete
+    @test summary.coverage.expected_parent_site_count == prod(plan.parent_dims)
+    @test summary.coverage.region_support_count == prod(plan.parent_dims)
+    @test summary.coverage.duplicate_site_count == 0
+    @test summary.coverage.missing_site_count == 0
+    @test !summary.shellification_regions_are_cpbs
+    @test !summary.shellification_regions_are_lowering_sources
+    @test !summary.lowering_applied_by_summary
+    @test !summary.retained_spaces_materialized
+    @test !summary.coefficient_maps_materialized
+    @test !summary.operator_blocks_materialized
+    @test !summary.pair_operator_blocks_materialized
+    @test !summary.hamiltonian_data_materialized
+    @test !summary.public_default_behavior_changed
+    @test all(!region.shellification_region_is_cpb for region in summary.regions)
+    @test all(
+        !region.shellification_region_is_lowering_source
+        for region in summary.regions
+    )
+    @test all(
+        region.lowering_status == :planned_not_lowered
+        for region in summary.regions
+    )
+    return summary
+end
+
 @testset "terminal Cartesian shellification one-center centered complete shells" begin
     axes = (collect(1:9), collect(1:9), collect(1:9))
     plan = GaussletBases._cartesian_terminal_shellification_geometry(
@@ -94,6 +144,21 @@ end
     @test plan.regions[2].support_count == 7^3 - 5^3
     @test plan.regions[3].support_count == 9^3 - 7^3
     _terminal_geometry_assert_full_partition(plan)
+    summary = _terminal_geometry_assert_private_summary_contract(plan)
+    expected_dependencies = (
+        :plan_lowerable_direct_core,
+        :plan_lowerable_complete_shell,
+        :plan_lowerable_complete_shell,
+    )
+    dependency_counts = summary.materialization_dependency_counts
+    @test summary.ordered_materialization_dependencies == expected_dependencies
+    @test dependency_counts.plan_lowerable_direct_core_count == 1
+    @test dependency_counts.plan_lowerable_complete_shell_count == 2
+    @test dependency_counts.plan_lowerable_shared_complete_shell_count == 0
+    @test dependency_counts.plan_lowerable_direct_slab_count == 0
+    @test dependency_counts.planned_distorted_product_box_lowering_count == 0
+    @test dependency_counts.unsupported_terminal_shellification_region_count == 0
+    @test summary.central_gap_region_count == 0
 end
 
 @testset "terminal Cartesian shellification one-center outer mismatch slabs" begin
@@ -109,6 +174,14 @@ end
     @test any(region.role == :x_high_outer_mismatch_slab for region in plan.regions)
     @test any(region.role == :y_high_outer_mismatch_slab for region in plan.regions)
     _terminal_geometry_assert_full_partition(plan)
+    summary = _terminal_geometry_assert_private_summary_contract(plan)
+    dependency_counts = summary.materialization_dependency_counts
+    @test dependency_counts.plan_lowerable_direct_boundary_slab_count > 0
+    @test all(
+        region.materialization_dependency == :plan_lowerable_direct_boundary_slab
+        for region in summary.regions
+        if region.region_kind == :outer_mismatch_slab
+    )
 end
 
 @testset "terminal Cartesian shellification coordinate snapping" begin
@@ -143,6 +216,10 @@ end
     @test any(region.role == :shared_molecular_shell for region in plan.regions)
     @test all(region.role ∉ (:left_atom_box, :right_atom_box) for region in plan.regions)
     _terminal_geometry_assert_full_partition(plan)
+    summary = _terminal_geometry_assert_private_summary_contract(plan)
+    dependency_counts = summary.materialization_dependency_counts
+    @test dependency_counts.plan_lowerable_shared_complete_shell_count > 0
+    @test dependency_counts.plan_lowerable_direct_slab_count == 1
 end
 
 @testset "terminal Cartesian shellification diatomic without midpoint" begin
@@ -175,6 +252,18 @@ end
     @test all(region.support_count == 5^2 for region in midpoint_slabs)
     @test !any(region.role == :central_distorted_product_box for region in plan.regions)
     _terminal_geometry_assert_full_partition(plan)
+    summary = _terminal_geometry_assert_private_summary_contract(plan)
+    dependency_counts = summary.materialization_dependency_counts
+    @test summary.central_gap_region_count == 5
+    @test summary.central_midpoint_slab_count == 5
+    @test summary.central_distorted_product_box_count == 0
+    @test dependency_counts.plan_lowerable_direct_slab_count == 5
+    @test dependency_counts.planned_distorted_product_box_lowering_count == 0
+    @test all(
+        region.materialization_dependency == :plan_lowerable_direct_slab
+        for region in summary.regions
+        if region.region_kind == :direct_midpoint_slab
+    )
 end
 
 @testset "terminal Cartesian shellification central gap at least q uses one region" begin
@@ -200,6 +289,21 @@ end
     @test central_box.metadata.lowering_hint == :distorted_comx_all_axes
     @test !any(region.role == :midpoint_slab for region in plan.regions)
     _terminal_geometry_assert_full_partition(plan)
+    summary = _terminal_geometry_assert_private_summary_contract(plan)
+    dependency_counts = summary.materialization_dependency_counts
+    distorted_metadata = only(summary.central_distorted_product_box_metadata)
+    @test summary.central_gap_region_count == 1
+    @test summary.central_midpoint_slab_count == 0
+    @test summary.central_distorted_product_box_count == 1
+    @test dependency_counts.plan_lowerable_direct_slab_count == 0
+    @test dependency_counts.planned_distorted_product_box_lowering_count == 1
+    @test distorted_metadata.q == 3
+    @test distorted_metadata.L == 7
+    @test distorted_metadata.source_mode_shape == (7, 3, 3)
+    @test only(
+        region for region in summary.regions
+        if region.region_kind == :central_distorted_product_box
+    ).materialization_dependency == :planned_distorted_product_box_lowering
 end
 
 @testset "terminal Cartesian shellification invalid inputs and unsupported geometries" begin
