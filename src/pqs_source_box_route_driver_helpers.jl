@@ -7392,6 +7392,13 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
             terminal_shellification_scaffold = nothing,
             terminal_shellification_region_count = 0,
             terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_unit_inventory = nothing,
+            terminal_shellification_unit_count = 0,
+            terminal_shellification_unit_keys = (),
+            terminal_shellification_unit_roles = (),
+            terminal_shellification_unit_kinds = (),
+            terminal_shellification_unit_support_counts = (),
+            terminal_shellification_final_retained_unit_inventory_available = false,
             terminal_shellification_transform_contracts_available = false,
             terminal_shellification_pair_inventory_available = false,
             terminal_shellification_pair_inventory_status = :not_available,
@@ -7559,6 +7566,33 @@ function _pqs_source_box_route_driver_assembly_stage_low_order_summary(pairs)
         terminal_shellification_unit_inventory_available =
             terminal_shellification_assembly_selected &&
             low_order_pairs.terminal_shellification_unit_inventory_available,
+        terminal_shellification_unit_inventory =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_inventory :
+            nothing,
+        terminal_shellification_unit_count =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_count :
+            0,
+        terminal_shellification_unit_keys =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_keys :
+            (),
+        terminal_shellification_unit_roles =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_roles :
+            (),
+        terminal_shellification_unit_kinds =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_kinds :
+            (),
+        terminal_shellification_unit_support_counts =
+            terminal_shellification_assembly_selected ?
+            low_order_pairs.terminal_shellification_unit_support_counts :
+            (),
+        terminal_shellification_final_retained_unit_inventory_available =
+            terminal_shellification_assembly_selected &&
+            low_order_pairs.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
             terminal_shellification_assembly_selected &&
             low_order_pairs.terminal_shellification_transform_contracts_available,
@@ -7728,6 +7762,20 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.terminal_shellification_region_count,
         terminal_shellification_unit_inventory_available =
             low_order_assembly.terminal_shellification_unit_inventory_available,
+        terminal_shellification_unit_inventory =
+            low_order_assembly.terminal_shellification_unit_inventory,
+        terminal_shellification_unit_count =
+            low_order_assembly.terminal_shellification_unit_count,
+        terminal_shellification_unit_keys =
+            low_order_assembly.terminal_shellification_unit_keys,
+        terminal_shellification_unit_roles =
+            low_order_assembly.terminal_shellification_unit_roles,
+        terminal_shellification_unit_kinds =
+            low_order_assembly.terminal_shellification_unit_kinds,
+        terminal_shellification_unit_support_counts =
+            low_order_assembly.terminal_shellification_unit_support_counts,
+        terminal_shellification_final_retained_unit_inventory_available =
+            low_order_assembly.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
             low_order_assembly.terminal_shellification_transform_contracts_available,
         terminal_shellification_pair_inventory_available =

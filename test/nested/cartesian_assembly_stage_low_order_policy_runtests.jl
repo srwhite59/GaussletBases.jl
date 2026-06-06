@@ -284,7 +284,20 @@ end
           terminal_stages.pairs.terminal_shellification_scaffold
     @test terminal_assembly.terminal_shellification_region_count ==
           terminal_stages.pairs.terminal_shellification_region_count
-    @test !terminal_assembly.terminal_shellification_unit_inventory_available
+    @test terminal_assembly.terminal_shellification_unit_inventory_available
+    @test terminal_assembly.terminal_shellification_unit_inventory ===
+          terminal_stages.pairs.terminal_shellification_unit_inventory
+    @test terminal_assembly.terminal_shellification_unit_count ==
+          terminal_stages.pairs.terminal_shellification_unit_count
+    @test terminal_assembly.terminal_shellification_unit_keys ==
+          terminal_stages.pairs.terminal_shellification_unit_keys
+    @test terminal_assembly.terminal_shellification_unit_roles ==
+          terminal_stages.pairs.terminal_shellification_unit_roles
+    @test terminal_assembly.terminal_shellification_unit_kinds ==
+          terminal_stages.pairs.terminal_shellification_unit_kinds
+    @test terminal_assembly.terminal_shellification_unit_support_counts ==
+          terminal_stages.pairs.terminal_shellification_unit_support_counts
+    @test !terminal_assembly.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_assembly.terminal_shellification_transform_contracts_available
     @test !terminal_assembly.terminal_shellification_pair_inventory_available
     @test terminal_assembly.terminal_shellification_pair_inventory_status ==
@@ -354,7 +367,20 @@ end
           terminal_stages.pairs.terminal_shellification_scaffold
     @test terminal_summary.terminal_shellification_region_count ==
           terminal_stages.pairs.terminal_shellification_region_count
-    @test !terminal_summary.terminal_shellification_unit_inventory_available
+    @test terminal_summary.terminal_shellification_unit_inventory_available
+    @test terminal_summary.terminal_shellification_unit_inventory ===
+          terminal_stages.pairs.terminal_shellification_unit_inventory
+    @test terminal_summary.terminal_shellification_unit_count ==
+          terminal_stages.pairs.terminal_shellification_unit_count
+    @test terminal_summary.terminal_shellification_unit_keys ==
+          terminal_stages.pairs.terminal_shellification_unit_keys
+    @test terminal_summary.terminal_shellification_unit_roles ==
+          terminal_stages.pairs.terminal_shellification_unit_roles
+    @test terminal_summary.terminal_shellification_unit_kinds ==
+          terminal_stages.pairs.terminal_shellification_unit_kinds
+    @test terminal_summary.terminal_shellification_unit_support_counts ==
+          terminal_stages.pairs.terminal_shellification_unit_support_counts
+    @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
     @test terminal_summary.terminal_shellification_pair_inventory_status ==
@@ -403,6 +429,14 @@ end
     @test terminal_summary.pair_operator_helper_by_family == ()
     @test terminal_summary.pair_helper_status_by_family == ()
     @test terminal_summary.summary_only
+    @test all(
+        record -> !record.owned_support_is_cpb,
+        terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
+    )
+    @test all(
+        record -> !record.shellification_region_is_cpb,
+        terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
+    )
     @test terminal_summary.assembly_stage_fields_preserved
     @test terminal_assembly.shells === terminal_stages.shells
     @test terminal_assembly.units === terminal_stages.units
