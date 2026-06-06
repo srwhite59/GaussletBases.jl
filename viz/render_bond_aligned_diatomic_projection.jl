@@ -158,6 +158,8 @@ function _group_style(group_kind::Symbol)
         return (color = :royalblue3, marker = :none, markersize = 0, strokewidth = 1.0, linewidth = 3.0, linestyle = :solid)
     elseif group_kind == :shared_midpoint_slab_box
         return (color = :deeppink4, marker = :none, markersize = 0, strokewidth = 1.0, linewidth = 4.0, linestyle = :solid)
+    elseif group_kind == :parent_grid_line
+        return (color = RGBAf(0.0, 0.0, 0.0, 0.12), marker = :none, markersize = 0, strokewidth = 1.0, linewidth = 1.0, linestyle = :solid)
     else
         return (color = :gray40, marker = :circle, markersize = 20, strokewidth = 1.0, linewidth = 0.0, linestyle = :solid)
     end
