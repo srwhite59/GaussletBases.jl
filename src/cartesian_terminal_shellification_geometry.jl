@@ -754,3 +754,227 @@ function _cartesian_terminal_shellification_geometry_private_summary(plan)
         public_default_behavior_changed = false,
     )
 end
+
+function _cartesian_terminal_shellification_geometry_region_lowering_family(
+    region_summary,
+)
+    region_summary.region_kind == :direct_core && return :direct_product_core
+    if region_summary.region_kind == :complete_shell
+        region_summary.role == :shared_molecular_shell &&
+            return :white_lindsey_adaptive_complete_shell
+        return :white_lindsey_complete_shell
+    end
+    region_summary.region_kind == :direct_midpoint_slab &&
+        return :direct_midpoint_slab
+    region_summary.region_kind == :central_distorted_product_box &&
+        return :distorted_comx_product_box_deferred
+    region_summary.region_kind == :outer_mismatch_slab &&
+        return :direct_boundary_slab
+    return :unsupported_terminal_shellification_region
+end
+
+function _cartesian_terminal_shellification_geometry_independently_lowerable(
+    dependency::Symbol,
+)
+    return dependency in (
+        :plan_lowerable_direct_core,
+        :plan_lowerable_complete_shell,
+        :plan_lowerable_shared_complete_shell,
+        :plan_lowerable_direct_slab,
+        :plan_lowerable_direct_boundary_slab,
+    )
+end
+
+function _cartesian_terminal_shellification_geometry_missing_lowering_reason(
+    dependency::Symbol,
+)
+    dependency == :planned_distorted_product_box_lowering &&
+        return :distorted_product_box_lowering_not_implemented
+    dependency == :unsupported_terminal_shellification_region &&
+        return :unsupported_terminal_shellification_region
+    return nothing
+end
+
+function _cartesian_terminal_shellification_geometry_region_retirement_target(
+    dependency::Symbol,
+)
+    _cartesian_terminal_shellification_geometry_independently_lowerable(
+        dependency,
+    ) && return :already_plan_lowered_region
+    dependency == :planned_distorted_product_box_lowering &&
+        return :pending_distorted_product_box_lowering_support
+    return :requires_manager_review
+end
+
+function _cartesian_terminal_shellification_geometry_scaffold_region(
+    region_summary,
+)
+    dependency = region_summary.materialization_dependency
+    independently_lowerable =
+        _cartesian_terminal_shellification_geometry_independently_lowerable(
+            dependency,
+        )
+    return (;
+        object_kind = :cartesian_terminal_shellification_scaffold_region,
+        order_index = region_summary.order_index,
+        role = region_summary.role,
+        region_kind = region_summary.region_kind,
+        box = region_summary.outer_box,
+        outer_box = region_summary.outer_box,
+        inner_exclusion_box = region_summary.inner_exclusion_box,
+        support_count = region_summary.support_count,
+        source_point_count = region_summary.support_count,
+        materialization_dependency = dependency,
+        lowering_family =
+            _cartesian_terminal_shellification_geometry_region_lowering_family(
+                region_summary,
+            ),
+        lowering_hint =
+            hasproperty(region_summary.metadata, :lowering_hint) ?
+            region_summary.metadata.lowering_hint :
+            nothing,
+        lowering_status = :planned_not_lowered,
+        terminal = region_summary.terminal,
+        shellification_region_is_cpb = false,
+        shellification_region_is_lowering_source = false,
+        coordinate_product_box_lowering_materialized = false,
+        source_backed = false,
+        independently_lowerable,
+        missing_independent_lowering_reason =
+            _cartesian_terminal_shellification_geometry_missing_lowering_reason(
+                dependency,
+            ),
+        retirement_target =
+            _cartesian_terminal_shellification_geometry_region_retirement_target(
+                dependency,
+            ),
+        metadata = region_summary.metadata,
+        provenance = (;
+            source = :_cartesian_terminal_shellification_geometry_private_summary,
+            summary_region_order_index = region_summary.order_index,
+            terminal_region_role = region_summary.role,
+            terminal_region_kind = region_summary.region_kind,
+        ),
+    )
+end
+
+function _cartesian_terminal_shellification_geometry_scaffold_materialization_status(
+    regions,
+)
+    any(
+        region ->
+            region.materialization_dependency ==
+            :unsupported_terminal_shellification_region,
+        regions,
+    ) && return :blocked_unsupported_regions
+    any(!getproperty(region, :independently_lowerable) for region in regions) &&
+        return :deferred_pending_distorted_product_box_lowering
+    return :ready_supported_terminal_subset
+end
+
+function _cartesian_terminal_shellification_geometry_scaffold_coverage(summary)
+    coverage = summary.coverage
+    return (;
+        object_kind = :cartesian_terminal_shellification_scaffold_coverage3d,
+        expected_support_count = coverage.expected_parent_site_count,
+        region_support_count = coverage.region_support_count,
+        covered_support_count = coverage.covered_site_count,
+        duplicate_count = coverage.duplicate_site_count,
+        missing_count = coverage.missing_site_count,
+        outside_count = 0,
+        coverage_complete = coverage.coverage_complete,
+    )
+end
+
+function _cartesian_terminal_shellification_geometry_spatial_policy_order(
+    system_kind::Symbol,
+)
+    system_kind == :one_center && return :single_center_outward
+    system_kind == :bond_aligned_diatomic && return :atom_outward
+    return :terminal_geometry_order
+end
+
+function _cartesian_terminal_shellification_geometry_scaffold(
+    plan;
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    summary =
+        _cartesian_terminal_shellification_geometry_private_summary(plan)
+    regions = Tuple(
+        _cartesian_terminal_shellification_geometry_scaffold_region(region)
+        for region in summary.regions
+    )
+    materialization_status =
+        _cartesian_terminal_shellification_geometry_scaffold_materialization_status(
+            regions,
+        )
+    dependency_counts = summary.materialization_dependency_counts
+    deferred_regions =
+        Tuple(region for region in regions if !region.independently_lowerable)
+    coverage =
+        _cartesian_terminal_shellification_geometry_scaffold_coverage(summary)
+
+    return (;
+        object_kind = :cartesian_terminal_shellification_scaffold3d,
+        status = :planned_metadata_only,
+        materialization_status,
+        private_development_only = true,
+        source_kind = :terminal_cartesian_shellification_geometry,
+        route_family,
+        system_classification = summary.system_kind,
+        shellification_role = :terminal_cartesian_shellification_geometry,
+        shellification_stage = :route_neutral_spatial_planning,
+        lowering_stage = :not_lowered_by_shellification_plan,
+        spatial_policy_order =
+            _cartesian_terminal_shellification_geometry_spatial_policy_order(
+                summary.system_kind,
+            ),
+        parent_box = summary.parent_box,
+        working_box = summary.parent_box,
+        full_parent_working_box = coverage.coverage_complete,
+        parent_dims = summary.parent_dims,
+        nuclear_indices = summary.nuclear_indices,
+        bond_axis = summary.bond_axis,
+        core_side = summary.core_side,
+        q = summary.q,
+        regions,
+        region_count = length(regions),
+        ordered_region_roles = Tuple(region.role for region in regions),
+        ordered_region_kinds = Tuple(region.region_kind for region in regions),
+        ordered_region_boxes = Tuple(region.box for region in regions),
+        ordered_materialization_dependencies =
+            Tuple(region.materialization_dependency for region in regions),
+        materialization_dependency_counts = dependency_counts,
+        independently_lowerable_region_count =
+            count(region -> region.independently_lowerable, regions),
+        deferred_region_count = length(deferred_regions),
+        deferred_regions,
+        unsupported_region_count =
+            dependency_counts.unsupported_terminal_shellification_region_count,
+        central_gap_region_count = summary.central_gap_region_count,
+        central_midpoint_slab_count = summary.central_midpoint_slab_count,
+        central_distorted_product_box_count =
+            summary.central_distorted_product_box_count,
+        central_distorted_product_box_metadata =
+            summary.central_distorted_product_box_metadata,
+        coverage,
+        terminal_geometry_summary = summary,
+        diagnostics = (;
+            source = :_cartesian_terminal_shellification_geometry_scaffold,
+            private_development_only = true,
+            terminal_geometry_authority = true,
+            route_neutral_spatial_planning = true,
+            lowering_applied_by_plan = false,
+            materialization_behavior_changed = false,
+            public_default_behavior_changed = false,
+            shellification_regions_are_cpbs = false,
+            shellification_regions_are_lowering_sources = false,
+            retained_spaces_materialized = false,
+            coefficient_maps_materialized = false,
+            operator_blocks_materialized = false,
+            pair_operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+            cartesian_shells_behavior_changed = false,
+        ),
+    )
+end

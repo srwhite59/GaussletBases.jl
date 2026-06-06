@@ -126,6 +126,77 @@ function _terminal_geometry_assert_private_summary_contract(plan)
     return summary
 end
 
+function _terminal_geometry_assert_scaffold_contract(
+    plan;
+    route_family::Symbol = :white_lindsey_low_order,
+)
+    scaffold = GaussletBases._cartesian_terminal_shellification_geometry_scaffold(
+        plan;
+        route_family,
+    )
+    @test scaffold.object_kind == :cartesian_terminal_shellification_scaffold3d
+    @test scaffold.status == :planned_metadata_only
+    @test scaffold.private_development_only
+    @test scaffold.source_kind == :terminal_cartesian_shellification_geometry
+    @test scaffold.route_family == route_family
+    @test scaffold.system_classification == plan.system_kind
+    @test scaffold.shellification_role == :terminal_cartesian_shellification_geometry
+    @test scaffold.shellification_stage == :route_neutral_spatial_planning
+    @test scaffold.lowering_stage == :not_lowered_by_shellification_plan
+    @test scaffold.parent_box == plan.parent_box
+    @test scaffold.working_box == plan.parent_box
+    @test scaffold.full_parent_working_box
+    @test scaffold.parent_dims == plan.parent_dims
+    @test scaffold.nuclear_indices == plan.nuclear_indices
+    @test scaffold.bond_axis == plan.bond_axis
+    @test scaffold.core_side == plan.core_side
+    @test scaffold.q == plan.q
+    @test scaffold.region_count == plan.region_count
+    @test scaffold.ordered_region_roles == plan.region_roles
+    @test scaffold.ordered_region_kinds == plan.region_kinds
+    @test scaffold.ordered_region_boxes ==
+          Tuple(region.outer_box for region in plan.regions)
+    @test scaffold.coverage.object_kind ==
+          :cartesian_terminal_shellification_scaffold_coverage3d
+    @test scaffold.coverage.coverage_complete
+    @test scaffold.coverage.expected_support_count == prod(plan.parent_dims)
+    @test scaffold.coverage.region_support_count == prod(plan.parent_dims)
+    @test scaffold.coverage.covered_support_count == prod(plan.parent_dims)
+    @test scaffold.coverage.duplicate_count == 0
+    @test scaffold.coverage.missing_count == 0
+    @test scaffold.coverage.outside_count == 0
+    @test scaffold.terminal_geometry_summary.object_kind ==
+          :cartesian_terminal_shellification_geometry_private_summary
+    @test scaffold.diagnostics.terminal_geometry_authority
+    @test scaffold.diagnostics.route_neutral_spatial_planning
+    @test !scaffold.diagnostics.lowering_applied_by_plan
+    @test !scaffold.diagnostics.materialization_behavior_changed
+    @test !scaffold.diagnostics.public_default_behavior_changed
+    @test !scaffold.diagnostics.shellification_regions_are_cpbs
+    @test !scaffold.diagnostics.shellification_regions_are_lowering_sources
+    @test !scaffold.diagnostics.retained_spaces_materialized
+    @test !scaffold.diagnostics.coefficient_maps_materialized
+    @test !scaffold.diagnostics.operator_blocks_materialized
+    @test !scaffold.diagnostics.pair_operator_blocks_materialized
+    @test !scaffold.diagnostics.hamiltonian_data_materialized
+    @test !scaffold.diagnostics.cartesian_shells_behavior_changed
+    @test all(region.source_backed == false for region in scaffold.regions)
+    @test all(!region.shellification_region_is_cpb for region in scaffold.regions)
+    @test all(
+        !region.shellification_region_is_lowering_source
+        for region in scaffold.regions
+    )
+    @test all(
+        !region.coordinate_product_box_lowering_materialized
+        for region in scaffold.regions
+    )
+    @test all(
+        region.lowering_status == :planned_not_lowered
+        for region in scaffold.regions
+    )
+    return scaffold
+end
+
 @testset "terminal Cartesian shellification one-center centered complete shells" begin
     axes = (collect(1:9), collect(1:9), collect(1:9))
     plan = GaussletBases._cartesian_terminal_shellification_geometry(
@@ -159,6 +230,17 @@ end
     @test dependency_counts.planned_distorted_product_box_lowering_count == 0
     @test dependency_counts.unsupported_terminal_shellification_region_count == 0
     @test summary.central_gap_region_count == 0
+    scaffold = _terminal_geometry_assert_scaffold_contract(plan)
+    @test scaffold.spatial_policy_order == :single_center_outward
+    @test scaffold.materialization_status == :ready_supported_terminal_subset
+    @test scaffold.independently_lowerable_region_count == plan.region_count
+    @test scaffold.deferred_region_count == 0
+    @test scaffold.unsupported_region_count == 0
+    @test all(region.independently_lowerable for region in scaffold.regions)
+    @test all(
+        region.retirement_target == :already_plan_lowered_region
+        for region in scaffold.regions
+    )
 end
 
 @testset "terminal Cartesian shellification one-center outer mismatch slabs" begin
@@ -220,6 +302,16 @@ end
     dependency_counts = summary.materialization_dependency_counts
     @test dependency_counts.plan_lowerable_shared_complete_shell_count > 0
     @test dependency_counts.plan_lowerable_direct_slab_count == 1
+    scaffold = _terminal_geometry_assert_scaffold_contract(plan)
+    @test scaffold.spatial_policy_order == :atom_outward
+    @test scaffold.materialization_status == :ready_supported_terminal_subset
+    @test scaffold.independently_lowerable_region_count == plan.region_count
+    @test scaffold.deferred_region_count == 0
+    midpoint_scaffold_regions =
+        filter(region -> region.region_kind == :direct_midpoint_slab, scaffold.regions)
+    @test length(midpoint_scaffold_regions) == 1
+    @test only(midpoint_scaffold_regions).lowering_family == :direct_midpoint_slab
+    @test only(midpoint_scaffold_regions).independently_lowerable
 end
 
 @testset "terminal Cartesian shellification diatomic without midpoint" begin
@@ -264,6 +356,19 @@ end
         for region in summary.regions
         if region.region_kind == :direct_midpoint_slab
     )
+    scaffold = _terminal_geometry_assert_scaffold_contract(plan)
+    @test scaffold.materialization_status == :ready_supported_terminal_subset
+    @test scaffold.central_gap_region_count == 5
+    @test scaffold.central_midpoint_slab_count == 5
+    @test scaffold.central_distorted_product_box_count == 0
+    midpoint_scaffold_regions =
+        filter(region -> region.region_kind == :direct_midpoint_slab, scaffold.regions)
+    @test length(midpoint_scaffold_regions) == 5
+    @test all(region.independently_lowerable for region in midpoint_scaffold_regions)
+    @test all(
+        region.materialization_dependency == :plan_lowerable_direct_slab
+        for region in midpoint_scaffold_regions
+    )
 end
 
 @testset "terminal Cartesian shellification central gap at least q uses one region" begin
@@ -304,6 +409,30 @@ end
         region for region in summary.regions
         if region.region_kind == :central_distorted_product_box
     ).materialization_dependency == :planned_distorted_product_box_lowering
+    scaffold = _terminal_geometry_assert_scaffold_contract(plan)
+    @test scaffold.materialization_status ==
+          :deferred_pending_distorted_product_box_lowering
+    @test scaffold.central_gap_region_count == 1
+    @test scaffold.central_midpoint_slab_count == 0
+    @test scaffold.central_distorted_product_box_count == 1
+    @test scaffold.deferred_region_count == 1
+    central_scaffold_region = only(
+        region for region in scaffold.regions
+        if region.region_kind == :central_distorted_product_box
+    )
+    @test !central_scaffold_region.independently_lowerable
+    @test central_scaffold_region.materialization_dependency ==
+          :planned_distorted_product_box_lowering
+    @test central_scaffold_region.lowering_family ==
+          :distorted_comx_product_box_deferred
+    @test central_scaffold_region.lowering_hint == :distorted_comx_all_axes
+    @test central_scaffold_region.missing_independent_lowering_reason ==
+          :distorted_product_box_lowering_not_implemented
+    @test central_scaffold_region.retirement_target ==
+          :pending_distorted_product_box_lowering_support
+    @test central_scaffold_region.metadata.q == 3
+    @test central_scaffold_region.metadata.L == 7
+    @test central_scaffold_region.metadata.source_mode_shape == (7, 3, 3)
 end
 
 @testset "terminal Cartesian shellification invalid inputs and unsupported geometries" begin
