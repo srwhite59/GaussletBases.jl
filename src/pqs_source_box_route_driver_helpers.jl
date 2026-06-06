@@ -5463,8 +5463,19 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
             shellization_kind = :not_available,
             unit_route_kind = :not_available,
             atom_growth_units_selected = false,
+            terminal_shellification_units_selected = false,
             legacy_source_units_selected = false,
             atom_growth_unit_summary_available = false,
+            terminal_shellification_unit_summary_available = false,
+            terminal_shellification_scaffold_available = false,
+            terminal_shellification_scaffold = nothing,
+            terminal_shellification_region_count = 0,
+            terminal_shellification_unit_inventory_available = false,
+            terminal_shellification_unit_inventory_status = :not_available,
+            terminal_shellification_central_gap_region_count = 0,
+            terminal_shellification_central_midpoint_slab_count = 0,
+            terminal_shellification_central_distorted_product_box_count = 0,
+            terminal_shellification_central_distorted_product_box_metadata = (),
             materialized_units_available = false,
             materialization_status = :not_available,
             retained_unit_dimensions_known = false,
@@ -5502,12 +5513,25 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     end
 
     atom_growth_units_selected = low_order_shellization.atom_growth_selected
+    terminal_shellification_units_selected =
+        low_order_shellization.terminal_shellification_selected
     legacy_source_units_selected = low_order_shellization.legacy_source_selected
     unit_route_kind =
         atom_growth_units_selected ?
         :atom_growth_complete_rectangular_low_order_units :
+        terminal_shellification_units_selected ?
+        :terminal_shellification_low_order_units :
         legacy_source_units_selected ?
         :legacy_diatomic_source_low_order_units :
+        :not_selected
+    terminal_shellification_scaffold_available =
+        terminal_shellification_units_selected &&
+        low_order_shellization.terminal_shellification_scaffold_available
+    terminal_shellification_unit_summary_available =
+        terminal_shellification_units_selected
+    terminal_shellification_unit_inventory_status =
+        terminal_shellification_units_selected ?
+        :deferred_terminal_shellification_unit_inventory :
         :not_selected
     plan_unit_inventory =
         atom_growth_units_selected ?
@@ -5523,13 +5547,17 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         plan_unit_inventory.unit_inventory_source :
         atom_growth_units_selected ?
         :blocked_atom_growth_shellification_plan :
+        terminal_shellification_units_selected ?
+        :terminal_shellification_scaffold :
         legacy_source_units_selected ?
         :legacy_diatomic_source_summary :
         :route_skeleton_compatibility_fields
     unit_inventory_status =
+        terminal_shellification_units_selected ?
+        terminal_shellification_unit_inventory_status :
         isnothing(plan_unit_inventory) ?
-        unit_inventory_source :
-        plan_unit_inventory.status
+            unit_inventory_source :
+            plan_unit_inventory.status
     source_backed_region_count =
         isnothing(plan_unit_inventory) ?
         0 :
@@ -5547,6 +5575,9 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
     status =
         plan_unit_inventory_available ?
         :available_unit_stage_low_order_summary :
+        terminal_shellification_units_selected &&
+        terminal_shellification_scaffold_available ?
+        :deferred_terminal_shellification_unit_inventory :
         low_order_shellization.status ==
         :available_shell_stage_low_order_shellization_summary ?
         :available_unit_stage_low_order_summary :
@@ -5569,12 +5600,43 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         shellization_kind = low_order_shellization.shellization_kind,
         unit_route_kind,
         atom_growth_units_selected,
+        terminal_shellification_units_selected,
         legacy_source_units_selected,
         atom_growth_unit_summary_available = atom_growth_units_selected,
+        terminal_shellification_unit_summary_available,
+        terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_scaffold :
+            nothing,
+        terminal_shellification_region_count =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_region_count :
+            0,
+        terminal_shellification_unit_inventory_available = false,
+        terminal_shellification_unit_inventory_status,
+        terminal_shellification_central_gap_region_count =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_central_gap_region_count :
+            0,
+        terminal_shellification_central_midpoint_slab_count =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_central_midpoint_slab_count :
+            0,
+        terminal_shellification_central_distorted_product_box_count =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_central_distorted_product_box_count :
+            0,
+        terminal_shellification_central_distorted_product_box_metadata =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_central_distorted_product_box_metadata :
+            (),
         materialized_units_available = false,
         materialization_status =
             atom_growth_units_selected ?
             :deferred_atom_growth_complete_rectangular_unit_materialization :
+            terminal_shellification_units_selected ?
+            :deferred_terminal_shellification_unit_materialization :
             legacy_source_units_selected ?
             :deferred_legacy_diatomic_source_unit_materialization :
             low_order_shellization.materialization_status,
@@ -5582,9 +5644,18 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         retained_unit_ranges_known = false,
         retained_dimension_known = false,
         retained_dimension = nothing,
-        plan_authority = low_order_shellization.atom_growth_plan_authority,
-        active_source_authority = low_order_shellization.active_source_authority,
-        legacy_source_authority = low_order_shellization.legacy_source_authority,
+        plan_authority =
+            terminal_shellification_units_selected ?
+            low_order_shellization.terminal_shellification_authority :
+            low_order_shellization.atom_growth_plan_authority,
+        active_source_authority =
+            terminal_shellification_units_selected ?
+            false :
+            low_order_shellization.active_source_authority,
+        legacy_source_authority =
+            terminal_shellification_units_selected ?
+            false :
+            low_order_shellization.legacy_source_authority,
         unit_inventory_source,
         unit_inventory_status,
         atom_growth_unit_inventory_available = plan_unit_inventory_available,
@@ -5633,7 +5704,8 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(shells)
         route_skeleton_unit_fields_preserved = true,
         route_skeleton_unit_inventory_source =
             :route_skeleton_compatibility_fields,
-        summary_only = !plan_unit_inventory_available,
+        summary_only =
+            terminal_shellification_units_selected || !plan_unit_inventory_available,
     )
 end
 
@@ -5658,6 +5730,28 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         atom_growth_units_selected = low_order_units.atom_growth_units_selected,
         atom_growth_unit_inventory_available =
             low_order_units.atom_growth_unit_inventory_available,
+        terminal_shellification_units_selected =
+            low_order_units.terminal_shellification_units_selected,
+        terminal_shellification_unit_summary_available =
+            low_order_units.terminal_shellification_unit_summary_available,
+        terminal_shellification_scaffold_available =
+            low_order_units.terminal_shellification_scaffold_available,
+        terminal_shellification_scaffold =
+            low_order_units.terminal_shellification_scaffold,
+        terminal_shellification_region_count =
+            low_order_units.terminal_shellification_region_count,
+        terminal_shellification_unit_inventory_available =
+            low_order_units.terminal_shellification_unit_inventory_available,
+        terminal_shellification_unit_inventory_status =
+            low_order_units.terminal_shellification_unit_inventory_status,
+        terminal_shellification_central_gap_region_count =
+            low_order_units.terminal_shellification_central_gap_region_count,
+        terminal_shellification_central_midpoint_slab_count =
+            low_order_units.terminal_shellification_central_midpoint_slab_count,
+        terminal_shellification_central_distorted_product_box_count =
+            low_order_units.terminal_shellification_central_distorted_product_box_count,
+        terminal_shellification_central_distorted_product_box_metadata =
+            low_order_units.terminal_shellification_central_distorted_product_box_metadata,
         plan_unit_inventory_available =
             low_order_units.plan_unit_inventory_available,
         plan_unit_inventory = low_order_units.plan_unit_inventory,
