@@ -108,72 +108,219 @@ function _cartesian_pair_stage_count_by_field(entries, field, value)
     return 0
 end
 
+function _cartesian_pair_stage_property(record, field, default = nothing)
+    return hasproperty(record, field) ? getproperty(record, field) : default
+end
+
+function _cartesian_pair_stage_fingerprint(record, spec)
+    names = Tuple(item[1] for item in spec)
+    values = Tuple(
+        _cartesian_pair_stage_property(record, item[2], item[3])
+        for item in spec
+    )
+    return NamedTuple{names}(values)
+end
+
+function _cartesian_pair_stage_contract_counts_fingerprint(entries)
+    return Tuple(
+        (;
+            unit_key = _cartesian_pair_stage_property(entry, :unit_key),
+            lowering_contract_count = _cartesian_pair_stage_property(
+                entry,
+                :lowering_contract_count,
+            ),
+            selected_contract_count = _cartesian_pair_stage_property(
+                entry,
+                :selected_contract_count,
+            ),
+        )
+        for entry in entries
+    )
+end
+
+const _CARTESIAN_PAIR_STAGE_TERMINAL_UNIT_FIELDS = (
+    (:available, :terminal_shellification_unit_inventory_available, false),
+    (:region_count, :terminal_shellification_region_count, 0),
+    (:unit_count, :terminal_shellification_unit_count, 0),
+    (:unit_keys, :terminal_shellification_unit_keys, ()),
+    (:unit_roles, :terminal_shellification_unit_roles, ()),
+    (:unit_kinds, :terminal_shellification_unit_kinds, ()),
+    (:support_counts, :terminal_shellification_unit_support_counts, ()),
+    (:central_gap_region_count,
+        :terminal_shellification_central_gap_region_count, 0),
+    (:central_midpoint_slab_count,
+        :terminal_shellification_central_midpoint_slab_count, 0),
+    (:central_distorted_product_box_count,
+        :terminal_shellification_central_distorted_product_box_count, 0),
+)
+
+function _cartesian_pair_stage_terminal_unit_inventory_fingerprint(stage)
+    return _cartesian_pair_stage_fingerprint(
+        stage,
+        _CARTESIAN_PAIR_STAGE_TERMINAL_UNIT_FIELDS,
+    )
+end
+
+const _CARTESIAN_PAIR_STAGE_LOWERING_CONTRACT_FIELDS = (
+    (:available,
+        :terminal_shellification_lowering_contract_inventory_available, false),
+    (:status,
+        :terminal_shellification_lowering_contract_inventory_status, nothing),
+    (:count, :terminal_shellification_lowering_contract_count, 0),
+    (:kinds, :terminal_shellification_lowering_contract_kinds, ()),
+    (:kind_counts,
+        :terminal_shellification_lowering_contract_kind_counts, ()),
+    (:lw_complete_shell_cpb_count,
+        :terminal_shellification_lw_complete_shell_cpb_count, 0),
+    (:lw_complete_shell_cpb_family_counts,
+        :terminal_shellification_lw_complete_shell_cpb_family_counts, ()),
+)
+
+function _cartesian_pair_stage_lowering_contract_fingerprint(stage)
+    base = _cartesian_pair_stage_fingerprint(
+        stage,
+        _CARTESIAN_PAIR_STAGE_LOWERING_CONTRACT_FIELDS,
+    )
+    return merge(
+        base,
+        (;
+            counts_by_unit = _cartesian_pair_stage_contract_counts_fingerprint(
+                _cartesian_pair_stage_property(
+                    stage,
+                    :terminal_shellification_contract_counts_by_unit,
+                    (),
+                ),
+            ),
+        ),
+    )
+end
+
+const _CARTESIAN_PAIR_STAGE_SELECTED_CONTRACT_FIELDS = (
+    (:available,
+        :terminal_shellification_selected_lowering_contract_inventory_available,
+        false),
+    (:status,
+        :terminal_shellification_selected_lowering_contract_inventory_status,
+        nothing),
+    (:family, :terminal_shellification_selected_lowering_family, nothing),
+    (:count, :terminal_shellification_selected_contract_count, 0),
+    (:kinds, :terminal_shellification_selected_contract_kinds, ()),
+    (:kind_counts, :terminal_shellification_selected_contract_kind_counts, ()),
+    (:all_units_have_exactly_one_selected_contract,
+        :terminal_shellification_all_units_have_exactly_one_selected_contract,
+        false),
+    (:unselected_count, :terminal_shellification_unselected_contract_count, 0),
+    (:unselected_kinds, :terminal_shellification_unselected_contract_kinds, ()),
+)
+
+function _cartesian_pair_stage_selected_contract_fingerprint(stage)
+    base = _cartesian_pair_stage_fingerprint(
+        stage,
+        _CARTESIAN_PAIR_STAGE_SELECTED_CONTRACT_FIELDS,
+    )
+    return merge(
+        base,
+        (;
+            counts_by_unit = _cartesian_pair_stage_contract_counts_fingerprint(
+                _cartesian_pair_stage_property(
+                    stage,
+                    :terminal_shellification_selected_contract_counts_by_unit,
+                    (),
+                ),
+            ),
+        ),
+    )
+end
+
+const _CARTESIAN_PAIR_STAGE_CRC_SIDECAR_FIELDS = (
+    (:object_kind, :object_kind, nothing),
+    (:status, :status, nothing),
+    (:selected_contract_count, :selected_contract_count, 0),
+    (:sidecar_available_count, :sidecar_available_count, 0),
+    (:sidecar_missing_count, :sidecar_missing_count, 0),
+    (:sidecar_inventory_complete, :sidecar_inventory_complete, false),
+    (:missing_sidecar_reasons, :missing_sidecar_reasons, ()),
+    (:missing_sidecar_kinds, :missing_sidecar_kinds, ()),
+    (:final_retained_unit_inventory_available,
+        :final_retained_unit_inventory_available, false),
+    (:pair_inventory_available, :pair_inventory_available, false),
+    (:pair_inventory_status, :pair_inventory_status, nothing),
+    (:operator_blocks_materialized, :operator_blocks_materialized, false),
+    (:pair_operator_blocks_materialized,
+        :pair_operator_blocks_materialized, false),
+    (:hamiltonian_data_materialized, :hamiltonian_data_materialized, false),
+    (:artifacts_materialized, :artifacts_materialized, false),
+)
+
+function _cartesian_pair_stage_crc_sidecar_summary_fingerprint(summary)
+    return _cartesian_pair_stage_fingerprint(
+        summary,
+        _CARTESIAN_PAIR_STAGE_CRC_SIDECAR_FIELDS,
+    )
+end
+
+const _CARTESIAN_PAIR_STAGE_PAIR_METADATA_FIELDS = (
+    (:pair_inventory_known, :pair_inventory_known, false),
+    (:pair_inventory_source, :pair_inventory_source, nothing),
+    (:pair_family_counts, :pair_family_counts, ()),
+    (:helper_by_pair_family, :helper_by_pair_family, ()),
+    (:pair_operator_helper_by_family, :pair_operator_helper_by_family, ()),
+    (:pair_helper_status_by_family, :pair_helper_status_by_family, ()),
+    (:pair_operator_blocks_materialized,
+        :pair_operator_blocks_materialized, false),
+    (:operator_pairs_materialized, :operator_pairs_materialized, false),
+    (:route_core_pair_inventory_available,
+        :route_core_pair_inventory_available, false),
+    (:route_core_pair_inventory_status,
+        :route_core_pair_inventory_status, nothing),
+    (:route_core_pair_count, :route_core_pair_count, 0),
+    (:route_core_pair_operator_ready, :route_core_pair_operator_ready, false),
+    (:route_core_pair_operator_readiness_status,
+        :route_core_pair_operator_readiness_status, nothing),
+    (:route_core_pair_operator_blocker,
+        :route_core_pair_operator_blocker, nothing),
+)
+
+function _cartesian_pair_stage_pair_metadata_fingerprint(stage)
+    pair_entries = _cartesian_pair_stage_property(stage, :pair_entries, ())
+    route_core_pair_keys =
+        _cartesian_pair_stage_property(stage, :route_core_pair_keys, ())
+    base = _cartesian_pair_stage_fingerprint(
+        stage,
+        _CARTESIAN_PAIR_STAGE_PAIR_METADATA_FIELDS,
+    )
+    return merge(
+        base,
+        (;
+            pair_entry_count = length(pair_entries),
+            pair_count = _cartesian_pair_stage_property(
+                stage,
+                :pair_count,
+                length(pair_entries),
+            ),
+            route_core_pair_key_count = length(route_core_pair_keys),
+            route_core_pair_keys,
+        ),
+    )
+end
+
 function _assert_terminal_lowering_contract_fields_match_pair_stage(
     pair_stage,
     transforms,
 )
-    @test pair_stage.terminal_shellification_lowering_contract_inventory_available
-    @test pair_stage.terminal_shellification_lowering_contract_inventory_status ==
-          transforms.terminal_shellification_lowering_contract_inventory_status
-    @test pair_stage.terminal_shellification_lowering_contract_count ==
-          transforms.terminal_shellification_lowering_contract_count
-    @test pair_stage.terminal_shellification_lowering_contract_kinds ==
-          transforms.terminal_shellification_lowering_contract_kinds
-    @test pair_stage.terminal_shellification_lowering_contract_kind_counts ==
-          transforms.terminal_shellification_lowering_contract_kind_counts
-    @test pair_stage.terminal_shellification_contract_counts_by_unit ==
-          transforms.terminal_shellification_contract_counts_by_unit
-    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_available
-    @test pair_stage.terminal_shellification_selected_lowering_contract_inventory_status ==
-          transforms.terminal_shellification_selected_lowering_contract_inventory_status
-    @test pair_stage.terminal_shellification_selected_lowering_family ==
-          transforms.terminal_shellification_selected_lowering_family
-    @test pair_stage.terminal_shellification_selected_contract_count ==
-          transforms.terminal_shellification_selected_contract_count
-    @test pair_stage.terminal_shellification_selected_contract_kinds ==
-          transforms.terminal_shellification_selected_contract_kinds
-    @test pair_stage.terminal_shellification_selected_contract_kind_counts ==
-          transforms.terminal_shellification_selected_contract_kind_counts
-    @test pair_stage.terminal_shellification_selected_contract_counts_by_unit ==
-          transforms.terminal_shellification_selected_contract_counts_by_unit
-    @test pair_stage.terminal_shellification_all_units_have_exactly_one_selected_contract ==
-          transforms.terminal_shellification_all_units_have_exactly_one_selected_contract
-    @test pair_stage.terminal_shellification_unselected_contract_count ==
-          transforms.terminal_shellification_unselected_contract_count
-    @test pair_stage.terminal_shellification_unselected_contract_kinds ==
-          transforms.terminal_shellification_unselected_contract_kinds
+    @test _cartesian_pair_stage_lowering_contract_fingerprint(pair_stage) ==
+          _cartesian_pair_stage_lowering_contract_fingerprint(transforms)
+    @test _cartesian_pair_stage_selected_contract_fingerprint(pair_stage) ==
+          _cartesian_pair_stage_selected_contract_fingerprint(transforms)
     transform_selected_crc_sidecars =
         transforms.terminal_shellification_selected_crc_sidecar_summary
     pair_stage_selected_crc_sidecars =
         pair_stage.terminal_shellification_selected_crc_sidecar_summary
-    @test pair_stage_selected_crc_sidecars.object_kind ==
-          :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
-    @test pair_stage_selected_crc_sidecars.status ==
-          transform_selected_crc_sidecars.status
-    @test pair_stage_selected_crc_sidecars.selected_contract_count ==
-          transform_selected_crc_sidecars.selected_contract_count
-    @test pair_stage_selected_crc_sidecars.sidecar_available_count ==
-          transform_selected_crc_sidecars.sidecar_available_count
-    @test pair_stage_selected_crc_sidecars.sidecar_missing_count ==
-          transform_selected_crc_sidecars.sidecar_missing_count
-    @test pair_stage_selected_crc_sidecars.sidecar_inventory_complete ==
-          transform_selected_crc_sidecars.sidecar_inventory_complete
-    @test pair_stage_selected_crc_sidecars.missing_sidecar_reasons ==
-          transform_selected_crc_sidecars.missing_sidecar_reasons
-    @test pair_stage_selected_crc_sidecars.missing_sidecar_kinds ==
-          transform_selected_crc_sidecars.missing_sidecar_kinds
-    @test !pair_stage_selected_crc_sidecars.final_retained_unit_inventory_available
-    @test !pair_stage_selected_crc_sidecars.pair_inventory_available
-    @test pair_stage_selected_crc_sidecars.pair_inventory_status ==
-          transform_selected_crc_sidecars.pair_inventory_status
-    @test !pair_stage_selected_crc_sidecars.operator_blocks_materialized
-    @test !pair_stage_selected_crc_sidecars.pair_operator_blocks_materialized
-    @test !pair_stage_selected_crc_sidecars.hamiltonian_data_materialized
-    @test !pair_stage_selected_crc_sidecars.artifacts_materialized
-    @test pair_stage.terminal_shellification_lw_complete_shell_cpb_count ==
-          transforms.terminal_shellification_lw_complete_shell_cpb_count
-    @test pair_stage.terminal_shellification_lw_complete_shell_cpb_family_counts ==
-          transforms.terminal_shellification_lw_complete_shell_cpb_family_counts
+    @test _cartesian_pair_stage_crc_sidecar_summary_fingerprint(
+        pair_stage_selected_crc_sidecars,
+    ) == _cartesian_pair_stage_crc_sidecar_summary_fingerprint(
+        transform_selected_crc_sidecars,
+    )
     selected_inventory =
         pair_stage.terminal_shellification_selected_lowering_contract_inventory
     @test selected_inventory.selected_contract_count ==
@@ -191,7 +338,128 @@ function _assert_terminal_lowering_contract_fields_match_pair_stage(
     @test !selected_inventory.artifacts_materialized
 end
 
-@testset "cartesian pair stage carries selected low-order policy" begin
+@testset "cartesian pair-stage compact fingerprint helpers" begin
+    synthetic = (;
+        terminal_shellification_unit_inventory_available = true,
+        terminal_shellification_region_count = 2,
+        terminal_shellification_unit_count = 2,
+        terminal_shellification_unit_keys = (:left, :right),
+        terminal_shellification_unit_roles = (:atom_local, :shared_shell),
+        terminal_shellification_unit_kinds = (:direct_core, :complete_shell),
+        terminal_shellification_unit_support_counts = (8, 26),
+        terminal_shellification_central_gap_region_count = 1,
+        terminal_shellification_central_midpoint_slab_count = 1,
+        terminal_shellification_central_distorted_product_box_count = 0,
+        terminal_shellification_lowering_contract_inventory_available = true,
+        terminal_shellification_lowering_contract_inventory_status =
+            :available,
+        terminal_shellification_lowering_contract_count = 3,
+        terminal_shellification_lowering_contract_kinds =
+            (:direct_core_identity_cpb, :white_lindsey_boundary_strata),
+        terminal_shellification_lowering_contract_kind_counts = (;
+            direct_core_identity_cpb_count = 1,
+            white_lindsey_boundary_strata_count = 2,
+        ),
+        terminal_shellification_contract_counts_by_unit = (
+            (; unit_key = :left, lowering_contract_count = 1),
+        ),
+        terminal_shellification_lw_complete_shell_cpb_count = 26,
+        terminal_shellification_lw_complete_shell_cpb_family_counts = (;
+            facet_cpb_count = 6,
+            edge_cpb_count = 12,
+            corner_cpb_count = 8,
+        ),
+        terminal_shellification_selected_lowering_contract_inventory_available =
+            true,
+        terminal_shellification_selected_lowering_contract_inventory_status =
+            :available,
+        terminal_shellification_selected_lowering_family =
+            :white_lindsey_low_order,
+        terminal_shellification_selected_contract_count = 2,
+        terminal_shellification_selected_contract_kinds =
+            (:direct_core_identity_cpb, :white_lindsey_boundary_strata),
+        terminal_shellification_selected_contract_kind_counts = (;
+            direct_core_identity_cpb_count = 1,
+            white_lindsey_boundary_strata_count = 1,
+        ),
+        terminal_shellification_selected_contract_counts_by_unit =
+            ((; unit_key = :right, selected_contract_count = 1),),
+        terminal_shellification_all_units_have_exactly_one_selected_contract =
+            true,
+        terminal_shellification_unselected_contract_count = 1,
+        terminal_shellification_unselected_contract_kinds =
+            (:pqs_filled_source_cpb,),
+        object_kind =
+            :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary,
+        status = :available,
+        selected_contract_count = 2,
+        sidecar_available_count = 2,
+        sidecar_missing_count = 0,
+        sidecar_inventory_complete = true,
+        missing_sidecar_reasons = (),
+        missing_sidecar_kinds = (),
+        final_retained_unit_inventory_available = false,
+        pair_inventory_available = false,
+        pair_inventory_status = :deferred,
+        operator_blocks_materialized = false,
+        pair_operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+        pair_inventory_known = true,
+        pair_inventory_source = :final_retained_units,
+        pair_entries = ((; pair_key = (:left, :left)),),
+        pair_count = 1,
+        pair_family_counts = (; direct_pair_count = 1),
+        helper_by_pair_family = (; direct_pair = :metadata_only),
+        pair_operator_helper_by_family = (; direct_pair = :metadata_only),
+        pair_helper_status_by_family = (; direct_pair = :metadata_only),
+        pair_operator_blocks_materialized = false,
+        operator_pairs_materialized = false,
+        route_core_pair_inventory_available = true,
+        route_core_pair_inventory_status = :available,
+        route_core_pair_count = 1,
+        route_core_pair_keys = ((:left, :left),),
+        route_core_pair_operator_ready = true,
+        route_core_pair_operator_readiness_status = :ready,
+        route_core_pair_operator_blocker = nothing,
+    )
+
+    unit_fingerprint =
+        _cartesian_pair_stage_terminal_unit_inventory_fingerprint(synthetic)
+    @test unit_fingerprint.unit_count == 2
+    @test unit_fingerprint.unit_keys == (:left, :right)
+
+    lowering_fingerprint =
+        _cartesian_pair_stage_lowering_contract_fingerprint(synthetic)
+    @test lowering_fingerprint.count == 3
+    @test lowering_fingerprint.counts_by_unit == (
+        (;
+            unit_key = :left,
+            lowering_contract_count = 1,
+            selected_contract_count = nothing,
+        ),
+    )
+
+    selected_fingerprint =
+        _cartesian_pair_stage_selected_contract_fingerprint(synthetic)
+    @test selected_fingerprint.family == :white_lindsey_low_order
+    @test selected_fingerprint.unselected_kinds == (:pqs_filled_source_cpb,)
+    @test selected_fingerprint.all_units_have_exactly_one_selected_contract
+
+    crc_fingerprint =
+        _cartesian_pair_stage_crc_sidecar_summary_fingerprint(synthetic)
+    @test crc_fingerprint.sidecar_inventory_complete
+    @test !crc_fingerprint.pair_inventory_available
+
+    pair_fingerprint =
+        _cartesian_pair_stage_pair_metadata_fingerprint(synthetic)
+    @test pair_fingerprint.pair_entry_count == 1
+    @test pair_fingerprint.route_core_pair_key_count == 1
+    @test pair_fingerprint.route_core_pair_operator_ready
+    @test !pair_fingerprint.pair_operator_blocks_materialized
+end
+
+@testset "cartesian pair stage carries selected low-order policy (slow integration)" begin
     fixture = _cartesian_pair_stage_low_order_policy_fixture()
 
     default_stages = _cartesian_pair_stage_low_order_policy_pairs(fixture)
@@ -566,19 +834,11 @@ end
     @test terminal_pairs.terminal_shellification_pairs_selected
     @test terminal_pairs.terminal_shellification_pair_summary_available
     @test terminal_pairs.terminal_shellification_scaffold_available
-    @test terminal_pairs.terminal_shellification_region_count ==
-          terminal_stages.transforms.terminal_shellification_region_count
-    @test terminal_pairs.terminal_shellification_unit_inventory_available
-    @test terminal_pairs.terminal_shellification_unit_count ==
-          terminal_stages.transforms.terminal_shellification_unit_count
-    @test terminal_pairs.terminal_shellification_unit_keys ==
-          terminal_stages.transforms.terminal_shellification_unit_keys
-    @test terminal_pairs.terminal_shellification_unit_roles ==
-          terminal_stages.transforms.terminal_shellification_unit_roles
-    @test terminal_pairs.terminal_shellification_unit_kinds ==
-          terminal_stages.transforms.terminal_shellification_unit_kinds
-    @test terminal_pairs.terminal_shellification_unit_support_counts ==
-          terminal_stages.transforms.terminal_shellification_unit_support_counts
+    @test _cartesian_pair_stage_terminal_unit_inventory_fingerprint(
+        terminal_pairs,
+    ) == _cartesian_pair_stage_terminal_unit_inventory_fingerprint(
+        terminal_stages.transforms,
+    )
     _assert_terminal_lowering_contract_fields_match_pair_stage(
         terminal_pairs,
         terminal_stages.transforms,
@@ -648,19 +908,11 @@ end
     @test !terminal_summary.legacy_source_pairs_selected
     @test terminal_summary.terminal_shellification_pair_summary_available
     @test terminal_summary.terminal_shellification_scaffold_available
-    @test terminal_summary.terminal_shellification_region_count ==
-          terminal_stages.transforms.terminal_shellification_region_count
-    @test terminal_summary.terminal_shellification_unit_inventory_available
-    @test terminal_summary.terminal_shellification_unit_count ==
-          terminal_stages.transforms.terminal_shellification_unit_count
-    @test terminal_summary.terminal_shellification_unit_keys ==
-          terminal_stages.transforms.terminal_shellification_unit_keys
-    @test terminal_summary.terminal_shellification_unit_roles ==
-          terminal_stages.transforms.terminal_shellification_unit_roles
-    @test terminal_summary.terminal_shellification_unit_kinds ==
-          terminal_stages.transforms.terminal_shellification_unit_kinds
-    @test terminal_summary.terminal_shellification_unit_support_counts ==
-          terminal_stages.transforms.terminal_shellification_unit_support_counts
+    @test _cartesian_pair_stage_terminal_unit_inventory_fingerprint(
+        terminal_summary,
+    ) == _cartesian_pair_stage_terminal_unit_inventory_fingerprint(
+        terminal_stages.transforms,
+    )
     _assert_terminal_lowering_contract_fields_match_pair_stage(
         terminal_summary,
         terminal_stages.transforms,
@@ -728,6 +980,8 @@ end
         terminal_summary.terminal_shellification_unit_inventory.terminal_region_units,
     )
     @test terminal_summary.pair_stage_fields_preserved
+    @test _cartesian_pair_stage_pair_metadata_fingerprint(terminal_summary) ==
+          _cartesian_pair_stage_pair_metadata_fingerprint(terminal_pairs)
     @test length(terminal_pairs.route_skeleton_pair_entries) ==
           length(terminal_stages.units.route_skeleton.pair_entries)
     @test terminal_pairs.route_skeleton_pair_family_counts ==
