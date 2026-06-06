@@ -4,7 +4,7 @@
 # coordinate intervals. Singleton intervals are allowed, so codimension-1,
 # codimension-2, and codimension-3 boundary strata can be represented by the
 # same object as filled boxes. Shells such as B_outer \ B_inner must be
-# represented as owned support, not as a CPB.
+# represented by a higher-level owned-support record, not as a CPB.
 
 const _CPB_AXES = (:x, :y, :z)
 const _CPB_SIDES = (:low, :high)
@@ -14,7 +14,7 @@ const _CPB_SIDES = (:low, :high)
 
 Axis-aligned product of three integer coordinate intervals. This is the typed
 source/support object used by lowering; shells such as `B_outer \\ B_inner` are
-represented by `OwnedSupport`, not by this type.
+not represented by this type.
 """
 struct CoordinateProductBox
     intervals::NTuple{3,UnitRange{Int}}
@@ -48,8 +48,8 @@ Construct a Coordinate Product Box (CPB), an axis-aligned product of three
 integer coordinate intervals. Singleton intervals are allowed, so the same type
 can represent filled boxes, slabs, facets, edges, and corners.
 
-This constructor does not represent shells such as `B_outer \\ B_inner`; use
-`complete_shell_support` for shell-owned support.
+This constructor does not represent shells such as `B_outer \\ B_inner`; those
+belong in a higher-level owned-support record.
 """
 function cpb(intervals; role::Symbol = :coordinate_product_box, metadata = (;))
     normalized = _normalize_intervals(intervals)
@@ -70,7 +70,7 @@ end
 
 Construct a codimension-0 CPB. All three intervals must be non-singleton.
 
-Use this for PQS filled source boxes and ordinary volume/source boxes.
+Use this for filled coordinate-product source/support boxes.
 """
 function filled_cpb(ix, iy, iz; role::Symbol = :filled_cpb, metadata = (;))
     box = cpb(ix, iy, iz; role, metadata)
@@ -84,8 +84,7 @@ end
 
 Construct a codimension-1 CPB. Exactly one interval must be singleton.
 
-Use this for direct slabs, midpoint/contact slabs, boundary slabs, or other
-slab-like source/support pieces.
+Use this for slab-like coordinate-product source/support pieces.
 """
 function slab_cpb(ix, iy, iz; role::Symbol = :slab_cpb, metadata = (;))
     box = cpb(ix, iy, iz; role, metadata)
@@ -250,8 +249,8 @@ The result is a named tuple with `facets`, `edges`, `corners`, and `all_strata`.
 The complete-shell invariant is checked: the inner box must remove exactly one
 low and one high boundary point on every axis.
 
-This is the White--Lindsey shell-decomposition geometry. PQS shell lowering uses
-a filled source CPB instead of this facet/edge/corner breakdown.
+This is only the CPB geometry of the decomposition. Higher-level lowering code
+decides how, or whether, to use these boundary strata.
 """
 function complete_shell_boundary_strata(
     outer_box::CoordinateProductBox,

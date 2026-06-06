@@ -19,8 +19,8 @@ must remain distinct:
         -> PairOperatorPlanInventory
 
 Responsibilities:
-- define Coordinate Product Boxes (CPBs), including filled boxes, slabs,
-  facets, edges, and corners;
+- re-export Coordinate Product Box (CPB) primitives from `CartesianCPB` for
+  compatibility with existing route code;
 - represent shellification-owned support without confusing shells with CPBs;
 - represent lowering sources for White--Lindsey and PQS routes;
 - represent intermediate retained spaces and shell-realization plans;
@@ -49,6 +49,19 @@ Metadata policy:
   hidden in metadata.
 """
 module CartesianRouteCore
+
+using ..CartesianCPB:
+    CoordinateProductBox,
+    cpb,
+    filled_cpb,
+    slab_cpb,
+    complete_shell_boundary_strata,
+    intervals,
+    shape,
+    codimension,
+    _assert_complete_shell_boxes
+
+import ..CartesianCPB: role, support_count
 
 # Export policy:
 # These exports are internal-to-GaussletBases conveniences, not public package
@@ -104,9 +117,6 @@ export CoordinateProductBox,
 
 # File organization:
 #
-# coordinate_product_boxes.jl
-#     CoordinateProductBox, CPB constructors, complete-shell boundary strata.
-#
 # shellification_regions.jl
 #     OwnedSupport and ShellificationRegion. Shells live here as owned support,
 #     not as CPBs.
@@ -122,7 +132,6 @@ export CoordinateProductBox,
 #
 # pair_operator_plans.jl
 #     Metadata-only source/operator/realization/final-block plans.
-include("coordinate_product_boxes.jl")
 include("shellification_regions.jl")
 include("lowering_sources.jl")
 include("retained_spaces.jl")
