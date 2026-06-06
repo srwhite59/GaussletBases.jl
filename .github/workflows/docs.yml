@@ -6,15 +6,14 @@ on:
       - main
   pull_request:
 
-permissions:
-  contents: write
-  actions: write
-  pull-requests: read
-  statuses: write
-
 jobs:
   docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: read
+      statuses: write
 
     steps:
       - name: Check out repository
