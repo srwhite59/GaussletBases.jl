@@ -112,6 +112,29 @@ function _cartesian_assembly_stage_low_order_policy_assembly(
     return (; shells, units, transforms, pairs, assembly)
 end
 
+function _assert_terminal_lowering_contract_fields_match_assembly_stage(
+    assembly_stage,
+    pairs,
+)
+    @test assembly_stage.terminal_shellification_lowering_contract_inventory_available
+    @test assembly_stage.terminal_shellification_lowering_contract_inventory_status ==
+          pairs.terminal_shellification_lowering_contract_inventory_status
+    @test assembly_stage.terminal_shellification_lowering_contract_inventory ===
+          pairs.terminal_shellification_lowering_contract_inventory
+    @test assembly_stage.terminal_shellification_lowering_contract_count ==
+          pairs.terminal_shellification_lowering_contract_count
+    @test assembly_stage.terminal_shellification_lowering_contract_kinds ==
+          pairs.terminal_shellification_lowering_contract_kinds
+    @test assembly_stage.terminal_shellification_lowering_contract_kind_counts ==
+          pairs.terminal_shellification_lowering_contract_kind_counts
+    @test assembly_stage.terminal_shellification_contract_counts_by_unit ==
+          pairs.terminal_shellification_contract_counts_by_unit
+    @test assembly_stage.terminal_shellification_lw_complete_shell_cpb_count ==
+          pairs.terminal_shellification_lw_complete_shell_cpb_count
+    @test assembly_stage.terminal_shellification_lw_complete_shell_cpb_family_counts ==
+          pairs.terminal_shellification_lw_complete_shell_cpb_family_counts
+end
+
 @testset "cartesian assembly stage carries selected low-order policy" begin
     fixture = _cartesian_assembly_stage_low_order_policy_fixture()
 
@@ -297,6 +320,10 @@ end
           terminal_stages.pairs.terminal_shellification_unit_kinds
     @test terminal_assembly.terminal_shellification_unit_support_counts ==
           terminal_stages.pairs.terminal_shellification_unit_support_counts
+    _assert_terminal_lowering_contract_fields_match_assembly_stage(
+        terminal_assembly,
+        terminal_stages.pairs,
+    )
     @test !terminal_assembly.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_assembly.terminal_shellification_transform_contracts_available
     @test !terminal_assembly.terminal_shellification_pair_inventory_available
@@ -380,6 +407,10 @@ end
           terminal_stages.pairs.terminal_shellification_unit_kinds
     @test terminal_summary.terminal_shellification_unit_support_counts ==
           terminal_stages.pairs.terminal_shellification_unit_support_counts
+    _assert_terminal_lowering_contract_fields_match_assembly_stage(
+        terminal_summary,
+        terminal_stages.pairs,
+    )
     @test !terminal_summary.terminal_shellification_final_retained_unit_inventory_available
     @test !terminal_summary.terminal_shellification_transform_contracts_available
     @test !terminal_summary.terminal_shellification_pair_inventory_available
