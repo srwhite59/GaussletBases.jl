@@ -9200,6 +9200,10 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             terminal_shellification_lowering_contract_inventory_status =
                 :not_available,
             terminal_shellification_lowering_contract_inventory = nothing,
+            terminal_shellification_lowering_plan_available = false,
+            terminal_shellification_lowering_plan_status = :not_available,
+            terminal_shellification_lowering_plan = nothing,
+            terminal_shellification_lowering_summary = nothing,
             terminal_shellification_lowering_contract_count = 0,
             terminal_shellification_lowering_contract_kinds = (),
             terminal_shellification_lowering_contract_kind_counts =
@@ -9311,51 +9315,19 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.legacy_source_assembly_selected,
         terminal_shellification_summary_available =
             low_order_assembly.terminal_shellification_assembly_summary_available,
-        terminal_shellification_scaffold_available =
-            low_order_assembly.terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            low_order_assembly.terminal_shellification_scaffold,
-        terminal_shellification_region_count =
-            low_order_assembly.terminal_shellification_region_count,
-        terminal_shellification_unit_inventory_available =
-            low_order_assembly.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            low_order_assembly.terminal_shellification_unit_inventory,
-        terminal_shellification_unit_count =
-            low_order_assembly.terminal_shellification_unit_count,
-        terminal_shellification_unit_keys =
-            low_order_assembly.terminal_shellification_unit_keys,
-        terminal_shellification_unit_roles =
-            low_order_assembly.terminal_shellification_unit_roles,
-        terminal_shellification_unit_kinds =
-            low_order_assembly.terminal_shellification_unit_kinds,
-        terminal_shellification_unit_support_counts =
-            low_order_assembly.terminal_shellification_unit_support_counts,
-        terminal_shellification_lowering_contract_inventory_available =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory,
-        terminal_shellification_lowering_contract_count =
-            low_order_assembly.terminal_shellification_lowering_contract_count,
-        terminal_shellification_lowering_contract_kinds =
-            low_order_assembly.terminal_shellification_lowering_contract_kinds,
-        terminal_shellification_lowering_contract_kind_counts =
-            low_order_assembly.terminal_shellification_lowering_contract_kind_counts,
-        _pqs_source_box_route_driver_selected_terminal_lowering_fields(
-            low_order_assembly.terminal_shellification_selected_lowering_contract_inventory,
-            low_order_assembly.terminal_shellification_selected_lowering_contract_inventory_status,
-            low_order_assembly.terminal_shellification_selected_lowering_family,
+        terminal_shellification_lowering_plan_available =
+            low_order_assembly.terminal_route_summary.lowering_plan_available,
+        terminal_shellification_lowering_plan_status =
+            low_order_assembly.terminal_route_summary.lowering_plan_status,
+        terminal_shellification_lowering_plan =
+            low_order_assembly.terminal_route_state.lowering_plan,
+        terminal_shellification_lowering_summary =
+            low_order_assembly.terminal_route_state.lowering_summary,
+        _pqs_source_box_route_driver_terminal_shellification_alias_fields(
+            low_order_assembly,
+            low_order_assembly.terminal_shellification_assembly_selected;
+            include_crc_sidecar_summary = false,
         )...,
-        terminal_shellification_contract_counts_by_unit =
-            low_order_assembly.terminal_shellification_contract_counts_by_unit,
-        terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_count,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        terminal_shellification_final_retained_unit_inventory_available =
-            low_order_assembly.terminal_shellification_final_retained_unit_inventory_available,
         terminal_shellification_transform_contracts_available =
             low_order_assembly.terminal_shellification_transform_contracts_available,
         terminal_shellification_pair_inventory_available =
@@ -9366,14 +9338,6 @@ function _pqs_source_box_route_driver_report_stage_low_order_route_summary(
             low_order_assembly.terminal_shellification_pair_materialization_status,
         terminal_shellification_assembly_materialization_status =
             low_order_assembly.terminal_shellification_assembly_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            low_order_assembly.terminal_shellification_central_gap_region_count,
-        terminal_shellification_central_midpoint_slab_count =
-            low_order_assembly.terminal_shellification_central_midpoint_slab_count,
-        terminal_shellification_central_distorted_product_box_count =
-            low_order_assembly.terminal_shellification_central_distorted_product_box_count,
-        terminal_shellification_central_distorted_product_box_metadata =
-            low_order_assembly.terminal_shellification_central_distorted_product_box_metadata,
         materialization_required =
             low_order_assembly.assembly_requires_materialization,
         materialization_status =
