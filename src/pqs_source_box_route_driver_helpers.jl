@@ -1468,6 +1468,86 @@ function _pqs_source_box_route_driver_standard_unit_inventory_summary(route_fact
     )
 end
 
+function _pqs_source_box_route_driver_report_terminal_route_aliases(
+    low_order_route_summary,
+)
+    return (;
+        low_order_terminal_shellification_selected =
+            low_order_route_summary.terminal_shellification_selected,
+        low_order_terminal_shellification_summary_available =
+            low_order_route_summary.terminal_shellification_summary_available,
+        low_order_terminal_shellification_scaffold_available =
+            low_order_route_summary.terminal_shellification_scaffold_available,
+        low_order_terminal_shellification_scaffold =
+            low_order_route_summary.terminal_shellification_scaffold,
+        low_order_terminal_shellification_region_count =
+            low_order_route_summary.terminal_shellification_region_count,
+        low_order_terminal_shellification_unit_inventory_available =
+            low_order_route_summary.terminal_shellification_unit_inventory_available,
+        low_order_terminal_shellification_unit_inventory =
+            low_order_route_summary.terminal_shellification_unit_inventory,
+        low_order_terminal_shellification_unit_count =
+            low_order_route_summary.terminal_shellification_unit_count,
+        low_order_terminal_shellification_unit_keys =
+            low_order_route_summary.terminal_shellification_unit_keys,
+        low_order_terminal_shellification_unit_roles =
+            low_order_route_summary.terminal_shellification_unit_roles,
+        low_order_terminal_shellification_unit_kinds =
+            low_order_route_summary.terminal_shellification_unit_kinds,
+        low_order_terminal_shellification_unit_support_counts =
+            low_order_route_summary.terminal_shellification_unit_support_counts,
+        low_order_terminal_shellification_lowering_contract_inventory_available =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory_available,
+        low_order_terminal_shellification_lowering_contract_inventory_status =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory_status,
+        low_order_terminal_shellification_lowering_contract_inventory =
+            low_order_route_summary.terminal_shellification_lowering_contract_inventory,
+        low_order_terminal_shellification_lowering_plan_available =
+            low_order_route_summary.terminal_shellification_lowering_plan_available,
+        low_order_terminal_shellification_lowering_plan_status =
+            low_order_route_summary.terminal_shellification_lowering_plan_status,
+        low_order_terminal_shellification_lowering_plan =
+            low_order_route_summary.terminal_shellification_lowering_plan,
+        low_order_terminal_shellification_lowering_summary =
+            low_order_route_summary.terminal_shellification_lowering_summary,
+        low_order_terminal_shellification_lowering_contract_count =
+            low_order_route_summary.terminal_shellification_lowering_contract_count,
+        low_order_terminal_shellification_lowering_contract_kinds =
+            low_order_route_summary.terminal_shellification_lowering_contract_kinds,
+        low_order_terminal_shellification_lowering_contract_kind_counts =
+            low_order_route_summary.terminal_shellification_lowering_contract_kind_counts,
+        low_order_terminal_shellification_contract_counts_by_unit =
+            low_order_route_summary.terminal_shellification_contract_counts_by_unit,
+        _pqs_source_box_route_driver_report_selected_terminal_lowering_fields(
+            low_order_route_summary,
+        )...,
+        low_order_terminal_shellification_lw_complete_shell_cpb_count =
+            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_count,
+        low_order_terminal_shellification_lw_complete_shell_cpb_family_counts =
+            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_family_counts,
+        low_order_terminal_shellification_final_retained_unit_inventory_available =
+            low_order_route_summary.terminal_shellification_final_retained_unit_inventory_available,
+        low_order_terminal_shellification_transform_contracts_available =
+            low_order_route_summary.terminal_shellification_transform_contracts_available,
+        low_order_terminal_shellification_pair_inventory_available =
+            low_order_route_summary.terminal_shellification_pair_inventory_available,
+        low_order_terminal_shellification_pair_inventory_status =
+            low_order_route_summary.terminal_shellification_pair_inventory_status,
+        low_order_terminal_shellification_pair_materialization_status =
+            low_order_route_summary.terminal_shellification_pair_materialization_status,
+        low_order_terminal_shellification_assembly_materialization_status =
+            low_order_route_summary.terminal_shellification_assembly_materialization_status,
+        low_order_terminal_shellification_central_gap_region_count =
+            low_order_route_summary.terminal_shellification_central_gap_region_count,
+        low_order_terminal_shellification_central_midpoint_slab_count =
+            low_order_route_summary.terminal_shellification_central_midpoint_slab_count,
+        low_order_terminal_shellification_central_distorted_product_box_count =
+            low_order_route_summary.terminal_shellification_central_distorted_product_box_count,
+        low_order_terminal_shellification_central_distorted_product_box_metadata =
+            low_order_route_summary.terminal_shellification_central_distorted_product_box_metadata,
+    )
+end
+
 function _pqs_source_box_route_driver_route_facts(route_skeleton)
     unit_inventory =
         _pqs_source_box_route_driver_unit_inventory(route_skeleton.retained_units)
@@ -1780,79 +1860,9 @@ function _pqs_source_box_route_driver_report(
         low_order_assembly_kind = low_order_route_summary.assembly_kind,
         atom_growth_low_order_route_selected =
             low_order_route_summary.atom_growth_selected,
-        low_order_terminal_shellification_selected =
-            low_order_route_summary.terminal_shellification_selected,
-        low_order_terminal_shellification_summary_available =
-            low_order_route_summary.terminal_shellification_summary_available,
-        low_order_terminal_shellification_scaffold_available =
-            low_order_route_summary.terminal_shellification_scaffold_available,
-        low_order_terminal_shellification_scaffold =
-            low_order_route_summary.terminal_shellification_scaffold,
-        low_order_terminal_shellification_region_count =
-            low_order_route_summary.terminal_shellification_region_count,
-        low_order_terminal_shellification_unit_inventory_available =
-            low_order_route_summary.terminal_shellification_unit_inventory_available,
-        low_order_terminal_shellification_unit_inventory =
-            low_order_route_summary.terminal_shellification_unit_inventory,
-        low_order_terminal_shellification_unit_count =
-            low_order_route_summary.terminal_shellification_unit_count,
-        low_order_terminal_shellification_unit_keys =
-            low_order_route_summary.terminal_shellification_unit_keys,
-        low_order_terminal_shellification_unit_roles =
-            low_order_route_summary.terminal_shellification_unit_roles,
-        low_order_terminal_shellification_unit_kinds =
-            low_order_route_summary.terminal_shellification_unit_kinds,
-        low_order_terminal_shellification_unit_support_counts =
-            low_order_route_summary.terminal_shellification_unit_support_counts,
-        low_order_terminal_shellification_lowering_contract_inventory_available =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory_available,
-        low_order_terminal_shellification_lowering_contract_inventory_status =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory_status,
-        low_order_terminal_shellification_lowering_contract_inventory =
-            low_order_route_summary.terminal_shellification_lowering_contract_inventory,
-        low_order_terminal_shellification_lowering_plan_available =
-            low_order_route_summary.terminal_shellification_lowering_plan_available,
-        low_order_terminal_shellification_lowering_plan_status =
-            low_order_route_summary.terminal_shellification_lowering_plan_status,
-        low_order_terminal_shellification_lowering_plan =
-            low_order_route_summary.terminal_shellification_lowering_plan,
-        low_order_terminal_shellification_lowering_summary =
-            low_order_route_summary.terminal_shellification_lowering_summary,
-        low_order_terminal_shellification_lowering_contract_count =
-            low_order_route_summary.terminal_shellification_lowering_contract_count,
-        low_order_terminal_shellification_lowering_contract_kinds =
-            low_order_route_summary.terminal_shellification_lowering_contract_kinds,
-        low_order_terminal_shellification_lowering_contract_kind_counts =
-            low_order_route_summary.terminal_shellification_lowering_contract_kind_counts,
-        low_order_terminal_shellification_contract_counts_by_unit =
-            low_order_route_summary.terminal_shellification_contract_counts_by_unit,
-        _pqs_source_box_route_driver_report_selected_terminal_lowering_fields(
+        _pqs_source_box_route_driver_report_terminal_route_aliases(
             low_order_route_summary,
         )...,
-        low_order_terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_count,
-        low_order_terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_route_summary.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        low_order_terminal_shellification_final_retained_unit_inventory_available =
-            low_order_route_summary.terminal_shellification_final_retained_unit_inventory_available,
-        low_order_terminal_shellification_transform_contracts_available =
-            low_order_route_summary.terminal_shellification_transform_contracts_available,
-        low_order_terminal_shellification_pair_inventory_available =
-            low_order_route_summary.terminal_shellification_pair_inventory_available,
-        low_order_terminal_shellification_pair_inventory_status =
-            low_order_route_summary.terminal_shellification_pair_inventory_status,
-        low_order_terminal_shellification_pair_materialization_status =
-            low_order_route_summary.terminal_shellification_pair_materialization_status,
-        low_order_terminal_shellification_assembly_materialization_status =
-            low_order_route_summary.terminal_shellification_assembly_materialization_status,
-        low_order_terminal_shellification_central_gap_region_count =
-            low_order_route_summary.terminal_shellification_central_gap_region_count,
-        low_order_terminal_shellification_central_midpoint_slab_count =
-            low_order_route_summary.terminal_shellification_central_midpoint_slab_count,
-        low_order_terminal_shellification_central_distorted_product_box_count =
-            low_order_route_summary.terminal_shellification_central_distorted_product_box_count,
-        low_order_terminal_shellification_central_distorted_product_box_metadata =
-            low_order_route_summary.terminal_shellification_central_distorted_product_box_metadata,
         legacy_source_low_order_route_selected =
             low_order_route_summary.legacy_source_selected,
         low_order_plan_authority = low_order_route_summary.plan_authority,
@@ -7010,92 +7020,6 @@ function cartesian_units(parent, shells, route_inputs, recipe)
         atom_growth_units_selected = low_order_units.atom_growth_units_selected,
         atom_growth_unit_inventory_available =
             low_order_units.atom_growth_unit_inventory_available,
-        terminal_shellification_units_selected =
-            low_order_units.terminal_shellification_units_selected,
-        terminal_shellification_unit_summary_available =
-            low_order_units.terminal_shellification_unit_summary_available,
-        terminal_shellification_scaffold_available =
-            low_order_units.terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            low_order_units.terminal_shellification_scaffold,
-        terminal_shellification_region_count =
-            low_order_units.terminal_shellification_region_count,
-        terminal_shellification_unit_inventory_available =
-            low_order_units.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory_status =
-            low_order_units.terminal_shellification_unit_inventory_status,
-        terminal_shellification_unit_inventory =
-            low_order_units.terminal_shellification_unit_inventory,
-        terminal_shellification_unit_count =
-            low_order_units.terminal_shellification_unit_count,
-        terminal_shellification_unit_keys =
-            low_order_units.terminal_shellification_unit_keys,
-        terminal_shellification_unit_roles =
-            low_order_units.terminal_shellification_unit_roles,
-        terminal_shellification_unit_kinds =
-            low_order_units.terminal_shellification_unit_kinds,
-        terminal_shellification_unit_support_counts =
-            low_order_units.terminal_shellification_unit_support_counts,
-        terminal_shellification_lowering_contract_inventory_available =
-            low_order_units.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            low_order_units.terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            low_order_units.terminal_shellification_lowering_contract_inventory,
-        terminal_shellification_lowering_plan_available =
-            low_order_units.terminal_shellification_lowering_plan_available,
-        terminal_shellification_lowering_plan_status =
-            low_order_units.terminal_shellification_lowering_plan_status,
-        terminal_shellification_lowering_plan =
-            low_order_units.terminal_shellification_lowering_plan,
-        terminal_shellification_lowering_summary =
-            low_order_units.terminal_shellification_lowering_summary,
-        terminal_shellification_lowering_contract_count =
-            low_order_units.terminal_shellification_lowering_contract_count,
-        terminal_shellification_lowering_contract_kinds =
-            low_order_units.terminal_shellification_lowering_contract_kinds,
-        terminal_shellification_lowering_contract_kind_counts =
-            low_order_units.terminal_shellification_lowering_contract_kind_counts,
-        terminal_shellification_selected_lowering_contract_inventory_available =
-            low_order_units.terminal_shellification_selected_lowering_contract_inventory_available,
-        terminal_shellification_selected_lowering_contract_inventory_status =
-            low_order_units.terminal_shellification_selected_lowering_contract_inventory_status,
-        terminal_shellification_selected_lowering_contract_inventory =
-            low_order_units.terminal_shellification_selected_lowering_contract_inventory,
-        terminal_shellification_selected_lowering_family =
-            low_order_units.terminal_shellification_selected_lowering_family,
-        terminal_shellification_selected_contract_count =
-            low_order_units.terminal_shellification_selected_contract_count,
-        terminal_shellification_selected_contract_kinds =
-            low_order_units.terminal_shellification_selected_contract_kinds,
-        terminal_shellification_selected_contract_kind_counts =
-            low_order_units.terminal_shellification_selected_contract_kind_counts,
-        terminal_shellification_selected_contract_counts_by_unit =
-            low_order_units.terminal_shellification_selected_contract_counts_by_unit,
-        terminal_shellification_all_units_have_exactly_one_selected_contract =
-            low_order_units.terminal_shellification_all_units_have_exactly_one_selected_contract,
-        terminal_shellification_unselected_contract_count =
-            low_order_units.terminal_shellification_unselected_contract_count,
-        terminal_shellification_unselected_contract_kinds =
-            low_order_units.terminal_shellification_unselected_contract_kinds,
-        terminal_shellification_contract_counts_by_unit =
-            low_order_units.terminal_shellification_contract_counts_by_unit,
-        terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_units.terminal_shellification_lw_complete_shell_cpb_count,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_units.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        terminal_shellification_final_retained_unit_inventory_available =
-            low_order_units.terminal_shellification_final_retained_unit_inventory_available,
-        terminal_shellification_pair_inventory_available =
-            low_order_units.terminal_shellification_pair_inventory_available,
-        terminal_shellification_central_gap_region_count =
-            low_order_units.terminal_shellification_central_gap_region_count,
-        terminal_shellification_central_midpoint_slab_count =
-            low_order_units.terminal_shellification_central_midpoint_slab_count,
-        terminal_shellification_central_distorted_product_box_count =
-            low_order_units.terminal_shellification_central_distorted_product_box_count,
-        terminal_shellification_central_distorted_product_box_metadata =
-            low_order_units.terminal_shellification_central_distorted_product_box_metadata,
         plan_unit_inventory_available =
             low_order_units.plan_unit_inventory_available,
         plan_unit_inventory = low_order_units.plan_unit_inventory,
@@ -7587,88 +7511,6 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.transform_route_kind,
         atom_growth_transforms_selected =
             low_order_transforms.atom_growth_transforms_selected,
-        terminal_shellification_transforms_selected =
-            low_order_transforms.terminal_shellification_transforms_selected,
-        terminal_shellification_transform_summary_available =
-            low_order_transforms.terminal_shellification_transform_summary_available,
-        terminal_shellification_scaffold_available =
-            low_order_transforms.terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            low_order_transforms.terminal_shellification_scaffold,
-        terminal_shellification_region_count =
-            low_order_transforms.terminal_shellification_region_count,
-        terminal_shellification_unit_inventory_available =
-            low_order_transforms.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            low_order_transforms.terminal_shellification_unit_inventory,
-        terminal_shellification_unit_count =
-            low_order_transforms.terminal_shellification_unit_count,
-        terminal_shellification_unit_keys =
-            low_order_transforms.terminal_shellification_unit_keys,
-        terminal_shellification_unit_roles =
-            low_order_transforms.terminal_shellification_unit_roles,
-        terminal_shellification_unit_kinds =
-            low_order_transforms.terminal_shellification_unit_kinds,
-        terminal_shellification_unit_support_counts =
-            low_order_transforms.terminal_shellification_unit_support_counts,
-        terminal_shellification_lowering_contract_inventory_available =
-            low_order_transforms.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            low_order_transforms.terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            low_order_transforms.terminal_shellification_lowering_contract_inventory,
-        terminal_shellification_lowering_contract_count =
-            low_order_transforms.terminal_shellification_lowering_contract_count,
-        terminal_shellification_lowering_contract_kinds =
-            low_order_transforms.terminal_shellification_lowering_contract_kinds,
-        terminal_shellification_lowering_contract_kind_counts =
-            low_order_transforms.terminal_shellification_lowering_contract_kind_counts,
-        terminal_shellification_selected_lowering_contract_inventory_available =
-            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory_available,
-        terminal_shellification_selected_lowering_contract_inventory_status =
-            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory_status,
-        terminal_shellification_selected_lowering_contract_inventory =
-            low_order_transforms.terminal_shellification_selected_lowering_contract_inventory,
-        terminal_shellification_selected_lowering_family =
-            low_order_transforms.terminal_shellification_selected_lowering_family,
-        terminal_shellification_selected_contract_count =
-            low_order_transforms.terminal_shellification_selected_contract_count,
-        terminal_shellification_selected_contract_kinds =
-            low_order_transforms.terminal_shellification_selected_contract_kinds,
-        terminal_shellification_selected_contract_kind_counts =
-            low_order_transforms.terminal_shellification_selected_contract_kind_counts,
-        terminal_shellification_selected_contract_counts_by_unit =
-            low_order_transforms.terminal_shellification_selected_contract_counts_by_unit,
-        terminal_shellification_all_units_have_exactly_one_selected_contract =
-            low_order_transforms.terminal_shellification_all_units_have_exactly_one_selected_contract,
-        terminal_shellification_unselected_contract_count =
-            low_order_transforms.terminal_shellification_unselected_contract_count,
-        terminal_shellification_unselected_contract_kinds =
-            low_order_transforms.terminal_shellification_unselected_contract_kinds,
-        terminal_shellification_selected_crc_sidecar_summary =
-            low_order_transforms.terminal_shellification_selected_crc_sidecar_summary,
-        terminal_shellification_contract_counts_by_unit =
-            low_order_transforms.terminal_shellification_contract_counts_by_unit,
-        terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_transforms.terminal_shellification_lw_complete_shell_cpb_count,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        terminal_shellification_final_retained_unit_inventory_available =
-            low_order_transforms.terminal_shellification_final_retained_unit_inventory_available,
-        terminal_shellification_pair_inventory_available =
-            low_order_transforms.terminal_shellification_pair_inventory_available,
-        terminal_shellification_transform_contracts_available =
-            low_order_transforms.terminal_shellification_transform_contracts_available,
-        terminal_shellification_transform_materialization_status =
-            low_order_transforms.terminal_shellification_transform_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            low_order_transforms.terminal_shellification_central_gap_region_count,
-        terminal_shellification_central_midpoint_slab_count =
-            low_order_transforms.terminal_shellification_central_midpoint_slab_count,
-        terminal_shellification_central_distorted_product_box_count =
-            low_order_transforms.terminal_shellification_central_distorted_product_box_count,
-        terminal_shellification_central_distorted_product_box_metadata =
-            low_order_transforms.terminal_shellification_central_distorted_product_box_metadata,
         coefficient_transforms_materialized =
             low_order_transforms.coefficient_transforms_materialized,
         coefficient_maps_materialized =
@@ -8699,90 +8541,6 @@ function cartesian_pair_terms(units, transforms, recipe)
         terminal_route_summary = low_order_pairs.terminal_route_summary,
         low_order_pair_route_kind = low_order_pairs.pair_route_kind,
         atom_growth_pairs_selected = low_order_pairs.atom_growth_pairs_selected,
-        terminal_shellification_pairs_selected =
-            low_order_pairs.terminal_shellification_pairs_selected,
-        terminal_shellification_pair_summary_available =
-            low_order_pairs.terminal_shellification_pair_summary_available,
-        terminal_shellification_scaffold_available =
-            low_order_pairs.terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            low_order_pairs.terminal_shellification_scaffold,
-        terminal_shellification_region_count =
-            low_order_pairs.terminal_shellification_region_count,
-        terminal_shellification_unit_inventory_available =
-            low_order_pairs.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            low_order_pairs.terminal_shellification_unit_inventory,
-        terminal_shellification_unit_count =
-            low_order_pairs.terminal_shellification_unit_count,
-        terminal_shellification_unit_keys =
-            low_order_pairs.terminal_shellification_unit_keys,
-        terminal_shellification_unit_roles =
-            low_order_pairs.terminal_shellification_unit_roles,
-        terminal_shellification_unit_kinds =
-            low_order_pairs.terminal_shellification_unit_kinds,
-        terminal_shellification_unit_support_counts =
-            low_order_pairs.terminal_shellification_unit_support_counts,
-        terminal_shellification_lowering_contract_inventory_available =
-            low_order_pairs.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            low_order_pairs.terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            low_order_pairs.terminal_shellification_lowering_contract_inventory,
-        terminal_shellification_lowering_contract_count =
-            low_order_pairs.terminal_shellification_lowering_contract_count,
-        terminal_shellification_lowering_contract_kinds =
-            low_order_pairs.terminal_shellification_lowering_contract_kinds,
-        terminal_shellification_lowering_contract_kind_counts =
-            low_order_pairs.terminal_shellification_lowering_contract_kind_counts,
-        terminal_shellification_selected_lowering_contract_inventory_available =
-            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory_available,
-        terminal_shellification_selected_lowering_contract_inventory_status =
-            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory_status,
-        terminal_shellification_selected_lowering_contract_inventory =
-            low_order_pairs.terminal_shellification_selected_lowering_contract_inventory,
-        terminal_shellification_selected_lowering_family =
-            low_order_pairs.terminal_shellification_selected_lowering_family,
-        terminal_shellification_selected_contract_count =
-            low_order_pairs.terminal_shellification_selected_contract_count,
-        terminal_shellification_selected_contract_kinds =
-            low_order_pairs.terminal_shellification_selected_contract_kinds,
-        terminal_shellification_selected_contract_kind_counts =
-            low_order_pairs.terminal_shellification_selected_contract_kind_counts,
-        terminal_shellification_selected_contract_counts_by_unit =
-            low_order_pairs.terminal_shellification_selected_contract_counts_by_unit,
-        terminal_shellification_all_units_have_exactly_one_selected_contract =
-            low_order_pairs.terminal_shellification_all_units_have_exactly_one_selected_contract,
-        terminal_shellification_unselected_contract_count =
-            low_order_pairs.terminal_shellification_unselected_contract_count,
-        terminal_shellification_unselected_contract_kinds =
-            low_order_pairs.terminal_shellification_unselected_contract_kinds,
-        terminal_shellification_selected_crc_sidecar_summary =
-            low_order_pairs.terminal_shellification_selected_crc_sidecar_summary,
-        terminal_shellification_contract_counts_by_unit =
-            low_order_pairs.terminal_shellification_contract_counts_by_unit,
-        terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_pairs.terminal_shellification_lw_complete_shell_cpb_count,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_pairs.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        terminal_shellification_final_retained_unit_inventory_available =
-            low_order_pairs.terminal_shellification_final_retained_unit_inventory_available,
-        terminal_shellification_transform_contracts_available =
-            low_order_pairs.terminal_shellification_transform_contracts_available,
-        terminal_shellification_pair_inventory_available =
-            low_order_pairs.terminal_shellification_pair_inventory_available,
-        terminal_shellification_pair_inventory_status =
-            low_order_pairs.terminal_shellification_pair_inventory_status,
-        terminal_shellification_pair_materialization_status =
-            low_order_pairs.terminal_shellification_pair_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            low_order_pairs.terminal_shellification_central_gap_region_count,
-        terminal_shellification_central_midpoint_slab_count =
-            low_order_pairs.terminal_shellification_central_midpoint_slab_count,
-        terminal_shellification_central_distorted_product_box_count =
-            low_order_pairs.terminal_shellification_central_distorted_product_box_count,
-        terminal_shellification_central_distorted_product_box_metadata =
-            low_order_pairs.terminal_shellification_central_distorted_product_box_metadata,
         pair_operator_blocks_materialized =
             low_order_pairs.pair_operator_blocks_materialized,
         operator_pairs_materialized = low_order_pairs.operator_pairs_materialized,
@@ -9361,90 +9119,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.assembly_route_kind,
         atom_growth_assembly_selected =
             low_order_assembly.atom_growth_assembly_selected,
-        terminal_shellification_assembly_selected =
-            low_order_assembly.terminal_shellification_assembly_selected,
-        terminal_shellification_assembly_summary_available =
-            low_order_assembly.terminal_shellification_assembly_summary_available,
-        terminal_shellification_scaffold_available =
-            low_order_assembly.terminal_shellification_scaffold_available,
-        terminal_shellification_scaffold =
-            low_order_assembly.terminal_shellification_scaffold,
-        terminal_shellification_region_count =
-            low_order_assembly.terminal_shellification_region_count,
-        terminal_shellification_unit_inventory_available =
-            low_order_assembly.terminal_shellification_unit_inventory_available,
-        terminal_shellification_unit_inventory =
-            low_order_assembly.terminal_shellification_unit_inventory,
-        terminal_shellification_unit_count =
-            low_order_assembly.terminal_shellification_unit_count,
-        terminal_shellification_unit_keys =
-            low_order_assembly.terminal_shellification_unit_keys,
-        terminal_shellification_unit_roles =
-            low_order_assembly.terminal_shellification_unit_roles,
-        terminal_shellification_unit_kinds =
-            low_order_assembly.terminal_shellification_unit_kinds,
-        terminal_shellification_unit_support_counts =
-            low_order_assembly.terminal_shellification_unit_support_counts,
-        terminal_shellification_lowering_contract_inventory_available =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory_available,
-        terminal_shellification_lowering_contract_inventory_status =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory_status,
-        terminal_shellification_lowering_contract_inventory =
-            low_order_assembly.terminal_shellification_lowering_contract_inventory,
-        terminal_shellification_lowering_contract_count =
-            low_order_assembly.terminal_shellification_lowering_contract_count,
-        terminal_shellification_lowering_contract_kinds =
-            low_order_assembly.terminal_shellification_lowering_contract_kinds,
-        terminal_shellification_lowering_contract_kind_counts =
-            low_order_assembly.terminal_shellification_lowering_contract_kind_counts,
-        terminal_shellification_selected_lowering_contract_inventory_available =
-            low_order_assembly.terminal_shellification_selected_lowering_contract_inventory_available,
-        terminal_shellification_selected_lowering_contract_inventory_status =
-            low_order_assembly.terminal_shellification_selected_lowering_contract_inventory_status,
-        terminal_shellification_selected_lowering_contract_inventory =
-            low_order_assembly.terminal_shellification_selected_lowering_contract_inventory,
-        terminal_shellification_selected_lowering_family =
-            low_order_assembly.terminal_shellification_selected_lowering_family,
-        terminal_shellification_selected_contract_count =
-            low_order_assembly.terminal_shellification_selected_contract_count,
-        terminal_shellification_selected_contract_kinds =
-            low_order_assembly.terminal_shellification_selected_contract_kinds,
-        terminal_shellification_selected_contract_kind_counts =
-            low_order_assembly.terminal_shellification_selected_contract_kind_counts,
-        terminal_shellification_selected_contract_counts_by_unit =
-            low_order_assembly.terminal_shellification_selected_contract_counts_by_unit,
-        terminal_shellification_all_units_have_exactly_one_selected_contract =
-            low_order_assembly.terminal_shellification_all_units_have_exactly_one_selected_contract,
-        terminal_shellification_unselected_contract_count =
-            low_order_assembly.terminal_shellification_unselected_contract_count,
-        terminal_shellification_unselected_contract_kinds =
-            low_order_assembly.terminal_shellification_unselected_contract_kinds,
-        terminal_shellification_contract_counts_by_unit =
-            low_order_assembly.terminal_shellification_contract_counts_by_unit,
-        terminal_shellification_lw_complete_shell_cpb_count =
-            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_count,
-        terminal_shellification_lw_complete_shell_cpb_family_counts =
-            low_order_assembly.terminal_shellification_lw_complete_shell_cpb_family_counts,
-        terminal_shellification_final_retained_unit_inventory_available =
-            low_order_assembly.terminal_shellification_final_retained_unit_inventory_available,
-        terminal_shellification_transform_contracts_available =
-            low_order_assembly.terminal_shellification_transform_contracts_available,
-        terminal_shellification_pair_inventory_available =
-            low_order_assembly.terminal_shellification_pair_inventory_available,
-        terminal_shellification_pair_inventory_status =
-            low_order_assembly.terminal_shellification_pair_inventory_status,
-        terminal_shellification_pair_materialization_status =
-            low_order_assembly.terminal_shellification_pair_materialization_status,
-        terminal_shellification_assembly_materialization_status =
-            low_order_assembly.terminal_shellification_assembly_materialization_status,
-        terminal_shellification_central_gap_region_count =
-            low_order_assembly.terminal_shellification_central_gap_region_count,
-        terminal_shellification_central_midpoint_slab_count =
-            low_order_assembly.terminal_shellification_central_midpoint_slab_count,
-        terminal_shellification_central_distorted_product_box_count =
-            low_order_assembly.terminal_shellification_central_distorted_product_box_count,
-        terminal_shellification_central_distorted_product_box_metadata =
-            low_order_assembly.terminal_shellification_central_distorted_product_box_metadata,
         hamiltonian_matrices_materialized =
             low_order_assembly.hamiltonian_matrices_materialized,
         operator_matrices_materialized =
