@@ -30,8 +30,5 @@ jobs:
       - name: Instantiate docs environment
         run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
 
-      - name: Build and deploy docs
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      - name: Build docs
         run: julia --project=docs docs/make.jl

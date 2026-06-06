@@ -4,6 +4,7 @@ push!(LOAD_PATH, joinpath(@__DIR__, ".."))
 using GaussletBases
 
 const DOCS_CI = get(ENV, "CI", "false") == "true"
+const DOCS_DEPLOY = get(ENV, "GAUSSLETBASES_DOCS_DEPLOY", "false") == "true"
 
 makedocs(
     sitename = "GaussletBases.jl",
@@ -48,7 +49,16 @@ makedocs(
     ],
 )
 
-deploydocs(
-    repo = "github.com/srwhite59/GaussletBases.jl.git",
-    devbranch = "main",
-)
+if DOCS_DEPLOY
+    deploydocs(
+        repo = "github.com/srwhite59/GaussletBases.jl.git",
+        devbranch = "main",
+    )
+elseif DOCS_CI
+    @info "Skipping docs deployment; set GAUSSLETBASES_DOCS_DEPLOY=true after gh-pages deployment authorization is configured."
+else
+    deploydocs(
+        repo = "github.com/srwhite59/GaussletBases.jl.git",
+        devbranch = "main",
+    )
+end
