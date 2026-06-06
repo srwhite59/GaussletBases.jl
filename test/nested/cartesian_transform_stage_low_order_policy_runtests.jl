@@ -457,6 +457,33 @@ end
           terminal_units.terminal_shellification_unselected_contract_count
     @test terminal_transforms.terminal_shellification_unselected_contract_kinds ==
           terminal_units.terminal_shellification_unselected_contract_kinds
+    unit_selected_crc_sidecars =
+        terminal_units.low_order_units.terminal_shellification_selected_crc_sidecar_summary
+    transform_selected_crc_sidecars =
+        terminal_transforms.terminal_shellification_selected_crc_sidecar_summary
+    @test transform_selected_crc_sidecars === unit_selected_crc_sidecars
+    @test transform_selected_crc_sidecars.object_kind ==
+          :cartesian_unit_stage_selected_terminal_lowering_crc_sidecar_summary
+    @test transform_selected_crc_sidecars.status ==
+          unit_selected_crc_sidecars.status
+    @test transform_selected_crc_sidecars.selected_contract_count ==
+          unit_selected_crc_sidecars.selected_contract_count
+    @test transform_selected_crc_sidecars.sidecar_available_count ==
+          unit_selected_crc_sidecars.sidecar_available_count
+    @test transform_selected_crc_sidecars.sidecar_missing_count ==
+          unit_selected_crc_sidecars.sidecar_missing_count
+    @test transform_selected_crc_sidecars.sidecar_inventory_complete ==
+          unit_selected_crc_sidecars.sidecar_inventory_complete
+    @test !transform_selected_crc_sidecars.final_retained_unit_inventory_available
+    @test !transform_selected_crc_sidecars.pair_inventory_available
+    @test transform_selected_crc_sidecars.pair_inventory_status ==
+          unit_selected_crc_sidecars.pair_inventory_status
+    @test !transform_selected_crc_sidecars.operator_blocks_materialized
+    @test !transform_selected_crc_sidecars.pair_operator_blocks_materialized
+    @test !transform_selected_crc_sidecars.hamiltonian_data_materialized
+    @test !transform_selected_crc_sidecars.artifacts_materialized
+    @test !transform_selected_crc_sidecars.sidecar_inventory.final_retained_unit_inventory_available
+    @test !transform_selected_crc_sidecars.sidecar_inventory.pair_inventory_available
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_transforms.terminal_shellification_lw_complete_shell_cpb_family_counts ==
@@ -589,6 +616,27 @@ end
           terminal_units.terminal_shellification_unselected_contract_count
     @test terminal_summary.terminal_shellification_unselected_contract_kinds ==
           terminal_units.terminal_shellification_unselected_contract_kinds
+    summary_selected_crc_sidecars =
+        terminal_summary.terminal_shellification_selected_crc_sidecar_summary
+    @test summary_selected_crc_sidecars === unit_selected_crc_sidecars
+    @test summary_selected_crc_sidecars.status ==
+          transform_selected_crc_sidecars.status
+    @test summary_selected_crc_sidecars.selected_contract_count ==
+          transform_selected_crc_sidecars.selected_contract_count
+    @test summary_selected_crc_sidecars.sidecar_available_count ==
+          transform_selected_crc_sidecars.sidecar_available_count
+    @test summary_selected_crc_sidecars.sidecar_missing_count ==
+          transform_selected_crc_sidecars.sidecar_missing_count
+    @test summary_selected_crc_sidecars.sidecar_inventory_complete ==
+          transform_selected_crc_sidecars.sidecar_inventory_complete
+    @test !summary_selected_crc_sidecars.final_retained_unit_inventory_available
+    @test !summary_selected_crc_sidecars.pair_inventory_available
+    @test summary_selected_crc_sidecars.pair_inventory_status ==
+          transform_selected_crc_sidecars.pair_inventory_status
+    @test !summary_selected_crc_sidecars.operator_blocks_materialized
+    @test !summary_selected_crc_sidecars.pair_operator_blocks_materialized
+    @test !summary_selected_crc_sidecars.hamiltonian_data_materialized
+    @test !summary_selected_crc_sidecars.artifacts_materialized
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_count ==
           terminal_units.terminal_shellification_lw_complete_shell_cpb_count
     @test terminal_summary.terminal_shellification_lw_complete_shell_cpb_family_counts ==

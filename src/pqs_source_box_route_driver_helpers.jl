@@ -6283,6 +6283,10 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
                 :not_available,
                 nothing,
             )...,
+            terminal_shellification_selected_crc_sidecar_summary =
+                _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+                    nothing,
+                ),
             terminal_shellification_contract_counts_by_unit = (),
             terminal_shellification_lw_complete_shell_cpb_count = 0,
             terminal_shellification_lw_complete_shell_cpb_family_counts =
@@ -6511,6 +6515,16 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             low_order_units.terminal_shellification_selected_lowering_family :
             nothing,
         )...,
+        terminal_shellification_selected_crc_sidecar_summary =
+            terminal_shellification_transforms_selected &&
+            hasproperty(
+                low_order_units,
+                :terminal_shellification_selected_crc_sidecar_summary,
+            ) ?
+            low_order_units.terminal_shellification_selected_crc_sidecar_summary :
+            _pqs_source_box_route_driver_selected_terminal_crc_sidecar_summary(
+                nothing,
+            ),
         terminal_shellification_contract_counts_by_unit =
             terminal_shellification_transforms_selected ?
             low_order_units.terminal_shellification_contract_counts_by_unit :
@@ -6716,6 +6730,8 @@ function cartesian_transforms(units, recipe)
             low_order_transforms.terminal_shellification_unselected_contract_count,
         terminal_shellification_unselected_contract_kinds =
             low_order_transforms.terminal_shellification_unselected_contract_kinds,
+        terminal_shellification_selected_crc_sidecar_summary =
+            low_order_transforms.terminal_shellification_selected_crc_sidecar_summary,
         terminal_shellification_contract_counts_by_unit =
             low_order_transforms.terminal_shellification_contract_counts_by_unit,
         terminal_shellification_lw_complete_shell_cpb_count =
