@@ -28,6 +28,7 @@ end
 Selected terminal lowering plan for one shellification plan and lowering
 policy. `available_contracts` may include alternative contracts; `contracts`
 contains the selected route contracts downstream construction should consume.
+Unselected available contracts may be unparameterized.
 """
 struct TerminalLoweringPlan
     policy::TerminalLoweringPolicy

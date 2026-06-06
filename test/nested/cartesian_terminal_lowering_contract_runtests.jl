@@ -79,6 +79,13 @@ end
     @test wl_shell_contract.metadata.corner_count == 8
     @test sum(CPBForLowering.support_count, CTL.source_cpbs(wl_shell_contract); init = 0) ==
           wl_shell_contract.metadata.shell_support_count
+    wl_available_pqs = first(
+        contract for contract in CTL.available_contracts(wl_plan)
+        if CTL.lowering_kind(contract) == :pqs_filled_source_cpb
+    )
+    @test isnothing(wl_available_pqs.metadata.q)
+    @test wl_available_pqs.metadata.parameter_status ==
+          :available_but_unparameterized
 
     pqs_plan = CTL.lower_terminal_regions(shell_plan, CTL.PQSLowering(q = 3))
     @test pqs_plan.policy isa CTL.PQSLowering

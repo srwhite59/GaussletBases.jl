@@ -109,9 +109,33 @@ function _pqs_complete_shell_contract(region, policy::PQSLowering)
 end
 
 function _pqs_complete_shell_contract(region; q = nothing)
+    isnothing(q) && return _pqs_unparameterized_complete_shell_contract(region)
+    return _pqs_complete_shell_contract(region, PQSLowering(q = q))
+end
+
+function _pqs_unparameterized_complete_shell_contract(region)
     raw = _raw_region(region)
-    resolved_q = isnothing(q) ? maximum(length.(raw.outer_box)) : q
-    return _pqs_complete_shell_contract(region, PQSLowering(q = resolved_q))
+    source = _filled_source_cpb_from_box(
+        raw.outer_box;
+        role = _terminal_source_role(region, :pqs_filled_source_cpb),
+        metadata = (; terminal_region_key = region.key),
+    )
+    return _terminal_lowering_contract(
+        contract_key = Symbol(String(region.key), "_pqs_filled_source_cpb"),
+        terminal_region = region,
+        lowering_kind = :pqs_filled_source_cpb,
+        source_cpbs = (source,),
+        retained_rule = :pqs_boundary_comx_product_modes,
+        realization_rule = :shell_projection_lowdin,
+        final_unit_granularity = :one_terminal_region,
+        metadata = (;
+            q = nothing,
+            parameter_status = :available_but_unparameterized,
+            source_mode_shape = nothing,
+            source_box_shape = CPB.shape(source),
+            face_edge_corner_decomposition_required = false,
+        ),
+    )
 end
 
 function _distorted_product_contract(region)
