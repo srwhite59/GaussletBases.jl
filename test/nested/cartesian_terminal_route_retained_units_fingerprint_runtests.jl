@@ -3,6 +3,7 @@ using GaussletBases
 
 const CTLForTerminalRouteFingerprint = GaussletBases.CartesianTerminalLowering
 const CRUForTerminalRouteFingerprint = GaussletBases.CartesianRetainedUnits
+const CUPForTerminalRouteFingerprint = GaussletBases.CartesianUnitPairs
 const CRCForTerminalRouteFingerprint = GaussletBases.CartesianRouteCore
 const CPBForTerminalRouteFingerprint = GaussletBases.CartesianCPB
 
@@ -115,12 +116,15 @@ end
             route_lowering_family = :pqs_terminal_route_fingerprint,
             lowering_plan,
             lowering_summary,
-        )
+    )
     terminal_route_summary = terminal_route_state.summary
     retained_unit_summary = terminal_route_summary.retained_unit_summary
+    unit_pair_summary = terminal_route_summary.unit_pair_summary
 
     @test terminal_route_state.retained_unit_plan isa
           CRUForTerminalRouteFingerprint.RetainedUnitPlan
+    @test terminal_route_state.unit_pair_plan isa
+          CUPForTerminalRouteFingerprint.UnitPairPlan
     @test retained_unit_summary.status == :available_retained_unit_plan
     @test retained_unit_summary.selected_contract_count == 2
     @test retained_unit_summary.retained_unit_count == 2
@@ -143,8 +147,24 @@ end
     @test !retained_unit_summary.hamiltonian_data_materialized
     @test terminal_route_summary.retained_unit_summary.status ==
           retained_unit_summary.status
+    @test terminal_route_summary.unit_pair_summary.status == unit_pair_summary.status
     @test terminal_route_summary.selected_contract_count == 2
-    @test !terminal_route_summary.pair_inventory_available
+    @test terminal_route_summary.pair_inventory_available
+    @test unit_pair_summary.status == :available_unit_pair_plan
+    @test unit_pair_summary.retained_unit_count ==
+          retained_unit_summary.retained_unit_count
+    @test unit_pair_summary.pair_count == 3
+    @test unit_pair_summary.expected_upper_triangular_pair_count == 3
+    @test unit_pair_summary.route_core_pair_inventory_available
+    @test unit_pair_summary.route_core_pair_inventory_status ==
+          :available_route_core_pair_inventory
+    @test unit_pair_summary.route_core_pair_count == unit_pair_summary.pair_count
+    @test !unit_pair_summary.materialized
+    @test !unit_pair_summary.pair_inventory_materialized
+    @test !unit_pair_summary.source_operator_blocks_materialized
+    @test !unit_pair_summary.operator_blocks_materialized
+    @test !unit_pair_summary.hamiltonian_data_materialized
+    @test !unit_pair_summary.artifacts_materialized
     @test !terminal_route_summary.operator_blocks_materialized
     @test !terminal_route_summary.hamiltonian_data_materialized
 
@@ -157,8 +177,10 @@ end
             lowering_summary,
         )
     unselected_summary = unselected_state.summary.retained_unit_summary
+    unselected_pair_summary = unselected_state.summary.unit_pair_summary
 
     @test unselected_state.retained_unit_plan === nothing
+    @test unselected_state.unit_pair_plan === nothing
     @test unselected_summary.status == :not_selected
     @test unselected_summary.retained_unit_count == 0
     @test unselected_summary.route_core_final_unit_available_count == 0
@@ -168,4 +190,14 @@ end
     @test !unselected_summary.pair_inventory_materialized
     @test !unselected_summary.operator_blocks_materialized
     @test !unselected_summary.hamiltonian_data_materialized
+    @test unselected_pair_summary.status == :not_selected
+    @test unselected_pair_summary.pair_count == 0
+    @test unselected_pair_summary.expected_upper_triangular_pair_count == 0
+    @test !unselected_pair_summary.route_core_pair_inventory_available
+    @test !unselected_pair_summary.materialized
+    @test !unselected_pair_summary.pair_inventory_materialized
+    @test !unselected_pair_summary.source_operator_blocks_materialized
+    @test !unselected_pair_summary.operator_blocks_materialized
+    @test !unselected_pair_summary.hamiltonian_data_materialized
+    @test !unselected_pair_summary.artifacts_materialized
 end

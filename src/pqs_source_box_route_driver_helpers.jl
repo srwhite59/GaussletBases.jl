@@ -6406,6 +6406,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     selected_contract_inventory,
     selected_crc_sidecar_summary,
     retained_unit_summary,
+    unit_pair_summary,
 )
     return (;
         object_kind = :cartesian_driver_terminal_route_state_summary,
@@ -6477,12 +6478,13 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
             selected_crc_sidecar_summary.sidecar_missing_count :
             0,
         retained_unit_summary,
+        unit_pair_summary,
         final_retained_unit_inventory_available =
             !isnothing(selected_crc_sidecar_summary) &&
             selected_crc_sidecar_summary.final_retained_unit_inventory_available,
         pair_inventory_available =
-            !isnothing(selected_crc_sidecar_summary) &&
-            selected_crc_sidecar_summary.pair_inventory_available,
+            !isnothing(unit_pair_summary) &&
+            unit_pair_summary.status == :available_unit_pair_plan,
         operator_blocks_materialized = false,
         pair_operator_blocks_materialized =
             !isnothing(selected_crc_sidecar_summary) &&
@@ -6493,6 +6495,33 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
         artifacts_materialized =
             !isnothing(selected_crc_sidecar_summary) &&
             selected_crc_sidecar_summary.artifacts_materialized,
+    )
+end
+
+function _pqs_source_box_route_driver_unit_pair_unavailable_summary(
+    status::Symbol,
+    blocker = nothing,
+)
+    return (;
+        object_kind = :cartesian_unit_pair_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        pair_count = 0,
+        expected_upper_triangular_pair_count = 0,
+        pair_families = (),
+        pair_family_counts = (),
+        route_core_pair_inventory_available = false,
+        route_core_pair_inventory_status = :not_available,
+        route_core_pair_inventory_blocker = blocker,
+        route_core_pair_count = 0,
+        route_core_pair_missing_final_unit_indices = (),
+        materialized = false,
+        pair_inventory_materialized = false,
+        source_operator_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
     )
 end
 
@@ -6532,6 +6561,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     selected_crc_sidecar_summary = nothing,
     retained_unit_plan = nothing,
     retained_unit_summary = nothing,
+    unit_pair_plan = nothing,
+    unit_pair_summary = nothing,
     blocker = nothing,
 )
     shellification_plan_available =
@@ -6572,6 +6603,21 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             blocker,
         ) :
         retained_unit_summary
+    unit_pair_plan =
+        isnothing(unit_pair_plan) && retained_unit_plan isa
+        CartesianRetainedUnits.RetainedUnitPlan ?
+        CartesianUnitPairs.unit_pair_plan(retained_unit_plan) :
+        unit_pair_plan
+    unit_pair_summary =
+        isnothing(unit_pair_summary) && unit_pair_plan isa
+        CartesianUnitPairs.UnitPairPlan ?
+        CartesianUnitPairs.summary(unit_pair_plan) :
+        isnothing(unit_pair_summary) ?
+        _pqs_source_box_route_driver_unit_pair_unavailable_summary(
+            selected ? status : :not_selected,
+            blocker,
+        ) :
+        unit_pair_summary
     summary =
         _pqs_source_box_route_driver_terminal_route_state_summary(;
             status,
@@ -6586,6 +6632,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             selected_contract_inventory,
             selected_crc_sidecar_summary,
             retained_unit_summary,
+            unit_pair_summary,
         )
 
     return (;
@@ -6609,6 +6656,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         selected_crc_sidecar_summary,
         retained_unit_plan,
         retained_unit_summary,
+        unit_pair_plan,
+        unit_pair_summary,
         summary,
         blocker,
         compatibility_alias_status =
