@@ -67,6 +67,7 @@ export PairBlockMaterializationPolicy,
        white_lindsey_boundary_stratum_adapter_summary,
        white_lindsey_boundary_stratum_unit_adapter_descriptor,
        white_lindsey_boundary_stratum_pair_adapter_descriptor,
+       white_lindsey_materialized_seed_oracle_summary,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -104,6 +105,9 @@ export PairBlockMaterializationPolicy,
 #     Metadata-only old-kernel reuse guidance and unit descriptors for future
 #     LW adapters.
 #
+# white_lindsey_seed_oracle_summary.jl
+#     Compact old-seed oracle summary for LW adapter validation.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -129,6 +133,7 @@ include("pqs_source_safe_terms.jl")
 include("pqs_source_shell_bridge.jl")
 include("pqs_source_final_readiness.jl")
 include("white_lindsey_adapter_summary.jl")
+include("white_lindsey_seed_oracle_summary.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")
