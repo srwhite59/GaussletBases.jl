@@ -20,8 +20,8 @@ Signs and prefactors for supplied 1D factors are owned by the caller-provided
 parent/axis blocks.
 
 PQS/PQS raw-source pair support currently has metadata preflight plus narrow
-raw source-space overlap, position, and x2 pilots from caller-supplied 1D
-factors. It does not build shell projection, Lowdin realization, or final
+raw source-space overlap, position, x2, and kinetic pilots from caller-supplied
+1D factors. It does not build shell projection, Lowdin realization, or final
 retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
@@ -52,6 +52,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_overlap_block,
        pqs_source_pair_position_block,
        pqs_source_pair_x2_block,
+       pqs_source_pair_kinetic_block,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,

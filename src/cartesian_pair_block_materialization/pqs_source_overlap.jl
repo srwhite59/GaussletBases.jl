@@ -93,12 +93,76 @@ function pqs_source_pair_x2_block(
     )
 end
 
+"""
+    pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d)
+
+Materialize one PQS/PQS raw source-space kinetic block from explicit 1D
+source-mode factors. The caller-supplied 1D kinetic factors own signs and
+prefactors. This remains before shell projection, Lowdin realization, and final
+retained pair blocks.
+"""
+function pqs_source_pair_kinetic_block(
+    record::PairBlockMaterializationRecord;
+    overlap_1d,
+    kinetic_1d,
+)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    kinetic_x, kinetic_y, kinetic_z =
+        _operator_1d_tuple(kinetic_1d, "kinetic_1d")
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    kinetic_axes = (kinetic_x, kinetic_y, kinetic_z)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    _assert_pqs_source_axis_sizes(kinetic_axes, left_dims, right_dims, "kinetic_1d")
+
+    kinetic_factor_form = _pqs_source_kinetic_factor_form()
+    kinetic_x_result = _pqs_source_pair_product_result(
+        record,
+        :source_kinetic,
+        (kinetic_x, overlap_y, overlap_z),
+        (; kinetic_factor_form),
+    )
+    kinetic_y_result = _pqs_source_pair_product_result(
+        record,
+        :source_kinetic,
+        (overlap_x, kinetic_y, overlap_z),
+        (; kinetic_factor_form),
+    )
+    kinetic_z_result = _pqs_source_pair_product_result(
+        record,
+        :source_kinetic,
+        (overlap_x, overlap_y, kinetic_z),
+        (; kinetic_factor_form),
+    )
+
+    return PairBlockMaterializationResult(
+        :source_kinetic,
+        record.pair_key,
+        kinetic_x_result.block + kinetic_y_result.block + kinetic_z_result.block,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        kinetic_x_result.metadata,
+    )
+end
+
 function _source_position_term(axis)
     return Symbol(:source_, _position_term(axis))
 end
 
 function _source_x2_term(axis)
     return Symbol(:source_, _x2_term(axis))
+end
+
+function _pqs_source_kinetic_factor_form()
+    return (
+        (:kinetic, :overlap, :overlap),
+        (:overlap, :kinetic, :overlap),
+        (:overlap, :overlap, :kinetic),
+    )
 end
 
 function _pqs_source_pair_product_result(

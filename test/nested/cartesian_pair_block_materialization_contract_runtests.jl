@@ -429,6 +429,22 @@ function _pair_block_pqs_source_x2_axes(left_dims, right_dims)
     return x2_x, x2_y, x2_z
 end
 
+function _pair_block_pqs_source_kinetic_axes(left_dims, right_dims)
+    kinetic_x = [
+        Float64(-40 * lx + 23 * rx)
+        for lx in 1:left_dims[1], rx in 1:right_dims[1]
+    ]
+    kinetic_y = [
+        Float64(-400 * ly + 29 * ry)
+        for ly in 1:left_dims[2], ry in 1:right_dims[2]
+    ]
+    kinetic_z = [
+        Float64(-4000 * lz + 31 * rz)
+        for lz in 1:left_dims[3], rz in 1:right_dims[3]
+    ]
+    return kinetic_x, kinetic_y, kinetic_z
+end
+
 function _pair_block_expected_source_product(
     left_dims,
     right_dims,
@@ -520,6 +536,43 @@ function _pair_block_expected_source_x2(
         operator_x,
         operator_y,
         operator_z,
+    )
+end
+
+function _pair_block_expected_source_kinetic(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    kinetic_x,
+    kinetic_y,
+    kinetic_z,
+)
+    return _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        kinetic_x,
+        overlap_y,
+        overlap_z,
+    ) +
+           _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        overlap_x,
+        kinetic_y,
+        overlap_z,
+    ) +
+           _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        overlap_x,
+        overlap_y,
+        kinetic_z,
     )
 end
 
@@ -874,6 +927,8 @@ end
         _pair_block_pqs_source_position_axes(left_source_dims, right_source_dims)
     pqs_x2_x, pqs_x2_y, pqs_x2_z =
         _pair_block_pqs_source_x2_axes(left_source_dims, right_source_dims)
+    pqs_kinetic_x, pqs_kinetic_y, pqs_kinetic_z =
+        _pair_block_pqs_source_kinetic_axes(left_source_dims, right_source_dims)
 
     for axis in (:x, :y, :z)
         position_overlap_1d =
@@ -959,6 +1014,42 @@ end
         @test !x2_result.metadata.final_pair_blocks_materialized
     end
 
+    kinetic_result = CPBM.pqs_source_pair_kinetic_block(
+        pqs_cross_record;
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        kinetic_1d = (pqs_kinetic_x, pqs_kinetic_y, pqs_kinetic_z),
+    )
+    expected_kinetic = _pair_block_expected_source_kinetic(
+        left_source_dims,
+        right_source_dims,
+        pqs_cross_record.metadata.source_mode_ordering,
+        pqs_overlap_x,
+        pqs_overlap_y,
+        pqs_overlap_z,
+        pqs_kinetic_x,
+        pqs_kinetic_y,
+        pqs_kinetic_z,
+    )
+    @test kinetic_result.term == :source_kinetic
+    @test size(kinetic_result.block) == (27, 60)
+    @test kinetic_result.block ≈ expected_kinetic
+    @test kinetic_result.materialized
+    @test kinetic_result.source_operator_blocks_materialized
+    @test !kinetic_result.final_pair_blocks_materialized
+    @test !kinetic_result.operator_blocks_materialized
+    @test !kinetic_result.hamiltonian_data_materialized
+    @test !kinetic_result.artifacts_materialized
+    @test kinetic_result.metadata.block_space == :raw_product_source_modes
+    @test kinetic_result.metadata.left_source_mode_dims == left_source_dims
+    @test kinetic_result.metadata.right_source_mode_dims == right_source_dims
+    @test kinetic_result.metadata.kinetic_factor_form == (
+        (:kinetic, :overlap, :overlap),
+        (:overlap, :kinetic, :overlap),
+        (:overlap, :overlap, :kinetic),
+    )
+    @test kinetic_result.metadata.source_operator_blocks_materialized
+    @test !kinetic_result.metadata.final_pair_blocks_materialized
+
     bad_pqs_overlap_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
     @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
         pqs_cross_record;
@@ -986,6 +1077,17 @@ end
         axis = :x,
         overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
         x2_1d = (; x = bad_pqs_x2_x, y = pqs_x2_y, z = pqs_x2_z),
+    )
+    bad_pqs_kinetic_z =
+        zeros(Float64, left_source_dims[3], right_source_dims[3] + 1)
+    @test_throws ArgumentError CPBM.pqs_source_pair_kinetic_block(
+        pqs_cross_record;
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        kinetic_1d = (;
+            x = pqs_kinetic_x,
+            y = pqs_kinetic_y,
+            z = bad_pqs_kinetic_z,
+        ),
     )
 
     left_contract, right_contract =
@@ -1052,6 +1154,15 @@ end
             z = pqs_position_z,
         ),
     )
+    @test_throws ArgumentError CPBM.pqs_source_pair_kinetic_block(
+        missing_cross_record;
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        kinetic_1d = (;
+            x = pqs_kinetic_x,
+            y = pqs_kinetic_y,
+            z = pqs_kinetic_z,
+        ),
+    )
 
     incompatible_right_summary =
         merge(
@@ -1109,6 +1220,15 @@ end
         axis = :x,
         overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
         x2_1d = (; x = pqs_x2_x, y = pqs_x2_y, z = pqs_x2_z),
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_kinetic_block(
+        incompatible_cross_record;
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        kinetic_1d = (;
+            x = pqs_kinetic_x,
+            y = pqs_kinetic_y,
+            z = pqs_kinetic_z,
+        ),
     )
 end
 
