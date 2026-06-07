@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic compact fixed-block term storage" begin
     basis = build_basis(
         MappedUniformBasisSpec(

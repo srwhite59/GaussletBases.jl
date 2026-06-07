@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Atomic residual keep policy rejects relative_case_scale on public QW routes" begin
     if !_legacy_basisfile_available()
         @test true

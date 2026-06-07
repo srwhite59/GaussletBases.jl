@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested support immediate contraction helpers" begin
     expansion = coulomb_gaussian_expansion(doacc = false)
     basis = build_basis(MappedUniformBasisSpec(:G10;

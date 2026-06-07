@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested shell interface" begin
     function _fixed_a_multi_face_basis(count::Int; a::Float64 = 0.25, xmax::Float64 = 10.0, tail_spacing::Float64 = 10.0)
         endpoint = (count - 1) / 2

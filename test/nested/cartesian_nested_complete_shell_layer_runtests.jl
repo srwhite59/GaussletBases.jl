@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested complete shell layer" begin
     (
         basis,

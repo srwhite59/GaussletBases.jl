@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian basis representation for direct-product QW bases" begin
     CP = GaussletBases.CartesianParentGaussletBases
     CCS = GaussletBases.CartesianCarriedSpaces

@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian basis representation for atomic QW residual bases" begin
     fixture = _atomic_hybrid_cartesian_representation_fixture()
     operators = fixture.full_ops

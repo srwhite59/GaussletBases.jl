@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic legacy-profile nested contract" begin
     basis, sequence, diagnostics, ownership = _one_center_atomic_legacy_profile_contract_fixture()
     common_contract = GaussletBases._nested_glass_box_contract(diagnostics)

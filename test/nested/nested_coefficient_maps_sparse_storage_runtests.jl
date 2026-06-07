@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Nested coefficient maps support sparse storage" begin
     basis = build_basis(
         MappedUniformBasisSpec(

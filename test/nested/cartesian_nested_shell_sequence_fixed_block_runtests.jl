@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested shell sequence fixed-block" begin
     (
         basis,

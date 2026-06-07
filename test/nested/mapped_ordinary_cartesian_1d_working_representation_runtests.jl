@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Mapped ordinary Cartesian 1D working representation uses localized Gaussian contract" begin
     mapping = white_lindsey_atomic_mapping(Z = 2.0, d = 0.2, tail_spacing = 10.0)
     basis_a = build_basis(

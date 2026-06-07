@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic factorized direct packet kernel" begin
     basis = build_basis(
         MappedUniformBasisSpec(

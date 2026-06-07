@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian contracted parent metric packet" begin
     CP = GaussletBases.CartesianParentGaussletBases
     CCP = GaussletBases.CartesianContractedParents

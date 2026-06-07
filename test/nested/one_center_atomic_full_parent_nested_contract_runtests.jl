@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic full-parent nested contract" begin
     basis, sequence, audit = _one_center_atomic_full_parent_contract_fixture()
     count = length(basis)

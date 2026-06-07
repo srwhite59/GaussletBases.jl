@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian basis bundle overlap and projector" begin
     square_basis, _square_source, square_fixed_block, _square_diagnostics =
         _axis_aligned_homonuclear_square_lattice_nested_fixture()

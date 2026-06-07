@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic ns=9 legacy-profile residual stabilization closes center-extraction failure" begin
     if !_RUN_SLOW_TESTS
         @test true

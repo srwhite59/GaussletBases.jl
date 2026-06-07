@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested fixed-block QW-PGDG adapter" begin
     CCS = GaussletBases.CartesianCarriedSpaces
     QWCS = GaussletBases.CartesianQWOperatorCarriedSpaces

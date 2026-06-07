@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Bond-aligned diatomic atom-growth construction plan" begin
     parent29 = (1:29, 1:29, 1:29)
     anatomy29 = GaussletBases._nested_bond_aligned_diatomic_atom_growth_anatomy(

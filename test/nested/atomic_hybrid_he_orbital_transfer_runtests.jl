@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Atomic hybrid He orbital transfer remains stable across same-parent different-final-contraction change" begin
     fixture = _atomic_hybrid_he_same_parent_stress_fixture()
 

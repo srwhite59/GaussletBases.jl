@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Atomic direct-product He extent change is not an outer-only identity" begin
     fixture = _atomic_direct_product_he_extent_change_contract_fixture()
 

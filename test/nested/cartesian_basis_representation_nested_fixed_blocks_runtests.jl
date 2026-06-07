@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian basis representation for nested fixed blocks" begin
     CP = GaussletBases.CartesianParentGaussletBases
     CCP = GaussletBases.CartesianContractedParents

@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "One-center atomic legacy-profile residual completion contract" begin
     if !_RUN_SLOW_TESTS
         @test true

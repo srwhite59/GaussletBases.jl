@@ -1,3 +1,5 @@
+# Integration/slow test. Do not include in default nested runner.
+
 @testset "Cartesian nested endcap-panel owned shell producer" begin
     function _owned_unit_test_bundle(count::Int)
         xmax = 8.0

@@ -2958,6 +2958,9 @@ end
 
 if _test_group_enabled(:nested)
     include(joinpath(@__DIR__, "nested", "runtests.jl"))
+    if _RUN_SLOW_TESTS
+        include(joinpath(@__DIR__, "nested", "integration_runtests.jl"))
+    end
 end
 
 if _test_group_enabled(:ordinary)
