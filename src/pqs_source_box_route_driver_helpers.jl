@@ -7338,7 +7338,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             terminal_shellification_lw_complete_shell_cpb_family_counts =
                 (facet_cpb = 0, edge_cpb = 0, corner_cpb = 0),
             terminal_shellification_final_retained_unit_inventory_available = false,
-            terminal_shellification_pair_inventory_available = false,
             terminal_shellification_transform_contracts_available = false,
             terminal_shellification_transform_materialization_status =
                 :not_available,
@@ -7490,9 +7489,6 @@ function _pqs_source_box_route_driver_transform_stage_low_order_summary(units)
             low_order_units,
             terminal_shellification_transforms_selected,
         )...,
-        terminal_shellification_pair_inventory_available =
-            terminal_shellification_transforms_selected &&
-            low_order_units.terminal_shellification_pair_inventory_available,
         terminal_shellification_transform_contracts_available = false,
         terminal_shellification_transform_materialization_status,
         coefficient_transforms_materialized = false,
