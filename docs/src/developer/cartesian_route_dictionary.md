@@ -54,6 +54,7 @@ CartesianShellification
 -> PQS/PQS raw source-space safe-term pilot
 -> PQS source-to-shell-realization bridge summaries
 -> metadata-only final PQS pair-block readiness summaries
+-> metadata-only LW boundary-stratum adapter preflight
 -> future shell realization and final pair-block materialization
 -> future assembly
 ```
@@ -101,6 +102,16 @@ or batch PQS source shell-realization bridge summaries and reports whether a
 future final retained PQS pair block could be attempted. Current summaries are
 blocked by `:shell_realization_not_materialized`, and blocked bridge summaries
 propagate their blockers.
+
+For White--Lindsey boundary-stratum retained-unit pairs,
+`CartesianPairBlockMaterialization` now recognizes the pair-operator
+`:white_lindsey_boundary_stratum_adapter_path` as the metadata-only
+`:white_lindsey_boundary_stratum_adapter_preflight`. Current readiness is
+blocked by
+`:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`. This is
+adapter-boundary metadata only: no LW numerical blocks, coefficient maps,
+doside transforms, Hamiltonians, exports, artifacts, IDA/MWG data, or Coulomb
+are built.
 
 ### Why “lowering”?
 
@@ -247,6 +258,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **PQS source-space block**          | A raw source-mode block for a PQS/PQS safe one-body term, built from caller-supplied 1D source factors. | Not a final shell-realized PQS pair block.                       |
 | **PQS source shell-realization bridge summary** | Metadata-only summary describing how a PQS source-space block or batch can later be consumed by shell realization. | It records keys, source-mode facts, statuses, blockers, paths, and flags; it builds no shell projection, Lowdin, final pair block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
+| **LW boundary-stratum adapter preflight** | Metadata-only pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` and currently blocks on `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`; builds no LW numerical block, coefficient map, doside transform, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **PQS source safe-term descriptor** | Private local metadata in `CartesianPairBlockMaterialization` for supported PQS source safe one-body terms. | Selector/code-organization helper only, not public API or route behavior. |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |

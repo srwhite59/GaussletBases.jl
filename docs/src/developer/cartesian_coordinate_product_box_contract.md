@@ -486,7 +486,8 @@ ShellificationRegion Ω
 -> retained-unit transform contracts
 -> unit pairs
 -> pair operator plans
--> pair-block materialization preflight/direct-direct and PQS source pilots
+-> pair-block materialization direct-direct and PQS source pilots
+-> pair-block materialization LW boundary-stratum adapter preflight
 -> final pair-block assembly
 -> assembly
 ```
@@ -531,3 +532,13 @@ single or batch bridge summaries and currently blocks on
 Lowdin, final retained blocks, Hamiltonians, exports, artifacts, IDA/MWG data,
 or Coulomb. Broader PQS, White--Lindsey, Coulomb/IDA, and Hamiltonian assembly
 remain future work.
+
+For low-order White--Lindsey boundary-stratum retained-unit pairs, pair-block
+materialization now recognizes `:white_lindsey_boundary_stratum_adapter_path`
+as metadata-only
+`:white_lindsey_boundary_stratum_adapter_preflight`. Current readiness is
+blocked by
+`:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`. This is
+only an adapter-boundary checkpoint; it does not build LW numerical blocks,
+coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
+IDA/MWG data, or Coulomb.

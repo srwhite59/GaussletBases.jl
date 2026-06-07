@@ -42,7 +42,7 @@ CartesianCPB
 -> CartesianRetainedUnitTransformContracts
 -> CartesianUnitPairs
 -> CartesianPairOperatorPlans
--> CartesianPairBlockMaterialization preflight/direct-direct and PQS source pilots
+-> CartesianPairBlockMaterialization preflight/direct-direct, PQS source, and LW adapter checkpoints
 ```
 
 `CartesianRawProductSources` is the side module for raw product source-box
@@ -64,7 +64,9 @@ It must not infer realization paths directly from retained-unit kinds.
 - metadata-only PQS source-to-shell-realization bridge summaries for single
   source results and batches;
 - metadata-only final PQS pair-block readiness summaries over those bridge
-  summaries.
+  summaries;
+- metadata-only White--Lindsey boundary-stratum adapter preflight
+  classification.
 
 The PQS helpers materialize source-space blocks only. They consume ready
 `:pqs_source_pair_preflight` records and caller-supplied 1D source factors,
@@ -91,6 +93,16 @@ At the current checkpoint the expected status remains blocked by
 own blockers. This helper is metadata-only and does not build shell projection,
 Lowdin data, final retained PQS pair blocks, Hamiltonians, exports, artifacts,
 IDA/MWG data, or Coulomb blocks.
+
+For White--Lindsey boundary-stratum pairs,
+`CartesianPairBlockMaterialization` now recognizes pair-operator records whose
+source-operator path is `:white_lindsey_boundary_stratum_adapter_path`. The
+metadata-only preflight materialization path is
+`:white_lindsey_boundary_stratum_adapter_preflight`; current readiness remains
+blocked by `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`.
+This is adapter-boundary metadata only. It does not build LW numerical blocks,
+coefficient maps, doside transforms, Hamiltonians, exports, artifacts, IDA/MWG
+data, or Coulomb.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
