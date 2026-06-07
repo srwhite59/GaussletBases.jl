@@ -25,42 +25,12 @@ function direct_direct_x2_block(
         axis === :x ? (x2_x, overlap_y, overlap_z) :
         axis === :y ? (overlap_x, x2_y, overlap_z) :
         (overlap_x, overlap_y, x2_z)
-
-    left_cpb = _direct_source_cpb(record, :left)
-    right_cpb = _direct_source_cpb(record, :right)
-    _assert_cpb_inside_parent(left_cpb, axis_counts, :left)
-    _assert_cpb_inside_parent(right_cpb, axis_counts, :right)
-
-    left_states = _cpb_support_states(left_cpb)
-    right_states = _cpb_support_states(right_cpb)
-    block = Matrix{Float64}(undef, length(left_states), length(right_states))
-    _fill_direct_direct_overlap_block!(
-        block,
-        left_states,
-        right_states,
-        operator_x,
-        operator_y,
-        operator_z,
-    )
-
-    return PairBlockMaterializationResult(
+    return _direct_direct_product_result(
+        record,
         term,
-        record.pair_key,
-        block,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        (;
-            materialization_path = record.materialization_path,
-            readiness_status_before_materialization = record.readiness_status,
-            parent_axis_counts = axis_counts,
-            x2_axis = axis,
-            left_source_shape = CPB.shape(left_cpb),
-            right_source_shape = CPB.shape(right_cpb),
-        ),
+        axis_counts,
+        (operator_x, operator_y, operator_z),
+        (; x2_axis = axis),
     )
 end
 
@@ -78,46 +48,19 @@ function direct_direct_x2_blocks(
     x2_1d,
 )
     term = _x2_term(axis)
-    results = PairBlockMaterializationResult[]
-    skipped = NamedTuple[]
-
-    for record in pair_block_materialization_records(plan)
-        if _is_ready_direct_direct_overlap_record(record)
-            push!(
-                results,
-                direct_direct_x2_block(
-                    record;
-                    axis,
-                    parent_axis_counts,
-                    overlap_1d,
-                    x2_1d,
-                ),
-            )
-        else
-            push!(skipped, _skipped_x2_record_summary(record))
-        end
-    end
-
-    result_tuple = Tuple(results)
-    skipped_tuple = Tuple(skipped)
-    any_materialized = !isempty(result_tuple)
-    return PairBlockMaterializationBatchResult(
-        term,
-        result_tuple,
-        skipped_tuple,
-        length(result_tuple),
-        length(skipped_tuple),
-        any_materialized,
-        any_materialized,
-        any_materialized,
-        false,
-        false,
-        false,
-        (;
-            materialization_path = :ready_direct_direct_x2_blocks_only,
-            x2_axis = axis,
-            pair_block_record_count = length(pair_block_materialization_records(plan)),
+    return _direct_direct_batch_results(
+        record -> direct_direct_x2_block(
+            record;
+            axis,
+            parent_axis_counts,
+            overlap_1d,
+            x2_1d,
         ),
+        plan,
+        term,
+        :ready_direct_direct_x2_blocks_only,
+        _skipped_x2_record_summary,
+        (; x2_axis = axis),
     )
 end
 

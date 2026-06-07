@@ -16,41 +16,12 @@ function direct_direct_overlap_block(
     axis_counts = _axis_counts_tuple(parent_axis_counts)
     overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
     _assert_overlap_axis_sizes((overlap_x, overlap_y, overlap_z), axis_counts)
-
-    left_cpb = _direct_source_cpb(record, :left)
-    right_cpb = _direct_source_cpb(record, :right)
-    _assert_cpb_inside_parent(left_cpb, axis_counts, :left)
-    _assert_cpb_inside_parent(right_cpb, axis_counts, :right)
-
-    left_states = _cpb_support_states(left_cpb)
-    right_states = _cpb_support_states(right_cpb)
-    block = Matrix{Float64}(undef, length(left_states), length(right_states))
-    _fill_direct_direct_overlap_block!(
-        block,
-        left_states,
-        right_states,
-        overlap_x,
-        overlap_y,
-        overlap_z,
-    )
-
-    return PairBlockMaterializationResult(
+    return _direct_direct_product_result(
+        record,
         :overlap,
-        record.pair_key,
-        block,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        (;
-            materialization_path = record.materialization_path,
-            readiness_status_before_materialization = record.readiness_status,
-            parent_axis_counts = axis_counts,
-            left_source_shape = CPB.shape(left_cpb),
-            right_source_shape = CPB.shape(right_cpb),
-        ),
+        axis_counts,
+        (overlap_x, overlap_y, overlap_z),
+        (;),
     )
 end
 
@@ -66,43 +37,17 @@ function direct_direct_overlap_blocks(
     parent_axis_counts,
     overlap_1d,
 )
-    results = PairBlockMaterializationResult[]
-    skipped = NamedTuple[]
-
-    for record in pair_block_materialization_records(plan)
-        if _is_ready_direct_direct_overlap_record(record)
-            push!(
-                results,
-                direct_direct_overlap_block(
-                    record;
-                    parent_axis_counts,
-                    overlap_1d,
-                ),
-            )
-        else
-            push!(skipped, _skipped_overlap_record_summary(record))
-        end
-    end
-
-    result_tuple = Tuple(results)
-    skipped_tuple = Tuple(skipped)
-    any_materialized = !isempty(result_tuple)
-    return PairBlockMaterializationBatchResult(
-        :overlap,
-        result_tuple,
-        skipped_tuple,
-        length(result_tuple),
-        length(skipped_tuple),
-        any_materialized,
-        any_materialized,
-        any_materialized,
-        false,
-        false,
-        false,
-        (;
-            materialization_path = :ready_direct_direct_overlap_blocks_only,
-            pair_block_record_count = length(pair_block_materialization_records(plan)),
+    return _direct_direct_batch_results(
+        record -> direct_direct_overlap_block(
+            record;
+            parent_axis_counts,
+            overlap_1d,
         ),
+        plan,
+        :overlap,
+        :ready_direct_direct_overlap_blocks_only,
+        _skipped_overlap_record_summary,
+        (;),
     )
 end
 
@@ -132,6 +77,48 @@ function _skipped_overlap_record_summary(record::PairBlockMaterializationRecord)
             isnothing(record.blocker) ?
             :unsupported_direct_direct_overlap_materialization_record :
             record.blocker,
+    )
+end
+
+function _direct_direct_batch_results(
+    materialize_record,
+    plan::PairBlockMaterializationPlan,
+    term::Symbol,
+    materialization_path::Symbol,
+    skipped_summary,
+    metadata,
+)
+    results = PairBlockMaterializationResult[]
+    skipped = NamedTuple[]
+
+    for record in pair_block_materialization_records(plan)
+        if _is_ready_direct_direct_overlap_record(record)
+            push!(results, materialize_record(record))
+        else
+            push!(skipped, skipped_summary(record))
+        end
+    end
+
+    result_tuple = Tuple(results)
+    skipped_tuple = Tuple(skipped)
+    any_materialized = !isempty(result_tuple)
+    return PairBlockMaterializationBatchResult(
+        term,
+        result_tuple,
+        skipped_tuple,
+        length(result_tuple),
+        length(skipped_tuple),
+        any_materialized,
+        any_materialized,
+        any_materialized,
+        false,
+        false,
+        false,
+        merge(
+            (; materialization_path),
+            NamedTuple(metadata),
+            (; pair_block_record_count = length(pair_block_materialization_records(plan))),
+        ),
     )
 end
 
@@ -201,6 +188,57 @@ function _direct_source_cpb(record::PairBlockMaterializationRecord, side::Symbol
     return source_cpb
 end
 
+function _direct_direct_product_result(
+    record::PairBlockMaterializationRecord,
+    term::Symbol,
+    axis_counts::NTuple{3,Int},
+    operator_axes,
+    metadata,
+)
+    _assert_direct_direct_overlap_record(record)
+
+    left_cpb = _direct_source_cpb(record, :left)
+    right_cpb = _direct_source_cpb(record, :right)
+    _assert_cpb_inside_parent(left_cpb, axis_counts, :left)
+    _assert_cpb_inside_parent(right_cpb, axis_counts, :right)
+
+    left_states = _cpb_support_states(left_cpb)
+    right_states = _cpb_support_states(right_cpb)
+    block = Matrix{Float64}(undef, length(left_states), length(right_states))
+    _fill_direct_direct_product_block!(
+        block,
+        left_states,
+        right_states,
+        operator_axes[1],
+        operator_axes[2],
+        operator_axes[3],
+    )
+
+    return PairBlockMaterializationResult(
+        term,
+        record.pair_key,
+        block,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        merge(
+            (;
+                materialization_path = record.materialization_path,
+                readiness_status_before_materialization = record.readiness_status,
+                parent_axis_counts = axis_counts,
+            ),
+            NamedTuple(metadata),
+            (;
+                left_source_shape = CPB.shape(left_cpb),
+                right_source_shape = CPB.shape(right_cpb),
+            ),
+        ),
+    )
+end
+
 function _assert_cpb_inside_parent(
     source_cpb::CPB.CoordinateProductBox,
     axis_counts::NTuple{3,Int},
@@ -219,20 +257,20 @@ function _cpb_support_states(source_cpb::CPB.CoordinateProductBox)
     return Tuple((x, y, z) for x in ix for y in iy for z in iz)
 end
 
-function _fill_direct_direct_overlap_block!(
+function _fill_direct_direct_product_block!(
     block::Matrix{Float64},
     left_states,
     right_states,
-    overlap_x,
-    overlap_y,
-    overlap_z,
+    operator_x,
+    operator_y,
+    operator_z,
 )
     @inbounds for (left_index, left_state) in pairs(left_states)
         lx, ly, lz = left_state
         for (right_index, right_state) in pairs(right_states)
             rx, ry, rz = right_state
             block[left_index, right_index] =
-                Float64(overlap_x[lx, rx] * overlap_y[ly, ry] * overlap_z[lz, rz])
+                Float64(operator_x[lx, rx] * operator_y[ly, ry] * operator_z[lz, rz])
         end
     end
     return block
