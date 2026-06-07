@@ -105,6 +105,12 @@ function _pair_block_materialization_preflight(
         )
     end
 
+    _is_white_lindsey_boundary_stratum_pair_preflight(record) && return (
+        :white_lindsey_boundary_stratum_adapter_preflight,
+        :blocked_white_lindsey_boundary_stratum_adapter_not_available,
+        :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
+    )
+
     return (
         :deferred_pair_block_materialization_path,
         :blocked_pair_block_materialization_not_implemented,
@@ -125,6 +131,19 @@ function _is_pqs_pqs_source_pair_preflight(record::CPOP.PairOperatorPlanRecord)
     return record.left_unit_kind === :pqs_shell_retained_unit &&
            record.right_unit_kind === :pqs_shell_retained_unit &&
            record.source_operator_path === :pqs_source_cpb_1d_factor_path
+end
+
+function _is_white_lindsey_boundary_stratum_pair_preflight(
+    record::CPOP.PairOperatorPlanRecord,
+)
+    return record.source_operator_path ===
+           :white_lindsey_boundary_stratum_adapter_path &&
+           (
+               record.left_unit_kind ===
+               :white_lindsey_boundary_stratum_retained_unit ||
+               record.right_unit_kind ===
+               :white_lindsey_boundary_stratum_retained_unit
+           )
 end
 
 function _pqs_source_pair_preflight_status(
@@ -227,6 +246,17 @@ function _pair_block_materialization_record_metadata(
         )
     end
 
+    if _is_white_lindsey_boundary_stratum_pair_preflight(record)
+        return merge(
+            base_metadata,
+            _white_lindsey_boundary_stratum_preflight_metadata(
+                record,
+                unit_pair,
+                transform_lookup,
+            ),
+        )
+    end
+
     _is_pqs_pqs_source_pair_preflight(record) ||
         return base_metadata
 
@@ -286,4 +316,54 @@ function _pair_block_materialization_record_metadata(
             final_pair_blocks_materialized = false,
         ),
     )
+end
+
+function _white_lindsey_boundary_stratum_preflight_metadata(
+    record::CPOP.PairOperatorPlanRecord,
+    unit_pair::CUP.UnitPairRecord,
+    transform_lookup,
+)
+    left_contract =
+        _pair_block_transform_contract(transform_lookup, unit_pair.left_unit_key)
+    right_contract =
+        _pair_block_transform_contract(transform_lookup, unit_pair.right_unit_key)
+    return (;
+        transform_contract_keys = (;
+            left = _transform_contract_key(left_contract),
+            right = _transform_contract_key(right_contract),
+        ),
+        source_contract_keys = (;
+            left = _source_contract_key(left_contract),
+            right = _source_contract_key(right_contract),
+        ),
+        left_unit_kind = record.left_unit_kind,
+        right_unit_kind = record.right_unit_kind,
+        left_lowering_kind = unit_pair.left_unit.lowering_kind,
+        right_lowering_kind = unit_pair.right_unit.lowering_kind,
+        left_retained_rule = unit_pair.left_unit.retained_rule,
+        right_retained_rule = unit_pair.right_unit.retained_rule,
+        left_stratum_kind =
+            _retained_unit_metadata_value(unit_pair.left_unit, :stratum_kind),
+        right_stratum_kind =
+            _retained_unit_metadata_value(unit_pair.right_unit, :stratum_kind),
+        left_source_cpb_count = length(unit_pair.left_unit.source_cpbs),
+        right_source_cpb_count = length(unit_pair.right_unit.source_cpbs),
+        left_source_cpb_roles = _source_cpb_roles(unit_pair.left_unit.source_cpbs),
+        right_source_cpb_roles = _source_cpb_roles(unit_pair.right_unit.source_cpbs),
+        transform_paths = record.transform_path,
+        realization_paths = record.realization_path,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
+function _retained_unit_metadata_value(unit, key::Symbol, default = nothing)
+    return haskey(unit.metadata, key) ? getfield(unit.metadata, key) : default
+end
+
+function _source_cpb_roles(source_cpbs)
+    return Tuple(CPB.role(source_cpb) for source_cpb in source_cpbs)
 end

@@ -290,6 +290,65 @@ function _pair_block_mixed_pqs_retained_plan()
     )
 end
 
+function _pair_block_white_lindsey_retained_plan()
+    left_source = CPBForPairBlocks.slab_cpb(
+        1:1,
+        1:3,
+        1:3;
+        role = :pair_block_lw_left_facet_source_cpb,
+        metadata = (; stratum_kind = :facet_cpb, source_cpb_index = 1),
+    )
+    right_source = CPBForPairBlocks.cpb(
+        4:4,
+        2:2,
+        1:3;
+        role = :pair_block_lw_right_edge_source_cpb,
+        metadata = (; stratum_kind = :edge_cpb, source_cpb_index = 2),
+    )
+    left_lw = _pair_block_retained_unit(
+        :pair_block_lw_left_unit,
+        1,
+        :white_lindsey_boundary_stratum_retained_unit,
+        :white_lindsey_boundary_strata,
+        :white_lindsey_boundary_stratum_product,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(left_source),
+        source_cpbs = (left_source,),
+        source_cpb_index = 1,
+        metadata = (; stratum_kind = :facet_cpb, source_cpb_index = 1),
+    )
+    right_lw = _pair_block_retained_unit(
+        :pair_block_lw_right_unit,
+        2,
+        :white_lindsey_boundary_stratum_retained_unit,
+        :white_lindsey_boundary_strata,
+        :white_lindsey_boundary_stratum_product,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(right_source),
+        source_cpbs = (right_source,),
+        source_cpb_index = 2,
+        metadata = (; stratum_kind = :edge_cpb, source_cpb_index = 2),
+    )
+    units = (left_lw, right_lw)
+    return CRUForPairBlocks.RetainedUnitPlan(
+        CRUForPairBlocks.MetadataOnlyRetainedUnits(),
+        _pair_block_minimal_lowering_plan(),
+        units,
+        (;
+            object_kind = :synthetic_retained_unit_plan_summary,
+            status = :available_retained_unit_plan,
+            retained_unit_count = length(units),
+            materialized = false,
+            transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            pair_inventory_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+        (; fixture = :cartesian_pair_block_white_lindsey_boundary_strata),
+    )
+end
+
 function _pair_block_transform_contract_with_metadata(contract, metadata)
     return CRTCForPairBlocks.RetainedUnitTransformContract(
         contract.unit_key,
@@ -898,6 +957,89 @@ end
     @test !materialization_summary.operator_blocks_materialized
     @test !materialization_summary.hamiltonian_data_materialized
     @test !materialization_summary.artifacts_materialized
+end
+
+@testset "CartesianPairBlockMaterialization White-Lindsey boundary-stratum preflight" begin
+    retained_plan = _pair_block_white_lindsey_retained_plan()
+    unit_pair_plan = CUPForPairBlocks.unit_pair_plan(retained_plan)
+    transform_plan =
+        CRTCForPairBlocks.retained_unit_transform_contract_plan(retained_plan)
+    pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            transform_plan;
+            route_core_sidecars = false,
+        )
+    materialization_plan =
+        CPBM.pair_block_materialization_plan(pair_operator_plan)
+    materialization_summary = CPBM.summary(materialization_plan)
+
+    @test length(CPBM.pair_block_materialization_records(materialization_plan)) == 3
+    @test materialization_summary.status == :blocked_pair_block_materialization_plan
+    @test materialization_summary.ready_record_count == 0
+    @test materialization_summary.blocked_record_count == 3
+    @test _pair_block_count(
+        materialization_summary.materialization_path_counts,
+        :materialization_path,
+        :white_lindsey_boundary_stratum_adapter_preflight,
+    ) == 3
+    @test _pair_block_count(
+        materialization_summary.readiness_status_counts,
+        :readiness_status,
+        :blocked_white_lindsey_boundary_stratum_adapter_not_available,
+    ) == 3
+    @test _pair_block_count(
+        materialization_summary.blocker_counts,
+        :blocker,
+        :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
+    ) == 3
+
+    lw_cross_record = _pair_block_record_for(
+        materialization_plan,
+        :pair_block_lw_left_unit,
+        :pair_block_lw_right_unit,
+    )
+    @test lw_cross_record.source_operator_path ==
+          :white_lindsey_boundary_stratum_adapter_path
+    @test lw_cross_record.materialization_path ==
+          :white_lindsey_boundary_stratum_adapter_preflight
+    @test lw_cross_record.readiness_status ==
+          :blocked_white_lindsey_boundary_stratum_adapter_not_available
+    @test lw_cross_record.blocker ==
+          :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized
+    @test lw_cross_record.transform_path.left ==
+          :white_lindsey_boundary_stratum_product_contract
+    @test lw_cross_record.transform_path.right ==
+          :white_lindsey_boundary_stratum_product_contract
+    @test lw_cross_record.realization_path.left == :identity_or_trivial_embedding
+    @test lw_cross_record.realization_path.right == :identity_or_trivial_embedding
+    @test lw_cross_record.final_block_path == :source_block_direct_to_final_block
+    @test lw_cross_record.metadata.transform_contract_keys.left ==
+          :pair_block_lw_left_unit
+    @test lw_cross_record.metadata.transform_contract_keys.right ==
+          :pair_block_lw_right_unit
+    @test lw_cross_record.metadata.source_contract_keys.left ==
+          :pair_block_lw_left_unit_contract
+    @test lw_cross_record.metadata.source_contract_keys.right ==
+          :pair_block_lw_right_unit_contract
+    @test lw_cross_record.metadata.left_unit_kind ==
+          :white_lindsey_boundary_stratum_retained_unit
+    @test lw_cross_record.metadata.right_unit_kind ==
+          :white_lindsey_boundary_stratum_retained_unit
+    @test lw_cross_record.metadata.left_stratum_kind == :facet_cpb
+    @test lw_cross_record.metadata.right_stratum_kind == :edge_cpb
+    @test lw_cross_record.metadata.left_source_cpb_count == 1
+    @test lw_cross_record.metadata.right_source_cpb_count == 1
+    @test lw_cross_record.metadata.left_source_cpb_roles ==
+          (:pair_block_lw_left_facet_source_cpb,)
+    @test lw_cross_record.metadata.right_source_cpb_roles ==
+          (:pair_block_lw_right_edge_source_cpb,)
+    @test !lw_cross_record.materialized
+    @test !lw_cross_record.metadata.source_operator_blocks_materialized
+    @test !lw_cross_record.metadata.final_pair_blocks_materialized
+    @test !lw_cross_record.metadata.operator_blocks_materialized
+    @test !lw_cross_record.metadata.hamiltonian_data_materialized
+    @test !lw_cross_record.metadata.artifacts_materialized
 end
 
 @testset "CartesianPairBlockMaterialization PQS source-pair preflight" begin
