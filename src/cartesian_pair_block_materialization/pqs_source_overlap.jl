@@ -1,4 +1,4 @@
-# First tiny PQS/PQS raw source-space overlap pilot.
+# Tiny PQS/PQS raw source-space safe-term pilots.
 
 """
     pqs_source_pair_overlap_block(record; overlap_1d)
@@ -12,16 +12,108 @@ function pqs_source_pair_overlap_block(
     record::PairBlockMaterializationRecord;
     overlap_1d,
 )
-    _assert_pqs_source_pair_overlap_record(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    return _pqs_source_pair_product_result(
+        record,
+        :source_overlap,
+        overlap_axes,
+        (;),
+    )
+end
+
+"""
+    pqs_source_pair_position_block(record; axis, overlap_1d, position_1d)
+
+Materialize one PQS/PQS raw source-space position block for
+`axis in (:x, :y, :z)` from explicit 1D source-mode factors. This remains
+before shell projection, Lowdin realization, and final retained pair blocks.
+"""
+function pqs_source_pair_position_block(
+    record::PairBlockMaterializationRecord;
+    axis,
+    overlap_1d,
+    position_1d,
+)
+    source_term = _source_position_term(axis)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    position_x, position_y, position_z =
+        _operator_1d_tuple(position_1d, "position_1d")
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    position_axes = (position_x, position_y, position_z)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    _assert_pqs_source_axis_sizes(position_axes, left_dims, right_dims, "position_1d")
+
+    operator_axes =
+        axis === :x ? (position_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, position_y, overlap_z) :
+        (overlap_x, overlap_y, position_z)
+    return _pqs_source_pair_product_result(
+        record,
+        source_term,
+        operator_axes,
+        (; position_axis = axis),
+    )
+end
+
+"""
+    pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
+
+Materialize one PQS/PQS raw source-space x2 block for
+`axis in (:x, :y, :z)` from explicit 1D source-mode factors. This remains
+before shell projection, Lowdin realization, and final retained pair blocks.
+"""
+function pqs_source_pair_x2_block(
+    record::PairBlockMaterializationRecord;
+    axis,
+    overlap_1d,
+    x2_1d,
+)
+    source_term = _source_x2_term(axis)
+    left_dims, right_dims = _pqs_source_pair_dims(record)
+    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
+    x2_x, x2_y, x2_z = _operator_1d_tuple(x2_1d, "x2_1d")
+    overlap_axes = (overlap_x, overlap_y, overlap_z)
+    x2_axes = (x2_x, x2_y, x2_z)
+    _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
+    _assert_pqs_source_axis_sizes(x2_axes, left_dims, right_dims, "x2_1d")
+
+    operator_axes =
+        axis === :x ? (x2_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, x2_y, overlap_z) :
+        (overlap_x, overlap_y, x2_z)
+    return _pqs_source_pair_product_result(
+        record,
+        source_term,
+        operator_axes,
+        (; x2_axis = axis),
+    )
+end
+
+function _source_position_term(axis)
+    return Symbol(:source_, _position_term(axis))
+end
+
+function _source_x2_term(axis)
+    return Symbol(:source_, _x2_term(axis))
+end
+
+function _pqs_source_pair_product_result(
+    record::PairBlockMaterializationRecord,
+    term::Symbol,
+    operator_axes,
+    metadata,
+)
+    _assert_pqs_source_pair_record(record)
 
     left_dims = _pqs_source_mode_dims(record, :left)
     right_dims = _pqs_source_mode_dims(record, :right)
     left_count = _pqs_source_mode_count(record, :left, left_dims)
     right_count = _pqs_source_mode_count(record, :right, right_dims)
     ordering = _pqs_source_mode_ordering(record)
-    overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
-    overlap_axes = (overlap_x, overlap_y, overlap_z)
-    _assert_pqs_source_overlap_axis_sizes(overlap_axes, left_dims, right_dims)
 
     left_modes = CRPS.source_mode_indices(left_dims; source_mode_ordering = ordering)
     right_modes = CRPS.source_mode_indices(right_dims; source_mode_ordering = ordering)
@@ -31,17 +123,17 @@ function pqs_source_pair_overlap_block(
         throw(ArgumentError("right source-mode count does not match right source-mode dims"))
 
     block = Matrix{Float64}(undef, left_count, right_count)
-    _fill_direct_direct_product_block!(
+    _fill_source_mode_product_block!(
         block,
         left_modes,
         right_modes,
-        overlap_axes[1],
-        overlap_axes[2],
-        overlap_axes[3],
+        operator_axes[1],
+        operator_axes[2],
+        operator_axes[3],
     )
 
     return PairBlockMaterializationResult(
-        :source_overlap,
+        term,
         record.pair_key,
         block,
         true,
@@ -50,39 +142,54 @@ function pqs_source_pair_overlap_block(
         false,
         false,
         false,
-        (;
-            materialization_path = record.materialization_path,
-            readiness_status_before_materialization = record.readiness_status,
-            block_space = :raw_product_source_modes,
-            source_mode_ordering = ordering,
-            left_source_mode_dims = left_dims,
-            right_source_mode_dims = right_dims,
-            left_source_mode_count = left_count,
-            right_source_mode_count = right_count,
-            source_operator_blocks_materialized = true,
-            final_pair_blocks_materialized = false,
-            operator_blocks_materialized = false,
-            hamiltonian_data_materialized = false,
-            artifacts_materialized = false,
+        merge(
+            (;
+                materialization_path = record.materialization_path,
+                readiness_status_before_materialization = record.readiness_status,
+                block_space = :raw_product_source_modes,
+                source_mode_ordering = ordering,
+                left_source_mode_dims = left_dims,
+                right_source_mode_dims = right_dims,
+                left_source_mode_count = left_count,
+                right_source_mode_count = right_count,
+                source_operator_blocks_materialized = true,
+                final_pair_blocks_materialized = false,
+                operator_blocks_materialized = false,
+                hamiltonian_data_materialized = false,
+                artifacts_materialized = false,
+            ),
+            NamedTuple(metadata),
         ),
     )
 end
 
 function _assert_pqs_source_pair_overlap_record(record::PairBlockMaterializationRecord)
+    return _assert_pqs_source_pair_record(record)
+end
+
+function _assert_pqs_source_pair_record(record::PairBlockMaterializationRecord)
     record.materialization_path === :pqs_source_pair_preflight ||
-        throw(ArgumentError("PQS source overlap requires a PQS source-pair preflight record"))
+        throw(ArgumentError("PQS source block requires a PQS source-pair preflight record"))
     record.readiness_status === :ready_metadata_only_not_materialized ||
         throw(
             ArgumentError(
-                "PQS source overlap requires a ready metadata-only PQS source-pair preflight record",
+                "PQS source block requires a ready metadata-only PQS source-pair preflight record",
             ),
         )
     isnothing(record.blocker) ||
-        throw(ArgumentError("PQS source overlap record is blocked"))
+        throw(ArgumentError("PQS source block record is blocked"))
     _pqs_source_mode_ordering(record)
     _pqs_source_mode_dims(record, :left)
     _pqs_source_mode_dims(record, :right)
     return nothing
+end
+
+function _pqs_source_pair_dims(record::PairBlockMaterializationRecord)
+    _assert_pqs_source_pair_record(record)
+    return (
+        _pqs_source_mode_dims(record, :left),
+        _pqs_source_mode_dims(record, :right),
+    )
 end
 
 function _pqs_source_mode_dims(record::PairBlockMaterializationRecord, side::Symbol)
@@ -91,10 +198,10 @@ function _pqs_source_mode_dims(record::PairBlockMaterializationRecord, side::Sym
         side === :right ? :right_source_mode_dims :
         throw(ArgumentError("PQS source side must be :left or :right"))
     haskey(record.metadata, key) ||
-        throw(ArgumentError("PQS source overlap record is missing $(key)"))
+        throw(ArgumentError("PQS source block record is missing $(key)"))
     dims = getfield(record.metadata, key)
     isnothing(dims) &&
-        throw(ArgumentError("PQS source overlap record has unavailable $(key)"))
+        throw(ArgumentError("PQS source block record has unavailable $(key)"))
     return _pqs_source_mode_dims_tuple(dims, String(key))
 end
 
@@ -121,7 +228,7 @@ function _pqs_source_mode_count(
         side === :right ? :right_source_mode_count :
         throw(ArgumentError("PQS source side must be :left or :right"))
     haskey(record.metadata, key) ||
-        throw(ArgumentError("PQS source overlap record is missing $(key)"))
+        throw(ArgumentError("PQS source block record is missing $(key)"))
     count = getfield(record.metadata, key)
     count isa Integer ||
         throw(ArgumentError("$(key) must be an integer"))
@@ -133,10 +240,10 @@ end
 
 function _pqs_source_mode_ordering(record::PairBlockMaterializationRecord)
     haskey(record.metadata, :source_mode_ordering) ||
-        throw(ArgumentError("PQS source overlap record is missing source_mode_ordering"))
+        throw(ArgumentError("PQS source block record is missing source_mode_ordering"))
     ordering = record.metadata.source_mode_ordering
     ordering isa Symbol ||
-        throw(ArgumentError("PQS source overlap record has unavailable source_mode_ordering"))
+        throw(ArgumentError("PQS source block record has unavailable source_mode_ordering"))
     left_ordering =
         haskey(record.metadata, :left_source_mode_ordering) ?
         record.metadata.left_source_mode_ordering :
@@ -146,8 +253,29 @@ function _pqs_source_mode_ordering(record::PairBlockMaterializationRecord)
         record.metadata.right_source_mode_ordering :
         ordering
     left_ordering === ordering && right_ordering === ordering ||
-        throw(ArgumentError("PQS source overlap requires compatible source-mode ordering"))
+        throw(ArgumentError("PQS source block requires compatible source-mode ordering"))
     return ordering
+end
+
+function _assert_pqs_source_axis_sizes(
+    overlap_axes,
+    left_dims::NTuple{3,Int},
+    right_dims::NTuple{3,Int},
+    name::AbstractString,
+)
+    axis_names = (:x, :y, :z)
+    for axis_index in 1:3
+        overlap = overlap_axes[axis_index]
+        overlap isa AbstractMatrix{<:Real} ||
+            throw(ArgumentError("$(name) entries must be real matrices"))
+        size(overlap) == (left_dims[axis_index], right_dims[axis_index]) ||
+            throw(
+                ArgumentError(
+                    "$(name).$(axis_names[axis_index]) has incompatible source-mode size",
+                ),
+            )
+    end
+    return nothing
 end
 
 function _assert_pqs_source_overlap_axis_sizes(
@@ -155,17 +283,5 @@ function _assert_pqs_source_overlap_axis_sizes(
     left_dims::NTuple{3,Int},
     right_dims::NTuple{3,Int},
 )
-    axis_names = (:x, :y, :z)
-    for axis_index in 1:3
-        overlap = overlap_axes[axis_index]
-        overlap isa AbstractMatrix{<:Real} ||
-            throw(ArgumentError("overlap_1d entries must be real matrices"))
-        size(overlap) == (left_dims[axis_index], right_dims[axis_index]) ||
-            throw(
-                ArgumentError(
-                    "overlap_1d.$(axis_names[axis_index]) has incompatible source-mode size",
-                ),
-            )
-    end
-    return nothing
+    return _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
 end

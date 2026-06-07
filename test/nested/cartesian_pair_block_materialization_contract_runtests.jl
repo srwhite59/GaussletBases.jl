@@ -397,13 +397,45 @@ function _pair_block_pqs_source_overlap_axes(left_dims, right_dims)
     return overlap_x, overlap_y, overlap_z
 end
 
-function _pair_block_expected_source_overlap(
+function _pair_block_pqs_source_position_axes(left_dims, right_dims)
+    position_x = [
+        Float64(20 * lx + 5 * rx)
+        for lx in 1:left_dims[1], rx in 1:right_dims[1]
+    ]
+    position_y = [
+        Float64(200 * ly + 7 * ry)
+        for ly in 1:left_dims[2], ry in 1:right_dims[2]
+    ]
+    position_z = [
+        Float64(2000 * lz + 11 * rz)
+        for lz in 1:left_dims[3], rz in 1:right_dims[3]
+    ]
+    return position_x, position_y, position_z
+end
+
+function _pair_block_pqs_source_x2_axes(left_dims, right_dims)
+    x2_x = [
+        Float64(30 * lx + 13 * rx)
+        for lx in 1:left_dims[1], rx in 1:right_dims[1]
+    ]
+    x2_y = [
+        Float64(300 * ly + 17 * ry)
+        for ly in 1:left_dims[2], ry in 1:right_dims[2]
+    ]
+    x2_z = [
+        Float64(3000 * lz + 19 * rz)
+        for lz in 1:left_dims[3], rz in 1:right_dims[3]
+    ]
+    return x2_x, x2_y, x2_z
+end
+
+function _pair_block_expected_source_product(
     left_dims,
     right_dims,
     source_mode_ordering,
-    overlap_x,
-    overlap_y,
-    overlap_z,
+    operator_x,
+    operator_y,
+    operator_z,
 )
     left_modes = CRPSForPairBlocks.source_mode_indices(
         left_dims;
@@ -414,11 +446,81 @@ function _pair_block_expected_source_overlap(
         source_mode_ordering,
     )
     return [
-        overlap_x[left[1], right[1]] *
-        overlap_y[left[2], right[2]] *
-        overlap_z[left[3], right[3]]
+        operator_x[left[1], right[1]] *
+        operator_y[left[2], right[2]] *
+        operator_z[left[3], right[3]]
         for left in left_modes, right in right_modes
     ]
+end
+
+function _pair_block_expected_source_overlap(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+)
+    return _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        overlap_x,
+        overlap_y,
+        overlap_z,
+    )
+end
+
+function _pair_block_expected_source_position(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    axis,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    position_x,
+    position_y,
+    position_z,
+)
+    operator_x, operator_y, operator_z =
+        axis === :x ? (position_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, position_y, overlap_z) :
+        (overlap_x, overlap_y, position_z)
+    return _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
+end
+
+function _pair_block_expected_source_x2(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    axis,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    x2_x,
+    x2_y,
+    x2_z,
+)
+    operator_x, operator_y, operator_z =
+        axis === :x ? (x2_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, x2_y, overlap_z) :
+        (overlap_x, overlap_y, x2_z)
+    return _pair_block_expected_source_product(
+        left_dims,
+        right_dims,
+        source_mode_ordering,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
 end
 
 function _pair_block_expected_position(
@@ -768,6 +870,95 @@ end
     @test pqs_overlap_result.metadata.source_operator_blocks_materialized
     @test !pqs_overlap_result.metadata.final_pair_blocks_materialized
 
+    pqs_position_x, pqs_position_y, pqs_position_z =
+        _pair_block_pqs_source_position_axes(left_source_dims, right_source_dims)
+    pqs_x2_x, pqs_x2_y, pqs_x2_z =
+        _pair_block_pqs_source_x2_axes(left_source_dims, right_source_dims)
+
+    for axis in (:x, :y, :z)
+        position_overlap_1d =
+            axis === :y ?
+            (pqs_overlap_x, pqs_overlap_y, pqs_overlap_z) :
+            (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z)
+        position_1d =
+            axis === :y ?
+            (pqs_position_x, pqs_position_y, pqs_position_z) :
+            (; x = pqs_position_x, y = pqs_position_y, z = pqs_position_z)
+        position_result = CPBM.pqs_source_pair_position_block(
+            pqs_cross_record;
+            axis,
+            overlap_1d = position_overlap_1d,
+            position_1d,
+        )
+        expected_position = _pair_block_expected_source_position(
+            left_source_dims,
+            right_source_dims,
+            pqs_cross_record.metadata.source_mode_ordering,
+            axis,
+            pqs_overlap_x,
+            pqs_overlap_y,
+            pqs_overlap_z,
+            pqs_position_x,
+            pqs_position_y,
+            pqs_position_z,
+        )
+
+        @test position_result.term == Symbol(:source_position_, axis)
+        @test size(position_result.block) == (27, 60)
+        @test position_result.block ≈ expected_position
+        @test position_result.materialized
+        @test position_result.source_operator_blocks_materialized
+        @test !position_result.final_pair_blocks_materialized
+        @test !position_result.operator_blocks_materialized
+        @test !position_result.hamiltonian_data_materialized
+        @test !position_result.artifacts_materialized
+        @test position_result.metadata.block_space == :raw_product_source_modes
+        @test position_result.metadata.position_axis == axis
+        @test position_result.metadata.left_source_mode_dims == left_source_dims
+        @test position_result.metadata.right_source_mode_dims == right_source_dims
+        @test position_result.metadata.source_operator_blocks_materialized
+        @test !position_result.metadata.final_pair_blocks_materialized
+
+        x2_1d =
+            axis === :z ?
+            (pqs_x2_x, pqs_x2_y, pqs_x2_z) :
+            (; x = pqs_x2_x, y = pqs_x2_y, z = pqs_x2_z)
+        x2_result = CPBM.pqs_source_pair_x2_block(
+            pqs_cross_record;
+            axis,
+            overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+            x2_1d,
+        )
+        expected_x2 = _pair_block_expected_source_x2(
+            left_source_dims,
+            right_source_dims,
+            pqs_cross_record.metadata.source_mode_ordering,
+            axis,
+            pqs_overlap_x,
+            pqs_overlap_y,
+            pqs_overlap_z,
+            pqs_x2_x,
+            pqs_x2_y,
+            pqs_x2_z,
+        )
+
+        @test x2_result.term == Symbol(:source_x2_, axis)
+        @test size(x2_result.block) == (27, 60)
+        @test x2_result.block ≈ expected_x2
+        @test x2_result.materialized
+        @test x2_result.source_operator_blocks_materialized
+        @test !x2_result.final_pair_blocks_materialized
+        @test !x2_result.operator_blocks_materialized
+        @test !x2_result.hamiltonian_data_materialized
+        @test !x2_result.artifacts_materialized
+        @test x2_result.metadata.block_space == :raw_product_source_modes
+        @test x2_result.metadata.x2_axis == axis
+        @test x2_result.metadata.left_source_mode_dims == left_source_dims
+        @test x2_result.metadata.right_source_mode_dims == right_source_dims
+        @test x2_result.metadata.source_operator_blocks_materialized
+        @test !x2_result.metadata.final_pair_blocks_materialized
+    end
+
     bad_pqs_overlap_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
     @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
         pqs_cross_record;
@@ -776,6 +967,25 @@ end
             y = pqs_overlap_y,
             z = pqs_overlap_z,
         ),
+    )
+    bad_pqs_position_y =
+        zeros(Float64, left_source_dims[2], right_source_dims[2] + 1)
+    @test_throws ArgumentError CPBM.pqs_source_pair_position_block(
+        pqs_cross_record;
+        axis = :x,
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        position_1d = (;
+            x = pqs_position_x,
+            y = bad_pqs_position_y,
+            z = pqs_position_z,
+        ),
+    )
+    bad_pqs_x2_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
+    @test_throws ArgumentError CPBM.pqs_source_pair_x2_block(
+        pqs_cross_record;
+        axis = :x,
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        x2_1d = (; x = bad_pqs_x2_x, y = pqs_x2_y, z = pqs_x2_z),
     )
 
     left_contract, right_contract =
@@ -832,6 +1042,16 @@ end
             z = pqs_overlap_z,
         ),
     )
+    @test_throws ArgumentError CPBM.pqs_source_pair_position_block(
+        missing_cross_record;
+        axis = :x,
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        position_1d = (;
+            x = pqs_position_x,
+            y = pqs_position_y,
+            z = pqs_position_z,
+        ),
+    )
 
     incompatible_right_summary =
         merge(
@@ -883,6 +1103,12 @@ end
             y = pqs_overlap_y,
             z = pqs_overlap_z,
         ),
+    )
+    @test_throws ArgumentError CPBM.pqs_source_pair_x2_block(
+        incompatible_cross_record;
+        axis = :x,
+        overlap_1d = (; x = pqs_overlap_x, y = pqs_overlap_y, z = pqs_overlap_z),
+        x2_1d = (; x = pqs_x2_x, y = pqs_x2_y, z = pqs_x2_z),
     )
 end
 

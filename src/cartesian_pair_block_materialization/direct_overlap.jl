@@ -265,6 +265,24 @@ function _fill_direct_direct_product_block!(
     operator_y,
     operator_z,
 )
+    return _fill_source_mode_product_block!(
+        block,
+        left_states,
+        right_states,
+        operator_x,
+        operator_y,
+        operator_z,
+    )
+end
+
+function _fill_source_mode_product_block!(
+    block::Matrix{Float64},
+    left_states,
+    right_states,
+    operator_x,
+    operator_y,
+    operator_z,
+)
     @inbounds for (left_index, left_state) in pairs(left_states)
         lx, ly, lz = left_state
         for (right_index, right_state) in pairs(right_states)
