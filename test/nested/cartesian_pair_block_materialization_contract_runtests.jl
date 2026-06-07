@@ -1115,6 +1115,108 @@ end
           :unknown_white_lindsey_stratum_kind
     @test isnothing(unknown_stratum_summary.right_planned_kernel)
     @test !unknown_stratum_summary.final_pair_blocks_materialized
+
+    lw_batch_summary =
+        CPBM.white_lindsey_boundary_stratum_adapter_summary(materialization_plan)
+    @test lw_batch_summary.object_kind ==
+          :white_lindsey_boundary_stratum_adapter_batch_summary
+    @test lw_batch_summary.status ==
+          :available_metadata_only_white_lindsey_adapter_reuse_batch
+    @test isnothing(lw_batch_summary.blocker)
+    @test lw_batch_summary.input_record_count == 3
+    @test lw_batch_summary.record_count == 3
+    @test lw_batch_summary.available_count == 3
+    @test lw_batch_summary.blocked_count == 0
+    @test lw_batch_summary.skipped_record_count == 0
+    @test _pair_block_count(
+        lw_batch_summary.status_counts,
+        :status,
+        :blocked_white_lindsey_boundary_stratum_adapter_not_available,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.blocker_counts,
+        :blocker,
+        :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.left_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_face_product,
+    ) == 2
+    @test _pair_block_count(
+        lw_batch_summary.left_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_edge_product,
+    ) == 1
+    @test _pair_block_count(
+        lw_batch_summary.right_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_face_product,
+    ) == 1
+    @test _pair_block_count(
+        lw_batch_summary.right_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_edge_product,
+    ) == 2
+    @test _pair_block_count(
+        lw_batch_summary.all_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_face_product,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.all_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_edge_product,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.stratum_kind_counts,
+        :stratum_kind,
+        :facet_cpb,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.stratum_kind_counts,
+        :stratum_kind,
+        :edge_cpb,
+    ) == 3
+    @test _pair_block_count(
+        lw_batch_summary.shared_1d_helper_counts,
+        :helper,
+        :_nested_doside_1d,
+    ) == 3
+    @test !lw_batch_summary.source_operator_blocks_materialized
+    @test !lw_batch_summary.final_pair_blocks_materialized
+    @test !lw_batch_summary.operator_blocks_materialized
+    @test !lw_batch_summary.hamiltonian_data_materialized
+    @test !lw_batch_summary.artifacts_materialized
+
+    non_lw_retained_plan = _pair_block_retained_plan()
+    non_lw_plan =
+        CPBM.pair_block_materialization_plan(
+            CPOPForPairBlocks.pair_operator_plan(
+                CUPForPairBlocks.unit_pair_plan(non_lw_retained_plan),
+                CRTCForPairBlocks.retained_unit_transform_contract_plan(
+                    non_lw_retained_plan,
+                );
+                route_core_sidecars = false,
+            ),
+        )
+    non_lw_record = first(CPBM.pair_block_materialization_records(non_lw_plan))
+    mixed_batch_summary =
+        CPBM.white_lindsey_boundary_stratum_adapter_summary((
+            lw_cross_record,
+            non_lw_record,
+        ))
+    @test mixed_batch_summary.input_record_count == 2
+    @test mixed_batch_summary.record_count == 1
+    @test mixed_batch_summary.available_count == 1
+    @test mixed_batch_summary.blocked_count == 0
+    @test mixed_batch_summary.skipped_record_count == 1
+    @test _pair_block_count(
+        mixed_batch_summary.skipped_blocker_counts,
+        :blocker,
+        :not_white_lindsey_boundary_stratum_adapter_preflight,
+    ) == 1
+    @test !mixed_batch_summary.final_pair_blocks_materialized
 end
 
 @testset "CartesianPairBlockMaterialization PQS source-pair preflight" begin
