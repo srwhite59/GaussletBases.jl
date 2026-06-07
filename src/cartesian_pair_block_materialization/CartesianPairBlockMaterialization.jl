@@ -65,6 +65,7 @@ export PairBlockMaterializationPolicy,
        pqs_source_pair_shell_realization_bridge_summary,
        pqs_source_pair_final_block_readiness_summary,
        white_lindsey_boundary_stratum_adapter_summary,
+       white_lindsey_boundary_stratum_unit_adapter_descriptor,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -99,7 +100,8 @@ export PairBlockMaterializationPolicy,
 #     Metadata-only readiness summaries for future final PQS pair blocks.
 #
 # white_lindsey_adapter_summary.jl
-#     Metadata-only old-kernel reuse guidance for future LW adapters.
+#     Metadata-only old-kernel reuse guidance and unit descriptors for future
+#     LW adapters.
 #
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.

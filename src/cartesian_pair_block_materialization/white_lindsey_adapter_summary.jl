@@ -1,5 +1,7 @@
 # Metadata-only old-kernel reuse summary for White--Lindsey boundary strata.
 
+const _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES = (:x, :y, :z)
+
 """
     white_lindsey_boundary_stratum_adapter_summary(record)
 
@@ -60,6 +62,67 @@ function white_lindsey_boundary_stratum_adapter_summary(
         right_stratum_kind,
         left_plan,
         right_plan,
+    )
+end
+
+"""
+    white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)
+
+Return compact metadata describing the source-CPB and old-kernel inputs for one
+White--Lindsey boundary-stratum retained unit. This does not call old kernels
+and does not build coefficient maps, LW numerical blocks, doside transforms,
+Hamiltonian data, exports, artifacts, IDA/MWG data, or Coulomb.
+"""
+function white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)
+    stratum_kind = _white_lindsey_unit_metadata_value(unit, :stratum_kind)
+    plan = _white_lindsey_stratum_kernel_plan(stratum_kind)
+    source_cpb_count = length(unit.source_cpbs)
+    source_cpb = source_cpb_count == 1 ? only(unit.source_cpbs) : nothing
+
+    status, blocker = _white_lindsey_unit_descriptor_status(
+        unit,
+        stratum_kind,
+        plan,
+        source_cpb,
+        source_cpb_count,
+    )
+
+    return (;
+        object_kind =
+            :white_lindsey_boundary_stratum_unit_adapter_descriptor,
+        status,
+        blocker,
+        unit_key = unit.unit_key,
+        unit_index = unit.unit_index,
+        unit_kind = unit.unit_kind,
+        lowering_kind = unit.lowering_kind,
+        retained_rule = unit.retained_rule,
+        source_contract_key = unit.source_contract_key,
+        terminal_region_key = unit.terminal_region_key,
+        stratum_kind,
+        source_cpb_index = unit.source_cpb_index,
+        source_cpb_count,
+        source_cpb_roles = Tuple(CPB.role(cpb) for cpb in unit.source_cpbs),
+        source_cpb_role =
+            isnothing(source_cpb) ? nothing : CPB.role(source_cpb),
+        source_cpb_codimension =
+            isnothing(source_cpb) ? nothing : CPB.codimension(source_cpb),
+        source_cpb_shape =
+            isnothing(source_cpb) ? nothing : CPB.shape(source_cpb),
+        active_product_axes =
+            _white_lindsey_source_cpb_active_product_axes(source_cpb),
+        fixed_axes = _white_lindsey_source_cpb_fixed_axes(source_cpb),
+        fixed_axis_coordinates =
+            _white_lindsey_source_cpb_fixed_axis_coordinates(source_cpb),
+        kernel_plan_status = plan.status,
+        planned_old_kernel = plan.kernel,
+        planned_1d_helper = plan.side_1d_helper,
+        coefficient_maps_materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
     )
 end
 
@@ -274,6 +337,80 @@ function _white_lindsey_record_metadata_value(
     default = nothing,
 )
     return haskey(record.metadata, key) ? getfield(record.metadata, key) : default
+end
+
+function _white_lindsey_unit_metadata_value(unit, key::Symbol, default = nothing)
+    return haskey(unit.metadata, key) ? getfield(unit.metadata, key) : default
+end
+
+function _white_lindsey_unit_descriptor_status(
+    unit,
+    stratum_kind,
+    plan,
+    source_cpb,
+    source_cpb_count::Int,
+)
+    unit.unit_kind === :white_lindsey_boundary_stratum_retained_unit || return (
+        :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor,
+        :not_white_lindsey_boundary_stratum_retained_unit,
+    )
+    plan.status === :available_white_lindsey_stratum_kernel_plan || return (
+        :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor,
+        plan.blocker,
+    )
+    source_cpb_count == 1 || return (
+        :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor,
+        :white_lindsey_unit_source_cpb_count_not_one,
+    )
+    _white_lindsey_stratum_codimension_matches(
+        stratum_kind,
+        CPB.codimension(source_cpb),
+    ) || return (
+        :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor,
+        :white_lindsey_stratum_codimension_mismatch,
+    )
+    return :available_metadata_only_white_lindsey_unit_adapter_descriptor, nothing
+end
+
+function _white_lindsey_stratum_codimension_matches(stratum_kind, codimension)
+    stratum_kind in (:facet_cpb, :face_cpb) && return codimension == 1
+    stratum_kind === :edge_cpb && return codimension == 2
+    stratum_kind === :corner_cpb && return codimension == 3
+    return false
+end
+
+function _white_lindsey_source_cpb_active_product_axes(source_cpb)
+    isnothing(source_cpb) && return nothing
+    return Tuple(
+        axis for (axis, interval) in zip(
+            _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES,
+            CPB.intervals(source_cpb),
+        )
+        if length(interval) > 1
+    )
+end
+
+function _white_lindsey_source_cpb_fixed_axes(source_cpb)
+    isnothing(source_cpb) && return nothing
+    return Tuple(
+        axis for (axis, interval) in zip(
+            _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES,
+            CPB.intervals(source_cpb),
+        )
+        if length(interval) == 1
+    )
+end
+
+function _white_lindsey_source_cpb_fixed_axis_coordinates(source_cpb)
+    isnothing(source_cpb) && return nothing
+    return Tuple(
+        (; axis, coordinate = first(interval))
+        for (axis, interval) in zip(
+            _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES,
+            CPB.intervals(source_cpb),
+        )
+        if length(interval) == 1
+    )
 end
 
 function _white_lindsey_stratum_kernel_plan(stratum_kind)

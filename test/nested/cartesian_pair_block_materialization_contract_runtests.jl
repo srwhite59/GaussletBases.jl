@@ -305,6 +305,13 @@ function _pair_block_white_lindsey_retained_plan()
         role = :pair_block_lw_right_edge_source_cpb,
         metadata = (; stratum_kind = :edge_cpb, source_cpb_index = 2),
     )
+    corner_source = CPBForPairBlocks.cpb(
+        4:4,
+        3:3,
+        3:3;
+        role = :pair_block_lw_corner_source_cpb,
+        metadata = (; stratum_kind = :corner_cpb, source_cpb_index = 3),
+    )
     left_lw = _pair_block_retained_unit(
         :pair_block_lw_left_unit,
         1,
@@ -329,7 +336,19 @@ function _pair_block_white_lindsey_retained_plan()
         source_cpb_index = 2,
         metadata = (; stratum_kind = :edge_cpb, source_cpb_index = 2),
     )
-    units = (left_lw, right_lw)
+    corner_lw = _pair_block_retained_unit(
+        :pair_block_lw_corner_unit,
+        3,
+        :white_lindsey_boundary_stratum_retained_unit,
+        :white_lindsey_boundary_strata,
+        :white_lindsey_boundary_stratum_product,
+        :direct_or_trivial_embedding;
+        owned_support = CRCForPairBlocks.owned_cpb(corner_source),
+        source_cpbs = (corner_source,),
+        source_cpb_index = 3,
+        metadata = (; stratum_kind = :corner_cpb, source_cpb_index = 3),
+    )
+    units = (left_lw, right_lw, corner_lw)
     return CRUForPairBlocks.RetainedUnitPlan(
         CRUForPairBlocks.MetadataOnlyRetainedUnits(),
         _pair_block_minimal_lowering_plan(),
@@ -979,6 +998,102 @@ end
 
 @testset "CartesianPairBlockMaterialization White-Lindsey boundary-stratum preflight" begin
     retained_plan = _pair_block_white_lindsey_retained_plan()
+    lw_units = CRUForPairBlocks.units(retained_plan)
+    @test length(lw_units) == 3
+
+    facet_descriptor =
+        CPBM.white_lindsey_boundary_stratum_unit_adapter_descriptor(lw_units[1])
+    @test facet_descriptor.object_kind ==
+          :white_lindsey_boundary_stratum_unit_adapter_descriptor
+    @test facet_descriptor.status ==
+          :available_metadata_only_white_lindsey_unit_adapter_descriptor
+    @test isnothing(facet_descriptor.blocker)
+    @test facet_descriptor.unit_key == :pair_block_lw_left_unit
+    @test facet_descriptor.unit_index == 1
+    @test facet_descriptor.unit_kind ==
+          :white_lindsey_boundary_stratum_retained_unit
+    @test facet_descriptor.stratum_kind == :facet_cpb
+    @test facet_descriptor.source_cpb_count == 1
+    @test facet_descriptor.source_cpb_role ==
+          :pair_block_lw_left_facet_source_cpb
+    @test facet_descriptor.source_cpb_codimension == 1
+    @test facet_descriptor.source_cpb_shape == (1, 3, 3)
+    @test facet_descriptor.active_product_axes == (:y, :z)
+    @test facet_descriptor.fixed_axes == (:x,)
+    @test facet_descriptor.fixed_axis_coordinates ==
+          ((; axis = :x, coordinate = 1),)
+    @test facet_descriptor.planned_old_kernel == :_nested_face_product
+    @test facet_descriptor.planned_1d_helper == :_nested_doside_1d
+    @test !facet_descriptor.coefficient_maps_materialized
+    @test !facet_descriptor.final_pair_blocks_materialized
+    @test !facet_descriptor.hamiltonian_data_materialized
+
+    edge_descriptor =
+        CPBM.white_lindsey_boundary_stratum_unit_adapter_descriptor(lw_units[2])
+    @test edge_descriptor.status ==
+          :available_metadata_only_white_lindsey_unit_adapter_descriptor
+    @test edge_descriptor.unit_key == :pair_block_lw_right_unit
+    @test edge_descriptor.stratum_kind == :edge_cpb
+    @test edge_descriptor.source_cpb_role ==
+          :pair_block_lw_right_edge_source_cpb
+    @test edge_descriptor.source_cpb_codimension == 2
+    @test edge_descriptor.source_cpb_shape == (1, 1, 3)
+    @test edge_descriptor.active_product_axes == (:z,)
+    @test edge_descriptor.fixed_axes == (:x, :y)
+    @test edge_descriptor.fixed_axis_coordinates ==
+          ((; axis = :x, coordinate = 4), (; axis = :y, coordinate = 2))
+    @test edge_descriptor.planned_old_kernel == :_nested_edge_product
+    @test edge_descriptor.planned_1d_helper == :_nested_doside_1d
+    @test !edge_descriptor.coefficient_maps_materialized
+
+    corner_descriptor =
+        CPBM.white_lindsey_boundary_stratum_unit_adapter_descriptor(lw_units[3])
+    @test corner_descriptor.status ==
+          :available_metadata_only_white_lindsey_unit_adapter_descriptor
+    @test corner_descriptor.unit_key == :pair_block_lw_corner_unit
+    @test corner_descriptor.stratum_kind == :corner_cpb
+    @test corner_descriptor.source_cpb_role == :pair_block_lw_corner_source_cpb
+    @test corner_descriptor.source_cpb_codimension == 3
+    @test corner_descriptor.source_cpb_shape == (1, 1, 1)
+    @test corner_descriptor.active_product_axes == ()
+    @test corner_descriptor.fixed_axes == (:x, :y, :z)
+    @test corner_descriptor.fixed_axis_coordinates == (
+        (; axis = :x, coordinate = 4),
+        (; axis = :y, coordinate = 3),
+        (; axis = :z, coordinate = 3),
+    )
+    @test corner_descriptor.planned_old_kernel == :_nested_corner_piece
+    @test isnothing(corner_descriptor.planned_1d_helper)
+    @test !corner_descriptor.coefficient_maps_materialized
+    @test !corner_descriptor.source_operator_blocks_materialized
+    @test !corner_descriptor.final_pair_blocks_materialized
+    @test !corner_descriptor.operator_blocks_materialized
+    @test !corner_descriptor.hamiltonian_data_materialized
+    @test !corner_descriptor.artifacts_materialized
+
+    missing_source_unit = _pair_block_retained_unit(
+        :pair_block_lw_missing_source_unit,
+        4,
+        :white_lindsey_boundary_stratum_retained_unit,
+        :white_lindsey_boundary_strata,
+        :white_lindsey_boundary_stratum_product,
+        :direct_or_trivial_embedding;
+        metadata = (; stratum_kind = :facet_cpb, source_cpb_index = 4),
+    )
+    missing_source_descriptor =
+        CPBM.white_lindsey_boundary_stratum_unit_adapter_descriptor(
+            missing_source_unit,
+        )
+    @test missing_source_descriptor.status ==
+          :blocked_white_lindsey_boundary_stratum_unit_adapter_descriptor
+    @test missing_source_descriptor.blocker ==
+          :white_lindsey_unit_source_cpb_count_not_one
+    @test missing_source_descriptor.source_cpb_count == 0
+    @test isnothing(missing_source_descriptor.source_cpb_role)
+    @test isnothing(missing_source_descriptor.active_product_axes)
+    @test missing_source_descriptor.planned_old_kernel == :_nested_face_product
+    @test !missing_source_descriptor.coefficient_maps_materialized
+
     unit_pair_plan = CUPForPairBlocks.unit_pair_plan(retained_plan)
     transform_plan =
         CRTCForPairBlocks.retained_unit_transform_contract_plan(retained_plan)
@@ -992,25 +1107,25 @@ end
         CPBM.pair_block_materialization_plan(pair_operator_plan)
     materialization_summary = CPBM.summary(materialization_plan)
 
-    @test length(CPBM.pair_block_materialization_records(materialization_plan)) == 3
+    @test length(CPBM.pair_block_materialization_records(materialization_plan)) == 6
     @test materialization_summary.status == :blocked_pair_block_materialization_plan
     @test materialization_summary.ready_record_count == 0
-    @test materialization_summary.blocked_record_count == 3
+    @test materialization_summary.blocked_record_count == 6
     @test _pair_block_count(
         materialization_summary.materialization_path_counts,
         :materialization_path,
         :white_lindsey_boundary_stratum_adapter_preflight,
-    ) == 3
+    ) == 6
     @test _pair_block_count(
         materialization_summary.readiness_status_counts,
         :readiness_status,
         :blocked_white_lindsey_boundary_stratum_adapter_not_available,
-    ) == 3
+    ) == 6
     @test _pair_block_count(
         materialization_summary.blocker_counts,
         :blocker,
         :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
-    ) == 3
+    ) == 6
 
     lw_cross_record = _pair_block_record_for(
         materialization_plan,
@@ -1123,32 +1238,37 @@ end
     @test lw_batch_summary.status ==
           :available_metadata_only_white_lindsey_adapter_reuse_batch
     @test isnothing(lw_batch_summary.blocker)
-    @test lw_batch_summary.input_record_count == 3
-    @test lw_batch_summary.record_count == 3
-    @test lw_batch_summary.available_count == 3
+    @test lw_batch_summary.input_record_count == 6
+    @test lw_batch_summary.record_count == 6
+    @test lw_batch_summary.available_count == 6
     @test lw_batch_summary.blocked_count == 0
-    @test lw_batch_summary.reuse_metadata_available_count == 3
+    @test lw_batch_summary.reuse_metadata_available_count == 6
     @test lw_batch_summary.reuse_metadata_blocked_count == 0
     @test lw_batch_summary.skipped_record_count == 0
     @test _pair_block_count(
         lw_batch_summary.status_counts,
         :status,
         :blocked_white_lindsey_boundary_stratum_adapter_not_available,
-    ) == 3
+    ) == 6
     @test _pair_block_count(
         lw_batch_summary.blocker_counts,
         :blocker,
         :white_lindsey_boundary_stratum_pair_block_adapter_not_materialized,
-    ) == 3
+    ) == 6
     @test _pair_block_count(
         lw_batch_summary.left_planned_kernel_counts,
         :planned_kernel,
         :_nested_face_product,
-    ) == 2
+    ) == 3
     @test _pair_block_count(
         lw_batch_summary.left_planned_kernel_counts,
         :planned_kernel,
         :_nested_edge_product,
+    ) == 2
+    @test _pair_block_count(
+        lw_batch_summary.left_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_corner_piece,
     ) == 1
     @test _pair_block_count(
         lw_batch_summary.right_planned_kernel_counts,
@@ -1161,30 +1281,45 @@ end
         :_nested_edge_product,
     ) == 2
     @test _pair_block_count(
-        lw_batch_summary.all_planned_kernel_counts,
+        lw_batch_summary.right_planned_kernel_counts,
         :planned_kernel,
-        :_nested_face_product,
+        :_nested_corner_piece,
     ) == 3
     @test _pair_block_count(
         lw_batch_summary.all_planned_kernel_counts,
         :planned_kernel,
+        :_nested_face_product,
+    ) == 4
+    @test _pair_block_count(
+        lw_batch_summary.all_planned_kernel_counts,
+        :planned_kernel,
         :_nested_edge_product,
-    ) == 3
+    ) == 4
+    @test _pair_block_count(
+        lw_batch_summary.all_planned_kernel_counts,
+        :planned_kernel,
+        :_nested_corner_piece,
+    ) == 4
     @test _pair_block_count(
         lw_batch_summary.stratum_kind_counts,
         :stratum_kind,
         :facet_cpb,
-    ) == 3
+    ) == 4
     @test _pair_block_count(
         lw_batch_summary.stratum_kind_counts,
         :stratum_kind,
         :edge_cpb,
-    ) == 3
+    ) == 4
+    @test _pair_block_count(
+        lw_batch_summary.stratum_kind_counts,
+        :stratum_kind,
+        :corner_cpb,
+    ) == 4
     @test _pair_block_count(
         lw_batch_summary.shared_1d_helper_counts,
         :helper,
         :_nested_doside_1d,
-    ) == 3
+    ) == 5
     @test !lw_batch_summary.source_operator_blocks_materialized
     @test !lw_batch_summary.final_pair_blocks_materialized
     @test !lw_batch_summary.operator_blocks_materialized
