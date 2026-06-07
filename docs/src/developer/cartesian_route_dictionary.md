@@ -51,9 +51,15 @@ CartesianShellification
 -> CartesianPairOperatorPlans
 -> CartesianPairBlockMaterialization preflight
 -> direct/direct one-body local pair-block pilot
--> future source/final pair-block materialization
+-> PQS/PQS raw source-space safe-term pilot
+-> future shell realization and final pair-block materialization
 -> future assembly
 ```
+
+`CartesianRawProductSources` is a side module used by the PQS source-space
+pilot. It records source CPBs, source-mode dimensions, deterministic
+source-mode ordering, and metadata-only axis transform facts. It is not a
+retained-rule, shell-realization, or pair-block module.
 
 Plainly:
 
@@ -66,15 +72,17 @@ geometry ownership
 -> pair-operator construction plans
 -> pair-block materialization readiness
 -> direct/direct one-body pair blocks for the current pilot
--> broader pair blocks and assembly later
+-> PQS/PQS raw source-space one-body blocks for the current source pilot
+-> broader final pair blocks and assembly later
 ```
 
 `CartesianPairBlockMaterialization` is now the preflight layer after
 `CartesianPairOperatorPlans`. It has also started numerical local pair-block
-pilots, but only for direct/direct one-body terms: overlap, position, x2, and
-kinetic. It is not yet a PQS block path, White--Lindsey block path,
-Coulomb/IDA path, full operator assembly, Hamiltonian bundle, export, or
-artifact writer.
+pilots: direct/direct final local one-body terms and PQS/PQS raw source-space
+safe one-body terms for overlap, position, x2, and kinetic. The PQS pilot is
+not a final shell-realized PQS pair-block path. It is also not a
+White--Lindsey block path, Coulomb/IDA path, full operator assembly,
+Hamiltonian bundle, export, or artifact writer.
 
 ### Why “lowering”?
 

@@ -471,7 +471,7 @@ parent lattice
 -> retained-unit transform contracts
 -> unit pairs
 -> pair operator plans
--> pair-block materialization preflight/direct-direct pilot
+-> pair-block materialization preflight/direct-direct and PQS source pilots
 -> final pair-block assembly
 -> assembly
 ```
@@ -486,7 +486,7 @@ ShellificationRegion Ω
 -> retained-unit transform contracts
 -> unit pairs
 -> pair operator plans
--> pair-block materialization preflight/direct-direct pilot
+-> pair-block materialization preflight/direct-direct and PQS source pilots
 -> final pair-block assembly
 -> assembly
 ```
@@ -504,7 +504,7 @@ ShellificationRegion Ω
 -> retained-unit transform contracts
 -> unit pairs
 -> pair operator plans
--> pair-block materialization preflight/direct-direct pilot
+-> pair-block materialization preflight/direct-direct and PQS source pilots
 -> final pair-block assembly
 -> assembly
 ```
@@ -520,6 +520,8 @@ pair planning starts from final retained units and transform contracts
 
 Pair planning must use final retained units plus retained-unit transform
 contracts. It must not rediscover realization paths by inspecting retained-unit
-kinds. Current pair-block materialization is only a preflight layer plus a
-direct/direct one-body pilot; broader PQS, White--Lindsey, Coulomb/IDA, and
+kinds. Current pair-block materialization is a preflight layer plus a
+direct/direct final local one-body pilot and a PQS/PQS raw source-space
+safe-term pilot. The PQS source pilot does not apply shell projection, Lowdin,
+or final retained-block assembly. Broader PQS, White--Lindsey, Coulomb/IDA, and
 Hamiltonian assembly remain future work.

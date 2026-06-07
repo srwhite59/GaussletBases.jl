@@ -42,17 +42,33 @@ CartesianCPB
 -> CartesianRetainedUnitTransformContracts
 -> CartesianUnitPairs
 -> CartesianPairOperatorPlans
--> CartesianPairBlockMaterialization preflight/direct-direct pilot
+-> CartesianPairBlockMaterialization preflight/direct-direct and PQS source pilots
 ```
+
+`CartesianRawProductSources` is the side module for raw product source-box
+facts used by the PQS source pilot. It owns source CPBs, source-mode
+dimensions, source-mode ordering, and metadata-only axis transform facts. It
+does not own retained rules, shell projection, Lowdin cleanup, final retained
+units, or pair blocks.
 
 `CartesianPairOperatorPlans` consumes retained-unit pairs plus
 `CartesianRetainedUnitTransformContracts` for transform and realization paths.
 It must not infer realization paths directly from retained-unit kinds.
 
-`CartesianPairBlockMaterialization` is currently a preflight layer plus local
-direct/direct one-body pair-block pilots for overlap, position, `x2`, and
-kinetic. It is not yet PQS or White--Lindsey block materialization, Coulomb or
-IDA materialization, full operator assembly, Ham export, or artifact writing.
+`CartesianPairBlockMaterialization` is currently a preflight layer plus:
+
+- local direct/direct one-body pair-block pilots for overlap, position, `x2`,
+  and kinetic;
+- PQS/PQS raw source-space safe one-body helpers for overlap, position, `x2`,
+  and kinetic.
+
+The PQS helpers materialize source-space blocks only. They consume ready
+`:pqs_source_pair_preflight` records and caller-supplied 1D source factors,
+following the old source-mode product pattern from
+`_pqs_raw_product_box_pair_mode_matrix(...)` and the safe-term descriptors from
+`_source_box_separable_term_factor_kinds(...)`. They do not apply shell
+projection, Lowdin cleanup, final retained PQS transforms, Coulomb/IDA
+materialization, full operator assembly, Ham export, or artifact writing.
 
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
@@ -527,14 +543,51 @@ must be true in object-contract terms:
 If any of those fields are ambiguous, stop for design review instead of
 filling the gap with shell-row support-local contraction.
 
+## Current PQS/PQS Source-Block Checkpoint
+
+As of 2026-06-07, the narrow PQS/PQS source-space pilot has this
+private-module surface inside `CartesianPairBlockMaterialization`:
+
+```text
+pqs_source_pair_overlap_block(record; overlap_1d)
+pqs_source_pair_position_block(record; axis, overlap_1d, position_1d)
+pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
+pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d)
+pqs_source_pair_one_body_block(record, term; ...)
+```
+
+with matching plan-level plural helpers. The accepted one-body terms are:
+
+```text
+:overlap
+:position_x, :position_y, :position_z
+:x2_x, :x2_y, :x2_z
+:kinetic
+```
+
+The returned blocks are source-space blocks in raw product source-mode
+ordering. Their status flags intentionally distinguish source materialization
+from final operator materialization:
+
+```text
+source_operator_blocks_materialized = true
+final_pair_blocks_materialized = false
+operator_blocks_materialized = false
+hamiltonian_data_materialized = false
+artifacts_materialized = false
+```
+
+Do not describe these as final PQS pair blocks. They are source-side inputs to
+later shell realization and final retained-block assembly.
+
 ## First PQS/PQS Implementation Target
 
-The first PQS/PQS implementation target should be a private
-mode-selected raw-box PQS/PQS safe-term block. It should not target the
+The first PQS/PQS implementation target was the private mode-selected raw-box
+PQS/PQS safe-term **source-space** block. It intentionally does not target the
 current-route shell-realized fixture. The reason is object-contract clarity:
-mode-selected raw-box PQS has an algorithmic `RetainedRule` on both sides
-(boundary COMX-product mode selection), while the shell-realized current-route
-fixture is still a shell-realization/support-row adapter with
+mode-selected raw-box PQS has an algorithmic source-space retained rule on both
+sides, while the shell-realized current-route fixture is still a
+shell-realization/support-row adapter with
 `source_box_operator_application_ready=false`.
 
 Target object setup:
@@ -567,6 +620,10 @@ In-scope safe terms:
 - `:position_x`, `:position_y`, `:position_z`;
 - `:x2_x`, `:x2_y`, `:x2_z`;
 - `:kinetic`.
+
+These safe terms now exist as source-space helpers. The next PQS/PQS target is
+not another source helper; it is the explicit bridge from source-space blocks
+through shell realization to final retained PQS pair blocks.
 
 Raw product-box pair construction:
 

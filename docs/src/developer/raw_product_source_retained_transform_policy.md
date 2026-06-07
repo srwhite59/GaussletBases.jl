@@ -185,24 +185,52 @@ CartesianSourceBoxPairOperatorPlan3D
 ```
 
 It is no longer the current module split. The active private implementation
-uses the finer spine:
+uses the finer route spine:
 
 ```text
-CartesianRetainedUnits
+CartesianShellification
+-> CartesianTerminalLowering
+-> CartesianRetainedUnits
 -> CartesianRetainedUnitTransformContracts
 -> CartesianUnitPairs
 -> CartesianPairOperatorPlans
 -> CartesianPairBlockMaterialization
 ```
 
+with `CartesianRawProductSources` as the side module for source-box facts used
+by PQS source-space materialization after lowering has selected source CPBs.
+
 In that split, pair-operator plans consume final retained-unit pairs plus
 retained-unit transform contracts. They must not infer realization paths
 directly from retained-unit kinds. `CartesianPairBlockMaterialization`
-currently provides preflight plus local direct/direct one-body pilots only.
+currently provides preflight, local direct/direct one-body pilots, and
+PQS/PQS raw source-space safe one-body helpers for overlap, position, `x2`,
+and kinetic.
 
-The next missing boundary is still a clean module or explicit adapter for
-`RawProductBoxPlan` and source-box source facts before PQS materialization
-expands.
+`CartesianRawProductSources` is the current metadata-only boundary for
+`RawProductBoxPlan` and source-box source facts. It owns source CPBs,
+source-mode dimensions, deterministic source-mode ordering, and metadata-only
+axis transform facts. It deliberately does not build numerical axis transforms
+or own retained rules, shell projection, Lowdin cleanup, final retained units,
+pair blocks, Hamiltonians, or artifacts. Older helpers may still wrap this
+module while preserving their compatibility fields.
+
+The current PQS/PQS helper surface is source-space only:
+
+```text
+pqs_source_pair_overlap_block(record; overlap_1d)
+pqs_source_pair_position_block(record; axis, overlap_1d, position_1d)
+pqs_source_pair_x2_block(record; axis, overlap_1d, x2_1d)
+pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d)
+pqs_source_pair_one_body_block(record, term; ...)
+```
+
+with plan-level plural variants. These helpers use source-mode dimensions and
+ordering from raw product source facts, not CPB support shape. The caller owns
+the supplied 1D factors, including any signs, scaling, or backend provenance.
+The result may report `source_operator_blocks_materialized = true`, but it
+must keep final-pair, Hamiltonian, export, and artifact materialization flags
+false until shell realization and final retained-block assembly exist.
 
 The following record descriptions remain a source-box policy guide for that
 adapter boundary, not the current implementation spine and not public API.
