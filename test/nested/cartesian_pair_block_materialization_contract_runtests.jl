@@ -1412,6 +1412,40 @@ end
     @test pqs_record.metadata.left_source_mode_dims == (3, 3, 3)
     @test pqs_record.metadata.right_source_mode_dims == (3, 3, 3)
 
+    overlap_descriptor = CPBM._pqs_source_safe_term_descriptor(:overlap)
+    position_descriptor = CPBM._pqs_source_safe_term_descriptor(:position_y)
+    x2_descriptor = CPBM._pqs_source_safe_term_descriptor(:x2_z)
+    kinetic_descriptor = CPBM._pqs_source_safe_term_descriptor(:kinetic)
+    unsupported_descriptor =
+        CPBM._pqs_source_safe_term_descriptor(:unsupported_safe_term)
+
+    @test overlap_descriptor.status == :available_pqs_source_safe_term
+    @test overlap_descriptor.source_term == :source_overlap
+    @test overlap_descriptor.family == :overlap
+    @test overlap_descriptor.required_factor_name == "overlap_1d"
+    @test overlap_descriptor.batch_materialization_path ==
+          :ready_pqs_source_overlap_blocks_only
+    @test position_descriptor.status == :available_pqs_source_safe_term
+    @test position_descriptor.source_term == :source_position_y
+    @test position_descriptor.family == :position
+    @test position_descriptor.axis == :y
+    @test position_descriptor.required_factor_name == "position_1d"
+    @test position_descriptor.unsupported_record_blocker ==
+          :unsupported_pqs_source_position_materialization_record
+    @test x2_descriptor.status == :available_pqs_source_safe_term
+    @test x2_descriptor.source_term == :source_x2_z
+    @test x2_descriptor.family == :x2
+    @test x2_descriptor.axis == :z
+    @test x2_descriptor.required_factor_name == "x2_1d"
+    @test kinetic_descriptor.status == :available_pqs_source_safe_term
+    @test kinetic_descriptor.source_term == :source_kinetic
+    @test kinetic_descriptor.family == :kinetic
+    @test kinetic_descriptor.required_factor_name == "kinetic_1d"
+    @test unsupported_descriptor.status ==
+          :blocked_unsupported_pqs_source_safe_term
+    @test unsupported_descriptor.blocker == :unsupported_pqs_source_one_body_term
+    @test unsupported_descriptor.source_term === nothing
+
     source_dims = pqs_record.metadata.left_source_mode_dims
     selector_overlap_x, selector_overlap_y, selector_overlap_z =
         _pair_block_pqs_source_overlap_axes(source_dims, source_dims)

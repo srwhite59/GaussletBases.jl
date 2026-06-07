@@ -12,13 +12,14 @@ function pqs_source_pair_overlap_block(
     record::PairBlockMaterializationRecord;
     overlap_1d,
 )
+    descriptor = _supported_pqs_source_safe_term_descriptor(:overlap)
     overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
     overlap_axes = (overlap_x, overlap_y, overlap_z)
     left_dims, right_dims = _pqs_source_pair_dims(record)
     _assert_pqs_source_axis_sizes(overlap_axes, left_dims, right_dims, "overlap_1d")
     return _pqs_source_pair_product_result(
         record,
-        :source_overlap,
+        descriptor.source_term,
         overlap_axes,
         (;),
     )
@@ -35,12 +36,13 @@ function pqs_source_pair_overlap_blocks(
     plan::PairBlockMaterializationPlan;
     overlap_1d,
 )
+    descriptor = _supported_pqs_source_safe_term_descriptor(:overlap)
     return _pqs_source_pair_batch_results(
         record -> pqs_source_pair_overlap_block(record; overlap_1d),
         plan,
-        :source_overlap,
-        :ready_pqs_source_overlap_blocks_only,
-        :unsupported_pqs_source_overlap_materialization_record,
+        descriptor.source_term,
+        descriptor.batch_materialization_path,
+        descriptor.unsupported_record_blocker,
         (;),
     )
 end
@@ -58,7 +60,7 @@ function pqs_source_pair_position_block(
     overlap_1d,
     position_1d,
 )
-    source_term = _source_position_term(axis)
+    descriptor = _pqs_source_axis_safe_term_descriptor(:position, axis)
     left_dims, right_dims = _pqs_source_pair_dims(record)
     overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
     position_x, position_y, position_z =
@@ -74,9 +76,9 @@ function pqs_source_pair_position_block(
         (overlap_x, overlap_y, position_z)
     return _pqs_source_pair_product_result(
         record,
-        source_term,
+        descriptor.source_term,
         operator_axes,
-        (; position_axis = axis),
+        _pqs_source_axis_metadata(descriptor),
     )
 end
 
@@ -92,7 +94,7 @@ function pqs_source_pair_position_blocks(
     overlap_1d,
     position_1d,
 )
-    source_term = _source_position_term(axis)
+    descriptor = _pqs_source_axis_safe_term_descriptor(:position, axis)
     return _pqs_source_pair_batch_results(
         record -> pqs_source_pair_position_block(
             record;
@@ -101,10 +103,10 @@ function pqs_source_pair_position_blocks(
             position_1d,
         ),
         plan,
-        source_term,
-        :ready_pqs_source_position_blocks_only,
-        :unsupported_pqs_source_position_materialization_record,
-        (; position_axis = axis),
+        descriptor.source_term,
+        descriptor.batch_materialization_path,
+        descriptor.unsupported_record_blocker,
+        _pqs_source_axis_metadata(descriptor),
     )
 end
 
@@ -121,7 +123,7 @@ function pqs_source_pair_x2_block(
     overlap_1d,
     x2_1d,
 )
-    source_term = _source_x2_term(axis)
+    descriptor = _pqs_source_axis_safe_term_descriptor(:x2, axis)
     left_dims, right_dims = _pqs_source_pair_dims(record)
     overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
     x2_x, x2_y, x2_z = _operator_1d_tuple(x2_1d, "x2_1d")
@@ -136,9 +138,9 @@ function pqs_source_pair_x2_block(
         (overlap_x, overlap_y, x2_z)
     return _pqs_source_pair_product_result(
         record,
-        source_term,
+        descriptor.source_term,
         operator_axes,
-        (; x2_axis = axis),
+        _pqs_source_axis_metadata(descriptor),
     )
 end
 
@@ -154,7 +156,7 @@ function pqs_source_pair_x2_blocks(
     overlap_1d,
     x2_1d,
 )
-    source_term = _source_x2_term(axis)
+    descriptor = _pqs_source_axis_safe_term_descriptor(:x2, axis)
     return _pqs_source_pair_batch_results(
         record -> pqs_source_pair_x2_block(
             record;
@@ -163,10 +165,10 @@ function pqs_source_pair_x2_blocks(
             x2_1d,
         ),
         plan,
-        source_term,
-        :ready_pqs_source_x2_blocks_only,
-        :unsupported_pqs_source_x2_materialization_record,
-        (; x2_axis = axis),
+        descriptor.source_term,
+        descriptor.batch_materialization_path,
+        descriptor.unsupported_record_blocker,
+        _pqs_source_axis_metadata(descriptor),
     )
 end
 
@@ -183,6 +185,7 @@ function pqs_source_pair_kinetic_block(
     overlap_1d,
     kinetic_1d,
 )
+    descriptor = _supported_pqs_source_safe_term_descriptor(:kinetic)
     left_dims, right_dims = _pqs_source_pair_dims(record)
     overlap_x, overlap_y, overlap_z = _overlap_1d_tuple(overlap_1d)
     kinetic_x, kinetic_y, kinetic_z =
@@ -195,25 +198,25 @@ function pqs_source_pair_kinetic_block(
     kinetic_factor_form = _pqs_source_kinetic_factor_form()
     kinetic_x_result = _pqs_source_pair_product_result(
         record,
-        :source_kinetic,
+        descriptor.source_term,
         (kinetic_x, overlap_y, overlap_z),
         (; kinetic_factor_form),
     )
     kinetic_y_result = _pqs_source_pair_product_result(
         record,
-        :source_kinetic,
+        descriptor.source_term,
         (overlap_x, kinetic_y, overlap_z),
         (; kinetic_factor_form),
     )
     kinetic_z_result = _pqs_source_pair_product_result(
         record,
-        :source_kinetic,
+        descriptor.source_term,
         (overlap_x, overlap_y, kinetic_z),
         (; kinetic_factor_form),
     )
 
     return PairBlockMaterializationResult(
-        :source_kinetic,
+        descriptor.source_term,
         record.pair_key,
         kinetic_x_result.block + kinetic_y_result.block + kinetic_z_result.block,
         true,
@@ -237,22 +240,23 @@ function pqs_source_pair_kinetic_blocks(
     overlap_1d,
     kinetic_1d,
 )
+    descriptor = _supported_pqs_source_safe_term_descriptor(:kinetic)
     return _pqs_source_pair_batch_results(
         record -> pqs_source_pair_kinetic_block(record; overlap_1d, kinetic_1d),
         plan,
-        :source_kinetic,
-        :ready_pqs_source_kinetic_blocks_only,
-        :unsupported_pqs_source_kinetic_materialization_record,
+        descriptor.source_term,
+        descriptor.batch_materialization_path,
+        descriptor.unsupported_record_blocker,
         (; kinetic_factor_form = _pqs_source_kinetic_factor_form()),
     )
 end
 
 function _source_position_term(axis)
-    return Symbol(:source_, _position_term(axis))
+    return _pqs_source_axis_safe_term_descriptor(:position, axis).source_term
 end
 
 function _source_x2_term(axis)
-    return Symbol(:source_, _x2_term(axis))
+    return _pqs_source_axis_safe_term_descriptor(:x2, axis).source_term
 end
 
 function _pqs_source_kinetic_factor_form()
@@ -261,6 +265,119 @@ function _pqs_source_kinetic_factor_form()
         (:overlap, :kinetic, :overlap),
         (:overlap, :overlap, :kinetic),
     )
+end
+
+function _pqs_source_safe_term_descriptor(term::Symbol)
+    if term === :overlap
+        return _pqs_source_safe_term_descriptor(
+            term,
+            :source_overlap,
+            :overlap,
+            nothing,
+            "overlap_1d",
+            :ready_pqs_source_overlap_blocks_only,
+            :unsupported_pqs_source_overlap_materialization_record,
+            nothing,
+        )
+    end
+
+    position_axis = _position_axis_for_term(term)
+    if !isnothing(position_axis)
+        return _pqs_source_safe_term_descriptor(
+            term,
+            Symbol(:source_, term),
+            :position,
+            position_axis,
+            "position_1d",
+            :ready_pqs_source_position_blocks_only,
+            :unsupported_pqs_source_position_materialization_record,
+            :position_axis,
+        )
+    end
+
+    x2_axis = _x2_axis_for_term(term)
+    if !isnothing(x2_axis)
+        return _pqs_source_safe_term_descriptor(
+            term,
+            Symbol(:source_, term),
+            :x2,
+            x2_axis,
+            "x2_1d",
+            :ready_pqs_source_x2_blocks_only,
+            :unsupported_pqs_source_x2_materialization_record,
+            :x2_axis,
+        )
+    end
+
+    if term === :kinetic
+        return _pqs_source_safe_term_descriptor(
+            term,
+            :source_kinetic,
+            :kinetic,
+            nothing,
+            "kinetic_1d",
+            :ready_pqs_source_kinetic_blocks_only,
+            :unsupported_pqs_source_kinetic_materialization_record,
+            nothing,
+        )
+    end
+
+    return (;
+        status = :blocked_unsupported_pqs_source_safe_term,
+        blocker = :unsupported_pqs_source_one_body_term,
+        requested_term = term,
+        source_term = nothing,
+        family = :unsupported,
+        axis = nothing,
+        required_factor_name = nothing,
+        batch_materialization_path = :blocked_pqs_source_safe_term_blocks,
+        unsupported_record_blocker = :unsupported_pqs_source_materialization_record,
+        axis_metadata_key = nothing,
+    )
+end
+
+function _pqs_source_safe_term_descriptor(
+    requested_term::Symbol,
+    source_term::Symbol,
+    family::Symbol,
+    axis,
+    required_factor_name::AbstractString,
+    batch_materialization_path::Symbol,
+    unsupported_record_blocker::Symbol,
+    axis_metadata_key,
+)
+    return (;
+        status = :available_pqs_source_safe_term,
+        blocker = nothing,
+        requested_term,
+        source_term,
+        family,
+        axis,
+        required_factor_name = String(required_factor_name),
+        batch_materialization_path,
+        unsupported_record_blocker,
+        axis_metadata_key,
+    )
+end
+
+function _supported_pqs_source_safe_term_descriptor(term::Symbol)
+    descriptor = _pqs_source_safe_term_descriptor(term)
+    isnothing(descriptor.blocker) ||
+        throw(ArgumentError("unsupported PQS source one-body term: $(term)"))
+    return descriptor
+end
+
+function _pqs_source_axis_safe_term_descriptor(family::Symbol, axis)
+    requested_term =
+        family === :position ? _position_term(axis) :
+        family === :x2 ? _x2_term(axis) :
+        throw(ArgumentError("PQS source axis family must be :position or :x2"))
+    return _supported_pqs_source_safe_term_descriptor(requested_term)
+end
+
+function _pqs_source_axis_metadata(descriptor)
+    isnothing(descriptor.axis_metadata_key) && return (;)
+    return (; descriptor.axis_metadata_key => descriptor.axis)
 end
 
 function _is_ready_pqs_source_pair_record(record::PairBlockMaterializationRecord)

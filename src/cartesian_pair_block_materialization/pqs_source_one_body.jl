@@ -15,38 +15,36 @@ function pqs_source_pair_one_body_block(
     x2_1d = nothing,
     kinetic_1d = nothing,
 )
-    term === :overlap && return pqs_source_pair_overlap_block(
-        record;
-        overlap_1d,
-    )
+    descriptor = _supported_pqs_source_safe_term_descriptor(term)
+    if descriptor.family === :overlap
+        return pqs_source_pair_overlap_block(record; overlap_1d)
+    end
 
-    position_axis = _position_axis_for_term(term)
-    if !isnothing(position_axis)
+    if descriptor.family === :position
         isnothing(position_1d) &&
-            throw(ArgumentError("position_1d is required for $(term)"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_position_block(
             record;
-            axis = position_axis,
+            axis = descriptor.axis,
             overlap_1d,
             position_1d,
         )
     end
 
-    x2_axis = _x2_axis_for_term(term)
-    if !isnothing(x2_axis)
+    if descriptor.family === :x2
         isnothing(x2_1d) &&
-            throw(ArgumentError("x2_1d is required for $(term)"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_x2_block(
             record;
-            axis = x2_axis,
+            axis = descriptor.axis,
             overlap_1d,
             x2_1d,
         )
     end
 
-    if term === :kinetic
+    if descriptor.family === :kinetic
         isnothing(kinetic_1d) &&
-            throw(ArgumentError("kinetic_1d is required for :kinetic"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_kinetic_block(
             record;
             overlap_1d,
@@ -71,38 +69,36 @@ function pqs_source_pair_one_body_blocks(
     x2_1d = nothing,
     kinetic_1d = nothing,
 )
-    term === :overlap && return pqs_source_pair_overlap_blocks(
-        plan;
-        overlap_1d,
-    )
+    descriptor = _supported_pqs_source_safe_term_descriptor(term)
+    if descriptor.family === :overlap
+        return pqs_source_pair_overlap_blocks(plan; overlap_1d)
+    end
 
-    position_axis = _position_axis_for_term(term)
-    if !isnothing(position_axis)
+    if descriptor.family === :position
         isnothing(position_1d) &&
-            throw(ArgumentError("position_1d is required for $(term)"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_position_blocks(
             plan;
-            axis = position_axis,
+            axis = descriptor.axis,
             overlap_1d,
             position_1d,
         )
     end
 
-    x2_axis = _x2_axis_for_term(term)
-    if !isnothing(x2_axis)
+    if descriptor.family === :x2
         isnothing(x2_1d) &&
-            throw(ArgumentError("x2_1d is required for $(term)"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_x2_blocks(
             plan;
-            axis = x2_axis,
+            axis = descriptor.axis,
             overlap_1d,
             x2_1d,
         )
     end
 
-    if term === :kinetic
+    if descriptor.family === :kinetic
         isnothing(kinetic_1d) &&
-            throw(ArgumentError("kinetic_1d is required for :kinetic"))
+            throw(ArgumentError(_pqs_source_required_factor_message(descriptor)))
         return pqs_source_pair_kinetic_blocks(
             plan;
             overlap_1d,
@@ -111,4 +107,12 @@ function pqs_source_pair_one_body_blocks(
     end
 
     throw(ArgumentError("unsupported PQS source one-body term: $(term)"))
+end
+
+function _pqs_source_required_factor_message(descriptor)
+    term_text =
+        descriptor.requested_term === :kinetic ?
+        ":kinetic" :
+        string(descriptor.requested_term)
+    return "$(descriptor.required_factor_name) is required for $(term_text)"
 end
