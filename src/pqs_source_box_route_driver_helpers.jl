@@ -6608,6 +6608,14 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         ) :
         unit_pair_summary
     pair_operator_plan =
+        isnothing(pair_operator_plan) &&
+        unit_pair_plan isa CartesianUnitPairs.UnitPairPlan &&
+        retained_unit_transform_contract_plan isa
+        CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan ?
+        CartesianPairOperatorPlans.pair_operator_plan(
+            unit_pair_plan,
+            retained_unit_transform_contract_plan,
+        ) :
         isnothing(pair_operator_plan) && unit_pair_plan isa
         CartesianUnitPairs.UnitPairPlan ?
         CartesianPairOperatorPlans.pair_operator_plan(unit_pair_plan) :

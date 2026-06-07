@@ -14,7 +14,7 @@ const _PAIR_OPERATOR_PLAN_DEFAULT_TERMS = (
 const _DIRECT_RETAINED_UNIT_KINDS = (:direct_cpb_retained_unit,)
 
 """
-    pair_operator_plan(unit_pair_plan; policy = MetadataOnlyPairOperatorPlans())
+    pair_operator_plan(unit_pair_plan, transform_contract_plan; policy)
 
 Build metadata-only pair-operator plans from retained-unit pairs.
 
@@ -26,13 +26,38 @@ function pair_operator_plan(
     unit_pair_plan::CUP.UnitPairPlan;
     policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
     supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
+    route_core_sidecars::Bool = true,
+    metadata = (;),
+)
+    transform_contract_plan =
+        CRTC.retained_unit_transform_contract_plan(unit_pair_plan.retained_unit_plan)
+    return pair_operator_plan(
+        unit_pair_plan,
+        transform_contract_plan;
+        policy,
+        supported_terms,
+        route_core_sidecars,
+        metadata,
+    )
+end
+
+function pair_operator_plan(
+    unit_pair_plan::CUP.UnitPairPlan,
+    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan;
+    policy::PairOperatorPlanPolicy = MetadataOnlyPairOperatorPlans(),
+    supported_terms = _PAIR_OPERATOR_PLAN_DEFAULT_TERMS,
+    route_core_sidecars::Bool = true,
     metadata = (;),
 )
     terms = _supported_terms_tuple(supported_terms)
-    route_core_plan = _route_core_pair_operator_plan_or_nothing(
+    transform_lookup = _retained_unit_transform_contract_lookup(transform_contract_plan)
+    route_core_plan =
+        route_core_sidecars ?
+        _route_core_pair_operator_plan_or_nothing(
         unit_pair_plan;
         supported_terms = terms,
-    )
+        ) :
+        _route_core_pair_operator_plan_not_requested()
     route_core_plans =
         isnothing(route_core_plan.inventory) ?
         nothing :
@@ -44,6 +69,7 @@ function pair_operator_plan(
             terms,
             isnothing(route_core_plans) ? nothing : route_core_plans[pair.pair_index],
             route_core_plan,
+            transform_lookup,
         ) for pair in CUP.unit_pairs(unit_pair_plan)
     )
     plan_summary =
@@ -51,10 +77,42 @@ function pair_operator_plan(
     return PairOperatorPlan(
         policy,
         unit_pair_plan,
+        transform_contract_plan,
         records,
         route_core_plan.inventory,
         plan_summary,
         NamedTuple(metadata),
+    )
+end
+
+function _route_core_pair_operator_plan_not_requested()
+    return (;
+        inventory = nothing,
+        status = :not_requested_route_core_pair_operator_plan_inventory,
+        blocker = nothing,
+    )
+end
+
+function _retained_unit_transform_contract_lookup(
+    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan,
+)
+    contracts_by_key = Dict{Symbol,CRTC.RetainedUnitTransformContract}()
+    duplicate_keys = Symbol[]
+    for contract in CRTC.transform_contracts(transform_contract_plan)
+        if haskey(contracts_by_key, contract.unit_key)
+            push!(duplicate_keys, contract.unit_key)
+        else
+            contracts_by_key[contract.unit_key] = contract
+        end
+    end
+    blocker =
+        isempty(duplicate_keys) ?
+        nothing :
+        :duplicate_retained_unit_transform_contract
+    return (;
+        contracts_by_key,
+        duplicate_unit_keys = Tuple(duplicate_keys),
+        blocker,
     )
 end
 
@@ -104,17 +162,35 @@ function _pair_operator_plan_record(
     supported_terms,
     route_core_sidecar,
     route_core_plan,
+    transform_lookup,
 )
     source_path, source_blocker = _source_operator_path(pair)
+    left_transform = _transform_contract_for_pair_unit(pair, :left, transform_lookup)
+    right_transform = _transform_contract_for_pair_unit(pair, :right, transform_lookup)
+    transform = (;
+        left = left_transform.transform_path,
+        right = right_transform.transform_path,
+    )
     realization = (;
-        left = _realization_path(pair.left_unit_kind),
-        right = _realization_path(pair.right_unit_kind),
+        left = left_transform.realization_path,
+        right = right_transform.realization_path,
     )
     blocker =
         isnothing(route_core_plan.inventory) ?
-        _first_blocker(route_core_plan.blocker, source_blocker) :
-        source_blocker
-    final_path = _final_block_path(pair, blocker)
+        _first_blocker(
+            transform_lookup.blocker,
+            left_transform.blocker,
+            right_transform.blocker,
+            route_core_plan.blocker,
+            source_blocker,
+        ) :
+        _first_blocker(
+            transform_lookup.blocker,
+            left_transform.blocker,
+            right_transform.blocker,
+            source_blocker,
+        )
+    final_path = _final_block_path(realization, blocker)
     status =
         isnothing(blocker) ?
         :metadata_only_not_materialized :
@@ -129,6 +205,7 @@ function _pair_operator_plan_record(
         pair.left_unit_kind,
         pair.right_unit_kind,
         source_path,
+        transform,
         realization,
         final_path,
         supported_terms,
@@ -143,7 +220,47 @@ function _pair_operator_plan_record(
                 :available_route_core_pair_operator_plan,
             route_core_pair_operator_sidecar_blocker =
                 isnothing(route_core_sidecar) ? route_core_plan.blocker : nothing,
+            duplicate_transform_contract_unit_keys =
+                transform_lookup.duplicate_unit_keys,
         ),
+    )
+end
+
+function _transform_contract_for_pair_unit(
+    pair::CUP.UnitPairRecord,
+    side::Symbol,
+    transform_lookup,
+)
+    side in (:left, :right) ||
+        throw(ArgumentError("pair transform contract side must be :left or :right"))
+    unit_key = side === :left ? pair.left_unit_key : pair.right_unit_key
+    unit_index = side === :left ? pair.left_index : pair.right_index
+    unit_kind = side === :left ? pair.left_unit_kind : pair.right_unit_kind
+    missing_blocker =
+        side === :left ?
+        :missing_left_transform_contract :
+        :missing_right_transform_contract
+    contract = get(transform_lookup.contracts_by_key, unit_key, nothing)
+    if isnothing(contract)
+        return (;
+            transform_path = :missing_retained_unit_transform_contract,
+            realization_path = :missing_retained_unit_realization_contract,
+            blocker = missing_blocker,
+        )
+    end
+    if contract.unit_index != unit_index ||
+       contract.unit_key != unit_key ||
+       contract.unit_kind != unit_kind
+        return (;
+            transform_path = contract.transform_path,
+            realization_path = contract.realization_path,
+            blocker = :transform_contract_unit_mismatch,
+        )
+    end
+    return (;
+        transform_path = contract.transform_path,
+        realization_path = contract.realization_path,
+        blocker = contract.blocker,
     )
 end
 
@@ -175,22 +292,10 @@ _unit_kind_is_white_lindsey(unit_kind::Symbol) =
 _unit_kind_is_distorted(unit_kind::Symbol) =
     unit_kind === :distorted_product_box_retained_unit
 
-function _realization_path(unit_kind::Symbol)
-    if _unit_kind_is_pqs(unit_kind)
-        return :shell_projection_lowdin_planned
-    end
-    if _unit_kind_is_distorted(unit_kind)
-        return :distorted_product_realization_planned
-    end
-    if _unit_kind_is_direct(unit_kind) || _unit_kind_is_white_lindsey(unit_kind)
-        return :identity_or_trivial_embedding
-    end
-    return :planned_shell_realization_path
-end
-
-function _final_block_path(pair::CUP.UnitPairRecord, blocker)
+function _final_block_path(realization::NamedTuple, blocker)
     isnothing(blocker) || return :blocked_final_pair_block_path
-    if _unit_kind_is_pqs(pair.left_unit_kind) || _unit_kind_is_pqs(pair.right_unit_kind)
+    if realization.left === :shell_projection_lowdin_planned ||
+       realization.right === :shell_projection_lowdin_planned
         return :source_block_realization_then_final_block
     end
     return :source_block_direct_to_final_block

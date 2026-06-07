@@ -18,9 +18,11 @@ module CartesianPairOperatorPlans
 
 using ..CartesianRouteCore
 using ..CartesianUnitPairs
+using ..CartesianRetainedUnitTransformContracts
 
 const CRC = CartesianRouteCore
 const CUP = CartesianUnitPairs
+const CRTC = CartesianRetainedUnitTransformContracts
 
 export PairOperatorPlanPolicy,
        MetadataOnlyPairOperatorPlans,

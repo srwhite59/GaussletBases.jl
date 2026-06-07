@@ -44,6 +44,13 @@ function _pair_operator_plan_summary(
                 (record.source_operator_path for record in records),
                 :source_operator_path,
             ),
+        transform_path_counts =
+            _count_by_value((record.transform_path for record in records), :transform_path),
+        realization_path_counts =
+            _count_by_value(
+                (record.realization_path for record in records),
+                :realization_path,
+            ),
         final_block_path_counts =
             _count_by_value((record.final_block_path for record in records), :final_block_path),
         materialization_status_counts =
@@ -86,6 +93,8 @@ function unavailable_summary(status::Symbol, blocker = nothing)
         pair_families = (),
         pair_family_counts = (),
         source_operator_path_counts = (),
+        transform_path_counts = (),
+        realization_path_counts = (),
         final_block_path_counts = (),
         materialization_status_counts = (),
         blocker_counts = (),

@@ -33,6 +33,7 @@ struct PairOperatorPlanRecord
     left_unit_kind::Symbol
     right_unit_kind::Symbol
     source_operator_path::Symbol
+    transform_path::NamedTuple
     realization_path::NamedTuple
     final_block_path::Symbol
     supported_terms::Tuple{Vararg{Symbol}}
@@ -52,6 +53,7 @@ unit-pair plan.
 struct PairOperatorPlan
     policy::PairOperatorPlanPolicy
     unit_pair_plan::CUP.UnitPairPlan
+    transform_contract_plan::CRTC.RetainedUnitTransformContractPlan
     records::Tuple{Vararg{PairOperatorPlanRecord}}
     route_core_pair_operator_plan_inventory::Union{
         CRC.PairOperatorPlanInventory,
