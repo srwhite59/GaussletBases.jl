@@ -233,6 +233,28 @@ function _pair_block_position_axes()
     return position_x, position_y, position_z
 end
 
+function _pair_block_x2_axes()
+    x2_x = [
+        5.10 0.61 0.63 0.67
+        0.61 5.30 0.69 0.71
+        0.63 0.69 5.50 0.77
+        0.67 0.71 0.77 5.70
+    ]
+    x2_y = [
+        6.10 0.81 0.83 0.87
+        0.81 6.30 0.89 0.91
+        0.83 0.89 6.50 0.97
+        0.87 0.91 0.97 6.70
+    ]
+    x2_z = [
+        7.10 1.01 1.03 1.07
+        1.01 7.30 1.09 1.11
+        1.03 1.09 7.50 1.17
+        1.07 1.11 1.17 7.70
+    ]
+    return x2_x, x2_y, x2_z
+end
+
 function _pair_block_cpb_states(source_cpb)
     ix, iy, iz = CPBForPairBlocks.intervals(source_cpb)
     return Tuple((x, y, z) for x in ix for y in iy for z in iz)
@@ -268,6 +290,24 @@ function _pair_block_expected_position(
         axis === :x ? (position_x, overlap_y, overlap_z) :
         axis === :y ? (overlap_x, position_y, overlap_z) :
         (overlap_x, overlap_y, position_z)
+    return _pair_block_expected_product(left_cpb, right_cpb, operator_x, operator_y, operator_z)
+end
+
+function _pair_block_expected_x2(
+    left_cpb,
+    right_cpb,
+    axis,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+    x2_x,
+    x2_y,
+    x2_z,
+)
+    operator_x, operator_y, operator_z =
+        axis === :x ? (x2_x, overlap_y, overlap_z) :
+        axis === :y ? (overlap_x, x2_y, overlap_z) :
+        (overlap_x, overlap_y, x2_z)
     return _pair_block_expected_product(left_cpb, right_cpb, operator_x, operator_y, operator_z)
 end
 
@@ -407,6 +447,14 @@ end
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         position_1d = (; x = position_x, y = position_y, z = position_z),
     )
+    x2_x, x2_y, x2_z = _pair_block_x2_axes()
+    @test_throws ArgumentError CPBM.direct_direct_x2_block(
+        direct_pqs_record;
+        axis = :x,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
+    )
     @test pqs_pqs_record.readiness_status ==
           :blocked_pair_block_materialization_not_implemented
     @test pqs_pqs_record.blocker ==
@@ -501,6 +549,44 @@ end
         @test !position_result.artifacts_materialized
     end
 
+    x2_x, x2_y, x2_z = _pair_block_x2_axes()
+    expected_x2_terms = (;
+        x = :x2_x,
+        y = :x2_y,
+        z = :x2_z,
+    )
+    for axis in (:x, :y, :z)
+        x2_result = CPBM.direct_direct_x2_block(
+            cross_record;
+            axis,
+            parent_axis_counts = (4, 4, 4),
+            overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+            x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
+        )
+        expected_x2 =
+            _pair_block_expected_x2(
+                left_source,
+                right_source,
+                axis,
+                overlap_x,
+                overlap_y,
+                overlap_z,
+                x2_x,
+                x2_y,
+                x2_z,
+            )
+
+        @test x2_result.term == getproperty(expected_x2_terms, axis)
+        @test size(x2_result.block) == (4, 6)
+        @test x2_result.block ≈ expected_x2
+        @test x2_result.materialized
+        @test x2_result.source_operator_blocks_materialized
+        @test x2_result.final_pair_blocks_materialized
+        @test !x2_result.operator_blocks_materialized
+        @test !x2_result.hamiltonian_data_materialized
+        @test !x2_result.artifacts_materialized
+    end
+
     batch_result = CPBM.direct_direct_overlap_blocks(
         materialization_plan;
         parent_axis_counts = (4, 4, 4),
@@ -512,6 +598,13 @@ end
         parent_axis_counts = (4, 4, 4),
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         position_1d = (; x = position_x, y = position_y, z = position_z),
+    )
+    x2_batch_result = CPBM.direct_direct_x2_blocks(
+        materialization_plan;
+        axis = :z,
+        parent_axis_counts = (4, 4, 4),
+        overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
+        x2_1d = (; x = x2_x, y = x2_y, z = x2_z),
     )
     batch_cross = only(
         result for result in batch_result.materialized_results
@@ -550,4 +643,14 @@ end
     @test !position_batch_result.operator_blocks_materialized
     @test !position_batch_result.hamiltonian_data_materialized
     @test !position_batch_result.artifacts_materialized
+
+    @test x2_batch_result.term == :x2_z
+    @test x2_batch_result.materialized_count == 3
+    @test x2_batch_result.skipped_count == 3
+    @test x2_batch_result.materialized
+    @test x2_batch_result.source_operator_blocks_materialized
+    @test x2_batch_result.final_pair_blocks_materialized
+    @test !x2_batch_result.operator_blocks_materialized
+    @test !x2_batch_result.hamiltonian_data_materialized
+    @test !x2_batch_result.artifacts_materialized
 end
