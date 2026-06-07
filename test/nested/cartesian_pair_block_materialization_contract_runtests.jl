@@ -1072,6 +1072,43 @@ end
     @test !final_readiness.hamiltonian_data_materialized
     @test !final_readiness.artifacts_materialized
 
+    non_bridge_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(
+            (; object_kind = :not_a_pqs_source_bridge_summary),
+        )
+    @test non_bridge_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test non_bridge_readiness.blocker ==
+          :not_pqs_source_shell_realization_bridge_summary
+    @test !non_bridge_readiness.final_pair_blocks_materialized
+    @test !non_bridge_readiness.shell_realization_materialized
+
+    missing_ordering_bridge = merge(shell_bridge, (; source_mode_ordering = nothing))
+    missing_ordering_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(
+            missing_ordering_bridge,
+        )
+    @test missing_ordering_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test missing_ordering_readiness.blocker == :missing_source_mode_ordering
+    @test !missing_ordering_readiness.final_pair_blocks_materialized
+
+    synthetic_blocked_bridge =
+        merge(
+            shell_bridge,
+            (;
+                status = :blocked_missing_shell_realization_facts,
+                blocker = :synthetic_bridge_blocker,
+            ),
+        )
+    synthetic_blocked_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(
+            synthetic_blocked_bridge,
+        )
+    @test synthetic_blocked_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test synthetic_blocked_readiness.blocker == :synthetic_bridge_blocker
+
     missing_bridge_realization_result =
         _pair_block_result_with_metadata(
             pqs_overlap_result,
@@ -1810,6 +1847,31 @@ end
     @test !overlap_final_readiness.shell_realization_materialized
     @test !overlap_final_readiness.final_pair_blocks_materialized
     @test !overlap_final_readiness.operator_blocks_materialized
+
+    empty_bridge_batch =
+        merge(
+            overlap_bridge_batch,
+            (;
+                status = :available_metadata_only_shell_realization_bridge_batch,
+                blocker = nothing,
+                term_counts = (),
+                result_count = 0,
+                available_count = 0,
+                blocked_count = 0,
+                bridge_status_counts = (),
+                blocker_counts = (),
+            ),
+        )
+    empty_batch_readiness =
+        CPBM.pqs_source_pair_final_block_readiness_summary(empty_bridge_batch)
+    @test empty_batch_readiness.status ==
+          :blocked_final_pqs_pair_block_not_ready
+    @test empty_batch_readiness.blocker == :no_pqs_source_block_results
+    @test empty_batch_readiness.result_count == 0
+    @test empty_batch_readiness.available_count == 0
+    @test empty_batch_readiness.blocked_count == 0
+    @test !empty_batch_readiness.final_pair_blocks_materialized
+    @test !empty_batch_readiness.shell_realization_materialized
 
     bridge_tuple =
         CPBM.pqs_source_pair_shell_realization_bridge_summary((
