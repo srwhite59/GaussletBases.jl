@@ -61,10 +61,14 @@ function _white_lindsey_unit_coefficients_status(descriptor)
             :unavailable_white_lindsey_unit_adapter_descriptor,
         ),
     )
-    _white_lindsey_descriptor_property(descriptor, :stratum_kind) ===
-        :corner_cpb || return (
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    stratum_kind in (:facet_cpb, :face_cpb, :edge_cpb) && return (
         :blocked_white_lindsey_boundary_stratum_unit_coefficients,
-        :white_lindsey_unit_coefficients_not_implemented_for_stratum,
+        :incomplete_white_lindsey_edge_facet_kernel_input_context,
+    )
+    stratum_kind === :corner_cpb || return (
+        :blocked_white_lindsey_boundary_stratum_unit_coefficients,
+        :unknown_white_lindsey_unit_coefficients_stratum,
     )
     _white_lindsey_descriptor_property(descriptor, :planned_old_kernel) ===
         :_nested_corner_piece || return (
@@ -105,13 +109,31 @@ function _white_lindsey_unit_coefficients_result(
             _white_lindsey_descriptor_property(descriptor, :source_cpb_role),
         source_cpb_shape =
             _white_lindsey_descriptor_property(descriptor, :source_cpb_shape),
+        source_cpb_intervals =
+            _white_lindsey_descriptor_property(descriptor, :source_cpb_intervals),
+        source_axis_intervals =
+            _white_lindsey_descriptor_property(descriptor, :source_axis_intervals),
+        active_product_axis_intervals =
+            _white_lindsey_descriptor_property(
+                descriptor,
+                :active_product_axis_intervals,
+            ),
+        free_axis = _white_lindsey_descriptor_property(descriptor, :free_axis),
+        free_axis_interval =
+            _white_lindsey_descriptor_property(descriptor, :free_axis_interval),
         fixed_axis_coordinates =
             _white_lindsey_descriptor_property(
                 descriptor,
                 :fixed_axis_coordinates,
             ),
+        fixed_side_metadata =
+            _white_lindsey_descriptor_property(descriptor, :fixed_side_metadata),
         planned_old_kernel =
             _white_lindsey_descriptor_property(descriptor, :planned_old_kernel),
+        coefficient_input_requirements =
+            _white_lindsey_unit_coefficient_input_requirements(descriptor),
+        missing_coefficient_inputs =
+            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
         coefficient_space = :source_cpb_support_local,
         parent_row_indices_available = false,
         source_support_row_count = materialized ? 1 : nothing,
@@ -140,8 +162,22 @@ function _white_lindsey_blocked_unit_coefficients(input, blocker::Symbol)
             _white_lindsey_descriptor_property(input, :source_cpb_role),
         source_cpb_shape =
             _white_lindsey_descriptor_property(input, :source_cpb_shape),
+        source_cpb_intervals =
+            _white_lindsey_descriptor_property(input, :source_cpb_intervals),
+        source_axis_intervals =
+            _white_lindsey_descriptor_property(input, :source_axis_intervals),
+        active_product_axis_intervals =
+            _white_lindsey_descriptor_property(
+                input,
+                :active_product_axis_intervals,
+            ),
+        free_axis = _white_lindsey_descriptor_property(input, :free_axis),
+        free_axis_interval =
+            _white_lindsey_descriptor_property(input, :free_axis_interval),
         fixed_axis_coordinates =
             _white_lindsey_descriptor_property(input, :fixed_axis_coordinates),
+        fixed_side_metadata =
+            _white_lindsey_descriptor_property(input, :fixed_side_metadata),
         planned_old_kernel =
             _white_lindsey_descriptor_property(input, :planned_old_kernel),
     )
@@ -168,4 +204,97 @@ end
 function _white_lindsey_descriptor_property(value, key::Symbol, default = nothing)
     hasproperty(value, key) && return getproperty(value, key)
     return default
+end
+
+function _white_lindsey_unit_coefficient_input_requirements(descriptor)
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    stratum_kind in (:facet_cpb, :face_cpb) && return (;
+        object_kind = :white_lindsey_unit_coefficient_input_requirements,
+        status = :blocked_missing_white_lindsey_facet_kernel_inputs,
+        required_old_kernel = :_nested_face_product,
+        required_1d_helper = :_nested_doside_1d,
+        required_inputs = (
+            :doside_source_1d,
+            :active_product_axis_intervals,
+            :fixed_side_metadata,
+            :retained_count,
+            :parent_dims,
+        ),
+        missing_inputs =
+            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
+    )
+    stratum_kind === :edge_cpb && return (;
+        object_kind = :white_lindsey_unit_coefficient_input_requirements,
+        status = :blocked_missing_white_lindsey_edge_kernel_inputs,
+        required_old_kernel = :_nested_edge_product,
+        required_1d_helper = :_nested_doside_1d,
+        required_inputs = (
+            :doside_source_1d,
+            :free_axis_interval,
+            :fixed_side_metadata,
+            :retained_count,
+            :parent_dims,
+        ),
+        missing_inputs =
+            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
+    )
+    stratum_kind === :corner_cpb && return (;
+        object_kind = :white_lindsey_unit_coefficient_input_requirements,
+        status = :available_corner_support_local_coefficients,
+        required_old_kernel = :_nested_corner_piece,
+        required_1d_helper = nothing,
+        required_inputs = (:fixed_axis_coordinates,),
+        missing_inputs =
+            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
+    )
+    return (;
+        object_kind = :white_lindsey_unit_coefficient_input_requirements,
+        status = :blocked_unknown_white_lindsey_unit_coefficient_inputs,
+        required_old_kernel = nothing,
+        required_1d_helper = nothing,
+        required_inputs = (),
+        missing_inputs =
+            _white_lindsey_missing_unit_coefficient_inputs(descriptor),
+    )
+end
+
+function _white_lindsey_missing_unit_coefficient_inputs(descriptor)
+    stratum_kind = _white_lindsey_descriptor_property(descriptor, :stratum_kind)
+    missing = Symbol[]
+    if stratum_kind in (:facet_cpb, :face_cpb, :edge_cpb)
+        isnothing(_white_lindsey_descriptor_property(descriptor, :doside_source_1d)) &&
+            push!(missing, :missing_white_lindsey_doside_source_1d)
+        isnothing(_white_lindsey_descriptor_property(descriptor, :retained_count)) &&
+            push!(missing, :missing_white_lindsey_retained_count)
+        isnothing(_white_lindsey_descriptor_property(descriptor, :parent_dims)) &&
+            push!(missing, :missing_white_lindsey_parent_dims)
+        isnothing(
+            _white_lindsey_descriptor_property(descriptor, :fixed_side_metadata),
+        ) && push!(missing, :missing_white_lindsey_fixed_side_metadata)
+        if stratum_kind === :edge_cpb
+            isnothing(
+                _white_lindsey_descriptor_property(
+                    descriptor,
+                    :free_axis_interval,
+                ),
+            ) && push!(missing, :missing_white_lindsey_free_axis_interval)
+        else
+            isempty(
+                _white_lindsey_descriptor_property(
+                    descriptor,
+                    :active_product_axis_intervals,
+                    (),
+                ),
+            ) && push!(
+                missing,
+                :missing_white_lindsey_active_product_axis_intervals,
+            )
+        end
+    elseif stratum_kind === :corner_cpb
+        fixed_coordinates =
+            _white_lindsey_descriptor_property(descriptor, :fixed_axis_coordinates)
+        (!isnothing(fixed_coordinates) && length(fixed_coordinates) == 3) ||
+            push!(missing, :missing_white_lindsey_corner_fixed_coordinates)
+    end
+    return Tuple(missing)
 end

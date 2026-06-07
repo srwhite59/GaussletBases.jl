@@ -98,6 +98,32 @@ end
         CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_adapter_descriptor(
             corner_unit,
         )
+    @test facet_descriptor.source_cpb_intervals == (1:1, 1:3, 1:3)
+    @test facet_descriptor.source_axis_intervals ==
+          (x = 1:1, y = 1:3, z = 1:3)
+    @test facet_descriptor.active_product_axis_intervals == (
+        (; axis = :y, interval = 1:3),
+        (; axis = :z, interval = 1:3),
+    )
+    @test isnothing(facet_descriptor.free_axis)
+    @test isnothing(facet_descriptor.free_axis_interval)
+    @test isnothing(facet_descriptor.fixed_side_metadata)
+
+    @test edge_descriptor.source_cpb_intervals == (4:4, 2:2, 1:3)
+    @test edge_descriptor.source_axis_intervals ==
+          (x = 4:4, y = 2:2, z = 1:3)
+    @test edge_descriptor.active_product_axis_intervals ==
+          ((; axis = :z, interval = 1:3),)
+    @test edge_descriptor.free_axis == :z
+    @test edge_descriptor.free_axis_interval == 1:3
+    @test isnothing(edge_descriptor.fixed_side_metadata)
+
+    @test corner_descriptor.source_cpb_intervals == (4:4, 3:3, 3:3)
+    @test corner_descriptor.source_axis_intervals ==
+          (x = 4:4, y = 3:3, z = 3:3)
+    @test corner_descriptor.active_product_axis_intervals == ()
+    @test isnothing(corner_descriptor.free_axis)
+    @test isnothing(corner_descriptor.free_axis_interval)
 
     corner_coefficients =
         CPBMForLWAdapter.white_lindsey_boundary_stratum_unit_coefficients(
@@ -120,6 +146,12 @@ end
     )
     @test corner_coefficients.planned_old_kernel == :_nested_corner_piece
     @test corner_coefficients.coefficient_space == :source_cpb_support_local
+    @test corner_coefficients.source_cpb_intervals == (4:4, 3:3, 3:3)
+    @test corner_coefficients.source_axis_intervals ==
+          (x = 4:4, y = 3:3, z = 3:3)
+    @test corner_coefficients.missing_coefficient_inputs == ()
+    @test corner_coefficients.coefficient_input_requirements.status ==
+          :available_corner_support_local_coefficients
     @test !corner_coefficients.parent_row_indices_available
     @test size(corner_coefficients.coefficient_matrix) == (1, 1)
     @test corner_coefficients.coefficient_matrix[1, 1] == 1.0
@@ -151,8 +183,24 @@ end
     @test facet_coefficients.status ==
           :blocked_white_lindsey_boundary_stratum_unit_coefficients
     @test facet_coefficients.blocker ==
-          :white_lindsey_unit_coefficients_not_implemented_for_stratum
+          :incomplete_white_lindsey_edge_facet_kernel_input_context
     @test facet_coefficients.stratum_kind == :facet_cpb
+    @test facet_coefficients.coefficient_input_requirements.status ==
+          :blocked_missing_white_lindsey_facet_kernel_inputs
+    @test facet_coefficients.coefficient_input_requirements.required_old_kernel ==
+          :_nested_face_product
+    @test facet_coefficients.coefficient_input_requirements.required_1d_helper ==
+          :_nested_doside_1d
+    @test facet_coefficients.missing_coefficient_inputs == (
+        :missing_white_lindsey_doside_source_1d,
+        :missing_white_lindsey_retained_count,
+        :missing_white_lindsey_parent_dims,
+        :missing_white_lindsey_fixed_side_metadata,
+    )
+    @test facet_coefficients.active_product_axis_intervals == (
+        (; axis = :y, interval = 1:3),
+        (; axis = :z, interval = 1:3),
+    )
     @test isnothing(facet_coefficients.coefficient_matrix)
     @test !facet_coefficients.coefficient_maps_materialized
 
@@ -163,8 +211,22 @@ end
     @test edge_coefficients.status ==
           :blocked_white_lindsey_boundary_stratum_unit_coefficients
     @test edge_coefficients.blocker ==
-          :white_lindsey_unit_coefficients_not_implemented_for_stratum
+          :incomplete_white_lindsey_edge_facet_kernel_input_context
     @test edge_coefficients.stratum_kind == :edge_cpb
+    @test edge_coefficients.coefficient_input_requirements.status ==
+          :blocked_missing_white_lindsey_edge_kernel_inputs
+    @test edge_coefficients.coefficient_input_requirements.required_old_kernel ==
+          :_nested_edge_product
+    @test edge_coefficients.coefficient_input_requirements.required_1d_helper ==
+          :_nested_doside_1d
+    @test edge_coefficients.missing_coefficient_inputs == (
+        :missing_white_lindsey_doside_source_1d,
+        :missing_white_lindsey_retained_count,
+        :missing_white_lindsey_parent_dims,
+        :missing_white_lindsey_fixed_side_metadata,
+    )
+    @test edge_coefficients.free_axis == :z
+    @test edge_coefficients.free_axis_interval == 1:3
     @test isnothing(edge_coefficients.coefficient_matrix)
     @test !edge_coefficients.coefficient_maps_materialized
 

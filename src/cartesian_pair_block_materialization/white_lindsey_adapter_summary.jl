@@ -109,11 +109,27 @@ function white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)
             isnothing(source_cpb) ? nothing : CPB.codimension(source_cpb),
         source_cpb_shape =
             isnothing(source_cpb) ? nothing : CPB.shape(source_cpb),
+        source_cpb_intervals =
+            isnothing(source_cpb) ? nothing : CPB.intervals(source_cpb),
+        source_axis_intervals =
+            _white_lindsey_source_cpb_axis_intervals(source_cpb),
         active_product_axes =
             _white_lindsey_source_cpb_active_product_axes(source_cpb),
+        active_product_axis_intervals =
+            _white_lindsey_source_cpb_active_product_axis_intervals(source_cpb),
+        free_axis = _white_lindsey_source_cpb_free_axis(source_cpb),
+        free_axis_interval =
+            _white_lindsey_source_cpb_free_axis_interval(source_cpb),
         fixed_axes = _white_lindsey_source_cpb_fixed_axes(source_cpb),
         fixed_axis_coordinates =
             _white_lindsey_source_cpb_fixed_axis_coordinates(source_cpb),
+        fixed_side_metadata =
+            _white_lindsey_source_cpb_fixed_side_metadata(source_cpb),
+        retained_count_status = unit.dimension_status,
+        retained_count = unit.dimension,
+        parent_dims = _white_lindsey_unit_metadata_value(unit, :parent_dims),
+        doside_source_1d =
+            _white_lindsey_unit_metadata_value(unit, :doside_source_1d),
         kernel_plan_status = plan.status,
         planned_old_kernel = plan.kernel,
         planned_1d_helper = plan.side_1d_helper,
@@ -619,6 +635,43 @@ function _white_lindsey_source_cpb_active_product_axes(source_cpb)
     )
 end
 
+function _white_lindsey_source_cpb_axis_intervals(source_cpb)
+    isnothing(source_cpb) && return nothing
+    intervals = CPB.intervals(source_cpb)
+    return (;
+        x = intervals[1],
+        y = intervals[2],
+        z = intervals[3],
+    )
+end
+
+function _white_lindsey_source_cpb_active_product_axis_intervals(source_cpb)
+    isnothing(source_cpb) && return nothing
+    return Tuple(
+        (; axis, interval)
+        for (axis, interval) in zip(
+            _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES,
+            CPB.intervals(source_cpb),
+        )
+        if length(interval) > 1
+    )
+end
+
+function _white_lindsey_source_cpb_free_axis(source_cpb)
+    active_axes = _white_lindsey_source_cpb_active_product_axes(source_cpb)
+    isnothing(active_axes) && return nothing
+    length(active_axes) == 1 || return nothing
+    return only(active_axes)
+end
+
+function _white_lindsey_source_cpb_free_axis_interval(source_cpb)
+    active_intervals =
+        _white_lindsey_source_cpb_active_product_axis_intervals(source_cpb)
+    isnothing(active_intervals) && return nothing
+    length(active_intervals) == 1 || return nothing
+    return only(active_intervals).interval
+end
+
 function _white_lindsey_source_cpb_fixed_axes(source_cpb)
     isnothing(source_cpb) && return nothing
     return Tuple(
@@ -628,6 +681,28 @@ function _white_lindsey_source_cpb_fixed_axes(source_cpb)
         )
         if length(interval) == 1
     )
+end
+
+function _white_lindsey_source_cpb_fixed_side_metadata(source_cpb)
+    isnothing(source_cpb) && return nothing
+    metadata = source_cpb.metadata
+    if haskey(metadata, :axis) && haskey(metadata, :side)
+        return ((; axis = metadata.axis, side = metadata.side),)
+    elseif haskey(metadata, :fixed_axes) && haskey(metadata, :sides)
+        return Tuple(
+            (; axis, side)
+            for (axis, side) in zip(metadata.fixed_axes, metadata.sides)
+        )
+    elseif haskey(metadata, :sides)
+        return Tuple(
+            (; axis, side)
+            for (axis, side) in zip(
+                _WHITE_LINDSEY_UNIT_DESCRIPTOR_AXES,
+                metadata.sides,
+            )
+        )
+    end
+    return nothing
 end
 
 function _white_lindsey_source_cpb_fixed_axis_coordinates(source_cpb)
