@@ -49,7 +49,10 @@ CartesianShellification
 -> CartesianRetainedUnitTransformContracts
 -> CartesianUnitPairs
 -> CartesianPairOperatorPlans
--> CartesianPairBlockMaterialization later
+-> CartesianPairBlockMaterialization preflight
+-> direct/direct one-body local pair-block pilot
+-> future source/final pair-block materialization
+-> future assembly
 ```
 
 Plainly:
@@ -61,12 +64,17 @@ geometry ownership
 -> per-unit transform/realization contracts
 -> retained-unit pairs
 -> pair-operator construction plans
--> numerical pair blocks later
+-> pair-block materialization readiness
+-> direct/direct one-body pair blocks for the current pilot
+-> broader pair blocks and assembly later
 ```
 
-`CartesianPairBlockMaterialization` is not part of the current metadata chain
-yet. It is the later numerical step that will build concrete pair blocks from
-pair-operator plans.
+`CartesianPairBlockMaterialization` is now the preflight layer after
+`CartesianPairOperatorPlans`. It has also started numerical local pair-block
+pilots, but only for direct/direct one-body terms: overlap, position, x2, and
+kinetic. It is not yet a PQS block path, White--Lindsey block path,
+Coulomb/IDA path, full operator assembly, Hamiltonian bundle, export, or
+artifact writer.
 
 ### Why “lowering”?
 
@@ -208,7 +216,7 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **Pair operator plan**              | Metadata describing how an operator block between two units should be built.                          | It reads transform and realization paths from retained-unit transform contracts, not directly from retained-unit kinds. It may be ready, blocked, adapter-only, or not materialized. |
 | **Source operator block**           | Operator block built between source CPBs/intermediate retained spaces.                                | For PQS, this is the natural first numerical block.              |
 | **Final pair block**                | Operator block between final retained units after any realization/transform maps.                     | This is what assembly eventually places into the global matrix.  |
-| **Pair-block materialization**      | The later numerical step that builds concrete pair blocks from pair-operator plans.                    | Not metadata planning, not Hamiltonian assembly, and not artifact export. |
+| **Pair-block materialization**      | The step that preflights and then builds concrete pair blocks from pair-operator plans.                | Current numerical pilots are direct/direct one-body local pair blocks only; not PQS/LW blocks, Coulomb/IDA, Hamiltonian assembly, or artifact export. |
 | **Pair operator block**             | Numerical block for one pair of final retained units and one or more operator terms.                  | Not yet built when report says metadata-only.                    |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |

@@ -3,13 +3,24 @@
 
 Internal metadata/preflight layer for Cartesian pair-block materialization.
 
-This module owns the future transition:
+This module owns the transition:
 
     pair-operator plan metadata -> numerical pair blocks
 
-For now it creates metadata-only readiness records. It does not materialize
-source operator blocks, final pair blocks, Hamiltonian data, exports, or
-artifacts.
+It currently provides metadata/preflight records for pair-block
+materialization, plus local direct/direct one-body pair-block pilots for:
+
+    :overlap
+    :position_x, :position_y, :position_z
+    :x2_x, :x2_y, :x2_z
+    :kinetic
+
+The direct/direct one-body selector is local pair-block materialization only.
+Signs and prefactors for supplied 1D factors are owned by the caller-provided
+parent/axis blocks.
+
+This module still does not assemble full operators, Hamiltonians, Ham bundles,
+exports, artifacts, PQS blocks, or White--Lindsey blocks.
 """
 module CartesianPairBlockMaterialization
 
