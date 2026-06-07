@@ -6417,6 +6417,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     selected_contract_inventory,
     selected_crc_sidecar_summary,
     retained_unit_summary,
+    retained_unit_transform_contract_summary,
     unit_pair_summary,
     pair_operator_summary,
 )
@@ -6490,6 +6491,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
             selected_crc_sidecar_summary.sidecar_missing_count :
             0,
         retained_unit_summary,
+        retained_unit_transform_contract_summary,
         unit_pair_summary,
         pair_operator_summary,
         final_retained_unit_inventory_available =
@@ -6524,6 +6526,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     selected_crc_sidecar_summary = nothing,
     retained_unit_plan = nothing,
     retained_unit_summary = nothing,
+    retained_unit_transform_contract_plan = nothing,
+    retained_unit_transform_contract_summary = nothing,
     unit_pair_plan = nothing,
     unit_pair_summary = nothing,
     pair_operator_plan = nothing,
@@ -6568,6 +6572,26 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             blocker,
         ) :
         retained_unit_summary
+    retained_unit_transform_contract_plan =
+        isnothing(retained_unit_transform_contract_plan) &&
+        retained_unit_plan isa CartesianRetainedUnits.RetainedUnitPlan ?
+        CartesianRetainedUnitTransformContracts.retained_unit_transform_contract_plan(
+            retained_unit_plan,
+        ) :
+        retained_unit_transform_contract_plan
+    retained_unit_transform_contract_summary =
+        isnothing(retained_unit_transform_contract_summary) &&
+        retained_unit_transform_contract_plan isa
+        CartesianRetainedUnitTransformContracts.RetainedUnitTransformContractPlan ?
+        CartesianRetainedUnitTransformContracts.summary(
+            retained_unit_transform_contract_plan,
+        ) :
+        isnothing(retained_unit_transform_contract_summary) ?
+        CartesianRetainedUnitTransformContracts.unavailable_summary(
+            selected ? status : :not_selected,
+            blocker,
+        ) :
+        retained_unit_transform_contract_summary
     unit_pair_plan =
         isnothing(unit_pair_plan) && retained_unit_plan isa
         CartesianRetainedUnits.RetainedUnitPlan ?
@@ -6612,6 +6636,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             selected_contract_inventory,
             selected_crc_sidecar_summary,
             retained_unit_summary,
+            retained_unit_transform_contract_summary,
             unit_pair_summary,
             pair_operator_summary,
         )
@@ -6637,6 +6662,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         selected_crc_sidecar_summary,
         retained_unit_plan,
         retained_unit_summary,
+        retained_unit_transform_contract_plan,
+        retained_unit_transform_contract_summary,
         unit_pair_plan,
         unit_pair_summary,
         pair_operator_plan,
