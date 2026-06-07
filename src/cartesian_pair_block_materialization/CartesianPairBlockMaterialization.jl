@@ -19,11 +19,13 @@ The direct/direct one-body selector is local pair-block materialization only.
 Signs and prefactors for supplied 1D factors are owned by the caller-provided
 parent/axis blocks.
 
-PQS/PQS raw-source pair support is currently preflight metadata only. It checks
-for compatible raw product source facts; it does not build PQS source blocks.
+PQS/PQS raw-source pair support currently has metadata preflight plus a narrow
+raw source-space overlap pilot from caller-supplied 1D overlap factors. It does
+not build shell projection, Lowdin realization, or final retained PQS pair
+blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
-exports, artifacts, PQS numerical blocks, or White--Lindsey blocks.
+exports, artifacts, final retained PQS pair blocks, or White--Lindsey blocks.
 """
 module CartesianPairBlockMaterialization
 
@@ -31,11 +33,13 @@ using ..CartesianCPB
 using ..CartesianUnitPairs
 using ..CartesianPairOperatorPlans
 using ..CartesianRetainedUnitTransformContracts
+using ..CartesianRawProductSources
 
 const CPB = CartesianCPB
 const CUP = CartesianUnitPairs
 const CPOP = CartesianPairOperatorPlans
 const CRTC = CartesianRetainedUnitTransformContracts
+const CRPS = CartesianRawProductSources
 
 export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,
@@ -45,6 +49,7 @@ export PairBlockMaterializationPolicy,
        PairBlockMaterializationPlan,
        pair_block_materialization_plan,
        pair_block_materialization_records,
+       pqs_source_pair_overlap_block,
        direct_direct_overlap_block,
        direct_direct_overlap_blocks,
        direct_direct_position_block,
@@ -69,6 +74,9 @@ export PairBlockMaterializationPolicy,
 # summaries.jl
 #     Compact summaries for tests and reports.
 #
+# pqs_source_overlap.jl
+#     First tiny PQS/PQS raw source-space overlap pilot.
+#
 # direct_overlap.jl
 #     First tiny direct/direct overlap pair-block pilot.
 #
@@ -87,6 +95,7 @@ include("records.jl")
 include("preflight.jl")
 include("summaries.jl")
 include("direct_overlap.jl")
+include("pqs_source_overlap.jl")
 include("direct_position.jl")
 include("direct_x2.jl")
 include("direct_kinetic.jl")

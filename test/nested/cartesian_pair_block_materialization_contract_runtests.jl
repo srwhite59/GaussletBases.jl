@@ -381,6 +381,46 @@ function _pair_block_expected_overlap(left_cpb, right_cpb, overlap_x, overlap_y,
     return _pair_block_expected_product(left_cpb, right_cpb, overlap_x, overlap_y, overlap_z)
 end
 
+function _pair_block_pqs_source_overlap_axes(left_dims, right_dims)
+    overlap_x = [
+        Float64(10 * lx + rx)
+        for lx in 1:left_dims[1], rx in 1:right_dims[1]
+    ]
+    overlap_y = [
+        Float64(100 * ly + 2 * ry)
+        for ly in 1:left_dims[2], ry in 1:right_dims[2]
+    ]
+    overlap_z = [
+        Float64(1000 * lz + 3 * rz)
+        for lz in 1:left_dims[3], rz in 1:right_dims[3]
+    ]
+    return overlap_x, overlap_y, overlap_z
+end
+
+function _pair_block_expected_source_overlap(
+    left_dims,
+    right_dims,
+    source_mode_ordering,
+    overlap_x,
+    overlap_y,
+    overlap_z,
+)
+    left_modes = CRPSForPairBlocks.source_mode_indices(
+        left_dims;
+        source_mode_ordering,
+    )
+    right_modes = CRPSForPairBlocks.source_mode_indices(
+        right_dims;
+        source_mode_ordering,
+    )
+    return [
+        overlap_x[left[1], right[1]] *
+        overlap_y[left[2], right[2]] *
+        overlap_z[left[3], right[3]]
+        for left in left_modes, right in right_modes
+    ]
+end
+
 function _pair_block_expected_position(
     left_cpb,
     right_cpb,
@@ -688,6 +728,56 @@ end
     @test !materialization_summary.hamiltonian_data_materialized
     @test !materialization_summary.artifacts_materialized
 
+    left_source_dims = pqs_cross_record.metadata.left_source_mode_dims
+    right_source_dims = pqs_cross_record.metadata.right_source_mode_dims
+    pqs_overlap_x, pqs_overlap_y, pqs_overlap_z =
+        _pair_block_pqs_source_overlap_axes(left_source_dims, right_source_dims)
+    pqs_overlap_result = CPBM.pqs_source_pair_overlap_block(
+        pqs_cross_record;
+        overlap_1d = (;
+            x = pqs_overlap_x,
+            y = pqs_overlap_y,
+            z = pqs_overlap_z,
+        ),
+    )
+    expected_pqs_overlap = _pair_block_expected_source_overlap(
+        left_source_dims,
+        right_source_dims,
+        pqs_cross_record.metadata.source_mode_ordering,
+        pqs_overlap_x,
+        pqs_overlap_y,
+        pqs_overlap_z,
+    )
+    @test pqs_overlap_result isa CPBM.PairBlockMaterializationResult
+    @test pqs_overlap_result.term == :source_overlap
+    @test pqs_overlap_result.pair_key ==
+          (:pair_block_pqs_left_unit, :pair_block_pqs_right_unit)
+    @test size(pqs_overlap_result.block) == (27, 60)
+    @test pqs_overlap_result.block ≈ expected_pqs_overlap
+    @test pqs_overlap_result.materialized
+    @test pqs_overlap_result.source_operator_blocks_materialized
+    @test !pqs_overlap_result.final_pair_blocks_materialized
+    @test !pqs_overlap_result.operator_blocks_materialized
+    @test !pqs_overlap_result.hamiltonian_data_materialized
+    @test !pqs_overlap_result.artifacts_materialized
+    @test pqs_overlap_result.metadata.block_space == :raw_product_source_modes
+    @test pqs_overlap_result.metadata.left_source_mode_dims == left_source_dims
+    @test pqs_overlap_result.metadata.right_source_mode_dims == right_source_dims
+    @test pqs_overlap_result.metadata.source_mode_ordering ==
+          :x_major_y_major_z_fast
+    @test pqs_overlap_result.metadata.source_operator_blocks_materialized
+    @test !pqs_overlap_result.metadata.final_pair_blocks_materialized
+
+    bad_pqs_overlap_x = zeros(Float64, left_source_dims[1] + 1, right_source_dims[1])
+    @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
+        pqs_cross_record;
+        overlap_1d = (;
+            x = bad_pqs_overlap_x,
+            y = pqs_overlap_y,
+            z = pqs_overlap_z,
+        ),
+    )
+
     left_contract, right_contract =
         CRTCForPairBlocks.transform_contracts(transform_plan)
     missing_left_contract =
@@ -734,6 +824,14 @@ end
           :blocked_missing_source_mode_dims
     @test missing_cross_record.metadata.right_raw_product_source_plan_status ==
           :available_raw_product_box_plan
+    @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
+        missing_cross_record;
+        overlap_1d = (;
+            x = pqs_overlap_x,
+            y = pqs_overlap_y,
+            z = pqs_overlap_z,
+        ),
+    )
 
     incompatible_right_summary =
         merge(
@@ -778,6 +876,14 @@ end
     @test incompatible_cross_record.metadata.right_source_mode_ordering ==
           :synthetic_other_ordering
     @test isnothing(incompatible_cross_record.metadata.source_mode_ordering)
+    @test_throws ArgumentError CPBM.pqs_source_pair_overlap_block(
+        incompatible_cross_record;
+        overlap_1d = (;
+            x = pqs_overlap_x,
+            y = pqs_overlap_y,
+            z = pqs_overlap_z,
+        ),
+    )
 end
 
 @testset "CartesianPairBlockMaterialization direct/direct overlap selector" begin
