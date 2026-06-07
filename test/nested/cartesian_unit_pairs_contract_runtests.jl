@@ -174,6 +174,29 @@ function _unit_pair_family_count(summary, pair_family::Symbol)
     return 0
 end
 
+@testset "CartesianUnitPairs unavailable summary" begin
+    summary = CUP.unavailable_summary(:not_selected, :not_selected_route)
+
+    @test summary.object_kind == :cartesian_unit_pair_plan_summary
+    @test summary.status == :not_selected
+    @test summary.blocker == :not_selected_route
+    @test summary.retained_unit_count == 0
+    @test summary.pair_count == 0
+    @test summary.expected_upper_triangular_pair_count == 0
+    @test summary.pair_family_counts == ()
+    @test !summary.route_core_pair_inventory_available
+    @test summary.route_core_pair_inventory_status == :not_available
+    @test summary.route_core_pair_inventory_blocker == :not_selected_route
+    @test summary.route_core_pair_count == 0
+    @test summary.route_core_pair_missing_final_unit_indices == ()
+    @test !summary.materialized
+    @test !summary.pair_inventory_materialized
+    @test !summary.source_operator_blocks_materialized
+    @test !summary.operator_blocks_materialized
+    @test !summary.hamiltonian_data_materialized
+    @test !summary.artifacts_materialized
+end
+
 @testset "CartesianUnitPairs metadata inventory" begin
     retained_plan = CRUForUnitPairs.retained_unit_plan(_unit_pairs_lowering_plan())
     pair_plan = CUP.unit_pair_plan(retained_plan)

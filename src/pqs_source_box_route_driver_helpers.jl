@@ -6511,33 +6511,6 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     )
 end
 
-function _pqs_source_box_route_driver_unit_pair_unavailable_summary(
-    status::Symbol,
-    blocker = nothing,
-)
-    return (;
-        object_kind = :cartesian_unit_pair_plan_summary,
-        status,
-        blocker,
-        retained_unit_count = 0,
-        pair_count = 0,
-        expected_upper_triangular_pair_count = 0,
-        pair_families = (),
-        pair_family_counts = (),
-        route_core_pair_inventory_available = false,
-        route_core_pair_inventory_status = :not_available,
-        route_core_pair_inventory_blocker = blocker,
-        route_core_pair_count = 0,
-        route_core_pair_missing_final_unit_indices = (),
-        materialized = false,
-        pair_inventory_materialized = false,
-        source_operator_blocks_materialized = false,
-        operator_blocks_materialized = false,
-        hamiltonian_data_materialized = false,
-        artifacts_materialized = false,
-    )
-end
-
 function _pqs_source_box_route_driver_retained_unit_unavailable_summary(
     status::Symbol,
     blocker = nothing,
@@ -6628,7 +6601,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         CartesianUnitPairs.UnitPairPlan ?
         CartesianUnitPairs.summary(unit_pair_plan) :
         isnothing(unit_pair_summary) ?
-        _pqs_source_box_route_driver_unit_pair_unavailable_summary(
+        CartesianUnitPairs.unavailable_summary(
             selected ? status : :not_selected,
             blocker,
         ) :

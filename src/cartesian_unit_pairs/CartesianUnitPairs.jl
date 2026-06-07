@@ -27,6 +27,7 @@ export UnitPairPolicy,
        UnitPairPlan,
        unit_pair_plan,
        unit_pairs,
+       unavailable_summary,
        summary,
        route_core_pair_inventory
 

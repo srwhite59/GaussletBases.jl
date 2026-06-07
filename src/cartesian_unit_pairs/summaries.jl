@@ -49,3 +49,27 @@ function _unit_pair_plan_summary(
         artifacts_materialized = false,
     )
 end
+
+function unavailable_summary(status::Symbol, blocker = nothing)
+    return (;
+        object_kind = :cartesian_unit_pair_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        pair_count = 0,
+        expected_upper_triangular_pair_count = 0,
+        pair_families = (),
+        pair_family_counts = (),
+        route_core_pair_inventory_available = false,
+        route_core_pair_inventory_status = :not_available,
+        route_core_pair_inventory_blocker = blocker,
+        route_core_pair_count = 0,
+        route_core_pair_missing_final_unit_indices = (),
+        materialized = false,
+        pair_inventory_materialized = false,
+        source_operator_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
