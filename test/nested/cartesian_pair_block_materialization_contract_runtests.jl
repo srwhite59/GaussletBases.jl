@@ -9,6 +9,7 @@ const CRUForPairBlocks = GaussletBases.CartesianRetainedUnits
 const CTLForPairBlocks = GaussletBases.CartesianTerminalLowering
 const CRCForPairBlocks = GaussletBases.CartesianRouteCore
 const CPBForPairBlocks = GaussletBases.CartesianCPB
+const CRPSForPairBlocks = GaussletBases.CartesianRawProductSources
 
 function _pair_block_count(counts, field::Symbol, value)
     matches = Tuple(entry for entry in counts if getproperty(entry, field) == value)
@@ -51,6 +52,7 @@ function _pair_block_retained_unit(
     owned_support = nothing,
     source_cpbs = (),
     source_cpb_index = nothing,
+    metadata = (; route_core_sidecar_status = :not_materialized),
 )
     return CRUForPairBlocks.RetainedUnitRecord(
         unit_key,
@@ -72,7 +74,7 @@ function _pair_block_retained_unit(
         nothing,
         nothing,
         false,
-        (; route_core_sidecar_status = :not_materialized),
+        NamedTuple(metadata),
     )
 end
 
@@ -179,6 +181,88 @@ function _pair_block_rectangular_retained_plan()
             hamiltonian_data_materialized = false,
         ),
         (; fixture = :cartesian_pair_block_rectangular_direct_direct),
+    )
+end
+
+function _pair_block_pqs_retained_plan()
+    left_source = CPBForPairBlocks.filled_cpb(
+        1:3,
+        1:3,
+        1:3;
+        role = :pair_block_pqs_left_source_cpb,
+    )
+    right_source = CPBForPairBlocks.filled_cpb(
+        4:6,
+        1:3,
+        1:3;
+        role = :pair_block_pqs_right_source_cpb,
+    )
+    left_pqs = _pair_block_retained_unit(
+        :pair_block_pqs_left_unit,
+        1,
+        :pqs_shell_retained_unit,
+        :pqs_filled_source_cpb,
+        :pqs_boundary_comx_product_modes,
+        :shell_projection_lowdin;
+        source_cpbs = (left_source,),
+        metadata = (; q = 3, source_mode_shape = nothing),
+    )
+    right_pqs = _pair_block_retained_unit(
+        :pair_block_pqs_right_unit,
+        2,
+        :pqs_shell_retained_unit,
+        :pqs_filled_source_cpb,
+        :pqs_boundary_comx_product_modes,
+        :shell_projection_lowdin;
+        source_cpbs = (right_source,),
+        metadata = (; q = 9, source_mode_shape = (5, 4, 3)),
+    )
+    units = (left_pqs, right_pqs)
+    return CRUForPairBlocks.RetainedUnitPlan(
+        CRUForPairBlocks.MetadataOnlyRetainedUnits(),
+        _pair_block_minimal_lowering_plan(),
+        units,
+        (;
+            object_kind = :synthetic_retained_unit_plan_summary,
+            status = :available_retained_unit_plan,
+            retained_unit_count = length(units),
+            materialized = false,
+            transforms_materialized = false,
+            coefficient_maps_materialized = false,
+            pair_inventory_materialized = false,
+            operator_blocks_materialized = false,
+            hamiltonian_data_materialized = false,
+        ),
+        (; fixture = :cartesian_pair_block_pqs_source_pair_preflight),
+    )
+end
+
+function _pair_block_transform_contract_with_metadata(contract, metadata)
+    return CRTCForPairBlocks.RetainedUnitTransformContract(
+        contract.unit_key,
+        contract.unit_index,
+        contract.unit_kind,
+        contract.lowering_kind,
+        contract.retained_rule,
+        contract.realization_rule,
+        contract.source_cpbs,
+        contract.transform_path,
+        contract.realization_path,
+        contract.dimension_status,
+        contract.column_range_status,
+        contract.materialized,
+        contract.blocker,
+        NamedTuple(metadata),
+    )
+end
+
+function _pair_block_transform_plan_with_contracts(transform_plan, contracts)
+    return CRTCForPairBlocks.RetainedUnitTransformContractPlan(
+        transform_plan.policy,
+        transform_plan.retained_unit_plan,
+        Tuple(contracts),
+        transform_plan.summary,
+        transform_plan.metadata,
     )
 end
 
@@ -418,7 +502,12 @@ end
         materialization_summary.materialization_path_counts,
         :materialization_path,
         :deferred_pair_block_materialization_path,
-    ) == 2
+    ) == 1
+    @test _pair_block_count(
+        materialization_summary.materialization_path_counts,
+        :materialization_path,
+        :pqs_source_pair_preflight,
+    ) == 1
     @test _pair_block_count(
         materialization_summary.readiness_status_counts,
         :readiness_status,
@@ -428,12 +517,22 @@ end
         materialization_summary.readiness_status_counts,
         :readiness_status,
         :blocked_pair_block_materialization_not_implemented,
-    ) == 2
+    ) == 1
+    @test _pair_block_count(
+        materialization_summary.readiness_status_counts,
+        :readiness_status,
+        :blocked_missing_raw_product_source_plan,
+    ) == 1
     @test _pair_block_count(
         materialization_summary.blocker_counts,
         :blocker,
         :non_direct_direct_pair_block_materialization_not_implemented,
-    ) == 2
+    ) == 1
+    @test _pair_block_count(
+        materialization_summary.blocker_counts,
+        :blocker,
+        :missing_left_raw_product_source_plan,
+    ) == 1
 
     direct_record = _pair_block_record_for(
         materialization_plan,
@@ -517,16 +616,168 @@ end
         overlap_1d = (; x = overlap_x, y = overlap_y, z = overlap_z),
         kinetic_1d = (; x = kinetic_x, y = kinetic_y, z = kinetic_z),
     )
+    @test pqs_pqs_record.materialization_path == :pqs_source_pair_preflight
     @test pqs_pqs_record.readiness_status ==
-          :blocked_pair_block_materialization_not_implemented
-    @test pqs_pqs_record.blocker ==
-          :non_direct_direct_pair_block_materialization_not_implemented
+          :blocked_missing_raw_product_source_plan
+    @test pqs_pqs_record.blocker == :missing_left_raw_product_source_plan
+    @test isnothing(pqs_pqs_record.metadata.left_source_mode_dims)
+    @test isnothing(pqs_pqs_record.metadata.right_source_mode_dims)
     @test !materialization_summary.materialized
     @test !materialization_summary.source_operator_blocks_materialized
     @test !materialization_summary.final_pair_blocks_materialized
     @test !materialization_summary.operator_blocks_materialized
     @test !materialization_summary.hamiltonian_data_materialized
     @test !materialization_summary.artifacts_materialized
+end
+
+@testset "CartesianPairBlockMaterialization PQS source-pair preflight" begin
+    retained_plan = _pair_block_pqs_retained_plan()
+    unit_pair_plan = CUPForPairBlocks.unit_pair_plan(retained_plan)
+    transform_plan =
+        CRTCForPairBlocks.retained_unit_transform_contract_plan(retained_plan)
+    pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            transform_plan;
+            route_core_sidecars = false,
+        )
+    materialization_plan =
+        CPBM.pair_block_materialization_plan(pair_operator_plan)
+    materialization_summary = CPBM.summary(materialization_plan)
+    pqs_cross_record = _pair_block_record_for(
+        materialization_plan,
+        :pair_block_pqs_left_unit,
+        :pair_block_pqs_right_unit,
+    )
+
+    @test materialization_summary.ready_record_count == 3
+    @test materialization_summary.blocked_record_count == 0
+    @test _pair_block_count(
+        materialization_summary.materialization_path_counts,
+        :materialization_path,
+        :pqs_source_pair_preflight,
+    ) == 3
+    @test pqs_cross_record.materialization_path == :pqs_source_pair_preflight
+    @test pqs_cross_record.readiness_status == :ready_metadata_only_not_materialized
+    @test isnothing(pqs_cross_record.blocker)
+    @test !pqs_cross_record.materialized
+    @test pqs_cross_record.metadata.left_raw_product_source_plan_status ==
+          :available_raw_product_box_plan
+    @test pqs_cross_record.metadata.right_raw_product_source_plan_status ==
+          :available_raw_product_box_plan
+    @test pqs_cross_record.metadata.left_source_mode_dims == (3, 3, 3)
+    @test pqs_cross_record.metadata.right_source_mode_dims == (5, 4, 3)
+    @test pqs_cross_record.metadata.left_source_mode_count == 27
+    @test pqs_cross_record.metadata.right_source_mode_count == 60
+    @test pqs_cross_record.metadata.source_mode_ordering ==
+          :x_major_y_major_z_fast
+    @test pqs_cross_record.metadata.left_source_mode_ordering ==
+          :x_major_y_major_z_fast
+    @test pqs_cross_record.metadata.right_source_mode_ordering ==
+          :x_major_y_major_z_fast
+    @test pqs_cross_record.metadata.left_raw_product_source_summary.source_mode_dims ==
+          (3, 3, 3)
+    @test pqs_cross_record.metadata.right_raw_product_source_summary.source_mode_dims ==
+          (5, 4, 3)
+    @test !pqs_cross_record.metadata.source_operator_blocks_materialized
+    @test !pqs_cross_record.metadata.final_pair_blocks_materialized
+    @test !materialization_summary.materialized
+    @test !materialization_summary.source_operator_blocks_materialized
+    @test !materialization_summary.final_pair_blocks_materialized
+    @test !materialization_summary.operator_blocks_materialized
+    @test !materialization_summary.hamiltonian_data_materialized
+    @test !materialization_summary.artifacts_materialized
+
+    left_contract, right_contract =
+        CRTCForPairBlocks.transform_contracts(transform_plan)
+    missing_left_contract =
+        _pair_block_transform_contract_with_metadata(
+            left_contract,
+            merge(
+                left_contract.metadata,
+                (;
+                    raw_product_source_plan = nothing,
+                    raw_product_source_summary =
+                        CRPSForPairBlocks.unavailable_summary(
+                            :blocked_missing_source_mode_dims,
+                            :missing_pqs_source_mode_dims,
+                        ),
+                    raw_product_source_plan_status =
+                        :blocked_missing_source_mode_dims,
+                ),
+            ),
+        )
+    missing_transform_plan =
+        _pair_block_transform_plan_with_contracts(
+            transform_plan,
+            (missing_left_contract, right_contract),
+        )
+    missing_pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            missing_transform_plan;
+            route_core_sidecars = false,
+        )
+    missing_materialization_plan =
+        CPBM.pair_block_materialization_plan(missing_pair_operator_plan)
+    missing_cross_record = _pair_block_record_for(
+        missing_materialization_plan,
+        :pair_block_pqs_left_unit,
+        :pair_block_pqs_right_unit,
+    )
+
+    @test missing_cross_record.materialization_path == :pqs_source_pair_preflight
+    @test missing_cross_record.readiness_status ==
+          :blocked_missing_raw_product_source_plan
+    @test missing_cross_record.blocker == :missing_left_raw_product_source_plan
+    @test missing_cross_record.metadata.left_raw_product_source_plan_status ==
+          :blocked_missing_source_mode_dims
+    @test missing_cross_record.metadata.right_raw_product_source_plan_status ==
+          :available_raw_product_box_plan
+
+    incompatible_right_summary =
+        merge(
+            right_contract.metadata.raw_product_source_summary,
+            (; source_mode_ordering = :synthetic_other_ordering),
+        )
+    incompatible_right_contract =
+        _pair_block_transform_contract_with_metadata(
+            right_contract,
+            merge(
+                right_contract.metadata,
+                (; raw_product_source_summary = incompatible_right_summary),
+            ),
+        )
+    incompatible_transform_plan =
+        _pair_block_transform_plan_with_contracts(
+            transform_plan,
+            (left_contract, incompatible_right_contract),
+        )
+    incompatible_pair_operator_plan =
+        CPOPForPairBlocks.pair_operator_plan(
+            unit_pair_plan,
+            incompatible_transform_plan;
+            route_core_sidecars = false,
+        )
+    incompatible_materialization_plan =
+        CPBM.pair_block_materialization_plan(incompatible_pair_operator_plan)
+    incompatible_cross_record = _pair_block_record_for(
+        incompatible_materialization_plan,
+        :pair_block_pqs_left_unit,
+        :pair_block_pqs_right_unit,
+    )
+
+    @test incompatible_cross_record.materialization_path ==
+          :pqs_source_pair_preflight
+    @test incompatible_cross_record.readiness_status ==
+          :blocked_incompatible_raw_product_source_ordering
+    @test incompatible_cross_record.blocker ==
+          :incompatible_raw_product_source_ordering
+    @test incompatible_cross_record.metadata.left_source_mode_ordering ==
+          :x_major_y_major_z_fast
+    @test incompatible_cross_record.metadata.right_source_mode_ordering ==
+          :synthetic_other_ordering
+    @test isnothing(incompatible_cross_record.metadata.source_mode_ordering)
 end
 
 @testset "CartesianPairBlockMaterialization direct/direct overlap selector" begin
@@ -796,11 +1047,12 @@ end
         (:pair_block_direct_left_unit, :pair_block_direct_right_unit),
         (:pair_block_direct_right_unit, :pair_block_direct_right_unit),
     ))
-    @test all(
-        skipped -> skipped.blocker ==
-                   :non_direct_direct_pair_block_materialization_not_implemented,
-        batch_result.skipped_records,
-    )
+    skipped_blockers = Tuple(skipped.blocker for skipped in batch_result.skipped_records)
+    @test count(
+        ==(:non_direct_direct_pair_block_materialization_not_implemented),
+        skipped_blockers,
+    ) == 2
+    @test count(==(:missing_left_raw_product_source_plan), skipped_blockers) == 1
     @test batch_cross.block ≈ expected_cross
     @test batch_result.materialized
     @test batch_result.source_operator_blocks_materialized

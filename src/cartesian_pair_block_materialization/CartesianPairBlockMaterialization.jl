@@ -19,18 +19,23 @@ The direct/direct one-body selector is local pair-block materialization only.
 Signs and prefactors for supplied 1D factors are owned by the caller-provided
 parent/axis blocks.
 
+PQS/PQS raw-source pair support is currently preflight metadata only. It checks
+for compatible raw product source facts; it does not build PQS source blocks.
+
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
-exports, artifacts, PQS blocks, or White--Lindsey blocks.
+exports, artifacts, PQS numerical blocks, or White--Lindsey blocks.
 """
 module CartesianPairBlockMaterialization
 
 using ..CartesianCPB
 using ..CartesianUnitPairs
 using ..CartesianPairOperatorPlans
+using ..CartesianRetainedUnitTransformContracts
 
 const CPB = CartesianCPB
 const CUP = CartesianUnitPairs
 const CPOP = CartesianPairOperatorPlans
+const CRTC = CartesianRetainedUnitTransformContracts
 
 export PairBlockMaterializationPolicy,
        MetadataOnlyPairBlockMaterialization,
