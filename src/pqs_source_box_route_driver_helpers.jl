@@ -6418,6 +6418,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     selected_crc_sidecar_summary,
     retained_unit_summary,
     unit_pair_summary,
+    pair_operator_summary,
 )
     return (;
         object_kind = :cartesian_driver_terminal_route_state_summary,
@@ -6490,6 +6491,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
             0,
         retained_unit_summary,
         unit_pair_summary,
+        pair_operator_summary,
         final_retained_unit_inventory_available =
             !isnothing(selected_crc_sidecar_summary) &&
             selected_crc_sidecar_summary.final_retained_unit_inventory_available,
@@ -6536,6 +6538,39 @@ function _pqs_source_box_route_driver_unit_pair_unavailable_summary(
     )
 end
 
+function _pqs_source_box_route_driver_pair_operator_unavailable_summary(
+    status::Symbol,
+    blocker = nothing,
+)
+    return (;
+        object_kind = :cartesian_pair_operator_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        unit_pair_count = 0,
+        pair_operator_plan_count = 0,
+        expected_pair_operator_plan_count = 0,
+        pair_families = (),
+        pair_family_counts = (),
+        source_operator_path_counts = (),
+        final_block_path_counts = (),
+        materialization_status_counts = (),
+        blocker_counts = (),
+        blocked_pair_operator_plan_count = 0,
+        route_core_pair_operator_plan_inventory_available = false,
+        route_core_pair_operator_plan_inventory_status = :not_available,
+        route_core_pair_operator_plan_inventory_blocker = blocker,
+        route_core_pair_operator_plan_count = 0,
+        route_core_pair_operator_plan_blocked_count = 0,
+        materialized = false,
+        source_operator_blocks_materialized = false,
+        final_pair_blocks_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+        artifacts_materialized = false,
+    )
+end
+
 function _pqs_source_box_route_driver_retained_unit_unavailable_summary(
     status::Symbol,
     blocker = nothing,
@@ -6574,6 +6609,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     retained_unit_summary = nothing,
     unit_pair_plan = nothing,
     unit_pair_summary = nothing,
+    pair_operator_plan = nothing,
+    pair_operator_summary = nothing,
     blocker = nothing,
 )
     shellification_plan_available =
@@ -6629,6 +6666,21 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             blocker,
         ) :
         unit_pair_summary
+    pair_operator_plan =
+        isnothing(pair_operator_plan) && unit_pair_plan isa
+        CartesianUnitPairs.UnitPairPlan ?
+        CartesianPairOperatorPlans.pair_operator_plan(unit_pair_plan) :
+        pair_operator_plan
+    pair_operator_summary =
+        isnothing(pair_operator_summary) && pair_operator_plan isa
+        CartesianPairOperatorPlans.PairOperatorPlan ?
+        CartesianPairOperatorPlans.summary(pair_operator_plan) :
+        isnothing(pair_operator_summary) ?
+        _pqs_source_box_route_driver_pair_operator_unavailable_summary(
+            selected ? status : :not_selected,
+            blocker,
+        ) :
+        pair_operator_summary
     summary =
         _pqs_source_box_route_driver_terminal_route_state_summary(;
             status,
@@ -6644,6 +6696,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             selected_crc_sidecar_summary,
             retained_unit_summary,
             unit_pair_summary,
+            pair_operator_summary,
         )
 
     return (;
@@ -6669,6 +6722,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         retained_unit_summary,
         unit_pair_plan,
         unit_pair_summary,
+        pair_operator_plan,
+        pair_operator_summary,
         summary,
         blocker,
         compatibility_alias_status =
