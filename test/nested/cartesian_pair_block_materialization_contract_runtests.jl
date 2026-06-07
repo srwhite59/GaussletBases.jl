@@ -1676,6 +1676,144 @@ end
     @test !selector_batch_kinetic.hamiltonian_data_materialized
     @test !selector_batch_kinetic.artifacts_materialized
 
+    overlap_bridge_batch =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary(selector_batch_overlap)
+    @test overlap_bridge_batch.object_kind ==
+          :pqs_source_pair_shell_realization_bridge_batch_summary
+    @test overlap_bridge_batch.status ==
+          :available_metadata_only_shell_realization_bridge_batch
+    @test isnothing(overlap_bridge_batch.blocker)
+    @test overlap_bridge_batch.term == :source_overlap
+    @test _pair_block_count(overlap_bridge_batch.term_counts, :term, :source_overlap) == 1
+    @test overlap_bridge_batch.result_count == 1
+    @test overlap_bridge_batch.available_count == 1
+    @test overlap_bridge_batch.blocked_count == 0
+    @test overlap_bridge_batch.skipped_record_count == 2
+    @test _pair_block_count(
+        overlap_bridge_batch.skipped_blocker_counts,
+        :blocker,
+        :unsupported_pqs_source_overlap_materialization_record,
+    ) == 1
+    @test overlap_bridge_batch.source_mode_ordering_status ==
+          :uniform_source_mode_ordering
+    @test overlap_bridge_batch.source_mode_ordering == :x_major_y_major_z_fast
+    @test overlap_bridge_batch.source_operator_blocks_materialized
+    @test !overlap_bridge_batch.final_pair_blocks_materialized
+    @test !overlap_bridge_batch.shell_realization_materialized
+    @test !overlap_bridge_batch.operator_blocks_materialized
+    @test !overlap_bridge_batch.hamiltonian_data_materialized
+    @test !overlap_bridge_batch.artifacts_materialized
+
+    bridge_tuple =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary((
+            selector_record_overlap,
+            selector_record_position,
+            selector_record_kinetic,
+        ))
+    @test bridge_tuple.status ==
+          :available_metadata_only_shell_realization_bridge_batch
+    @test bridge_tuple.term == :mixed_source_terms
+    @test bridge_tuple.result_count == 3
+    @test bridge_tuple.available_count == 3
+    @test bridge_tuple.blocked_count == 0
+    @test _pair_block_count(bridge_tuple.term_counts, :term, :source_overlap) == 1
+    @test _pair_block_count(bridge_tuple.term_counts, :term, :source_position_y) == 1
+    @test _pair_block_count(bridge_tuple.term_counts, :term, :source_kinetic) == 1
+    @test bridge_tuple.source_mode_ordering_status == :uniform_source_mode_ordering
+    @test bridge_tuple.source_operator_blocks_materialized
+    @test !bridge_tuple.final_pair_blocks_materialized
+    @test !bridge_tuple.shell_realization_materialized
+
+    bridge_vector =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary([
+            selector_record_overlap,
+            selector_record_position,
+        ])
+    @test bridge_vector.term == :mixed_source_terms
+    @test bridge_vector.result_count == 2
+    @test bridge_vector.available_count == 2
+    @test bridge_vector.blocked_count == 0
+
+    non_pqs_source_result =
+        _pair_block_result_with_metadata(
+            selector_record_overlap,
+            merge(
+                selector_record_overlap.metadata,
+                (; block_space = :direct_source_cpb_modes),
+            ),
+        )
+    missing_source_metadata_result =
+        _pair_block_result_with_metadata(
+            selector_record_overlap,
+            merge(selector_record_overlap.metadata, (; left_source_mode_dims = nothing)),
+        )
+    missing_transform_keys_result =
+        _pair_block_result_with_metadata(
+            selector_record_overlap,
+            merge(
+                selector_record_overlap.metadata,
+                (; transform_contract_keys = nothing),
+            ),
+        )
+    missing_realization_paths_result =
+        _pair_block_result_with_metadata(
+            selector_record_overlap,
+            merge(selector_record_overlap.metadata, (; realization_paths = nothing)),
+        )
+    blocked_bridge_batch =
+        CPBM.pqs_source_pair_shell_realization_bridge_summary((
+            non_pqs_source_result,
+            missing_source_metadata_result,
+            missing_transform_keys_result,
+            missing_realization_paths_result,
+        ))
+    @test blocked_bridge_batch.status ==
+          :blocked_pqs_source_shell_realization_bridge_batch
+    @test blocked_bridge_batch.blocker == :not_raw_product_source_modes
+    @test blocked_bridge_batch.result_count == 4
+    @test blocked_bridge_batch.available_count == 0
+    @test blocked_bridge_batch.blocked_count == 4
+    @test _pair_block_count(
+        blocked_bridge_batch.bridge_status_counts,
+        :status,
+        :blocked_not_pqs_source_space_block,
+    ) == 1
+    @test _pair_block_count(
+        blocked_bridge_batch.bridge_status_counts,
+        :status,
+        :blocked_missing_source_block_metadata,
+    ) == 1
+    @test _pair_block_count(
+        blocked_bridge_batch.bridge_status_counts,
+        :status,
+        :blocked_missing_shell_realization_facts,
+    ) == 2
+    @test _pair_block_count(
+        blocked_bridge_batch.blocker_counts,
+        :blocker,
+        :not_raw_product_source_modes,
+    ) == 1
+    @test _pair_block_count(
+        blocked_bridge_batch.blocker_counts,
+        :blocker,
+        :missing_left_source_mode_dims,
+    ) == 1
+    @test _pair_block_count(
+        blocked_bridge_batch.blocker_counts,
+        :blocker,
+        :missing_transform_contract_keys,
+    ) == 1
+    @test _pair_block_count(
+        blocked_bridge_batch.blocker_counts,
+        :blocker,
+        :missing_shell_realization_path,
+    ) == 1
+    @test blocked_bridge_batch.source_mode_ordering_status ==
+          :uniform_source_mode_ordering
+    @test blocked_bridge_batch.source_operator_blocks_materialized
+    @test !blocked_bridge_batch.final_pair_blocks_materialized
+    @test !blocked_bridge_batch.shell_realization_materialized
+
     @test_throws ArgumentError CPBM.pqs_source_pair_one_body_block(
         pqs_record,
         :position_x;

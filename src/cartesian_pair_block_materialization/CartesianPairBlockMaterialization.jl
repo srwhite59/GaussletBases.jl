@@ -22,9 +22,9 @@ parent/axis blocks.
 PQS/PQS raw-source pair support currently has metadata preflight plus raw
 source-space safe one-body helpers for overlap, position, x2, kinetic, and a
 selector over those terms. Caller-supplied 1D factors own signs and prefactors.
-It also provides a metadata-only shell-realization bridge summary for those
-source-space blocks. This path does not build shell projection, Lowdin
-realization, or final retained PQS pair blocks.
+It also provides metadata-only shell-realization bridge summaries for those
+source-space blocks and batches. This path does not build shell projection,
+Lowdin realization, or final retained PQS pair blocks.
 
 This module still does not assemble full operators, Hamiltonians, Ham bundles,
 exports, artifacts, final retained PQS pair blocks, or White--Lindsey blocks.
