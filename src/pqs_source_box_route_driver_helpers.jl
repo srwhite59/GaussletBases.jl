@@ -6405,6 +6405,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     selected_contract_inventory_available::Bool,
     selected_contract_inventory,
     selected_crc_sidecar_summary,
+    retained_unit_summary,
 )
     return (;
         object_kind = :cartesian_driver_terminal_route_state_summary,
@@ -6475,6 +6476,7 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
             !isnothing(selected_crc_sidecar_summary) ?
             selected_crc_sidecar_summary.sidecar_missing_count :
             0,
+        retained_unit_summary,
         final_retained_unit_inventory_available =
             !isnothing(selected_crc_sidecar_summary) &&
             selected_crc_sidecar_summary.final_retained_unit_inventory_available,
@@ -6494,6 +6496,29 @@ function _pqs_source_box_route_driver_terminal_route_state_summary(;
     )
 end
 
+function _pqs_source_box_route_driver_retained_unit_unavailable_summary(
+    status::Symbol,
+    blocker = nothing,
+)
+    return (;
+        object_kind = :cartesian_retained_unit_plan_summary,
+        status,
+        blocker,
+        retained_unit_count = 0,
+        unit_kinds = (),
+        unit_kind_counts = (),
+        route_core_final_unit_count = 0,
+        route_core_final_unit_available_count = 0,
+        route_core_final_unit_blocked_count = 0,
+        materialized = false,
+        transforms_materialized = false,
+        coefficient_maps_materialized = false,
+        pair_inventory_materialized = false,
+        operator_blocks_materialized = false,
+        hamiltonian_data_materialized = false,
+    )
+end
+
 function _pqs_source_box_route_driver_terminal_route_state(;
     status,
     selected::Bool,
@@ -6505,6 +6530,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
     lowering_contract_inventory = nothing,
     selected_contract_inventory = nothing,
     selected_crc_sidecar_summary = nothing,
+    retained_unit_plan = nothing,
+    retained_unit_summary = nothing,
     blocker = nothing,
 )
     shellification_plan_available =
@@ -6531,6 +6558,20 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             nothing,
         ) :
         selected_crc_sidecar_summary
+    retained_unit_plan =
+        isnothing(retained_unit_plan) && selected && lowering_plan_available ?
+        CartesianRetainedUnits.retained_unit_plan(lowering_plan) :
+        retained_unit_plan
+    retained_unit_summary =
+        isnothing(retained_unit_summary) && retained_unit_plan isa
+        CartesianRetainedUnits.RetainedUnitPlan ?
+        CartesianRetainedUnits.summary(retained_unit_plan) :
+        isnothing(retained_unit_summary) ?
+        _pqs_source_box_route_driver_retained_unit_unavailable_summary(
+            selected ? status : :not_selected,
+            blocker,
+        ) :
+        retained_unit_summary
     summary =
         _pqs_source_box_route_driver_terminal_route_state_summary(;
             status,
@@ -6544,6 +6585,7 @@ function _pqs_source_box_route_driver_terminal_route_state(;
             selected_contract_inventory_available,
             selected_contract_inventory,
             selected_crc_sidecar_summary,
+            retained_unit_summary,
         )
 
     return (;
@@ -6565,6 +6607,8 @@ function _pqs_source_box_route_driver_terminal_route_state(;
         selected_contract_inventory_available,
         selected_contract_inventory,
         selected_crc_sidecar_summary,
+        retained_unit_plan,
+        retained_unit_summary,
         summary,
         blocker,
         compatibility_alias_status =

@@ -130,6 +130,9 @@ end
             selected_crc_sidecar_summary = crc_sidecar_summary,
         )
     terminal_route_summary = terminal_route_state.summary
+    retained_unit_summary = terminal_route_summary.retained_unit_summary
+    retained_unit_kind_count_total =
+        sum(entry.count for entry in retained_unit_summary.unit_kind_counts; init = 0)
 
     @test terminal_route_state.object_kind ==
           :cartesian_driver_terminal_route_state
@@ -150,6 +153,27 @@ end
     @test terminal_route_summary.selected_crc_sidecar_missing_count ==
           crc_sidecar_summary.sidecar_missing_count
     @test !terminal_route_summary.operator_blocks_materialized
+    @test terminal_route_state.retained_unit_plan isa
+          GaussletBases.CartesianRetainedUnits.RetainedUnitPlan
+    @test retained_unit_summary.status == :available_retained_unit_plan
+    @test retained_unit_summary.selected_contract_count ==
+          module_summary.selected_contract_count
+    @test retained_unit_summary.retained_unit_count >
+          module_summary.selected_contract_count
+    @test retained_unit_kind_count_total ==
+          retained_unit_summary.retained_unit_count
+    @test any(
+        entry -> entry.unit_kind == :white_lindsey_boundary_stratum_retained_unit,
+        retained_unit_summary.unit_kind_counts,
+    )
+    @test retained_unit_summary.route_core_final_unit_available_count ==
+          retained_unit_summary.retained_unit_count
+    @test !retained_unit_summary.materialized
+    @test !retained_unit_summary.transforms_materialized
+    @test !retained_unit_summary.coefficient_maps_materialized
+    @test !retained_unit_summary.pair_inventory_materialized
+    @test !retained_unit_summary.operator_blocks_materialized
+    @test !retained_unit_summary.hamiltonian_data_materialized
 
     alias_source = merge(
         (;
