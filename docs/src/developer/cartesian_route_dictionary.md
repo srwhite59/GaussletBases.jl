@@ -124,6 +124,22 @@ counts describe old-kernel reuse metadata availability only, not numerical
 adapter readiness or pair-block materialization. It does not call those
 kernels.
 
+The unit-level descriptor
+`white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` records compact
+source-CPB and kernel-input facts for one LW boundary-stratum retained unit:
+stratum kind, source CPB role/codimension, active/fixed axis metadata, and the
+planned old kernel/helper symbols. The pair-level descriptor
+`white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])`
+classifies adapter-preflight pairs as facet/facet, facet/edge, facet/corner,
+edge/edge, edge/corner, or corner/corner. The old-seed oracle helper
+`white_lindsey_materialized_seed_oracle_summary(...)` returns compact
+validation counts/ranges/roles and one-body matrix availability metadata only.
+It is not route authority and not adapter authority.
+
+These descriptor/oracle helpers build no coefficient maps, call no old kernels
+for adapter materialization, and build no one-body adapter blocks, Coulomb,
+IDA/MWG data, Hamiltonians, exports, or artifacts.
+
 ### Why “lowering”?
 
 “Lowering” is compiler-style language: it means translating a higher-level geometric object into a lower-level construction representation. Here:
@@ -271,6 +287,9 @@ The PQS source geometry is “one filled box,” but the actual retained space c
 | **PQS final pair-block readiness summary** | Metadata-only summary over a single or batch PQS source shell-realization bridge summary. | Reports whether a future final retained PQS pair block could be attempted; currently blocks on `:shell_realization_not_materialized` and builds no shell projection, Lowdin, final block, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **LW boundary-stratum adapter preflight** | Metadata-only pair-block materialization classification for `:white_lindsey_boundary_stratum_adapter_path`. | Uses `:white_lindsey_boundary_stratum_adapter_preflight` and currently blocks on `:white_lindsey_boundary_stratum_pair_block_adapter_not_materialized`; builds no LW numerical block, coefficient map, doside transform, Hamiltonian, export, artifact, IDA/MWG data, or Coulomb. |
 | **LW adapter reuse summary** | Internal metadata helper `white_lindsey_boundary_stratum_adapter_summary(record)` over LW adapter preflight records. | Records future reuse targets only: facet/face -> `_nested_face_product`, edge -> `_nested_edge_product`, corner -> `_nested_corner_piece`, facet/edge side helper -> `_nested_doside_1d`; batch summaries expose `reuse_metadata_available_count` and `reuse_metadata_blocked_count` for metadata availability only, not numerical adapter readiness or pair-block materialization; it does not call those kernels or materialize LW blocks. |
+| **LW unit adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` over one LW boundary-stratum retained unit. | Records compact source-CPB/kernel-input facts only; it does not call old kernels or build coefficient maps. |
+| **LW pair adapter descriptor** | Internal metadata helper `white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])` over one LW adapter-preflight pair. | Classifies facet/facet, facet/edge, facet/corner, edge/edge, edge/corner, and corner/corner pairs; it does not build pair blocks or call old kernels. |
+| **LW seed oracle summary** | Internal validation helper `white_lindsey_materialized_seed_oracle_summary(...)`. | Summarizes old seed counts, ranges, roles, packet/operator availability, and one-body matrix dimensions for validation only; it is not route or adapter authority. |
 | **PQS source safe-term descriptor** | Private local metadata in `CartesianPairBlockMaterialization` for supported PQS source safe one-body terms. | Selector/code-organization helper only, not public API or route behavior. |
 | **Assembly**                        | Placing pair blocks into full retained operator/Hamiltonian matrices.                                 | Comes after pair-block construction.                             |
 | **Hamiltonian matrix / Ham bundle** | Final or export-ready operator/Hamiltonian data.                                                      | Much later than shellification and lowering.                     |

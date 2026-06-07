@@ -113,6 +113,16 @@ helper -> `_nested_doside_1d`. For batch or plan-level inputs,
 old-kernel reuse metadata availability, not numerical adapter readiness or
 pair-block materialization. It does not call those old kernels.
 
+The related LW descriptor/oracle helpers
+`white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)`,
+`white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])`,
+and `white_lindsey_materialized_seed_oracle_summary(...)` are also
+metadata/reference-only. They record compact source-CPB/kernel-input facts,
+facet/edge/corner pair-family classifications, and old-seed validation facts;
+they are not route or adapter authority and do not build coefficient maps,
+one-body adapter blocks, Coulomb, IDA/MWG data, Hamiltonians, exports, or
+artifacts.
+
 The PQS guardrails are unchanged: support-row or shell-row contraction is an
 oracle/debug path, not the PQS algorithm; shell projection and Lowdin cleanup
 belong to shell realization, not raw product-box operator construction;

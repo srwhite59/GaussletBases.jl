@@ -557,6 +557,27 @@ does not call those kernels and does not build LW numerical blocks,
 coefficient maps, doside transforms, Hamiltonians, exports, artifacts,
 IDA/MWG data, or Coulomb.
 
+`white_lindsey_boundary_stratum_unit_adapter_descriptor(unit)` is the compact
+unit-level adapter descriptor. It records source-CPB and kernel-input facts
+only: unit identity, stratum kind, source CPB role/codimension/count,
+active/fixed axis metadata, planned old kernel symbol, and the planned
+`_nested_doside_1d` helper for facet/edge strata. It does not build
+coefficient maps and does not call old kernels.
+
+`white_lindsey_boundary_stratum_pair_adapter_descriptor(record[, unit_pair])`
+is the compact pair-level adapter descriptor. With unit-pair context it uses
+the unit descriptors; record-only use reports only record-derived facts. It
+classifies upper-triangular LW boundary-stratum pairs as facet/facet,
+facet/edge, facet/corner, edge/edge, edge/corner, or corner/corner. It does
+not build one-body adapter blocks and does not call old kernels.
+
+`white_lindsey_materialized_seed_oracle_summary(...)` is a compact validation
+oracle over the old materialized seed. It reports counts, ranges, roles,
+packet/operator inventory availability, one-body operator availability flags,
+and fixed-block matrix dimension summaries. It is validation-only: not route
+authority and not adapter authority. It must not be used to make the old route
+the new construction path.
+
 ### Next low-order White--Lindsey adapter target
 
 The next White--Lindsey numerical step should be a narrow adapter behind
@@ -570,3 +591,8 @@ Initial acceptance should check retained counts, stratum/source CPB roles,
 coefficient-map shapes, and one-body local block agreement. Do not start with
 Coulomb, IDA, Hamiltonian export, or artifact generation. Do not make
 support-row or dense-parent fallback the production algorithm.
+
+The descriptor and oracle helpers above are still metadata/reference helpers.
+They build no coefficient maps, call no old kernels for adapter
+materialization, and build no one-body adapter blocks, Coulomb, IDA/MWG data,
+Hamiltonians, exports, or artifacts.
