@@ -8600,66 +8600,6 @@ function cartesian_pair_terms(units, transforms, recipe)
             low_order_pairs.route_core_pair_family_count_source,
         route_core_summary_status =
             low_order_pairs.route_core_summary_status,
-        route_core_pair_operator_ready =
-            low_order_pairs.route_core_pair_operator_ready,
-        route_core_pair_operator_readiness_status =
-            low_order_pairs.route_core_pair_operator_readiness_status,
-        route_core_pair_operator_blocker =
-            low_order_pairs.route_core_pair_operator_blocker,
-        route_core_pair_operator_readiness_requirements =
-            low_order_pairs.route_core_pair_operator_readiness_requirements,
-        route_core_pair_operator_preflight_available =
-            low_order_pairs.route_core_pair_operator_preflight_available,
-        route_core_pair_operator_preflight_status =
-            low_order_pairs.route_core_pair_operator_preflight_status,
-        route_core_pair_operator_preflight =
-            low_order_pairs.route_core_pair_operator_preflight,
-        route_core_pair_operator_preflight_blocker =
-            low_order_pairs.route_core_pair_operator_preflight_blocker,
-        route_core_pair_operator_plan_available =
-            low_order_pairs.route_core_pair_operator_plan_available,
-        route_core_pair_operator_plan_status =
-            low_order_pairs.route_core_pair_operator_plan_status,
-        route_core_pair_operator_plan =
-            low_order_pairs.route_core_pair_operator_plan,
-        route_core_pair_operator_plan_blocker =
-            low_order_pairs.route_core_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_inventory_available =
-            low_order_pairs.route_core_typed_pair_operator_plan_inventory_available,
-        route_core_typed_pair_operator_plan_inventory_status =
-            low_order_pairs.route_core_typed_pair_operator_plan_inventory_status,
-        route_core_typed_pair_operator_plan_blocker =
-            low_order_pairs.route_core_typed_pair_operator_plan_blocker,
-        route_core_typed_pair_operator_plan_count =
-            low_order_pairs.route_core_typed_pair_operator_plan_count,
-        route_core_typed_pair_operator_plan_blocked_count =
-            low_order_pairs.route_core_typed_pair_operator_plan_blocked_count,
-        route_core_typed_pair_operator_plan_materialized =
-            low_order_pairs.route_core_typed_pair_operator_plan_materialized,
-        route_core_typed_pair_operator_source_path_counts =
-            low_order_pairs.route_core_typed_pair_operator_source_path_counts,
-        route_core_typed_pair_operator_final_block_path_counts =
-            low_order_pairs.route_core_typed_pair_operator_final_block_path_counts,
-        route_core_typed_pair_operator_materialization_status_counts =
-            low_order_pairs.route_core_typed_pair_operator_materialization_status_counts,
-        route_core_typed_pair_operator_blocker_counts =
-            low_order_pairs.route_core_typed_pair_operator_blocker_counts,
-        route_core_typed_pair_operator_plan_family_counts =
-            low_order_pairs.route_core_typed_pair_operator_plan_family_counts,
-        route_core_typed_pair_operator_materialization_ready =
-            low_order_pairs.route_core_typed_pair_operator_materialization_ready,
-        route_core_typed_pair_operator_materialization_readiness_status =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_status,
-        route_core_typed_pair_operator_materialization_readiness_blocker =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocker,
-        route_core_typed_pair_operator_materialization_readiness_requirements =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_requirements,
-        route_core_typed_pair_operator_materialization_readiness_plan_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_plan_count,
-        route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_blocked_count,
-        route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            low_order_pairs.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         active_source_authority = low_order_pairs.active_source_authority,
         pair_entries = low_order_pairs.pair_entries,
         pair_family_counts = low_order_pairs.pair_family_counts,
@@ -9079,66 +9019,6 @@ function cartesian_assembly(parent, shells, units, transforms, pairs, recipe)
             low_order_assembly.route_core_pair_family_counts,
         low_order_route_core_summary_status =
             low_order_assembly.route_core_summary_status,
-        low_order_route_core_pair_operator_ready =
-            low_order_assembly.route_core_pair_operator_ready,
-        low_order_route_core_pair_operator_readiness_status =
-            low_order_assembly.route_core_pair_operator_readiness_status,
-        low_order_route_core_pair_operator_blocker =
-            low_order_assembly.route_core_pair_operator_blocker,
-        low_order_route_core_pair_operator_readiness_requirements =
-            low_order_assembly.route_core_pair_operator_readiness_requirements,
-        low_order_route_core_pair_operator_preflight_available =
-            low_order_assembly.route_core_pair_operator_preflight_available,
-        low_order_route_core_pair_operator_preflight_status =
-            low_order_assembly.route_core_pair_operator_preflight_status,
-        low_order_route_core_pair_operator_preflight =
-            low_order_assembly.route_core_pair_operator_preflight,
-        low_order_route_core_pair_operator_preflight_blocker =
-            low_order_assembly.route_core_pair_operator_preflight_blocker,
-        low_order_route_core_pair_operator_plan_available =
-            low_order_assembly.route_core_pair_operator_plan_available,
-        low_order_route_core_pair_operator_plan_status =
-            low_order_assembly.route_core_pair_operator_plan_status,
-        low_order_route_core_pair_operator_plan =
-            low_order_assembly.route_core_pair_operator_plan,
-        low_order_route_core_pair_operator_plan_blocker =
-            low_order_assembly.route_core_pair_operator_plan_blocker,
-        low_order_route_core_typed_pair_operator_plan_inventory_available =
-            low_order_assembly.route_core_typed_pair_operator_plan_inventory_available,
-        low_order_route_core_typed_pair_operator_plan_inventory_status =
-            low_order_assembly.route_core_typed_pair_operator_plan_inventory_status,
-        low_order_route_core_typed_pair_operator_plan_blocker =
-            low_order_assembly.route_core_typed_pair_operator_plan_blocker,
-        low_order_route_core_typed_pair_operator_plan_count =
-            low_order_assembly.route_core_typed_pair_operator_plan_count,
-        low_order_route_core_typed_pair_operator_plan_blocked_count =
-            low_order_assembly.route_core_typed_pair_operator_plan_blocked_count,
-        low_order_route_core_typed_pair_operator_plan_materialized =
-            low_order_assembly.route_core_typed_pair_operator_plan_materialized,
-        low_order_route_core_typed_pair_operator_source_path_counts =
-            low_order_assembly.route_core_typed_pair_operator_source_path_counts,
-        low_order_route_core_typed_pair_operator_final_block_path_counts =
-            low_order_assembly.route_core_typed_pair_operator_final_block_path_counts,
-        low_order_route_core_typed_pair_operator_materialization_status_counts =
-            low_order_assembly.route_core_typed_pair_operator_materialization_status_counts,
-        low_order_route_core_typed_pair_operator_blocker_counts =
-            low_order_assembly.route_core_typed_pair_operator_blocker_counts,
-        low_order_route_core_typed_pair_operator_plan_family_counts =
-            low_order_assembly.route_core_typed_pair_operator_plan_family_counts,
-        low_order_route_core_typed_pair_operator_materialization_ready =
-            low_order_assembly.route_core_typed_pair_operator_materialization_ready,
-        low_order_route_core_typed_pair_operator_materialization_readiness_status =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_status,
-        low_order_route_core_typed_pair_operator_materialization_readiness_blocker =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocker,
-        low_order_route_core_typed_pair_operator_materialization_readiness_requirements =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_requirements,
-        low_order_route_core_typed_pair_operator_materialization_readiness_plan_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_plan_count,
-        low_order_route_core_typed_pair_operator_materialization_readiness_blocked_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_blocked_count,
-        low_order_route_core_typed_pair_operator_materialization_readiness_materialized_count =
-            low_order_assembly.route_core_typed_pair_operator_materialization_readiness_materialized_count,
         low_order_pair_operator_helper_by_family =
             low_order_assembly.pair_operator_helper_by_family,
         low_order_pair_helper_status_by_family =
